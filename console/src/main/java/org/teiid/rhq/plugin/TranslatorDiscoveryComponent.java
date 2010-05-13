@@ -21,10 +21,7 @@
  */
 package org.teiid.rhq.plugin;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -33,29 +30,27 @@ import org.apache.commons.logging.LogFactory;
 import org.jboss.managed.api.ComponentType;
 import org.jboss.managed.api.ManagedComponent;
 import org.jboss.managed.api.ManagedProperty;
-import org.jboss.managed.plugins.ManagedObjectImpl;
+import org.jboss.metatype.api.types.MetaType;
 import org.jboss.metatype.api.values.CollectionValueSupport;
-import org.jboss.metatype.api.values.GenericValueSupport;
 import org.jboss.metatype.api.values.MetaValue;
-import org.jboss.metatype.api.values.SimpleValueSupport;
+import org.jboss.metatype.api.values.MetaValueFactory;
 import org.rhq.core.domain.configuration.Configuration;
-import org.rhq.core.domain.configuration.Property;
 import org.rhq.core.domain.configuration.PropertyList;
 import org.rhq.core.domain.configuration.PropertyMap;
 import org.rhq.core.domain.configuration.PropertySimple;
 import org.rhq.core.pluginapi.inventory.DiscoveredResourceDetails;
 import org.rhq.core.pluginapi.inventory.InvalidPluginConfigurationException;
-import org.rhq.core.pluginapi.inventory.ResourceComponent;
 import org.rhq.core.pluginapi.inventory.ResourceDiscoveryComponent;
 import org.rhq.core.pluginapi.inventory.ResourceDiscoveryContext;
+import org.teiid.adminapi.impl.PropertyMetadata;
 import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 
 /**
- * Discovery component for the MetaMatrix Host controller process
+ * Discovery component for Teiid Translator instances
  * 
  */
-public class ModelDiscoveryComponent implements ResourceDiscoveryComponent {
+public class TranslatorDiscoveryComponent implements ResourceDiscoveryComponent {
 
 	private final Log log = LogFactory.getLog(this.getClass());
 
@@ -64,62 +59,88 @@ public class ModelDiscoveryComponent implements ResourceDiscoveryComponent {
 			throws InvalidPluginConfigurationException, Exception {
 		Set<DiscoveredResourceDetails> discoveredResources = new HashSet<DiscoveredResourceDetails>();
 
-		for (int i = 0; i < 3; i++) {
-			String modelName = "myModel" + i;
+		Set<ManagedComponent> translators = ProfileServiceUtil
+				.getManagedComponents(new ComponentType(
+						PluginConstants.ComponentType.Translator.TYPE,
+						PluginConstants.ComponentType.Translator.SUBTYPE));
 
+		for (ManagedComponent translator : translators) {
+
+			Map<String, ManagedProperty> managedPropertyMap = translator
+					.getProperties();
+			String translatorKey = translator.getName();
+			String translatorName = ProfileServiceUtil.getSimpleValue(
+					translator, "name", String.class);
+			/**
+			 * 
+			 * A discovered resource must have a unique key, that must stay the
+			 * same when the resource is discovered the next time
+			 */
 			DiscoveredResourceDetails detail = new DiscoveredResourceDetails(
 					discoveryContext.getResourceType(), // ResourceType
-					modelName, // Resource Key
-					modelName, // Resource Name
-					null, // Version TODO can we get that from discovery ?
-					PluginConstants.ComponentType.Model.DESCRIPTION, // Description
+					translatorKey, // Resource Key
+					translatorName, // Resource Name
+					null, // Version
+					PluginConstants.ComponentType.Translator.DESCRIPTION, // Description
 					discoveryContext.getDefaultPluginConfiguration(), // Plugin
 					// Config
 					null // Process info from a process scan
 			);
 
 			Configuration c = detail.getPluginConfiguration();
-			c.put(new PropertySimple(modelName, "name"));
+			PropertyList list = new PropertyList("translatorList");
+			PropertyMap propMap = null;
+			c.put(list);
 
-			PropertyList list = new PropertyList("multisourceModels");
-			PropertyMap map = new PropertyMap("model",
-					new PropertySimple("oraclesource", "sourceName"),
-					new PropertySimple("JNDINameOracle", "jndiName"),
-					new PropertySimple("MySQLsource", "sourceName"),
-					new PropertySimple("JNDINameMySQL", "jndiName"));
-			list.add(map);
-			
+			for (ManagedProperty prop : managedPropertyMap.values()) {
+				propMap = new PropertyMap("translatorMap");
+				String name = prop.getName();
+				if (name.equals("translator-property")) {
+					getTranslatorValues(prop.getValue(), propMap, list);
+				} else {
+					propMap.put(new PropertySimple("name", name));
+					propMap.put(new PropertySimple("value", ProfileServiceUtil
+							.stringValue(prop.getValue())));
+					propMap.put(new PropertySimple("description", prop
+							.getDescription()));
+					list.add(propMap);
+				}
+			}
+
 			detail.setPluginConfiguration(c);
 			// Add to return values
 			discoveredResources.add(detail);
-			log.info("Discovered Teiid Model: " + modelName);
+			log.info("Discovered Teiid Translator: " + translatorName);
 		}
 
 		return discoveredResources;
 	}
 
-	/**
-	 * @param mcVdb
-	 * @param configuration
-	 */
-	private void getConnectors(ManagedComponent model,
-			Configuration configuration) {
-		// Get Connector(s) from Model
-		ManagedProperty property = model.getProperty("connectorBindingNames");
-		CollectionValueSupport valueSupport = (CollectionValueSupport) property
-				.getValue();
-		MetaValue[] metaValues = valueSupport.getElements();
-
-		PropertyList connectorsList = new PropertyList("connectors");
-		configuration.put(connectorsList);
-
-		for (MetaValue value : metaValues) {
-			SimpleValueSupport simpleValueSupport = (SimpleValueSupport) value;
-			String connectorName = (String) simpleValueSupport.getValue();
-
-			PropertyMap connector = new PropertyMap("connector",
-					new PropertySimple("name", connectorName));
-			connectorsList.add(connector);
+	public static <T> void getTranslatorValues(MetaValue pValue,
+			PropertyMap map, PropertyList list) {
+		MetaType metaType = pValue.getMetaType();
+		PropertyMetadata unwrappedvalue = null;
+		if (metaType.isCollection()) {
+			for (MetaValue value : ((CollectionValueSupport) pValue)
+					.getElements()) {
+				if (value.getMetaType().isComposite()) {
+					map = new PropertyMap("translatorMap");
+					unwrappedvalue = (PropertyMetadata) MetaValueFactory
+							.getInstance().unwrap(value);
+					map
+							.put(new PropertySimple("name", unwrappedvalue
+									.getName()));
+					map.put(new PropertySimple("value", unwrappedvalue
+							.getValue()));
+					map
+							.put(new PropertySimple("description",
+									"Custom property"));
+					list.add(map);
+				} else {
+					throw new IllegalStateException(pValue
+							+ " is not a Composite type");
+				}
+			}
 		}
 	}
 

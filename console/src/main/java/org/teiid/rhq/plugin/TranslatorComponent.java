@@ -42,9 +42,9 @@ import org.teiid.rhq.comm.ConnectionConstants;
  * Component class for the MetaMatrix Host Controller process.
  * 
  */
-public class ModelComponent extends Facet {
+public class TranslatorComponent extends Facet {
 	private final Log LOG = LogFactory
-			.getLog(ModelComponent.class);
+			.getLog(TranslatorComponent.class);
 
 
 	/** 

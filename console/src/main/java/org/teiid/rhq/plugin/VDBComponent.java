@@ -331,7 +331,6 @@ public class VDBComponent extends Facet {
 					String jndiName = (String) sourceMap.get("jndiName");
 					String translatorName = (String) sourceMap.get("translatorName");
 					PropertyMap multiSourceModel = null;
-					PropertyMap multiSourceModel2 = null;
 
 				PropertyMap model = null;
 				if (supportMultiSource){
@@ -352,13 +351,7 @@ public class VDBComponent extends Facet {
 							new PropertySimple("visibility", visibility),
 							new PropertySimple("supportsMultiSource",
 									true));
-					 	sourceModelsList.add(model);
-					 	multiSourceModel = new PropertyMap("model",
-								new PropertySimple("name", modelName),
-								new PropertySimple("sourceName", sourceName),
-								new PropertySimple("jndiName", jndiName),
-								new PropertySimple("translatorName", translatorName));
-					multiSourceModelsList.add(multiSourceModel);
+					 	sourceModelsList.add(model);					 	
 					}else{
 						 model = new PropertyMap("model",
 								new PropertySimple("name", modelName),

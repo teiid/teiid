@@ -16,6 +16,757 @@
 		Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA *
 		02110-1301 USA. */
 	-->
+	
+	<!DOCTYPE plugin [
+
+<!ENTITY managedObjectMetrics '
+    <metric property="runState" displayType="summary"
+            defaultOn="true" defaultInterval="30000" dataType="trait" category="performance"/>
+'>
+
+<!ENTITY translatorConfiguration '
+	<resource-configuration>
+    <c:list-property name="translatorList" description="Properties for this translator"
+						readOnly="true">
+						<c:map-property name="translatorMap">
+							<c:simple-property name="name" displayName="Name"
+								description="Name of this property" readOnly="true" />
+							<c:simple-property name="value" displayName="Value"
+								description="Value of this property" readOnly="true" />
+							<c:simple-property name="description" displayName="Description"
+								description="Description of this property" readOnly="true" />
+						</c:map-property>
+	</c:list-property>
+	</resource-configuration>
+    
+    
+'>			
+			
+
+<!ENTITY datasourceAndConnectionFactoryOperations '
+    <operation name="flush" displayName="Flush"
+               description="Flush the connections in the pool"/>
+
+    <operation name="listFormattedSubPoolStatistics" displayName="List Formatted Sub Pool Statistics"
+               description="Obtain a formatted sub pool statistics report">
+        <parameters>
+            <c:simple-property required="false" name="formatClassName"
+                               defaultValue="org.jboss.resource.statistic.pool.JBossDefaultSubPoolStatisticFormatter">
+                <c:description>
+                    The fully qualified name of the Java class to use to format the the sub pool statistics. The default
+                    is "org.jboss.resource.statistic.pool.JBossDefaultSubPoolStatisticFormatter".
+                </c:description>
+            </c:simple-property>                                                              
+        </parameters>
+        <results>
+            <c:simple-property name="result" type="longString">
+                <c:description>
+                    A formatted sub pool statistics report.
+                </c:description>
+            </c:simple-property>
+        </results>
+    </operation>
+
+    <operation name="listStatistics" displayName="List Statistics" description="Obtain a statistics report">
+        <results>
+            <c:map-property name="result"/>
+        </results>
+    </operation>
+'>
+
+<!-- TODO: Use one shared XML entity for datasource and connection factory metrics. -->
+<!ENTITY datasourceMetrics '
+    <!-- Traits -->
+    <metric property="poolJndiName" displayType="summary" displayName="Pool JNDI Name"
+            defaultOn="true" defaultInterval="60000" dataType="trait" category="performance"
+            description="the JNDI name of the connection pool for this datasource"/>
+
+    <!-- Numerics -->
+    <metric property="availableConnectionCount" measurementType="dynamic" displayType="summary"
+            defaultOn="true" defaultInterval="60000" dataType="measurement" category="performance"
+            description="the maximum number of connections that are available"/>
+
+    <metric property="connectionCount" measurementType="dynamic" displayType="summary"
+            defaultOn="true" defaultInterval="60000" dataType="measurement" category="performance"
+            description="the number of connections that are currently in the pool"/>
+
+    <metric property="connectionCreatedCount" measurementType="dynamic" displayType="detail"
+            defaultOn="true" defaultInterval="60000" dataType="measurement" category="performance"
+            description="the number of connections that have been created since the datasource was last started"/>
+
+    <metric property="connectionDestroyedCount" measurementType="dynamic" displayType="detail"
+            defaultOn="true" defaultInterval="60000" dataType="measurement" category="performance"
+            description="the number of connections that have been destroyed since the datasource was last started"/>
+
+    <metric property="inUseConnectionCount" measurementType="dynamic" displayType="detail"
+            defaultOn="true" defaultInterval="60000" dataType="measurement" category="performance"
+            description="the number of connections that are currently in use"/>
+
+    <metric property="local-transaction" displayType="summary"
+            defaultOn="true" defaultInterval="60000" dataType="trait" category="performance"/>
+
+    <metric property="maxConnectionsInUseCount" measurementType="dynamic" displayType="detail"
+            defaultOn="true" defaultInterval="60000" dataType="measurement" category="performance"
+            description="the most connections that have been simultaneously in use since this datasource was started"/>
+
+    <metric property="maxSize" measurementType="dynamic" displayType="detail" displayName="Max Size"
+            defaultOn="true" defaultInterval="60000" dataType="measurement" category="performance"/>
+
+    <metric property="minSize" measurementType="dynamic" displayType="detail" displayName="Min Size"
+            defaultOn="true" defaultInterval="60000" dataType="measurement" category="performance"/>
+'>
+
+<!-- NOTE: For Datasource ManagedProperty annotations, see:
+     https://anonsvn.jboss.org/repos/jbossas/trunk/connector/src/main/org/jboss/resource/metadata/mcf/DataSourceDeploymentMetaData.java
+     Descriptions of datasource config props can also be culled from the following locations:
+     https://anonsvn.jboss.org/repos/jbossas/trunk/connector/src/resources/dtd/jboss-ds_5_0.dtd
+     http://www.jboss.org/file-access/default/members/jbossas/freezone/docs/Administration_And_Configuration_Guide/5/html/Configuring_JDBC_DataSources.html
+     http://www.jboss.org/community/wiki/ConfigDataSources
+     http://www.jboss.org/community/wiki/ConfigJCACommon
+  -->
+
+<!ENTITY datasourceAndConnectionFactoryConnectionResourceConfigProps '
+    <c:simple-property name="min-pool-size"
+                       displayName="Minimum Pool Size"
+                       type="integer"
+                       required="false"
+                       defaultValue="0">
+        <c:description>
+            The minimum number of connections the pool should hold. The default is 0.
+        </c:description>
+        <c:constraint>
+            <c:integer-constraint minimum="0"/>
+        </c:constraint>
+    </c:simple-property>
+
+    <c:simple-property name="max-pool-size"
+                       displayName="Maximum Pool Size"
+                       type="integer"
+                       required="false"
+                       defaultValue="10">
+        <c:description>
+            The maximum number of connections the pool should hold. The default is 10.
+        </c:description>
+        <c:constraint>
+            <c:integer-constraint minimum="0"/>
+        </c:constraint>
+    </c:simple-property>
+'>
+
+<!ENTITY datasourceConnectionResourceConfigProps '
+    <c:simple-property name="jndi-name"
+                       displayName="JNDI Name"
+                       description="The global JNDI Name under which to bind the datasource"
+                       type="string"/>
+
+    <c:simple-property name="user-name"
+                       displayName="Username"
+                       description="The default username when creating a new connection."
+                       type="string"
+                       activationPolicy="immediate"
+                       required="false"/>
+
+    <c:simple-property name="password"
+                       displayName="Password"
+                       description="The default password when creating a new connection."
+                       type="password"
+                       activationPolicy="immediate"
+                       required="false"/>
+'>
+
+<!ENTITY datasourceAndConnectionFactoryAdvancedResourceConfigProps '
+    <c:simple-property name="allocation-retry" type="integer" required="false"
+                       defaultValue="0">
+        <c:description>
+            The number of times that allocating a connection should be tried before throwing an exception. The default
+            is 0.
+        </c:description>
+    </c:simple-property>
+
+    <c:simple-property name="allocation-retry-wait-millis" type="long" required="false"  units="milliseconds"
+                       defaultValue="5000">
+        <c:description>
+            The time in milliseconds to wait between retrying to allocate a connection. The default is 5000 (5 seconds).
+        </c:description>
+    </c:simple-property>
+
+    <c:simple-property name="background-validation" type="boolean" required="false" defaultValue="false">
+        <c:description>
+            Specify if connections should be validated on a background thread versus being validated
+            prior to use. Background validation is meant to reduce the overall load on the RDBMS system when validating
+            a connection. The default is No.
+        </c:description>
+    </c:simple-property>
+
+    <c:simple-property name="background-validation-millis" type="long" required="false" units="milliseconds"
+                       defaultValue="0">
+        <c:description>
+            The interval, in milliseconds, at which the ConnectionValidator will run.  Set to 0 to disable background
+            validation. The default is 0.
+        </c:description>
+    </c:simple-property>
+
+    <c:simple-property name="blocking-timeout-millis" displayName="Blocking Timeout in Milliseconds"
+                       units="milliseconds" defaultValue="30000"
+                       type="integer" required="false">
+        <c:description>
+            Indicates the maximum time in milliseconds to block while waiting for a connection before throwing
+            an exception. Note that this blocks only while waiting for a permit for a connection, and will never
+            throw an exception if creating a new connection takes an inordinately long time. The default is 30000
+            (30 seconds).
+        </c:description>
+        <c:constraint>
+            <c:integer-constraint minimum="0"/>
+        </c:constraint>
+    </c:simple-property>
+
+    <c:simple-property name="idle-timeout-minutes" type="integer" activationPolicy="immediate"
+                       displayName="Idle Timeout" units="minutes" required="false" defaultValue="30">
+        <c:description>
+            The maximum time, in minutes, a connection may be idle before being closed. The default is 30.
+        </c:description>
+        <c:constraint>
+            <c:integer-constraint minimum="0"/>
+        </c:constraint>
+    </c:simple-property>
+
+    <c:simple-property name="isSameRM-override-value" type="boolean" required="false">
+        <c:description>
+            If set, unconditionally sets the boolean return value of javax.transaction.xa.XAResource.isSameRM(XAResource).
+        </c:description>
+    </c:simple-property>
+
+    <c:simple-property name="jmx-invoker-name" required="false">
+        <c:description>
+            The ObjectName of the JMX Invoker MBean associated with this datasource.
+        </c:description>
+    </c:simple-property>
+
+    <c:map-property name="metadata" required="false" description="Metadata properties.">
+        <c:simple-property required="false" name="typeMapping">
+            <c:description>
+                The name of the corresponding type-mapping in conf/standardjbosscmp-jdbc.xml.
+            </c:description>
+            <c:property-options>
+                <c:option name="Cloudscape" value="Cloudscape"/>
+                <c:option name="DB2" value="DB2"/>
+                <c:option name="DB2/400" value="DB2/400"/>
+                <c:option name="Derby" value="Derby"/>
+                <c:option name="Firebird" value="Firebird"/>
+                <c:option name="FirstSQL/J" value="FirstSQL/J"/>
+                <c:option name="Hypersonic SQL" value="Hypersonic SQL"/>
+                <c:option name="InformixDB" value="InformixDB"/>
+                <c:option name="Ingres" value="Ingres"/>
+                <c:option name="InterBase" value="InterBase"/>
+                <c:option name="MaxDB" value="MaxDB"/>
+                <c:option name="McKoi" value="McKoi"/>
+                <c:option name="Mimer SQL" value="Mimer SQL"/>
+                <c:option name="MS SQLSERVER" value="MS SQLSERVER"/>
+                <c:option name="MS SQLSERVER2000" value="MS SQLSERVER2000"/>
+                <c:option name="Oracle7" value="Oracle7"/>
+                <c:option name="Oracle8" value="Oracle8"/>
+                <c:option name="Oracle9i" value="Oracle9i"/>
+                <c:option name="PointBase" value="PointBase"/>
+                <c:option name="PostgreSQL" value="PostgreSQL"/>
+                <c:option name="PostgreSQL 7.2" value="PostgreSQL 7.2"/>
+                <c:option name="PostgreSQL 8.0" value="PostgreSQL 8.0"/>
+                <c:option name="SapDB" value="SapDB"/>
+                <c:option name="SOLID" value="SOLID"/>
+                <c:option name="Sybase" value="Sybase"/>
+            </c:property-options>
+        </c:simple-property>
+    </c:map-property>
+
+    <c:simple-property name="no-tx-separate-pools" type="boolean"
+                       displayName="No Tx Separate Pools" required="false">
+        <c:description>Whether or not to use separate pools. The default is Yes.</c:description>
+        <c:property-options>
+            <c:option name="True" value="true"/>
+            <c:option name="False" value="false"/>
+        </c:property-options>
+    </c:simple-property>
+
+    <c:simple-property name="prefill" type="boolean" required="false">
+        <c:description>
+            Whether to attempt to prefill the connection pool to the minimum number of connections. NOTE: Only
+            supporting pools (OnePool) support this feature. A warning can be found in the logs if the pool does not
+            support this. The default is No.
+        </c:description>
+    </c:simple-property>
+
+    <c:map-property name="security-domain" displayName="Security Settings" required="false">
+        <c:description>
+            Security settings for connections in the pool.
+        </c:description>
+
+        <c:simple-property name="securityDeploymentType" type="string"
+                           required="false" defaultValue="NONE">
+            <c:description>
+                Indicates whether Subject (from security domain), application-supplied parameters
+                (such as from getConnection(user, pw)), both Subject and app-supplied parameters,
+                or neither Subject nor app-supplied parameters are used to distinguish connections
+                in the pool. The default is "NONE".
+            </c:description>
+            <c:property-options>
+                <c:option name="None" value="NONE"/>
+                <c:option name="Application" value="APPLICATION"/>
+                <c:option name="Domain" value="DOMAIN"/>
+                <c:option name="Domain and Application" value="DOMAIN_AND_APPLICATION"/>
+            </c:property-options>
+        </c:simple-property>
+
+        <c:simple-property name="domain" type="string"
+                           required="false">
+            <c:description>
+                The name of the JAAS security manager that will handle authentication (only required if security
+                deployment type is DOMAIN or DOMAIN_AND_APPLICATION). This name correlates to the JAAS login-config.xml
+                descriptor application-policy/name attribute.
+            </c:description>
+        </c:simple-property>
+    </c:map-property>
+
+    <c:simple-property name="statistics-formatter" required="false">
+        <c:description>
+             The fully qualified class name of the class to use for formatting managed connection pool statistics for
+             this datasource. The class must implement the org.jboss.resource.statistic.formatter.StatisticsFormatter.
+             interface. The default is "org.jboss.resource.statistic.pool.JBossDefaultSubPoolStatisticFormatter".
+        </c:description>
+    </c:simple-property>
+
+    <c:simple-property name="type-mapping" displayName="Type Mapping" required="false">
+        <c:description>
+            The name of the corresponding type-mapping in conf/standardjbosscmp-jdbc.xml.
+        </c:description>
+        <c:property-options>
+            <c:option name="Cloudscape" value="Cloudscape"/>
+            <c:option name="DB2" value="DB2"/>
+            <c:option name="DB2/400" value="DB2/400"/>
+            <c:option name="Derby" value="Derby"/>
+            <c:option name="Firebird" value="Firebird"/>
+            <c:option name="FirstSQL/J" value="FirstSQL/J"/>
+            <c:option name="Hypersonic SQL" value="Hypersonic SQL"/>
+            <c:option name="InformixDB" value="InformixDB"/>
+            <c:option name="Ingres" value="Ingres"/>
+            <c:option name="InterBase" value="InterBase"/>
+            <c:option name="MaxDB" value="MaxDB"/>
+            <c:option name="McKoi" value="McKoi"/>
+            <c:option name="Mimer SQL" value="Mimer SQL"/>
+            <c:option name="MS SQLSERVER" value="MS SQLSERVER"/>
+            <c:option name="MS SQLSERVER2000" value="MS SQLSERVER2000"/>
+            <c:option name="Oracle7" value="Oracle7"/>
+            <c:option name="Oracle8" value="Oracle8"/>
+            <c:option name="Oracle9i" value="Oracle9i"/>
+            <c:option name="PointBase" value="PointBase"/>
+            <c:option name="PostgreSQL" value="PostgreSQL"/>
+            <c:option name="PostgreSQL 7.2" value="PostgreSQL 7.2"/>
+            <c:option name="PostgreSQL 8.0" value="PostgreSQL 8.0"/>            
+            <c:option name="SapDB" value="SapDB"/>
+            <c:option name="SOLID" value="SOLID"/>
+            <c:option name="Sybase" value="Sybase"/>
+        </c:property-options>
+    </c:simple-property>
+
+    <c:simple-property name="use-java-context"
+                       displayName="Use Java Context"
+                       type="boolean" defaultValue="true"
+                       required="false">
+        <c:description>
+            Indicates whether the JNDI name should be bound under the "java" context,
+            which causes the DataSource to only be accessible from within the JBossAS VM.
+            The default is Yes.
+        </c:description>
+    </c:simple-property>
+
+    <c:simple-property name="use-strict-min" type="boolean" required="false">
+        <c:description>
+             Whether idle connections below the min-pool-size should be closed. The default is No.
+        </c:description>
+    </c:simple-property>
+
+    <c:simple-property name="validate-on-match" type="boolean" required="false" defaultValue="true">
+        <c:description>
+            The validate-on-match element indicates whether or not connection level validation should be done when a
+            connection factory attempts to match a managed connection for a given set. This is typically exclusive to
+            the use of background validation. The default is Yes.
+        </c:description>
+    </c:simple-property>
+'>
+
+<!ENTITY datasourceAdvancedResourceConfigProps '
+    <c:simple-property name="check-valid-connection-sql" type="longString"
+                       displayName="Check Valid Connection SQL" required="false">
+        <c:description>The SQL statement to use to check the validity of a pool connection.</c:description>
+    </c:simple-property>
+
+    <c:simple-property required="false" name="connection-definition">
+        <c:description>
+            The connection definition inside the RAR deployment uniquely identified by the connection factory interface,
+            e.g. "javax.sql.DataSource".
+        </c:description>
+    </c:simple-property>
+
+    <c:simple-property name="exception-sorter-class-name" type="string" activationPolicy="immediate"
+                       displayName="Exception Sorter Class Name" required="false">
+        <c:description>
+            The fully qualified name of a Java class to use to check if an exception should be broadcast.
+        </c:description>
+    </c:simple-property>
+
+    <c:simple-property name="new-connection-sql" type="longString" activationPolicy="immediate"
+                       displayName="New Connection SQL" required="false">
+        <c:description>
+            An SQL statement to execute whenever a new connection is added to the pool; this can be used to set the
+            connection schema, etc.
+        </c:description>
+    </c:simple-property>
+
+    <c:simple-property name="prepared-statement-cache-size" type="integer"
+                       displayName="Prepared Statement Cache Size" required="false" defaultValue="0">
+        <c:description>
+            The number of prepared statements per connection to be kept open and reused in subsequent requests. They are
+            stored in an LRU cache. Set to 0 to disable the cache. The default is 0.
+        </c:description>
+        <c:constraint>
+            <c:integer-constraint minimum="0"/>
+        </c:constraint>
+    </c:simple-property>
+
+    <c:simple-property name="query-timeout"
+                       displayName="Query Timeout"
+                       type="integer"
+                       units="seconds"
+                       required="false">
+        <c:description>
+            Any configured query timeout in seconds. A value of 0 means no timeout. The default is 0.
+        </c:description>
+    </c:simple-property>
+
+    <c:simple-property name="rar-name" required="false">
+        <c:description>
+             The RAR deployment to associate with the connection manager MBean. e.g. jms-ra.rar or
+             myapplication.ear#my.rar for nested rars.
+        </c:description>
+    </c:simple-property>
+
+    <c:simple-property name="set-tx-query-timeout"
+                       displayName="Set Tx Query Timeout"
+                       type="boolean"
+                       required="false"
+                       defaultValue="false">
+        <c:description>
+            Whether to set the query timeout based on the time remaining until transaction timeout;
+            any configured query timeout will be used if there is no transaction. The default is No.
+        </c:description>
+    </c:simple-property>
+
+    <c:simple-property name="share-prepared-statements" displayName="Share Prepared Statements"
+                       type="boolean"
+                       required="false" defaultValue="false">
+        <c:description>
+            Should prepared statements be shared? The default is No.
+        </c:description>
+    </c:simple-property>
+
+    <c:simple-property name="stale-connection-checker-class-name"
+                       displayName="Stale Connection Checker Class Name"
+                       type="string"
+                       required="false">
+        <c:description>
+            Fully qualified name of the Java class used to check if a connection has become stale.
+        </c:description>
+    </c:simple-property>
+
+    <c:simple-property name="track-statements" type="string"
+                       displayName="Track Statements" required="false">
+        <c:description>
+            Whether to check for unclosed Statements and ResultSets when connections are returned to the pool. The
+            default is "yes-no-warnings".
+        </c:description>
+        <c:property-options>
+            <c:option name="No" value="no"/>
+            <c:option name="Yes" value="yes"/>
+            <c:option name="Yes, but no warnings" value="yes-no-warnings" default="true"/>
+        </c:property-options>
+    </c:simple-property>
+
+    <c:simple-property name="transaction-isolation" required="false"
+                       description="The Transaction Isolation level. The default setting is to use whichever isolation level is provided by default by the database.">
+        <c:property-options>
+            <c:option value="TRANSACTION_READ_UNCOMMITTED" name="Read Uncommitted"/>
+            <c:option value="TRANSACTION_READ_COMMITTED" default="true" name="Read Committed"/>
+            <c:option value="TRANSACTION_REPEATABLE_READ" name="Repeatable Read"/>
+            <c:option value="TRANSACTION_SERIALIZABLE" name="Serializable"/>
+            <c:option value="TRANSACTION_NONE" name="None"/>
+        </c:property-options>
+    </c:simple-property>
+
+    <c:simple-property name="url-delimiter" required="false">
+        <c:description>
+             Specifies the delimiter for URLs in connection-url for HA datasources.
+        </c:description>
+    </c:simple-property>
+
+    <c:simple-property name="url-selector-strategy-class-name" required="false">
+        <c:description>
+             The fully qualified class name of a class that implements the
+             org.jboss.resource.adapter.jdbc.URLSelectorStrategy interface.
+        </c:description>
+    </c:simple-property>
+
+    <c:simple-property name="use-try-lock" type="long" required="false" defaultValue="0">
+        <c:description>
+            Any configured timeout, in milliseconds, for internal locks on the resource adapter objects. A value of 0
+            means no timeout. The default is 0.
+        </c:description>
+    </c:simple-property>
+
+    <c:simple-property name="valid-connection-checker-class-name" type="string"
+                       displayName="Valid Connection Checker Class Name" required="false">
+        <c:description>
+            Fully qualified name of the Java class used to validate if a connection is valid.
+        </c:description>
+    </c:simple-property>
+'>
+
+<!ENTITY nonXaDatasourceConnectionResourceConfigProps '
+    <c:simple-property name="driver-class"
+                       displayName="JDBC Driver Class"
+                       description="The fully qualified name of the JDBC driver class."
+                       type="string"
+                       activationPolicy="immediate"/>
+
+    <c:simple-property name="connection-url"
+                       displayName="Connection URL"
+                       description="The JDBC driver URL string."
+                       type="string"
+                       activationPolicy="immediate"/>
+
+    <c:map-property name="connection-properties" required="false"
+                    description="Arbitrary connection properties that should be passed to the java.sql.Driver.connect(url, props) method."/>
+'>
+
+<!ENTITY nonXaDatasourceOracleTemplateProps '
+    <c:simple-property name="driver-class" default="oracle.jdbc.driver.OracleDriver"/>
+    <c:simple-property name="connection-url" default="jdbc:oracle:oci:@youroracle-tns-name"/>
+    <c:simple-property name="exception-sorter-class-name"
+                       default="org.jboss.resource.adapter.jdbc.vendor.OracleExceptionSorter"/>
+    <c:simple-property name="check-valid-connection-sql" default="SELECT * FROM DUAL"/>
+    <c:simple-property name="type-mapping" default="oracle.jdbc.driver.OracleDriver"/>
+    <c:simple-property name="use-try-lock" default="60000"/>
+    <c:map-property name="metadata">
+        <c:simple-property name="typeMapping" default="Oracle9i"/>
+    </c:map-property>
+    <c:simple-property name="type-mapping" default="Oracle9i"/>
+'>
+
+<!--
+   See:
+       https://anonsvn.jboss.org/repos/jbossas/trunk/connector/src/main/org/jboss/resource/metadata/mcf/ManagedConnectionFactoryDeploymentMetaData.java
+       http://www.jboss.org/community/wiki/ConfigJCACommon
+ -->
+
+<!ENTITY connectionFactoryConnectionResourceConfigProps '
+    <c:simple-property required="true" name="jndi-name" displayName="JNDI Name"
+                       description="The global JNDI name to bind the connection factory under."/>
+
+    <c:simple-property required="true" name="rar-name" displayName="RAR Name">
+        <c:description>
+            The name of the RAR file that contains the definition for the resource we want to provide. For nested RAR
+            files, the name would look like myapplication.ear#my.rar.
+        </c:description>
+    </c:simple-property>
+
+    <c:simple-property required="true" name="connection-definition">
+        <c:description>
+            The connection factory interface class. It should match the connectionfactory-interface in the ra.xml file.
+        </c:description>
+    </c:simple-property>
+
+'>
+
+
+<!ENTITY connectionFactoryAdvancedResourceConfigProps '
+    <c:list-property required="false" name="config-property">
+        <c:description>
+            Properties to supply to the ManagedConnectionFactory (MCF) MBean service configuration.
+        </c:description>
+        <c:map-property name="config-property">
+            <c:simple-property name="name" description="The name of the configuration property." />
+            <c:simple-property name="type" description="The type of the configuration property.">
+                <c:property-options>
+                    <c:option value="java.lang.String" default="true"/>
+                    <c:option value="java.lang.Boolean"/>
+                    <c:option value="java.lang.Integer"/>
+                    <c:option value="java.lang.Double"/>
+                    <c:option value="java.lang.Byte"/>
+                    <c:option value="java.lang.Short"/>
+                    <c:option value="java.lang.Long"/>
+                    <c:option value="java.lang.Float"/>
+                    <c:option value="java.lang.Character"/> 
+                </c:property-options>
+            </c:simple-property>
+            <c:simple-property name="value" required="false" description="The value of the configuration property." />
+        </c:map-property>
+    </c:list-property>
+'>
+
+<!ENTITY connectionFactoryMetrics '
+    <!-- Traits -->
+    <metric property="poolJndiName" displayType="summary" displayName="Pool JNDI Name" defaultOn="true"
+            defaultInterval="600000" dataType="trait" category="performance"/>
+
+    <!-- Numerics -->
+    <metric property="availableConnectionCount" measurementType="dynamic" displayType="summary"
+            displayName="Available Connection Count" description="Number of available connections."
+            defaultOn="true" defaultInterval="60000" dataType="measurement" category="performance"/>
+
+    <metric property="connectionCount" measurementType="dynamic" displayType="summary"
+            displayName="Connection Count" defaultOn="true" defaultInterval="60000" dataType="measurement"
+            category="performance"/>
+
+    <metric property="connectionCreatedCount" measurementType="dynamic" displayType="detail"
+            displayName="Connection Created Count" defaultOn="true" defaultInterval="60000"
+            dataType="measurement" category="performance"/>
+
+    <metric property="connectionDestroyedCount" measurementType="dynamic" displayType="detail"
+            displayName="Connection Destroyed Count" defaultOn="true" defaultInterval="60000"
+            dataType="measurement" category="performance"/>
+
+    <metric property="inUseConnectionCount" measurementType="dynamic" displayType="detail"
+            displayName="In Use Connection Count" description="Mumber of connections currently in use."
+            defaultOn="true" defaultInterval="60000" dataType="measurement" category="performance"/>
+
+    <metric property="maxConnectionsInUseCount" measurementType="dynamic" displayType="detail"
+            displayName="Max Connections In Use Count" description="Maximum number of maximum connections that have been in use."
+            defaultOn="true" defaultInterval="60000" dataType="measurement" category="performance"/>
+
+    <metric property="maxSize" measurementType="dynamic" displayType="detail" displayName="Max Size"
+            defaultOn="true" defaultInterval="60000" dataType="measurement" category="performance"/>
+
+    <metric property="minSize" measurementType="dynamic" displayType="detail" displayName="Min Size"
+            defaultOn="true" defaultInterval="60000" dataType="measurement" category="performance"/>
+'>
+
+<!-- These are the operations that both Topics and Queues have. -->
+<!ENTITY destinationOperations '
+    <operation name="removeAllMessages" displayName="Remove All Messages" description="Remove all messages from the destination."/>
+
+    <operation name="start" displayName="Start" description="Start the destination."/>
+
+    <operation name="stop" displayName="Stop" description="Stop the destination."/>
+'>
+
+<!ENTITY deploymentResourceConfigProps '
+    <c:simple-property type="boolean" required="false" name="blackList"/>
+    <c:simple-property type="boolean" required="false" name="cache"/>
+    <c:simple-property required="false" name="domain"/>
+    <c:simple-property required="false" name="excluded"/>
+    <c:simple-property required="false" name="excludedExport"/>
+    <c:simple-property required="false" name="exportAll">
+        <c:property-options>
+            <c:option name="all" value="ALL"/>
+            <c:option name="non-empty" value="NON_EMPTY"/>
+        </c:property-options>
+    </c:simple-property>
+    <c:simple-property type="boolean" required="false" name="importAll"/>
+    <c:simple-property required="false" name="included"/>
+    <c:simple-property required="false" name="name"/>
+    <c:simple-property required="false" name="parentDomain"/>
+    <c:simple-property type="boolean" required="false" name="parentFirst"/>
+    <c:simple-property required="false" name="version"/>
+'>
+
+<!--<c:simple-property name="deployDirectory" type="string" required="true" default="deploy"
+                              description="Path of the directory where the EAR should be deployed (e.g. "deploy" or "farm") - relative to the AS configuration set directory (e.g. /opt/jboss-5.1.0.CR1/server/default)."/>-->
+           
+<!ENTITY deploymentContentConfigProps '
+    <configuration>
+        <c:group name="deployment" displayName="Deployment Options">
+           <c:simple-property name="deployExploded" type="boolean" required="true" default="false"
+                              description="Should the archive be deployed in exploded form (i.e. as a directory)"/>
+        </c:group>
+    </configuration>
+'>
+
+<!ENTITY webApplicationMetrics '
+    <metric property="contextRoot"
+            dataType="trait" displayType="summary"
+            description="this context root of this WAR - used as a unique path prefix for URLs corresponding to this WAR"/>
+
+    <metric property="virtualHosts"
+            dataType="trait" displayType="summary"
+            description="the virtual hosts to which this WAR is deployed"/>
+'>
+
+<!ENTITY webApplicationContextMetrics '
+    <metric property="virtualHost"
+            dataType="trait" displayType="summary"
+            description="the virtual host with which this context is associated"/>
+
+    <!--
+    <metric property="responseTime"
+            dataType="calltime" defaultOn="false" units="milliseconds" destinationType="URL"
+            description="the minimum, maximum, and average response times for requests serviced by this webapp"/>
+    -->
+
+    <metric property="activeSessions"
+           displayName="Currently Active Sessions"
+           units="none" description="the number of sessions that are currently active for this WAR" />
+
+    <metric property="maxActive" displayName="Maximum Active Sessions"
+           units="none" description="the maximum number of sessions that have been active for this WAR" />
+
+    <metric property="sessionCounter" displayName="Created Sessions"
+           units="none" description="the number of sessions created for this WAR"
+           measurementType="trendsup" />
+
+    <metric property="expiredSessions" displayName="Expired Sessions"
+           units="none" description="the number of expired sessions for this WAR"
+           measurementType="trendsup" />
+
+    <metric property="rejectedSessions" displayName="Rejected Sessions"
+           units="none" description="the number of sessions rejected for this WAR"
+           measurementType="trendsup" />
+
+    <metric property="sessionAverageAliveTime" displayName="Average Session Alive Time"
+           units="seconds" description="the average alive time of sessions for this WAR" />
+
+    <metric property="sessionMaxAliveTime" displayName="Max Session Alive Time"
+           units="seconds" description="the maximum alive time of sessions for this WAR" />
+
+    <metric property="Servlet.minimumResponseTime" displayName="Minimum Response Time"
+            units="milliseconds"
+            description="the minimum response time for requests serviced by this WAR"/>
+
+    <metric property="Servlet.averageResponseTime" displayName="Average Response Time"
+            units="milliseconds"
+            description="the average response time for requests serviced by this WAR"/>
+
+    <metric property="Servlet.maximumResponseTime" displayName="Maximum Response Time"
+            units="milliseconds"
+            description="the maximum response time for requests serviced by this WAR"/>
+
+    <metric property="Servlet.totalResponseTime" displayName="Total Response Time"
+        units="milliseconds" measurementType="trendsup"
+        description="the total response time for requests serviced by this WAR"/>
+
+    <metric property="Servlet.requestCount" displayName="Number of Requests Serviced"
+           units="none" description="the number of requests serviced by this WAR"
+           measurementType="trendsup" displayType="summary"/>
+
+    <metric property="Servlet.errorCount" displayName="Number of Error Responses"
+           units="none" description="the number of error responses sent by this WAR"
+           measurementType="trendsup" displayType="summary"/>
+'>
+
+]>
+
+	<!--
+		############################################# END OF XML ENTITIES
+		###############################################
+	-->
+
+
 
 <plugin name="TeiidPlugin" displayName="Teiid Plugin" package="org.teiid.rhq.plugin"
 	version="2.0.0" description="Supports management and monitoring of JBoss Teiid"
@@ -449,12 +1200,11 @@
 							<c:simple-property name="sourceName"
 								displayName="Source Name" description="Source name for this model"
 								required="false" readOnly="true" />
-                            <c:simple-property name="translatorName"
-                                displayName="Translator Name" description="Name of the translator"
-                                required="true" />                                
-							<c:simple-property name="jndiName"
-								displayName="Connection JNDI Name" description="JNDI name for this connection"
-								required="false" />
+							<c:simple-property name="translatorName"
+								displayName="Translator Name" description="Name of the translator"
+								required="true" />
+							<c:simple-property name="jndiName" displayName="Connection JNDI Name"
+								description="JNDI name for this connection" required="false" />
 							<c:simple-property name="visibility"
 								displayName="Visible" description="Visibility of the model"
 								required="true" type="boolean">
@@ -465,6 +1215,20 @@
 								required="true" default="true" type="boolean" />
 						</c:map-property>
 					</c:list-property>
+
+					<c:list-property name="multisourceModels"
+						description="The multi-source model sources for this VDB">
+						<c:map-property name="model">
+							<c:simple-property name="name" displayName="Name"
+								description="Name of the model" required="true" />
+							<c:simple-property name="sourceName"
+								displayName="Source Name" description="Source name for this model" />
+							<c:simple-property name="jndiName"
+								displayName="Connector Binding JNDI Name" description="JNDI name for this connector binding"
+								required="false" />
+						</c:map-property>
+					</c:list-property>
+
 					<c:list-property name="logicalModels" readOnly="true"
 						description="The logical models for this VDB">
 						<c:map-property name="model">
@@ -491,6 +1255,12 @@
 				</c:group>
 			</resource-configuration>
 
+		</service>
+
+		<service name="Translators" description="Teiid Translators"
+			class="TranslatorComponent" discovery="TranslatorDiscoveryComponent">
+
+			&translatorConfiguration;
 
 		</service>
 
