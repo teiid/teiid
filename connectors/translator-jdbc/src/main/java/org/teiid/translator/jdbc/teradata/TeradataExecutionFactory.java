@@ -25,16 +25,16 @@ package org.teiid.translator.jdbc.teradata;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.translator.jdbc.JDBCCapabilities;
+import org.teiid.translator.jdbc.JDBCExecutionFactory;
 
 
 
 /** 
  * for Teradata database Release V2R5.1
  */
-public class TeradataCapabilities extends JDBCCapabilities {
+public class TeradataExecutionFactory extends JDBCExecutionFactory {
 
-    public TeradataCapabilities() {
+    public TeradataExecutionFactory() {
     }
     
     /* 

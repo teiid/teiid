@@ -21,11 +21,11 @@
  */
 package org.teiid.deployers;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.junit.Test;
 import org.teiid.adminapi.impl.TranslatorMetaData;
-import org.teiid.translator.BasicExecutionFactory;
+import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorProperty;
 
 @SuppressWarnings("nls")
@@ -35,18 +35,17 @@ public class TestTranslatorDeployer {
 	public void testBuildExecutionFactory() throws Exception {
 		TranslatorMetaData tm = new TranslatorMetaData();
 		
-		tm.setCapabilitiesClass("capabilities");
 		tm.setXaCapable(true);
 		tm.addProperty("my-property", "correctly-assigned");
 		
 		TranslatorDeployer td = new TranslatorDeployer();
 		MyTranslator my = (MyTranslator)td.buildTranslator(MyTranslator.class.getName(), tm);
 		
-		assertEquals("capabilities", my.getCapabilitiesClass());
+		assertTrue(my.isXaCapable());
 		assertEquals("correctly-assigned", my.getMyProperty());
 	}
 	
-	public static class MyTranslator extends BasicExecutionFactory {
+	public static class MyTranslator extends ExecutionFactory {
 		String mine;
 		
 		@TranslatorProperty(name="my-property")

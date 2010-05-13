@@ -22,29 +22,44 @@
 
 package org.teiid.translator.yahoo;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.BasicExecutionFactory;
-import org.teiid.translator.ConnectorCapabilities;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ResultSetExecution;
 
-public class YahooExecutionFactory extends BasicExecutionFactory {
+public class YahooExecutionFactory extends ExecutionFactory {
 
+	public static final int YAHOO_MAX_SET_SIZE = 100;
+	
     @Override
     public void start() throws ConnectorException {
     }
 
     @Override
-    public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
-    	return YahooCapabilities.class;
-    }
-    
-    @Override
     public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory)
     		throws ConnectorException {
     	return new YahooExecution((Select)command, metadata);
     }    
+    
+    public List getSupportedFunctions() {
+        return Collections.EMPTY_LIST;
+    }
+
+    public boolean supportsCompareCriteriaEquals() {
+        return true;
+    }
+
+    public boolean supportsInCriteria() {
+        return true;
+    }
+
+    public int getMaxInCriteriaSize() {
+        return YAHOO_MAX_SET_SIZE;
+    }
 }

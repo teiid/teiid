@@ -26,19 +26,17 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.translator.ConnectorException;
-import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.TranslationHelper;
-import org.teiid.translator.jdbc.mysql.MySQLTranslator;
 
 /**
  */
 public class TestMySQLTranslator {
 
-    private static MySQLTranslator TRANSLATOR; 
+    private static MySQLExecutionFactory TRANSLATOR; 
     
     @BeforeClass public static void oneTimeSetup() throws ConnectorException {
-        TRANSLATOR = new MySQLTranslator();        
-        TRANSLATOR.initialize(new JDBCExecutionFactory());
+        TRANSLATOR = new MySQLExecutionFactory();        
+        TRANSLATOR.start();
     }
 
     private String getTestVDB() {

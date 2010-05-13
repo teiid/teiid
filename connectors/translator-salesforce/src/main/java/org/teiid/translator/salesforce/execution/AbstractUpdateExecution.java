@@ -27,7 +27,6 @@ import org.teiid.language.Command;
 import org.teiid.language.Comparison;
 import org.teiid.language.Condition;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.BasicExecution;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -46,7 +45,7 @@ import com.sforce.soap.partner.sobject.SObject;
  * get IDs of Salesforce objects.
  *
  */
-public abstract class AbstractUpdateExecution extends BasicExecution implements UpdateExecution {
+public abstract class AbstractUpdateExecution implements UpdateExecution {
 
 	protected SalesforceConnection connection;
 	protected RuntimeMetadata metadata;

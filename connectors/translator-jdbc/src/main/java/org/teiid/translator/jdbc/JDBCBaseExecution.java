@@ -35,14 +35,14 @@ import org.teiid.language.Literal;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.translator.BasicExecution;
 import org.teiid.translator.ConnectorException;
+import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
 
 
 /**
  */
-public abstract class JDBCBaseExecution extends BasicExecution  {
+public abstract class JDBCBaseExecution implements Execution  {
 
     // ===========================================================================================================================
     // Fields
@@ -50,8 +50,8 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
 
     // Passed to constructor
     protected Connection connection;
-    protected Translator sqlTranslator;
     protected ExecutionContext context;
+    protected JDBCExecutionFactory executionFactory;
 
     // Derived from properties
     protected boolean trimString;
@@ -65,17 +65,18 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
     // Constructors
     // ===========================================================================================================================
 
-    protected JDBCBaseExecution(Connection connection, ExecutionContext context, JDBCExecutionFactory env, Translator translator) {
+    protected JDBCBaseExecution(Connection connection, ExecutionContext context, JDBCExecutionFactory jef) {
         this.connection = connection;
-        this.sqlTranslator = translator;
         this.context = context;
 
-        trimString = env.isTrimStrings();
-        fetchSize = (env.getFetchSize() != -1)?env.getFetchSize():context.getBatchSize();
-        maxResultRows = env.getMaxResultRows();
+        this.executionFactory = jef;
+        
+        trimString = jef.isTrimStrings();
+        fetchSize = (jef.getFetchSize() != -1)?jef.getFetchSize():context.getBatchSize();
+        maxResultRows = jef.getMaxResultRows();
       
         //if the connector work needs to throw an excpetion, set the size plus 1
-        if (maxResultRows > 0 && env.isExceptionOnMaxRows()) {
+        if (maxResultRows > 0 && jef.isExceptionOnMaxRows()) {
         	maxResultRows++;
         }
         if (maxResultRows > 0) {
@@ -97,7 +98,7 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
 	            	value = ((List<?>)value).get(row);
 	            }
 	            Class<?> paramType = paramValue.getType();
-	            sqlTranslator.bindValue(stmt, value, paramType, i+1);
+	            this.executionFactory.bindValue(stmt, value, paramType, i+1);
 	        }
 	        if (rowCount > 1) {
             	stmt.addBatch();
@@ -110,7 +111,7 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
     // ===========================================================================================================================
 
     protected TranslatedCommand translateCommand(Command command) throws ConnectorException {
-        TranslatedCommand translatedCommand = new TranslatedCommand(context, sqlTranslator);
+        TranslatedCommand translatedCommand = new TranslatedCommand(context, this.executionFactory);
         translatedCommand.translateCommand(command);
 
         if (translatedCommand.getSql() != null && LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {
@@ -198,10 +199,6 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
     public Connection getConnection() {
         return this.connection;
     }
-    
-    public Translator getSqlTranslator() {
-		return sqlTranslator;
-	}
     
     public void addStatementWarnings() throws SQLException {
     	SQLWarning warning = this.statement.getWarnings();

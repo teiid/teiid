@@ -44,7 +44,6 @@ import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
-import org.teiid.translator.BasicExecution;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -59,7 +58,7 @@ import org.w3c.dom.Element;
 import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
 
-public class QueryExecutionImpl extends BasicExecution implements ResultSetExecution {
+public class QueryExecutionImpl implements ResultSetExecution {
 
 	private SalesforceConnection connection;
 

@@ -33,9 +33,6 @@ import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.jdbc.ModFunctionModifier;
-import org.teiid.translator.jdbc.SQLConversionVisitor;
-import org.teiid.translator.jdbc.Translator;
 
 /**
  * Test <code>ModFunctionModifier</code> by invoking its methods with varying 
@@ -90,16 +87,15 @@ public class TestModFunctionModifier extends TestCase {
     	Function func = LANG_FACTORY.createFunction(modFunctionName,
             Arrays.asList(param1, param2), param1.getType());
 
-    	Translator trans = new Translator() {
+    	JDBCExecutionFactory trans = new JDBCExecutionFactory() {
 			@Override
-			public void initialize(JDBCExecutionFactory env)
-					throws ConnectorException {
-				super.initialize(env);
+			public void start() throws ConnectorException {
+				super.start();
 				registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier(modFunctionName, getLanguageFactory()));
 			}
     	};
     	
-        trans.initialize(new JDBCExecutionFactory());
+        trans.start();
 
         SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
         sqlVisitor.append(func);  

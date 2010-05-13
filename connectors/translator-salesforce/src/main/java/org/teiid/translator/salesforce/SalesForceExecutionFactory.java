@@ -22,6 +22,9 @@
 
 package org.teiid.translator.salesforce;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
@@ -29,9 +32,9 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ConnectorCapabilities;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.MetadataProvider;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
@@ -44,7 +47,7 @@ import org.teiid.translator.salesforce.execution.QueryExecutionImpl;
 import org.teiid.translator.salesforce.execution.UpdateExecutionImpl;
 
 
-public class SalesForceExecutionFactory extends org.teiid.translator.BasicExecutionFactory implements MetadataProvider {
+public class SalesForceExecutionFactory extends ExecutionFactory implements MetadataProvider {
 
 	private String connectorStateClass;
 	private boolean auditModelFields = false;	
@@ -74,11 +77,6 @@ public class SalesForceExecutionFactory extends org.teiid.translator.BasicExecut
 
 
 	@Override
-    public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
-    	return SalesforceCapabilities.class;
-    }	
-	
-	@Override
 	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory)
 			throws ConnectorException {
 		return new QueryExecutionImpl(command, (SalesforceConnection)connectionFactory, metadata, executionContext);
@@ -107,5 +105,75 @@ public class SalesForceExecutionFactory extends org.teiid.translator.BasicExecut
 	public void getConnectorMetadata(MetadataFactory metadataFactory, Object connectionFactory) throws ConnectorException {
 		MetadataProcessor processor = new MetadataProcessor((SalesforceConnection)connectionFactory,metadataFactory, this);
 		processor.processMetadata();
+	}	
+	
+	@Override
+    public int getMaxInCriteriaSize() {
+        return 700;
+    }
+
+    @Override
+    public List getSupportedFunctions() {
+        List<String> supportedFunctions = new ArrayList<String>();
+        supportedFunctions.add("includes"); //$NON-NLS-1$
+        supportedFunctions.add("excludes"); //$NON-NLS-1$
+        return supportedFunctions;
+    }
+
+    @Override
+    public boolean supportsCompareCriteriaEquals() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsInCriteria() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsLikeCriteria() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsRowLimit() {
+        return true;
+    }
+
+    // http://jira.jboss.org/jira/browse/JBEDSP-306
+    // Salesforce supports ORDER BY, but not on all column types
+    @Override
+    public boolean supportsOrderBy() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsAggregatesCountStar() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsNotCriteria() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsOrCriteria() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsCompareCriteriaOrdered() {
+        return true;
+    }
+
+	@Override
+	public SupportedJoinCriteria getSupportedJoinCriteria() {
+		return SupportedJoinCriteria.KEY;
+	}
+
+	@Override
+	public boolean supportsOuterJoins() {
+		return true;
 	}	
 }

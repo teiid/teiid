@@ -31,225 +31,160 @@ import java.util.List;
  * This capabilities class may come in handy for testing and for 
  * sources that support JDBC but don't support extended JDBC capabilities.  
  */
-public class SimpleCapabilities extends JDBCCapabilities {
+public class SimpleJDBCExecutionFactory extends JDBCExecutionFactory {
 
-    public SimpleCapabilities() {
-    }
-    
     @Override
     public int getMaxInCriteriaSize() {
     	return 250;
     }
     
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCompareCriteriaEquals()
-     */
+    @Override
     public boolean supportsCompareCriteriaEquals() {
         return true;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsInCriteria()
-     */
+    @Override
     public boolean supportsInCriteria() {
         return true;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsIsNullCriteria()
-     */
+    @Override
     public boolean supportsIsNullCriteria() {
         return true;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsLikeCriteria()
-     */
+    @Override
     public boolean supportsLikeCriteria() {
         return true;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsNotCriteria()
-     */
+    @Override
     public boolean supportsNotCriteria() {
         return true;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsOrCriteria()
-     */
+    @Override
     public boolean supportsOrCriteria() {
         return true;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsSelectDistinct()
-     */
+    @Override
     public boolean supportsSelectDistinct() {
         return true;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsAliasedGroup()
-     */
+    @Override
     public boolean supportsAliasedGroup() {
         return false;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsSelfJoins()
-     */
+    @Override
     public boolean supportsSelfJoins() {
         return false;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsOuterJoins()
-     */
+    @Override
     public boolean supportsOuterJoins() {
         return false;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsFullOuterJoins()
-     */
+    @Override
     public boolean supportsFullOuterJoins() {
         return false;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsBetweenCriteria()
-     */
+    @Override
     public boolean supportsBetweenCriteria() {
         return false;
     }
 
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsLikeCriteriaEscapeCharacter()
-     */
+    @Override
     public boolean supportsLikeCriteriaEscapeCharacter() {
         return false;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsInCriteriaSubquery()
-     */
+    @Override
     public boolean supportsInCriteriaSubquery() {
         return false;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsExistsCriteria()
-     */
+    @Override
     public boolean supportsExistsCriteria() {
         return false;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsQuantifiedCompareCriteriaSome()
-     */
+    @Override
     public boolean supportsQuantifiedCompareCriteriaSome() {
         return false;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsQuantifiedCompareCriteriaAll()
-     */
+    @Override
     public boolean supportsQuantifiedCompareCriteriaAll() {
         return false;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsOrderBy()
-     */
+    @Override
     public boolean supportsOrderBy() {
         return false;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsAggregatesSum()
-     */
+    @Override
     public boolean supportsAggregatesSum() {
         return false;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsAggregatesAvg()
-     */
+    @Override
     public boolean supportsAggregatesAvg() {
         return false;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsAggregatesMin()
-     */
+    @Override
     public boolean supportsAggregatesMin() {
         return false;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsAggregatesMax()
-     */
+    @Override
     public boolean supportsAggregatesMax() {
         return false;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsAggregatesCount()
-     */
+    @Override
     public boolean supportsAggregatesCount() {
         return false;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsAggregatesCountStar()
-     */
+    @Override
     public boolean supportsAggregatesCountStar() {
         return false;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsAggregatesDistinct()
-     */
+    @Override
     public boolean supportsAggregatesDistinct() {
         return false;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsScalarSubqueries()
-     */
+    @Override
     public boolean supportsScalarSubqueries() {
         return false;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCorrelatedSubqueries()
-     */
+    @Override
     public boolean supportsCorrelatedSubqueries() {
         return false;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCaseExpressions()
-     */
+    @Override
     public boolean supportsCaseExpressions() {
         return false;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsSearchedCaseExpressions()
-     */
+    @Override
     public boolean supportsSearchedCaseExpressions() {
         return false;
     }
 
-    /**
-     * Return null to indicate no functions are supported.
-     * @return null 
-     * @see org.teiid.translator.ConnectorCapabilities#getSupportedFunctions()
-     */
+    @Override
     public List getSupportedFunctions() {
         return null;
     }
@@ -258,10 +193,7 @@ public class SimpleCapabilities extends JDBCCapabilities {
         return false;
     }       
 
-    /** 
-     * @see org.teiid.translator.ConnectorCapabilities#supportsUnions()
-     * @since 4.2
-     */
+    @Override
     public boolean supportsUnions() {
         return false;
     }
@@ -270,5 +202,4 @@ public class SimpleCapabilities extends JDBCCapabilities {
     public boolean supportsInsertWithQueryExpression() {
     	return false;
     }
-
 }

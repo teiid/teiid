@@ -32,9 +32,7 @@ import org.teiid.language.LanguageFactory;
 import org.teiid.language.Literal;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
-import org.teiid.translator.jdbc.oracle.OracleSQLTranslator;
 
 
 /**
@@ -56,8 +54,8 @@ public class TestDayWeekQuarterFunctionModifier extends TestCase {
             Arrays.asList(c),
             String.class);
         
-        OracleSQLTranslator trans = new OracleSQLTranslator();
-        trans.initialize(new JDBCExecutionFactory());
+        OracleExecutionFactory trans = new OracleExecutionFactory();
+        trans.start();
         
         SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
         sqlVisitor.append(func);  

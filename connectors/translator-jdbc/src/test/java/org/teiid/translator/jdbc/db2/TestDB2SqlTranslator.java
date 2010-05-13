@@ -31,10 +31,8 @@ import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Command;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
-import org.teiid.translator.jdbc.db2.DB2SQLTranslator;
 
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
@@ -43,12 +41,12 @@ import com.metamatrix.cdk.unittest.FakeTranslationFactory;
  */
 public class TestDB2SqlTranslator {
 
-    private static DB2SQLTranslator TRANSLATOR; 
+    private static DB2ExecutionFactory TRANSLATOR; 
 
     @BeforeClass
     public static void setUp() throws ConnectorException {
-        TRANSLATOR = new DB2SQLTranslator();        
-        TRANSLATOR.initialize(new JDBCExecutionFactory());
+        TRANSLATOR = new DB2ExecutionFactory();        
+        TRANSLATOR.start();
     }
     
     public String getTestVDB() {

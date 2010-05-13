@@ -144,9 +144,8 @@ public class ConnectorManager  {
     	}
 
     	checkStatus();
-    	ExecutionFactory connector = getExecutionFactory();
-    	ConnectorCapabilities caps = connector.getCapabilities();
-        BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(caps, this.connectorId, connector.isXaCapable());
+    	ExecutionFactory translator = getExecutionFactory();
+        BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(translator, this.connectorId, translator.isXaCapable());
     	resultCaps.setScope(Scope.SCOPE_GLOBAL);
     	cachedCapabilities = resultCaps;
         return resultCaps;

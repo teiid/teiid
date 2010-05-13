@@ -47,8 +47,8 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
      * @param props
      * @param id
      */
-	public JDBCProcedureExecution(Command command, Connection connection, ExecutionContext context, JDBCExecutionFactory env, Translator translator) {
-        super(command, connection, context, env, translator);
+	public JDBCProcedureExecution(Command command, Connection connection, ExecutionContext context, JDBCExecutionFactory env) {
+        super(command, connection, context, env);
     }
 
     @Override
@@ -64,7 +64,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
         try{
             //create parameter index map
             CallableStatement cstmt = getCallableStatement(sql);
-            this.results = sqlTranslator.executeStoredProcedure(cstmt, translatedComm, procedure.getReturnType());
+            this.results = this.executionFactory.executeStoredProcedure(cstmt, translatedComm, procedure.getReturnType());
             addStatementWarnings();
         }catch(SQLException e){
             throw new ConnectorException(e, JDBCPlugin.Util.getString("JDBCQueryExecution.Error_executing_query__1", sql)); //$NON-NLS-1$
@@ -108,7 +108,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
 
 	private void addParameterValue(List<Object> result, int paramIndex,
 			Class<?> type) throws SQLException {
-		Object value = sqlTranslator.retrieveValue((CallableStatement)this.statement, paramIndex, type);
+		Object value = this.executionFactory.retrieveValue((CallableStatement)this.statement, paramIndex, type);
 		result.add(value);
 	}
     

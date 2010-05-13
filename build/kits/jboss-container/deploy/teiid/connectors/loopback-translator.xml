@@ -2,6 +2,6 @@
 <translator-factory>
     <translator>
         <name>loopback</name>
-        <execution-factory-class>org.teiid.resource.adapter.loopback.LoopbackExecutionFactory</execution-factory-class>
+        <execution-factory-class>org.teiid.translator.loopback.LoopbackExecutionFactory</execution-factory-class>
     </translator>
 </translator-factory>

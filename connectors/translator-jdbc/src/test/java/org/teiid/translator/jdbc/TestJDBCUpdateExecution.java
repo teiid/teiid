@@ -33,9 +33,6 @@ import org.teiid.language.ExpressionValueSource;
 import org.teiid.language.Insert;
 import org.teiid.language.Literal;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.jdbc.JDBCExecutionFactory;
-import org.teiid.translator.jdbc.JDBCUpdateExecution;
-import org.teiid.translator.jdbc.Translator;
 
 public class TestJDBCUpdateExecution {
 
@@ -54,10 +51,9 @@ public class TestJDBCUpdateExecution {
 		Mockito.stub(p.executeBatch()).toReturn(new int [] {1, 1});
 		Mockito.stub(connection.prepareStatement("INSERT INTO SmallA (IntKey, IntNum) VALUES (?, ?)")).toReturn(p); //$NON-NLS-1$
 		
-		JDBCExecutionFactory config = Mockito.mock(JDBCExecutionFactory.class);
-		Mockito.stub(config.getTranslator()).toReturn(new Translator());
+		JDBCExecutionFactory config = new JDBCExecutionFactory();
 		
-		JDBCUpdateExecution updateExecution = new JDBCUpdateExecution(command, connection, Mockito.mock(ExecutionContext.class), config, config.getTranslator());
+		JDBCUpdateExecution updateExecution = new JDBCUpdateExecution(command, connection, Mockito.mock(ExecutionContext.class), config);
 		updateExecution.execute();
 		Mockito.verify(p, Mockito.times(2)).addBatch();
 	}

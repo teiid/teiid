@@ -20,25 +20,35 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.jdbc;
+/*
+ */
+package org.teiid.translator.jdbc.informix;
 
-import static org.junit.Assert.*;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.junit.Test;
+import org.teiid.translator.ConnectorException;
+import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
-import org.teiid.translator.jdbc.Translator;
-import org.teiid.translator.jdbc.sqlserver.SQLServerSQLTranslator;
-public class TestJDBCExecutionFactory {
 
-	@Test public void testGetExtensionTranslationClassDefault() throws Exception {
-		JDBCExecutionFactory mcf = new JDBCExecutionFactory();
-		assertSame(Translator.class, mcf.getTranslator().getClass());
-	}
-	
-	@Test public void testGetExtensionTranslationClass() throws Exception {
-		JDBCExecutionFactory mcf = new JDBCExecutionFactory();
-		mcf.setExtensionTranslationClassName(SQLServerSQLTranslator.class.getName());
-		assertSame(SQLServerSQLTranslator.class, mcf.getTranslator().getClass());
-	}
-	
+
+/**
+ */
+public class InformixExecutionFactory extends JDBCExecutionFactory {
+
+	@Override
+	public void start() throws ConnectorException {
+		super.start();
+    	registerFunctionModifier(SourceSystemFunctions.CONVERT, new ConvertModifier());
+    }
+
+	@Override
+    public List getSupportedFunctions() {
+        List supportedFunctons = new ArrayList();
+        supportedFunctons.addAll(super.getSupportedFunctions());
+        supportedFunctons.add("CAST"); //$NON-NLS-1$
+        supportedFunctons.add("CONVERT"); //$NON-NLS-1$
+        return supportedFunctons;
+    }
 }

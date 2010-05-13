@@ -33,9 +33,6 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.language.Command;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.jdbc.JDBCExecutionFactory;
-import org.teiid.translator.jdbc.JDBCProcedureExecution;
-import org.teiid.translator.jdbc.Translator;
 
 public class TestJDBCProcedureExecution {
 	
@@ -46,12 +43,9 @@ public class TestJDBCProcedureExecution {
 		Mockito.stub(cs.getUpdateCount()).toReturn(-1);
 		Mockito.stub(cs.getInt(1)).toReturn(5);
 		Mockito.stub(connection.prepareCall("{  call spTest8a(?)}")).toReturn(cs); //$NON-NLS-1$
-		Translator sqlTranslator = new Translator();
+		JDBCExecutionFactory ef = new JDBCExecutionFactory();
 		
-		JDBCExecutionFactory config = Mockito.mock(JDBCExecutionFactory.class);
-		Mockito.stub(config.getTranslator()).toReturn(sqlTranslator);
-		
-		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  config, sqlTranslator);
+		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
 		procedureExecution.execute();
 		assertEquals(Arrays.asList(5), procedureExecution.getOutputParameterValues());
 		Mockito.verify(cs, Mockito.times(1)).registerOutParameter(1, Types.INTEGER);
@@ -63,12 +57,9 @@ public class TestJDBCProcedureExecution {
 		Mockito.stub(cs.getUpdateCount()).toReturn(-1);
 		Mockito.stub(cs.getInt(2)).toReturn(5);
 		Mockito.stub(connection.prepareCall("{  call spTest8(?,?)}")).toReturn(cs); //$NON-NLS-1$
-		Translator sqlTranslator = new Translator();
+		JDBCExecutionFactory config = new JDBCExecutionFactory();
 
-		JDBCExecutionFactory config = Mockito.mock(JDBCExecutionFactory.class);
-		Mockito.stub(config.getTranslator()).toReturn(sqlTranslator);
-		
-		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class), config, sqlTranslator);
+		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class), config);
 		procedureExecution.execute();
 		assertEquals(Arrays.asList(5), procedureExecution.getOutputParameterValues());
 		Mockito.verify(cs, Mockito.times(1)).registerOutParameter(2, Types.INTEGER);

@@ -40,8 +40,6 @@ import org.teiid.language.QueryExpression;
 import org.teiid.language.Argument.Direction;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.BasicExecution;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ProcedureExecution;
@@ -52,7 +50,7 @@ import org.teiid.translator.UpdateExecution;
 /**
  * Represents the execution of a command.
  */
-public class LoopbackExecution extends BasicExecution implements UpdateExecution, ProcedureExecution {
+public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
 
     private static final String ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; //$NON-NLS-1$
 

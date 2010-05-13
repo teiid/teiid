@@ -15,21 +15,14 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
-import org.teiid.translator.BasicConnectorCapabilities;
-import org.teiid.translator.BasicExecutionFactory;
-import org.teiid.translator.ConnectorCapabilities;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
 
 
-public class MockConnector extends BasicExecutionFactory {
-	
-	@Override
-	public ConnectorCapabilities getCapabilities() {
-		return new BasicConnectorCapabilities();
-	}
+public class MockConnector extends ExecutionFactory {
 	
 	
 	@Override

@@ -56,7 +56,7 @@ import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.jdbc.Translator.NullOrder;
+import org.teiid.translator.jdbc.JDBCExecutionFactory.NullOrder;
 
 
 /**
@@ -71,7 +71,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     private static double SCIENTIC_HIGH = Math.pow(10, 7);
     
     private ExecutionContext context;
-    private Translator translator;
+    private JDBCExecutionFactory executionFactory;
 
     private boolean prepared;
     
@@ -82,9 +82,9 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     
     private boolean replaceWithBinding = false;
     
-    public SQLConversionVisitor(Translator translator) {
-        this.translator = translator;
-        this.prepared = translator.usePreparedStatements();
+    public SQLConversionVisitor(JDBCExecutionFactory ef) {
+        this.executionFactory = ef;
+        this.prepared = executionFactory.usePreparedStatements();
     }
     
     @Override
@@ -107,7 +107,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     		} else if (trans instanceof LanguageObject) {
     			obj = (LanguageObject)trans;
     		} else {
-    			parts = translator.translate(obj, context);
+    			parts = executionFactory.translate(obj, context);
     			if (parts != null) {
     				this.translations.put(obj, parts);
     			} else {
@@ -134,8 +134,8 @@ public class SQLConversionVisitor extends SQLStringVisitor{
 	@Override
 	public void visit(SortSpecification obj) {
 		super.visit(obj);
-		NullOrder nullOrder = this.translator.getDefaultNullOrder();
-		if (!this.translator.supportsExplicitNullOrdering() || nullOrder == NullOrder.LOW) {
+		NullOrder nullOrder = this.executionFactory.getDefaultNullOrder();
+		if (!this.executionFactory.supportsExplicitNullOrdering() || nullOrder == NullOrder.LOW) {
 			return;
 		}
 		if (obj.getOrdering() == Ordering.ASC) {
@@ -179,13 +179,13 @@ public class SQLConversionVisitor extends SQLStringVisitor{
                     valuesbuffer.append(obj);
                 }
             } else if(type.equals(TypeFacility.RUNTIME_TYPES.BOOLEAN)) {
-                valuesbuffer.append(translator.translateLiteralBoolean((Boolean)obj));
+                valuesbuffer.append(executionFactory.translateLiteralBoolean((Boolean)obj));
             } else if(type.equals(TypeFacility.RUNTIME_TYPES.TIMESTAMP)) {
-                valuesbuffer.append(translator.translateLiteralTimestamp((Timestamp)obj));
+                valuesbuffer.append(executionFactory.translateLiteralTimestamp((Timestamp)obj));
             } else if(type.equals(TypeFacility.RUNTIME_TYPES.TIME)) {
-                valuesbuffer.append(translator.translateLiteralTime((Time)obj));
+                valuesbuffer.append(executionFactory.translateLiteralTime((Time)obj));
             } else if(type.equals(TypeFacility.RUNTIME_TYPES.DATE)) {
-                valuesbuffer.append(translator.translateLiteralDate((java.sql.Date)obj));
+                valuesbuffer.append(executionFactory.translateLiteralDate((java.sql.Date)obj));
             } else {
                 // If obj is string, toSting() will not create a new String 
                 // object, it returns it self, so new object creation. 
@@ -282,7 +282,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     }
 
     protected String getSourceComment(Command command) {
-    	return this.translator.getSourceComment(this.context, command);
+    	return this.executionFactory.getSourceComment(this.context, command);
     }
     
     /**
@@ -342,31 +342,31 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     
     @Override
     protected boolean useAsInGroupAlias() {
-    	return this.translator.useAsInGroupAlias();
+    	return this.executionFactory.useAsInGroupAlias();
     }
         
     @Override
     protected boolean useParensForSetQueries() {
-    	return translator.useParensForSetQueries();
+    	return executionFactory.useParensForSetQueries();
     }
     	
 	@Override
 	protected String replaceElementName(String group, String element) {
-		return translator.replaceElementName(group, element);
+		return executionFactory.replaceElementName(group, element);
 	}
 	
 	@Override
 	protected void appendSetOperation(Operation operation) {
-		buffer.append(translator.getSetOperationString(operation));
+		buffer.append(executionFactory.getSetOperationString(operation));
 	}
     
 	@Override
     protected boolean useParensForJoins() {
-    	return translator.useParensForJoins();
+    	return executionFactory.useParensForJoins();
     }
 	
 	protected boolean useSelectLimit() {
-		return translator.useSelectLimit();
+		return executionFactory.useSelectLimit();
 	}
 	
 }

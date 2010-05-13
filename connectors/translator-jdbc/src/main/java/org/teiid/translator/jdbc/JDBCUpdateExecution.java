@@ -51,8 +51,8 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
      * @param props
      * @param id
      */
-	public JDBCUpdateExecution(Command command, Connection connection, ExecutionContext context, JDBCExecutionFactory env, Translator translator) {
-        super(connection, context, env, translator);
+	public JDBCUpdateExecution(Command command, Connection connection, ExecutionContext context, JDBCExecutionFactory env) {
+        super(connection, context, env);
         this.command = command;
     }
 

@@ -37,8 +37,6 @@ import org.teiid.language.LanguageObject;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.jdbc.SQLConversionVisitor;
-import org.teiid.translator.jdbc.Translator;
 
 /**
  */
@@ -53,13 +51,12 @@ public class TestSQLConversionVisitor {
                                                                             "PartID",  //$NON-NLS-1$ 
                                                                             "ExecCount");     //$NON-NLS-1$ 
     
-    private static Translator TRANSLATOR; 
+    private static JDBCExecutionFactory TRANSLATOR; 
     
     @BeforeClass public static void oneTimeSetup() throws ConnectorException {
-    	TRANSLATOR = new Translator();
-    	JDBCExecutionFactory env = new JDBCExecutionFactory();
-    	env.setTrimStrings(true);
-    	TRANSLATOR.initialize(env);
+    	TRANSLATOR = new JDBCExecutionFactory();
+    	TRANSLATOR.setTrimStrings(true);
+    	TRANSLATOR.start();
     }
     
     public String getTestVDB() {
@@ -71,13 +68,12 @@ public class TestSQLConversionVisitor {
     }
     
     public void helpTestVisitor(String vdb, String input, String expectedOutput, boolean usePreparedStatement) {
-        Translator trans = new Translator();
-        JDBCExecutionFactory env = new JDBCExecutionFactory();
+    	JDBCExecutionFactory trans = new JDBCExecutionFactory();
         if (usePreparedStatement) {
-        	env.setUseBindVariables(true);
+        	trans.setUseBindVariables(true);
         }
         try {
-			trans.initialize(env);
+			trans.start();
 	        TranslationHelper.helpTestVisitor(vdb, input, expectedOutput, trans);
 		} catch (ConnectorException e) {
 			throw new RuntimeException(e);
@@ -89,9 +85,9 @@ public class TestSQLConversionVisitor {
     private String getStringWithContext(LanguageObject obj) throws ConnectorException {
     	JDBCExecutionFactory env = new JDBCExecutionFactory();
     	env.setUseCommentsInSourceQuery(true);
-        Translator trans = new Translator();
-        trans.initialize(env);
-        SQLConversionVisitor visitor = trans.getSQLConversionVisitor();
+        env.start();
+        
+        SQLConversionVisitor visitor = env.getSQLConversionVisitor();
         visitor.setExecutionContext(context);
         visitor.append(obj);
         return visitor.toString();

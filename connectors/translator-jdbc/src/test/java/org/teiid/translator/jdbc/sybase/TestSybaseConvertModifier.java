@@ -37,9 +37,7 @@ import org.teiid.language.LanguageFactory;
 import org.teiid.language.Literal;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.translator.ConnectorException;
-import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
-import org.teiid.translator.jdbc.sybase.SybaseSQLTranslator;
 
 
 /**
@@ -47,11 +45,11 @@ import org.teiid.translator.jdbc.sybase.SybaseSQLTranslator;
 public class TestSybaseConvertModifier {
 
     private static final LanguageFactory LANG_FACTORY = new LanguageFactory();
-    private static SybaseSQLTranslator trans = new SybaseSQLTranslator();
+    private static SybaseExecutionFactory trans = new SybaseExecutionFactory();
     
     @BeforeClass
     public static void setup() throws ConnectorException {
-        trans.initialize(new JDBCExecutionFactory());
+        trans.start();
     }
     
     public String helpGetString(Expression expr) throws Exception {

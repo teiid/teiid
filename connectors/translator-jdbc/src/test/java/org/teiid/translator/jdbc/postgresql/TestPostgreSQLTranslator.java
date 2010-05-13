@@ -25,17 +25,15 @@ package org.teiid.translator.jdbc.postgresql;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.translator.ConnectorException;
-import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.TranslationHelper;
-import org.teiid.translator.jdbc.postgresql.PostgreSQLTranslator;
 
 public class TestPostgreSQLTranslator {
 
-    private static PostgreSQLTranslator TRANSLATOR; 
+    private static PostgreSQLExecutionFactory TRANSLATOR; 
 
     @BeforeClass public static void setupOnce() throws Exception {
-        TRANSLATOR = new PostgreSQLTranslator();        
-        TRANSLATOR.initialize(new JDBCExecutionFactory());
+        TRANSLATOR = new PostgreSQLExecutionFactory();        
+        TRANSLATOR.start();
     }
     
     public String getTestVDB() {

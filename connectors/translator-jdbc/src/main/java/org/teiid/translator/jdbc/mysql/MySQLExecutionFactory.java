@@ -22,19 +22,133 @@
 
 package org.teiid.translator.jdbc.mysql;
 
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.language.Function;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.translator.ConnectorException;
 import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.jdbc.JDBCCapabilities;
-
+import org.teiid.translator.TypeFacility;
+import org.teiid.translator.jdbc.ConvertModifier;
+import org.teiid.translator.jdbc.FunctionModifier;
+import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.LocateFunctionModifier;
 
 
 /** 
  * @since 4.3
  */
-public class MySQLCapabilities extends JDBCCapabilities {
+public class MySQLExecutionFactory extends JDBCExecutionFactory {
+	
+	/**
+	 * Adds support for the 2 argument form of padding
+	 */
+	private final class PadFunctionModifier extends FunctionModifier {
+		@Override
+		public List<?> translate(Function function) {
+			if (function.getParameters().size() == 2) {
+				function.getParameters().add(getLanguageFactory().createLiteral(" ", TypeFacility.RUNTIME_TYPES.STRING)); //$NON-NLS-1$
+			}
+			return null;
+		}
+	}
 
+	@Override
+    public void start() throws ConnectorException {
+        super.start();
+        registerFunctionModifier(SourceSystemFunctions.BITAND, new BitFunctionModifier("&", getLanguageFactory())); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.BITNOT, new BitFunctionModifier("~", getLanguageFactory())); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.BITOR, new BitFunctionModifier("|", getLanguageFactory())); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.BITXOR, new BitFunctionModifier("^", getLanguageFactory())); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));
+        registerFunctionModifier(SourceSystemFunctions.LPAD, new PadFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.RPAD, new PadFunctionModifier());
+        //add in type conversion
+        ConvertModifier convertModifier = new ConvertModifier();
+        convertModifier.addTypeMapping("signed", FunctionModifier.BOOLEAN, FunctionModifier.BYTE, FunctionModifier.SHORT, FunctionModifier.INTEGER, FunctionModifier.LONG); //$NON-NLS-1$
+    	//char(n) assume 4.1 or later
+    	convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("char", FunctionModifier.STRING); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DATE, new ConvertModifier.FormatModifier("DATE")); //$NON-NLS-1$
+    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIME, new ConvertModifier.FormatModifier("TIME")); //$NON-NLS-1$
+    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("TIMESTAMP")); //$NON-NLS-1$
+    	convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new ConvertModifier.FormatModifier("date_format", "%Y-%m-%d")); //$NON-NLS-1$ //$NON-NLS-2$
+    	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new ConvertModifier.FormatModifier("date_format", "%H:%i:%S")); //$NON-NLS-1$ //$NON-NLS-2$
+    	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new ConvertModifier.FormatModifier("date_format", "%Y-%m-%d %H:%i:%S.%f")); //$NON-NLS-1$ //$NON-NLS-2$
+    	convertModifier.addTypeConversion(new FunctionModifier() {
+			@Override
+			public List<?> translate(Function function) {
+				return Arrays.asList(function.getParameters().get(0), " + 0.0"); //$NON-NLS-1$
+			}
+		}, FunctionModifier.BIGDECIMAL, FunctionModifier.BIGINTEGER, FunctionModifier.FLOAT, FunctionModifier.DOUBLE);
+    	convertModifier.addNumericBooleanConversions();
+    	convertModifier.setWideningNumericImplicit(true);
+    	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
+    }  
+	
+	@Override
+    public String translateLiteralDate(Date dateValue) {
+        return "DATE('" + formatDateValue(dateValue) + "')";  //$NON-NLS-1$//$NON-NLS-2$
+    }
+
+	@Override
+    public String translateLiteralTime(Time timeValue) {
+        return "TIME('" + formatDateValue(timeValue) + "')";  //$NON-NLS-1$//$NON-NLS-2$
+    }
+
+	@Override
+    public String translateLiteralTimestamp(Timestamp timestampValue) {
+        return "{ts '" + formatDateValue(timestampValue) + "'}";  //$NON-NLS-1$//$NON-NLS-2$
+    }
+	
+	@Override
+	public boolean useParensForSetQueries() {
+		return true;
+	}
+	
+	@Override
+	public int getTimestampNanoPrecision() {
+		return 0;
+	}
+	
+	@Override
+	public void afterConnectionCreation(Connection connection) {
+		super.afterConnectionCreation(connection);
+		
+		Statement stmt = null;
+		try {
+			stmt = connection.createStatement();
+			stmt.execute("set SESSION sql_mode = 'ANSI'"); //$NON-NLS-1$
+		} catch (SQLException e) {
+			LogManager.logError(LogConstants.CTX_CONNECTOR,  e, "Error setting ANSI mode"); //$NON-NLS-1$
+		} finally {
+			if (stmt != null) {
+				try {
+					stmt.close();
+				} catch (SQLException e) {
+					LogManager.logDetail("Error closing statement", e); //$NON-NLS-1$
+				}
+			}
+		}
+	}
+	@Override
+    public boolean useParensForJoins() {
+    	return true;
+    }
+    
+    @Override
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.addAll(super.getSupportedFunctions());
@@ -264,19 +378,21 @@ public class MySQLCapabilities extends JDBCCapabilities {
 //        supportedFunctions.add("VALUES"); //$NON-NLS-1$
         return supportedFunctions;
     }
-
+    @Override
     public boolean supportsFullOuterJoins() {
         return false;
     }
-    
+    @Override
     public boolean supportsAggregatesDistinct() {
         return false;
     }
         
+    @Override
     public boolean supportsRowLimit() {
         return true;
     }
+    @Override
     public boolean supportsRowOffset() {
         return true;
-    }
+    }    
 }

@@ -33,17 +33,17 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
-import org.teiid.translator.jdbc.sybase.SybaseSQLTranslator;
+import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
 
 /**
  */
 public class TestSybaseSQLConversionVisitor {
 
-    private static SybaseSQLTranslator trans = new SybaseSQLTranslator();
+    private static SybaseExecutionFactory trans = new SybaseExecutionFactory();
     
     @BeforeClass
     public static void setup() throws ConnectorException {
-        trans.initialize(new JDBCExecutionFactory());
+        trans.start();
     }
 
     public String getTestVDB() {

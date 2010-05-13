@@ -36,9 +36,6 @@ import org.teiid.language.NamedTable;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.jdbc.ExtractFunctionModifier;
-import org.teiid.translator.jdbc.SQLConversionVisitor;
-import org.teiid.translator.jdbc.Translator;
 
 
 /**
@@ -61,9 +58,9 @@ public class TestExtractFunctionModifier extends TestCase {
             Integer.class);
         
         ExtractFunctionModifier mod = new ExtractFunctionModifier ();
-        Translator trans = new Translator();
+        JDBCExecutionFactory trans = new JDBCExecutionFactory();
         trans.registerFunctionModifier(target, mod);
-        trans.initialize(new JDBCExecutionFactory());
+        trans.start();
         
         SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
 

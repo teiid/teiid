@@ -25,19 +25,17 @@ package org.teiid.translator.jdbc.mysql;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.translator.ConnectorException;
-import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.TranslationHelper;
-import org.teiid.translator.jdbc.mysql.MySQL5Translator;
 
 /**
  */
 public class TestMySQL5Translator {
 
-    private static MySQL5Translator TRANSLATOR; 
+    private static MySQL5ExecutionFactory TRANSLATOR; 
     
     @BeforeClass public static void oneTimeSetup() throws ConnectorException {
-        TRANSLATOR = new MySQL5Translator();        
-        TRANSLATOR.initialize(new JDBCExecutionFactory());
+        TRANSLATOR = new MySQL5ExecutionFactory();        
+        TRANSLATOR.start();
     }
 
     @Test public void testChar() throws Exception {

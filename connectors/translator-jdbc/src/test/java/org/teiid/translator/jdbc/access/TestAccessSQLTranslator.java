@@ -30,8 +30,6 @@ import org.teiid.translator.ConnectorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.TranslatedCommand;
-import org.teiid.translator.jdbc.Translator;
-import org.teiid.translator.jdbc.access.AccessSQLTranslator;
 
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
 
@@ -41,12 +39,12 @@ import com.metamatrix.cdk.unittest.FakeTranslationFactory;
  */
 public class TestAccessSQLTranslator extends TestCase {
 
-    private static Translator TRANSLATOR; 
+    private static JDBCExecutionFactory TRANSLATOR; 
 
     static {
         try {
-            TRANSLATOR = new AccessSQLTranslator();        
-            TRANSLATOR.initialize(Mockito.mock(JDBCExecutionFactory.class));
+            TRANSLATOR = new AccessExecutionFactory();        
+            TRANSLATOR.start();
         } catch(ConnectorException e) {
             e.printStackTrace();    
         }

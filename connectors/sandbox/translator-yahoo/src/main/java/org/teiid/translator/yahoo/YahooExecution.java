@@ -47,7 +47,6 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.BasicExecution;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ResultSetExecution;
@@ -56,7 +55,7 @@ import org.teiid.translator.ResultSetExecution;
 /**
  * Represents the execution of a command.
  */
-public class YahooExecution extends BasicExecution implements ResultSetExecution {
+public class YahooExecution implements ResultSetExecution {
 
     public static final String JAVA_PROP_HTTP_PROXY_HOST = "http.proxyHost"; //$NON-NLS-1$
     public static final String JAVA_PROP_HTTP_PROXY_PORT = "http.proxyPort"; //$NON-NLS-1$

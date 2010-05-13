@@ -45,27 +45,21 @@ import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
-import org.teiid.translator.jdbc.Translator;
-import org.teiid.translator.jdbc.oracle.OracleSQLTranslator;
 
 import com.metamatrix.cdk.api.TranslationUtility;
 
 public class TestOracleTranslator {
 	
-    /**
-     * An instance of {@link Translator} which has already been initialized.  
-     */
-    private Translator TRANSLATOR;
+    private OracleExecutionFactory TRANSLATOR;
     private String UDF = "/OracleSpatialFunctions.xmi"; //$NON-NLS-1$;
     private static ExecutionContext EMPTY_CONTEXT = new FakeExecutionContextImpl();
 
     @Before 
     public void setup() throws Exception {
-        TRANSLATOR = new OracleSQLTranslator();     
-        TRANSLATOR.initialize(new JDBCExecutionFactory());
+        TRANSLATOR = new OracleExecutionFactory();     
+        TRANSLATOR.start();
     }
 
 	private void helpTestVisitor(String input, String expectedOutput) throws ConnectorException {
@@ -522,13 +516,12 @@ public class TestOracleTranslator {
     }
     
     private void helpTestVisitor(Command obj, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws ConnectorException {
-        OracleSQLTranslator translator = new OracleSQLTranslator();
-        JDBCExecutionFactory f = new JDBCExecutionFactory();
+        OracleExecutionFactory translator = new OracleExecutionFactory();
         if (dbmsTimeZone != null) {
-        	f.setDatabaseTimeZone(dbmsTimeZone);
+        	translator.setDatabaseTimeZone(dbmsTimeZone);
         }
         
-        translator.initialize(f);
+        translator.start();
         // Convert back to SQL
         TranslatedCommand tc = new TranslatedCommand(context, translator);
         tc.translateCommand(obj);

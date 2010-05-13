@@ -47,7 +47,6 @@ import org.teiid.language.Comparison.Operator;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.translator.BasicExecution;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.UpdateExecution;
@@ -69,7 +68,7 @@ import org.teiid.translator.UpdateExecution;
  * item in the WHERE clause for UPDATE and DELETE operations, and in the list
  * of attributes to assign values in an INSERT operation * Responsible for update/insert/delete operations against LDAP
  */
-public class LDAPUpdateExecution extends BasicExecution implements UpdateExecution {
+public class LDAPUpdateExecution implements UpdateExecution {
 	private LdapContext ldapConnection;
 	private LdapContext ldapCtx;
 	private Command command;

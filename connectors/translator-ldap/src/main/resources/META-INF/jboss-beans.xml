@@ -10,7 +10,7 @@
       <constructor factoryMethod="createTemplateInfo">
          <factory bean="TranslatorDeploymentTemplateInfoFactory"/>
          <parameter class="java.lang.Class">org.teiid.templates.TranslatorTemplateInfo</parameter>
-         <parameter class="java.lang.Class">org.teiid.resource.adapter.ldap.LDAPExecutionFactory</parameter>
+         <parameter class="java.lang.Class">org.teiid.translator.ldap.LDAPExecutionFactory</parameter>
          <parameter class="java.lang.String">${project.artifactId}-${project.version}</parameter>
          <parameter class="java.lang.String">${project.description}</parameter>         
       </constructor>

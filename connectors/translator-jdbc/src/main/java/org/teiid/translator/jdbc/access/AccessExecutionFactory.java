@@ -24,11 +24,13 @@
  */
 package org.teiid.translator.jdbc.access;
 
-import org.teiid.translator.ConnectorCapabilities;
-import org.teiid.translator.jdbc.sybase.SybaseSQLTranslator;
+import java.util.List;
+
+import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
 
 
-public class AccessSQLTranslator extends SybaseSQLTranslator {
+public class AccessExecutionFactory extends SybaseExecutionFactory {
 	
     @Override
     public String translateLiteralBoolean(Boolean booleanValue) {
@@ -44,8 +46,42 @@ public class AccessSQLTranslator extends SybaseSQLTranslator {
     }
     
     @Override
-    public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
-    	return AccessCapabilities.class;
+    public boolean supportsOrderBy() {
+        return false;
     }
     
+    @Override
+    public boolean supportsRowLimit() {
+        return true;
+    }
+    
+    @Override
+    public boolean supportsInsertWithQueryExpression() {
+    	return false;
+    }
+    
+    @Override
+    public boolean supportsInlineViews() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsFunctionsInGroupBy() {
+        return false;
+    }
+    
+    @Override
+    public int getMaxInCriteriaSize() {
+    	return JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA;
+    }
+    
+    @Override
+    public int getMaxFromGroups() {
+        return DEFAULT_MAX_FROM_GROUPS;
+    } 
+    
+    @Override
+    public List<String> getSupportedFunctions() {
+    	return getDefaultSupportedFunctions();
+    }
 }

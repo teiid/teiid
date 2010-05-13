@@ -39,7 +39,6 @@ import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
-import org.teiid.translator.BasicExecution;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ResultSetExecution;
@@ -49,7 +48,7 @@ import org.teiid.translator.TypeFacility;
  * The essential part that executes the query. It keeps all the execution
  * states.
  */
-public class TextSynchExecution extends BasicExecution implements ResultSetExecution {
+public class TextSynchExecution implements ResultSetExecution {
     // Command to be executed
     private Select cmd;
 

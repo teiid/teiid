@@ -25,18 +25,16 @@ package org.teiid.translator.jdbc.h2;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.translator.ConnectorException;
-import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.TranslationHelper;
-import org.teiid.translator.jdbc.h2.H2Translator;
 
 public class TestH2Translator {
 	
-    private static H2Translator TRANSLATOR; 
+    private static H2ExecutionFactory TRANSLATOR; 
 
     @BeforeClass
     public static void setUp() throws ConnectorException {
-        TRANSLATOR = new H2Translator();        
-        TRANSLATOR.initialize(new JDBCExecutionFactory());
+        TRANSLATOR = new H2ExecutionFactory();        
+        TRANSLATOR.start();
     }
 	
 	@Test public void testTimestampDiff() throws Exception {

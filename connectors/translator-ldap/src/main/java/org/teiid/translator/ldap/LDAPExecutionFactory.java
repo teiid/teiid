@@ -29,28 +29,24 @@ import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.BasicExecutionFactory;
-import org.teiid.translator.ConnectorCapabilities;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.UpdateExecution;
 
 
 /** 
- * LDAPConnector.  This is responsible for initializing 
+ * LDAP translator.  This is responsible for initializing 
  * a connection factory, and obtaining connections to LDAP.
  */
-public class LDAPExecutionFactory extends BasicExecutionFactory {
+public class LDAPExecutionFactory extends ExecutionFactory {
 
 	private String searchDefaultBaseDN;
 	private boolean restrictToObjectClass = false;
 	private String searchDefaultScope = "SUBTREE_SCOPE"; //$NON-NLS-1$
 	
-    public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
-    	return LDAPConnectorCapabilities.class;
-    }	
     	
     @TranslatorProperty(name="SearchDefaultBaseDN", display="Default Search Base DN", description="Default Base DN for LDAP Searches",advanced=true, defaultValue="")
 	public String getSearchDefaultBaseDN() {
@@ -99,5 +95,62 @@ public class LDAPExecutionFactory extends BasicExecutionFactory {
 		} catch (ResourceException e) {
 			throw new ConnectorException(e);
 		}
+	}	
+	
+	@Override
+	public int getMaxInCriteriaSize() {
+		return 1000;
+	}
+	
+	@Override
+    public boolean supportsCompareCriteriaEquals() {
+		return true;
+	}
+
+    @Override
+	public boolean supportsInCriteria() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsLikeCriteria() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsOrCriteria() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsOrderBy() {
+		// Removed this support -- see LDAPSyncQueryExecution comments for details.
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowLimit() {
+		// GHH 20080408 - turned this on, because I fixed issue
+		// in nextBatch that was causing this to fail
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowOffset() {
+		// TODO This might actually be possible in future releases,
+		// when using virtual list views/Sun. note that this requires the ability
+		// to set the count limit, as well as an offset, so setCountLimit::searchControls
+		// won't do it alone.
+		return false;
+	}
+	
+	@Override
+	public boolean supportsCompareCriteriaOrdered() {
+		return true;
+	}
+	
+	@Override
+	public boolean supportsNotCriteria() {
+		return true;
 	}	
 }

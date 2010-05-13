@@ -22,24 +22,25 @@
 
 package org.teiid.translator.jdbc.derby;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-import org.teiid.translator.jdbc.derby.DerbyCapabilities;
 
 public class TestDerbyCapabilities {
 	
 	@Test public void testLimitSupport() {
-		DerbyCapabilities derbyCapabilities = new DerbyCapabilities();
+		DerbyExecutionFactory derbyCapabilities = new DerbyExecutionFactory();
 		assertFalse(derbyCapabilities.supportsRowLimit());
-		derbyCapabilities.setDatabaseVersion(DerbyCapabilities.TEN_5);
+		derbyCapabilities.setDatabaseVersion(DerbyExecutionFactory.TEN_5);
 		assertTrue(derbyCapabilities.supportsRowLimit());
 	}
 	
 	@Test public void testFunctionSupport() {
-		DerbyCapabilities derbyCapabilities = new DerbyCapabilities();
+		DerbyExecutionFactory derbyCapabilities = new DerbyExecutionFactory();
 		assertEquals(27, derbyCapabilities.getSupportedFunctions().size());
-		derbyCapabilities.setDatabaseVersion(DerbyCapabilities.TEN_4);
+		derbyCapabilities.setDatabaseVersion(DerbyExecutionFactory.TEN_4);
 		assertEquals(43, derbyCapabilities.getSupportedFunctions().size());
 	}
 

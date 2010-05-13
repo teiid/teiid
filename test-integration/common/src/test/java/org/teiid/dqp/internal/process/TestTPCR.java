@@ -34,8 +34,8 @@ import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.unittest.TimestampUtil;
-import org.teiid.translator.jdbc.oracle.OracleCapabilities;
-import org.teiid.translator.jdbc.sqlserver.SQLServerCapabilities;
+import org.teiid.translator.jdbc.oracle.OracleExecutionFactory;
+import org.teiid.translator.jdbc.sqlserver.SQLServerExecutionFactory;
 
 
 
@@ -54,7 +54,7 @@ public class TestTPCR extends BaseQueryTest {
      */
     public void testQuery3() throws Exception{
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
-        finder.addCapabilities("TPCR_Oracle_9i", CapabilitiesConverter.convertCapabilities(new OracleCapabilities())); //$NON-NLS-1$
+        finder.addCapabilities("TPCR_Oracle_9i", CapabilitiesConverter.convertCapabilities(new OracleExecutionFactory())); //$NON-NLS-1$
         
         HardcodedDataManager dataMgr = new HardcodedDataManager();
     
@@ -80,7 +80,7 @@ public class TestTPCR extends BaseQueryTest {
     
     public void testQueryCase3042() throws Exception{
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
-        finder.addCapabilities("TPCR_Ora", CapabilitiesConverter.convertCapabilities(new OracleCapabilities())); //$NON-NLS-1$
+        finder.addCapabilities("TPCR_Ora", CapabilitiesConverter.convertCapabilities(new OracleExecutionFactory())); //$NON-NLS-1$
         
         HardcodedDataManager dataMgr = new HardcodedDataManager();
         List[] expected =
@@ -112,8 +112,8 @@ public class TestTPCR extends BaseQueryTest {
      */
     public void testQueryCase3047() throws Exception{
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
-        finder.addCapabilities("TPCR_Ora", CapabilitiesConverter.convertCapabilities(new OracleCapabilities())); //$NON-NLS-1$
-        finder.addCapabilities("TPCR_SQLS", CapabilitiesConverter.convertCapabilities(new SQLServerCapabilities())); //$NON-NLS-1$
+        finder.addCapabilities("TPCR_Ora", CapabilitiesConverter.convertCapabilities(new OracleExecutionFactory())); //$NON-NLS-1$
+        finder.addCapabilities("TPCR_SQLS", CapabilitiesConverter.convertCapabilities(new SQLServerExecutionFactory())); //$NON-NLS-1$
         
         HardcodedDataManager dataMgr = new HardcodedDataManager();
                 
@@ -152,8 +152,8 @@ public class TestTPCR extends BaseQueryTest {
      */
     public void testQueryCase3047workaround() throws Exception{
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
-        finder.addCapabilities("TPCR_Ora", CapabilitiesConverter.convertCapabilities(new OracleCapabilities())); //$NON-NLS-1$
-        finder.addCapabilities("TPCR_SQLS", CapabilitiesConverter.convertCapabilities(new SQLServerCapabilities())); //$NON-NLS-1$
+        finder.addCapabilities("TPCR_Ora", CapabilitiesConverter.convertCapabilities(new OracleExecutionFactory())); //$NON-NLS-1$
+        finder.addCapabilities("TPCR_SQLS", CapabilitiesConverter.convertCapabilities(new SQLServerExecutionFactory())); //$NON-NLS-1$
         
         HardcodedDataManager dataMgr = new HardcodedDataManager();
                 
@@ -187,7 +187,7 @@ public class TestTPCR extends BaseQueryTest {
     
     public void testQuery22() throws Exception{
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
-        finder.addCapabilities("TPCR_Oracle_9i", CapabilitiesConverter.convertCapabilities(new OracleCapabilities())); //$NON-NLS-1$
+        finder.addCapabilities("TPCR_Oracle_9i", CapabilitiesConverter.convertCapabilities(new OracleExecutionFactory())); //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT custsale.cntrycode, COUNT(*) AS numcust, SUM(c_acctbal) AS totacctbal FROM (SELECT left(C_PHONE, 2) AS cntrycode, CUSTOMER.C_ACCTBAL FROM CUSTOMER WHERE (left(C_PHONE, 2) IN ('13','31','23','29','30','18','17')) AND (CUSTOMER.C_ACCTBAL > (SELECT AVG(CUSTOMER.C_ACCTBAL) FROM CUSTOMER WHERE (CUSTOMER.C_ACCTBAL > 0.0) AND (left(C_PHONE, 2) IN ('13','31','23','29','30','18','17')))) AND (NOT (EXISTS (SELECT * FROM ORDERS WHERE O_CUSTKEY = C_CUSTKEY)))) AS custsale GROUP BY custsale.cntrycode ORDER BY custsale.cntrycode", //$NON-NLS-1$
         		METADATA, null, finder,
@@ -197,7 +197,7 @@ public class TestTPCR extends BaseQueryTest {
     
     public void testDefect22475() throws Exception {
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
-        finder.addCapabilities("TPCR_Oracle_9i", CapabilitiesConverter.convertCapabilities(new SQLServerCapabilities())); //$NON-NLS-1$
+        finder.addCapabilities("TPCR_Oracle_9i", CapabilitiesConverter.convertCapabilities(new SQLServerExecutionFactory())); //$NON-NLS-1$
 
         ProcessorPlan plan = TestOptimizer.helpPlan("select S_ACCTBAL, S_NAME, N_NAME, P_PARTKEY, P_MFGR, S_ADDRESS, S_PHONE, S_COMMENT from (SELECT SUPPLIER.S_ACCTBAL, SUPPLIER.S_NAME, NATION.N_NAME, PART.P_PARTKEY, PART.P_MFGR, SUPPLIER.S_ADDRESS, SUPPLIER.S_PHONE, SUPPLIER.S_COMMENT FROM PART, SUPPLIER, PARTSUPP, NATION, REGION WHERE (PART.P_PARTKEY = PS_PARTKEY) AND (S_SUPPKEY = PS_SUPPKEY) AND (P_SIZE = 15) AND (P_TYPE LIKE '%BRASS') AND (S_NATIONKEY = N_NATIONKEY) AND (N_REGIONKEY = R_REGIONKEY) AND (R_NAME = 'EUROPE') AND (PS_SUPPLYCOST = (SELECT MIN(PS_SUPPLYCOST) FROM PARTSUPP, SUPPLIER, NATION, REGION WHERE (PART.P_PARTKEY = PS_PARTKEY) AND (S_SUPPKEY = PS_SUPPKEY) AND (S_NATIONKEY = N_NATIONKEY) AND (N_REGIONKEY = R_REGIONKEY) AND (R_NAME = 'EUROPE'))) ORDER BY SUPPLIER.S_ACCTBAL DESC, NATION.N_NAME, SUPPLIER.S_NAME, PART.P_PARTKEY) as x", //$NON-NLS-1$
         		METADATA, null, finder,

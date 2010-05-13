@@ -45,15 +45,15 @@ public class TranslatedCommand {
     private boolean prepared;
     private List preparedValues;
     
-    private Translator sqlTranslator;
+    private JDBCExecutionFactory executionFactory;
     private ExecutionContext context;
     
     /**
      * Constructor, takes a SQLConversionVisitor subclass 
      * @param visitor a SQLConversionVisitor subclass 
      */
-    public TranslatedCommand(ExecutionContext context, Translator sqlTranslator){
-    	this.sqlTranslator = sqlTranslator;
+    public TranslatedCommand(ExecutionContext context, JDBCExecutionFactory executionFactory){
+    	this.executionFactory = executionFactory;
     	this.context = context;
     }
     
@@ -65,9 +65,9 @@ public class TranslatedCommand {
      * @throws ConnectorException 
      */
     public void translateCommand(Command command) throws ConnectorException {
-    	SQLConversionVisitor sqlConversionVisitor = sqlTranslator.getSQLConversionVisitor();
+    	SQLConversionVisitor sqlConversionVisitor = executionFactory.getSQLConversionVisitor();
         sqlConversionVisitor.setExecutionContext(context);
-        if (sqlTranslator.usePreparedStatements() || hasBindValue(command)) {
+        if (executionFactory.usePreparedStatements() || hasBindValue(command)) {
         	sqlConversionVisitor.setPrepared(true);
         }
         

@@ -57,8 +57,8 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
     // Constructors
     // ===========================================================================================================================
 
-    public JDBCQueryExecution(Command command, Connection connection, ExecutionContext context, JDBCExecutionFactory env, Translator translator) {
-        super(connection, context, env, translator);
+    public JDBCQueryExecution(Command command, Connection connection, ExecutionContext context, JDBCExecutionFactory env) {
+        super(connection, context, env);
         this.command = command;
     }
     
@@ -96,7 +96,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
 
                 for (int i = 0; i < columnDataTypes.length; i++) {
                     // Convert from 0-based to 1-based
-                    Object value = sqlTranslator.retrieveValue(results, i+1, columnDataTypes[i]);
+                    Object value = this.executionFactory.retrieveValue(results, i+1, columnDataTypes[i]);
                     vals.add(value); 
                 }
 

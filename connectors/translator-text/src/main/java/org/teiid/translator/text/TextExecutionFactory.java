@@ -45,9 +45,9 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
-import org.teiid.translator.BasicExecutionFactory;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.FileConnection;
 import org.teiid.translator.MetadataProvider;
 import org.teiid.translator.ResultSetExecution;
@@ -58,7 +58,7 @@ import org.teiid.translator.TypeFacility;
 /**
  * Implementation of text connector.
  */
-public class TextExecutionFactory extends BasicExecutionFactory implements MetadataProvider{
+public class TextExecutionFactory extends ExecutionFactory implements MetadataProvider{
 
 	private boolean enforceColumnCount = false;
 	private String dateResultFormatsDelimiter;

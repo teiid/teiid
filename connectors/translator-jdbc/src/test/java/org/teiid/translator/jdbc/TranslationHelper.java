@@ -36,8 +36,6 @@ import org.teiid.query.function.metadata.FunctionMetadataReader;
 import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.jdbc.TranslatedCommand;
-import org.teiid.translator.jdbc.Translator;
 
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
@@ -72,19 +70,18 @@ public class TranslationHelper {
         return util.parseCommand(sql);        
     }    
 
-	public static void helpTestVisitor(String vdb, String input, String expectedOutput, Translator translator) throws ConnectorException {
+	public static void helpTestVisitor(String vdb, String input, String expectedOutput, JDBCExecutionFactory translator) throws ConnectorException {
 		helpTestVisitor(vdb,null,input, expectedOutput, translator);
 	}
 	
-	public static void helpTestVisitor(String vdb, String udf, String input, String expectedOutput, Translator translator) throws ConnectorException {
+	public static void helpTestVisitor(String vdb, String udf, String input, String expectedOutput, JDBCExecutionFactory translator) throws ConnectorException {
 	    // Convert from sql to objects
 	    Command obj = helpTranslate(vdb, udf, input);
 	    
 	    helpTestVisitor(expectedOutput, translator, obj);
 	}	
 
-	public static void helpTestVisitor(String expectedOutput,
-			Translator translator, Command obj) throws ConnectorException {
+	public static void helpTestVisitor(String expectedOutput, JDBCExecutionFactory translator, Command obj) throws ConnectorException {
 		TranslatedCommand tc = new TranslatedCommand(Mockito.mock(ExecutionContext.class), translator);
 	    tc.translateCommand(obj);
 	    assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$

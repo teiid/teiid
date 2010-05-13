@@ -22,21 +22,20 @@
 
 package org.teiid.translator.jdbc.mysql;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.language.Function;
-import org.teiid.translator.ConnectorCapabilities;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.jdbc.FunctionModifier;
-import org.teiid.translator.jdbc.JDBCExecutionFactory;
 
-public class MySQL5Translator extends MySQLTranslator {
+public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
 	
 	@Override
-    public void initialize(JDBCExecutionFactory env) throws ConnectorException {
-        super.initialize(env);
+    public void start() throws ConnectorException {
+        super.start();
         registerFunctionModifier(SourceSystemFunctions.CHAR, new FunctionModifier() {
 			
 			@Override
@@ -47,8 +46,17 @@ public class MySQL5Translator extends MySQLTranslator {
 	}
 	
 	@Override
-	public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
-		return MySQL5Capabilities.class;
-	}
+    public List<String> getSupportedFunctions() {
+        List<String> supportedFunctions = new ArrayList<String>();
+        supportedFunctions.addAll(super.getSupportedFunctions());
+        supportedFunctions.add(SourceSystemFunctions.TIMESTAMPADD);
+        supportedFunctions.add(SourceSystemFunctions.TIMESTAMPDIFF);
+        return supportedFunctions;
+    }
+    
+    @Override
+    public boolean supportsInlineViews() {
+    	return true;
+    }
 	
 }

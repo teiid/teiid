@@ -97,7 +97,6 @@ import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
-import org.teiid.translator.BasicExecution;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.ResultSetExecution;
 
@@ -107,7 +106,7 @@ import org.teiid.translator.ResultSetExecution;
  * LDAPSyncQueryExecution is responsible for executing an LDAP search 
  * corresponding to a read-only "select" query from MetaMatrix.
  */
-public class LDAPSyncQueryExecution extends BasicExecution implements ResultSetExecution {
+public class LDAPSyncQueryExecution implements ResultSetExecution {
 
 	private LDAPSearchDetails searchDetails;
 	private LdapContext ldapConnection;

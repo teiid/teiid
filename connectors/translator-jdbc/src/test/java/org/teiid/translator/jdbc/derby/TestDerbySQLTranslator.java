@@ -24,23 +24,20 @@ package org.teiid.translator.jdbc.derby;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.teiid.translator.ConnectorException;
-import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.TranslationHelper;
-import org.teiid.translator.jdbc.derby.DerbySQLTranslator;
 
 
 /**
  */
 public class TestDerbySQLTranslator {
 
-    private static DerbySQLTranslator TRANSLATOR; 
+    private static DerbyExecutionFactory TRANSLATOR; 
 
     @BeforeClass
     public static void setUp() throws ConnectorException {
-        TRANSLATOR = new DerbySQLTranslator();        
-        TRANSLATOR.initialize(Mockito.mock(JDBCExecutionFactory.class));
+        TRANSLATOR = new DerbyExecutionFactory();        
+        TRANSLATOR.start();
     }
     
     @Test

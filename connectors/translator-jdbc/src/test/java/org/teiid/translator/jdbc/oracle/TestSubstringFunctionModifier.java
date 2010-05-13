@@ -30,9 +30,7 @@ import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
-import org.teiid.translator.jdbc.oracle.OracleSQLTranslator;
 
 /**
  */
@@ -53,8 +51,8 @@ public class TestSubstringFunctionModifier extends TestCase {
         Function func = LANG_FACTORY.createFunction("substring",  //$NON-NLS-1$
             Arrays.asList(args), TypeFacility.RUNTIME_TYPES.STRING);
         
-        OracleSQLTranslator trans = new OracleSQLTranslator();
-        trans.initialize(new JDBCExecutionFactory());
+        OracleExecutionFactory trans = new OracleExecutionFactory();
+        trans.start();
 
         SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
         sqlVisitor.append(func);  

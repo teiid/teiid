@@ -26,13 +26,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.translator.BasicExecution;
 import org.teiid.translator.ConnectorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ProcedureExecution;
 
 
-final class FakeProcedureExecution extends BasicExecution implements ProcedureExecution {
+final class FakeProcedureExecution implements ProcedureExecution {
 
     int resultSetSize;
     int rowNum;

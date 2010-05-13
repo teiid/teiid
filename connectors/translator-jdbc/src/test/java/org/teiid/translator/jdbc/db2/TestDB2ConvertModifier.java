@@ -34,9 +34,7 @@ import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
-import org.teiid.translator.jdbc.db2.DB2SQLTranslator;
 
 
 /**
@@ -54,8 +52,8 @@ public class TestDB2ConvertModifier extends TestCase {
     }
 
     public String helpGetString(Expression expr) throws Exception {
-        DB2SQLTranslator trans = new DB2SQLTranslator();
-        trans.initialize(new JDBCExecutionFactory());
+        DB2ExecutionFactory trans = new DB2ExecutionFactory();
+        trans.start();
         SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
         sqlVisitor.append(expr);  
         
