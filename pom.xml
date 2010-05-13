@@ -238,12 +238,12 @@
 			</dependency>
 			<dependency>
 				<groupId>org.jboss.teiid</groupId>
-				<artifactId>teiid-connector-api</artifactId>
+				<artifactId>teiid-api</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.jboss.teiid</groupId>
-				<artifactId>teiid-connector-api</artifactId>
+				<artifactId>teiid-api</artifactId>
 				<type>test-jar</type>
 				<version>${project.version}</version>
 				<scope>test</scope>
@@ -466,7 +466,7 @@
 	</dependencyManagement>
 	<modules>
 		<module>common-core</module>
-		<module>connector-api</module>
+		<module>api</module>
 		<module>client</module>
 		<module>engine</module>
 		<module>connectors</module>

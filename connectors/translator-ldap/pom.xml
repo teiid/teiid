@@ -13,7 +13,7 @@
     <dependencies>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-connector-api</artifactId>
+            <artifactId>teiid-api</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>

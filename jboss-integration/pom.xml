@@ -20,7 +20,7 @@
  
     <dependency>
       <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-connector-api</artifactId>
+      <artifactId>teiid-api</artifactId>
     </dependency>
                 
     <dependency>
