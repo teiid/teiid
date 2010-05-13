@@ -39,4 +39,6 @@ public interface Translator extends AdminObject{
 	public String getOverrideCapabilitiesFile();
 	
 	public void setOverrideCapabilitiesFile(String propsFile);
+	
+	public String getTemplateName();
 }

@@ -3,54 +3,63 @@
     <translator>
         <name>access</name>
         <execution-factory-class>org.teiid.translator.jdbc.access.AccessExecutionFactory</execution-factory-class>
+        <template-name>translator-jdbc-${project.version}</template-name>
         <xa-capable>true</xa-capable>
     </translator>
 
     <translator>
         <name>db2</name>
         <execution-factory-class>org.teiid.translator.jdbc.db2.DB2ExecutionFactory</execution-factory-class>
+        <template-name>translator-jdbc-${project.version}</template-name>
         <xa-capable>true</xa-capable>
     </translator>
 
     <translator>
         <name>derby</name>
         <execution-factory-class>org.teiid.translator.jdbc.derby.DerbyExecutionFactory</execution-factory-class>
+        <template-name>translator-jdbc-${project.version}</template-name>
         <xa-capable>true</xa-capable>
     </translator>
 
     <translator>
         <name>h2</name>
         <execution-factory-class>org.teiid.translator.jdbc.h2.H2ExecutionFactory</execution-factory-class>
+        <template-name>translator-jdbc-${project.version}</template-name>
         <xa-capable>true</xa-capable>
     </translator>
 
     <translator>
         <name>hsql</name>
         <execution-factory-class>org.teiid.translator.jdbc.hsql.HsqlExecutionFactory</execution-factory-class>
+        <template-name>translator-jdbc-${project.version}</template-name>
         <xa-capable>true</xa-capable>
     </translator>
 
     <translator>
         <name>mysql</name>
         <execution-factory-class>org.teiid.translator.jdbc.mysql.MySQLExecutionFactory</execution-factory-class>
+        <template-name>translator-jdbc-${project.version}</template-name>
         <xa-capable>true</xa-capable>
     </translator>
     
     <translator>
         <name>mysql5</name>
         <execution-factory-class>org.teiid.translator.jdbc.mysql.MySQL5ExecutionFactory</execution-factory-class>
+        <template-name>translator-jdbc-${project.version}</template-name>
         <xa-capable>true</xa-capable>
     </translator>    
 
     <translator>
         <name>oracle</name>
         <execution-factory-class>org.teiid.translator.jdbc.oracle.OracleExecutionFactory</execution-factory-class>
+        <template-name>translator-jdbc-${project.version}</template-name>
         <xa-capable>true</xa-capable>
     </translator>
 
     <translator>
         <name>postgresql</name>
         <execution-factory-class>org.teiid.translator.jdbc.postgresql.PostgreSQLExecutionFactory</execution-factory-class>
+        <template-name>translator-jdbc-${project.version}</template-name>
         <xa-capable>true</xa-capable>
     </translator>
 
@@ -58,11 +67,13 @@
         <name>sqlserver</name>
         <execution-factory-class>org.teiid.translator.jdbc.sqlserver.SQLServerExecutionFactory</execution-factory-class>
         <xa-capable>true</xa-capable>
+        <template-name>translator-jdbc-${project.version}</template-name>
     </translator>
 
     <translator>
         <name>sybase</name>
         <execution-factory-class>org.teiid.translator.jdbc.sybase.SybaseExecutionFactory</execution-factory-class>
         <xa-capable>true</xa-capable>
+        <template-name>translator-jdbc-${project.version}</template-name>
     </translator>
 </translator-factory>

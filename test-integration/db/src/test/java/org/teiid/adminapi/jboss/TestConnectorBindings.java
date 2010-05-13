@@ -385,15 +385,15 @@ public class TestConnectorBindings extends BaseConnection {
 		}
 		
 		// test minimal correct add
-		props.setProperty("execution-factory-class", "org.teiid.resource.adapter.jdbc.JDBCExecutionFactory");
+		props.setProperty("execution-factory-class", "org.teiid.translator.jdbc.JDBCExecutionFactory");
 		admin.addTranslator("foo", "translator-jdbc"+VERSION, props);
 		
 		// test set property
 		admin.setTranslatorProperty("foo", "TrimStrings", "true");
 		
 		Translator t = admin.getTranslator("foo");
-		assertEquals("org.teiid.resource.adapter.jdbc.JDBCExecutionFactory", t.getExecutionFactoryClass());
-		assertEquals("org.teiid.resource.adapter.jdbc.JDBCExecutionFactory", t.getExecutionFactoryClass());
+		assertEquals("org.teiid.translator.jdbc.JDBCExecutionFactory", t.getExecutionFactoryClass());
+		assertEquals("org.teiid.translator.jdbc.JDBCExecutionFactory", t.getExecutionFactoryClass());
 		
 		admin.setTranslatorProperty("foo", "any-thing", "every-thing");
 		

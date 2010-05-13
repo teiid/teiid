@@ -49,6 +49,7 @@ public class TranslatorMetaData extends AdminObjectImpl implements Translator, S
 	public static final String XA_CAPABLE = "xa-capable"; //$NON-NLS-1$
 	public static final String OVERRIDE_CAPABILITIES_FILE = "override-capabilities-file"; //$NON-NLS-1$
 	public static final String NAME = "name"; //$NON-NLS-1$
+	public static final String TEMPLATE_NAME = "template-name"; //$NON-NLS-1$
 	
 	// objects are used to keep the jaxb putting verbose xml elements when they are not defined.
 	private String executionFactoryClass;
@@ -58,6 +59,7 @@ public class TranslatorMetaData extends AdminObjectImpl implements Translator, S
 	private int maxResultRows = -1;
 	private boolean xaCapable = false;
 	private String overrideCapabilitiesFile;
+	private String templateName;
 	
 	@Override
 	@ManagementProperty(name="name", description="Name of the Translator", mandatory = true)
@@ -154,6 +156,17 @@ public class TranslatorMetaData extends AdminObjectImpl implements Translator, S
 	@ManagementPropertyFactory(TranslatorPropertyFactory.class)
 	public List<PropertyMetadata> getJAXBProperties(){
 		return super.getJAXBProperties();
+	}	
+	
+	@Override
+	@ManagementProperty(name=TEMPLATE_NAME, description = "Template with which this Translator is created")	
+	public String getTemplateName() {
+		return templateName;
+	}
+
+	@XmlElement(name = TEMPLATE_NAME)
+	public void setTemplateName(String templateName) {
+		this.templateName = templateName;
 	}	
 	
 	public String toString() {
