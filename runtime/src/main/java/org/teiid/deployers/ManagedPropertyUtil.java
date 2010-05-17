@@ -37,12 +37,11 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.translator.TranslatorProperty;
 
 public class ManagedPropertyUtil {
-	private static final String[] EMPTY_ALLOWED = new String[0];
 	private static final String TEIID_PROPERTY = "teiid-property"; //$NON-NLS-1$
 	
 	public static ManagedProperty convert(Object instance, Method method, TranslatorProperty prop) {
 		Class<?> type = method.getReturnType();
-		String[] allowedValues = EMPTY_ALLOWED;
+		String[] allowedValues = null;
 		Method getter = null;
 		boolean readOnly = false;
 		if (type == Void.TYPE) { //check for setter
@@ -71,7 +70,11 @@ public class ManagedPropertyUtil {
 			}
 		}
 		Object defaultValue = null;
-		if (!prop.required() && getter != null) {
+		if (prop.required()) {
+			if (prop.advanced()) {
+				throw new TeiidRuntimeException("TranslatorProperty annotation should not both be advanced and required " + method); //$NON-NLS-1$
+			}
+		} else if (getter != null) {
 			try {
 				defaultValue = getter.invoke(instance, (Object[])null);
 			} catch (Exception e) {
