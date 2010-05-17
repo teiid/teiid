@@ -1,0 +1,543 @@
+<?xml version="1.0" encoding="UTF-8"?><Books:bookCollection xmlns:Books="http://www.metamatrix.com/XMLSchema/DataSets/Books">
+<!--
+
+    JBoss, Home of Professional Open Source.
+    See the COPYRIGHT.txt file distributed with this work for information
+    regarding copyright ownership.  Some portions may be licensed
+    to Red Hat, Inc. under one or more contributor license agreements.	
+    
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or (at your option) any later version.
+    
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+    
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+    02110-1301 USA.
+
+-->
+
+   <book isbn="0-7356-0877-7">
+      <title>After the Gold Rush</title>
+      <subtitle>Creating a True Profession of Software Engineering</subtitle>
+      <edition>1</edition>
+      <authors>
+         <author>McConnell</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Microsoft Press</publisher>
+         <publishDate>1999</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="1-55615-484-4">
+      <title>Code Complete</title>
+      <subtitle>A Practical Handbook of Software Construction</subtitle>
+      <edition>1</edition>
+      <authors>
+         <author>McConnell</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Microsoft Press</publisher>
+         <publishDate>1993</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="1-556-15900-5">
+      <title>Rapid Development</title>
+      <subtitle>Taming Wild Software Schedules</subtitle>
+      <edition>1</edition>
+      <authors>
+         <author>McConnell</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Microsoft Press</publisher>
+         <publishDate>1996</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0-7356-0631-5">
+      <title>Software Requirements</title>
+      <subtitle/>
+      <edition>1</edition>
+      <authors>
+         <author>Wiegers</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Microsoft Press</publisher>
+         <publishDate>1999</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="1-57231-621-7">
+      <title>Software Project Survival Guide</title>
+      <subtitle/>
+      <edition>1</edition>
+      <authors>
+         <author>McConnell</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Microsoft Press</publisher>
+         <publishDate>1998</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0-201-43287-0">
+      <title>Automated Software Testing</title>
+      <subtitle>Introduction, Management, and Performance</subtitle>
+      <edition>1</edition>
+      <authors>
+         <author>Dustin</author>
+         <author>Rashka</author>
+         <author>Paul</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Addison-Wesley</publisher>
+         <publishDate>1999</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0-201-31000-7">
+      <title>Inside Java 2 Security</title>
+      <subtitle/>
+      <edition>1</edition>
+      <authors>
+         <author>Gong</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Addison-Wesley</publisher>
+         <publishDate>1999</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="020130998X">
+      <title>The Unified Modeling Language Reference Manual</title>
+      <subtitle/>
+      <edition>1</edition>
+      <authors>
+         <author>Rumbaugh</author>
+         <author>Jacobson</author>
+         <author>Booch</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Addison-Wesley</publisher>
+         <publishDate>1998</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0-201-70225-8">
+      <title>Writing Effective Use Cases</title>
+      <subtitle/>
+      <edition>1</edition>
+      <authors>
+         <author>Cockburn</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Addison-Wesley</publisher>
+         <publishDate>2001</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0201877562">
+      <title>Software Testing in the Real World</title>
+      <subtitle>Improving the Process</subtitle>
+      <edition>1</edition>
+      <authors>
+         <author>Kit</author>
+         <author>Finzi</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Addison-Wesley</publisher>
+         <publishDate>1995</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0-201-43336-2">
+      <title>SQL Queries for Mere Mortals</title>
+      <subtitle>A Hands-on Guide to Data Manipulation in SQL</subtitle>
+      <edition>1</edition>
+      <authors>
+         <author>Hernandez</author>
+         <author>Viescas</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Addison-Wesley</publisher>
+         <publishDate>2000</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0-201-65758-9">
+      <title>LDAP Programming with Java</title>
+      <subtitle/>
+      <edition>1</edition>
+      <authors>
+         <author>Weltman</author>
+         <author>Dahbura</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Addison-Wesley</publisher>
+         <publishDate>2000</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0-201-44787-8">
+      <title>The Practical SQL Handbook</title>
+      <subtitle>Using Structured Query Language</subtitle>
+      <edition>1</edition>
+      <authors>
+         <author>Bowman</author>
+         <author>Emerson</author>
+         <author>Darnovsky</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Addison-Wesley</publisher>
+         <publishDate>1996</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0-201-10088-6">
+      <title>Compilers</title>
+      <subtitle>Principles, Techniques, and Tools</subtitle>
+      <edition>1</edition>
+      <authors>
+         <author>Aho</author>
+         <author>Sethi</author>
+         <author>Ullman</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Addison-Wesley</publisher>
+         <publishDate>1985</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0-201-31009-0">
+      <title>Concurrent Programming in Java</title>
+      <subtitle>Design Principles and Patterns</subtitle>
+      <edition>2</edition>
+      <authors>
+         <author>Lea</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Addison-Wesley</publisher>
+         <publishDate>2000</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0-471-98710-7">
+      <title>Concurrency State Models &amp; Java Programs</title>
+      <subtitle/>
+      <edition>1</edition>
+      <authors>
+         <author>Kramer</author>
+         <author>Magee</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Wiley</publisher>
+         <publishDate>1999</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0-471355232">
+      <title>Building and Managing the Meta Data Repository</title>
+      <subtitle>A Full Life-Cycle Guide</subtitle>
+      <edition>1</edition>
+      <authors>
+         <author>Marco</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Wiley</publisher>
+         <publishDate>2000</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0-7897-2271-2">
+      <title>Complete Idiot's Guide to Project Management with Microsoft Project 2000</title>
+      <subtitle/>
+      <edition>1</edition>
+      <authors>
+         <author>Black</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Que</publisher>
+         <publishDate>2000</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0-932633-33-1">
+      <title>Creating a Software Engineering Culture</title>
+      <subtitle/>
+      <edition>1</edition>
+      <authors>
+         <author>Wiegers</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Dorset House Publishing</publisher>
+         <publishDate>1996</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0-932633-43-9">
+      <title>Peopleware</title>
+      <subtitle>Productive Projects and Teams</subtitle>
+      <edition>2</edition>
+      <authors>
+         <author>DeMarco</author>
+         <author>Lister</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Dorset House Publishing</publisher>
+         <publishDate>1999</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="1558605150">
+      <title>Database Design for Smarties</title>
+      <subtitle>Using UML for Data Modeling</subtitle>
+      <edition>1</edition>
+      <authors>
+         <author>Muller</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Morgan Kaufman</publisher>
+         <publishDate>1999</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="1-558-60190-2">
+      <title>Transaction Processing</title>
+      <subtitle>Concepts and Techniques</subtitle>
+      <edition>1</edition>
+      <authors>
+         <author>Gray</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Morgan Kaufman</publisher>
+         <publishDate>1992</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="1-55860-415-4">
+      <title>Principles of Transaction Processing</title>
+      <subtitle/>
+      <edition>1</edition>
+      <authors>
+         <author>Bernstein</author>
+         <author>Newcomer</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Morgan Kaufman</publisher>
+         <publishDate>1997</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="1558605231">
+      <title>Readings in Database Systems</title>
+      <subtitle/>
+      <edition>3</edition>
+      <authors>
+         <author>Stonebraker</author>
+         <author>Hellerstein</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Morgan Kaufman</publisher>
+         <publishDate>1998</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0-13-239856-7">
+      <title>How to Run Successful Projects II</title>
+      <subtitle/>
+      <edition>2</edition>
+      <authors>
+         <author>O'Connell</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Prentice Hall</publisher>
+         <publishDate>1996</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0-13-014714-1">
+      <title>The XML Handbook</title>
+      <subtitle/>
+      <edition>2</edition>
+      <authors>
+         <author>Goldfarb</author>
+         <author>Prescod</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Prentice Hall</publisher>
+         <publishDate>2000</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0130273635">
+      <title>Thinking in Java</title>
+      <subtitle/>
+      <edition>2</edition>
+      <authors>
+         <author>Eckel</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Prentice Hall</publisher>
+         <publishDate>2000</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="130402648">
+      <title>Database System Implementation</title>
+      <subtitle/>
+      <edition>1</edition>
+      <authors>
+         <author>Ullman</author>
+         <author>Garcia-Molina</author>
+         <author>Widom</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Prentice Hall</publisher>
+         <publishDate>1999</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0-596-00016-2">
+      <title>Java and XML</title>
+      <subtitle/>
+      <edition>1</edition>
+      <authors>
+         <author>McLaughlin</author>
+         <author>Loukides</author>
+      </authors>
+      <publishingInformation>
+         <publisher>O'Reilly</publisher>
+         <publishDate>2000</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="1-56592-487-8">
+      <title>Java in a Nutshell</title>
+      <subtitle/>
+      <edition>3</edition>
+      <authors>
+         <author>Flanagan</author>
+      </authors>
+      <publishingInformation>
+         <publisher>O'Reilly</publisher>
+         <publishDate>1999</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="1-56592-483-5">
+      <title>Java Enterprise in a Nutshell</title>
+      <subtitle/>
+      <edition>1</edition>
+      <authors>
+         <author>Flanagan</author>
+      </authors>
+      <publishingInformation>
+         <publisher>O'Reilly</publisher>
+         <publishDate>1999</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0-672-31602-1">
+      <title>Java Security Handbook</title>
+      <subtitle/>
+      <edition>1</edition>
+      <authors>
+         <author>Jaworski</author>
+         <author>Perrone</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Sams</publisher>
+         <publishDate>2000</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0-672-31983-7">
+      <title>Software Testing</title>
+      <subtitle/>
+      <edition>1</edition>
+      <authors>
+         <author>Patton</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Sams</publisher>
+         <publishDate>2001</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="1-861002-77-7">
+      <title>Professional Java Server Programming</title>
+      <subtitle/>
+      <edition>1</edition>
+      <authors>
+         <author>Ayers</author>
+         <author>Bergsten</author>
+         <author>Diamond</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Wrox</publisher>
+         <publishDate>1999</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="1-861-00506-7">
+      <title>XSLT Programmer's Reference</title>
+      <subtitle/>
+      <edition>2</edition>
+      <authors>
+         <author>Kay</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Wrox</publisher>
+         <publishDate>2001</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="1-861-00312-9">
+      <title>XSLT Programmer's Reference</title>
+      <subtitle/>
+      <edition>1</edition>
+      <authors>
+         <author>Kay</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Wrox</publisher>
+         <publishDate>2000</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0-818-68300-7">
+      <title>The Software Project Manager's Handbook</title>
+      <subtitle>Principles that Work</subtitle>
+      <edition>1</edition>
+      <authors>
+         <author>Phillips</author>
+      </authors>
+      <publishingInformation>
+         <publisher>IEEE Computer Society</publisher>
+         <publishDate>1998</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="1-884777-84-8">
+      <title>Swing</title>
+      <subtitle/>
+      <edition>1</edition>
+      <authors>
+         <author>Robinson</author>
+         <author>Vorobiev</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Manning</publisher>
+         <publishDate>2000</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="1-893115-10-0">
+      <title>Taming Java Threads</title>
+      <subtitle/>
+      <edition>1</edition>
+      <authors>
+         <author>Holub</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Apress</publisher>
+         <publishDate>2000</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="1-57870-070-1">
+      <title>Understanding and Deploying LDAP Directory Services</title>
+      <subtitle/>
+      <edition>1</edition>
+      <authors>
+         <author>Howes</author>
+         <author>Smith</author>
+         <author>Good</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Macmillan</publisher>
+         <publishDate>1990</publishDate>
+      </publishingInformation>
+   </book>
+   <book isbn="0-7821-1148-3">
+      <title>SQL Instant Reference</title>
+      <subtitle/>
+      <edition>1</edition>
+      <authors>
+         <author>Gruber</author>
+      </authors>
+      <publishingInformation>
+         <publisher>Sybex</publisher>
+         <publishDate>1993</publishDate>
+      </publishingInformation>
+   </book>
+</Books:bookCollection>

@@ -1,0 +1,2206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<purchaseOrder xsi:noNamespaceSchemaLocation="po.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" orderDate="2001-01-01">
+  <shipTo country="US">
+    <name>The Absolutely Fabricated Company Name Company - 92</name>
+    <street>92 Main Street</street>
+    <city>Boulder</city>
+    <state>Colorado</state>
+    <zip>80301</zip>
+  </shipTo>
+  <billTo country="US">
+    <name>We Pay for U, Inc.</name>
+    <street>105 Boulevard, Suite 92</street>
+    <city>Springfield</city>
+    <state>MA</state>
+    <zip>01103</zip>
+  </billTo>
+  <comment>This is the comment element.  Counter value at 92 when this file was generated.  The quick brown fox jumped over the lazy dog.</comment>
+  <items>
+    <item partNum="A-92">
+      <productName>Ronco Whizzomatic A</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-01</shipDate>
+    </item>
+    <item partNum="B-92">
+      <productName>Ronco Whizzomatic B</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-02</shipDate>
+    </item>
+    <item partNum="C-92">
+      <productName>Ronco Whizzomatic C</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-03</shipDate>
+    </item>
+    <item partNum="D-92">
+      <productName>Ronco Whizzomatic D</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-04</shipDate>
+    </item>
+    <item partNum="E-92">
+      <productName>Ronco Whizzomatic E</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-05</shipDate>
+    </item>
+    <item partNum="F-92">
+      <productName>Ronco Whizzomatic F</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-06</shipDate>
+    </item>
+    <item partNum="G-92">
+      <productName>Ronco Whizzomatic G</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-07</shipDate>
+    </item>
+    <item partNum="H-92">
+      <productName>Ronco Whizzomatic H</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-08</shipDate>
+    </item>
+    <item partNum="I-92">
+      <productName>Ronco Whizzomatic I</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-09</shipDate>
+    </item>
+    <item partNum="J-92">
+      <productName>Ronco Whizzomatic J</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-10</shipDate>
+    </item>
+    <item partNum="K-92">
+      <productName>Ronco Whizzomatic K</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-11</shipDate>
+    </item>
+    <item partNum="L-92">
+      <productName>Ronco Whizzomatic L</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-12</shipDate>
+    </item>
+    <item partNum="M-92">
+      <productName>Ronco Whizzomatic M</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-13</shipDate>
+    </item>
+    <item partNum="N-92">
+      <productName>Ronco Whizzomatic N</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-14</shipDate>
+    </item>
+    <item partNum="O-92">
+      <productName>Ronco Whizzomatic O</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-15</shipDate>
+    </item>
+    <item partNum="P-92">
+      <productName>Ronco Whizzomatic P</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-16</shipDate>
+    </item>
+    <item partNum="Q-92">
+      <productName>Ronco Whizzomatic Q</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-17</shipDate>
+    </item>
+    <item partNum="R-92">
+      <productName>Ronco Whizzomatic R</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-18</shipDate>
+    </item>
+    <item partNum="S-92">
+      <productName>Ronco Whizzomatic S</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-19</shipDate>
+    </item>
+    <item partNum="T-92">
+      <productName>Ronco Whizzomatic T</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-20</shipDate>
+    </item>
+    <item partNum="U-92">
+      <productName>Ronco Whizzomatic U</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-21</shipDate>
+    </item>
+    <item partNum="V-92">
+      <productName>Ronco Whizzomatic V</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-22</shipDate>
+    </item>
+    <item partNum="W-92">
+      <productName>Ronco Whizzomatic W</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-23</shipDate>
+    </item>
+    <item partNum="X-92">
+      <productName>Ronco Whizzomatic X</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-24</shipDate>
+    </item>
+    <item partNum="Y-92">
+      <productName>Ronco Whizzomatic Y</productName>
+      <quantity>1</quantity>
+      <USPrice>59.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-25</shipDate>
+    </item>
+    <item partNum="Z-92">
+      <productName>Ronco Whizzomatic Z</productName>
+      <quantity>1</quantity>
+      <USPrice>69.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-26</shipDate>
+    </item>
+    <item partNum="AA-92">
+      <productName>Ronco Whizzomatic A</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-01</shipDate>
+    </item>
+    <item partNum="BB-92">
+      <productName>Ronco Whizzomatic B</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-02</shipDate>
+    </item>
+    <item partNum="CC-92">
+      <productName>Ronco Whizzomatic C</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-03</shipDate>
+    </item>
+    <item partNum="DD-92">
+      <productName>Ronco Whizzomatic D</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-04</shipDate>
+    </item>
+    <item partNum="EE-92">
+      <productName>Ronco Whizzomatic E</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-05</shipDate>
+    </item>
+    <item partNum="FF-92">
+      <productName>Ronco Whizzomatic F</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-06</shipDate>
+    </item>
+    <item partNum="GG-92">
+      <productName>Ronco Whizzomatic G</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-07</shipDate>
+    </item>
+    <item partNum="HH-92">
+      <productName>Ronco Whizzomatic H</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-08</shipDate>
+    </item>
+    <item partNum="II-92">
+      <productName>Ronco Whizzomatic I</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-09</shipDate>
+    </item>
+    <item partNum="JJ-92">
+      <productName>Ronco Whizzomatic J</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-10</shipDate>
+    </item>
+    <item partNum="KK-92">
+      <productName>Ronco Whizzomatic K</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-11</shipDate>
+    </item>
+    <item partNum="LL-92">
+      <productName>Ronco Whizzomatic L</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-12</shipDate>
+    </item>
+    <item partNum="MM-92">
+      <productName>Ronco Whizzomatic M</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-13</shipDate>
+    </item>
+    <item partNum="NN-92">
+      <productName>Ronco Whizzomatic N</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-14</shipDate>
+    </item>
+    <item partNum="OO-92">
+      <productName>Ronco Whizzomatic O</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-15</shipDate>
+    </item>
+    <item partNum="PP-92">
+      <productName>Ronco Whizzomatic P</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-16</shipDate>
+    </item>
+    <item partNum="QQ-92">
+      <productName>Ronco Whizzomatic Q</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-17</shipDate>
+    </item>
+    <item partNum="RR-92">
+      <productName>Ronco Whizzomatic R</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-18</shipDate>
+    </item>
+    <item partNum="SS-92">
+      <productName>Ronco Whizzomatic S</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-19</shipDate>
+    </item>
+    <item partNum="TT-92">
+      <productName>Ronco Whizzomatic T</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-20</shipDate>
+    </item>
+    <item partNum="UU-92">
+      <productName>Ronco Whizzomatic U</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-21</shipDate>
+    </item>
+    <item partNum="VV-92">
+      <productName>Ronco Whizzomatic V</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-22</shipDate>
+    </item>
+    <item partNum="WW-92">
+      <productName>Ronco Whizzomatic W</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-23</shipDate>
+    </item>
+    <item partNum="XX-92">
+      <productName>Ronco Whizzomatic X</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-24</shipDate>
+    </item>
+    <item partNum="YY-92">
+      <productName>Ronco Whizzomatic Y</productName>
+      <quantity>1</quantity>
+      <USPrice>59.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-25</shipDate>
+    </item>
+    <item partNum="ZZ-92">
+      <productName>Ronco Whizzomatic Z</productName>
+      <quantity>1</quantity>
+      <USPrice>69.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-26</shipDate>
+    </item>
+    <item partNum="AAAA-92">
+      <productName>Ronco Whizzomatic A</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-01</shipDate>
+    </item>
+    <item partNum="BBBB-92">
+      <productName>Ronco Whizzomatic B</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-02</shipDate>
+    </item>
+    <item partNum="CCCC-92">
+      <productName>Ronco Whizzomatic C</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-03</shipDate>
+    </item>
+    <item partNum="DDDD-92">
+      <productName>Ronco Whizzomatic D</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-04</shipDate>
+    </item>
+    <item partNum="EEEE-92">
+      <productName>Ronco Whizzomatic E</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-05</shipDate>
+    </item>
+    <item partNum="FFFF-92">
+      <productName>Ronco Whizzomatic F</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-06</shipDate>
+    </item>
+    <item partNum="GGGG-92">
+      <productName>Ronco Whizzomatic G</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-07</shipDate>
+    </item>
+    <item partNum="HHHH-92">
+      <productName>Ronco Whizzomatic H</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-08</shipDate>
+    </item>
+    <item partNum="IIII-92">
+      <productName>Ronco Whizzomatic I</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-09</shipDate>
+    </item>
+    <item partNum="JJJJ-92">
+      <productName>Ronco Whizzomatic J</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-10</shipDate>
+    </item>
+    <item partNum="KKKK-92">
+      <productName>Ronco Whizzomatic K</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-11</shipDate>
+    </item>
+    <item partNum="LLLL-92">
+      <productName>Ronco Whizzomatic L</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-12</shipDate>
+    </item>
+    <item partNum="MMMM-92">
+      <productName>Ronco Whizzomatic M</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-13</shipDate>
+    </item>
+    <item partNum="NNNN-92">
+      <productName>Ronco Whizzomatic N</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-14</shipDate>
+    </item>
+    <item partNum="OOOO-92">
+      <productName>Ronco Whizzomatic O</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-15</shipDate>
+    </item>
+    <item partNum="PPPP-92">
+      <productName>Ronco Whizzomatic P</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-16</shipDate>
+    </item>
+    <item partNum="QQQQ-92">
+      <productName>Ronco Whizzomatic Q</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-17</shipDate>
+    </item>
+    <item partNum="RRRR-92">
+      <productName>Ronco Whizzomatic R</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-18</shipDate>
+    </item>
+    <item partNum="SSSS-92">
+      <productName>Ronco Whizzomatic S</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-19</shipDate>
+    </item>
+    <item partNum="TTTT-92">
+      <productName>Ronco Whizzomatic T</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-20</shipDate>
+    </item>
+    <item partNum="UUUU-92">
+      <productName>Ronco Whizzomatic U</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-21</shipDate>
+    </item>
+    <item partNum="VVVV-92">
+      <productName>Ronco Whizzomatic V</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-22</shipDate>
+    </item>
+    <item partNum="WWWW-92">
+      <productName>Ronco Whizzomatic W</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-23</shipDate>
+    </item>
+    <item partNum="XXXX-92">
+      <productName>Ronco Whizzomatic X</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-24</shipDate>
+    </item>
+    <item partNum="YYYY-92">
+      <productName>Ronco Whizzomatic Y</productName>
+      <quantity>1</quantity>
+      <USPrice>59.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-25</shipDate>
+    </item>
+    <item partNum="ZZZZ-92">
+      <productName>Ronco Whizzomatic Z</productName>
+      <quantity>1</quantity>
+      <USPrice>69.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2001-01-26</shipDate>
+    </item>
+    <item partNum="ABCD-92">
+      <productName>Ronco Whizzomatic Deluxe A</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-01</shipDate>
+    </item>
+    <item partNum="BCDE-92">
+      <productName>Ronco Whizzomatic Deluxe B</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-02</shipDate>
+    </item>
+    <item partNum="CDEF-92">
+      <productName>Ronco Whizzomatic Deluxe C</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-03</shipDate>
+    </item>
+    <item partNum="DEFG-92">
+      <productName>Ronco Whizzomatic Deluxe D</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-04</shipDate>
+    </item>
+    <item partNum="EFGH-92">
+      <productName>Ronco Whizzomatic Deluxe E</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-05</shipDate>
+    </item>
+    <item partNum="FGHI-92">
+      <productName>Ronco Whizzomatic Deluxe F</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-06</shipDate>
+    </item>
+    <item partNum="GHIJ-92">
+      <productName>Ronco Whizzomatic Deluxe G</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-07</shipDate>
+    </item>
+    <item partNum="HIJK-92">
+      <productName>Ronco Whizzomatic Deluxe H</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-08</shipDate>
+    </item>
+    <item partNum="IJKL-92">
+      <productName>Ronco Whizzomatic Deluxe I</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-09</shipDate>
+    </item>
+    <item partNum="JKLM-92">
+      <productName>Ronco Whizzomatic Deluxe J</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-10</shipDate>
+    </item>
+    <item partNum="KLMN-92">
+      <productName>Ronco Whizzomatic Deluxe K</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-11</shipDate>
+    </item>
+    <item partNum="LMNO-92">
+      <productName>Ronco Whizzomatic Deluxe L</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-12</shipDate>
+    </item>
+    <item partNum="MNOP-92">
+      <productName>Ronco Whizzomatic Deluxe M</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-13</shipDate>
+    </item>
+    <item partNum="NOPQ-92">
+      <productName>Ronco Whizzomatic Deluxe N</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-14</shipDate>
+    </item>
+    <item partNum="OPQR-92">
+      <productName>Ronco Whizzomatic Deluxe O</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-15</shipDate>
+    </item>
+    <item partNum="PQRS-92">
+      <productName>Ronco Whizzomatic Deluxe P</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-16</shipDate>
+    </item>
+    <item partNum="QRST-92">
+      <productName>Ronco Whizzomatic Deluxe Q</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-17</shipDate>
+    </item>
+    <item partNum="RSTU-92">
+      <productName>Ronco Whizzomatic Deluxe R</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-18</shipDate>
+    </item>
+    <item partNum="STUV-92">
+      <productName>Ronco Whizzomatic Deluxe S</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-19</shipDate>
+    </item>
+    <item partNum="TUVW-92">
+      <productName>Ronco Whizzomatic Deluxe T</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-20</shipDate>
+    </item>
+    <item partNum="UVWX-92">
+      <productName>Ronco Whizzomatic Deluxe U</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-21</shipDate>
+    </item>
+    <item partNum="VWXY-92">
+      <productName>Ronco Whizzomatic Deluxe V</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-22</shipDate>
+    </item>
+    <item partNum="WXYZ-92">
+      <productName>Ronco Whizzomatic Deluxe W</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-23</shipDate>
+    </item>
+    <item partNum="XYZA-92">
+      <productName>Ronco Whizzomatic Deluxe X</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-24</shipDate>
+    </item>
+    <item partNum="YZAB-92">
+      <productName>Ronco Whizzomatic Deluxe Y</productName>
+      <quantity>1</quantity>
+      <USPrice>59.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-25</shipDate>
+    </item>
+    <item partNum="ZABC-92">
+      <productName>Ronco Whizzomatic Deluxe Z</productName>
+      <quantity>1</quantity>
+      <USPrice>69.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2001-01-26</shipDate>
+    </item>
+
+    <item partNum="A-92">
+      <productName>Ronco Whizzomatic A</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-01</shipDate>
+    </item>
+    <item partNum="B-92">
+      <productName>Ronco Whizzomatic B</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-02</shipDate>
+    </item>
+    <item partNum="C-92">
+      <productName>Ronco Whizzomatic C</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-03</shipDate>
+    </item>
+    <item partNum="D-92">
+      <productName>Ronco Whizzomatic D</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-04</shipDate>
+    </item>
+    <item partNum="E-92">
+      <productName>Ronco Whizzomatic E</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-05</shipDate>
+    </item>
+    <item partNum="F-92">
+      <productName>Ronco Whizzomatic F</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-06</shipDate>
+    </item>
+    <item partNum="G-92">
+      <productName>Ronco Whizzomatic G</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-07</shipDate>
+    </item>
+    <item partNum="H-92">
+      <productName>Ronco Whizzomatic H</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-08</shipDate>
+    </item>
+    <item partNum="I-92">
+      <productName>Ronco Whizzomatic I</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-09</shipDate>
+    </item>
+    <item partNum="J-92">
+      <productName>Ronco Whizzomatic J</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-10</shipDate>
+    </item>
+    <item partNum="K-92">
+      <productName>Ronco Whizzomatic K</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-11</shipDate>
+    </item>
+    <item partNum="L-92">
+      <productName>Ronco Whizzomatic L</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-12</shipDate>
+    </item>
+    <item partNum="M-92">
+      <productName>Ronco Whizzomatic M</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-13</shipDate>
+    </item>
+    <item partNum="N-92">
+      <productName>Ronco Whizzomatic N</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-14</shipDate>
+    </item>
+    <item partNum="O-92">
+      <productName>Ronco Whizzomatic O</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-15</shipDate>
+    </item>
+    <item partNum="P-92">
+      <productName>Ronco Whizzomatic P</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-16</shipDate>
+    </item>
+    <item partNum="Q-92">
+      <productName>Ronco Whizzomatic Q</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-17</shipDate>
+    </item>
+    <item partNum="R-92">
+      <productName>Ronco Whizzomatic R</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-18</shipDate>
+    </item>
+    <item partNum="S-92">
+      <productName>Ronco Whizzomatic S</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-19</shipDate>
+    </item>
+    <item partNum="T-92">
+      <productName>Ronco Whizzomatic T</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-20</shipDate>
+    </item>
+    <item partNum="U-92">
+      <productName>Ronco Whizzomatic U</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-21</shipDate>
+    </item>
+    <item partNum="V-92">
+      <productName>Ronco Whizzomatic V</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-22</shipDate>
+    </item>
+    <item partNum="W-92">
+      <productName>Ronco Whizzomatic W</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-23</shipDate>
+    </item>
+    <item partNum="X-92">
+      <productName>Ronco Whizzomatic X</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-24</shipDate>
+    </item>
+    <item partNum="Y-92">
+      <productName>Ronco Whizzomatic Y</productName>
+      <quantity>1</quantity>
+      <USPrice>59.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-25</shipDate>
+    </item>
+    <item partNum="Z-92">
+      <productName>Ronco Whizzomatic Z</productName>
+      <quantity>1</quantity>
+      <USPrice>69.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-26</shipDate>
+    </item>
+    <item partNum="AA-92">
+      <productName>Ronco Whizzomatic A</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-01</shipDate>
+    </item>
+    <item partNum="BB-92">
+      <productName>Ronco Whizzomatic B</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-02</shipDate>
+    </item>
+    <item partNum="CC-92">
+      <productName>Ronco Whizzomatic C</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-03</shipDate>
+    </item>
+    <item partNum="DD-92">
+      <productName>Ronco Whizzomatic D</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-04</shipDate>
+    </item>
+    <item partNum="EE-92">
+      <productName>Ronco Whizzomatic E</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-05</shipDate>
+    </item>
+    <item partNum="FF-92">
+      <productName>Ronco Whizzomatic F</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-06</shipDate>
+    </item>
+    <item partNum="GG-92">
+      <productName>Ronco Whizzomatic G</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-07</shipDate>
+    </item>
+    <item partNum="HH-92">
+      <productName>Ronco Whizzomatic H</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-08</shipDate>
+    </item>
+    <item partNum="II-92">
+      <productName>Ronco Whizzomatic I</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-09</shipDate>
+    </item>
+    <item partNum="JJ-92">
+      <productName>Ronco Whizzomatic J</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-10</shipDate>
+    </item>
+    <item partNum="KK-92">
+      <productName>Ronco Whizzomatic K</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-11</shipDate>
+    </item>
+    <item partNum="LL-92">
+      <productName>Ronco Whizzomatic L</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-12</shipDate>
+    </item>
+    <item partNum="MM-92">
+      <productName>Ronco Whizzomatic M</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-13</shipDate>
+    </item>
+    <item partNum="NN-92">
+      <productName>Ronco Whizzomatic N</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-14</shipDate>
+    </item>
+    <item partNum="OO-92">
+      <productName>Ronco Whizzomatic O</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-15</shipDate>
+    </item>
+    <item partNum="PP-92">
+      <productName>Ronco Whizzomatic P</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-16</shipDate>
+    </item>
+    <item partNum="QQ-92">
+      <productName>Ronco Whizzomatic Q</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-17</shipDate>
+    </item>
+    <item partNum="RR-92">
+      <productName>Ronco Whizzomatic R</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-18</shipDate>
+    </item>
+    <item partNum="SS-92">
+      <productName>Ronco Whizzomatic S</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-19</shipDate>
+    </item>
+    <item partNum="TT-92">
+      <productName>Ronco Whizzomatic T</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-20</shipDate>
+    </item>
+    <item partNum="UU-92">
+      <productName>Ronco Whizzomatic U</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-21</shipDate>
+    </item>
+    <item partNum="VV-92">
+      <productName>Ronco Whizzomatic V</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-22</shipDate>
+    </item>
+    <item partNum="WW-92">
+      <productName>Ronco Whizzomatic W</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-23</shipDate>
+    </item>
+    <item partNum="XX-92">
+      <productName>Ronco Whizzomatic X</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-24</shipDate>
+    </item>
+    <item partNum="YY-92">
+      <productName>Ronco Whizzomatic Y</productName>
+      <quantity>1</quantity>
+      <USPrice>59.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-25</shipDate>
+    </item>
+    <item partNum="ZZ-92">
+      <productName>Ronco Whizzomatic Z</productName>
+      <quantity>1</quantity>
+      <USPrice>69.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-26</shipDate>
+    </item>
+    <item partNum="AAAA-92">
+      <productName>Ronco Whizzomatic A</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-01</shipDate>
+    </item>
+    <item partNum="BBBB-92">
+      <productName>Ronco Whizzomatic B</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-02</shipDate>
+    </item>
+    <item partNum="CCCC-92">
+      <productName>Ronco Whizzomatic C</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-03</shipDate>
+    </item>
+    <item partNum="DDDD-92">
+      <productName>Ronco Whizzomatic D</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-04</shipDate>
+    </item>
+    <item partNum="EEEE-92">
+      <productName>Ronco Whizzomatic E</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-05</shipDate>
+    </item>
+    <item partNum="FFFF-92">
+      <productName>Ronco Whizzomatic F</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-06</shipDate>
+    </item>
+    <item partNum="GGGG-92">
+      <productName>Ronco Whizzomatic G</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-07</shipDate>
+    </item>
+    <item partNum="HHHH-92">
+      <productName>Ronco Whizzomatic H</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-08</shipDate>
+    </item>
+    <item partNum="IIII-92">
+      <productName>Ronco Whizzomatic I</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-09</shipDate>
+    </item>
+    <item partNum="JJJJ-92">
+      <productName>Ronco Whizzomatic J</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-10</shipDate>
+    </item>
+    <item partNum="KKKK-92">
+      <productName>Ronco Whizzomatic K</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-11</shipDate>
+    </item>
+    <item partNum="LLLL-92">
+      <productName>Ronco Whizzomatic L</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-12</shipDate>
+    </item>
+    <item partNum="MMMM-92">
+      <productName>Ronco Whizzomatic M</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-13</shipDate>
+    </item>
+    <item partNum="NNNN-92">
+      <productName>Ronco Whizzomatic N</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-14</shipDate>
+    </item>
+    <item partNum="OOOO-92">
+      <productName>Ronco Whizzomatic O</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-15</shipDate>
+    </item>
+    <item partNum="PPPP-92">
+      <productName>Ronco Whizzomatic P</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-16</shipDate>
+    </item>
+    <item partNum="QQQQ-92">
+      <productName>Ronco Whizzomatic Q</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-17</shipDate>
+    </item>
+    <item partNum="RRRR-92">
+      <productName>Ronco Whizzomatic R</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-18</shipDate>
+    </item>
+    <item partNum="SSSS-92">
+      <productName>Ronco Whizzomatic S</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-19</shipDate>
+    </item>
+    <item partNum="TTTT-92">
+      <productName>Ronco Whizzomatic T</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-20</shipDate>
+    </item>
+    <item partNum="UUUU-92">
+      <productName>Ronco Whizzomatic U</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-21</shipDate>
+    </item>
+    <item partNum="VVVV-92">
+      <productName>Ronco Whizzomatic V</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-22</shipDate>
+    </item>
+    <item partNum="WWWW-92">
+      <productName>Ronco Whizzomatic W</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-23</shipDate>
+    </item>
+    <item partNum="XXXX-92">
+      <productName>Ronco Whizzomatic X</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-24</shipDate>
+    </item>
+    <item partNum="YYYY-92">
+      <productName>Ronco Whizzomatic Y</productName>
+      <quantity>1</quantity>
+      <USPrice>59.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-25</shipDate>
+    </item>
+    <item partNum="ZZZZ-92">
+      <productName>Ronco Whizzomatic Z</productName>
+      <quantity>1</quantity>
+      <USPrice>69.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2003-01-26</shipDate>
+    </item>
+    <item partNum="ABCD-92">
+      <productName>Ronco Whizzomatic Deluxe A</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-01</shipDate>
+    </item>
+    <item partNum="BCDE-92">
+      <productName>Ronco Whizzomatic Deluxe B</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-02</shipDate>
+    </item>
+    <item partNum="CDEF-92">
+      <productName>Ronco Whizzomatic Deluxe C</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-03</shipDate>
+    </item>
+    <item partNum="DEFG-92">
+      <productName>Ronco Whizzomatic Deluxe D</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-04</shipDate>
+    </item>
+    <item partNum="EFGH-92">
+      <productName>Ronco Whizzomatic Deluxe E</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-05</shipDate>
+    </item>
+    <item partNum="FGHI-92">
+      <productName>Ronco Whizzomatic Deluxe F</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-06</shipDate>
+    </item>
+    <item partNum="GHIJ-92">
+      <productName>Ronco Whizzomatic Deluxe G</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-07</shipDate>
+    </item>
+    <item partNum="HIJK-92">
+      <productName>Ronco Whizzomatic Deluxe H</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-08</shipDate>
+    </item>
+    <item partNum="IJKL-92">
+      <productName>Ronco Whizzomatic Deluxe I</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-09</shipDate>
+    </item>
+    <item partNum="JKLM-92">
+      <productName>Ronco Whizzomatic Deluxe J</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-10</shipDate>
+    </item>
+    <item partNum="KLMN-92">
+      <productName>Ronco Whizzomatic Deluxe K</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-11</shipDate>
+    </item>
+    <item partNum="LMNO-92">
+      <productName>Ronco Whizzomatic Deluxe L</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-12</shipDate>
+    </item>
+    <item partNum="MNOP-92">
+      <productName>Ronco Whizzomatic Deluxe M</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-13</shipDate>
+    </item>
+    <item partNum="NOPQ-92">
+      <productName>Ronco Whizzomatic Deluxe N</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-14</shipDate>
+    </item>
+    <item partNum="OPQR-92">
+      <productName>Ronco Whizzomatic Deluxe O</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-15</shipDate>
+    </item>
+    <item partNum="PQRS-92">
+      <productName>Ronco Whizzomatic Deluxe P</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-16</shipDate>
+    </item>
+    <item partNum="QRST-92">
+      <productName>Ronco Whizzomatic Deluxe Q</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-17</shipDate>
+    </item>
+    <item partNum="RSTU-92">
+      <productName>Ronco Whizzomatic Deluxe R</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-18</shipDate>
+    </item>
+    <item partNum="STUV-92">
+      <productName>Ronco Whizzomatic Deluxe S</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-19</shipDate>
+    </item>
+    <item partNum="TUVW-92">
+      <productName>Ronco Whizzomatic Deluxe T</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-20</shipDate>
+    </item>
+    <item partNum="UVWX-92">
+      <productName>Ronco Whizzomatic Deluxe U</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-21</shipDate>
+    </item>
+    <item partNum="VWXY-92">
+      <productName>Ronco Whizzomatic Deluxe V</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-22</shipDate>
+    </item>
+    <item partNum="WXYZ-92">
+      <productName>Ronco Whizzomatic Deluxe W</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-23</shipDate>
+    </item>
+    <item partNum="XYZA-92">
+      <productName>Ronco Whizzomatic Deluxe X</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-24</shipDate>
+    </item>
+    <item partNum="YZAB-92">
+      <productName>Ronco Whizzomatic Deluxe Y</productName>
+      <quantity>1</quantity>
+      <USPrice>59.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-25</shipDate>
+    </item>
+    <item partNum="ZABC-92">
+      <productName>Ronco Whizzomatic Deluxe Z</productName>
+      <quantity>1</quantity>
+      <USPrice>69.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2003-01-26</shipDate>
+    </item>
+
+    <item partNum="A-92">
+      <productName>Ronco Whizzomatic A</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-01</shipDate>
+    </item>
+    <item partNum="B-92">
+      <productName>Ronco Whizzomatic B</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-02</shipDate>
+    </item>
+    <item partNum="C-92">
+      <productName>Ronco Whizzomatic C</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-03</shipDate>
+    </item>
+    <item partNum="D-92">
+      <productName>Ronco Whizzomatic D</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-04</shipDate>
+    </item>
+    <item partNum="E-92">
+      <productName>Ronco Whizzomatic E</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-05</shipDate>
+    </item>
+    <item partNum="F-92">
+      <productName>Ronco Whizzomatic F</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-06</shipDate>
+    </item>
+    <item partNum="G-92">
+      <productName>Ronco Whizzomatic G</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-07</shipDate>
+    </item>
+    <item partNum="H-92">
+      <productName>Ronco Whizzomatic H</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-08</shipDate>
+    </item>
+    <item partNum="I-92">
+      <productName>Ronco Whizzomatic I</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-09</shipDate>
+    </item>
+    <item partNum="J-92">
+      <productName>Ronco Whizzomatic J</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-10</shipDate>
+    </item>
+    <item partNum="K-92">
+      <productName>Ronco Whizzomatic K</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-11</shipDate>
+    </item>
+    <item partNum="L-92">
+      <productName>Ronco Whizzomatic L</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-12</shipDate>
+    </item>
+    <item partNum="M-92">
+      <productName>Ronco Whizzomatic M</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-13</shipDate>
+    </item>
+    <item partNum="N-92">
+      <productName>Ronco Whizzomatic N</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-14</shipDate>
+    </item>
+    <item partNum="O-92">
+      <productName>Ronco Whizzomatic O</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-15</shipDate>
+    </item>
+    <item partNum="P-92">
+      <productName>Ronco Whizzomatic P</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-16</shipDate>
+    </item>
+    <item partNum="Q-92">
+      <productName>Ronco Whizzomatic Q</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-17</shipDate>
+    </item>
+    <item partNum="R-92">
+      <productName>Ronco Whizzomatic R</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-18</shipDate>
+    </item>
+    <item partNum="S-92">
+      <productName>Ronco Whizzomatic S</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-19</shipDate>
+    </item>
+    <item partNum="T-92">
+      <productName>Ronco Whizzomatic T</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-20</shipDate>
+    </item>
+    <item partNum="U-92">
+      <productName>Ronco Whizzomatic U</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-21</shipDate>
+    </item>
+    <item partNum="V-92">
+      <productName>Ronco Whizzomatic V</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-22</shipDate>
+    </item>
+    <item partNum="W-92">
+      <productName>Ronco Whizzomatic W</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-23</shipDate>
+    </item>
+    <item partNum="X-92">
+      <productName>Ronco Whizzomatic X</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-24</shipDate>
+    </item>
+    <item partNum="Y-92">
+      <productName>Ronco Whizzomatic Y</productName>
+      <quantity>1</quantity>
+      <USPrice>59.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-25</shipDate>
+    </item>
+    <item partNum="Z-92">
+      <productName>Ronco Whizzomatic Z</productName>
+      <quantity>1</quantity>
+      <USPrice>69.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-26</shipDate>
+    </item>
+    <item partNum="AA-92">
+      <productName>Ronco Whizzomatic A</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-01</shipDate>
+    </item>
+    <item partNum="BB-92">
+      <productName>Ronco Whizzomatic B</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-02</shipDate>
+    </item>
+    <item partNum="CC-92">
+      <productName>Ronco Whizzomatic C</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-03</shipDate>
+    </item>
+    <item partNum="DD-92">
+      <productName>Ronco Whizzomatic D</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-04</shipDate>
+    </item>
+    <item partNum="EE-92">
+      <productName>Ronco Whizzomatic E</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-05</shipDate>
+    </item>
+    <item partNum="FF-92">
+      <productName>Ronco Whizzomatic F</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-06</shipDate>
+    </item>
+    <item partNum="GG-92">
+      <productName>Ronco Whizzomatic G</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-07</shipDate>
+    </item>
+    <item partNum="HH-92">
+      <productName>Ronco Whizzomatic H</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-08</shipDate>
+    </item>
+    <item partNum="II-92">
+      <productName>Ronco Whizzomatic I</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-09</shipDate>
+    </item>
+    <item partNum="JJ-92">
+      <productName>Ronco Whizzomatic J</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-10</shipDate>
+    </item>
+    <item partNum="KK-92">
+      <productName>Ronco Whizzomatic K</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-11</shipDate>
+    </item>
+    <item partNum="LL-92">
+      <productName>Ronco Whizzomatic L</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-12</shipDate>
+    </item>
+    <item partNum="MM-92">
+      <productName>Ronco Whizzomatic M</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-13</shipDate>
+    </item>
+    <item partNum="NN-92">
+      <productName>Ronco Whizzomatic N</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-14</shipDate>
+    </item>
+    <item partNum="OO-92">
+      <productName>Ronco Whizzomatic O</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-15</shipDate>
+    </item>
+    <item partNum="PP-92">
+      <productName>Ronco Whizzomatic P</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-16</shipDate>
+    </item>
+    <item partNum="QQ-92">
+      <productName>Ronco Whizzomatic Q</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-17</shipDate>
+    </item>
+    <item partNum="RR-92">
+      <productName>Ronco Whizzomatic R</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-18</shipDate>
+    </item>
+    <item partNum="SS-92">
+      <productName>Ronco Whizzomatic S</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-19</shipDate>
+    </item>
+    <item partNum="TT-92">
+      <productName>Ronco Whizzomatic T</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-20</shipDate>
+    </item>
+    <item partNum="UU-92">
+      <productName>Ronco Whizzomatic U</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-21</shipDate>
+    </item>
+    <item partNum="VV-92">
+      <productName>Ronco Whizzomatic V</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-22</shipDate>
+    </item>
+    <item partNum="WW-92">
+      <productName>Ronco Whizzomatic W</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-23</shipDate>
+    </item>
+    <item partNum="XX-92">
+      <productName>Ronco Whizzomatic X</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-24</shipDate>
+    </item>
+    <item partNum="YY-92">
+      <productName>Ronco Whizzomatic Y</productName>
+      <quantity>1</quantity>
+      <USPrice>59.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-25</shipDate>
+    </item>
+    <item partNum="ZZ-92">
+      <productName>Ronco Whizzomatic Z</productName>
+      <quantity>1</quantity>
+      <USPrice>69.95</USPrice>
+      <comment>The double-letter series of whizzomatic has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-26</shipDate>
+    </item>
+    <item partNum="AAAA-92">
+      <productName>Ronco Whizzomatic A</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-01</shipDate>
+    </item>
+    <item partNum="BBBB-92">
+      <productName>Ronco Whizzomatic B</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-02</shipDate>
+    </item>
+    <item partNum="CCCC-92">
+      <productName>Ronco Whizzomatic C</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-03</shipDate>
+    </item>
+    <item partNum="DDDD-92">
+      <productName>Ronco Whizzomatic D</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-04</shipDate>
+    </item>
+    <item partNum="EEEE-92">
+      <productName>Ronco Whizzomatic E</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-05</shipDate>
+    </item>
+    <item partNum="FFFF-92">
+      <productName>Ronco Whizzomatic F</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-06</shipDate>
+    </item>
+    <item partNum="GGGG-92">
+      <productName>Ronco Whizzomatic G</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-07</shipDate>
+    </item>
+    <item partNum="HHHH-92">
+      <productName>Ronco Whizzomatic H</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-08</shipDate>
+    </item>
+    <item partNum="IIII-92">
+      <productName>Ronco Whizzomatic I</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-09</shipDate>
+    </item>
+    <item partNum="JJJJ-92">
+      <productName>Ronco Whizzomatic J</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-10</shipDate>
+    </item>
+    <item partNum="KKKK-92">
+      <productName>Ronco Whizzomatic K</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-11</shipDate>
+    </item>
+    <item partNum="LLLL-92">
+      <productName>Ronco Whizzomatic L</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-12</shipDate>
+    </item>
+    <item partNum="MMMM-92">
+      <productName>Ronco Whizzomatic M</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-13</shipDate>
+    </item>
+    <item partNum="NNNN-92">
+      <productName>Ronco Whizzomatic N</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-14</shipDate>
+    </item>
+    <item partNum="OOOO-92">
+      <productName>Ronco Whizzomatic O</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-15</shipDate>
+    </item>
+    <item partNum="PPPP-92">
+      <productName>Ronco Whizzomatic P</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-16</shipDate>
+    </item>
+    <item partNum="QQQQ-92">
+      <productName>Ronco Whizzomatic Q</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-17</shipDate>
+    </item>
+    <item partNum="RRRR-92">
+      <productName>Ronco Whizzomatic R</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-18</shipDate>
+    </item>
+    <item partNum="SSSS-92">
+      <productName>Ronco Whizzomatic S</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-19</shipDate>
+    </item>
+    <item partNum="TTTT-92">
+      <productName>Ronco Whizzomatic T</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-20</shipDate>
+    </item>
+    <item partNum="UUUU-92">
+      <productName>Ronco Whizzomatic U</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-21</shipDate>
+    </item>
+    <item partNum="VVVV-92">
+      <productName>Ronco Whizzomatic V</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-22</shipDate>
+    </item>
+    <item partNum="WWWW-92">
+      <productName>Ronco Whizzomatic W</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-23</shipDate>
+    </item>
+    <item partNum="XXXX-92">
+      <productName>Ronco Whizzomatic X</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-24</shipDate>
+    </item>
+    <item partNum="YYYY-92">
+      <productName>Ronco Whizzomatic Y</productName>
+      <quantity>1</quantity>
+      <USPrice>59.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-25</shipDate>
+    </item>
+    <item partNum="ZZZZ-92">
+      <productName>Ronco Whizzomatic Z</productName>
+      <quantity>1</quantity>
+      <USPrice>69.95</USPrice>
+      <comment>This thing is fast!</comment>
+      <shipDate>2005-01-26</shipDate>
+    </item>
+    <item partNum="ABCD-92">
+      <productName>Ronco Whizzomatic Deluxe A</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-01</shipDate>
+    </item>
+    <item partNum="BCDE-92">
+      <productName>Ronco Whizzomatic Deluxe B</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-02</shipDate>
+    </item>
+    <item partNum="CDEF-92">
+      <productName>Ronco Whizzomatic Deluxe C</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-03</shipDate>
+    </item>
+    <item partNum="DEFG-92">
+      <productName>Ronco Whizzomatic Deluxe D</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-04</shipDate>
+    </item>
+    <item partNum="EFGH-92">
+      <productName>Ronco Whizzomatic Deluxe E</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-05</shipDate>
+    </item>
+    <item partNum="FGHI-92">
+      <productName>Ronco Whizzomatic Deluxe F</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-06</shipDate>
+    </item>
+    <item partNum="GHIJ-92">
+      <productName>Ronco Whizzomatic Deluxe G</productName>
+      <quantity>1</quantity>
+      <USPrice>9.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-07</shipDate>
+    </item>
+    <item partNum="HIJK-92">
+      <productName>Ronco Whizzomatic Deluxe H</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-08</shipDate>
+    </item>
+    <item partNum="IJKL-92">
+      <productName>Ronco Whizzomatic Deluxe I</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-09</shipDate>
+    </item>
+    <item partNum="JKLM-92">
+      <productName>Ronco Whizzomatic Deluxe J</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-10</shipDate>
+    </item>
+    <item partNum="KLMN-92">
+      <productName>Ronco Whizzomatic Deluxe K</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-11</shipDate>
+    </item>
+    <item partNum="LMNO-92">
+      <productName>Ronco Whizzomatic Deluxe L</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-12</shipDate>
+    </item>
+    <item partNum="MNOP-92">
+      <productName>Ronco Whizzomatic Deluxe M</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-13</shipDate>
+    </item>
+    <item partNum="NOPQ-92">
+      <productName>Ronco Whizzomatic Deluxe N</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-14</shipDate>
+    </item>
+    <item partNum="OPQR-92">
+      <productName>Ronco Whizzomatic Deluxe O</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-15</shipDate>
+    </item>
+    <item partNum="PQRS-92">
+      <productName>Ronco Whizzomatic Deluxe P</productName>
+      <quantity>1</quantity>
+      <USPrice>19.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-16</shipDate>
+    </item>
+    <item partNum="QRST-92">
+      <productName>Ronco Whizzomatic Deluxe Q</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-17</shipDate>
+    </item>
+    <item partNum="RSTU-92">
+      <productName>Ronco Whizzomatic Deluxe R</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-18</shipDate>
+    </item>
+    <item partNum="STUV-92">
+      <productName>Ronco Whizzomatic Deluxe S</productName>
+      <quantity>1</quantity>
+      <USPrice>29.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-19</shipDate>
+    </item>
+    <item partNum="TUVW-92">
+      <productName>Ronco Whizzomatic Deluxe T</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-20</shipDate>
+    </item>
+    <item partNum="UVWX-92">
+      <productName>Ronco Whizzomatic Deluxe U</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-21</shipDate>
+    </item>
+    <item partNum="VWXY-92">
+      <productName>Ronco Whizzomatic Deluxe V</productName>
+      <quantity>1</quantity>
+      <USPrice>39.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-22</shipDate>
+    </item>
+    <item partNum="WXYZ-92">
+      <productName>Ronco Whizzomatic Deluxe W</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-23</shipDate>
+    </item>
+    <item partNum="XYZA-92">
+      <productName>Ronco Whizzomatic Deluxe X</productName>
+      <quantity>1</quantity>
+      <USPrice>49.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-24</shipDate>
+    </item>
+    <item partNum="YZAB-92">
+      <productName>Ronco Whizzomatic Deluxe Y</productName>
+      <quantity>1</quantity>
+      <USPrice>59.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-25</shipDate>
+    </item>
+    <item partNum="ZABC-92">
+      <productName>Ronco Whizzomatic Deluxe Z</productName>
+      <quantity>1</quantity>
+      <USPrice>69.95</USPrice>
+      <comment>The quadruple-letter series of Whizzomatic Deluxe has demonstrated its usefulness the world over in domains as varied as commercial food preparation and residential exterior maintenance activities.</comment>
+      <shipDate>2005-01-26</shipDate>
+    </item>
+  </items>
+</purchaseOrder>

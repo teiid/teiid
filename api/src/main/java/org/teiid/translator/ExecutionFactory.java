@@ -22,8 +22,11 @@
 
 package org.teiid.translator;
 
+import java.util.Collection;
 import java.util.List;
 
+import org.teiid.core.TeiidException;
+import org.teiid.core.util.ReflectionHelper;
 import org.teiid.language.BatchedUpdates;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
@@ -683,4 +686,21 @@ public class ExecutionFactory {
     	return false;
     }
 	
+    public static <T> T getInstance(Class<T> expectedType, String className, Collection ctorObjs, Class defaultClass) throws TranslatorException {
+    	try {
+	    	if (className == null) {
+	    		if (defaultClass == null) {
+	    			throw new TranslatorException("Neither class name or default class specified to create an instance"); //$NON-NLS-1$
+	    		}
+	    		return expectedType.cast(defaultClass.newInstance());
+	    	}
+	    	return expectedType.cast(ReflectionHelper.create(className, ctorObjs, Thread.currentThread().getContextClassLoader()));
+		} catch (TeiidException e) {
+			throw new TranslatorException(e);
+		} catch (IllegalAccessException e) {
+			throw new TranslatorException(e);
+		} catch(InstantiationException e) {
+			throw new TranslatorException(e);
+		}    	
+    }    
 }

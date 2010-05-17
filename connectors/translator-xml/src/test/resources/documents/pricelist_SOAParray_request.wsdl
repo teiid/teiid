@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions name="PriceListService"
+	targetNamespace="http://www.example.org/wsdl/PriceListService.wsdl"
+	xmlns="http://www.example.org/wsdl/PriceListService.wsdl"
+	xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+	xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+	xmlns:tns="http://www.example.com/wsdl/PriceListService.wsdl"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/">
+
+	<wsdl:types>
+		<xsd:schema 
+			targetNamespace="http://www.example.org/wsdl/PriceListService.wsdl"
+			xmlns:tns="http://www.example.com/wsdl/PriceListService.wsdl"
+			xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+			xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/">
+			<xsd:import
+				namespace="http://schemas.xmlsoap.org/soap/encoding/"
+				schemaLocation="http://schemas.xmlsoap.org/soap/encoding/" />
+
+			<xsd:complexType name="ArrayOfString">
+				<xsd:complexContent>
+					<xsd:restriction base="soapenc:Array">
+						<xsd:attribute ref="soapenc:arrayType"
+							wsdl:arrayType="string[]" />
+					</xsd:restriction>
+				</xsd:complexContent>
+			</xsd:complexType>
+
+			<xsd:complexType name="ArrayOfDouble">
+				<xsd:complexContent>
+					<xsd:restriction base="soapenc:Array">
+						<xsd:attribute ref="soapenc:arrayType"
+							wsdl:arrayType="double[]" />
+					</xsd:restriction>
+				</xsd:complexContent>
+			</xsd:complexType>
+
+			<xsd:complexType name="ArrayOfPairs">
+				<xsd:complexContent>
+					<xsd:restriction base="soapenc:Array">
+						<xsd:attribute ref="soapenc:arrayType"
+							wsdl:arrayType="pair[]" />
+					</xsd:restriction>
+				</xsd:complexContent>
+			</xsd:complexType>
+
+			<xsd:complexType name="pair">
+				<xsd:sequence>
+					<xsd:element name="Alpha" type="xsd:string"></xsd:element>
+					<xsd:element name="Beta" type="xsd:string"></xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+
+		</xsd:schema>
+	</wsdl:types>
+
+	<wsdl:message name="PriceListRequest">
+		<wsdl:part name="sku_list" type="ArrayOfString" />
+	</wsdl:message>
+
+	<wsdl:message name="PriceListResponse">
+		<wsdl:part name="price_list" type="ArrayOfDouble" />
+	</wsdl:message>
+	
+	<wsdl:message name="PairListRequest">
+		<wsdl:part name="sku_list" type="ArrayOfPairs" />
+	</wsdl:message>
+
+	<wsdl:portType name="PriceList_PortType">
+		<wsdl:operation name="getPriceList">            <wsdl:input message="PriceListRequest" />
+            <wsdl:output message="PriceListResponse" />
+		</wsdl:operation>
+		<wsdl:operation name="sendPairList">
+            <wsdl:input message="PairListRequest" />
+            <wsdl:output message="PriceListResponse" />
+		</wsdl:operation>
+	</wsdl:portType>
+
+	<wsdl:binding name="PriceList_Binding" type="PriceList_PortType">
+		<soap:binding style="rpc"
+			transport="http://schemas.xmlsoap.org/soap/http" />
+		<wsdl:operation name="getPriceList">
+			<soap:operation soapAction="urn:examples:pricelistservice" />
+			<wsdl:input>
+				<soap:body
+					encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+					namespace="urn:examples:pricelistservice" use="encoded" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body
+					encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+					namespace="urn:examples:pricelistservice" use="encoded" />
+			</wsdl:output>
+		</wsdl:operation>
+		
+		<wsdl:operation name="sendPairList">
+			<soap:operation soapAction="urn:examples:pairlistservice" />
+			<wsdl:input>
+				<soap:body
+					encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+					namespace="urn:examples:pricelistservice" use="encoded" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body
+					encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+					namespace="urn:examples:pricelistservice" use="encoded" />
+			</wsdl:output>
+		</wsdl:operation>
+	</wsdl:binding>
+
+	<wsdl:service name="PriceList_Service">
+		<wsdl:port name="PriceList_Port" binding="PriceList_Binding">
+			<soap:address
+				location="http://localhost:8080/soap/servlet/rpcrouter" />
+		</wsdl:port>
+	</wsdl:service>
+</wsdl:definitions>

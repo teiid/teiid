@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<personnel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation='personal.xsd'>
+
+  <person id="Big.Boss.268" >
+    <name><family>Boss</family> <given>Big</given></name>
+    <email>chief_268@foo.com</email>
+    <link subordinates="one.worker_268 two.worker_268 three.worker_268 four.worker_268 five.worker_268"/>
+  </person>
+
+  <person id="one.worker_268">
+    <name><family>Worker</family> <given>One_268</given></name>
+    <email>one_268@foo.com</email>
+    <link manager="Big.Boss.268"/>
+  </person>
+
+  <person id="two.worker_268">
+    <name><family>Worker</family> <given>Two_268</given></name>
+    <email>two_268@foo.com</email>
+    <link manager="Big.Boss.268"/>
+  </person>
+
+  <person id="three.worker_268">
+    <name><family>Worker</family> <given>Three_268</given></name>
+    <email>three_268@foo.com</email>
+    <link manager="Big.Boss.268"/>
+  </person>
+
+  <person id="four.worker_268">
+    <name><family>Worker</family> <given>Four_268</given></name>
+    <email>four_268@foo.com</email>
+    <link manager="Big.Boss.268"/>
+  </person>
+
+  <person id="five.worker_268">
+    <name><family>Worker</family> <given>Five_268</given></name>
+    <email>five_268@foo.com</email>
+    <link manager="Big.Boss.268"/>
+  </person>
+
+</personnel>

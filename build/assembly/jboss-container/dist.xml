@@ -47,7 +47,7 @@
 
         <includes>
             <include>org.jboss.teiid:teiid-jboss-integration</include>
-            <include>org.jboss.teiid.connectors:connector-xml</include>
+            <include>org.jboss.teiid.connectors:translator-xml</include>
         </includes>
 
         <binaries>
@@ -78,6 +78,8 @@
             <include>org.jboss.teiid.connectors:connector-ldap:rar</include>
             <include>org.jboss.teiid.connectors:translator-salesforce</include>
             <include>org.jboss.teiid.connectors:connector-salesforce:rar</include>
+            <include>org.jboss.teiid.connectors:connector-ws:rar</include>
+            
             <!-- 
             <include>org.jboss.teiid.connectors:connector-xml-http:rar</include>
             <include>org.jboss.teiid.connectors:connector-xml-file:rar</include>

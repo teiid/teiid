@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<personnel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation='personal.xsd'>
+
+  <person id="Big.Boss.355" >
+    <name><family>Boss</family> <given>Big</given></name>
+    <email>chief_355@foo.com</email>
+    <link subordinates="one.worker_355 two.worker_355 three.worker_355 four.worker_355 five.worker_355"/>
+  </person>
+
+  <person id="one.worker_355">
+    <name><family>Worker</family> <given>One_355</given></name>
+    <email>one_355@foo.com</email>
+    <link manager="Big.Boss.355"/>
+  </person>
+
+  <person id="two.worker_355">
+    <name><family>Worker</family> <given>Two_355</given></name>
+    <email>two_355@foo.com</email>
+    <link manager="Big.Boss.355"/>
+  </person>
+
+  <person id="three.worker_355">
+    <name><family>Worker</family> <given>Three_355</given></name>
+    <email>three_355@foo.com</email>
+    <link manager="Big.Boss.355"/>
+  </person>
+
+  <person id="four.worker_355">
+    <name><family>Worker</family> <given>Four_355</given></name>
+    <email>four_355@foo.com</email>
+    <link manager="Big.Boss.355"/>
+  </person>
+
+  <person id="five.worker_355">
+    <name><family>Worker</family> <given>Five_355</given></name>
+    <email>five_355@foo.com</email>
+    <link manager="Big.Boss.355"/>
+  </person>
+
+</personnel>

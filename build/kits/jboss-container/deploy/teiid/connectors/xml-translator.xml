@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<translator-factory>
+    <translator>
+        <name>xml</name>
+        <execution-factory-class>org.teiid.translator.xml.base.XMLExecutionFactory</execution-factory-class>
+        <template-name>translator-xml-${project.version}</template-name>
+    </translator>
+</translator-factory>

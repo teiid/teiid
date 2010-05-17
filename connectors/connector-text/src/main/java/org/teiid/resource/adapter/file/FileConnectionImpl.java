@@ -43,9 +43,14 @@ public class FileConnectionImpl extends BasicConnection implements FileConnectio
 	}
 
     public File[] getFiles(String location) {
-        if (location == null) return null;
+    	File datafile = null;
         
-        File datafile = new File(parentDirectory, location);
+    	if (location == null) {
+    		datafile = this.parentDirectory;
+        }
+        else {
+        	datafile = new File(parentDirectory, location);	
+        }
         
         if (datafile.isDirectory()) {
         	return datafile.listFiles();
