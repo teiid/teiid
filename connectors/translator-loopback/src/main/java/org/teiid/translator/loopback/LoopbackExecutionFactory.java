@@ -43,7 +43,15 @@ public class LoopbackExecutionFactory extends ExecutionFactory {
 	private boolean throwError = false;
 	private long pollIntervalInMilli = -1;
 	
-	@TranslatorProperty(name="wait-time", display="Max Random Wait Time",required=true, advanced=true, defaultValue="0")
+	public LoopbackExecutionFactory() {
+		setSupportsFullOuterJoins(true);
+		setSupportsOrderBy(true);
+		setSupportsOuterJoins(true);
+		setSupportsSelectDistinct(true);
+		setSupportsInnerJoins(true);
+	}
+	
+	@TranslatorProperty(display="Max Random Wait Time", advanced=true)
 	public int getWaitTime() {
 		return waitTime;
 	}
@@ -52,7 +60,7 @@ public class LoopbackExecutionFactory extends ExecutionFactory {
 		this.waitTime = waitTime.intValue();
 	}
 	
-	@TranslatorProperty(name="row-count", display="Rows Per Query",required=true, advanced=true, defaultValue="1")
+	@TranslatorProperty(display="Rows Per Query", advanced=true)
 	public int getRowCount() {
 		return rowCount;
 	}
@@ -61,7 +69,7 @@ public class LoopbackExecutionFactory extends ExecutionFactory {
 		this.rowCount = rowCount;
 	}
 	
-	@TranslatorProperty(name="throw-error", display="Always Throw Error", defaultValue="false")
+	@TranslatorProperty(display="Always Throw Error")
 	public boolean isThrowError() {
 		return this.throwError;
 	}
@@ -70,7 +78,7 @@ public class LoopbackExecutionFactory extends ExecutionFactory {
 		this.throwError = error.booleanValue();
 	}
 	
-	@TranslatorProperty(name="poll-intervel", display="Poll interval if using a Asynchronous Connector", defaultValue="-1")
+	@TranslatorProperty(display="Poll interval if using a Asynchronous Connector")
 	public long getPollIntervalInMilli() {
 		return this.pollIntervalInMilli;
 	}
@@ -154,7 +162,7 @@ public class LoopbackExecutionFactory extends ExecutionFactory {
     }
 
     @Override
-    public boolean supportsAliasedGroup() {
+    public boolean supportsAliasedTable() {
         return true;
     }
 
@@ -180,11 +188,6 @@ public class LoopbackExecutionFactory extends ExecutionFactory {
 
     @Override
     public boolean supportsExistsCriteria() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsFullOuterJoins() {
         return true;
     }
 
@@ -224,16 +227,6 @@ public class LoopbackExecutionFactory extends ExecutionFactory {
     }
 
     @Override
-    public boolean supportsOrderBy() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsOuterJoins() {
-        return true;
-    }
-
-    @Override
     public boolean supportsQuantifiedCompareCriteriaAll() {
         return true;
     }
@@ -249,14 +242,10 @@ public class LoopbackExecutionFactory extends ExecutionFactory {
     }
 
     @Override
-    public boolean supportsSelectDistinct() {
-        return true;
-    }
-
-    @Override
     public boolean supportsSelfJoins() {
         return true;
     }
+    
     @Override
     public boolean supportsInlineViews() {
         return true;
@@ -288,11 +277,6 @@ public class LoopbackExecutionFactory extends ExecutionFactory {
     
     @Override
     public boolean supportsCompareCriteriaOrdered() {
-    	return true;
-    }
-    
-    @Override
-    public boolean supportsInnerJoins() {
     	return true;
     }
     

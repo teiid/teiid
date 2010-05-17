@@ -46,6 +46,10 @@ public class DerbyExecutionFactory extends DB2ExecutionFactory {
 	
 	private String version = TEN_1;
 	
+	public DerbyExecutionFactory() {
+		setSupportsFullOuterJoins(false); //Derby supports only left and right outer joins.
+	}
+	
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
@@ -68,7 +72,7 @@ public class DerbyExecutionFactory extends DB2ExecutionFactory {
     	return version.compareTo(TEN_4) >= 0;
     }
     
-    @TranslatorProperty(name="DatabaseVersion", description= "Version of the postgres", defaultValue=TEN_1)
+    @TranslatorProperty(display="Database Version", description= "Derby Database Version")
     public String getDatabaseVersion() {
     	return this.version;
     }    
@@ -180,15 +184,6 @@ public class DerbyExecutionFactory extends DB2ExecutionFactory {
      */
     @Override
     public boolean supportsCaseExpressions() {
-        return false;
-    }
-    
-    /**
-     * Derby supports only left and right outer joins. 
-     * @since 5.0
-     */
-    @Override
-    public boolean supportsFullOuterJoins() {
         return false;
     }
     

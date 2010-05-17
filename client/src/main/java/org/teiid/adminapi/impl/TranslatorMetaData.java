@@ -21,7 +21,6 @@
  */
 package org.teiid.adminapi.impl;
 
-import java.io.Serializable;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -38,27 +37,23 @@ import org.teiid.adminapi.Translator;
 
 @ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="translator"), properties=ManagementProperties.EXPLICIT)
 @XmlAccessorType(XmlAccessType.NONE)
-public class TranslatorMetaData extends AdminObjectImpl implements Translator, Serializable {
+public class TranslatorMetaData extends AdminObjectImpl implements Translator {
 
 	private static final long serialVersionUID = 1680003620274793056L;
 	public static final String EXECUTION_FACTORY_CLASS = "execution-factory-class"; //$NON-NLS-1$
-	public static final String CAPBILITIES_CLASS = "capabilities-class"; //$NON-NLS-1$
 	public static final String IMMUTABLE = "immutable"; //$NON-NLS-1$
 	public static final String EXCEPTION_ON_MAX_ROWS = "exception-on-max-rows"; //$NON-NLS-1$
 	public static final String MAX_RESULT_ROWS = "max-result-rows"; //$NON-NLS-1$
 	public static final String XA_CAPABLE = "xa-capable"; //$NON-NLS-1$
-	public static final String OVERRIDE_CAPABILITIES_FILE = "override-capabilities-file"; //$NON-NLS-1$
 	public static final String NAME = "name"; //$NON-NLS-1$
 	public static final String TEMPLATE_NAME = "template-name"; //$NON-NLS-1$
 	
 	// objects are used to keep the jaxb putting verbose xml elements when they are not defined.
 	private String executionFactoryClass;
-	private String capabilitiesClass;
 	private boolean immutable = false;
 	private boolean exceptionOnMaxRows = false;
 	private int maxResultRows = -1;
 	private boolean xaCapable = false;
-	private String overrideCapabilitiesFile;
 	private String templateName;
 	
 	@Override
@@ -74,7 +69,7 @@ public class TranslatorMetaData extends AdminObjectImpl implements Translator, S
 	}
 	
 	@Override
-	@ManagementProperty(name=EXECUTION_FACTORY_CLASS, description="Connector Class", mandatory = true)
+	@ManagementProperty(name=EXECUTION_FACTORY_CLASS, description="Execution Factory Class", mandatory = true)
 	public String getExecutionFactoryClass() {
 		return executionFactoryClass;
 	}	
@@ -82,17 +77,6 @@ public class TranslatorMetaData extends AdminObjectImpl implements Translator, S
 	@XmlElement(name = EXECUTION_FACTORY_CLASS)
 	public void setExecutionFactoryClass(String arg0) {
 		this.executionFactoryClass = arg0;
-	}
-	
-	@Override
-	@ManagementProperty(name=CAPBILITIES_CLASS, description="The class to use to provide the Connector Capabilities")
-	public String getCapabilitiesClass() {
-		return capabilitiesClass;
-	}
-
-	@XmlElement(name = CAPBILITIES_CLASS)
-	public void setCapabilitiesClass(String arg0) {
-		this.capabilitiesClass = arg0;
 	}
 	
 	@Override
@@ -138,17 +122,6 @@ public class TranslatorMetaData extends AdminObjectImpl implements Translator, S
 	public void setXaCapable(boolean arg0) {
 		this.xaCapable = arg0;
 	}	
-	
-	@Override
-	@ManagementProperty(name=OVERRIDE_CAPABILITIES_FILE, description="Property file that defines the override capability properties")
-	public String getOverrideCapabilitiesFile() {
-		return this.overrideCapabilitiesFile;
-	}
-	
-	@XmlElement(name = OVERRIDE_CAPABILITIES_FILE)
-	public void setOverrideCapabilitiesFile(String propsFile) {
-		this.overrideCapabilitiesFile = propsFile;
-	}
 	
 	@Override
 	@XmlElement(name = "translator-property", type = PropertyMetadata.class)

@@ -32,6 +32,10 @@ import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
 
 public class AccessExecutionFactory extends SybaseExecutionFactory {
 	
+	public AccessExecutionFactory() {
+		setSupportsOrderBy(false);
+	}
+	
     @Override
     public String translateLiteralBoolean(Boolean booleanValue) {
         if(booleanValue.booleanValue()) {
@@ -43,11 +47,6 @@ public class AccessExecutionFactory extends SybaseExecutionFactory {
     @Override
     public boolean addSourceComment() {
     	return false;
-    }
-    
-    @Override
-    public boolean supportsOrderBy() {
-        return false;
     }
     
     @Override

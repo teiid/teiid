@@ -21,6 +21,8 @@
  */
 package org.teiid.deployers;
 
+import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.util.HashSet;
 
 import org.jboss.managed.api.Fields;
@@ -31,15 +33,68 @@ import org.jboss.metatype.api.types.MetaType;
 import org.jboss.metatype.api.types.SimpleMetaType;
 import org.jboss.metatype.api.values.MetaValue;
 import org.jboss.metatype.api.values.SimpleValueSupport;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.translator.TranslatorProperty;
 
 public class ManagedPropertyUtil {
+	private static final String[] EMPTY_ALLOWED = new String[0];
 	private static final String TEIID_PROPERTY = "teiid-property"; //$NON-NLS-1$
 	
-	public static ManagedProperty convert(TranslatorProperty prop) {
-		return createProperty(prop.name(), SimpleMetaType.resolve(prop.type().getName()), 
-				prop.display(), prop.description(), prop.required(), prop.readOnly(), prop.defaultValue(),
-				prop.advanced(), prop.masked(), prop.allowed());
+	public static ManagedProperty convert(Object instance, Method method, TranslatorProperty prop) {
+		Class<?> type = method.getReturnType();
+		String[] allowedValues = EMPTY_ALLOWED;
+		Method getter = null;
+		boolean readOnly = false;
+		if (type == Void.TYPE) { //check for setter
+			Class<?>[] types = method.getParameterTypes();
+			if (types.length != 1) {
+				throw new TeiidRuntimeException("TranslatorProperty annotation should be placed on valid getter or setter method, " + method + " is not valid."); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+			type = types[0];
+			try {
+				getter = instance.getClass().getMethod("get" + method.getName(), (Class[])null); //$NON-NLS-1$
+			} catch (Exception e) {
+				try {
+					getter = instance.getClass().getMethod("get" + method.getName().substring(3), (Class[])null); //$NON-NLS-1$
+				} catch (Exception e1) {
+					//can't find getter, won't set the default value
+				}
+			}
+		} else if (method.getParameterTypes().length != 0) {
+			throw new TeiidRuntimeException("TranslatorProperty annotation should be placed on valid getter or setter method, " + method + " is not valid."); //$NON-NLS-1$ //$NON-NLS-2$
+		} else {
+			getter = method;
+			try {
+				TranslatorDeployer.getSetter(instance.getClass(), method);
+			} catch (Exception e) {
+				readOnly = true;
+			}
+		}
+		Object defaultValue = null;
+		if (!prop.required() && getter != null) {
+			try {
+				defaultValue = getter.invoke(instance, (Object[])null);
+			} catch (Exception e) {
+				//no simple default value
+			}
+		}
+		if (type.isEnum()) {
+			Object[] constants = type.getEnumConstants();
+			allowedValues = new String[constants.length];
+			for( int i=0; i<constants.length; i++ ) {
+                allowedValues[i] = ((Enum<?>)constants[i]).name();
+            }
+			type = String.class;
+			if (defaultValue != null) {
+				defaultValue = ((Enum<?>)defaultValue).name();
+			}
+		}
+		if (!(defaultValue instanceof Serializable)) {
+			defaultValue = null; //TODO
+		}
+		return createProperty(TranslatorDeployer.getPropertyName(method), SimpleMetaType.resolve(type.getName()), 
+				prop.display(), prop.description(), prop.required(), readOnly, (Serializable)defaultValue,
+				prop.advanced(), prop.masked(), allowedValues);
 	}
 	
 	public static ManagedProperty convert(ExtendedPropertyMetadata prop) {
@@ -50,7 +105,7 @@ public class ManagedPropertyUtil {
 	
 	public static ManagedProperty createProperty(String name,
 			MetaType type, String displayName, String description,
-			boolean mandatory, boolean readOnly, String defaultValue) {
+			boolean mandatory, boolean readOnly, Serializable defaultValue) {
 
 		DefaultFieldsImpl fields = new DefaultFieldsImpl(name);
 		fields.setDescription(description);
@@ -68,7 +123,7 @@ public class ManagedPropertyUtil {
 	
 	public static ManagedProperty createProperty(String name,
 			SimpleMetaType type, String displayName, String description,
-			boolean mandatory, boolean readOnly, String defaultValue, boolean advanced,
+			boolean mandatory, boolean readOnly, Serializable defaultValue, boolean advanced,
 			boolean masked, String[] allowed) {
 		
 		ManagedProperty mp = createProperty(name, type, displayName, description, mandatory, readOnly, defaultValue);

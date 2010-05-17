@@ -28,10 +28,10 @@ import java.util.Map;
 import org.jboss.deployers.spi.DeploymentException;
 import org.jboss.deployers.spi.deployer.helpers.AbstractSimpleRealDeployer;
 import org.jboss.deployers.structure.spi.DeploymentUnit;
-import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.adminapi.impl.TranslatorMetaData;
 import org.teiid.core.TeiidException;
 import org.teiid.core.util.ReflectionHelper;
+import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.datamgr.impl.TranslatorRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -108,43 +108,58 @@ public class TranslatorDeployer extends AbstractSimpleRealDeployer<TranslatorMet
 			throw new DeploymentException(e);
 		} catch (IllegalAccessException e) {
 			throw new DeploymentException(e);
-		} catch (NoSuchMethodException e) {
-			throw new DeploymentException(e);
 		}
 	}
-    
-	private void injectProperties(ExecutionFactory ef, final TranslatorMetaData data) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException, DeploymentException{
+	
+	public static String getPropertyName(Method method) {
+		String result = method.getName();
+		if (result.startsWith("get") || result.startsWith("set")) { //$NON-NLS-1$ //$NON-NLS-2$
+			return result.substring(3);
+		}
+		else if (result.startsWith("is")) { //$NON-NLS-1$
+			return result.substring(2);
+		}
+		return result;
+	}
+	
+	public static Method getSetter(Class<?> clazz, Method method) throws SecurityException, DeploymentException {
+		String setter = method.getName();
+		if (method.getName().startsWith("get")) { //$NON-NLS-1$
+			setter = "set"+setter.substring(3);//$NON-NLS-1$
+		}
+		else if (method.getName().startsWith("is")) { //$NON-NLS-1$
+			setter = "set"+setter.substring(2); //$NON-NLS-1$
+		}
+		try {
+			return clazz.getMethod(setter, method.getReturnType());
+		} catch (NoSuchMethodException e) {
+			throw new DeploymentException(RuntimePlugin.Util.getString("no_set_method", setter, method.getName())); //$NON-NLS-1$
+		}
+	}
+	
+	private void injectProperties(ExecutionFactory ef, final TranslatorMetaData data) throws InvocationTargetException, IllegalAccessException, DeploymentException{
 		Map<Method, TranslatorProperty> props = TranslatorPropertyUtil.getTranslatorProperties(ef.getClass());
 		
 		for (Method method:props.keySet()) {
 			TranslatorProperty tp = props.get(method);
-			Object value = data.getPropertyValue(tp.name());
-			if (value == null) {
-				Method[] sourceMethods = data.getClass().getMethods();
-				for (Method sm:sourceMethods) {
-					ManagementProperty mp = sm.getAnnotation(ManagementProperty.class);
-					if (mp != null && mp.name().equals(tp.name())) {
-						value = sm.invoke(data);
-						break;
-					}
-				}
+			if (tp.managed()) {
+				continue;
 			}
+			String propertyName = getPropertyName(method);
+			Object value = data.getPropertyValue(propertyName);
 			
 			if (value != null) {
-				String setter = method.getName();
-				if (method.getName().startsWith("get")) { //$NON-NLS-1$
-					setter = "set"+method.getName().substring(3);//$NON-NLS-1$
-				}
-				else if (method.getName().startsWith("is")) { //$NON-NLS-1$
-					setter = "set"+method.getName().substring(2); //$NON-NLS-1$
-				}
-				Method setterMethod = ef.getClass().getMethod(setter, method.getReturnType());
-				if (setterMethod == null) {
-					throw new DeploymentException(RuntimePlugin.Util.getString("no_set_method", setter, tp.name())); //$NON-NLS-1$
-				}
+				Method setterMethod = getSetter(ef.getClass(), method);
 				setterMethod.invoke(ef, convert(value, method.getReturnType()));
+			} else if (tp.required()) {
+				throw new DeploymentException(RuntimePlugin.Util.getString("required_property_not_exists", tp.display())); //$NON-NLS-1$
 			}
 		}
+		
+		ef.setExceptionOnMaxRows(data.isExceptionOnMaxRows());
+		ef.setImmutable(data.isImmutable());
+		ef.setMaxResultRows(data.getMaxResultRows());
+		ef.setXaCapable(data.isXaCapable());
 	}
 
 	public void setTranslatorRepository(TranslatorRepository repo) {
@@ -155,31 +170,14 @@ public class TranslatorDeployer extends AbstractSimpleRealDeployer<TranslatorMet
 		this.vdbChecker = checker;
 	}
 	
-	Object convert(Object value, Class type) {
+	Object convert(Object value, Class<?> type) {
 		if(value.getClass() == type) {
 			return value;
 		}
 		
 		if (value instanceof String) {
 			String str = (String)value;
-			if (type == int.class || type == Integer.class) {
-				return Integer.parseInt(str);
-			}
-			else if (type == boolean.class || type == Boolean.class) {
-				return Boolean.parseBoolean(str);
-			}
-			else if (type == long.class || type == Long.class) {
-				return Long.parseLong(str);
-			}
-			else if (type == byte.class || type == Byte.class) {
-				return Byte.parseByte(str);
-			}
-			else if (type == short.class || type == Short.class) {
-				return Short.parseShort(str);
-			}
-			else if (type == float.class || type == Float.class) {
-				return Float.parseFloat(str);
-			}
+			return StringUtil.valueOf(str, type);
 		}
 		return value;
 	}

@@ -45,7 +45,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
-import org.teiid.translator.TranslatorCapabilities.SupportedJoinCriteria;
+import org.teiid.translator.ExecutionFactory.SupportedJoinCriteria;
 
 
 /**

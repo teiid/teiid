@@ -28,7 +28,7 @@ import java.util.List;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
-import org.teiid.translator.TranslatorCapabilities;
+import org.teiid.translator.ExecutionFactory;
 
 
 /**
@@ -40,16 +40,16 @@ public class CapabilitiesConverter {
     private CapabilitiesConverter() {
     }
 
-    public static SourceCapabilities convertCapabilities(TranslatorCapabilities srcCaps) {
+    public static SourceCapabilities convertCapabilities(ExecutionFactory srcCaps) {
         return convertCapabilities(srcCaps, null, false);
     }
     
-    public static BasicSourceCapabilities convertCapabilities(TranslatorCapabilities srcCaps, String connectorID, boolean isXa) {
+    public static BasicSourceCapabilities convertCapabilities(ExecutionFactory srcCaps, String connectorID, boolean isXa) {
         BasicSourceCapabilities tgtCaps = new BasicSourceCapabilities();
         
         tgtCaps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, srcCaps.supportsSelectExpression());
         tgtCaps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, srcCaps.supportsSelectDistinct());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, srcCaps.supportsAliasedGroup());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, srcCaps.supportsAliasedTable());
         tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, srcCaps.supportsInnerJoins());
         tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, srcCaps.supportsSelfJoins());
         tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, srcCaps.supportsOuterJoins());

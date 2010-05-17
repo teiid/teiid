@@ -462,7 +462,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         return true;
     }
     
-    @TranslatorProperty(name="DatabaseVersion", description= "Version of the postgres", defaultValue=EIGHT_0)
+    @TranslatorProperty(description= "PostgreSQL Database Version")
     public String getDatabaseVersion() {
     	return this.version;
     }

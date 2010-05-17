@@ -49,6 +49,10 @@ import org.teiid.translator.jdbc.LocateFunctionModifier;
  */
 public class MySQLExecutionFactory extends JDBCExecutionFactory {
 	
+	public MySQLExecutionFactory() {
+		setSupportsFullOuterJoins(false);
+	}
+	
 	/**
 	 * Adds support for the 2 argument form of padding
 	 */
@@ -378,10 +382,7 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
 //        supportedFunctions.add("VALUES"); //$NON-NLS-1$
         return supportedFunctions;
     }
-    @Override
-    public boolean supportsFullOuterJoins() {
-        return false;
-    }
+    
     @Override
     public boolean supportsAggregatesDistinct() {
         return false;
@@ -391,6 +392,7 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsRowLimit() {
         return true;
     }
+    
     @Override
     public boolean supportsRowOffset() {
         return true;

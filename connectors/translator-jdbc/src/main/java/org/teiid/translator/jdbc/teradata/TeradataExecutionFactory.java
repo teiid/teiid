@@ -35,13 +35,7 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 public class TeradataExecutionFactory extends JDBCExecutionFactory {
 
     public TeradataExecutionFactory() {
-    }
-    
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsFullOuterJoins()
-     */
-    public boolean supportsFullOuterJoins() {
-        return false;
+    	setSupportsOuterJoins(false);
     }
     
     @Override

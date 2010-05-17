@@ -43,12 +43,17 @@ import org.teiid.translator.UpdateExecution;
  */
 public class LDAPExecutionFactory extends ExecutionFactory {
 
-	private String searchDefaultBaseDN;
-	private boolean restrictToObjectClass = false;
-	private String searchDefaultScope = "SUBTREE_SCOPE"; //$NON-NLS-1$
+	public enum SearchDefaultScope {
+		SUBTREE_SCOPE,
+		OBJECT_SCOPE,
+		ONELEVEL_SCOPE
+	}
 	
-    	
-    @TranslatorProperty(name="SearchDefaultBaseDN", display="Default Search Base DN", description="Default Base DN for LDAP Searches",advanced=true, defaultValue="")
+	private String searchDefaultBaseDN;
+	private boolean restrictToObjectClass;
+	private SearchDefaultScope searchDefaultScope = SearchDefaultScope.ONELEVEL_SCOPE;
+	
+    @TranslatorProperty(display="Default Search Base DN", description="Default Base DN for LDAP Searches",required=true)
 	public String getSearchDefaultBaseDN() {
 		return searchDefaultBaseDN;
 	}
@@ -57,7 +62,7 @@ public class LDAPExecutionFactory extends ExecutionFactory {
 		this.searchDefaultBaseDN = searchDefaultBaseDN;
 	}
 	
-	@TranslatorProperty(name="RestrictToObjectClass", display="Restrict Searches To Named Object Class", description="Restrict Searches to objectClass named in the Name field for a table", advanced=true, defaultValue="false")
+	@TranslatorProperty(display="Restrict Searches To Named Object Class", description="Restrict Searches to objectClass named in the Name field for a table", advanced=true)
 	public boolean isRestrictToObjectClass() {
 		return restrictToObjectClass;
 	}
@@ -66,12 +71,12 @@ public class LDAPExecutionFactory extends ExecutionFactory {
 		this.restrictToObjectClass = restrictToObjectClass;
 	}
 
-	@TranslatorProperty(name="SearchDefaultScope", display="Default Search Scope", description="Default Scope for LDAP Searches", allowed={"OBJECT_SCOPE","ONELEVEL_SCOPE","SUBTREE_SCOPE"},required=true, defaultValue="SUBTREE_SCOPE")
-	public String getSearchDefaultScope() {
+	@TranslatorProperty(display="Default Search Scope", description="Default Scope for LDAP Searches")
+	public SearchDefaultScope getSearchDefaultScope() {
 		return searchDefaultScope;
 	}
 	
-	public void setSearchDefaultScope(String searchDefaultScope) {
+	public void setSearchDefaultScope(SearchDefaultScope searchDefaultScope) {
 		this.searchDefaultScope = searchDefaultScope;
 	}    
 	
@@ -120,12 +125,6 @@ public class LDAPExecutionFactory extends ExecutionFactory {
 	@Override
 	public boolean supportsOrCriteria() {
 		return true;
-	}
-
-	@Override
-	public boolean supportsOrderBy() {
-		// Removed this support -- see LDAPSyncQueryExecution comments for details.
-		return false;
 	}
 
 	@Override

@@ -56,11 +56,10 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Scope;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.translator.TranslatorCapabilities;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.MetadataProvider;
+import org.teiid.translator.TranslatorException;
 
 
 /**

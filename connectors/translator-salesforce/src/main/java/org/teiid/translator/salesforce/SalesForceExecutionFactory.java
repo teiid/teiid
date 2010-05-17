@@ -51,7 +51,14 @@ public class SalesForceExecutionFactory extends ExecutionFactory implements Meta
 
 	private String connectorStateClass;
 	private boolean auditModelFields = false;	
-
+	
+	public SalesForceExecutionFactory() {
+	    // http://jira.jboss.org/jira/browse/JBEDSP-306
+	    // Salesforce supports ORDER BY, but not on all column types
+		setSupportsOrderBy(false);
+		setSupportsOuterJoins(true);
+		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
+	}
 	
 	public String getConnectorStateClass() {
 		return this.connectorStateClass;
@@ -60,7 +67,7 @@ public class SalesForceExecutionFactory extends ExecutionFactory implements Meta
 		this.connectorStateClass = connectorStateClass;
 	}
 	
-	@TranslatorProperty(name="ModelAuditFields", display="Audit Model Fields", advanced=true, defaultValue="false")
+	@TranslatorProperty(display="Audit Model Fields", advanced=true)
 	public boolean isModelAuditFields() {
 		return this.auditModelFields;
 	}
@@ -140,13 +147,6 @@ public class SalesForceExecutionFactory extends ExecutionFactory implements Meta
         return true;
     }
 
-    // http://jira.jboss.org/jira/browse/JBEDSP-306
-    // Salesforce supports ORDER BY, but not on all column types
-    @Override
-    public boolean supportsOrderBy() {
-        return false;
-    }
-
     @Override
     public boolean supportsAggregatesCountStar() {
         return true;
@@ -167,13 +167,4 @@ public class SalesForceExecutionFactory extends ExecutionFactory implements Meta
         return true;
     }
 
-	@Override
-	public SupportedJoinCriteria getSupportedJoinCriteria() {
-		return SupportedJoinCriteria.KEY;
-	}
-
-	@Override
-	public boolean supportsOuterJoins() {
-		return true;
-	}	
 }

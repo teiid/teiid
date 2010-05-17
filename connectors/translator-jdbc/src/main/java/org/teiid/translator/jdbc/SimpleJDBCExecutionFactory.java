@@ -33,6 +33,12 @@ import java.util.List;
  */
 public class SimpleJDBCExecutionFactory extends JDBCExecutionFactory {
 
+	public SimpleJDBCExecutionFactory() {
+		setSupportsOuterJoins(false);
+		setSupportsFullOuterJoins(false);
+		setSupportsOrderBy(false);
+	}
+	
     @Override
     public int getMaxInCriteriaSize() {
     	return 250;
@@ -69,27 +75,12 @@ public class SimpleJDBCExecutionFactory extends JDBCExecutionFactory {
     }
 
     @Override
-    public boolean supportsSelectDistinct() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsAliasedGroup() {
+    public boolean supportsAliasedTable() {
         return false;
     }
 
     @Override
     public boolean supportsSelfJoins() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsOuterJoins() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsFullOuterJoins() {
         return false;
     }
 
@@ -121,11 +112,6 @@ public class SimpleJDBCExecutionFactory extends JDBCExecutionFactory {
 
     @Override
     public boolean supportsQuantifiedCompareCriteriaAll() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsOrderBy() {
         return false;
     }
 

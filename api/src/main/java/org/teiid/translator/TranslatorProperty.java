@@ -21,6 +21,7 @@
  */
 package org.teiid.translator;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
@@ -31,38 +32,44 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
+@Documented
 public @interface TranslatorProperty {
 
 	public static final String EMPTY_STRING = ""; //$NON-NLS-1$
-	public static final String GENERATED = "%GENERATED%"; //$NON-NLS-1$
 
-	// name of the property
-	String name() default GENERATED;
-	
-	// type of the property
-	Class type() default java.lang.String.class;
+	/**
+	 * Description to be shown in tools
+	 * @return
+	 */
+	String description() default EMPTY_STRING;
 
-	// description
-	String description() default GENERATED;
+	/**
+	 * Display name to be shown in tools
+	 * @return
+	 */
+	String display() default EMPTY_STRING;
 
-	// display name to be used in tools
-	String display() default GENERATED;
-
-	// is this mandatory property
+	/**
+	 * True if a non-null value must be supplied
+	 * @return
+	 */
 	boolean required() default false;
 
-	// is it modifiable
-	boolean readOnly() default false;
-	
-	// is advanced?
+	/**
+	 * True if this property should be shown in an advanced panel of properties.
+	 * @return
+	 */
 	boolean advanced() default false;
 	
-	// should mask the values of this property in the tools
+	/**
+	 * True if this is property should be masked when displayed - this has no effect on how the value is persisted.
+	 * @return
+	 */
 	boolean masked() default false;
 	
-	// if this represents a enum what are the legal values?
-	String[] allowed() default {};
-	
-	// what is the default in the string form
-	String defaultValue() default EMPTY_STRING;
+	/**
+	 * True if this is a full managed property, rather than just a name value pair
+	 * @return
+	 */
+	boolean managed() default false;
 }

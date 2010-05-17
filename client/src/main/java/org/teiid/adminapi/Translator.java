@@ -26,8 +26,6 @@ public interface Translator extends AdminObject{
 	
 	public String getExecutionFactoryClass();
 	
-	public String getCapabilitiesClass();
-
 	public boolean isImmutable();
 
 	public boolean isExceptionOnMaxRows();
@@ -36,9 +34,5 @@ public interface Translator extends AdminObject{
 	
 	public boolean isXaCapable();
 
-	public String getOverrideCapabilitiesFile();
-	
-	public void setOverrideCapabilitiesFile(String propsFile);
-	
 	public String getTemplateName();
 }

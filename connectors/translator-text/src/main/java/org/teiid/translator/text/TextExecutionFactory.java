@@ -72,7 +72,7 @@ public class TextExecutionFactory extends ExecutionFactory implements MetadataPr
 		initMetaDataProps();
     }
 
-	@TranslatorProperty(name="EnforceColumnCount", display="Enforce Column Count",description="This forces the number of columns in text file to match what was modeled", defaultValue="false")
+	@TranslatorProperty(display="Enforce Column Count",description="This forces the number of columns in text file to match what was modeled")
 	public boolean isEnforceColumnCount() {
 		return enforceColumnCount;
 	}
@@ -81,7 +81,7 @@ public class TextExecutionFactory extends ExecutionFactory implements MetadataPr
 		this.enforceColumnCount = enforceColumnCount.booleanValue();
 	}
 	
-	@TranslatorProperty(name="DateResultFormatsDelimiter", display="Date Result Formats Delimiter", advanced=true)
+	@TranslatorProperty(display="Date Result Formats Delimiter", advanced=true)
 	public String getDateResultFormatsDelimiter() {
 		return dateResultFormatsDelimiter;
 	}
@@ -90,7 +90,7 @@ public class TextExecutionFactory extends ExecutionFactory implements MetadataPr
 		this.dateResultFormatsDelimiter = dateResultFormatsDelimiter;
 	}
 
-	@TranslatorProperty(name="DateResultFormats", display="Date Result Formats",advanced=true)
+	@TranslatorProperty(display="Date Result Formats",advanced=true)
 	public String getDateResultFormats() {
 		return dateResultFormats;
 	}
@@ -99,7 +99,7 @@ public class TextExecutionFactory extends ExecutionFactory implements MetadataPr
 		this.dateResultFormats = dateResultFormats;
 	}	
 	
-	@TranslatorProperty(name="DescriptorFile", display="Descriptor File",required=true)
+	@TranslatorProperty(display="Descriptor File",required=true)
 	public String getDescriptorFile() {
 		return descriptorFile;
 	}
@@ -108,7 +108,7 @@ public class TextExecutionFactory extends ExecutionFactory implements MetadataPr
 		this.descriptorFile = descriptorFile;
 	}	
 	
-	@TranslatorProperty(name="Encoding", display="File Encoding",advanced=true)
+	@TranslatorProperty(display="File Encoding",advanced=true)
 	public String getEncoding() {
 		return encoding;
 	}

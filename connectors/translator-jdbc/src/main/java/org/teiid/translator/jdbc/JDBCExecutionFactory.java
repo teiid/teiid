@@ -142,9 +142,17 @@ public class JDBCExecutionFactory extends ExecutionFactory implements MetadataPr
 	private String databaseTimeZone;
 	private boolean trimStrings;
 	private boolean useCommentsInSourceQuery;
-	private int fetchSize;
+	private int fetchSize = 1024;
 	
 	boolean initialConnection = true;
+	
+	public JDBCExecutionFactory() {
+		setSupportsFullOuterJoins(true);
+		setSupportsOrderBy(true);
+		setSupportsOuterJoins(true);
+		setSupportsSelectDistinct(true);
+		setSupportsInnerJoins(true);
+	}
     
 	@Override
 	public void start() throws TranslatorException {
@@ -159,8 +167,8 @@ public class JDBCExecutionFactory extends ExecutionFactory implements MetadataPr
         }  		
     }
     
-	@TranslatorProperty(name="UseBindVariables", display="Use Bind Variables", description="Use prepared statements and bind variables",advanced=true, defaultValue="false")
-	public boolean isUseBindVariables() {
+	@TranslatorProperty(display="Use Bind Variables", description="Use prepared statements and bind variables",advanced=true)
+	public boolean useBindVariables() {
 		return this.useBindVariables;
 	}
 
@@ -168,7 +176,7 @@ public class JDBCExecutionFactory extends ExecutionFactory implements MetadataPr
 		this.useBindVariables = useBindVariables;
 	}
 
-	@TranslatorProperty(name="DatabaseTimeZone", display="Database time zone", description="Time zone of the database, if different than Integration Server", advanced=true)
+	@TranslatorProperty(display="Database time zone", description="Time zone of the database, if different than Integration Server", advanced=true)
 	public String getDatabaseTimeZone() {
 		return this.databaseTimeZone;
 	}
@@ -177,7 +185,7 @@ public class JDBCExecutionFactory extends ExecutionFactory implements MetadataPr
 		this.databaseTimeZone = databaseTimeZone;
 	}
 	
-	@TranslatorProperty(name="TrimStrings",display="Trim string flag", description="Right Trim fixed character types returned as Strings - note that the native type must be char or nchar and the source must support the rtrim function.",advanced=true, defaultValue="false")
+	@TranslatorProperty(display="Trim string flag", description="Right Trim fixed character types returned as Strings - note that the native type must be char or nchar and the source must support the rtrim function.",advanced=true)
 	public boolean isTrimStrings() {
 		return this.trimStrings;
 	}
@@ -186,8 +194,8 @@ public class JDBCExecutionFactory extends ExecutionFactory implements MetadataPr
 		this.trimStrings = trimStrings;
 	}
 
-	@TranslatorProperty(name="UseCommentsInSourceQuery", display="Use informational comments in Source Queries", description="This will embed /*comment*/ style comment with session/request id in source SQL query for informational purposes", advanced=true, defaultValue="false")
-	public boolean isUseCommentsInSourceQuery() {
+	@TranslatorProperty(display="Use informational comments in Source Queries", description="This will embed /*comment*/ style comment with session/request id in source SQL query for informational purposes", advanced=true)
+	public boolean useCommentsInSourceQuery() {
 		return this.useCommentsInSourceQuery;
 	}
 
@@ -196,7 +204,7 @@ public class JDBCExecutionFactory extends ExecutionFactory implements MetadataPr
 	}
 
 	
-	@TranslatorProperty(name="FetchSize", display="FetCh Size", description="fetch size used from the connector to its underlying source.", advanced=true, defaultValue="1024")
+	@TranslatorProperty(display="Fetch Size", description="fetch size used from the connector to its underlying source.", advanced=true)
 	public int getFetchSize() {
 		return this.fetchSize;
 	}
@@ -329,7 +337,7 @@ public class JDBCExecutionFactory extends ExecutionFactory implements MetadataPr
     }
 
     @Override
-    public boolean supportsAliasedGroup() {
+    public boolean supportsAliasedTable() {
         return true;
     }
 
@@ -355,11 +363,6 @@ public class JDBCExecutionFactory extends ExecutionFactory implements MetadataPr
 
     @Override
     public boolean supportsExistsCriteria() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsFullOuterJoins() {
         return true;
     }
 
@@ -399,18 +402,8 @@ public class JDBCExecutionFactory extends ExecutionFactory implements MetadataPr
     }
 
     @Override
-    public boolean supportsOrderBy() {
-        return true;
-    }
-    
-    @Override
     public boolean supportsOrderByUnrelated() {
     	return true;
-    }
-
-    @Override
-    public boolean supportsOuterJoins() {
-        return true;
     }
 
     @Override
@@ -425,11 +418,6 @@ public class JDBCExecutionFactory extends ExecutionFactory implements MetadataPr
 
     @Override
     public boolean supportsSearchedCaseExpressions() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsSelectDistinct() {
         return true;
     }
 
@@ -474,17 +462,7 @@ public class JDBCExecutionFactory extends ExecutionFactory implements MetadataPr
     }
     
     @Override
-    public SupportedJoinCriteria getSupportedJoinCriteria() {
-    	return SupportedJoinCriteria.ANY;
-    }
-    
-    @Override
     public boolean supportsHaving() {
-    	return true;
-    }
-    
-    @Override
-    public boolean supportsInnerJoins() {
     	return true;
     }
     
@@ -661,7 +639,7 @@ public class JDBCExecutionFactory extends ExecutionFactory implements MetadataPr
      * indicating the session and request ids.
      */
     public boolean addSourceComment() {
-        return isUseCommentsInSourceQuery();
+        return useCommentsInSourceQuery();
     }   
     
     /**
@@ -682,7 +660,7 @@ public class JDBCExecutionFactory extends ExecutionFactory implements MetadataPr
      * can be used to force a literal to be a bind value.  
      */
     public boolean usePreparedStatements() {
-    	return isUseBindVariables();
+    	return useBindVariables();
     }
     
     /**

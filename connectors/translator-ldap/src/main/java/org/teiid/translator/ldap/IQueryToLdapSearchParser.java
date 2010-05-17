@@ -75,6 +75,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.ldap.LDAPExecutionFactory.SearchDefaultScope;
 
 
 
@@ -326,7 +327,10 @@ public class IQueryToLdapSearchParser {
 			// if there is no search scope specified
 			// try the default in the connector properties
 			if(searchScopeString.equals("")) {  //$NON-NLS-1$
-				searchScopeString = this.executionFactory.getSearchDefaultScope();	
+				SearchDefaultScope searchDefaultScope = this.executionFactory.getSearchDefaultScope();
+				if (searchDefaultScope != null) {
+					searchScopeString = searchDefaultScope.name();
+				}
 				// protect against getting null back from the property
 				if(searchScopeString == null) {
 					searchScopeString = "";  //$NON-NLS-1$

@@ -24,10 +24,12 @@ package org.teiid.translator;
 
 import java.util.List;
 
+import org.teiid.language.BatchedUpdates;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.LanguageFactory;
 import org.teiid.language.QueryExpression;
+import org.teiid.language.SetQuery;
 import org.teiid.metadata.RuntimeMetadata;
 
 
@@ -38,17 +40,53 @@ import org.teiid.metadata.RuntimeMetadata;
  * The deployer instantiates this class through reflection. So it is important to have no-arg constructor. Once constructed
  * the "start" method is called. This class represents the basic capabilities of the translator.
  */
-public class ExecutionFactory implements TranslatorCapabilities{
+public class ExecutionFactory {
+	
+	public enum SupportedJoinCriteria {
+		/**
+		 * Indicates that any supported criteria is allowed.
+		 */
+		ANY, 
+		/**
+		 * Indicates that any simple comparison of elements is allowed. 
+		 */
+		THETA,
+		/**
+		 * Indicates that only equality predicates of elements are allowed.
+		 */
+		EQUI,
+		/**
+		 * Indicates that only equality predicates between
+		 * exactly one primary and foreign key is allowed per join.
+		 */
+		KEY
+	}
 
 	public static final int DEFAULT_MAX_FROM_GROUPS = -1;
+	public static final int DEFAULT_MAX_IN_CRITERIA_SIZE = -1;
+	public static final int DEFAULT_MAX_ROWS = -1;
 
 	private static final TypeFacility TYPE_FACILITY = new TypeFacility();
 	
-	private boolean immutable = false;
-	private boolean exceptionOnMaxRows = false;
-	private int maxResultRows = DEFAULT_MAX_FROM_GROUPS;
+	/*
+	 * Managed execution properties
+	 */
+	private boolean immutable;
+	private boolean exceptionOnMaxRows = true;
+	private int maxResultRows = DEFAULT_MAX_ROWS;
 	private boolean xaCapable;
 	private boolean sourceRequired = true;
+	
+	/*
+	 * Support properties
+	 */
+	private boolean supportsSelectDistinct;
+	private boolean supportsOuterJoins;
+	private SupportedJoinCriteria supportedJoinCriteria = SupportedJoinCriteria.ANY;
+	private boolean supportsOrderBy;
+	private boolean supportsInnerJoins;
+	private boolean supportsFullOuterJoins;
+	private boolean requiresCriteria;
 	
 	/**
 	 * Initialize the connector with supplied configuration
@@ -60,7 +98,7 @@ public class ExecutionFactory implements TranslatorCapabilities{
 	 * Defines if the Connector is read-only connector 
 	 * @return
 	 */
-	@TranslatorProperty(name="immutable", display="Is Immutable",description="Is Immutable, True if the source never changes.",advanced=true, defaultValue="false")
+	@TranslatorProperty(managed=true, display="Is Immutable",description="Is Immutable, True if the source never changes.",advanced=true)
 	public boolean isImmutable() {
 		return immutable;
 	}
@@ -73,7 +111,7 @@ public class ExecutionFactory implements TranslatorCapabilities{
 	 * Throw exception if there are more rows in the result set than specified in the MaxResultRows setting.
 	 * @return
 	 */
-	@TranslatorProperty(name="exception-on-max-rows", display="Exception on Exceeding Max Rows",description="Indicates if an Exception should be thrown if the specified value for Maximum Result Rows is exceeded; else no exception and no more than the maximum will be returned",advanced=true, defaultValue="true")
+	@TranslatorProperty(managed=true, display="Exception on Exceeding Max Rows",description="Indicates if an Exception should be thrown if the specified value for Maximum Result Rows is exceeded; else no exception and no more than the maximum will be returned",advanced=true)
 	public boolean isExceptionOnMaxRows() {
 		return exceptionOnMaxRows;
 	}
@@ -86,9 +124,9 @@ public class ExecutionFactory implements TranslatorCapabilities{
 	 * Maximum result set rows to fetch
 	 * @return
 	 */
-	@TranslatorProperty(name="max-result-rows", display="Maximum Result Rows", description="Maximum Result Rows allowed", advanced=true, defaultValue="-1")
+	@TranslatorProperty(managed=true, display="Maximum Result Rows", description="Maximum Result Rows allowed", advanced=true)
 	public int getMaxResultRows() {
-		return maxResultRows;
+		return maxResultRows = DEFAULT_MAX_ROWS;
 	}
 
 	public void setMaxResultRows(int arg0) {
@@ -99,7 +137,7 @@ public class ExecutionFactory implements TranslatorCapabilities{
 	 * Shows the XA transaction capability of the Connector.
 	 * @return
 	 */
-	@TranslatorProperty(name="xa-capable", display="Is XA Capable", description="True, if this connector supports XA Transactions", defaultValue="false")
+	@TranslatorProperty(managed=true, display="Is XA Capable", description="True, if this connector supports XA Transactions")
 	public boolean isXaCapable() {
 		return xaCapable;
 	}
@@ -168,263 +206,481 @@ public class ExecutionFactory implements TranslatorCapabilities{
 		throw new TranslatorException("Unsupported Execution");//$NON-NLS-1$
 	}   
 	
-	@Override
-    public boolean supportsSelectDistinct() {
-        return false;
+    /** 
+     * Support indicates connector can accept queries with SELECT DISTINCT
+     * @since 3.1 SP2 
+     */
+	@TranslatorProperty(display="Supports Select Distinct", description="True, if this connector supports SELECT DISTINCT", advanced=true)
+    public final boolean supportsSelectDistinct() {
+    	return supportsSelectDistinct;
+    }
+	
+	public void setSupportsSelectDistinct(boolean supportsSelectDistinct) {
+		this.supportsSelectDistinct = supportsSelectDistinct;
+	}
+
+    /** 
+     * Support indicates connector can accept expressions other than element
+     * symbols in the SELECT clause.  Specific supports for the expression
+     * type are still checked.
+     * @since 6.1.0
+     */
+    public boolean supportsSelectExpression() {
+    	return false;
     }
 
-    @Override
-    public boolean supportsAliasedGroup() {
-        return false;
+    /**
+     * Support indicates connector can accept groups with aliases  
+     * @since 3.1 SP2
+     */
+    public boolean supportsAliasedTable() {
+    	return false;
     }
 
-    @Override
+    /** 
+     * Get the supported join criteria. A null return value will be treated
+     * as {@link SupportedJoinCriteria#ANY}  
+     * @since 6.1.0
+     */
+	@TranslatorProperty(display="Supported Join Criteria", description="Returns one of any, theta, equi, or key", advanced=true)
+    public final SupportedJoinCriteria getSupportedJoinCriteria() {
+    	return supportedJoinCriteria;
+    }
+	
+	public void setSupportedJoinCriteria(
+			SupportedJoinCriteria supportedJoinCriteria) {
+		this.supportedJoinCriteria = supportedJoinCriteria;
+	}
+    
+    /** 
+     * Support indicates connector can accept inner or cross joins
+     * @since 6.1.0
+     */
+	@TranslatorProperty(display="Supports Inner Joins", description="True, if this connector supports inner joins", advanced=true)
+    public final boolean supportsInnerJoins() {
+    	return supportsInnerJoins;
+    }
+	
+	public void setSupportsInnerJoins(boolean supportsInnerJoins) {
+		this.supportsInnerJoins = supportsInnerJoins;
+	}
+    
+    /** 
+     * Support indicates connector can accept self-joins where a 
+     * group is joined to itself with aliases.  Connector must also support
+     * {@link #supportsAliasedTable()}. 
+     * @since 3.1 SP2
+     */
     public boolean supportsSelfJoins() {
-        return false;
+    	return false;
     }
-
-    @Override
-    public boolean supportsOuterJoins() {
-        return false;
+    
+    /** 
+     * Support indicates connector can accept left outer joins 
+     * @since 3.1 SP2
+     */
+	@TranslatorProperty(display="Supports Outer Joins", description="True, if this connector supports outer joins", advanced=true)
+    public final boolean supportsOuterJoins() {
+    	return supportsOuterJoins;
     }
-
-    @Override
-    public boolean supportsFullOuterJoins() {
-        return false;
+	
+	public void setSupportsOuterJoins(boolean supportsOuterJoins) {
+		this.supportsOuterJoins = supportsOuterJoins;
+	}
+    
+    /** 
+     * Support indicates connector can accept full outer joins
+     * @since 3.1 SP2 
+     */
+	@TranslatorProperty(display="Supports Full Outer Joins", description="True, if this connector supports full outer joins", advanced=true)
+    public final boolean supportsFullOuterJoins() {
+    	return supportsFullOuterJoins;
     }
+	
+	public void setSupportsFullOuterJoins(boolean supportsFullOuterJoins) {
+		this.supportsFullOuterJoins = supportsFullOuterJoins;
+	}
 
-    @Override
-    public boolean supportsBetweenCriteria() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsCompareCriteriaEquals() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsLikeCriteria() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsLikeCriteriaEscapeCharacter() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsInCriteria() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsInCriteriaSubquery() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsIsNullCriteria() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsOrCriteria() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsNotCriteria() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsExistsCriteria() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsQuantifiedCompareCriteriaSome() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsQuantifiedCompareCriteriaAll() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsOrderBy() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsAggregatesSum() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsAggregatesAvg() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsAggregatesMin() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsAggregatesMax() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsAggregatesCount() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsAggregatesCountStar() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsAggregatesDistinct() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsScalarSubqueries() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsCorrelatedSubqueries() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsCaseExpressions() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsSearchedCaseExpressions() {
-        return false;
-    }
-
-    @Override
-    public List<String> getSupportedFunctions() {
-        return null;
-    }
-
+    /** 
+     * Support indicates connector can accept inline views (subqueries
+     * in the FROM clause).  
+     * @since 4.1 
+     */
     public boolean supportsInlineViews() {
-        return false;
+    	return false;
+    }
+
+    /** 
+     * Support indicates connector accepts criteria of form (element BETWEEN constant AND constant)
+     * <br>NOT CURRENTLY USED - between is rewritten as compound compare criteria
+     * @since 4.0
+     */
+    public boolean supportsBetweenCriteria() {
+    	return false;
     }
     
-    @Override
+    /** 
+     * Support indicates connector accepts criteria of form (element = constant) 
+     * @since 3.1 SP2
+     */
+    public boolean supportsCompareCriteriaEquals() {
+    	return false;
+    }
+
+    /** 
+     * Support indicates connector accepts criteria of form (element &lt;=|&gt;= constant)
+     * <br>The query engine will may pushdown queries containing &lt; or &gt; if NOT is also
+     * supported.  
+     * @since 3.1 SP2
+     */
+    public boolean supportsCompareCriteriaOrdered() {
+    	return false;
+    }
+
+    /** 
+     * Support indicates connector accepts criteria of form (element LIKE constant) 
+     * @since 3.1 SP2
+     */
+    public boolean supportsLikeCriteria() {
+    	return false;
+    }
+        
+    /** 
+     * Support indicates connector accepts criteria of form (element LIKE constant ESCAPE char)
+     * @since 3.1 SP2
+     */
+    public boolean supportsLikeCriteriaEscapeCharacter() {
+    	return false;
+    }
+
+    /** 
+     * Support indicates connector accepts criteria of form (element IN set) 
+     * @since 3.1 SP2
+     */
+    public boolean supportsInCriteria() {
+    	return false;
+    }
+
+    /** 
+     * Support indicates connector accepts IN criteria with a subquery on the right side 
+     * @since 4.0
+     */
+    public boolean supportsInCriteriaSubquery() {
+    	return false;
+    }
+
+    /** 
+     * Support indicates connector accepts criteria of form (element IS NULL) 
+     * @since 3.1 SP2
+     */
+    public boolean supportsIsNullCriteria() {
+    	return false;
+    }
+
+    /** 
+     * Support indicates connector accepts logical criteria connected by OR 
+     * @since 3.1 SP2
+     */
+    public boolean supportsOrCriteria() {
+    	return false;
+    }
+
+    /** 
+     * Support indicates connector accepts logical criteria NOT 
+     * @since 3.1 SP2
+     */
+    public boolean supportsNotCriteria() {
+    	return false;
+    }
+
+    /** 
+     * Support indicates connector accepts the EXISTS criteria 
+     * @since 4.0
+     */
+    public boolean supportsExistsCriteria() {
+    	return false;
+    }
+
+    /** 
+     * Support indicates connector accepts the quantified comparison criteria that 
+     * use SOME
+     * @since 4.0
+     */
+    public boolean supportsQuantifiedCompareCriteriaSome() {
+    	return false;
+    }
+
+    /** 
+     * Support indicates connector accepts the quantified comparison criteria that 
+     * use ALL
+     * @since 4.0
+     */
+    public boolean supportsQuantifiedCompareCriteriaAll() {
+    	return false;
+    }
+
+    /** 
+     * Support indicates connector accepts ORDER BY clause, including multiple elements
+     * and ascending and descending sorts.    
+     * @since 3.1 SP2
+     */
+    @TranslatorProperty(display="Supports ORDER BY", description="True, if this connector supports ORDER BY", advanced=true)
+    public final boolean supportsOrderBy() {
+    	return supportsOrderBy;
+    }
+    
+    public void setSupportsOrderBy(boolean supportsOrderBy) {
+		this.supportsOrderBy = supportsOrderBy;
+	}
+    
+    /**
+     * Support indicates connector accepts ORDER BY clause with columns not from the select    
+     * @since 6.2
+     * @return
+     */
+    public boolean supportsOrderByUnrelated() {
+    	return false;
+    }
+    
+    /**
+     * Whether the source supports an explicit GROUP BY clause
+     * @since 6.1
+     */
+    public boolean supportsGroupBy() {
+    	return false;
+    }
+
+    /**
+     * Whether the source supports the HAVING clause
+     * @since 6.1
+     */
+    public boolean supportsHaving() {
+    	return false;
+    }
+    
+    /** 
+     * Support indicates connector can accept the SUM aggregate function 
+     * @since 3.1 SP2
+     */
+    public boolean supportsAggregatesSum() {
+    	return false;
+    }
+    
+    /** 
+     * Support indicates connector can accept the AVG aggregate function
+     * @since 3.1 SP2 
+     */
+    public boolean supportsAggregatesAvg() {
+    	return false;
+    }
+    
+    /** 
+     * Support indicates connector can accept the MIN aggregate function 
+     * @since 3.1 SP2
+     */
+    public boolean supportsAggregatesMin() {
+    	return false;
+    }
+    
+    /** 
+     * Support indicates connector can accept the MAX aggregate function 
+     * @since 3.1 SP2
+     */
+    public boolean supportsAggregatesMax() {
+    	return false;
+    }
+    
+    /** 
+     * Support indicates connector can accept the COUNT aggregate function
+     * @since 3.1 SP2 
+     */
+    public boolean supportsAggregatesCount() {
+    	return false;
+    }
+    
+    /** 
+     * Support indicates connector can accept the COUNT(*) aggregate function 
+     * @since 3.1 SP2
+     */
+    public boolean supportsAggregatesCountStar() {
+    	return false;
+    }
+    
+    /** 
+     * Support indicates connector can accept DISTINCT within aggregate functions 
+     * @since 3.1 SP2
+     */
+    public boolean supportsAggregatesDistinct() {
+    	return false;
+    }
+
+    /** 
+     * Support indicates connector can accept scalar subqueries in the SELECT, WHERE, and
+     * HAVING clauses
+     * @since 4.0
+     */
+    public boolean supportsScalarSubqueries() {
+    	return false;
+    }
+
+    /** 
+     * Support indicates connector can accept correlated subqueries wherever subqueries
+     * are accepted 
+     * @since 4.0
+     */
+    public boolean supportsCorrelatedSubqueries() {
+    	return false;
+    }
+    
+    /**
+     * Support indicates connector can accept queries with non-searched
+     * CASE <expression> WHEN <expression> ... END
+     * <br>NOT CURRENTLY USED - case is pushed down as searched case
+     * @since 4.0
+     */
+    public boolean supportsCaseExpressions() {
+    	return false;
+    }
+
+    /**
+     * Support indicates connector can accept queries with searched CASE WHEN <criteria> ... END
+     * @since 4.0
+     */
+    public boolean supportsSearchedCaseExpressions() {
+    	return false;
+    }
+   
+    /**
+     * Support indicates that the connector supports the UNION of two queries. 
+     * @since 4.2
+     */
     public boolean supportsUnions() {
-        return false;
+    	return false;
     }
 
-    @Override
-    public int getMaxInCriteriaSize() {
-        return DEFAULT_MAX_FROM_GROUPS;
-    }
-    
-    @Override
-    public boolean supportsFunctionsInGroupBy() {
-        return false;
-    }
-    
-    @Override
-    public boolean supportsRowLimit() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsRowOffset() {
-        return false;
-    }
-
-    @Override
-    public int getMaxFromGroups() {
-        return DEFAULT_MAX_FROM_GROUPS; //-1 indicates no max
-    }
-
-    @Override
-    public boolean supportsExcept() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsIntersect() {
-        return false;
-    }
-
-    @Override
+    /**
+     * Support indicates that the connector supports an ORDER BY on a SetQuery. 
+     * @since 5.6
+     */
     public boolean supportsSetQueryOrderBy() {
-        return false;
-    }    
+    	return false;
+    }
     
-    @Override
+    /**
+     * Support indicates that the connector supports the INTERSECT of two queries. 
+     * @since 5.6
+     */
+    public boolean supportsIntersect() {
+    	return false;
+    }
+
+    /**
+     * Support indicates that the connector supports the EXCEPT of two queries. 
+     * @since 5.6
+     */
+    public boolean supportsExcept() {
+    	return false;
+    }
+        
+    /**
+     * Get list of all supported function names.  Arithmetic functions have names like
+     * &quot;+&quot;.  
+     * @since 3.1 SP3    
+     */        
+    public List<String> getSupportedFunctions() {
+    	return null;
+    }
+    
+    /**
+     * Get the integer value representing the number of values allowed in an IN criteria
+     * in the WHERE clause of a query
+     * @since 5.0
+     */
+    public int getMaxInCriteriaSize() {
+    	return DEFAULT_MAX_IN_CRITERIA_SIZE;
+    }
+    
+    /**
+     * <p>Support indicates that the connector supports functions in GROUP BY, such as:
+     *  <code>SELECT dayofmonth(theDate), COUNT(*) FROM table GROUP BY dayofmonth(theDate)</code></p>
+     *  
+     * <br>NOT CURRENTLY USED - group by expressions create an inline view for pushdown
+     * @since 5.0
+     */
+    public boolean supportsFunctionsInGroupBy() {
+    	return false;
+    }
+    
+    /**
+     * Gets whether the connector can limit the number of rows returned by a query.
+     * @since 5.0 SP1
+     */
+    public boolean supportsRowLimit() {
+    	return false;
+    }
+    
+    /**
+     * Gets whether the connector supports a SQL clause (similar to the LIMIT with an offset) that can return
+     * result sets that start in the middle of the resulting rows returned by a query
+     * @since 5.0 SP1
+     */
+    public boolean supportsRowOffset() {
+    	return false;
+    }
+    
+    /**
+     * The number of groups supported in the from clause.  Added for a Sybase limitation. 
+     * @since 5.6
+     * @return the number of groups supported in the from clause, or -1 if there is no limit
+     */
+    public int getMaxFromGroups() {
+    	return DEFAULT_MAX_FROM_GROUPS;
+    }
+    
+    /**
+     * Whether the source prefers to use ANSI style joins.
+     * @since 6.0
+     */
     public boolean useAnsiJoin() {
     	return false;
     }
-
-    @Override
-    public boolean requiresCriteria() {
+    
+    /**
+     * Whether the source supports queries without criteria.
+     * @since 6.0
+     */
+	@TranslatorProperty(display="Requries Criteria", description="True, if this connector requires criteria on source queries", advanced=true)
+    public final boolean requiresCriteria() {
+    	return requiresCriteria;
+    }
+	
+	public void setRequiresCriteria(boolean requiresCriteria) {
+		this.requiresCriteria = requiresCriteria;
+	}
+    
+    /**
+     * Whether the source supports {@link BatchedUpdates}
+     * @since 6.0
+     */
+    public boolean supportsBatchedUpdates() {
     	return false;
     }
-
-	@Override
-	public boolean supportsBatchedUpdates() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsGroupBy() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsHaving() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsInnerJoins() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsSelectExpression() {
-		return false;
-	}
-	
-	@Override
-	public SupportedJoinCriteria getSupportedJoinCriteria() {
-		return SupportedJoinCriteria.ANY;
-	}
-	
-	@Override
-	public boolean supportsCompareCriteriaOrdered() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsInsertWithQueryExpression() {
-		return false;
-	}
-	
-	@Override
-	public boolean supportsBulkUpdate() {
-		return false;
-	}
-	
-	@Override
-	public boolean supportsOrderByUnrelated() {
-		return false;
-	}	
+    
+    /**
+     * Whether the source supports updates with multiple value sets
+     * @since 6.0
+     */
+    public boolean supportsBulkUpdate() {
+    	return false;
+    }
+    
+    /**
+     * Support indicates that the connector can accept INSERTs with
+     * values specified by an {@link SetQuery}.
+     * @since 6.1
+     */
+    public boolean supportsInsertWithQueryExpression() {
+    	return false;
+    }
 	
 }
