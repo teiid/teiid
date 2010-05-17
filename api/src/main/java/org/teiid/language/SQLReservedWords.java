@@ -81,11 +81,15 @@ public class SQLReservedWords {
     public static final String ADD = "ADD"; //$NON-NLS-1$
 	public static final String ANY = "ANY"; //$NON-NLS-1$
     public static final String ALL = "ALL"; //$NON-NLS-1$
+    public static final String ALLOCATE = "ALLOCATE"; //$NON-NLS-1$
     public static final String ALTER = "ALTER"; //$NON-NLS-1$
     public static final String AND = "AND"; //$NON-NLS-1$
+    public static final String ARE = "ARE"; //$NON-NLS-1$
     public static final String ARRAY = "ARRAY"; //$NON-NLS-1$s
     public static final String AS = "AS"; //$NON-NLS-1$
     public static final String ASC = "ASC"; //$NON-NLS-1$
+    public static final String ASENSITIVE = "ASENSITIVE"; //$NON-NLS-1$
+    public static final String ASYMETRIC = "ASYMETRIC"; //$NON-NLS-1$
     public static final String ATOMIC = "ATOMIC"; //$NON-NLS-1$
     public static final String AUTHORIZATION = "AUTHORIZATION"; //$NON-NLS-1$
 	public static final String AVG = "AVG"; //$NON-NLS-1$
@@ -122,13 +126,16 @@ public class SQLReservedWords {
     public static final String CURRENT_TIMESTAMP = "CURRENT_TIMESTAMP"; //$NON-NLS-1$
     public static final String CURRENT_USER = "CURRENT_USER"; //$NON-NLS-1$
     public static final String CURSOR = "CURSOR"; //$NON-NLS-1$
+    public static final String CYCLE = "CYCLE"; //$NON-NLS-1$
     public static final String DATE = "DATE"; //$NON-NLS-1$
     public static final String DAY = "DAY"; //$NON-NLS-1$
     public static final String DEALLOCATE = "DEALLOCATE"; //$NON-NLS-1$
+    public static final String DEC = "DEC"; //$NON-NLS-1$
     public static final String DECIMAL = "DECIMAL"; //$NON-NLS-1$
     public static final String DECLARE = "DECLARE";     //$NON-NLS-1$
     public static final String DEFAULT = "DEFAULT"; //$NON-NLS-1$
 	public static final String DELETE = "DELETE"; //$NON-NLS-1$
+	public static final String DEREF = "DEREF"; //$NON-NLS-1$
     public static final String DESC = "DESC"; //$NON-NLS-1$
     public static final String DESCRIBE = "DESCRIBE"; //$NON-NLS-1$
     public static final String DETERMINISTIC = "DETERMINISTIC"; //$NON-NLS-1$
@@ -136,7 +143,9 @@ public class SQLReservedWords {
 	public static final String DISTINCT = "DISTINCT"; //$NON-NLS-1$
 	public static final String DOUBLE = "DOUBLE"; //$NON-NLS-1$
     public static final String DROP = "DROP"; //$NON-NLS-1$
+    public static final String DYNAMIC = "DYNAMIC"; //$NON-NLS-1$
     public static final String EACH = "EACH"; //$NON-NLS-1$
+    public static final String ELEMENT = "ELEMENT"; //$NON-NLS-1$
 	public static final String ELSE = "ELSE";	 //$NON-NLS-1$
 	public static final String END = "END"; //$NON-NLS-1$
     public static final String ESCAPE = "ESCAPE"; //$NON-NLS-1$
@@ -151,6 +160,7 @@ public class SQLReservedWords {
     public static final String FLOAT = "FLOAT"; //$NON-NLS-1$
     public static final String FOR = "FOR";     //$NON-NLS-1$
     public static final String FOREIGN = "FOREIGN"; //$NON-NLS-1$
+    public static final String FREE = "FREE"; //$NON-NLS-1$
 	public static final String FROM = "FROM"; //$NON-NLS-1$
 	public static final String FULL = "FULL"; //$NON-NLS-1$
 	public static final String FUNCTION = "FUNCTION"; //$NON-NLS-1$
@@ -176,31 +186,41 @@ public class SQLReservedWords {
     public static final String INTEGER = "INTEGER"; //$NON-NLS-1$
     public static final String INTERSECT = "INTERSECT"; //$NON-NLS-1$
     public static final String INTERVAL = "INTERVAL"; //$NON-NLS-1$
+    public static final String INT = "INT"; //$NON-NLS-1$
     public static final String INTO = "INTO"; //$NON-NLS-1$
     public static final String IS = "IS";     //$NON-NLS-1$
     public static final String ISOLATION = "ISOLATION"; //$NON-NLS-1$
     public static final String JOIN = "JOIN"; //$NON-NLS-1$
     public static final String LANGUAGE = "LANGUAGE"; //$NON-NLS-1$
     public static final String LARGE = "LARGE"; //$NON-NLS-1$
+    public static final String LATERAL = "LATERAL"; //$NON-NLS-1$
     public static final String LEADING = "LEADING"; //$NON-NLS-1$
     public static final String LEFT = "LEFT"; //$NON-NLS-1$
     public static final String LIKE = "LIKE"; //$NON-NLS-1$
     public static final String LOCAL = "LOCAL"; //$NON-NLS-1$
+    public static final String LOCALTIME = "LOCALTIME"; //$NON-NLS-1$
+    public static final String LOCALTIMESTAMP = "LOCALTIMESTAMP"; //$NON-NLS-1$
     public static final String MATCH = "MATCH"; //$NON-NLS-1$
     public static final String MAX = "MAX"; //$NON-NLS-1$
 	public static final String MIN = "MIN"; //$NON-NLS-1$
+	public static final String MEMBER = "MEMBER"; //$NON-NLS-1$
 	public static final String MERGE = "MERGE"; //$NON-NLS-1$
 	public static final String METHOD = "METHOD"; //$NON-NLS-1$
 	public static final String MINUTE = "MINUTE"; //$NON-NLS-1$
 	public static final String MODIFIES = "MODIFIES"; //$NON-NLS-1$
 	public static final String MODULE = "MODULE"; //$NON-NLS-1$
 	public static final String MONTH = "MONTH"; //$NON-NLS-1$
+	public static final String MULTISET = "MULTISET"; //$NON-NLS-1$
+	public static final String NATIONAL = "NATIONAL"; //$NON-NLS-1$
 	public static final String NATURAL = "NATURAL"; //$NON-NLS-1$
+	public static final String NCHAR = "NCHAR"; //$NON-NLS-1$
+	public static final String NCLOB = "NCLOB"; //$NON-NLS-1$
 	public static final String NEW = "NEW"; //$NON-NLS-1$
 	public static final String NO = "NO"; //$NON-NLS-1$
     public static final String NONE = "NONE"; //$NON-NLS-1$
     public static final String NOT = "NOT"; //$NON-NLS-1$
     public static final String NULL = "NULL"; //$NON-NLS-1$
+    public static final String NUMERIC = "NUMERIC"; //$NON-NLS-1$
     public static final String OBJECT = "OBJECT"; //$NON-NLS-1$
 	public static final String OF = "OF"; //$NON-NLS-1$
 	public static final String OLD = "OLD"; //$NON-NLS-1$
@@ -227,6 +247,7 @@ public class SQLReservedWords {
     public static final String RECURSIVE = "RECURSIVE"; //$NON-NLS-1$
     public static final String REFERENCES = "REFERENCES"; //$NON-NLS-1$
     public static final String REFERENCING = "REFERENCING"; //$NON-NLS-1$
+    public static final String RELEASE = "RELEASE"; //$NON-NLS-1$
     public static final String RETURN = "RETURN"; //$NON-NLS-1$
     public static final String RETURNS = "RETURNS"; //$NON-NLS-1$
     public static final String REVOKE = "REVOKE"; //$NON-NLS-1$
@@ -235,25 +256,28 @@ public class SQLReservedWords {
     public static final String ROLLUP = "ROLLUP"; //$NON-NLS-1$
     public static final String ROW = "ROW"; //$NON-NLS-1$
     public static final String ROWS = "ROWS"; //$NON-NLS-1$
-    public static final String SAVEPOINT = "ROWS"; //$NON-NLS-1$
-    public static final String SCROLL = "ROWS"; //$NON-NLS-1$
-    public static final String SEARCH = "ROWS"; //$NON-NLS-1$
-    public static final String SECOND = "ROWS"; //$NON-NLS-1$
+    public static final String SAVEPOINT = "SAVEPOINT"; //$NON-NLS-1$
+    public static final String SCROLL = "SCROLL"; //$NON-NLS-1$
+    public static final String SEARCH = "SEARCH"; //$NON-NLS-1$
+    public static final String SECOND = "SECOND"; //$NON-NLS-1$
 	public static final String SELECT = "SELECT"; //$NON-NLS-1$
-    public static final String SENSITIVE = "ROWS"; //$NON-NLS-1$
+    public static final String SENSITIVE = "SENSITIVE"; //$NON-NLS-1$
     public static final String SESSION_USER = "SESSION_USER"; //$NON-NLS-1$
     public static final String SET = "SET"; //$NON-NLS-1$
     public static final String SHORT = "SHORT"; //$NON-NLS-1$
-    public static final String SIILAR = "ROWS"; //$NON-NLS-1$
-    public static final String SMALLINT = "ROWS"; //$NON-NLS-1$
+    public static final String SIILAR = "SIMILAR"; //$NON-NLS-1$
+    public static final String SMALLINT = "SMALLINT"; //$NON-NLS-1$
     public static final String SOME = "SOME"; //$NON-NLS-1$
-    public static final String SPECIFIC = "ROWS"; //$NON-NLS-1$
-    public static final String SQL = "ROWS"; //$NON-NLS-1$
+    public static final String SPECIFIC = "SPECIFIC"; //$NON-NLS-1$
+    public static final String SPECIFICTYPE = "SPECIFICTYPE"; //$NON-NLS-1$
+    public static final String SQL = "SQL"; //$NON-NLS-1$
     public static final String SQLEXCEPTION = "SQLEXCEPTION"; //$NON-NLS-1$
     public static final String SQLSTATE = "SQLSTATE"; //$NON-NLS-1$
     public static final String SQLWARNING = "SQLWARNING"; //$NON-NLS-1$
+    public static final String SUBMULTILIST = "SUBMULTILIST"; //$NON-NLS-1$
     public static final String START = "START"; //$NON-NLS-1$
     public static final String STATIC = "STATIC"; //$NON-NLS-1$
+    public static final String SYMETRIC = "SYMETRIC"; //$NON-NLS-1$
     public static final String SYSTEM = "SYSTEM"; //$NON-NLS-1$
     public static final String SYSTEM_USER = "SYSTEM_USER"; //$NON-NLS-1$
 	public static final String SUM = "SUM"; //$NON-NLS-1$
@@ -265,8 +289,10 @@ public class SQLReservedWords {
     public static final String TIMEZONE_HOUR = "TIMEZONE_HOUR"; //$NON-NLS-1$
     public static final String TIMEZONE_MINUTE = "TIMEZONE_MINUTE"; //$NON-NLS-1$
     public static final String TO = "TO"; //$NON-NLS-1$
+    public static final String TREAT = "TREAT"; //$NON-NLS-1$
     public static final String TRAILING = "TRAILING"; //$NON-NLS-1$
 	public static final String TRANSLATE = "TRANSLATE";	 //$NON-NLS-1$
+	public static final String TRANSLATION = "TRANSLATION";	 //$NON-NLS-1$
 	public static final String TRIGGER = "TRIGGER"; //$NON-NLS-1$
     public static final String TRUE = "TRUE"; //$NON-NLS-1$
     public static final String UNION = "UNION"; //$NON-NLS-1$
@@ -278,6 +304,7 @@ public class SQLReservedWords {
     public static final String VALUE = "VALUE"; //$NON-NLS-1$
 	public static final String VALUES = "VALUES"; //$NON-NLS-1$
     public static final String VARCHAR = "VARCHAR"; //$NON-NLS-1$
+    public static final String VARYING = "VARYING"; //$NON-NLS-1$
     public static final String WHEN = "WHEN";     //$NON-NLS-1$
     public static final String WHENEVER = "WHENEVER";     //$NON-NLS-1$
     public static final String WHERE = "WHERE"; //$NON-NLS-1$
@@ -317,7 +344,7 @@ public class SQLReservedWords {
     public static final String DLURLSCHEME = "DLURLSCHEME"; //$NON-NLS-1$
     public static final String DLURLSERVER = "DLURLSEVER"; //$NON-NLS-1$
     public static final String DLVALUE = "DLVALUE"; //$NON-NLS-1$
-    public static final String IMPORT = "XMLPI"; //$NON-NLS-1$
+    public static final String IMPORT = "IMPORT"; //$NON-NLS-1$
         
     /**
  	 * Set of CAPITALIZED reserved words for checking whether a string is a reserved word.
@@ -329,8 +356,10 @@ public class SQLReservedWords {
  		Field[] fields = SQLReservedWords.class.getDeclaredFields();
  		for (Field field : fields) {
  			if (field.getType() == String.class) {
- 				try {
-					RESERVED_WORDS.add((String)field.get(null));
+				try {
+					if (!RESERVED_WORDS.add((String)field.get(null))) {
+						throw new AssertionError("Duplicate value for " + field.getName()); //$NON-NLS-1$
+					}
 				} catch (Exception e) {
 				}
  			}

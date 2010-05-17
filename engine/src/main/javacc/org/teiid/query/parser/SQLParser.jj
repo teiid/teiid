@@ -296,6 +296,34 @@ TOKEN : /* Reserved words */
 |   <WITHIN: "within">
 |   <WITHOUT: "without">
 |   <YEAR: "year">
+
+|   <ALLOCATE: "allocate">
+|   <ARE: "are">
+|   <ASENSITIVE: "asensitive">
+|   <ASYMETRIC: "asymetric">
+|   <CYCLE: "cycle">
+|   <DEC: "dec">
+|   <DEREF: "deref">
+|   <DYNAMIC: "dynamic">
+|   <ELEMENT: "element">
+|   <FREE: "free">
+|   <INT: "int">
+|   <LATERAL: "lateral">
+|   <LOCALTIME: "localtime">
+|   <LOCALTIMESTAMP: "localtimestamp">
+|   <MEMBER: "member">
+|   <MULTISET: "multiset">
+|   <NATIONAL: "national">
+|   <NCHAR: "nchar">
+|   <NCLOB: "nclob">
+|   <NUMERIC: "numeric">
+|   <RELEASE: "release">
+|   <SPECIFICTYPE: "specifictype">
+|   <SYMETRIC: "symetric">
+|   <SUBMULTILIST: "submultilist">
+|   <TRANSLATION: "translation">
+|   <TREAT: "treat">
+|   <VARYING: "varying">
 }
 
 TOKEN : /* SQL/XML Reserved words */

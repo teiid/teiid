@@ -1033,14 +1033,14 @@ public class TestSQLStringVisitor extends TestCase {
 	}
 	
 	public void testAliasSymbol1() {
-	    AliasSymbol as = new AliasSymbol("x", new ElementSymbol("element")); //$NON-NLS-1$ //$NON-NLS-2$
-	    helpTest(as, "element AS x"); //$NON-NLS-1$
+	    AliasSymbol as = new AliasSymbol("x", new ElementSymbol("y")); //$NON-NLS-1$ //$NON-NLS-2$
+	    helpTest(as, "y AS x"); //$NON-NLS-1$
 	}
 
 	// Test alias symbol with reserved word 
 	public void testAliasSymbol2() {
-	    AliasSymbol as = new AliasSymbol("select", new ElementSymbol("element")); //$NON-NLS-1$ //$NON-NLS-2$
-	    helpTest(as, "element AS \"select\""); //$NON-NLS-1$
+	    AliasSymbol as = new AliasSymbol("select", new ElementSymbol("y")); //$NON-NLS-1$ //$NON-NLS-2$
+	    helpTest(as, "y AS \"select\""); //$NON-NLS-1$
 	}
 
 	public void testAllSymbol() {
