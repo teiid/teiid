@@ -36,7 +36,7 @@ public class TestTranslatorDeployer {
 		TranslatorMetaData tm = new TranslatorMetaData();
 		
 		tm.setXaCapable(true);
-		tm.addProperty("my-property", "correctly-assigned");
+		tm.addProperty("MyProperty", "correctly-assigned");
 		
 		TranslatorDeployer td = new TranslatorDeployer();
 		MyTranslator my = (MyTranslator)td.buildTranslator(MyTranslator.class.getName(), tm);
@@ -48,7 +48,7 @@ public class TestTranslatorDeployer {
 	public static class MyTranslator extends ExecutionFactory {
 		String mine;
 		
-		@TranslatorProperty(name="my-property")
+		@TranslatorProperty(display="my-property")
 		public String getMyProperty() {
 			return mine;
 		}
