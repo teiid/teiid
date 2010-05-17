@@ -86,14 +86,15 @@
     <module>connector-salesforce</module>
     <module>connector-ldap</module>
     <module>salesforce-api</module>
+    <module>connector-ws</module>
 
     <module>sandbox</module>
     
-    <!--
-    <module>connector-xml</module>
+    <module>translator-xml</module>
+    <!-- 
     <module>connector-xml-file</module>
     <module>connector-xml-soap</module>
     <module>connector-xml-http</module>
-    -->
+     -->
   </modules>
 </project>
