@@ -220,6 +220,9 @@
         <listitem>
           <para>MAX(expression) – maximum value in a group (excluding null)</para>
         </listitem>
+        <listitem>
+          <para>XMLAGG(xml expression <link linkend="orderby_clause">[ORDER BY ...]</link>) – xml concatination of all xml expressions in a group (excluding null)</para>
+        </listitem>
       </itemizedlist>
       <itemizedlist>
         <para>Syntax Rules:
@@ -783,7 +786,7 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
     <sect2 id="orderby_clause">
       <title>ORDER BY Clause</title>
       <para>
-      The ORDER BY clause specifies how the returned records from a SELECT should be sorted. The options are ASC (ascending) and DESC (descending).
+      The ORDER BY clause specifies how records should be sorted. The options are ASC (ascending) and DESC (descending).
       </para>
       <para>
         Usage:
