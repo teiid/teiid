@@ -23,6 +23,7 @@
 package org.teiid.translator.xml;
 
 import java.io.StringReader;
+import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.util.Arrays;
@@ -34,7 +35,6 @@ import javax.xml.ws.Dispatch;
 
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
-import org.teiid.language.Argument.Direction;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
@@ -43,7 +43,6 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.xml.streaming.BaseStreamingExecution;
 
 /**
  * A soap call executor - handles all styles doc/literal, rpc/encoded etc. 
@@ -61,7 +60,7 @@ public class XMLProcedureExecution implements ProcedureExecution {
     /** 
      * @param env
      */
-    public XMLProcedureExecution(Call procedure, RuntimeMetadata metadata, ExecutionContext context, XMLExecutionFactory executionFactory, Dispatch dispatch) {
+    public XMLProcedureExecution(Call procedure, RuntimeMetadata metadata, ExecutionContext context, XMLExecutionFactory executionFactory, Dispatch<Source> dispatch) {
         this.metadata = metadata;
         this.context = context;
         this.procedure = procedure;
@@ -81,7 +80,12 @@ public class XMLProcedureExecution implements ProcedureExecution {
         }
 		
 		// execute the request
-		Source result = this.dispatch.invoke(buildRequest(procedureName, procedure.getArguments()));
+		Source result;
+		try {
+			result = this.dispatch.invoke(buildRequest(procedure.getArguments()));
+		} catch (SQLException e1) {
+			throw new TranslatorException(e1);
+		}
 		this.returnValue = this.executionFactory.convertToXMLType(result);
         if (executionFactory.isLogRequestResponseDocs()) {
         	try {
@@ -92,26 +96,23 @@ public class XMLProcedureExecution implements ProcedureExecution {
 		
     }
     
-    Source buildRequest(String procedureName, List<Argument> args){
-    	StringBuilder sb = new StringBuilder();
-    	sb.append("<tns1:").append(procedureName);
-    	sb.append(" xmlns:tns1=\"").append(BaseStreamingExecution.DUMMY_NS_NAME).append("\">");
-    	
-    	for (Argument argument:args) {
-            if (argument.getDirection() == Direction.IN ) {
-                sb.append(argument.getArgumentValue().getValue());
-            }
-            else if (argument.getDirection() == Direction.INOUT) {
-            	sb.append(argument.getArgumentValue().getValue());
-            }   
+    Source buildRequest(List<Argument> args) throws SQLException, TranslatorException{
+    	if (args.size() != 1) {
+    		throw new TranslatorException("Expected a single argument to the procedure execution");  //$NON-NLS-1$
     	}
-    	
-    	sb.append("</tns1:").append(procedureName).append(">");
-
-    	return new StreamSource(new StringReader(sb.toString()));
+    	Argument arg = args.get(0);
+    	Object value = arg.getArgumentValue().getValue();
+    	if (value instanceof SQLXML) {
+    		return new StreamSource(((SQLXML)value).getCharacterStream());
+    	} else if (value instanceof Clob) {
+    		return new StreamSource(((Clob)value).getCharacterStream());    		
+    	} else if (value != null) {
+    		return new StreamSource(new StringReader(value.toString()));
+    	} else {
+    		//TODO: work around for JBoss native
+    		return new StreamSource(new StringReader("<none/>")); //$NON-NLS-1$
+    	}
     }
-    
-   
     
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {

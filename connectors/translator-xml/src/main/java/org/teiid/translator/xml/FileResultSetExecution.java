@@ -127,14 +127,13 @@ public class FileResultSetExecution implements ResultSetExecution {
 		return null;
 	}
 
-	private List<String> getXPaths() {
+	private List<String> getXPaths() throws TranslatorException {
         XPathSplitter splitter = new XPathSplitter();
         try {
 			return splitter.split(this.executionInfo.getTableXPath());
 		} catch (InvalidPathException e) {
-			e.printStackTrace();
+			throw new TranslatorException(e);
 		}		
-		return null;
 	}	
 	
 	private Document getDocumentStream(final File xmlFile, int fileNumber) {

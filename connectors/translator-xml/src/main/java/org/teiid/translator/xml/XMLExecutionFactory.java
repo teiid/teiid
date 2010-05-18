@@ -37,6 +37,9 @@ import javax.xml.ws.Dispatch;
 import org.teiid.language.Call;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
@@ -95,7 +98,7 @@ public class XMLExecutionFactory extends ExecutionFactory {
 
 	@TranslatorProperty(description="Log the XML request/response documents", display="Log Request/Response Documents")
 	public boolean isLogRequestResponseDocs() {
-		return logRequestResponseDocs;
+		return logRequestResponseDocs && LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL);
 	}
 
 	public void setLogRequestResponseDocs(Boolean logRequestResponseDocs) {
