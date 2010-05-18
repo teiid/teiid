@@ -233,7 +233,6 @@ public class Admin extends TeiidAdmin {
 			else {
 				Map<String, String> configProps = new HashMap<String, String>();
 				configProps.put(propertyName, propertyValue);
-				configProps.put(propertyValue+".type", "java.lang.String"); //$NON-NLS-1$	//$NON-NLS-2$	
 				MetaValue metaValue = ManagedUtil.compositeValueMap(configProps);
 				mc.getProperty("translator-property").setValue(metaValue); //$NON-NLS-1$
 			}

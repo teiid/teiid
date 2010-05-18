@@ -27,8 +27,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Reader;
-import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Properties;
@@ -50,7 +48,6 @@ import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.WorkerPoolStatistics;
 import org.teiid.adminshell.Help.Doc;
 import org.teiid.core.util.ObjectConverterUtil;
-import org.teiid.core.util.ReaderInputStream;
 
 
 /**
@@ -62,7 +59,7 @@ public class AdminShell {
 	
 	static Properties p;
 	private static int connectionCount = 1;
-	private static Admin internalAdmin;
+	static Admin internalAdmin;
 	private static String currentName;
 	private static HashMap<String, Admin> connections = new HashMap<String, Admin>();
 	private static Help help = new Help(AdminShell.class);
@@ -332,14 +329,6 @@ public class AdminShell {
 	}
 
 	private static void writeFile(String deployedName, String fileName,
-			Reader contents) throws IOException, AdminProcessingException {
-		if (contents == null) {
-	    	throw new AdminProcessingException(deployedName + " not found for exporting");
-	    }
-    	ObjectConverterUtil.write(new ReaderInputStream(contents, Charset.forName("UTF-8")), fileName);	//$NON-NLS-1$
-	}
-	
-	private static void writeFile(String deployedName, String fileName,
 			InputStream contents) throws IOException, AdminProcessingException {
 		if (contents == null) {
 	    	throw new AdminProcessingException(deployedName + " not found for exporting");
@@ -359,9 +348,10 @@ public class AdminShell {
 	@Doc(text = "Deploy a VDB from file")
 	public static void deployVDB(
 			@Doc(text = "file name") String vdbFile) throws AdminException, FileNotFoundException {
-		FileInputStream fis = new FileInputStream(new File(vdbFile));
+		File file = new File(vdbFile);
+		FileInputStream fis = new FileInputStream(file);
 		try {
-			getAdmin().deployVDB(vdbFile, fis);
+			getAdmin().deployVDB(file.getName(), fis);
 		} finally {
 			try {
 				fis.close();

@@ -29,7 +29,7 @@ import org.teiid.services.BufferServiceImpl;
 
 import junit.framework.TestCase;
 
-
+@SuppressWarnings("nls")
 public class TestLocalBufferService extends TestCase {
 
     public TestLocalBufferService(String name) {

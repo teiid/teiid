@@ -61,7 +61,6 @@ import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.util.ArgCheck;
-import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.SqlUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 
@@ -294,11 +293,7 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
     }
 
     public void setBinaryStream(int parameterIndex, java.io.InputStream in, int length) throws SQLException {
-    	try {
-			setObject(parameterIndex, new SerialBlob(ObjectConverterUtil.convertToByteArray(in, length)));
-		} catch (IOException e) {
-			throw TeiidSQLException.create(e);
-		}
+    	setBlob(parameterIndex, in);
     }
 
     /**
@@ -330,7 +325,7 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
      * @throws SQLException, if parameter type/datatype do not match
      */
     public void setByte(int parameterIndex, byte value) throws SQLException {
-        setObject(parameterIndex, new Byte(value));
+        setObject(parameterIndex, Byte.valueOf(value));
     }
 
     /**
@@ -416,7 +411,7 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
      * @throws SQLException, if parameter type/datatype do not match
      */
     public void setInt(int parameterIndex, int value) throws SQLException {
-        setObject(parameterIndex, new Integer(value));
+        setObject(parameterIndex, Integer.valueOf(value));
     }
 
     /**
@@ -427,7 +422,7 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
      * @throws SQLException, if parameter type/datatype do not match
      */
     public void setLong(int parameterIndex, long value) throws SQLException {
-        setObject(parameterIndex, new Long(value));
+        setObject(parameterIndex, Long.valueOf(value));
     }
 
     /**
@@ -545,7 +540,7 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
             val = TimestampWithTimezone.create((java.util.Date)value, getDefaultCalendar().getTimeZone(), serverCalendar, value.getClass());
         } else val = value;
 
-        parameterMap.put(new Integer(parameterIndex), val);
+        parameterMap.put(parameterIndex, val);
     }
 
     /**
@@ -556,7 +551,7 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
      * @throws SQLException, if there is an error setting the parameter value
      */
     public void setShort(int parameterIndex, short value) throws SQLException {
-        setObject(parameterIndex, new Short(value));
+        setObject(parameterIndex, value);
     }
 
     /**
