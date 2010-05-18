@@ -42,6 +42,7 @@ import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 
 
@@ -87,7 +88,7 @@ public class SortUtility {
     private Mode mode;
     private BufferManager bufferManager;
     private String groupName;
-    private List<SingleElementSymbol> schema;
+    private List<? extends Expression> schema;
     private int schemaSize;
 	private ListNestedSortComparator comparator;
 
@@ -120,7 +121,7 @@ public class SortUtility {
 	    		sortTypes = Collections.nCopies(sortElements.size(), OrderBy.ASC);
 	        } else if (sortElements.size() < schema.size()) {
 	        	sortElements = new ArrayList(sortElements);
-	        	List<SingleElementSymbol> toAdd = new ArrayList<SingleElementSymbol>(schema);
+	        	List<Expression> toAdd = new ArrayList<Expression>(schema);
 	        	toAdd.removeAll(sortElements);
 	        	sortElements.addAll(toAdd);
 	        	sortTypes = new ArrayList<Boolean>(sortTypes);

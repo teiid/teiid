@@ -35,22 +35,24 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.function.aggregate.AggregateFunction;
 import org.teiid.query.processor.relational.SortUtility.Mode;
-import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.sql.symbol.ElementSymbol;
-
 
 /**
  */
-public class DuplicateFilter implements AggregateFunction {
+public class SortingFilter extends AggregateFunction {
 
-    // Initial setup - can be reused
+    private static final int[] NO_INDECIES = new int[0];
+	// Initial setup - can be reused
     private AggregateFunction proxy;
     private BufferManager mgr;
     private String groupName;
+    private boolean removeDuplicates;
 
     // Derived and static - can be reused
     private List elements;
     private List sortTypes;
+    private List sortElements;
+    
+    private int[] indecies = NO_INDECIES;
 
     // Temporary state - should be reset
     private TupleBuffer collectionBuffer;
@@ -59,31 +61,40 @@ public class DuplicateFilter implements AggregateFunction {
     /**
      * Constructor for DuplicateFilter.
      */
-    public DuplicateFilter(AggregateFunction proxy, BufferManager mgr, String groupName) {
+    public SortingFilter(AggregateFunction proxy, BufferManager mgr, String groupName, boolean removeDuplicates) {
         super();
 
         this.proxy = proxy;
         this.mgr = mgr;
         this.groupName = groupName;
+        this.removeDuplicates = removeDuplicates;
     }
     
     public List getElements() {
 		return elements;
 	}
-
+    
+    public void setElements(List elements) {
+		this.elements = elements;
+	}
+    
+    public void setSortTypes(List sortTypes) {
+		this.sortTypes = sortTypes;
+	}
+    
+    public void setIndecies(int[] indecies) {
+		this.indecies = indecies;
+	}
+    
+    public void setSortElements(List sortElements) {
+		this.sortElements = sortElements;
+	}
+    
     /**
      * @see org.teiid.query.function.aggregate.AggregateFunction#initialize(String, Class)
      */
-    public void initialize(Class dataType, Class inputType) {
+    public void initialize(Class<?> dataType, Class<?> inputType) {
     	this.proxy.initialize(dataType, inputType);
-        // Set up schema
-        ElementSymbol element = new ElementSymbol("val"); //$NON-NLS-1$
-        element.setType(inputType);
-        elements = new ArrayList();
-        elements.add(element);
-
-        sortTypes = new ArrayList();
-        sortTypes.add(Boolean.valueOf(OrderBy.ASC));
     }
 
     public void reset() {
@@ -98,23 +109,23 @@ public class DuplicateFilter implements AggregateFunction {
         this.collectionBuffer = null;
         this.sortUtility = null;
 	}
-
-    /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInput(Object)
-     */
-    public void addInput(Object input)
-        throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
-
+	
+	@Override
+	public void addInputDirect(Object input, List<?> tuple)
+			throws FunctionExecutionException, ExpressionEvaluationException,
+			TeiidComponentException, TeiidProcessingException {
         if(collectionBuffer == null) {
             collectionBuffer = mgr.createTupleBuffer(elements, groupName, TupleSourceType.PROCESSOR);
             collectionBuffer.setForwardOnly(true);
         }
-
-        List row = new ArrayList(1);
+        List<Object> row = new ArrayList<Object>(1 + indecies.length);
         row.add(input);
+        for (int i = 0; i < indecies.length; i++) {
+			row.add(tuple.get(indecies[i]));
+		}
         this.collectionBuffer.addTuple(row);
-    }
-
+	}
+	
     /**
      * @throws TeiidProcessingException 
      * @see org.teiid.query.function.aggregate.AggregateFunction#getResult()
@@ -127,7 +138,7 @@ public class DuplicateFilter implements AggregateFunction {
 
             // Sort
             if (sortUtility == null) {
-            	sortUtility = new SortUtility(collectionBuffer.createIndexedTupleSource(), elements, sortTypes, Mode.DUP_REMOVE_SORT, mgr, groupName);
+            	sortUtility = new SortUtility(collectionBuffer.createIndexedTupleSource(), sortElements, sortTypes, removeDuplicates?Mode.DUP_REMOVE_SORT:Mode.SORT, mgr, groupName);
             }
             TupleBuffer sorted = sortUtility.sort();
             sorted.setForwardOnly(true);
@@ -139,7 +150,7 @@ public class DuplicateFilter implements AggregateFunction {
 	                if(tuple == null) {
 	                    break;
 	                }
-	                this.proxy.addInput(tuple.get(0));
+	                this.proxy.addInputDirect(tuple.get(0), null);
 	            }
             } finally {
             	sorted.remove();

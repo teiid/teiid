@@ -28,9 +28,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
-import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
@@ -47,12 +47,14 @@ import org.teiid.query.function.aggregate.ConstantFunction;
 import org.teiid.query.function.aggregate.Count;
 import org.teiid.query.function.aggregate.Max;
 import org.teiid.query.function.aggregate.Min;
-import org.teiid.query.function.aggregate.NullFilter;
 import org.teiid.query.function.aggregate.Sum;
+import org.teiid.query.function.aggregate.XMLAgg;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.util.CommandContext;
@@ -68,7 +70,7 @@ public class GroupingNode extends RelationalNode {
     // Collection phase
     private int phase = COLLECTION;
     private Map elementMap;                    // Map of incoming symbol to index in source elements
-    private List collectedExpressions;         // Collected Expressions
+    private List<Expression> collectedExpressions;         // Collected Expressions
        
     // Sort phase
     private SortUtility sortUtility;
@@ -77,7 +79,6 @@ public class GroupingNode extends RelationalNode {
     
     // Group phase
     private AggregateFunction[] functions;
-    private int[] aggProjectionIndexes;
     private List lastRow;
 	private List currentGroupTuple;
 
@@ -140,33 +141,28 @@ public class GroupingNode extends RelationalNode {
 
     	// List should contain all grouping columns / expressions as we need those for sorting
         if(this.sortElements != null) {
-            this.collectedExpressions = new ArrayList(this.sortElements.size() + getElements().size());
+            this.collectedExpressions = new ArrayList<Expression>(this.sortElements.size() + getElements().size());
             this.collectedExpressions.addAll(sortElements);
         } else {
-            this.collectedExpressions = new ArrayList(getElements().size());
+            this.collectedExpressions = new ArrayList<Expression>(getElements().size());
         }
         
         // Construct aggregate function state accumulators
         functions = new AggregateFunction[getElements().size()];
-        aggProjectionIndexes = new int[getElements().size()];
-        Arrays.fill(aggProjectionIndexes, -1);
         for(int i=0; i<getElements().size(); i++) {
             SingleElementSymbol symbol = (SingleElementSymbol)getElements().get(i);
             Class<?> outputType = symbol.getType();
             Class<?> inputType = symbol.getType();
             if(symbol instanceof AggregateSymbol) {
                 AggregateSymbol aggSymbol = (AggregateSymbol) symbol;
-
+                
                 if(aggSymbol.getExpression() == null) {
                     functions[i] = new Count();
                 } else {
-                	int index = this.collectedExpressions.indexOf(aggSymbol.getExpression());
-                	if(index == -1) {
-                        index = this.collectedExpressions.size();
-                        this.collectedExpressions.add(aggSymbol.getExpression());
-                    }
-                	aggProjectionIndexes[i] = index;
-                    String function = aggSymbol.getAggregateFunction();
+                	Expression ex = aggSymbol.getExpression();
+                	inputType = ex.getType();
+                	int index = collectExpression(ex);
+                	String function = aggSymbol.getAggregateFunction();
                     if(function.equals(SQLReservedWords.COUNT)) {
                         functions[i] = new Count();
                     } else if(function.equals(SQLReservedWords.SUM)) {
@@ -175,24 +171,59 @@ public class GroupingNode extends RelationalNode {
                         functions[i] = new Avg();
                     } else if(function.equals(SQLReservedWords.MIN)) {
                         functions[i] = new Min();
-                    } else {
+                    } else if (function.equals(SQLReservedWords.MAX)){
                         functions[i] = new Max();
+                    } else {
+                    	functions[i] = new XMLAgg(context);
                     }
 
                     if(aggSymbol.isDistinct() && !function.equals(SQLReservedWords.MIN) && !function.equals(SQLReservedWords.MAX)) {
-                        functions[i] = new DuplicateFilter(functions[i], getBufferManager(), getConnectionID());
-                    }
-                    
-                    functions[i] = new NullFilter(functions[i]);
-                    inputType = aggSymbol.getExpression().getType();
+                        SortingFilter filter = new SortingFilter(functions[i], getBufferManager(), getConnectionID(), true);
+                        ElementSymbol element = new ElementSymbol("val"); //$NON-NLS-1$
+                        element.setType(inputType);
+                        filter.setElements(Arrays.asList(element));
+                        filter.setSortElements(filter.getElements());
+                        functions[i] = filter;
+                    } else if (aggSymbol.getOrderBy() != null) { //handle the xmlagg case
+                		int[] orderIndecies = new int[aggSymbol.getOrderBy().getOrderByItems().size()];
+                		List<Boolean> aggSortTypes = new ArrayList<Boolean>(orderIndecies.length);
+                		List<ElementSymbol> schema = new ArrayList<ElementSymbol>(orderIndecies.length + 1);
+                		ElementSymbol element = new ElementSymbol("val"); //$NON-NLS-1$
+                        element.setType(inputType);
+                        schema.add(element);
+                		for (ListIterator<OrderByItem> iterator = aggSymbol.getOrderBy().getOrderByItems().listIterator(); iterator.hasNext();) {
+                			OrderByItem item = iterator.next();
+                			orderIndecies[iterator.previousIndex()] = collectExpression(item.getSymbol());
+                			aggSortTypes.add(item.isAscending());
+                			element = new ElementSymbol(String.valueOf(iterator.previousIndex()));
+                            element.setType(inputType);
+                			schema.add(element);
+						}
+                		SortingFilter filter = new SortingFilter(functions[i], getBufferManager(), getConnectionID(), false);
+                		filter.setSortTypes(aggSortTypes);
+                		filter.setIndecies(orderIndecies);
+                		filter.setElements(schema);
+                		filter.setSortElements(schema.subList(1, schema.size()));
+                        functions[i] = filter;
+                	}
+                    functions[i].setExpressionIndex(index);
                 }
             } else {
                 functions[i] = new ConstantFunction();
-                aggProjectionIndexes[i] = this.collectedExpressions.indexOf(symbol);
+                functions[i].setExpressionIndex(this.collectedExpressions.indexOf(symbol));
             }
             functions[i].initialize(outputType, inputType);
         }
-    } 
+    }
+
+	private int collectExpression(Expression ex) {
+		int index = this.collectedExpressions.indexOf(ex);
+		if(index == -1) {
+		    index = this.collectedExpressions.size();
+		    this.collectedExpressions.add(ex);
+		}
+		return index;
+	} 
     
     AggregateFunction[] getFunctions() {
 		return functions;
@@ -246,7 +277,7 @@ public class GroupingNode extends RelationalNode {
 		                for(int col = 0; col<columns; col++) { 
 		                    // The following call may throw BlockedException, but all state to this point
 		                    // is saved in class variables so we can start over on building this tuple
-		                    Object value = new Evaluator(elementMap, getDataManager(), getContext()).evaluate((Expression) collectedExpressions.get(col), tuple);
+		                    Object value = new Evaluator(elementMap, getDataManager(), getContext()).evaluate((Expression)collectedExpressions.get(col), tuple);
 		                    exprTuple.add(value);
 		                }
 		                sourceRow++;
@@ -263,7 +294,7 @@ public class GroupingNode extends RelationalNode {
 			}
 			
 			@Override
-			public List<SingleElementSymbol> getSchema() {
+			public List<Expression> getSchema() {
 				return collectedExpressions;
 			}
 			
@@ -382,14 +413,10 @@ public class GroupingNode extends RelationalNode {
     }
 
     private void updateAggregates(List tuple)
-    throws TeiidComponentException, ExpressionEvaluationException {
+    throws TeiidComponentException, TeiidProcessingException {
 
         for(int i=0; i<functions.length; i++) {
-            Object value = null;
-            if(aggProjectionIndexes[i] != -1) {
-                value = tuple.get(aggProjectionIndexes[i]);
-            }
-            functions[i].addInput(value);
+            functions[i].addInput(tuple);
         }
     }
 

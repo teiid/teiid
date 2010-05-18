@@ -132,6 +132,7 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     public void visit(AggregateSymbol obj) {
         preVisitVisitor(obj);
         visitNode(obj.getExpression());
+        visitNode(obj.getOrderBy());
         postVisitVisitor(obj);
     }
     public void visit(AliasSymbol obj) {

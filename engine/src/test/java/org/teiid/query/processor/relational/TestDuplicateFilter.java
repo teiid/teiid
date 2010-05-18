@@ -22,13 +22,16 @@
 
 package org.teiid.query.processor.relational;
 
+import java.util.Arrays;
+
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.function.aggregate.Count;
-import org.teiid.query.processor.relational.DuplicateFilter;
+import org.teiid.query.processor.relational.SortingFilter;
+import org.teiid.query.sql.symbol.ElementSymbol;
 
 import junit.framework.TestCase;
 
@@ -48,13 +51,17 @@ public class TestDuplicateFilter extends TestCase {
     public void helpTestDuplicateFilter(Object[] input, Class dataType, int expected) throws TeiidComponentException, TeiidProcessingException {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
         
-        DuplicateFilter filter = new DuplicateFilter(new Count(), mgr, "test"); //$NON-NLS-1$
+        SortingFilter filter = new SortingFilter(new Count(), mgr, "test", true); //$NON-NLS-1$
         filter.initialize(dataType, dataType);
+        ElementSymbol element = new ElementSymbol("val"); //$NON-NLS-1$
+        element.setType(dataType);
+        filter.setElements(Arrays.asList(element));
+        filter.setSortElements(filter.getElements());
         filter.reset();
         
         // Add inputs
         for(int i=0; i<input.length; i++) {
-            filter.addInput(input[i]);    
+            filter.addInputDirect(input[i], null);    
         }        
         
         Integer actual = (Integer) filter.getResult();

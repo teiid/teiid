@@ -22,63 +22,44 @@
 
 package org.teiid.query.function.aggregate;
 
-import org.teiid.api.exception.query.ExpressionEvaluationException;
-import org.teiid.api.exception.query.FunctionExecutionException;
+import java.util.List;
+
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-
-
+import org.teiid.core.types.XMLType;
+import org.teiid.query.function.source.XMLSystemFunctions;
+import org.teiid.query.util.CommandContext;
 
 /**
+ * Aggregates XML entries
  */
-public class NullFilter implements AggregateFunction {
+public class XMLAgg extends AggregateFunction {
 
-    private AggregateFunction proxy;
+    private XMLType result;
+    private CommandContext context;
     
-    /**
-     * Constructor for NullFilter.
-     */
-    public NullFilter(AggregateFunction proxy) {
-        super();
-        
-        this.proxy = proxy;
-    }
-    
-    public AggregateFunction getProxy() {
-		return proxy;
+    public XMLAgg(CommandContext context) {
+    	this.context = context;
 	}
 
-    /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#initialize(String, Class)
-     */
-    public void initialize(Class dataType, Class inputType) {
-    	this.proxy.initialize(dataType, inputType);
-    }
-
     public void reset() {
-        this.proxy.reset();
-    }
-    
-    /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInput(Object)
-     */
-    public void addInput(Object input)
-        throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
-        
-        if(input != null) { 
-            this.proxy.addInput(input);
-        } 
+        result = null;
     }
 
     /**
      * @throws TeiidProcessingException 
-     * @see org.teiid.query.function.aggregate.AggregateFunction#getResult()
+     * @throws TeiidComponentException 
+     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(Object, List)
      */
-    public Object getResult()
-        throws TeiidComponentException, TeiidProcessingException {
-            
-        return this.proxy.getResult();
+    public void addInputDirect(Object input, List<?> tuple) throws TeiidComponentException, TeiidProcessingException {
+    	result = XMLSystemFunctions.xmlConcat(context, result, input);
     }
 
+    /**
+     * @see org.teiid.query.function.aggregate.AggregateFunction#getResult()
+     */
+    public Object getResult() {
+        return result;
+    }
 
 }

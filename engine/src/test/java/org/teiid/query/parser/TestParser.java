@@ -37,6 +37,7 @@ import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.language.SQLReservedWords;
 import org.teiid.query.sql.lang.BetweenCriteria;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.CompareCriteria;
@@ -6731,6 +6732,15 @@ public class TestParser {
     	XMLForest f = new XMLForest(Arrays.asList((SingleElementSymbol)new AliasSymbol("table", new ElementSymbol("a"))));
     	f.setNamespaces(new XMLNamespaces(Arrays.asList(new XMLNamespaces.NamespaceItem(), new XMLNamespaces.NamespaceItem("x", "http://foo"))));
     	helpTestExpression("xmlforest(xmlnamespaces(no default, 'http://foo' as x), a as \"table\")", "XMLFOREST(XMLNAMESPACES(NO DEFAULT, 'http://foo' AS x), a AS \"table\")", f);
+    }
+    
+    @Test public void testXmlAggWithOrderBy() throws Exception {
+        String sql = "SELECT xmlAgg(1 order by e2)"; //$NON-NLS-1$
+        AggregateSymbol as = new AggregateSymbol("foo", SQLReservedWords.XMLAGG, false, new Constant(1));
+        as.setOrderBy(new OrderBy(Arrays.asList(new ElementSymbol("e2"))));
+        Query query = new Query();
+        query.setSelect(new Select(Arrays.asList(as)));
+        helpTest(sql, "SELECT XMLAGG(1 ORDER BY e2)", query);
     }
 
 }

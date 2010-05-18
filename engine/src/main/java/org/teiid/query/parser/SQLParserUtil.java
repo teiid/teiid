@@ -248,6 +248,9 @@ public class SQLParserUtil {
         } else if(functionType.equals(SQLReservedWords.MAX)) { 
             int num = info.anonMaxCount++;
             return "max" + (num == 0 ? "" : ""+num);//$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
+        } else if(functionType.equals(SQLReservedWords.XMLAGG)) { 
+            int num = info.anonMaxCount++;
+            return "xmlagg" + (num == 0 ? "" : ""+num);//$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
         } else {
             Object[] params = new Object[] { functionType };
             throw new ParseException(QueryPlugin.Util.getString("SQLParser.Unknown_agg_func", params)); //$NON-NLS-1$

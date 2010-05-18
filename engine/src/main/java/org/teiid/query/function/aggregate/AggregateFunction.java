@@ -22,6 +22,8 @@
 
 package org.teiid.query.function.aggregate;
 
+import java.util.List;
+
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
@@ -34,8 +36,13 @@ import org.teiid.core.TeiidProcessingException;
  * being aggregated, then addInput() is called for every row in the group, then
  * getResult() is called to retrieve the result.
  */
-public interface AggregateFunction {
+public abstract class AggregateFunction {
 
+	private int expressionIndex = -1;
+	
+	public void setExpressionIndex(int expressionIndex) {
+		this.expressionIndex = expressionIndex;
+	}
 
     /**
      * Called to initialize the function.  In the future this may expand
@@ -43,20 +50,35 @@ public interface AggregateFunction {
      * @param dataType Data type of element begin aggregated
      * @param inputType
      */
-    public abstract void initialize(Class dataType, Class inputType);
+    public void initialize(Class<?> dataType, Class<?> inputType) {}
 
     /**
      * Called to reset the state of the function.
      */
     public abstract void reset();
 
+    public void addInput(List<?> tuple) throws TeiidComponentException, TeiidProcessingException {
+    	if (expressionIndex == -1) {
+    		addInputDirect(null, tuple);
+    		return;
+    	}
+    	Object input = tuple.get(expressionIndex);
+    	if (!filter(input)) {
+    		addInputDirect(input, tuple);
+    	}
+    }
+    
+    boolean filter(Object value) {
+    	return value == null; 
+    }
+    
     /**
      * Called for the element value in every row of a group.
      * @param input Input value, may be null
+     * @param tuple 
+     * @throws TeiidProcessingException 
      */
-    public abstract void addInput(Object input) 
-        throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException;
-
+    public abstract void addInputDirect(Object input, List<?> tuple) throws TeiidComponentException, TeiidProcessingException;
 
     /**
      * Called after all values have been processed to get the result.

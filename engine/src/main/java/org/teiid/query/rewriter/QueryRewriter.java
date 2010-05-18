@@ -759,7 +759,7 @@ public class QueryRewriter {
      * @param query
      * @throws TeiidComponentException, MetaMatrixProcessingException
      */
-    public QueryCommand rewriteOrderBy(QueryCommand queryCommand) throws TeiidComponentException, TeiidProcessingException{
+    public QueryCommand rewriteOrderBy(QueryCommand queryCommand) throws TeiidComponentException {
     	final OrderBy orderBy = queryCommand.getOrderBy();
         if (orderBy == null) {
             return queryCommand;

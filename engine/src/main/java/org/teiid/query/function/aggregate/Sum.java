@@ -24,6 +24,7 @@ package org.teiid.query.function.aggregate;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.List;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
@@ -36,7 +37,7 @@ import org.teiid.core.types.DataTypeManager;
  * of a column.  The type of the result varies depending on the type
  * of the input {@see AggregateSymbol}
  */
-public class Sum implements AggregateFunction {
+public class Sum extends AggregateFunction {
 
     // Various possible accumulators, depending on type
     protected static final int LONG = 0;
@@ -49,12 +50,6 @@ public class Sum implements AggregateFunction {
     private Object sum = null;
 
     /**
-     * Constructor for Sum.
-     */
-    public Sum() {
-    }
-    
-    /**
      * Allows subclasses to determine type of accumulator for the SUM.
      * @return Type, as defined in constants
      */    
@@ -65,7 +60,7 @@ public class Sum implements AggregateFunction {
     /**
      * @see org.teiid.query.function.aggregate.AggregateFunction#initialize(boolean, String)
      */
-    public void initialize(Class dataType, Class inputType) {
+    public void initialize(Class<?> dataType, Class<?> inputType) {
         if(dataType.equals(DataTypeManager.DefaultDataClasses.LONG)) {
                     
             this.accumulatorType = LONG;    
@@ -87,9 +82,9 @@ public class Sum implements AggregateFunction {
     }
 
     /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInput(Object)
+     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(Object, List)
      */
-    public void addInput(Object input)
+    public void addInputDirect(Object input, List<?> tuple)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
         
         if (this.sum == null) {

@@ -22,6 +22,8 @@
 
 package org.teiid.query.function.aggregate;
 
+import java.util.List;
+
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
@@ -31,31 +33,18 @@ import org.teiid.query.util.ErrorMessageKeys;
 
 /**
  */
-public class Min implements AggregateFunction {
+public class Min extends AggregateFunction {
 
     private Object minValue;
-
-    /**
-     * Constructor for Min.
-     */
-    public Min() {
-        super();
-    }
-
-    /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#initialize(String, Class)
-     */
-    public void initialize(Class dataType, Class inputType) {
-    }
 
     public void reset() {
         minValue = null;
     }
 
     /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInput(Object)
+     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(Object, List)
      */
-    public void addInput(Object value)
+    public void addInputDirect(Object value, List<?> tuple)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
 
         if(minValue == null) {

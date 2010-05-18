@@ -627,13 +627,11 @@ public class ResolverVisitor extends LanguageVisitor {
 	        if (! type.equals(DataTypeManager.DefaultDataTypes.STRING) &&
 	            ! type.equals(DataTypeManager.DefaultDataTypes.CLOB)) {
 	                
-	            if(!(expr instanceof AggregateSymbol) &&
-	                ResolverUtil.canImplicitlyConvert(type, DataTypeManager.DefaultDataTypes.STRING)) {
+	            if(ResolverUtil.canImplicitlyConvert(type, DataTypeManager.DefaultDataTypes.STRING)) {
 	
 	                result = ResolverUtil.convertExpression(expr, type, DataTypeManager.DefaultDataTypes.STRING, metadata);
 	                
-	            } else if (!(expr instanceof AggregateSymbol) &&
-	                ResolverUtil.canImplicitlyConvert(type, DataTypeManager.DefaultDataTypes.CLOB)){
+	            } else if (ResolverUtil.canImplicitlyConvert(type, DataTypeManager.DefaultDataTypes.CLOB)){
 	                    
 	                result = ResolverUtil.convertExpression(expr, type, DataTypeManager.DefaultDataTypes.CLOB, metadata);
 	
@@ -666,9 +664,6 @@ public class ResolverVisitor extends LanguageVisitor {
 	        Expression value = (Expression) valIter.next();
 	        setDesiredType(value, exprType, scrit);
 	        if(! value.getType().equals(exprType)) {
-	            if(value instanceof AggregateSymbol) {
-	                throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0031, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0031, scrit));
-	            }
 	            // try to apply cast
 	            String valTypeName = DataTypeManager.getDataTypeName(value.getType());
 	            if(ResolverUtil.canImplicitlyConvert(valTypeName, exprTypeName)) {

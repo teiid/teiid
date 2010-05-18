@@ -44,13 +44,9 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.function.aggregate.AggregateFunction;
-import org.teiid.query.function.aggregate.NullFilter;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.FakeTupleSource;
 import org.teiid.query.processor.ProcessorDataManager;
-import org.teiid.query.processor.relational.DuplicateFilter;
-import org.teiid.query.processor.relational.GroupingNode;
-import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -177,7 +173,7 @@ public class TestGroupingNode {
         //ensure that the distinct input type is correct
         AggregateFunction[] functions = node.getFunctions();
         AggregateFunction countDist = functions[5];
-        DuplicateFilter dup = (DuplicateFilter)((NullFilter)countDist).getProxy();
+        SortingFilter dup = (SortingFilter)countDist;
         assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, ((ElementSymbol)dup.getElements().get(0)).getType());
 	}
 

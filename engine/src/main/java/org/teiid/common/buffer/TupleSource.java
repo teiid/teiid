@@ -26,7 +26,7 @@ import java.util.List;
 
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 
 
 /**
@@ -40,7 +40,7 @@ public interface TupleSource {
      * Returns the List of ElementSymbol describing the Tuple Source
      * @return the List of elements describing the Tuple Source
      */
-	List<SingleElementSymbol> getSchema();
+	List<? extends Expression> getSchema();
 	
     /**
      * Returns the next tuple

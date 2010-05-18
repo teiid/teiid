@@ -22,34 +22,23 @@
 
 package org.teiid.query.function.aggregate;
 
+import java.util.List;
+
 /**
  * Just a simple COUNT() implementation that counts every non-null row it sees.
  */
-public class Count implements AggregateFunction {
+public class Count extends AggregateFunction {
 
     private int count = 0;
 
-    /**
-     * Constructor for Count.
-     */
-    public Count() {
-        super();
-    }
-
-    /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#initialize(String, Class)
-     */
-    public void initialize(Class dataType, Class inputType) {
-    }
-    
     public void reset() {
         count = 0;
     }
 
     /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInput(Object)
+     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(Object, List)
      */
-    public void addInput(Object input) {
+    public void addInputDirect(Object input, List<?> tuple) {
         count++;
     }
 

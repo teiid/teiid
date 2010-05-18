@@ -1104,6 +1104,11 @@ public class SQLStringVisitor extends LanguageVisitor {
 		} else {
 			parts.add(registerNode(obj.getExpression()));
 		}
+		
+		if (obj.getOrderBy() != null) {
+			parts.add(SPACE);
+			parts.add(registerNode(obj.getOrderBy()));
+		}
 		parts.add(")"); //$NON-NLS-1$
     }
 

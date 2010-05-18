@@ -1688,6 +1688,7 @@ AggregateSymbol aggregateSymbol(ParseInfo info) :
 	AggregateSymbol agg = null;
 	boolean isDistinct = false;
 	Expression expression = null;
+	OrderBy orderBy = null;
 }
 {
     // Things that can be aliased    
@@ -1704,13 +1705,23 @@ AggregateSymbol aggregateSymbol(ParseInfo info) :
 				functionToken = <SUM> | 
 				functionToken = <AVG> |
 				functionToken = <MIN> |
-				functionToken = <MAX>
+				functionToken = <MAX> 
 			)
 			<LPAREN>
 			[ <DISTINCT> {isDistinct=true;} ]
 			expression = expression(info)
 			<RPAREN>
-		)             
+		) 
+		| 
+		(
+			functionToken = <XMLAGG>
+			<LPAREN>
+			expression = expression(info)
+			[
+				orderBy = orderby(info)
+			]
+			<RPAREN>
+		)            
 	)
 	{
 		if(! info.aggregatesAllowed) {
@@ -1726,7 +1737,7 @@ AggregateSymbol aggregateSymbol(ParseInfo info) :
 			// COUNT(*)			
 			agg = new AggregateSymbol(name, func, false, null);
 		}
-		
+		agg.setOrderBy(orderBy);
 		return agg;
 	}
 }

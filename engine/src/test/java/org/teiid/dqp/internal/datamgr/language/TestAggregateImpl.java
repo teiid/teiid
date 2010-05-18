@@ -47,7 +47,7 @@ public class TestAggregateImpl extends TestCase {
                                                      functionName,
                                                      distinct,
                                                       new Constant(new Integer(value)));
-        return (AggregateFunction)TstLanguageBridgeFactory.factory.translate(symbol);
+        return TstLanguageBridgeFactory.factory.translate(symbol);
         
     }
 

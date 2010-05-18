@@ -23,6 +23,7 @@
 package org.teiid.query.function.aggregate;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
@@ -45,16 +46,9 @@ public class Avg extends Sum {
     private int count = 0;
 
     /**
-     * Constructor for Avg.
-     */
-    public Avg() {
-        super();
-    }
-
-    /**
      * @see org.teiid.query.function.aggregate.AggregateFunction#initialize(String, Class)
      */
-    public void initialize(Class dataType, Class inputType) {
+    public void initialize(Class<?> dataType, Class<?> inputType) {
         if (dataType.equals(DataTypeManager.DefaultDataClasses.BIG_DECIMAL)) {
             this.accumulatorType = BIG_DECIMAL;
         } else {
@@ -68,12 +62,12 @@ public class Avg extends Sum {
     }
 
     /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInput(Object)
+     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(Object, List)
      */
-    public void addInput(Object input)
+    public void addInputDirect(Object input, List<?> tuple)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
 
-        super.addInput(input);
+        super.addInputDirect(input, tuple);
         count++;
     }
 

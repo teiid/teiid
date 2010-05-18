@@ -33,6 +33,7 @@ import org.teiid.core.util.HashCodeUtil;
 import org.teiid.language.SQLReservedWords;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.util.ErrorMessageKeys;
 
 
@@ -59,21 +60,23 @@ public class AggregateSymbol extends ExpressionSymbol {
 
 	private String aggregate;
 	private boolean distinct;
+	private OrderBy orderBy;
 
-	private static final Class COUNT_TYPE = DataTypeManager.getDataTypeClass(DataTypeManager.DefaultDataTypes.INTEGER);
-	private static final Set AGGREGATE_FUNCTIONS;
-	private static final Map SUM_TYPES;
-    private static final Map AVG_TYPES;
+	private static final Class<Integer> COUNT_TYPE = DataTypeManager.DefaultDataClasses.INTEGER;
+	private static final Set<String> AGGREGATE_FUNCTIONS;
+	private static final Map<Class<?>, Class<?>> SUM_TYPES;
+    private static final Map<Class<?>, Class<?>> AVG_TYPES;
 
 	static {
-		AGGREGATE_FUNCTIONS = new HashSet();
+		AGGREGATE_FUNCTIONS = new HashSet<String>();
 		AGGREGATE_FUNCTIONS.add(SQLReservedWords.COUNT);
 		AGGREGATE_FUNCTIONS.add(SQLReservedWords.SUM);
 		AGGREGATE_FUNCTIONS.add(SQLReservedWords.AVG);
 		AGGREGATE_FUNCTIONS.add(SQLReservedWords.MIN);
 		AGGREGATE_FUNCTIONS.add(SQLReservedWords.MAX);
+		AGGREGATE_FUNCTIONS.add(SQLReservedWords.XMLAGG);
 
-		SUM_TYPES = new HashMap();
+		SUM_TYPES = new HashMap<Class<?>, Class<?>>();
 		SUM_TYPES.put(DataTypeManager.DefaultDataClasses.BYTE, DataTypeManager.DefaultDataClasses.LONG);
 		SUM_TYPES.put(DataTypeManager.DefaultDataClasses.SHORT, DataTypeManager.DefaultDataClasses.LONG);
 		SUM_TYPES.put(DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.LONG);
@@ -83,7 +86,7 @@ public class AggregateSymbol extends ExpressionSymbol {
 		SUM_TYPES.put(DataTypeManager.DefaultDataClasses.DOUBLE, DataTypeManager.DefaultDataClasses.DOUBLE);
 		SUM_TYPES.put(DataTypeManager.DefaultDataClasses.BIG_DECIMAL, DataTypeManager.DefaultDataClasses.BIG_DECIMAL);
         
-        AVG_TYPES = new HashMap();
+        AVG_TYPES = new HashMap<Class<?>, Class<?>>();
         AVG_TYPES.put(DataTypeManager.DefaultDataClasses.BYTE, DataTypeManager.DefaultDataClasses.DOUBLE);
         AVG_TYPES.put(DataTypeManager.DefaultDataClasses.SHORT, DataTypeManager.DefaultDataClasses.DOUBLE);
         AVG_TYPES.put(DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.DOUBLE);
@@ -167,15 +170,15 @@ public class AggregateSymbol extends ExpressionSymbol {
 	 * type of the contained expression
 	 * @return Type of the symbol
 	 */
-	public Class getType() {
+	public Class<?> getType() {
 		if(this.aggregate.equals(SQLReservedWords.COUNT)) {
 			return COUNT_TYPE;
 		} else if(this.aggregate.equals(SQLReservedWords.SUM) ) {
-			Class expressionType = this.getExpression().getType();
-			return (Class) SUM_TYPES.get(expressionType);
+			Class<?> expressionType = this.getExpression().getType();
+			return SUM_TYPES.get(expressionType);
         } else if (this.aggregate.equals(SQLReservedWords.AVG)) {
-            Class expressionType = this.getExpression().getType();
-            return (Class) AVG_TYPES.get(expressionType);
+            Class<?> expressionType = this.getExpression().getType();
+            return AVG_TYPES.get(expressionType);
 		} else {
 			return this.getExpression().getType();
 		}
@@ -184,6 +187,14 @@ public class AggregateSymbol extends ExpressionSymbol {
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
+    
+    public OrderBy getOrderBy() {
+		return orderBy;
+	}
+    
+    public void setOrderBy(OrderBy orderBy) {
+		this.orderBy = orderBy;
+	}
 
 	/**
 	 * Return a deep copy of this object
@@ -195,7 +206,9 @@ public class AggregateSymbol extends ExpressionSymbol {
 		} else {
 			copy = new AggregateSymbol(getName(), getCanonical(), getAggregateFunction(), isDistinct(), null);
 		}
-
+		if (orderBy != null) {
+			copy.setOrderBy(orderBy.clone());
+		}
 		return copy;
 	}
     
@@ -219,7 +232,8 @@ public class AggregateSymbol extends ExpressionSymbol {
         
         return this.aggregate.equals(other.aggregate)
                && this.distinct == other.distinct
-               && EquivalenceUtil.areEqual(this.getExpression(), other.getExpression());
+               && EquivalenceUtil.areEqual(this.getExpression(), other.getExpression())
+        	   && EquivalenceUtil.areEqual(this.getOrderBy(), other.getOrderBy());
     }
 
 }

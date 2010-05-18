@@ -22,6 +22,8 @@
 
 package org.teiid.query.function.aggregate;
 
+import java.util.List;
+
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
@@ -29,31 +31,23 @@ import org.teiid.core.TeiidComponentException;
 
 /**
  */
-public class ConstantFunction implements AggregateFunction {
+public class ConstantFunction extends AggregateFunction {
 
     private Object value;
 
-    /**
-     * Constructor for NoFunction.
-     */
-    public ConstantFunction() {
-        super();
-    }
-
-    /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#initialize(String, Class)
-     */
-    public void initialize(Class dataType, Class inputType) {
-    }
-    
     public void reset() {
         this.value = null;
     }
+    
+    @Override
+    boolean filter(Object input) {
+    	return false;
+    }
 
     /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInput(Object)
+     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(Object, List)
      */
-    public void addInput(Object input)
+    public void addInputDirect(Object input, List<?> tuple)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
             
         value = input;
