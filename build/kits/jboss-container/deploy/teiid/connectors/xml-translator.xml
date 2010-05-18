@@ -2,7 +2,7 @@
 <translator-factory>
     <translator>
         <name>xml</name>
-        <execution-factory-class>org.teiid.translator.xml.base.XMLExecutionFactory</execution-factory-class>
+        <execution-factory-class>org.teiid.translator.xml.XMLExecutionFactory</execution-factory-class>
         <template-name>translator-xml-${project.version}</template-name>
     </translator>
 </translator-factory>
