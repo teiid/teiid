@@ -41,10 +41,10 @@
             <managedconnectionfactory-class>org.teiid.resource.adapter.ws.WSManagedConnectionFactory</managedconnectionfactory-class>
 
             <config-property>
-                <description>{$display:"Invocation Type",$description:"Service Invocation type (HTTP or SOAP)", $allowed="HTTP_GET, HTTP_POST,SOAP", $required="true", $defaultValue="SOAP"}</description>
+                <description>{$display:"Invocation Type",$description:"Service Invocation type (HTTP or SOAP)", $allowed="HTTP_GET, HTTP_POST, SOAP11, SOAP12", $required="true", $defaultValue="SOAP12"}</description>
                 <config-property-name>InvocationType</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
-                <config-property-value>SOAP</config-property-value>
+                <config-property-value>SOAP12</config-property-value>
             </config-property>
             
             <config-property>
@@ -85,18 +85,11 @@
             </config-property>
                                 
             <config-property>
-                <description>{$display:"XML Parameter Name", $description="only required for the HTTP with XML based request"}</description>
+                <description>{$display:"XML Parameter Name", $description="only required for HTTP_GET with an XML based request"}</description>
                 <config-property-name>XMLParamName</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
             </config-property>
                          
-            <config-property>
-                <description>{$display:"Parameter Method (None, Name_Value, XMLRequest, XMLInQueryString)",$description:"",$allowed:["None","Name_Value","XMLRequest","XMLInQueryString"], $editable:"false", defaultValue="Name_Value"}</description>
-                <config-property-name>ParameterMethod</config-property-name>
-                <config-property-type>java.lang.String</config-property-type>
-                <config-property-value>Name_Value</config-property-value>
-            </config-property>
-             
             <connectionfactory-interface>javax.resource.cci.ConnectionFactory</connectionfactory-interface>
             <connectionfactory-impl-class>org.teiid.resource.spi.WrappedConnectionFactory</connectionfactory-impl-class>
             <connection-interface>javax.resource.cci.Connection</connection-interface>

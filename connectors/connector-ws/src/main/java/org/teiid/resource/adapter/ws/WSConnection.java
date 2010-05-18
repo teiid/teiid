@@ -1,6 +1,8 @@
 package org.teiid.resource.adapter.ws;
 
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -23,31 +25,31 @@ import javax.xml.ws.http.HTTPBinding;
 import javax.xml.ws.soap.SOAPBinding;
 
 import org.jboss.ws.core.ConfigProvider;
-import org.teiid.resource.adapter.ws.WSManagedConnectionFactory.ParameterType;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.resource.adapter.ws.WSManagedConnectionFactory.InvocationType;
 import org.teiid.resource.spi.BasicConnection;
 
 public class WSConnection extends BasicConnection implements Dispatch<Source>{
 	private static QName svcQname = new QName("http://teiid.org", "teiid"); //$NON-NLS-1$ //$NON-NLS-2$
 	private static QName portQName = new QName("http://teiid.org", "teiid");//$NON-NLS-1$ //$NON-NLS-2$
 	
-	private Dispatch delegate;
+	private Dispatch<Source> delegate;
 	private WSManagedConnectionFactory mcf;
 
 	public WSConnection(WSManagedConnectionFactory mcf) {
-		if (mcf.getInvocationType() == WSManagedConnectionFactory.InvocationType.SOAP) {
-	        this.delegate = createSOAPDispatch(mcf);
-		}
-		else if (mcf.getInvocationType() == WSManagedConnectionFactory.InvocationType.HTTP_GET) {
-			this.delegate = createHTTPDispatch(mcf, "GET"); //$NON-NLS-1$
+		this.mcf = mcf;
+		if (mcf.getInvocationType() == WSManagedConnectionFactory.InvocationType.HTTP_GET) {
+			this.delegate = createHTTPDispatch("GET"); //$NON-NLS-1$
 		}
 		else if (mcf.getInvocationType() == WSManagedConnectionFactory.InvocationType.HTTP_POST) {
-			this.delegate = createHTTPDispatch(mcf, "POST"); //$NON-NLS-1$
-		}		
-		this.mcf = mcf;
+			this.delegate = createHTTPDispatch("POST"); //$NON-NLS-1$
+		} else {
+			this.delegate = createSOAPDispatch();
+		}
 	}
 
-	
-	private Dispatch createHTTPDispatch(WSManagedConnectionFactory mcf, String requestMethod){
+	private Dispatch<Source> createHTTPDispatch(String requestMethod){
 		Service svc = Service.create(svcQname);
 		svc.addPort(portQName, HTTPBinding.HTTP_BINDING, mcf.getEndPoint());
 
@@ -69,12 +71,12 @@ public class WSConnection extends BasicConnection implements Dispatch<Source>{
 		return dispatch;
 	}
 
-	private Dispatch createSOAPDispatch(WSManagedConnectionFactory mcf) {
+	private Dispatch<Source> createSOAPDispatch() {
 		Service svc = Service.create(svcQname);
 		
-		svc.addPort(portQName, SOAPBinding.SOAP11HTTP_BINDING, mcf.getEndPoint());
+		svc.addPort(portQName, mcf.getInvocationType() == InvocationType.SOAP11 ? SOAPBinding.SOAP11HTTP_BINDING : SOAPBinding.SOAP12HTTP_BINDING, mcf.getEndPoint());
 
-		Dispatch dispatch = svc.createDispatch(portQName, Source.class, Service.Mode.PAYLOAD);
+		Dispatch<Source> dispatch = svc.createDispatch(portQName, Source.class, Service.Mode.PAYLOAD);
 		if (mcf.getSecurityType() == WSManagedConnectionFactory.SecurityType.WSSecurity) {
 			//  JBoss WS-Security
 			((ConfigProvider) this.delegate).setSecurityConfig(mcf.getWsSecurityConfigURL());
@@ -118,36 +120,42 @@ public class WSConnection extends BasicConnection implements Dispatch<Source>{
         }
 
 		if (this.mcf.getInvocationType() == WSManagedConnectionFactory.InvocationType.HTTP_GET) {
-			if (isXMLInput() && xmlPayload != null) {
-				getRequestContext().put(MessageContext.QUERY_STRING, this.mcf.getXMLParamName()+"="+xmlPayload); //$NON-NLS-1$
-			}
-			else {
-				if (getRequestContext().get(BindingProvider.ENDPOINT_ADDRESS_PROPERTY) == null) {
-					
-					String path = (String)getRequestContext().get(MessageContext.PATH_INFO);
-					String queryString = (String)getRequestContext().get(MessageContext.QUERY_STRING);
-					String url = this.mcf.getEndPoint();
-					if (path != null) {
-						url = url + "/" + path; //$NON-NLS-1$
-					}
-					if (queryString != null) {
-						url = url + "?" + queryString; //$NON-NLS-1$
-					}
-					getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, url);
+			if (this.mcf.getXMLParamName() != null) {
+				if (xmlPayload != null) {
+					try {
+						getRequestContext().put(MessageContext.QUERY_STRING, this.mcf.getXMLParamName()+"="+URLEncoder.encode(xmlPayload, "UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
+					} catch (UnsupportedEncodingException e) {
+						throw new RuntimeException(e);
+					} 
+				} else {
+					LogManager.logDetail(LogConstants.CTX_CONNECTOR, "XML Param specified, but no request document was generated."); //$NON-NLS-1$
 				}
+			}
+			else if (getRequestContext().get(BindingProvider.ENDPOINT_ADDRESS_PROPERTY) == null) {
+					
+				String path = (String)getRequestContext().get(MessageContext.PATH_INFO);
+				String queryString = (String)getRequestContext().get(MessageContext.QUERY_STRING);
+				String url = this.mcf.getEndPoint();
+				if (path != null) {
+					url = url + "/" + path; //$NON-NLS-1$
+				}
+				if (queryString != null) {
+					url = url + "?" + queryString; //$NON-NLS-1$
+				}
+				getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, url);
 			}
     		msg = null;
 		}
 		else if (this.mcf.getInvocationType() == WSManagedConnectionFactory.InvocationType.HTTP_POST) {
 			getRequestContext().put(MessageContext.QUERY_STRING, ""); //$NON-NLS-1$
-			if (isXMLInput() && xmlPayload != null) {
+			if (xmlPayload != null) {
 				msg = new StreamSource(new StringReader(xmlPayload));
 			}
 			else {
 				msg = null;
 			}
 		}
-		else if (this.mcf.getInvocationType() == WSManagedConnectionFactory.InvocationType.SOAP) {
+		else {
 			// JBossWS native adds the null based address property somewhere and results in error if this 
 			// is corrected
 			if (getRequestContext().get(BindingProvider.ENDPOINT_ADDRESS_PROPERTY) == null) {
@@ -157,22 +165,18 @@ public class WSConnection extends BasicConnection implements Dispatch<Source>{
 	
 		if (msg == null) {
 			// JBoss Native DispatchImpl throws exception when the source is null
-			msg = new StreamSource(new StringReader("<none/>"));
+			msg = new StreamSource(new StringReader("<none/>")); //$NON-NLS-1$
 		}
-		return (Source)delegate.invoke(msg);
+		return delegate.invoke(msg);
 	}
 	
-	private boolean isXMLInput() {
-		return (this.mcf.getParameterMethod() == ParameterType.XMLInQueryString || this.mcf.getParameterMethod() == ParameterType.XMLRequest);
-	}
-
 	@Override
-	public Future invokeAsync(Source msg, AsyncHandler handler) {
+	public Future invokeAsync(Source msg, AsyncHandler<Source> handler) {
 		return delegate.invokeAsync(msg, handler);
 	}
 
 	@Override
-	public Response invokeAsync(Source msg) {
+	public Response<Source> invokeAsync(Source msg) {
 		return delegate.invokeAsync(msg);
 	}
 

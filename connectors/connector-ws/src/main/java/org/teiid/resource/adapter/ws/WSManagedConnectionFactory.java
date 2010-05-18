@@ -22,7 +22,6 @@
 package org.teiid.resource.adapter.ws;
 
 import javax.resource.ResourceException;
-import javax.resource.cci.ConnectionSpec;
 
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.resource.spi.BasicConnectionFactory;
@@ -32,21 +31,18 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 
 	private static final long serialVersionUID = -2998163922934555003L;
 
-	enum InvocationType {HTTP_GET, HTTP_POST, SOAP};
-	enum SecurityType {None,HTTPBasic,WSSecurity}
-	enum ParameterType{None,Name_Value,XMLRequest,XMLInQueryString};
+	public enum InvocationType {HTTP_GET, HTTP_POST, SOAP11, SOAP12};
+	public enum SecurityType {None,HTTPBasic,WSSecurity}
 	
-	private String invocationType;
+	private String invocationType = InvocationType.SOAP12.name();
 	private String endPoint;
 	
-	private String securityType; // None, HTTPBasic, WS-Security
+	private String securityType = SecurityType.None.name(); // None, HTTPBasic, WS-Security
 	private String wsSecurityConfigURL; // path to the "jboss-wsse-client.xml" file
 	private String wsSecurityConfigName; // ws-security config name in the above file
 	private String authPassword; // httpbasic - password
 	private String authUserName; // httpbasic - username
-	private String parameterMethod;
-	private String xMLParamName;
-	
+	private String xmlParamName;
 
 	@Override
 	public Object createConnectionFactory() throws ResourceException {
@@ -58,11 +54,9 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 		};
 	}
 	
-	
 	public InvocationType getInvocationType() {
 		return InvocationType.valueOf(invocationType);
 	}
-
 
 	public void setInvocationType(String invocationType) {
 		this.invocationType = invocationType;
@@ -116,19 +110,11 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 		this.wsSecurityConfigName = wsSecurityConfigName;
 	}
 	
-	public ParameterType getParameterMethod() {
-		return ParameterType.valueOf(parameterMethod);
-	}
-
-	public void setParameterMethod(String parameterMethod) {
-		this.parameterMethod = parameterMethod;
-	}
-	
 	public String getXMLParamName() {
-		return xMLParamName;
+		return xmlParamName;
 	}
 
 	public void setXMLParamName(String xMLParamName) {
-		this.xMLParamName = xMLParamName;
+		this.xmlParamName = xMLParamName;
 	}
 }
