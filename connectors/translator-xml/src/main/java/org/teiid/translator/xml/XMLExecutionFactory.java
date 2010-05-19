@@ -23,6 +23,7 @@
 package org.teiid.translator.xml;
 
 import java.sql.SQLXML;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +55,7 @@ public class XMLExecutionFactory extends ExecutionFactory {
 		
 	private String saxFilterProviderClass;
 	private String encoding = "ISO-8859-1"; //$NON-NLS-1$
-	private Map<String, SQLXML> responses = new ConcurrentHashMap<String, SQLXML>();
+	private Map<String, List<SQLXML>> responses = new ConcurrentHashMap<String, List<SQLXML>>();
 	private boolean logRequestResponseDocs = false;
 	private String queryPreprocessorClass;
 
@@ -105,15 +106,20 @@ public class XMLExecutionFactory extends ExecutionFactory {
 		this.logRequestResponseDocs = logRequestResponseDocs;
 	}
 
-	public SQLXML getResponse(String key) {
+	public List<SQLXML> getResponse(String key) {
 		return this.responses.get(key);
 	}
 	
 	public void setResponse(String key, SQLXML xml) {
-		this.responses.put(key, xml);
+		List<SQLXML> results = this.responses.get(key);
+		if (results == null) {
+			results = new ArrayList<SQLXML>();
+			this.responses.put(key, results);
+		}
+		results.add(xml);
 	}
 	
-	public SQLXML removeResponse(String key) {
+	public List<SQLXML> removeResponse(String key) {
 		return this.responses.remove(key);
 	}	
 	
@@ -147,19 +153,35 @@ public class XMLExecutionFactory extends ExecutionFactory {
     		command = preProcessor.preprocessQuery((Select)command, metadata, executionContext);
     	}
     	
+		QueryAnalyzer analyzer  = new QueryAnalyzer((Select)command);
+		ExecutionInfo executionInfo = analyzer.getExecutionInfo();
+		List<List<CriteriaDesc>> requestPerms = analyzer.getRequestPerms();
+    	
+		if (requestPerms.size() > 1) {
+			CompositeExecution compasiteExecution = new CompositeExecution();
+			for (List<CriteriaDesc> cds: requestPerms) {
+				compasiteExecution.addExecution(createExecution(cds, executionInfo, executionContext,connectionFactory));
+			}
+			return compasiteExecution;
+		}
+		return createExecution(requestPerms.get(0), executionInfo, executionContext,connectionFactory);
+	}
+
+	private ResultSetExecution createExecution(List<CriteriaDesc> cds, ExecutionInfo executionInfo, ExecutionContext executionContext, Object connectionFactory)
+			throws TranslatorException {
 		try {
 			ConnectionFactory cf = (ConnectionFactory)connectionFactory;
 			Connection connection = cf.getConnection();
 			if (connection instanceof FileConnection) {
-				return new FileResultSetExecution((Select)command, this, (FileConnection)connection);
+				return new FileResultSetExecution(cds, executionInfo, this, (FileConnection)connection);
 			}
 			else if (connection instanceof Dispatch<?>) {
-				return new BaseStreamingExecution((Select)command, metadata, executionContext, this, (Dispatch)connection);				
+				return new BaseStreamingExecution(cds, executionInfo, executionContext, this, (Dispatch)connection);				
 			}
-			return null;
 		} catch (ResourceException e) {
 			throw new TranslatorException(e);
 		}
+		return null;
 	}	
 	
 	private RequestPreprocessor getRequestPreProcessor() throws TranslatorException {

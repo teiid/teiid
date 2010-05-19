@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.core.types.InputStreamFactory;
-import org.teiid.language.Select;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.FileConnection;
 import org.teiid.translator.ResultSetExecution;
@@ -54,10 +53,9 @@ public class FileResultSetExecution implements ResultSetExecution {
 	private int currentRow = 0;
 	
 	
-	public FileResultSetExecution(Select query, XMLExecutionFactory executionFactory, FileConnection connection) throws TranslatorException {
+	public FileResultSetExecution(List<CriteriaDesc> requestParams, ExecutionInfo executionInfo, XMLExecutionFactory executionFactory, FileConnection connection) throws TranslatorException {
 
-		QueryAnalyzer analyzer = new QueryAnalyzer(query);
-		this.executionInfo = analyzer.getExecutionInfo();
+		this.executionInfo = executionInfo;
 
 		String tableName = this.executionInfo.getLocation();
         if (tableName == null) {
@@ -67,14 +65,8 @@ public class FileResultSetExecution implements ResultSetExecution {
         this.content = connection.getFiles(tableName);
 		
 		validateParams();
-		List<CriteriaDesc[]> requestPerms = analyzer.getRequestPerms();
 
-		if (requestPerms.size() > 1) {
-			throw new AssertionError("The QueryAnalyzer produced > 1 request permutation"); //$NON-NLS-1$
-		}
-
-		List<CriteriaDesc> criteriaList = Arrays.asList(requestPerms.get(0));
-		this.executionInfo.setParameters(criteriaList);
+		this.executionInfo.setParameters(requestParams);
 		this.executionFactory = executionFactory;
 		this.streamProducer = new StreamingResultsProducer(this.executionInfo, this.executionFactory.getSaxFilterProvider());
 	}

@@ -73,22 +73,30 @@ public class ConnectorHost {
         Command command = getCommand(query);
         RuntimeMetadata runtimeMetadata = getRuntimeMetadata();
 
-        return executeCommand(command, runtimeMetadata);
+        return executeCommand(command, runtimeMetadata, true);
+    }
+    
+    public List executeCommand(String query, boolean close) throws TranslatorException {
+        Command command = getCommand(query);
+        RuntimeMetadata runtimeMetadata = getRuntimeMetadata();
+
+        return executeCommand(command, runtimeMetadata, close);
     }
     
     public List executeCommand(Command command) throws TranslatorException {
         RuntimeMetadata runtimeMetadata = getRuntimeMetadata();
-        return executeCommand(command, runtimeMetadata);
+        return executeCommand(command, runtimeMetadata, true);
     }
 
-    private List executeCommand(Command command, RuntimeMetadata runtimeMetadata)
+    private List executeCommand(Command command, RuntimeMetadata runtimeMetadata, boolean close)
         throws TranslatorException {
 
         Execution exec = connector.createExecution(command, this.executionContext, runtimeMetadata, this.connectionFactory);
         exec.execute();
         List results = readResultsFromExecution(exec);
-        exec.close();                
-
+        if (close) {
+        	exec.close();
+        }
         return results;
     }
 
@@ -103,7 +111,7 @@ public class ConnectorHost {
     }
     
     public int[] executeBatchedUpdates(Command[] commands, RuntimeMetadata runtimeMetadata) throws TranslatorException {
-    	List<List> result = executeCommand(new BatchedUpdates(Arrays.asList(commands)), runtimeMetadata);
+    	List<List> result = executeCommand(new BatchedUpdates(Arrays.asList(commands)), runtimeMetadata, true);
     	int[] counts = new int[result.size()];
     	for (int i = 0; i < counts.length; i++) {
     		counts[i] = ((Integer)result.get(i).get(0)).intValue();

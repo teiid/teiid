@@ -22,8 +22,10 @@
 package org.teiid.translator.xml.streaming;
 
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.util.ArrayList;
@@ -40,11 +42,10 @@ import javax.xml.ws.handler.MessageContext;
 
 import org.jdom.Element;
 import org.jdom.output.XMLOutputter;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.Assertion;
-import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
@@ -56,14 +57,14 @@ import org.teiid.translator.xml.DocumentBuilder;
 import org.teiid.translator.xml.ExecutionInfo;
 import org.teiid.translator.xml.OutputXPathDesc;
 import org.teiid.translator.xml.ParameterDescriptor;
-import org.teiid.translator.xml.QueryAnalyzer;
-import org.teiid.translator.xml.RequestGenerator;
 import org.teiid.translator.xml.XMLExecutionFactory;
 import org.teiid.translator.xml.XMLPlugin;
 
 
 public class BaseStreamingExecution implements ResultSetExecution {
-    public static final String PARM_INPUT_XPATH_TABLE_PROPERTY_NAME = "XPathRootForInput"; //$NON-NLS-1$
+    private static final String DOT_SLASH = "./"; //$NON-NLS-1$
+	private static final String SLASH = "/"; //$NON-NLS-1$
+	public static final String PARM_INPUT_XPATH_TABLE_PROPERTY_NAME = "XPathRootForInput"; //$NON-NLS-1$
     public static final String PARM_INPUT_NAMESPACE_TABLE_PROPERTY_NAME = "NamespaceForDocument"; //$NON-NLS-1$
 	public final static String soapNSLabel = "SOAP-ENV"; //$NON-NLS-1$
 	public static final String soapHeader= "Header"; //$NON-NLS-1$
@@ -75,47 +76,36 @@ public class BaseStreamingExecution implements ResultSetExecution {
 	private int resultIndex = 0;
 
 	// injected state
-	protected RuntimeMetadata metadata;
 	protected ExecutionContext context;
 	protected XMLExecutionFactory executionFactory;
 	Dispatch<Source> dispatch;
 	ExecutionInfo executionInfo;
-	private Source soapPayload;
+	Source soapPayload;
 	Iterator<Document> resultsIterator;
 
-	public BaseStreamingExecution(Select command, RuntimeMetadata rtMetadata, ExecutionContext context, XMLExecutionFactory executionFactory, Dispatch<Source> dispatch) throws TranslatorException {
-		this.metadata = rtMetadata;
+	public BaseStreamingExecution(List<CriteriaDesc> requestParams, ExecutionInfo executionInfo, ExecutionContext context, XMLExecutionFactory executionFactory, Dispatch<Source> dispatch) throws TranslatorException {
 		this.context = context;
 		this.executionFactory = executionFactory;
 		this.dispatch = dispatch;
-		
-		QueryAnalyzer analyzer  = new QueryAnalyzer(command);
-		this.executionInfo = analyzer.getExecutionInfo();
-		List<CriteriaDesc[]> requestPerms = analyzer.getRequestPerms();
+		this.executionInfo = executionInfo;
 
-		for (CriteriaDesc[] criteria : requestPerms) {
-			processOutputXPathDescs(this.executionInfo.getRequestedColumns(), Arrays.asList(criteria));
-		}
+		processOutputXPathDescs(this.executionInfo.getRequestedColumns(), requestParams);
 		
-        if (checkIfRequestIsNeeded(this.executionInfo)) {            
-    		for (CriteriaDesc[] criteria : requestPerms) {
-            	List<CriteriaDesc[]> parameters = RequestGenerator.getRequests(Arrays.asList(criteria));
-            	
-            	// Build a query String for http
-            	String queryString = buildQueryString(parameters);
-            	this.dispatch.getRequestContext().put(MessageContext.QUERY_STRING, queryString);
-            	            	            	
-            	String endpoint = buildAlternateEndpoint(this.executionInfo);
-            	if (endpoint == null) {
-            		this.dispatch.getRequestContext().put(Dispatch.ENDPOINT_ADDRESS_PROPERTY, endpoint);
-            	}
-            	else {
-            		String pathInfo = buildPath(this.executionInfo);
-            		if (pathInfo != null) {
-            			this.dispatch.getRequestContext().put(MessageContext.PATH_INFO, pathInfo);
-            		}
-            	}
-    		}        	
+        if (checkIfRequestIsNeeded(this.executionInfo)) {                    	
+        	// Build a query String for http
+        	String queryString = buildQueryString(requestParams);
+        	this.dispatch.getRequestContext().put(MessageContext.QUERY_STRING, queryString);
+        	            	            	
+        	String endpoint = buildAlternateEndpoint(this.executionInfo);
+        	if (endpoint == null) {
+        		this.dispatch.getRequestContext().put(Dispatch.ENDPOINT_ADDRESS_PROPERTY, endpoint);
+        	}
+        	else {
+        		String pathInfo = buildPath(this.executionInfo);
+        		if (pathInfo != null) {
+        			this.dispatch.getRequestContext().put(MessageContext.PATH_INFO, pathInfo);
+        		}
+        	}
     		
     		String soapAction = this.executionInfo.getOtherProperties().get("SOAPAction"); //$NON-NLS-1$
     		if (soapAction != null) {
@@ -126,7 +116,7 @@ public class BaseStreamingExecution implements ResultSetExecution {
         
 	    	try {
 				// Build XML string for HTTP
-				String xmlPayload = buildSimpleXML(requestPerms);
+				String xmlPayload = buildSimpleXML(requestParams);
 				if (xmlPayload != null) {
 					Map<String, Object> map = (Map)this.dispatch.getRequestContext().get(MessageContext.INBOUND_MESSAGE_ATTACHMENTS);
 					if (map == null) {
@@ -144,7 +134,7 @@ public class BaseStreamingExecution implements ResultSetExecution {
 
 			try {
 				// Build XML for SOAP
-				String soapIn = buildSOAPInput(requestPerms);
+				String soapIn = buildSOAPInput(requestParams);
 				if(soapIn != null) {
 					this.soapPayload = new StreamSource(new StringReader(soapIn));
 			        if (executionFactory.isLogRequestResponseDocs()) {
@@ -161,15 +151,16 @@ public class BaseStreamingExecution implements ResultSetExecution {
 		
 	}
 
-	private String buildQueryString(List<CriteriaDesc[]> parameters) throws TranslatorException{
+	private String buildQueryString(List<CriteriaDesc> parameters) throws TranslatorException{
 		StringBuilder sb  = new StringBuilder();
-		
-        for (CriteriaDesc[] query: parameters) {
-        	for(CriteriaDesc cd: query) {
-                String name = (cd.getInputXpath() == null || cd.getInputXpath().length() == 0) ? cd.getColumnName() : cd.getInputXpath();
-                sb.append(name).append("=").append(cd.getCurrentIndexValue()).append("&"); //$NON-NLS-1$ //$NON-NLS-2$
-        	}
-        }
+    	try {
+			for(CriteriaDesc cd: parameters) {
+			    String name = (cd.getInputXpath() == null || cd.getInputXpath().length() == 0) ? cd.getColumnName() : cd.getInputXpath();
+			    sb.append(URLEncoder.encode(name, "UTF-8")).append("=").append(URLEncoder.encode(cd.getCurrentIndexValue(), "UTF-8")).append("&"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+			}
+		} catch (UnsupportedEncodingException e) {
+			throw new TeiidRuntimeException(e);
+		}
         return sb.toString();
 	}
 	
@@ -234,9 +225,7 @@ public class BaseStreamingExecution implements ResultSetExecution {
 
 	@Override
 	public void execute() throws TranslatorException {
-		ArrayList<Document> result = new ArrayList<Document>();
-		result.add(getDocumentStream(this.executionInfo));
-		this.resultsIterator = result.iterator();
+		this.resultsIterator = getDocumentStream(this.executionInfo).iterator();
 	}
     
 	/**
@@ -319,16 +308,18 @@ public class BaseStreamingExecution implements ResultSetExecution {
     }
 	
 
-	private Document getDocumentStream(ExecutionInfo executionInfo) {
-		Document document;
+	private List<Document> getDocumentStream(ExecutionInfo executionInfo) {
+		ArrayList<Document> docs = new ArrayList<Document>();
 
         // Is this a request part joining across a document
         CriteriaDesc criterion = executionInfo.getResponseIDCriterion();
         if (criterion != null) {
             String responseid = (String) (criterion.getValues().get(0));
-            SQLXML xml = this.executionFactory.getResponse(responseid);
-            Assertion.isNotNull(xml);
-        	document = new DocumentImpl(xml, responseid);
+            List<SQLXML> xmls = this.executionFactory.getResponse(responseid);
+            for (SQLXML xml:xmls) {
+            	Assertion.isNotNull(xml);
+            	docs.add(new DocumentImpl(xml, responseid));
+            }
         } else {
         	// Not a join, but might still be cached.
         	// Not cached, so make the request
@@ -341,21 +332,17 @@ public class BaseStreamingExecution implements ResultSetExecution {
 				}
             }
     		this.executionFactory.setResponse(this.context.getExecutionCountIdentifier(), responseBody);
-            document = new DocumentImpl(responseBody, this.context.getExecutionCountIdentifier());
+    		docs.add(new DocumentImpl(responseBody, this.context.getExecutionCountIdentifier()));
         }
-		return document;
+		return docs;
 	}    	
 	
 	
-	private String buildSOAPInput(List<CriteriaDesc[]> params) throws TranslatorException {
-		List<CriteriaDesc[]> requestPerms = RequestGenerator.getRequests(Arrays.asList(params.get(0)));
-		CriteriaDesc[] parameters = requestPerms.get(0);
-		
-		List<CriteriaDesc> queryList = new ArrayList<CriteriaDesc>(Arrays.asList(parameters));
+	private String buildSOAPInput(List<CriteriaDesc> params) throws TranslatorException {		
 		List<CriteriaDesc> headerParams = new ArrayList<CriteriaDesc>();
 		List<CriteriaDesc> bodyParams = new ArrayList<CriteriaDesc>();
 
-		for (CriteriaDesc desc : queryList) {
+		for (CriteriaDesc desc : params) {
 			if (desc.getInputXpath().startsWith(soapNSLabel+ ":" + soapHeader)) { //$NON-NLS-1$
 				headerParams.add(desc);
 			} else {
@@ -369,15 +356,13 @@ public class BaseStreamingExecution implements ResultSetExecution {
 		DocumentBuilder builder = new DocumentBuilder();
 		//TODO: always set to encoded false - rareddy
 		builder.setUseTypeAttributes(false);
-		final String slash = "/"; //$NON-NLS-1$
-		final String dotSlash = "./"; //$NON-NLS-1$
 		boolean hasDummy = false;
-		if (inputParmsXPath.equals(dotSlash) || inputParmsXPath.equals(slash) || inputParmsXPath.equals("")) { //$NON-NLS-1$
+		if (inputParmsXPath == null || inputParmsXPath.equals(DOT_SLASH) || inputParmsXPath.equals(SLASH) || inputParmsXPath.equals("")) { //$NON-NLS-1$
 			inputParmsXPath = DUMMY_NS_PREFIX + ":dummy"; //$NON-NLS-1$
 			namespacePrefixes = namespacePrefixes + " xmlns:" + DUMMY_NS_PREFIX + "=\"" + DUMMY_NS_NAME + "\""; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			hasDummy = true;
 		}
-		org.jdom.Document doc = builder.buildDocument(Arrays.asList(parameters), inputParmsXPath, namespacePrefixes);
+		org.jdom.Document doc = builder.buildDocument(params, inputParmsXPath, namespacePrefixes);
 		if (hasDummy) {
 			// Since there is no real root - these should all be elements
 			Element element = (Element) doc.getRootElement().getChildren().get(0);
@@ -387,18 +372,18 @@ public class BaseStreamingExecution implements ResultSetExecution {
 		return new XMLOutputter().outputString(doc);
 	}
 	
-	private String buildSimpleXML(List<CriteriaDesc[]> params) throws TranslatorException{
-		List<CriteriaDesc[]> requestPerms = RequestGenerator.getRequests(Arrays.asList(params.get(0)));
-		CriteriaDesc[] parameters = requestPerms.get(0);
-		
+	private String buildSimpleXML(List<CriteriaDesc> params) throws TranslatorException{		
 		DocumentBuilder builder = new DocumentBuilder();
     	Map<String, String> props = executionInfo.getOtherProperties();
         String inputParmsXPath = props.get(DocumentBuilder.PARM_INPUT_XPATH_TABLE_PROPERTY_NAME);
         String namespacePrefixes = props.get(Constants.NAMESPACE_PREFIX_PROPERTY_NAME);
+        
+        if(inputParmsXPath.equals(SLASH)) {
+        	inputParmsXPath = "SLASH"; //$NON-NLS-1$
+        }
 		
-        org.jdom.Document inputXMLDoc = builder.buildDocument(Arrays.asList(parameters), inputParmsXPath,namespacePrefixes);
+        org.jdom.Document inputXMLDoc = builder.buildDocument(params, inputParmsXPath,namespacePrefixes);
         XMLOutputter out = new XMLOutputter();
         return out.outputString(inputXMLDoc).trim();
 	}		
-	
 }

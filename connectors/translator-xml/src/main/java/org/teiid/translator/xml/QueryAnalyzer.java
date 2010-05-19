@@ -63,7 +63,7 @@ public class QueryAnalyzer {
         return this.executionInfo;
     }
 
-    private void setGroupInfo() throws TranslatorException {
+    private void setGroupInfo() {
         List<TableReference> fromItems = command.getFrom();
         //Can only be one because we do not support joins
         NamedTable group = (NamedTable) fromItems.get(0);
@@ -197,12 +197,12 @@ public class QueryAnalyzer {
         }
     }
 
-    private void setProperties() throws TranslatorException {
+    private void setProperties() {
     	this.executionInfo.setOtherProperties(table.getProperties());
     }
 
-	public List<CriteriaDesc[]> getRequestPerms() {
-		return RequestGenerator.getRequests(this.executionInfo.getParameters());
+	public List<List<CriteriaDesc>> getRequestPerms() {
+		return CartesienCriteriaGenerator.generateCartesianCriteria(this.executionInfo.getParameters());
 	}
 
 }
