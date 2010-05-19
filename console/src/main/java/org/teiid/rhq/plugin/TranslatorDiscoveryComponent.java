@@ -31,7 +31,6 @@ import org.jboss.managed.api.ComponentType;
 import org.jboss.managed.api.ManagedComponent;
 import org.jboss.managed.api.ManagedProperty;
 import org.jboss.metatype.api.types.MetaType;
-import org.jboss.metatype.api.values.CollectionValueSupport;
 import org.jboss.metatype.api.values.MetaValue;
 import org.jboss.metatype.api.values.MetaValueFactory;
 import org.rhq.core.domain.configuration.Configuration;
@@ -42,7 +41,6 @@ import org.rhq.core.pluginapi.inventory.DiscoveredResourceDetails;
 import org.rhq.core.pluginapi.inventory.InvalidPluginConfigurationException;
 import org.rhq.core.pluginapi.inventory.ResourceDiscoveryComponent;
 import org.rhq.core.pluginapi.inventory.ResourceDiscoveryContext;
-import org.teiid.adminapi.impl.PropertyMetadata;
 import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 
@@ -66,8 +64,6 @@ public class TranslatorDiscoveryComponent implements ResourceDiscoveryComponent 
 
 		for (ManagedComponent translator : translators) {
 
-			Map<String, ManagedProperty> managedPropertyMap = translator
-					.getProperties();
 			String translatorKey = translator.getName();
 			String translatorName = ProfileServiceUtil.getSimpleValue(
 					translator, "name", String.class);
@@ -82,8 +78,7 @@ public class TranslatorDiscoveryComponent implements ResourceDiscoveryComponent 
 					translatorName, // Resource Name
 					null, // Version
 					PluginConstants.ComponentType.Translator.DESCRIPTION, // Description
-					discoveryContext.getDefaultPluginConfiguration(), // Plugin
-					// Config
+					discoveryContext.getDefaultPluginConfiguration(), // Plugin config
 					null // Process info from a process scan
 			);
 
@@ -92,25 +87,34 @@ public class TranslatorDiscoveryComponent implements ResourceDiscoveryComponent 
 			PropertyMap propMap = null;
 			c.put(list);
 
-			for (ManagedProperty prop : managedPropertyMap.values()) {
-				propMap = new PropertyMap("translatorMap");
-				String name = prop.getName();
-				if (name.equals("translator-property")) {
-					getTranslatorValues(prop.getValue(), propMap, list);
-				} else {
-					propMap.put(new PropertySimple("name", name));
-					propMap.put(new PropertySimple("value", ProfileServiceUtil
-							.stringValue(prop.getValue())));
-					propMap.put(new PropertySimple("description", prop
-							.getDescription()));
-					list.add(propMap);
-				}
-			}
+			// First get translator specific properties
+			ManagedProperty translatorProps = translator
+					.getProperty("translator-property");
+			getTranslatorValues(translatorProps.getValue(), propMap, list);
+
+			// Now get common properties
+			c.put(new PropertySimple("name", translatorName));
+			c.put(new PropertySimple("execution-factory-class",
+					ProfileServiceUtil.getSimpleValue(translator,
+							"execution-factory-class", String.class)));
+			c.put(new PropertySimple("immutable", ProfileServiceUtil
+					.getSimpleValue(translator, "immutable", Boolean.class)));
+			c.put(new PropertySimple("xa-capable", ProfileServiceUtil
+					.getSimpleValue(translator, "xa-capable", Boolean.class)));
+			c.put(new PropertySimple("exception-on-max-rows",
+					ProfileServiceUtil.getSimpleValue(translator,
+							"exception-on-max-rows", Boolean.class)));
+			c.put(new PropertySimple("max-result-rows", ProfileServiceUtil
+					.getSimpleValue(translator, "max-result-rows",
+							Integer.class)));
+			c.put(new PropertySimple("template-name", ProfileServiceUtil
+							.getSimpleValue(translator, "template-name",
+									String.class)));
 
 			detail.setPluginConfiguration(c);
 			// Add to return values
 			discoveredResources.add(detail);
-			log.info("Discovered Teiid Translator: " + translatorName);
+			log.debug("Discovered Teiid Translator: " + translatorName);
 		}
 
 		return discoveredResources;
@@ -119,29 +123,22 @@ public class TranslatorDiscoveryComponent implements ResourceDiscoveryComponent 
 	public static <T> void getTranslatorValues(MetaValue pValue,
 			PropertyMap map, PropertyList list) {
 		MetaType metaType = pValue.getMetaType();
-		PropertyMetadata unwrappedvalue = null;
-		if (metaType.isCollection()) {
-			for (MetaValue value : ((CollectionValueSupport) pValue)
-					.getElements()) {
-				if (value.getMetaType().isComposite()) {
-					map = new PropertyMap("translatorMap");
-					unwrappedvalue = (PropertyMetadata) MetaValueFactory
-							.getInstance().unwrap(value);
-					map
-							.put(new PropertySimple("name", unwrappedvalue
-									.getName()));
-					map.put(new PropertySimple("value", unwrappedvalue
-							.getValue()));
-					map
-							.put(new PropertySimple("description",
-									"Custom property"));
-					list.add(map);
-				} else {
-					throw new IllegalStateException(pValue
-							+ " is not a Composite type");
-				}
+		Map<String, T> unwrappedvalue = null;
+		if (metaType.isComposite()) {
+			unwrappedvalue = (Map<String, T>) MetaValueFactory
+					.getInstance().unwrap(pValue);
+
+			for (String key : unwrappedvalue.keySet()) {
+				map = new PropertyMap("translator-properties");
+				map.put(new PropertySimple("name", key));
+				map.put(new PropertySimple("value", unwrappedvalue.get(key)));
+				map.put(new PropertySimple("description", "Custom property"));
+				list.add(map);
 			}
+		} else {
+			throw new IllegalStateException(pValue + " is not a Composite type");
 		}
+
 	}
 
 }

@@ -239,7 +239,7 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 		list.add(map);
 		MetaType metaType = pValue.getMetaType();
 		if (metaType.isCollection()) {
-			for (MetaValue value : ((CollectionValueSupport) pValue)
+			for (MetaValue value : ((CollectionValueSupport) pValue) 
 					.getElements()) {
 				GenericValueSupport genValue = ((GenericValueSupport) value);
 				ManagedObject mo = (ManagedObject) genValue.getValue();

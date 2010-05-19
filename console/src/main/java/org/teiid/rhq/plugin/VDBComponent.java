@@ -43,6 +43,7 @@ import org.jboss.metatype.api.values.MetaValue;
 import org.jboss.metatype.api.values.SimpleValue;
 import org.jboss.metatype.api.values.SimpleValueSupport;
 import org.rhq.core.domain.configuration.Configuration;
+import org.rhq.core.domain.configuration.ConfigurationUpdateStatus;
 import org.rhq.core.domain.configuration.PropertyList;
 import org.rhq.core.domain.configuration.PropertyMap;
 import org.rhq.core.domain.configuration.PropertySimple;
@@ -51,6 +52,10 @@ import org.rhq.core.domain.measurement.MeasurementDataNumeric;
 import org.rhq.core.domain.measurement.MeasurementDataTrait;
 import org.rhq.core.domain.measurement.MeasurementReport;
 import org.rhq.core.domain.measurement.MeasurementScheduleRequest;
+import org.rhq.core.domain.resource.ResourceType;
+import org.rhq.core.pluginapi.configuration.ConfigurationFacet;
+import org.rhq.core.pluginapi.configuration.ConfigurationUpdateReport;
+import org.rhq.core.pluginapi.inventory.CreateResourceReport;
 import org.rhq.core.pluginapi.inventory.ResourceContext;
 import org.teiid.rhq.admin.DQPManagementView;
 import org.teiid.rhq.comm.ConnectionConstants;
@@ -218,6 +223,21 @@ public class VDBComponent extends Facet {
 		return PluginConstants.ComponentType.VDB.NAME;
 	}
 
+	/**
+	 * The plugin container will call this method when it has a new
+	 * configuration for your managed resource. Your plugin will re-configure
+	 * the managed resource in your own custom way, setting its configuration
+	 * based on the new values of the given configuration.
+	 * 
+	 * @see ConfigurationFacet#updateResourceConfiguration(ConfigurationUpdateReport)
+	 */
+	public void updateResourceConfiguration(ConfigurationUpdateReport report) {
+		// this simulates the plugin taking the new configuration and
+		// reconfiguring the managed resource
+		resourceConfiguration = report.getConfiguration().deepCopy();
+		report.setStatus(ConfigurationUpdateStatus.SUCCESS);
+	}
+	
 	@Override
 	public Configuration loadResourceConfiguration() {
 
@@ -250,6 +270,14 @@ public class VDBComponent extends Facet {
 
 		return configuration;
 
+	}
+	
+	@Override
+	public CreateResourceReport createResource(
+			CreateResourceReport createResourceReport) {
+
+		createContentBasedResource(createResourceReport);
+		return createResourceReport;
 	}
 
 	/**

@@ -35,6 +35,7 @@ import org.rhq.core.domain.measurement.AvailabilityType;
 import org.rhq.core.domain.measurement.MeasurementDataNumeric;
 import org.rhq.core.domain.measurement.MeasurementReport;
 import org.rhq.core.domain.measurement.MeasurementScheduleRequest;
+import org.rhq.core.pluginapi.inventory.CreateResourceReport;
 import org.teiid.rhq.admin.DQPManagementView;
 import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
@@ -174,11 +175,14 @@ public class PlatformComponent extends Facet implements PluginConstants {
 		}
 
 	}
+		
 
 	@Override
 	public void stop() {
 		// TODO Auto-generated method stub
 		super.stop();
 	}
+
+	
 
 }

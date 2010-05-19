@@ -21,42 +21,56 @@
  */
 package org.teiid.rhq.plugin;
 
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
+
+import javax.naming.NamingException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jboss.deployers.spi.management.ManagementView;
+import org.jboss.managed.api.ComponentType;
+import org.jboss.managed.api.DeploymentTemplateInfo;
+import org.jboss.managed.api.ManagedProperty;
+import org.jboss.profileservice.spi.NoSuchDeploymentException;
 import org.rhq.core.domain.configuration.Configuration;
 import org.rhq.core.domain.configuration.PropertySimple;
+import org.rhq.core.domain.configuration.definition.ConfigurationDefinition;
 import org.rhq.core.domain.measurement.MeasurementDataNumeric;
 import org.rhq.core.domain.measurement.MeasurementReport;
 import org.rhq.core.domain.measurement.MeasurementScheduleRequest;
-import org.rhq.core.pluginapi.configuration.ConfigurationFacet;
+import org.rhq.core.domain.resource.CreateResourceStatus;
+import org.rhq.core.domain.resource.ResourceType;
+import org.rhq.core.pluginapi.inventory.CreateResourceReport;
 import org.rhq.core.pluginapi.measurement.MeasurementFacet;
 import org.teiid.rhq.comm.ConnectionConstants;
-
+import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 
 /**
  * Component class for the MetaMatrix Host Controller process.
  * 
  */
 public class TranslatorComponent extends Facet {
-	private final Log LOG = LogFactory
-			.getLog(TranslatorComponent.class);
+	private final Log LOG = LogFactory.getLog(TranslatorComponent.class);
 
+	public static interface Config {
+		String COMPONENT_TYPE = "componentType";
+		String COMPONENT_SUBTYPE = "componentSubtype";
+		String COMPONENT_NAME = "componentName";
+		String TEMPLATE_NAME = "template-name";
+		String RESOURCE_NAME = "resourceName";
+	}
 
-	/** 
-     * @see org.teiid.rhq.plugin.Facet#getComponentType()
-     * @since 1.0
-     */
-    @Override
-    String getComponentType() {
-        return ConnectionConstants.ComponentType.Resource.Model.TYPE;
-    }
-    
-    /**
+	/**
+	 * @see org.teiid.rhq.plugin.Facet#getComponentType()
+	 * @since 1.0
+	 */
+	@Override
+	String getComponentType() {
+		return ConnectionConstants.ComponentType.Resource.Model.TYPE;
+	}
+
+	/**
 	 * The plugin container will call this method when your resource component
 	 * has been scheduled to collect some measurements now. It is within this
 	 * method that you actually talk to the managed resource and collect the
@@ -75,8 +89,8 @@ public class TranslatorComponent extends Facet {
 			// actually need to collect
 			try {
 				Number value = new Integer(1); // dummy measurement value -
-												// this should come from the
-												// managed resource
+				// this should come from the
+				// managed resource
 				report.addData(new MeasurementDataNumeric(request, value
 						.doubleValue()));
 			} catch (Exception e) {
@@ -88,14 +102,17 @@ public class TranslatorComponent extends Facet {
 		return;
 	}
 	
-	protected void setOperationArguments(String name, Configuration configuration,
-			Map argumentMap) {
+	protected void setOperationArguments(String name,
+			Configuration configuration, Map argumentMap) {
 
-		if (name.equals(ConnectionConstants.ComponentType.Operation.GET_PROPERTIES)){
+		if (name
+				.equals(ConnectionConstants.ComponentType.Operation.GET_PROPERTIES)) {
 			String key = ConnectionConstants.IDENTIFIER;
 			argumentMap.put(key, getComponentIdentifier());
 		}
- 		
-	} 
+
+	}
 	
+	
+
 }

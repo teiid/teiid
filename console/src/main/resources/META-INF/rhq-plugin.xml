@@ -25,6 +25,40 @@
 '>
 
 <!ENTITY translatorConfiguration '
+
+    <c:list-property name="translatorList" description="Properties for this translator"
+						readOnly="true">
+						<c:simple-property name="name" displayName="Name"
+							description="Name of the translator" />
+						<c:simple-property name="execution-factory-class" displayName="execution-factory-class"
+							description="Connector Class" />	
+						<c:simple-property name="capabilities-class" displayName="capabilities-class"
+							description="The class to use to provide the Connector Capabilities" />
+						<c:simple-property name="override-capabilities-file" displayName="override-capabilities-file"
+							description="Property file that defines the override capability properties" />
+						<c:simple-property name="immutable" displayName="immutable"
+							description="Is Immutable, True if the source never changes." type="boolean" default="false" />	
+						<c:simple-property name="exception-on-max-rows" displayName="exception-on-max-rows" type="boolean" default="false" />
+							description="Indicates if an Exception should be thrown if the specified value for Maximum Result Rows is exceeded; else no exception and no more than the maximum will be returned" default="false" />
+						<c:simple-property name="max-result-rows" displayName="max-result-rows"
+							description="Maximum Result Rows allowed" default="false" />
+						<c:simple-property name="xa-capable" displayName="xa-capable"
+							description="True, if this connector supports XA Transactions" type="boolean" default="false" />
+						 <c:list-property name="translatorList" description="Properties for this translator"
+						readOnly="true">
+						<c:map-property name="translator-properties" >
+							<c:simple-property name="name" displayName="Name"
+								description="Name of this property" readOnly="true" />
+							<c:simple-property name="value" displayName="Value"
+								description="Value of this property" />
+							<c:simple-property name="description" displayName="Description"
+								description="Description of this property" />
+						</c:map-property>						
+	</c:list-property>
+	
+'>			
+		
+<!ENTITY accessTranslatorConfiguration '
 	<resource-configuration>
     <c:list-property name="translatorList" description="Properties for this translator"
 						readOnly="true">
@@ -37,11 +71,9 @@
 								description="Description of this property" readOnly="true" />
 						</c:map-property>
 	</c:list-property>
-	</resource-configuration>
+	</resource-configuration>    
     
-    
-'>			
-			
+'>					
 
 <!ENTITY datasourceAndConnectionFactoryOperations '
     <operation name="flush" displayName="Flush"
@@ -1258,9 +1290,202 @@
 		</service>
 
 		<service name="Translators" description="Teiid Translators"
-			class="TranslatorComponent" discovery="TranslatorDiscoveryComponent">
+			class="TranslatorComponent" discovery="TranslatorDiscoveryComponent"
+			createDeletePolicy="both" creationDataType="configuration">
 
-			&translatorConfiguration;
+			<plugin-configuration>
+				<c:simple-property name="componentType" default="teiid"
+					readOnly="true" />
+				<c:simple-property name="componentSubtype"
+					default="translator" readOnly="true" />
+				<c:simple-property name="componentName" default="teiid"
+					readOnly="true" />
+				<c:simple-property name="template-name" default="translator"
+					readOnly="true" />
+				<c:simple-property name="resourceName" default="name">
+					<c:description>The name of the Resource configuration property
+						whose value should be used as the
+						Resource name when creating a new
+						Resource of this type.</c:description>
+				</c:simple-property>
+			</plugin-configuration>
+
+			<resource-configuration>
+				<c:simple-property name="name" displayName="Name"
+					description="Name of the translator" />
+				<c:simple-property name="execution-factory-class"
+					displayName="execution-factory-class" description="Connector Class" />
+				<c:simple-property name="immutable" displayName="immutable"
+					description="Is Immutable, True if the source never changes." type="boolean"
+					default="false" />
+				<c:simple-property name="exception-on-max-rows"
+					displayName="exception-on-max-rows"
+					description="Indicates if an Exception should be thrown if the
+					specified value for Maximum Result Rows is exceeded; else no
+					exception and no more than the maximum will be returned"
+					type="boolean" default="false" defaultValue="false" />
+				<c:simple-property name="max-result-rows"
+					displayName="max-result-rows" description="Maximum Result Rows allowed"
+					default="false" />
+				<c:simple-property name="xa-capable" displayName="xa-capable"
+					description="True, if this connector supports XA Transactions"
+					type="boolean" default="false" />
+				<c:list-property name="translatorList" readOnly="true" required="false"
+					displayName="Translator Specific Properties" description="List of translator specific properties">
+					<c:map-property name="translator-properties" >
+						<c:simple-property name="name" displayName="Name"
+							description="Name of this property" readOnly="true" />
+						<c:simple-property name="value" displayName="Value"
+							description="Value of this property" />
+						<c:simple-property name="description"
+							displayName="Description" description="Description of this property" />
+					</c:map-property>
+				</c:list-property>
+				<c:simple-property name="template-name" default="translator"
+					readOnly="true" />
+
+				<c:template name="Access" description="Translator for Access">
+					<c:simple-property name="execution-factory-class"
+						default="org.teiid.translator.jdbc.access.AccessExecutionFactory"
+						displayName="execution-factory-class" description="Connector Class" />
+					<c:simple-property name="xa-capable" displayName="xa-capable"
+						description="True, if this connector supports XA Transactions"
+						type="boolean" default="true" />
+					<c:simple-property name="template-name"
+						default="translator-jdbc-${project.version}" readOnly="true" />
+				</c:template>
+				<c:template name="DB2" description="Translator for DB2">
+					<c:simple-property name="execution-factory-class"
+						default="org.teiid.translator.jdbc.db2.DB2ExecutionFactory"
+						displayName="execution-factory-class" description="Connector Class" />
+					<c:simple-property name="xa-capable" displayName="xa-capable"
+						description="True, if this connector supports XA Transactions"
+						type="boolean" default="true" />
+					<c:simple-property name="template-name"
+						default="translator-jdbc-${project.version}" readOnly="true" />
+				</c:template>
+				<c:template name="Derby" description="Translator for Derby">
+					<c:simple-property name="execution-factory-class"
+						default="org.teiid.translator.jdbc.derby.DerbyExecutionFactory"
+						displayName="execution-factory-class" description="Connector Class" />
+					<c:simple-property name="xa-capable" displayName="xa-capable"
+						description="True, if this connector supports XA Transactions"
+						type="boolean" default="true" />
+					<c:simple-property name="template-name"
+						default="translator-jdbc-${project.version}" readOnly="true" />
+				</c:template>
+				<c:template name="H2" description="Translator for H2">
+					<c:simple-property name="execution-factory-class"
+						default="org.teiid.translator.jdbc.h2.H2ExecutionFactory"
+						displayName="execution-factory-class" description="Connector Class" />
+					<c:simple-property name="xa-capable" displayName="xa-capable"
+						description="True, if this connector supports XA Transactions"
+						type="boolean" default="true" />
+					<c:simple-property name="template-name"
+						default="translator-jdbc-${project.version}" readOnly="true" />
+				</c:template>
+				<c:template name="HSQL" description="Translator for HSQL">
+					<c:simple-property name="execution-factory-class"
+						default="org.teiid.translator.jdbc.hsql.HsqlExecutionFactory"
+						displayName="execution-factory-class" description="Connector Class" />
+					<c:simple-property name="xa-capable" displayName="xa-capable"
+						description="True, if this connector supports XA Transactions"
+						type="boolean" default="true" />
+					<c:simple-property name="template-name"
+						default="translator-jdbc-${project.version}" readOnly="true" />
+				</c:template>
+				<c:template name="MySQL" description="Translator for MySQL">
+					<c:simple-property name="execution-factory-class"
+						default="org.teiid.translator.jdbc.mysql.MySQLExecutionFactory"
+						displayName="execution-factory-class" description="Connector Class" />
+					<c:simple-property name="xa-capable" displayName="xa-capable"
+						description="True, if this connector supports XA Transactions"
+						type="boolean" default="true" />
+					<c:simple-property name="template-name"
+						default="translator-jdbc-${project.version}" readOnly="true" />
+				</c:template>
+				<c:template name="MySQL5" description="Translator for MySQL 5">
+					<c:simple-property name="execution-factory-class"
+						default="org.teiid.translator.jdbc.mysql5.MySQL5ExecutionFactory"
+						displayName="execution-factory-class" description="Connector Class" />
+					<c:simple-property name="xa-capable" displayName="xa-capable"
+						description="True, if this connector supports XA Transactions"
+						type="boolean" default="true" />
+					<c:simple-property name="template-name"
+						default="translator-jdbc-${project.version}" readOnly="true" />
+				</c:template>
+				<c:template name="Oracle" description="Translator for Oracle">
+					<c:simple-property name="execution-factory-class"
+						default="org.teiid.translator.jdbc.oracle.OracleExecutionFactory"
+						displayName="execution-factory-class" description="Connector Class" />
+					<c:simple-property name="xa-capable" displayName="xa-capable"
+						description="True, if this connector supports XA Transactions"
+						type="boolean" default="true" />
+					<c:simple-property name="template-name"
+						default="translator-jdbc-${project.version}" readOnly="true" />
+				</c:template>
+				<c:template name="SQLServer" description="Translator for SQLServer">
+					<c:simple-property name="execution-factory-class"
+						default="org.teiid.translator.jdbc.oracle.SQLServerExecutionFactory"
+						displayName="execution-factory-class" description="Connector Class" />
+					<c:simple-property name="xa-capable" displayName="xa-capable"
+						description="True, if this connector supports XA Transactions"
+						type="boolean" default="true" />
+					<c:simple-property name="template-name"
+						default="translator-jdbc-${project.version}" readOnly="true" />
+				</c:template>
+				<c:template name="Sybase" description="Translator for Sybase">
+					<c:simple-property name="execution-factory-class"
+						default="org.teiid.translator.jdbc.sybase.SybaseExecutionFactory"
+						displayName="execution-factory-class" description="Connector Class" />
+					<c:simple-property name="xa-capable" displayName="xa-capable"
+						description="True, if this connector supports XA Transactions"
+						type="boolean" default="true" />
+					<c:simple-property name="template-name"
+						default="translator-jdbc-${project.version}" readOnly="true" />
+				</c:template>
+				<c:template name="LDAP" description="Translator for LDAP">
+					<c:simple-property name="execution-factory-class"
+						default="org.teiid.translator.ldap.LDAPExecutionFactory"
+						displayName="execution-factory-class" description="Connector Class" />
+					<c:simple-property name="xa-capable" displayName="xa-capable"
+						description="True, if this connector supports XA Transactions"
+						type="boolean" default="true" />
+					<c:simple-property name="template-name"
+						default="translator-ldap-${project.version}" readOnly="true" />
+				</c:template>
+				<c:template name="SalesForce" description="Translator for SalesForce">
+					<c:simple-property name="execution-factory-class"
+						default="org.teiid.translator.salesforce.SalesForceExecutionFactory"
+						displayName="execution-factory-class" description="Connector Class" />
+					<c:simple-property name="xa-capable" displayName="xa-capable"
+						description="True, if this connector supports XA Transactions"
+						type="boolean" default="true" />
+					<c:simple-property name="template-name"
+						default="translator-salesforce-${project.version}" readOnly="true" />
+				</c:template>
+				<c:template name="XML" description="Translator for XML">
+					<c:simple-property name="execution-factory-class"
+						default="org.teiid.translator.xml.XMLExecutionFactory"
+						displayName="execution-factory-class" description="Connector Class" />
+					<c:simple-property name="xa-capable" displayName="xa-capable"
+						description="True, if this connector supports XA Transactions"
+						type="boolean" default="true" />
+					<c:simple-property name="template-name"
+						default="translator-xml-${project.version}" readOnly="true" />
+				</c:template>
+				<c:template name="Loopback" description="Translator for Loopback">
+					<c:simple-property name="execution-factory-class"
+						default=">org.teiid.translator.loopback.LoopbackExecutionFactory"
+						displayName="execution-factory-class" description="Connector Class" />
+					<c:simple-property name="xa-capable" displayName="xa-capable"
+						description="True, if this connector supports XA Transactions"
+						type="boolean" default="true" />
+					<c:simple-property name="template-name"
+						default="translator-loopback-${project.version}" readOnly="true" />
+				</c:template>
+
+			</resource-configuration>
 
 		</service>
 
