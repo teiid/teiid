@@ -6,15 +6,16 @@ Put the <derby home>/lib/derbyclient.jar to the "<jboss home>/server/default/lib
 
 Copy the PortfolioModel/Portolio.vdb file to the "<jboss home>/server/default/deploy" directory.
 
-Copy the Connectors for the example
-	- text-connection-ds.xml
+Copy the Translators/ConnectionFactories for the example to the "<jboss home>/server/default/deploy" directory.
+	- marketdata-file-ds.xml
 	- portfolio-ds.xml 
+	- marketdata-text-translator.xml
  
 Start the JBoss Container
 
 Use the simple client example run script i.e. 
 
-$run.sh portfolio "select * from CustomerAccount"
+$run.sh localhost 31000 portfolio "select * from CustomerAccount"
 
-That will execute the query against the CustomerAccount view in the Portfolio VDB running in Teiid embedded mode. 
+That will execute the query against the CustomerAccount view in the Portfolio VDB. 
 

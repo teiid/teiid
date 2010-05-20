@@ -22,6 +22,7 @@
 package org.teiid.resource.adapter.file;
 
 import javax.resource.ResourceException;
+import javax.resource.spi.InvalidPropertyException;
 
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.resource.spi.BasicConnectionFactory;
@@ -35,6 +36,9 @@ public class FileManagedConnectionFactory extends BasicManagedConnectionFactory{
 	
 	@Override
 	public Object createConnectionFactory() throws ResourceException {
+		if (this.parentDirectory == null) {
+			throw new InvalidPropertyException("ParentDirectory is not set");
+		}
 		return new BasicConnectionFactory() {
 			
 			@Override

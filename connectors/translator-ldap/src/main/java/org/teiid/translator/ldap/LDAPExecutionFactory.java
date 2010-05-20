@@ -53,7 +53,7 @@ public class LDAPExecutionFactory extends ExecutionFactory {
 	private boolean restrictToObjectClass;
 	private SearchDefaultScope searchDefaultScope = SearchDefaultScope.ONELEVEL_SCOPE;
 	
-    @TranslatorProperty(display="Default Search Base DN", description="Default Base DN for LDAP Searches",required=true)
+    @TranslatorProperty(display="Default Search Base DN", description="Default Base DN for LDAP Searches")
 	public String getSearchDefaultBaseDN() {
 		return searchDefaultBaseDN;
 	}

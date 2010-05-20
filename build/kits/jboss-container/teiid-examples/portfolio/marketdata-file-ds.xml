@@ -3,17 +3,15 @@
 <connection-factories>
 
    <no-tx-connection-factory>
-      <jndi-name>marketdata-text-connection</jndi-name>
-      <rar-name>connector-text-${project.version}.rar</rar-name>
+      <jndi-name>marketdata-file-connection</jndi-name>
+      <rar-name>connector-file-${project.version}.rar</rar-name>
       <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>      
       <!--
         All the available properties for this connector are defined inside the "ra.xml" defined inside the rar
         file mentioned above. 
        -->
              
-      <config-property name="XaCapable" type="java.lang.Boolean">false</config-property>
-
-      <config-property name="DescriptorFile" type="java.lang.String">${jboss.server.home.dir}/teiid-examples/portfolio/marketdata-def.txt</config-property>
+      <config-property name="ParentDirectory" type="java.lang.String">${jboss.server.home.dir}/teiid-examples/portfolio</config-property>
             
       <max-pool-size>20</max-pool-size>
 

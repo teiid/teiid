@@ -137,7 +137,13 @@ public class ExceptionHolder implements Externalizable {
 	}
 		
 	private Throwable buildException(List<String> classNames, String message, StackTraceElement[] stackTrace, String code) {
-		List<String> args = Arrays.asList(CorePlugin.Util.getString("ExceptionHolder.converted_exception", message, classNames)); //$NON-NLS-1$
+		if (classNames.isEmpty()) {
+			return null;
+		}
+		
+		String originalClass = classNames.get(0);
+		
+		List<String> args = Arrays.asList(CorePlugin.Util.getString("ExceptionHolder.converted_exception", message, originalClass)); //$NON-NLS-1$
 		
 		Throwable result = null;
 		for (String className : classNames) {

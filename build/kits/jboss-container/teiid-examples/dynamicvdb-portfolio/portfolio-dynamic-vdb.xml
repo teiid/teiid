@@ -27,7 +27,7 @@
             you can create one. They are defined using "-translator.xml" file. Connections define connections
             to physical sources. In JBoss AS they are typically defined using "xxx-ds.xml" files. 
         -->
-        <source name="text-connector" translator-name="text" connection-jndi-name="java:marketdata-text-connection"/>
+        <source name="text-connector" translator-name="marketdata-text" connection-jndi-name="java:marketdata-text-connection"/>
     </model>
 
     <model name="Accounts">

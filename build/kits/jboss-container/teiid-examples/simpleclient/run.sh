@@ -4,6 +4,6 @@
 CLIENT_PATH=.
 
 #Second one for the Teiid client jar
-TEIID_PATH=../../client/teiid-${pom.version}-client.jar
+TEIID_PATH=../../lib/teiid-${pom.version}-client.jar
 
 java -cp ${CLIENT_PATH}:${TEIID_PATH} JDBCClient "$@"

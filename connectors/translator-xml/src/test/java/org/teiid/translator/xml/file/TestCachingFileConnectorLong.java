@@ -1,5 +1,26 @@
-package org.teiid.translator.xml.file;
+/*
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
 
+package org.teiid.translator.xml.file;
 
 import java.io.File;
 import java.util.List;
@@ -43,17 +64,14 @@ public class TestCachingFileConnectorLong extends TestCase {
 	
 	/**
 	 * This primes the cache with the response docs, then gets them from the cache
+	 * @throws TranslatorException 
 	 */
-	public void testSelectFromCache() {
-		try {
-			List result = host.executeCommand("SELECT * FROM file_po_list.ITEM");
-			assertEquals(5968, result.size());
-			
-			result = host.executeCommand("SELECT * FROM file_po_list.ITEM");
-			assertEquals(5968, result.size());
-		} catch (TranslatorException e) {
-			fail(e.getMessage());
-		}
+	public void testSelectFromCache() throws TranslatorException {
+		List result = host.executeCommand("SELECT * FROM file_po_list.ITEM");
+		assertEquals(5968, result.size());
+		
+		result = host.executeCommand("SELECT * FROM file_po_list.ITEM");
+		assertEquals(5968, result.size());
 	}
 
     static class FileImpl extends BasicConnection implements FileConnection{

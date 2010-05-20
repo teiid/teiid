@@ -82,7 +82,7 @@
     <module>translator-text</module>
     <module>translator-salesforce</module>
     
-    <module>connector-text</module>
+    <module>connector-file</module>
     <module>connector-salesforce</module>
     <module>connector-ldap</module>
     <module>salesforce-api</module>

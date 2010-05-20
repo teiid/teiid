@@ -43,7 +43,7 @@ public class TestExceptionHolder extends TestCase {
         ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
         ExceptionHolder holder = (ExceptionHolder)ois.readObject();
         assertTrue(holder.getException() instanceof BadException);
-        assertEquals("Remote exception: null ... Original type hierarchy [org.teiid.client.util.TestExceptionHolder$BadException, org.teiid.core.TeiidProcessingException, org.teiid.core.TeiidException].", holder.getException().getMessage()); //$NON-NLS-1$
+        assertEquals("Remote org.teiid.client.util.TestExceptionHolder$BadException: null", holder.getException().getMessage()); //$NON-NLS-1$
 	}
 
 
@@ -71,12 +71,12 @@ public class TestExceptionHolder extends TestCase {
         ExceptionHolder holder = (ExceptionHolder)ois.readObject();
         Throwable e = holder.getException();
         assertTrue(e instanceof BadException2);
-        assertEquals("Remote exception: I have foreign exception embedded in me ... Original type hierarchy [org.teiid.client.util.TestExceptionHolder$BadException2, org.teiid.core.TeiidProcessingException, org.teiid.core.TeiidException].", e.getMessage()); //$NON-NLS-1$
+        assertEquals("Remote org.teiid.client.util.TestExceptionHolder$BadException2: I have foreign exception embedded in me", e.getMessage()); //$NON-NLS-1$
         
         // now unknown exception is not found, so promote known SQL exception up
         e = e.getCause();
         assertTrue(e instanceof SQLException);
-        assertEquals("Remote exception: something bad happended ... Original type hierarchy [java.sql.SQLException].", e.getMessage()); //$NON-NLS-1$
+        assertEquals("Remote java.sql.SQLException: something bad happended", e.getMessage()); //$NON-NLS-1$
 	}	
 	
 	@Test public void testDeserializationUnknownChildException2() throws Exception {

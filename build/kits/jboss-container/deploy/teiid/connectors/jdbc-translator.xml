@@ -76,4 +76,18 @@
         <xa-capable>true</xa-capable>
         <template-name>translator-jdbc-${project.version}</template-name>
     </translator>
+    
+    <translator>
+        <name>jdbc-simple</name>
+        <execution-factory-class>org.teiid.translator.jdbc.SimpleExecutionFactory</execution-factory-class>
+        <xa-capable>true</xa-capable>
+        <template-name>translator-jdbc-${project.version}</template-name>
+    </translator>
+    
+    <translator>
+        <name>jdbc-ansi</name>
+        <execution-factory-class>org.teiid.translator.jdbc.JDBCExecutionFactory</execution-factory-class>
+        <xa-capable>true</xa-capable>
+        <template-name>translator-jdbc-${project.version}</template-name>
+    </translator>
 </translator-factory>

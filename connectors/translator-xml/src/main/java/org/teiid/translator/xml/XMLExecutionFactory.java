@@ -164,7 +164,10 @@ public class XMLExecutionFactory extends ExecutionFactory {
 			}
 			return compasiteExecution;
 		}
-		return createExecution(requestPerms.get(0), executionInfo, executionContext,connectionFactory);
+		if (requestPerms.size() == 1) {
+			return createExecution(requestPerms.get(0), executionInfo, executionContext,connectionFactory);
+		}
+		return createExecution(Collections.EMPTY_LIST, executionInfo, executionContext,connectionFactory);
 	}
 
 	private ResultSetExecution createExecution(List<CriteriaDesc> cds, ExecutionInfo executionInfo, ExecutionContext executionContext, Object connectionFactory)
