@@ -182,28 +182,23 @@ public class Program implements Cloneable {
      * The sub program(s) from those kinds of instructions are passed, recursively, into this
      * method.
      */
-    private final int programToString(StringBuilder str) {
+    private final void programToString(StringBuilder str) {
 
         int instructionIndex = 0;
         ProgramInstruction inst = getInstructionAt(instructionIndex);
     
         while(inst != null) {
             
-            printLine(counter++, inst.toString(), str);
+            printLine(instructionIndex++, inst.toString(), str);
 
-			if(counter > 1000) { 
-			    printLine(counter, "[OUTPUT TRUNCATED...]", str); //$NON-NLS-1$
+			if(instructionIndex > 1000) { 
+			    printLine(instructionIndex, "[OUTPUT TRUNCATED...]", str); //$NON-NLS-1$
 			    break;
 			}
 
-            instructionIndex++;
             inst = getInstructionAt(instructionIndex);
-        
         }
-
-        return counter;
     }
-
 
     private static final void printLine(int counter, String line, StringBuilder buffer) {
         // Pad counter with spaces
