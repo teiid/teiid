@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.xml.Document;
+import org.teiid.translator.xml.StremableDocument;
 import org.teiid.translator.xml.ExecutionInfo;
 import org.teiid.translator.xml.SAXFilterProvider;
 import org.xml.sax.SAXException;
@@ -63,7 +63,7 @@ public class StreamingResultsProducer {
 	 * @return result set rows
 	 * @throws TranslatorException
 	 */
-    public List<Object[]> getResult(Document xml, List<String> xpaths) throws TranslatorException {
+    public List<Object[]> getResult(StremableDocument xml, List<String> xpaths) throws TranslatorException {
 		
 		List<Object[]> rows;
 		try {

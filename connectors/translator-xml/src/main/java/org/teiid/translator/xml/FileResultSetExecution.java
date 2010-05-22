@@ -35,7 +35,6 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.FileConnection;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.xml.streaming.DocumentImpl;
 import org.teiid.translator.xml.streaming.InvalidPathException;
 import org.teiid.translator.xml.streaming.StreamingResultsProducer;
 import org.teiid.translator.xml.streaming.XPathSplitter;
@@ -47,7 +46,7 @@ public class FileResultSetExecution implements ResultSetExecution {
 	private int docNumber = 0;
 	private File[] content;
 	private XMLExecutionFactory executionFactory;
-	private List<Document> resultDocuments = null;
+	private List<StremableDocument> resultDocuments = null;
 	private StreamingResultsProducer streamProducer;
 	private List<Object[]> currentRowSet;
 	private int currentRow = 0;
@@ -87,7 +86,7 @@ public class FileResultSetExecution implements ResultSetExecution {
 	@Override
 	public void execute() throws TranslatorException {
 		if (this.content != null) {
-			this.resultDocuments = new ArrayList<Document>();
+			this.resultDocuments = new ArrayList<StremableDocument>();
 			int i = 0;
 			for(File f:this.content) {
 				this.resultDocuments.add(getDocumentStream(f, i++));
@@ -128,14 +127,14 @@ public class FileResultSetExecution implements ResultSetExecution {
 		}		
 	}	
 	
-	private Document getDocumentStream(final File xmlFile, int fileNumber) {
+	private StremableDocument getDocumentStream(final File xmlFile, int fileNumber) {
 		InputStreamFactory isf = new InputStreamFactory() {
 			@Override
 			public InputStream getInputStream() throws IOException {
 				return new BufferedInputStream(new FileInputStream(xmlFile));
 			}
 		};				
-		return new DocumentImpl(this.executionFactory.convertToXMLType(isf), xmlFile.getName()+fileNumber);
+		return new StremableDocument(this.executionFactory.convertToXMLType(isf), xmlFile.getName()+fileNumber);
 	}	
 	
 	@Override

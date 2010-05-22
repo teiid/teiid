@@ -1,7 +1,6 @@
 package org.teiid.translator.xml.streaming;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -14,9 +13,9 @@ import nu.xom.Text;
 
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.xml.CriteriaDesc;
-import org.teiid.translator.xml.Document;
 import org.teiid.translator.xml.ExecutionInfo;
 import org.teiid.translator.xml.OutputXPathDesc;
+import org.teiid.translator.xml.StremableDocument;
 import org.teiid.translator.xml.XMLPlugin;
 
 
@@ -31,10 +30,11 @@ import org.teiid.translator.xml.XMLPlugin;
  */
 public class ElementProcessor {
 
+	private static final String CRITERIA_PREFIX = "_criteria_"; //$NON-NLS-1$
 	private ExecutionInfo info;
 	private Object[] row;
 	private Map<String, OutputXPathDesc> resultPaths;
-	private OutputXPathDesc cacheKeyColumn;
+	private OutputXPathDesc responseId;
 	private Map<String, String> namespacesToPrefixMap;
 	private boolean rowExcluded = false;
     
@@ -52,7 +52,7 @@ public class ElementProcessor {
 	public Object[] process(Node element) {
 		setRowExcluded(false);
 		row = new Object[resultPaths.size()];
-		listChildren(element, "");
+		listChildren(element, ""); //$NON-NLS-1$
 		return row;
 	}
 	
@@ -61,26 +61,37 @@ public class ElementProcessor {
 	 * @param xml the XML Document
 	 * @param result the result batch for the query
 	 */
-	public void insertResponseId(Document xml, List<Object[]> result) {
-		if (null != cacheKeyColumn) {
-			Object[] aRow;
+	public void insertProjectedParameters(StremableDocument xml, List<Object[]> result) {
+		if (responseId != null) {
 			if (!result.isEmpty()) {
-				for (Iterator<Object[]> iter = result.iterator(); iter.hasNext();) {
-					aRow = iter.next();
-					aRow[cacheKeyColumn.getColumnNumber()] = xml.getCachekey();
+				for (Object[] aRow:result) {
+					aRow[responseId.getColumnNumber()] = xml.getCachekey();
 				}
 			} else {
-				aRow = new Object[resultPaths.size()];
-				aRow[cacheKeyColumn.getColumnNumber()] = xml.getCachekey();
+				Object[] aRow = new Object[resultPaths.size()];
+				aRow[responseId.getColumnNumber()] = xml.getCachekey();
 				result.add(aRow);
 			}
 		}
+		
+		for (String column:resultPaths.keySet()) {
+			if (column != null && column.startsWith(CRITERIA_PREFIX)) {
+				OutputXPathDesc oxd = this.resultPaths.get(column);
+				
+				if (!result.isEmpty()) {
+					for (Object[] aRow:result) {
+						aRow[oxd.getColumnNumber()] = oxd.getCurrentValue();
+					}
+				}
+				else {
+					Object[] aRow = new Object[resultPaths.size()];
+					aRow[oxd.getColumnNumber()] = oxd.getCurrentValue();
+					result.add(aRow);					
+				}
+			}
+		}		
 	}
 	
-	private void insertProjectedParameters() {
-		//TODO insertProjectedParameters
-	}
-
 	/**
 	 * Match the current path against the Map of requested paths and add
 	 * the matches to the result row.
@@ -97,7 +108,12 @@ public class ElementProcessor {
 	        Element temp = (Element) current;
 	        for (int i = 0; i < temp.getAttributeCount(); i++) {
 	          Attribute attribute = temp.getAttribute(i);
-	          String attrPath = path + "/@" + getLocalQName(attribute);
+	          
+	          String attrPath = "@" + getLocalQName(attribute); //$NON-NLS-1$
+	          if (path != null && path.length()> 0) {
+	        	  attrPath = path + "/@" + getLocalQName(attribute); //$NON-NLS-1$
+	          }
+	          
 	          if(resultPaths.containsKey(attrPath)) {
 		          handleNode(attribute, attrPath);
 		          if(isRowExcluded()) {
@@ -115,7 +131,7 @@ public class ElementProcessor {
 	        path = path + '/' + temp.getRootElementName();   
 	    }
 	    else if (current instanceof Text) {
-	    	String textPath = path + "/text()";
+	    	String textPath = path + "/text()"; //$NON-NLS-1$
 	    	if(resultPaths.containsKey(textPath)) {
 	        	  handleNode(current, textPath);
 	        	  if(isRowExcluded()) {
@@ -161,7 +177,7 @@ public class ElementProcessor {
 			localName = attribute.getLocalName();
 		}
 		if(null == namespaceURI) {
-			throw new Error("namespce URI not found in model namespaces");
+			throw new Error("namespce URI not found in model namespaces"); //$NON-NLS-1$
 		}
 		String prefix = namespacesToPrefixMap.get(namespaceURI);
 		String result;
@@ -180,10 +196,9 @@ public class ElementProcessor {
 		if(!passesCriteriaCheck(info.getCriteria(), node.getValue(), columnNum)) {
 			setRowExcluded(true);
 			return;
-		} else {
-			//TODO: type conversion
-			row[columnNum] = node.getValue();
-		}
+		} 
+		//TODO: type conversion
+		row[columnNum] = node.getValue();
 	}
 	
     /**
@@ -229,8 +244,11 @@ public class ElementProcessor {
 				if (xpathString != null) {
 					xpathString = relativizeAbsoluteXpath(xpathString);
 				}
+				else if (xPathDesc.getCurrentValue() != null) {
+					xpathString = CRITERIA_PREFIX+xPathDesc.getColumnName();
+				}
 			} else {
-				cacheKeyColumn = xPathDesc;
+				responseId = xPathDesc;
 			}
 			xpaths.put(xpathString, xPathDesc);
 		}

@@ -11,7 +11,7 @@ import nu.xom.Nodes;
 import nux.xom.xquery.StreamingTransform;
 
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.xml.Document;
+import org.teiid.translator.xml.StremableDocument;
 import org.xml.sax.XMLReader;
 
 
@@ -42,7 +42,7 @@ public class StreamingRowCollector {
 	 * @throws TranslatorException
 	 * @throws InvalidPathException
 	 */
-	public List<Object[]> getElements(Document xml, List<String> xPaths)
+	public List<Object[]> getElements(StremableDocument xml, List<String> xPaths)
 			throws TranslatorException, InvalidPathException {
 		result.clear();
 		StreamingTransform myTransform = new StreamingTransform() {
@@ -61,7 +61,7 @@ public class StreamingRowCollector {
 		} catch (Exception e) {
 			throw new TranslatorException(e);
 		}
-		elemProcessor.insertResponseId(xml, result);
+		elemProcessor.insertProjectedParameters(xml, result);
 		return result;
 	}
 

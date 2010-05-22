@@ -166,7 +166,7 @@ public class TestSoapExecution {
 	
 	static class MyDispatch extends BasicConnection implements Dispatch<Source>{
 		private Map<String, Object> requestContext = new HashMap<String, Object>();
-		private Map<String, String> result;
+		Map<String, String> result;
 		
 		public MyDispatch(Map<String, String> result) {
 			this.result = result;

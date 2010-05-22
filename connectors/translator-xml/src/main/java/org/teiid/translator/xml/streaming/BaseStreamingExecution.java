@@ -52,7 +52,7 @@ import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.xml.Constants;
 import org.teiid.translator.xml.CriteriaDesc;
-import org.teiid.translator.xml.Document;
+import org.teiid.translator.xml.StremableDocument;
 import org.teiid.translator.xml.DocumentBuilder;
 import org.teiid.translator.xml.ExecutionInfo;
 import org.teiid.translator.xml.OutputXPathDesc;
@@ -81,7 +81,7 @@ public class BaseStreamingExecution implements ResultSetExecution {
 	Dispatch<Source> dispatch;
 	ExecutionInfo executionInfo;
 	Source soapPayload;
-	Iterator<Document> resultsIterator;
+	Iterator<StremableDocument> resultsIterator;
 
 	public BaseStreamingExecution(List<CriteriaDesc> requestParams, ExecutionInfo executionInfo, ExecutionContext context, XMLExecutionFactory executionFactory, Dispatch<Source> dispatch) throws TranslatorException {
 		this.context = context;
@@ -202,9 +202,9 @@ public class BaseStreamingExecution implements ResultSetExecution {
 	private void fillInResults() throws TranslatorException {
 		List<Object[]> rows;
 		StreamingResultsProducer streamProducer = new StreamingResultsProducer(this.executionInfo, this.executionFactory.getSaxFilterProvider());
-		Iterator<Document> streamIter = this.resultsIterator;
+		Iterator<StremableDocument> streamIter = this.resultsIterator;
 		while (streamIter.hasNext()) {
-			Document xml = streamIter.next();
+			StremableDocument xml = streamIter.next();
 			// TODO: add stream filter class. --rareddy
 			rows = streamProducer.getResult(xml, getXPaths());
 			if (rows.isEmpty()) {
@@ -308,8 +308,8 @@ public class BaseStreamingExecution implements ResultSetExecution {
     }
 	
 
-	private List<Document> getDocumentStream(ExecutionInfo executionInfo) {
-		ArrayList<Document> docs = new ArrayList<Document>();
+	private List<StremableDocument> getDocumentStream(ExecutionInfo executionInfo) {
+		ArrayList<StremableDocument> docs = new ArrayList<StremableDocument>();
 
         // Is this a request part joining across a document
         CriteriaDesc criterion = executionInfo.getResponseIDCriterion();
@@ -318,7 +318,7 @@ public class BaseStreamingExecution implements ResultSetExecution {
             List<SQLXML> xmls = this.executionFactory.getResponse(responseid);
             for (SQLXML xml:xmls) {
             	Assertion.isNotNull(xml);
-            	docs.add(new DocumentImpl(xml, responseid));
+            	docs.add(new StremableDocument(xml, responseid));
             }
         } else {
         	// Not a join, but might still be cached.
@@ -332,7 +332,7 @@ public class BaseStreamingExecution implements ResultSetExecution {
 				}
             }
     		this.executionFactory.setResponse(this.context.getExecutionCountIdentifier(), responseBody);
-    		docs.add(new DocumentImpl(responseBody, this.context.getExecutionCountIdentifier()));
+    		docs.add(new StremableDocument(responseBody, this.context.getExecutionCountIdentifier()));
         }
 		return docs;
 	}    	
@@ -378,7 +378,7 @@ public class BaseStreamingExecution implements ResultSetExecution {
         String inputParmsXPath = props.get(DocumentBuilder.PARM_INPUT_XPATH_TABLE_PROPERTY_NAME);
         String namespacePrefixes = props.get(Constants.NAMESPACE_PREFIX_PROPERTY_NAME);
         
-        if(inputParmsXPath.equals(SLASH)) {
+        if(inputParmsXPath == null || inputParmsXPath.equals(SLASH)) {
         	inputParmsXPath = "SLASH"; //$NON-NLS-1$
         }
 		
