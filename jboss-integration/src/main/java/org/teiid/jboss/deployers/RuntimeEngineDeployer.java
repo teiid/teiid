@@ -247,6 +247,13 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	}
 	
 	@Override
+    @ManagementOperation(description="Long running requests", impact=Impact.ReadOnly)
+    public List<RequestMetadata> getLongRunningRequests() {
+		return this.dqpCore.getLongRunningRequests();
+	}
+	
+	
+	@Override
 	@ManagementOperation(description="Get Runtime workmanager statistics", impact=Impact.ReadOnly,params={@ManagementParameter(name="identifier",description="Use \"runtime\" for engine, or connector name for connector")})
     public WorkerPoolStatisticsMetadata getWorkManagerStatistics(String identifier) {
 		if ("runtime".equalsIgnoreCase(identifier)) { //$NON-NLS-1$

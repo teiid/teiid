@@ -40,4 +40,5 @@ public interface DQPManagement {
     Collection<org.teiid.adminapi.Transaction> getTransactions();
     void terminateTransaction(String xid) throws AdminException ;
     void mergeVDBs(String sourceVDBName, int sourceVDBVersion, String targetVDBName, int targetVDBVersion) throws AdminException;
+    List<RequestMetadata> getLongRunningRequests();
 }

@@ -173,6 +173,7 @@ public class DQPCore implements DQP {
     private int maxCodeRecords = DQPConfiguration.DEFAULT_MAX_CODE_RECORDS;
     
     private int maxFetchSize = DQPConfiguration.DEFAULT_FETCH_SIZE;
+    private int queryThreshold = DQPConfiguration.DEFAULT_QUERY_THRESHOLD;
     
     // Resources
     private BufferManager bufferManager;
@@ -214,7 +215,7 @@ public class DQPCore implements DQP {
     	if (state == null) {
     		return Collections.emptyList();
     	}
-        return buildRequestInfos(state.getRequests());
+        return buildRequestInfos(state.getRequests(), -1);
     }
     
     public ClientState getClientState(String key, boolean create) {
@@ -232,10 +233,14 @@ public class DQPCore implements DQP {
      * Return a list of all {@link RequestMetadata} 
      */
     public List<RequestMetadata> getRequests() {
-		return buildRequestInfos(requests.keySet());
+		return buildRequestInfos(requests.keySet(), -1);
     } 
+    
+    public List<RequestMetadata> getLongRunningRequests(){
+    	return buildRequestInfos(requests.keySet(), this.queryThreshold);
+    }
 
-    private List<RequestMetadata> buildRequestInfos(Collection<RequestID> ids) {
+    private List<RequestMetadata> buildRequestInfos(Collection<RequestID> ids, int longRunningQueryThreshold) {
 		List<RequestMetadata> results = new ArrayList<RequestMetadata>();
     	
 		for (RequestID requestID : ids) {
@@ -291,7 +296,12 @@ public class DQPCore implements DQP {
                 	info.setState(conInfo.isCanceled()?ProcessingState.CANCELED:conInfo.isDone()?ProcessingState.DONE:ProcessingState.PROCESSING);
         			results.add(info);
                 }
-                results.add(req);
+                
+                // check if only need long running queries.
+                long elapsedTime = System.currentTimeMillis() - req.getStartTime();
+                if (longRunningQueryThreshold == -1 || elapsedTime > longRunningQueryThreshold) {
+                	results.add(req);
+                }
             }
         }
     	return results;
@@ -624,6 +634,7 @@ public class DQPCore implements DQP {
         this.maxCodeTables = config.getCodeTablesMaxCount();
         this.maxCodeRecords = config.getCodeTablesMaxRows();
         this.useEntitlements = config.useEntitlements();
+        this.queryThreshold = config.getQueryThresholdInSecs();
         
         this.chunkSize = config.getLobChunkSizeInKB() * 1024;
         
