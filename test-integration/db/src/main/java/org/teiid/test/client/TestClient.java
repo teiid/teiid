@@ -194,7 +194,11 @@ public class TestClient  {
             	    userTxn.init(summary, expectedResults, q);
              	    
         	    // run test
-            	    tc.runTransaction(userTxn);
+            	    try {
+            		tc.runTransaction(userTxn);
+            	    } catch (Throwable t) {
+            		TestLogger.logInfo("Testcase run error: " + t.getLocalizedMessage());
+            	    }
 	             
         	}
         	
