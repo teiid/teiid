@@ -39,19 +39,13 @@ import org.teiid.adminapi.jboss.ManagedUtil;
 import org.teiid.deployers.ManagedPropertyUtil;
 
 /**
- * This template is to create a simplified XA JDBC datasource  
+ * This template is to create a simplified local JDBC datasource  
  */
-public class XaJdbcConnectorTemplateInfo extends DsDataSourceTemplateInfo implements ExtendedPropertyInfo {
+public class LocalJdbcConnectorTemplateInfo extends DsDataSourceTemplateInfo implements ExtendedPropertyInfo {
+	private static final long serialVersionUID = 7618814758011974868L;
+	static final String ADDITIONAL_CONNECTION_PROPS = "addtional-connection-properties";//$NON-NLS-1$
 	
-	private static final long serialVersionUID = 9066758787789280783L;
-	static final String SERVER_NAME = "ServerName";//$NON-NLS-1$	
-	static final String PORT_NUMBER = "PortNumber";//$NON-NLS-1$	
-	static final String DATABASE_NAME = "DatabaseName";//$NON-NLS-1$
-	static final String ADDITIONAL_DS_PROPS = "addtional-ds-properties";//$NON-NLS-1$
-	
-	static final String[] EXTENDED_DS_PROPERTIES = {SERVER_NAME, PORT_NUMBER,DATABASE_NAME};
-	
-	public XaJdbcConnectorTemplateInfo(String name, String description, Map<String, ManagedProperty> properties) {
+	public LocalJdbcConnectorTemplateInfo(String name, String description, Map<String, ManagedProperty> properties) {
 		super(name, description, properties);
 	}
 
@@ -60,8 +54,8 @@ public class XaJdbcConnectorTemplateInfo extends DsDataSourceTemplateInfo implem
 	}
 
 	@Override
-	public XaJdbcConnectorTemplateInfo copy() {
-		XaJdbcConnectorTemplateInfo copy = new XaJdbcConnectorTemplateInfo(getName(), getDescription(), getProperties());
+	public LocalJdbcConnectorTemplateInfo copy() {
+		LocalJdbcConnectorTemplateInfo copy = new LocalJdbcConnectorTemplateInfo(getName(), getDescription(), getProperties());
 		super.copy(copy);
 		copy.populate();
 		return copy;
@@ -74,7 +68,7 @@ public class XaJdbcConnectorTemplateInfo extends DsDataSourceTemplateInfo implem
 		mp.setValue(ManagedUtil.wrap(SimpleMetaType.STRING, "javax.sql.DataSource"));//$NON-NLS-1$	
 
 		mp = this.getProperties().get("dsType");//$NON-NLS-1$	
-		mp.setValue(ManagedUtil.wrap(SimpleMetaType.STRING, "xa-datasource"));//$NON-NLS-1$	
+		mp.setValue(ManagedUtil.wrap(SimpleMetaType.STRING, "local-tx-datasource"));//$NON-NLS-1$	
 		
 		ManagedPropertyImpl dsTypeMP = buildConfigProperty();
 		addProperty(dsTypeMP);
@@ -83,10 +77,10 @@ public class XaJdbcConnectorTemplateInfo extends DsDataSourceTemplateInfo implem
 		
 		ManagedPropertyUtil.markAsTeiidProperty(this.getProperties().get("user-name")); //$NON-NLS-1$
 		ManagedPropertyUtil.markAsTeiidProperty(this.getProperties().get("password"));//$NON-NLS-1$
-		addProperty(ManagedPropertyUtil.createProperty(DATABASE_NAME, SimpleMetaType.STRING,"Database Name","Database Name", false, false, null));//$NON-NLS-1$ //$NON-NLS-2$
-		addProperty(ManagedPropertyUtil.createProperty(PORT_NUMBER, SimpleMetaType.INTEGER,"Database Port", "Database Port",false, false, null));//$NON-NLS-1$ //$NON-NLS-2$	
-		addProperty(ManagedPropertyUtil.createProperty(SERVER_NAME, SimpleMetaType.STRING,"Database Server Name", "Database Server Name", false, false, null));//$NON-NLS-1$ //$NON-NLS-2$
-		addProperty(ManagedPropertyUtil.createProperty(ADDITIONAL_DS_PROPS, SimpleMetaType.STRING,"Addtional Data Source Properties", "Addtional Data source properties. (comma separated name value pairs)", false, false, null));//$NON-NLS-1$ //$NON-NLS-2$
+		ManagedPropertyUtil.markAsTeiidProperty(this.getProperties().get("driver-class")); //$NON-NLS-1$
+		ManagedPropertyUtil.markAsTeiidProperty(this.getProperties().get("connection-url"));//$NON-NLS-1$
+		
+		addProperty(ManagedPropertyUtil.createProperty(ADDITIONAL_CONNECTION_PROPS, SimpleMetaType.STRING,"Addtional Connection Properties", "Addtional Connection properties. (comma separated name value pairs)", false, false, null));//$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	static ManagedPropertyImpl buildConfigProperty() {
@@ -103,18 +97,12 @@ public class XaJdbcConnectorTemplateInfo extends DsDataSourceTemplateInfo implem
 	 * This is for updating a single property.
 	 */
 	public void updateProperty(String name, String value, ManagedComponent main) {
-		if (name.equals(DATABASE_NAME)||name.equals(PORT_NUMBER)||name.equals(SERVER_NAME)||name.equals(ADDITIONAL_DS_PROPS)) {
+		if (name.equals(ADDITIONAL_CONNECTION_PROPS)) {
 			Map<String, String> map = new HashMap<String, String>();
-			
-			if (name.equals(ADDITIONAL_DS_PROPS)) {
-				parseProperties(value, map);
-			}
-			else {
-				map.put(name, value);
-			}
+			parseProperties(value, map);
 			
 			// update the container managed object.
-			MapCompositeValueSupport previousValues = (MapCompositeValueSupport)main.getProperty("xa-datasource-properties").getValue(); //$NON-NLS-1$
+			MapCompositeValueSupport previousValues = (MapCompositeValueSupport)main.getProperty("connection-properties").getValue(); //$NON-NLS-1$
 			if (previousValues != null) {
 				for (String key:map.keySet()) {
 					previousValues.put(key, SimpleValueSupport.wrap(map.get(key)));

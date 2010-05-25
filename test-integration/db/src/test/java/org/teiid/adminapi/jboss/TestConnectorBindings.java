@@ -266,7 +266,7 @@ public class TestConnectorBindings extends BaseConnection {
 	
 	@Test
 	public void testTranslatorTemplateProperties() throws Exception {
-		Collection<PropertyDefinition> defs = admin.getTranslatorTemplatePropertyDefinitions("translator-jdbc"+VERSION); //$NON-NLS-1$
+		Collection<PropertyDefinition> defs = admin.getTemplatePropertyDefinitions("translator-jdbc"+VERSION); //$NON-NLS-1$
 		for (PropertyDefinition pd:defs) {
 			System.out.println(pd.getName()+":"+pd.getPropertyTypeClassName()+":"+pd.getDefaultValue());
 			if (pd.getName().equals("ExtensionTranslationClassName")) { //$NON-NLS-1$
@@ -378,7 +378,7 @@ public class TestConnectorBindings extends BaseConnection {
 		
 		// test blank add
 		try {
-			admin.addTranslator("foo", "translator-jdbc"+VERSION, props);
+			admin.createTranslator("foo", "translator-jdbc"+VERSION, props);
 			fail("must have failed because no exeuction factory set");
 		}catch(AdminException e) {
 			
@@ -386,7 +386,7 @@ public class TestConnectorBindings extends BaseConnection {
 		
 		// test minimal correct add
 		props.setProperty("execution-factory-class", "org.teiid.translator.jdbc.JDBCExecutionFactory");
-		admin.addTranslator("foo", "translator-jdbc"+VERSION, props);
+		admin.createTranslator("foo", "translator-jdbc"+VERSION, props);
 		
 		// test set property
 		admin.setTranslatorProperty("foo", "TrimStrings", "true");
@@ -402,6 +402,34 @@ public class TestConnectorBindings extends BaseConnection {
 		t = admin.getTranslator("foo");
 		assertNull(t);
 		
+	}
+	
+	@Test
+	public void testCreateDataSource() throws Exception {
+		
+		Properties p = new Properties();
+		p.setProperty("DatabaseName", "txntest");
+		p.setProperty("PortNumber", "3306");
+		p.setProperty("ServerName", "localhost");
+		p.setProperty("addtional-ds-properties", "foo=bar, t= x");
+		p.setProperty("user-name", "rareddy");
+		p.setProperty("password", "mm");
+		p.setProperty("xa-datasource-class", "com.mysql.jdbc.jdbc2.optional.MysqlXADataSource");
+		
+		admin.createDataSource("test-mysql","connector-jdbc-xa", p);	 //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
+	@Test
+	public void testCreateDriverSource() throws Exception {
+		
+		Properties p = new Properties();
+		p.setProperty("connection-url", "jdbc:mysql://localhost:3306/txntest");
+		p.setProperty("addtional-connection-properties", "foo=bar, t= x");
+		p.setProperty("user-name", "rareddy");
+		p.setProperty("password", "mm");
+		p.setProperty("driver-class", "com.mysql.jdbc.Driver");
+		
+		admin.createDataSource("test-mysql-driver","connector-jdbc", p);	 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 }

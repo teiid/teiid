@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <deployment xmlns="urn:jboss:bean-deployer:2.0">
-    <!-- 
+
    <bean name="connector-jdbc-xa-${project.version}" class="org.teiid.templates.connector.XaJdbcConnectorTemplate">
       <property name="info"><inject bean="connector-jdbc-xa-templateinfo"/></property>
    </bean>   
@@ -10,12 +10,24 @@
          <factory bean="DSDeploymentTemplateInfoFactory"/>
          <parameter class="java.lang.Class">org.teiid.templates.connector.XaJdbcConnectorTemplateInfo</parameter>
          <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.XADataSourceDeploymentMetaData</parameter>
-         <parameter class="java.lang.String">connector-jdbc-xa-${project.version}</parameter>
+         <parameter class="java.lang.String">connector-jdbc-xa</parameter>
          <parameter class="java.lang.String">Teiid JDBC XA Connector</parameter>         
       </constructor>
-      <property name="rarName">connector-jdbc-${project.version}.rar</property>
    </bean> 
-    -->
+    
+   <bean name="connector-jdbc-${project.version}" class="org.teiid.templates.connector.LocalJdbcConnectorTemplate">
+      <property name="info"><inject bean="connector-jdbc-templateinfo"/></property>
+   </bean>   
+   
+   <bean name="connector-jdbc-templateinfo" class="org.teiid.templates.connector.LocalJdbcConnectorTemplateInfo">
+      <constructor factoryMethod="createTemplateInfo">
+         <factory bean="DSDeploymentTemplateInfoFactory"/>
+         <parameter class="java.lang.Class">org.teiid.templates.connector.LocalJdbcConnectorTemplateInfo</parameter>
+         <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.LocalDataSourceDeploymentMetaData</parameter>
+         <parameter class="java.lang.String">connector-jdbc</parameter>
+         <parameter class="java.lang.String">Teiid JDBC Connector</parameter>         
+      </constructor>
+   </bean>    
     
    <bean name="connector-ldap-${project.version}" class="org.teiid.templates.connector.ConnectorDeploymentTemplate">
       <property name="info"><inject bean="connector-ldap-templateinfo"/></property>
@@ -27,7 +39,7 @@
          <parameter class="java.lang.Class">org.teiid.templates.connector.ConnectorTemplateInfo</parameter>
          <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>
          <parameter class="java.lang.String">connector-ldap-${project.version}</parameter>
-         <parameter class="java.lang.String">Teiid LDAP Connector</parameter>
+         <parameter class="java.lang.String">LDAP Connection</parameter>
       </constructor>
       <property name="rarName">connector-ldap-${project.version}.rar</property>
    </bean>    
@@ -42,7 +54,7 @@
          <parameter class="java.lang.Class">org.teiid.templates.connector.ConnectorTemplateInfo</parameter>
          <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>
          <parameter class="java.lang.String">connector-salesforce-${project.version}</parameter>
-         <parameter class="java.lang.String">Teiid Salesforce Connector</parameter>
+         <parameter class="java.lang.String">Salesforce Connection</parameter>
       </constructor>
       <property name="rarName">connector-salesforce-${project.version}.rar</property>
    </bean>    
@@ -57,7 +69,7 @@
          <parameter class="java.lang.Class">org.teiid.templates.connector.ConnectorTemplateInfo</parameter>
          <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>
          <parameter class="java.lang.String">connector-file-${project.version}</parameter>
-         <parameter class="java.lang.String">Teiid File Connector</parameter>
+         <parameter class="java.lang.String">File Connection</parameter>
       </constructor>
       <property name="rarName">connector-file-${project.version}.rar</property>
    </bean>    
@@ -72,56 +84,9 @@
          <parameter class="java.lang.Class">org.teiid.templates.connector.ConnectorTemplateInfo</parameter>
          <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>
          <parameter class="java.lang.String">connector-ws-${project.version}</parameter>
-         <parameter class="java.lang.String">Teiid WS Connector</parameter>
+         <parameter class="java.lang.String">WS Connection</parameter>
       </constructor>
       <property name="rarName">connector-ws-${project.version}.rar</property>
    </bean>  
-   
-   <!-- 
-   <bean name="connector-xmlsource-file-${project.version}" class="org.teiid.templates.connector.ConnectorDeploymentTemplate">
-      <property name="info"><inject bean="connector-xmlsource-file-templateinfo"/></property>
-      <property name="targetTemplate"><inject bean="NoTxConnectionFactoryTemplate"/></property>
-   </bean>
-   <bean name="connector-xmlsource-file-templateinfo" class="org.teiid.templates.connector.ConnectorTemplateInfo">
-      <constructor factoryMethod="createTemplateInfo">
-         <factory bean="DSDeploymentTemplateInfoFactory"/>
-         <parameter class="java.lang.Class">org.teiid.templates.connector.ConnectorTemplateInfo</parameter>
-         <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>
-         <parameter class="java.lang.String">connector-xmlsource-file-${project.version}</parameter>
-         <parameter class="java.lang.String">Teiid XML File Connector</parameter>
-      </constructor>
-      <property name="rarName">connector-xmlsource-file-${project.version}.rar</property>
-   </bean>    
-   
-   <bean name="connector-xmlsource-soap-${project.version}" class="org.teiid.templates.connector.ConnectorDeploymentTemplate">
-      <property name="info"><inject bean="connector-xmlsource-soap-templateinfo"/></property>
-      <property name="targetTemplate"><inject bean="NoTxConnectionFactoryTemplate"/></property>
-   </bean>
-   <bean name="connector-xmlsource-soap-templateinfo" class="org.teiid.templates.connector.ConnectorTemplateInfo">
-      <constructor factoryMethod="createTemplateInfo">
-         <factory bean="DSDeploymentTemplateInfoFactory"/>
-         <parameter class="java.lang.Class">org.teiid.templates.connector.ConnectorTemplateInfo</parameter>
-         <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>
-         <parameter class="java.lang.String">connector-xmlsource-soap-${project.version}</parameter>
-         <parameter class="java.lang.String">Teiid XML SOAP Connector</parameter>
-      </constructor>
-      <property name="rarName">connector-xmlsource-soap-${project.version}.rar</property>
-   </bean> 
-   
-   <bean name="connector-xml-http-${project.version}" class="org.teiid.templates.connector.ConnectorDeploymentTemplate">
-      <property name="info"><inject bean="connector-xml-http-templateinfo"/></property>
-      <property name="targetTemplate"><inject bean="NoTxConnectionFactoryTemplate"/></property>
-   </bean>
-   <bean name="connector-xml-http-templateinfo" class="org.teiid.templates.connector.ConnectorTemplateInfo">
-      <constructor factoryMethod="createTemplateInfo">
-         <factory bean="DSDeploymentTemplateInfoFactory"/>
-         <parameter class="java.lang.Class">org.teiid.templates.connector.ConnectorTemplateInfo</parameter>
-         <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>
-         <parameter class="java.lang.String">connector-xml-http-${project.version}</parameter>
-         <parameter class="java.lang.String">Teiid XML HTTP Connector</parameter>
-      </constructor>
-      <property name="rarName">connector-xml-http-${project.version}.rar</property>
-   </bean>   
-    -->
    
 </deployment>

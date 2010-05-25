@@ -54,7 +54,7 @@ public interface Admin {
     void setTranslatorProperty(String deployedName, String propertyName, String propertyValue) throws AdminException;
     
     /**
-     * Deploy a {@link Translator} to Configuration
+     * Create a {@link Translator}
      *
      * @param deployedName  Translator name that will be added to Configuration
      * @param templateName template name 
@@ -62,7 +62,7 @@ public interface Admin {
 
      * @throws AdminException 
      */
-    Translator addTranslator(String deployedName, String templateName, Properties properties) throws AdminException;
+    Translator createTranslator(String deployedName, String templateName, Properties properties) throws AdminException;
 
     /**
      * Delete the {@link Translator} from the Configuration
@@ -194,7 +194,7 @@ public interface Admin {
      * @return
      * @throws AdminException
      */
-    Collection<PropertyDefinition> getTranslatorTemplatePropertyDefinitions(String templateName) throws AdminException;
+    Collection<PropertyDefinition> getTemplatePropertyDefinitions(String templateName) throws AdminException;
     
     
     /**
@@ -286,4 +286,33 @@ public interface Admin {
      */
     void mergeVDBs(String sourceVDBName, int sourceVDBVersion, String targetVDBName, int targetVDBVersion) throws AdminException;
 
+    
+    /**
+     * Creates a JCA data source
+     * @param deploymentName - name of the source
+     * @param templateName - template of data source
+     * @param properties - properties
+     * @throws AdminException
+     */
+    void createDataSource(String deploymentName, String templateName, Properties properties) throws AdminException;
+    
+    /**
+     * Delete data source. 
+     * @param deployedName
+     * @throws AdminException
+     */
+    void deleteDataSource(String deployedName) throws AdminException;
+    
+    /**
+     * Returns the all names of all the data sources available in the configuration.
+     */
+    Collection<String> getDataSourceNames() throws AdminException;
+    
+    /**
+     * Get the Datasource templates  available in the configuration.
+     *
+     * @return Set of template names.
+     * @throws AdminException 
+     */
+    Set<String> getDataSourceTemplateNames() throws AdminException;
 }

@@ -74,7 +74,7 @@ public class AdminShell {
 		currentName = connectionName;
 		Admin old = connections.put(connectionName, internalAdmin);
 		if (old != null) {
-			System.out.println("Closing previous admin associated with " + connectionName);
+			System.out.println("Closing previous admin associated with " + connectionName); //$NON-NLS-1$
 			old.close();
 		}
 	}
@@ -97,7 +97,7 @@ public class AdminShell {
 		    fis = new FileInputStream("connection.properties"); //$NON-NLS-1$
 	    	props.load(fis);
 	    } catch (IOException e) {
-	    	log.log(Level.WARNING, "Could not load default connection properties.", e);
+	    	log.log(Level.WARNING, "Could not load default connection properties.", e); //$NON-NLS-1$
 	    } finally {
 	    	if (fis != null) {
 	    		try {
@@ -109,12 +109,12 @@ public class AdminShell {
 	    p = props;
 	}
 	
-	@Doc(text = "Add a Translator")
-	public static Translator addTranslator(
+	@Doc(text = "Create a Translator")
+	public static Translator createTranslator(
 			@Doc(text = "deployed name") String deployedName,
 			@Doc(text = "type name") String typeName, 
 			Properties properties) throws AdminException {
-		return getAdmin().addTranslator(deployedName, typeName, properties);
+		return getAdmin().createTranslator(deployedName, typeName, properties);
 	}
 
 	@Doc(text = "Adds a role to the specified policy")
@@ -189,10 +189,10 @@ public class AdminShell {
 		return getAdmin().getTranslatorTemplateNames();
 	}
 
-	@Doc(text = "Get all PropertyDefinitions for the given translator template")
+	@Doc(text = "Get all PropertyDefinitions for the given template")
 	public static Collection<PropertyDefinition> getTranslatorTemplatePropertyDefinitions(
 			@Doc(text = "template name") String templateName) throws AdminException {
-		return getAdmin().getTranslatorTemplatePropertyDefinitions(templateName);
+		return getAdmin().getTemplatePropertyDefinitions(templateName);
 	}
 
 	@Doc(text = "Get the ProcessObject instances for the given identifier")
@@ -331,7 +331,7 @@ public class AdminShell {
 	private static void writeFile(String deployedName, String fileName,
 			InputStream contents) throws IOException, AdminProcessingException {
 		if (contents == null) {
-	    	throw new AdminProcessingException(deployedName + " not found for exporting");
+	    	throw new AdminProcessingException(deployedName + " not found for exporting");//$NON-NLS-1$
 	    }
 		ObjectConverterUtil.write(contents, fileName);	
 	}
@@ -359,11 +359,30 @@ public class AdminShell {
 			}
 		}
 	}
+	@Doc(text = "Create a data source from supplied properties")
+	public static void createDataSource(@Doc(text = "deployed name")String deploymentName, @Doc(text = "template name")String templateName, @Doc(text = "properties")Properties properties) throws AdminException {
+		getAdmin().createDataSource(deploymentName, templateName, properties);
+	}
+	
+	@Doc(text = "Delete data source")
+	public static void deleteDataSource(@Doc(text = "deployed name")String deployedName) throws AdminException{
+		getAdmin().deleteDataSource(deployedName);
+	}
+	
+	@Doc(text = "Available data sources")
+	public static Collection<String> getDataSourceNames() throws AdminException{
+		return getAdmin().getDataSourceNames();
+	}
 
+	@Doc(text = "Available data source template names")
+	public static Set<String> getDataSourceTemplateNames() throws AdminException{
+		return getAdmin().getDataSourceTemplateNames();
+	}
+	
 	@Doc(text = "Get the current Admin connection")
 	public static Admin getAdmin() {
 		if (internalAdmin == null) {
-	        throw new NullPointerException("Not connected.  You must call a \"connectAsAdmin\" method or choose an active connection via \"useConnection\".");
+	        throw new NullPointerException("Not connected.  You must call a \"connectAsAdmin\" method or choose an active connection via \"useConnection\"."); //$NON-NLS-1$
 	    }
 		return internalAdmin;
 	}
@@ -393,7 +412,7 @@ public class AdminShell {
 			@Doc(text = "connection name") String name) {
 		Admin admin = connections.get(name);
 		if (admin == null) {
-			System.out.println("Warning: connection is not active for " + name);
+			System.out.println("Warning: connection is not active for " + name); //$NON-NLS-1$
 			return;
 		}
 		internalAdmin = admin;

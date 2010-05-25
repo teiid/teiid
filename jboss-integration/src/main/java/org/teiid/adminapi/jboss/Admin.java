@@ -49,6 +49,7 @@ import org.jboss.metatype.api.types.SimpleMetaType;
 import org.jboss.metatype.api.values.CollectionValueSupport;
 import org.jboss.metatype.api.values.MetaValue;
 import org.jboss.metatype.api.values.MetaValueFactory;
+import org.jboss.metatype.api.values.SimpleValue;
 import org.jboss.metatype.api.values.SimpleValueSupport;
 import org.jboss.profileservice.spi.NoSuchDeploymentException;
 import org.jboss.profileservice.spi.ProfileKey;
@@ -77,6 +78,7 @@ import org.teiid.jboss.deployers.RuntimeEngineDeployer;
 
 public class Admin extends TeiidAdmin {
 	private static final String TRANSLATOR_PREFIX = "translator-"; //$NON-NLS-1$
+	private static final String CONNECTOR_PREFIX = "connector-"; //$NON-NLS-1$
 	private static final ProfileKey DEFAULT_PROFILE_KEY = new ProfileKey(ProfileKey.DEFAULT);
 	private static final long serialVersionUID = 7081309086056911304L;
 	private static ComponentType VDBTYPE = new ComponentType("teiid", "vdb");//$NON-NLS-1$ //$NON-NLS-2$
@@ -84,6 +86,10 @@ public class Admin extends TeiidAdmin {
 	private static String DQPNAME = RuntimeEngineDeployer.class.getName();
 	private static ComponentType TRANSLATOR_TYPE = new ComponentType("teiid", "translator");//$NON-NLS-1$ //$NON-NLS-2$
 	private static AdminObjectBuilder AOB = new AdminObjectBuilder();
+	
+	private static final String[] DS_TYPES = {"XA", "NoTx", "LocalTx"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	private static final String[] CF_TYPES = {"NoTx", "Tx"}; //$NON-NLS-1$ //$NON-NLS-2$
+	
 	
 	private ManagementView view;
 	private DeploymentManager deploymentMgr;
@@ -181,7 +187,7 @@ public class Admin extends TeiidAdmin {
 	}	
 	
 	@Override
-	public Translator addTranslator(String deploymentName, String typeName, Properties properties) throws AdminException {
+	public Translator createTranslator(String deploymentName, String typeName, Properties properties) throws AdminException {
 		try {
 			ManagedComponent mc = getView().getComponent(deploymentName, TRANSLATOR_TYPE);
 			if (mc != null) {
@@ -472,7 +478,7 @@ public class Admin extends TeiidAdmin {
 	
 	
 	@Override
-	public Collection<PropertyDefinition> getTranslatorTemplatePropertyDefinitions(String templateName) throws AdminException {
+	public Collection<PropertyDefinition> getTemplatePropertyDefinitions(String templateName) throws AdminException {
 		try {
 			DeploymentTemplateInfo info = getView().getTemplate(templateName);
 			if(info == null) {
@@ -670,5 +676,108 @@ public class Admin extends TeiidAdmin {
 		} catch (Exception e) {
 			throw new AdminComponentException(e.getMessage(), e);
 		}   		
+	}
+
+	private ManagedComponent getDatasource(String deployedName) throws Exception {
+		ManagedComponent mc = null;
+		for (String type:DS_TYPES) {
+			ComponentType ct = new ComponentType("DataSource", type); //$NON-NLS-1$
+			mc = getView().getComponent(deployedName, ct);
+			if (mc != null) {
+				return mc;
+			}				
+		}		
+		for (String type:CF_TYPES) {
+			ComponentType ct = new ComponentType("ConnectionFactory", type); //$NON-NLS-1$
+			mc = getView().getComponent(deployedName, ct);
+			if (mc != null) {
+				return mc;
+			}				
+		}
+		return mc;
+	}
+	
+	
+	@Override
+	public void createDataSource(String deploymentName, String templateName, Properties properties) throws AdminException {
+		try {
+			ManagedComponent mc = getDatasource(deploymentName);
+			if (mc != null) {
+				throw new AdminProcessingException(IntegrationPlugin.Util.getString("datasource_exists",deploymentName)); //$NON-NLS-1$;	
+			}
+			
+			DeploymentTemplateInfo info = getView().getTemplate(templateName);
+			if(info == null) {
+				throw new AdminProcessingException(IntegrationPlugin.Util.getString("datasource_template_not_found", templateName)); //$NON-NLS-1$
+			}
+			
+			// template properties specific to the template
+			Map<String, ManagedProperty> propertyMap = info.getProperties();
+			
+			// walk through the supplied properties and assign properly to template
+			for (String key:properties.stringPropertyNames()) {
+				ManagedProperty mp = propertyMap.get(key);
+				if (mp != null) {
+					String value = properties.getProperty(key);
+					if (!ManagedUtil.sameValue(mp.getDefaultValue(), value)){
+						mp.setValue(SimpleValueSupport.wrap(value));
+					}
+				}
+			}
+			info.getProperties().get("jndi-name").setValue(SimpleValueSupport.wrap(deploymentName)); //$NON-NLS-1$
+			getView().applyTemplate(deploymentName, info);
+		} catch (NoSuchDeploymentException e) {
+			throw new AdminComponentException(e.getMessage(), e);
+		} catch(Exception e) {
+			throw new AdminComponentException(e.getMessage(), e);
+		} 
+	}
+
+	@Override
+	public void deleteDataSource(String deployedName) throws AdminException {
+		try {
+			ManagedComponent mc = getDatasource(deployedName);
+			if (mc != null) {
+				ManagedUtil.removeArchive(getDeploymentManager(),mc.getDeployment().getName());
+			}
+		} catch (Exception e) {
+			throw new AdminComponentException(e);
+		}
+	}
+
+	@Override
+	public Collection<String> getDataSourceNames() throws AdminException {
+		ArrayList<String> names = new ArrayList<String>();
+		try {
+			for (String type:DS_TYPES) {
+				ComponentType ct = new ComponentType("DataSource", type); //$NON-NLS-1$
+				Set<ManagedComponent> mcs = getView().getComponentsForType(ct);
+				for (ManagedComponent mc:mcs) {
+					names.add(((SimpleValue)mc.getProperty("jndi-name").getValue()).getValue().toString()); //$NON-NLS-1$
+				}
+			}		
+			for (String type:CF_TYPES) {
+				ComponentType ct = new ComponentType("ConnectionFactory", type); //$NON-NLS-1$
+				Set<ManagedComponent> mcs = getView().getComponentsForType(ct);
+				for (ManagedComponent mc:mcs) {
+					names.add(((SimpleValue)mc.getProperty("jndi-name").getValue()).getValue().toString()); //$NON-NLS-1$
+				}			
+			}
+		} catch (Exception e) {
+			throw new AdminComponentException(e);
+		}
+		return names;
+	}
+	
+	@Override
+	public Set<String> getDataSourceTemplateNames() throws AdminException{
+		Set<String> names = getView().getTemplateNames();
+		HashSet<String> matched = new HashSet<String>();
+		for(String name:names) {
+			if (name.startsWith(CONNECTOR_PREFIX)) {
+				matched.add(name);
+			}
+		}
+		return matched;		
 	}
 }
