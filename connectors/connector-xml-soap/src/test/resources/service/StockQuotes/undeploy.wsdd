@@ -1,3 +1,0 @@
-<undeployment xmlns="http://xml.apache.org/axis/wsdd/">
-  <service name="StockQuotes"/>
-</undeployment>
