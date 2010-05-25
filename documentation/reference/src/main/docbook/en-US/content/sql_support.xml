@@ -4,7 +4,7 @@
   <title>SQL Support</title>
   <para>
     Teiid supports SQL for issuing queries and for defining view
-    transformations; see also Procedure Language<!-- TODO:link -->
+    transformations; see also <link linkend="procedure_language">Procedure Language</link>
     for how SQL is used in virtual procedures and update procedures.
   </para>
   <para>
@@ -569,7 +569,7 @@
 		      input of the parameter.</para>
           </listitem>
           <listitem>
-            <para>Input values are passed via criteria. Values can be passed by '=','is null', or 'in' predicates.
+            <para>Input values are passed via criteria. Values can be passed by '=','is null', or 'in' predicates.  Disjuncts however are not allowed.
             </para>
           </listitem>
           <listitem>
@@ -593,6 +593,12 @@
 		<title>Multiple Execution</title>
 		  <para>The usage of 'in' or join criteria can result in
 				the procedure being executed multiple times.</para>
+	  </note>
+	  <note>
+	  	<title>Alternative Syntax</title>
+	  	<para>
+	  		None of issues listed in the syntax rules above exist if a <link linkend="nested_table">nested table reference</link> is used. 
+	  	</para>
 	  </note>
     </sect2>
   </sect1>
@@ -694,10 +700,11 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
       </para>
       <itemizedlist>
         <para>Example Syntax:</para>
-        <listitem><para>FROM {table [AS alias]}</para></listitem>
-        <listitem><para>FROM table1 [INNER|LEFT OUTER|RIGHT OUTER|FULL OUTER] JOIN table1 ON join-criteria</para></listitem>
-        <listitem><para>FROM table1 CROSS JOIN table1</para></listitem>
-        <listitem><para>FROM (subquery) [AS alias]</para></listitem>
+        <listitem><para>FROM table [[AS] alias]</para></listitem>
+        <listitem><para>FROM table1 [INNER|LEFT OUTER|RIGHT OUTER|FULL OUTER] JOIN table2 ON join-criteria</para></listitem>
+        <listitem><para>FROM table1 CROSS JOIN table2</para></listitem>
+        <listitem><para>FROM (subquery) [AS] alias</para></listitem>
+        <listitem><para>FROM <link linkend="nested_table">table(subquery)</link> [AS] alias</para></listitem>
         <listitem><para>FROM table1 JOIN table2 MAKEDEP ON join-criteria</para></listitem>
         <listitem><para>FROM table1 JOIN table2 MAKENOTDEP ON join-criteria</para></listitem>
         <listitem><para>FROM table1 left outer join <link linkend="optional_join">/* optional */</link> table2 ON join-criteria</para></listitem>
@@ -712,6 +719,19 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
           metadata, and costing information.
         </para>
       </note>
+      <sect3 id="nested_table">
+      	<title>Nested Table Reference</title>
+      	<para>Nested tables may appear in the FROM clause with the TABLE keyword.  They are an alternative to using a view with normal join semantics.
+      	</para>
+		<para>A nested table may have correlated references to preceeding FROM clause 
+	       column references as long as INNER and LEFT OUTER joins are used.  This is especially useful in cases where then nested expression is a procedure or function call.</para>
+	       <para>Valid Example: select * from t1, TABLE(call proc(t1.x)) t2</para>
+	       <para>Invalid Example: select * from TABLE(call proc(t1.x)) t2, t1</para>
+	       <note>
+		<title>Multiple Execution</title>
+		  <para>The usage of a correlated nested table may result in multiple executions of the table expression - once for each correlated row.</para>
+	  </note>      	
+      </sect3>
     </sect2>
     <sect2 id="where_clause">
       <title>WHERE Clause</title>

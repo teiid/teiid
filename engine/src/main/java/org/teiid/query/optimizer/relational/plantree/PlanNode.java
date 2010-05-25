@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -42,6 +43,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
+import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 
@@ -309,6 +311,37 @@ public class PlanNode {
 			}
 		}
     	return result;
+    }
+    
+    public List<SymbolMap> getAllReferences() {
+    	List<SymbolMap> refMaps = new ArrayList<SymbolMap>(getCorrelatedReferences());
+        refMaps.addAll(getExportedCorrelatedReferences());
+        return refMaps;
+    }
+    
+    public List<SymbolMap> getExportedCorrelatedReferences() {
+    	if (type != NodeConstants.Types.JOIN) {
+    		return Collections.emptyList();
+    	}
+    	LinkedList<SymbolMap> result = new LinkedList<SymbolMap>();
+		for (PlanNode child : NodeEditor.findAllNodes(this, NodeConstants.Types.SOURCE, NodeConstants.Types.ACCESS)) {
+			Command command = (Command)child.getProperty(NodeConstants.Info.NESTED_COMMAND);
+	        if (command == null || command.getCorrelatedReferences() == null) {
+	        	continue;
+	        }
+        	Set<GroupSymbol> correlationGroups = GroupsUsedByElementsVisitor.getGroups(command.getCorrelatedReferences().getValues());
+        	PlanNode joinNode = NodeEditor.findParent(child, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE);
+        	while (joinNode != null) {
+        		if (joinNode.getGroups().containsAll(correlationGroups)) {
+        			if (joinNode == this) {
+        				result.add(command.getCorrelatedReferences());
+        			}
+        			break;
+        		}
+        		joinNode = NodeEditor.findParent(joinNode, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE);
+        	}
+		}
+        return result;
     }
     
     public Set<ElementSymbol> getCorrelatedReferenceElements() {

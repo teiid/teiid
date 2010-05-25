@@ -81,6 +81,7 @@ class JoinRegion {
     private List<PlanNode> criteriaNodes = new ArrayList<PlanNode>();
     
     private List<Collection<AccessPattern>> unsatisfiedAccessPatterns = new LinkedList<Collection<AccessPattern>>();
+    private boolean containsNestedTable;
     
     private Map<ElementSymbol, Set<Collection<GroupSymbol>>> dependentCriteriaElements;
     private Map<PlanNode, Set<PlanNode>> critieriaToSourceMap;
@@ -88,6 +89,14 @@ class JoinRegion {
     public PlanNode getJoinRoot() {
         return joinRoot;
     }
+    
+    public void setContainsNestedTable(boolean containsNestedTable) {
+		this.containsNestedTable = containsNestedTable;
+	}
+    
+    public boolean containsNestedTable() {
+		return containsNestedTable;
+	}
     
     public List<Collection<AccessPattern>> getUnsatisfiedAccessPatterns() {
         return unsatisfiedAccessPatterns;
@@ -240,7 +249,7 @@ class JoinRegion {
             PlanNode joinSourceRoot = entry.getValue();
             
             //check to make sure that this group ordering satisfies the access patterns
-            if (!this.unsatisfiedAccessPatterns.isEmpty()) {
+            if (!this.unsatisfiedAccessPatterns.isEmpty() || this.containsNestedTable) {
                 PlanNode joinSource = entry.getKey();
                 
                 Collection<GroupSymbol> requiredGroups = (Collection<GroupSymbol>)joinSource.getProperty(NodeConstants.Info.REQUIRED_ACCESS_PATTERN_GROUPS);

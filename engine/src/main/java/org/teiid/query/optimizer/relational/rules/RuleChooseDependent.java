@@ -154,8 +154,8 @@ public final class RuleChooseDependent implements OptimizerRule {
         for (PlanNode joinNode : NodeEditor.findAllNodes(root, NodeConstants.Types.JOIN, NodeConstants.Types.ACCESS)) {
             CandidateJoin candidate = null;
             
-            for (Iterator j = joinNode.getChildren().iterator(); j.hasNext();) {
-                PlanNode child = (PlanNode)j.next();
+            for (Iterator<PlanNode> j = joinNode.getChildren().iterator(); j.hasNext();) {
+                PlanNode child = j.next();
                 child = FrameUtil.findJoinSourceNode(child);
                 
                 if(child.hasBooleanProperty(NodeConstants.Info.MAKE_NOT_DEP) || !isValidJoin(joinNode, child, analysisRecord)) {
@@ -196,6 +196,13 @@ public final class RuleChooseDependent implements OptimizerRule {
         		analysisRecord.println("Rejecting dependent access node as parent join is CROSS or FULL OUTER: "+ sourceNode.nodeToString()); //$NON-NLS-1$
         	}
             return false;
+        }
+        
+        if (!joinNode.getExportedCorrelatedReferences().isEmpty()) {
+        	if (analysisRecord.recordDebug()) {
+        		analysisRecord.println("Rejecting dependent access node as parent join has a correlated nested table: "+ sourceNode.nodeToString()); //$NON-NLS-1$
+        	}
+        	return false;
         }
 
         // Check that join criteria exist

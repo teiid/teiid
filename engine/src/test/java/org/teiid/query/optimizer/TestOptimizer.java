@@ -64,6 +64,7 @@ import org.teiid.query.processor.relational.JoinNode;
 import org.teiid.query.processor.relational.JoinStrategy;
 import org.teiid.query.processor.relational.MergeJoinStrategy;
 import org.teiid.query.processor.relational.NestedLoopJoinStrategy;
+import org.teiid.query.processor.relational.NestedTableJoinStrategy;
 import org.teiid.query.processor.relational.NullNode;
 import org.teiid.query.processor.relational.PartitionedSortJoin;
 import org.teiid.query.processor.relational.PlanExecutionNode;
@@ -91,7 +92,7 @@ import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.translator.SourceSystemFunctions;
 
-
+@SuppressWarnings("nls")
 public class TestOptimizer {
 
     public interface DependentJoin {}
@@ -408,7 +409,9 @@ public class TestOptimizer {
                 if (strategy instanceof PartitionedSortJoin) {
                     updateCounts(PartitionedSortJoin.class, counts, types);
                 } 
-            } 
+            } else if (strategy instanceof NestedTableJoinStrategy) {
+            	updateCounts(NestedTableJoinStrategy.class, counts, types);
+            }
             if (((JoinNode)relationalNode).isDependent()) {
                 updateCounts(DependentJoin.class, counts, types);
             }
@@ -6775,6 +6778,16 @@ public class TestOptimizer {
         helpPlan(sql, metadata, null, capFinder,
             new String[] {"SELECT CONVERT(CONVERT(e2, long), biginteger) FROM pm1.g1 AS A"}, //$NON-NLS-1$
             SHOULD_SUCCEED );
+    }
+    
+    @Test public void testNestedTable() throws Exception {
+		FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+		BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+		caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("select pm2.g1.e1, x.e1 from pm2.g1, table(select * from pm2.g2 where pm2.g1.e1=pm2.g2.e1) x where pm2.g1.e2 IN (1, 2)", example1(), //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 FROM pm2.g2 AS g_0 WHERE g_0.e1 = pm2.g1.e1", "SELECT g_0.e1 FROM pm2.g1 AS g_0 WHERE g_0.e2 IN (1, 2)" }, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        checkNodeTypes(plan, new int[] {1}, new Class[] {NestedTableJoinStrategy.class});         
     }
 
 	public static final boolean DEBUG = false;

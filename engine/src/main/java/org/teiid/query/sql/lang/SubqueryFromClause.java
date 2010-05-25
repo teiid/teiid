@@ -37,6 +37,7 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
 
     private GroupSymbol symbol;
     private Command command;
+    private boolean table;
 	
 	/**
 	 * Construct default object
@@ -59,6 +60,14 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
         this.symbol = symbol;
         this.command = command;
     }
+    
+    public boolean isTable() {
+		return table;
+	}
+    
+    public void setTable(boolean table) {
+		this.table = table;
+	}
 
     /** 
      * Reset the alias for this subquery from clause and it's pseudo-GroupSymbol.  
@@ -135,7 +144,8 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
 		SubqueryFromClause sfc = (SubqueryFromClause) obj;
 		
         return this.getName().equalsIgnoreCase(sfc.getName()) &&
-            sfc.isOptional() == this.isOptional() && this.command.equals(sfc.command);
+            sfc.isOptional() == this.isOptional() && this.command.equals(sfc.command)
+            && this.table == sfc.table;
 	}
 	
 	/**
@@ -160,7 +170,7 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
         clause.setOptional(this.isOptional());
         clause.setMakeDep(this.isMakeDep());
         clause.setMakeNotDep(this.isMakeNotDep());
-        
+        clause.setTable(this.isTable());
         return clause;
 	}
 

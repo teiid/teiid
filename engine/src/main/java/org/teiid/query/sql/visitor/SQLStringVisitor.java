@@ -36,6 +36,7 @@ import org.teiid.language.SQLReservedWords.Tokens;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.lang.AtomicCriteria;
 import org.teiid.query.sql.lang.BetweenCriteria;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.CompareCriteria;
@@ -532,7 +533,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 			Iterator critIter = joinCriteria.iterator();
 			while(critIter.hasNext()) {
 				Criteria crit = (Criteria) critIter.next();
-                if(crit instanceof PredicateCriteria) {
+                if(crit instanceof PredicateCriteria || crit instanceof AtomicCriteria) {
     				parts.add(registerNode(crit));
                 } else {
                     parts.add("("); //$NON-NLS-1$
@@ -1025,6 +1026,9 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     public void visit(SubqueryFromClause obj) {
         addOptionComment(obj);
+        if (obj.isTable()) {
+        	parts.add(SQLReservedWords.TABLE);
+        }
         parts.add("(");//$NON-NLS-1$
         parts.add(registerNode(obj.getCommand()));
         parts.add(")");//$NON-NLS-1$

@@ -45,7 +45,7 @@ public class NestedLoopJoinStrategy extends MergeJoinStrategy {
      * @see org.teiid.query.processor.relational.MergeJoinStrategy#clone()
      */
     @Override
-    public Object clone() {
+    public NestedLoopJoinStrategy clone() {
         return new NestedLoopJoinStrategy();
     }
     

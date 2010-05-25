@@ -56,7 +56,6 @@ import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
-import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.CaseExpression;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;

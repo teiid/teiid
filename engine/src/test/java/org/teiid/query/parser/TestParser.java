@@ -6742,5 +6742,17 @@ public class TestParser {
         query.setSelect(new Select(Arrays.asList(as)));
         helpTest(sql, "SELECT XMLAGG(1 ORDER BY e2)", query);
     }
+    
+    @Test public void testNestedTable() throws Exception {
+        String sql = "SELECT * from TABLE(exec foo()) as x"; //$NON-NLS-1$
+        Query query = new Query();
+        query.setSelect(new Select(Arrays.asList(new AllSymbol())));
+        StoredProcedure sp = new StoredProcedure();
+        sp.setProcedureName("foo");
+        SubqueryFromClause sfc = new SubqueryFromClause("x", sp);
+        sfc.setTable(true);
+        query.setFrom(new From(Arrays.asList(sfc)));
+        helpTest(sql, "SELECT * FROM TABLE(EXEC foo()) AS x", query);
+    }
 
 }

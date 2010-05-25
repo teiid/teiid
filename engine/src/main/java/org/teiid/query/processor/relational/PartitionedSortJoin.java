@@ -304,7 +304,7 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
     }
     
     @Override
-    public Object clone() {
+    public PartitionedSortJoin clone() {
     	return new PartitionedSortJoin(this.sortLeft, this.sortRight);
     }
     

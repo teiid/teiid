@@ -49,6 +49,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.sql.lang.AbstractSetCriteria;
+import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.CompoundCriteria;
 import org.teiid.query.sql.lang.Criteria;
@@ -344,11 +345,15 @@ public class NewCalculateCostUtil {
         
         float cost = UNKNOWN_VALUE;
         if(node.getChildCount() > 0) {
-            PlanNode child = node.getFirstChild();
-            Float childCostFloat = (Float)child.getProperty(NodeConstants.Info.EST_CARDINALITY);
-            if (childCostFloat != null) {
-                cost = childCostFloat.floatValue();
-            }
+        	Command command = (Command)node.getProperty(NodeConstants.Info.NESTED_COMMAND);
+        	//only cost non-correlated TODO: a better estimate for correlated
+        	if (command == null || command.getCorrelatedReferences() == null) {
+	            PlanNode child = node.getFirstChild();
+	            Float childCostFloat = (Float)child.getProperty(NodeConstants.Info.EST_CARDINALITY);
+	            if (childCostFloat != null) {
+	                cost = childCostFloat.floatValue();
+	            }
+        	}
         }else {
             GroupSymbol group = node.getGroups().iterator().next();
             float cardinality = metadata.getCardinality(group.getMetadataID());

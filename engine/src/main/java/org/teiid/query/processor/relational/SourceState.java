@@ -55,6 +55,7 @@ class SourceState {
     private int maxProbeMatch = 1;
     private boolean distinct;
     private ImplicitBuffer implicitBuffer = ImplicitBuffer.FULL;
+    boolean open;
     
     private SortUtility sortUtility;
     
@@ -110,6 +111,8 @@ class SourceState {
 			this.iterator.closeSource();
         	this.iterator = null;
         }
+        this.currentTuple = null;
+        this.open = false;
     }
 
     public int getRowCount() throws TeiidComponentException, TeiidProcessingException {

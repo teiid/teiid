@@ -47,9 +47,13 @@ import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.resolver.util.AccessPattern;
+import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.util.SymbolMap;
+import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.Permutation;
 import org.teiid.translator.ExecutionFactory.SupportedJoinCriteria;
@@ -121,6 +125,18 @@ public class RulePlanJoins implements OptimizerRule {
             }
             
             joinRegion.initializeJoinInformation();
+            
+            //account for nested table correlations
+            for (PlanNode joinSource : joinRegion.getJoinSourceNodes().keySet()) {
+                Command command = (Command)joinSource.getProperty(NodeConstants.Info.NESTED_COMMAND);
+                if (command != null) {
+                	SymbolMap map = command.getCorrelatedReferences();
+                	if (map !=null) {
+                        joinSource.setProperty(NodeConstants.Info.REQUIRED_ACCESS_PATTERN_GROUPS, GroupsUsedByElementsVisitor.getGroups(map.getValues()));
+                        joinRegion.setContainsNestedTable(true);
+                	}
+                }
+            }
             
             //check for unsatisfied dependencies
             if (joinRegion.getUnsatisfiedAccessPatterns().isEmpty()) {
@@ -197,7 +213,7 @@ public class RulePlanJoins implements OptimizerRule {
         for (Iterator accessNodeIter = accessMap.entrySet().iterator(); accessNodeIter.hasNext();) {
             Map.Entry entry = (Map.Entry)accessNodeIter.next();
             
-            List accessNodes = (List)entry.getValue();
+            List<PlanNode> accessNodes = (List)entry.getValue();
             
             if (accessNodes.size() < 2) {
                 continue;
@@ -205,14 +221,14 @@ public class RulePlanJoins implements OptimizerRule {
             
             for (int i = accessNodes.size() - 1; i >= 0; i--) {
                 
-                PlanNode accessNode1 = (PlanNode)accessNodes.get(i);
+                PlanNode accessNode1 = accessNodes.get(i);
                 
                 for (int k = accessNodes.size() - 1; k >= 0; k--) {
                     if (k == i) {
                         continue;
                     }
                     
-                    PlanNode accessNode2 = (PlanNode)accessNodes.get(k);
+                    PlanNode accessNode2 = accessNodes.get(k);
                     
                     List<PlanNode> criteriaNodes = joinRegion.getCriteriaNodes();
                     
@@ -230,7 +246,7 @@ public class RulePlanJoins implements OptimizerRule {
                     Object modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode1, metadata);
                     SupportedJoinCriteria sjc = CapabilitiesUtil.getSupportedJoinCriteria(modelId, metadata, capFinder);
                     for (PlanNode critNode : criteriaNodes) {
-                        Set sources = (Set)joinRegion.getCritieriaToSourceMap().get(critNode);
+                        Set<PlanNode> sources = joinRegion.getCritieriaToSourceMap().get(critNode);
 
                         if (sources == null) {
                             continue;
@@ -260,9 +276,7 @@ public class RulePlanJoins implements OptimizerRule {
                     	continue;
                     }                    
                     
-                    List toTest = new ArrayList(2);
-                    toTest.add(accessNode1);
-                    toTest.add(accessNode2);
+                    List<PlanNode> toTest = Arrays.asList(accessNode1, accessNode2);
                     
                     JoinType joinType = joinCriteria.isEmpty()?JoinType.JOIN_CROSS:JoinType.JOIN_INNER;
                     
@@ -291,17 +305,14 @@ public class RulePlanJoins implements OptimizerRule {
                     joinNode.setProperty(NodeConstants.Info.JOIN_CRITERIA, joinCriteria);
 
                     PlanNode newAccess = RuleRaiseAccess.raiseAccessOverJoin(joinNode, entry.getKey(), false);
-                    for (Iterator joinCriteriaIter = joinCriteriaNodes.iterator(); joinCriteriaIter.hasNext();) {
-                        PlanNode critNode = (PlanNode)joinCriteriaIter.next();
+                    for (PlanNode critNode : joinCriteriaNodes) {
                         critNode.removeFromParent();
                         critNode.removeAllChildren();
                     }
                                     
                     //update with the new source
                     
-                    for (Iterator sourceIter = joinRegion.getCritieriaToSourceMap().values().iterator(); sourceIter.hasNext();) {
-                        Set source = (Set)sourceIter.next();
-                        
+                    for (Set<PlanNode> source : joinRegion.getCritieriaToSourceMap().values()) {
                         if (source.remove(accessNode1) || source.remove(accessNode2)) {
                             source.add(newAccess);
                         }
@@ -340,9 +351,7 @@ public class RulePlanJoins implements OptimizerRule {
                                                    TeiidComponentException {
         Map accessMap = new HashMap();
         
-        for (Iterator joinSourceIter = joinRegion.getJoinSourceNodes().values().iterator(); joinSourceIter.hasNext();) {
-            PlanNode node = (PlanNode)joinSourceIter.next();
-            
+        for (PlanNode node : joinRegion.getJoinSourceNodes().values()) {
             /* check to see if we are directly over an access node.  in the event that the join source root
              * looks like select->access, we still won't consider this node for pushing
              */
@@ -376,15 +385,13 @@ public class RulePlanJoins implements OptimizerRule {
             throw new QueryPlannerException(QueryExecPlugin.Util.getString("RulePlanJoins.cantSatisfy", joinRegion.getUnsatisfiedAccessPatterns())); //$NON-NLS-1$
         }
         
-        HashSet currentGroups = new HashSet();
+        HashSet<GroupSymbol> currentGroups = new HashSet<GroupSymbol>();
         
-        for (Iterator joinSources = joinRegion.getJoinSourceNodes().keySet().iterator(); joinSources.hasNext();) {
-            PlanNode joinSource = (PlanNode)joinSources.next();
-                        
+        for (PlanNode joinSource : joinRegion.getJoinSourceNodes().keySet()) {
             currentGroups.addAll(joinSource.getGroups());
         }
                 
-        HashMap dependentNodes = new HashMap(joinRegion.getDependentJoinSourceNodes());
+        HashMap<PlanNode, PlanNode> dependentNodes = new HashMap<PlanNode, PlanNode>(joinRegion.getDependentJoinSourceNodes());
                 
         boolean satisfiedAP = true;
         
@@ -392,23 +399,21 @@ public class RulePlanJoins implements OptimizerRule {
             
             satisfiedAP = false;
         
-            for (Iterator joinSources = dependentNodes.entrySet().iterator(); joinSources.hasNext();) {
-                Map.Entry entry = (Map.Entry)joinSources.next();
-                PlanNode joinSource = (PlanNode)entry.getKey();
+            for (Iterator<Map.Entry<PlanNode, PlanNode>> joinSources = dependentNodes.entrySet().iterator(); joinSources.hasNext();) {
+            	Map.Entry<PlanNode, PlanNode> entry = joinSources.next();
+                PlanNode joinSource = entry.getKey();
                 
                 Collection accessPatterns = (Collection)joinSource.getProperty(NodeConstants.Info.ACCESS_PATTERNS);
                 for (Iterator i = accessPatterns.iterator(); i.hasNext();) {
                     AccessPattern ap = (AccessPattern)i.next();
                     
                     boolean foundGroups = true;
-                    HashSet allRequiredGroups = new HashSet();
-                    for (Iterator j = ap.getUnsatisfied().iterator(); j.hasNext();) {
-                        ElementSymbol symbol = (ElementSymbol)j.next();
-                        Collection requiredGroupsSet = (Collection)joinRegion.getDependentCriteriaElements().get(symbol);
+                    HashSet<GroupSymbol> allRequiredGroups = new HashSet<GroupSymbol>();
+                    for (ElementSymbol symbol : ap.getUnsatisfied()) {
+                        Set<Collection<GroupSymbol>> requiredGroupsSet = joinRegion.getDependentCriteriaElements().get(symbol);
                         boolean elementSatisfied = false;
                         if (requiredGroupsSet != null) {
-                            for (Iterator k = requiredGroupsSet.iterator(); k.hasNext();) {
-                                Collection requiredGroups = (Collection)k.next();
+                            for (Collection<GroupSymbol> requiredGroups : requiredGroupsSet) {
                                 if (currentGroups.containsAll(requiredGroups)) {
                                     elementSatisfied = true;
                                     allRequiredGroups.addAll(requiredGroups);
@@ -523,7 +528,7 @@ public class RulePlanJoins implements OptimizerRule {
     Object[] findBestJoinOrder(JoinRegion region, QueryMetadataInterface metadata) {
         int regionCount = region.getJoinSourceNodes().size();
         
-        List orderList = new ArrayList(regionCount);
+        List<Integer> orderList = new ArrayList<Integer>(regionCount);
         for(int i=0; i<regionCount; i++) {
             orderList.add(new Integer(i));
         }

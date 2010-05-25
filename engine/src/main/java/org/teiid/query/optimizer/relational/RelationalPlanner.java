@@ -671,6 +671,22 @@ public class RelationalPlanner implements CommandPlanner {
             GroupSymbol group = sfc.getGroupSymbol();
             Command nestedCommand = sfc.getCommand();
             node = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
+            if (sfc.isTable()) {
+	            PlanNode rootJoin = parent;
+	            while (rootJoin.getParent() != null && rootJoin.getParent().getType() == NodeConstants.Types.JOIN) {
+	            	rootJoin = rootJoin.getParent();
+	            }
+	            List<Reference> correlatedReferences = new ArrayList<Reference>();
+	            CorrelatedReferenceCollectorVisitor.collectReferences(sfc, rootJoin.getGroups(), correlatedReferences);
+	            
+                if (!correlatedReferences.isEmpty()) {
+	                SymbolMap map = new SymbolMap();
+	                for (Reference reference : correlatedReferences) {
+	    				map.addMapping(reference.getExpression(), reference.getExpression());
+	    			}
+	                sfc.getCommand().setCorrelatedReferences(map);
+                }
+            }
             node.addGroup(group);
             addNestedCommand(node, group, nestedCommand, nestedCommand, true);
             hints.hasVirtualGroups = true;

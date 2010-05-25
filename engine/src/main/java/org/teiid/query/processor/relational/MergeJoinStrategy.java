@@ -103,7 +103,7 @@ public class MergeJoinStrategy extends JoinStrategy {
      * @see org.teiid.query.processor.relational.JoinStrategy#clone()
      */
     @Override
-    public Object clone() {
+    public MergeJoinStrategy clone() {
         return new MergeJoinStrategy(sortLeft, sortRight, grouping);
     }
 

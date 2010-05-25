@@ -41,6 +41,7 @@ import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
@@ -87,6 +88,11 @@ public final class RuleMergeVirtual implements
         // check to see if frame represents a proc relational query.
         if (virtualGroup.isProcedure()) {
             return root;
+        }
+        
+        Command command = (Command)frame.getProperty(NodeConstants.Info.NESTED_COMMAND);
+        if (command != null && command.getCorrelatedReferences() != null) {
+        	return root; //correlated nested table commands should not be merged
         }
 
         PlanNode parentProject = NodeEditor.findParent(frame, NodeConstants.Types.PROJECT);

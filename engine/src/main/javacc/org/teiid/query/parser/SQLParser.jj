@@ -1908,10 +1908,13 @@ SubqueryFromClause subqueryFromClause(ParseInfo info) :
 {
     String aliasID = null;
 	Command command = null;
-	SubqueryFromClause clause = null;
 	Token lparen = null;
+	boolean table = false;
 }
 {	
+	[
+		<TABLE> { table = true; }
+	]
 	lparen = <LPAREN> 
 	( command = queryExpression(info) |
       command = storedProcedure(info) )
@@ -1920,8 +1923,9 @@ SubqueryFromClause subqueryFromClause(ParseInfo info) :
 	aliasID = id()
 	
 	{
-		clause = new SubqueryFromClause(validateAlias(aliasID), command);
+		SubqueryFromClause clause = new SubqueryFromClause(validateAlias(aliasID), command);
         setFromClauseOptions(lparen, clause);
+        clause.setTable(table);
         return clause;
     }	
 }	

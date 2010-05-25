@@ -38,6 +38,7 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.UnresolvedSymbolDescription;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -54,8 +55,10 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.ExistsCriteria;
 import org.teiid.query.sql.lang.From;
+import org.teiid.query.sql.lang.FromClause;
 import org.teiid.query.sql.lang.Into;
 import org.teiid.query.sql.lang.JoinPredicate;
+import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.Select;
@@ -145,9 +148,11 @@ public class SimpleQueryResolver implements CommandResolver {
 
         private LinkedHashSet<GroupSymbol> currentGroups = new LinkedHashSet<GroupSymbol>();
         private List<GroupSymbol> discoveredGroups = new LinkedList<GroupSymbol>();
+        private List<GroupSymbol> implicitGroups = new LinkedList<GroupSymbol>();
         private TempMetadataAdapter metadata;
         private Query query;
         private AnalysisRecord analysis;
+        private boolean allowImplicit = true;
         
         public QueryResolverVisitor(Query query, TempMetadataAdapter metadata, AnalysisRecord record) {
             super(new ResolverVisitor(metadata, null, query.getExternalGroupContexts()));
@@ -163,9 +168,7 @@ public class SimpleQueryResolver implements CommandResolver {
             ResolverVisitor visitor = (ResolverVisitor)getVisitor();
             try {
 				visitor.throwException(false);
-			} catch (QueryResolverException e) {
-				throw new TeiidRuntimeException(e);
-			} catch (TeiidComponentException e) {
+			} catch (TeiidException e) {
 				throw new TeiidRuntimeException(e);
 			}
         }
@@ -185,24 +188,20 @@ public class SimpleQueryResolver implements CommandResolver {
         public void visit(GroupSymbol obj) {
             try {
                 ResolverUtil.resolveGroup(obj, metadata);
-            } catch (QueryResolverException err) {
-                throw new TeiidRuntimeException(err);
-            } catch (TeiidComponentException err) {
+            } catch (TeiidException err) {
                 throw new TeiidRuntimeException(err);
             }
         }
                         
-        private void resolveSubQuery(SubqueryContainer obj) {
+        private void resolveSubQuery(SubqueryContainer obj, Collection<GroupSymbol> externalGroups) {
             Command command = obj.getCommand();
             
             QueryResolver.setChildMetadata(command, query);
-            command.pushNewResolvingContext(this.currentGroups);
+            command.pushNewResolvingContext(externalGroups);
             
             try {
                 QueryResolver.resolveCommand(command, Collections.EMPTY_MAP, metadata.getMetadata(), analysis, false);
-            } catch (QueryResolverException err) {
-                throw new TeiidRuntimeException(err);
-            } catch (TeiidComponentException err) {
+            } catch (TeiidException err) {
                 throw new TeiidRuntimeException(err);
             }
         }
@@ -244,15 +243,13 @@ public class SimpleQueryResolver implements CommandResolver {
                 List<ElementSymbol> elements = resolveSelectableElements(group);
                 
                 obj.setElementSymbols(elements);
-            } catch (QueryResolverException err) {
-                throw new TeiidRuntimeException(err);
-            } catch (TeiidComponentException err) {
+            } catch (TeiidException err) {
                 throw new TeiidRuntimeException(err);
             } 
         }
         
         public void visit(ScalarSubquery obj) {
-            resolveSubQuery(obj);
+            resolveSubQuery(obj, this.currentGroups);
             
             Collection<SingleElementSymbol> projSymbols = obj.getCommand().getProjectedSymbols();
 
@@ -265,24 +262,29 @@ public class SimpleQueryResolver implements CommandResolver {
         }
         
         public void visit(ExistsCriteria obj) {
-            resolveSubQuery(obj);
+            resolveSubQuery(obj, this.currentGroups);
         }
         
         public void visit(SubqueryCompareCriteria obj) {
             visitNode(obj.getLeftExpression());
-            resolveSubQuery(obj);
+            resolveSubQuery(obj, this.currentGroups);
             postVisitVisitor(obj);
         }
         
         public void visit(SubquerySetCriteria obj) {
             visitNode(obj.getExpression());
-            resolveSubQuery(obj);
+            resolveSubQuery(obj, this.currentGroups);
             postVisitVisitor(obj);
         }
         
         public void visit(SubqueryFromClause obj) {
-            resolveSubQuery(obj);
-            this.discoveredGroups.add(obj.getGroupSymbol());
+        	Collection<GroupSymbol> externalGroups = this.currentGroups;
+        	if (obj.isTable() && allowImplicit) {
+        		externalGroups = new ArrayList<GroupSymbol>(externalGroups);
+        		externalGroups.addAll(this.implicitGroups);
+        	}
+            resolveSubQuery(obj, externalGroups);
+            discoveredGroup(obj.getGroupSymbol());
             try {
                 ResolverUtil.addTempGroup(metadata, obj.getGroupSymbol(), obj.getCommand().getProjectedSymbols(), false);
             } catch (QueryResolverException err) {
@@ -298,15 +300,20 @@ public class SimpleQueryResolver implements CommandResolver {
 	            if (!group.isProcedure() && metadata.isXMLGroup(group.getMetadataID())) {
 	                throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0003, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0003));
 	            }
-	            this.discoveredGroups.add(group);
+	            discoveredGroup(group);
 	            if (group.isProcedure()) {
 	                createProcRelational(obj);
 	            }
-            } catch(QueryResolverException e) {
-                throw new TeiidRuntimeException(e);
-            } catch(TeiidComponentException e) {
+            } catch(TeiidException e) {
                 throw new TeiidRuntimeException(e);                        
 			}
+        }
+        
+        private void discoveredGroup(GroupSymbol group) {
+        	discoveredGroups.add(group);
+        	if (allowImplicit) {
+        		implicitGroups.add(group);
+        	}
         }
 
 		private void createProcRelational(UnaryFromClause obj)
@@ -405,14 +412,19 @@ public class SimpleQueryResolver implements CommandResolver {
         }
 
         public void visit(JoinPredicate obj) {
-        	List<GroupSymbol> pendingDiscoveredGroups = new ArrayList<GroupSymbol>(discoveredGroups);
+            assert currentGroups.isEmpty();
+        	List<GroupSymbol> tempImplicitGroups = new ArrayList<GroupSymbol>(discoveredGroups);
         	discoveredGroups.clear();
             visitNode(obj.getLeftClause());
+            List<GroupSymbol> leftGroups = new ArrayList<GroupSymbol>(discoveredGroups);
+        	discoveredGroups.clear();
             visitNode(obj.getRightClause());
-            
+            discoveredGroups.addAll(leftGroups);
             addDiscoveredGroups();
-            discoveredGroups = pendingDiscoveredGroups;
             visitNodes(obj.getJoinCriteria());
+            discoveredGroups.addAll(currentGroups);
+            currentGroups.clear();
+            discoveredGroups.addAll(tempImplicitGroups);
         }
 
 		private void addDiscoveredGroups() {
@@ -429,8 +441,25 @@ public class SimpleQueryResolver implements CommandResolver {
                 
         public void visit(From obj) {
             assert currentGroups.isEmpty();
+            for (FromClause clause : (List<FromClause>)obj.getClauses()) {
+				checkImplicit(clause);
+			}
             super.visit(obj);
             addDiscoveredGroups();
         }
+
+		private void checkImplicit(FromClause clause) {
+			if (clause instanceof JoinPredicate) {
+				JoinPredicate jp = (JoinPredicate)clause;
+				if (jp.getJoinType() == JoinType.JOIN_FULL_OUTER || jp.getJoinType() == JoinType.JOIN_RIGHT_OUTER) {
+					allowImplicit = false;
+					return;
+				}
+				checkImplicit(jp.getLeftClause());
+				if (allowImplicit) {
+					checkImplicit(jp.getRightClause());
+				}
+			}
+		}
     }
 }

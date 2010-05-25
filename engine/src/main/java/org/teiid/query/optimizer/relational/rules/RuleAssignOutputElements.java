@@ -475,7 +475,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 
         // Gather elements from correlated subquery references;
         // currently only for SELECT or PROJECT nodes
-		for (SymbolMap refs : node.getCorrelatedReferences()) {
+		for (SymbolMap refs : node.getAllReferences()) {
         	for (Expression expr : refs.asMap().values()) {
                 AggregateSymbolCollectorVisitor.getAggregates(expr, requiredSymbols, requiredSymbols);
             }

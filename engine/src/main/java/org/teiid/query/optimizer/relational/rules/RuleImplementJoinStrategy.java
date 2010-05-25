@@ -42,9 +42,12 @@ import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
+import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.util.CommandContext;
 
 
@@ -64,6 +67,25 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
                             CommandContext context) throws QueryPlannerException,
                                                    QueryMetadataException,
                                                    TeiidComponentException {
+    	
+    	for (PlanNode sourceNode : NodeEditor.findAllNodes(plan, NodeConstants.Types.SOURCE, NodeConstants.Types.ACCESS)) {
+    		Command command = (Command)sourceNode.getProperty(NodeConstants.Info.NESTED_COMMAND);
+	        if (command != null && command.getCorrelatedReferences() != null) {
+	        	Set<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(command.getCorrelatedReferences().getValues());
+	        	PlanNode joinNode = NodeEditor.findParent(sourceNode, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE);
+	        	while (joinNode != null) {
+	        		joinNode.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.NESTED_TABLE);
+	        		if (joinNode.getProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE) != null) {
+	        			//sanity check
+	        			throw new AssertionError("Cannot use a depenedent join when the join involves a correlated nested table.");  //$NON-NLS-1$
+	        		}
+	        		if (joinNode.getGroups().containsAll(groups)) {
+	        			break;
+	        		}
+	        		joinNode = NodeEditor.findParent(joinNode, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE);
+	        	}
+	        }
+    	}
 
         for (PlanNode joinNode : NodeEditor.findAllNodes(plan, NodeConstants.Types.JOIN, NodeConstants.Types.ACCESS)) {
             JoinStrategyType stype = (JoinStrategyType) joinNode.getProperty(NodeConstants.Info.JOIN_STRATEGY);

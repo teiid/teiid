@@ -45,6 +45,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
+import org.teiid.query.optimizer.relational.rules.FrameUtil;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.DependentAccessNode;
@@ -56,6 +57,7 @@ import org.teiid.query.processor.relational.JoinNode;
 import org.teiid.query.processor.relational.LimitNode;
 import org.teiid.query.processor.relational.MergeJoinStrategy;
 import org.teiid.query.processor.relational.NestedLoopJoinStrategy;
+import org.teiid.query.processor.relational.NestedTableJoinStrategy;
 import org.teiid.query.processor.relational.NullNode;
 import org.teiid.query.processor.relational.PartitionedSortJoin;
 import org.teiid.query.processor.relational.PlanExecutionNode;
@@ -212,7 +214,7 @@ public class PlanToProcessConverter {
                 List joinCrits = (List) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
                 String depValueSource = (String) node.getProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE);
                 SortOption leftSort = (SortOption)node.getProperty(NodeConstants.Info.SORT_LEFT);
-                if(stype.equals(JoinStrategyType.MERGE) || stype.equals(JoinStrategyType.PARTITIONED_SORT)) {
+                if(stype == JoinStrategyType.MERGE || stype == JoinStrategyType.PARTITIONED_SORT) {
                 	MergeJoinStrategy mjStrategy = null;
                 	if (stype.equals(JoinStrategyType.PARTITIONED_SORT)) { 
                 		mjStrategy = new PartitionedSortJoin(leftSort, (SortOption)node.getProperty(NodeConstants.Info.SORT_RIGHT));
@@ -224,10 +226,21 @@ public class PlanToProcessConverter {
                     List rightExpressions = (List) node.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS);
                     jnode.setJoinExpressions(leftExpressions, rightExpressions);
                     joinCrits = (List) node.getProperty(NodeConstants.Info.NON_EQUI_JOIN_CRITERIA);
+                } else if (stype == JoinStrategyType.NESTED_TABLE) {
+                	NestedTableJoinStrategy ntjStrategy = new NestedTableJoinStrategy();
+                	jnode.setJoinStrategy(ntjStrategy);
+                	Command command = (Command)FrameUtil.findJoinSourceNode(node.getFirstChild()).getProperty(NodeConstants.Info.NESTED_COMMAND);
+                	if (command != null) {
+                		ntjStrategy.setLeftMap(command.getCorrelatedReferences());
+                	}
+                	command = (Command)FrameUtil.findJoinSourceNode(node.getLastChild()).getProperty(NodeConstants.Info.NESTED_COMMAND);
+                	if (command != null) {
+                		ntjStrategy.setRightMap(command.getCorrelatedReferences());
+                	}
                 } else {
                     NestedLoopJoinStrategy nljStrategy = new NestedLoopJoinStrategy();
                     jnode.setJoinStrategy(nljStrategy);
-                } 
+                }
                 Criteria joinCrit = Criteria.combineCriteria(joinCrits);
                 jnode.setJoinCriteria(joinCrit);
                                

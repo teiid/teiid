@@ -2749,6 +2749,10 @@ public class TestResolver {
         helpResolve("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 CROSS JOIN pm1.g2 LEFT OUTER JOIN pm2.g1 on pm1.g1.e1 = pm2.g1.e1"); //$NON-NLS-1$ 
     }
     
+    @Test public void testInvalidColumnReferenceWithNestedJoin() {
+    	helpResolveException("SELECT a.* FROM (pm1.g2 a left outer join pm1.g2 b on a.e1= b.e1) LEFT OUTER JOIN (select a.e1) c on (a.e1 = c.e1)"); //$NON-NLS-1$ 
+    }
+    
     /**
      * should be the same as exec with too many params
      */
@@ -2930,6 +2934,11 @@ public class TestResolver {
 
     @Test public void testOrderByConstantFails() {
     	helpResolveException("select pm1.g1.e1 from pm1.g1 order by 2"); //$NON-NLS-1$
+    }
+    
+    @Test public void testCorrelatedNestedTableReference() {
+    	helpResolve("select pm1.g1.e1 from pm1.g1, table (exec pm1.sq2(pm1.g1.e2)) x"); //$NON-NLS-1$
+    	helpResolveException("select pm1.g1.e1 from pm1.g1, (exec pm1.sq2(pm1.g1.e2)) x"); //$NON-NLS-1$
     }
     
 }

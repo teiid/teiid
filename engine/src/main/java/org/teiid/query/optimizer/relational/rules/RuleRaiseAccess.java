@@ -42,6 +42,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
@@ -175,6 +176,11 @@ public final class RuleRaiseAccess implements OptimizerRule {
                 //if a source has access patterns that are unsatisfied, then the raise cannot occur
                 if (parentNode.hasCollectionProperty(NodeConstants.Info.ACCESS_PATTERNS)) {
                     return null;
+                }
+                
+                Command command = (Command)parentNode.getProperty(NodeConstants.Info.NESTED_COMMAND);
+                if (command != null && command.getCorrelatedReferences() != null) {
+                	return null;
                 }
                 
                 //raise only if there is no intervening project into

@@ -163,7 +163,8 @@ public class RulePlanSorts implements OptimizerRule {
 			parentBlocking = true;
 			break;
 		case NodeConstants.Types.JOIN:
-			if (node.getProperty(NodeConstants.Info.JOIN_STRATEGY) == JoinStrategyType.NESTED_LOOP) {
+			if (node.getProperty(NodeConstants.Info.JOIN_STRATEGY) == JoinStrategyType.NESTED_LOOP 
+					|| node.getProperty(NodeConstants.Info.JOIN_STRATEGY) == JoinStrategyType.NESTED_TABLE) {
 				break;
 			}
 			/*

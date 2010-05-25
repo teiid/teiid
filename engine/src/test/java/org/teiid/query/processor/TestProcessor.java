@@ -298,10 +298,11 @@ public class TestProcessor {
 		Properties props = new Properties();
 		props.setProperty("soap_host", "my.host.com"); //$NON-NLS-1$ //$NON-NLS-2$
 		props.setProperty("soap_port", "12345"); //$NON-NLS-1$ //$NON-NLS-2$
-		CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", 1, props, DEBUG, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", 1, props, DEBUG, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         context.setProcessorBatchSize(2000);
         context.setConnectorBatchSize(2000);
         context.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
+        context.setProcessDebug(DEBUG);
 		return context;
 	}   
     	
@@ -7485,6 +7486,106 @@ public class TestProcessor {
         
         helpProcess(plan, dataManager, expected);
     }
+    
+    @Test public void testCorrelatedNestedTable() {
+        String sql = "select y.e2, x.e1, x.e2 from (select * from pm1.g1) y, table (select * from pm1.g3 where e2 = y.e2) x"; //$NON-NLS-1$
         
+        List[] expected = new List[] {
+        		Arrays.asList(0, "a", 0),
+        		Arrays.asList(0, "a", 0),
+        		Arrays.asList(1, null, 1),
+        		Arrays.asList(1, "c", 1),
+        		Arrays.asList(3, "a", 3),
+        		Arrays.asList(1, null, 1),
+        		Arrays.asList(1, "c", 1),
+        		Arrays.asList(2, "b", 2),
+        		Arrays.asList(0, "a", 0),
+        		Arrays.asList(0, "a", 0),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testCorrelatedNestedTable1() {
+        String sql = "select y.e2, z.e2, x.e1, x.e2 from (select * from pm1.g1 order by e2 desc limit 2) y inner join pm1.g2 z on y.e1 = z.e1, table (select * from pm1.g3 where e2 = y.e2 + z.e2) x"; //$NON-NLS-1$
+        
+        List[] expected = new List[] {
+        		Arrays.asList(3, 0, "a", 3),
+        		Arrays.asList(3, 0, "a", 3),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testCorrelatedNestedTable2() {
+        String sql = "select y.e1, x.e1 from (select distinct e1 from pm1.g1 where e1 is not null) y, table (call pm1.sq3b(\"in\" = e1, in3 = 'something')) x"; //$NON-NLS-1$
+        
+        List[] expected = new List[] {
+        		Arrays.asList("a", "a"),
+        		Arrays.asList("a", "a"),
+        		Arrays.asList("a", "a"),
+        		Arrays.asList("b", "b"),
+        		Arrays.asList("c", "c"),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testCorrelatedNestedTable3() {
+        String sql = "select y.e1, x.e1 from (select * from pm1.g1) y left outer join table (call pm1.sq3b(\"in\" = e2, in3 = 'something')) x on (1=1)"; //$NON-NLS-1$
+        
+        List[] expected = new List[] {
+        		Arrays.asList("a", null),
+        		Arrays.asList(null, null),
+        		Arrays.asList("a", null),
+        		Arrays.asList("c", null),
+        		Arrays.asList("b", null),
+        		Arrays.asList("a", null),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testCorrelatedNestedTable4() {
+    	String sql = "select y.e1, y.e2, z.e2 from (select * from pm1.g1) y inner join table (select * from pm1.g3 where e2 = y.e2) x left outer join (select null as e1, e2 from pm1.g2) z on (x.e1 = z.e1) on (x.e1 = y.e1)"; //$NON-NLS-1$
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("a", 0, null),
+        		Arrays.asList("a", 0, null),
+        		Arrays.asList("a", 3, null),
+        		Arrays.asList("c", 1, null),
+        		Arrays.asList("b", 2, null),
+        		Arrays.asList("a", 0, null),
+        		Arrays.asList("a", 0, null),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
     private static final boolean DEBUG = false;
 }

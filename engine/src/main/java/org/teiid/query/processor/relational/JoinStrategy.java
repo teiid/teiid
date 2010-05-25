@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.api.exception.query.CriteriaEvaluationException;
+import org.teiid.common.buffer.BufferManager.BufferReserveMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 
@@ -35,8 +36,11 @@ public abstract class JoinStrategy {
     protected JoinNode joinNode;
     protected SourceState leftSource;
     protected SourceState rightSource;
-    
+    private int reserved;
+
     public void close() {
+    	joinNode.getBufferManager().releaseBuffers(reserved);
+		reserved = 0;
         try {
             if (leftSource != null) {
                 leftSource.close();
@@ -82,6 +86,23 @@ public abstract class JoinStrategy {
     
     protected abstract void process() throws TeiidComponentException, CriteriaEvaluationException, TeiidProcessingException;
     
-    public abstract Object clone();
+    public abstract JoinStrategy clone();
+    
+    protected void openLeft() throws TeiidComponentException, TeiidProcessingException {
+        if (!this.leftSource.open) {
+            leftSource.getSource().open();
+            this.leftSource.open = true;
+        }
+    }
+    
+    protected void openRight() throws TeiidComponentException, TeiidProcessingException {
+    	if (!this.rightSource.open) {
+			if (reserved == 0) {
+				reserved = joinNode.getBufferManager().reserveBuffers(joinNode.getBufferManager().getSchemaSize(joinNode.getOutputElements()), BufferReserveMode.FORCE);
+			}
+			rightSource.getSource().open();
+			this.rightSource.open = true;
+		}
+    }
         
 }

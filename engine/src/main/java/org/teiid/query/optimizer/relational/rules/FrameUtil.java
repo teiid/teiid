@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -164,24 +165,24 @@ public class FrameUtil {
     static void convertNode(PlanNode node, GroupSymbol oldGroup, Set<GroupSymbol> newGroups, Map symbolMap, QueryMetadataInterface metadata)
         throws QueryPlannerException {
 
+        // Convert expressions from correlated subquery references;
+        List<SymbolMap> refMaps = node.getAllReferences();
+        LinkedList<Expression> correlatedExpression = new LinkedList<Expression>(); 
+        for (SymbolMap refs : refMaps) {
+        	for (Map.Entry<ElementSymbol, Expression> ref : refs.asUpdatableMap().entrySet()) {
+	            Expression expr = ref.getValue();
+	            Expression convertedExpr = convertExpression(expr, symbolMap);
+	            ref.setValue(convertedExpr);
+	            correlatedExpression.add(convertedExpr);
+	        }
+        }
+
         // Update groups for current node   
         Set<GroupSymbol> groups = node.getGroups();  
         
         boolean hasOld = groups.remove(oldGroup);
 
         int type = node.getType();
-
-        // Convert expressions from correlated subquery references;
-        List<SymbolMap> refMaps = node.getCorrelatedReferences();
-        boolean hasRefs = false;
-        for (SymbolMap refs : refMaps) {
-        	for (Map.Entry<ElementSymbol, Expression> ref : refs.asUpdatableMap().entrySet()) {
-        		hasRefs = true;
-	            Expression expr = ref.getValue();
-	            Expression convertedExpr = convertExpression(expr, symbolMap);
-	            ref.setValue(convertedExpr);
-	        }
-        }
         
         boolean singleMapping = newGroups != null && newGroups.size() == 1;
         
@@ -198,9 +199,7 @@ public class FrameUtil {
         	groups.clear();
         }
         
-        if (hasRefs) {
-        	groups.addAll(GroupsUsedByElementsVisitor.getGroups(node.getCorrelatedReferenceElements()));
-        }
+    	groups.addAll(GroupsUsedByElementsVisitor.getGroups(correlatedExpression));
         
         if(type == NodeConstants.Types.SELECT) { 
             Criteria crit = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
@@ -365,7 +364,7 @@ public class FrameUtil {
      * @param groups
      * @return
      */
-    static PlanNode findJoinSourceNode(PlanNode root) {
+    public static PlanNode findJoinSourceNode(PlanNode root) {
         return findOriginatingNode(root, root.getGroups(), true);
     }
     

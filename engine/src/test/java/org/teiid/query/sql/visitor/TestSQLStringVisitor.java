@@ -204,7 +204,7 @@ public class TestSQLStringVisitor extends TestCase {
             new ElementSymbol("m.g.c1"), //$NON-NLS-1$
             CompareCriteria.EQ,
             new Constant("abc") ); //$NON-NLS-1$
-        List crits = new ArrayList();
+        List<Criteria> crits = new ArrayList<Criteria>();
         crits.add(cc);        
         CompoundCriteria comp = new CompoundCriteria(CompoundCriteria.AND, crits);
     
@@ -220,7 +220,7 @@ public class TestSQLStringVisitor extends TestCase {
             new ElementSymbol("m.g.c2"), //$NON-NLS-1$
             CompareCriteria.EQ,
             new Constant("abc") ); //$NON-NLS-1$
-        List crits = new ArrayList();
+        List<Criteria> crits = new ArrayList<Criteria>();
         crits.add(cc1);        
         crits.add(cc2);        
         CompoundCriteria comp = new CompoundCriteria(CompoundCriteria.AND, crits);
@@ -241,7 +241,7 @@ public class TestSQLStringVisitor extends TestCase {
             new ElementSymbol("m.g.c3"), //$NON-NLS-1$
             CompareCriteria.EQ,
             new Constant("abc") ); //$NON-NLS-1$
-        List crits = new ArrayList();
+        List<Criteria> crits = new ArrayList<Criteria>();
         crits.add(cc1);        
         crits.add(cc2);        
         crits.add(cc3);        
@@ -255,7 +255,7 @@ public class TestSQLStringVisitor extends TestCase {
             new ElementSymbol("m.g.c1"), //$NON-NLS-1$
             CompareCriteria.EQ,
             new Constant("abc") ); //$NON-NLS-1$
-        List crits = new ArrayList();
+        List<Criteria> crits = new ArrayList<Criteria>();
         crits.add(cc1);        
         crits.add(null);        
         CompoundCriteria comp = new CompoundCriteria(CompoundCriteria.OR, crits);
@@ -268,7 +268,7 @@ public class TestSQLStringVisitor extends TestCase {
             new ElementSymbol("m.g.c1"), //$NON-NLS-1$
             CompareCriteria.EQ,
             new Constant("abc") ); //$NON-NLS-1$
-        List crits = new ArrayList();
+        List<Criteria> crits = new ArrayList<Criteria>();
         crits.add(null);        
         crits.add(cc1);        
         CompoundCriteria comp = new CompoundCriteria(CompoundCriteria.OR, crits);
@@ -281,7 +281,7 @@ public class TestSQLStringVisitor extends TestCase {
             new ElementSymbol("m.g.c1"), //$NON-NLS-1$
             CompareCriteria.EQ,
             new Constant("abc") ); //$NON-NLS-1$
-        List crits = new ArrayList();
+        List<Criteria> crits = new ArrayList<Criteria>();
         crits.add(cc1);        
         crits.add(null);        
         CompoundCriteria comp = new CompoundCriteria(CompoundCriteria.OR, crits);
@@ -404,7 +404,7 @@ public class TestSQLStringVisitor extends TestCase {
     }
 
 	public void testJoinPredicate2() {
-	    ArrayList crits = new ArrayList();
+	    ArrayList<Criteria> crits = new ArrayList<Criteria>();
 	    crits.add(new CompareCriteria(new ElementSymbol("m.g2.e1"), CompareCriteria.EQ, new ElementSymbol("m.g3.e1"))); //$NON-NLS-1$ //$NON-NLS-2$
 		JoinPredicate jp = new JoinPredicate(
     		new UnaryFromClause(new GroupSymbol("m.g2")), //$NON-NLS-1$
@@ -416,7 +416,7 @@ public class TestSQLStringVisitor extends TestCase {
 	}
 	
 	public void testJoinPredicate3() {
-	    ArrayList crits = new ArrayList();
+	    ArrayList<Criteria> crits = new ArrayList<Criteria>();
 	    crits.add(new CompareCriteria(new ElementSymbol("m.g2.e1"), CompareCriteria.EQ, new ElementSymbol("m.g3.e1"))); //$NON-NLS-1$ //$NON-NLS-2$
 	    crits.add(new CompareCriteria(new ElementSymbol("m.g2.e2"), CompareCriteria.EQ, new ElementSymbol("m.g3.e2"))); //$NON-NLS-1$ //$NON-NLS-2$
 		JoinPredicate jp = new JoinPredicate(
@@ -429,7 +429,7 @@ public class TestSQLStringVisitor extends TestCase {
 	}
 
 	public void testJoinPredicate4() {
-	    ArrayList crits = new ArrayList();
+	    ArrayList<Criteria> crits = new ArrayList<Criteria>();
 	    crits.add(new CompareCriteria(new ElementSymbol("m.g2.e1"), CompareCriteria.EQ, new ElementSymbol("m.g3.e1"))); //$NON-NLS-1$ //$NON-NLS-2$
 		JoinPredicate jp = new JoinPredicate(
     		new UnaryFromClause(new GroupSymbol("m.g2")), //$NON-NLS-1$
@@ -446,7 +446,7 @@ public class TestSQLStringVisitor extends TestCase {
 	}
 
     public void testJoinPredicate5() {
-        ArrayList crits = new ArrayList();
+        ArrayList<Criteria> crits = new ArrayList<Criteria>();
         crits.add(new NotCriteria(new CompareCriteria(new ElementSymbol("m.g2.e1"), CompareCriteria.EQ, new ElementSymbol("m.g3.e1")))); //$NON-NLS-1$ //$NON-NLS-2$
         JoinPredicate jp = new JoinPredicate(
             new UnaryFromClause(new GroupSymbol("m.g2")), //$NON-NLS-1$
@@ -454,7 +454,7 @@ public class TestSQLStringVisitor extends TestCase {
             JoinType.JOIN_INNER,
             crits );
                         
-        helpTest(jp, "m.g2 INNER JOIN m.g3 ON (NOT (m.g2.e1 = m.g3.e1))"); //$NON-NLS-1$
+        helpTest(jp, "m.g2 INNER JOIN m.g3 ON NOT (m.g2.e1 = m.g3.e1)"); //$NON-NLS-1$
     }
 
 	public void testJoinType1() {

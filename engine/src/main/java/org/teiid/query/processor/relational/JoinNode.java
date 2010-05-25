@@ -34,7 +34,6 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
-import org.teiid.common.buffer.BufferManager.BufferReserveMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.processor.ProcessorDataManager;
@@ -56,15 +55,12 @@ public class JoinNode extends SubqueryAwareRelationalNode {
 	public enum JoinStrategyType {    
 	    MERGE,
 	    PARTITIONED_SORT,
-	    NESTED_LOOP
+	    NESTED_LOOP,
+	    NESTED_TABLE
 	}
         
     private enum State { LOAD_LEFT, LOAD_RIGHT, EXECUTE }    
     private State state = State.LOAD_LEFT;
-    
-    private boolean leftOpened;
-    private boolean rightOpened;
-    private int reserved;
     
     private JoinStrategy joinStrategy;
     private JoinType joinType;
@@ -120,16 +116,6 @@ public class JoinNode extends SubqueryAwareRelationalNode {
         this.joinCriteria = joinCriteria;
     }
     
-    /** 
-     * @see org.teiid.query.processor.relational.RelationalNode#reset()
-     */
-    @Override
-    public void reset() {
-        super.reset();
-        this.leftOpened = false;
-        this.rightOpened = false;
-    }
-    
     @Override
     public void initialize(CommandContext context, BufferManager bufferManager,
     		ProcessorDataManager dataMgr) {
@@ -146,33 +132,18 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     
     public void open()
         throws TeiidComponentException, TeiidProcessingException {
+        // Set Up Join Strategy
+        this.joinStrategy.initialize(this);
         
-        // Open left child always
-        if (!this.leftOpened) {
-            getChildren()[0].open();
-            this.leftOpened = true;
-        }
+        joinStrategy.openLeft();
         
         if(!isDependent()) {
-        	openRight();
+        	joinStrategy.openRight();
         }
             
         this.state = State.LOAD_LEFT;
-        // Set Up Join Strategy
-        this.joinStrategy.initialize(this);
     }
 
-	private void openRight() throws TeiidComponentException,
-			TeiidProcessingException {
-		if (!this.rightOpened) {
-			if (reserved == 0) {
-				reserved = getBufferManager().reserveBuffers(getBufferManager().getSchemaSize(getOutputElements()), BufferReserveMode.FORCE);
-			}
-			getChildren()[1].open();
-			this.rightOpened = true;
-		}
-	}
-            
     /** 
      * @see org.teiid.query.processor.relational.RelationalNode#clone()
      * @since 4.2
@@ -182,7 +153,7 @@ public class JoinNode extends SubqueryAwareRelationalNode {
         super.copy(this, clonedNode);
         
         clonedNode.joinType = this.joinType;
-        clonedNode.joinStrategy = (JoinStrategy) this.joinStrategy.clone();
+        clonedNode.joinStrategy = this.joinStrategy.clone();
         
         clonedNode.joinCriteria = this.joinCriteria;
         
@@ -216,7 +187,7 @@ public class JoinNode extends SubqueryAwareRelationalNode {
             state = State.LOAD_RIGHT;
         }
         if (state == State.LOAD_RIGHT) {
-        	this.openRight();
+        	this.joinStrategy.openRight();
             this.joinStrategy.loadRight();
         	this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, null);
             state = State.EXECUTE;
@@ -301,8 +272,6 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     }
     
     public void closeDirect() {
-		getBufferManager().releaseBuffers(reserved);
-		reserved = 0;
         super.closeDirect();
         joinStrategy.close();
     	this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, null);
