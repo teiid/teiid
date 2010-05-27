@@ -390,13 +390,15 @@ public class Admin extends TeiidAdmin {
 	public Collection<PropertyDefinition> getTemplatePropertyDefinitions(String templateName) throws AdminException {
 		
 		DeploymentTemplateInfo info = null;
-		try {
-			info = getView().getTemplate(templateName);
-		} catch (NoSuchDeploymentException e) {
-			// ignore..
-		}
 		
 		try {
+			
+			try {
+				info = getView().getTemplate(templateName);
+			} catch (Exception e) {
+				// ignore..
+			}
+			
 			if (info == null && !templateName.startsWith(TranslatorMetaData.TRANSLATOR_PREFIX)) {
 				info = getView().getTemplate(TranslatorMetaData.TRANSLATOR_PREFIX+templateName);
 			}

@@ -50,16 +50,16 @@ public class PropertyDefinitionMetadata extends AdminObjectImpl implements Prope
     public String toString() {
         StringBuffer result = new StringBuffer();
         result.append("Display Name:").append(getDisplayName()); //$NON-NLS-1$
-        result.append("Description:").append(getDescription()); //$NON-NLS-1$
-        result.append("Property Type Classname:").append(getPropertyTypeClassName()); //$NON-NLS-1$
-        result.append("Default Value:").append(getDefaultValue()); //$NON-NLS-1$
-        result.append("Constrained To Allow Values:").append(isConstrainedToAllowedValues()); //$NON-NLS-1$
-        result.append("Allowed Values:").append(getAllowedValues()); //$NON-NLS-1$
-        result.append("Required:").append(isRequired()); //$NON-NLS-1$
-        result.append("Expert:").append(isAdvanced()); //$NON-NLS-1$
-        result.append("Masked:").append(isMasked()); //$NON-NLS-1$
-        result.append("Modifiable:").append(isModifiable()); //$NON-NLS-1$
-        result.append("RequiresRestart:").append(getRequiresRestart()); //$NON-NLS-1$
+        result.append(" Description:").append(getDescription()); //$NON-NLS-1$
+        result.append(" Property Type Classname:").append(getPropertyTypeClassName()); //$NON-NLS-1$
+        result.append(" Default Value:").append(getDefaultValue()); //$NON-NLS-1$
+        result.append(" Constrained To Allow Values:").append(isConstrainedToAllowedValues()); //$NON-NLS-1$
+        result.append(" Allowed Values:").append(getAllowedValues()); //$NON-NLS-1$
+        result.append(" Required:").append(isRequired()); //$NON-NLS-1$
+        result.append(" Expert:").append(isAdvanced()); //$NON-NLS-1$
+        result.append(" Masked:").append(isMasked()); //$NON-NLS-1$
+        result.append(" Modifiable:").append(isModifiable()); //$NON-NLS-1$
+        result.append(" RequiresRestart:").append(getRequiresRestart()); //$NON-NLS-1$
         return result.toString();
     }
     
