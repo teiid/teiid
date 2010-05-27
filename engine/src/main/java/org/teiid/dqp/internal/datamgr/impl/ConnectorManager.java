@@ -89,6 +89,7 @@ public class ConnectorManager  {
 	private LinkedList<ConnectorWorkItem> queuedRequests = new LinkedList<ConnectorWorkItem>();
 	
 	private volatile boolean stopped;
+	private ExecutionFactory executionFactory;
 	
     public ConnectorManager(String translatorName, String connectionName) {
     	this.translatorName = translatorName;
@@ -98,6 +99,7 @@ public class ConnectorManager  {
     public String getStausMessage() {
     	StringBuilder sb = new StringBuilder();
     	ExecutionFactory ef = getExecutionFactory();
+		
     	if(ef != null) {
     		if (ef.isSourceRequired()) {
     			Object conn = getConnectionFactory();
@@ -129,12 +131,12 @@ public class ConnectorManager  {
         
     
     public MetadataStore getMetadata(String modelName, Map<String, Datatype> datatypes, Properties importProperties) throws TranslatorException {
-    	MetadataFactory factory = new MetadataFactory(modelName, datatypes, importProperties);
-    	ExecutionFactory executionFactory = getExecutionFactory();
-    	if (executionFactory instanceof MetadataProvider) {
-    		((MetadataProvider)executionFactory).getConnectorMetadata(factory, getConnectionFactory());
-    	}
-    	return factory.getMetadataStore();
+		MetadataFactory factory = new MetadataFactory(modelName, datatypes, importProperties);
+		ExecutionFactory executionFactory = getExecutionFactory();
+		if (executionFactory instanceof MetadataProvider) {
+			((MetadataProvider)executionFactory).getConnectorMetadata(factory, getConnectionFactory());
+		}
+		return factory.getMetadataStore();
 	}    
     
     public SourceCapabilities getCapabilities() throws TranslatorException {
@@ -142,12 +144,12 @@ public class ConnectorManager  {
     		return cachedCapabilities;
     	}
 
-    	checkStatus();
-    	ExecutionFactory translator = getExecutionFactory();
-        BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(translator, this.connectorId, translator.isXaCapable());
-    	resultCaps.setScope(Scope.SCOPE_GLOBAL);
-    	cachedCapabilities = resultCaps;
-        return resultCaps;
+		checkStatus();
+		ExecutionFactory translator = getExecutionFactory();
+		BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(translator, this.connectorId, translator.isXaCapable());
+		resultCaps.setScope(Scope.SCOPE_GLOBAL);
+		cachedCapabilities = resultCaps;
+		return resultCaps;
     }
     
     public ConnectorWork executeRequest(AtomicRequestMessage message, AbstractWorkItem awi) throws TranslatorException {
@@ -250,14 +252,22 @@ public class ConnectorManager  {
      * Get the <code>Translator</code> object managed by this  manager.
      * @return the <code>ExecutionFactory</code>.
      */
-    protected ExecutionFactory getExecutionFactory() {
-    	try {
-			InitialContext ic = new InitialContext();
-			return (ExecutionFactory)ic.lookup(this.translatorName);
-		} catch (NamingException e) {
-		}  
-		return null;
+    @SuppressWarnings("unused")
+	protected ExecutionFactory getExecutionFactory() {
+    	if (this.executionFactory == null) {
+	    	try {
+				InitialContext ic = new InitialContext();
+				return (ExecutionFactory)ic.lookup(this.translatorName);
+			} catch (NamingException e) {
+			}
+    	}
+		return this.executionFactory;
     }
+    
+	public void setExecutionFactory(ExecutionFactory ef) {
+		this.executionFactory = ef;
+	}
+    
     
     /**
      * Get the ConnectionFactory object required by this manager

@@ -32,6 +32,7 @@ import org.teiid.language.ColumnReference;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.Translator;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
@@ -39,6 +40,7 @@ import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
 /**
  * Updated to assume the use of the DataDirect, 2005 driver, or later.
  */
+@Translator(name="sqlserver")
 public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 	
 	//TEIID-31 remove mod modifier for SQL Server 2008

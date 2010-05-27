@@ -33,6 +33,7 @@ import org.teiid.language.Function;
 import org.teiid.language.Limit;
 import org.teiid.language.OrderBy;
 import org.teiid.language.SetQuery;
+import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
@@ -44,8 +45,7 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.ModFunctionModifier;
 
 
-/**
- */
+@Translator(name="sybase")
 public class SybaseExecutionFactory extends JDBCExecutionFactory {
     
     public void start() throws TranslatorException {

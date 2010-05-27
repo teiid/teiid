@@ -21,36 +21,38 @@
  */
 package org.teiid.deployers;
 
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
+import static org.junit.Assert.*;
 
+import org.junit.Test;
+import org.teiid.adminapi.impl.TranslatorMetaData;
+import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorProperty;
 
-public class TranslatorPropertyUtil {
-	
-	public static Map<Method, TranslatorProperty> getTranslatorProperties(Class<?> attachmentClass) {
-		Map<Method, TranslatorProperty> props = new HashMap<Method,  TranslatorProperty>();
-		buildTranslatorProperties(attachmentClass, props);
-		return props;
+@SuppressWarnings("nls")
+public class TestTranslatorUtil {
+
+	@Test
+	public void testBuildExecutionFactory() throws Exception {
+		TranslatorMetaData tm = new TranslatorMetaData();
+		
+		tm.addProperty("MyProperty", "correctly-assigned");
+		tm.setExecutionFactoryClass(MyTranslator.class);
+		
+		MyTranslator my = (MyTranslator)TranslatorUtil.buildExecutionFactory(tm);
+		
+		assertEquals("correctly-assigned", my.getMyProperty());
 	}
 	
-	private static void buildTranslatorProperties(Class<?> attachmentClass, Map<Method, TranslatorProperty> props){
-		Method[] methods = attachmentClass.getMethods();
-		for (Method m:methods) {
-			TranslatorProperty tp = m.getAnnotation(TranslatorProperty.class);
-			if (tp != null) {
-				props.put(m, tp);
-			}
+	public static class MyTranslator extends ExecutionFactory {
+		String mine;
+		
+		@TranslatorProperty(display="my-property")
+		public String getMyProperty() {
+			return mine;
 		}
-		// Now look at the base interfaces
-		Class[] baseInterfaces = attachmentClass.getInterfaces();
-		for (Class clazz:baseInterfaces) {
-			buildTranslatorProperties(clazz, props);
+		
+		public void setMyProperty(String value) {
+			this.mine = value;
 		}
-		Class superClass = attachmentClass.getSuperclass();
-		if (superClass != null) {
-			buildTranslatorProperties(superClass, props);
-		}
-	}	
+	}
 }

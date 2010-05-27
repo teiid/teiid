@@ -66,10 +66,4 @@ public @interface TranslatorProperty {
 	 * @return
 	 */
 	boolean masked() default false;
-	
-	/**
-	 * True if this is a full managed property, rather than just a name value pair
-	 * @return
-	 */
-	boolean managed() default false;
 }

@@ -22,6 +22,7 @@
 package org.teiid.adminapi.jboss;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,6 +39,7 @@ import org.jboss.metatype.api.values.MapCompositeValueSupport;
 import org.jboss.metatype.api.values.MetaValue;
 import org.jboss.metatype.api.values.MetaValueFactory;
 import org.jboss.metatype.api.values.SimpleValue;
+import org.teiid.adminapi.impl.PropertyMetadata;
 import org.teiid.adminapi.impl.TranslatorMetaData;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.PropertiesUtils;
@@ -72,8 +74,18 @@ public class AdminObjectBuilder {
 					}
 					else if (type.isComposite()) {
 						if (value instanceof MapCompositeValueSupport) {
-							Object myValue = MetaValueFactory.getInstance().unwrap(value);
-							PropertiesUtils.setBeanProperty(t, mp.getMappedName(), myValue);
+							HashMap<String, String> myValue = (HashMap<String, String>)MetaValueFactory.getInstance().unwrap(value);
+							
+							if (mp.getMappedName().equals("JAXBProperties")) { //$NON-NLS-1$
+								List<PropertyMetadata> props = new ArrayList<PropertyMetadata>();
+								for (String key:myValue.keySet()) {
+									props.add(new PropertyMetadata(key, myValue.get(key)));
+								}
+								PropertiesUtils.setBeanProperty(t, mp.getMappedName(), props);
+							}
+							else {
+								PropertiesUtils.setBeanProperty(t, mp.getMappedName(), myValue);
+							}
 						}
 					}
 					else if (type.isCollection()) {
@@ -89,6 +101,9 @@ public class AdminObjectBuilder {
 						else if (elementType == SimpleMetaType.STRING) {
 							list.addAll((List<String>) MetaValueFactory.getInstance().unwrap(value));
 						}
+						else if (elementType.isComposite()) {
+							list.addAll((List)MetaValueFactory.getInstance().unwrap(value));
+						}
 						
 						PropertiesUtils.setBeanProperty(t, mp.getMappedName(), list);
 					}
@@ -101,6 +116,8 @@ public class AdminObjectBuilder {
 			throw new TeiidRuntimeException(e, IntegrationPlugin.Util.getString("class_not_found", clazz.getName())); //$NON-NLS-1$
 		}
 	}
+	
+
 	
 	public <T> T buildAdminObject(ManagedCommon mc, Class<T> clazz) {
 		try {

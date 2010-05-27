@@ -289,20 +289,9 @@ public class TestConnectorBindings extends BaseConnection {
 			System.out.println(key+"="+translator.getPropertyValue(key));
 		}
 		assertEquals("org.teiid.translator.jdbc.oracle.OracleSQLTranslator", translator.getPropertyValue("ExtensionTranslationClassName")); //$NON-NLS-1$
-		assertEquals(true, translator.isXaCapable());
+		assertEquals(false, translator.getPropertyValue("XaCapable"));
 	}
 	
-	@Test
-	public void testTranslatorTypes() throws Exception {
-		Set<String> defs = admin.getTranslatorTemplateNames();
-		assertTrue(defs.contains("translator-salesforce"+VERSION)); //$NON-NLS-1$
-		assertTrue(defs.contains("translator-jdbc"+VERSION)); //$NON-NLS-1$
-		assertTrue(defs.contains("translator-text"+VERSION)); //$NON-NLS-1$
-		assertTrue(defs.contains("translator-loopback"+VERSION)); //$NON-NLS-1$
-		assertTrue(defs.contains("translator-ldap"+VERSION)); //$NON-NLS-1$
-		System.out.println(defs);
-	}
-
 	@Test
 	public void testExportVDB() throws Exception{
 		File f = new File(UnitTestUtil.getTestScratchPath()+"/TransactionsRevisited.vdb"); //$NON-NLS-1$
@@ -371,38 +360,6 @@ public class TestConnectorBindings extends BaseConnection {
 		// remove non-existent role name
 		admin.removeRoleFromDataPolicy("TransactionsRevisited", 1, "policy1", "FOO");
 	}	
-	
-	@Test
-	public void testTranslator() throws Exception {
-		Properties props = new Properties();
-		
-		// test blank add
-		try {
-			admin.createTranslator("foo", "translator-jdbc"+VERSION, props);
-			fail("must have failed because no exeuction factory set");
-		}catch(AdminException e) {
-			
-		}
-		
-		// test minimal correct add
-		props.setProperty("execution-factory-class", "org.teiid.translator.jdbc.JDBCExecutionFactory");
-		admin.createTranslator("foo", "translator-jdbc"+VERSION, props);
-		
-		// test set property
-		admin.setTranslatorProperty("foo", "TrimStrings", "true");
-		
-		Translator t = admin.getTranslator("foo");
-		assertEquals("org.teiid.translator.jdbc.JDBCExecutionFactory", t.getExecutionFactoryClass());
-		assertEquals("org.teiid.translator.jdbc.JDBCExecutionFactory", t.getExecutionFactoryClass());
-		
-		admin.setTranslatorProperty("foo", "any-thing", "every-thing");
-		
-		admin.deleteTranslator("foo");
-		
-		t = admin.getTranslator("foo");
-		assertNull(t);
-		
-	}
 	
 	@Test
 	public void testCreateDataSource() throws Exception {

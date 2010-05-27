@@ -47,10 +47,12 @@ import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.FileConnection;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.xml.streaming.BaseStreamingExecution;
 
+@Translator(name="xml")
 public class XMLExecutionFactory extends ExecutionFactory {
 		
 	private String saxFilterProviderClass;
@@ -102,7 +104,7 @@ public class XMLExecutionFactory extends ExecutionFactory {
 		return logRequestResponseDocs && LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL);
 	}
 
-	public void setLogRequestResponseDocs(Boolean logRequestResponseDocs) {
+	public void setLogRequestResponseDocs(boolean logRequestResponseDocs) {
 		this.logRequestResponseDocs = logRequestResponseDocs;
 	}
 

@@ -35,6 +35,7 @@ import org.teiid.language.Limit;
 import org.teiid.language.Literal;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.language.Join.JoinType;
+import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
@@ -46,6 +47,7 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.LocateFunctionModifier;
 import org.teiid.translator.jdbc.ModFunctionModifier;
 
+@Translator(name="db2")
 public class DB2ExecutionFactory extends JDBCExecutionFactory {
 
 	private final class NullHandlingFormatModifier extends

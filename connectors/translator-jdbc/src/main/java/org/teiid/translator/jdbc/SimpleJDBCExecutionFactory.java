@@ -24,6 +24,8 @@ package org.teiid.translator.jdbc;
 
 import java.util.List;
 
+import org.teiid.translator.Translator;
+
 
 /**
  * This is a "simple" capabilities class that allows criteria but no 
@@ -31,6 +33,7 @@ import java.util.List;
  * This capabilities class may come in handy for testing and for 
  * sources that support JDBC but don't support extended JDBC capabilities.  
  */
+@Translator(name="jdbc-simple")
 public class SimpleJDBCExecutionFactory extends JDBCExecutionFactory {
 
 	public SimpleJDBCExecutionFactory() {

@@ -27,14 +27,14 @@ package org.teiid.translator.jdbc.informix;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 
 
-/**
- */
+@Translator(name="informix")
 public class InformixExecutionFactory extends JDBCExecutionFactory {
 
 	@Override

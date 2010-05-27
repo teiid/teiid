@@ -29,7 +29,7 @@ import java.util.Map;
 import org.jboss.managed.api.DeploymentTemplateInfo;
 import org.jboss.managed.api.ManagedProperty;
 import org.teiid.deployers.ManagedPropertyUtil;
-import org.teiid.deployers.TranslatorPropertyUtil;
+import org.teiid.deployers.TranslatorUtil;
 import org.teiid.translator.TranslatorProperty;
 
 public class TranslatorTemplateInfoFactory {
@@ -48,16 +48,16 @@ public class TranslatorTemplateInfoFactory {
 	public DeploymentTemplateInfo createTemplateInfo(Class<? extends DeploymentTemplateInfo> infoClass, Class<?> attachmentClass, String name, String description) throws Exception {
 
 		Map<String, ManagedProperty> infoProps = getProperties(attachmentClass);
-		Class<?>[] parameterTypes = { String.class, String.class, Map.class };
+		Class<?>[] parameterTypes = { String.class, String.class, Map.class, String.class};
 		Constructor<? extends DeploymentTemplateInfo> ctor = infoClass.getConstructor(parameterTypes);
-		DeploymentTemplateInfo info = ctor.newInstance(name, description,infoProps);
+		DeploymentTemplateInfo info = ctor.newInstance(name, description,infoProps, attachmentClass.getName());
 		return info;
 	}
 
 	public static Map<String, ManagedProperty> getProperties(
 			Class<?> attachmentClass)
 			throws InstantiationException, IllegalAccessException {
-		Map<Method, TranslatorProperty> props = TranslatorPropertyUtil.getTranslatorProperties(attachmentClass);
+		Map<Method, TranslatorProperty> props = TranslatorUtil.getTranslatorProperties(attachmentClass);
 		
 		Map<String, ManagedProperty> infoProps = new HashMap<String, ManagedProperty>();
 		

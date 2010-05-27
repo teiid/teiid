@@ -8,11 +8,13 @@ package org.teiid.translator.jdbc.mm;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.translator.Translator;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 
 /** 
  * Capabilities compatible with MM 5.5.x
  */
+@Translator(name="metamatrix")
 public class MetaMatrixExecutionFactory extends JDBCExecutionFactory {
     
     public List<String> getSupportedFunctions() {

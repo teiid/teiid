@@ -40,6 +40,10 @@ public class ManagedPropertyUtil {
 	private static final String TEIID_PROPERTY = "teiid-property"; //$NON-NLS-1$
 	
 	public static ManagedProperty convert(Object instance, Method method, TranslatorProperty prop) {
+		return (ManagedProperty)convert(instance, method, prop, false);
+	}
+
+	private static Object convert(Object instance, Method method, TranslatorProperty prop, boolean needDefaultValue) {
 		Class<?> type = method.getReturnType();
 		String[] allowedValues = null;
 		Method getter = null;
@@ -64,7 +68,7 @@ public class ManagedPropertyUtil {
 		} else {
 			getter = method;
 			try {
-				TranslatorDeployer.getSetter(instance.getClass(), method);
+				TranslatorUtil.getSetter(instance.getClass(), method);
 			} catch (Exception e) {
 				readOnly = true;
 			}
@@ -95,10 +99,17 @@ public class ManagedPropertyUtil {
 		if (!(defaultValue instanceof Serializable)) {
 			defaultValue = null; //TODO
 		}
-		return createProperty(TranslatorDeployer.getPropertyName(method), SimpleMetaType.resolve(type.getName()), 
+		if (needDefaultValue) {
+			return defaultValue;
+		}
+		return createProperty(TranslatorUtil.getPropertyName(method), SimpleMetaType.resolve(type.getName()), 
 				prop.display(), prop.description(), prop.required(), readOnly, (Serializable)defaultValue,
 				prop.advanced(), prop.masked(), allowedValues);
 	}
+	
+	public static Object getDefaultValue(Object instance, Method method, TranslatorProperty prop) {
+		return convert(instance, method, prop, true);
+	}	
 	
 	public static ManagedProperty convert(ExtendedPropertyMetadata prop) {
 		return createProperty(prop.name(), SimpleMetaType.resolve(prop.type()), 

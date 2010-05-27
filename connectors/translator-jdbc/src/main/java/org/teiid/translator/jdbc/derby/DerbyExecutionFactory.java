@@ -25,6 +25,7 @@ package org.teiid.translator.jdbc.derby;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorProperty;
@@ -37,6 +38,7 @@ import org.teiid.translator.jdbc.oracle.LeftOrRightFunctionModifier;
 /** 
  * @since 4.3
  */
+@Translator(name="derby")
 public class DerbyExecutionFactory extends DB2ExecutionFactory {
 	
 	public static final String TEN_1 = "10.1"; //$NON-NLS-1$

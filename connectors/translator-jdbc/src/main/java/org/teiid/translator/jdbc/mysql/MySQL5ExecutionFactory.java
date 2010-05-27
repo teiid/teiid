@@ -27,10 +27,12 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.language.Function;
+import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.jdbc.FunctionModifier;
 
+@Translator(name="mysql5")
 public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
 	
 	@Override

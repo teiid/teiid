@@ -65,8 +65,7 @@ public class TranslatorDiscoveryComponent implements ResourceDiscoveryComponent 
 		for (ManagedComponent translator : translators) {
 
 			String translatorKey = translator.getName();
-			String translatorName = ProfileServiceUtil.getSimpleValue(
-					translator, "name", String.class);
+			String translatorName = ProfileServiceUtil.getSimpleValue(translator, "name", String.class);
 			/**
 			 * 
 			 * A discovered resource must have a unique key, that must stay the
@@ -88,28 +87,12 @@ public class TranslatorDiscoveryComponent implements ResourceDiscoveryComponent 
 			c.put(list);
 
 			// First get translator specific properties
-			ManagedProperty translatorProps = translator
-					.getProperty("translator-property");
+			ManagedProperty translatorProps = translator.getProperty("property");
 			getTranslatorValues(translatorProps.getValue(), propMap, list);
 
 			// Now get common properties
 			c.put(new PropertySimple("name", translatorName));
-			c.put(new PropertySimple("execution-factory-class",
-					ProfileServiceUtil.getSimpleValue(translator,
-							"execution-factory-class", String.class)));
-			c.put(new PropertySimple("immutable", ProfileServiceUtil
-					.getSimpleValue(translator, "immutable", Boolean.class)));
-			c.put(new PropertySimple("xa-capable", ProfileServiceUtil
-					.getSimpleValue(translator, "xa-capable", Boolean.class)));
-			c.put(new PropertySimple("exception-on-max-rows",
-					ProfileServiceUtil.getSimpleValue(translator,
-							"exception-on-max-rows", Boolean.class)));
-			c.put(new PropertySimple("max-result-rows", ProfileServiceUtil
-					.getSimpleValue(translator, "max-result-rows",
-							Integer.class)));
-			c.put(new PropertySimple("template-name", ProfileServiceUtil
-							.getSimpleValue(translator, "template-name",
-									String.class)));
+			c.put(new PropertySimple("type",ProfileServiceUtil.getSimpleValue(translator,"type", String.class)));
 
 			detail.setPluginConfiguration(c);
 			// Add to return values
@@ -125,14 +108,13 @@ public class TranslatorDiscoveryComponent implements ResourceDiscoveryComponent 
 		MetaType metaType = pValue.getMetaType();
 		Map<String, T> unwrappedvalue = null;
 		if (metaType.isComposite()) {
-			unwrappedvalue = (Map<String, T>) MetaValueFactory
-					.getInstance().unwrap(pValue);
+			unwrappedvalue = (Map<String, T>) MetaValueFactory.getInstance().unwrap(pValue);
 
 			for (String key : unwrappedvalue.keySet()) {
-				map = new PropertyMap("translator-properties");
+				map = new PropertyMap("properties");
 				map.put(new PropertySimple("name", key));
 				map.put(new PropertySimple("value", unwrappedvalue.get(key)));
-				map.put(new PropertySimple("description", "Custom property"));
+				//map.put(new PropertySimple("description", "Custom property"));
 				list.add(map);
 			}
 		} else {

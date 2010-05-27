@@ -27,12 +27,14 @@ package org.teiid.translator.jdbc.teiid;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.translator.Translator;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 
 
 /** 
  * @since 4.3
  */
+@Translator(name="teiid")
 public class TeiidExecutionFactory extends JDBCExecutionFactory {
     
 	@Override

@@ -87,4 +87,10 @@ public interface VDB extends AdminObject {
      * @return
      */
     public List<DataPolicy> getDataPolicies();
+    
+    /**
+     * Get the list of translators defined in the VDB
+     * @return
+     */
+    public List<Translator> getOverrideTranslators();
 }

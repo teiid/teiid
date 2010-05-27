@@ -53,6 +53,7 @@ import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
+import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
@@ -66,7 +67,7 @@ import org.teiid.translator.jdbc.JDBCPlugin;
 import org.teiid.translator.jdbc.LocateFunctionModifier;
 
 
-
+@Translator(name="oracle")
 public class OracleExecutionFactory extends JDBCExecutionFactory {
 
 	/*

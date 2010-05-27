@@ -92,6 +92,15 @@
 			<artifactId>saxon-dom</artifactId>
 		</dependency>
 
+        <dependency>
+            <groupId>xom</groupId>
+            <artifactId>xom</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>nux</groupId>
+            <artifactId>nux</artifactId>
+        </dependency>
+
 	</dependencies>
 
 </project>

@@ -36,6 +36,7 @@ import org.teiid.language.LanguageObject;
 import org.teiid.language.Limit;
 import org.teiid.language.Literal;
 import org.teiid.language.SQLReservedWords;
+import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
@@ -57,6 +58,7 @@ import org.teiid.translator.jdbc.oracle.MonthOrDayNameFunctionModifier;
  * Translator class for PostgreSQL.  Updated to expect a 8.0+ jdbc client
  * @since 4.3
  */
+@Translator(name="postgresql")
 public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 	
 	public static final String EIGHT_0 = "8.0"; //$NON-NLS-1$

@@ -42,8 +42,10 @@ import org.jboss.managed.api.ManagedObject;
 import org.jboss.managed.api.factory.ManagedObjectFactory;
 import org.jboss.virtual.VirtualFile;
 import org.teiid.adminapi.Model;
+import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.core.CoreConstants;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -201,6 +203,14 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 					throw new DeploymentException("could not create managed object"); //$NON-NLS-1$
 				}
 				managedObjects.put(mo.getName(), mo);
+			}
+			
+			for (Translator t: vdb.getOverrideTranslators()) {
+				ManagedObject mo = this.mof.initManagedObject(t, VDBTranslatorMetaData.class, t.getName(), t.getName());
+				if (mo == null) {
+					throw new DeploymentException("could not create managed object"); //$NON-NLS-1$
+				}
+				managedObjects.put(mo.getName(), mo);				
 			}
 		}
 	}	

@@ -29,6 +29,7 @@ import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
@@ -41,6 +42,7 @@ import org.teiid.translator.UpdateExecution;
  * LDAP translator.  This is responsible for initializing 
  * a connection factory, and obtaining connections to LDAP.
  */
+@Translator(name="ldap")
 public class LDAPExecutionFactory extends ExecutionFactory {
 
 	public enum SearchDefaultScope {

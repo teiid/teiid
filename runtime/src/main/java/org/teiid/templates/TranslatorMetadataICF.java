@@ -40,11 +40,11 @@ import org.teiid.adminapi.impl.TranslatorMetaData;
 
 /**
  * This class is defined as bean in the deployer's -jboss-beans.xml file. This used to construct the 
- * TranslatorMetadata object with "translator-property"
+ * TranslatorMetadata object with "property"
  */
 public class TranslatorMetadataICF extends	AbstractInstanceClassFactory<TranslatorMetaData> {
 
-	private static final String TRANSLATOR_PROPERTY = "translator-property"; //$NON-NLS-1$
+	private static final String TRANSLATOR_PROPERTY = "property"; //$NON-NLS-1$
 
 	public TranslatorMetadataICF(ManagedObjectFactory mof) {
 		super(mof);

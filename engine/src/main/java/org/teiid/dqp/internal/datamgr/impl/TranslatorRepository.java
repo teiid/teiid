@@ -26,35 +26,53 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.teiid.translator.ExecutionFactory;
+import org.teiid.adminapi.Translator;
+import org.teiid.adminapi.impl.TranslatorMetaData;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.vdb.runtime.VDBKey;
 
 
 public class TranslatorRepository implements Serializable{
 	
 	private static final long serialVersionUID = -1212280886010974273L;
-	private Map<String, ExecutionFactory> translatorRepo = new ConcurrentHashMap<String, ExecutionFactory>();
+	private Map<String, TranslatorMetaData> translatorRepo = new ConcurrentHashMap<String, TranslatorMetaData>();
+	private Map<VDBKey, Map<String, VDBTranslatorMetaData>> vdbScopedTranslatorRepo = new ConcurrentHashMap<VDBKey, Map<String, VDBTranslatorMetaData>>();
 
-	public void addTranslator(String name, ExecutionFactory t) {
-//		try {
-//			InitialContext ic = new InitialContext();
-//			ic.bind(name, t);
-//		} catch (NamingException e) {
-//			LogManager.logError(LogConstants.CTX_RUNTIME, DQPPlugin.Util.getString("failed_to_bind_translator", name)); //$NON-NLS-1$
-//		}
-		this.translatorRepo.put(name, t);
+	public void addTranslatorMetadata(String name, TranslatorMetaData factory) {
+		this.translatorRepo.put(name, factory);
 	}
 	
-	public ExecutionFactory getTranslator(String name) {
-		return this.translatorRepo.get(name);
+	public void addTranslatorMetadata(VDBKey key, String name, VDBTranslatorMetaData factory) {
+		Map<String, VDBTranslatorMetaData> repo = vdbScopedTranslatorRepo.get(key);
+		if (repo == null) {
+			repo = new ConcurrentHashMap<String, VDBTranslatorMetaData>();
+			this.vdbScopedTranslatorRepo.put(key, repo);
+		}
+		repo.put(name, factory);
+	}	
+	
+	public Translator getTranslatorMetaData(VDBKey key, String name) {
+		Translator factory = null;
+
+		if (key != null) {
+			Map<String, VDBTranslatorMetaData> repo = vdbScopedTranslatorRepo.get(key);
+			if (repo != null && !repo.isEmpty()) {
+				factory = repo.get(name); 	
+			}
+		}
+		
+		if (factory == null) {
+			factory = this.translatorRepo.get(name);
+		}
+		
+		return factory;
 	}
 	
-	public ExecutionFactory removeTranslator(String name) {
-//		try {
-//			InitialContext ic = new InitialContext();
-//			ic.unbind(name);
-//		} catch (NamingException e) {
-//			LogManager.logError(LogConstants.CTX_RUNTIME, DQPPlugin.Util.getString("failed_to_unbind_translator", name)); //$NON-NLS-1$
-//		}		
+	public TranslatorMetaData removeTranslatorMetadata(String name) {
 		return this.translatorRepo.remove(name);
 	}	
+	
+	public void removeVDBTranslators(VDBKey name) {
+		this.vdbScopedTranslatorRepo.remove(name);
+	}
 }

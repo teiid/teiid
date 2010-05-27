@@ -94,6 +94,7 @@ public class ExecutionFactory {
 	/**
 	 * Initialize the connector with supplied configuration
 	 */
+	@SuppressWarnings("unused")
 	public void start() throws TranslatorException {
 	}
 	    
@@ -101,7 +102,7 @@ public class ExecutionFactory {
 	 * Defines if the Connector is read-only connector 
 	 * @return
 	 */
-	@TranslatorProperty(managed=true, display="Is Immutable",description="Is Immutable, True if the source never changes.",advanced=true)
+	@TranslatorProperty(display="Is Immutable",description="Is Immutable, True if the source never changes.",advanced=true)
 	public boolean isImmutable() {
 		return immutable;
 	}
@@ -114,7 +115,7 @@ public class ExecutionFactory {
 	 * Throw exception if there are more rows in the result set than specified in the MaxResultRows setting.
 	 * @return
 	 */
-	@TranslatorProperty(managed=true, display="Exception on Exceeding Max Rows",description="Indicates if an Exception should be thrown if the specified value for Maximum Result Rows is exceeded; else no exception and no more than the maximum will be returned",advanced=true)
+	@TranslatorProperty(display="Exception on Exceeding Max Rows",description="Indicates if an Exception should be thrown if the specified value for Maximum Result Rows is exceeded; else no exception and no more than the maximum will be returned",advanced=true)
 	public boolean isExceptionOnMaxRows() {
 		return exceptionOnMaxRows;
 	}
@@ -127,9 +128,9 @@ public class ExecutionFactory {
 	 * Maximum result set rows to fetch
 	 * @return
 	 */
-	@TranslatorProperty(managed=true, display="Maximum Result Rows", description="Maximum Result Rows allowed", advanced=true)
+	@TranslatorProperty(display="Maximum Result Rows", description="Maximum Result Rows allowed", advanced=true)
 	public int getMaxResultRows() {
-		return maxResultRows = DEFAULT_MAX_ROWS;
+		return maxResultRows;
 	}
 
 	public void setMaxResultRows(int arg0) {
@@ -140,7 +141,7 @@ public class ExecutionFactory {
 	 * Shows the XA transaction capability of the Connector.
 	 * @return
 	 */
-	@TranslatorProperty(managed=true, display="Is XA Capable", description="True, if this connector supports XA Transactions")
+	@TranslatorProperty(display="Is XA Capable", description="True, if this connector supports XA Transactions")
 	public boolean isXaCapable() {
 		return xaCapable;
 	}
@@ -197,14 +198,17 @@ public class ExecutionFactory {
 		return createUpdateExecution(command, executionContext, metadata, connectionFactory);
 	}
 
+	@SuppressWarnings("unused")
 	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection) throws TranslatorException {
 		throw new TranslatorException("Unsupported Execution"); //$NON-NLS-1$
 	}
 
+	@SuppressWarnings("unused")
 	public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection) throws TranslatorException {
 		throw new TranslatorException("Unsupported Execution");//$NON-NLS-1$
 	}
 
+	@SuppressWarnings("unused")
 	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection) throws TranslatorException {
 		throw new TranslatorException("Unsupported Execution");//$NON-NLS-1$
 	}   

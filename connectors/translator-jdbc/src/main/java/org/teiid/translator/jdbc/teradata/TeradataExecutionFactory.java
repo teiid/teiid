@@ -25,6 +25,7 @@ package org.teiid.translator.jdbc.teradata;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.translator.Translator;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 
 
@@ -32,6 +33,7 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 /** 
  * for Teradata database Release V2R5.1
  */
+@Translator(name="teradata")
 public class TeradataExecutionFactory extends JDBCExecutionFactory {
 
     public TeradataExecutionFactory() {

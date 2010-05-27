@@ -40,6 +40,7 @@ import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
+import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
 
@@ -50,6 +51,7 @@ import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
     "description",
     "JAXBProperties",
     "models",
+    "translators",
     "dataPolicies"
 })
 @XmlRootElement(name = "vdb")
@@ -71,8 +73,20 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		}
 	});
 	
+	@XmlElement(name = "translator", required = true, type = VDBTranslatorMetaData.class)
+	protected ListOverMap<VDBTranslatorMetaData> translators = new ListOverMap<VDBTranslatorMetaData>(new KeyBuilder<VDBTranslatorMetaData>() {
+		private static final long serialVersionUID = 3890502172003653563L;
+
+		@Override
+		public String getKey(VDBTranslatorMetaData entry) {
+			return entry.getName();
+		}
+	});	
+	
 	@XmlElement(name = "data-policy", required = true, type = DataPolicyMetadata.class)
 	protected ListOverMap<DataPolicyMetadata> dataPolicies = new ListOverMap<DataPolicyMetadata>(new KeyBuilder<DataPolicyMetadata>() {
+		private static final long serialVersionUID = 4954591545242715254L;
+
 		@Override
 		public String getKey(DataPolicyMetadata entry) {
 			return entry.getName();
@@ -153,6 +167,18 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	public void addModel(ModelMetaData m) {
 		this.models.getMap().put(m.getName(), m);
 	}	
+	
+	@Override
+	@ManagementProperty(description="Translators in a VDB", managed=true)
+	public List<Translator> getOverrideTranslators() {
+		return new ArrayList<Translator>(this.translators.getMap().values());
+	}
+	
+	public void setTranslators(List<Translator> translators) {
+		for (Translator t: translators) {
+			this.translators.getMap().put(t.getName(), (VDBTranslatorMetaData)t);
+		}
+	}
 	
 	@Override
 	@ManagementProperty(description = "Description")	

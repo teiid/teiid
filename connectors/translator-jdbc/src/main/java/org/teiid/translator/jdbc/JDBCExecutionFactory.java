@@ -60,6 +60,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
@@ -75,6 +76,7 @@ import org.teiid.translator.UpdateExecution;
 /**
  * JDBC implementation of Connector interface.
  */
+@Translator(name="jdbc-ansi")
 public class JDBCExecutionFactory extends ExecutionFactory implements MetadataProvider {
 
 	public static final int DEFAULT_MAX_IN_CRITERIA = 1000;

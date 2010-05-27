@@ -22,17 +22,13 @@
 package org.teiid.adminapi;
 
 
-public interface Translator extends AdminObject{
+public interface Translator extends AdminObject{		
+	public static final String EXECUTION_FACTORY_CLASS = "execution-factory-class"; //$NON-NLS-1$
+	public static final String TRANSLATOR_PROPERTY = "property"; //$NON-NLS-1$
 	
-	public String getExecutionFactoryClass();
-	
-	public boolean isImmutable();
-
-	public boolean isExceptionOnMaxRows();
-
-	public int getMaxResultRows();
-	
-	public boolean isXaCapable();
-
-	public String getTemplateName();
+	/**
+	 * Get the Translator type
+	 * @return
+	 */
+	public String getType();
 }

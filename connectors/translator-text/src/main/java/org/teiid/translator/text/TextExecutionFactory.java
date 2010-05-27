@@ -45,6 +45,7 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
+import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
@@ -58,6 +59,7 @@ import org.teiid.translator.TypeFacility;
 /**
  * Implementation of text connector.
  */
+@Translator(name="text")
 public class TextExecutionFactory extends ExecutionFactory implements MetadataProvider{
 
 	private boolean enforceColumnCount = false;

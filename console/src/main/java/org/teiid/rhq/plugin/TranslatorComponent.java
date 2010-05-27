@@ -24,27 +24,14 @@ package org.teiid.rhq.plugin;
 import java.util.Map;
 import java.util.Set;
 
-import javax.naming.NamingException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jboss.deployers.spi.management.ManagementView;
-import org.jboss.managed.api.ComponentType;
-import org.jboss.managed.api.DeploymentTemplateInfo;
-import org.jboss.managed.api.ManagedProperty;
-import org.jboss.profileservice.spi.NoSuchDeploymentException;
 import org.rhq.core.domain.configuration.Configuration;
-import org.rhq.core.domain.configuration.PropertySimple;
-import org.rhq.core.domain.configuration.definition.ConfigurationDefinition;
 import org.rhq.core.domain.measurement.MeasurementDataNumeric;
 import org.rhq.core.domain.measurement.MeasurementReport;
 import org.rhq.core.domain.measurement.MeasurementScheduleRequest;
-import org.rhq.core.domain.resource.CreateResourceStatus;
-import org.rhq.core.domain.resource.ResourceType;
-import org.rhq.core.pluginapi.inventory.CreateResourceReport;
 import org.rhq.core.pluginapi.measurement.MeasurementFacet;
 import org.teiid.rhq.comm.ConnectionConstants;
-import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 
 /**
  * Component class for the MetaMatrix Host Controller process.

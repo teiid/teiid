@@ -26,10 +26,11 @@ package org.teiid.translator.jdbc.access;
 
 import java.util.List;
 
+import org.teiid.translator.Translator;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
 
-
+@Translator(name="access")
 public class AccessExecutionFactory extends SybaseExecutionFactory {
 	
 	public AccessExecutionFactory() {

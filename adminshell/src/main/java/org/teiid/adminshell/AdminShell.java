@@ -109,13 +109,7 @@ public class AdminShell {
 	    p = props;
 	}
 	
-	@Doc(text = "Create a Translator")
-	public static Translator createTranslator(
-			@Doc(text = "deployed name") String deployedName,
-			@Doc(text = "type name") String typeName, 
-			Properties properties) throws AdminException {
-		return getAdmin().createTranslator(deployedName, typeName, properties);
-	}
+
 
 	@Doc(text = "Adds a role to the specified policy")
 	public static void addRoleToDataPolicy(
@@ -152,13 +146,6 @@ public class AdminShell {
 		getAdmin().clearCache(cacheType);
 	}
 
-	@Doc(text = "Delete a Translator")
-	public static void deleteTranslator(
-			@Doc(text = "deployed name") String deployedName)
-			throws AdminException {
-		getAdmin().deleteTranslator(deployedName);
-	}
-
 	@Doc(text = "Delete a VDB")
 	public static void deleteVDB(
 			@Doc(text = "vdb name") String vdbName, 
@@ -184,13 +171,8 @@ public class AdminShell {
 		return getAdmin().getTranslator(deployedName);
 	}
 
-	@Doc(text = "Get all translator name Strings")
-	public static Set<String> getTranslatorTemplateNames() throws AdminException {
-		return getAdmin().getTranslatorTemplateNames();
-	}
-
 	@Doc(text = "Get all PropertyDefinitions for the given template")
-	public static Collection<PropertyDefinition> getTranslatorTemplatePropertyDefinitions(
+	public static Collection<PropertyDefinition> getTemplatePropertyDefinitions(
 			@Doc(text = "template name") String templateName) throws AdminException {
 		return getAdmin().getTemplatePropertyDefinitions(templateName);
 	}
@@ -251,14 +233,6 @@ public class AdminShell {
 			@Doc(text = "role name") String role) throws AdminException {
 		getAdmin()
 				.removeRoleFromDataPolicy(vdbName, vdbVersion, policyName, role);
-	}
-
-	@Doc(text = "Set a Translator property")
-	public static void setTranslatorProperty(
-			@Doc(text = "deployed name") String deployedName,
-			@Doc(text = "propery name") String propertyName, 
-			@Doc(text = "value") String propertyValue) throws AdminException {
-		getAdmin().setTranslatorProperty(deployedName, propertyName,propertyValue);
 	}
 
 	@Doc(text = "Set a runtime property")

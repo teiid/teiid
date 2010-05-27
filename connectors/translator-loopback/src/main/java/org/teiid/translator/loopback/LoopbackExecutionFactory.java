@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.teiid.language.Command;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
@@ -36,6 +37,7 @@ import org.teiid.translator.TranslatorProperty;
 /**
  * Loopback translator.
  */
+@Translator(name="loopback")
 public class LoopbackExecutionFactory extends ExecutionFactory {
 
 	private int waitTime = 0;

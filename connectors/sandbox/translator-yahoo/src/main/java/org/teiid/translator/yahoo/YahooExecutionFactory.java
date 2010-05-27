@@ -28,11 +28,12 @@ import java.util.List;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ResultSetExecution;
-
+@Translator(name="yahoo")
 public class YahooExecutionFactory extends ExecutionFactory {
 
 	public static final int YAHOO_MAX_SET_SIZE = 100;

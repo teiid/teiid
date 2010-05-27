@@ -28,7 +28,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -76,8 +75,7 @@ import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.jboss.IntegrationPlugin;
 import org.teiid.jboss.deployers.RuntimeEngineDeployer;
 
-public class Admin extends TeiidAdmin {
-	private static final String TRANSLATOR_PREFIX = "translator-"; //$NON-NLS-1$
+public class Admin extends TeiidAdmin {	
 	private static final String CONNECTOR_PREFIX = "connector-"; //$NON-NLS-1$
 	private static final ProfileKey DEFAULT_PROFILE_KEY = new ProfileKey(ProfileKey.DEFAULT);
 	private static final long serialVersionUID = 7081309086056911304L;
@@ -85,7 +83,6 @@ public class Admin extends TeiidAdmin {
 	private static ComponentType DQPTYPE = new ComponentType("teiid", "dqp");//$NON-NLS-1$ //$NON-NLS-2$	
 	private static String DQPNAME = RuntimeEngineDeployer.class.getName();
 	private static ComponentType TRANSLATOR_TYPE = new ComponentType("teiid", "translator");//$NON-NLS-1$ //$NON-NLS-2$
-	private static AdminObjectBuilder AOB = new AdminObjectBuilder();
 	
 	private static final String[] DS_TYPES = {"XA", "NoTx", "LocalTx"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	private static final String[] CF_TYPES = {"NoTx", "Tx"}; //$NON-NLS-1$ //$NON-NLS-2$
@@ -154,7 +151,7 @@ public class Admin extends TeiidAdmin {
 		try {
 			Set<ManagedComponent> mcSet = getView().getComponentsForType(TRANSLATOR_TYPE);
 			for (ManagedComponent mc:mcSet) {
-				factories.add(AOB.buildAdminObject(mc, TranslatorMetaData.class));
+				factories.add(AdminObjectBuilder.buildAO(mc, TranslatorMetaData.class));
 			}
 		} catch (Exception e) {
 			throw new AdminComponentException(e);
@@ -167,7 +164,7 @@ public class Admin extends TeiidAdmin {
 		try {
 			ManagedComponent mc = getView().getComponent(deployedName, TRANSLATOR_TYPE);
 			if (mc != null) {
-				return AOB.buildAdminObject(mc, TranslatorMetaData.class);
+				return AdminObjectBuilder.buildAO(mc, TranslatorMetaData.class);
 			}
 			return null;
 		} catch(Exception e) {
@@ -185,94 +182,6 @@ public class Admin extends TeiidAdmin {
 			throw new AdminComponentException(e);
 		}
 	}	
-	
-	@Override
-	public Translator createTranslator(String deploymentName, String typeName, Properties properties) throws AdminException {
-		try {
-			ManagedComponent mc = getView().getComponent(deploymentName, TRANSLATOR_TYPE);
-			if (mc != null) {
-				throw new AdminProcessingException(IntegrationPlugin.Util.getString("translator_exists",deploymentName)); //$NON-NLS-1$;	
-			}
-			
-			DeploymentTemplateInfo info = getView().getTemplate(typeName);
-			if(info == null) {
-				throw new AdminProcessingException(IntegrationPlugin.Util.getString("translator_template_not_found", typeName)); //$NON-NLS-1$
-			}
-			
-			// template properties specific to the template
-			Map<String, ManagedProperty> propertyMap = info.getProperties();
-			
-			// walk through the supplied properties and assign properly to template
-			for (String key:properties.stringPropertyNames()) {
-				ManagedProperty mp = propertyMap.get(key);
-				if (mp != null) {
-					String value = properties.getProperty(key);
-					if (!ManagedUtil.sameValue(mp.getDefaultValue(), value)){
-						mp.setValue(SimpleValueSupport.wrap(value));
-					}
-				}
-			}
-			propertyMap.get(TranslatorMetaData.NAME).setValue(SimpleValueSupport.wrap(deploymentName)); 
-			propertyMap.get(TranslatorMetaData.TEMPLATE_NAME).setValue(SimpleValueSupport.wrap(typeName));
-			
-			getView().applyTemplate(deploymentName, info);
-		} catch (NoSuchDeploymentException e) {
-			throw new AdminComponentException(e.getMessage(), e);
-		} catch(Exception e) {
-			throw new AdminComponentException(e.getMessage(), e);
-		} 
-		return getTranslator(deploymentName);
-	}
-	
-	@Override
-	public void setTranslatorProperty(String deployedName, String propertyName, String propertyValue) throws AdminException{
-		try {
-			ManagementView localView = getView();
-			ManagedComponent mc = localView.getComponent(deployedName, TRANSLATOR_TYPE);
-			if (mc == null) {
-				throw new AdminProcessingException(IntegrationPlugin.Util.getString("translator_does_not_exist",deployedName)); //$NON-NLS-1$;
-			}
-			
-			if (mc.getProperty(propertyName) != null) {
-				mc.getProperty(propertyName).setValue(SimpleValueSupport.wrap(propertyValue));
-			}
-			else {
-				Map<String, String> configProps = new HashMap<String, String>();
-				configProps.put(propertyName, propertyValue);
-				MetaValue metaValue = ManagedUtil.compositeValueMap(configProps);
-				mc.getProperty("translator-property").setValue(metaValue); //$NON-NLS-1$
-			}
-
-			localView.updateComponent(mc);
-			localView.load();
-		} catch (Exception e) {
-			throw new AdminComponentException(e);
-		}
-	}
-		
-	@Override
-	public void deleteTranslator(String deployedName) throws AdminException {
-		try {
-			ManagedComponent mc = getView().getComponent(deployedName, TRANSLATOR_TYPE);
-			if (mc != null) {
-				ManagedUtil.removeArchive(getDeploymentManager(),mc.getDeployment().getName());
-			}
-		} catch (Exception e) {
-			throw new AdminComponentException(e);
-		}
-	}
-	
-	@Override
-	public Set<String> getTranslatorTemplateNames() throws AdminException{
-		Set<String> names = getView().getTemplateNames();
-		HashSet<String> matched = new HashSet<String>();
-		for(String name:names) {
-			if (name.startsWith(TRANSLATOR_PREFIX)) {
-				matched.add(name);
-			}
-		}
-		return matched;
-	}
 	
     boolean matches(String regEx, String value) {
         regEx = regEx.replaceAll(AdminObject.ESCAPED_WILDCARD, ".*"); //$NON-NLS-1$ 
@@ -479,8 +388,18 @@ public class Admin extends TeiidAdmin {
 	
 	@Override
 	public Collection<PropertyDefinition> getTemplatePropertyDefinitions(String templateName) throws AdminException {
+		
+		DeploymentTemplateInfo info = null;
 		try {
-			DeploymentTemplateInfo info = getView().getTemplate(templateName);
+			info = getView().getTemplate(templateName);
+		} catch (NoSuchDeploymentException e) {
+			// ignore..
+		}
+		
+		try {
+			if (info == null && !templateName.startsWith(TranslatorMetaData.TRANSLATOR_PREFIX)) {
+				info = getView().getTemplate(TranslatorMetaData.TRANSLATOR_PREFIX+templateName);
+			}
 			if(info == null) {
 				throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_type_not_found", templateName)); //$NON-NLS-1$
 			}

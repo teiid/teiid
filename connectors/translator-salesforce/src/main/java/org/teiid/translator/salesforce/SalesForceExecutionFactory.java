@@ -32,6 +32,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
@@ -46,7 +47,7 @@ import org.teiid.translator.salesforce.execution.ProcedureExecutionParentImpl;
 import org.teiid.translator.salesforce.execution.QueryExecutionImpl;
 import org.teiid.translator.salesforce.execution.UpdateExecutionImpl;
 
-
+@Translator(name="salesforce")
 public class SalesForceExecutionFactory extends ExecutionFactory implements MetadataProvider {
 
 	private String connectorStateClass;

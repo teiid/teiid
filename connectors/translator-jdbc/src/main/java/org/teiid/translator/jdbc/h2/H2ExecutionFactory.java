@@ -28,6 +28,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.jdbc.AliasModifier;
@@ -38,6 +39,7 @@ import org.teiid.translator.jdbc.ModFunctionModifier;
 import org.teiid.translator.jdbc.hsql.AddDiffModifier;
 import org.teiid.translator.jdbc.oracle.ConcatFunctionModifier;
 
+@Translator(name="h2")
 public class H2ExecutionFactory extends JDBCExecutionFactory {
 	
 	@Override

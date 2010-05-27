@@ -19,42 +19,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.deployers;
+package org.teiid.translator;
 
-import static org.junit.Assert.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import org.junit.Test;
-import org.teiid.adminapi.impl.TranslatorMetaData;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.TranslatorProperty;
-
-@SuppressWarnings("nls")
-public class TestTranslatorDeployer {
-
-	@Test
-	public void testBuildExecutionFactory() throws Exception {
-		TranslatorMetaData tm = new TranslatorMetaData();
-		
-		tm.setXaCapable(true);
-		tm.addProperty("MyProperty", "correctly-assigned");
-		
-		TranslatorDeployer td = new TranslatorDeployer();
-		MyTranslator my = (MyTranslator)td.buildTranslator(MyTranslator.class.getName(), tm);
-		
-		assertTrue(my.isXaCapable());
-		assertEquals("correctly-assigned", my.getMyProperty());
-	}
-	
-	public static class MyTranslator extends ExecutionFactory {
-		String mine;
-		
-		@TranslatorProperty(display="my-property")
-		public String getMyProperty() {
-			return mine;
-		}
-		
-		public void setMyProperty(String value) {
-			this.mine = value;
-		}
-	}
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Inherited
+@Documented
+/**
+ * This annotation defines a instance of a translator
+ */
+public @interface Translator {
+	String name();
 }

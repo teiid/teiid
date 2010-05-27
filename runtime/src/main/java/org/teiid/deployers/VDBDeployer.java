@@ -23,18 +23,22 @@ package org.teiid.deployers;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 
 import org.jboss.deployers.spi.DeploymentException;
 import org.jboss.deployers.spi.deployer.helpers.AbstractSimpleRealDeployer;
 import org.jboss.deployers.structure.spi.DeploymentUnit;
 import org.jboss.deployers.vfs.spi.structure.VFSDeploymentUnit;
 import org.teiid.adminapi.Model;
+import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.util.FileUtils;
 import org.teiid.dqp.internal.cache.DQPContextCache;
@@ -47,8 +51,9 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.TransformationMetadata.Resource;
 import org.teiid.metadata.index.IndexMetadataFactory;
 import org.teiid.runtime.RuntimePlugin;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.TranslatorException;
+import org.teiid.vdb.runtime.VDBKey;
 
 
 public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
@@ -85,6 +90,23 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		MetadataStoreGroup store = unit.getAttachment(MetadataStoreGroup.class);
 		
 		// add required connector managers; if they are not already there
+		for (Translator t: deployment.getOverrideTranslators()) {
+			VDBTranslatorMetaData data = (VDBTranslatorMetaData)t;
+			
+			String type = data.getType();
+			Translator parent = this.translatorRepository.getTranslatorMetaData(null, type);
+			if ( parent == null) {
+				throw new DeploymentException(RuntimePlugin.Util.getString("translator_type_not_found", unit.getName())); //$NON-NLS-1$
+			}
+			
+			Set<String> keys = parent.getProperties().stringPropertyNames();
+			for (String key:keys) {
+				if (data.getPropertyValue(key) == null && parent.getPropertyValue(key) != null) {
+					data.addProperty(key, parent.getPropertyValue(key));
+				}
+			}			
+			this.translatorRepository.addTranslatorMetadata(new VDBKey(deployment.getName(), deployment.getVersion()), data.getName(), data);
+		}
 		createConnectorManagers(deployment);
 		
 		// if store is null and vdb dynamic vdb then try to get the metadata
@@ -142,18 +164,25 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_deployed",deployment, valid?"active":"inactive")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
-	private void createConnectorManagers(VDBMetaData deployment) {
+	private void createConnectorManagers(final VDBMetaData deployment) throws DeploymentException {
+		IdentityHashMap<Translator, ExecutionFactory> map = new IdentityHashMap<Translator, ExecutionFactory>();
+		
 		for (Model model:deployment.getModels()) {
 			if (model.getName().equals(CoreConstants.SYSTEM_MODEL)){
 				continue;
-			}
+			}			
 			for (String source:model.getSourceNames()) {
 				if (this.connectorManagerRepository.getConnectorManager(source) == null) {
-					ConnectorManager cm = new ConnectorManager(model.getSourceTranslatorName(source), model.getSourceConnectionJndiName(source)) {
-						protected ExecutionFactory getExecutionFactory() {
-							return VDBDeployer.this.translatorRepository.getTranslator(getTranslatorName());
-						}
-					};
+
+					Translator translator = VDBDeployer.this.translatorRepository.getTranslatorMetaData(new VDBKey(deployment.getName(), deployment.getVersion()), model.getSourceTranslatorName(source));
+					ExecutionFactory ef = map.get(translator);
+					if ( ef == null) {
+						ef = TranslatorUtil.buildExecutionFactory(translator);
+						map.put(translator, ef);
+					}
+
+					ConnectorManager cm = new ConnectorManager(model.getSourceTranslatorName(source), model.getSourceConnectionJndiName(source));
+					cm.setExecutionFactory(ef);
 					this.connectorManagerRepository.addConnectorManager(source, cm);
 				}
 			}
@@ -201,6 +230,8 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 				}
 			}
 		}
+		
+		this.translatorRepository.removeVDBTranslators(new VDBKey(deployment.getName(), deployment.getVersion()));
 		
 		if (this.vdbRepository != null) {
 			this.vdbRepository.removeVDB(deployment.getName(), deployment.getVersion());

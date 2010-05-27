@@ -45,34 +45,6 @@ public interface Admin {
     void assignToModel(String vdbName, int vdbVersion, String modelName, String sourceName, String translatorName, String dsName) throws AdminException;
     
     /**
-     * Set/update the property for the Connection Factory identified by the given deployed name.
-     * @param deployedName
-     * @param propertyName
-     * @param propertyValue
-     * @throws AdminException
-     */
-    void setTranslatorProperty(String deployedName, String propertyName, String propertyValue) throws AdminException;
-    
-    /**
-     * Create a {@link Translator}
-     *
-     * @param deployedName  Translator name that will be added to Configuration
-     * @param templateName template name 
-     * @param properties Name & Value pair need to deploy the Connection Factory
-
-     * @throws AdminException 
-     */
-    Translator createTranslator(String deployedName, String templateName, Properties properties) throws AdminException;
-
-    /**
-     * Delete the {@link Translator} from the Configuration
-     *
-     * @param deployedName - deployed name of the connection factory
-     * @throws AdminException  
-     */
-    void deleteTranslator(String deployedName) throws AdminException;
-    
-    /**
      * Deploy a {@link VDB} file.
      * @param name  Name of the VDB file to save under
      * @param VDB 	VDB.
@@ -108,14 +80,6 @@ public interface Admin {
      */
     void setRuntimeProperty(String propertyName, String propertyValue) throws AdminException;
     
-    /**
-     * Get the translator templates  available in the configuration.
-     *
-     * @return Set of connector template names.
-     * @throws AdminException 
-     */
-    Set<String> getTranslatorTemplateNames() throws AdminException;
-
     /**
      * Get the VDBs that currently deployed in the system
      *
