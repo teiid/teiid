@@ -28,6 +28,8 @@ import javax.resource.ResourceException;
 import org.teiid.language.Command;
 import org.teiid.language.Comparison;
 import org.teiid.language.Condition;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
@@ -69,7 +71,12 @@ public abstract class AbstractUpdateExecution implements UpdateExecution {
 	}
 
 	@Override
-	public void close() throws TranslatorException {
+	public void close() {
+		try {
+			connection.close();
+		} catch (ResourceException e) {
+			LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing"); //$NON-NLS-1$
+		}
 	}
 	
 	@Override

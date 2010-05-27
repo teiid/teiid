@@ -101,7 +101,7 @@ public class FakeConnector extends ExecutionFactory {
             cancelled = true;
             this.notify();
         }
-        public void close() throws TranslatorException {
+        public void close() {
             Assert.assertFalse("The execution should not be closed more than once", closed); //$NON-NLS-1$
             closed = true;
         }

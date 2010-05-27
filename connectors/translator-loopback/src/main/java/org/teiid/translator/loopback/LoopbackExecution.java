@@ -147,7 +147,7 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
      * @see com.metamatrix.data.Execution#close()
      */
     @Override
-    public void close() throws TranslatorException {
+    public void close() {
         // nothing to do
     }
 

@@ -34,6 +34,8 @@ import java.util.List;
 
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -113,18 +115,21 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
     /**
      * @see org.teiid.translator.jdbc.JDBCBaseExecution#close()
      */
-    public synchronized void close() throws TranslatorException {
+    public synchronized void close() {
         // first we would need to close the result set here then we can close
         // the statement, using the base class.
-        if (results != null) {
-            try {
-                results.close();
-                results = null;
-            } catch (SQLException e) {
-                throw new TranslatorException(e);
-            }
-        }
-        super.close();
+    	try {
+	        if (results != null) {
+	            try {
+	                results.close();
+	                results = null;
+	            } catch (SQLException e) {
+	            	LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing"); //$NON-NLS-1$
+	            }
+	        }
+    	} finally {
+    		super.close();
+    	}
     }
 
 }

@@ -21,11 +21,7 @@
  */
 package org.teiid.translator.xml;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -61,7 +57,7 @@ public class FileResultSetExecution implements ResultSetExecution {
         	tableName = this.executionInfo.getOtherProperties().get(PARM_FILE_NAME_TABLE_PROPERTY_NAME);
         }
         
-        this.content = connection.getFiles(tableName);
+        this.content = FileConnection.Util.getFiles(tableName, connection);
 		
 		validateParams();
 
@@ -128,12 +124,7 @@ public class FileResultSetExecution implements ResultSetExecution {
 	}	
 	
 	private StremableDocument getDocumentStream(final File xmlFile, int fileNumber) {
-		InputStreamFactory isf = new InputStreamFactory() {
-			@Override
-			public InputStream getInputStream() throws IOException {
-				return new BufferedInputStream(new FileInputStream(xmlFile));
-			}
-		};				
+		InputStreamFactory isf = new InputStreamFactory.FileInputStreamFactory(xmlFile);				
 		return new StremableDocument(this.executionFactory.convertToXMLType(isf), xmlFile.getName()+fileNumber);
 	}	
 	
@@ -143,7 +134,7 @@ public class FileResultSetExecution implements ResultSetExecution {
 	}
 
 	@Override
-	public void close() throws TranslatorException {
+	public void close() {
 		
 	}	
 }

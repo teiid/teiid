@@ -1,5 +1,0 @@
-SummitData.SUMMITDATA.skipHeaderLines = 1
-SummitData.SUMMITDATA.location = src/test/resources/SUMMITDATA3.txt
-SummitData.SUMMITDATA.delimiter = ,
-SummitData.SUMMITDATA.columns = TRADEID,NOTIONAL,EVTTYPE,CCY,PORS,RATE,STRIKE,SPREAD,DMOWNERTAB,FOLDER,DESK,START,MATURITY,COMMENT 
-SummitData.SUMMITDATA.types = integer,biginteger,string,string,string,biginteger,integer,integer,string,string,string,timestamp,timestamp,string

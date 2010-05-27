@@ -24,6 +24,7 @@ package org.teiid.translator.salesforce;
 import java.util.List;
 
 import javax.resource.ResourceException;
+import javax.resource.cci.Connection;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.teiid.translator.salesforce.execution.DataPayload;
@@ -34,7 +35,7 @@ import com.sforce.soap.partner.DescribeGlobalResult;
 import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.QueryResult;
 
-public interface SalesforceConnection {
+public interface SalesforceConnection extends Connection {
 
 	public QueryResult query(String queryString, int maxBatchSize, Boolean queryAll) throws ResourceException;
 
@@ -57,4 +58,6 @@ public interface SalesforceConnection {
 	public DescribeGlobalResult getObjects() throws ResourceException;
 	
 	public DescribeSObjectResult getObjectMetaData(String objectName) throws ResourceException;
+	
+	
 }

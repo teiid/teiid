@@ -22,6 +22,9 @@
 
 package org.teiid.core.types;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -85,4 +88,31 @@ public abstract class InputStreamFactory implements Source {
     public Reader getCharacterStream() throws IOException {
 		return new InputStreamReader(this.getInputStream(), this.getEncoding());
     }
+    
+    public static class FileInputStreamFactory extends InputStreamFactory {
+    	
+    	private File f;
+    	
+    	public FileInputStreamFactory(File f) {
+    		super();
+    		this.f = f;
+    	}
+    	
+    	public FileInputStreamFactory(File f, String encoding) {
+    		super(encoding);
+    		this.f = f;
+		}
+    	
+    	@Override
+    	public long getLength() {
+    		return f.length();
+    	}
+    	
+    	@Override
+    	public InputStream getInputStream() throws IOException {
+    		return new BufferedInputStream(new FileInputStream(f));
+    	}
+    	
+    }
+    
 }

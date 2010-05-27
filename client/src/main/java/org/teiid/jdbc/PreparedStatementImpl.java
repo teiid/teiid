@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -61,6 +62,7 @@ import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.util.ArgCheck;
+import org.teiid.core.util.ReaderInputStream;
 import org.teiid.core.util.SqlUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 
@@ -722,12 +724,12 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
 		setCharacterStream(parameterIndex, reader);
 	}
 
-	public void setClob(int parameterIndex, Reader reader) throws SQLException {
+	public void setClob(int parameterIndex, final Reader reader) throws SQLException {
 		this.setObject(parameterIndex, new ClobImpl(new InputStreamFactory() {
 			
 			@Override
 			public InputStream getInputStream() throws IOException {
-				return null;
+				return new ReaderInputStream(reader, Charset.defaultCharset());
 			}
 		}, -1));
 	}

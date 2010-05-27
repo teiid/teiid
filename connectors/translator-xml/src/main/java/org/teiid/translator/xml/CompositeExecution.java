@@ -67,7 +67,7 @@ public class CompositeExecution implements ResultSetExecution {
 	}
 
 	@Override
-	public void close() throws TranslatorException {
+	public void close() {
 		this.closed = true;
 		for(ResultSetExecution exec:this.executions) {
 			exec.close();

@@ -178,8 +178,6 @@ public class ConnectorWorkItem implements ConnectorWork {
 	            execution.close();
 	            LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Closed execution"}); //$NON-NLS-1$                    
 	        }	        
-	    } catch (TranslatorException e) {
-	        LogManager.logWarning(LogConstants.CTX_CONNECTOR, e.getMessage());
         } catch (Throwable e) {
             LogManager.logError(LogConstants.CTX_CONNECTOR, e, e.getMessage());
         } finally {
@@ -271,7 +269,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 	        			exec.cancel();
 	        		}
 	        		@Override
-	        		public void close() throws TranslatorException {
+	        		public void close() {
 	        			exec.close();
 	        		}
 	        		@Override

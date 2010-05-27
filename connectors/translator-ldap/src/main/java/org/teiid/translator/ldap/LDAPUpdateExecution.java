@@ -425,14 +425,14 @@ public class LDAPUpdateExecution implements UpdateExecution {
 	// calling close on already closed context is safe per
 	// javax.naming.Context javadoc so we won't worry about this also
 	// happening in our close method
-	public void close() throws TranslatorException {
+	public void close() {
 		try {
 			if(ldapCtx != null) {
 				ldapCtx.close();
 			}
 		} catch (NamingException ne) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.closeContextError",ne.getExplanation()); //$NON-NLS-1$
-            LogManager.logError(LogConstants.CTX_CONNECTOR,msg);
+            LogManager.logWarning(LogConstants.CTX_CONNECTOR,msg);
 		}
 	}
 

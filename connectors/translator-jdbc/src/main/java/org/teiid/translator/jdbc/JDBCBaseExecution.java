@@ -124,16 +124,21 @@ public abstract class JDBCBaseExecution implements Execution  {
     /*
      * @see com.metamatrix.data.Execution#close()
      */
-    public synchronized void close() throws TranslatorException {
+    public synchronized void close() {
         try {
             if (statement != null) {
                 statement.close();
             }
-            if (connection != null) {
-            	connection.close();
-            }
         } catch (SQLException e) {
-            throw new TranslatorException(e);
+			LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing"); //$NON-NLS-1$
+        } finally {
+            try {
+                if (connection != null) {
+                	connection.close();
+                }
+            } catch (SQLException e) {
+    			LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing"); //$NON-NLS-1$
+            }
         }
     }
 

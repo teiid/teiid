@@ -281,7 +281,7 @@ public class YahooExecution implements ResultSetExecution {
      * @see com.metamatrix.data.Execution#close()
      */
     @Override
-    public void close() throws TranslatorException {
+    public void close() {
         // nothing to do
     }
 

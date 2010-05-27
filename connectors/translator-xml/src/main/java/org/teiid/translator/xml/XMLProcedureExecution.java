@@ -128,7 +128,7 @@ public class XMLProcedureExecution implements ProcedureExecution {
         throw new TranslatorException(XMLPlugin.getString("No_outputs_allowed")); //$NON-NLS-1$
     }    
     
-    public void close() throws TranslatorException {
+    public void close() {
         // no-op
     }
 

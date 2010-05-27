@@ -40,7 +40,7 @@ import org.teiid.translator.TypeFacility;
  */
 public class ModFunctionModifier extends AliasModifier {
 
-	private Set<Class> supportedTypes = new HashSet<Class>(Arrays.asList(TypeFacility.RUNTIME_TYPES.INTEGER, TypeFacility.RUNTIME_TYPES.LONG));
+	private Set<Class<?>> supportedTypes = new HashSet<Class<?>>(Arrays.asList(TypeFacility.RUNTIME_TYPES.INTEGER, TypeFacility.RUNTIME_TYPES.LONG));
 
 	private LanguageFactory langFactory;
 
@@ -48,7 +48,7 @@ public class ModFunctionModifier extends AliasModifier {
     	this(modFunction, langFactory, null);
     }
 
-    public ModFunctionModifier(String modFunction, LanguageFactory langFactory, Collection<Class> supportedTypes) {
+    public ModFunctionModifier(String modFunction, LanguageFactory langFactory, Collection<? extends Class<?>> supportedTypes) {
     	super(modFunction);
     	this.langFactory = langFactory;
     	if (supportedTypes != null) {

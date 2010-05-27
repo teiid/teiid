@@ -35,6 +35,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.resource.ResourceException;
+import javax.resource.cci.Connection;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.ws.Dispatch;
@@ -219,7 +221,14 @@ public class BaseStreamingExecution implements ResultSetExecution {
     }	
     
     @Override
-    public void close() throws TranslatorException {
+    public void close() {
+    	if (dispatch instanceof Connection) {
+    		try {
+				((Connection)dispatch).close();
+			} catch (ResourceException e) {
+				LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing"); //$NON-NLS-1$
+			}
+    	}
     	this.executionFactory.removeResponse(this.context.getExecutionCountIdentifier());
     }
 

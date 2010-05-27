@@ -80,25 +80,13 @@ public class TestCachingFileConnectorLong extends TestCase {
     		this.file = new File(file);
     	}
     	
-		@Override
-		public File[] getFiles(String path) {
-			
-			File f = null;
-			if (path != null) {
-				f = new File(file, path);
-			}
-			else {
-				f = file;
-			}
-			
-			if (!f.exists()) {
-				return null;
-			}
-			if (f.isDirectory()) {
-				return file.listFiles();
-			}
-			return new File[] {f};
-		}
+    	@Override
+    	public File getFile(String path) {
+    		if (path == null) {
+        		return this.file;
+            }
+        	return new File(file, path);
+    	}
 
 		@Override
 		public void close() throws ResourceException {

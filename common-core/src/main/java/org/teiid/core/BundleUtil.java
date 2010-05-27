@@ -24,12 +24,12 @@ package org.teiid.core;
 
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.StringUtil;
-
 
 public class BundleUtil {
     /**
@@ -49,6 +49,30 @@ public class BundleUtil {
     private final ResourceBundle bundle;
 
     protected final String pluginId;
+    
+    /**
+     * Return the {@link BundleUtil} for the class.  The bundle must be in the same package or a parent package of the class.
+     * @param clazz
+     * @return
+     */
+    public static BundleUtil getBundleUtil(Class<?> clazz) {
+    	String packageName = clazz.getPackage().getName();
+    	
+    	while (true) {
+    		//scan up packages until found
+    		String bundleName = packageName + ".i18n"; //$NON-NLS-1$
+    		try {
+    			ResourceBundle bundle = ResourceBundle.getBundle(bundleName, Locale.getDefault(), clazz.getClassLoader());
+    			return new BundleUtil(packageName, bundleName, bundle);
+    		} catch (MissingResourceException e) {
+    			int index = packageName.lastIndexOf('.'); 
+    			if (index < 0) {
+    				throw e;
+    			}
+    			packageName = packageName.substring(0, index);
+    		}
+    	}
+    }
 
     /**
      * Construct an instance of this class by specifying the plugin ID.

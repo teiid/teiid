@@ -1,3 +1,0 @@
-text.library.location = src/test/resources/MultiParts/columCntMissMatchOption/*.csv
-text.library.qualifier = "
-text.library.delimiter = ,

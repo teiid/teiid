@@ -1,4 +1,0 @@
-Parts.PARTS_NoNameInSource.location = src/test/resources/TextParts/TextParts3.csv
-Parts.PARTS_NoNameInSource.qualifier = "
-Parts.PARTS_NoNameInSource.delimiter = ,
-Parts.PARTS_NoNameInSource.skipHeaderLines = 1

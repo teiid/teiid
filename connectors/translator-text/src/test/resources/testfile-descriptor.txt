@@ -1,3 +1,0 @@
-ThreeColString_Text.testfile.location = src/test/resources/test-file.txt.csv
-ThreeColString_Text.testfile.qualifier = "
-ThreeColString_Text.testfile.delimiter = ,

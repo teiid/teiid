@@ -24,9 +24,6 @@ package org.teiid.query.processor;
 
 import static org.teiid.query.processor.TestProcessor.*;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 
@@ -177,13 +174,7 @@ public class TestTextTable {
     }
 	
 	public ClobType clobFromFile(final String file) {
-		return new ClobType(new ClobImpl(new InputStreamFactory() {
-			
-			@Override
-			public InputStream getInputStream() throws IOException {
-				return new FileInputStream(UnitTestUtil.getTestDataFile(file));
-			}
-		}, -1));
+		return new ClobType(new ClobImpl(new InputStreamFactory.FileInputStreamFactory(UnitTestUtil.getTestDataFile(file)), -1));
 	}
 	
 }

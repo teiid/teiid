@@ -56,7 +56,7 @@ final class FakeProcedureExecution implements ProcedureExecution {
     	return result;
     }
     
-    public void close() throws TranslatorException {
+    public void close() {
     }
 
     public void cancel() throws TranslatorException {

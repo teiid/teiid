@@ -45,10 +45,10 @@ import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.Messages;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.Util;
@@ -107,8 +107,13 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, Messages.getString("SalesforceQueryExecutionImpl.cancel"));//$NON-NLS-1$
 	}
 
-	public void close() throws TranslatorException {
+	public void close() {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, Messages.getString("SalesforceQueryExecutionImpl.close")); //$NON-NLS-1$
+		try {
+			connection.close();
+		} catch (ResourceException e) {
+			LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing"); //$NON-NLS-1$
+		}
 	}
 
 	@Override

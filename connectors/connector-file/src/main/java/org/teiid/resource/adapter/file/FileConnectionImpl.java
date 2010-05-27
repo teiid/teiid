@@ -26,7 +26,6 @@ import java.io.File;
 
 import javax.resource.ResourceException;
 
-import org.teiid.core.util.FileUtils;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.translator.FileConnection;
 
@@ -41,34 +40,13 @@ public class FileConnectionImpl extends BasicConnection implements FileConnectio
 	public FileConnectionImpl(String parentDirectory) {
 		this.parentDirectory = new File(parentDirectory);
 	}
-
-    public File[] getFiles(String location) {
-    	File datafile = null;
-        
-    	if (location == null) {
-    		datafile = this.parentDirectory;
+	
+	@Override
+	public File getFile(String path) {
+    	if (path == null) {
+    		return this.parentDirectory;
         }
-        else {
-        	datafile = new File(parentDirectory, location);	
-        }
-        
-        if (datafile.isDirectory()) {
-        	return datafile.listFiles();
-        }
-        
-        String fname = datafile.getName();
-        String ext = FileUtils.getExtension(fname);
-        File parentDir = datafile.getParentFile();
-        
-        // determine if the wild card is used to indicate all files
-        // of the specified extension
-        if (ext != null && "*".equals(FileUtils.getBaseFileNameWithoutExtension(fname))) { //$NON-NLS-1$            
-            return FileUtils.findAllFilesInDirectoryHavingExtension(parentDir.getAbsolutePath(), "." + ext); //$NON-NLS-1$
-        }
-        if (!datafile.exists()) {
-        	return null;
-        }
-        return new File[] {datafile};
+    	return new File(parentDirectory, path);	
     }
 
 	@Override

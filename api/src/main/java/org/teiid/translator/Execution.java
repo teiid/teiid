@@ -36,7 +36,7 @@ public interface Execution {
     /**
      * Terminates the execution normally.
      */
-    void close() throws TranslatorException;
+    void close();
     
     /**
      * Cancels the execution abnormally.  This will happen via

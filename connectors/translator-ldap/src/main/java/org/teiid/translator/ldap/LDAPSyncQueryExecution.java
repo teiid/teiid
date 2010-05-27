@@ -259,7 +259,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 	// but less so when closing context, since it is safe to call close
 	// on contexts multiple times
 	@Override
-	public void close() throws TranslatorException {
+	public void close() {
 		if (searchEnumeration != null) {
 			try {
 				searchEnumeration.close();
@@ -270,7 +270,7 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 				ldapCtx.close();
 			} catch (NamingException ne) {
 	            final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.closeContextError",ne.getExplanation()); //$NON-NLS-1$
-	            LogManager.logError(LogConstants.CTX_CONNECTOR, msg);
+	            LogManager.logWarning(LogConstants.CTX_CONNECTOR, msg);
 			}
 		}
 	}

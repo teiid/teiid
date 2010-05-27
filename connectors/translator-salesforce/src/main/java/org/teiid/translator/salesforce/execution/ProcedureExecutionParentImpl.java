@@ -43,7 +43,7 @@ public class ProcedureExecutionParentImpl implements ProcedureExecution, Procedu
 	}
 
 	@Override
-	public void close() throws TranslatorException {
+	public void close() {
 		execution.close();
 	}
 

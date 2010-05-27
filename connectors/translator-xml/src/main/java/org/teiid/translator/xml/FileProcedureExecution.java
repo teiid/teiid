@@ -81,20 +81,14 @@ public class FileProcedureExecution implements ProcedureExecution {
             throw new TranslatorException(XMLPlugin.Util.getString("source_name_not_supplied", new Object[] {procedure.getProcedureName()})); //$NON-NLS-1$            
         }
     
-        final File[] files = this.connection.getFiles(fileName); 
+        final File[] files = FileConnection.Util.getFiles(fileName, this.connection); 
         if (files.length == 0 || !files[0].exists()) {
         	throw new TranslatorException(XMLPlugin.Util.getString("file_not_supplied", new Object[] {fileName, procedure.getProcedureName()})); //$NON-NLS-1$
         }
         
         String encoding = this.executionFactory.getCharacterEncodingScheme();
         
-        returnValue = new SQLXMLImpl(new InputStreamFactory(encoding) {
-			
-			@Override
-			public InputStream getInputStream() throws IOException {
-				return new BufferedInputStream(new FileInputStream(files[0]));
-			}
-		});
+        returnValue = new SQLXMLImpl(new InputStreamFactory.FileInputStreamFactory(files[0], encoding));
         
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, XMLPlugin.Util.getString("executing_procedure", new Object[] {procedure.getProcedureName()})); //$NON-NLS-1$
     }
@@ -113,7 +107,7 @@ public class FileProcedureExecution implements ProcedureExecution {
         throw new TranslatorException(XMLPlugin.Util.getString("No_outputs_allowed")); //$NON-NLS-1$
     }
 
-    public void close() throws TranslatorException {
+    public void close() {
         // no-op
     }
 

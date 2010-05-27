@@ -71,7 +71,7 @@
         <includes>
             <include>org.jboss.teiid.connectors:translator-jdbc</include>
             <include>org.jboss.teiid.connectors:translator-loopback</include>
-            <include>org.jboss.teiid.connectors:translator-text</include>
+            <include>org.jboss.teiid.connectors:translator-file</include>
             <include>org.jboss.teiid.connectors:connector-file:rar</include>
             <include>org.jboss.teiid.connectors:translator-ldap</include>
             <include>org.jboss.teiid.connectors:connector-ldap:rar</include>

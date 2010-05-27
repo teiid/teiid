@@ -22,38 +22,44 @@
 
 package org.teiid.translator;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+import org.teiid.core.types.BlobType;
+import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.core.types.XMLType;
 import org.teiid.core.util.TimestampWithTimezone;
-
 
 /**
  */
 public class TypeFacility {
 
     public interface RUNTIME_TYPES {
-        public static final Class STRING        = DataTypeManager.DefaultDataClasses.STRING;
-        public static final Class BOOLEAN       = DataTypeManager.DefaultDataClasses.BOOLEAN;
-        public static final Class BYTE          = DataTypeManager.DefaultDataClasses.BYTE;
-        public static final Class SHORT         = DataTypeManager.DefaultDataClasses.SHORT;
-        public static final Class CHAR          = DataTypeManager.DefaultDataClasses.CHAR;
-        public static final Class INTEGER       = DataTypeManager.DefaultDataClasses.INTEGER;
-        public static final Class LONG          = DataTypeManager.DefaultDataClasses.LONG;
-        public static final Class BIG_INTEGER   = DataTypeManager.DefaultDataClasses.BIG_INTEGER;
-        public static final Class FLOAT         = DataTypeManager.DefaultDataClasses.FLOAT;
-        public static final Class DOUBLE        = DataTypeManager.DefaultDataClasses.DOUBLE;
-        public static final Class BIG_DECIMAL   = DataTypeManager.DefaultDataClasses.BIG_DECIMAL;
-        public static final Class DATE          = DataTypeManager.DefaultDataClasses.DATE;
-        public static final Class TIME          = DataTypeManager.DefaultDataClasses.TIME;
-        public static final Class TIMESTAMP     = DataTypeManager.DefaultDataClasses.TIMESTAMP;
-        public static final Class OBJECT        = DataTypeManager.DefaultDataClasses.OBJECT;
-        public static final Class BLOB          = DataTypeManager.DefaultDataClasses.BLOB;
-        public static final Class CLOB          = DataTypeManager.DefaultDataClasses.CLOB;
-        public static final Class XML           = DataTypeManager.DefaultDataClasses.XML;
+        public static final Class<String> STRING        = DataTypeManager.DefaultDataClasses.STRING;
+        public static final Class<Boolean> BOOLEAN       = DataTypeManager.DefaultDataClasses.BOOLEAN;
+        public static final Class<Byte> BYTE          = DataTypeManager.DefaultDataClasses.BYTE;
+        public static final Class<Short> SHORT         = DataTypeManager.DefaultDataClasses.SHORT;
+        public static final Class<Character> CHAR          = DataTypeManager.DefaultDataClasses.CHAR;
+        public static final Class<Integer> INTEGER       = DataTypeManager.DefaultDataClasses.INTEGER;
+        public static final Class<Long> LONG          = DataTypeManager.DefaultDataClasses.LONG;
+        public static final Class<BigInteger> BIG_INTEGER   = DataTypeManager.DefaultDataClasses.BIG_INTEGER;
+        public static final Class<Float> FLOAT         = DataTypeManager.DefaultDataClasses.FLOAT;
+        public static final Class<Double> DOUBLE        = DataTypeManager.DefaultDataClasses.DOUBLE;
+        public static final Class<BigDecimal> BIG_DECIMAL   = DataTypeManager.DefaultDataClasses.BIG_DECIMAL;
+        public static final Class<java.sql.Date> DATE          = DataTypeManager.DefaultDataClasses.DATE;
+        public static final Class<Time> TIME          = DataTypeManager.DefaultDataClasses.TIME;
+        public static final Class<Timestamp> TIMESTAMP     = DataTypeManager.DefaultDataClasses.TIMESTAMP;
+        public static final Class<Object> OBJECT        = DataTypeManager.DefaultDataClasses.OBJECT;
+        public static final Class<BlobType> BLOB          = DataTypeManager.DefaultDataClasses.BLOB;
+        public static final Class<ClobType> CLOB          = DataTypeManager.DefaultDataClasses.CLOB;
+        public static final Class<XMLType> XML           = DataTypeManager.DefaultDataClasses.XML;
     }
     
     public static final class RUNTIME_NAMES {
@@ -124,7 +130,7 @@ public class TypeFacility {
      * @return
      */
 	public Object convertDate(Date date, TimeZone initial, Calendar target,
-			Class targetType) {
+			Class<?> targetType) {
 		return TimestampWithTimezone.create(date, initial, target, targetType);
 	}
 

@@ -79,7 +79,7 @@
     <module>translator-ldap</module>
     
     <module>translator-loopback</module>
-    <module>translator-text</module>
+    <module>translator-file</module>
     <module>translator-salesforce</module>
     
     <module>connector-file</module>

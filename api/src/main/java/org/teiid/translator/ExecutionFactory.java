@@ -199,17 +199,17 @@ public class ExecutionFactory {
 	}
 
 	@SuppressWarnings("unused")
-	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection) throws TranslatorException {
+	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory) throws TranslatorException {
 		throw new TranslatorException("Unsupported Execution"); //$NON-NLS-1$
 	}
 
 	@SuppressWarnings("unused")
-	public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection) throws TranslatorException {
+	public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory) throws TranslatorException {
 		throw new TranslatorException("Unsupported Execution");//$NON-NLS-1$
 	}
 
 	@SuppressWarnings("unused")
-	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection) throws TranslatorException {
+	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory) throws TranslatorException {
 		throw new TranslatorException("Unsupported Execution");//$NON-NLS-1$
 	}   
 	
