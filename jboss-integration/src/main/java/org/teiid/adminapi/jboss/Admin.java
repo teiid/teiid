@@ -498,7 +498,7 @@ public class Admin extends TeiidAdmin {
                 	if (translatorProperty == null) {
                 		translatorProperty = new WritethroughManagedPropertyImpl(mo, new DefaultFieldsImpl("translatorName")); //$NON-NLS-1$
                 	}
-                	translatorProperty.setValue(ManagedUtil.wrap(SimpleMetaType.STRING, dsName));
+                	translatorProperty.setValue(ManagedUtil.wrap(SimpleMetaType.STRING, translatorName));
                 	
                 	// set the jndi name for the ds.
                 	ManagedProperty jndiProperty = mo.getProperty("connectionJndiName"); //$NON-NLS-1$
