@@ -35,7 +35,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.teiid.query.sql.LanguageObject;
-import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -325,16 +324,16 @@ public class PlanNode {
     	}
     	LinkedList<SymbolMap> result = new LinkedList<SymbolMap>();
 		for (PlanNode child : NodeEditor.findAllNodes(this, NodeConstants.Types.SOURCE, NodeConstants.Types.ACCESS)) {
-			Command command = (Command)child.getProperty(NodeConstants.Info.NESTED_COMMAND);
-	        if (command == null || command.getCorrelatedReferences() == null) {
+			SymbolMap references = (SymbolMap)child.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+	        if (references == null) {
 	        	continue;
 	        }
-        	Set<GroupSymbol> correlationGroups = GroupsUsedByElementsVisitor.getGroups(command.getCorrelatedReferences().getValues());
+        	Set<GroupSymbol> correlationGroups = GroupsUsedByElementsVisitor.getGroups(references.getValues());
         	PlanNode joinNode = NodeEditor.findParent(child, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE);
         	while (joinNode != null) {
         		if (joinNode.getGroups().containsAll(correlationGroups)) {
         			if (joinNode == this) {
-        				result.add(command.getCorrelatedReferences());
+        				result.add(references);
         			}
         			break;
         		}

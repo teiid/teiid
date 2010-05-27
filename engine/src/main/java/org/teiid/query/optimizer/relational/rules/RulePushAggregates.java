@@ -162,7 +162,7 @@ public class RulePushAggregates implements
 			List<SingleElementSymbol> groupingExpressions, PlanNode setOp)
 			throws TeiidComponentException, QueryMetadataException,
 			QueryPlannerException, QueryResolverException {
-		if (setOp.getType() != NodeConstants.Types.SET_OP || setOp.getProperty(NodeConstants.Info.SET_OPERATION) != Operation.UNION) {
+		if (setOp == null || setOp.getType() != NodeConstants.Types.SET_OP || setOp.getProperty(NodeConstants.Info.SET_OPERATION) != Operation.UNION) {
 			return; //must not be a union
 		}
 		LinkedHashSet<AggregateSymbol> aggregates = collectAggregates(groupNode);

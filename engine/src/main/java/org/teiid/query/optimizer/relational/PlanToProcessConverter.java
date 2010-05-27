@@ -67,6 +67,7 @@ import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.processor.relational.SelectNode;
 import org.teiid.query.processor.relational.SortNode;
+import org.teiid.query.processor.relational.TextTableNode;
 import org.teiid.query.processor.relational.UnionAllNode;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
@@ -79,6 +80,7 @@ import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -229,14 +231,10 @@ public class PlanToProcessConverter {
                 } else if (stype == JoinStrategyType.NESTED_TABLE) {
                 	NestedTableJoinStrategy ntjStrategy = new NestedTableJoinStrategy();
                 	jnode.setJoinStrategy(ntjStrategy);
-                	Command command = (Command)FrameUtil.findJoinSourceNode(node.getFirstChild()).getProperty(NodeConstants.Info.NESTED_COMMAND);
-                	if (command != null) {
-                		ntjStrategy.setLeftMap(command.getCorrelatedReferences());
-                	}
-                	command = (Command)FrameUtil.findJoinSourceNode(node.getLastChild()).getProperty(NodeConstants.Info.NESTED_COMMAND);
-                	if (command != null) {
-                		ntjStrategy.setRightMap(command.getCorrelatedReferences());
-                	}
+                	SymbolMap references = (SymbolMap)FrameUtil.findJoinSourceNode(node.getFirstChild()).getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+            		ntjStrategy.setLeftMap(references);
+                	references = (SymbolMap)FrameUtil.findJoinSourceNode(node.getLastChild()).getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+            		ntjStrategy.setRightMap(references);
                 } else {
                     NestedLoopJoinStrategy nljStrategy = new NestedLoopJoinStrategy();
                     jnode.setJoinStrategy(nljStrategy);
@@ -368,9 +366,14 @@ public class PlanToProcessConverter {
                         child.setProperty(NodeConstants.Info.OUTPUT_COLS, node.getProperty(NodeConstants.Info.OUTPUT_COLS));
                     }
 				}
-				
-				return null;
-
+				Object source = node.getProperty(NodeConstants.Info.TABLE_FUNCTION);
+				if (!(source instanceof TextTable)) {
+					return null;
+				}
+				TextTableNode ttn = new TextTableNode(getID());
+				ttn.setTable((TextTable)source);
+				processNode = ttn;
+				break;
     		case NodeConstants.Types.SET_OP:
                 Operation setOp = (Operation) node.getProperty(NodeConstants.Info.SET_OPERATION);
                 boolean useAll = ((Boolean) node.getProperty(NodeConstants.Info.USE_ALL)).booleanValue();

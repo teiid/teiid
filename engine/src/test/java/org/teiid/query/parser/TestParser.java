@@ -71,9 +71,11 @@ import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
+import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.lang.SetQuery.Operation;
+import org.teiid.query.sql.lang.TextTable.TextColumn;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.BreakStatement;
@@ -2800,7 +2802,7 @@ public class TestParser {
 	}
 	
     @Test public void testLikeWithEscapeException(){
-        helpException("SELECT a from db.g where b like '#String' escape '#1'", "Parsing error: Like escape value must be a single character.");  //$NON-NLS-1$ //$NON-NLS-2$
+        helpException("SELECT a from db.g where b like '#String' escape '#1'", "Parsing error: LIKE ESCAPE value must be a single character: [#1].");  //$NON-NLS-1$ //$NON-NLS-2$
     }   
 
 	/** SELECT "date"."time" from db.g */
@@ -6753,6 +6755,36 @@ public class TestParser {
         sfc.setTable(true);
         query.setFrom(new From(Arrays.asList(sfc)));
         helpTest(sql, "SELECT * FROM TABLE(EXEC foo()) AS x", query);
+    }
+    
+    @Test public void testTextTable() throws Exception {
+    	String sql = "SELECT * from texttable(file columns x string WIDTH 1, y date width 10 skip 10) as x"; //$NON-NLS-1$
+        Query query = new Query();
+        query.setSelect(new Select(Arrays.asList(new AllSymbol())));
+        TextTable tt = new TextTable();
+        tt.setFile(new ElementSymbol("file"));
+        List<TextTable.TextColumn> columns = new ArrayList<TextTable.TextColumn>();
+        columns.add(new TextTable.TextColumn("x", "string", 1));
+        columns.add(new TextTable.TextColumn("y", "date", 10));
+        tt.setColumns(columns);
+        tt.setSkip(10);
+        tt.setName("x");
+        query.setFrom(new From(Arrays.asList(tt)));
+        helpTest(sql, "SELECT * FROM TEXTTABLE(file COLUMNS x string WIDTH 1, y date WIDTH 10 SKIP 10) AS x", query);
+        
+        sql = "SELECT * from texttable(file columns x string, y date delimiter ',' escape '\"' header skip 10) as x"; //$NON-NLS-1$
+        tt.setDelimiter(',');
+        tt.setQuote('"');
+        tt.setEscape(true);
+        tt.setHeader(1);
+        for (TextColumn textColumn : columns) {
+			textColumn.setWidth(null);
+		}
+        helpTest(sql, "SELECT * FROM TEXTTABLE(file COLUMNS x string, y date DELIMITER ',' ESCAPE '\"' HEADER SKIP 10) AS x", query);
+    }
+    
+    @Test public void testTextTableColumns() throws Exception {
+        helpException("SELECT * from texttable(foo x string)", "Parsing error: Columns non-reserved word expected in TEXTTABLE.");
     }
 
 }

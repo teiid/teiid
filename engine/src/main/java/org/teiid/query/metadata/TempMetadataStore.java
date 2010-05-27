@@ -234,7 +234,7 @@ public class TempMetadataStore implements Serializable {
      * @param tempElement Short element name
      * @return Metadata ID or null if not found
      */
-    public List getTempElementElementIDs(String tempGroup) {
+    public List<TempMetadataID> getTempElementElementIDs(String tempGroup) {
         TempMetadataID groupID = tempGroups.get(tempGroup.toUpperCase());        
         if(groupID != null) {
             return groupID.getElements();

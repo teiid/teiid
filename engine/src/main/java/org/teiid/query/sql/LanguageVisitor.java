@@ -130,4 +130,5 @@ public abstract class LanguageVisitor {
     public void visit(XMLAttributes obj) {}
     public void visit(XMLForest obj) {}
     public void visit(XMLNamespaces obj) {}
+    public void visit(TextTable obj) {}
 }

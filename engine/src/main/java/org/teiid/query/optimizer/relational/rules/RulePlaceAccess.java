@@ -44,6 +44,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.Insert;
+import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -106,6 +107,10 @@ public final class RulePlaceAccess implements
         Object req = sourceNode.getProperty(NodeConstants.Info.ATOMIC_REQUEST);
         if (req == null) {
             req = sourceNode.getProperty(NodeConstants.Info.NESTED_COMMAND);
+        }
+        
+        if (sourceNode.getProperty(NodeConstants.Info.TABLE_FUNCTION) != null) {
+        	return;
         }
 
         if (req instanceof Insert) {

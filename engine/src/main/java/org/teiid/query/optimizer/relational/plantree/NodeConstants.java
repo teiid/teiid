@@ -118,6 +118,8 @@ public final class NodeConstants {
         MAKE_DEP,           // ??? List of Groups ???
         PROCESSOR_PLAN,     // ProcessorPlan for non-relational sub plan
         NESTED_COMMAND,     // Command for nested processor plan
+        TABLE_FUNCTION,     // Table Function
+        CORRELATED_REFERENCES,  // SymbolMap
         MAKE_NOT_DEP,       // Source should not be dependent
         INLINE_VIEW,        // If the source node represents an inline view
         

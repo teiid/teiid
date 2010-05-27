@@ -25,9 +25,8 @@ package org.teiid.query.sql.lang;
 import java.util.Collection;
 
 import org.teiid.core.util.EquivalenceUtil;
-import org.teiid.query.sql.*;
+import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
 /**
@@ -133,15 +132,6 @@ public class UnaryFromClause extends FromClause {
 		return clonedUnaryFromClause;	
 	}
 
-
-    /**
-     * Returns a string representation of an instance of this class.
-     * @return String representation of object
-     */
-    public String toString() {
-    	return SQLStringVisitor.getSQLString(this);
-    }
-    
     /** 
      * @return Returns the expandedCommand.
      */

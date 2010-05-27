@@ -106,6 +106,7 @@ import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
+import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.TranslatableProcedureContainer;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
@@ -917,6 +918,9 @@ public class QueryRewriter {
 			return rewriteJoinPredicate(parent, (JoinPredicate) clause);
         } else if (clause instanceof SubqueryFromClause) {
             rewriteSubqueryContainer((SubqueryFromClause)clause, true);
+        } else if (clause instanceof TextTable) {
+        	TextTable tt = (TextTable)clause;
+        	tt.setFile(rewriteExpressionDirect(tt.getFile()));
         }
         return clause;
 	}

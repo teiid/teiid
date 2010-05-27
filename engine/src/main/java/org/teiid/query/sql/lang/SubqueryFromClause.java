@@ -26,7 +26,6 @@ import java.util.Collection;
 
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
 /**
@@ -174,12 +173,4 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
         return clause;
 	}
 
-    /**
-     * Returns a string representation of an instance of this class.
-     * @return String representation of object
-     */
-    public String toString() {
-    	return SQLStringVisitor.getSQLString(this);
-    }
-		
 }

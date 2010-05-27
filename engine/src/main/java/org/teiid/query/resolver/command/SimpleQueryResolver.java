@@ -40,6 +40,7 @@ import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -67,6 +68,7 @@ import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
+import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.symbol.AliasSymbol;
@@ -78,6 +80,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.util.ErrorMessageKeys;
 
 
@@ -147,7 +150,7 @@ public class SimpleQueryResolver implements CommandResolver {
     public static class QueryResolverVisitor extends PostOrderNavigator {
 
         private LinkedHashSet<GroupSymbol> currentGroups = new LinkedHashSet<GroupSymbol>();
-        private List<GroupSymbol> discoveredGroups = new LinkedList<GroupSymbol>();
+        private LinkedList<GroupSymbol> discoveredGroups = new LinkedList<GroupSymbol>();
         private List<GroupSymbol> implicitGroups = new LinkedList<GroupSymbol>();
         private TempMetadataAdapter metadata;
         private Query query;
@@ -275,6 +278,60 @@ public class SimpleQueryResolver implements CommandResolver {
             visitNode(obj.getExpression());
             resolveSubQuery(obj, this.currentGroups);
             postVisitVisitor(obj);
+        }
+        
+        /**
+         * TextTables have similar resolving semantics to a nested table.
+         */
+        @Override
+        public void visit(TextTable obj) {
+        	LinkedHashSet<GroupSymbol> saved = new LinkedHashSet<GroupSymbol>(this.currentGroups);
+        	if (allowImplicit) {
+        		currentGroups.addAll(this.implicitGroups);
+        	}
+        	this.visitNode(obj.getFile());
+        	try {
+				obj.setFile(ResolverUtil.convertExpression(obj.getFile(), DataTypeManager.DefaultDataTypes.CLOB, metadata));
+			} catch (QueryResolverException e) {
+				throw new TeiidRuntimeException(e);
+			}
+			//we didn't create a true external context, so we manually mark external
+			for (ElementSymbol symbol : ElementCollectorVisitor.getElements(obj, false)) {
+				if (symbol.isExternalReference()) {
+					continue;
+				}
+				if (implicitGroups.contains(symbol.getGroupSymbol())) {
+					symbol.setIsExternalReference(true);
+				}
+			}
+			if (allowImplicit) {
+	        	this.currentGroups.clear();
+	        	this.currentGroups.addAll(saved);
+			}
+            discoveredGroup(obj.getGroupSymbol());
+            try {
+                ResolverUtil.addTempGroup(metadata, obj.getGroupSymbol(), obj.getProjectedSymbols(), false);
+            } catch (QueryResolverException err) {
+                throw new TeiidRuntimeException(err);
+            }
+            obj.getGroupSymbol().setMetadataID(metadata.getMetadataStore().getTempGroupID(obj.getGroupSymbol().getName()));
+            //now resolve the projected symbols
+            Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
+            groups.add(obj.getGroupSymbol());
+            for (ElementSymbol symbol : obj.getProjectedSymbols()) {
+                try {
+					ResolverVisitor.resolveLanguageObject(symbol, groups, null, metadata);
+				} catch (TeiidException e) {
+					throw new TeiidRuntimeException(e);
+				}				
+			}
+            //set to fixed width if any column has width specified
+            for (TextTable.TextColumn col : obj.getColumns()) {
+				if (col.getWidth() != null) {
+					obj.setFixedWidth(true);
+					break;
+				}
+			}
         }
         
         public void visit(SubqueryFromClause obj) {

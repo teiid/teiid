@@ -47,7 +47,6 @@ import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.resolver.util.AccessPattern;
-import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -128,14 +127,11 @@ public class RulePlanJoins implements OptimizerRule {
             
             //account for nested table correlations
             for (PlanNode joinSource : joinRegion.getJoinSourceNodes().keySet()) {
-                Command command = (Command)joinSource.getProperty(NodeConstants.Info.NESTED_COMMAND);
-                if (command != null) {
-                	SymbolMap map = command.getCorrelatedReferences();
-                	if (map !=null) {
-                        joinSource.setProperty(NodeConstants.Info.REQUIRED_ACCESS_PATTERN_GROUPS, GroupsUsedByElementsVisitor.getGroups(map.getValues()));
-                        joinRegion.setContainsNestedTable(true);
-                	}
-                }
+            	SymbolMap map = (SymbolMap)joinSource.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+            	if (map !=null) {
+                    joinSource.setProperty(NodeConstants.Info.REQUIRED_ACCESS_PATTERN_GROUPS, GroupsUsedByElementsVisitor.getGroups(map.getValues()));
+                    joinRegion.setContainsNestedTable(true);
+            	}
             }
             
             //check for unsatisfied dependencies

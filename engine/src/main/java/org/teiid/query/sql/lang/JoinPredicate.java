@@ -22,12 +22,14 @@
 
 package org.teiid.query.sql.lang;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
-import org.teiid.query.sql.*;
-import org.teiid.query.sql.visitor.SQLStringVisitor;
+import org.teiid.query.sql.LanguageVisitor;
 
 
 /**
@@ -248,13 +250,5 @@ public class JoinPredicate extends FromClause {
         clonedJoinPredicate.setMakeNotDep(this.isMakeNotDep());
         return clonedJoinPredicate;
 	}
-
-    /**
-     * Returns a string representation of an instance of this class.
-     * @return String representation of object
-     */
-    public String toString() {
-    	return SQLStringVisitor.getSQLString(this);
-    }
 
 }

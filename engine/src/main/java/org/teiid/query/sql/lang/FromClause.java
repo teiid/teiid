@@ -26,6 +26,7 @@ import java.util.Collection;
 
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
 /**
@@ -86,5 +87,10 @@ public abstract class FromClause implements LanguageObject {
         return other.isOptional() == this.isOptional()
                && other.isMakeDep() == this.isMakeDep()
                && other.isMakeNotDep() == this.isMakeNotDep();
+    }
+    
+    @Override
+    public String toString() {
+    	return SQLStringVisitor.getSQLString(this);
     }
 }

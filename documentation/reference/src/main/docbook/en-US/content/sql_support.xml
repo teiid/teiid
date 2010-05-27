@@ -55,7 +55,7 @@
           ways, some prepending catalog or schema or user information,
           Teiid allows table specification to be a dot-delimited construct.
           <note>
-	        <para> When a table specification contains a dot resolving will allow for the match of
+	        <para>When a table specification contains a dot resolving will allow for the match of
 	        a partial name against any number of the end segments in the name.  e.g. a table with the 
 	        fully-qualified name vdbname."sourcescema.sourcetable" would match the partial name
 	        sourcetable.
@@ -569,7 +569,8 @@
 		      input of the parameter.</para>
           </listitem>
           <listitem>
-            <para>Input values are passed via criteria. Values can be passed by '=','is null', or 'in' predicates.  Disjuncts however are not allowed.
+            <para>Input values are passed via criteria. Values can be passed by '=','is null', or 'in' predicates.  Disjuncts are not allowed.  
+            It is also not possible to pass the value of a non-comparable column through an equality predicate.
             </para>
           </listitem>
           <listitem>
@@ -704,34 +705,121 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
         <listitem><para>FROM table1 [INNER|LEFT OUTER|RIGHT OUTER|FULL OUTER] JOIN table2 ON join-criteria</para></listitem>
         <listitem><para>FROM table1 CROSS JOIN table2</para></listitem>
         <listitem><para>FROM (subquery) [AS] alias</para></listitem>
-        <listitem><para>FROM <link linkend="nested_table">table(subquery)</link> [AS] alias</para></listitem>
+        <listitem><para>FROM <link linkend="nested_table">TABLE(subquery)</link> [AS] alias</para></listitem>
         <listitem><para>FROM table1 JOIN table2 MAKEDEP ON join-criteria</para></listitem>
         <listitem><para>FROM table1 JOIN table2 MAKENOTDEP ON join-criteria</para></listitem>
         <listitem><para>FROM table1 left outer join <link linkend="optional_join">/* optional */</link> table2 ON join-criteria</para></listitem>
+        <listitem><para>FROM <link linkend="texttable">TEXTTABLE...</link></para></listitem>
       </itemizedlist> 
       <note>
         <title>DEP Hints</title>
         <para>
           MAKEDEP and MAKENOTDEP are hints used to control
-          <link linkend="dependent_join">dependent join</link>
+          <link linkend="dependent_joins">dependent join</link>
           behavior. They should only be used in situations where the optimizer
           does not choose the most optimal plan based upon query structure,
           metadata, and costing information.
         </para>
       </note>
       <sect3 id="nested_table">
-      	<title>Nested Table Reference</title>
-      	<para>Nested tables may appear in the FROM clause with the TABLE keyword.  They are an alternative to using a view with normal join semantics.
+		<title>Nested Table Reference</title>
+		<para>Nested tables may appear in the FROM clause with the TABLE
+			keyword. They are an alternative to using a view with normal join
+			semantics.  The columns projected from the command contained in the nested table
+			 may be used just as any of the other FROM clause projected columns in join criteria, the where clause, etc.
       	</para>
-		<para>A nested table may have correlated references to preceeding FROM clause 
-	       column references as long as INNER and LEFT OUTER joins are used.  This is especially useful in cases where then nested expression is a procedure or function call.</para>
-	       <para>Valid Example: select * from t1, TABLE(call proc(t1.x)) t2</para>
-	       <para>Invalid Example: select * from TABLE(call proc(t1.x)) t2, t1</para>
-	       <note>
-		<title>Multiple Execution</title>
-		  <para>The usage of a correlated nested table may result in multiple executions of the table expression - once for each correlated row.</para>
-	  </note>      	
-      </sect3>
+		<para>A nested table may have correlated references to preceeding FROM
+			clause column references as long as INNER and LEFT OUTER joins are used. This is
+			especially useful in cases where then nested expression is a
+			procedure or function call.</para>
+		<para>Valid example: 
+		<programlisting>select * from t1, TABLE(call proc(t1.x)) t2</programlisting>
+		</para>
+		<para>Invalid example, since t1 appears after the nested table in the from clause: 
+		<programlisting>select * from TABLE(call proc(t1.x)) t2, t1</programlisting>
+		</para>
+		<note>
+			<title>Multiple Execution</title>
+			<para>The usage of a correlated nested table may result in multiple
+				executions of the table expression - once for each correlated row.
+			</para>
+		</note>
+	  </sect3>
+	  <sect3 id="texttable">
+		<title>TEXTTABLE</title>
+		<para>The TEXTTABLE funciton processes character input to produce tabular ouptut.  It supports both fixed and delimited file format parsing.  
+			The function itself defines what columns it projects.  
+		    The TEXTTABLE function is implicitly a nested table and may be correlated to preceeding FROM clause entries.
+      	</para>
+      	<para>
+        Usage:
+        	<synopsis label="Usage">TEXTTABLE(expression COLUMNS column, ... [DELIMITER char] [(QUOTE|ESCAPE) char] [HEADER [integer]] [SKIP integer]) AS identifier</synopsis>
+        	<synopsis label="Usage">column := identifier datatype [WIDTH integer]</synopsis> 
+      	</para>
+      	<itemizedlist>
+        <para>Syntax Rules:
+        </para>
+        <listitem>
+          <para>If width is specified for one column it must be specified for all columns.
+          </para>
+        </listitem>
+        <listitem>
+          <para>If width is specified, then fixed width parsing is used and ESCAPE, QUOTE, and HEADER should not be specified.
+          </para>
+        </listitem>
+        </itemizedlist>
+        <itemizedlist>
+        	<para>Parameters</para>
+        <listitem>
+          <para>expression - the text content to process, which should be convertable to CLOB.
+          </para>
+        </listitem>
+        <listitem>
+        	<para>DELIMITER sets the field delimiter character to use.  Defaults to ','.
+        	</para>
+        </listitem>
+        <listitem>
+        	<para>QUOTE sets the quote, or qualifier, character used to wrap field values.  Defaults to '"'.  
+        	</para>
+        </listitem>
+        <listitem>
+        	<para>ESCAPE sets the escape character to use if no quoting character is in use.  
+        	This is used in situations where the delimiter or new line characters are escaped with a preceding character, e.g. \,  
+        	</para>
+        </listitem>
+        <listitem>
+        	<para>HEADER specifies the text line number (counting every new line) on which the column names occur.  All lines prior to the header will be skipped.
+        	If HEADER is specified, then the header line will be used to determine the TEXTTABLE column position by case-insensitive name matching.  This is especially useful in situations where only a subset of the columns are needed.
+        	If the HEADER value is not specified, it defaults to 1.  
+        	If HEADER is not specified, then columns are expected to match positionally with the text contents. 
+        	</para>
+        </listitem>
+        <listitem>
+        	<para>SKIP specifies the number of text lines (counting every new line) to skip before parsing the contents.  HEADER may still be specified with SKP.
+        	</para>
+        </listitem>
+      	</itemizedlist>
+      	<itemizedlist>
+        	<para>Examples</para>
+        	<listitem>
+		        <para>Use of the HEADER parameter, returns 1 row ['b']: <programlisting>select * from texttable('col1,col2,col3\na,b,c' COLUMNS col2 string HEADER) x</programlisting>
+				</para>		
+        	</listitem>
+        	<listitem>
+		        <para>Use of fixed width, returns 1 row ['a', 'b', 'c']: <programlisting>select * from texttable('abc' COLUMNS col1 string width 1, col2 string width 1, col3 string width 1) x</programlisting>
+				</para>		
+        	</listitem>
+        	<listitem>
+		        <para>Use of ESCAPE parameter, returns 1 row ['a,', 'b']: <programlisting>select * from texttable('a:,,b' COLUMNS col1 string, col2 string ESCAPE ':') x</programlisting>
+				</para>		
+        	</listitem>
+        	<listitem>
+		        <para>As a nested table: <programlisting>select x.* from t, texttable(t.clobcolumn COLUMNS first string, second date SKIP 1) x</programlisting>
+				</para>		
+        	</listitem>
+        	
+		</itemizedlist>		
+	  </sect3>
     </sect2>
     <sect2 id="where_clause">
       <title>WHERE Clause</title>

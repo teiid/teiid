@@ -75,9 +75,11 @@ import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
+import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.lang.XQuery;
+import org.teiid.query.sql.lang.TextTable.TextColumn;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.BreakStatement;
@@ -427,11 +429,11 @@ public class SQLStringVisitor extends LanguageVisitor {
         parts.add(SPACE);
 
         // Columns clause
-        List columns = obj.getColumns();
+        List<ElementSymbol> columns = obj.getColumns();
         parts.add("("); //$NON-NLS-1$
-        Iterator iter = columns.iterator();
+        Iterator<ElementSymbol> iter = columns.iterator();
         while(iter.hasNext()) {
-            ElementSymbol element = (ElementSymbol) iter.next();
+            ElementSymbol element = iter.next();
             element.setDisplayMode(ElementSymbol.DisplayMode.SHORT_OUTPUT_NAME);
             parts.add(registerNode(element));
             parts.add(SPACE);
@@ -1604,13 +1606,12 @@ public class SQLStringVisitor extends LanguageVisitor {
     				parts.add("NO DEFAULT"); //$NON-NLS-1$
     			} else {
 	    			parts.add("DEFAULT '"); //$NON-NLS-1$
-	        		parts.add(escapeStringValue(item.getUri(), "'")); //$NON-NLS-1$
+	    			parts.add(registerNode(new Constant(item.getUri())));
 	        		parts.add("'"); //$NON-NLS-1$
     			}
     		} else {
-    			parts.add("'"); //$NON-NLS-1$
-    			parts.add(escapeStringValue(item.getUri(), "'")); //$NON-NLS-1$
-    			parts.add("' AS "); //$NON-NLS-1$
+    			parts.add(registerNode(new Constant(item.getUri())));
+    			parts.add(" AS "); //$NON-NLS-1$
         		outputDisplayName(item.getPrefix());
     		}
     		if (items.hasNext()) {
@@ -1629,6 +1630,66 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
         parts.add(SPACE);
         parts.add(registerNode(obj.getRowLimit()));
+    }
+    
+    @Override
+    public void visit(TextTable obj) {
+    	parts.add("TEXTTABLE("); //$NON-NLS-1$
+    	parts.add(registerNode(obj.getFile()));
+    	parts.add(SPACE);
+    	parts.add("COLUMNS"); //$NON-NLS-1$
+    	
+    	for (Iterator<TextColumn> cols = obj.getColumns().iterator(); cols.hasNext();) {
+    		TextColumn col = cols.next();
+    		parts.add(SPACE);
+    		outputDisplayName(col.getName());
+    		parts.add(SPACE);
+    		parts.add(col.getType());
+    		if (col.getWidth() != null) {
+        		parts.add(SPACE);
+    			parts.add("WIDTH"); //$NON-NLS-1$
+            	parts.add(SPACE);
+    			parts.add(col.getWidth());
+    		}
+    		if (cols.hasNext()) {
+    			parts.add(","); //$NON-NLS-1$
+    		}
+		}
+    	if (obj.getDelimiter() != null) {
+        	parts.add(SPACE);
+    		parts.add("DELIMITER"); //$NON-NLS-1$
+        	parts.add(SPACE);
+    		parts.add(registerNode(new Constant(obj.getDelimiter())));
+    	}
+    	if (obj.getQuote() != null) {
+        	parts.add(SPACE);
+        	if (obj.isEscape()) {
+        		parts.add(SQLReservedWords.ESCAPE);
+        	} else {
+        		parts.add("QUOTE"); //$NON-NLS-1$
+        	}
+        	parts.add(SPACE);
+    		parts.add(registerNode(new Constant(obj.getQuote())));
+    	}
+    	if (obj.getHeader() != null) {
+        	parts.add(SPACE);
+    		parts.add("HEADER"); //$NON-NLS-1$
+    		if (1 != obj.getHeader()) {
+	        	parts.add(SPACE);
+	    		parts.add(obj.getHeader());
+    		}
+    	}
+    	if (obj.getSkip() != null) {
+        	parts.add(SPACE);
+    		parts.add("SKIP"); //$NON-NLS-1$
+        	parts.add(SPACE);
+    		parts.add(obj.getSkip());
+    	}
+    	parts.add(")");//$NON-NLS-1$
+    	parts.add(SPACE);
+    	parts.add(SQLReservedWords.AS);
+    	parts.add(SPACE);
+		outputDisplayName(obj.getName());
     }
 
     public static String escapeSinglePart(String part) {

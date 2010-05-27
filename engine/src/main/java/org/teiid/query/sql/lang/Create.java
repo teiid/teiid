@@ -25,11 +25,10 @@ package org.teiid.query.sql.lang;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
-import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
@@ -41,7 +40,7 @@ public class Create extends Command {
     /** Identifies the table to be created. */
     private GroupSymbol table;
     
-    private List columns = new ArrayList();
+    private List<ElementSymbol> columns = new ArrayList<ElementSymbol>();
     
     public GroupSymbol getTable() {
         return table;
@@ -51,7 +50,7 @@ public class Create extends Command {
         this.table = table;
     }
     
-    public List getColumns() {
+    public List<ElementSymbol> getColumns() {
         return columns;
     }
     
@@ -100,7 +99,7 @@ public class Create extends Command {
         visitor.visit(this);
     }
 
-    public void setColumns(List columns) {
+    public void setColumns(List<ElementSymbol> columns) {
         this.columns = columns;
     }
     

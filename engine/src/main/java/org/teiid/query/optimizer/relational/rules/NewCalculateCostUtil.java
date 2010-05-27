@@ -345,9 +345,9 @@ public class NewCalculateCostUtil {
         
         float cost = UNKNOWN_VALUE;
         if(node.getChildCount() > 0) {
-        	Command command = (Command)node.getProperty(NodeConstants.Info.NESTED_COMMAND);
+        	SymbolMap references = (SymbolMap)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
         	//only cost non-correlated TODO: a better estimate for correlated
-        	if (command == null || command.getCorrelatedReferences() == null) {
+        	if (references == null) {
 	            PlanNode child = node.getFirstChild();
 	            Float childCostFloat = (Float)child.getProperty(NodeConstants.Info.EST_CARDINALITY);
 	            if (childCostFloat != null) {

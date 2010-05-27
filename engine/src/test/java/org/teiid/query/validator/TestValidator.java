@@ -63,6 +63,7 @@ import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.FakeMetadataObject;
 import org.teiid.query.unittest.FakeMetadataStore;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorReport;
 
@@ -1983,6 +1984,17 @@ public class TestValidator {
         String userSql = "SELECT xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', '//*[local-name()=\"bookName\"]', 'xmlns==')"; //$NON-NLS-1$
         helpValidate(userSql, new String[] {"xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', '//*[local-name()=\"bookName\"]', 'xmlns==')"}, FakeMetadataFactory.exampleBQTCached());
     }
+    
+    @Test public void testTextTableNegativeWidth() {        
+        helpValidate("SELECT * from texttable(null columns x string width -1) as x", new String[] {"TEXTTABLE(null COLUMNS x string WIDTH -1) AS x"}, RealMetadataFactory.exampleBQTCached()); 
+	}
+    
+    @Test public void testTextTableNoWidth() {        
+        helpValidate("SELECT * from texttable(null columns x string width 1, y integer) as x", new String[] {"TEXTTABLE(null COLUMNS x string WIDTH 1, y integer) AS x"}, RealMetadataFactory.exampleBQTCached()); 
+	}
 
-
+    @Test public void testTextTableInvalidDelimiter() {        
+        helpValidate("SELECT * from texttable(null columns x string width 1 DELIMITER 'z') as x", new String[] {"TEXTTABLE(null COLUMNS x string WIDTH 1 DELIMITER 'z') AS x"}, RealMetadataFactory.exampleBQTCached()); 
+	}
+    
 }

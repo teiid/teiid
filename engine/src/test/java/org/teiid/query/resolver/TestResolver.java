@@ -2941,4 +2941,9 @@ public class TestResolver {
     	helpResolveException("select pm1.g1.e1 from pm1.g1, (exec pm1.sq2(pm1.g1.e2)) x"); //$NON-NLS-1$
     }
     
+    @Test public void testCorrelatedTextTable() {
+    	Command command = helpResolve("select x.* from pm1.g1, texttable(e1 COLUMNS x string) x"); //$NON-NLS-1$
+    	assertEquals(1, command.getProjectedSymbols().size());
+    }
+    
 }

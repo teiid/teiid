@@ -146,7 +146,7 @@ public class NestedTableJoinStrategy extends JoinStrategy {
 			} else {
 				rightSource.close();
 				for (Map.Entry<ElementSymbol, Expression> entry : rightMap.asMap().entrySet()) {
-					joinNode.getContext().getVariableContext().setValue(entry.getKey(), null);
+					joinNode.getContext().getVariableContext().remove(entry.getKey());
 				}
 			}
 			
@@ -157,7 +157,7 @@ public class NestedTableJoinStrategy extends JoinStrategy {
 		if (leftMap != null) {
 			leftSource.close();
 			for (Map.Entry<ElementSymbol, Expression> entry : leftMap.asMap().entrySet()) {
-				joinNode.getContext().getVariableContext().setValue(entry.getKey(), null);
+				joinNode.getContext().getVariableContext().remove(entry.getKey());
 			}
 		}
 	}
@@ -167,7 +167,11 @@ public class NestedTableJoinStrategy extends JoinStrategy {
 		for (int i = 0; i < elements.size(); i++) {
 			SingleElementSymbol element = elements.get(i);
 			if (element instanceof ElementSymbol) {
-				joinNode.getContext().getVariableContext().setValue((ElementSymbol)element, tuple==null?null:tuple.get(i));
+				if (tuple == null) {
+					joinNode.getContext().getVariableContext().remove((ElementSymbol)element);
+				} else {
+					joinNode.getContext().getVariableContext().setValue((ElementSymbol)element, tuple.get(i));
+				}
 			}
 		}
 	}

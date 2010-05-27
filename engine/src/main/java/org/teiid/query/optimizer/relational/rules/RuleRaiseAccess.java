@@ -178,8 +178,8 @@ public final class RuleRaiseAccess implements OptimizerRule {
                     return null;
                 }
                 
-                Command command = (Command)parentNode.getProperty(NodeConstants.Info.NESTED_COMMAND);
-                if (command != null && command.getCorrelatedReferences() != null) {
+                SymbolMap references = (SymbolMap)parentNode.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+                if (references != null) {
                 	return null;
                 }
                 

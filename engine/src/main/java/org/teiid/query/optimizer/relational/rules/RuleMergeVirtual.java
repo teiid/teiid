@@ -90,8 +90,8 @@ public final class RuleMergeVirtual implements
             return root;
         }
         
-        Command command = (Command)frame.getProperty(NodeConstants.Info.NESTED_COMMAND);
-        if (command != null && command.getCorrelatedReferences() != null) {
+        SymbolMap references = (SymbolMap)frame.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+        if (references != null) {
         	return root; //correlated nested table commands should not be merged
         }
 

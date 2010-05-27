@@ -93,7 +93,7 @@ import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorReport;
 
-
+@SuppressWarnings("nls")
 public class TestProcessor {
 
 	// ################################## TEST HELPERS ################################
@@ -5254,21 +5254,28 @@ public class TestProcessor {
         FunctionLibrary funcLibrary = new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(new FakeFunctionMetadataSource().getFunctionMethods())));
         FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
         
-        
-        Command command = helpParse(sql);   
+        processPreparedStatement(sql, expected, dataManager, capFinder,
+				metadata, Arrays.asList("a    "));        
+    }
+
+	static void processPreparedStatement(String sql, List[] expected,
+			ProcessorDataManager dataManager, CapabilitiesFinder capFinder,
+			QueryMetadataInterface metadata, List<?> values) throws Exception {
+		Command command = helpParse(sql);   
         CommandContext context = createCommandContext();
         context.setMetadata(metadata);        
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder, context);
         
         // Collect reference, set value
-        Reference ref = ReferenceCollectorVisitor.getReferences(command).iterator().next();
         VariableContext vc = new VariableContext();
-        vc.setGlobalValue(ref.getContextSymbol(),  "a    "); //$NON-NLS-1$
+        Iterator<?> valIter = values.iterator();
+        for (Reference ref : ReferenceCollectorVisitor.getReferences(command)) {
+            vc.setGlobalValue(ref.getContextSymbol(),  valIter.next()); //$NON-NLS-1$
+		}
         context.setVariableContext(vc);
         // Run query
-        helpProcess(plan, context, dataManager, expected);        
-        
-    }    
+        helpProcess(plan, context, dataManager, expected);
+	}    
 
     /** defect 15348
      * @throws Exception */
@@ -5295,21 +5302,8 @@ public class TestProcessor {
         FunctionLibrary funcLibrary = new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(new FakeFunctionMetadataSource().getFunctionMethods())));
         FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
         
-        
-        Command command = helpParse(sql);   
-        CommandContext context = createCommandContext();
-        context.setMetadata(metadata);        
-        ProcessorPlan plan = helpGetPlan(command, metadata, capFinder, context);
-        
-        // Collect reference, set value
-        Reference ref = ReferenceCollectorVisitor.getReferences(command).iterator().next();
-        VariableContext vc = new VariableContext();
-        vc.setGlobalValue(ref.getContextSymbol(), "a"); //$NON-NLS-1$
-        context.setVariableContext(vc);
-        
-        // Run query
-        helpProcess(plan, context, dataManager, expected);        
-        
+        processPreparedStatement(sql, expected, dataManager, capFinder,
+				metadata, Arrays.asList("a")); 
     }      
 
     @Test public void testSourceDoesntSupportGroupAlias() {  
@@ -7297,15 +7291,6 @@ public class TestProcessor {
 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
-        Command command = helpParse("select ?, e1 from pm1.g1"); //$NON-NLS-1$   
-        ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
-        
-        Reference ref = ReferenceCollectorVisitor.getReferences(command).iterator().next();
-        VariableContext vc = new VariableContext();
-        vc.setGlobalValue(ref.getContextSymbol(), "a"); //$NON-NLS-1$
-        CommandContext context = createCommandContext();
-        context.setVariableContext(vc);
-        
         List[] expected = new List[] {
             Arrays.asList("a", "b"), //$NON-NLS-1$ //$NON-NLS-2$
             Arrays.asList("a", "c") //$NON-NLS-1$ //$NON-NLS-2$
@@ -7314,7 +7299,8 @@ public class TestProcessor {
         HardcodedDataManager manager = new HardcodedDataManager();
         manager.addData("SELECT 'a', pm1.g1.e1 FROM pm1.g1", expected); //$NON-NLS-1$ 
         
-        helpProcess(plan, context, manager, expected);
+        processPreparedStatement("select ?, e1 from pm1.g1", expected, manager, capFinder,
+				metadata, Arrays.asList("a")); 
     }
     
     @Test public void testCase6486() { 

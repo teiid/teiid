@@ -1880,7 +1880,9 @@ FromClause tablePrimary(ParseInfo info) :
 	Token lparen = null;
 }
 {
-	(	clause = unaryFromClause(info)
+	(	LOOKAHEAD(<ID> <LPAREN>, { "texttable".equalsIgnoreCase(getToken(1).image) }) clause = textTable(info)
+	    |
+	    clause = unaryFromClause(info)
 		|
 		LOOKAHEAD(subqueryFromClause(info)) clause = subqueryFromClause(info) 
 	    |			
@@ -1889,7 +1891,7 @@ FromClause tablePrimary(ParseInfo info) :
 			setFromClauseOptions(lparen, clause);
 		}
 		<RPAREN> 
-		) 
+		)
 	)
 	[	(<MAKEDEP>  { clause.setMakeDep(true); })
 	 	| (<MAKENOTDEP> {  clause.setMakeNotDep(true); } )
@@ -1898,6 +1900,103 @@ FromClause tablePrimary(ParseInfo info) :
 		return clause;
 	}
 }
+
+TextTable textTable(ParseInfo info) :
+{
+	Expression file = null;
+	String name = null;
+	Constant datatype = null;
+	List<TextTable.TextColumn> columns = new ArrayList<TextTable.TextColumn>();
+	Integer width = null;
+	Character delimiter = null;
+	boolean escape = false;
+	Character quote = null;
+	Integer header = null;
+	Integer skip = null;
+	Token columnsToken = null;
+	String aliasID = null;
+}
+{
+ 	<ID> <LPAREN> file = expression(info)
+ 	columnsToken = <ID> { if (!"columns".equalsIgnoreCase(columnsToken.image)) throw new ParseException(QueryPlugin.Util.getString("SQLParser.expected_columns")); }
+ 	name = id()
+	datatype = dataType()
+	[ 
+	  	LOOKAHEAD(<ID>, { "width".equalsIgnoreCase(getToken(1).image) }) <ID>
+	  	width = intVal() 
+	]
+	{
+		columns.add(new TextTable.TextColumn(validateElementName(name), (String)datatype.getValue(), width));
+		width = null;
+	} 
+	(<COMMA>
+		name = id()
+		datatype = dataType()
+		[ 
+		  	LOOKAHEAD(<ID>, { "width".equalsIgnoreCase(getToken(1).image) }) <ID>
+		  	width = intVal() 
+		]
+		{
+			columns.add(new TextTable.TextColumn(validateElementName(name), (String)datatype.getValue(), width));
+			width = null;
+		}
+	)* 
+	[
+	  LOOKAHEAD(<ID>, { "delimiter".equalsIgnoreCase(getToken(1).image) }) <ID>
+	  delimiter = charVal(info, "DELMITER")
+	]
+	[
+	  (<ESCAPE> quote = charVal(info, "ESCAPE") ) { escape = true; }
+	  |
+	  LOOKAHEAD(<ID>, { "quote".equalsIgnoreCase(getToken(1).image) })
+	  ( <ID> quote = charVal(info, "QUOTE") )
+	]
+	[
+	  LOOKAHEAD(<ID>, { "header".equalsIgnoreCase(getToken(1).image) }) <ID>
+	  [
+	  	header = intVal()
+	  ]
+	  {
+	  	if (header == null) {
+	  		header = 1;
+	  	}
+	  }
+	]
+	[
+	  LOOKAHEAD(<ID>, { "skip".equalsIgnoreCase(getToken(1).image) }) <ID>
+	  skip = intVal()
+	]
+ 	<RPAREN>
+ 	[<AS>] aliasID=id()
+ 	{
+ 		TextTable result = new TextTable();
+ 		result.setFile(file);
+ 		result.setColumns(columns);
+ 		result.setDelimiter(delimiter);
+ 		result.setEscape(escape);
+ 		result.setHeader(header);
+ 		result.setSkip(skip);
+ 		result.setName(validateAlias(aliasID));
+ 		result.setQuote(quote);
+ 		return result;
+ 	}
+}
+
+int intVal() :
+{
+	Token t;
+}
+{
+	t = <INTEGERVAL>
+	{
+		try { 
+			return Integer.valueOf(t.image); 				
+		} catch(NumberFormatException e1) { 
+			throw new ParseException(QueryPlugin.Util.getString("SQLParser.Integer_parse", t.image)); //$NON-NLS-1$
+		}
+	}
+}
+
 
 /**
  * Parse a unary from clause, which is just a single group name and an optional alias.
@@ -2228,8 +2327,8 @@ MatchCriteria matchCrit(ParseInfo info) :
     	[<NOT> {negated = true;}]
 	    <LIKE>
     	value=expression(info)
-	    [   esc = escapeChar(info) |
-            (<LBRACE> esc = escapeChar(info) <RBRACE>) 
+	    [   <ESCAPE> esc = charVal(info, "LIKE ESCAPE") |
+            (<LBRACE> <ESCAPE> esc = charVal(info, "LIKE ESCAPE") <RBRACE>) 
         ]
     )        
 	{
@@ -2242,15 +2341,15 @@ MatchCriteria matchCrit(ParseInfo info) :
    	}
 }
 
-Character escapeChar(ParseInfo info) :
+Character charVal(ParseInfo info, String type) :
 {
 	String escStr = null;
 }
 {
-	<ESCAPE> escStr=stringVal()
+	escStr=stringVal()
 	{
 		if (escStr.length() != 1) {
-			throw new ParseException(QueryPlugin.Util.getString("SQLParser.Invalid_escape_char", escStr)); //$NON-NLS-1$
+			throw new ParseException(QueryPlugin.Util.getString("SQLParser.Invalid_char", type, escStr)); //$NON-NLS-1$
 		}
 		return Character.valueOf(escStr.charAt(0));
 	}

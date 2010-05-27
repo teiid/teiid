@@ -40,6 +40,7 @@ import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionLibrary;
@@ -78,6 +79,7 @@ import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
+import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
@@ -113,7 +115,6 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.ErrorMessageKeys;
 import org.teiid.translator.SourceSystemFunctions;
-
 
 public class ValidationVisitor extends AbstractValidationVisitor {
 
@@ -1155,6 +1156,52 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     		if (arg instanceof ExpressionSymbol) {
     			handleValidationError("ValidationVisitor.expression_requires_name", arg); //$NON-NLS-1$
     		}
+		}
+    }
+    
+    @Override
+    public void visit(TextTable obj) {
+    	boolean widthSet = false;
+    	Character delimiter = null;
+    	Character quote = null;
+    	for (TextTable.TextColumn column : obj.getColumns()) {
+			if (column.getWidth() != null) {
+				widthSet = true;
+				if (column.getWidth() < 0) {
+					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_negative"), obj); //$NON-NLS-1$
+				}
+			} else if (widthSet) {
+    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_invalid_width"), obj); //$NON-NLS-1$
+			}
+		}
+    	if (widthSet) {
+    		if (obj.getDelimiter() != null || obj.getHeader() != null || obj.getQuote() != null) {
+        		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_width"), obj); //$NON-NLS-1$
+    		}
+    	} else {
+        	delimiter = obj.getDelimiter();
+    		if (delimiter == null) {
+    			delimiter = ',';
+    		}
+    	}
+    	if (obj.getSkip() != null && obj.getSkip() < 0) {
+    		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_negative"), obj); //$NON-NLS-1$
+    	}
+		if (!widthSet) {
+	    	if (obj.getHeader() != null && obj.getHeader() < 0) {
+	    		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_negative"), obj); //$NON-NLS-1$
+	    	}
+	    	quote = obj.getQuote();
+			if (quote == null) {
+				quote = '"';
+			} 
+			if (EquivalenceUtil.areEqual(quote, delimiter)) {
+				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_delimiter"), obj); //$NON-NLS-1$
+			}
+			if (EquivalenceUtil.areEqual(quote, '\n') 
+					|| EquivalenceUtil.areEqual(delimiter, '\n')) {
+				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_newline"), obj); //$NON-NLS-1$
+			}
 		}
     }
         

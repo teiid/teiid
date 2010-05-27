@@ -61,6 +61,7 @@ import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
+import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.lang.XQuery;
@@ -549,6 +550,14 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     public void visit(XMLNamespaces obj) {
     	preVisitVisitor(obj);
     	postVisitVisitor(obj);
+    }
+    
+    @Override
+    public void visit(TextTable obj) {
+        preVisitVisitor(obj);
+        visitNode(obj.getFile());
+        visitNode(obj.getGroupSymbol());
+        postVisitVisitor(obj);
     }
     
     public static void doVisit(LanguageObject object, LanguageVisitor visitor, boolean order) {

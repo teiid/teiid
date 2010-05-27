@@ -66,6 +66,7 @@ import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.BindVariableVisitor;
 import org.teiid.query.rewriter.QueryRewriter;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageObject.Util;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
@@ -86,6 +87,7 @@ import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.SubqueryFromClause;
+import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -672,24 +674,19 @@ public class RelationalPlanner implements CommandPlanner {
             Command nestedCommand = sfc.getCommand();
             node = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
             if (sfc.isTable()) {
-	            PlanNode rootJoin = parent;
-	            while (rootJoin.getParent() != null && rootJoin.getParent().getType() == NodeConstants.Types.JOIN) {
-	            	rootJoin = rootJoin.getParent();
-	            }
-	            List<Reference> correlatedReferences = new ArrayList<Reference>();
-	            CorrelatedReferenceCollectorVisitor.collectReferences(sfc, rootJoin.getGroups(), correlatedReferences);
-	            
-                if (!correlatedReferences.isEmpty()) {
-	                SymbolMap map = new SymbolMap();
-	                for (Reference reference : correlatedReferences) {
-	    				map.addMapping(reference.getExpression(), reference.getExpression());
-	    			}
-	                sfc.getCommand().setCorrelatedReferences(map);
-                }
+    		    sfc.getCommand().setCorrelatedReferences(getCorrelatedReferences(parent, node, sfc));
             }
             node.addGroup(group);
             addNestedCommand(node, group, nestedCommand, nestedCommand, true);
             hints.hasVirtualGroups = true;
+            parent.addLastChild(node);
+        } else if (clause instanceof TextTable) {
+        	TextTable tt = (TextTable)clause;
+            GroupSymbol group = tt.getGroupSymbol();
+            node = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
+            node.setProperty(NodeConstants.Info.TABLE_FUNCTION, tt);
+            tt.setCorrelatedReferences(getCorrelatedReferences(parent, node, tt));
+            node.addGroup(group);
             parent.addLastChild(node);
         }
         
@@ -704,6 +701,26 @@ public class RelationalPlanner implements CommandPlanner {
             node.setProperty(NodeConstants.Info.MAKE_NOT_DEP, Boolean.TRUE);
         }
     }
+
+	private SymbolMap getCorrelatedReferences(PlanNode parent, PlanNode node,
+			LanguageObject lo) {
+		PlanNode rootJoin = parent;
+		while (rootJoin.getParent() != null && rootJoin.getParent().getType() == NodeConstants.Types.JOIN) {
+			rootJoin = rootJoin.getParent();
+		}
+		List<Reference> correlatedReferences = new ArrayList<Reference>();
+		CorrelatedReferenceCollectorVisitor.collectReferences(lo, rootJoin.getGroups(), correlatedReferences);
+		
+		if (correlatedReferences.isEmpty()) {
+			return null;
+		}
+	    SymbolMap map = new SymbolMap();
+	    for (Reference reference : correlatedReferences) {
+			map.addMapping(reference.getExpression(), reference.getExpression());
+		}
+	    node.setProperty(NodeConstants.Info.CORRELATED_REFERENCES, map);
+	    return map;
+	}
 
 	private void addNestedCommand(PlanNode node,
 			GroupSymbol group, Command nestedCommand, Command toPlan, boolean merge) throws TeiidComponentException, QueryMetadataException, TeiidProcessingException {
