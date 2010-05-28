@@ -73,7 +73,7 @@ public class FileExecutionFactory extends ExecutionFactory implements MetadataPr
 
 		@Override
 		public void execute() throws TranslatorException {
-			FileConnection.Util.getFiles((String)command.getArguments().get(0).getArgumentValue().getValue(), fc);
+			files = FileConnection.Util.getFiles((String)command.getArguments().get(0).getArgumentValue().getValue(), fc);
 			String name = command.getProcedureName();
 			if (name.equalsIgnoreCase(GETTEXTFILES)) {
 				isText = true;
@@ -102,7 +102,7 @@ public class FileExecutionFactory extends ExecutionFactory implements MetadataPr
 				return null;
 			}
 			ArrayList<Object> result = new ArrayList<Object>(2);
-			final File file = files[index];
+			final File file = files[index++];
 			FileInputStreamFactory isf = new FileInputStreamFactory(file, encoding);
 			isf.setLength(file.length());
 			Object value = null;

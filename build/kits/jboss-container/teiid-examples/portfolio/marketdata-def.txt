@@ -1,6 +1,0 @@
-MarketData.Price.location = marketdata-price.txt
-MarketData.Price.delimiter = ,
-MarketData.Price.headerLine = 1
-MarketData.Price.skipHeaderLines = 1
-MarketData.Price.columns=SYMBOL,PRICE
-MarketData.Price.types=string,bigdecimal

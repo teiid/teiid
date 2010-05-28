@@ -23,11 +23,11 @@
     --> 
     <model name="MarketData">
         <!-- 
-            Each of source represents translator and data source  reading and writing data. There are pre-defined translators or
-            you can create one. They are defined using "-translator.xml" file. Connections define connections
-            to physical sources. In JBoss AS they are typically defined using "xxx-ds.xml" files. 
+            Each source represents a translator and data source. There are 
+            pre-defined translators, or you can create one. ConnectionFactories 
+            or DataSources in JBoss AS they are typically defined using "xxx-ds.xml" files. 
         -->
-        <source name="text-connector" translator-name="marketdata-text" connection-jndi-name="java:marketdata-text-connection"/>
+        <source name="text-connector" translator-name="file" connection-jndi-name="java:marketdata-file"/>
     </model>
 
     <model name="Accounts">

@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<translator-factory>
-    <translator>
-        <name>text</name>
-        <execution-factory-class>org.teiid.translator.text.TextExecutionFactory</execution-factory-class>
-        <template-name>translator-text-${project.version}</template-name>
-        <translator-property name="DescriptorFile" value="file://${jboss.server.home.dir}/teiid-examples/portfolio/marketdata-def.txt"/>
-    </translator>
-</translator-factory>

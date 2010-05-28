@@ -22,11 +22,16 @@
 
 package org.teiid.dqp.internal.datamgr.language;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import junit.framework.TestCase;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.DerivedColumn;
+import org.teiid.language.Literal;
+import org.teiid.language.Select;
 
 
 public class TestSelectSymbolImpl extends TestCase {
@@ -55,6 +60,19 @@ public class TestSelectSymbolImpl extends TestCase {
 
     public void testGetExpression() throws Exception {
         assertNotNull(example("testName", null).getExpression()); //$NON-NLS-1$
+    }
+    
+    public void testGetColumnDataTypes(){
+        Class<?>[] expectedResults = new Class[2];
+        List<DerivedColumn> symbols = new ArrayList<DerivedColumn>();
+        symbols.add(new DerivedColumn("c1", new Literal("3", DataTypeManager.DefaultDataClasses.STRING)));  //$NON-NLS-1$//$NON-NLS-2$
+        expectedResults[0] = DataTypeManager.DefaultDataClasses.STRING;
+        symbols.add(new DerivedColumn("c2", new Literal(new Integer(5), DataTypeManager.DefaultDataClasses.INTEGER)));  //$NON-NLS-1$
+        expectedResults[1] = DataTypeManager.DefaultDataClasses.INTEGER;
+        Select query = new Select(symbols, false, null, null, null, null, null);
+        Class<?>[] results = query.getColumnTypes();  
+        assertEquals( results[0], expectedResults[0]);
+        assertEquals( results[1], expectedResults[1]);     
     }
 
 }

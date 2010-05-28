@@ -9,7 +9,6 @@ Copy the PortfolioModel/Portolio.vdb file to the "<jboss home>/server/default/de
 Copy the Translators/ConnectionFactories for the example to the "<jboss home>/server/default/deploy" directory.
 	- marketdata-file-ds.xml
 	- portfolio-ds.xml 
-	- marketdata-text-translator.xml
  
 Start the JBoss Container
 

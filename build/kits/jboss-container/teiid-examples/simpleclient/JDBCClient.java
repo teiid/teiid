@@ -29,6 +29,7 @@ import java.sql.Statement;
 import org.teiid.jdbc.TeiidDataSource;
 import org.teiid.jdbc.TeiidStatement;
 
+@SuppressWarnings("nls")
 public class JDBCClient {
 	public static void main(String[] args) throws Exception {
 		if (args.length < 4) {
@@ -39,7 +40,7 @@ public class JDBCClient {
 		System.out.println("Executing using the TeiidDriver");
 		execute(getDriverConnection(args[0], args[1], args[2]), args[3]);
 
-		System.out.println("");
+		System.out.println("-----------------------------------");
 		System.out.println("Executing using the TeiidDataSource");
 		// this is showing how to make a Data Source connection. 
 		execute(getDataSourceConnection(args[0], args[1], args[2]), args[3]);
@@ -73,15 +74,14 @@ public class JDBCClient {
 			
 			ResultSetMetaData metadata = results.getMetaData();
 			int columns = metadata.getColumnCount();
-			
-			while(results.next()) {
+			System.out.println("Results");
+			for (int row = 1; results.next(); row++) {
+				System.out.println(row + ": ");
 				for (int i = 0; i < columns; i++) {
 					System.out.print(results.getString(i+1));
 					System.out.print(",");
 				}
-				System.out.println("");
 			}
-			
 			System.out.println("Query Plan");
 			System.out.println(statement.unwrap(TeiidStatement.class).getPlanDescription());
 			

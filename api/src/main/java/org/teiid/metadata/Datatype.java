@@ -28,7 +28,8 @@ import org.teiid.metadata.Column.SearchType;
 public class Datatype extends AbstractMetadataRecord {
 	
 	private static final long serialVersionUID = -7839335802224393230L;
-
+	private static final String OLD_PACKAGE = "com.metamatrix.common."; //$NON-NLS-1$
+	
 	public enum Type {
 		Basic,
 		UserDefined,
@@ -185,6 +186,12 @@ public class Datatype extends AbstractMetadataRecord {
      * @param string
      */
     public void setJavaClassName(String string) {
+    	if (string != null) {
+    		int index = string.indexOf(OLD_PACKAGE);
+    		if (index == 0) {
+    			string = "org.teiid.core." + string.substring(OLD_PACKAGE.length()); //$NON-NLS-1$
+    		}
+    	}
         javaClassName = string;
     }
 
