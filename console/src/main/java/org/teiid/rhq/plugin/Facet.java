@@ -319,11 +319,6 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 			componentType = new ComponentType(
 					PluginConstants.ComponentType.VDB.TYPE,
 					PluginConstants.ComponentType.VDB.SUBTYPE);
-		} else if (this.getComponentType()
-				.equals(PluginConstants.ComponentType.Translator.NAME)) {
-			componentType = new ComponentType(
-					PluginConstants.ComponentType.Translator.TYPE,
-					PluginConstants.ComponentType.Translator.SUBTYPE);
 		} else {
 			report.setStatus(ConfigurationUpdateStatus.FAILURE);
 			report.setErrorMessage("Update not implemented for the component type.");
@@ -496,11 +491,11 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 	@Override
 	public CreateResourceReport createResource(CreateResourceReport report) {
 		ResourceType resourceType = report.getResourceType();
-		if (resourceType.getName().equals("Translators")) {
-			createConfigurationBasedResource(report);
-		} else {
+//		if (resourceType.getName().equals("Translators")) {
+//			createConfigurationBasedResource(report);
+//		} else {
 			createContentBasedResource(report);
-		}
+//		}
 
 		return report;
 	}

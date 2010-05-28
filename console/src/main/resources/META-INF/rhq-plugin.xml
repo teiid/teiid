@@ -487,7 +487,7 @@
 								required="false" readOnly="true" />
 							<c:simple-property name="translatorName"
 								displayName="Translator Name" description="Name of the translator"
-								required="true" />
+								required="false" readOnly="true"/>
 							<c:simple-property name="jndiName" displayName="Connection JNDI Name"
 								description="JNDI name for this connection" required="false" />
 							<c:simple-property name="visibility"
@@ -548,75 +548,15 @@
 			class="TranslatorComponent" discovery="TranslatorDiscoveryComponent"
 			createDeletePolicy="both" creationDataType="configuration">
 
-			<plugin-configuration>
-				<c:simple-property name="componentType" default="teiid" readOnly="true" />
-				<c:simple-property name="componentSubtype" default="translator" readOnly="true" />
-				<c:simple-property name="componentName" default="teiid" readOnly="true" />
-				<c:simple-property name="template-name" default="translator"	readOnly="true" />
-				<c:simple-property name="resourceName" default="name">
-					<c:description>The name of the Resource configuration property
-						whose value should be used as the
-						Resource name when creating a new
-						Resource of this type.</c:description>
-				</c:simple-property>
-			</plugin-configuration>
-
 			<resource-configuration>
-				<c:simple-property name="name" displayName="Name" description="Name of the translator" />
-				<c:simple-property name="type" 	displayName="Type" description="Base Translator Type" readOnly="true"/>
+				<c:simple-property name="name" displayName="Name" description="Name of the translator" readOnly="true" required="false"/>
 				<c:list-property name="translatorList" readOnly="true" required="false"
-                			displayName="Translator Specific Properties" description="List of translator specific properties">
-					<c:map-property name="translator-properties" readOnly="true">
+                			displayName="Properties" description="Translator properties">
+					<c:map-property name="properties" readOnly="true">
 						<c:simple-property name="name" displayName="Name" description="Name of this property" readOnly="true" />
 						<c:simple-property name="value" displayName="Value"	description="Value of this property" readOnly="true"/>
-						<!--c:simple-property name="description" 	displayName="Description" description="Description of this property" readOnly="true"/-->
 					</c:map-property>
 				</c:list-property>
-
-				<c:template name="Access" description="Translator for Access">
-					<c:simple-property name="type" 	default="access" displayName="Type" description="Base Translator Type" readOnly="true"/>
-				</c:template>
-				<c:template name="DB2" description="Translator for DB2">
-                    <c:simple-property name="type" 	default="db2" displayName="Type" description="Base Translator Type" readOnly="true"/>
-				</c:template>
-				<c:template name="Derby" description="Translator for Derby">
-					<c:simple-property name="execution-factory-class"
-						default="org.teiid.translator.jdbc.derby.DerbyExecutionFactory"
-						displayName="execution-factory-class" description="Connector Class" />
-				</c:template>
-				<c:template name="H2" description="Translator for H2">
-                    <c:simple-property name="type" 	default="h2" displayName="Type" description="Base Translator Type" readOnly="true"/>				
-                </c:template>
-				<c:template name="HSQL" description="Translator for HSQL">
-					<c:simple-property name="type" 	default="hsql" displayName="Type" description="Base Translator Type" readOnly="true"/>
-				</c:template>
-				<c:template name="MySQL" description="Translator for MySQL">
-					<c:simple-property name="type" 	default="mysql" displayName="Type" description="Base Translator Type" readOnly="true"/>
-				</c:template>
-				<c:template name="MySQL5" description="Translator for MySQL 5">
-					<c:simple-property name="type" 	default="mysql5" displayName="Type" description="Base Translator Type" readOnly="true"/>
-				</c:template>
-				<c:template name="Oracle" description="Translator for Oracle">
-					<c:simple-property name="type" 	default="oracle" displayName="Type" description="Base Translator Type" readOnly="true"/>
-				</c:template>
-				<c:template name="SQLServer" description="Translator for SQLServer">
-					<c:simple-property name="type" 	default="sqlserver" displayName="Type" description="Base Translator Type" readOnly="true"/>
-				</c:template>
-				<c:template name="Sybase" description="Translator for Sybase">
-					<c:simple-property name="type" 	default="sybase" displayName="Type" description="Base Translator Type" readOnly="true"/>
-				</c:template>
-				<c:template name="LDAP" description="Translator for LDAP">
-					<c:simple-property name="type" 	default="ldap" displayName="Type" description="Base Translator Type" readOnly="true"/>
-				</c:template>
-				<c:template name="SalesForce" description="Translator for SalesForce">
-					<c:simple-property name="type" 	default="salesforce" displayName="Type" description="Base Translator Type" readOnly="true"/>
-				</c:template>
-				<c:template name="XML" description="Translator for XML">
-					<c:simple-property name="type" 	default="xml" displayName="Type" description="Base Translator Type" readOnly="true"/>
-				</c:template>
-				<c:template name="Loopback" description="Translator for Loopback">
-					<c:simple-property name="type" 	default="loopback" displayName="Type" description="Base Translator Type" readOnly="true"/>
-				</c:template>
 
 			</resource-configuration>
 
