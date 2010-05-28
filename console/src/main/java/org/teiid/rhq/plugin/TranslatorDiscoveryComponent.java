@@ -91,13 +91,15 @@ public class TranslatorDiscoveryComponent implements ResourceDiscoveryComponent 
 			 // Add to return values
 			// First get translator specific properties
 			ManagedProperty translatorProps = translator.getProperty("property");
+			PropertyList list = new PropertyList("translatorList");
+			PropertyMap propMap = null;
 			getTranslatorValues(translatorProps.getValue(), propMap, list);
 
 			// Now get common properties
-			c.put(new PropertySimple("name", translatorName));
-			c.put(new PropertySimple("type",ProfileServiceUtil.getSimpleValue(translator,"type", String.class)));
+			configuration.put(new PropertySimple("name", translatorName));
+			configuration.put(new PropertySimple("type",ProfileServiceUtil.getSimpleValue(translator,"type", String.class)));
 
-			detail.setPluginConfiguration(c);
+			detail.setPluginConfiguration(configuration);
 			// Add to return values
 			discoveredResources.add(detail);
 			log.debug("Discovered Teiid Translator: " + translatorName);
