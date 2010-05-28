@@ -24,11 +24,14 @@ package org.teiid.rhq.plugin.util;
 
 import java.io.File;
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -42,6 +45,7 @@ import org.jboss.deployers.spi.management.KnownDeploymentTypes;
 import org.jboss.deployers.spi.management.ManagementView;
 import org.jboss.deployers.spi.management.deploy.DeploymentManager;
 import org.jboss.managed.api.ComponentType;
+import org.jboss.managed.api.ManagedCommon;
 import org.jboss.managed.api.ManagedComponent;
 import org.jboss.managed.api.ManagedDeployment;
 import org.jboss.managed.api.ManagedProperty;
@@ -52,6 +56,7 @@ import org.jboss.metatype.api.types.SimpleMetaType;
 import org.jboss.metatype.api.values.EnumValue;
 import org.jboss.metatype.api.values.MetaValue;
 import org.jboss.metatype.api.values.SimpleValue;
+import org.jboss.metatype.api.values.SimpleValueSupport;
 import org.jboss.profileservice.spi.ProfileService;
 import org.rhq.core.domain.configuration.Configuration;
 import org.rhq.core.domain.configuration.Property;
@@ -70,7 +75,6 @@ import org.teiid.rhq.plugin.adapter.api.PropertyAdapter;
 import org.teiid.rhq.plugin.adapter.api.PropertyAdapterFactory;
 
 import com.sun.istack.NotNull;
-import com.sun.istack.Nullable;
 
 public class ProfileServiceUtil {
 
@@ -305,6 +309,23 @@ public class ProfileServiceUtil {
 		}
 		return null;
 	}
+	
+	public static <T> T getSimpleValue(ManagedCommon mc, String prop, Class<T> expectedType) {
+		 ManagedProperty mp = mc.getProperty(prop);
+		 if (mp != null) {
+			 MetaType metaType = mp.getMetaType();
+			 if (metaType.isSimple()) {
+		            SimpleValue simpleValue = (SimpleValue)mp.getValue();
+		            return expectedType.cast((simpleValue != null) ? simpleValue.getValue() : null);
+			 }
+			 else if (metaType.isEnum()) {
+				 EnumValue enumValue = (EnumValue)mp.getValue();
+				 return expectedType.cast((enumValue != null) ? enumValue.getValue() : null);
+			 }
+			 throw new IllegalArgumentException(prop+ " is not a simple type"); //$NON-NLS-1$
+		 }
+		 return null;
+	}	
 
 	public static Map<String, PropertySimple> getCustomProperties(
 			Configuration pluginConfig) {
@@ -403,7 +424,7 @@ public class ProfileServiceUtil {
 		return;
 	}
 
-	private static void populateManagedPropertyFromProperty(ManagedProperty managedProperty,
+	public static void populateManagedPropertyFromProperty(ManagedProperty managedProperty,
 			PropertyDefinition propertyDefinition, Configuration configuration) {
     	// If the ManagedProperty defines a default value, assume it's more
 		// definitive than any default value that may
@@ -418,13 +439,15 @@ public class ProfileServiceUtil {
 		PropertyAdapter propertyAdapter = null;
 		if (metaValue != null) {
 			LOG.trace("Populating existing MetaValue of type "
-					+ metaValue.getMetaType() + " from RHQ property "
+					+ metaValue.getMetaType() + " from Teiid property "
 					+ propertyDefinition.getName() + " with definition " + propertyDefinition
 					+ "...");
 			propertyAdapter = PropertyAdapterFactory
 						.getPropertyAdapter(metaValue);
+			
 			propertyAdapter.populateMetaValueFromProperty(configuration.getSimple(propertyDefinition.getName()), metaValue,
-					propertyDefinition);
+						propertyDefinition);
+			managedProperty.setValue(metaValue);
 		} else {
 			MetaType metaType = managedProperty.getMetaType(); 
 			if (propertyAdapter == null)
@@ -434,9 +457,10 @@ public class ProfileServiceUtil {
 					+ propertyDefinition + " to MetaValue of type " + metaType
 					+ "...");
 			metaValue = propertyAdapter.convertToMetaValue(configuration.getSimple(propertyDefinition.getName()),
-					propertyDefinition, metaType);
+					propertyDefinition, metaType);		
 			managedProperty.setValue(metaValue);
 		}
+		
 	}
 
 	private static void updateDefaultValueOnPropertyDefinition(
@@ -487,7 +511,7 @@ public class ProfileServiceUtil {
 					.getPropertyDefinitions();
 			if (memberPropDefs.isEmpty())
 				throw new IllegalStateException(
-						"PropertyDefinitionMap doesn't contain any member PropertyDefinitions.");
+						"PropertyDefinitionMap doesn't contain any member PropertyDefinitions."); //$NON-NLS-1$
 			// NOTE: We assume member prop defs are all of the same type, since
 			// for MapCompositeMetaTypes, they have to be.
 			PropertyDefinition mapMemberPropDef = memberPropDefs.values()
@@ -496,7 +520,7 @@ public class ProfileServiceUtil {
 			memberMetaType = new MapCompositeMetaType(mapMemberMetaType);
 		} else {
 			throw new IllegalStateException(
-					"List member PropertyDefinition has unknown type: "
+					"List member PropertyDefinition has unknown type: " //$NON-NLS-1$
 							+ propDef.getClass().getName());
 		}
 		return memberMetaType;
@@ -530,6 +554,59 @@ public class ProfileServiceUtil {
 	        memberMetaType = SimpleMetaType.resolve(memberClass.getName());
 	        return memberMetaType;
 	    }
+	 
+	 public static SimpleValue wrap(MetaType type, String value) throws Exception {
+			if (type instanceof SimpleMetaType) {
+				SimpleMetaType st = (SimpleMetaType)type;
+				
+				if (SimpleMetaType.BIGDECIMAL.equals(st)) {
+					return new SimpleValueSupport(st, new BigDecimal(value));
+				} else if (SimpleMetaType.BIGINTEGER.equals(st)) {
+					return new SimpleValueSupport(st, new BigInteger(value));
+				} else if (SimpleMetaType.BOOLEAN.equals(st)) {
+					return new SimpleValueSupport(st, Boolean.valueOf(value));
+				} else if (SimpleMetaType.BOOLEAN_PRIMITIVE.equals(st)) {
+					return new SimpleValueSupport(st, Boolean.valueOf(value).booleanValue());
+				} else if (SimpleMetaType.BYTE.equals(st)) {
+					return new SimpleValueSupport(st, new Byte(value.getBytes()[0]));
+				} else if (SimpleMetaType.BYTE_PRIMITIVE.equals(st)) {
+					return new SimpleValueSupport(st, value.getBytes()[0]);
+				} else if (SimpleMetaType.CHARACTER.equals(st)) {
+					return new SimpleValueSupport(st, new Character(value.charAt(0)));
+				} else if (SimpleMetaType.CHARACTER_PRIMITIVE.equals(st)) {
+					return new SimpleValueSupport(st,value.charAt(0));
+				} else if (SimpleMetaType.DATE.equals(st)) {
+					try {
+						return new SimpleValueSupport(st, SimpleDateFormat.getInstance().parse(value));
+					} catch (ParseException e) {
+						throw new Exception("Failed to convert value to SimpleValue", e); //$NON-NLS-1$
+					}
+				} else if (SimpleMetaType.DOUBLE.equals(st)) {
+					return new SimpleValueSupport(st, Double.valueOf(value));
+				} else if (SimpleMetaType.DOUBLE_PRIMITIVE.equals(st)) {
+					return new SimpleValueSupport(st, Double.parseDouble(value));
+				} else if (SimpleMetaType.FLOAT.equals(st)) {
+					return new SimpleValueSupport(st, Float.parseFloat(value));
+				} else if (SimpleMetaType.FLOAT_PRIMITIVE.equals(st)) {
+					return new SimpleValueSupport(st, Float.valueOf(value));
+				} else if (SimpleMetaType.INTEGER.equals(st)) {
+					return new SimpleValueSupport(st, Integer.valueOf(value));
+				} else if (SimpleMetaType.INTEGER_PRIMITIVE.equals(st)) {
+					return new SimpleValueSupport(st, Integer.parseInt(value));
+				} else if (SimpleMetaType.LONG.equals(st)) {
+					return new SimpleValueSupport(st, Long.valueOf(value));
+				} else if (SimpleMetaType.LONG_PRIMITIVE.equals(st)) {
+					return new SimpleValueSupport(st, Long.parseLong(value));
+				} else if (SimpleMetaType.SHORT.equals(st)) {
+					return new SimpleValueSupport(st, Short.valueOf(value));
+				} else if (SimpleMetaType.SHORT_PRIMITIVE.equals(st)) {
+					return new SimpleValueSupport(st, Short.parseShort(value));
+				} else if (SimpleMetaType.STRING.equals(st)) {
+					return new SimpleValueSupport(st,value);
+				}
+			}
+			throw new Exception("Failed to convert value to SimpleValue"); //$NON-NLS-1$
+		} 
 
 
 }

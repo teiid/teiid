@@ -39,6 +39,7 @@ import org.jboss.deployers.spi.management.deploy.DeploymentProgress;
 import org.jboss.deployers.spi.management.deploy.DeploymentStatus;
 import org.jboss.managed.api.ComponentType;
 import org.jboss.managed.api.DeploymentTemplateInfo;
+import org.jboss.managed.api.ManagedComponent;
 import org.jboss.managed.api.ManagedProperty;
 import org.jboss.profileservice.spi.NoSuchDeploymentException;
 import org.rhq.core.domain.configuration.Configuration;
@@ -74,6 +75,7 @@ import org.teiid.rhq.admin.DQPManagementView;
 import org.teiid.rhq.comm.ExecutedResult;
 import org.teiid.rhq.plugin.objects.ExecutedOperationResultImpl;
 import org.teiid.rhq.plugin.util.DeploymentUtils;
+import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 
 /**
@@ -169,8 +171,8 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 	public void setResourceConfiguration(Configuration resourceConfiguration) {
 		this.resourceConfiguration = resourceConfiguration;
 	}
-
-	public String getComponentName() {
+	
+	public String componentType() {
 		return name;
 	}
 
@@ -191,7 +193,7 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 		// moved this logic up to the associated implemented class
 		throw new InvalidPluginConfigurationException(
 				"Not implemented on component type " + this.getComponentType()
-						+ " named " + this.getComponentName());
+						+ " named " + this.name);
 
 	}
 
@@ -200,7 +202,7 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 		// moved this logic up to the associated implemented class
 		throw new InvalidPluginConfigurationException(
 				"Not implemented on component type " + this.getComponentType()
-						+ " named " + this.getComponentName());
+						+ " named " + this.name);
 
 	}
 
@@ -306,10 +308,78 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 	 * @see ConfigurationFacet#updateResourceConfiguration(ConfigurationUpdateReport)
 	 */
 	public void updateResourceConfiguration(ConfigurationUpdateReport report) {
-		// this simulates the plugin taking the new configuration and
-		// reconfiguring the managed resource
+
 		resourceConfiguration = report.getConfiguration().deepCopy();
+
+		Configuration resourceConfig = report.getConfiguration();
+		
+		ManagementView managementView = null; 
+		ComponentType componentType = null;
+		if (this.getComponentType().equals(PluginConstants.ComponentType.VDB.NAME)) {
+			componentType = new ComponentType(
+					PluginConstants.ComponentType.VDB.TYPE,
+					PluginConstants.ComponentType.VDB.SUBTYPE);
+		} else if (this.getComponentType()
+				.equals(PluginConstants.ComponentType.Translator.NAME)) {
+			componentType = new ComponentType(
+					PluginConstants.ComponentType.Translator.TYPE,
+					PluginConstants.ComponentType.Translator.SUBTYPE);
+		} else {
+			report.setStatus(ConfigurationUpdateStatus.FAILURE);
+			report.setErrorMessage("Update not implemented for the component type.");
+		}
+
+		ManagedComponent managedComponent = null;
 		report.setStatus(ConfigurationUpdateStatus.SUCCESS);
+		try {
+			
+			managementView = ProfileServiceUtil.getManagementView(
+				ProfileServiceUtil.getProfileService(), true);
+			managedComponent = managementView.getComponent(this.name, componentType);
+			Map<String, ManagedProperty> managedProperties = managedComponent
+					.getProperties();
+
+			ProfileServiceUtil.convertConfigurationToManagedProperties(
+					managedProperties, resourceConfig, resourceContext
+							.getResourceType());
+
+			try {
+				managementView.updateComponent(managedComponent);				
+			} catch (Exception e) {
+				LOG.error("Unable to update component ["
+						+ managedComponent.getName() + "] of type "
+						+ componentType + ".", e);
+				report.setStatus(ConfigurationUpdateStatus.FAILURE);
+				report.setErrorMessageFromThrowable(e);
+			}
+		} catch (Exception e) {
+			LOG.error("Unable to process update request", e);
+			report.setStatus(ConfigurationUpdateStatus.FAILURE);
+			report.setErrorMessageFromThrowable(e);
+		}
+	}
+
+	/**
+	 * @return
+	 * @throws Exception
+	 */
+	protected Map<String, ManagedProperty> getManagedProperties()
+			throws Exception {
+		return null;
+	}
+
+	/**
+	 * @param managedComponent
+	 * @throws Exception
+	 */
+	protected void updateComponent(ManagedComponent managedComponent)
+			throws Exception {
+		log.trace("Updating " + this.name + " with component "
+				+ managedComponent.toString() + "...");
+		ManagementView managementView = ProfileServiceUtil.getManagementView(
+				ProfileServiceUtil.getProfileService(), false);
+		managementView.updateComponent(managedComponent);
+		
 	}
 
 	@Override
@@ -407,7 +477,6 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 		return null;
 	}
 
-	
 	protected static Configuration getDefaultPluginConfiguration(
 			ResourceType resourceType) {
 		ConfigurationTemplate pluginConfigDefaultTemplate = resourceType
@@ -416,92 +485,94 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 				.createConfiguration()
 				: new Configuration();
 	}
-	
-	
 
-	/* (non-Javadoc)
-	 * @see org.rhq.core.pluginapi.inventory.CreateChildResourceFacet#createResource(org.rhq.core.pluginapi.inventory.CreateResourceReport)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.rhq.core.pluginapi.inventory.CreateChildResourceFacet#createResource
+	 * (org.rhq.core.pluginapi.inventory.CreateResourceReport)
 	 */
 	@Override
 	public CreateResourceReport createResource(CreateResourceReport report) {
 		ResourceType resourceType = report.getResourceType();
-		if (resourceType.getName().equals("Translators")){
+		if (resourceType.getName().equals("Translators")) {
 			createConfigurationBasedResource(report);
-		}else{
+		} else {
 			createContentBasedResource(report);
 		}
-		
+
 		return report;
 	}
-	
+
 	private CreateResourceReport createConfigurationBasedResource(
 			CreateResourceReport createResourceReport) {
 		ResourceType resourceType = createResourceReport.getResourceType();
-		Configuration defaultPluginConfig =
-			 getDefaultPluginConfiguration(resourceType);
-			Configuration resourceConfig = createResourceReport
-					.getResourceConfiguration();
-			String resourceName = getResourceName(defaultPluginConfig,
-					resourceConfig);
-			ComponentType componentType = ProfileServiceUtil
-					.getComponentType(resourceType);
-			ManagementView managementView = null;;
+		Configuration defaultPluginConfig = getDefaultPluginConfiguration(resourceType);
+		Configuration resourceConfig = createResourceReport
+				.getResourceConfiguration();
+		String resourceName = getResourceName(defaultPluginConfig,
+				resourceConfig);
+		ComponentType componentType = ProfileServiceUtil
+				.getComponentType(resourceType);
+		ManagementView managementView = null;
+		;
+		try {
+			managementView = ProfileServiceUtil.getManagementView(
+					ProfileServiceUtil.getProfileService(), true);
+		} catch (NamingException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		if (ProfileServiceUtil.isManagedComponent(managementView, resourceName,
+				componentType)) {
+			createResourceReport.setStatus(CreateResourceStatus.FAILURE);
+			createResourceReport.setErrorMessage("A " + resourceType.getName()
+					+ " named '" + resourceName + "' already exists.");
+			return createResourceReport;
+		}
+
+		createResourceReport.setResourceName(resourceName);
+		String resourceKey = getResourceKey(resourceType, resourceName);
+		createResourceReport.setResourceKey(resourceKey);
+
+		PropertySimple templateNameProperty = resourceConfig
+				.getSimple(TranslatorComponent.Config.TEMPLATE_NAME);
+		String templateName = templateNameProperty.getStringValue();
+
+		DeploymentTemplateInfo template;
+		Set templateNamesSet = managementView.getTemplateNames();
+		try {
+			template = managementView.getTemplate(templateName);
+			Map<String, ManagedProperty> managedProperties = template
+					.getProperties();
+
+			ProfileServiceUtil.convertConfigurationToManagedProperties(
+					managedProperties, resourceConfig, resourceType);
+
+			LOG.debug("Applying template [" + templateName
+					+ "] to create ManagedComponent of type [" + componentType
+					+ "]...");
 			try {
-				managementView = ProfileServiceUtil.getManagementView(
-						ProfileServiceUtil.getProfileService(), true);
-			} catch (NamingException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-			if (ProfileServiceUtil.isManagedComponent(managementView,
-					resourceName, componentType)) {
-				createResourceReport.setStatus(CreateResourceStatus.FAILURE);
-				createResourceReport.setErrorMessage("A " + resourceType.getName()
-						+ " named '" + resourceName + "' already exists.");
-				return createResourceReport;
-			}
-
-			createResourceReport.setResourceName(resourceName);
-			String resourceKey = getResourceKey(resourceType, resourceName);
-			createResourceReport.setResourceKey(resourceKey);
-
-			PropertySimple templateNameProperty = resourceConfig
-					.getSimple(TranslatorComponent.Config.TEMPLATE_NAME);
-			String templateName = templateNameProperty.getStringValue();
-
-			DeploymentTemplateInfo template;
-			Set templateNamesSet = managementView.getTemplateNames();
-			try {
-				template = managementView.getTemplate(templateName);
-				Map<String, ManagedProperty> managedProperties = template
-						.getProperties();
-			
-				ProfileServiceUtil.convertConfigurationToManagedProperties(
-						managedProperties, resourceConfig, resourceType);
-				
-				LOG.debug("Applying template [" + templateName
-						+ "] to create ManagedComponent of type [" + componentType
-						+ "]...");
-				try {
-					managementView.applyTemplate(resourceName, template);
-					managementView.process();
-					createResourceReport.setStatus(CreateResourceStatus.SUCCESS);
-				} catch (Exception e) {
-					LOG.error("Unable to apply template [" + templateName
-							+ "] to create ManagedComponent of type "
-							+ componentType + ".", e);
-					createResourceReport.setStatus(CreateResourceStatus.FAILURE);
-					createResourceReport.setException(e);
-				}
-			} catch (NoSuchDeploymentException e) {
-				LOG.error("Unable to find template [" + templateName + "].", e);
-				createResourceReport.setStatus(CreateResourceStatus.FAILURE);
-				createResourceReport.setException(e);
+				managementView.applyTemplate(resourceName, template);
+				managementView.process();
+				createResourceReport.setStatus(CreateResourceStatus.SUCCESS);
 			} catch (Exception e) {
-				LOG.error("Unable to process create request", e);
+				LOG.error("Unable to apply template [" + templateName
+						+ "] to create ManagedComponent of type "
+						+ componentType + ".", e);
 				createResourceReport.setStatus(CreateResourceStatus.FAILURE);
 				createResourceReport.setException(e);
 			}
+		} catch (NoSuchDeploymentException e) {
+			LOG.error("Unable to find template [" + templateName + "].", e);
+			createResourceReport.setStatus(CreateResourceStatus.FAILURE);
+			createResourceReport.setException(e);
+		} catch (Exception e) {
+			LOG.error("Unable to process create request", e);
+			createResourceReport.setStatus(CreateResourceStatus.FAILURE);
+			createResourceReport.setException(e);
+		}
 		return createResourceReport;
 	}
 
@@ -545,28 +616,34 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 		}
 
 	}
-	
-	private static String getResourceName(Configuration pluginConfig, Configuration resourceConfig)
-    {
-        PropertySimple resourceNameProp = pluginConfig.getSimple(TranslatorComponent.Config.RESOURCE_NAME);
-        if (resourceNameProp == null || resourceNameProp.getStringValue() == null)
-            throw new IllegalStateException("Property [" + TranslatorComponent.Config.RESOURCE_NAME
-                    + "] is not defined in the default plugin configuration.");
-        String resourceNamePropName = resourceNameProp.getStringValue();
-        PropertySimple propToUseAsResourceName = resourceConfig.getSimple(resourceNamePropName);
-        if (propToUseAsResourceName == null)
-            throw new IllegalStateException("Property [" + resourceNamePropName
-                    + "] is not defined in initial Resource configuration.");
-        return propToUseAsResourceName.getStringValue();
-    }
-    
-    private String getResourceKey(ResourceType resourceType, String resourceName)
-    {
-        ComponentType componentType = ProfileServiceUtil.getComponentType(resourceType);
-        if (componentType == null)
-            throw new IllegalStateException("Unable to map " + resourceType + " to a ComponentType.");
-        return componentType.getType() + ":" + componentType.getSubtype() + ":" + resourceName;
-    }
+
+	private static String getResourceName(Configuration pluginConfig,
+			Configuration resourceConfig) {
+		PropertySimple resourceNameProp = pluginConfig
+				.getSimple(TranslatorComponent.Config.RESOURCE_NAME);
+		if (resourceNameProp == null
+				|| resourceNameProp.getStringValue() == null)
+			throw new IllegalStateException("Property ["
+					+ TranslatorComponent.Config.RESOURCE_NAME
+					+ "] is not defined in the default plugin configuration.");
+		String resourceNamePropName = resourceNameProp.getStringValue();
+		PropertySimple propToUseAsResourceName = resourceConfig
+				.getSimple(resourceNamePropName);
+		if (propToUseAsResourceName == null)
+			throw new IllegalStateException("Property [" + resourceNamePropName
+					+ "] is not defined in initial Resource configuration.");
+		return propToUseAsResourceName.getStringValue();
+	}
+
+	private String getResourceKey(ResourceType resourceType, String resourceName) {
+		ComponentType componentType = ProfileServiceUtil
+				.getComponentType(resourceType);
+		if (componentType == null)
+			throw new IllegalStateException("Unable to map " + resourceType
+					+ " to a ComponentType.");
+		return componentType.getType() + ":" + componentType.getSubtype() + ":"
+				+ resourceName;
+	}
 
 	/**
 	 * Returns an instantiated and loaded versions store access point.

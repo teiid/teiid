@@ -24,6 +24,8 @@ package org.teiid.rhq.plugin;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,19 +33,25 @@ import javax.naming.NamingException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jboss.deployers.spi.management.ManagementView;
+import org.jboss.managed.api.ComponentType;
 import org.jboss.managed.api.ManagedComponent;
 import org.jboss.managed.api.ManagedObject;
 import org.jboss.managed.api.ManagedProperty;
 import org.jboss.managed.plugins.ManagedObjectImpl;
 import org.jboss.metatype.api.types.MetaType;
+import org.jboss.metatype.api.types.SimpleMetaType;
 import org.jboss.metatype.api.values.CollectionValueSupport;
 import org.jboss.metatype.api.values.EnumValueSupport;
+import org.jboss.metatype.api.values.GenericValue;
 import org.jboss.metatype.api.values.GenericValueSupport;
 import org.jboss.metatype.api.values.MetaValue;
+import org.jboss.metatype.api.values.MetaValueFactory;
 import org.jboss.metatype.api.values.SimpleValue;
 import org.jboss.metatype.api.values.SimpleValueSupport;
 import org.rhq.core.domain.configuration.Configuration;
 import org.rhq.core.domain.configuration.ConfigurationUpdateStatus;
+import org.rhq.core.domain.configuration.Property;
 import org.rhq.core.domain.configuration.PropertyList;
 import org.rhq.core.domain.configuration.PropertyMap;
 import org.rhq.core.domain.configuration.PropertySimple;
@@ -52,7 +60,6 @@ import org.rhq.core.domain.measurement.MeasurementDataNumeric;
 import org.rhq.core.domain.measurement.MeasurementDataTrait;
 import org.rhq.core.domain.measurement.MeasurementReport;
 import org.rhq.core.domain.measurement.MeasurementScheduleRequest;
-import org.rhq.core.domain.resource.ResourceType;
 import org.rhq.core.pluginapi.configuration.ConfigurationFacet;
 import org.rhq.core.pluginapi.configuration.ConfigurationUpdateReport;
 import org.rhq.core.pluginapi.inventory.CreateResourceReport;
@@ -82,18 +89,9 @@ public class VDBComponent extends Facet {
 	public void start(ResourceContext context) {
 		this.setComponentName(context.getPluginConfiguration().getSimpleValue(
 				"name", null));
-		this.resourceConfiguration=context.getPluginConfiguration();
+		this.resourceConfiguration = context.getPluginConfiguration();
+		this.componentType = PluginConstants.ComponentType.VDB.NAME;
 		super.start(context);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.teiid.rhq.plugin.Facet#getComponentName()
-	 */
-	@Override
-	public String getComponentName() {
-		return this.name;
 	}
 
 	@Override
@@ -126,8 +124,7 @@ public class VDBComponent extends Facet {
 	@Override
 	public AvailabilityType getAvailability() {
 		// TODO Remove vdb version after no longer viable in Teiid
-		String status = DQPManagementView.getVDBStatus(this.getComponentName(),
-				1);
+		String status = DQPManagementView.getVDBStatus(this.name, 1);
 		if (status.equals("ACTIVE")) {
 			return AvailabilityType.UP;
 		}
@@ -232,12 +229,113 @@ public class VDBComponent extends Facet {
 	 * @see ConfigurationFacet#updateResourceConfiguration(ConfigurationUpdateReport)
 	 */
 	public void updateResourceConfiguration(ConfigurationUpdateReport report) {
-		// this simulates the plugin taking the new configuration and
-		// reconfiguring the managed resource
-		resourceConfiguration = report.getConfiguration().deepCopy();
+
+		Configuration resourceConfig = report.getConfiguration();
+		resourceConfiguration = resourceConfig.deepCopy();
+
+		// First update simple properties
+		super.updateResourceConfiguration(report);
+
+		// Then update models
+		ManagementView managementView = null;
+		ComponentType componentType = new ComponentType(
+				PluginConstants.ComponentType.VDB.TYPE,
+				PluginConstants.ComponentType.VDB.SUBTYPE);
+
+		ManagedComponent managedComponent = null;
+		CollectionValueSupport modelsMetaValue = null;
 		report.setStatus(ConfigurationUpdateStatus.SUCCESS);
+		try {
+
+			managementView = ProfileServiceUtil.getManagementView(
+					ProfileServiceUtil.getProfileService(), true);
+			managedComponent = managementView.getComponent(this.name,
+					componentType);
+			ManagedProperty mp = managedComponent.getProperty("models");//$NON-NLS-1$
+			List<ManagedObject> modelsMp = (List<ManagedObject>) MetaValueFactory
+					.getInstance().unwrap(mp.getValue());
+			modelsMetaValue = (CollectionValueSupport) managedComponent
+					.getProperty("models").getValue();
+			GenericValue[] models = (GenericValue[]) modelsMetaValue
+					.getElements();
+			List<Property> multiSourceModelsPropertyList = resourceConfiguration
+					.getList("multiSourceModels").getList();
+			List<Property> singleSourceModelsPropertyList = resourceConfiguration
+					.getList("singleSourceModels").getList();
+			ArrayList<List<Property>> sourceMappingList = new ArrayList<List<Property>>();
+			sourceMappingList.add(singleSourceModelsPropertyList);
+			sourceMappingList.add(multiSourceModelsPropertyList);
+			PropertyMap model = null;
+			Iterator<List<Property>> sourceMappingListIterator = sourceMappingList.iterator();
+			while (sourceMappingListIterator.hasNext()) {
+				List<Property> sourceList = sourceMappingListIterator.next();
+				for (int i = 0; i < sourceList.size(); i++) {
+					model = (PropertyMap) sourceList.get(i);
+					String sourceName = ((PropertySimple) model
+							.get("sourceName")).getStringValue(); //$NON-NLS-1$
+					if (sourceName.equals("See below")) continue; //This is a multisource model which we will handle separately
+					String modelName = ((PropertySimple) model.get("name")) //$NON-NLS-1$
+						.getStringValue();
+					String translatorName = ((PropertySimple) model
+							.get("translatorName")).getStringValue(); //$NON-NLS-1$
+					String dsName = ((PropertySimple) model.get("jndiName")) //$NON-NLS-1$
+							.getStringValue();
+
+					ManagedObject managedModel = null;
+					if (models != null && !modelsMp.isEmpty()) {
+						for (ManagedObject mo : modelsMp) {
+							String name = ProfileServiceUtil.getSimpleValue(mo,
+									"name", String.class); //$NON-NLS-1$
+							if (modelName.equals(name)) {
+								managedModel = mo;
+							}
+						}
+					}
+					ManagedProperty sourceMappings = managedModel
+							.getProperty("sourceMappings");//$NON-NLS-1$
+					if (sourceMappings != null) {
+						List<ManagedObject> mappings = (List<ManagedObject>) MetaValueFactory
+								.getInstance()
+								.unwrap(sourceMappings.getValue());
+						for (ManagedObject mo : mappings) {
+							String sName = ProfileServiceUtil.getSimpleValue(
+									mo, "name", String.class);//$NON-NLS-1$
+							if (sName.equals(sourceName)) {
+
+								ManagedProperty translatorProperty = mo
+										.getProperty("translatorName"); //$NON-NLS-1$
+								translatorProperty.setValue(ProfileServiceUtil
+										.wrap(SimpleMetaType.STRING,
+												translatorName));
+
+								// set the jndi name for the ds.
+								ManagedProperty jndiProperty = mo
+										.getProperty("connectionJndiName"); //$NON-NLS-1$
+								jndiProperty.setValue(ProfileServiceUtil.wrap(
+										SimpleMetaType.STRING, dsName));
+							}
+						}
+					}
+				}
+			}
+
+			try {
+				managementView.updateComponent(managedComponent);
+			} catch (Exception e) {
+				LOG.error("Unable to update component ["
+						+ managedComponent.getName() + "] of type "
+						+ componentType + ".", e);
+				report.setStatus(ConfigurationUpdateStatus.FAILURE);
+				report.setErrorMessageFromThrowable(e);
+			}
+		} catch (Exception e) {
+			LOG.error("Unable to process update request", e);
+			report.setStatus(ConfigurationUpdateStatus.FAILURE);
+			report.setErrorMessageFromThrowable(e);
+		}
+
 	}
-	
+
 	@Override
 	public Configuration loadResourceConfiguration() {
 
@@ -246,32 +344,42 @@ public class VDBComponent extends Facet {
 			mcVdb = ProfileServiceUtil.getManagedComponent(
 					new org.jboss.managed.api.ComponentType(
 							PluginConstants.ComponentType.VDB.TYPE,
-							PluginConstants.ComponentType.VDB.SUBTYPE), this
-							.getComponentName());
+							PluginConstants.ComponentType.VDB.SUBTYPE),
+					this.name);
 		} catch (NamingException e) {
-			final String msg = "NamingException in getVDBStatus(): " + e.getExplanation(); //$NON-NLS-1$
+			final String msg = "NamingException in loadResourceConfiguration(): " + e.getExplanation(); //$NON-NLS-1$
 			LOG.error(msg, e);
 		} catch (Exception e) {
-			final String msg = "Exception in getVDBStatus(): " + e.getMessage(); //$NON-NLS-1$
+			final String msg = "Exception in loadResourceConfiguration(): " + e.getMessage(); //$NON-NLS-1$
 			LOG.error(msg, e);
 		}
+
+		String vdbName = ProfileServiceUtil.getSimpleValue(mcVdb, "name",
+				String.class);
+		Integer vdbVersion = ProfileServiceUtil.getSimpleValue(mcVdb,
+				"version", Integer.class);
+		String vdbDescription = ProfileServiceUtil.getSimpleValue(mcVdb,
+				"description", String.class);
+		String vdbStatus = ProfileServiceUtil.getSimpleValue(mcVdb, "status",
+				String.class);
+		String vdbURL = ProfileServiceUtil.getSimpleValue(mcVdb, "url",
+				String.class);
 
 		// Get plugin config map for models
 		Configuration configuration = resourceContext.getPluginConfiguration();
 
-		// configuration.put(new PropertySimple("name", vdbName));
-		// configuration.put(new PropertySimple("version", vdbVersion));
-		// configuration
-		// .put(new PropertySimple("description", vdbDescription));
-		// configuration.put(new PropertySimple("status", vdbStatus));
-		// configuration.put(new PropertySimple("url", vdbURL));
+		configuration.put(new PropertySimple("name", vdbName));
+		configuration.put(new PropertySimple("version", vdbVersion));
+		configuration.put(new PropertySimple("description", vdbDescription));
+		configuration.put(new PropertySimple("status", vdbStatus));
+		configuration.put(new PropertySimple("url", vdbURL));
 
 		getModels(mcVdb, configuration);
 
 		return configuration;
 
 	}
-	
+
 	@Override
 	public CreateResourceReport createResource(
 			CreateResourceReport createResourceReport) {
@@ -285,18 +393,20 @@ public class VDBComponent extends Facet {
 	 * @param configuration
 	 * @throws Exception
 	 */
-	private void getModels(ManagedComponent mcVdb, Configuration configuration)
-			 {
+	private void getModels(ManagedComponent mcVdb, Configuration configuration) {
 		// Get models from VDB
 		ManagedProperty property = mcVdb.getProperty("models");
+		List<ManagedObject> models = (List<ManagedObject>) MetaValueFactory
+				.getInstance().unwrap(property.getValue());
 		CollectionValueSupport valueSupport = (CollectionValueSupport) property
 				.getValue();
 		MetaValue[] metaValues = valueSupport.getElements();
 
-		PropertyList sourceModelsList = new PropertyList("sourceModels");
+		PropertyList sourceModelsList = new PropertyList("singleSourceModels");
 		configuration.put(sourceModelsList);
-		
-		PropertyList multiSourceModelsList = new PropertyList("multisourceModels");
+
+		PropertyList multiSourceModelsList = new PropertyList(
+				"multiSourceModels");
 		configuration.put(multiSourceModelsList);
 
 		PropertyList logicalModelsList = new PropertyList("logicalModels");
@@ -307,44 +417,55 @@ public class VDBComponent extends Facet {
 
 		for (MetaValue value : metaValues) {
 			GenericValueSupport genValueSupport = (GenericValueSupport) value;
-			ManagedObjectImpl managedObject = (ManagedObjectImpl) genValueSupport.getValue();
+			ManagedObjectImpl managedObject = (ManagedObjectImpl) genValueSupport
+					.getValue();
 
 			Boolean isSource = Boolean.TRUE;
 			try {
-				isSource = ProfileServiceUtil.booleanValue(managedObject.getProperty("source").getValue());
+				isSource = ProfileServiceUtil.booleanValue(managedObject
+						.getProperty("source").getValue());
 			} catch (Exception e) {
 				LOG.error(e.getMessage());
 			}
 
 			Boolean supportMultiSource = Boolean.TRUE;
 			try {
-				supportMultiSource = ProfileServiceUtil.booleanValue(managedObject.getProperty("supportsMultiSourceBindings").getValue());
+				supportMultiSource = ProfileServiceUtil
+						.booleanValue(managedObject.getProperty(
+								"supportsMultiSourceBindings").getValue());
 			} catch (Exception e) {
 				LOG.error(e.getMessage());
 			}
 
 			String modelName = managedObject.getName();
-			ManagedProperty connectorBinding = managedObject.getProperty("sourceMappings");
+			ManagedProperty connectorBinding = managedObject
+					.getProperty("sourceMappings");
 			Collection<Map<String, String>> sourceList = new ArrayList<Map<String, String>>();
-			
+
 			getSourceMappingValue(connectorBinding.getValue(), sourceList);
-			
-			String visibility = ((SimpleValueSupport) managedObject.getProperty("visible").getValue()).getValue().toString();
-			String type = ((EnumValueSupport) managedObject.getProperty("modelType").getValue()).getValue().toString();
+
+			String visibility = ((SimpleValueSupport) managedObject
+					.getProperty("visible").getValue()).getValue().toString();
+			String type = ((EnumValueSupport) managedObject.getProperty(
+					"modelType").getValue()).getValue().toString();
 
 			// Get any model errors/warnings
 			MetaValue errors = managedObject.getProperty("errors").getValue();
 			if (errors != null) {
 				CollectionValueSupport errorValueSupport = (CollectionValueSupport) errors;
 				MetaValue[] errorArray = errorValueSupport.getElements();
-				
+
 				for (MetaValue error : errorArray) {
 					GenericValueSupport errorGenValueSupport = (GenericValueSupport) error;
-					
-					ManagedObject errorMo = (ManagedObject) errorGenValueSupport.getValue();
-					String severity = ((SimpleValue) errorMo.getProperty("severity").getValue()).getValue().toString();
-					String message = ((SimpleValue) errorMo.getProperty("value").getValue()).getValue().toString();
-					
+
+					ManagedObject errorMo = (ManagedObject) errorGenValueSupport
+							.getValue();
+					String severity = ((SimpleValue) errorMo.getProperty(
+							"severity").getValue()).getValue().toString();
+					String message = ((SimpleValue) errorMo
+							.getProperty("value").getValue()).getValue()
+							.toString();
+
 					PropertyMap errorMap = new PropertyMap("errorMap",
 							new PropertySimple("severity", severity),
 							new PropertySimple("message", message));
@@ -357,42 +478,43 @@ public class VDBComponent extends Facet {
 				if (isSource) {
 					String sourceName = (String) sourceMap.get("name");
 					String jndiName = (String) sourceMap.get("jndiName");
-					String translatorName = (String) sourceMap.get("translatorName");
+					String translatorName = (String) sourceMap
+							.get("translatorName");
 					PropertyMap multiSourceModel = null;
 
-				PropertyMap model = null;
-				if (supportMultiSource){
-					//TODO need to loop through multisource models
-					multiSourceModel = new PropertyMap("model",
-									new PropertySimple("name", modelName),
-									new PropertySimple("sourceName", sourceName),
-									new PropertySimple("jndiName", jndiName),
-									new PropertySimple("translatorName", translatorName));
-					
-					multiSourceModelsList.add(multiSourceModel);
-					
-					 model = new PropertyMap("model",
-							new PropertySimple("name", modelName),
-							new PropertySimple("sourceName", "See below"),
-							new PropertySimple("jndiName", "See below"),
-							new PropertySimple("translatorName", "See below"),
-							new PropertySimple("visibility", visibility),
-							new PropertySimple("supportsMultiSource",
-									true));
-					 	sourceModelsList.add(model);					 	
-					}else{
-						 model = new PropertyMap("model",
+					PropertyMap model = null;
+					if (supportMultiSource) {
+						// TODO need to loop through multisource models
+						multiSourceModel = new PropertyMap("map",
 								new PropertySimple("name", modelName),
 								new PropertySimple("sourceName", sourceName),
 								new PropertySimple("jndiName", jndiName),
-								new PropertySimple("translatorName", translatorName),
+								new PropertySimple("translatorName",
+										translatorName));
+
+						multiSourceModelsList.add(multiSourceModel);
+
+						model = new PropertyMap("map", new PropertySimple(
+								"name", modelName), new PropertySimple(
+								"sourceName", "See below"), new PropertySimple(
+								"jndiName", "See below"), new PropertySimple(
+								"translatorName", "See below"),
+								new PropertySimple("visibility", visibility),
+								new PropertySimple("supportsMultiSource", true));
+						sourceModelsList.add(model);
+					} else {
+						model = new PropertyMap("map", new PropertySimple(
+								"name", modelName), new PropertySimple(
+								"sourceName", sourceName), new PropertySimple(
+								"jndiName", jndiName), new PropertySimple(
+								"translatorName", translatorName),
 								new PropertySimple("visibility", visibility),
 								new PropertySimple("supportsMultiSource",
 										supportMultiSource));
-						 sourceModelsList.add(model);
+						sourceModelsList.add(model);
 					}
 				} else {
-					PropertyMap model = new PropertyMap("model",
+					PropertyMap model = new PropertyMap("map",
 							new PropertySimple("name", modelName),
 							new PropertySimple("type", type),
 							new PropertySimple("visibility", visibility));
@@ -419,14 +541,17 @@ public class VDBComponent extends Facet {
 				GenericValueSupport genValue = ((GenericValueSupport) value);
 				ManagedObject mo = (ManagedObject) genValue.getValue();
 				String sourceName = mo.getName();
-				String jndi = ((SimpleValue) mo.getProperty("connectionJndiName").getValue()).getValue().toString();
-				String translatorName = ((SimpleValue) mo.getProperty("translatorName").getValue()).getValue().toString();
+				String jndi = ((SimpleValue) mo.getProperty(
+						"connectionJndiName").getValue()).getValue().toString();
+				String translatorName = ((SimpleValue) mo.getProperty(
+						"translatorName").getValue()).getValue().toString();
 				map.put("name", sourceName);
 				map.put("jndiName", jndi);
 				map.put("translatorName", translatorName);
 			}
 		} else {
-			throw new IllegalStateException(pValue+ " is not a Collection type");
+			throw new IllegalStateException(pValue
+					+ " is not a Collection type");
 		}
 	}
 

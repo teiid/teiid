@@ -29,23 +29,50 @@ import javax.naming.NamingException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jboss.deployers.spi.management.ManagementView;
+import org.jboss.managed.api.ComponentType;
+import org.jboss.managed.api.ManagedComponent;
+import org.jboss.managed.api.ManagedProperty;
 import org.jboss.managed.api.RunState;
 import org.rhq.core.domain.configuration.Configuration;
+import org.rhq.core.domain.configuration.ConfigurationUpdateStatus;
+import org.rhq.core.domain.configuration.PropertyMap;
+import org.rhq.core.domain.configuration.PropertySimple;
 import org.rhq.core.domain.measurement.AvailabilityType;
 import org.rhq.core.domain.measurement.MeasurementDataNumeric;
 import org.rhq.core.domain.measurement.MeasurementReport;
 import org.rhq.core.domain.measurement.MeasurementScheduleRequest;
-import org.rhq.core.pluginapi.inventory.CreateResourceReport;
+import org.rhq.core.pluginapi.configuration.ConfigurationFacet;
+import org.rhq.core.pluginapi.configuration.ConfigurationUpdateReport;
+import org.rhq.core.pluginapi.inventory.ResourceContext;
 import org.teiid.rhq.admin.DQPManagementView;
 import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
+import org.teiid.rhq.plugin.util.PluginConstants.Operation;
 import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.Platform;
 
 /**
  * 
  */
-public class PlatformComponent extends Facet implements PluginConstants {
+public class PlatformComponent extends Facet {
 	private final Log LOG = LogFactory.getLog(PlatformComponent.class);
+
+	String[] PLATFORM_SERVICES_NAMES = { "org.teiid.jboss.deployers.RuntimeEngineDeployer",
+			"org.teiid.services.BufferServiceImpl", "org.teiid.services.SessionServiceImpl", "org.teiid.transport.SocketConfiguration" };
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @seeorg.teiid.rhq.plugin.Facet#start(org.rhq.core.pluginapi.inventory.
+	 * ResourceContext)
+	 */
+	@Override
+	public void start(ResourceContext context) {
+		this.setComponentName(context.getPluginConfiguration().getSimpleValue(
+				"name", null));
+		this.resourceConfiguration = context.getPluginConfiguration();
+		super.start(context);
+	}
 
 	/**
 	 * @see org.teiid.rhq.plugin.Facet#getComponentType()
@@ -94,8 +121,8 @@ public class PlatformComponent extends Facet implements PluginConstants {
 			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(
 					Operation.Value.SESSION_ID).getLongValue());
 		} else if (name.equals(Platform.Operations.KILL_REQUEST)) {
-			valueMap.put(Operation.Value.TRANSACTION_ID, configuration.getSimple(
-					Operation.Value.TRANSACTION_ID).getLongValue());
+			valueMap.put(Operation.Value.TRANSACTION_ID, configuration
+					.getSimple(Operation.Value.TRANSACTION_ID).getLongValue());
 		} else if (name.equals(Platform.Operations.KILL_SESSION)) {
 			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(
 					Operation.Value.SESSION_ID).getLongValue());
@@ -175,7 +202,6 @@ public class PlatformComponent extends Facet implements PluginConstants {
 		}
 
 	}
-		
 
 	@Override
 	public void stop() {
@@ -183,6 +209,139 @@ public class PlatformComponent extends Facet implements PluginConstants {
 		super.stop();
 	}
 
-	
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.teiid.rhq.plugin.Facet#updateResourceConfiguration(org.rhq.core.pluginapi
+	 * .configuration.ConfigurationUpdateReport)
+	 */
+	@Override
+	public void updateResourceConfiguration(ConfigurationUpdateReport report) {
+
+		resourceConfiguration = report.getConfiguration().deepCopy();
+
+		Configuration resourceConfig = report.getConfiguration();
+
+		ManagementView managementView = null;
+		ComponentType componentType = new ComponentType(
+				PluginConstants.ComponentType.Platform.TEIID_TYPE,
+				PluginConstants.ComponentType.Platform.TEIID_SUB_TYPE);
+
+		ManagedComponent managedComponent = null;
+		report.setStatus(ConfigurationUpdateStatus.SUCCESS);
+		try {
+
+			managementView = ProfileServiceUtil.getManagementView(
+					ProfileServiceUtil.getProfileService(), true);
+
+			for (String serviceName : PLATFORM_SERVICES_NAMES) {
+
+				managedComponent = managementView.getComponent(serviceName,
+						componentType);
+				Map<String, ManagedProperty> managedProperties = managedComponent
+						.getProperties();
+
+				ProfileServiceUtil.convertConfigurationToManagedProperties(
+						managedProperties, resourceConfig, resourceContext
+								.getResourceType());
+
+				try {
+					managementView.updateComponent(managedComponent);
+				} catch (Exception e) {
+					LOG.error("Unable to update component ["
+							+ managedComponent.getName() + "] of type "
+							+ componentType + ".", e);
+					report.setStatus(ConfigurationUpdateStatus.FAILURE);
+					report.setErrorMessageFromThrowable(e);
+				}
+			}
+		} catch (Exception e) {
+			LOG.error("Unable to process update request", e);
+			report.setStatus(ConfigurationUpdateStatus.FAILURE);
+			report.setErrorMessageFromThrowable(e);
+		}
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.teiid.rhq.plugin.Facet#loadResourceConfiguration()
+	 */
+	@Override
+	public Configuration loadResourceConfiguration() {
+
+		// ManagedComponent platform = null;
+		// try {
+		// platform = ProfileServiceUtil.getManagedComponent(
+		// new
+		// org.jboss.managed.api.ComponentType(PluginConstants.ComponentType.Platform.TYPE,
+		// PluginConstants.ComponentType.Platform.SUBTYPE),
+		// PluginConstants.ComponentType.Platform.TEIID_RUNTIME_ENGINE);
+		// } catch (NamingException e) {
+		//			final String msg = "NamingException in loadResourceConfiguration(): " + e.getExplanation(); //$NON-NLS-1$
+		// LOG.error(msg, e);
+		// } catch (Exception e) {
+		//			final String msg = "Exception in loadResourceConfiguration(): " + e.getMessage(); //$NON-NLS-1$
+		// LOG.error(msg, e);
+		// }
+		//		
+		// Get plugin config
+		Configuration c = resourceContext.getPluginConfiguration();
+
+		getProperties(c);
+
+		return c;
+
+	}
+
+	/**
+	 * @param mc
+	 * @param configuration
+	 * @throws Exception
+	 */
+	private void getProperties(Configuration configuration) {
+
+		// Get all ManagedComponents of type Teiid and subtype dqp
+		Set<ManagedComponent> mcSet = null;
+		try {
+			mcSet = ProfileServiceUtil
+					.getManagedComponents(new org.jboss.managed.api.ComponentType(
+							PluginConstants.ComponentType.Platform.TEIID_TYPE,
+							PluginConstants.ComponentType.Platform.TEIID_SUB_TYPE));
+		} catch (NamingException e) {
+			LOG
+					.error("NamingException getting components in Platform loadConfiguration(): "
+							+ e.getMessage());
+		} catch (Exception e) {
+			LOG
+					.error("Exception getting components in Platform loadConfiguration(): "
+							+ e.getMessage());
+		}
+
+		for (ManagedComponent mc : mcSet) {
+			Map<String, ManagedProperty> mcMap = mc.getProperties();
+			setProperties(mcMap, configuration);
+		}
+	}
+
+	/**
+	 * @param mcMap
+	 * @param configuration
+	 */
+	private void setProperties(Map<String, ManagedProperty> mcMap, Configuration configuration) {
+		for (ManagedProperty mProp : mcMap.values()) {
+			try {
+				String value = ProfileServiceUtil.stringValue(mProp.getValue());
+				PropertySimple prop = new PropertySimple(mProp.getName(), value);
+				configuration.put(prop);
+			} catch (Exception e) {
+				LOG
+						.error("Exception setting properties in Platform loadConfiguration(): "
+								+ e.getMessage());
+			}
+		}
+	}
 
 }

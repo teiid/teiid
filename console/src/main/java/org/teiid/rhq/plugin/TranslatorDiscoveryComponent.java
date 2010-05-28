@@ -65,7 +65,8 @@ public class TranslatorDiscoveryComponent implements ResourceDiscoveryComponent 
 		for (ManagedComponent translator : translators) {
 
 			String translatorKey = translator.getName();
-			String translatorName = ProfileServiceUtil.getSimpleValue(translator, "name", String.class);
+			String translatorName = ProfileServiceUtil.getSimpleValue(
+					translator, "name", String.class);
 			/**
 			 * 
 			 * A discovered resource must have a unique key, that must stay the
@@ -81,11 +82,13 @@ public class TranslatorDiscoveryComponent implements ResourceDiscoveryComponent 
 					null // Process info from a process scan
 			);
 
-			Configuration c = detail.getPluginConfiguration();
-			PropertyList list = new PropertyList("translatorList");
-			PropertyMap propMap = null;
-			c.put(list);
+			// Get plugin config map for models
+			Configuration configuration = detail.getPluginConfiguration();
 
+			configuration.put(new PropertySimple("name", translatorName));
+			detail.setPluginConfiguration(configuration);
+			
+			 // Add to return values
 			// First get translator specific properties
 			ManagedProperty translatorProps = translator.getProperty("property");
 			getTranslatorValues(translatorProps.getValue(), propMap, list);
@@ -102,6 +105,7 @@ public class TranslatorDiscoveryComponent implements ResourceDiscoveryComponent 
 
 		return discoveredResources;
 	}
+
 
 	public static <T> void getTranslatorValues(MetaValue pValue,
 			PropertyMap map, PropertyList list) {
