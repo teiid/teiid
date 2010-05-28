@@ -54,7 +54,7 @@ import org.teiid.query.util.CommandContext;
  */
 public abstract class ProcessorPlan implements Cloneable, BatchProducer {
 	
-    private List warnings = null;
+    private List<Exception> warnings = null;
     
     private CommandContext context;
 
@@ -77,18 +77,18 @@ public abstract class ProcessorPlan implements Cloneable, BatchProducer {
      * the current warnings list.  The warnings are in order they were detected.
      * @return Current list of warnings, never null
      */
-    public List getAndClearWarnings() {
+    public List<Exception> getAndClearWarnings() {
         if (warnings == null) {
             return null;
         }
-        List copied = warnings;
+        List<Exception> copied = warnings;
         warnings = null;
         return copied;
     }
     
     protected void addWarning(TeiidException warning) {
         if (warnings == null) {
-            warnings = new ArrayList(1);
+            warnings = new ArrayList<Exception>(1);
         }
         warnings.add(warning);
     }

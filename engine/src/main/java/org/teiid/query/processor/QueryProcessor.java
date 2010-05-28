@@ -27,6 +27,7 @@ import java.util.List;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
+import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.BufferManager.BufferReserveMode;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
@@ -223,8 +224,12 @@ public class QueryProcessor implements BatchProducer {
         this.requestCanceled = true;
     }
     
+    public TupleBuffer createTupleBuffer() throws TeiidComponentException {
+    	return this.bufferMgr.createTupleBuffer(this.processPlan.getOutputElements(), context.getConnectionID(), TupleSourceType.PROCESSOR);
+    }
+    
 	public BatchCollector createBatchCollector() throws TeiidComponentException {
-		return new BatchCollector(this, this.bufferMgr.createTupleBuffer(this.processPlan.getOutputElements(), context.getConnectionID(), TupleSourceType.PROCESSOR));
+		return new BatchCollector(this, createTupleBuffer());
 	}
 	
 	public void setNonBlocking(boolean nonBlocking) {

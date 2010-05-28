@@ -42,9 +42,8 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.TeiidException;
-import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
@@ -61,7 +60,6 @@ import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.QueryProcessor;
-import org.teiid.query.processor.BatchCollector.BatchHandler;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
@@ -354,12 +352,29 @@ public class RequestWorkItem extends AbstractWorkItem {
         	this.cid = cacheId;
         }
 		processor = request.processor;
-		collector = processor.createBatchCollector();
-		collector.setBatchHandler(new BatchHandler() {
-			public boolean batchProduced(TupleBatch batch) throws TeiidComponentException {
-			    return sendResultsIfNeeded(batch);
+		resultsBuffer = processor.createTupleBuffer();
+		collector = new BatchCollector(processor, resultsBuffer) {
+			protected void flushBatchDirect(TupleBatch batch, boolean add) throws TeiidComponentException,TeiidProcessingException {
+				boolean added = false;
+				if (cid != null || resultsBuffer.isLobs()) {
+					super.flushBatchDirect(batch, add);
+					added = true;
+				}
+				doneProducingBatches = batch.getTerminationFlag();
+				if (doneProducingBatches && cid != null) {
+			    	boolean sessionScope = processor.getContext().isSessionFunctionEvaluated();
+	            	CachedResults cr = new CachedResults();
+	            	cr.setCommand(originalCommand);
+	                cr.setAnalysisRecord(analysisRecord);
+	                cr.setResults(resultsBuffer);
+	                dqpCore.getRsCache().put(cid, sessionScope, cr);
+			    }
+				add = sendResultsIfNeeded(batch);
+				if (!added) {
+					super.flushBatchDirect(batch, add);
+				}
 			}
-		});
+		};
 		resultsBuffer = collector.getTupleBuffer();
 		resultsBuffer.setForwardOnly(isForwardOnly());
 		analysisRecord = request.analysisRecord;
@@ -381,17 +396,6 @@ public class RequestWorkItem extends AbstractWorkItem {
 	 * Send results if they have been requested.  This should only be called from the processing thread.
 	 */
 	protected boolean sendResultsIfNeeded(TupleBatch batch) throws TeiidComponentException {
-		if (batch != null) {
-			doneProducingBatches = batch.getTerminationFlag();
-			if (doneProducingBatches && cid != null) {
-		    	boolean sessionScope = this.processor.getContext().isSessionFunctionEvaluated();
-            	CachedResults cr = new CachedResults();
-            	cr.setCommand(originalCommand);
-                cr.setAnalysisRecord(analysisRecord);
-                cr.setResults(this.resultsBuffer);
-                dqpCore.getRsCache().put(cid, sessionScope, cr);
-		    }
-		}
 		ResultsMessage response = null;
 		ResultsReceiver<ResultsMessage> receiver = null;
 		boolean result = true;

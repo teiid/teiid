@@ -51,12 +51,7 @@ public class BatchCollector {
 	    List getOutputElements();
 	}
 	
-	public interface BatchHandler {
-		boolean batchProduced(TupleBatch batch) throws TeiidProcessingException, TeiidComponentException;
-	}
-
     private BatchProducer sourceNode;
-    private BatchHandler batchHandler;
 
     private boolean done = false;
     private TupleBuffer buffer;
@@ -91,19 +86,16 @@ public class BatchCollector {
      * Flush the batch by giving it to the buffer manager.
      */
     private void flushBatch(TupleBatch batch) throws TeiidComponentException, TeiidProcessingException {
-    	boolean add = true;
-		if (this.batchHandler != null && (batch.getRowCount() > 0 || batch.getTerminationFlag())) {
-        	add = this.batchHandler.batchProduced(batch);
-        }
-    	// Add batch
-        if(batch.getRowCount() > 0 || batch.getTerminationFlag()) {
-        	buffer.addTupleBatch(batch, add);
-        }
+    	if (batch.getRowCount() == 0 && !batch.getTerminationFlag()) {
+    		return;
+    	}
+    	flushBatchDirect(batch, true);
     }
     
-	public void setBatchHandler(BatchHandler batchHandler) {
-		this.batchHandler = batchHandler;
-	}
+    @SuppressWarnings("unused")
+	protected void flushBatchDirect(TupleBatch batch, boolean add) throws TeiidComponentException, TeiidProcessingException {
+    	buffer.addTupleBatch(batch, add);
+    }
     
     public int getRowCount() {
         return buffer.getRowCount();
