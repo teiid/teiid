@@ -13,10 +13,22 @@
   <fileSets>
           
     <fileSet>
-        <directory>build/target/kits/jboss-container</directory>       
-        <outputDirectory>/</outputDirectory>     
+        <directory>build/target/kits/jboss-container</directory>
+        <outputDirectory>/</outputDirectory>      
+        <includes>
+          <include>**/*.sh</include>
+        </includes>   
+        <fileMode>755</fileMode>      
+    </fileSet> 
+          
+    <fileSet>
+        <directory>build/target/kits/jboss-container</directory>
+        <outputDirectory>/</outputDirectory>      
+        <excludes>
+          <exclude>**/*.sh</exclude>
+        </excludes>      
     </fileSet>
-                    
+          
     <!-- only true dependency file for any client --> 
     <fileSet>
       <directory>target/distribution</directory>
