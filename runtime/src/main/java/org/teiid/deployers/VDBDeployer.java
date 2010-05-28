@@ -172,19 +172,25 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 				continue;
 			}			
 			for (String source:model.getSourceNames()) {
-				if (this.connectorManagerRepository.getConnectorManager(source) == null) {
-
-					Translator translator = VDBDeployer.this.translatorRepository.getTranslatorMetaData(new VDBKey(deployment.getName(), deployment.getVersion()), model.getSourceTranslatorName(source));
-					ExecutionFactory ef = map.get(translator);
-					if ( ef == null) {
-						ef = TranslatorUtil.buildExecutionFactory(translator);
-						map.put(translator, ef);
-					}
-
-					ConnectorManager cm = new ConnectorManager(model.getSourceTranslatorName(source), model.getSourceConnectionJndiName(source));
-					cm.setExecutionFactory(ef);
-					this.connectorManagerRepository.addConnectorManager(source, cm);
+				if (this.connectorManagerRepository.getConnectorManager(source) != null) {
+					continue;
 				}
+
+				String name = model.getSourceTranslatorName(source);
+				Translator translator = VDBDeployer.this.translatorRepository.getTranslatorMetaData(new VDBKey(deployment.getName(), deployment.getVersion()), name);
+				if (translator == null) {
+					throw new DeploymentException(RuntimePlugin.Util.getString("translator_not_found", name)); //$NON-NLS-1$
+				}
+			
+				ExecutionFactory ef = map.get(translator);
+				if ( ef == null) {
+					ef = TranslatorUtil.buildExecutionFactory(translator);
+					map.put(translator, ef);
+				}
+
+				ConnectorManager cm = new ConnectorManager(name, model.getSourceConnectionJndiName(source));
+				cm.setExecutionFactory(ef);
+				this.connectorManagerRepository.addConnectorManager(source, cm);
 			}
 		}
 	}
@@ -307,11 +313,11 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
     			}
     			return store;
 			} catch (TranslatorException e) {
-				if (exception != null) {
+				if (exception == null) {
 					exception = e;
 				}
 			} catch (IOException e) {
-				if (exception != null) {
+				if (exception == null) {
 					exception = e;
 				}				
 			}
