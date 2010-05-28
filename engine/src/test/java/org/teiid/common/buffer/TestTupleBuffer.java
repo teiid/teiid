@@ -92,7 +92,7 @@ public class TestTupleBuffer {
 		List<ElementSymbol> schema = Arrays.asList(x);
 		TupleBuffer tb = new TupleBuffer(new FakeBatchManager(), "x", schema, 32); //$NON-NLS-1$
 		ClobType c = new ClobType(new SerialClob(new char[0]));
-		TupleBatch batch = new TupleBatch(0, new List[] {Arrays.asList(c)});
+		TupleBatch batch = new TupleBatch(1, new List[] {Arrays.asList(c)});
 		tb.addTupleBatch(batch, false);
 		assertNotNull(c.getReferenceStreamId());
 	}
