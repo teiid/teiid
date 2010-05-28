@@ -5,8 +5,6 @@
         <isSameRM-override-value>false</isSameRM-override-value>
         <xa-datasource-class>org.apache.derby.jdbc.ClientXADataSource</xa-datasource-class>
         <xa-datasource-property name="DatabaseName">teiid/accounts</xa-datasource-property>
-        <xa-datasource-property name="User">sa</xa-datasource-property>
-        <xa-datasource-property name="Password"></xa-datasource-property>
         <xa-datasource-property name="PortNumber">1527</xa-datasource-property>
         <xa-datasource-property name="ServerName">localhost</xa-datasource-property>
 
