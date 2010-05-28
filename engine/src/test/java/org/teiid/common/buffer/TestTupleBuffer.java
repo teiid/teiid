@@ -27,46 +27,47 @@ import static org.junit.Assert.*;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.sql.rowset.serial.SerialClob;
+
 import org.junit.Test;
-import org.teiid.common.buffer.BatchManager;
-import org.teiid.common.buffer.TupleBatch;
-import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.sql.symbol.ElementSymbol;
 
 
 public class TestTupleBuffer {
 
+	private final class FakeBatchManager implements BatchManager {
+		@Override
+		public void remove() {
+			
+		}
+
+		@Override
+		public ManagedBatch createManagedBatch(final TupleBatch batch)
+				throws TeiidComponentException {
+			return new ManagedBatch() {
+				
+				@Override
+				public void remove() {
+					
+				}
+				
+				@Override
+				public TupleBatch getBatch(boolean cache, String[] types)
+						throws TeiidComponentException {
+					return batch;
+				}
+			};
+		}
+	}
+
 	@Test public void testForwardOnly() throws Exception {
 		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
 		x.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 		List<ElementSymbol> schema = Arrays.asList(x);
-		TupleBuffer tb = new TupleBuffer(new BatchManager() {
-			
-			@Override
-			public void remove() {
-				
-			}
-			
-			@Override
-			public ManagedBatch createManagedBatch(final TupleBatch batch)
-					throws TeiidComponentException {
-				return new ManagedBatch() {
-					
-					@Override
-					public void remove() {
-						
-					}
-					
-					@Override
-					public TupleBatch getBatch(boolean cache, String[] types)
-							throws TeiidComponentException {
-						return batch;
-					}
-				};
-			}
-		}, "x", schema, 32); //$NON-NLS-1$ 
+		TupleBuffer tb = new TupleBuffer(new FakeBatchManager(), "x", schema, 32); //$NON-NLS-1$ 
 		tb.setForwardOnly(true);
 		tb.addTuple(Arrays.asList(1));
 		TupleBatch batch = tb.getBatch(1);
@@ -83,6 +84,17 @@ public class TestTupleBuffer {
 		batch = tb.getBatch(2);
 		assertTrue(batch.getTerminationFlag());
 		assertEquals(2, batch.getBeginRow());
+	}
+	
+	@Test public void testLobHandling() throws Exception {
+		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
+		x.setType(DataTypeManager.DefaultDataClasses.CLOB);
+		List<ElementSymbol> schema = Arrays.asList(x);
+		TupleBuffer tb = new TupleBuffer(new FakeBatchManager(), "x", schema, 32); //$NON-NLS-1$
+		ClobType c = new ClobType(new SerialClob(new char[0]));
+		TupleBatch batch = new TupleBatch(0, new List[] {Arrays.asList(c)});
+		tb.addTupleBatch(batch, false);
+		assertNotNull(c.getReferenceStreamId());
 	}
 	
 }

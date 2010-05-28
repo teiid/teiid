@@ -194,6 +194,10 @@ public class TupleBuffer {
         }
 	}
 	
+	public boolean isLobs() {
+		return lobs;
+	}
+	
 	public void addTuple(List<?> tuple) throws TeiidComponentException {
 		if (lobs) {
 			correctLobReferences(new List[] {tuple});
@@ -219,6 +223,9 @@ public class TupleBuffer {
 			for (List<?> tuple : batch.getAllTuples()) {
 				addTuple(tuple);
 			}
+		} else {
+			//add the lob references only, since they may still be referenced later
+			correctLobReferences(batch.getAllTuples()); 
 		}
 	}
 
