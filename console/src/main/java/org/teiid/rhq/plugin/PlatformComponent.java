@@ -109,13 +109,7 @@ public class PlatformComponent extends Facet {
 	protected void setOperationArguments(String name,
 			Configuration configuration, Map<String, Object> valueMap) {
 		// Parameter logic for System Operations
-		if (name.equals(Platform.Operations.GET_QUERIES)
-				|| name.equals(Platform.Operations.GET_LONGRUNNINGQUERIES)) {
-			Integer long_running_value = getResourceConfiguration().getSimple(
-					Operation.Value.LONG_RUNNING_QUERY_LIMIT).getIntegerValue();
-			valueMap.put(Operation.Value.LONG_RUNNING_QUERY_LIMIT,
-					long_running_value);
-		} else if (name.equals(Platform.Operations.KILL_REQUEST)) {
+		if (name.equals(Platform.Operations.KILL_REQUEST)) {
 			valueMap.put(Operation.Value.REQUEST_ID, configuration.getSimple(
 					Operation.Value.REQUEST_ID).getLongValue());
 			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(
@@ -144,22 +138,8 @@ public class PlatformComponent extends Facet {
 				LOG.debug("Measurement name = " + name); //$NON-NLS-1$
 
 				// Initialize any parameters to be used in the retrieval of
-				// metric
-				// values
-				if (request
-						.getName()
-						.equals(
-								PluginConstants.ComponentType.Platform.Metrics.LONG_RUNNING_QUERIES)) {
-					Integer value = getResourceConfiguration()
-							.getSimple(
-									PluginConstants.Operation.Value.LONG_RUNNING_QUERY_LIMIT)
-							.getIntegerValue();
-					valueMap
-							.put(
-									PluginConstants.Operation.Value.LONG_RUNNING_QUERY_LIMIT,
-									value);
-				}
-
+				// metric values
+				
 				Object metricReturnObject = view.getMetric(getComponentType(),
 						this.getComponentIdentifier(), name, valueMap);
 
@@ -272,21 +252,6 @@ public class PlatformComponent extends Facet {
 	@Override
 	public Configuration loadResourceConfiguration() {
 
-		// ManagedComponent platform = null;
-		// try {
-		// platform = ProfileServiceUtil.getManagedComponent(
-		// new
-		// org.jboss.managed.api.ComponentType(PluginConstants.ComponentType.Platform.TYPE,
-		// PluginConstants.ComponentType.Platform.SUBTYPE),
-		// PluginConstants.ComponentType.Platform.TEIID_RUNTIME_ENGINE);
-		// } catch (NamingException e) {
-		//			final String msg = "NamingException in loadResourceConfiguration(): " + e.getExplanation(); //$NON-NLS-1$
-		// LOG.error(msg, e);
-		// } catch (Exception e) {
-		//			final String msg = "Exception in loadResourceConfiguration(): " + e.getMessage(); //$NON-NLS-1$
-		// LOG.error(msg, e);
-		// }
-		//		
 		// Get plugin config
 		Configuration c = resourceContext.getPluginConfiguration();
 

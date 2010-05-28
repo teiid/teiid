@@ -89,7 +89,7 @@
 				plugin="JBossAS5" />
 		</runs-inside>
 
-		<operation name="listLongRunningQueries" displayName="View current long running queries"
+		<operation name="getLongRunningRequests" displayName="View current long running queries"
 			description="List current queries executing against the Teiid System that have surpassed the long running query threshhold">
 			<results>
 				<c:list-property name="list">
@@ -254,18 +254,6 @@
 			description="The number of user connections for a given point in time" />
 
 		<resource-configuration>
-			<c:group name="general" displayName="General"
-				hiddenByDefault="false">
-				<c:description>Query Configuration</c:description>
-				<c:simple-property name="longRunningQueryLimit"
-					type="integer" activationPolicy="immediate" units="seconds"
-					default="600" required="true" displayName="Long Running Query limit"
-					description="The value (in seconds) to use to determine if a query is to be considered 'long running'.">
-					<c:constraint>
-						<c:integer-constraint minimum="0" maximum="999999" />
-					</c:constraint>
-				</c:simple-property>
-			</c:group>
 			<c:group name="teiidProperties" displayName="Runtime Engine Properties"
 				hiddenByDefault="false">
 				<c:simple-property name="resultSetCacheMaxEntries"
@@ -316,6 +304,9 @@
 				<c:simple-property name="activeSessionsCount"
 					displayName="Active Session Count" description="Count of active sessions"
 					required="false" readOnly="false" />
+				<c:simple-property name="queryThresholdInSecs"
+					displayName="Long Running Query Threshold" description="Length of time in seconds before a query is considered long running"
+					required="false" readOnly="false" />	
 			</c:group>
 			<c:group name="bufferServiceProperties" displayName="Buffer Service Properties"
 				hiddenByDefault="false">

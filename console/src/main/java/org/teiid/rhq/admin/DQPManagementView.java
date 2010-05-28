@@ -2,7 +2,6 @@ package org.teiid.rhq.admin;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -74,9 +73,8 @@ public class DQPManagementView implements PluginConstants {
 			} else {
 				if (metric
 						.equals(PluginConstants.ComponentType.Platform.Metrics.LONG_RUNNING_QUERIES)) {
-					Integer longRunningQueryLimit = (Integer) valueMap
-							.get(PluginConstants.Operation.Value.LONG_RUNNING_QUERY_LIMIT);
-					Collection<Request> longRunningQueries = getLongRunningQueries(longRunningQueryLimit);
+					Collection<Request> longRunningQueries = new ArrayList<Request>();
+					getRequestCollectionValue(getLongRunningQueries(), longRunningQueries);
 					resultObject = new Double(longRunningQueries.size());
 				}
 			}
@@ -104,9 +102,8 @@ public class DQPManagementView implements PluginConstants {
 			resultObject = new Double(getSessionCount().doubleValue());
 		} else if (metric
 				.equals(PluginConstants.ComponentType.VDB.Metrics.LONG_RUNNING_QUERIES)) {
-			Integer longRunningQueryLimit = (Integer) valueMap
-					.get(PluginConstants.Operation.Value.LONG_RUNNING_QUERY_LIMIT);
-			Collection<Request> longRunningQueries = getLongRunningQueries(longRunningQueryLimit);
+			Collection<Request> longRunningQueries = new ArrayList<Request>();
+			getRequestCollectionValue(getLongRunningQueries(), longRunningQueries);
 			resultObject = new Double(longRunningQueries.size());
 
 		}
@@ -141,10 +138,8 @@ public class DQPManagementView implements PluginConstants {
 
 
 		if (operationName.equals(Platform.Operations.GET_LONGRUNNINGQUERIES)) {
-			Integer longRunningValue = (Integer) valueMap
-					.get(Operation.Value.LONG_RUNNING_QUERY_LIMIT);
 			List<String> fieldNameList = operationResult.getFieldNameList();
-			resultObject = getLongRunningQueries(longRunningValue);
+			getRequestCollectionValue(getLongRunningQueries(), resultObject);
 			operationResult.setContent(createReportResultList(fieldNameList,
 					resultObject.iterator()));
 		} else if (operationName.equals(Platform.Operations.GET_SESSIONS)) {
@@ -441,8 +436,6 @@ public class DQPManagementView implements PluginConstants {
 			ManagedObjectImpl managedObject = (ManagedObjectImpl) genValueSupport
 					.getValue();
 
-			String modelName = managedObject.getName();
-
 			// Get any model errors/warnings
 			MetaValue errors = managedObject.getProperty("errors").getValue();
 			if (errors != null) {
@@ -454,31 +447,20 @@ public class DQPManagementView implements PluginConstants {
 		return count;
 	}
 
-	protected Collection<Request> getLongRunningQueries(int longRunningValue) {
+	protected MetaValue getLongRunningQueries() {
 
 		MetaValue requestsCollection = null;
-		Collection<Request> list = new ArrayList<Request>();
+		MetaValue args = null;
 
-		double longRunningQueryTimeDouble = new Double(longRunningValue);
-
-		requestsCollection = getRequests();
-
-		getRequestCollectionValue(requestsCollection, list);
-
-		Iterator<Request> requestsIter = list.iterator();
-		while (requestsIter.hasNext()) {
-			Request request = requestsIter.next();
-			long startTime = request.getStartTime();
-			// Get msec from each, and subtract.
-			long runningTime = Calendar.getInstance().getTimeInMillis()
-					- startTime;
-
-			if (runningTime < longRunningQueryTimeDouble) {
-				requestsIter.remove();
-			}
+		try {
+			requestsCollection = executeManagedOperation(mc,
+					Platform.Operations.GET_LONGRUNNINGQUERIES, args);
+		} catch (Exception e) {
+			final String msg = "Exception executing operation: " + Platform.Operations.GET_LONGRUNNINGQUERIES; //$NON-NLS-1$
+			LOG.error(msg, e);
 		}
 
-		return list;
+		return requestsCollection;
 	}
 
 	public static <T> void getRequestCollectionValue(MetaValue pValue,
