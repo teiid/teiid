@@ -76,11 +76,14 @@ public class JDBCClient {
 			int columns = metadata.getColumnCount();
 			System.out.println("Results");
 			for (int row = 1; results.next(); row++) {
-				System.out.println(row + ": ");
+				System.out.print(row + ": ");
 				for (int i = 0; i < columns; i++) {
+					if (i > 0) {
+						System.out.print(",");
+					}
 					System.out.print(results.getString(i+1));
-					System.out.print(",");
 				}
+				System.out.println();
 			}
 			System.out.println("Query Plan");
 			System.out.println(statement.unwrap(TeiidStatement.class).getPlanDescription());
