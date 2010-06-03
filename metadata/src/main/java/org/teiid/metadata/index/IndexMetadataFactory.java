@@ -625,7 +625,11 @@ public class IndexMetadataFactory {
     private IEntryResult[] queryIndex(char recordType, final char[] pattern, boolean isPrefix, boolean isCaseSensitive, boolean returnFirstMatch) {
     	// The the index file name for the record type
         final String indexName = SimpleIndexUtil.getIndexFileNameForRecordType(recordType);
-        Index[] search = SimpleIndexUtil.getIndexes(indexName, this.indexes);            
+        Index[] search = SimpleIndexUtil.getIndexes(indexName, this.indexes);       
+        
+        if (search.length == 0) {
+        	search = this.indexes;
+        }
 
     	try {
             return SimpleIndexUtil.queryIndex(search, pattern, isPrefix, isCaseSensitive, returnFirstMatch);
