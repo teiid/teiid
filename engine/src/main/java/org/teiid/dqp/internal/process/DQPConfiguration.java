@@ -23,6 +23,7 @@ package org.teiid.dqp.internal.process;
 
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.client.RequestMessage;
+import org.teiid.core.util.ApplicationInfo;
 
 
 public class DQPConfiguration{
@@ -172,5 +173,10 @@ public class DQPConfiguration{
 
 	public void setQueryThresholdInSecs(int queryThresholdInSecs) {
 		this.queryThresholdInSecs = queryThresholdInSecs;
-	}	
+	}
+	
+	@ManagementProperty(description="Teiid runtime version", readOnly=true)
+	public String getRuntimeVersion() {
+		return ApplicationInfo.getInstance().getBuildNumber();
+	}
 }
