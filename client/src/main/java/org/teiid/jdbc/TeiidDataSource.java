@@ -212,6 +212,7 @@ public class TeiidDataSource extends BaseDataSource {
 
     	// check if this is embedded connection 
     	if (getServerName() == null) {
+    		super.validateProperties(userName, password);
 	        final Properties props = buildEmbeddedProperties(userName, password);	 
 	        String url = new JDBCURL(getDatabaseName(), null, props).getJDBCURL();
 	        return driver.connect(url, props);    		    		
