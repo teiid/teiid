@@ -71,7 +71,6 @@ import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.processor.TempTableDataManager;
 import org.teiid.query.processor.xml.XMLPlan;
-import org.teiid.query.processor.xquery.XQueryPlan;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
@@ -81,7 +80,6 @@ import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.lang.XQuery;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
@@ -204,9 +202,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
     		returnsResultSet = query.getInto() == null;
     		returnsUpdateCount = !returnsResultSet;
         } else if (userCommand instanceof SetQuery) {
-        	returnsResultSet = true;
-        	returnsUpdateCount = false;
-        } else if (userCommand instanceof XQuery) {
         	returnsResultSet = true;
         	returnsUpdateCount = false;
         } else if (userCommand instanceof StoredProcedure) {
@@ -462,23 +457,14 @@ public class Request implements QueryProcessor.ProcessorFactory {
     }
 
 	private void postProcessXML() {
-        if (requestMsg.getXMLFormat() != null) {
-	        if(processPlan instanceof XQueryPlan) {
-	            ((XQueryPlan)processPlan).setXMLFormat(requestMsg.getXMLFormat());
-	        } else if (processPlan instanceof XMLPlan) {
-	        	((XMLPlan)processPlan).setXMLFormat(requestMsg.getXMLFormat());
-	        }
+        if (requestMsg.getXMLFormat() != null && processPlan instanceof XMLPlan) {
+        	((XMLPlan)processPlan).setXMLFormat(requestMsg.getXMLFormat());
         }
         this.context.setValidateXML(requestMsg.getValidationMode());
 	}
     
 	public QueryProcessor createQueryProcessor(String query, String recursionGroup, CommandContext commandContext) throws TeiidProcessingException, TeiidComponentException {
-		boolean isRootXQuery = recursionGroup == null && commandContext.getCallStackDepth() == 0 && userCommand instanceof XQuery;
-		
 		ParseInfo parseInfo = new ParseInfo();
-		if (isRootXQuery) {
-			parseInfo.ansiQuotedIdentifiers = requestMsg.isAnsiQuotedIdentifiers();
-		}
 		Command newCommand = QueryParser.getQueryParser().parseCommand(query, parseInfo);
         QueryResolver.resolveCommand(newCommand, metadata);            
         
@@ -487,10 +473,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
         referenceCheck(references);
         
         validateQuery(newCommand);
-        
-        if (isRootXQuery) {
-        	validateAccess(newCommand);
-        }
         
         CommandContext copy = (CommandContext) commandContext.clone();
         if (recursionGroup != null) {

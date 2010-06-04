@@ -40,7 +40,12 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Sequencable;
+import org.teiid.core.types.TransformationException;
+import org.teiid.core.types.XMLType;
+import org.teiid.core.types.XMLType.Type;
+import org.teiid.core.types.basic.StringToSQLXMLTransform;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.query.QueryPlugin;
@@ -66,10 +71,11 @@ import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.CaseExpression;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ContextReference;
+import org.teiid.query.sql.symbol.DerivedColumn;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
@@ -80,6 +86,7 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
 import org.teiid.query.sql.symbol.XMLNamespaces;
+import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.sql.symbol.XMLNamespaces.NamespaceItem;
 import org.teiid.query.sql.util.ValueIterator;
 import org.teiid.query.sql.util.ValueIteratorSource;
@@ -584,7 +591,7 @@ public class Evaluator {
 		   }
 	   } else if (expression instanceof XMLForest){
 		   XMLForest function = (XMLForest)expression;
-		   List<SingleElementSymbol> args = function.getArgs();
+		   List<DerivedColumn> args = function.getArgs();
 		   NameValuePair<Object>[] nameValuePairs = getNameValuePairs(tuple, args); 
 		   
 		   try {
@@ -592,20 +599,43 @@ public class Evaluator {
 		   } catch (TeiidProcessingException e) {
 			   throw new FunctionExecutionException(e, e.getMessage());
 		   }
+	   } else if (expression instanceof XMLSerialize){
+		   XMLSerialize xs = (XMLSerialize)expression;
+		   XMLType value = (XMLType) internalEvaluate(xs.getExpression(), tuple);
+		   if (value == null) {
+			   return null;
+		   }
+		   try {
+			   if (!xs.isDocument()) { 
+				   return DataTypeManager.transformValue(value, xs.getType());
+			   }
+			   if (value.getType() == Type.UNKNOWN) {
+				   Type type = StringToSQLXMLTransform.isXml(value.getCharacterStream());
+				   value.setType(type);
+			   }
+			   if (value.getType() == Type.DOCUMENT || value.getType() == Type.FRAGMENT) {
+				   return DataTypeManager.transformValue(value, xs.getType());			   
+			   }
+		   } catch (SQLException e) {
+			   throw new FunctionExecutionException(e, e.getMessage());
+		   } catch (TransformationException e) {
+			   throw new FunctionExecutionException(e, e.getMessage());
+		   }
+		   throw new FunctionExecutionException(QueryPlugin.Util.getString("Evaluator.xmlserialize")); //$NON-NLS-1$
 	   } else {
 	       throw new TeiidComponentException(ErrorMessageKeys.PROCESSOR_0016, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0016, expression.getClass().getName()));
 	   }
 	}
 
-	private NameValuePair<Object>[] getNameValuePairs(List tuple, List<SingleElementSymbol> args)
+	private NameValuePair<Object>[] getNameValuePairs(List tuple, List<DerivedColumn> args)
 			throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 		NameValuePair<Object>[] nameValuePairs = new NameValuePair[args.size()];
 		for (int i = 0; i < args.size(); i++) {
-			SingleElementSymbol symbol = args.get(i);
-			String name = symbol.getShortName();
-			Expression ex = symbol;
-			if (symbol instanceof AliasSymbol) {
-				ex = ((AliasSymbol) symbol).getSymbol();
+			DerivedColumn symbol = args.get(i);
+			String name = symbol.getAlias();
+			Expression ex = symbol.getExpression();
+			if (name == null && ex instanceof ElementSymbol) {
+				name = ((ElementSymbol)ex).getShortName();
 			}
 			nameValuePairs[i] = new NameValuePair<Object>(name, internalEvaluate(ex, tuple));
 		}

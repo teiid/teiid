@@ -25,20 +25,18 @@ package org.teiid.query.sql.symbol;
 import java.util.List;
 
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
-
 public class XMLForest implements Expression {
 
 	private static final long serialVersionUID = -3348922701950966494L;
-	private List<SingleElementSymbol> args;
+	private List<DerivedColumn> args;
 	private XMLNamespaces namespaces;
 	
-	public XMLForest(List<SingleElementSymbol> args) {
+	public XMLForest(List<DerivedColumn> args) {
 		this.args = args;
 	}
 	
@@ -50,7 +48,7 @@ public class XMLForest implements Expression {
 		this.namespaces = namespaces;
 	}
 	
-	public List<SingleElementSymbol> getArgs() {
+	public List<DerivedColumn> getArgs() {
 		return args;
 	}
 
@@ -61,8 +59,8 @@ public class XMLForest implements Expression {
 
 	@Override
 	public boolean isResolved() {
-		for (SingleElementSymbol arg : args) {
-			if (!arg.isResolved()) {
+		for (DerivedColumn arg : args) {
+			if (!arg.getExpression().isResolved()) {
 				return false;
 			}
 		}
@@ -76,7 +74,7 @@ public class XMLForest implements Expression {
 		
 	@Override
 	public XMLForest clone() {
-		XMLForest clone = new XMLForest(LanguageObject.Util.deepClone(args, SingleElementSymbol.class));
+		XMLForest clone = new XMLForest(LanguageObject.Util.deepClone(args, DerivedColumn.class));
 		return clone;
 	}
 	

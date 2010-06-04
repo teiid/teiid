@@ -65,8 +65,8 @@ import org.teiid.language.Function;
 import org.teiid.language.Insert;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Literal;
-import org.teiid.language.SQLReservedWords;
 import org.teiid.language.Select;
+import org.teiid.language.SQLReservedWords.NonReserved;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.sql.lang.CompareCriteria;
@@ -87,7 +87,7 @@ public class TestSQLStringVisitor  {
      */
     @Test public void testVisitIAggregate() throws Exception {
         String expected = "COUNT(42)"; //$NON-NLS-1$
-        assertEquals(expected, getString(TestAggregateImpl.example("COUNT", SQLReservedWords.COUNT, false, 42))); //$NON-NLS-1$
+        assertEquals(expected, getString(TestAggregateImpl.example("COUNT", NonReserved.COUNT, false, 42))); //$NON-NLS-1$
     }
 
     @Test public void testVisitIAggregateDistinct() throws Exception {
@@ -382,7 +382,7 @@ public class TestSQLStringVisitor  {
     }
     
     @Test public void testTimestampAddFunction() throws Exception {
-    	String sql = "select timestampadd(" +SQLReservedWords.SQL_TSI_DAY+ ", 2, timestampvalue) from bqt1.smalla"; //$NON-NLS-1$ //$NON-NLS-2$
+    	String sql = "select timestampadd(" +NonReserved.SQL_TSI_DAY+ ", 2, timestampvalue) from bqt1.smalla"; //$NON-NLS-1$ //$NON-NLS-2$
     	
     	Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql);
     	assertEquals("SELECT timestampadd(SQL_TSI_DAY, 2, SmallA.TimestampValue) FROM SmallA", command.toString()); //$NON-NLS-1$

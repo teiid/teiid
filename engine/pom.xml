@@ -83,13 +83,14 @@
 		</dependency>
 
 		<dependency>
-			<groupId>net.sf.saxon</groupId>
+			<groupId>net.sourceforge.saxon</groupId>
 			<artifactId>saxon</artifactId>
 		</dependency>
 
 		<dependency>
-			<groupId>net.sf.saxon</groupId>
-			<artifactId>saxon-dom</artifactId>
+			<groupId>net.sourceforge.saxon</groupId>
+			<classifier>dom</classifier>
+			<artifactId>saxon</artifactId>
 		</dependency>
 
         <dependency>

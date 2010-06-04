@@ -87,6 +87,7 @@ import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.SubqueryFromClause;
+import org.teiid.query.sql.lang.TableFunctionReference;
 import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
@@ -680,8 +681,8 @@ public class RelationalPlanner implements CommandPlanner {
             addNestedCommand(node, group, nestedCommand, nestedCommand, true);
             hints.hasVirtualGroups = true;
             parent.addLastChild(node);
-        } else if (clause instanceof TextTable) {
-        	TextTable tt = (TextTable)clause;
+        } else if (clause instanceof TableFunctionReference) {
+        	TableFunctionReference tt = (TableFunctionReference)clause;
             GroupSymbol group = tt.getGroupSymbol();
             node = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
             node.setProperty(NodeConstants.Info.TABLE_FUNCTION, tt);

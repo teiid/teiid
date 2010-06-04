@@ -93,7 +93,7 @@
 					</para>
 				</listitem>
 				<listitem>
-					<para>If the user command is a SELECT (including XML) or an XQuery and the transaction isolation is not REPEATABLE_READ nor SERIALIABLE.
+					<para>If the user command is a SELECT (including XML) and the transaction isolation is not REPEATABLE_READ nor SERIALIABLE.
 					</para>
 				</listitem>
 				<listitem>

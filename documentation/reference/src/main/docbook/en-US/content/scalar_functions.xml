@@ -1932,29 +1932,15 @@
         <tbody>
           <row>
             <entry>
-              <para><code>XPATHVALUE(doc, xpath [, namepaces])</code></para>
+              <para><code>XPATHVALUE(doc, xpath)</code></para>
             </entry>
             <entry>
               <para>Applies the XPATH query to the document and returns a
                 string value for the first matching result. An attempt is made to provide a
                 meaningful result for non-text nodes.</para>
-              <para>The optional namespaces string is used to provide default and prefix to uri mappings for the given xpath. The format is the same as namespace declarations in an xml element: xmlns:foo="uri"</para>
             </entry>
             <entry>
-              <para>Doc in {string, xml} and xpath, namespaces in {string}. Return value is a string.
-              </para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para><code>XPATHQUERY(doc, xpath [, namepaces])</code></para>
-            </entry>
-            <entry>
-              <para>Takes a document and an XPATH query and returns a SQL/XML of the result.</para>
-              <para>The optional namespaces string is used to provide default and prefix to uri mappings for the given xpath. The format is the same as namespace declarations in an xml element: xmlns:foo="uri"</para>
-            </entry>
-            <entry>
-              <para>Doc in {string, xml} and xpath, namespaces in {string}. Return value is a string.
+              <para>Doc in {string, xml} and xpath. Return value is a string.
               </para>
             </entry>
           </row>
@@ -2040,6 +2026,21 @@
             </entry>
             <entry>
               <para>Name is an identifier. Content is a string. Return value is xml.
+              </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para><code>XMLSERIALIZE((DOCUMENT|CONTENT) exp [AS datatype])</code></para>
+            </entry>
+            <entry>
+              <para>Returns a character type representation of the exp. 
+              Only a character type (string, varchar, clob) may be specified as the datatype.  
+              If DOCUMENT is specified and the xml is not a valid document or fragment, then an exception is raised. 
+              </para>
+            </entry>
+            <entry>
+              <para>Exp is xml. Return value mathces datatype.
               </para>
             </entry>
           </row>

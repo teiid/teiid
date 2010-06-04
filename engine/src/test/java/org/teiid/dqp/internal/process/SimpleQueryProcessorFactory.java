@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.query.processor.dynamic;
+package org.teiid.dqp.internal.process;
 
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;

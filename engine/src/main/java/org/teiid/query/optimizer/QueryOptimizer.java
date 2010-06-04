@@ -40,7 +40,6 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.proc.ProcedurePlanner;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.xml.XMLPlanner;
-import org.teiid.query.optimizer.xquery.XQueryPlanner;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
@@ -61,7 +60,6 @@ public class QueryOptimizer {
 	
 	private static final CommandPlanner XML_PLANNER = new XMLPlanner();
 	private static final CommandPlanner PROCEDURE_PLANNER = new ProcedurePlanner();
-    private static final CommandPlanner XQUERY_PLANNER = new XQueryPlanner();
     private static final CommandPlanner BATCHED_UPDATE_PLANNER = new BatchedUpdatePlanner();
 
 	// Can't construct	
@@ -98,8 +96,6 @@ public class QueryOptimizer {
 
 		if (command.getType() == Command.TYPE_UPDATE_PROCEDURE){
 			result = PROCEDURE_PLANNER.optimize(command, idGenerator, metadata, capFinder, analysisRecord, context);
-        } else if (command.getType() == Command.TYPE_XQUERY){
-            result = XQUERY_PLANNER.optimize(command, idGenerator, metadata, capFinder, analysisRecord, context);
         } else if (command.getType() == Command.TYPE_BATCHED_UPDATE){
             result = BATCHED_UPDATE_PLANNER.optimize(command, idGenerator, metadata, capFinder, analysisRecord, context);
         } else {

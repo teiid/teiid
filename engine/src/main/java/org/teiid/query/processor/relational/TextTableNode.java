@@ -69,7 +69,6 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	private char quote;
 	private char delimiter;
 	private int lineWidth;
-	private List<Class<?>> types;
 	private Map elementMap;
     private int[] projectionIndexes;
 	
@@ -86,7 +85,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	public void initialize(CommandContext context, BufferManager bufferManager,
 			ProcessorDataManager dataMgr) {
 		super.initialize(context, bufferManager, dataMgr);
-		if (types != null) {
+		if (elementMap != null) {
 			return;
 		}
 		if (table.getSkip() != null) {
@@ -112,11 +111,6 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				noQuote = table.isEscape();
 				quote = table.getQuote();
 			}
-		}
-		types = new ArrayList<Class<?>>();
-		//TODO: if all string types, then we can skip this step
-		for (TextColumn col : table.getColumns()) {
-			types.add(DataTypeManager.getDataTypeClass(col.getType()));
 		}
         this.elementMap = createLookupMap(table.getProjectedSymbols());
         this.projectionIndexes = getProjectionIndexes(elementMap, getElements());
@@ -190,7 +184,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				}
 				val = vals.get(index);
 				try {
-					tuple.add(DataTypeManager.transformValue(val, types.get(output)));
+					tuple.add(DataTypeManager.transformValue(val, table.getColumns().get(output).getSymbol().getType()));
 				} catch (TransformationException e) {
 					throw new TeiidProcessingException(e, QueryExecPlugin.Util.getString("TextTableNode.conversion_error", col.getName(), textLine)); //$NON-NLS-1$
 				}

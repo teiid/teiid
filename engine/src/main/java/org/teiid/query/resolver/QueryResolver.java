@@ -49,7 +49,6 @@ import org.teiid.query.resolver.command.TempTableResolver;
 import org.teiid.query.resolver.command.UpdateProcedureResolver;
 import org.teiid.query.resolver.command.UpdateResolver;
 import org.teiid.query.resolver.command.XMLQueryResolver;
-import org.teiid.query.resolver.command.XQueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.lang.Command;
@@ -80,7 +79,6 @@ public class QueryResolver {
     private static final CommandResolver UPDATE_RESOLVER = new UpdateResolver();
     private static final CommandResolver DELETE_RESOLVER = new DeleteResolver();
     private static final CommandResolver UPDATE_PROCEDURE_RESOLVER = new UpdateProcedureResolver();
-    private static final CommandResolver X_QUERY_RESOLVER = new XQueryResolver();
     private static final CommandResolver BATCHED_UPDATE_RESOLVER = new BatchedUpdateResolver();
     private static final CommandResolver DYNAMIC_COMMAND_RESOLVER = new DynamicCommandResolver();
     private static final CommandResolver TEMP_TABLE_RESOLVER = new TempTableResolver();
@@ -207,7 +205,6 @@ public class QueryResolver {
             case Command.TYPE_DELETE:               return DELETE_RESOLVER;
             case Command.TYPE_STORED_PROCEDURE:     return EXEC_RESOLVER;
             case Command.TYPE_UPDATE_PROCEDURE:     return UPDATE_PROCEDURE_RESOLVER;
-            case Command.TYPE_XQUERY:               return X_QUERY_RESOLVER;
             case Command.TYPE_BATCHED_UPDATE:       return BATCHED_UPDATE_RESOLVER;
             case Command.TYPE_DYNAMIC:              return DYNAMIC_COMMAND_RESOLVER;
             case Command.TYPE_CREATE:               return TEMP_TABLE_RESOLVER;

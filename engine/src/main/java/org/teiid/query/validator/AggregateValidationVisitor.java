@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLReservedWords.NonReserved;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
@@ -72,12 +73,12 @@ public class AggregateValidationVisitor extends AbstractValidationVisitor {
         
         // Verify data type of aggregate expression
         String aggregateFunction = obj.getAggregateFunction();
-        if((aggregateFunction.equals(SQLReservedWords.SUM) || aggregateFunction.equals(SQLReservedWords.AVG)) && obj.getType() == null) {
+        if((aggregateFunction.equals(NonReserved.SUM) || aggregateFunction.equals(NonReserved.AVG)) && obj.getType() == null) {
             handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0041, new Object[] {aggregateFunction, obj}), obj);
         } else if (aggregateFunction.equals(SQLReservedWords.XMLAGG) && obj.getType() != DataTypeManager.DefaultDataClasses.XML) {
-        	handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_xml", new Object[] {aggregateFunction, obj}), obj);
+        	handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_xml", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
         }
-        if((obj.isDistinct() || aggregateFunction.equals(SQLReservedWords.MIN) || aggregateFunction.equals(SQLReservedWords.MAX)) && DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(aggExp.getType()))) {
+        if((obj.isDistinct() || aggregateFunction.equals(NonReserved.MIN) || aggregateFunction.equals(NonReserved.MAX)) && DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(aggExp.getType()))) {
     		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_comparable", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
         }
         validateBelow = false;

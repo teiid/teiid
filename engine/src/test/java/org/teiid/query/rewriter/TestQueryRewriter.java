@@ -2273,4 +2273,22 @@ public class TestQueryRewriter {
     	helpTestRewriteExpression(original, "'<a c=\"b\"></a>'", metadata);
     }
     
+    @Test public void testRewriteXmlElement1() throws Exception {
+    	String original = "xmlelement(name a, xmlattributes(1+1 as c), BQT1.SmallA.timevalue)"; //$NON-NLS-1$
+    	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+    	helpTestRewriteExpression(original, "XMLELEMENT(NAME a, XMLATTRIBUTES(2 AS c), BQT1.SmallA.timevalue)", metadata);
+    }
+    
+    @Test public void testRewriteXmlSerialize() throws Exception {
+    	String original = "xmlserialize(document xmlelement(name a, xmlattributes('b' as c)) as string)"; //$NON-NLS-1$
+    	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+    	helpTestRewriteExpression(original, "'<a c=\"b\"></a>'", metadata);
+    }
+    
+    @Test public void testRewriteXmlTable() throws Exception {
+    	String original = "select * from xmltable('/' passing 1 + 1 as a columns x string default curdate()) as x"; //$NON-NLS-1$
+    	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+    	helpTestRewriteCommand(original, "SELECT * FROM XMLTABLE('/' PASSING 2 AS a COLUMNS x string DEFAULT curdate()) AS x", metadata);
+    }
+
 }

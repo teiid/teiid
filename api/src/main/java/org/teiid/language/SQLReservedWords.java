@@ -46,6 +46,39 @@ public class SQLReservedWords {
 		public static final String LPAREN = "("; //$NON-NLS-1$
 		public static final String RPAREN = ")"; //$NON-NLS-1$
 	}
+	
+	public interface NonReserved {
+		public static final String SQL_TSI_FRAC_SECOND = "SQL_TSI_FRAC_SECOND"; //$NON-NLS-1$
+		public static final String SQL_TSI_SECOND = "SQL_TSI_SECOND"; //$NON-NLS-1$
+		public static final String SQL_TSI_MINUTE = "SQL_TSI_MINUTE"; //$NON-NLS-1$
+		public static final String SQL_TSI_HOUR = "SQL_TSI_HOUR"; //$NON-NLS-1$
+		public static final String SQL_TSI_DAY = "SQL_TSI_DAY"; //$NON-NLS-1$
+		public static final String SQL_TSI_WEEK = "SQL_TSI_WEEK"; //$NON-NLS-1$
+		public static final String SQL_TSI_MONTH = "SQL_TSI_MONTH"; //$NON-NLS-1$
+		public static final String SQL_TSI_QUARTER = "SQL_TSI_QUARTER"; //$NON-NLS-1$
+		public static final String SQL_TSI_YEAR = "SQL_TSI_YEAR"; //$NON-NLS-1$
+		public static final String TIMESTAMPADD = "TIMESTAMPADD"; //$NON-NLS-1$
+		public static final String TIMESTAMPDIFF = "TIMESTAMPDIFF"; //$NON-NLS-1$
+		//aggregate functions
+		public static final String MAX = "MAX"; //$NON-NLS-1$
+		public static final String MIN = "MIN"; //$NON-NLS-1$
+		public static final String COUNT = "COUNT"; //$NON-NLS-1$
+		public static final String AVG = "AVG"; //$NON-NLS-1$
+		public static final String SUM = "SUM"; //$NON-NLS-1$
+		//texttable
+		public static final String WIDTH = "WIDTH"; //$NON-NLS-1$
+		public static final String DELIMITER = "DELIMITER"; //$NON-NLS-1$
+		public static final String HEADER = "HEADER"; //$NON-NLS-1$
+		public static final String QUOTE = "QUOTE"; //$NON-NLS-1$
+		public static final String COLUMNS = "COLUMNS"; //$NON-NLS-1$
+		//xmltable
+		public static final String ORDINALITY = "ORDINALITY"; //$NON-NLS-1$
+		public static final String PASSING = "PASSING"; //$NON-NLS-1$
+		public static final String PATH = "PATH"; //$NON-NLS-1$
+		//xmlserialize
+		public static final String DOCUMENT = "DOCUMENT"; //$NON-NLS-1$
+		public static final String CONTENT = "CONTENT"; //$NON-NLS-1$
+	}
 
 	//Teiid specific
 	public static final String BIGDECIMAL = "BIGDECIMAL"; //$NON-NLS-1$
@@ -54,26 +87,13 @@ public class SQLReservedWords {
     public static final String BYTE = "BYTE"; //$NON-NLS-1$
     public static final String CRITERIA = "CRITERIA"; //$NON-NLS-1$
     public static final String ERROR = "ERROR";	 //$NON-NLS-1$
-    public static final String FN = "FN"; //$NON-NLS-1$
     public static final String LIMIT = "LIMIT"; //$NON-NLS-1$
     public static final String LONG = "LONG"; //$NON-NLS-1$
     public static final String LOOP = "LOOP"; //$NON-NLS-1$
     public static final String MAKEDEP = "MAKEDEP"; //$NON-NLS-1$
     public static final String MAKENOTDEP = "MAKENOTDEP"; //$NON-NLS-1$
 	public static final String NOCACHE = "NOCACHE"; //$NON-NLS-1$
-	public static final String OJ = "OJ"; //$NON-NLS-1$
-	public static final String SQL_TSI_FRAC_SECOND = "SQL_TSI_FRAC_SECOND"; //$NON-NLS-1$
-    public static final String SQL_TSI_SECOND = "SQL_TSI_SECOND"; //$NON-NLS-1$
-    public static final String SQL_TSI_MINUTE = "SQL_TSI_MINUTE"; //$NON-NLS-1$
-    public static final String SQL_TSI_HOUR = "SQL_TSI_HOUR"; //$NON-NLS-1$
-    public static final String SQL_TSI_DAY = "SQL_TSI_DAY"; //$NON-NLS-1$
-    public static final String SQL_TSI_WEEK = "SQL_TSI_WEEK"; //$NON-NLS-1$
-    public static final String SQL_TSI_MONTH = "SQL_TSI_MONTH"; //$NON-NLS-1$
-    public static final String SQL_TSI_QUARTER = "SQL_TSI_QUARTER"; //$NON-NLS-1$
-    public static final String SQL_TSI_YEAR = "SQL_TSI_YEAR"; //$NON-NLS-1$
-    public static final String STRING = "STRING"; //$NON-NLS-1$
-    public static final String TIMESTAMPADD = "TIMESTAMPADD"; //$NON-NLS-1$
-    public static final String TIMESTAMPDIFF = "TIMESTAMPDIFF"; //$NON-NLS-1$
+	public static final String STRING = "STRING"; //$NON-NLS-1$
     public static final String VIRTUAL = "VIRTUAL"; //$NON-NLS-1$
     public static final String WHILE = "WHILE"; //$NON-NLS-1$
     
@@ -92,8 +112,7 @@ public class SQLReservedWords {
     public static final String ASYMETRIC = "ASYMETRIC"; //$NON-NLS-1$
     public static final String ATOMIC = "ATOMIC"; //$NON-NLS-1$
     public static final String AUTHORIZATION = "AUTHORIZATION"; //$NON-NLS-1$
-	public static final String AVG = "AVG"; //$NON-NLS-1$
-    public static final String BEGIN = "BEGIN"; //$NON-NLS-1$
+	public static final String BEGIN = "BEGIN"; //$NON-NLS-1$
     public static final String BETWEEN = "BETWEEN"; //$NON-NLS-1$
     public static final String BIGINT = "BIGINT"; //$NON-NLS-1$
     public static final String BINARY = "BINARY"; //$NON-NLS-1$
@@ -117,7 +136,6 @@ public class SQLReservedWords {
     public static final String CONVERT = "CONVERT"; //$NON-NLS-1$
     public static final String CONSTRAINT = "CONSTRAINT"; //$NON-NLS-1$
     public static final String CONTINUE = "CONTINUE"; //$NON-NLS-1$
-	public static final String COUNT = "COUNT"; //$NON-NLS-1$
 	public static final String CORRESPONDING = "CORRESPONDING"; //$NON-NLS-1$
     public static final String CREATE = "CREATE"; //$NON-NLS-1$
     public static final String CROSS = "CROSS"; //$NON-NLS-1$
@@ -201,9 +219,7 @@ public class SQLReservedWords {
     public static final String LOCALTIME = "LOCALTIME"; //$NON-NLS-1$
     public static final String LOCALTIMESTAMP = "LOCALTIMESTAMP"; //$NON-NLS-1$
     public static final String MATCH = "MATCH"; //$NON-NLS-1$
-    public static final String MAX = "MAX"; //$NON-NLS-1$
-	public static final String MIN = "MIN"; //$NON-NLS-1$
-	public static final String MEMBER = "MEMBER"; //$NON-NLS-1$
+    public static final String MEMBER = "MEMBER"; //$NON-NLS-1$
 	public static final String MERGE = "MERGE"; //$NON-NLS-1$
 	public static final String METHOD = "METHOD"; //$NON-NLS-1$
 	public static final String MINUTE = "MINUTE"; //$NON-NLS-1$
@@ -280,8 +296,7 @@ public class SQLReservedWords {
     public static final String SYMETRIC = "SYMETRIC"; //$NON-NLS-1$
     public static final String SYSTEM = "SYSTEM"; //$NON-NLS-1$
     public static final String SYSTEM_USER = "SYSTEM_USER"; //$NON-NLS-1$
-	public static final String SUM = "SUM"; //$NON-NLS-1$
-    public static final String TABLE = "TABLE"; //$NON-NLS-1$
+	public static final String TABLE = "TABLE"; //$NON-NLS-1$
     public static final String TEMPORARY = "TEMPORARY"; //$NON-NLS-1$
     public static final String THEN = "THEN"; //$NON-NLS-1$
     public static final String TIME = "TIME"; //$NON-NLS-1$

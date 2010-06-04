@@ -31,10 +31,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.xml.xpath.XPathExpressionException;
+import net.sf.saxon.trans.XPathException;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
-import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
@@ -81,7 +80,9 @@ import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.SetQuery.Operation;
+import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
@@ -94,6 +95,7 @@ import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.symbol.AbstractCaseExpression;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.DerivedColumn;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
@@ -103,6 +105,7 @@ import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLForest;
+import org.teiid.query.sql.symbol.XMLNamespaces;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.CommandCollectorVisitor;
@@ -327,22 +330,14 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                 // can't use this pseudo-function in non-XML queries
                 handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.The_rowlimit_function_cannot_be_used_in_a_non-XML_command"), obj); //$NON-NLS-1$
             }
-        } else if(obj.getFunctionDescriptor().getName().equalsIgnoreCase(SourceSystemFunctions.XPATHVALUE) || obj.getFunctionDescriptor().getName().equalsIgnoreCase(SourceSystemFunctions.XPATHQUERY)) {
+        } else if(obj.getFunctionDescriptor().getName().equalsIgnoreCase(SourceSystemFunctions.XPATHVALUE)) {
 	        // Validate the xpath value is valid
 	        if(obj.getArgs()[1] instanceof Constant) {
 	            Constant xpathConst = (Constant) obj.getArgs()[1];
                 try {
                     XMLSystemFunctions.validateXpath((String)xpathConst.getValue());
-                } catch(XPathExpressionException e) {
+                } catch(XPathException e) {
                 	handleValidationError(QueryPlugin.Util.getString("QueryResolver.invalid_xpath", e.getMessage()), obj); //$NON-NLS-1$
-                }
-	        }
-	        if (obj.getArgs().length > 2 && obj.getArgs()[2] instanceof Constant) {
-	            Constant xpathConst = (Constant) obj.getArgs()[2];
-                try {
-                    XMLSystemFunctions.getNamespaces((String)xpathConst.getValue());
-                } catch(FunctionExecutionException e) {
-                	handleValidationError(e.getMessage(), obj);
                 }
 	        }
 	    }
@@ -1071,7 +1066,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         // Validate use of 'rowlimit' and 'rowlimitexception' pseudo-functions - they cannot be nested within another
         // function, and their operands must be a nonnegative integers
 
-        // Collect all occurrances of rowlimit function
+        // Collect all occurrences of rowlimit function
         List rowLimitFunctions = new ArrayList();
         FunctionCollectorVisitor visitor = new FunctionCollectorVisitor(rowLimitFunctions, FunctionLibrary.ROWLIMIT);
         PreOrderNavigator.doVisit(obj, visitor);   
@@ -1142,20 +1137,81 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
     
     @Override
-    public void visit(XMLAttributes obj) {
-    	for (SingleElementSymbol arg : obj.getArgs()) {
-    		if (arg instanceof ExpressionSymbol) {
-    			handleValidationError("ValidationVisitor.expression_requires_name", arg); //$NON-NLS-1$
-    		}
+    public void visit(XMLForest obj) {
+    	for (DerivedColumn dc : obj.getArgs()) {
+    		if (dc.getAlias() == null && !(dc.getExpression() instanceof ElementSymbol)) {
+    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.expression_requires_name"), obj); //$NON-NLS-1$
+        	}	
 		}
     }
     
     @Override
-    public void visit(XMLForest obj) {
-    	for (SingleElementSymbol arg : obj.getArgs()) {
-    		if (arg instanceof ExpressionSymbol) {
-    			handleValidationError("ValidationVisitor.expression_requires_name", arg); //$NON-NLS-1$
-    		}
+    public void visit(XMLAttributes obj) {
+    	for (DerivedColumn dc : obj.getArgs()) {
+    		if (dc.getAlias() == null && !(dc.getExpression() instanceof ElementSymbol)) {
+    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.expression_requires_name"), obj); //$NON-NLS-1$
+        	}	
+		}
+    }
+    
+    @Override
+    public void visit(XMLTable obj) {
+    	boolean context = false;
+    	boolean hadError = false;
+    	HashSet<String> names = new HashSet<String>();
+    	for (DerivedColumn dc : obj.getPassing()) {
+    		if (dc.getAlias() == null) {
+    			Class<?> type = dc.getExpression().getType();
+    			if (type != DataTypeManager.DefaultDataClasses.STRING &&
+    				type != DataTypeManager.DefaultDataClasses.XML &&
+    				type != DataTypeManager.DefaultDataClasses.CLOB) {
+    				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.context_item_type"), obj); //$NON-NLS-1$
+    			}
+    			if (context && !hadError) {
+    				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.passing_requires_name"), obj); //$NON-NLS-1$
+    				hadError = true;
+    			}
+    			context = true;
+        	} else if (!names.add(dc.getAlias().toUpperCase())) {
+    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.duplicate_passing", dc.getAlias()), obj); //$NON-NLS-1$
+        	}
+		}
+    	boolean hasOrdinal = false;
+    	for (XMLColumn xc : obj.getColumns()) {
+			if (!xc.isOrdinal()) {
+				if (xc.getDefaultExpression() != null && !EvaluatableVisitor.isFullyEvaluatable(obj, false)) {
+					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.invalid_default", xc.getDefaultExpression()), obj); //$NON-NLS-1$
+				}
+				continue;
+			}
+			if (hasOrdinal) {
+				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.one_ordinal"), obj); //$NON-NLS-1$
+				break;
+			}
+			hasOrdinal = true;
+		}
+    }
+    
+    @Override
+    public void visit(XMLNamespaces obj) {
+    	boolean hasDefault = false;
+    	boolean noDefault = false;
+    	for (XMLNamespaces.NamespaceItem item : obj.getNamespaceItems()) {
+			if (item.getPrefix() != null) {
+				if (item.getPrefix().equals("xml") || item.getPrefix().equals("xmlns")) { //$NON-NLS-1$ //$NON-NLS-2$
+					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_namespaces_reserved"), obj); //$NON-NLS-1$
+				}
+				continue;
+			}
+			if (hasDefault || noDefault) {
+				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_namespaces"), obj); //$NON-NLS-1$
+				break;
+			}
+			if (item.getUri() == null) { 
+				noDefault = true;
+			} else {
+				hasDefault = true;
+			}
 		}
     }
     

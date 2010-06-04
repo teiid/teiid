@@ -31,7 +31,6 @@ import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Option;
 import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.XQuery;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.symbol.GroupSymbol;
 
@@ -195,10 +194,4 @@ public class TestCreateUpdateProcedureCommand  extends TestCase {
         UnitTestUtil.helpTestEquivalence(0, s1, s2);
     }
     
-    public void testCloneMethod4() {
-    	CreateUpdateProcedureCommand s1 = new CreateUpdateProcedureCommand();
-    	s1.getSubCommands().add(new XQuery());
-        CreateUpdateProcedureCommand s2 = (CreateUpdateProcedureCommand)s1.clone();
-        UnitTestUtil.helpTestEquivalence(0, s1, s2);
-    }
 }

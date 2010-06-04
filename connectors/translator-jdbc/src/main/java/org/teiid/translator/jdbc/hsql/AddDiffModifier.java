@@ -31,7 +31,7 @@ import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
 import org.teiid.language.Literal;
-import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLReservedWords.NonReserved;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.ExtractFunctionModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
@@ -41,12 +41,12 @@ public class AddDiffModifier extends FunctionModifier {
 	private static Map<String, String> INTERVAL_MAP = new HashMap<String, String>();
 	
 	static {
-		INTERVAL_MAP.put(SQLReservedWords.SQL_TSI_DAY, ExtractFunctionModifier.DAY);
-		INTERVAL_MAP.put(SQLReservedWords.SQL_TSI_HOUR, ExtractFunctionModifier.HOUR);
-		INTERVAL_MAP.put(SQLReservedWords.SQL_TSI_MINUTE, ExtractFunctionModifier.MINUTE);
-		INTERVAL_MAP.put(SQLReservedWords.SQL_TSI_MONTH, ExtractFunctionModifier.MONTH);
-		INTERVAL_MAP.put(SQLReservedWords.SQL_TSI_SECOND, ExtractFunctionModifier.SECOND);
-		INTERVAL_MAP.put(SQLReservedWords.SQL_TSI_YEAR, ExtractFunctionModifier.YEAR);
+		INTERVAL_MAP.put(NonReserved.SQL_TSI_DAY, ExtractFunctionModifier.DAY);
+		INTERVAL_MAP.put(NonReserved.SQL_TSI_HOUR, ExtractFunctionModifier.HOUR);
+		INTERVAL_MAP.put(NonReserved.SQL_TSI_MINUTE, ExtractFunctionModifier.MINUTE);
+		INTERVAL_MAP.put(NonReserved.SQL_TSI_MONTH, ExtractFunctionModifier.MONTH);
+		INTERVAL_MAP.put(NonReserved.SQL_TSI_SECOND, ExtractFunctionModifier.SECOND);
+		INTERVAL_MAP.put(NonReserved.SQL_TSI_YEAR, ExtractFunctionModifier.YEAR);
 	}
 	
 	private boolean add;
@@ -72,11 +72,11 @@ public class AddDiffModifier extends FunctionModifier {
 			return null;
 		}
 		if (add) {
-			if (interval.equals(SQLReservedWords.SQL_TSI_FRAC_SECOND)) {
+			if (interval.equals(NonReserved.SQL_TSI_FRAC_SECOND)) {
 				intervalType.setValue("MILLISECOND"); //$NON-NLS-1$
 				Expression[] args = new Expression[] {function.getParameters().get(1), factory.createLiteral(1000000, TypeFacility.RUNTIME_TYPES.INTEGER)};
 				function.getParameters().set(1, factory.createFunction("/", args, TypeFacility.RUNTIME_TYPES.INTEGER)); //$NON-NLS-1$
-			} else if (interval.equals(SQLReservedWords.SQL_TSI_QUARTER)) {
+			} else if (interval.equals(NonReserved.SQL_TSI_QUARTER)) {
 				intervalType.setValue(ExtractFunctionModifier.DAY);
 				Expression[] args = new Expression[] {function.getParameters().get(1), factory.createLiteral(91, TypeFacility.RUNTIME_TYPES.INTEGER)};
 				function.getParameters().set(1, factory.createFunction("*", args, TypeFacility.RUNTIME_TYPES.INTEGER)); //$NON-NLS-1$
@@ -87,10 +87,10 @@ public class AddDiffModifier extends FunctionModifier {
 			}
 			return null;
 		} 
-		if (interval.equals(SQLReservedWords.SQL_TSI_FRAC_SECOND)) {
+		if (interval.equals(NonReserved.SQL_TSI_FRAC_SECOND)) {
 			intervalType.setValue("MILLISECOND"); //$NON-NLS-1$
 			return Arrays.asList(function, " * 1000000"); //$NON-NLS-1$
-		} else if (interval.equals(SQLReservedWords.SQL_TSI_QUARTER)) {
+		} else if (interval.equals(NonReserved.SQL_TSI_QUARTER)) {
 			intervalType.setValue(ExtractFunctionModifier.DAY);
 			return Arrays.asList(function, " / 91"); //$NON-NLS-1$  
 		} 

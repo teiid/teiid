@@ -81,6 +81,7 @@ import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.TextTable;
+import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -367,6 +368,9 @@ public class PlanToProcessConverter {
                     }
 				}
 				Object source = node.getProperty(NodeConstants.Info.TABLE_FUNCTION);
+				if (source instanceof XMLTable) {
+					return null;
+				}
 				if (!(source instanceof TextTable)) {
 					return null;
 				}

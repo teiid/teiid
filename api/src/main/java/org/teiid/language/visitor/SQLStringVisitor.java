@@ -70,6 +70,7 @@ import org.teiid.language.SubqueryIn;
 import org.teiid.language.TableReference;
 import org.teiid.language.Update;
 import org.teiid.language.Argument.Direction;
+import org.teiid.language.SQLReservedWords.NonReserved;
 import org.teiid.language.SQLReservedWords.Tokens;
 import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.metadata.AbstractMetadataRecord;
@@ -393,7 +394,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
             }
             buffer.append(Tokens.RPAREN);
 
-        } else if(name.equalsIgnoreCase(SQLReservedWords.TIMESTAMPADD) || name.equalsIgnoreCase(SQLReservedWords.TIMESTAMPDIFF)) {
+        } else if(name.equalsIgnoreCase(NonReserved.TIMESTAMPADD) || name.equalsIgnoreCase(NonReserved.TIMESTAMPDIFF)) {
             buffer.append(name);
             buffer.append(Tokens.LPAREN); 
 

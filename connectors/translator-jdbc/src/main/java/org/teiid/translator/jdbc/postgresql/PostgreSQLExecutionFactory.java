@@ -35,7 +35,7 @@ import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Limit;
 import org.teiid.language.Literal;
-import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLReservedWords.NonReserved;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
@@ -205,9 +205,9 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     	if (obj instanceof AggregateFunction) {
     		AggregateFunction agg = (AggregateFunction)obj;
     		if (agg.getExpression() != null && TypeFacility.RUNTIME_TYPES.BOOLEAN.equals(agg.getExpression().getType())) {
-            	if (agg.getName().equalsIgnoreCase(SQLReservedWords.MIN)) {
+            	if (agg.getName().equalsIgnoreCase(NonReserved.MIN)) {
             		agg.setName("bool_and"); //$NON-NLS-1$
-            	} else if (agg.getName().equalsIgnoreCase(SQLReservedWords.MAX)) {
+            	} else if (agg.getName().equalsIgnoreCase(NonReserved.MAX)) {
             		agg.setName("bool_or"); //$NON-NLS-1$
             	}
             }

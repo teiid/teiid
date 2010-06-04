@@ -53,7 +53,7 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.TimestampWithTimezone;
-import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLReservedWords.NonReserved;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.function.FunctionDescriptor;
@@ -110,6 +110,7 @@ import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.TranslatableProcedureContainer;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.PredicateCriteria.Negatable;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
@@ -137,6 +138,9 @@ import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.XMLElement;
+import org.teiid.query.sql.symbol.XMLForest;
+import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.util.ValueIterator;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
@@ -921,6 +925,8 @@ public class QueryRewriter {
         } else if (clause instanceof TextTable) {
         	TextTable tt = (TextTable)clause;
         	tt.setFile(rewriteExpressionDirect(tt.getFile()));
+        } else if (clause instanceof XMLTable) {
+        	rewriteExpressions(clause);
         }
         return clause;
 	}
@@ -1895,6 +1901,12 @@ public class QueryRewriter {
         	} else {
             	expression = rewriteExpressionDirect(((ExpressionSymbol)expression).getExpression());
         	}
+        } else if (expression instanceof XMLElement) {
+        	rewriteExpressions(expression);
+        } else if (expression instanceof XMLForest) {
+        	rewriteExpressions(expression);
+        } else if (expression instanceof XMLSerialize) {
+        	rewriteExpressions(expression);
         }
     	
         if(dataMgr == null) {
@@ -1913,8 +1925,8 @@ public class QueryRewriter {
 	}
     
     private Expression rewriteExpression(AggregateSymbol expression) {
-    	if (!expression.getAggregateFunction().equals(SQLReservedWords.COUNT)
-				&& !expression.getAggregateFunction().equals(SQLReservedWords.SUM)
+    	if (!expression.getAggregateFunction().equals(NonReserved.COUNT)
+				&& !expression.getAggregateFunction().equals(NonReserved.SUM)
 				&& EvaluatableVisitor.willBecomeConstant(expression.getExpression())) {
 			try {
 				return new ExpressionSymbol(expression.getName(), ResolverUtil
@@ -1967,7 +1979,7 @@ public class QueryRewriter {
 			}
 			case 1: {//from_unixtime(a) => timestampadd(SQL_TSI_SECOND, a, new Timestamp(0)) 
 				Function result = new Function(FunctionLibrary.TIMESTAMPADD,
-						new Expression[] {new Constant(SQLReservedWords.SQL_TSI_SECOND), function.getArg(0), new Constant(new Timestamp(0)) });
+						new Expression[] {new Constant(NonReserved.SQL_TSI_SECOND), function.getArg(0), new Constant(new Timestamp(0)) });
 				//resolve the function
 				FunctionDescriptor descriptor = 
 					funcLibrary.findFunction(FunctionLibrary.TIMESTAMPADD, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.TIMESTAMP });

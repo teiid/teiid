@@ -93,11 +93,6 @@ public abstract class Command implements LanguageObject {
     public static final int TYPE_UPDATE_PROCEDURE = 7;
 
     /**
-     * Represents an XQuery
-     */
-    public static final int TYPE_XQUERY = 8;
-
-    /**
      * Represents a batched sequence of UPDATE statements
      */
     public static final int TYPE_BATCHED_UPDATE = 9;

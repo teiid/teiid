@@ -29,6 +29,7 @@ import java.util.List;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLReservedWords.NonReserved;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.FromClause;
@@ -39,6 +40,15 @@ import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.proc.CriteriaSelector;
 
 public class SQLParserUtil {
+	
+	String matchesAny(String arg, String ... expected) {
+		for (String string : expected) {
+			if (string.equalsIgnoreCase(arg)) {
+				return arg;
+			}
+		}
+		return null;
+	}
 	
 	String normalizeStringLiteral(String s) {
 		int start = 1;
@@ -229,23 +239,23 @@ public class SQLParserUtil {
             int num = info.anonExprCount++;
             return "expr" + (num == 0 ? "" : ""+num); //$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
 
-        } else if(functionType.equals(SQLReservedWords.COUNT)) { 
+        } else if(functionType.equals(NonReserved.COUNT)) { 
             int num = info.anonCountCount++;
             return "count" + (num == 0 ? "" : ""+num);//$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
 
-        } else if(functionType.equals(SQLReservedWords.SUM)) { 
+        } else if(functionType.equals(NonReserved.SUM)) { 
             int num = info.anonSumCount++;
             return "sum" + (num == 0 ? "" : ""+num);//$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
 
-        } else if(functionType.equals(SQLReservedWords.AVG)) { 
+        } else if(functionType.equals(NonReserved.AVG)) { 
             int num = info.anonAvgCount++;
             return "avg" + (num == 0 ? "" : ""+num);//$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
 
-        } else if(functionType.equals(SQLReservedWords.MIN)) { 
+        } else if(functionType.equals(NonReserved.MIN)) { 
             int num = info.anonMinCount++;
             return "min" + (num == 0 ? "" : ""+num);//$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
 
-        } else if(functionType.equals(SQLReservedWords.MAX)) { 
+        } else if(functionType.equals(NonReserved.MAX)) { 
             int num = info.anonMaxCount++;
             return "max" + (num == 0 ? "" : ""+num);//$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
         } else if(functionType.equals(SQLReservedWords.XMLAGG)) { 

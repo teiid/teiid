@@ -40,7 +40,7 @@ import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLReservedWords.NonReserved;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -351,7 +351,7 @@ public class RulePushAggregates implements
         	if (pushdown) {
         		projectedViewSymbols.add(agg);
         	} else {
-        		if (agg.getAggregateFunction().equals(SQLReservedWords.COUNT)) {
+        		if (agg.getAggregateFunction().equals(NonReserved.COUNT)) {
         			SearchedCaseExpression count = new SearchedCaseExpression(Arrays.asList(new IsNullCriteria(agg.getExpression())), Arrays.asList(new Constant(Integer.valueOf(0))));
         			count.setElseExpression(new Constant(Integer.valueOf(1)));
         			count.setType(DataTypeManager.DefaultDataClasses.INTEGER);
@@ -501,7 +501,7 @@ public class RulePushAggregates implements
 		} else {
 		    // if the source has no rows we need to insert a select node with criteria count(*)>0
 		    PlanNode selectNode = NodeFactory.getNewNode(NodeConstants.Types.SELECT);
-		    AggregateSymbol count = new AggregateSymbol("stagedAgg", SQLReservedWords.COUNT, false, null); //$NON-NLS-1$
+		    AggregateSymbol count = new AggregateSymbol("stagedAgg", NonReserved.COUNT, false, null); //$NON-NLS-1$
 		    aggregates.add(count); //consider the count aggregate for the push down call below
 		    selectNode.setProperty(NodeConstants.Info.SELECT_CRITERIA, new CompareCriteria(count, CompareCriteria.GT,
 		                                                                                   new Constant(new Integer(0))));
@@ -669,9 +669,9 @@ public class RulePushAggregates implements
             Expression newExpression = null;
 
             String aggFunction = partitionAgg.getAggregateFunction();
-            if (aggFunction.equals(SQLReservedWords.COUNT)) {
+            if (aggFunction.equals(NonReserved.COUNT)) {
                 //COUNT(x) -> CONVERT(SUM(COUNT(x)), INTEGER)
-                AggregateSymbol newAgg = new AggregateSymbol("stagedAgg", SQLReservedWords.SUM, false, partitionAgg); //$NON-NLS-1$
+                AggregateSymbol newAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, partitionAgg); //$NON-NLS-1$
 
                 // Build conversion function to convert SUM (which returns LONG) back to INTEGER
                 Constant convertTargetType = new Constant(DataTypeManager.getDataTypeName(partitionAgg.getType()),
@@ -681,13 +681,13 @@ public class RulePushAggregates implements
 
                 newExpression = convertFunc;  
                 nestedAggregates.add(partitionAgg);
-            } else if (aggFunction.equals(SQLReservedWords.AVG)) {
+            } else if (aggFunction.equals(NonReserved.AVG)) {
                 //AVG(x) -> SUM(SUM(x)) / SUM(COUNT(x))
-                AggregateSymbol countAgg = new AggregateSymbol("stagedAgg", SQLReservedWords.COUNT, false, partitionAgg.getExpression()); //$NON-NLS-1$
-                AggregateSymbol sumAgg = new AggregateSymbol("stagedAgg", SQLReservedWords.SUM, false, partitionAgg.getExpression()); //$NON-NLS-1$
+                AggregateSymbol countAgg = new AggregateSymbol("stagedAgg", NonReserved.COUNT, false, partitionAgg.getExpression()); //$NON-NLS-1$
+                AggregateSymbol sumAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, partitionAgg.getExpression()); //$NON-NLS-1$
                 
-                AggregateSymbol sumSumAgg = new AggregateSymbol("stagedAgg", SQLReservedWords.SUM, false, sumAgg); //$NON-NLS-1$
-                AggregateSymbol sumCountAgg = new AggregateSymbol("stagedAgg", SQLReservedWords.SUM, false, countAgg); //$NON-NLS-1$
+                AggregateSymbol sumSumAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, sumAgg); //$NON-NLS-1$
+                AggregateSymbol sumCountAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, countAgg); //$NON-NLS-1$
 
                 Function divideFunc = new Function("/", new Expression[] {sumSumAgg, sumCountAgg}); //$NON-NLS-1$
                 ResolverVisitor.resolveLanguageObject(divideFunc, metadata);

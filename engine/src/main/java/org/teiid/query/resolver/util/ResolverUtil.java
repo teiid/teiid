@@ -612,7 +612,7 @@ public class ResolverUtil {
     public static TempMetadataID addTempGroup(TempMetadataAdapter metadata,
                                     GroupSymbol symbol,
                                     List symbols, boolean tempTable) throws QueryResolverException {
-        HashSet names = new HashSet();
+        HashSet<String> names = new HashSet<String>();
         for (Iterator i = symbols.iterator(); i.hasNext();) {
             SingleElementSymbol ses = (SingleElementSymbol)i.next();
             if (!names.add(ses.getShortCanonicalName())) {

@@ -68,13 +68,16 @@ import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
+import org.teiid.query.sql.lang.TableFunctionReference;
 import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.AllInGroupSymbol;
 import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
@@ -82,7 +85,6 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.util.ErrorMessageKeys;
-
 
 public class SimpleQueryResolver implements CommandResolver {
 
@@ -280,21 +282,54 @@ public class SimpleQueryResolver implements CommandResolver {
             postVisitVisitor(obj);
         }
         
-        /**
-         * TextTables have similar resolving semantics to a nested table.
-         */
         @Override
         public void visit(TextTable obj) {
-        	LinkedHashSet<GroupSymbol> saved = new LinkedHashSet<GroupSymbol>(this.currentGroups);
-        	if (allowImplicit) {
-        		currentGroups.addAll(this.implicitGroups);
-        	}
+        	LinkedHashSet<GroupSymbol> saved = preTableFunctionReference(obj);
         	this.visitNode(obj.getFile());
         	try {
 				obj.setFile(ResolverUtil.convertExpression(obj.getFile(), DataTypeManager.DefaultDataTypes.CLOB, metadata));
 			} catch (QueryResolverException e) {
 				throw new TeiidRuntimeException(e);
 			}
+			postTableFunctionReference(obj, saved);
+            //set to fixed width if any column has width specified
+            for (TextTable.TextColumn col : obj.getColumns()) {
+				if (col.getWidth() != null) {
+					obj.setFixedWidth(true);
+					break;
+				}
+			}
+        }
+        
+        @Override
+        public void visit(XMLTable obj) {
+        	LinkedHashSet<GroupSymbol> saved = preTableFunctionReference(obj);
+        	visitNodes(obj.getPassing());
+			postTableFunctionReference(obj, saved);
+			try {
+				obj.compileXqueryExpression();
+				for (XMLTable.XMLColumn column : obj.getColumns()) {
+					if (column.getDefaultExpression() == null) {
+						continue;
+					}
+					ResolverVisitor.resolveLanguageObject(column.getDefaultExpression(), metadata);
+					Expression ex = ResolverUtil.convertExpression(column.getDefaultExpression(), DataTypeManager.getDataTypeName(column.getSymbol().getType()), metadata);
+					column.setDefaultExpression(ex);
+				}
+			} catch (TeiidException e) {
+				throw new TeiidRuntimeException(e);
+			}
+        }
+        
+        public LinkedHashSet<GroupSymbol> preTableFunctionReference(TableFunctionReference tfr) {
+        	LinkedHashSet<GroupSymbol> saved = new LinkedHashSet<GroupSymbol>(this.currentGroups);
+        	if (allowImplicit) {
+        		currentGroups.addAll(this.implicitGroups);
+        	}
+        	return saved;
+        }
+        
+        public void postTableFunctionReference(TableFunctionReference obj, LinkedHashSet<GroupSymbol> saved) {
 			//we didn't create a true external context, so we manually mark external
 			for (ElementSymbol symbol : ElementCollectorVisitor.getElements(obj, false)) {
 				if (symbol.isExternalReference()) {
@@ -324,13 +359,6 @@ public class SimpleQueryResolver implements CommandResolver {
 				} catch (TeiidException e) {
 					throw new TeiidRuntimeException(e);
 				}				
-			}
-            //set to fixed width if any column has width specified
-            for (TextTable.TextColumn col : obj.getColumns()) {
-				if (col.getWidth() != null) {
-					obj.setFixedWidth(true);
-					break;
-				}
 			}
         }
         

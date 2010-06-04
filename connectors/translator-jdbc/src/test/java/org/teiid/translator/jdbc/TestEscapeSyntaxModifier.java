@@ -29,7 +29,7 @@ import java.util.List;
 import org.teiid.cdk.CommandBuilder;
 import org.teiid.language.Function;
 import org.teiid.language.Literal;
-import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLReservedWords.NonReserved;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.translator.jdbc.EscapeSyntaxModifier;
 
@@ -57,7 +57,7 @@ public class TestEscapeSyntaxModifier extends TestCase {
     }
     
     public void testTimestampAdd() {
-        Literal arg1 = CommandBuilder.getLanuageFactory().createLiteral(SQLReservedWords.SQL_TSI_HOUR, String.class); 
+        Literal arg1 = CommandBuilder.getLanuageFactory().createLiteral(NonReserved.SQL_TSI_HOUR, String.class); 
         Literal arg2 = CommandBuilder.getLanuageFactory().createLiteral(Integer.valueOf(1), Integer.class);
         Literal arg3 = CommandBuilder.getLanuageFactory().createLiteral(TimestampUtil.createTimestamp(0, 0, 0, 0, 0, 0, 0), Timestamp.class);
         Function func = CommandBuilder.getLanuageFactory().createFunction("timestampadd", Arrays.asList( arg1, arg2, arg3), Timestamp.class); //$NON-NLS-1$

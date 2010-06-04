@@ -25,16 +25,10 @@ package org.teiid.query.parser;
 import java.io.StringReader;
 
 import org.teiid.api.exception.query.QueryParserException;
-import org.teiid.core.TeiidProcessingException;
-import org.teiid.language.SQLReservedWords;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.Option;
-import org.teiid.query.sql.lang.XQuery;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.xquery.XQueryExpression;
-import org.teiid.query.xquery.saxon.SaxonXQueryExpression;
 
 /**
  * <p>Converts a SQL-string to an object version of a query.  This
@@ -60,7 +54,6 @@ public class QueryParser {
     
     private static final String XQUERY_DECLARE = "declare"; //$NON-NLS-1$
     private static final String XML_OPEN_BRACKET = "<"; //$NON-NLS-1$
-    private static final String XML_CLOSE_BRACKET = ">"; //$NON-NLS-1$
 
 	private SQLParser parser;
     
@@ -113,60 +106,17 @@ public class QueryParser {
             throw new QueryParserException(QueryPlugin.Util.getString("QueryParser.emptysql")); //$NON-NLS-1$
         }
         
-        QueryParserException qpe = null;
         try {
 	        Command result = parseCommandWithParser(sql, parseInfo);
 	        result.setCache(parseInfo.cache);
 			return result;
         } catch (QueryParserException e) {
-        	qpe = e;
-        }
-        
-        try {
-            // Check for OPTION
-            Option option = null;
-            int closeBracket = sql.lastIndexOf(XML_CLOSE_BRACKET);
-            int optionIndex = sql.toUpperCase().lastIndexOf(SQLReservedWords.OPTION);
-            if (optionIndex != -1 && optionIndex > closeBracket){
-                String optionSQL = sql.substring(optionIndex);
-                option = getOption(optionSQL, parseInfo);
-                sql = sql.substring(0, optionIndex-1);
-            }
-            
-            XQueryExpression expr = new SaxonXQueryExpression();
-            expr.compileXQuery(sql);
-            XQuery xquery = new XQuery(sql, expr);
-            if (option != null){
-                xquery.setOption(option);
-            }
-            return xquery;        
-        } catch (TeiidProcessingException e) {
             if(sql.startsWith(XML_OPEN_BRACKET) || sql.startsWith(XQUERY_DECLARE)) {
-            	throw new QueryParserException(e, QueryPlugin.Util.getString("QueryParser.xqueryCompilation")); //$NON-NLS-1$
+            	throw new QueryParserException(e, QueryPlugin.Util.getString("QueryParser.xqueryCompilation", sql)); //$NON-NLS-1$
             }
+        	throw e;
         }
-
-        throw qpe;
 	}
-
-    /**
-     * Parses Option object given option SQL fragment.
-     * @param optionSQL option SQL
-     * @return Option object
-     */
-    private Option getOption(String optionSQL, ParseInfo parseInfo) throws QueryParserException {
-    	Option result = null;
-        try{
-            result = getSqlParser(optionSQL).option(parseInfo);
-            
-        } catch(ParseException pe) {
-            throw convertParserException(pe);
-
-        } catch(TokenMgrError tme) {
-            handleTokenMgrError(tme);
-        }
-        return result;
-    }
 
     /**
      * Parse the String sql into a Command using the MetaMatrix parser.

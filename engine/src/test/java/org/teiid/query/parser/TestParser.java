@@ -27,6 +27,7 @@ import static org.junit.Assert.*;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -74,6 +75,7 @@ import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.TextTable.TextColumn;
 import org.teiid.query.sql.proc.AssignmentStatement;
@@ -97,6 +99,7 @@ import org.teiid.query.sql.symbol.AllInGroupSymbol;
 import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.CaseExpression;
 import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.DerivedColumn;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
@@ -105,13 +108,13 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.TestCaseExpression;
 import org.teiid.query.sql.symbol.TestSearchedCaseExpression;
 import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
 import org.teiid.query.sql.symbol.XMLNamespaces;
+import org.teiid.query.sql.symbol.XMLSerialize;
 
 @SuppressWarnings("nls")
 public class TestParser {
@@ -6716,12 +6719,12 @@ public class TestParser {
     
     @Test public void testXmlElementWithAttributes() throws Exception {
     	XMLElement f = new XMLElement("y", new ArrayList<Expression>());
-    	f.setAttributes(new XMLAttributes(Arrays.asList((SingleElementSymbol)new AliasSymbol("val", new ExpressionSymbol("", new Constant("a"))))));
+    	f.setAttributes(new XMLAttributes(Arrays.asList(new DerivedColumn("val", new Constant("a")))));
     	helpTestExpression("xmlelement(y, xmlattributes('a' as val))", "XMLELEMENT(NAME y, XMLATTRIBUTES('a' AS val))", f);
     }
     
     @Test public void testXmlForest() throws Exception {
-    	XMLForest f = new XMLForest(Arrays.asList((SingleElementSymbol)new AliasSymbol("table", new ElementSymbol("a"))));
+    	XMLForest f = new XMLForest(Arrays.asList(new DerivedColumn("table", new ElementSymbol("a"))));
     	helpTestExpression("xmlforest(a as \"table\")", "XMLFOREST(a AS \"table\")", f);
     }
     
@@ -6731,7 +6734,7 @@ public class TestParser {
     }
     
     @Test public void testXmlNamespaces() throws Exception {
-    	XMLForest f = new XMLForest(Arrays.asList((SingleElementSymbol)new AliasSymbol("table", new ElementSymbol("a"))));
+    	XMLForest f = new XMLForest(Arrays.asList(new DerivedColumn("table", new ElementSymbol("a"))));
     	f.setNamespaces(new XMLNamespaces(Arrays.asList(new XMLNamespaces.NamespaceItem(), new XMLNamespaces.NamespaceItem("x", "http://foo"))));
     	helpTestExpression("xmlforest(xmlnamespaces(no default, 'http://foo' as x), a as \"table\")", "XMLFOREST(XMLNAMESPACES(NO DEFAULT, 'http://foo' AS x), a AS \"table\")", f);
     }
@@ -6784,7 +6787,31 @@ public class TestParser {
     }
     
     @Test public void testTextTableColumns() throws Exception {
-        helpException("SELECT * from texttable(foo x string)", "Parsing error: Columns non-reserved word expected in TEXTTABLE.");
+        helpException("SELECT * from texttable(foo x string)", "Parsing error: Expected non-reserved word [COLUMNS], but was x.");
+    }
+    
+    @Test public void testXMLTable() throws Exception {
+    	String sql = "SELECT * from xmltable(xmlnamespaces(no default), '/' columns x for ordinality, y date path '@date' default {d'2000-01-01'}) as x"; //$NON-NLS-1$
+        Query query = new Query();
+        query.setSelect(new Select(Arrays.asList(new AllSymbol())));
+        XMLTable xt = new XMLTable();
+        xt.setName("x");
+        xt.setNamespaces(new XMLNamespaces(Arrays.asList(new XMLNamespaces.NamespaceItem())));
+        xt.setXquery("/");
+        List<XMLTable.XMLColumn> columns = new ArrayList<XMLTable.XMLColumn>();
+        columns.add(new XMLTable.XMLColumn("x"));
+        columns.add(new XMLTable.XMLColumn("y", "date", "@date", new Constant(Date.valueOf("2000-01-01"))));
+        xt.setColumns(columns);
+        query.setFrom(new From(Arrays.asList(xt)));
+        helpTest(sql, "SELECT * FROM XMLTABLE(XMLNAMESPACES(NO DEFAULT), '/' COLUMNS x FOR ORDINALITY, y date PATH '@date' DEFAULT {d'2000-01-01'}) AS x", query);
+    }
+    
+    @Test public void testXmlSerialize() throws Exception {
+    	XMLSerialize f = new XMLSerialize();
+    	f.setDocument(true);
+    	f.setExpression(new ElementSymbol("x"));
+    	f.setTypeString("CLOB");
+    	helpTestExpression("xmlserialize(document x as CLOB)", "XMLSERIALIZE(DOCUMENT x AS CLOB)", f);
     }
 
 }

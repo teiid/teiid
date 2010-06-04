@@ -31,8 +31,6 @@ import java.util.List;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.api.exception.query.QueryParserException;
-import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.RequestMessage;
@@ -419,17 +417,4 @@ public class TestPreparedStatement {
 		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, false,FakeMetadataFactory.example1VDB());
     }
     
-    @Test public void testXQueryParam() throws Exception {
-        String preparedSql = "exec m.xproc3(?)"; //$NON-NLS-1$
-        
-		List<String> values = Arrays.asList("<test1/>"); //$NON-NLS-1$
-        List[] expected = new List[] { 
-                Arrays.asList("<?xml version=\"1.0\" encoding=\"UTF-8\"?><wrap><test1/></wrap>"), //$NON-NLS-1$
-            };    
-        
-        FakeDataManager dataManager = new FakeDataManager();
-        TestProcessor.sampleData1(dataManager);
-		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.exampleXQueryTransformations(), false, false, FakeMetadataFactory.exampleXQueryTransformationsVDB());
-    }
-
 }

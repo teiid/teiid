@@ -31,6 +31,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLReservedWords.NonReserved;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.OrderBy;
@@ -69,11 +70,11 @@ public class AggregateSymbol extends ExpressionSymbol {
 
 	static {
 		AGGREGATE_FUNCTIONS = new HashSet<String>();
-		AGGREGATE_FUNCTIONS.add(SQLReservedWords.COUNT);
-		AGGREGATE_FUNCTIONS.add(SQLReservedWords.SUM);
-		AGGREGATE_FUNCTIONS.add(SQLReservedWords.AVG);
-		AGGREGATE_FUNCTIONS.add(SQLReservedWords.MIN);
-		AGGREGATE_FUNCTIONS.add(SQLReservedWords.MAX);
+		AGGREGATE_FUNCTIONS.add(NonReserved.COUNT);
+		AGGREGATE_FUNCTIONS.add(NonReserved.SUM);
+		AGGREGATE_FUNCTIONS.add(NonReserved.AVG);
+		AGGREGATE_FUNCTIONS.add(NonReserved.MIN);
+		AGGREGATE_FUNCTIONS.add(NonReserved.MAX);
 		AGGREGATE_FUNCTIONS.add(SQLReservedWords.XMLAGG);
 
 		SUM_TYPES = new HashMap<Class<?>, Class<?>>();
@@ -113,7 +114,7 @@ public class AggregateSymbol extends ExpressionSymbol {
 	/**
 	 * Construct an aggregate symbol with all given data.
 	 * @param name Name of the function
-	 * @param aggregateFunction Aggregate function type ({@link org.teiid.language.SQLReservedWords#COUNT}, etc)
+	 * @param aggregateFunction Aggregate function type ({@link org.teiid.language.SQLReservedWords.NonReserved#COUNT}, etc)
 	 * @param isDistinct True if DISTINCT flag is set
 	 * @param expression Contained expression
 	 */
@@ -128,11 +129,11 @@ public class AggregateSymbol extends ExpressionSymbol {
 	 * Set the aggregate function.  If the aggregate function is an invalid value, an
 	 * IllegalArgumentException is thrown.
 	 * @param aggregateFunction Aggregate function type
-	 * @see org.teiid.language.SQLReservedWords#COUNT
-	 * @see org.teiid.language.SQLReservedWords#SUM
-	 * @see org.teiid.language.SQLReservedWords#AVG
-	 * @see org.teiid.language.SQLReservedWords#MIN
-	 * @see org.teiid.language.SQLReservedWords#MAX
+	 * @see org.teiid.language.SQLReservedWords.NonReserved#COUNT
+	 * @see org.teiid.language.SQLReservedWords.NonReserved#SUM
+	 * @see org.teiid.language.SQLReservedWords.NonReserved#AVG
+	 * @see org.teiid.language.SQLReservedWords.NonReserved#MIN
+	 * @see org.teiid.language.SQLReservedWords.NonReserved#MAX
 	 */
 	private void setAggregateFunction(String aggregateFunction) {
 		// Validate aggregate
@@ -146,11 +147,11 @@ public class AggregateSymbol extends ExpressionSymbol {
 	 * Get the aggregate function type - this will map to one of the reserved words
 	 * for the aggregate functions.
 	 * @return Aggregate function type
-	 * @see org.teiid.language.SQLReservedWords#COUNT
-	 * @see org.teiid.language.SQLReservedWords#SUM
-	 * @see org.teiid.language.SQLReservedWords#AVG
-	 * @see org.teiid.language.SQLReservedWords#MIN
-	 * @see org.teiid.language.SQLReservedWords#MAX
+	 * @see org.teiid.language.SQLReservedWords.NonReserved#COUNT
+	 * @see org.teiid.language.SQLReservedWords.NonReserved#SUM
+	 * @see org.teiid.language.SQLReservedWords.NonReserved#AVG
+	 * @see org.teiid.language.SQLReservedWords.NonReserved#MIN
+	 * @see org.teiid.language.SQLReservedWords.NonReserved#MAX
 	 */
 	public String getAggregateFunction() {
 		return this.aggregate;
@@ -171,12 +172,12 @@ public class AggregateSymbol extends ExpressionSymbol {
 	 * @return Type of the symbol
 	 */
 	public Class<?> getType() {
-		if(this.aggregate.equals(SQLReservedWords.COUNT)) {
+		if(this.aggregate.equals(NonReserved.COUNT)) {
 			return COUNT_TYPE;
-		} else if(this.aggregate.equals(SQLReservedWords.SUM) ) {
+		} else if(this.aggregate.equals(NonReserved.SUM) ) {
 			Class<?> expressionType = this.getExpression().getType();
 			return SUM_TYPES.get(expressionType);
-        } else if (this.aggregate.equals(SQLReservedWords.AVG)) {
+        } else if (this.aggregate.equals(NonReserved.AVG)) {
             Class<?> expressionType = this.getExpression().getType();
             return AVG_TYPES.get(expressionType);
 		} else {

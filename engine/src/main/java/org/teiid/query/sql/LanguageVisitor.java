@@ -84,7 +84,6 @@ public abstract class LanguageVisitor {
         visit((ProcedureContainer)obj);
     }
     public void visit(Into obj) {}
-    public void visit(XQuery obj) {}
     public void visit(DependentSetCriteria obj) {}
     public void visit(Create obj) {}
     public void visit(Drop obj) {}
@@ -131,4 +130,7 @@ public abstract class LanguageVisitor {
     public void visit(XMLForest obj) {}
     public void visit(XMLNamespaces obj) {}
     public void visit(TextTable obj) {}
+    public void visit(XMLTable obj) {}
+    public void visit(DerivedColumn obj) {}
+    public void visit(XMLSerialize obj) {}
 }

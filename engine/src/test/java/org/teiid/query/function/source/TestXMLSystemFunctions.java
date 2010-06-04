@@ -31,19 +31,17 @@ import java.io.StringReader;
 import java.sql.Timestamp;
 import java.util.TimeZone;
 
-import javax.xml.xpath.XPathExpressionException;
+import net.sf.saxon.trans.XPathException;
 
 import org.jdom.Attribute;
 import org.jdom.Element;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.util.FileUtil;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.query.function.source.XMLSystemFunctions;
 
 
 @SuppressWarnings("nls")
@@ -55,17 +53,16 @@ public class TestXMLSystemFunctions {
         return util.read();
     }
     
-    public String helpTestXpathValue(final String xmlFilePath, final String xpath, 
-                                     String namespaces, final String expected) throws IOException, XPathExpressionException, FunctionExecutionException {
-        final String actual = helpGetNode(xmlFilePath,xpath, namespaces);
+    public String helpTestXpathValue(final String xmlFilePath, final String xpath, final String expected) throws IOException, XPathException {
+        final String actual = helpGetNode(xmlFilePath,xpath);
         assertEquals(expected,actual);
         return actual;
     }
 
-    public String helpGetNode(final String xmlFilePath, final String xpath, String namespaces ) throws IOException, XPathExpressionException, FunctionExecutionException {
+    public String helpGetNode(final String xmlFilePath, final String xpath ) throws IOException, XPathException {
         final String xmlContent = getContentOfTestFile(xmlFilePath);
         final Reader docReader = new StringReader(xmlContent);
-        return XMLSystemFunctions.xpathValue(docReader,xpath, namespaces);
+        return XMLSystemFunctions.xpathValue(docReader,xpath);
     }
 
     public void helpCheckElement(final Object jdomNode, final String name, final String prefix, final String namespaceUri,
@@ -148,13 +145,13 @@ public class TestXMLSystemFunctions {
         assertNull(value);
     }
     
-    @Test(expected=XPathExpressionException.class) public void testBadXPath() throws Exception {
+    @Test(expected=XPathException.class) public void testBadXPath() throws Exception {
         String doc = "<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>"; //$NON-NLS-1$
         String xpath = ":BOGUS:"; //$NON-NLS-1$
         XMLSystemFunctions.xpathValue(doc, xpath);
     }
     
-    @Test(expected=XPathExpressionException.class) public void testValidateXpath_Defect15088() throws Exception {
+    @Test(expected=XPathException.class) public void testValidateXpath_Defect15088() throws Exception {
         // Mismatched tick and quote
         final String xpath = "//*[local-name()='bookName\"]"; //$NON-NLS-1$       
     	XMLSystemFunctions.validateXpath(xpath);
@@ -172,43 +169,36 @@ public class TestXMLSystemFunctions {
         final String xmlFilePath = "testdoc.xml"; //$NON-NLS-1$
         final String xpath = "//shipTo/@country"; //$NON-NLS-1$
         final String expectedValue = "US"; //$NON-NLS-1$
-        helpTestXpathValue(xmlFilePath,xpath,null, expectedValue);
+        helpTestXpathValue(xmlFilePath,xpath, expectedValue);
     }
 
     @Test public void testGetSingleMatch_01_002() throws Exception {
         final String xmlFilePath = "testdoc.xml"; //$NON-NLS-1$
         final String xpath = "//@partNum"; //$NON-NLS-1$
         final String expectedValue = "872-AA"; //$NON-NLS-1$
-        helpTestXpathValue(xmlFilePath,xpath,null, expectedValue);
+        helpTestXpathValue(xmlFilePath,xpath, expectedValue);
     }
 
     @Test public void testGetSingleMatch_01_003() throws Exception {
         final String xmlFilePath = "testdoc.xml"; //$NON-NLS-1$
         final String xpath = "//productName"; //$NON-NLS-1$
         final String expectedValue = "Lawnmower"; //$NON-NLS-1$
-        helpTestXpathValue(xmlFilePath,xpath,null, expectedValue);
-    }
-
-    @Test public void testGetSingleMatch_01_004() throws Exception {
-        final String xmlFilePath = "testdoc.xml"; //$NON-NLS-1$
-        final String xpath = "/SOAP-ENV:Envelope/billTo/zip"; //$NON-NLS-1$
-        final String expectedValue = "95819"; //$NON-NLS-1$
-        helpTestXpathValue(xmlFilePath,xpath,"xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"", expectedValue);
+        helpTestXpathValue(xmlFilePath,xpath, expectedValue);
     }
 
     @Test public void testGetSingleMatch_03() throws Exception {
         final String xmlFilePath = "testdoc.xml"; //$NON-NLS-1$
         final String xpath = "//*[local-name()=\"ReadOnly\"]"; //$NON-NLS-1$
-        helpTestXpathValue(xmlFilePath,xpath,null, "false"); //$NON-NLS-1$
+        helpTestXpathValue(xmlFilePath,xpath, "false"); //$NON-NLS-1$
     }
     
     /**
      * * is no longer valid to match the namespace
      */
-    @Test(expected=XPathExpressionException.class) public void testGetSingleMatch_04() throws Exception {
+    @Test public void testGetSingleMatch_04() throws Exception {
         final String xmlFilePath = "testdoc.xml"; //$NON-NLS-1$
         final String xpath = "//*:ReadOnly"; //$NON-NLS-1$
-        helpTestXpathValue(xmlFilePath,xpath,null, "false"); //$NON-NLS-1$
+        helpTestXpathValue(xmlFilePath,xpath, "false"); //$NON-NLS-1$
     }
     
 	@Test public void testInvokeXmlElement2() throws Exception {

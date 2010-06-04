@@ -37,7 +37,6 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.xml.XMLConstants;
-import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 import javax.xml.stream.EventFilter;
 import javax.xml.stream.FactoryConfigurationError;
@@ -47,20 +46,19 @@ import javax.xml.stream.XMLEventWriter;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.events.XMLEvent;
-import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
+
+import net.sf.saxon.om.Item;
+import net.sf.saxon.sxpath.XPathEvaluator;
+import net.sf.saxon.sxpath.XPathExpression;
+import net.sf.saxon.trans.XPathException;
 
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
@@ -73,13 +71,9 @@ import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.XMLTranslator;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.types.XMLType.Type;
-import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.processor.xml.XMLUtil;
 import org.teiid.query.util.CommandContext;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 
 
 /** 
@@ -421,130 +415,52 @@ public class XMLSystemFunctions {
 	    
 	}
 
-    public static String xpathValue(XMLType document, String xpathStr, String namespaces) throws IOException, XPathExpressionException, SQLException, FunctionExecutionException {
-    	Reader stream = document.getCharacterStream();
-        return xpathValue(stream, xpathStr, namespaces);
-    }
-	
-    public static String xpathValue(String document, String xpathStr, String namespaces) throws IOException, XPathExpressionException, FunctionExecutionException {
-    	return xpathValue(new StringReader(document), xpathStr, namespaces);	
+    public static String xpathValue(String document, String xpathStr) throws IOException, XPathException {
+    	return xpathValue(new StringReader(document), xpathStr);
     }
     
-    public static String xpathValue(String document, String xpathStr) throws IOException, XPathExpressionException, FunctionExecutionException {
-    	return xpathValue(document, xpathStr, null);
-    }
-    
-    public static String xpathValue(XMLType document, String xpathStr) throws IOException, SQLException, XPathExpressionException, FunctionExecutionException {
-    	return xpathValue(document, xpathStr, null);
+    public static String xpathValue(XMLType document, String xpathStr) throws IOException, SQLException, XPathException {
+    	return xpathValue(document.getCharacterStream(), xpathStr);
     }
 
-    public static XMLType xpathQuery(CommandContext context, String document, String xpathStr) throws IOException, TeiidComponentException, TeiidProcessingException, XPathExpressionException {
-    	return xpathQuery(context, document, xpathStr, null);
-    }
-    
-    public static XMLType xpathQuery(CommandContext context, XMLType document, String xpathStr) throws IOException, SQLException, XPathExpressionException, TeiidComponentException, TeiidProcessingException {
-    	return xpathQuery(context, document, xpathStr, null);
-    }
-    
-    public static XMLType xpathQuery(CommandContext context, String document, String xpathStr, String namespaces) throws IOException, TeiidComponentException, TeiidProcessingException, XPathExpressionException {
-    	Reader stream = new StringReader(document);
-    	return xpathQuery(context, xpathStr, stream, namespaces);
-    }
-    
-    public static XMLType xpathQuery(CommandContext context, XMLType document, String xpathStr, String namespaces) throws IOException, SQLException, XPathExpressionException, TeiidComponentException, TeiidProcessingException {
-    	Reader stream = ((SQLXML)document).getCharacterStream();
-    	return xpathQuery(context, xpathStr, stream, namespaces);
-    }
-
-	private static XMLType xpathQuery(CommandContext context, String xpathStr,
-			Reader stream, String namespaces) throws XPathExpressionException,
-			TeiidComponentException, TeiidProcessingException,
-			IOException {
-		try {
-            XPathFactory xpathFactory = XPathFactory.newInstance();
-        	XPath xp = xpathFactory.newXPath();
-        	NamespaceContext nc = getNamespaces(namespaces);
-        	if (nc != null) {
-        		xp.setNamespaceContext(nc);
-        	}
-        	final NodeList nodes = (NodeList)xp.evaluate(xpathStr, new InputSource(stream), XPathConstants.NODESET);
-        	if (nodes.getLength() == 0) {
-        		return null;
-        	}
-        	Type type = nodes.getLength() > 1 ? Type.SIBLINGS : Type.FRAGMENT;
-        	for (int i = 0; i < nodes.getLength(); i++) {
-        		Node node = nodes.item(i);
-        		if (node.getNodeType() == Node.TEXT_NODE) {
-        			type = Type.TEXT;
-        		}
-        	}
-        	SQLXML sqlXml = XMLUtil.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
-				
-				@Override
-				public void translate(Writer writer) throws TransformerException {
-	                TransformerFactory factory = TransformerFactory.newInstance();
-	                Transformer transformer = factory.newTransformer();
-	                transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes"); //$NON-NLS-1$
-	                for (int i = 0; i < nodes.getLength(); i++) {
-	            		Node node = nodes.item(i);
-						transformer.transform(new DOMSource(node), new StreamResult(writer));
-	            	}
-				}
-			}, Streamable.STREAMING_BATCH_SIZE_IN_BYTES);
-        	XMLType result = new XMLType(sqlXml);
-        	result.setType(type);
-        	return result;
-        } finally {
-    		stream.close();
-        }
-	}  
-	
-    public static String xpathValue(Reader documentReader, String xpath, String namespaces) throws IOException, XPathExpressionException, FunctionExecutionException {        
+    public static String xpathValue(Reader documentReader, String xpath) throws IOException, XPathException {        
         try {
-            XPathFactory xpathFactory = XPathFactory.newInstance();
-        	XPath xp = xpathFactory.newXPath();
-        	NamespaceContext nc = getNamespaces(namespaces);
-        	if (nc != null) {
-        		xp.setNamespaceContext(nc);
-        	}
-        	Node node = (Node)xp.evaluate(xpath, new InputSource(documentReader), XPathConstants.NODE);
-        	if (node == null) {
-        		return null;
-        	}
-        	return node.getTextContent();
+        	Source s = new StreamSource(documentReader);
+            XPathEvaluator eval = new XPathEvaluator();
+            // Wrap the string() function to force a string return             
+            XPathExpression expr = eval.createExpression(xpath);
+            Object o = expr.evaluateSingle(s);
+            
+            if(o == null) {
+                return null;
+            }
+            
+            // Return string value of node type
+            if(o instanceof Item) {
+                return ((Item)o).getStringValue();
+            }  
+            
+            // Return string representation of non-node value
+            return o.toString();
         } finally {
             // Always close the reader
             documentReader.close();
         }
     }
     
-    public static NamespaceContext getNamespaces(String namespaces) throws FunctionExecutionException {
-    	if (namespaces == null) {
-    		return null;
-    	}
-		XMLInputFactory inputFactory = XMLInputFactory.newInstance();
-		try {
-			XMLStreamReader eventReader = inputFactory.createXMLStreamReader(new StringReader("<x " + namespaces + " />")); //$NON-NLS-1$ //$NON-NLS-2$
-			eventReader.next();
-        	return eventReader.getNamespaceContext();
-		} catch (XMLStreamException e) {
-			throw new FunctionExecutionException(e, QueryPlugin.Util.getString("XMLSystemFunctions.invalid_namespaces", namespaces)); //$NON-NLS-1$
-		}
-    }
-
     /**
      * Validate whether the XPath is a valid XPath.  If not valid, an XPathExpressionException will be thrown.
      * @param xpath An xpath expression, for example: a/b/c/getText()
      * @throws XPathExpressionException 
+     * @throws XPathException 
      */
-    public static void validateXpath(String xpath) throws XPathExpressionException {
+    public static void validateXpath(String xpath) throws XPathException {
         if(xpath == null) { 
             return;
         }
         
-        XPathFactory factory = XPathFactory.newInstance();
-        XPath xp = factory.newXPath();
-        xp.compile(xpath);
+        XPathEvaluator eval = new XPathEvaluator();
+        eval.createExpression(xpath);
     }
-	
+    
 }

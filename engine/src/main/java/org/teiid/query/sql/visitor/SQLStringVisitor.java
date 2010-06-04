@@ -32,6 +32,7 @@ import java.util.List;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLReservedWords.NonReserved;
 import org.teiid.language.SQLReservedWords.Tokens;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.sql.LanguageObject;
@@ -78,8 +79,9 @@ import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
-import org.teiid.query.sql.lang.XQuery;
+import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.TextTable.TextColumn;
+import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.BreakStatement;
@@ -101,6 +103,7 @@ import org.teiid.query.sql.symbol.AllInGroupSymbol;
 import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.CaseExpression;
 import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.DerivedColumn;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
@@ -115,6 +118,7 @@ import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
 import org.teiid.query.sql.symbol.XMLNamespaces;
+import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.sql.symbol.XMLNamespaces.NamespaceItem;
 import org.teiid.translator.SourceSystemFunctions;
 
@@ -961,17 +965,6 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
     }
 
-    public void visit(XQuery obj) {
-        // XQuery string
-        parts.add(obj.getXQuery());
-
-        // Option clause
-        if(obj.getOption() != null) {
-            parts.add(SPACE);
-            parts.add(registerNode(obj.getOption()));
-        }        
-    }
-
     public void visit(StoredProcedure obj) {
     	addCacheHint(obj);
         //exec clause
@@ -1249,7 +1242,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 			}
 			parts.add(")"); //$NON-NLS-1$
 
-        } else if(name.equalsIgnoreCase(SQLReservedWords.TIMESTAMPADD) || name.equalsIgnoreCase(SQLReservedWords.TIMESTAMPDIFF)) {
+        } else if(name.equalsIgnoreCase(NonReserved.TIMESTAMPADD) || name.equalsIgnoreCase(NonReserved.TIMESTAMPDIFF)) {
             parts.add(name);
             parts.add("("); //$NON-NLS-1$
 
@@ -1274,11 +1267,15 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
     
     private void registerNodes(LanguageObject[] objects, int begin) {
-    	for (int i = begin; i < objects.length; i++) {
+    	registerNodes(Arrays.asList(objects), begin);
+    }
+    
+    private void registerNodes(List<? extends LanguageObject> objects, int begin) {
+    	for (int i = begin; i < objects.size(); i++) {
     		if (i > 0) {
     			parts.add(", "); //$NON-NLS-1$
     		}
-			parts.add(registerNode(objects[i]));
+			parts.add(registerNode(objects.get(i)));
 		}
     }
 
@@ -1559,7 +1556,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit(XMLAttributes obj) {
     	parts.add(FunctionLibrary.XMLATTRIBUTES);
     	parts.add("("); //$NON-NLS-1$
-    	registerNodes(obj.getArgs().toArray(new LanguageObject[obj.getArgs().size()]), 0);
+    	registerNodes(obj.getArgs(), 0);
     	parts.add(")"); //$NON-NLS-1$
     }
     
@@ -1579,7 +1576,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     	if (!obj.getContent().isEmpty()) {
     		parts.add(", "); //$NON-NLS-1$
     	}
-		registerNodes(obj.getContent().toArray(new LanguageObject[obj.getContent().size()]), 0);
+		registerNodes(obj.getContent(), 0);
     	parts.add(")"); //$NON-NLS-1$
     }
     
@@ -1591,7 +1588,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     		parts.add(registerNode(obj.getNamespaces()));
     		parts.add(", "); //$NON-NLS-1$
     	}
-    	registerNodes(obj.getArgs().toArray(new LanguageObject[obj.getArgs().size()]), 0);
+    	registerNodes(obj.getArgs(), 0);
     	parts.add(")"); //$NON-NLS-1$
     }
     
@@ -1605,9 +1602,8 @@ public class SQLStringVisitor extends LanguageVisitor {
     			if (item.getUri() == null) {
     				parts.add("NO DEFAULT"); //$NON-NLS-1$
     			} else {
-	    			parts.add("DEFAULT '"); //$NON-NLS-1$
+	    			parts.add("DEFAULT "); //$NON-NLS-1$
 	    			parts.add(registerNode(new Constant(item.getUri())));
-	        		parts.add("'"); //$NON-NLS-1$
     			}
     		} else {
     			parts.add(registerNode(new Constant(item.getUri())));
@@ -1637,7 +1633,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     	parts.add("TEXTTABLE("); //$NON-NLS-1$
     	parts.add(registerNode(obj.getFile()));
     	parts.add(SPACE);
-    	parts.add("COLUMNS"); //$NON-NLS-1$
+    	parts.add(NonReserved.COLUMNS);
     	
     	for (Iterator<TextColumn> cols = obj.getColumns().iterator(); cols.hasNext();) {
     		TextColumn col = cols.next();
@@ -1647,7 +1643,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     		parts.add(col.getType());
     		if (col.getWidth() != null) {
         		parts.add(SPACE);
-    			parts.add("WIDTH"); //$NON-NLS-1$
+    			parts.add(NonReserved.WIDTH);
             	parts.add(SPACE);
     			parts.add(col.getWidth());
     		}
@@ -1657,7 +1653,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 		}
     	if (obj.getDelimiter() != null) {
         	parts.add(SPACE);
-    		parts.add("DELIMITER"); //$NON-NLS-1$
+    		parts.add(NonReserved.DELIMITER);
         	parts.add(SPACE);
     		parts.add(registerNode(new Constant(obj.getDelimiter())));
     	}
@@ -1666,14 +1662,14 @@ public class SQLStringVisitor extends LanguageVisitor {
         	if (obj.isEscape()) {
         		parts.add(SQLReservedWords.ESCAPE);
         	} else {
-        		parts.add("QUOTE"); //$NON-NLS-1$
+        		parts.add(NonReserved.QUOTE);
         	}
         	parts.add(SPACE);
     		parts.add(registerNode(new Constant(obj.getQuote())));
     	}
     	if (obj.getHeader() != null) {
         	parts.add(SPACE);
-    		parts.add("HEADER"); //$NON-NLS-1$
+    		parts.add(NonReserved.HEADER);
     		if (1 != obj.getHeader()) {
 	        	parts.add(SPACE);
 	    		parts.add(obj.getHeader());
@@ -1690,6 +1686,91 @@ public class SQLStringVisitor extends LanguageVisitor {
     	parts.add(SQLReservedWords.AS);
     	parts.add(SPACE);
 		outputDisplayName(obj.getName());
+    }
+
+    @Override
+    public void visit(XMLTable obj) {
+    	parts.add("XMLTABLE("); //$NON-NLS-1$
+    	if (obj.getNamespaces() != null) {
+    		parts.add(registerNode(obj.getNamespaces()));
+    		parts.add(","); //$NON-NLS-1$
+    		parts.add(SPACE);
+    	}
+    	parts.add(new Constant(obj.getXquery()));
+    	if (!obj.getPassing().isEmpty()) {
+    		parts.add(SPACE);
+        	parts.add(NonReserved.PASSING);
+        	parts.add(SPACE);
+	    	registerNodes(obj.getPassing(), 0);
+    	}
+    	if (!obj.getColumns().isEmpty()) {
+    		parts.add(SPACE);
+        	parts.add(NonReserved.COLUMNS);
+	    	for (Iterator<XMLColumn> cols = obj.getColumns().iterator(); cols.hasNext();) {
+	    		XMLColumn col = cols.next();
+	    		parts.add(SPACE);
+	    		outputDisplayName(col.getName());
+	    		parts.add(SPACE);
+	    		if (col.isOrdinal()) {
+	    			parts.add(SQLReservedWords.FOR);
+	    			parts.add(SPACE);
+	    			parts.add(NonReserved.ORDINALITY); 
+	    		} else {
+	    			parts.add(col.getType());
+		    		if (col.getPath() != null) {
+		        		parts.add(SPACE);
+		    			parts.add(NonReserved.PATH); 
+		            	parts.add(SPACE);
+		    			parts.add(new Constant(col.getPath()));
+		    		}
+		    		if (col.getDefaultExpression() != null) {
+		        		parts.add(SPACE);
+		    			parts.add(SQLReservedWords.DEFAULT);
+		            	parts.add(SPACE);
+		    			parts.add(registerNode(col.getDefaultExpression()));
+		    		}
+	    		}
+	    		if (cols.hasNext()) {
+	    			parts.add(","); //$NON-NLS-1$
+	    		}
+			}
+    	}
+    	parts.add(")");//$NON-NLS-1$
+    	parts.add(SPACE);
+    	parts.add(SQLReservedWords.AS);
+    	parts.add(SPACE);
+		outputDisplayName(obj.getName());
+    }
+    
+    @Override
+    public void visit(DerivedColumn obj) {
+    	parts.add(registerNode(obj.getExpression()));
+    	if (obj.getAlias() != null) {
+    		parts.add(SPACE);
+    		parts.add(SQLReservedWords.AS);
+    		parts.add(SPACE);
+    		outputDisplayName(obj.getAlias());
+    	}
+    }
+    
+    @Override
+    public void visit(XMLSerialize obj) {
+    	parts.add(SQLReservedWords.XMLSERIALIZE);
+    	parts.add(SQLReservedWords.Tokens.LPAREN);
+    	if (obj.isDocument()) {
+    		parts.add(SQLReservedWords.NonReserved.DOCUMENT);
+    	} else {
+    		parts.add(SQLReservedWords.NonReserved.CONTENT);
+    	}
+    	parts.add(SPACE);
+    	parts.add(registerNode(obj.getExpression()));
+    	if (obj.getTypeString() != null) {
+    		parts.add(SPACE);
+        	parts.add(SQLReservedWords.AS);
+        	parts.add(SPACE);
+        	parts.add(obj.getTypeString());
+    	}
+    	parts.add(SQLReservedWords.Tokens.RPAREN);
     }
 
     public static String escapeSinglePart(String part) {

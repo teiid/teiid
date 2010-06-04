@@ -30,7 +30,7 @@ import java.util.List;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLReservedWords.NonReserved;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -145,7 +145,7 @@ public class CapabilitiesUtil {
 
         // Check particular function
         String func = aggregate.getAggregateFunction();
-        if(func.equals(SQLReservedWords.COUNT)) {
+        if(func.equals(NonReserved.COUNT)) {
             if(aggregate.getExpression() == null) {
                 if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_COUNT_STAR)) {
                     return false;
@@ -155,19 +155,19 @@ public class CapabilitiesUtil {
                     return false;
                 }                
             }
-        } else if(func.equals(SQLReservedWords.SUM)) {
+        } else if(func.equals(NonReserved.SUM)) {
             if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_SUM)) {
                 return false;
             }
-        } else if(func.equals(SQLReservedWords.AVG)) {
+        } else if(func.equals(NonReserved.AVG)) {
             if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_AVG)) {
                 return false;
             }
-        } else if(func.equals(SQLReservedWords.MIN)) {
+        } else if(func.equals(NonReserved.MIN)) {
             if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_MIN)) {
                 return false;
             }
-        } else if(func.equals(SQLReservedWords.MAX)) {
+        } else if(func.equals(NonReserved.MAX)) {
             if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_MAX)) {
                 return false;
             }

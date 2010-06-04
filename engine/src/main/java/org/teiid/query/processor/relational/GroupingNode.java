@@ -39,7 +39,7 @@ import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLReservedWords.NonReserved;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.aggregate.AggregateFunction;
 import org.teiid.query.function.aggregate.Avg;
@@ -163,21 +163,21 @@ public class GroupingNode extends RelationalNode {
                 	inputType = ex.getType();
                 	int index = collectExpression(ex);
                 	String function = aggSymbol.getAggregateFunction();
-                    if(function.equals(SQLReservedWords.COUNT)) {
+                    if(function.equals(NonReserved.COUNT)) {
                         functions[i] = new Count();
-                    } else if(function.equals(SQLReservedWords.SUM)) {
+                    } else if(function.equals(NonReserved.SUM)) {
                         functions[i] = new Sum();
-                    } else if(function.equals(SQLReservedWords.AVG)) {
+                    } else if(function.equals(NonReserved.AVG)) {
                         functions[i] = new Avg();
-                    } else if(function.equals(SQLReservedWords.MIN)) {
+                    } else if(function.equals(NonReserved.MIN)) {
                         functions[i] = new Min();
-                    } else if (function.equals(SQLReservedWords.MAX)){
+                    } else if (function.equals(NonReserved.MAX)){
                         functions[i] = new Max();
                     } else {
                     	functions[i] = new XMLAgg(context);
                     }
 
-                    if(aggSymbol.isDistinct() && !function.equals(SQLReservedWords.MIN) && !function.equals(SQLReservedWords.MAX)) {
+                    if(aggSymbol.isDistinct() && !function.equals(NonReserved.MIN) && !function.equals(NonReserved.MAX)) {
                         SortingFilter filter = new SortingFilter(functions[i], getBufferManager(), getConnectionID(), true);
                         ElementSymbol element = new ElementSymbol("val"); //$NON-NLS-1$
                         element.setType(inputType);

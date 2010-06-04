@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import nux.xom.xquery.XQuery;
+
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
@@ -43,7 +45,7 @@ import org.teiid.dqp.internal.process.DQPCore.ClientState;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.dqp.message.RequestID;
-import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLReservedWords.NonReserved;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
@@ -54,7 +56,6 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.XQuery;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -161,10 +162,6 @@ public class MetaDataProcessor {
             case Command.TYPE_CREATE:    
             case Command.TYPE_DROP:
                 break;    
-            case Command.TYPE_XQUERY:
-                columnMetadata = new Map[1];
-                columnMetadata[0] = createXQueryColumnMetadata((XQuery)originalCommand);
-                break;
             default:
                 columnMetadata = createProjectedSymbolMetadata(originalCommand);                   
         }
@@ -322,7 +319,7 @@ public class MetaDataProcessor {
         
         Expression expression = symbol.getExpression();
         String function = symbol.getAggregateFunction();
-        if(function.equals(SQLReservedWords.MIN) || function.equals(SQLReservedWords.MAX)){
+        if(function.equals(NonReserved.MIN) || function.equals(NonReserved.MAX)){
             if(expression instanceof ElementSymbol) {
                 return createColumnMetadata(shortColumnName, (ElementSymbol)expression);
             }

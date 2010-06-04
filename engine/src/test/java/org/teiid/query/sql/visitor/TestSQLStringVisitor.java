@@ -27,9 +27,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import junit.framework.TestCase;
+
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLReservedWords.NonReserved;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.LanguageObject;
@@ -63,7 +65,6 @@ import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
-import org.teiid.query.sql.lang.XQuery;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
@@ -90,10 +91,7 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.TestCaseExpression;
 import org.teiid.query.sql.symbol.TestSearchedCaseExpression;
-import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.unittest.FakeMetadataFactory;
-
-import junit.framework.TestCase;
 
 
 public class TestSQLStringVisitor extends TestCase {
@@ -998,37 +996,37 @@ public class TestSQLStringVisitor extends TestCase {
 	}
 	
 	public void testAggregateSymbol1() {
-		AggregateSymbol agg = new AggregateSymbol("abc", SQLReservedWords.COUNT, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
+		AggregateSymbol agg = new AggregateSymbol("abc", NonReserved.COUNT, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
 		helpTest(agg, "COUNT('abc')"); //$NON-NLS-1$
 	}
 	
 	public void testAggregateSymbol2() {
-		AggregateSymbol agg = new AggregateSymbol("abc", SQLReservedWords.COUNT, true, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
+		AggregateSymbol agg = new AggregateSymbol("abc", NonReserved.COUNT, true, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
 		helpTest(agg, "COUNT(DISTINCT 'abc')"); //$NON-NLS-1$
 	}
 	
 	public void testAggregateSymbol3() {
-		AggregateSymbol agg = new AggregateSymbol("abc", SQLReservedWords.COUNT, false, null); //$NON-NLS-1$
+		AggregateSymbol agg = new AggregateSymbol("abc", NonReserved.COUNT, false, null); //$NON-NLS-1$
 		helpTest(agg, "COUNT(*)"); //$NON-NLS-1$
 	}
 	
 	public void testAggregateSymbol4() {
-		AggregateSymbol agg = new AggregateSymbol("abc", SQLReservedWords.AVG, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
+		AggregateSymbol agg = new AggregateSymbol("abc", NonReserved.AVG, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
 		helpTest(agg, "AVG('abc')"); //$NON-NLS-1$
 	}
 	
 	public void testAggregateSymbol5() {
-		AggregateSymbol agg = new AggregateSymbol("abc", SQLReservedWords.SUM, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
+		AggregateSymbol agg = new AggregateSymbol("abc", NonReserved.SUM, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
 		helpTest(agg, "SUM('abc')"); //$NON-NLS-1$
 	}
 	
 	public void testAggregateSymbol6() {
-		AggregateSymbol agg = new AggregateSymbol("abc", SQLReservedWords.MIN, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
+		AggregateSymbol agg = new AggregateSymbol("abc", NonReserved.MIN, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
 		helpTest(agg, "MIN('abc')"); //$NON-NLS-1$
 	}
 	
 	public void testAggregateSymbol7() {
-		AggregateSymbol agg = new AggregateSymbol("abc", SQLReservedWords.MAX, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
+		AggregateSymbol agg = new AggregateSymbol("abc", NonReserved.MAX, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
 		helpTest(agg, "MAX('abc')"); //$NON-NLS-1$
 	}
 	
@@ -1819,45 +1817,6 @@ public class TestSQLStringVisitor extends TestCase {
         helpTest(example,
                  "CASE WHEN x = 0 THEN 0 WHEN x = 1 THEN 1 END"); //$NON-NLS-1$
         
-    }
-    
-    public void testXQuery(){
-        
-        String xquerystring = 
-                "XQUERY <Items>\r\n" + //$NON-NLS-1$
-                "{\r\n" + //$NON-NLS-1$
-                "for $x in doc(\"xmltest.doc9893\")//ItemName\r\n" + //$NON-NLS-1$
-                "return  <Item>{$x/text()}</Item>\r\n" + //$NON-NLS-1$
-                "}\r\n" + //$NON-NLS-1$
-                "</Items>\r\n"; //$NON-NLS-1$
-        
-        XQuery xquery = new XQuery(xquerystring, null); 
-        helpTest(xquery, xquerystring); 
-    }
-
-    public void testXQueryWithOption(){
-        
-        String xquerystring = 
-                "XQUERY <Items>\r\n" + //$NON-NLS-1$
-                "{\r\n" + //$NON-NLS-1$
-                "for $x in doc(\"xmltest.doc9893\")//ItemName\r\n" + //$NON-NLS-1$
-                "return  <Item>{$x/text()}</Item>\r\n" + //$NON-NLS-1$
-                "}\r\n" + //$NON-NLS-1$
-                "</Items>"; //$NON-NLS-1$
-
-        String expectedString = 
-                "XQUERY <Items>\r\n" + //$NON-NLS-1$
-                "{\r\n" + //$NON-NLS-1$
-                "for $x in doc(\"xmltest.doc9893\")//ItemName\r\n" + //$NON-NLS-1$
-                "return  <Item>{$x/text()}</Item>\r\n" + //$NON-NLS-1$
-                "}\r\n" + //$NON-NLS-1$
-                "</Items> OPTION NOCACHE"; //$NON-NLS-1$
-        
-        XQuery xquery = new XQuery(xquerystring, null); 
-        Option option = new Option();
-        option.setNoCache(true);
-        xquery.setOption(option);
-        helpTest(xquery, expectedString); 
     }
     
     /**  

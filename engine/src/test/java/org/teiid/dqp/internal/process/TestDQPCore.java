@@ -188,17 +188,6 @@ public class TestDQPCore {
         assertEquals("[QueryValidatorException]Group does not exist: BQT3.SmallA", results.getException().toString()); //$NON-NLS-1$
 	}
 
-	@Test public void testXQueryVisibility() throws Exception {
-        String xquery = "<Items>\r\n" + //$NON-NLS-1$
-				"{\r\n" + //$NON-NLS-1$
-				"for $x in doc(\"select * from bqt3.smalla\")//Item\r\n" + //$NON-NLS-1$
-				"return  <Item>{$x/intkey/text()}</Item>\r\n" + //$NON-NLS-1$
-				"}\r\n" + //$NON-NLS-1$
-				"</Items>\r\n"; //$NON-NLS-1$
-		
-		helpTestVisibilityFails(xquery);
-	}
-    
     ///////////////////////////Helper method///////////////////////////////////
     private ResultsMessage helpExecute(String sql, String userName) throws Exception {
     	return helpExecute(sql, userName, 1, false);

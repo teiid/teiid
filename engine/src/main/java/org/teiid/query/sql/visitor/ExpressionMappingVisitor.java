@@ -49,18 +49,22 @@ import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
+import org.teiid.query.sql.lang.XMLTable;
+import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.CaseExpression;
+import org.teiid.query.sql.symbol.DerivedColumn;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.query.sql.symbol.XMLAttributes;
-import org.teiid.query.sql.symbol.XMLForest;
+import org.teiid.query.sql.symbol.XMLElement;
+import org.teiid.query.sql.symbol.XMLSerialize;
 
 
 /**
@@ -88,15 +92,29 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     }
     
     @Override
-    public void visit(XMLForest obj) {
-    	replaceSymbols(obj.getArgs(), true);
+    public void visit(DerivedColumn obj) {
+    	Expression original = obj.getExpression();
+    	obj.setExpression(replaceExpression(original));
+    	if (obj.isPropagateName() && obj.getAlias() == null && !(obj.getExpression() instanceof ElementSymbol) && original instanceof ElementSymbol) {
+    		obj.setAlias(((ElementSymbol)original).getShortName());
+    	}
     }
     
     @Override
-    public void visit(XMLAttributes obj) {
-    	replaceSymbols(obj.getArgs(), true);
+    public void visit(XMLTable obj) {
+    	for (XMLColumn col : obj.getColumns()) {
+    		Expression exp = col.getDefaultExpression();
+    		if (exp != null) {
+    			col.setDefaultExpression(replaceExpression(exp));
+    		}
+		}
     }
-
+    
+    @Override
+    public void visit(XMLSerialize obj) {
+    	obj.setExpression(replaceExpression(obj.getExpression()));
+    }
+    
     private void replaceSymbols(List symbols, boolean alias) {
         for (int i = 0; i < symbols.size(); i++) {
             Object symbol = symbols.get(i);
@@ -357,6 +375,13 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
         for (int i = 0; i < obj.getValues().size(); i++) {
             obj.getValues().set(i, replaceExpression((Expression)obj.getValues().get(i)));
         }
+    }
+    
+    @Override
+    public void visit(XMLElement obj) {
+    	for (int i = 0; i < obj.getContent().size(); i++) {
+    		obj.getContent().set(i, replaceExpression(obj.getContent().get(i)));
+    	}
     }
     
 }

@@ -453,14 +453,15 @@
 				<version>2.0b4</version>
 			</dependency>
 			<dependency>
-				<groupId>net.sf.saxon</groupId>
+				<groupId>net.sourceforge.saxon</groupId>
 				<artifactId>saxon</artifactId>
-				<version>8.7</version>
+				<version>9.1.0.8</version>
 			</dependency>
 			<dependency>
-				<groupId>net.sf.saxon</groupId>
-				<artifactId>saxon-dom</artifactId>
-				<version>8.7</version>
+				<groupId>net.sourceforge.saxon</groupId>
+				<artifactId>saxon</artifactId>
+				<classifier>dom</classifier>
+				<version>9.1.0.8</version>
 			</dependency>
 			<dependency>
 				<groupId>org.jboss.netty</groupId>

@@ -654,7 +654,7 @@ System.out.println(queryPlan);</programlisting>
   <sect1 id="query_planner">
     <title>Query Planner</title>
     <para>For each sub-command in the user command an appropriate kind
-      of sub-planner is used (relational, XML, XQuery, procedure,
+      of sub-planner is used (relational, XML, procedure,
       etc).</para>
     <para>Each planner has three primary phases:</para>
     <orderedlist>
@@ -1044,11 +1044,6 @@ System.out.println(queryPlan);</programlisting>
             the same document fragment for both the initial fragment and a set
             of repeated fragments (each a new query) until some termination
             criteria or limit is met.</para>
-    </sect2>
-    <sect2>
-      <title>XQuery Planner</title>
-      <para>XQuery planning uses the embedded Saxon XQuery
-        engine to compile the query.  There is no direct optimization by Teiid.</para>
     </sect2>
   </sect1>
 </chapter>

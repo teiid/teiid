@@ -34,7 +34,7 @@ import java.util.Properties;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.FunctionExecutionException;
-import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLReservedWords.NonReserved;
 import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.unittest.TimestampUtil;
@@ -846,18 +846,18 @@ public class TestFunction {
     }
 
     @Test public void testTimestampAdd2() throws Exception {
-    	assertEquals(TimestampUtil.createTimestamp(103, 11, 1, 18, 20, 30, 0), FunctionMethods.timestampAdd(SQLReservedWords.SQL_TSI_HOUR, 3, TimestampUtil.createTimestamp(103, 11, 1, 15, 20, 30, 0)));
+    	assertEquals(TimestampUtil.createTimestamp(103, 11, 1, 18, 20, 30, 0), FunctionMethods.timestampAdd(NonReserved.SQL_TSI_HOUR, 3, TimestampUtil.createTimestamp(103, 11, 1, 15, 20, 30, 0)));
     }
 
     @Test public void testTimestampDiffTimeStamp_FracSec_1() throws Exception {
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_FRAC_SECOND, 
+        helpTestTimestampDiff(NonReserved.SQL_TSI_FRAC_SECOND, 
                               TimestampUtil.createTimestamp((2001-1900), 5, 21, 3, 9, 35, 1),
                               TimestampUtil.createTimestamp((2001-1900), 5, 21, 3, 9, 35, 100000000),
                               new Long(99999999));
     }
 
     @Test public void testTimestampDiffTimeStamp_FracSec_2() throws Exception {
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_FRAC_SECOND,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_FRAC_SECOND,
                               // 1 day (8.64 x 10^10 nanos) and 1 nano
                               TimestampUtil.createTimestamp((2001-1900), 5, 21, 3, 9, 35, 2),
                               TimestampUtil.createTimestamp((2001-1900), 5, 22, 3, 9, 35, 3),
@@ -865,7 +865,7 @@ public class TestFunction {
     }
 
     @Test public void testTimestampDiffTimeStamp_FracSec_3() throws Exception {
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_FRAC_SECOND,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_FRAC_SECOND,
                               // 1 day (8.64 x 10^10 nanos) less 1 nano
                               TimestampUtil.createTimestamp((2001-1900), 5, 22, 3, 9, 35, 2),
                               TimestampUtil.createTimestamp((2001-1900), 5, 21, 3, 9, 35, 3),
@@ -873,28 +873,28 @@ public class TestFunction {
     }
 
     @Test public void testTimestampDiffTimeStamp_FracSec_4() throws Exception {
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_FRAC_SECOND,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_FRAC_SECOND,
                               TimestampUtil.createTimestamp((2001-1900), 5, 21, 0, 0, 0, 1),
                               TimestampUtil.createTimestamp((2001-1900), 5, 21, 0, 0, 0, 3),
                               new Long(00000002));
     }
 
     @Test public void testTimestampDiffTimeStamp_FracSec_5() throws Exception {
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_FRAC_SECOND,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_FRAC_SECOND,
                               TimestampUtil.createTimestamp((2004-1900), 5, 22, 0, 0, 0, 1),
                               TimestampUtil.createTimestamp((2004-1900), 5, 22, 0, 0, 0, 10),
                               new Long(9));
     }
 
     @Test public void testTimestampDiffTimeStamp_FracSec_6() throws Exception {
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_FRAC_SECOND,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_FRAC_SECOND,
                               TimestampUtil.createTimestamp((2001-1900), 5, 22, 0, 0, 0, 2),
                               TimestampUtil.createTimestamp((2001-1900), 5, 22, 0, 0, 0, 3),
                               new Long(1));
     }
 
     @Test public void testTimestampDiffTimeStamp_FracSec_7() throws Exception {
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_FRAC_SECOND,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_FRAC_SECOND,
                               // 1 nano diff
                               TimestampUtil.createTimestamp((2004-1900), 5, 22, 3, 9, 35, 2),
                               TimestampUtil.createTimestamp((2004-1900), 5, 22, 3, 9, 35, 3),
@@ -902,7 +902,7 @@ public class TestFunction {
     }
 
     @Test public void testTimestampDiffTimeStamp_FracSec_8() throws Exception {
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_FRAC_SECOND,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_FRAC_SECOND,
                               // 1 nano diff
                               TimestampUtil.createTimestamp((2004-1900), 5, 22, 3, 9, 35, 3),
                               TimestampUtil.createTimestamp((2004-1900), 5, 22, 3, 9, 35, 2),
@@ -910,98 +910,98 @@ public class TestFunction {
     }
 
     @Test public void testTimestampDiffTimeStamp_Min_1() throws Exception {
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_MINUTE,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_MINUTE,
                               TimestampUtil.createTimestamp(0, 0, 0, 2, 34, 12, 0),
                               TimestampUtil.createTimestamp(0, 0, 0, 12, 0, 0, 0),
                               new Long(565));
     }
 
     @Test public void testTimestampDiffTimeStamp_Min_2() throws Exception {
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_MINUTE,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_MINUTE,
                               TimestampUtil.createTimestamp((2001-1900), 0, 0, 2, 0, 0, 0),
                               TimestampUtil.createTimestamp((2001-1900), 0, 0, 0, 33, 12, 0),
                               new Long(-86));
     }
 
     @Test public void testTimestampDiffTimeStamp_Min_3() throws Exception {
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_MINUTE,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_MINUTE,
                               TimestampUtil.createTimestamp((2001-1900), 8, 26, 12, 07, 58, 65497),
                               TimestampUtil.createTimestamp((2001-1900), 8, 29, 11, 25, 42, 483219),
                               new Long(4277));
     }
 
     @Test public void testTimestampDiffTimeStamp_Min_4() throws Exception {
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_MINUTE,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_MINUTE,
                               TimestampUtil.createTimestamp((2001-1900), 8, 26, 12, 07, 58, 0),
                               TimestampUtil.createTimestamp((2001-1900), 8, 29, 11, 25, 42, 0),
                               new Long(4277));
     }
 
     @Test public void testTimestampDiffTimeStamp_Min_5() throws Exception {
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_MINUTE,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_MINUTE,
                               TimestampUtil.createTimestamp((2001-1900), 8, 26, 12, 0, 0, 1),
                               TimestampUtil.createTimestamp((2001-1900), 8, 26, 12, 0, 0, 0),
                               new Long(0));
     }
 
     @Test public void testTimestampDiffTimeStamp_Hour_1() throws Exception {
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_HOUR,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_HOUR,
                               TimestampUtil.createTimestamp((2004-1900), 8, 26, 12, 0, 0, 0),
                               TimestampUtil.createTimestamp((2004-1900), 8, 26, 12, 59, 59, 999999999),
                               new Long(0));
     }
 
     @Test public void testTimestampDiffTimeStamp_Week_1() throws Exception {
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_WEEK,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_WEEK,
                               TimestampUtil.createTimestamp((2001-1900), 5, 21, 3, 9, 35, 100),
                               TimestampUtil.createTimestamp((2001-1900), 4, 2, 5, 19, 35, 500),
                               new Long(-7));
     }
 
     @Test public void testTimestampDiffTimeStamp_Month_1() throws Exception {
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_MONTH,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_MONTH,
                               TimestampUtil.createTimestamp((2004-1900), 4, 19, 0, 0, 0, 0),
                               TimestampUtil.createTimestamp((2004-1900), 11, 20, 12, 0, 0, 0),
                               new Long(7));
     }
 
     @Test public void testTimestampDiffTimeStamp_Month_2() throws Exception {
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_MONTH,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_MONTH,
                               TimestampUtil.createTimestamp((2004-1900), 5, 1, 0, 0, 0, 1000000),
                               TimestampUtil.createTimestamp((2004-1900), 11, 1, 12, 0, 0, 1),
                               new Long(6));
     }
 
     @Test public void testTimestampDiffTimeStamp_Month_3() throws Exception {
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_MONTH,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_MONTH,
                               TimestampUtil.createTimestamp((2004-1900), 4, 19, 0, 0, 0, 1),
                               TimestampUtil.createTimestamp((2004-1900), 11, 18, 12, 0, 0, 1000000),
                               new Long(7));
     }
 
     @Test public void testTimestampDiffTimeStamp_Month_4() throws Exception {
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_MONTH,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_MONTH,
                               TimestampUtil.createTimestamp((2004-1900), 4, 1, 0, 0, 0, 1000000),
                               TimestampUtil.createTimestamp((2004-1900), 11, 1, 0, 0, 0, 0),
                               new Long(7));
     }
 
     @Test public void testTimestampDiffTimeStamp_Month_5() throws Exception {
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_MONTH,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_MONTH,
                               TimestampUtil.createTimestamp((2004-1900), 4, 1, 0, 0, 1, 0),
                               TimestampUtil.createTimestamp((2004-1900), 11, 1, 0, 0, 0, 0),
                               new Long(7));
     }
 
     @Test public void testTimestampDiffTimeStamp_Month_6() throws Exception {
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_MONTH,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_MONTH,
                               TimestampUtil.createTimestamp((2004-1900), 4, 1, 0, 0, 1, 0),
                               TimestampUtil.createTimestamp((2004-1900), 11, 1, 0, 0, 2, 0),
                               new Long(7));
     }
 
     @Test public void testTimestampDiffTimeStamp_Day_1() throws Exception {
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_DAY,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_DAY,
                               TimestampUtil.createTimestamp((2004-1900), 2, 1, 0, 0, 0, 0),
                               TimestampUtil.createTimestamp((2004-1900), 3, 1, 0, 0, 0, 0),
                               new Long(31));
@@ -1009,20 +1009,20 @@ public class TestFunction {
 
     @Test public void testTimestampDiffTimeStamp_Day_2() throws Exception {
         // Leap year
-        helpTestTimestampDiff(SQLReservedWords.SQL_TSI_DAY,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_DAY,
                               TimestampUtil.createTimestamp((2004-1900), 1, 1, 0, 0, 0, 0),
                               TimestampUtil.createTimestamp((2004-1900), 2, 1, 0, 0, 0, 0),
                               new Long(29));
     }
 
 	@Test public void testTimestampDiffTime_Hour_1() throws Exception {
-		helpTestTimestampDiff(SQLReservedWords.SQL_TSI_HOUR, new Timestamp(
+		helpTestTimestampDiff(NonReserved.SQL_TSI_HOUR, new Timestamp(
 				TimestampUtil.createTime(3, 4, 45).getTime()), new Timestamp(
 				TimestampUtil.createTime(5, 5, 36).getTime()), new Long(2));
 	}
 
 	@Test public void testTimestampDiffTime_Hour_2() throws Exception {
-		helpTestTimestampDiff(SQLReservedWords.SQL_TSI_HOUR, new Timestamp(
+		helpTestTimestampDiff(NonReserved.SQL_TSI_HOUR, new Timestamp(
 				TimestampUtil.createTime(5, 0, 30).getTime()), new Timestamp(
 				TimestampUtil.createTime(3, 0, 31).getTime()), new Long(-1));
 	}

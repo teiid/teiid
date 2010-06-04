@@ -64,7 +64,7 @@ import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
-import org.teiid.query.sql.lang.XQuery;
+import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.BreakStatement;
@@ -85,6 +85,7 @@ import org.teiid.query.sql.symbol.AllInGroupSymbol;
 import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.CaseExpression;
 import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.DerivedColumn;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
@@ -93,12 +94,11 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
 import org.teiid.query.sql.symbol.XMLNamespaces;
-import org.teiid.query.sql.util.SymbolMap;
+import org.teiid.query.sql.symbol.XMLSerialize;
 
 
 
@@ -479,11 +479,6 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
         visitNode(obj.getBlock());
         postVisitVisitor(obj);
     }
-    public void visit(XQuery obj) {
-        preVisitVisitor(obj);
-        visitNode(obj.getOption());
-        postVisitVisitor(obj);
-    }
     
     /**
      * NOTE: we specifically don't need to visit the as columns or the using identifiers.
@@ -520,20 +515,14 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     public void visit(XMLForest obj) {
     	preVisitVisitor(obj);
     	visitNode(obj.getNamespaces());
-    	//we just want the underlying expressions, not the wrapping alias/expression symbols
-    	for (SingleElementSymbol symbol : obj.getArgs()) {
-        	visitNode(SymbolMap.getExpression(symbol));
-		}
+    	visitNodes(obj.getArgs());
         postVisitVisitor(obj);
     }
     
     @Override
     public void visit(XMLAttributes obj) {
     	preVisitVisitor(obj);
-    	//we just want the underlying expressions, not the wrapping alias/expression symbols
-    	for (SingleElementSymbol symbol : obj.getArgs()) {
-        	visitNode(SymbolMap.getExpression(symbol));
-		}
+    	visitNodes(obj.getArgs());
         postVisitVisitor(obj);
     }
     
@@ -558,6 +547,32 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
         visitNode(obj.getFile());
         visitNode(obj.getGroupSymbol());
         postVisitVisitor(obj);
+    }
+    
+    @Override
+    public void visit(XMLTable obj) {
+    	preVisitVisitor(obj);
+    	visitNode(obj.getNamespaces());
+    	visitNodes(obj.getPassing());
+    	for (XMLTable.XMLColumn column : obj.getColumns()) {
+			visitNode(column.getDefaultExpression());
+		}
+        visitNode(obj.getGroupSymbol());
+        postVisitVisitor(obj);
+    }
+    
+    @Override
+    public void visit(DerivedColumn obj) {
+    	preVisitVisitor(obj);
+    	visitNode(obj.getExpression());
+    	postVisitVisitor(obj);
+    }
+    
+    @Override
+    public void visit(XMLSerialize obj) {
+    	preVisitVisitor(obj);
+    	visitNode(obj.getExpression());
+    	postVisitVisitor(obj);
     }
     
     public static void doVisit(LanguageObject object, LanguageVisitor visitor, boolean order) {

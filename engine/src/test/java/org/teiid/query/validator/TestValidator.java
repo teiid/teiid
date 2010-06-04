@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
@@ -64,9 +65,6 @@ import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.FakeMetadataObject;
 import org.teiid.query.unittest.FakeMetadataStore;
 import org.teiid.query.unittest.RealMetadataFactory;
-import org.teiid.query.validator.Validator;
-import org.teiid.query.validator.ValidatorReport;
-
 
 @SuppressWarnings("nls")
 public class TestValidator {
@@ -1963,11 +1961,11 @@ public class TestValidator {
 	}
 	
 	@Test public void testValidateNoExpressionName() {        
-        helpValidate("SELECT xmlelement(name a, xmlattributes('1'))", new String[] {"'1'"}, exampleMetadata2()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT xmlelement(name a, xmlattributes('1'))", new String[] {"XMLATTRIBUTES('1')"}, exampleMetadata2()); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	@Test public void testValidateNoExpressionName1() {        
-        helpValidate("SELECT xmlforest('1')", new String[] {"'1'"}, exampleMetadata2()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT xmlforest('1')", new String[] {"XMLFOREST('1')"}, exampleMetadata2()); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
     @Test public void testXpathValueValid_defect15088() {
@@ -1978,11 +1976,6 @@ public class TestValidator {
     @Test public void testXpathValueInvalid_defect15088() throws Exception {
         String userSql = "SELECT xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', '//*[local-name()=''bookName\"]')"; //$NON-NLS-1$
         helpValidate(userSql, new String[] {"xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', '//*[local-name()=''bookName\"]')"}, FakeMetadataFactory.exampleBQTCached());
-    }
-    
-    @Test public void testXpathValueInvalidNamespaces() throws Exception {
-        String userSql = "SELECT xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', '//*[local-name()=\"bookName\"]', 'xmlns==')"; //$NON-NLS-1$
-        helpValidate(userSql, new String[] {"xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', '//*[local-name()=\"bookName\"]', 'xmlns==')"}, FakeMetadataFactory.exampleBQTCached());
     }
     
     @Test public void testTextTableNegativeWidth() {        
@@ -1997,4 +1990,29 @@ public class TestValidator {
         helpValidate("SELECT * from texttable(null columns x string width 1 DELIMITER 'z') as x", new String[] {"TEXTTABLE(null COLUMNS x string WIDTH 1 DELIMITER 'z') AS x"}, RealMetadataFactory.exampleBQTCached()); 
 	}
     
+    @Test public void testXMLNamespaces() {
+    	helpValidate("select xmlforest(xmlnamespaces(no default, default 'http://foo'), e1 as \"table\") from pm1.g1", new String[] {"XMLNAMESPACES(NO DEFAULT, DEFAULT 'http://foo')"}, FakeMetadataFactory.example1Cached());
+    }
+
+    @Test public void testXMLNamespacesReserved() {
+    	helpValidate("select xmlforest(xmlnamespaces('http://foo' as xmlns), e1 as \"table\") from pm1.g1", new String[] {"XMLNAMESPACES('http://foo' AS xmlns)"}, FakeMetadataFactory.example1Cached());
+    }
+    
+    @Test public void testXMLTablePassingMultipleContext() {
+    	helpValidate("select * from pm1.g1, xmltable('/' passing '<a/>', '<b/>') as x", new String[] {"XMLTABLE('/' PASSING '<a/>', '<b/>') AS x"}, FakeMetadataFactory.example1Cached());
+    }
+
+    @Ignore("this is actually handled by saxon and will show up during resolving")
+    @Test public void testXMLTablePassingSameName() {
+    	helpValidate("select * from pm1.g1, xmltable('/' passing '<a/>' as a, '<b/>' as a) as x", new String[] {"xmltable('/' passing e1, e1 || 'x') as x"}, FakeMetadataFactory.example1Cached());
+    }
+
+    @Test public void testXMLTablePassingContextType() {
+    	helpValidate("select * from pm1.g1, xmltable('/' passing 2) as x", new String[] {"XMLTABLE('/' PASSING 2) AS x"}, FakeMetadataFactory.example1Cached());
+    }
+
+    @Test public void testXMLTableMultipleOrdinals() {
+    	helpValidate("select * from pm1.g1, xmltable('/' passing '<a/>' columns x for ordinality, y for ordinality) as x", new String[] {"XMLTABLE('/' PASSING '<a/>' COLUMNS x FOR ORDINALITY, y FOR ORDINALITY) AS x"}, FakeMetadataFactory.example1Cached());
+    }
+
 }

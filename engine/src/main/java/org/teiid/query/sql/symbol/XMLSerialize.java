@@ -22,55 +22,87 @@
 
 package org.teiid.query.sql.symbol;
 
-import java.util.List;
-
-import org.teiid.core.util.HashCodeUtil;
-import org.teiid.query.sql.LanguageObject;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
+public class XMLSerialize implements Expression {
 
-/**
- * Represents XMLATTRIBUTES name value pairs
- */
-public class XMLAttributes implements LanguageObject {
-
-	private static final long serialVersionUID = -3348922701950966494L;
-	private List<DerivedColumn> args;
+	private static final long serialVersionUID = -6574662238317329252L;
 	
-	public XMLAttributes(List<DerivedColumn> args) {
-		this.args = args;
+	private boolean document;
+	private Expression expression;
+	private String typeString;
+	private Class<?> type;
+	
+	@Override
+	public Class<?> getType() {
+		if (type == null) {
+			if (typeString == null) {
+				type = DataTypeManager.DefaultDataClasses.CLOB;
+			} else {
+				type = DataTypeManager.getDataTypeClass(typeString);
+			}
+		}
+		return type;
 	}
 	
-	public List<DerivedColumn> getArgs() {
-		return args;
+	public Expression getExpression() {
+		return expression;
+	}
+	
+	public boolean isDocument() {
+		return document;
+	}
+	
+	public void setDocument(boolean document) {
+		this.document = document;
+	}
+	
+	public void setExpression(Expression expression) {
+		this.expression = expression;
+	}
+	
+	public void setTypeString(String typeString) {
+		this.typeString = typeString;
+	}
+	
+	public String getTypeString() {
+		return typeString;
 	}
 	
 	@Override
-	public XMLAttributes clone() {
-		XMLAttributes clone = new XMLAttributes(LanguageObject.Util.deepClone(args, DerivedColumn.class));
+	public boolean isResolved() {
+		return expression.isResolved();
+	}
+	
+	@Override
+	public void acceptVisitor(LanguageVisitor visitor) {
+		visitor.visit(this);
+	}
+		
+	@Override
+	public XMLSerialize clone() {
+		XMLSerialize clone = new XMLSerialize();
 		return clone;
 	}
 	
 	@Override
 	public int hashCode() {
-		return HashCodeUtil.hashCode(args.hashCode());
+		return expression.hashCode();
 	}
 	
 	public boolean equals(Object obj) {
 		if (obj == this) {
 			return true;
 		}
-		if (!(obj instanceof XMLAttributes)) {
+		if (!(obj instanceof XMLSerialize)) {
 			return false;
 		}
-		XMLAttributes other = (XMLAttributes)obj;
-		return args.equals(other.args);
-	}
-
-	@Override
-	public void acceptVisitor(LanguageVisitor visitor) {
-		visitor.visit(this);
+		XMLSerialize other = (XMLSerialize)obj;
+		return document == other.document 
+			&& this.expression.equals(other.expression)
+			&& this.getType() == other.getType();
 	}
 	
 	@Override

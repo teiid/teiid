@@ -35,6 +35,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
 
@@ -121,14 +122,14 @@ public class TestFunctionResolving {
 
 	private Function helpResolveFunction(String sql) throws QueryParserException,
 			QueryResolverException, TeiidComponentException {
-		Function func = getFunction(sql);
+		Function func = (Function)getExpression(sql);
     	assertEquals(DataTypeManager.DefaultDataClasses.STRING, func.getType());
     	return func;
 	}
 
-	private Function getFunction(String sql) throws QueryParserException,
+	private Expression getExpression(String sql) throws QueryParserException,
 			TeiidComponentException, QueryResolverException {
-		Function func = (Function)QueryParser.getQueryParser().parseExpression(sql);
+		Expression func = QueryParser.getQueryParser().parseExpression(sql);
 		ResolverVisitor.resolveLanguageObject(func, FakeMetadataFactory.example1Cached());
 		return func;
 	}
@@ -139,8 +140,20 @@ public class TestFunctionResolving {
 	 */
     @Test public void testLookupTypeConversion() throws Exception {
     	String sql = "lookup('pm1.g1', 'e2', 'e1', 1)"; //$NON-NLS-1$
-    	Function f = getFunction(sql);
+    	Function f = (Function)getExpression(sql);
     	assertEquals(DataTypeManager.DefaultDataClasses.STRING, f.getArg(3).getType());
     }
-	
+    
+    @Test public void testXMLSerialize() throws Exception {
+    	String sql = "xmlserialize(DOCUMENT '<a/>' as clob)"; //$NON-NLS-1$
+    	XMLSerialize xs = (XMLSerialize)getExpression(sql);
+    	assertEquals(DataTypeManager.DefaultDataClasses.CLOB, xs.getType());
+    }
+
+    @Test(expected=QueryResolverException.class) public void testXMLSerialize_1() throws Exception {
+    	String sql = "xmlserialize(DOCUMENT 1 as clob)"; //$NON-NLS-1$
+    	XMLSerialize xs = (XMLSerialize)getExpression(sql);
+    	assertEquals(DataTypeManager.DefaultDataClasses.CLOB, xs.getType());
+    }
+    
 }

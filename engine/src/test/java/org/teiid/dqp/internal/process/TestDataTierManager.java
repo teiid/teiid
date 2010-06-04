@@ -36,7 +36,6 @@ import org.teiid.dqp.service.FakeBufferService;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.parser.QueryParser;
-import org.teiid.query.processor.dynamic.SimpleQueryProcessorFactory;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.FakeMetadataFactory;

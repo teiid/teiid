@@ -27,7 +27,7 @@ import junit.framework.TestCase;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.AggregateFunction;
 import org.teiid.language.Literal;
-import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLReservedWords.NonReserved;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 
@@ -52,23 +52,23 @@ public class TestAggregateImpl extends TestCase {
     }
 
     public void testGetName() throws Exception {
-        assertEquals(AggregateFunction.COUNT, example("testName", SQLReservedWords.COUNT, true, 42).getName()); //$NON-NLS-1$ 
+        assertEquals(AggregateFunction.COUNT, example("testName", NonReserved.COUNT, true, 42).getName()); //$NON-NLS-1$ 
     }
 
     public void testIsDistinct() throws Exception {
-        assertTrue(example("testName", SQLReservedWords.COUNT, true, 42).isDistinct()); //$NON-NLS-1$
-        assertFalse(example("testName", SQLReservedWords.COUNT, false, 42).isDistinct()); //$NON-NLS-1$
+        assertTrue(example("testName", NonReserved.COUNT, true, 42).isDistinct()); //$NON-NLS-1$
+        assertFalse(example("testName", NonReserved.COUNT, false, 42).isDistinct()); //$NON-NLS-1$
     }
 
     public void testGetExpression() throws Exception {
-        AggregateFunction agg = example("testName", SQLReservedWords.COUNT, true, 42); //$NON-NLS-1$
+        AggregateFunction agg = example("testName", NonReserved.COUNT, true, 42); //$NON-NLS-1$
         assertNotNull(agg.getExpression());
         assertTrue(agg.getExpression() instanceof Literal);
         assertEquals(new Integer(42), ((Literal)agg.getExpression()).getValue());
     }
 
     public void testGetType() throws Exception {
-        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, example("x", SQLReservedWords.COUNT, true, 42).getType()); //$NON-NLS-1$
+        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, example("x", NonReserved.COUNT, true, 42).getType()); //$NON-NLS-1$
     }
 
 }

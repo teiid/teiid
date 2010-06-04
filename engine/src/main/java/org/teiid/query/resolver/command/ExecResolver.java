@@ -54,7 +54,6 @@ import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryContainer;
-import org.teiid.query.sql.lang.XQuery;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -66,20 +65,6 @@ import org.teiid.query.util.ErrorMessageKeys;
  */
 public class ExecResolver extends ProcedureContainerResolver implements VariableResolver {
 	
-	@Override
-	public Command expandCommand(ProcedureContainer procCommand,
-			QueryMetadataInterface metadata, AnalysisRecord analysis)
-			throws QueryMetadataException, QueryResolverException,
-			TeiidComponentException {
-		Command command = super.expandCommand(procCommand, metadata, analysis);
-		if (command instanceof XQuery) {
-			XQuery query = (XQuery)command;
-			query.setProcedureGroup(procCommand.getGroup().getCanonicalName());
-			query.setVariables(getVariableValues(procCommand, metadata));
-		}
-		return command;
-	}
-
     /**
      * @see org.teiid.query.resolver.CommandResolver#findCommandMetadata(org.teiid.query.sql.lang.Command,
      * org.teiid.query.metadata.QueryMetadataInterface)

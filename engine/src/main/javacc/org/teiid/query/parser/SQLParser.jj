@@ -28,6 +28,7 @@ import org.teiid.query.sql.symbol.*;
  * file.  <B>WARNING:</B> DO NOT MODIFY the SQLParser.java file as it will be 
  * regenerated from the .jj file and your changes will be lost!</p>
  */
+@SuppressWarnings("nls")
 public class SQLParser extends SQLParserUtil {
 
 } // end class
@@ -89,15 +90,6 @@ TOKEN: /* Functions with special syntax */
 {
 	<CAST: "cast">
 |	<CONVERT: "convert">
-|   <TIMESTAMPADD: "timestampadd">
-|   <TIMESTAMPDIFF: "timestampdiff">
-
-/* aggregate */
-|	<COUNT: "count">
-|	<SUM: "sum">
-|	<AVG: "avg">
-|	<MIN: "min">
-|	<MAX: "max">
 }
 
 TOKEN : /* Reserved words */
@@ -163,7 +155,6 @@ TOKEN : /* Reserved words */
 |   <FALSE: "false">
 |   <FETCH: "fetch">
 |   <FILTER: "filter">
-|   <FN: "fn">
 |   <FOR: "for">
 |   <FORIEGN: "foriegn">
 |   <FROM: "from">
@@ -221,7 +212,6 @@ TOKEN : /* Reserved words */
 |   <OLD: "old">
 |   <ON: "on">
 |   <ONLY: "only">
-|   <OJ: "oj">
 |   <OPEN: "open">
 |   <OPTION: "option">
 |   <OR: "or">
@@ -359,19 +349,6 @@ TOKEN : /* SQL/MED Reserved words */
 |   <IMPORT: "import">
 }
 
-TOKEN : /* Special function words */
-{
-	<SQL_TSI_FRAC_SECOND: "SQL_TSI_FRAC_SECOND"> 
-|	<SQL_TSI_SECOND: "SQL_TSI_SECOND"> 
-|	<SQL_TSI_MINUTE: "SQL_TSI_MINUTE"> 
-|	<SQL_TSI_HOUR: "SQL_TSI_HOUR"> 
-|	<SQL_TSI_DAY: "SQL_TSI_DAY"> 
-|	<SQL_TSI_WEEK: "SQL_TSI_WEEK"> 
-|	<SQL_TSI_MONTH: "SQL_TSI_MONTH"> 
-|	<SQL_TSI_QUARTER: "SQL_TSI_QUARTER"> 
-|	<SQL_TSI_YEAR: "SQL_TSI_YEAR"> 
-}
-
 TOKEN : /* User variables and literals */
 {
     < ALL_IN_GROUP: <ID> <PERIOD> <STAR> >
@@ -456,7 +433,7 @@ Command command(ParseInfo info) :
 	Command command = null;
 }
 {
-	 (LOOKAHEAD(2) (command = createUpdateProcedure(info)) |
+	 (LOOKAHEAD(2) command = createUpdateProcedure(info) |
 	  command = userCommand(info) |
 	  command = callableStatement(info)	  
 	)
@@ -1644,8 +1621,7 @@ SingleElementSymbol selectExpression(ParseInfo info) :
 	(	
 		// Expression
 		expression=expression(info)	
-		[[<AS>] ( alias=id() )
-		]
+		[[<AS>] alias=id() ]
 	)
 	{		
 		SingleElementSymbol es = null;
@@ -1669,6 +1645,25 @@ SingleElementSymbol selectExpression(ParseInfo info) :
 	}
 }
 
+DerivedColumn derivedColumn(ParseInfo info) :
+{
+	Expression expression = null;
+    String alias = null;
+}
+{
+	(	
+		// Expression
+		expression=expression(info)	
+		[<AS> alias=id() ]
+	)
+	{		
+		if(alias != null) {
+			alias = validateAlias(alias); 
+		}
+		return new DerivedColumn(alias, expression);
+	}
+}
+
 AllInGroupSymbol allInGroupSymbol() :
 {
 	Token allInGroupToken = null;
@@ -1681,54 +1676,60 @@ AllInGroupSymbol allInGroupSymbol() :
 	}
 }
 
-AggregateSymbol aggregateSymbol(ParseInfo info) :
+AggregateSymbol xmlAgg(ParseInfo info) :
 {
-	Token functionToken = null;
-	Token starToken = null;
-	AggregateSymbol agg = null;
-	boolean isDistinct = false;
 	Expression expression = null;
 	OrderBy orderBy = null;
 }
 {
-    // Things that can be aliased    
-	(
-		// COUNT(*)
-		LOOKAHEAD(3) (
-			functionToken = <COUNT>
-			<LPAREN>
-			starToken = <STAR>
-			<RPAREN> )	|
-			
-		// Remaining aggregates
-		(	(	functionToken = <COUNT> | 
-				functionToken = <SUM> | 
-				functionToken = <AVG> |
-				functionToken = <MIN> |
-				functionToken = <MAX> 
-			)
-			<LPAREN>
-			[ <DISTINCT> {isDistinct=true;} ]
-			expression = expression(info)
-			<RPAREN>
-		) 
-		| 
-		(
-			functionToken = <XMLAGG>
-			<LPAREN>
-			expression = expression(info)
-			[
-				orderBy = orderby(info)
-			]
-			<RPAREN>
-		)            
-	)
+	<XMLAGG> <LPAREN>
+	expression = expression(info)
+	[
+		orderBy = orderby(info)
+	]
+	<RPAREN>
 	{
 		if(! info.aggregatesAllowed) {
 			throw new ParseException(QueryPlugin.Util.getString("SQLParser.Aggregate_only_top_level")); //$NON-NLS-1$
 		}
 		
-		String func = functionToken.image.toUpperCase();
+		String name = generateFunctionName(info, "XMLAGG");
+		AggregateSymbol	agg = new AggregateSymbol(name, "XMLAGG", false, expression);
+		agg.setOrderBy(orderBy);
+		return agg;
+	}
+}
+
+AggregateSymbol aggregateSymbol(ParseInfo info) :
+{
+	String func = null;
+	Token starToken = null;
+	AggregateSymbol agg = null;
+	boolean isDistinct = false;
+	Expression expression = null;
+}
+{
+	(
+		// COUNT(*)
+		LOOKAHEAD(3) (
+			func = nonReserved("COUNT")
+			<LPAREN>
+			starToken = <STAR>
+			<RPAREN> )	|
+			
+		// Remaining aggregates
+		(	func = nonReserved("COUNT", "SUM", "AVG", "MIN", "MAX")
+			<LPAREN>
+			[ <DISTINCT> {isDistinct=true;} ]
+			expression = expression(info)
+			<RPAREN>
+		) 
+	)
+	{
+		if(! info.aggregatesAllowed) {
+			throw new ParseException(QueryPlugin.Util.getString("SQLParser.Aggregate_only_top_level")); //$NON-NLS-1$
+		}
+		func = func.toUpperCase();
 		String name = generateFunctionName(info, func);
 		if(starToken == null) { 
 			// Aggregate
@@ -1737,7 +1738,6 @@ AggregateSymbol aggregateSymbol(ParseInfo info) :
 			// COUNT(*)			
 			agg = new AggregateSymbol(name, func, false, null);
 		}
-		agg.setOrderBy(orderBy);
 		return agg;
 	}
 }
@@ -1791,7 +1791,7 @@ FromClause tableReference(ParseInfo info) :
 {	
 	(
 		(	
-			<LBRACE> <OJ>
+			<LBRACE> nonReserved("OJ")
 			result=tableReferenceUnescaped(info)
 			<RBRACE>
 		) 
@@ -1882,6 +1882,8 @@ FromClause tablePrimary(ParseInfo info) :
 {
 	(	LOOKAHEAD(<ID> <LPAREN>, { "texttable".equalsIgnoreCase(getToken(1).image) }) clause = textTable(info)
 	    |
+	    LOOKAHEAD(<ID> <LPAREN>, { "xmltable".equalsIgnoreCase(getToken(1).image) }) clause = xmlTable(info)
+	    |
 	    clause = unaryFromClause(info)
 		|
 		LOOKAHEAD(subqueryFromClause(info)) clause = subqueryFromClause(info) 
@@ -1901,44 +1903,69 @@ FromClause tablePrimary(ParseInfo info) :
 	}
 }
 
+XMLSerialize xmlSerialize(ParseInfo info) :
+{
+	Expression expr = null;
+	String doc = null;
+	Token t = null;
+}
+{
+	<XMLSERIALIZE> <LPAREN>
+	doc = nonReserved("DOCUMENT", "CONTENT")
+	expr = expression(info)
+	[
+		<AS> (t = <STRING> | t = <VARCHAR> | t = <CLOB>)
+	]
+	<RPAREN>
+	{
+		XMLSerialize result = new XMLSerialize();
+		result.setExpression(expr);
+		result.setDocument("document".equalsIgnoreCase(doc));
+		if (t != null) {
+			result.setTypeString(t.image);
+		}
+		return result;
+	}
+}
+
+String nonReserved(String... expected) :
+{
+	Token t = null;
+}
+{
+	t = <ID> 
+	{
+		String result = matchesAny(t.image, expected);
+		if (result != null) {
+			return result;
+		}
+		throw new ParseException(QueryPlugin.Util.getString("SQLParser.expected_non_reserved", Arrays.toString(expected), t.image));
+	}
+}
+
 TextTable textTable(ParseInfo info) :
 {
 	Expression file = null;
-	String name = null;
-	Constant datatype = null;
+	TextTable.TextColumn column = null;
 	List<TextTable.TextColumn> columns = new ArrayList<TextTable.TextColumn>();
-	Integer width = null;
 	Character delimiter = null;
 	boolean escape = false;
 	Character quote = null;
 	Integer header = null;
 	Integer skip = null;
-	Token columnsToken = null;
 	String aliasID = null;
 }
 {
  	<ID> <LPAREN> file = expression(info)
- 	columnsToken = <ID> { if (!"columns".equalsIgnoreCase(columnsToken.image)) throw new ParseException(QueryPlugin.Util.getString("SQLParser.expected_columns")); }
- 	name = id()
-	datatype = dataType()
-	[ 
-	  	LOOKAHEAD(<ID>, { "width".equalsIgnoreCase(getToken(1).image) }) <ID>
-	  	width = intVal() 
-	]
+ 	nonReserved("COLUMNS")
+ 	column = textColumn(info)
 	{
-		columns.add(new TextTable.TextColumn(validateElementName(name), (String)datatype.getValue(), width));
-		width = null;
+		columns.add(column);
 	} 
 	(<COMMA>
-		name = id()
-		datatype = dataType()
-		[ 
-		  	LOOKAHEAD(<ID>, { "width".equalsIgnoreCase(getToken(1).image) }) <ID>
-		  	width = intVal() 
-		]
+		column = textColumn(info)
 		{
-			columns.add(new TextTable.TextColumn(validateElementName(name), (String)datatype.getValue(), width));
-			width = null;
+			columns.add(column);
 		}
 	)* 
 	[
@@ -1980,6 +2007,109 @@ TextTable textTable(ParseInfo info) :
  		result.setQuote(quote);
  		return result;
  	}
+}
+
+TextTable.TextColumn textColumn(ParseInfo info):
+{
+	String name = null;
+	Constant datatype = null;
+	Integer width = null;
+}
+{
+	name = id()
+	datatype = dataType()
+	[ 
+	  	LOOKAHEAD(<ID>, { "width".equalsIgnoreCase(getToken(1).image) }) <ID>
+	  	width = intVal() 
+	]
+	{
+		return new TextTable.TextColumn(validateElementName(name), (String)datatype.getValue(), width);
+	}
+}
+
+XMLTable xmlTable(ParseInfo info) :
+{
+	String xquery = null;
+	XMLNamespaces xmlNamespaces = null;
+	DerivedColumn passing = null;
+	ArrayList<DerivedColumn> passingValues = new ArrayList<DerivedColumn>();
+	XMLTable.XMLColumn column = null;
+	ArrayList<XMLTable.XMLColumn> columns = new ArrayList<XMLTable.XMLColumn>();
+	String aliasID = null;
+}
+{
+ 	<ID> <LPAREN> 
+ 	[ xmlNamespaces = xmlNamespaces(info) <COMMA> ]
+ 	xquery = stringVal()
+ 	[ 
+ 	  LOOKAHEAD(<ID>, { "passing".equalsIgnoreCase(getToken(1).image) }) <ID>
+ 	  passing = derivedColumn(info)
+ 	  {
+ 	  	passingValues.add(passing);
+ 	  	passing.setPropagateName(false);
+ 	  }
+ 	  (<COMMA>
+ 	    passing = derivedColumn(info)
+ 	    {
+ 	  	  passingValues.add(passing);
+ 	  	  passing.setPropagateName(false);
+ 	    }
+ 	  )*
+ 	]
+ 	
+ 	[
+ 	  LOOKAHEAD(<ID>, { "columns".equalsIgnoreCase(getToken(1).image) }) <ID>
+ 	  column = xmlColumn(info)
+ 	  {
+ 	    columns.add(column);
+ 	  }
+ 	  (<COMMA>
+ 	    column = xmlColumn(info)
+ 	    {
+ 	      columns.add(column); 	    
+ 	    }
+ 	  )*
+ 	]
+ 	<RPAREN>
+ 	[<AS>] aliasID=id()
+ 	{
+ 		XMLTable result = new XMLTable();
+ 		result.setXquery(xquery);
+ 		result.setNamespaces(xmlNamespaces);
+ 		result.setPassing(passingValues);
+ 		result.setColumns(columns);
+ 		result.setName(validateAlias(aliasID));
+ 		return result;
+ 	}
+}
+
+XMLTable.XMLColumn xmlColumn(ParseInfo info):
+{
+	String name = null;
+	Constant datatype = null;
+	String path = null;
+	Expression defaultExpr = null;
+}
+{
+	name = id()
+	
+	((
+	  <FOR> nonReserved("ORDINALITY") 
+	  {
+	    return new XMLTable.XMLColumn(name); 
+	  }	
+	) | (
+      datatype = dataType()
+      [ 
+	    nonReserved("PATH") path = stringVal()
+	  ]
+	  [
+	    <DEFAULT_KEYWORD> defaultExpr = expression(info)
+	  ]
+	  {
+		return new XMLTable.XMLColumn(name, (String)datatype.getValue(), path, defaultExpr);
+	  }
+	))
 }
 
 int intVal() :
@@ -2867,13 +2997,15 @@ Expression basicExpression(ParseInfo info) :
 		literal=literal()
 		|
 		// Escaped function
-		(	<LBRACE> <FN>
+		(	<LBRACE> nonReserved("FN")
 			expression=function(info)
 			<RBRACE>
 		)
 		|
 		// Aggregate function
-		(expression=aggregateSymbol(info))
+		LOOKAHEAD(<ID>, {matchesAny(getToken(1).image, "count", "min", "max", "sum", "avg") != null}) (expression=aggregateSymbol(info))
+		|
+		(expression=xmlAgg(info))
 		|
 		// Function
 		LOOKAHEAD(2) (expression=function(info))
@@ -3034,8 +3166,8 @@ Expression function(ParseInfo info) :
 		<RPAREN>				
 	)		
 	|
-	(			
-		(funcToken =  <TIMESTAMPADD> | funcToken = <TIMESTAMPDIFF>)
+	LOOKAHEAD(<ID>, {matchesAny(getToken(1).image, "timestampadd", "timestampdiff") != null}) (	
+		funcName = nonReserved("TIMESTAMPADD", "TIMESTAMPDIFF")
 		<LPAREN>
 		expression = intervalType() 
 		{		
@@ -3147,6 +3279,10 @@ Expression function(ParseInfo info) :
 		{
 			return expression;
 		}
+	|	expression = xmlSerialize(info)
+		{
+			return expression;
+		}
 	|
 	(	funcName = id()
 		{ 
@@ -3216,17 +3352,17 @@ XMLElement xmlElement(ParseInfo info) :
 
 XMLAttributes xmlAttributes(ParseInfo info) :
 {
-	Expression expression = null;
-	ArrayList args = new ArrayList();
+	DerivedColumn expression = null;
+	ArrayList<DerivedColumn> args = new ArrayList<DerivedColumn>();
 }
 {
  	<XMLATTRIBUTES> <LPAREN>
-	expression = selectExpression(info)
+	expression = derivedColumn(info)
 	{
 		args.add(expression);
 		expression = null;
 	}
-	(<COMMA> expression=selectExpression(info)
+	(<COMMA> expression=derivedColumn(info)
 	 {
 		args.add(expression);
 		expression = null;
@@ -3240,21 +3376,21 @@ XMLAttributes xmlAttributes(ParseInfo info) :
 
 XMLForest xmlForest(ParseInfo info) :
 {
-	Expression expression = null;
+	DerivedColumn expression = null;
 	XMLNamespaces xmlNamespaces = null;
-	ArrayList args = new ArrayList();
+	ArrayList<DerivedColumn> args = new ArrayList<DerivedColumn>();
 }
 {
  	<XMLFOREST> <LPAREN>
 	[
 		xmlNamespaces = xmlNamespaces(info) <COMMA>
 	]
-	expression = selectExpression(info)
+	expression = derivedColumn(info)
 	{
 		args.add(expression);
 		expression = null;
 	}
-	(<COMMA> expression=selectExpression(info)
+	(<COMMA> expression=derivedColumn(info)
 	 {
 		args.add(expression);
 		expression = null;
@@ -3376,23 +3512,14 @@ Constant dataType() :
  */
 Constant intervalType() : 
 {
-	Token typeToken = null;
+	String type = null;
 }
 {
 	(
-		typeToken = <SQL_TSI_FRAC_SECOND> | 
-		typeToken = <SQL_TSI_SECOND> | 
-		typeToken = <SQL_TSI_MINUTE> | 
-		typeToken = <SQL_TSI_HOUR> | 
-		typeToken = <SQL_TSI_DAY> | 
-		typeToken = <SQL_TSI_WEEK> | 
-		typeToken = <SQL_TSI_MONTH> | 
-		typeToken = <SQL_TSI_QUARTER> | 
-		typeToken = <SQL_TSI_YEAR>
+		type = nonReserved("SQL_TSI_FRAC_SECOND", "SQL_TSI_SECOND", "SQL_TSI_MINUTE", "SQL_TSI_HOUR", "SQL_TSI_DAY", "SQL_TSI_WEEK", "SQL_TSI_MONTH", "SQL_TSI_QUARTER", "SQL_TSI_YEAR")
 	)
-	
 	{
-		return new Constant(typeToken.image);
+		return new Constant(type);
 	}
 }
 /**
