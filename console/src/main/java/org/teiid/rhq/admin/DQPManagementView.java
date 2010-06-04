@@ -213,6 +213,8 @@ public class DQPManagementView implements PluginConstants {
 		Collection<Session> activeSessionsCollection = new ArrayList<Session>();
 		String vdbName = (String) valueMap
 				.get(PluginConstants.ComponentType.VDB.NAME);
+		String vdbVersion = (String) valueMap
+		.get(PluginConstants.ComponentType.VDB.VERSION);
 
 		if (operationName.equals(VDB.Operations.GET_PROPERTIES)) {
 			List<String> fieldNameList = operationResult.getFieldNameList();
@@ -228,8 +230,8 @@ public class DQPManagementView implements PluginConstants {
 					activeSessionsCollection.iterator()));
 		} else if (operationName.equals(VDB.Operations.GET_REQUESTS)) {
 			List<String> fieldNameList = operationResult.getFieldNameList();
-			MetaValue requestMetaValue = getRequests();
-			getRequestCollectionValueForVDB(requestMetaValue, resultObject, vdbName);
+			MetaValue requestMetaValue = getRequestsForVDB(vdbName, Integer.parseInt(vdbVersion));
+			getRequestCollectionValue(requestMetaValue, resultObject);
 			operationResult.setContent(createReportResultList(fieldNameList,
 					resultObject.iterator()));
 		}
@@ -265,6 +267,26 @@ public class DQPManagementView implements PluginConstants {
 		try {
 			requestsCollection = executeManagedOperation(mc,
 					PluginConstants.Operation.GET_REQUESTS, args);
+		} catch (Exception e) {
+			final String msg = "Exception executing operation: " + Platform.Operations.GET_REQUESTS; //$NON-NLS-1$
+			LOG.error(msg, e);
+		}
+
+		return requestsCollection;
+
+	}
+
+	protected MetaValue getRequestsForVDB(String vdbName, int vdbVersion) {
+
+		MetaValue requestsCollection = null;
+		MetaValue[] args = new MetaValue[] {
+				MetaValueFactory.getInstance().create(vdbName),
+				MetaValueFactory.getInstance().create(vdbVersion)};
+
+		try {
+			requestsCollection = executeManagedOperation(mc,
+					PluginConstants.ComponentType.VDB.Operations.GET_REQUESTS,
+					args);
 		} catch (Exception e) {
 			final String msg = "Exception executing operation: " + Platform.Operations.GET_REQUESTS; //$NON-NLS-1$
 			LOG.error(msg, e);
@@ -472,26 +494,8 @@ public class DQPManagementView implements PluginConstants {
 		return requestsCollection;
 	}
 
-	public static <T> void getRequestCollectionValue(MetaValue pValue,
+	private void getRequestCollectionValue(MetaValue pValue,
 			Collection<Request> list) {
-		MetaType metaType = pValue.getMetaType();
-		if (metaType.isCollection()) {
-			for (MetaValue value : ((CollectionValueSupport) pValue)
-					.getElements()) {
-				if (value.getMetaType().isComposite()) {
-					Request Request = (Request) MetaValueFactory.getInstance()
-							.unwrap(value);
-					list.add(Request);
-				} else {
-					throw new IllegalStateException(pValue
-							+ " is not a Composite type");
-				}
-			}
-		}
-	}
-
-	private void getRequestCollectionValueForVDB(MetaValue pValue,
-			Collection<Request> list, String vdbName) {
 		MetaType metaType = pValue.getMetaType();
 		if (metaType.isCollection()) {
 			for (MetaValue value : ((CollectionValueSupport) pValue)
@@ -500,7 +504,7 @@ public class DQPManagementView implements PluginConstants {
 					RequestMetadataMapper rmm = new RequestMetadataMapper();
 					RequestMetadata request = (RequestMetadata) rmm
 							.unwrapMetaValue(value);
-						list.add(request);
+					list.add(request);
 				} else {
 					throw new IllegalStateException(pValue
 							+ " is not a Composite type");

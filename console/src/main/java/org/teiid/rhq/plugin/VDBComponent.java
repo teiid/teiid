@@ -101,6 +101,9 @@ public class VDBComponent extends Facet {
 		String key = VDB.NAME; 
 		valueMap.put(key, this.resourceConfiguration.getSimpleValue("name",
 				null));
+		String version = VDB.VERSION; 
+		valueMap.put(version, this.resourceConfiguration.getSimpleValue("version",
+				null));
 		
 		// Parameter logic for VDB Operations
 		if (name.equals(VDB.Operations.KILL_REQUEST)) {
