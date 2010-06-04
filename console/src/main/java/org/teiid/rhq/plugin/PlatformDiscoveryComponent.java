@@ -67,7 +67,9 @@ public class PlatformDiscoveryComponent implements ResourceDiscoveryComponent {
 						PluginConstants.ComponentType.Platform.TEIID_TYPE,
 						PluginConstants.ComponentType.Platform.TEIID_SUB_TYPE),
 				PluginConstants.ComponentType.Platform.TEIID_RUNTIME_ENGINE);
-
+		
+		String version = ProfileServiceUtil.getSimpleValue(mc, "runtimeVersion", String.class);
+			
 		/**
 		 * 
 		 * A discovered resource must have a unique key, that must stay the same
@@ -76,9 +78,8 @@ public class PlatformDiscoveryComponent implements ResourceDiscoveryComponent {
 		DiscoveredResourceDetails detail = new DiscoveredResourceDetails(
 				discoveryContext.getResourceType(), // ResourceType
 				mc.getName(), // Resource Key
-				PluginConstants.ComponentType.Platform.TEIID_ENGINE_RESOURCE_NAME, // Resource
-				// Name
-				null, // Version TODO can we get that from discovery ?
+				PluginConstants.ComponentType.Platform.TEIID_ENGINE_RESOURCE_NAME, // Resource name
+				version,
 				PluginConstants.ComponentType.Platform.TEIID_ENGINE_RESOURCE_DESCRIPTION, // Description
 				discoveryContext.getDefaultPluginConfiguration(), // Plugin
 				// Config
