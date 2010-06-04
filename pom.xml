@@ -13,6 +13,7 @@
 		<site.url>http://www.jboss.org/teiid</site.url>
 	</properties>
 	<scm>
+        <connection>scm:svn:https://anonsvn.jboss.org/repos/teiid/trunk</connection>
 		<developerConnection>scm:svn:https://svn.jboss.org/repos/teiid/trunk</developerConnection>
 	</scm>
 	<licenses>
@@ -172,11 +173,23 @@
 					</archive>
 				</configuration>
 			</plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<version>2.5</version>
-			</plugin>
+			</plugin>            
 		</plugins>
 	</build>
 	<reporting>
@@ -194,12 +207,9 @@
 	</reporting>
 	<repositories>
 		<repository>
-			<id>jboss</id>
-			<url>http://repository.jboss.com/maven2/</url>
-		</repository>
-		<repository>
-			<id>jboss-snapshot</id>
-			<url>http://snapshots.jboss.org/maven2</url>
+			<id>jboss-public-repository</id>
+            <name>JBoss Public Maven Repository Group</name>
+			<url>http://repository.jboss.org/nexus/content/groups/public/</url>
 		</repository>
 	</repositories>
 	<dependencies>
@@ -490,10 +500,16 @@
         <module>jboss-integration</module>
 		<module>test-integration</module>
 	</modules>
-	<distributionManagement>
-		<repository>
-			<id>repository.jboss.org</id>
-			<url>${jboss.repository.root}</url>
-		</repository>
-	</distributionManagement>
+    <distributionManagement>
+        <repository>
+            <id>jboss-releases-repository</id>
+            <name>JBoss Releases Repository</name>
+            <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/</url>
+        </repository>
+        <snapshotRepository>
+            <id>jboss-snapshots-repository</id>
+            <name>JBoss Snapshots Repository</name>
+            <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>

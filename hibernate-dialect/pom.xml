@@ -11,9 +11,9 @@
 	<description>Teiid Hibernate Dialect</description>
 	<dependencies>
 		<dependency>
-			<groupId>hibernate</groupId>
-			<artifactId>hibernate3</artifactId>
-			<version>3.2.3.GA</version>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>3.5.2-Final</version>
 		</dependency>
 	</dependencies>
 </project>
