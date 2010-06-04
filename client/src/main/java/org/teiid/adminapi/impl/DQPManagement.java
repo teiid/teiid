@@ -28,7 +28,7 @@ import org.teiid.adminapi.AdminException;
 
 
 public interface DQPManagement {
-    List<RequestMetadata> getRequestsForSession(long sessionId) ;
+    List<RequestMetadata> getRequestsForSession(String sessionId) ;
     List<RequestMetadata> getRequests();
     WorkerPoolStatisticsMetadata getWorkManagerStatistics(String identifier);
     void terminateSession(String terminateeId);
@@ -41,4 +41,5 @@ public interface DQPManagement {
     void terminateTransaction(String xid) throws AdminException ;
     void mergeVDBs(String sourceVDBName, int sourceVDBVersion, String targetVDBName, int targetVDBVersion) throws AdminException;
     List<RequestMetadata> getLongRunningRequests();
+    List<RequestMetadata> getRequestsUsingVDB(String vdbName, int vdbVersion) throws AdminException;
 }

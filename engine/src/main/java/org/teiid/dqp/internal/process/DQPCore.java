@@ -210,8 +210,8 @@ public class DQPCore implements DQP {
     /**
      * Return a list of {@link RequestMetadata} for the given session
      */
-    public List<RequestMetadata> getRequestsForSession(long sessionId) {
-    	ClientState state = getClientState(String.valueOf(sessionId), false);
+    public List<RequestMetadata> getRequestsForSession(String sessionId) {
+    	ClientState state = getClientState(sessionId, false);
     	if (state == null) {
     		return Collections.emptyList();
     	}

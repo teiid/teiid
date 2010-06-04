@@ -31,7 +31,6 @@ import junit.framework.TestCase;
 import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.SourceWarning;
-import org.teiid.client.security.SessionToken;
 import org.teiid.core.TeiidException;
 import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
 import org.teiid.dqp.internal.process.DQPCore.ClientState;
@@ -44,7 +43,7 @@ import org.teiid.query.sql.lang.Command;
  */
 public class TestDQPCoreRequestHandling extends TestCase {
 
-	private static final String SESSION_STRING = "2";
+	private static final String SESSION_STRING = "2"; //$NON-NLS-1$
 	
     public TestDQPCoreRequestHandling(String name) {
         super(name);
@@ -65,7 +64,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
     public void testGetRequestsSessionToken1() {
         DQPCore rm = new DQPCore();
         Set reqs = new HashSet();                
-        Collection actualReqs = rm.getRequestsForSession(2);
+        Collection actualReqs = rm.getRequestsForSession(SESSION_STRING); 
         compareReqInfos(reqs, actualReqs);
     }
 
@@ -79,7 +78,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
         RequestID id = addRequest(rm, SESSION_STRING, 1);
         reqs.add(id);
 
-        Collection<RequestMetadata> actualReqs = rm.getRequestsForSession(2);
+        Collection<RequestMetadata> actualReqs = rm.getRequestsForSession(SESSION_STRING); 
         compareReqInfos(reqs, actualReqs);
     }
 
@@ -102,7 +101,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
         reqs.add(addRequest(rm, SESSION_STRING, 1));
         reqs.add(addRequest(rm, SESSION_STRING, 2));
                 
-        Collection actualReqs = rm.getRequestsForSession(2);
+        Collection actualReqs = rm.getRequestsForSession(SESSION_STRING); 
         compareReqInfos(reqs, actualReqs);
     }
     

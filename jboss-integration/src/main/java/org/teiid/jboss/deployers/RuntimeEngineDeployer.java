@@ -25,6 +25,7 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -236,9 +237,27 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	
 	@Override
     @ManagementOperation(description="Requests for perticular session", impact=Impact.ReadOnly,params={@ManagementParameter(name="sessionId",description="The session Identifier")})
-    public List<RequestMetadata> getRequestsForSession(long sessionId) {
+    public List<RequestMetadata> getRequestsForSession(String sessionId) {
 		return this.dqpCore.getRequestsForSession(sessionId);
 	}
+	
+	@Override
+    @ManagementOperation(description="Requests using a certain VDB", impact=Impact.ReadOnly,params={@ManagementParameter(name="vdbName",description="VDB Name"), @ManagementParameter(name="vdbVersion",description="VDB Version")})
+    public List<RequestMetadata> getRequestsUsingVDB(String vdbName, int vdbVersion) throws AdminException {
+		List<RequestMetadata> requests = new ArrayList<RequestMetadata>();
+		try {
+			Collection<SessionMetadata> sessions = this.sessionService.getActiveSessions();
+			for (SessionMetadata session:sessions) {
+				if (session.getVDBName().equals(vdbName) && session.getVDBVersion() == vdbVersion) {
+					requests.addAll(this.dqpCore.getRequestsForSession(session.getSessionId()));
+				}
+			}
+		} catch (SessionServiceException e) {
+			throw new AdminComponentException(e);
+		}
+		return requests;
+	}
+	
     
 	@Override
     @ManagementOperation(description="Active requests", impact=Impact.ReadOnly)
