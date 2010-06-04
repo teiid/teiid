@@ -97,6 +97,11 @@ public class VDBComponent extends Facet {
 	@Override
 	protected void setOperationArguments(String name,
 			Configuration configuration, Map<String, Object> valueMap) {
+		// Parameter logic for VDB Metrics
+		String key = VDB.NAME; 
+		valueMap.put(key, this.resourceConfiguration.getSimpleValue("name",
+				null));
+		
 		// Parameter logic for VDB Operations
 		if (name.equals(VDB.Operations.KILL_REQUEST)) {
 			valueMap.put(Operation.Value.REQUEST_ID, configuration.getSimple(
@@ -107,7 +112,7 @@ public class VDBComponent extends Facet {
 			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(
 					Operation.Value.SESSION_ID).getLongValue());
 		} else if (name.equals(Platform.Operations.GET_PROPERTIES)) {
-			String key = ConnectionConstants.IDENTIFIER;
+			key = ConnectionConstants.IDENTIFIER;
 			valueMap.put(key, getComponentIdentifier());
 		} else if (name.equals(Platform.Operations.KILL_SESSION)) {
 			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(
@@ -136,7 +141,7 @@ public class VDBComponent extends Facet {
 	protected void setMetricArguments(String name, Configuration configuration,
 			Map<String, Object> valueMap) {
 		// Parameter logic for VDB Metrics
-		String key = VDB.NAME;
+		String key = VDB.NAME; 
 		valueMap.put(key, this.resourceConfiguration.getSimpleValue("name",
 				null));
 	}
