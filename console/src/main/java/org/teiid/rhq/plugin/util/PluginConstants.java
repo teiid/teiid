@@ -95,6 +95,7 @@ public interface PluginConstants {
 			public final static String TYPE = "teiid"; //$NON-NLS-1$
 			public final static String SUBTYPE = "vdb"; //$NON-NLS-1$
 			public final static String NAME = "Enterprise Virtual Database"; //$NON-NLS-1$
+			public final static String VERSION = "version"; //$NON-NLS-1$
 			public final static String DESCRIPTION = "JBoss Enterprise Virtual Database (VDB)"; //$NON-NLS-1$
 
 			public static interface Operations {
@@ -104,7 +105,7 @@ public interface PluginConstants {
 				public final static String KILL_REQUEST = "cancelRequest"; //$NON-NLS-1$
 				public final static String KILL_SESSION = "terminateSession"; //$NON-NLS-1$
 				public final static String GET_PROPERTIES = "getProperties"; //$NON-NLS-1$
-				public final static String GET_REQUESTS = "getRequests"; //$NON-NLS-1$
+				public final static String GET_REQUESTS = "getRequestsUsingVDB"; //$NON-NLS-1$
 				public final static String GET_SESSIONS = "getSessions"; //$NON-NLS-1$
 
 			}
