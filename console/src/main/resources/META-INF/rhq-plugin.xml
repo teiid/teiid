@@ -400,7 +400,7 @@
 				</results>
 			</operation>
 
-			<operation name="getRequests" displayName="View VDB requests"
+			<operation name="getRequestsUsingVDB" displayName="View VDB requests"
 				description="Get current requests executing against this VDB">
 				<results>
 
