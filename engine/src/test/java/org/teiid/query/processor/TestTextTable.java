@@ -166,6 +166,16 @@ public class TestTextTable {
         process(sql, expected);
     }
 	
+	@Test public void testTextTableCriteria() throws Exception {
+    	String sql = "select x.* from texttable('a' || ',' || '1' COLUMNS x string, y integer) x where x.y = 1"; //$NON-NLS-1$
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("a", 1),
+        };    
+
+        process(sql, expected);
+    }
+
     public static void process(String sql, List[] expectedResults) throws Exception {    
     	FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);

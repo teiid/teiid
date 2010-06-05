@@ -834,8 +834,11 @@ public class NewCalculateCostUtil {
             		PlanNode sourceNode = FrameUtil.findOriginatingNode(current, new HashSet<GroupSymbol>(Arrays.asList(elementSymbol.getGroupSymbol())));
             		if (sourceNode != null) {
 	        			SymbolMap symbolMap = (SymbolMap)sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
-	        			Expression expr = symbolMap.getMappedExpression(elementSymbol);
-	        			ndv = getNDV(ElementCollectorVisitor.getElements(expr, true), sourceNode.getFirstChild(), cardinality, metadata);
+	        			//symbolMap will be null for table functions
+	        			if (symbolMap != null) {
+		        			Expression expr = symbolMap.getMappedExpression(elementSymbol);
+		        			ndv = getNDV(ElementCollectorVisitor.getElements(expr, true), sourceNode.getFirstChild(), cardinality, metadata);
+	        			}
             		}
             	}
             	if (ndv == UNKNOWN_VALUE) {
