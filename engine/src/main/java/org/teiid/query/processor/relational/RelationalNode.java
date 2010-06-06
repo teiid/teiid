@@ -338,7 +338,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 	/**
 	 * Helper method for all the node that will filter the elements needed for the next node.
 	 */
-	protected int[] getProjectionIndexes(Map<SingleElementSymbol, Integer> tupleElements, List<SingleElementSymbol> projectElements) {
+	public static int[] getProjectionIndexes(Map<SingleElementSymbol, Integer> tupleElements, List<SingleElementSymbol> projectElements) {
 		int[] result = new int[projectElements.size()];
 
 		int i = 0;

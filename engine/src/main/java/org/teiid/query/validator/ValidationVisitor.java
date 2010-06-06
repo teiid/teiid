@@ -1162,8 +1162,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	for (DerivedColumn dc : obj.getPassing()) {
     		if (dc.getAlias() == null) {
     			Class<?> type = dc.getExpression().getType();
-    			if (type != DataTypeManager.DefaultDataClasses.STRING &&
-    				type != DataTypeManager.DefaultDataClasses.XML &&
+    			if (type != DataTypeManager.DefaultDataClasses.XML &&
     				type != DataTypeManager.DefaultDataClasses.CLOB) {
     				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.context_item_type"), obj); //$NON-NLS-1$
     			}
@@ -1176,6 +1175,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.duplicate_passing", dc.getAlias()), obj); //$NON-NLS-1$
         	}
 		}
+    	if (obj.getXQueryExpression().usesContextItem() && !context) {
+			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.context_required"), obj); //$NON-NLS-1$    		
+    	}
     	boolean hasOrdinal = false;
     	for (XMLColumn xc : obj.getColumns()) {
 			if (!xc.isOrdinal()) {

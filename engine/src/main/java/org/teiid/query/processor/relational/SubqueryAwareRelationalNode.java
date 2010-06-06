@@ -22,9 +22,16 @@
 
 package org.teiid.query.processor.relational;
 
+import java.util.Collections;
 import java.util.Map;
 
+import org.teiid.api.exception.query.ExpressionEvaluationException;
+import org.teiid.common.buffer.BlockedException;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.query.eval.Evaluator;
+import org.teiid.query.sql.lang.TableFunctionReference;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 
 public abstract class SubqueryAwareRelationalNode extends RelationalNode {
 
@@ -55,6 +62,15 @@ public abstract class SubqueryAwareRelationalNode extends RelationalNode {
 	public void closeDirect() {
 		if (evaluator != null) {
 			evaluator.close();
+		}
+	}
+	
+	protected void setReferenceValues(TableFunctionReference ref) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
+		if (ref.getCorrelatedReferences() == null) {
+			return;
+		}
+		for (Map.Entry<ElementSymbol, Expression> entry : ref.getCorrelatedReferences().asMap().entrySet()) {
+			getContext().getVariableContext().setValue(entry.getKey(), getEvaluator(Collections.emptyMap()).evaluate(entry.getValue(), null));
 		}
 	}
 

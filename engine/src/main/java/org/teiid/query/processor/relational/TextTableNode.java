@@ -43,6 +43,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.sql.lang.TableFunctionReference;
 import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.TextTable.TextColumn;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -69,7 +70,6 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	private char quote;
 	private char delimiter;
 	private int lineWidth;
-	private Map elementMap;
     private int[] projectionIndexes;
 	
     //per file state
@@ -85,7 +85,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	public void initialize(CommandContext context, BufferManager bufferManager,
 			ProcessorDataManager dataMgr) {
 		super.initialize(context, bufferManager, dataMgr);
-		if (elementMap != null) {
+		if (projectionIndexes != null) {
 			return;
 		}
 		if (table.getSkip() != null) {
@@ -112,7 +112,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				quote = table.getQuote();
 			}
 		}
-        this.elementMap = createLookupMap(table.getProjectedSymbols());
+        Map elementMap = createLookupMap(table.getProjectedSymbols());
         this.projectionIndexes = getProjectionIndexes(elementMap, getElements());
 	}
 	
@@ -215,11 +215,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	private void initReader() throws ExpressionEvaluationException,
 			BlockedException, TeiidComponentException, TeiidProcessingException {
 		
-		if (table.getCorrelatedReferences() != null) { 
-			for (Map.Entry<ElementSymbol, Expression> entry : table.getCorrelatedReferences().asMap().entrySet()) {
-				getContext().getVariableContext().setValue(entry.getKey(), getEvaluator(Collections.emptyMap()).evaluate(entry.getValue(), null));
-			}
-		}
+		setReferenceValues(this.table);
 		ClobType file = (ClobType)getEvaluator(Collections.emptyMap()).evaluate(table.getFile(), null);
 		
 		if (file == null) {

@@ -22,15 +22,14 @@
 
 package org.teiid.query.xquery.saxon;
 
-import java.io.StringReader;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.xml.transform.ErrorListener;
 import javax.xml.transform.Source;
@@ -41,8 +40,10 @@ import net.sf.saxon.AugmentedSource;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.event.ProxyReceiver;
 import net.sf.saxon.expr.AxisExpression;
+import net.sf.saxon.expr.ContextItemExpression;
 import net.sf.saxon.expr.Expression;
 import net.sf.saxon.expr.PathMap;
+import net.sf.saxon.expr.RootExpression;
 import net.sf.saxon.expr.PathMap.PathMapArc;
 import net.sf.saxon.expr.PathMap.PathMapNode;
 import net.sf.saxon.expr.PathMap.PathMapNodeSet;
@@ -54,9 +55,7 @@ import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.pattern.AnyNodeTest;
 import net.sf.saxon.pattern.NodeKindTest;
 import net.sf.saxon.query.DynamicQueryContext;
-import net.sf.saxon.query.QueryResult;
 import net.sf.saxon.query.StaticQueryContext;
-import net.sf.saxon.query.XQueryExpression;
 import net.sf.saxon.sxpath.IndependentContext;
 import net.sf.saxon.sxpath.XPathEvaluator;
 import net.sf.saxon.sxpath.XPathExpression;
@@ -72,16 +71,15 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.XMLType;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
-import org.teiid.logging.MessageLevel;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.symbol.DerivedColumn;
 import org.teiid.query.sql.symbol.XMLNamespaces;
 import org.teiid.query.sql.symbol.XMLNamespaces.NamespaceItem;
 
+@SuppressWarnings("serial")
 public class SaxonXQueryExpression {
 	
 	private static final Expression DUMMY_EXPRESSION = new Expression() {
@@ -148,10 +146,8 @@ public class SaxonXQueryExpression {
         		}
 			}
         }
-    	boolean hasContext = false;
         for (DerivedColumn derivedColumn : passing) {
         	if (derivedColumn.getAlias() == null) {
-        		hasContext = true; //skip the context item
         		continue;
         	}
         	try {
@@ -159,92 +155,156 @@ public class SaxonXQueryExpression {
 			} catch (XPathException e) {
 				throw new TeiidRuntimeException(e, "Could not define global variable"); //$NON-NLS-1$ 
 			}
-        	ic.declareVariable("", derivedColumn.getAlias()); //$NON-NLS-1$
 		}
         
-        XPathEvaluator eval = new XPathEvaluator(config);
-    	eval.setStaticContext(ic);
-    	
-    	processColumns(columns, eval);	    	
+    	processColumns(columns, ic);	    	
     
         try {
 			this.xQuery = context.compileQuery(xQueryString);
 		} catch (XPathException e) {
 			throw new QueryResolverException(e, QueryPlugin.Util.getString("SaxonXQueryExpression.compile_failed")); //$NON-NLS-1$
 		}
-        if (hasContext) {
-        	useDocumentProjection(columns);
-        } else {
-	    	LogManager.logDetail(LogConstants.CTX_QUERY_PLANNER, "Document projection will not be used, since no context item exists or there are unknown dependencies"); //$NON-NLS-1$
-        }
     }
-
-	private void useDocumentProjection(List<XMLTable.XMLColumn> columns) {
-		XQueryExpression toAnalyze = this.xQuery;
-		
-		PathMap map = new PathMap(DUMMY_EXPRESSION);
-		PathMapNodeSet set = toAnalyze.getExpression().addToPathMap(map, null);
-		
-		boolean complexEndState = false;
-		if (set != null) {  
+    
+    public boolean usesContextItem() {
+    	return this.xQuery.usesContextItem();
+    }
+    
+	public void useDocumentProjection(List<XMLTable.XMLColumn> columns, AnalysisRecord record) {
+		PathMap map = this.xQuery.getPathMap();
+		PathMapRoot parentRoot;
+		try {
+			parentRoot = map.getContextRoot();
+		} catch (IllegalStateException e) {
+			if (record.recordDebug()) {
+				record.println("Document projection will not be used, since multiple context item exist."); //$NON-NLS-1$
+			}
+			return;
+		}
+		if (parentRoot == null) {
+			//TODO: this seems like we could omit the context item altogether
+			//this.xQuery.usesContextItem() should also be false
+			if (record.recordDebug()) {
+				record.println("Document projection will not be used, since no context item reference was found in the XQuery"); //$NON-NLS-1$
+			}
+			return;			
+		}
+		HashSet<PathMapNode> finalNodes = new HashSet<PathMapNode>();
+		getReturnableNodes(parentRoot, finalNodes);
+				
+		if (!finalNodes.isEmpty()) {  
 			if (columns != null && !columns.isEmpty()) {
-				if (set.size() != 1) {
-					complexEndState = true;
-				} else {
-					for (XMLColumn xmlColumn : columns) {
-						if (xmlColumn.isOrdinal()) {
-							continue;
-						}
-				    	Expression internalExpression = xmlColumn.getPathExpression().getInternalExpression();
-				    	PathMap subMap = new PathMap(internalExpression);
-				    	PathMapRoot root = subMap.getContextRoot();
-				    	if (root == null) {
-				    		continue;
-				    	}
-				    	PathMapNodeSet finalNodes = internalExpression.addToPathMap(map, set);
-				    	if (finalNodes != null) {
-				    		for (Iterator iter = finalNodes.iterator(); iter.hasNext(); ) {
-				                PathMapNode subNode = (PathMapNode)iter.next();
-						    	if (xmlColumn.getSymbol().getType() == DataTypeManager.DefaultDataClasses.XML) {
-						    		subNode.createArc(new AxisExpression(Axis.DESCENDANT_OR_SELF, AnyNodeTest.getInstance()));
-						    		subNode.setReturnable(true);
-						    	} else {
-						    		//this may not always be needed, but it doesn't harm anything
-						    		subNode.createArc(new AxisExpression(Axis.CHILD, NodeKindTest.TEXT));
-						    		subNode.setAtomized();
-						    	}
-				            }
-				    	}
+				if (finalNodes.size() != 1) {
+					if (record.recordDebug()) {
+						record.println("Document projection will not be used, since multiple return items exist"); //$NON-NLS-1$
 					}
+					return;	
+				} 
+				parentRoot = projectColumns(parentRoot, columns, finalNodes.iterator().next(), record);
+				if (parentRoot == null) {
+					return;
 				}
 			} else {
-				for (Iterator iter = set.iterator(); iter.hasNext(); ) {
+				for (Iterator iter = finalNodes.iterator(); iter.hasNext(); ) {
 	                PathMapNode subNode = (PathMapNode)iter.next();
 	                subNode.createArc(new AxisExpression(Axis.DESCENDANT_OR_SELF, AnyNodeTest.getInstance()));
-	                subNode.setReturnable(true);
 	            }
 			}
 		} 
-		//PathMap map = toAnalyze.getPathMap();
-		contextRoot = map.getContextRoot();
-		if (contextRoot == null || complexEndState || contextRoot.hasUnknownDependencies()) {
-	    	LogManager.logDetail(LogConstants.CTX_QUERY_PLANNER, "Document projection will not be used, since no context item exists or there are unknown dependencies"); //$NON-NLS-1$
-			contextRoot = null;
-		} else if (LogManager.isMessageToBeRecorded(LogConstants.CTX_QUERY_PLANNER, MessageLevel.DETAIL)) {
-	    	StringBuilder sb = new StringBuilder();
-	    	showArcs(sb, contextRoot, 0);
-	    	LogManager.logDetail(LogConstants.CTX_QUERY_PLANNER, "Using path filtering for XQuery context item: \n" + sb.toString()); //$NON-NLS-1$
+		if (parentRoot.hasUnknownDependencies()) {
+			if (record.recordDebug()) {
+				record.println("Document projection will not be used since there are unknown dependencies (most likely a user defined function)."); //$NON-NLS-1$
+			}
+	    	return;
 		}
-/*		StringBuilder sb = new StringBuilder();
-    	showArcs(sb, contextRoot, 0);
-    	System.out.println(sb);
-*/	}
+		contextRoot = parentRoot;
+		if (record.recordDebug()) {
+			StringBuilder sb = new StringBuilder();
+	    	showArcs(sb, contextRoot, 0);
+	    	record.println("Using path filtering for XQuery context item: \n" + sb.toString()); //$NON-NLS-1$
+		}
+	}
 
-	private void processColumns(List<XMLTable.XMLColumn> columns, XPathEvaluator eval)
+	private PathMapRoot projectColumns(PathMapRoot parentRoot, List<XMLTable.XMLColumn> columns, PathMapNode finalNode, AnalysisRecord record) {
+		for (XMLColumn xmlColumn : columns) {
+			if (xmlColumn.isOrdinal()) {
+				continue;
+			}
+	    	Expression internalExpression = xmlColumn.getPathExpression().getInternalExpression();
+	    	PathMap subMap = new PathMap(internalExpression);
+	    	PathMapRoot subContextRoot = null;
+	    	for (PathMapRoot root : subMap.getPathMapRoots()) {
+				if (root.getRootExpression() instanceof ContextItemExpression || root.getRootExpression() instanceof RootExpression) {
+					if (subContextRoot != null) {
+						if (record.recordDebug()) {
+							record.println("Document projection will not be used, since multiple context item exist in column path " + xmlColumn.getPath()); //$NON-NLS-1$
+						}
+						return null;
+					}
+					subContextRoot = root;
+				}
+			}
+	    	if (subContextRoot == null) {
+	    		//special case for handling '.', which the pathmap logic doesn't consider as a root
+	    		if (internalExpression instanceof ContextItemExpression) {
+	    			addReturnedArcs(xmlColumn, finalNode);
+	    		}
+	    		continue;
+	    	}
+	    	for (PathMapArc arc : subContextRoot.getArcs()) {
+				finalNode.createArc(arc.getStep(), arc.getTarget());
+			}
+	    	HashSet<PathMapNode> subFinalNodes = new HashSet<PathMapNode>();
+			getReturnableNodes(subContextRoot, subFinalNodes);
+	    	for (Iterator iter = subFinalNodes.iterator(); iter.hasNext(); ) {
+	            PathMapNode subNode = (PathMapNode)iter.next();
+		    	addReturnedArcs(xmlColumn, subNode);
+	        }
+		}
+		//Workaround to rerun the reduction algorithm - by making a copy of the old version
+		PathMap newMap = new PathMap(DUMMY_EXPRESSION);
+		PathMapRoot newRoot = newMap.makeNewRoot(parentRoot.getRootExpression());
+		if (parentRoot.isAtomized()) {
+			newRoot.setAtomized();
+		}
+		if (parentRoot.isReturnable()) {
+			newRoot.setReturnable(true);
+		}
+		if (parentRoot.hasUnknownDependencies()) {
+			newRoot.setHasUnknownDependencies();
+		}
+		for (PathMapArc arc : parentRoot.getArcs()) {
+			newRoot.createArc(arc.getStep(), arc.getTarget());
+		}
+		return newMap.reduceToDownwardsAxes(newRoot);
+	}
+
+	private void addReturnedArcs(XMLColumn xmlColumn, PathMapNode subNode) {
+		if (xmlColumn.getSymbol().getType() == DataTypeManager.DefaultDataClasses.XML) {
+			subNode.createArc(new AxisExpression(Axis.DESCENDANT_OR_SELF, AnyNodeTest.getInstance()));
+		} else {
+			//this may not always be needed, but it doesn't harm anything
+			subNode.createArc(new AxisExpression(Axis.CHILD, NodeKindTest.TEXT));
+			subNode.setAtomized();
+		}
+	}
+
+	private void getReturnableNodes(PathMapNode node, HashSet<PathMapNode> finalNodes) {
+		if (node.isReturnable()) {
+			finalNodes.add(node);
+		}
+		for (PathMapArc arc : node.getArcs()) {
+			getReturnableNodes(arc.getTarget(), finalNodes);
+		}
+	}
+
+	private void processColumns(List<XMLTable.XMLColumn> columns, IndependentContext ic)
 			throws TeiidProcessingException {
 		if (columns == null) {
 			return;
 		}
+        XPathEvaluator eval = new XPathEvaluator(config);
+    	eval.setStaticContext(ic);
 		for (XMLColumn xmlColumn : columns) {
         	if (xmlColumn.isOrdinal()) {
         		continue;
@@ -254,7 +314,7 @@ public class SaxonXQueryExpression {
         		path = xmlColumn.getName();
         	}
         	path = path.trim();
-        	if (path.startsWith("/") && !path.startsWith("//")) {
+        	if (path.startsWith("/") && !path.startsWith("//")) { //$NON-NLS-1$ //$NON-NLS-2$
         		path = path.substring(1);
         	}
 	    	XPathExpression exp;
@@ -275,9 +335,6 @@ public class SaxonXQueryExpression {
 	    	if (value instanceof XMLType) {
 				return ((SQLXML)value).getSource(null);
 	    	}
-	    	if (value instanceof String) {
-	    		return new StreamSource(new StringReader((String)value));
-	    	}
 	    	if (value instanceof ClobType) {
 	    		return new StreamSource(((Clob)value).getCharacterStream());
 	    	}
@@ -292,12 +349,8 @@ public class SaxonXQueryExpression {
         
         for (Map.Entry<String, Object> entry : parameterValues.entrySet()) {
             Object value = entry.getValue();
-            if(value instanceof SQLXML) {                    
-                try {
-                    value = ((SQLXML)value).getSource(null);
-                } catch (SQLException e) {
-                    throw new TeiidProcessingException(e);
-                }
+            if(value instanceof SQLXML || value instanceof Clob) {                    
+            	value = convertToSource(value);
             }
             dynamicContext.setParameter(entry.getKey(), value);                
 		}
@@ -320,9 +373,7 @@ public class SaxonXQueryExpression {
 	        dynamicContext.setContextItem(doc);
         }
         try {
-            //return this.xQuery.iterator(dynamicContext);
-        	QueryResult.serializeSequence(xQuery.iterator(dynamicContext), config, System.out, new Properties());
-        	return null;
+        	return xQuery.iterator(dynamicContext);
         } catch (TransformerException e) {
         	throw new TeiidProcessingException(e, QueryPlugin.Util.getString("SaxonXQueryExpression.bad_xquery")); //$NON-NLS-1$
         }       

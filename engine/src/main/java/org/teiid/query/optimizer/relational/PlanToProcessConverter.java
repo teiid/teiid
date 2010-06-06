@@ -22,9 +22,11 @@
 
 package org.teiid.query.optimizer.relational;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -69,6 +71,7 @@ import org.teiid.query.processor.relational.SelectNode;
 import org.teiid.query.processor.relational.SortNode;
 import org.teiid.query.processor.relational.TextTableNode;
 import org.teiid.query.processor.relational.UnionAllNode;
+import org.teiid.query.processor.relational.XMLTableNode;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
 import org.teiid.query.processor.relational.SortUtility.Mode;
@@ -83,6 +86,7 @@ import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.SetQuery.Operation;
+import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -369,15 +373,30 @@ public class PlanToProcessConverter {
 				}
 				Object source = node.getProperty(NodeConstants.Info.TABLE_FUNCTION);
 				if (source instanceof XMLTable) {
-					return null;
+					XMLTable xt = (XMLTable)source;
+					XMLTableNode xtn = new XMLTableNode(getID());
+					//we handle the projection filtering once here rather than repeating the
+					//path analysis on a per plan basis
+					Map elementMap = RelationalNode.createLookupMap(xt.getProjectedSymbols());
+			        List cols = (List) node.getProperty(NodeConstants.Info.OUTPUT_COLS);
+					int[] projectionIndexes = RelationalNode.getProjectionIndexes(elementMap, cols);
+					ArrayList<XMLColumn> filteredColumns = new ArrayList<XMLColumn>(projectionIndexes.length);
+					for (int col : projectionIndexes) {
+						filteredColumns.add(xt.getColumns().get(col));
+					}
+					xt.getXQueryExpression().useDocumentProjection(filteredColumns, analysisRecord);
+					xtn.setProjectedColumns(filteredColumns);
+					xtn.setTable(xt);
+					processNode = xtn;
+					break;
 				}
-				if (!(source instanceof TextTable)) {
-					return null;
+				if (source instanceof TextTable) {
+					TextTableNode ttn = new TextTableNode(getID());
+					ttn.setTable((TextTable)source);
+					processNode = ttn;
+					break;
 				}
-				TextTableNode ttn = new TextTableNode(getID());
-				ttn.setTable((TextTable)source);
-				processNode = ttn;
-				break;
+				return null;
     		case NodeConstants.Types.SET_OP:
                 Operation setOp = (Operation) node.getProperty(NodeConstants.Info.SET_OPERATION);
                 boolean useAll = ((Boolean) node.getProperty(NodeConstants.Info.USE_ALL)).booleanValue();

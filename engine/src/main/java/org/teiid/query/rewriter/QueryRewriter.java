@@ -47,8 +47,8 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
@@ -926,6 +926,8 @@ public class QueryRewriter {
         	TextTable tt = (TextTable)clause;
         	tt.setFile(rewriteExpressionDirect(tt.getFile()));
         } else if (clause instanceof XMLTable) {
+        	XMLTable xt = (XMLTable)clause;
+        	xt.rewriteDefaultColumn();
         	rewriteExpressions(clause);
         }
         return clause;

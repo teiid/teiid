@@ -105,7 +105,7 @@ public class XMLTable extends TableFunctionReference {
     private XMLNamespaces namespaces;
     private String xquery;
     private List<DerivedColumn> passing = new ArrayList<DerivedColumn>();
-    private ElementSymbol defaultColumn;
+    private XMLColumn defaultColumn;
     
     private SaxonXQueryExpression xqueryExpression;
     
@@ -114,10 +114,14 @@ public class XMLTable extends TableFunctionReference {
 	}
     
     public void compileXqueryExpression() throws TeiidProcessingException {
-    	this.xqueryExpression = new SaxonXQueryExpression(xquery, namespaces, passing, columns);
+    	List<XMLColumn> cols = this.columns;
+    	if (cols.isEmpty()) {
+    		cols = Arrays.asList(defaultColumn);
+    	}
+    	this.xqueryExpression = new SaxonXQueryExpression(xquery, namespaces, passing, cols);
     }
     
-    public SaxonXQueryExpression getXqueryExpression() {
+    public SaxonXQueryExpression getXQueryExpression() {
 		return xqueryExpression;
 	}
     
@@ -155,10 +159,9 @@ public class XMLTable extends TableFunctionReference {
         	return super.getProjectedSymbols();
     	}
     	if (defaultColumn == null) {
-    		defaultColumn = new ElementSymbol("COLUMN_VALUE"); //$NON-NLS-1$
-    		defaultColumn.setType(DataTypeManager.DefaultDataClasses.XML);
+    		defaultColumn = new XMLColumn("OBJECT_VALUE", DataTypeManager.DefaultDataTypes.XML, ".", null); //$NON-NLS-1$ //$NON-NLS-2$
     	}
-    	return Arrays.asList(defaultColumn);
+    	return Arrays.asList(defaultColumn.getSymbol());
     }
     
 	@Override
@@ -193,6 +196,13 @@ public class XMLTable extends TableFunctionReference {
 		}
 		XMLTable other = (XMLTable)obj;
 		return this.columns.equals(other.columns);
+	}
+
+	public void rewriteDefaultColumn() {
+		if (this.columns.isEmpty() && defaultColumn != null) {
+			this.columns.add(defaultColumn);
+			defaultColumn = null;
+		}
 	}
 	
 }
