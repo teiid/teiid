@@ -467,6 +467,23 @@
 					<c:simple-property name="url" type="string"
 						description="The Virtual Database URL" required="false" readOnly="true" />
 				</c:group>
+				<c:group name="Translators" displayName="Translators" hiddenByDefault="false">
+					<c:list-property name="translators" displayName="Overrides" readOnly="true"
+						description="The translator overrides for this VDB">
+						<c:map-property name="map" description="Translator Overrides for this VDB">
+							<c:simple-property name="name" displayName="Name"
+								description="Name of this translator instance" required="true" readOnly="true" />
+							<c:simple-property name="type"
+								displayName="Translator type" description="Translator type"
+								required="false" readOnly="true" />
+							<c:simple-property name="propertyName"
+								displayName="Property Name" description="Property Name"
+								required="false" readOnly="true"/>
+							<c:simple-property name="propertyValue" displayName="Property Value"
+								description="Property Value" required="false" />
+						</c:map-property>
+					</c:list-property>
+				</c:group>
 				<c:group name="Models" displayName="Models" hiddenByDefault="false">
 					<c:list-property name="singleSourceModels" readOnly="true"
 						description="The source models for this VDB">

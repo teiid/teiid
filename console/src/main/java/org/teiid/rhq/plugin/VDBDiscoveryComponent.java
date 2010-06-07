@@ -106,7 +106,7 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 					null // Process info from a process scan
 			);
 
-			// Get plugin config map for models
+			// Get plugin config map for properties
 			Configuration configuration = detail.getPluginConfiguration();
 
 			configuration.put(new PropertySimple("name", vdbName));

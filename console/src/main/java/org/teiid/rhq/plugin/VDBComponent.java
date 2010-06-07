@@ -42,6 +42,7 @@ import org.jboss.managed.plugins.ManagedObjectImpl;
 import org.jboss.metatype.api.types.MetaType;
 import org.jboss.metatype.api.types.SimpleMetaType;
 import org.jboss.metatype.api.values.CollectionValueSupport;
+import org.jboss.metatype.api.values.CompositeValueSupport;
 import org.jboss.metatype.api.values.EnumValueSupport;
 import org.jboss.metatype.api.values.GenericValue;
 import org.jboss.metatype.api.values.GenericValueSupport;
@@ -64,6 +65,7 @@ import org.rhq.core.pluginapi.configuration.ConfigurationFacet;
 import org.rhq.core.pluginapi.configuration.ConfigurationUpdateReport;
 import org.rhq.core.pluginapi.inventory.CreateResourceReport;
 import org.rhq.core.pluginapi.inventory.ResourceContext;
+import org.teiid.adminapi.impl.PropertyMetadata;
 import org.teiid.rhq.admin.DQPManagementView;
 import org.teiid.rhq.comm.ConnectionConstants;
 import org.teiid.rhq.plugin.util.PluginConstants;
@@ -98,13 +100,13 @@ public class VDBComponent extends Facet {
 	protected void setOperationArguments(String name,
 			Configuration configuration, Map<String, Object> valueMap) {
 		// Parameter logic for VDB Metrics
-		String key = VDB.NAME; 
+		String key = VDB.NAME;
 		valueMap.put(key, this.resourceConfiguration.getSimpleValue("name",
 				null));
-		String version = VDB.VERSION; 
-		valueMap.put(version, this.resourceConfiguration.getSimpleValue("version",
-				null));
-		
+		String version = VDB.VERSION;
+		valueMap.put(version, this.resourceConfiguration.getSimpleValue(
+				"version", null));
+
 		// Parameter logic for VDB Operations
 		if (name.equals(VDB.Operations.KILL_REQUEST)) {
 			valueMap.put(Operation.Value.REQUEST_ID, configuration.getSimple(
@@ -144,7 +146,7 @@ public class VDBComponent extends Facet {
 	protected void setMetricArguments(String name, Configuration configuration,
 			Map<String, Object> valueMap) {
 		// Parameter logic for VDB Metrics
-		String key = VDB.NAME; 
+		String key = VDB.NAME;
 		valueMap.put(key, this.resourceConfiguration.getSimpleValue("name",
 				null));
 	}
@@ -274,18 +276,19 @@ public class VDBComponent extends Facet {
 			sourceMappingList.add(singleSourceModelsPropertyList);
 			sourceMappingList.add(multiSourceModelsPropertyList);
 			PropertyMap model = null;
-			Iterator<List<Property>> sourceMappingListIterator = sourceMappingList.iterator();
+			Iterator<List<Property>> sourceMappingListIterator = sourceMappingList
+					.iterator();
 			while (sourceMappingListIterator.hasNext()) {
 				List<Property> sourceList = sourceMappingListIterator.next();
 				for (int i = 0; i < sourceList.size(); i++) {
 					model = (PropertyMap) sourceList.get(i);
 					String sourceName = ((PropertySimple) model
 							.get("sourceName")).getStringValue(); //$NON-NLS-1$
-					if (sourceName.equals("See below")) continue; //This is a multisource model which we will handle separately
+					if (sourceName.equals("See below"))
+						continue; // This is a multisource model which we will
+					// handle separately
 					String modelName = ((PropertySimple) model.get("name")) //$NON-NLS-1$
-						.getStringValue();
-					String translatorName = ((PropertySimple) model
-							.get("translatorName")).getStringValue(); //$NON-NLS-1$
+							.getStringValue();
 					String dsName = ((PropertySimple) model.get("jndiName")) //$NON-NLS-1$
 							.getStringValue();
 
@@ -309,13 +312,6 @@ public class VDBComponent extends Facet {
 							String sName = ProfileServiceUtil.getSimpleValue(
 									mo, "name", String.class);//$NON-NLS-1$
 							if (sName.equals(sourceName)) {
-
-								ManagedProperty translatorProperty = mo
-										.getProperty("translatorName"); //$NON-NLS-1$
-								translatorProperty.setValue(ProfileServiceUtil
-										.wrap(SimpleMetaType.STRING,
-												translatorName));
-
 								// set the jndi name for the ds.
 								ManagedProperty jndiProperty = mo
 										.getProperty("connectionJndiName"); //$NON-NLS-1$
@@ -381,6 +377,8 @@ public class VDBComponent extends Facet {
 		configuration.put(new PropertySimple("description", vdbDescription));
 		configuration.put(new PropertySimple("status", vdbStatus));
 		configuration.put(new PropertySimple("url", vdbURL));
+
+		getTranslators(mcVdb, configuration);
 
 		getModels(mcVdb, configuration);
 
@@ -556,6 +554,90 @@ public class VDBComponent extends Facet {
 				map.put("name", sourceName);
 				map.put("jndiName", jndi);
 				map.put("translatorName", translatorName);
+			}
+		} else {
+			throw new IllegalStateException(pValue
+					+ " is not a Collection type");
+		}
+	}
+
+	/**
+	 * @param mcVdb
+	 * @param configuration
+	 * @throws Exception
+	 */
+	private void getTranslators(ManagedComponent mcVdb,
+			Configuration configuration) {
+		// Get models from VDB
+		ManagedProperty property = mcVdb.getProperty("overrideTranslators");
+		if (property == null) {
+			return;
+		}
+		List<ManagedObject> translators = (List<ManagedObject>) MetaValueFactory
+				.getInstance().unwrap(property.getValue());
+		CollectionValueSupport valueSupport = (CollectionValueSupport) property
+				.getValue();
+		MetaValue[] metaValues = valueSupport.getElements();
+
+		PropertyList translatorsList = new PropertyList("translators");
+		configuration.put(translatorsList);
+
+		for (MetaValue value : metaValues) {
+			GenericValueSupport genValueSupport = (GenericValueSupport) value;
+			ManagedObjectImpl managedObject = (ManagedObjectImpl) genValueSupport
+					.getValue();
+
+			String translatorName = ProfileServiceUtil.getSimpleValue(
+					managedObject, "name", String.class);
+			String translatorType = ProfileServiceUtil.getSimpleValue(
+					managedObject, "type", String.class);
+			ManagedProperty properties = managedObject.getProperty("property");
+
+			if (properties != null) {
+				List<PropertyMetadata> props = (List<PropertyMetadata>) MetaValueFactory
+						.getInstance().unwrap(properties.getValue());
+				for (PropertyMetadata propertyMetaData : props) {
+					String propertyName = propertyMetaData.getName();
+					String propertyValue = propertyMetaData.getValue();
+					PropertyMap translatorMap = null;
+
+					translatorMap = new PropertyMap("translatorMap",
+							new PropertySimple("name", translatorName),
+							new PropertySimple("type", translatorType),
+							new PropertySimple("propertyName", propertyName),
+							new PropertySimple("propertyValue", propertyValue));
+					// Only want translator name and value to show up for the first row,
+					// so we will blank them out here.
+					translatorName = "";
+					translatorType = "";
+					translatorsList.add(translatorMap);
+				}
+			}
+		}
+	}
+
+	/**
+	 * @param <T>
+	 * @param pValue
+	 * @param list
+	 */
+	public static <T> void getPropertyValues(MetaValue pValue,
+			Collection<Map<String, String>> list) {
+		Map<String, String> map = new HashMap<String, String>();
+		list.add(map);
+		MetaType metaType = pValue.getMetaType();
+		if (metaType.isCollection()) {
+			for (MetaValue value : ((CollectionValueSupport) pValue)
+					.getElements()) {
+				CompositeValueSupport compValue = ((CompositeValueSupport) value);
+				for (MetaValue propValue : compValue.values()) {
+					String propertyName = ((CompositeValueSupport) propValue)
+							.get("name").toString();
+					String propertyValue = ((CompositeValueSupport) propValue)
+							.get("value").toString();
+					map.put("name", propertyName);
+					map.put("value", propertyValue);
+				}
 			}
 		} else {
 			throw new IllegalStateException(pValue
