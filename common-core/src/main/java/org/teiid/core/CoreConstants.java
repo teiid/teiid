@@ -106,7 +106,7 @@ public interface CoreConstants {
     /**
      * Constant for the anonymous Teiid system username  
      */
-    public static final String DEFAULT_ANON_USERNAME = "teiidanonymous";
+    public static final String DEFAULT_ANON_USERNAME = "anonymous"; //$NON-NLS-1$
     
 
 }

@@ -57,12 +57,11 @@ public class TeiidLoginContext {
 	private String securitydomain;
 	private Object credentials;
 	
-	public void authenticateUser(String username, Credentials credential, String applicationName, List<String> domains) throws LoginException {
+	public void authenticateUser(String username, final Credentials credential, String applicationName, List<String> domains) throws LoginException {
         
         LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"authenticateUser", username, applicationName}); //$NON-NLS-1$
                 
         final String baseUsername = getBaseUsername(username);
-        final char[] password = credential.getCredentialsAsCharArray();
            
         // If username specifies a domain (user@domain) only that domain is authenticated against.
         // If username specifies no domain, then all domains are tried in order.
@@ -78,6 +77,10 @@ public class TeiidLoginContext {
 								nc.setName(baseUsername);
 							} else if (callbacks[i] instanceof PasswordCallback) {
 								PasswordCallback pc = (PasswordCallback)callbacks[i];
+						        char[] password = null;
+						        if (credential != null) {
+						        	password = credential.getCredentialsAsCharArray();
+						        }
 								pc.setPassword(password);
 								credentials = password;
 							} else {
