@@ -26,7 +26,8 @@ import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLConstants;
+import org.teiid.language.SQLConstants.Reserved;
 
 /**
  * Special variable names in stored procedure language.
@@ -34,7 +35,7 @@ import org.teiid.language.SQLReservedWords;
 public class ProcedureReservedWords {
 
 	@Deprecated
-    public static final String INPUT = SQLReservedWords.INPUT;
+    public static final String INPUT = Reserved.INPUT;
     
     public static final String INPUTS = "INPUTS"; //$NON-NLS-1$
 
@@ -53,7 +54,7 @@ public class ProcedureReservedWords {
 
     // Initialize RESERVED_WORDS set - This is a poor man's enum.  To much legacy code expects the constants to be Strings.
  	static {
- 		Field[] fields = SQLReservedWords.class.getDeclaredFields();
+ 		Field[] fields = SQLConstants.class.getDeclaredFields();
  		for (Field field : fields) {
  			if (field.getType() == String.class) {
  				try {

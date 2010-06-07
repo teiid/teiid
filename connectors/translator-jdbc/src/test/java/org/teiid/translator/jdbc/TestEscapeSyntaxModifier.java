@@ -29,7 +29,7 @@ import java.util.List;
 import org.teiid.cdk.CommandBuilder;
 import org.teiid.language.Function;
 import org.teiid.language.Literal;
-import org.teiid.language.SQLReservedWords.NonReserved;
+import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.translator.jdbc.EscapeSyntaxModifier;
 

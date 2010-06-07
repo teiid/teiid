@@ -22,22 +22,13 @@
 
 package org.teiid.query.processor.relational;
 
-import java.io.IOException;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
 
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.TransformerException;
-
-import net.sf.saxon.Configuration;
+import net.sf.saxon.expr.PathMap.PathMapRoot;
 import net.sf.saxon.om.Item;
-import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.SequenceIterator;
-import net.sf.saxon.query.QueryResult;
 import net.sf.saxon.sxpath.XPathDynamicContext;
 import net.sf.saxon.sxpath.XPathExpression;
 import net.sf.saxon.trans.XPathException;
@@ -49,44 +40,19 @@ import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.SQLXMLImpl;
-import org.teiid.core.types.Streamable;
-import org.teiid.core.types.TransformationException;
-import org.teiid.core.types.XMLTranslator;
 import org.teiid.core.types.XMLType;
-import org.teiid.core.types.XMLType.Type;
-import org.teiid.query.processor.xml.XMLUtil;
+import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
-import org.teiid.query.sql.symbol.DerivedColumn;
 
 /**
  * Handles xml table processing.
  */
 public class XMLTableNode extends SubqueryAwareRelationalNode {
 
-	private static final class QueryResultTranslator extends XMLTranslator {
-		private final SequenceIterator pathIter;
-		private final Configuration config;
-
-		private QueryResultTranslator(SequenceIterator pathIter, Configuration config) {
-			this.pathIter = pathIter;
-			this.config = config;
-		}
-
-		@Override
-		public void translate(Writer writer) throws TransformerException,
-				IOException {
-			Properties props = new Properties();
-		    props.setProperty(OutputKeys.METHOD, "xml"); //$NON-NLS-1$
-		    //props.setProperty(OutputKeys.INDENT, "yes"); //$NON-NLS-1$
-		    props.setProperty(OutputKeys.OMIT_XML_DECLARATION, "yes"); //$NON-NLS-1$
-			QueryResult.serializeSequence(pathIter, config, writer, props);
-		}
-	}
-
 	private XMLTable table;
 	private List<XMLColumn> projectedColumns;
+	private PathMapRoot contextRoot;
 	
 	private SequenceIterator result;
 	private int rowCount = 0;
@@ -119,6 +85,10 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 		this.projectedColumns = projectedColumns;
 	}
 	
+	public void setContextRoot(PathMapRoot contextRoot) {
+		this.contextRoot = contextRoot;
+	}
+	
 	@Override
 	public XMLTableNode clone() {
 		XMLTableNode clone = new XMLTableNode(getID());
@@ -134,34 +104,23 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 		
 		if (result == null) {
 			setReferenceValues(this.table);
-			HashMap<String, Object> parameters = new HashMap<String, Object>();
-			Object contextItem = null;
-			for (DerivedColumn passing : this.table.getPassing()) {
-				Object value = getEvaluator(Collections.emptyMap()).evaluate(passing.getExpression(), null);
-				if (passing.getAlias() == null) {
-					contextItem = value;
-				} else {
-					parameters.put(passing.getAlias(), value);
-				}
-			}
-			result = this.table.getXQueryExpression().evaluateXQuery(contextItem, parameters);
+			result = getEvaluator(Collections.emptyMap()).evaluateXQuery(this.table.getXQueryExpression(), this.contextRoot, this.table.getPassing(), null);
 		}
 		
 		while (!isBatchFull() && !isLastBatch()) {
-			try {
-				processRow();
-			} catch (XPathException e) {
-				e.printStackTrace();
-			}
+			processRow();
 		}
 		return pullBatch();
 	}
 
-	private void processRow() throws XPathException,
-			ExpressionEvaluationException, BlockedException,
-			TeiidComponentException, TeiidProcessingException,
-			TransformationException {
-		Item item = result.next();
+	private void processRow() throws ExpressionEvaluationException, BlockedException,
+			TeiidComponentException, TeiidProcessingException {
+		Item item;
+		try {
+			item = result.next();
+		} catch (XPathException e) {
+			throw new TeiidProcessingException(e, QueryExecPlugin.Util.getString("XMLTableNode.error", e.getMessage())); //$NON-NLS-1$
+		}
 		rowCount++;
 		if (item == null) {
 			terminateBatches();
@@ -172,48 +131,40 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 			if (proColumn.isOrdinal()) {
 				tuple.add(rowCount);
 			} else {
-				XPathExpression path = proColumn.getPathExpression();
-				XPathDynamicContext dynamicContext = path.createDynamicContext(item);
-				SequenceIterator pathIter = path.iterate(dynamicContext);
-				Item colItem = pathIter.next();
-				if (colItem == null) {
-					if (proColumn.getDefaultExpression() != null) {
-						tuple.add(getEvaluator(Collections.emptyMap()).evaluate(proColumn.getDefaultExpression(), null));
-					} else {
-						tuple.add(null);
-					}
-					continue;
-				}
-				if (proColumn.getSymbol().getType() == DataTypeManager.DefaultDataClasses.XML) {
-					Item next = pathIter.next();
-					XMLType.Type type = Type.FRAGMENT;
-					if (next != null) {
-						if (next instanceof NodeInfo || colItem instanceof NodeInfo) {
-							type = Type.SIBLINGS;
+				try {
+					XPathExpression path = proColumn.getPathExpression();
+					XPathDynamicContext dynamicContext = path.createDynamicContext(item);
+					SequenceIterator pathIter = path.iterate(dynamicContext);
+					Item colItem = pathIter.next();
+					if (colItem == null) {
+						if (proColumn.getDefaultExpression() != null) {
+							tuple.add(getEvaluator(Collections.emptyMap()).evaluate(proColumn.getDefaultExpression(), null));
 						} else {
-							type = Type.TEXT;
+							tuple.add(null);
 						}
+						continue;
 					}
-					pathIter = pathIter.getAnother();
-					SQLXMLImpl xml = XMLUtil.saveToBufferManager(getBufferManager(), new QueryResultTranslator(pathIter, this.table.getXQueryExpression().getConfig()), Streamable.STREAMING_BATCH_SIZE_IN_BYTES);
-					XMLType value = new XMLType(xml);
-					value.setType(type);
+					if (proColumn.getSymbol().getType() == DataTypeManager.DefaultDataClasses.XML) {
+						XMLType value = getEvaluator(Collections.emptyMap()).createXMLType(pathIter.getAnother(), table.getXQueryExpression(), false, false);
+						tuple.add(value);
+						continue;
+					}
+					if (pathIter.next() != null) {
+						throw new TeiidProcessingException(QueryExecPlugin.Util.getString("XMLTableName.multi_value", proColumn.getName())); //$NON-NLS-1$
+					}
+					Object value = Value.convertToJava(colItem);
+					if (value instanceof Item) {
+						value = ((Item)value).getStringValue();
+					}
+					value = DataTypeManager.convertToRuntimeType(value);
+					value = DataTypeManager.transformValue(value, proColumn.getSymbol().getType());
 					tuple.add(value);
-					continue;
+				} catch (XPathException e) {
+					throw new TeiidProcessingException(e, QueryExecPlugin.Util.getString("XMLTableNode.path_error", proColumn.getName())); //$NON-NLS-1$
 				}
-				if (pathIter.next() != null) {
-					throw new TeiidProcessingException("Unexpected multi-valued result was returned for XML Column " + proColumn.getName() + ".  All path expressions should return at most a single result.");
-				}
-				Object value = Value.convertToJava(colItem);
-				if (value instanceof Item) {
-					value = ((Item)value).getStringValue();
-				}
-				value = DataTypeManager.convertToRuntimeType(value);
-				value = DataTypeManager.transformValue(value, proColumn.getSymbol().getType());
-				tuple.add(value);
 			}
 		}
 		addBatchRow(tuple);
 	}
-	
+		
 }

@@ -361,6 +361,7 @@ TOKEN : /* User variables and literals */
 | 	< TIMETYPE: "{" "t" >
 | 	< TIMESTAMPTYPE: "{" "ts" >
 | 	< BOOLEANTYPE: "{" "b" >
+| 	< XMLTYPE: "{" "x" >
 
 |	< INTEGERVAL: (<MINUS>)?(<DIGIT>)+ >
 |   < FLOATVAL: (<MINUS>)? (<DIGIT>)* <PERIOD> (<DIGIT>)+ 
@@ -2027,6 +2028,61 @@ TextTable.TextColumn textColumn(ParseInfo info):
 	}
 }
 
+XMLQuery xmlQuery(ParseInfo info) :
+{
+	String xquery = null;
+	XMLNamespaces xmlNamespaces = null;
+	DerivedColumn passing = null;
+	ArrayList<DerivedColumn> passingValues = new ArrayList<DerivedColumn>();
+	Boolean content = null;
+	Boolean empty = null;
+}
+{
+ 	<ID> <LPAREN> 
+ 	[ xmlNamespaces = xmlNamespaces(info) <COMMA> ]
+ 	xquery = stringVal()
+ 	[ 
+ 	  LOOKAHEAD(<ID>, { "passing".equalsIgnoreCase(getToken(1).image) }) <ID>
+ 	  passing = derivedColumn(info)
+ 	  {
+ 	  	passingValues.add(passing);
+ 	  	passing.setPropagateName(false);
+ 	  }
+ 	  (<COMMA>
+ 	    passing = derivedColumn(info)
+ 	    {
+ 	  	  passingValues.add(passing);
+ 	  	  passing.setPropagateName(false);
+ 	    }
+ 	  )*
+ 	]
+ 	[
+ 	  LOOKAHEAD(<ID>, { "returning".equalsIgnoreCase(getToken(1).image) }) <ID>
+ 	  (
+ 	  	LOOKAHEAD(<ID>, { "content".equalsIgnoreCase(getToken(1).image) }) <ID> { content = true; }
+ 	  	|
+ 	  	LOOKAHEAD(<ID>, { "sequence".equalsIgnoreCase(getToken(1).image) }) (<ID> { content = false; }
+ 	    [
+ 	      (<NULL> { empty = false; }
+ 	      |
+ 	      nonReserved("EMPTY") { empty = true; }
+ 	      )
+	      <ON> nonReserved("EMPTY")
+ 	    ])
+ 	  )
+ 	]
+ 	<RPAREN>
+ 	{
+ 		XMLQuery result = new XMLQuery();
+ 		result.setXquery(xquery);
+ 		result.setNamespaces(xmlNamespaces);
+ 		result.setPassing(passingValues);
+ 		result.setEmptyOnEmpty(empty);
+ 		result.setReturningContent(content);
+ 		return result;
+ 	}
+}
+
 XMLTable xmlTable(ParseInfo info) :
 {
 	String xquery = null;
@@ -3283,7 +3339,11 @@ Expression function(ParseInfo info) :
 		{
 			return expression;
 		}
-	|
+	|	LOOKAHEAD(<ID>, { "xmlQuery".equalsIgnoreCase(getToken(1).image) }) expression = xmlQuery(info)
+		{
+			return expression;
+		}
+	|   
 	(	funcName = id()
 		{ 
 			funcName = validateFunctionName(funcName);
@@ -3578,7 +3638,8 @@ Constant literal() :
         ( (<BOOLEANTYPE>   { escapeType=DataTypeManager.DefaultDataClasses.BOOLEAN; } |
           <TIMESTAMPTYPE> { escapeType=DataTypeManager.DefaultDataClasses.TIMESTAMP; } | 
           <DATETYPE>      { escapeType=DataTypeManager.DefaultDataClasses.DATE; } |
-          <TIMETYPE>      { escapeType=DataTypeManager.DefaultDataClasses.TIME; }) strVal=stringVal() { 
+          <TIMETYPE>      { escapeType=DataTypeManager.DefaultDataClasses.TIME; } |
+          <XMLTYPE>      { escapeType=DataTypeManager.DefaultDataClasses.XML; }) strVal=stringVal() { 
 	        	try {
 	        		constant = new Constant(DataTypeManager.transformValue(strVal, escapeType), escapeType);
 	        	} catch (TransformationException e) {

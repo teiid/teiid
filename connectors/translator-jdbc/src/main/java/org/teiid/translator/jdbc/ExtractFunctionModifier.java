@@ -29,8 +29,8 @@ import java.util.Map;
 
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
-import org.teiid.language.SQLReservedWords;
-import org.teiid.language.SQLReservedWords.Tokens;
+import org.teiid.language.SQLConstants.Reserved;
+import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.translator.SourceSystemFunctions;
 
 
@@ -75,7 +75,7 @@ public class ExtractFunctionModifier extends FunctionModifier {
         objs.add("EXTRACT("); //$NON-NLS-1$
         objs.add(FUNCTION_PART_MAP.get(function.getName().toLowerCase()));
         objs.add(Tokens.SPACE);
-        objs.add(SQLReservedWords.FROM); 
+        objs.add(Reserved.FROM); 
         objs.add(Tokens.SPACE);               
         objs.add(args.get(0));
         objs.add(Tokens.RPAREN);

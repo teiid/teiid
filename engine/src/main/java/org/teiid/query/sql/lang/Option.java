@@ -27,7 +27,7 @@ import java.util.List;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
-import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
@@ -40,8 +40,8 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  */
 public class Option implements LanguageObject {
     
-    public final static String MAKEDEP = SQLReservedWords.MAKEDEP; 
-    public final static String MAKENOTDEP = SQLReservedWords.MAKENOTDEP; 
+    public final static String MAKEDEP = Reserved.MAKEDEP; 
+    public final static String MAKENOTDEP = Reserved.MAKENOTDEP; 
     public final static String OPTIONAL = "optional"; //$NON-NLS-1$
 
     private List<String> makeDependentGroups;

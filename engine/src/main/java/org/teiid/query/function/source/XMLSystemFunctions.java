@@ -183,7 +183,7 @@ public class XMLSystemFunctions {
 				} 
 			}
 		}, context.getStreamingBatchSize()));
-		result.setType(Type.SIBLINGS);
+		result.setType(Type.SEQUENCE);
 		return result;
 	}
 	
@@ -268,7 +268,7 @@ public class XMLSystemFunctions {
 				} 
 			}
 		}, context.getStreamingBatchSize()));
-		result.setType(Type.SIBLINGS);
+		result.setType(Type.SEQUENCE);
 		return result;
 	}
 	
@@ -341,7 +341,7 @@ public class XMLSystemFunctions {
 		}
 		switch(type) {
 		case FRAGMENT:
-		case SIBLINGS: 
+		case SEQUENCE: 
 		case PI:
 		case COMMENT: //write the value directly to the writer
 			eventWriter.flush();

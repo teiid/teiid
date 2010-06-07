@@ -27,7 +27,7 @@ import junit.framework.TestCase;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.AggregateFunction;
 import org.teiid.language.Literal;
-import org.teiid.language.SQLReservedWords.NonReserved;
+import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 

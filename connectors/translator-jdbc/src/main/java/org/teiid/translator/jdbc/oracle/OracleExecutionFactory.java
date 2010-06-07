@@ -47,7 +47,7 @@ import org.teiid.language.Literal;
 import org.teiid.language.NamedTable;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
-import org.teiid.language.SQLReservedWords.Tokens;
+import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.logging.LogConstants;

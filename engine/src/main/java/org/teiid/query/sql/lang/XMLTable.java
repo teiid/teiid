@@ -178,6 +178,16 @@ public class XMLTable extends TableFunctionReference {
 		if (defaultColumn != null) {
 			clone.defaultColumn = this.defaultColumn;
 		}
+		if (this.namespaces != null) {
+			clone.namespaces = this.namespaces.clone();
+		}
+		if (this.passing != null) {
+			for (DerivedColumn col : this.passing) {
+				clone.passing.add(col.clone());
+			}
+		}
+		clone.xquery = this.xquery;
+		clone.xqueryExpression = this.xqueryExpression;
 		return clone;
 	}
 
@@ -195,7 +205,10 @@ public class XMLTable extends TableFunctionReference {
 			return false;
 		}
 		XMLTable other = (XMLTable)obj;
-		return this.columns.equals(other.columns);
+		return this.columns.equals(other.columns) 
+			&& EquivalenceUtil.areEqual(this.namespaces, other.namespaces)
+			&& this.xquery.equals(other.xquery)
+			&& this.passing.equals(other.passing);
 	}
 
 	public void rewriteDefaultColumn() {

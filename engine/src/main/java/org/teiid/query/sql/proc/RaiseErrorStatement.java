@@ -22,7 +22,7 @@
 
 package org.teiid.query.sql.proc;
 
-import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -58,10 +58,10 @@ public class RaiseErrorStatement extends AssignmentStatement {
          * matter that it has an invalid ID or GroupSymbol.  Setting the type to
          * String allows for the expression to be converted to String as necessary.
          */
-        ElementSymbol result = new ElementSymbol(SQLReservedWords.ERROR);
-        result.setMetadataID(SQLReservedWords.ERROR);
+        ElementSymbol result = new ElementSymbol(Reserved.ERROR);
+        result.setMetadataID(Reserved.ERROR);
         result.setType(String.class);
-        result.setGroupSymbol(new GroupSymbol(SQLReservedWords.ERROR));
+        result.setGroupSymbol(new GroupSymbol(Reserved.ERROR));
         return result;
     }
     

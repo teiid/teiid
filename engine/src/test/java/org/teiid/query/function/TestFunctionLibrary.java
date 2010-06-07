@@ -47,7 +47,7 @@ import org.teiid.core.types.NullType;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.TimestampWithTimezone;
-import org.teiid.language.SQLReservedWords.NonReserved;
+import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.query.util.CommandContext;

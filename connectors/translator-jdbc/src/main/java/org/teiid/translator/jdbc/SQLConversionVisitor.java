@@ -45,12 +45,12 @@ import org.teiid.language.In;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Like;
 import org.teiid.language.Literal;
-import org.teiid.language.SQLReservedWords;
 import org.teiid.language.SearchedCase;
 import org.teiid.language.SetClause;
 import org.teiid.language.SortSpecification;
 import org.teiid.language.Argument.Direction;
-import org.teiid.language.SQLReservedWords.Tokens;
+import org.teiid.language.SQLConstants.Reserved;
+import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.language.visitor.SQLStringVisitor;
@@ -154,7 +154,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
      */
     private void translateSQLType(Class type, Object obj, StringBuilder valuesbuffer) {
         if (obj == null) {
-            valuesbuffer.append(SQLReservedWords.NULL);
+            valuesbuffer.append(Reserved.NULL);
         } else {
             if(Number.class.isAssignableFrom(type)) {
                 boolean useFormatting = false;

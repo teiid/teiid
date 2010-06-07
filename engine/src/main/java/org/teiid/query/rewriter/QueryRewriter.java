@@ -53,7 +53,7 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.TimestampWithTimezone;
-import org.teiid.language.SQLReservedWords.NonReserved;
+import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.function.FunctionDescriptor;
@@ -140,6 +140,7 @@ import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
+import org.teiid.query.sql.symbol.XMLQuery;
 import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.util.ValueIterator;
@@ -1908,6 +1909,8 @@ public class QueryRewriter {
         } else if (expression instanceof XMLForest) {
         	rewriteExpressions(expression);
         } else if (expression instanceof XMLSerialize) {
+        	rewriteExpressions(expression);
+        } else if (expression instanceof XMLQuery) {
         	rewriteExpressions(expression);
         }
     	

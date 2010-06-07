@@ -64,6 +64,7 @@ import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
+import org.teiid.query.sql.symbol.XMLQuery;
 import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.util.ErrorMessageKeys;
 
@@ -336,6 +337,15 @@ public class ResolverVisitor extends LanguageVisitor {
 			obj.setExpression(ResolverUtil.convertExpression(obj.getExpression(), DataTypeManager.DefaultDataTypes.XML, metadata));
 		} catch (QueryResolverException e) {
 			handleException(new QueryResolverException(e, QueryPlugin.Util.getString("XMLSerialize.resolvingError", obj))); //$NON-NLS-1$
+		}
+    }
+    
+    @Override
+    public void visit(XMLQuery obj) {
+    	try {
+			obj.compileXqueryExpression();
+		} catch (QueryResolverException e) {
+			handleException(e); 
 		}
     }
 

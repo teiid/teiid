@@ -23,12 +23,15 @@
 package org.teiid.query.function;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.HashCodeUtil;
-import org.teiid.language.SQLReservedWords;
-import org.teiid.query.function.metadata.*;
+import org.teiid.language.SQLConstants.Reserved;
+import org.teiid.query.function.metadata.FunctionMethod;
+import org.teiid.query.function.metadata.FunctionParameter;
 
 
 /**
@@ -171,7 +174,7 @@ public class FunctionForm implements Serializable, Comparable {
 				str.append(", "); //$NON-NLS-1$
 			} else {
 				str.append(" "); //$NON-NLS-1$
-				str.append(SQLReservedWords.AS);
+				str.append(Reserved.AS);
 				str.append(" "); //$NON-NLS-1$
 			}	
 			str.append(inputParamNames.get(1));

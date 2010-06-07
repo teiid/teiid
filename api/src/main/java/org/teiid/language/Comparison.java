@@ -22,7 +22,7 @@
 
 package org.teiid.language;
 
-import org.teiid.language.SQLReservedWords.Tokens;
+import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.visitor.LanguageObjectVisitor;
 
 /**

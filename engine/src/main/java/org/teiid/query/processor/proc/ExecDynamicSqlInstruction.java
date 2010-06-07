@@ -38,7 +38,8 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLConstants;
+import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.logging.LogManager;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.execution.QueryExecPlugin;
@@ -146,9 +147,9 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
             
             if (dynamicCommand.getUsing() != null
                             && !dynamicCommand.getUsing().isEmpty()) {
-                metadataStore.addTempGroup(SQLReservedWords.USING, new LinkedList(dynamicCommand.getUsing().getClauseMap().keySet()));
-                GroupSymbol using = new GroupSymbol(SQLReservedWords.USING);
-                using.setMetadataID(metadataStore.getTempGroupID(SQLReservedWords.USING));
+                metadataStore.addTempGroup(Reserved.USING, new LinkedList(dynamicCommand.getUsing().getClauseMap().keySet()));
+                GroupSymbol using = new GroupSymbol(Reserved.USING);
+                using.setMetadataID(metadataStore.getTempGroupID(Reserved.USING));
                 command.addExternalGroupToContext(using);
                 metadataStore.addTempGroup(ProcedureReservedWords.DVARS, new LinkedList(dynamicCommand.getUsing().getClauseMap().keySet()));
                 using = new GroupSymbol(ProcedureReservedWords.DVARS);
@@ -234,7 +235,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 						new Object[] { this, " The using variable ", //$NON-NLS-1$
 						setClause.getSymbol(), " has value :", assignment }); //$NON-NLS-1$
 				localContext.setValue(setClause.getSymbol(), assignment);
-				localContext.setValue(new ElementSymbol(SQLReservedWords.USING + ElementSymbol.SEPARATOR + setClause.getSymbol().getShortName()), assignment);
+				localContext.setValue(new ElementSymbol(Reserved.USING + ElementSymbol.SEPARATOR + setClause.getSymbol().getShortName()), assignment);
 			}
 		}
 	}

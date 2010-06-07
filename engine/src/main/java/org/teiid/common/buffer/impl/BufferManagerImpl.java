@@ -385,6 +385,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				return new XMLType(sqlxml);
 			}
 		});
+		XMLUtil.setBufferManager(this);
 	}
 	
     @Override

@@ -25,7 +25,7 @@ package org.teiid.query.sql.symbol;
 import junit.framework.TestCase;
 
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.language.SQLReservedWords.NonReserved;
+import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;

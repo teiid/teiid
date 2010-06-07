@@ -28,8 +28,8 @@ import java.util.List;
 
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.StringUtil;
-import org.teiid.language.SQLReservedWords;
-import org.teiid.language.SQLReservedWords.NonReserved;
+import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.FromClause;
@@ -210,17 +210,17 @@ public class SQLParserUtil {
             return JoinType.JOIN_INNER;
         }   
         String joinType = joinTypeToken.image;
-        if(joinType.equalsIgnoreCase(SQLReservedWords.INNER)) {
+        if(joinType.equalsIgnoreCase(Reserved.INNER)) {
             return JoinType.JOIN_INNER;
-        } else if(joinType.equalsIgnoreCase(SQLReservedWords.CROSS)) {
+        } else if(joinType.equalsIgnoreCase(Reserved.CROSS)) {
             return JoinType.JOIN_CROSS;         
-        } else if(joinType.equalsIgnoreCase(SQLReservedWords.LEFT)) {
+        } else if(joinType.equalsIgnoreCase(Reserved.LEFT)) {
             return JoinType.JOIN_LEFT_OUTER;
-        } else if(joinType.equalsIgnoreCase(SQLReservedWords.RIGHT)) {
+        } else if(joinType.equalsIgnoreCase(Reserved.RIGHT)) {
             return JoinType.JOIN_RIGHT_OUTER;
-        } else if(joinType.equalsIgnoreCase(SQLReservedWords.FULL)) {
+        } else if(joinType.equalsIgnoreCase(Reserved.FULL)) {
             return JoinType.JOIN_FULL_OUTER;
-        } else if(joinType.equalsIgnoreCase(SQLReservedWords.UNION)) {
+        } else if(joinType.equalsIgnoreCase(Reserved.UNION)) {
             return JoinType.JOIN_UNION;
         } else {
             Object[] params = new Object[] { joinType };
@@ -258,7 +258,7 @@ public class SQLParserUtil {
         } else if(functionType.equals(NonReserved.MAX)) { 
             int num = info.anonMaxCount++;
             return "max" + (num == 0 ? "" : ""+num);//$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
-        } else if(functionType.equals(SQLReservedWords.XMLAGG)) { 
+        } else if(functionType.equals(Reserved.XMLAGG)) { 
             int num = info.anonMaxCount++;
             return "xmlagg" + (num == 0 ? "" : ""+num);//$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
         } else {

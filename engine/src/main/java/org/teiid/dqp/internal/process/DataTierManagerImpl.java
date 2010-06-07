@@ -55,7 +55,7 @@ import org.teiid.dqp.internal.process.CodeTableCache.CacheKey;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.BufferService;
-import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.CompositeMetadataStore;
@@ -393,7 +393,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         String keyElementName)
         throws TeiidComponentException, TeiidProcessingException {
 
-        String query = SQLReservedWords.SELECT + ' ' + keyElementName + " ," + returnElementName + ' ' + SQLReservedWords.FROM + ' ' + codeTableName; //$NON-NLS-1$ 
+        String query = Reserved.SELECT + ' ' + keyElementName + " ," + returnElementName + ' ' + Reserved.FROM + ' ' + codeTableName; //$NON-NLS-1$ 
         
         final CacheKey codeRequestId = this.codeTableCache.createCacheRequest(codeTableName, returnElementName, keyElementName, context);
 

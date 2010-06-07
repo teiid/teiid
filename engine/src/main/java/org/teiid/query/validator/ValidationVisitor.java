@@ -106,6 +106,7 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLForest;
 import org.teiid.query.sql.symbol.XMLNamespaces;
+import org.teiid.query.sql.symbol.XMLQuery;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.CommandCollectorVisitor;
@@ -117,6 +118,7 @@ import org.teiid.query.sql.visitor.PredicateCollectorVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.ErrorMessageKeys;
+import org.teiid.query.xquery.saxon.SaxonXQueryExpression;
 import org.teiid.translator.SourceSystemFunctions;
 
 public class ValidationVisitor extends AbstractValidationVisitor {
@@ -1156,28 +1158,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     
     @Override
     public void visit(XMLTable obj) {
-    	boolean context = false;
-    	boolean hadError = false;
-    	HashSet<String> names = new HashSet<String>();
-    	for (DerivedColumn dc : obj.getPassing()) {
-    		if (dc.getAlias() == null) {
-    			Class<?> type = dc.getExpression().getType();
-    			if (type != DataTypeManager.DefaultDataClasses.XML &&
-    				type != DataTypeManager.DefaultDataClasses.CLOB) {
-    				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.context_item_type"), obj); //$NON-NLS-1$
-    			}
-    			if (context && !hadError) {
-    				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.passing_requires_name"), obj); //$NON-NLS-1$
-    				hadError = true;
-    			}
-    			context = true;
-        	} else if (!names.add(dc.getAlias().toUpperCase())) {
-    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.duplicate_passing", dc.getAlias()), obj); //$NON-NLS-1$
-        	}
-		}
-    	if (obj.getXQueryExpression().usesContextItem() && !context) {
-			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.context_required"), obj); //$NON-NLS-1$    		
-    	}
+    	List<DerivedColumn> passing = obj.getPassing();
+    	validatePassing(obj, obj.getXQueryExpression(), passing);
     	boolean hasOrdinal = false;
     	for (XMLColumn xc : obj.getColumns()) {
 			if (!xc.isOrdinal()) {
@@ -1195,9 +1177,38 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
     
     @Override
+    public void visit(XMLQuery obj) {
+    	validatePassing(obj, obj.getXQueryExpression(), obj.getPassing());
+    }
+
+	private void validatePassing(LanguageObject obj, SaxonXQueryExpression xqe, List<DerivedColumn> passing) {
+		boolean context = false;
+    	boolean hadError = false;
+    	HashSet<String> names = new HashSet<String>();
+    	for (DerivedColumn dc : passing) {
+    		if (dc.getAlias() == null) {
+    			Class<?> type = dc.getExpression().getType();
+    			if (type != DataTypeManager.DefaultDataClasses.XML &&
+    				type != DataTypeManager.DefaultDataClasses.CLOB) {
+    				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.context_item_type"), obj); //$NON-NLS-1$
+    			}
+    			if (context && !hadError) {
+    				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.passing_requires_name"), obj); //$NON-NLS-1$
+    				hadError = true;
+    			}
+    			context = true;
+        	} else if (!names.add(dc.getAlias().toUpperCase())) {
+    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.duplicate_passing", dc.getAlias()), obj); //$NON-NLS-1$
+        	}
+		}
+    	if (xqe.usesContextItem() && !context) {
+			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.context_required"), obj); //$NON-NLS-1$    		
+    	}
+	}
+    
+    @Override
     public void visit(XMLNamespaces obj) {
     	boolean hasDefault = false;
-    	boolean noDefault = false;
     	for (XMLNamespaces.NamespaceItem item : obj.getNamespaceItems()) {
 			if (item.getPrefix() != null) {
 				if (item.getPrefix().equals("xml") || item.getPrefix().equals("xmlns")) { //$NON-NLS-1$ //$NON-NLS-2$
@@ -1205,15 +1216,11 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 				}
 				continue;
 			}
-			if (hasDefault || noDefault) {
+			if (hasDefault) {
 				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_namespaces"), obj); //$NON-NLS-1$
 				break;
 			}
-			if (item.getUri() == null) { 
-				noDefault = true;
-			} else {
-				hasDefault = true;
-			}
+			hasDefault = true;
 		}
     }
     

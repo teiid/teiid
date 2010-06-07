@@ -38,7 +38,7 @@ import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.query.sql.lang.BetweenCriteria;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.CompareCriteria;
@@ -114,6 +114,7 @@ import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
 import org.teiid.query.sql.symbol.XMLNamespaces;
+import org.teiid.query.sql.symbol.XMLQuery;
 import org.teiid.query.sql.symbol.XMLSerialize;
 
 @SuppressWarnings("nls")
@@ -6741,7 +6742,7 @@ public class TestParser {
     
     @Test public void testXmlAggWithOrderBy() throws Exception {
         String sql = "SELECT xmlAgg(1 order by e2)"; //$NON-NLS-1$
-        AggregateSymbol as = new AggregateSymbol("foo", SQLReservedWords.XMLAGG, false, new Constant(1));
+        AggregateSymbol as = new AggregateSymbol("foo", Reserved.XMLAGG, false, new Constant(1));
         as.setOrderBy(new OrderBy(Arrays.asList(new ElementSymbol("e2"))));
         Query query = new Query();
         query.setSelect(new Select(Arrays.asList(as)));
@@ -6812,6 +6813,15 @@ public class TestParser {
     	f.setExpression(new ElementSymbol("x"));
     	f.setTypeString("CLOB");
     	helpTestExpression("xmlserialize(document x as CLOB)", "XMLSERIALIZE(DOCUMENT x AS CLOB)", f);
+    }
+    
+    @Test public void testXmlQuery() throws Exception {
+    	XMLQuery f = new XMLQuery();
+    	f.setXquery("/x");
+    	f.setEmptyOnEmpty(false);
+    	f.setReturningContent(false);
+    	f.setPassing(Arrays.asList(new DerivedColumn(null, new ElementSymbol("foo"))));
+    	helpTestExpression("xmlquery('/x' passing foo returning sequence null on empty)", "XMLQUERY('/x' PASSING foo RETURNING SEQUENCE NULL ON EMPTY)", f);
     }
 
 }

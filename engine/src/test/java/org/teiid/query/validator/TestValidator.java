@@ -1999,12 +1999,12 @@ public class TestValidator {
     }
     
     @Test public void testXMLTablePassingMultipleContext() {
-    	helpValidate("select * from pm1.g1, xmltable('/' passing '<a/>', '<b/>') as x", new String[] {"XMLTABLE('/' PASSING '<a/>', '<b/>') AS x"}, FakeMetadataFactory.example1Cached());
+    	helpValidate("select * from pm1.g1, xmltable('/' passing {x '<a/>'}, {x '<b/>'}) as x", new String[] {"XMLTABLE('/' PASSING {x '<a/>'}, {x '<b/>'}) AS x"}, FakeMetadataFactory.example1Cached());
     }
 
     @Ignore("this is actually handled by saxon and will show up during resolving")
     @Test public void testXMLTablePassingSameName() {
-    	helpValidate("select * from pm1.g1, xmltable('/' passing '<a/>' as a, '<b/>' as a) as x", new String[] {"xmltable('/' passing e1, e1 || 'x') as x"}, FakeMetadataFactory.example1Cached());
+    	helpValidate("select * from pm1.g1, xmltable('/' passing {x '<a/>'} as a, {x '<b/>'} as a) as x", new String[] {"xmltable('/' passing e1, e1 || 'x') as x"}, FakeMetadataFactory.example1Cached());
     }
 
     @Test public void testXMLTablePassingContextType() {
@@ -2012,7 +2012,15 @@ public class TestValidator {
     }
 
     @Test public void testXMLTableMultipleOrdinals() {
-    	helpValidate("select * from pm1.g1, xmltable('/' passing '<a/>' columns x for ordinality, y for ordinality) as x", new String[] {"XMLTABLE('/' PASSING '<a/>' COLUMNS x FOR ORDINALITY, y FOR ORDINALITY) AS x"}, FakeMetadataFactory.example1Cached());
+    	helpValidate("select * from pm1.g1, xmltable('/' passing {x '<a/>'} columns x for ordinality, y for ordinality) as x", new String[] {"XMLTABLE('/' PASSING {x '<a/>'} COLUMNS x FOR ORDINALITY, y FOR ORDINALITY) AS x"}, FakeMetadataFactory.example1Cached());
+    }
+    
+    @Test public void testXMLTableContextRequired() {
+    	helpValidate("select * from xmltable('/a/b' passing convert('<a/>', xml) as a columns x for ordinality, c integer path '.') as x", new String[] {"XMLTABLE('/a/b' PASSING convert('<a/>', xml) AS a COLUMNS x FOR ORDINALITY, c integer PATH '.') AS x"}, FakeMetadataFactory.example1Cached());
+    }
+
+    @Test public void testXMLQueryPassingContextType() {
+    	helpValidate("select xmlquery('/' passing 2)", new String[] {"XMLQUERY('/' PASSING 2)"}, FakeMetadataFactory.example1Cached());
     }
 
 }

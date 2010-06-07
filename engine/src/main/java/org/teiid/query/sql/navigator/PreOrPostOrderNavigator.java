@@ -98,6 +98,7 @@ import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
 import org.teiid.query.sql.symbol.XMLNamespaces;
+import org.teiid.query.sql.symbol.XMLQuery;
 import org.teiid.query.sql.symbol.XMLSerialize;
 
 
@@ -558,6 +559,14 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
 			visitNode(column.getDefaultExpression());
 		}
         visitNode(obj.getGroupSymbol());
+        postVisitVisitor(obj);
+    }
+    
+    @Override
+    public void visit(XMLQuery obj) {
+    	preVisitVisitor(obj);
+    	visitNode(obj.getNamespaces());
+    	visitNodes(obj.getPassing());
         postVisitVisitor(obj);
     }
     

@@ -7,7 +7,7 @@
  */
 package org.teiid.translator.salesforce;
 
-import org.teiid.language.SQLReservedWords;
+import org.teiid.language.SQLConstants;
 
 public class NameUtil {
 
@@ -28,7 +28,7 @@ public class NameUtil {
      * @return
      */
     private static String checkReservedWords( String normal ) {
-        if (SQLReservedWords.isReservedWord(normal)) {
+        if (SQLConstants.isReservedWord(normal)) {
             normal = normal + "_"; //$NON-NLS-1$
         }
         return normal;

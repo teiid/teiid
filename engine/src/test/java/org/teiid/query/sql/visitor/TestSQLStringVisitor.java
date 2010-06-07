@@ -31,7 +31,7 @@ import junit.framework.TestCase;
 
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.language.SQLReservedWords.NonReserved;
+import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.LanguageObject;

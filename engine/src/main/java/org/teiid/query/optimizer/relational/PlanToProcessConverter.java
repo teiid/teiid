@@ -28,6 +28,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.saxon.expr.PathMap.PathMapRoot;
+
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.CoreConstants;
@@ -384,7 +386,7 @@ public class PlanToProcessConverter {
 					for (int col : projectionIndexes) {
 						filteredColumns.add(xt.getColumns().get(col));
 					}
-					xt.getXQueryExpression().useDocumentProjection(filteredColumns, analysisRecord);
+					PathMapRoot root = xt.getXQueryExpression().useDocumentProjection(filteredColumns, analysisRecord);
 					xtn.setProjectedColumns(filteredColumns);
 					xtn.setTable(xt);
 					processNode = xtn;

@@ -27,8 +27,8 @@ import static org.teiid.query.processor.TestProcessor.*;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
 @SuppressWarnings({"nls", "unchecked"})
@@ -294,12 +294,14 @@ public class TestSQLXMLProcessing {
         helpProcess(plan, dataManager, expected);
     }
     
-    @Ignore
-    @Test public void testXmlTableForOrdinality() {
-        String sql = "select * from xmltable('/a/b' passing convert('<a><b><c>1</c></b><b>1</b><b><c>1</c></b><b>1</b></a>', xml) as a columns x for ordinality, c integer path '.') as x"; //$NON-NLS-1$
+    @Test public void testXmlTableForOrdinalityAndDefaultPath() {
+        String sql = "select * from xmltable('/a/b' passing convert('<a><b><c>1</c></b><b>1</b><b><c>1</c></b><b>1</b></a>', xml) columns x for ordinality, c integer) as x"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<b>first</b>"),
+        		Arrays.asList(1, 1),
+        		Arrays.asList(2, null),
+        		Arrays.asList(3, 1),
+        		Arrays.asList(4, null),
         };    
     
         FakeDataManager dataManager = new FakeDataManager();
@@ -308,6 +310,79 @@ public class TestSQLXMLProcessing {
         ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
         
         helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testXmlTableDescendantPath() {
+        String sql = "select * from xmltable('<a>{for $i in (1 to 5) return $i}</a>' columns x string path '//text()') as x"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("1 2 3 4 5"),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+
+    @Test public void testXmlQuery() {
+        String sql = "select xmlquery('for $i in (1 to 5) return $i' returning sequence)"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("1 2 3 4 5"),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test(expected=TeiidProcessingException.class) public void testXmlQueryContentError() throws Exception {
+        String sql = "select xmlquery('for $i in $e1 return $i' passing e1 as e1) from pm1.g1 order by e1 limit 1"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, createCommandContext(), dataManager, expected);
+    }
+    
+    @Test(expected=TeiidProcessingException.class) public void testXmlQueryEmpty() throws Exception {
+        String sql = "select xmlquery('/a' passing xmlelement(x, e1)) from pm1.g1 order by e1 limit 1"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, createCommandContext(), dataManager, expected);
+    }
+    
+    @Test public void testXmlQueryEmptyNull() throws Exception {
+    	String sql = "select xmlquery('/a' passing {x '<x/>'} returning sequence null on empty)"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList((String)null)
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, createCommandContext(), dataManager, expected);
     }
 
 }

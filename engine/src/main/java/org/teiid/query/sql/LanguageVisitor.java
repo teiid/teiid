@@ -133,4 +133,5 @@ public abstract class LanguageVisitor {
     public void visit(XMLTable obj) {}
     public void visit(DerivedColumn obj) {}
     public void visit(XMLSerialize obj) {}
+    public void visit(XMLQuery obj) {}
 }

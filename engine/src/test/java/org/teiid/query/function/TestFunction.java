@@ -34,7 +34,7 @@ import java.util.Properties;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.FunctionExecutionException;
-import org.teiid.language.SQLReservedWords.NonReserved;
+import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.unittest.TimestampUtil;

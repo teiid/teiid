@@ -30,8 +30,8 @@ import java.util.Set;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
-import org.teiid.language.SQLReservedWords;
-import org.teiid.language.SQLReservedWords.NonReserved;
+import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.OrderBy;
@@ -75,7 +75,7 @@ public class AggregateSymbol extends ExpressionSymbol {
 		AGGREGATE_FUNCTIONS.add(NonReserved.AVG);
 		AGGREGATE_FUNCTIONS.add(NonReserved.MIN);
 		AGGREGATE_FUNCTIONS.add(NonReserved.MAX);
-		AGGREGATE_FUNCTIONS.add(SQLReservedWords.XMLAGG);
+		AGGREGATE_FUNCTIONS.add(Reserved.XMLAGG);
 
 		SUM_TYPES = new HashMap<Class<?>, Class<?>>();
 		SUM_TYPES.put(DataTypeManager.DefaultDataClasses.BYTE, DataTypeManager.DefaultDataClasses.LONG);
@@ -114,7 +114,7 @@ public class AggregateSymbol extends ExpressionSymbol {
 	/**
 	 * Construct an aggregate symbol with all given data.
 	 * @param name Name of the function
-	 * @param aggregateFunction Aggregate function type ({@link org.teiid.language.SQLReservedWords.NonReserved#COUNT}, etc)
+	 * @param aggregateFunction Aggregate function type ({@link org.teiid.language.SQLConstants.NonReserved#COUNT}, etc)
 	 * @param isDistinct True if DISTINCT flag is set
 	 * @param expression Contained expression
 	 */
@@ -129,11 +129,11 @@ public class AggregateSymbol extends ExpressionSymbol {
 	 * Set the aggregate function.  If the aggregate function is an invalid value, an
 	 * IllegalArgumentException is thrown.
 	 * @param aggregateFunction Aggregate function type
-	 * @see org.teiid.language.SQLReservedWords.NonReserved#COUNT
-	 * @see org.teiid.language.SQLReservedWords.NonReserved#SUM
-	 * @see org.teiid.language.SQLReservedWords.NonReserved#AVG
-	 * @see org.teiid.language.SQLReservedWords.NonReserved#MIN
-	 * @see org.teiid.language.SQLReservedWords.NonReserved#MAX
+	 * @see org.teiid.language.SQLConstants.NonReserved#COUNT
+	 * @see org.teiid.language.SQLConstants.NonReserved#SUM
+	 * @see org.teiid.language.SQLConstants.NonReserved#AVG
+	 * @see org.teiid.language.SQLConstants.NonReserved#MIN
+	 * @see org.teiid.language.SQLConstants.NonReserved#MAX
 	 */
 	private void setAggregateFunction(String aggregateFunction) {
 		// Validate aggregate
@@ -147,11 +147,11 @@ public class AggregateSymbol extends ExpressionSymbol {
 	 * Get the aggregate function type - this will map to one of the reserved words
 	 * for the aggregate functions.
 	 * @return Aggregate function type
-	 * @see org.teiid.language.SQLReservedWords.NonReserved#COUNT
-	 * @see org.teiid.language.SQLReservedWords.NonReserved#SUM
-	 * @see org.teiid.language.SQLReservedWords.NonReserved#AVG
-	 * @see org.teiid.language.SQLReservedWords.NonReserved#MIN
-	 * @see org.teiid.language.SQLReservedWords.NonReserved#MAX
+	 * @see org.teiid.language.SQLConstants.NonReserved#COUNT
+	 * @see org.teiid.language.SQLConstants.NonReserved#SUM
+	 * @see org.teiid.language.SQLConstants.NonReserved#AVG
+	 * @see org.teiid.language.SQLConstants.NonReserved#MIN
+	 * @see org.teiid.language.SQLConstants.NonReserved#MAX
 	 */
 	public String getAggregateFunction() {
 		return this.aggregate;

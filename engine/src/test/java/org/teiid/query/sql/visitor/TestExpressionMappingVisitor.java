@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
-import org.teiid.language.SQLReservedWords.NonReserved;
+import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Select;

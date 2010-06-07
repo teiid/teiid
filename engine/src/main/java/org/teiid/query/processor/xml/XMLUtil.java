@@ -33,6 +33,7 @@ import javax.xml.transform.TransformerException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.FileStore.FileStoreOutputStream;
+import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.InputStreamFactory;
@@ -46,6 +47,17 @@ import org.teiid.core.types.XMLTranslator;
  * Utility methods to be used with the XML and XQuery processing.
  */
 public class XMLUtil {
+	
+	//horrible hack
+	private static BufferManager bufferManager;
+	
+	public static void setBufferManager(BufferManager bufferManager) {
+		XMLUtil.bufferManager = bufferManager;
+	}
+	
+	public static SQLXMLImpl saveToBufferManager(XMLTranslator translator) throws TeiidComponentException, TeiidProcessingException {
+		return saveToBufferManager(bufferManager, translator, Streamable.STREAMING_BATCH_SIZE_IN_BYTES);
+	}
 	
     /**
      * This method saves the given XML object to the buffer manager's disk process
