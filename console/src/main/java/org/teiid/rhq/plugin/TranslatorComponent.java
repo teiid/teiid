@@ -43,7 +43,6 @@ import org.rhq.core.domain.measurement.MeasurementReport;
 import org.rhq.core.domain.measurement.MeasurementScheduleRequest;
 import org.rhq.core.pluginapi.inventory.ResourceContext;
 import org.rhq.core.pluginapi.measurement.MeasurementFacet;
-import org.teiid.rhq.comm.ConnectionConstants;
 import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 
@@ -119,12 +118,7 @@ public class TranslatorComponent extends Facet {
 	
 	protected void setOperationArguments(String name,
 			Configuration configuration, Map argumentMap) {
-
-		if (name
-				.equals(ConnectionConstants.ComponentType.Operation.GET_PROPERTIES)) {
-			String key = ConnectionConstants.IDENTIFIER;
-			argumentMap.put(key, getComponentIdentifier());
-		}
+		//No operations for translators
 
 	}
 	

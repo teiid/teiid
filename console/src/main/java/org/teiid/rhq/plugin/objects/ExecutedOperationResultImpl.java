@@ -37,7 +37,6 @@ import org.rhq.core.domain.configuration.definition.PropertyDefinitionMap;
 import org.rhq.core.domain.configuration.definition.PropertyDefinitionSimple;
 import org.rhq.core.domain.operation.OperationDefinition;
 import org.rhq.core.pluginapi.operation.OperationResult;
-import org.teiid.rhq.comm.ExecutedResult;
 
 
 public class ExecutedOperationResultImpl implements ExecutedResult {

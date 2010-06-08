@@ -19,22 +19,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.rhq.embedded.pool;
+package org.teiid.rhq.plugin.objects;
 
+import java.util.Collection;
+import java.util.List;
 
-/** 
- * These are the Constants that used when the jbedsp-plugin is running in the enbedded environment
- */
-public interface EmbeddedConnectionConstants {
-    
-    /**
-     * These are Environment properties need to create a connection.  They will be exposed via the @see #getEnvironment call.
-     */
-        public final static String USERNAME = "username"; //$NON-NLS-1$
-        public final static String PASSWORD = "password"; //$NON-NLS-1$
-        public final static String URL = "url"; //$NON-NLS-1$
-        
+public interface ExecutedResult {
+	
+	String getComponentType() ;
+	
+	String getOperationName();
+	
+	Object getResult();
+	
+	List<String> getFieldNameList();
+	
+	void setContent(Collection content);
+	
+	void setContent(String content);
+	
 
-        public final static String SYSTEM_KEY="jbedsp_system"; //$NON-NLS-1$
-         
-   }
+}

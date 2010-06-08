@@ -27,7 +27,7 @@ import org.teiid.adminapi.Session;
 import org.teiid.adminapi.Transaction;
 import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.RequestMetadataMapper;
-import org.teiid.rhq.comm.ExecutedResult;
+import org.teiid.rhq.plugin.objects.ExecutedResult;
 import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.Platform;

@@ -67,7 +67,6 @@ import org.rhq.core.pluginapi.inventory.CreateResourceReport;
 import org.rhq.core.pluginapi.inventory.ResourceContext;
 import org.teiid.adminapi.impl.PropertyMetadata;
 import org.teiid.rhq.admin.DQPManagementView;
-import org.teiid.rhq.comm.ConnectionConstants;
 import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 import org.teiid.rhq.plugin.util.PluginConstants.Operation;
@@ -116,9 +115,6 @@ public class VDBComponent extends Facet {
 		} else if (name.equals(Platform.Operations.KILL_SESSION)) {
 			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(
 					Operation.Value.SESSION_ID).getLongValue());
-		} else if (name.equals(Platform.Operations.GET_PROPERTIES)) {
-			key = ConnectionConstants.IDENTIFIER;
-			valueMap.put(key, getComponentIdentifier());
 		} else if (name.equals(Platform.Operations.KILL_SESSION)) {
 			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(
 					Operation.Value.SESSION_ID).getLongValue());
@@ -134,7 +130,9 @@ public class VDBComponent extends Facet {
 	@Override
 	public AvailabilityType getAvailability() {
 		// TODO Remove vdb version after no longer viable in Teiid
-		String status = DQPManagementView.getVDBStatus(this.name, 1);
+		String version = this.resourceConfiguration.getSimpleValue(
+				"version", null);
+		String status = DQPManagementView.getVDBStatus(this.name, Integer.parseInt(version));
 		if (status.equals("ACTIVE")) {
 			return AvailabilityType.UP;
 		}
