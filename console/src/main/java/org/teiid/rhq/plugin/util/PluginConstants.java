@@ -65,7 +65,7 @@ public interface PluginConstants {
 			public final static String SUBTYPE = "NoTx"; //$NON-NLS-1$
 			public final static String TEIID_RUNTIME_ENGINE = "org.teiid.jboss.deployers.RuntimeEngineDeployer"; //$NON-NLS-1$
 			public final static String TEIID_ENGINE_RESOURCE_NAME = "Data Services"; //$NON-NLS-1$
-			public final static String TEIID_ENGINE_RESOURCE_DESCRIPTION = "JBoss Enterprise Data Service Runtime Engine"; //$NON-NLS-1$
+			public final static String TEIID_ENGINE_RESOURCE_DESCRIPTION = "Teiid Data Service Runtime Engine"; //$NON-NLS-1$
 
 			public static interface Operations {
 
@@ -94,9 +94,9 @@ public interface PluginConstants {
 
 			public final static String TYPE = "teiid"; //$NON-NLS-1$
 			public final static String SUBTYPE = "vdb"; //$NON-NLS-1$
-			public final static String NAME = "Enterprise Virtual Database"; //$NON-NLS-1$
+			public final static String NAME = "Teiid Virtual Database"; //$NON-NLS-1$
 			public final static String VERSION = "version"; //$NON-NLS-1$
-			public final static String DESCRIPTION = "JBoss Enterprise Virtual Database (VDB)"; //$NON-NLS-1$
+			public final static String DESCRIPTION = "Teiid Virtual Database (VDB)"; //$NON-NLS-1$
 
 			public static interface Operations {
 
