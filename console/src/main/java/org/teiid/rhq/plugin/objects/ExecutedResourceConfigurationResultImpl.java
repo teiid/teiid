@@ -26,7 +26,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.rhq.core.domain.configuration.PropertyList;
 import org.rhq.core.domain.configuration.PropertyMap;
@@ -35,8 +34,6 @@ import org.rhq.core.domain.configuration.definition.PropertyDefinition;
 import org.rhq.core.domain.configuration.definition.PropertyDefinitionList;
 import org.rhq.core.domain.configuration.definition.PropertyDefinitionMap;
 import org.rhq.core.domain.configuration.definition.PropertyDefinitionSimple;
-import org.rhq.core.domain.operation.OperationDefinition;
-import org.rhq.core.pluginapi.operation.OperationResult;
 import org.teiid.rhq.comm.ExecutedResult;
 
 

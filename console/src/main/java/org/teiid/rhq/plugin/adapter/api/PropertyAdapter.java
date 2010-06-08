@@ -30,9 +30,6 @@ import org.jboss.metatype.api.values.MetaValue;
 /**
  * An adapter that can convert back and forth between a specific type of {@link MetaValue} and a specific type of {@link
  * Property}.
- *
- * @author Mark Spritzler
- * @author Ian Springer
  */
 public interface PropertyAdapter<P extends Property, D extends PropertyDefinition>
 {

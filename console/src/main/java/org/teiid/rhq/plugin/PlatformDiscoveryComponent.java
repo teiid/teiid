@@ -22,18 +22,13 @@
 package org.teiid.rhq.plugin;
 
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
-
-import javax.naming.NamingException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.managed.api.ComponentType;
 import org.jboss.managed.api.ManagedComponent;
-import org.jboss.managed.api.ManagedProperty;
 import org.rhq.core.domain.configuration.Configuration;
-import org.rhq.core.domain.configuration.PropertyMap;
 import org.rhq.core.domain.configuration.PropertySimple;
 import org.rhq.core.pluginapi.inventory.DiscoveredResourceDetails;
 import org.rhq.core.pluginapi.inventory.InvalidPluginConfigurationException;

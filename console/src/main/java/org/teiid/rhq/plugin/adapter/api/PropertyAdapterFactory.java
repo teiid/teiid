@@ -41,7 +41,7 @@ import org.teiid.rhq.plugin.adapter.impl.PropertySimpleToSimpleValueAdapter;
 import com.sun.istack.Nullable;
 
 /**
- * @author Mark Spritzler
+ * 
  */
 public class PropertyAdapterFactory
 {
