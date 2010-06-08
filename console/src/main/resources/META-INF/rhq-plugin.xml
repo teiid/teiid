@@ -333,7 +333,7 @@
 				displayName="Jdbc Socket Configuration Properties" hiddenByDefault="false">
 				<c:simple-property name="portNumber" displayName="Port Number"
 					description="Port Number" required="false" readOnly="false" />
-				<c:simple-property name="enabled" displayName=" SSL Enabled"
+				<c:simple-property name="sslEnabled" displayName="SSL Enabled"
 					description="SSL enabled" required="false" readOnly="false" type="boolean"
 					default="true" />
 				<c:simple-property name="hostName" displayName="Host Name"
