@@ -38,7 +38,7 @@
          <factory bean="DSDeploymentTemplateInfoFactory"/>
          <parameter class="java.lang.Class">org.teiid.templates.connector.ConnectorTemplateInfo</parameter>
          <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>
-         <parameter class="java.lang.String">connector-ldap-${project.version}</parameter>
+         <parameter class="java.lang.String">connector-ldap</parameter>
          <parameter class="java.lang.String">LDAP Connection</parameter>
       </constructor>
       <property name="rarName">connector-ldap-${project.version}.rar</property>
@@ -53,7 +53,7 @@
          <factory bean="DSDeploymentTemplateInfoFactory"/>
          <parameter class="java.lang.Class">org.teiid.templates.connector.ConnectorTemplateInfo</parameter>
          <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>
-         <parameter class="java.lang.String">connector-salesforce-${project.version}</parameter>
+         <parameter class="java.lang.String">connector-salesforce</parameter>
          <parameter class="java.lang.String">Salesforce Connection</parameter>
       </constructor>
       <property name="rarName">connector-salesforce-${project.version}.rar</property>
@@ -68,7 +68,7 @@
          <factory bean="DSDeploymentTemplateInfoFactory"/>
          <parameter class="java.lang.Class">org.teiid.templates.connector.ConnectorTemplateInfo</parameter>
          <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>
-         <parameter class="java.lang.String">connector-file-${project.version}</parameter>
+         <parameter class="java.lang.String">connector-file</parameter>
          <parameter class="java.lang.String">File Connection</parameter>
       </constructor>
       <property name="rarName">connector-file-${project.version}.rar</property>
@@ -83,7 +83,7 @@
          <factory bean="DSDeploymentTemplateInfoFactory"/>
          <parameter class="java.lang.Class">org.teiid.templates.connector.ConnectorTemplateInfo</parameter>
          <parameter class="java.lang.Class">org.jboss.resource.metadata.mcf.NoTxConnectionFactoryDeploymentMetaData</parameter>
-         <parameter class="java.lang.String">connector-ws-${project.version}</parameter>
+         <parameter class="java.lang.String">connector-ws</parameter>
          <parameter class="java.lang.String">WS Connection</parameter>
       </constructor>
       <property name="rarName">connector-ws-${project.version}.rar</property>
