@@ -37,8 +37,11 @@
         <para>Import the Derby database's "account" schema into a source model.</para>
       </listitem>
       <listitem>
-        <para>Manually create the source model for the "Text File". Create a Table called "Price" with
-          "stock" and "price" as column names</para>
+        <para>Manually create the view model for the "Text File". Create a Table called "Price" with
+          "stock" and "price" as column names. In the transformation window add the following SQL</para>
+        <programlisting><![CDATA[
+            SQL text here..         
+         ]]> </programlisting>          
       </listitem>
       <listitem>
         <para>Create a view model called "AccountView"</para>

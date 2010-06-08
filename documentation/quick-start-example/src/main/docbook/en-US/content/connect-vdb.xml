@@ -7,6 +7,12 @@
     this process is no different than connecting to any other JDBC source like Oracle.</para>
   <sect1>
     <title>Stand-alone Java Application Deployment</title>
+    
+    <para>Before you can make a JDBC connection to the Teiid VDB, add the Teiid's driver jar file to your application's classpath</para>
+    <programlisting><![CDATA[
+      ${jboss-install}/server/${profile}/lib/teiid-${version}-client.jar
+     ]]> </programlisting>  
+          
     <para>
       For a Java application to connect to a JDBC source, it needs a URL, user-id, and password. To
       connect to your VDB all you need is a URL and any additional optional properties that you would like to set.
@@ -95,8 +101,7 @@
     You are encouraged to experiment with queries that go beyond the simple "select * from CustomerAccount". 
    </para>
      
-  <para>If your application is Web based, you can also deploy Teiid in an application server 
-  and treat it as any other JDBC source by creating a connection pool with the 
+  <para>If your application is Web based, you can create data source for your VDB using the above  and treat it as any other JDBC source using 
   <emphasis>org.teiid.jdbc.TeiidDataSource</emphasis> and assigning it a JNDI name. 
   Refer to <ulink url="https://community.jboss.org/docs/DOC-13888">deployment to application server</ulink> for more information. 
   </para>

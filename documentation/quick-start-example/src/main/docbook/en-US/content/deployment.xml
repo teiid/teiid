@@ -2,30 +2,16 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="deployment">
   <title>Deployment</title>
-  <para> Having built the VDB, it must be deployed so it can be access through a JDBC connection.</para>
-  <para> Teiid is typically used in one of two manners:</para>
-  <itemizedlist>
-    <listitem>
-      <para>
-        As a
-        <link linkend="stand-alone-deployment">Stand-alone</link>
-        Java application
-      </para>
-    </listitem>
-    <listitem>
-      <para>In a JEE Application Server (Deploy and Create connection pool).</para>
-    </listitem>
-  </itemizedlist>
+  <para> Having built the VDB, it must be deployed into Teiid server, so it can be accessed through a JDBC connection.</para>
+
   <para />
-  <para>This example deploys Teiid within a stand-alone Java application. The sample deployment is shown below.
+  <para>This example deploys Teiid within a JBoss AS. The sample deployment is shown below.
   You can find more details about deploying to application servers on the Teiid web-site</para>
   <para />
-  <sect1 id="stand-alone-deployment">
-    <title>Stand-alone Application Deployment</title>
+  <sect1 id="teiid-runtime">
+    <title>JBoss AS Application Deployment</title>
+    
     <orderedlist>
-      <listitem>
-        <para>Add the "${jboss-install}/server/${profile}/lib/teiid-${version}-client.jar" to your application classpath</para>
-      </listitem>
       <listitem>
         <para>
         Before we can deploy the VDB to the server, we need to create and deploy the required Connection Factories for Derby
@@ -33,24 +19,18 @@
         familiar with creating data sources or connection factories in JBoss AS, then this is exactly the same operation. 
         </para>
         
-        <para>For this example we need to create three (3) different data sources. You would first need to create a data source to Derby. 
-        See ${teiid-examples}/portfolio/PortfolioModel/portfolio-ds.xml.
-        Then create Teiid specific connection factories  to Derby and File sources.
-        See ${teiid-examples}/portfolio/PortfolioModel/derby-connector-ds.xml 
-        and ${teiid-examples}/portfolio/PortfolioModel/text-connector-ds.xml</para>
-        
-        <para>The reason we created a data source and also a Connection Factory for Derby is, the data source provides a 
-        JDBC connection to the portfolio database, and the Connection Factory provides a Teiid wrapper around 
-        data source that understands execution and query translation defined by the Teiid runtime. The concerns about the
-        connection and Teiid access are separated into two different sources. So, the data source can be used by any other application
-         however the Teid connection factory is only used by the Teiid. This will be case for any JDBC
-        based sources. The same is not true for File source, because File Connector can access the resource directly itself.</para>
-        <para>To deploy these connection factories copy the "-ds.xml" files into "${jboss-install}/server/{profile}/deploy" directory. 
-        Make sure they are started correctly and you have supplied correct credentials for data source. </para>
+        <para>For this example we need to create three (2) different data sources. You would first need to create a data source to Derby, 
+        then to File source. See or copy the following</para>
+        <programlisting><![CDATA[
+                ${teiid-examples}/portfolio/PortfolioModel/portfolio-ds.xml
+                ${teiid-examples}/portfolio/PortfolioModel/marketdata-file-ds.xml
+         ]]> </programlisting>  
+        <para>files into "${jboss-install}/server/{profile}/deploy" directory.</para>
       </listitem>      
       <listitem>
-        <para>Place your VDB in a the "${jboss-install}/server/{profile}/deploy" directory. If the JBoss AS is not already 
-        started, start by running the "${jboss-install}/bin/run.sh" or "${jboss-install}/bin/run.bat" scripts.
+        <para>The above data sources provide the data to your VDB. Now to deploy your VDB, place your VDB in a the "${jboss-install}/server/{profile}/deploy" directory. 
+        If the JBoss AS is not already started, start by running the "${jboss-install}/bin/run.sh" or "${jboss-install}/bin/run.bat" scripts. 
+        Make sure there were no errors during the deply of the VDB
         </para>
       </listitem>
       <listitem>

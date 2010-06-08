@@ -99,7 +99,7 @@
     </programlisting>
     <para>We need to start the Derby RDBMS and create the "accounts" database with the below schema. These
       commands are intended for a Linux environment. For starting the Derby instance on another platform, you will need to use 
-      commands appropariate to that platform.</para>
+      commands appropriate to that platform.</para>
       <para>Start a terminal session, and change directory to where
       Derby is installed and execute following commands</para>
     <programlisting><![CDATA[
@@ -126,82 +126,10 @@
   </sect1>
   <sect1 id="step-2">
     <title>Step-2: Describe the CSV file and its contents</title>
-    <para>In order to use a Text file as the source, we need to define two different types of files: A descriptor
-      file and one or more data files. Conceptually, a Descriptor file defines a schema, and each data file defines
-      data inside a table</para>
+    <para>In order to use a Text file as the source, we need a data file defines data inside a table</para>
     <orderedlist>
       <listitem>
-        <para>Text Descriptor File - The Text Descriptor file defines the structure
-          of the text file you want to use as a data source. The path to the data file, delimiter character used,and the number
-          of header lines are attributes of the Descriptor file.
-          A sample descriptor file is shown below.</para>
-        <programlisting><![CDATA[
-            MarketData.Price.location = /path/to/marketdata-price.txt
-            MarketData.Price.delimiter = ,
-            MarketData.Price.headerLine = 1
-         ]]>        
-        </programlisting>
-        <para>The table shown below details some of the available properties that can be used in a Descriptor file. For
-          full details look in Text File Connector documentation</para>
-        <table frame="all">
-          <title>Connection Properties</title>
-          <tgroup cols='2' align='left' colsep='1' rowsep='1'>
-            <colspec colname='c1' colwidth="1*" />
-            <colspec colname='c2' colwidth="1*" />
-            <thead>
-              <row>
-                <entry>
-                  <para>Property</para>
-                </entry>
-                <entry>
-                  <para>Description</para>
-                </entry>
-              </row>
-            </thead>
-            <tbody>
-              <row>
-                <entry>
-                  <para>location</para>
-                </entry>
-                <entry>
-                  <para>The path to the file on the local system or URL to remote file.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>delimiter</para>
-                </entry>
-                <entry>
-                  <para>The character the file uses to delimit the fields within each line in the file</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>headerLine</para>
-                </entry>
-                <entry>
-                  <para>The line number in which the names of the columns are defined</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>skipHeaderLines</para>
-                </entry>
-                <entry>
-                  <para>The number of top lines to skip in a text file (include one for the header).</para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </table>
-        <para>Note that each property line starts with the "schema" information and followed by the logical "table"
-          name and then the "property" itself. In the above sample file "MarketData" is the schema and "Price" is
-          the table. The sample Descriptor file is for a 'single' table. You can define multiple tables in the 
-          same Descriptor file, but each "location" property for a given "table" must point to different data file.</para>
-      </listitem>
-      <listitem>
-        <para>Data File: This is the file that is identified by the "location" property in the Descriptor file.
-          Each data file contains column information for the table. The
+        <para>Data File: Each data file contains column information for the table. The
           column information is typically defined on line 1 as header line in the file, and all the following lines
           contain the actual rows of data. Each single line corresponds to single row. A portion of the sample file
           is shown below. The complete sample file is "examples/portfolio/marketdata-price.txt".</para>
