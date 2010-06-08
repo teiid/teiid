@@ -21,10 +21,15 @@
  */
 package org.teiid.adminapi.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -38,9 +43,10 @@ import javax.xml.validation.SchemaFactory;
 import org.junit.Test;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
+import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 
-
+@SuppressWarnings("nls")
 public class TestVDBMetaData {
 
 	@Test
@@ -73,6 +79,14 @@ public class TestVDBMetaData {
 		
 		vdb.addModel(modelTwo);
 		
+		TranslatorMetaData t1 = new TranslatorMetaData();
+		t1.setName("oracleOverride");
+		t1.setType("oracle");
+		t1.addProperty("my-property", "my-value");
+		List<Translator> list = new ArrayList<Translator>();
+		list.add(t1);
+		vdb.setOverrideTranslators(list);
+		
 		DataPolicyMetadata roleOne = new DataPolicyMetadata();
 		roleOne.setName("roleOne"); //$NON-NLS-1$
 		roleOne.setDescription("roleOne described"); //$NON-NLS-1$
@@ -92,7 +106,6 @@ public class TestVDBMetaData {
 		
 		vdb.addDataPolicy(roleOne);
 		
-
 		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         Schema schema = schemaFactory.newSchema(VDBMetaData.class.getResource("/vdb-deployer.xsd")); 		 //$NON-NLS-1$
 		JAXBContext jc = JAXBContext.newInstance(new Class<?>[] {VDBMetaData.class});
@@ -137,6 +150,14 @@ public class TestVDBMetaData {
 		
 		assertTrue(vdb.getValidityErrors().contains("There is an error in VDB")); //$NON-NLS-1$
 		
+		List<Translator> translators = vdb.getOverrideTranslators();
+		assertTrue(translators.size() == 1);
+		
+		Translator translator = translators.get(0);
+		assertEquals("oracleOverride", translator.getName());
+		assertEquals("oracle", translator.getType());
+		assertEquals("my-value", translator.getPropertyValue("my-property"));
+				
 		List<DataPolicy> roles = vdb.getDataPolicies();
 		
 		assertTrue(roles.size() == 1);

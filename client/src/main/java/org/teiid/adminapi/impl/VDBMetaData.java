@@ -174,7 +174,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		return new ArrayList<Translator>(this.translators.getMap().values());
 	}
 	
-	public void setTranslators(List<Translator> translators) {
+	public void setOverrideTranslators(List<Translator> translators) {
 		for (Translator t: translators) {
 			this.translators.getMap().put(t.getName(), (VDBTranslatorMetaData)t);
 		}
