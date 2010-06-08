@@ -105,7 +105,7 @@ public class TestSoapExecution {
 		return cf;
 	}
 	
-	//@Test
+	@Test
 	public void testSOAPSingleRequest() throws Exception {
 		
 		XMLExecutionFactory factory  = new XMLExecutionFactory();
