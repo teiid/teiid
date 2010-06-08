@@ -79,6 +79,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     
     /* Created on new request */
     private Object connection;
+    private Object connectionFactory;
     private ExecutionContextImpl securityContext;
     private volatile ResultSetExecution execution;
     private ProcedureBatchHandler procedureBatchHandler;
@@ -181,6 +182,7 @@ public class ConnectorWorkItem implements ConnectorWork {
         } catch (Throwable e) {
             LogManager.logError(LogConstants.CTX_CONNECTOR, e, e.getMessage());
         } finally {
+    		this.connector.closeConnection(connection, connectionFactory);
             manager.removeState(this.id);
 		    LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Closed connection"}); //$NON-NLS-1$
         } 
@@ -226,8 +228,8 @@ public class ConnectorWorkItem implements ConnectorWork {
 
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Processing NEW request:", this.requestMsg.getCommand()}); //$NON-NLS-1$                                     
     	try {
-	    	this.connection = this.manager.getConnectionFactory();
-	        
+	    	this.connectionFactory = this.manager.getConnectionFactory();
+	        this.connection = this.connector.getConnection(this.connectionFactory);
 	        // Translate the command
 	        Command command = this.requestMsg.getCommand();
 			List<SingleElementSymbol> symbols = this.requestMsg.getCommand().getProjectedSymbols();

@@ -1188,8 +1188,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	for (DerivedColumn dc : passing) {
     		if (dc.getAlias() == null) {
     			Class<?> type = dc.getExpression().getType();
-    			if (type != DataTypeManager.DefaultDataClasses.XML &&
-    				type != DataTypeManager.DefaultDataClasses.CLOB) {
+    			if (type != DataTypeManager.DefaultDataClasses.XML) {
     				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.context_item_type"), obj); //$NON-NLS-1$
     			}
     			if (context && !hadError) {

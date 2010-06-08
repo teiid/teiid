@@ -22,18 +22,17 @@
 package org.teiid.translator.ldap;
 
 import javax.naming.ldap.LdapContext;
-import javax.resource.ResourceException;
 import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.UpdateExecution;
 
@@ -43,7 +42,7 @@ import org.teiid.translator.UpdateExecution;
  * a connection factory, and obtaining connections to LDAP.
  */
 @Translator(name="ldap")
-public class LDAPExecutionFactory extends ExecutionFactory {
+public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, LdapContext> {
 
 	public enum SearchDefaultScope {
 		SUBTREE_SCOPE,
@@ -83,25 +82,15 @@ public class LDAPExecutionFactory extends ExecutionFactory {
 	}    
 	
 	@Override
-	public ResultSetExecution createResultSetExecution(QueryExpression command,ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory)
+	public ResultSetExecution createResultSetExecution(QueryExpression command,ExecutionContext executionContext, RuntimeMetadata metadata, LdapContext context)
 			throws TranslatorException {
-		try {
-			ConnectionFactory cf = (ConnectionFactory)connectionFactory;
-			return new LDAPSyncQueryExecution((Select)command, this, (LdapContext)cf.getConnection());
-		} catch (ResourceException e) {
-			throw new TranslatorException(e);
-		}
+		return new LDAPSyncQueryExecution((Select)command, this, context);
 	}
 	
 	@Override
-	public UpdateExecution createUpdateExecution(Command command,ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory)
+	public UpdateExecution createUpdateExecution(Command command,ExecutionContext executionContext, RuntimeMetadata metadata, LdapContext context)
 			throws TranslatorException {
-		try {
-			ConnectionFactory cf = (ConnectionFactory)connectionFactory;
-			return new LDAPUpdateExecution(command, (LdapContext)cf.getConnection());
-		} catch (ResourceException e) {
-			throw new TranslatorException(e);
-		}
+		return new LDAPUpdateExecution(command, context);
 	}	
 	
 	@Override

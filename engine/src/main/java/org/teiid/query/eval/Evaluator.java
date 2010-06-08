@@ -22,8 +22,6 @@
 
 package org.teiid.query.eval;
 
-import java.io.IOException;
-import java.io.Writer;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,20 +29,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.TransformerException;
-
-import net.sf.saxon.expr.PathMap.PathMapRoot;
-import net.sf.saxon.om.Item;
-import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.SequenceIterator;
-import net.sf.saxon.query.QueryResult;
 import net.sf.saxon.trans.XPathException;
 
 import org.teiid.api.exception.query.CriteriaEvaluationException;
@@ -55,10 +45,8 @@ import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.Sequencable;
 import org.teiid.core.types.TransformationException;
-import org.teiid.core.types.XMLTranslator;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.types.XMLType.Type;
 import org.teiid.core.types.basic.StringToSQLXMLTransform;
@@ -71,7 +59,6 @@ import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.function.source.XMLSystemFunctions.NameValuePair;
 import org.teiid.query.processor.ProcessorDataManager;
-import org.teiid.query.processor.xml.XMLUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.AbstractSetCriteria;
 import org.teiid.query.sql.lang.CollectionValueIterator;
@@ -632,7 +619,7 @@ public class Evaluator {
 				   Type type = StringToSQLXMLTransform.isXml(value.getCharacterStream());
 				   value.setType(type);
 			   }
-			   if (value.getType() == Type.DOCUMENT || value.getType() == Type.FRAGMENT) {
+			   if (value.getType() == Type.DOCUMENT || value.getType() == Type.ELEMENT) {
 				   return DataTypeManager.transformValue(value, xs.getType());			   
 			   }
 		   } catch (SQLException e) {
@@ -643,17 +630,13 @@ public class Evaluator {
 		   throw new FunctionExecutionException(QueryPlugin.Util.getString("Evaluator.xmlserialize")); //$NON-NLS-1$
 	   } else if (expression instanceof XMLQuery) {
 		   XMLQuery xmlQuery = (XMLQuery)expression;
-		   boolean contentOnly = true;
 		   boolean emptyOnEmpty = true;
-		   if (xmlQuery.getReturningContent() != null)  {
-			   contentOnly = xmlQuery.getReturningContent();
-		   }
 		   if (xmlQuery.getEmptyOnEmpty() != null)  {
 			   emptyOnEmpty = xmlQuery.getEmptyOnEmpty();
 		   }   
 		   try {
-			   SequenceIterator iter = evaluateXQuery(xmlQuery.getXQueryExpression(), xmlQuery.getContextRoot(), xmlQuery.getPassing(), tuple);
-			   return createXMLType(iter, xmlQuery.getXQueryExpression(), contentOnly, emptyOnEmpty);
+			   SequenceIterator iter = evaluateXQuery(xmlQuery.getXQueryExpression(), xmlQuery.getPassing(), tuple);
+			   return xmlQuery.getXQueryExpression().createXMLType(iter, emptyOnEmpty);
 		   } catch (TeiidProcessingException e) {
 			   throw new FunctionExecutionException(e, QueryPlugin.Util.getString("Evaluator.xmlquery", e.getMessage())); //$NON-NLS-1$
 		   } catch (XPathException e) {
@@ -664,56 +647,7 @@ public class Evaluator {
 	   }
 	}
 	
-	public XMLType createXMLType(final SequenceIterator iter, final SaxonXQueryExpression expr, boolean contentOnly, boolean emptyOnEmpty) throws XPathException, TeiidComponentException, TeiidProcessingException {
-		Item item = iter.next();
-		if (item == null) {
-			if (contentOnly) {
-				throw new FunctionExecutionException(QueryPlugin.Util.getString("Evaluator.xmlquery_content_empty")); //$NON-NLS-1$
-			}
-			if (!emptyOnEmpty) {
-				return null;
-			}
-		}
-		XMLType.Type type = Type.SEQUENCE;
-		if (item instanceof NodeInfo) {
-			NodeInfo info = (NodeInfo)item;
-			switch (info.getNodeKind()) {
-				case net.sf.saxon.type.Type.DOCUMENT:
-					type = Type.DOCUMENT;
-					break;
-				case net.sf.saxon.type.Type.ELEMENT:
-					type = Type.FRAGMENT;
-					break;
-				case net.sf.saxon.type.Type.TEXT:
-					type = Type.TEXT;
-					break;
-			}
-		}
-		Item next = iter.next();
-		if (next != null) {
-			type = Type.SEQUENCE;
-		}
-		if (contentOnly && type != Type.DOCUMENT && type != Type.FRAGMENT) {
-			throw new FunctionExecutionException(QueryPlugin.Util.getString("Evaluator.xmlquery_content")); //$NON-NLS-1$
-		}
-		SQLXMLImpl xml = XMLUtil.saveToBufferManager(new XMLTranslator() {
-			
-			@Override
-			public void translate(Writer writer) throws TransformerException,
-					IOException {
-				Properties props = new Properties();
-			    props.setProperty(OutputKeys.METHOD, "xml"); //$NON-NLS-1$
-			    //props.setProperty(OutputKeys.INDENT, "yes"); //$NON-NLS-1$
-			    props.setProperty(OutputKeys.OMIT_XML_DECLARATION, "yes"); //$NON-NLS-1$
-				QueryResult.serializeSequence(iter.getAnother(), expr.getConfig(), writer, props);				
-			}
-		});
-		XMLType value = new XMLType(xml);
-		value.setType(type);
-		return value;
-	}
-	
-	public SequenceIterator evaluateXQuery(SaxonXQueryExpression xquery, PathMapRoot contextRoot, List<DerivedColumn> cols, List<?> tuple) 
+	public SequenceIterator evaluateXQuery(SaxonXQueryExpression xquery, List<DerivedColumn> cols, List<?> tuple) 
 	throws BlockedException, TeiidComponentException, TeiidProcessingException {
 		HashMap<String, Object> parameters = new HashMap<String, Object>();
 		Object contextItem = null;
@@ -725,7 +659,7 @@ public class Evaluator {
 				parameters.put(passing.getAlias(), value);
 			}
 		}
-		return xquery.evaluateXQuery(contextItem, contextRoot, parameters);
+		return xquery.evaluateXQuery(contextItem, parameters);
 	}
 
 	private NameValuePair<Object>[] getNameValuePairs(List tuple, List<DerivedColumn> args)

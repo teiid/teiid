@@ -23,6 +23,7 @@
 package org.teiid.query.function.source;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -888,6 +889,12 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
                             new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpathvalue_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
 
         functions.add(new FunctionMethod(SourceSystemFunctions.XPATHVALUE, QueryPlugin.Util.getString("SystemSource.xpathvalue_description"), XML, XML_FUNCTION_CLASS, "xpathValue", //$NON-NLS-1$ //$NON-NLS-2$ 
+                new FunctionParameter[] { 
+                    new FunctionParameter("document", DataTypeManager.DefaultDataTypes.CLOB, QueryPlugin.Util.getString("SystemSource.xpath_param1")), //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("xpath", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpathvalue_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+        
+        functions.add(new FunctionMethod(SourceSystemFunctions.XPATHVALUE, QueryPlugin.Util.getString("SystemSource.xpathvalue_description"), XML, XML_FUNCTION_CLASS, "xpathValue", //$NON-NLS-1$ //$NON-NLS-2$ 
                                          new FunctionParameter[] { 
                                              new FunctionParameter("document", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xpath_param1")), //$NON-NLS-1$ //$NON-NLS-2$
                                              new FunctionParameter("xpath", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xpath_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
@@ -895,28 +902,15 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     }
     
     private void addXslTransformFunction() {
-        functions.add(new FunctionMethod(SourceSystemFunctions.XSLTRANSFORM, QueryPlugin.Util.getString("SystemSource.xsltransform_description"), XML, XML_FUNCTION_CLASS, "xslTransform", //$NON-NLS-1$ //$NON-NLS-2$  
-                            new FunctionParameter[] { 
-                                new FunctionParameter("document", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xsltransform_param1")), //$NON-NLS-1$ //$NON-NLS-2$
-                                new FunctionParameter("xsl", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xsltransform_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
-                            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.CLOB, QueryPlugin.Util.getString("SystemSource.xsltransform_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
-        functions.add(new FunctionMethod(SourceSystemFunctions.XSLTRANSFORM, QueryPlugin.Util.getString("SystemSource.xsltransform_description"), XML, XML_FUNCTION_CLASS, "xslTransform", //$NON-NLS-1$ //$NON-NLS-2$  
-                new FunctionParameter[] { 
-                    new FunctionParameter("document", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xsltransform_param1")), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("xsl", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xsltransform_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.CLOB, QueryPlugin.Util.getString("SystemSource.xsltransform_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
-        
-        functions.add(new FunctionMethod(SourceSystemFunctions.XSLTRANSFORM, QueryPlugin.Util.getString("SystemSource.xsltransform_description"), XML, XML_FUNCTION_CLASS, "xslTransform", //$NON-NLS-1$ //$NON-NLS-2$  
-                new FunctionParameter[] { 
-                    new FunctionParameter("document", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xsltransform_param1")), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("xsl", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xsltransform_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.CLOB, QueryPlugin.Util.getString("SystemSource.xsltransform_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
-        
-        functions.add(new FunctionMethod(SourceSystemFunctions.XSLTRANSFORM, QueryPlugin.Util.getString("SystemSource.xsltransform_description"), XML, XML_FUNCTION_CLASS, "xslTransform", //$NON-NLS-1$ //$NON-NLS-2$  
-                new FunctionParameter[] { 
-                    new FunctionParameter("document", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xsltransform_param1")), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("xsl", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xsltransform_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.CLOB, QueryPlugin.Util.getString("SystemSource.xsltransform_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+    	for (String type1 : Arrays.asList(DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.XML, DataTypeManager.DefaultDataTypes.CLOB)) {
+    		for (String type2 : Arrays.asList(DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.XML, DataTypeManager.DefaultDataTypes.CLOB)) {
+    	        functions.add(new FunctionMethod(SourceSystemFunctions.XSLTRANSFORM, QueryPlugin.Util.getString("SystemSource.xsltransform_description"), XML, XML_FUNCTION_CLASS, "xslTransform", //$NON-NLS-1$ //$NON-NLS-2$  
+                        new FunctionParameter[] { 
+                            new FunctionParameter("document", type1, QueryPlugin.Util.getString("SystemSource.xsltransform_param1")), //$NON-NLS-1$ //$NON-NLS-2$
+                            new FunctionParameter("xsl", type2, QueryPlugin.Util.getString("SystemSource.xsltransform_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
+                        new FunctionParameter("result", DataTypeManager.DefaultDataTypes.CLOB, QueryPlugin.Util.getString("SystemSource.xsltransform_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+    		}
+    	}
     }
     
     private void addXmlComment() {

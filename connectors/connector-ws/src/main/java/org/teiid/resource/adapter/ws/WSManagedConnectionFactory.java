@@ -42,7 +42,7 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 	private String wsSecurityConfigName; // ws-security config name in the above file
 	private String authPassword; // httpbasic - password
 	private String authUserName; // httpbasic - username
-	private String xmlParamName;
+	private String xmlParamName; // used only in the http get invocation
 
 	@Override
 	public Object createConnectionFactory() throws ResourceException {

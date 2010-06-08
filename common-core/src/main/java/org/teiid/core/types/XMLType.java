@@ -46,7 +46,7 @@ import javax.xml.transform.Source;
 public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 	
 	public enum Type {
-		UNKNOWN, DOCUMENT, FRAGMENT, SEQUENCE, COMMENT, PI, TEXT
+		UNKNOWN, DOCUMENT, CONTENT, ELEMENT, COMMENT, PI, TEXT
 	}
 	
 	private static final long serialVersionUID = -7922647237095135723L;

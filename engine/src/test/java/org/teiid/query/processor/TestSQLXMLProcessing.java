@@ -328,7 +328,7 @@ public class TestSQLXMLProcessing {
     }
 
     @Test public void testXmlQuery() {
-        String sql = "select xmlquery('for $i in (1 to 5) return $i' returning sequence)"; //$NON-NLS-1$
+        String sql = "select xmlquery('for $i in (1 to 5) return $i')"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
         		Arrays.asList("1 2 3 4 5"),
@@ -342,36 +342,8 @@ public class TestSQLXMLProcessing {
         helpProcess(plan, dataManager, expected);
     }
     
-    @Test(expected=TeiidProcessingException.class) public void testXmlQueryContentError() throws Exception {
-        String sql = "select xmlquery('for $i in $e1 return $i' passing e1 as e1) from pm1.g1 order by e1 limit 1"; //$NON-NLS-1$
-        
-        List<?>[] expected = new List<?>[] {
-        };    
-    
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
-        
-        helpProcess(plan, createCommandContext(), dataManager, expected);
-    }
-    
-    @Test(expected=TeiidProcessingException.class) public void testXmlQueryEmpty() throws Exception {
-        String sql = "select xmlquery('/a' passing xmlelement(x, e1)) from pm1.g1 order by e1 limit 1"; //$NON-NLS-1$
-        
-        List<?>[] expected = new List<?>[] {
-        };    
-    
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
-        
-        helpProcess(plan, createCommandContext(), dataManager, expected);
-    }
-    
     @Test public void testXmlQueryEmptyNull() throws Exception {
-    	String sql = "select xmlquery('/a' passing {x '<x/>'} returning sequence null on empty)"; //$NON-NLS-1$
+    	String sql = "select xmlquery('/a' passing {x '<x/>'} null on empty)"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
         		Arrays.asList((String)null)

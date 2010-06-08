@@ -38,7 +38,7 @@ import org.teiid.translator.TranslatorProperty;
  * Loopback translator.
  */
 @Translator(name="loopback")
-public class LoopbackExecutionFactory extends ExecutionFactory {
+public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
 
 	private int waitTime = 0;
 	private int rowCount = 1;
@@ -51,6 +51,11 @@ public class LoopbackExecutionFactory extends ExecutionFactory {
 		setSupportsOuterJoins(true);
 		setSupportsSelectDistinct(true);
 		setSupportsInnerJoins(true);
+	}
+	
+	@Override
+	public Object getConnection(Object factory) throws TranslatorException {
+		return null;
 	}
 	
 	@TranslatorProperty(display="Max Random Wait Time", advanced=true)
@@ -95,7 +100,7 @@ public class LoopbackExecutionFactory extends ExecutionFactory {
 	}
 
     @Override
-    public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionfactory)
+    public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection)
     		throws TranslatorException {
         return new LoopbackExecution(command, this);
     }   

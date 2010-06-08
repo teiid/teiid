@@ -73,7 +73,7 @@ public class SQLXMLImpl extends BaseLob implements SQLXML {
     @SuppressWarnings("unchecked")
 	public <T extends Source> T getSource(Class<T> sourceClass) throws SQLException {
 		if (sourceClass == null || sourceClass == StreamSource.class) {
-			return (T)new StreamSource(getBinaryStream());
+			return (T)new StreamSource(getBinaryStream(), this.getStreamFactory().getSystemId());
 		}
         throw new SQLException("Unsupported source type " + sourceClass); //$NON-NLS-1$
     }

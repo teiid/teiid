@@ -1940,7 +1940,7 @@
                 meaningful result for non-text nodes.</para>
             </entry>
             <entry>
-              <para>Doc in {string, xml} and xpath. Return value is a string.
+              <para>Doc in {string, clob, xml} and xpath. Return value is a string.
               </para>
             </entry>
           </row>
@@ -1952,7 +1952,27 @@
               <para>Applies an xsl stylesheet to the given document.  If either argument is null, the result is null.</para>
             </entry>
             <entry>
-              <para>Doc, xsl in {string, xml}. Return value is a clob.
+              <para>Doc, xsl in {string, clob, xml}. Return value is a clob.
+              </para>
+            </entry>
+          </row>
+          <row id="xmlquery">
+            <entry>
+              <para><code>XMLQUERY([&lt;NSP&gt;] xquery [&lt;PASSING&gt;] [(NULL|EMPTY) ON EMPTY]]</code></para>
+              <para>PASSING:=<code>PASSING exp [AS name] [, exp [AS name]]*</code></para>
+            </entry>
+            <entry>
+              <para>Returns the XML result from evaluating the given xquery.</para>
+              <para>See XMLELEMENT for the definition of NSP - <link linkend="xmlnamespaces">XMLNAMESPACES</link>.</para><para>Namespaces may also be directly declared in the xquery prolog.</para>
+              <para id="passing">The optional PASSING clause is used to provide the context item, which does not have a name, and named global variable values.  
+              If the xquery uses a context item and none is provided, then an exception will be raised.  
+              Only one context item may be specified and should be an XML type.  All non-context non-XML passing values will be converted to an appropriate XML type.</para>
+              <para>The ON EMPTY clause is used to specify the result when the evaluted sequence is empty.  
+              EMPTY ON EMPTY, the default, returns an empty XML result.  NULL ON EMPTY returns a null result.</para>
+              <para>See also <link linkend="xmltable">XMLTABLE</link></para>
+            </entry>
+            <entry>
+              <para>xquery in string. Return value is xml.
               </para>
             </entry>
           </row>
@@ -1960,12 +1980,14 @@
             <entry>
               <para><code>XMLELEMENT([NAME] name [, &lt;NSP&gt;] [, &lt;ATTR&gt;][, exp]*)</code></para>
               <para>ATTR:=<code>XMLATTRIBUTES(exp [AS name] [, exp [AS name]]*)</code></para>
-              <para>NSP:=<code>XMLNAMESPACES((uri AS prefix | DEFAULT uri | NO DEFAULTS))+</code></para>
+              <para>NSP:=<code>XMLNAMESPACES((uri AS prefix | DEFAULT uri | NO DEFAULT))+</code></para>
             </entry>
             <entry>
               <para>Returns an XML element with the given name and content.  If the content value is of a type other than xml, 
               it will be escaped when added to the parent element.  Null content values are ignored.  
               Whitespace in XML or the string values of the content is preserved, but no whitespace is added between content values.</para>
+              <para id="xmlnamespaces">XMLNAMESPACES is used provide namespace information.  NO DEFAULT is equivalent to defining the default namespace to the null uri - xmlns="".  
+              Only one DEFAULT or NO DEFAULT namespace item may be specified.  The namespace prefixes xmlns and xml are reserved.</para>
               <para>If a attribute name is not supplied, the expression must be a column reference, in which case the attribute name will be the column name. Null attribute values are ignored.</para>
               <para>Example: with an xml_value of &lt;doc/&gt;, <code>xmlelement('elem', 1, '&lt;2/&gt;', xml_value)</code>
               		Returns: <code>&lt;elem&gt;1&amp;lt;2/&amp;gt;&lt;doc/&gt;&lt;elem/&gt;</code>
@@ -1996,7 +2018,7 @@
             <entry>
               <para>Returns an concatination of an XML element for each non-null expression exp.  If a name is not supplied, the expression must be a column reference, in which case the element name will be the column name.
               </para>
-              <para>See XMLELEMENT for the definition of NSP - XMLNAMESPACES.</para>
+              <para>See XMLELEMENT for the definition of NSP - <link linkend="xmlnamespaces">XMLNAMESPACES</link>.</para>
             </entry>
             <entry>
               <para>Name is an identifier. Exp can be any type. Return value is xml.

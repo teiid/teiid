@@ -3,8 +3,6 @@ package org.teiid.query.sql.symbol;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.saxon.expr.PathMap.PathMapRoot;
-
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
@@ -19,10 +17,8 @@ public class XMLQuery implements Expression {
     private String xquery;
     private List<DerivedColumn> passing = new ArrayList<DerivedColumn>();
     private Boolean emptyOnEmpty;
-    private Boolean returningContent;
     
     private SaxonXQueryExpression xqueryExpression;
-    private PathMapRoot contextRoot;
     
     @Override
     public Class<?> getType() {
@@ -37,14 +33,6 @@ public class XMLQuery implements Expression {
 		this.emptyOnEmpty = emptyOnEmpty;
 	}
     
-    public Boolean getReturningContent() {
-		return returningContent;
-	}
-    
-    public void setReturningContent(Boolean returningContent) {
-		this.returningContent = returningContent;
-	}
-    
     @Override
     public boolean isResolved() {
     	return xqueryExpression != null;
@@ -57,15 +45,11 @@ public class XMLQuery implements Expression {
     //TODO: display the analysis record info
     public void compileXqueryExpression() throws QueryResolverException {
     	this.xqueryExpression = new SaxonXQueryExpression(xquery, namespaces, passing, null);
-    	this.contextRoot = this.xqueryExpression.useDocumentProjection(null, new AnalysisRecord(false, false));
+    	this.xqueryExpression.useDocumentProjection(null, new AnalysisRecord(false, false));
     }
     
     public SaxonXQueryExpression getXQueryExpression() {
 		return xqueryExpression;
-	}
-    
-    public PathMapRoot getContextRoot() {
-		return contextRoot;
 	}
     
     public void setPassing(List<DerivedColumn> passing) {
@@ -105,9 +89,10 @@ public class XMLQuery implements Expression {
 			}
 		}
 		clone.xquery = this.xquery;
-		clone.xqueryExpression = this.xqueryExpression;
+		if (this.xqueryExpression != null) {
+			clone.xqueryExpression = this.xqueryExpression.clone();
+		}
 		clone.emptyOnEmpty = this.emptyOnEmpty;
-		clone.returningContent = this.returningContent;
 		return clone;
 	}
 
@@ -123,8 +108,7 @@ public class XMLQuery implements Expression {
 		return EquivalenceUtil.areEqual(this.namespaces, other.namespaces)
 			  && this.passing.equals(other.passing)
 			  && this.xquery.equals(other.xquery)
-			  && EquivalenceUtil.areEqual(this.emptyOnEmpty, other.emptyOnEmpty)
-			  && EquivalenceUtil.areEqual(this.returningContent, other.returningContent);
+			  && EquivalenceUtil.areEqual(this.emptyOnEmpty, other.emptyOnEmpty);
 	}
 	
 	@Override

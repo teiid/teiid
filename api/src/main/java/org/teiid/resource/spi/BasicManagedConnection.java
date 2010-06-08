@@ -67,6 +67,9 @@ public class BasicManagedConnection implements ManagedConnection {
 			}
 			handles.clear();
 		}
+		if (this.physicalConnection != null) {
+			this.physicalConnection.cleanUp();
+		}
 		ConnectionContext.setSubject(null);
 	}
 

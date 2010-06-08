@@ -25,7 +25,6 @@ package org.teiid.query.function.source;
 import static org.junit.Assert.*;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.sql.Timestamp;
@@ -38,11 +37,11 @@ import org.jdom.Element;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.util.FileUtil;
 import org.teiid.core.util.UnitTestUtil;
-
 
 @SuppressWarnings("nls")
 public class TestXMLSystemFunctions {
@@ -53,16 +52,15 @@ public class TestXMLSystemFunctions {
         return util.read();
     }
     
-    public String helpTestXpathValue(final String xmlFilePath, final String xpath, final String expected) throws IOException, XPathException {
+    public String helpTestXpathValue(final String xmlFilePath, final String xpath, final String expected) throws XPathException, TeiidProcessingException {
         final String actual = helpGetNode(xmlFilePath,xpath);
         assertEquals(expected,actual);
         return actual;
     }
 
-    public String helpGetNode(final String xmlFilePath, final String xpath ) throws IOException, XPathException {
+    public String helpGetNode(final String xmlFilePath, final String xpath ) throws XPathException, TeiidProcessingException {
         final String xmlContent = getContentOfTestFile(xmlFilePath);
-        final Reader docReader = new StringReader(xmlContent);
-        return XMLSystemFunctions.xpathValue(docReader,xpath);
+        return XMLSystemFunctions.xpathValue(xmlContent,xpath);
     }
 
     public void helpCheckElement(final Object jdomNode, final String name, final String prefix, final String namespaceUri,

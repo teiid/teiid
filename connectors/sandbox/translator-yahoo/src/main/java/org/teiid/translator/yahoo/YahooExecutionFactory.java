@@ -34,7 +34,7 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ResultSetExecution;
 @Translator(name="yahoo")
-public class YahooExecutionFactory extends ExecutionFactory {
+public class YahooExecutionFactory extends ExecutionFactory<Object, Object> {
 
 	public static final int YAHOO_MAX_SET_SIZE = 100;
 	

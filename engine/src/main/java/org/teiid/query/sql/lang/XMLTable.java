@@ -187,7 +187,9 @@ public class XMLTable extends TableFunctionReference {
 			}
 		}
 		clone.xquery = this.xquery;
-		clone.xqueryExpression = this.xqueryExpression;
+		if (this.xqueryExpression != null) {
+			clone.xqueryExpression = this.xqueryExpression.clone();
+		}
 		return clone;
 	}
 

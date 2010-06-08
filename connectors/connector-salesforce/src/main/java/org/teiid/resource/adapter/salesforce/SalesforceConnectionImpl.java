@@ -90,7 +90,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	}
 	
 	private void login(String username, String password, URL url, int timeout) throws ResourceException {
-		if (!isAlive()) {
+		if (!isValid()) {
 			LoginResult loginResult = null;
 			sfSoap = null;
 			sfService = null;
@@ -137,7 +137,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	}
 	
 	
-	public boolean isAlive() {
+	public boolean isValid() {
 		boolean result = true;
 		if(sfSoap == null) {
 			result = false;

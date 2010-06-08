@@ -28,6 +28,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
 import java.nio.CharBuffer;
+import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
@@ -108,48 +109,52 @@ public class XMLSystemFunctions {
         YEAR_ZERO = cal.getTimeInMillis();
     }
     
-	public static ClobType xslTransform(CommandContext context, String xmlResults, String styleSheet) throws Exception {
-		return xslTransform(context, DataTypeManager.transformValue(xmlResults, DataTypeManager.DefaultDataClasses.XML), DataTypeManager.transformValue(styleSheet, DataTypeManager.DefaultDataClasses.XML));
-	}
-
-	public static ClobType xslTransform(CommandContext context, String xmlResults, XMLType styleSheet) throws Exception {
-		return xslTransform(context, DataTypeManager.transformValue(xmlResults, DataTypeManager.DefaultDataClasses.XML), styleSheet);
-	}
-
-	public static ClobType xslTransform(CommandContext context, XMLType xmlResults, String styleSheet) throws Exception {
-		return xslTransform(context, xmlResults, DataTypeManager.transformValue(styleSheet, DataTypeManager.DefaultDataClasses.XML));
-	}
-
-	public static ClobType xslTransform(CommandContext context, XMLType xmlResults, XMLType styleSheet) throws Exception {
-    	Reader styleSheetReader = styleSheet.getCharacterStream();
-    	final Source styleSource = new StreamSource(styleSheetReader);
-		Reader reader = xmlResults.getCharacterStream();
-		final Source xmlSource = new StreamSource(reader);
+	public static ClobType xslTransform(CommandContext context, Object xml, Object styleSheet) throws Exception {
+    	Source styleSource = null; 
+		Source xmlSource = null;
 		try {
+			styleSource = convertToSource(styleSheet);
+			xmlSource = convertToSource(xml);
+			final Source xmlParam = xmlSource;
+			TransformerFactory factory = TransformerFactory.newInstance();
+            final Transformer transformer = factory.newTransformer(styleSource);
+            
 			//this creates a non-validated sqlxml - it may not be valid xml/root-less xml
 			SQLXML result = XMLUtil.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
 				
 				@Override
 				public void translate(Writer writer) throws TransformerException {
-	                TransformerFactory factory = TransformerFactory.newInstance();
-	                Transformer transformer = factory.newTransformer(styleSource);
 	                //transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes"); //$NON-NLS-1$
 	                // Feed the resultant I/O stream into the XSLT processor
-					transformer.transform(xmlSource, new StreamResult(writer));
+					transformer.transform(xmlParam, new StreamResult(writer));
 				}
 			}, Streamable.STREAMING_BATCH_SIZE_IN_BYTES);
 			return DataTypeManager.transformValue(new XMLType(result), DataTypeManager.DefaultDataClasses.CLOB);
 		} finally {
-			try {
-				reader.close();
-			} catch (IOException e) {
-			}
-			try {
-				styleSheetReader.close();
-			} catch (IOException e) {
-			}
+			closeSource(styleSource);
+			closeSource(xmlSource);
 		}
     }
+
+	private static void closeSource(final Source source) {
+		if (!(source instanceof StreamSource)) {
+			return;
+		}
+		
+		StreamSource stream = (StreamSource)source;
+		try {
+			if (stream.getInputStream() != null) {
+				stream.getInputStream().close();
+			}
+		} catch (IOException e) {
+		}
+		try {
+			if (stream.getReader() != null) {
+				stream.getReader().close();
+			}
+		} catch (IOException e) {
+		}
+	}
 		
 	public static XMLType xmlForest(final CommandContext context, final NameValuePair[] namespaces, final NameValuePair[] values) throws TeiidComponentException, TeiidProcessingException {
 		boolean valueExists = false;
@@ -183,7 +188,7 @@ public class XMLSystemFunctions {
 				} 
 			}
 		}, context.getStreamingBatchSize()));
-		result.setType(Type.SEQUENCE);
+		result.setType(Type.CONTENT);
 		return result;
 	}
 	
@@ -214,7 +219,7 @@ public class XMLSystemFunctions {
 			}
 
 		}, context.getStreamingBatchSize()));
-		result.setType(Type.FRAGMENT);
+		result.setType(Type.ELEMENT);
 		return result;
 	}
 	
@@ -268,7 +273,7 @@ public class XMLSystemFunctions {
 				} 
 			}
 		}, context.getStreamingBatchSize()));
-		result.setType(Type.SEQUENCE);
+		result.setType(Type.CONTENT);
 		return result;
 	}
 	
@@ -340,8 +345,8 @@ public class XMLSystemFunctions {
 			r = new BufferedReader(r);
 		}
 		switch(type) {
-		case FRAGMENT:
-		case SEQUENCE: 
+		case CONTENT:
+		case ELEMENT: 
 		case PI:
 		case COMMENT: //write the value directly to the writer
 			eventWriter.flush();
@@ -414,18 +419,34 @@ public class XMLSystemFunctions {
 	    return resultBuffer.toString();
 	    
 	}
-
-    public static String xpathValue(String document, String xpathStr) throws IOException, XPathException {
-    	return xpathValue(new StringReader(document), xpathStr);
+	
+    public static Source convertToSource(Object value) throws TeiidProcessingException {
+    	if (value == null) {
+    		return null;
+    	}
+    	try {
+	    	if (value instanceof SQLXML) {
+				return ((SQLXML)value).getSource(null);
+	    	}
+	    	if (value instanceof Clob) {
+	    		return new StreamSource(((Clob)value).getCharacterStream());
+	    	}
+	    	if (value instanceof Blob) {
+	    		return new StreamSource(((Blob)value).getBinaryStream());
+	    	}
+	    	if (value instanceof String) {
+	    		return new StreamSource(new StringReader((String)value));
+	    	}
+    	} catch (SQLException e) {
+			throw new TeiidProcessingException(e);
+		}
+    	throw new AssertionError("Unknown type"); //$NON-NLS-1$
     }
-    
-    public static String xpathValue(XMLType document, String xpathStr) throws IOException, SQLException, XPathException {
-    	return xpathValue(document.getCharacterStream(), xpathStr);
-    }
 
-    public static String xpathValue(Reader documentReader, String xpath) throws IOException, XPathException {        
+    public static String xpathValue(Object doc, String xpath) throws XPathException, TeiidProcessingException {
+    	Source s = null;
         try {
-        	Source s = new StreamSource(documentReader);
+        	s = convertToSource(doc);
             XPathEvaluator eval = new XPathEvaluator();
             // Wrap the string() function to force a string return             
             XPathExpression expr = eval.createExpression(xpath);
@@ -443,8 +464,7 @@ public class XMLSystemFunctions {
             // Return string representation of non-node value
             return o.toString();
         } finally {
-            // Always close the reader
-            documentReader.close();
+        	closeSource(s);
         }
     }
     

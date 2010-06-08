@@ -109,11 +109,6 @@ public class QueryExecutionImpl implements ResultSetExecution {
 
 	public void close() {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, Messages.getString("SalesforceQueryExecutionImpl.close")); //$NON-NLS-1$
-		try {
-			connection.close();
-		} catch (ResourceException e) {
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing"); //$NON-NLS-1$
-		}
 	}
 
 	@Override

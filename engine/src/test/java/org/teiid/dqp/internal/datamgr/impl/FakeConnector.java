@@ -68,6 +68,15 @@ public class FakeConnector extends ExecutionFactory {
     public Object getConnection() {
         return new FakeConnection();
     }
+    
+    @Override
+    public Object getConnection(Object factory) throws TranslatorException {
+    	return factory;
+    }
+    
+    @Override
+    public void closeConnection(Object connection, Object factory) {
+    }
 	
     private class FakeConnection {
     	public FakeConnection() {

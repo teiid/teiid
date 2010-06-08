@@ -473,17 +473,6 @@
 				<artifactId>ant</artifactId>
 				<version>${ant.version}</version>
 			</dependency>
-            <dependency>
-                <groupId>xom</groupId>
-                <artifactId>xom</artifactId>
-                <version>1.2</version>
-            </dependency>
-            <dependency>
-                <groupId>nux</groupId>
-                <artifactId>nux</artifactId>
-                <version>1.6</version>
-            </dependency>
-            
 		</dependencies>
 	</dependencyManagement>
 	<modules>

@@ -321,15 +321,22 @@ TOKEN : /* SQL/XML Reserved words */
     <XMLAGG: "xmlagg">
 |   <XMLATTRIBUTES: "xmlattributes">
 |   <XMLBINARY: "xmlbinary">
+|   <XMLCAST: "xmlcast">
 |   <XMLCONCAT: "xmlconcat">
 |   <XMLCOMMENT: "xmlcomment">
+|   <XMLDOCUMENT: "xmldocument">
 |   <XMLELEMENT: "xmlelement">
+|   <XMLEXISTS: "xmlexists">
 |   <XMLFOREST: "xmlforest">
+|   <XMLITERATE: "xmliterate">
 |   <XMLNAMESPACES: "xmlnamespaces">
 |   <XMLPARSE: "xmlparse">
 |   <XMLPI: "xmlpi">
-|   <XMLROOT: "xmlroot">
+|   <XMLQUERY: "xmlquery">
 |   <XMLSERIALIZE: "xmlserialize">
+|   <XMLTABLE: "xmltable">
+|   <XMLTEXT: "xmltext">
+|   <XMLVALIDATE: "xmlvalidate">
 }
 
 TOKEN : /* SQL/MED Reserved words */
@@ -1883,7 +1890,7 @@ FromClause tablePrimary(ParseInfo info) :
 {
 	(	LOOKAHEAD(<ID> <LPAREN>, { "texttable".equalsIgnoreCase(getToken(1).image) }) clause = textTable(info)
 	    |
-	    LOOKAHEAD(<ID> <LPAREN>, { "xmltable".equalsIgnoreCase(getToken(1).image) }) clause = xmlTable(info)
+	    clause = xmlTable(info)
 	    |
 	    clause = unaryFromClause(info)
 		|
@@ -2038,7 +2045,7 @@ XMLQuery xmlQuery(ParseInfo info) :
 	Boolean empty = null;
 }
 {
- 	<ID> <LPAREN> 
+ 	<XMLQUERY> <LPAREN> 
  	[ xmlNamespaces = xmlNamespaces(info) <COMMA> ]
  	xquery = stringVal()
  	[ 
@@ -2056,20 +2063,20 @@ XMLQuery xmlQuery(ParseInfo info) :
  	    }
  	  )*
  	]
- 	[
+/* 	[
  	  LOOKAHEAD(<ID>, { "returning".equalsIgnoreCase(getToken(1).image) }) <ID>
  	  (
  	  	LOOKAHEAD(<ID>, { "content".equalsIgnoreCase(getToken(1).image) }) <ID> { content = true; }
  	  	|
  	  	LOOKAHEAD(<ID>, { "sequence".equalsIgnoreCase(getToken(1).image) }) (<ID> { content = false; }
- 	    [
- 	      (<NULL> { empty = false; }
- 	      |
- 	      nonReserved("EMPTY") { empty = true; }
- 	      )
-	      <ON> nonReserved("EMPTY")
- 	    ])
  	  )
+ 	]*/
+ 	[
+ 	  (<NULL> { empty = false; }
+ 	   |
+ 	   nonReserved("EMPTY") { empty = true; }
+ 	  )
+ 	  <ON> nonReserved("EMPTY")
  	]
  	<RPAREN>
  	{
@@ -2078,7 +2085,6 @@ XMLQuery xmlQuery(ParseInfo info) :
  		result.setNamespaces(xmlNamespaces);
  		result.setPassing(passingValues);
  		result.setEmptyOnEmpty(empty);
- 		result.setReturningContent(content);
  		return result;
  	}
 }
@@ -2094,7 +2100,7 @@ XMLTable xmlTable(ParseInfo info) :
 	String aliasID = null;
 }
 {
- 	<ID> <LPAREN> 
+ 	<XMLTABLE> <LPAREN> 
  	[ xmlNamespaces = xmlNamespaces(info) <COMMA> ]
  	xquery = stringVal()
  	[ 
@@ -3339,7 +3345,7 @@ Expression function(ParseInfo info) :
 		{
 			return expression;
 		}
-	|	LOOKAHEAD(<ID>, { "xmlQuery".equalsIgnoreCase(getToken(1).image) }) expression = xmlQuery(info)
+	|	expression = xmlQuery(info)
 		{
 			return expression;
 		}

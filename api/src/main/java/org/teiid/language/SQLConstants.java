@@ -340,15 +340,22 @@ public class SQLConstants {
 	    public static final String XMLAGG = "XMLAGG"; //$NON-NLS-1$
 	    public static final String XMLATTRIBUTES = "XMLATTRIBUTES"; //$NON-NLS-1$
 	    public static final String XMLBINARY = "XMLBINARY"; //$NON-NLS-1$
-	    public static final String XMLCONCAT = "XMLCONCAT"; //$NON-NLS-1$
+	    public static final String XMLCAST = "XMLCAST"; //$NON-NLS-1$
 	    public static final String XMLCOMMENT = "XMLCOMMENT"; //$NON-NLS-1$
+	    public static final String XMLCONCAT = "XMLCONCAT"; //$NON-NLS-1$
+	    public static final String XMLDOCUMENT = "XMLDOCUMENT"; //$NON-NLS-1$
 	    public static final String XMLELEMENT = "XMLELEMENT"; //$NON-NLS-1$
+	    public static final String XMLEXISTS = "XMLEXISTS"; //$NON-NLS-1$
 	    public static final String XMLFOREST = "XMLFOREST"; //$NON-NLS-1$
+	    public static final String XMLITERATE = "XMLITERATE"; //$NON-NLS-1$
 	    public static final String XMLNAMESPACES = "XMLNAMESPACES"; //$NON-NLS-1$
 	    public static final String XMLPARSE = "XMLPARSE"; //$NON-NLS-1$
 	    public static final String XMLPI = "XMLPI"; //$NON-NLS-1$
-	    public static final String XMLROOT = "XMLROOT"; //$NON-NLS-1$
+	    public static final String XMLQUERY = "XMLQUERY"; //$NON-NLS-1$
 	    public static final String XMLSERIALIZE = "XMLSERIALIZE"; //$NON-NLS-1$
+	    public static final String XMLTABLE = "XMLTABLE"; //$NON-NLS-1$
+	    public static final String XMLTEXT = "XMLTEXT"; //$NON-NLS-1$
+	    public static final String XMLVALIDATE = "XMLVALIDATE"; //$NON-NLS-1$
 	    
 	    //SQL/MED
 	    

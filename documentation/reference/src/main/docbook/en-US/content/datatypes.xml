@@ -471,23 +471,29 @@
         <tbody>
           <row>
             <entry>BOOLEAN</entry>
-            <entry>{b'true'} or {b'false'}</entry>
+            <entry>{b 'true'} or {b 'false'}</entry>
           </row>
           <row>
             <entry>DATE</entry>
-            <entry>{d'yyyy-mm-dd'}</entry>
+            <entry>{d 'yyyy-mm-dd'}</entry>
           </row>
           <row>
             <entry>TIME</entry>
-            <entry>{t'hh-mm-ss'}</entry>
+            <entry>{t 'hh-mm-ss'}</entry>
           </row>
           <row>
             <entry>TIMESTAMP</entry>
             <entry>
-              {ts'yyyy-mm-dd hh:mm:ss.fffffffff'}
+              {ts 'yyyy-mm-dd hh:mm:ss.fffffffff'}
               <footnote>
                 <para>fractional seconds are optional</para>
               </footnote>
+            </entry>
+          </row>
+          <row>
+            <entry>XML</entry>
+            <entry>
+              {x 'well-formed doc'}
             </entry>
           </row>
         </tbody>

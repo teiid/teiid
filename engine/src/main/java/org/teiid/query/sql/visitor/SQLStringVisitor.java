@@ -1762,27 +1762,17 @@ public class SQLStringVisitor extends LanguageVisitor {
         	parts.add(SPACE);
 	    	registerNodes(obj.getPassing(), 0);
     	}
-    	if (obj.getReturningContent() != null) {
+    	if (obj.getEmptyOnEmpty() != null) {
     		parts.add(SPACE);
-    		parts.add(NonReserved.RETURNING);
-    		parts.add(SPACE);
-    		if (obj.getReturningContent()) {
-        		parts.add(NonReserved.CONTENT);
+    		if (obj.getEmptyOnEmpty()) {
+        		parts.add(NonReserved.EMPTY);    			
     		} else {
-        		parts.add(NonReserved.SEQUENCE);
-            	if (obj.getEmptyOnEmpty() != null) {
-            		parts.add(SPACE);
-            		if (obj.getEmptyOnEmpty()) {
-                		parts.add(NonReserved.EMPTY);    			
-            		} else {
-            			parts.add(NULL);
-            		}
-            		parts.add(SPACE);
-            		parts.add(ON);
-            		parts.add(SPACE);
-            		parts.add(NonReserved.EMPTY);
-            	}
+    			parts.add(NULL);
     		}
+    		parts.add(SPACE);
+    		parts.add(ON);
+    		parts.add(SPACE);
+    		parts.add(NonReserved.EMPTY);
     	}
     	parts.add(")");//$NON-NLS-1$
     }

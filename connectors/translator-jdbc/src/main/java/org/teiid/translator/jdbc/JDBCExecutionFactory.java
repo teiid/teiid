@@ -60,14 +60,13 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.MetadataProvider;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.UpdateExecution;
@@ -77,7 +76,7 @@ import org.teiid.translator.UpdateExecution;
  * JDBC implementation of Connector interface.
  */
 @Translator(name="jdbc-ansi")
-public class JDBCExecutionFactory extends ExecutionFactory implements MetadataProvider {
+public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connection> {
 
 	public static final int DEFAULT_MAX_IN_CRITERIA = 1000;
 
@@ -221,64 +220,54 @@ public class JDBCExecutionFactory extends ExecutionFactory implements MetadataPr
 	}
 	
     @Override
-    public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory)
+    public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
     		throws TranslatorException {
-    	try {
-			DataSource ds = (DataSource)connectionFactory;
-			Connection conn = ds.getConnection();
-	    	//TODO: This is not correct; this should be only called once for connection creation    	
-	    	afterConnectionCreation(conn);
-	    	return new JDBCQueryExecution(command, conn, executionContext, this);
-    	} catch(SQLException e) {
-    		throw new TranslatorException(e);
-    	}
+    	//TODO: This is not correct; this should be only called once for connection creation    	
+    	afterConnectionCreation(conn);
+    	return new JDBCQueryExecution(command, conn, executionContext, this);
     }
     
     @Override
-    public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory)
+    public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
     		throws TranslatorException {
-    	try {
-			DataSource ds = (DataSource)connectionFactory;
-			Connection conn = ds.getConnection();
-			//TODO: This is not correct; this should be only called once for connection creation    	
-			afterConnectionCreation(conn);
-			return new JDBCProcedureExecution(command, conn, executionContext, this);
+		//TODO: This is not correct; this should be only called once for connection creation    	
+		afterConnectionCreation(conn);
+		return new JDBCProcedureExecution(command, conn, executionContext, this);
+    }
+
+    @Override
+    public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
+    		throws TranslatorException {
+		//TODO: This is not correct; this should be only called once for connection creation
+		afterConnectionCreation(conn);
+		return new JDBCUpdateExecution(command, conn, executionContext, this);
+    }	
+    
+    @Override
+    public Connection getConnection(DataSource ds)
+    		throws TranslatorException {
+		try {
+	    	return ds.getConnection();
 		} catch (SQLException e) {
 			throw new TranslatorException(e);
 		}
     }
-
+    
     @Override
-    public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory)
-    		throws TranslatorException {
+    public void closeConnection(Connection connection, DataSource factory) {
     	try {
-			DataSource ds = (DataSource)connectionFactory;
-			Connection conn = ds.getConnection();
-			
-			//TODO: This is not correct; this should be only called once for connection creation
-			afterConnectionCreation(conn);
-			return new JDBCUpdateExecution(command, conn, executionContext, this);
+			connection.close();
 		} catch (SQLException e) {
-			throw new TranslatorException(e);
-		}    
-    }	
+			LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Error closing"); //$NON-NLS-1$
+		}
+    }
     
 	@Override
-	public void getConnectorMetadata(MetadataFactory metadataFactory, Object connectionFactory) throws TranslatorException {
+	public void getMetadata(MetadataFactory metadataFactory, Connection conn) throws TranslatorException {
 		try {
-	    	Connection conn = null;
-			try {
-		    	DataSource ds = (DataSource)connectionFactory;
-		    	conn = ds.getConnection();
-				
-				JDBCMetdataProcessor metadataProcessor = new JDBCMetdataProcessor();
-				PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getImportProperties(), "importer"); //$NON-NLS-1$
-				metadataProcessor.getConnectorMetadata(conn, metadataFactory);
-			} finally {
-				if (conn != null) {
-					conn.close();
-				}
-			}
+			JDBCMetdataProcessor metadataProcessor = new JDBCMetdataProcessor();
+			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getImportProperties(), "importer"); //$NON-NLS-1$
+			metadataProcessor.getConnectorMetadata(conn, metadataFactory);
 		} catch (SQLException e) {
 			throw new TranslatorException(e);
 		}

@@ -94,13 +94,13 @@ public abstract class InputStreamFactory implements Source {
     	private File f;
     	
     	public FileInputStreamFactory(File f) {
-    		super();
-    		this.f = f;
+    		this(f, Charset.defaultCharset().displayName());
     	}
     	
     	public FileInputStreamFactory(File f, String encoding) {
     		super(encoding);
     		this.f = f;
+    		this.setSystemId(f.toURI().toASCIIString());
 		}
     	
     	@Override

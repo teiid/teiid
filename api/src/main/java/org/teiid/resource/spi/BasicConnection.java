@@ -27,6 +27,7 @@ import javax.resource.cci.ConnectionMetaData;
 import javax.resource.cci.Interaction;
 import javax.resource.cci.LocalTransaction;
 import javax.resource.cci.ResultSetInfo;
+import javax.resource.spi.ManagedConnection;
 
 public abstract class BasicConnection implements Connection {
 
@@ -50,8 +51,20 @@ public abstract class BasicConnection implements Connection {
 		throw new ResourceException("This operation not supported"); //$NON-NLS-1$
 	}
 	
+	/**
+	 * Tests the connection to see if it is still valid.
+	 * @return
+	 */
 	public boolean isAlive() {
 		return true;
+	}
+	
+	/**
+	 * Called by the {@link ManagedConnection} to indicate the physical connection
+	 * should be cleaned up for reuse.
+	 */
+	public void cleanUp() {
+		
 	}
 
 }

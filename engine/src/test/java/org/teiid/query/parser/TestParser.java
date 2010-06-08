@@ -6819,9 +6819,8 @@ public class TestParser {
     	XMLQuery f = new XMLQuery();
     	f.setXquery("/x");
     	f.setEmptyOnEmpty(false);
-    	f.setReturningContent(false);
     	f.setPassing(Arrays.asList(new DerivedColumn(null, new ElementSymbol("foo"))));
-    	helpTestExpression("xmlquery('/x' passing foo returning sequence null on empty)", "XMLQUERY('/x' PASSING foo RETURNING SEQUENCE NULL ON EMPTY)", f);
+    	helpTestExpression("xmlquery('/x' passing foo null on empty)", "XMLQUERY('/x' PASSING foo NULL ON EMPTY)", f);
     }
 
 }

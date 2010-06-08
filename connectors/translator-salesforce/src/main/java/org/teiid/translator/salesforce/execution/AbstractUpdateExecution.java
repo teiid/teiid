@@ -72,11 +72,6 @@ public abstract class AbstractUpdateExecution implements UpdateExecution {
 
 	@Override
 	public void close() {
-		try {
-			connection.close();
-		} catch (ResourceException e) {
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing"); //$NON-NLS-1$
-		}
 	}
 	
 	@Override

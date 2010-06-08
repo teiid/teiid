@@ -710,6 +710,7 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
         <listitem><para>FROM table1 JOIN table2 MAKENOTDEP ON join-criteria</para></listitem>
         <listitem><para>FROM table1 left outer join <link linkend="optional_join">/* optional */</link> table2 ON join-criteria</para></listitem>
         <listitem><para>FROM <link linkend="texttable">TEXTTABLE...</link></para></listitem>
+        <listitem><para>FROM <link linkend="xmltable">XMLTABLE...</link></para></listitem>
       </itemizedlist> 
       <note>
         <title>DEP Hints</title>
@@ -753,22 +754,10 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
       	</para>
       	<para>
         Usage:
-        	<synopsis label="Usage">TEXTTABLE(expression COLUMNS column, ... [DELIMITER char] [(QUOTE|ESCAPE) char] [HEADER [integer]] [SKIP integer]) AS identifier</synopsis>
-        	<synopsis label="Usage">column := identifier datatype [WIDTH integer]</synopsis> 
+        	<synopsis label="Usage">TEXTTABLE(expression COLUMNS &lt;COLUMN&gt;, ... [DELIMITER char] [(QUOTE|ESCAPE) char] [HEADER [integer]] [SKIP integer]) AS name</synopsis>
+        	<synopsis label="Usage">COLUMN := name datatype [WIDTH integer]</synopsis> 
       	</para>
       	<itemizedlist>
-        <para>Syntax Rules:
-        </para>
-        <listitem>
-          <para>If width is specified for one column it must be specified for all columns.
-          </para>
-        </listitem>
-        <listitem>
-          <para>If width is specified, then fixed width parsing is used and ESCAPE, QUOTE, and HEADER should not be specified.
-          </para>
-        </listitem>
-        </itemizedlist>
-        <itemizedlist>
         	<para>Parameters</para>
         <listitem>
           <para>expression - the text content to process, which should be convertable to CLOB.
@@ -800,6 +789,22 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
         </listitem>
       	</itemizedlist>
       	<itemizedlist>
+        <para>Syntax Rules:
+        </para>
+        <listitem>
+          <para>If width is specified for one column it must be specified for all columns.
+          </para>
+        </listitem>
+        <listitem>
+          <para>If width is specified, then fixed width parsing is used and ESCAPE, QUOTE, and HEADER should not be specified.
+          </para>
+        </listitem>
+        <listitem>
+          <para>The columns names must be not contain duplicates.
+          </para>
+        </listitem>
+        </itemizedlist>
+      	<itemizedlist>
         	<para>Examples</para>
         	<listitem>
 		        <para>Use of the HEADER parameter, returns 1 row ['b']: <programlisting>select * from texttable('col1,col2,col3\na,b,c' COLUMNS col2 string HEADER) x</programlisting>
@@ -817,7 +822,59 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
 		        <para>As a nested table: <programlisting>select x.* from t, texttable(t.clobcolumn COLUMNS first string, second date SKIP 1) x</programlisting>
 				</para>		
         	</listitem>
-        	
+		</itemizedlist>		
+	  </sect3>
+	  <sect3 id="xmltable">
+		<title>XMLTABLE</title>
+		<para>The XMLTABLE funciton uses XQuery to produce tabular ouptut.  
+		    The XMLTABLE function is implicitly a nested table and may be correlated to preceeding FROM clause entries.
+      	</para>
+      	<para>
+        Usage:
+        	<synopsis label="Usage">XMLTABLE([&lt;NSP&gt;,] xquery-expression [&lt;PASSING&gt;] [COLUMNS &lt;COLUMN&gt;, ... )] AS name</synopsis>
+        	<synopsis label="Usage">COLUMN := name (FOR ORDINALITY | (datatype [PATH string] [DEFAULT expression]))</synopsis> 
+      	</para>
+      	<para>See XMLELEMENT for the definition of NSP - <link linkend="xmlnamespaces">XMLNAMESPACES</link>.</para>
+      	<para>See XMLQUERY for the definition of <link linkend="passing">PASSING</link>.</para>
+      	<para>See also <link linkend="xmlquery">XMLQUERY</link></para>
+      	<itemizedlist>
+        	<para>Parameters</para>
+        <listitem>
+        	<para>The optional XMLNAMESPACES clause specifies the namepaces for use in the XQuery and COLUMN path expressions.
+        	</para>
+        </listitem>
+        <listitem>
+        	<para>The xquery-expression should be a valid XQuery.  Each sequence item returned by the xquery will be used to create a row of values as defined by the COLUMNS clause.
+        	</para>
+        </listitem>
+        <listitem>
+        	<para>If COLUMNS is not specified, then that is the same as having the COLUMNS clause: "COLUMNS OBJECT_VALUE XML PATH '.'", which returns the entire item as an XML value.  Each non-ordinality column specifies a type and optionally a PATH and a DEFAULT expression.  
+        	If PATH is not specified, then the path will be the same as the column name.  A FOR ORDINALITY column is typed as integer and will return the 1-based item number as its value.    
+        	</para>
+        </listitem>
+      	</itemizedlist>
+      	<itemizedlist>
+        <para>Syntax Rules:
+        </para>
+        <listitem>
+          <para>Only 1 FOR ORDINALITY column may be specified.
+          </para>
+        </listitem>
+        <listitem>
+          <para>The columns names must be not contain duplicates.
+          </para>
+        </listitem>
+        </itemizedlist>
+      	<itemizedlist>
+        	<para>Examples</para>
+        	<listitem>
+		        <para>Use of passing, returns 1 row [1]: <programlisting>select * from xmltable('/a' PASSING {x '&lt;a id="1"/&gt;'} COLUMNS id integer PATH '@id') x</programlisting>
+				</para>		
+        	</listitem>
+        	<listitem>
+		        <para>As a nested table: <programlisting>select x.* from t, xmltable('/x/y' PASSING t.doc COLUMNS first string, second FOR ORDINALITY) x</programlisting>
+				</para>		
+        	</listitem>
 		</itemizedlist>		
 	  </sect3>
     </sect2>

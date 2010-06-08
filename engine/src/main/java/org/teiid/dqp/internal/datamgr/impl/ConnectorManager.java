@@ -58,7 +58,6 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities.Scope;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.MetadataProvider;
 import org.teiid.translator.TranslatorException;
 
 
@@ -133,8 +132,12 @@ public class ConnectorManager  {
     public MetadataStore getMetadata(String modelName, Map<String, Datatype> datatypes, Properties importProperties) throws TranslatorException {
 		MetadataFactory factory = new MetadataFactory(modelName, datatypes, importProperties);
 		ExecutionFactory executionFactory = getExecutionFactory();
-		if (executionFactory instanceof MetadataProvider) {
-			((MetadataProvider)executionFactory).getConnectorMetadata(factory, getConnectionFactory());
+		Object connectionFactory = getConnectionFactory();
+		Object connection = executionFactory.getConnection(executionFactory);
+		try {
+			executionFactory.getMetadata(factory, connection);
+		} finally {
+			executionFactory.closeConnection(connection, connectionFactory);
 		}
 		return factory.getMetadataStore();
 	}    

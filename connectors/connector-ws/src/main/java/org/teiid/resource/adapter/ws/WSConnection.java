@@ -39,6 +39,10 @@ public class WSConnection extends BasicConnection implements Dispatch<Source>{
 
 	public WSConnection(WSManagedConnectionFactory mcf) {
 		this.mcf = mcf;
+		createDelegate();
+	}
+
+	private void createDelegate() {
 		if (mcf.getInvocationType() == WSManagedConnectionFactory.InvocationType.HTTP_GET) {
 			this.delegate = createHTTPDispatch("GET"); //$NON-NLS-1$
 		}
@@ -188,5 +192,12 @@ public class WSConnection extends BasicConnection implements Dispatch<Source>{
 	@Override
 	public void close() throws ResourceException {
 		this.delegate = null;
+	}
+	
+	@Override
+	public void cleanUp() {
+		//recreate to ensure the proper state
+		//this isn't really a heavy-weight operation
+		createDelegate(); 
 	}
 }

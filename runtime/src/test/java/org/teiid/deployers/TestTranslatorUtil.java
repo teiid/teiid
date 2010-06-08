@@ -43,7 +43,7 @@ public class TestTranslatorUtil {
 		assertEquals("correctly-assigned", my.getMyProperty());
 	}
 	
-	public static class MyTranslator extends ExecutionFactory {
+	public static class MyTranslator extends ExecutionFactory<Object, Object> {
 		String mine;
 		
 		@TranslatorProperty(display="my-property")

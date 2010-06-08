@@ -20,23 +20,10 @@
  * 02110-1301 USA.
  */
 
+package org.teiid.translator.ws;
 
+import org.xml.sax.XMLFilter;
 
-package org.teiid.translator.xml;
-
-import org.teiid.language.Select;
-import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.xml.RequestPreprocessor;
-
-public class MockQueryPreprocessor implements RequestPreprocessor {
-
-	public MockQueryPreprocessor() {
-		super();
-	}
-
-	public Select preprocessQuery(Select query, RuntimeMetadata m_metadata, ExecutionContext exeContext) {
-		return query;
-	}
-
+public interface SAXFilterProvider {
+	XMLFilter[] getExtendedFilters();
 }

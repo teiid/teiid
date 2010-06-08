@@ -27,8 +27,6 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.util.Arrays;
 
-import javax.resource.cci.ConnectionFactory;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.core.util.UnitTestUtil;
@@ -45,12 +43,10 @@ public class TestFileExecutionFactory {
 
 	@Test public void testGetTextFiles() throws Exception {
 		FileExecutionFactory fef = new FileExecutionFactory();
-		ConnectionFactory cf = Mockito.mock(ConnectionFactory.class);
 		FileConnection fc = Mockito.mock(FileConnection.class);
-		Mockito.stub(cf.getConnection()).toReturn(fc);
 		Mockito.stub(fc.getFile("*.txt")).toReturn(new File(UnitTestUtil.getTestDataPath(), "*.txt"));
 		Call call = fef.getLanguageFactory().createCall("getTextFiles", Arrays.asList(new Argument(Direction.IN, new Literal("*.txt", TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null)), null);
-		ProcedureExecution pe = fef.createProcedureExecution(call, null, null, cf);
+		ProcedureExecution pe = fef.createProcedureExecution(call, null, null, fc);
 		pe.execute();
 		int count = 0;
 		while (true) {

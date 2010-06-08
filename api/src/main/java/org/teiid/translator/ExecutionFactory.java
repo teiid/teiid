@@ -25,6 +25,10 @@ package org.teiid.translator;
 import java.util.Collection;
 import java.util.List;
 
+import javax.resource.ResourceException;
+import javax.resource.cci.Connection;
+import javax.resource.cci.ConnectionFactory;
+
 import org.teiid.core.TeiidException;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.language.BatchedUpdates;
@@ -33,6 +37,9 @@ import org.teiid.language.Command;
 import org.teiid.language.LanguageFactory;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.SetQuery;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 
 
@@ -43,7 +50,7 @@ import org.teiid.metadata.RuntimeMetadata;
  * The deployer instantiates this class through reflection. So it is important to have no-arg constructor. Once constructed
  * the "start" method is called. This class represents the basic capabilities of the translator.
  */
-public class ExecutionFactory {
+public class ExecutionFactory<F, C> {
 	
 	public enum SupportedJoinCriteria {
 		/**
@@ -110,6 +117,54 @@ public class ExecutionFactory {
 	public void setImmutable(boolean arg0) {
 		this.immutable = arg0;
 	}	
+	
+	/**
+	 * Return a connection object from the given connection factory.
+	 * 
+	 * The default implementation assumes a JCA {@link ConnectionFactory}.  Subclasses should override, if they use 
+	 * another type of connection factory.
+	 * 
+	 * @param factory
+	 * @return
+	 * @throws TranslatorException
+	 */
+	@SuppressWarnings("unchecked")
+	public C getConnection(F factory) throws TranslatorException {
+		if (factory == null) {
+			return null;
+		}
+		if (factory instanceof ConnectionFactory) {
+			try {
+				return (C) ((ConnectionFactory)factory).getConnection();
+			} catch (ResourceException e) {
+				throw new TranslatorException(e);
+			}
+		}
+		throw new AssertionError("A connection factory was supplied, but no implementation was provided getConnection"); //$NON-NLS-1$
+	}
+	
+	/**
+	 * Closes a connection object from the given connection factory.
+	 * 
+	 * The default implementation assumes a JCA {@link Connection}.  Subclasses should override, if they use 
+	 * another type of connection.
+	 * 
+	 * @param connection
+	 * @param factory
+	 */
+	public void closeConnection(C connection, F factory) {
+		if (connection == null) {
+			return;
+		}
+		if (connection instanceof Connection) {
+			try {
+				((Connection)connection).close();
+			} catch (ResourceException e) {
+				LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Error closing"); //$NON-NLS-1$
+			}
+		}
+		throw new AssertionError("A connection was created, but no implementation provided for closeConnection"); //$NON-NLS-1$
+	}
 	
 	/**
 	 * Throw exception if there are more rows in the result set than specified in the MaxResultRows setting.
@@ -188,28 +243,28 @@ public class ExecutionFactory {
      * @param connection connection factory object to the data source
      * @return An execution object that can use to execute the command
      */
-	public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory) throws TranslatorException {
+	public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, C connection) throws TranslatorException {
 		if (command instanceof QueryExpression) {
-			return createResultSetExecution((QueryExpression)command, executionContext, metadata, connectionFactory);
+			return createResultSetExecution((QueryExpression)command, executionContext, metadata, connection);
 		}
 		if (command instanceof Call) {
-			return createProcedureExecution((Call)command, executionContext, metadata, connectionFactory);
+			return createProcedureExecution((Call)command, executionContext, metadata, connection);
 		}
-		return createUpdateExecution(command, executionContext, metadata, connectionFactory);
+		return createUpdateExecution(command, executionContext, metadata, connection);
 	}
 
 	@SuppressWarnings("unused")
-	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory) throws TranslatorException {
+	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, C connection) throws TranslatorException {
 		throw new TranslatorException("Unsupported Execution"); //$NON-NLS-1$
 	}
 
 	@SuppressWarnings("unused")
-	public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory) throws TranslatorException {
+	public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, C connection) throws TranslatorException {
 		throw new TranslatorException("Unsupported Execution");//$NON-NLS-1$
 	}
 
 	@SuppressWarnings("unused")
-	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory) throws TranslatorException {
+	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, C connection) throws TranslatorException {
 		throw new TranslatorException("Unsupported Execution");//$NON-NLS-1$
 	}   
 	
@@ -690,7 +745,7 @@ public class ExecutionFactory {
     	return false;
     }
 	
-    public static <T> T getInstance(Class<T> expectedType, String className, Collection ctorObjs, Class defaultClass) throws TranslatorException {
+    public static <T> T getInstance(Class<T> expectedType, String className, Collection<?> ctorObjs, Class<? extends T> defaultClass) throws TranslatorException {
     	try {
 	    	if (className == null) {
 	    		if (defaultClass == null) {
@@ -706,5 +761,16 @@ public class ExecutionFactory {
 		} catch(InstantiationException e) {
 			throw new TranslatorException(e);
 		}    	
-    }    
+    } 
+    
+    /**
+     * Implement to provide metadata to the metadata for use by the engine.  This is the 
+     * primary method of creating metadata for dynamic VDBs.
+     * @param metadataFactory
+     * @param conn
+     * @throws TranslatorException
+     */
+    public void getMetadata(MetadataFactory metadataFactory, C conn) throws TranslatorException {
+    	
+    }
 }

@@ -131,15 +131,7 @@ public abstract class JDBCBaseExecution implements Execution  {
             }
         } catch (SQLException e) {
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing"); //$NON-NLS-1$
-        } finally {
-            try {
-                if (connection != null) {
-                	connection.close();
-                }
-            } catch (SQLException e) {
-    			LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing"); //$NON-NLS-1$
-            }
-        }
+        } 
     }
 
     /*

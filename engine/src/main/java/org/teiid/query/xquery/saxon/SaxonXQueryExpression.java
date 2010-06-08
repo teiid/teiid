@@ -22,19 +22,20 @@
 
 package org.teiid.query.xquery.saxon;
 
-import java.sql.Clob;
-import java.sql.SQLException;
+import java.io.IOException;
+import java.io.Writer;
 import java.sql.SQLXML;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.xml.transform.ErrorListener;
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.stream.StreamSource;
 
 import net.sf.saxon.AugmentedSource;
 import net.sf.saxon.Configuration;
@@ -50,11 +51,14 @@ import net.sf.saxon.expr.PathMap.PathMapNodeSet;
 import net.sf.saxon.expr.PathMap.PathMapRoot;
 import net.sf.saxon.om.Axis;
 import net.sf.saxon.om.DocumentInfo;
+import net.sf.saxon.om.Item;
+import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.pattern.AnyNodeTest;
 import net.sf.saxon.pattern.NodeKindTest;
 import net.sf.saxon.query.DynamicQueryContext;
+import net.sf.saxon.query.QueryResult;
 import net.sf.saxon.query.StaticQueryContext;
 import net.sf.saxon.sxpath.IndependentContext;
 import net.sf.saxon.sxpath.XPathEvaluator;
@@ -66,13 +70,18 @@ import net.sf.saxon.type.TypeHierarchy;
 import net.sf.saxon.value.SequenceType;
 
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.SQLXMLImpl;
+import org.teiid.core.types.XMLTranslator;
 import org.teiid.core.types.XMLType;
+import org.teiid.core.types.XMLType.Type;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.function.source.XMLSystemFunctions;
+import org.teiid.query.processor.xml.XMLUtil;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.symbol.DerivedColumn;
@@ -122,6 +131,7 @@ public class SaxonXQueryExpression {
 
 	private net.sf.saxon.query.XQueryExpression xQuery;    
 	private Configuration config = new Configuration();
+	private PathMapRoot contextRoot;
 	
     public SaxonXQueryExpression(String xQueryString, XMLNamespaces namespaces, List<DerivedColumn> passing, List<XMLTable.XMLColumn> columns) 
     throws QueryResolverException {
@@ -166,11 +176,24 @@ public class SaxonXQueryExpression {
 		}
     }
     
+    private SaxonXQueryExpression() {
+    	
+    }
+    
+    public SaxonXQueryExpression clone() {
+    	SaxonXQueryExpression clone = new SaxonXQueryExpression();
+    	clone.xQuery = xQuery;
+    	clone.config = config;
+    	clone.contextRoot = contextRoot;
+    	return clone;
+    }
+    
     public boolean usesContextItem() {
     	return this.xQuery.usesContextItem();
     }
     
-	public PathMapRoot useDocumentProjection(List<XMLTable.XMLColumn> columns, AnalysisRecord record) {
+	public void useDocumentProjection(List<XMLTable.XMLColumn> columns, AnalysisRecord record) {
+		this.contextRoot = null;
 		PathMap map = this.xQuery.getPathMap();
 		PathMapRoot parentRoot;
 		try {
@@ -179,7 +202,7 @@ public class SaxonXQueryExpression {
 			if (record.recordDebug()) {
 				record.println("Document projection will not be used, since multiple context item exist."); //$NON-NLS-1$
 			}
-			return null;
+			return;
 		}
 		if (parentRoot == null) {
 			//TODO: this seems like we could omit the context item altogether
@@ -187,7 +210,7 @@ public class SaxonXQueryExpression {
 			if (record.recordDebug()) {
 				record.println("Document projection will not be used, since no context item reference was found in the XQuery"); //$NON-NLS-1$
 			}
-			return null;			
+			return;			
 		}
 		HashSet<PathMapNode> finalNodes = new HashSet<PathMapNode>();
 		getReturnableNodes(parentRoot, finalNodes);
@@ -198,11 +221,11 @@ public class SaxonXQueryExpression {
 					if (record.recordDebug()) {
 						record.println("Document projection will not be used, since multiple return items exist"); //$NON-NLS-1$
 					}
-					return null;	
+					return;	
 				} 
 				parentRoot = projectColumns(parentRoot, columns, finalNodes.iterator().next(), record);
 				if (parentRoot == null) {
-					return null;
+					return;
 				}
 			} else {
 				for (Iterator iter = finalNodes.iterator(); iter.hasNext(); ) {
@@ -215,14 +238,14 @@ public class SaxonXQueryExpression {
 			if (record.recordDebug()) {
 				record.println("Document projection will not be used since there are unknown dependencies (most likely a user defined function)."); //$NON-NLS-1$
 			}
-	    	return null;
+	    	return;
 		}
 		if (record.recordDebug()) {
 			StringBuilder sb = new StringBuilder();
 	    	showArcs(sb, parentRoot, 0);
 	    	record.println("Using path filtering for XQuery context item: \n" + sb.toString()); //$NON-NLS-1$
 		}
-		return parentRoot;
+		this.contextRoot = parentRoot;
 	}
 
 	private PathMapRoot projectColumns(PathMapRoot parentRoot, List<XMLTable.XMLColumn> columns, PathMapNode finalNode, AnalysisRecord record) {
@@ -331,36 +354,19 @@ public class SaxonXQueryExpression {
 		}
 	}
     
-    public static Source convertToSource(Object value) throws TeiidProcessingException {
-    	if (value == null) {
-    		return null;
-    	}
-    	try {
-	    	if (value instanceof XMLType) {
-				return ((SQLXML)value).getSource(null);
-	    	}
-	    	if (value instanceof ClobType) {
-	    		return new StreamSource(((Clob)value).getCharacterStream());
-	    	}
-    	} catch (SQLException e) {
-			throw new TeiidProcessingException(e);
-		}
-    	throw new AssertionError("Unknown type"); //$NON-NLS-1$
-    }
-    
-    public SequenceIterator evaluateXQuery(Object context, PathMapRoot contextRoot, Map<String, Object> parameterValues) throws TeiidProcessingException {
+    public SequenceIterator evaluateXQuery(Object context, Map<String, Object> parameterValues) throws TeiidProcessingException {
         DynamicQueryContext dynamicContext = new DynamicQueryContext(config);
         
         for (Map.Entry<String, Object> entry : parameterValues.entrySet()) {
             Object value = entry.getValue();
-            if(value instanceof SQLXML || value instanceof Clob) {                    
-            	value = convertToSource(value);
+            if(value instanceof SQLXML) {                    
+            	value = XMLSystemFunctions.convertToSource(value);
             }
             dynamicContext.setParameter(entry.getKey(), value);                
 		}
         
         if (context != null) {
-        	Source source = convertToSource(context);
+        	Source source = XMLSystemFunctions.convertToSource(context);
             if (contextRoot != null) {
             	//create our own filter as this logic is not provided in the free saxon
                 ProxyReceiver filter = new PathMapFilter(contextRoot);
@@ -382,6 +388,47 @@ public class SaxonXQueryExpression {
         	throw new TeiidProcessingException(e, QueryPlugin.Util.getString("SaxonXQueryExpression.bad_xquery")); //$NON-NLS-1$
         }       
     }
+    
+	public XMLType createXMLType(final SequenceIterator iter, boolean emptyOnEmpty) throws XPathException, TeiidComponentException, TeiidProcessingException {
+		Item item = iter.next();
+		if (item == null && !emptyOnEmpty) {
+			return null;
+		}
+		XMLType.Type type = Type.CONTENT;
+		if (item instanceof NodeInfo) {
+			NodeInfo info = (NodeInfo)item;
+			switch (info.getNodeKind()) {
+				case net.sf.saxon.type.Type.DOCUMENT:
+					type = Type.DOCUMENT;
+					break;
+				case net.sf.saxon.type.Type.ELEMENT:
+					type = Type.ELEMENT;
+					break;
+				case net.sf.saxon.type.Type.TEXT:
+					type = Type.TEXT;
+					break;
+			}
+		}
+		Item next = iter.next();
+		if (next != null) {
+			type = Type.CONTENT;
+		}
+		SQLXMLImpl xml = XMLUtil.saveToBufferManager(new XMLTranslator() {
+			
+			@Override
+			public void translate(Writer writer) throws TransformerException,
+					IOException {
+				Properties props = new Properties();
+			    props.setProperty(OutputKeys.METHOD, "xml"); //$NON-NLS-1$
+			    //props.setProperty(OutputKeys.INDENT, "yes"); //$NON-NLS-1$
+			    props.setProperty(OutputKeys.OMIT_XML_DECLARATION, "yes"); //$NON-NLS-1$
+			    QueryResult.serializeSequence(iter.getAnother(), config, writer, props);
+			}
+		});
+		XMLType value = new XMLType(xml);
+		value.setType(type);
+		return value;
+	}
     
     public Configuration getConfig() {
 		return config;

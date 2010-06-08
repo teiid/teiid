@@ -22,7 +22,7 @@ import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
 
 
-public class MockConnector extends ExecutionFactory {
+public class MockConnector extends ExecutionFactory<Object, Object> {
 	
 	
 	@Override

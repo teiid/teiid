@@ -41,7 +41,7 @@ public interface SalesforceConnection extends Connection {
 
 	public QueryResult queryMore(String queryLocator, int batchSize) throws ResourceException;
 	
-	public boolean isAlive();
+	public boolean isValid();
 	
 	public int delete(String[] ids) throws ResourceException ;
 

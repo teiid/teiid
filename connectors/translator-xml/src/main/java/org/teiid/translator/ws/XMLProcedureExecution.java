@@ -20,24 +20,26 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.xml;
+package org.teiid.translator.ws;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.ws.Dispatch;
 
+import org.teiid.core.types.ClobType;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -49,7 +51,7 @@ import org.teiid.translator.TranslatorException;
  */
 public class XMLProcedureExecution implements ProcedureExecution {
 
-    RuntimeMetadata metadata = null;
+    RuntimeMetadata metadata;
     ExecutionContext context;
     private Call procedure;
     private boolean returnedResult;
@@ -72,46 +74,60 @@ public class XMLProcedureExecution implements ProcedureExecution {
      * @see org.teiid.connector.api.ProcedureExecution#execute(org.teiid.connector.language.Call, int)
      */
     public void execute() throws TranslatorException {
+        List<Argument> arguments = this.procedure.getArguments();
         
-		AbstractMetadataRecord metaObject = procedure.getMetadataObject();
-		String procedureName =  metaObject.getNameInSource();    	
-        if (procedureName == null || procedureName.length() == 0) {
-            throw new TranslatorException(XMLPlugin.getString("source_name_not_supplied"));  //$NON-NLS-1$     
-        }
+        Object docObject = (Object)arguments.get(0).getArgumentValue().getValue();
+        Source source = null;
+    	try {
+	        if (docObject instanceof SQLXML) {
+	        	SQLXML xml = (SQLXML)docObject;
+	        	source = xml.getSource(null);
+	            if (executionFactory.isLogRequestResponseDocs()) {
+	    			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Request " + xml.getString()); //$NON-NLS-1$
+	            }
+	        } else if (docObject instanceof Clob) {
+	        	Clob clob = (Clob)docObject;
+	        	source = new StreamSource(clob.getCharacterStream());
+	            if (executionFactory.isLogRequestResponseDocs()) {
+	    			try {
+						LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Request " + ClobType.getString(clob)); //$NON-NLS-1$
+					} catch (IOException e) {
+					} 
+	            }
+	        } else if (docObject instanceof String) {
+	        	String string = (String)docObject;
+	        	source = new StreamSource(new StringReader(string));
+	            if (executionFactory.isLogRequestResponseDocs()) {
+	    			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Request " + string); //$NON-NLS-1$
+	            }
+	        } else if (docObject != null) {
+	        	throw new TranslatorException("Unknown document type, should be one of XML, CLOB, String");
+	        }
+		} catch (SQLException e) {
+			throw new TranslatorException(e);
+		}
+        
+        String endpoint = (String)arguments.get(1).getArgumentValue().getValue();
+        String soapAction = (String)arguments.get(2).getArgumentValue().getValue();
+
+		if (soapAction != null) {
+			dispatch.getRequestContext().put(Dispatch.SOAPACTION_USE_PROPERTY, Boolean.TRUE);
+			dispatch.getRequestContext().put(Dispatch.SOAPACTION_URI_PROPERTY, soapAction);
+		}
+		
+		if (endpoint != null) {
+			this.dispatch.getRequestContext().put(Dispatch.ENDPOINT_ADDRESS_PROPERTY, endpoint);
+		}
 		
 		// execute the request
-		Source result;
-		try {
-			result = this.dispatch.invoke(buildRequest(procedure.getArguments()));
-		} catch (SQLException e1) {
-			throw new TranslatorException(e1);
-		}
+		Source result = this.dispatch.invoke(source);
 		this.returnValue = this.executionFactory.convertToXMLType(result);
         if (executionFactory.isLogRequestResponseDocs()) {
         	try {
-				LogManager.logDetail(LogConstants.CTX_CONNECTOR, this.returnValue.getString());
+				LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Response " + this.returnValue.getString()); //$NON-NLS-1$
 			} catch (SQLException e) {
 			}
         }
-		
-    }
-    
-    Source buildRequest(List<Argument> args) throws SQLException, TranslatorException{
-    	if (args.size() != 1) {
-    		throw new TranslatorException("Expected a single argument to the procedure execution");  //$NON-NLS-1$
-    	}
-    	Argument arg = args.get(0);
-    	Object value = arg.getArgumentValue().getValue();
-    	if (value instanceof SQLXML) {
-    		return new StreamSource(((SQLXML)value).getCharacterStream());
-    	} else if (value instanceof Clob) {
-    		return new StreamSource(((Clob)value).getCharacterStream());    		
-    	} else if (value != null) {
-    		return new StreamSource(new StringReader(value.toString()));
-    	} else {
-    		//TODO: work around for JBoss native
-    		return new StreamSource(new StringReader("<none/>")); //$NON-NLS-1$
-    	}
     }
     
     @Override
@@ -125,11 +141,11 @@ public class XMLProcedureExecution implements ProcedureExecution {
     
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
-        throw new TranslatorException(XMLPlugin.getString("No_outputs_allowed")); //$NON-NLS-1$
+        return Collections.emptyList();
     }    
     
     public void close() {
-        // no-op
+    	
     }
 
     public void cancel() throws TranslatorException {

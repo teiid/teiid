@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import net.sf.saxon.expr.PathMap.PathMapRoot;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.sxpath.XPathDynamicContext;
@@ -52,10 +51,10 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 
 	private XMLTable table;
 	private List<XMLColumn> projectedColumns;
-	private PathMapRoot contextRoot;
 	
 	private SequenceIterator result;
 	private int rowCount = 0;
+	private Item item;
 	
 	public XMLTableNode(int nodeID) {
 		super(nodeID);
@@ -74,6 +73,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 			result.close();
 			result = null;
 		}
+		item = null;
 		rowCount = 0;
 	}
 	
@@ -83,10 +83,6 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 	
 	public void setProjectedColumns(List<XMLColumn> projectedColumns) {
 		this.projectedColumns = projectedColumns;
-	}
-	
-	public void setContextRoot(PathMapRoot contextRoot) {
-		this.contextRoot = contextRoot;
 	}
 	
 	@Override
@@ -104,7 +100,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 		
 		if (result == null) {
 			setReferenceValues(this.table);
-			result = getEvaluator(Collections.emptyMap()).evaluateXQuery(this.table.getXQueryExpression(), this.contextRoot, this.table.getPassing(), null);
+			result = getEvaluator(Collections.emptyMap()).evaluateXQuery(this.table.getXQueryExpression(), this.table.getPassing(), null);
 		}
 		
 		while (!isBatchFull() && !isLastBatch()) {
@@ -115,16 +111,17 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 
 	private void processRow() throws ExpressionEvaluationException, BlockedException,
 			TeiidComponentException, TeiidProcessingException {
-		Item item;
-		try {
-			item = result.next();
-		} catch (XPathException e) {
-			throw new TeiidProcessingException(e, QueryExecPlugin.Util.getString("XMLTableNode.error", e.getMessage())); //$NON-NLS-1$
-		}
-		rowCount++;
 		if (item == null) {
-			terminateBatches();
-			return;
+			try {
+				item = result.next();
+			} catch (XPathException e) {
+				throw new TeiidProcessingException(e, QueryExecPlugin.Util.getString("XMLTableNode.error", e.getMessage())); //$NON-NLS-1$
+			}
+			rowCount++;
+			if (item == null) {
+				terminateBatches();
+				return;
+			}
 		}
 		List<Object> tuple = new ArrayList<Object>(projectedColumns.size());
 		for (XMLColumn proColumn : projectedColumns) {
@@ -145,7 +142,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 						continue;
 					}
 					if (proColumn.getSymbol().getType() == DataTypeManager.DefaultDataClasses.XML) {
-						XMLType value = getEvaluator(Collections.emptyMap()).createXMLType(pathIter.getAnother(), table.getXQueryExpression(), false, false);
+						XMLType value = table.getXQueryExpression().createXMLType(pathIter.getAnother(), false);
 						tuple.add(value);
 						continue;
 					}
@@ -164,6 +161,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 				}
 			}
 		}
+		item = null;
 		addBatchRow(tuple);
 	}
 		

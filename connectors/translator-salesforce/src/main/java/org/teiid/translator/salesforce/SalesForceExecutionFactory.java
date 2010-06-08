@@ -25,6 +25,8 @@ package org.teiid.translator.salesforce;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.resource.cci.ConnectionFactory;
+
 import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
@@ -32,13 +34,12 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.MetadataProvider;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.salesforce.execution.DeleteExecutionImpl;
@@ -48,7 +49,7 @@ import org.teiid.translator.salesforce.execution.QueryExecutionImpl;
 import org.teiid.translator.salesforce.execution.UpdateExecutionImpl;
 
 @Translator(name="salesforce")
-public class SalesForceExecutionFactory extends ExecutionFactory implements MetadataProvider {
+public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFactory, SalesforceConnection> {
 
 	private String connectorStateClass;
 	private boolean auditModelFields = false;	
@@ -85,33 +86,33 @@ public class SalesForceExecutionFactory extends ExecutionFactory implements Meta
 
 
 	@Override
-	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory)
+	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, SalesforceConnection connection)
 			throws TranslatorException {
-		return new QueryExecutionImpl(command, (SalesforceConnection)connectionFactory, metadata, executionContext);
+		return new QueryExecutionImpl(command, connection, metadata, executionContext);
 	}
 	
 	@Override
-	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory) throws TranslatorException {
+	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, SalesforceConnection connection) throws TranslatorException {
 		UpdateExecution result = null;
 		if(command instanceof org.teiid.language.Delete) {
-			result = new DeleteExecutionImpl(command, (SalesforceConnection)connectionFactory, metadata, executionContext);
+			result = new DeleteExecutionImpl(command, connection, metadata, executionContext);
 		} else if (command instanceof org.teiid.language.Insert) {
-			result = new InsertExecutionImpl(command, (SalesforceConnection)connectionFactory, metadata, executionContext);
+			result = new InsertExecutionImpl(command, connection, metadata, executionContext);
 		} else if (command instanceof org.teiid.language.Update) {
-			result = new UpdateExecutionImpl(command, (SalesforceConnection)connectionFactory, metadata, executionContext);
+			result = new UpdateExecutionImpl(command, connection, metadata, executionContext);
 		}
 		return result;
 
 	}
 	
 	@Override
-	public ProcedureExecution createProcedureExecution(Call command,ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory)
+	public ProcedureExecution createProcedureExecution(Call command,ExecutionContext executionContext, RuntimeMetadata metadata, SalesforceConnection connection)
 			throws TranslatorException {
-		return new ProcedureExecutionParentImpl(command, (SalesforceConnection)connectionFactory, metadata, executionContext);
+		return new ProcedureExecutionParentImpl(command, connection, metadata, executionContext);
 	}
 	@Override
-	public void getConnectorMetadata(MetadataFactory metadataFactory, Object connectionFactory) throws TranslatorException {
-		MetadataProcessor processor = new MetadataProcessor((SalesforceConnection)connectionFactory,metadataFactory, this);
+	public void getMetadata(MetadataFactory metadataFactory, SalesforceConnection connection) throws TranslatorException {
+		MetadataProcessor processor = new MetadataProcessor(connection,metadataFactory, this);
 		processor.processMetadata();
 	}	
 	

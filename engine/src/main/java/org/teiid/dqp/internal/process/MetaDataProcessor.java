@@ -29,8 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import nux.xom.xquery.XQuery;
-
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
@@ -228,15 +226,6 @@ public class MetaDataProcessor {
         xmlMetadata.put(ResultsMetadataConstants.DISPLAY_SIZE, ResultsMetadataDefaults.XML_COLUMN_LENGTH);
         
         return xmlMetadata;
-    }
-
-    private Map createXQueryColumnMetadata(XQuery xqueryCommand) {
-        Map xqueryMetadata = getDefaultColumn(null, ResultsMetadataDefaults.XML_COLUMN_NAME, XMLType.class);
-
-        // Override size as XML may be big        
-        xqueryMetadata.put(ResultsMetadataConstants.DISPLAY_SIZE, ResultsMetadataDefaults.XML_COLUMN_LENGTH);
-        
-        return xqueryMetadata;
     }
 
     private Map createColumnMetadata(String shortColumnName, SingleElementSymbol symbol) throws QueryMetadataException, TeiidComponentException {

@@ -386,7 +386,7 @@ public class PlanToProcessConverter {
 					for (int col : projectionIndexes) {
 						filteredColumns.add(xt.getColumns().get(col));
 					}
-					PathMapRoot root = xt.getXQueryExpression().useDocumentProjection(filteredColumns, analysisRecord);
+					xt.getXQueryExpression().useDocumentProjection(filteredColumns, analysisRecord);
 					xtn.setProjectedColumns(filteredColumns);
 					xtn.setTable(xt);
 					processNode = xtn;

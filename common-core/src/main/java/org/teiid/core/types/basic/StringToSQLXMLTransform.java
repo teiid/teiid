@@ -59,7 +59,7 @@ public class StringToSQLXMLTransform extends Transform {
 	}
 
 	public static Type isXml(Reader reader) throws TransformationException {
-		Type type = Type.FRAGMENT;
+		Type type = Type.ELEMENT;
 		XMLInputFactory inputFactory = XMLInputFactory.newInstance();
         try{        
              XMLEventReader xmlReader = inputFactory.createXMLEventReader(reader);
