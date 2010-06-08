@@ -99,7 +99,7 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 
 			// Add to return values
 			discoveredResources.add(detail);
-			log.info("Discovered Teiid VDB: " + vdbName);
+			log.debug("Discovered Teiid VDB: " + vdbName);
 		}
 
 		return discoveredResources;
