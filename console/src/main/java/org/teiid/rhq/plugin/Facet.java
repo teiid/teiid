@@ -86,7 +86,7 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 		OperationFacet, ConfigurationFacet, ContentFacet, DeleteResourceFacet,
 		CreateChildResourceFacet {
 
-	protected final Log LOG = LogFactory.getLog(Facet.class);
+	protected final Log LOG = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 
 	/**
 	 * Represents the resource configuration of the custom product being

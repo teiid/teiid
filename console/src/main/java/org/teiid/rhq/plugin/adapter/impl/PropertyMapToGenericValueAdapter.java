@@ -42,6 +42,7 @@ import org.rhq.core.domain.configuration.definition.PropertyDefinitionMap;
 import org.teiid.rhq.plugin.adapter.api.AbstractPropertyMapAdapter;
 import org.teiid.rhq.plugin.adapter.api.PropertyAdapter;
 import org.teiid.rhq.plugin.adapter.api.PropertyAdapterFactory;
+import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 
 /**
@@ -52,7 +53,7 @@ import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 public class PropertyMapToGenericValueAdapter extends AbstractPropertyMapAdapter
         implements PropertyAdapter<PropertyMap, PropertyDefinitionMap>
 {
-    private final Log log = LogFactory.getLog(this.getClass());
+    private final Log log = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 
     public void populateMetaValueFromProperty(PropertyMap propMap, MetaValue metaValue, PropertyDefinitionMap propDefMap)
     {

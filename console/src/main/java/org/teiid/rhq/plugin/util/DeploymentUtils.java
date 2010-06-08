@@ -39,7 +39,7 @@ import org.rhq.core.util.exception.ThrowableUtil;
  *
  */
 public class DeploymentUtils {
-    private static final Log LOG = LogFactory.getLog(DeploymentUtils.class);
+    private static final Log LOG = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 
     public static boolean hasCorrectExtension(String archiveFileName, ResourceType resourceType) {
         String expectedExtension = "vdb";

@@ -36,7 +36,7 @@ import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.VDB;
 public class DQPManagementView implements PluginConstants {
 
 	private static ManagedComponent mc = null;
-	private static final Log LOG = LogFactory.getLog(DQPManagementView.class);
+	private static final Log LOG = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 	private static final MetaValueFactory metaValueFactory = MetaValueFactory
 			.getInstance();
 

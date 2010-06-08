@@ -41,13 +41,13 @@ public interface PluginConstants {
 	 * These are global properties used by all components
 	 */
 	public final static String PROFILE_SERVICE = "ProfileService"; //$NON-NLS-1$
-
+	
 	/**
-	 * These properties are exposed via the #getProperty method call.
+	 * Log4j log category to use
 	 */
-	public static String SYSTEM_NAME = "cluster.name"; //$NON-NLS-1$
-	public static String SYSTEM_NAME_IDENTIFIER = "JGroups"; //$NON-NLS-1$
-
+	public final static String DEFAULT_LOGGER_CATEGORY = "org.rhq"; //$NON-NLS-1$
+	
+	
 	/**
 	 * Use these component type names when calling Connection related methods
 	 * that require the type.

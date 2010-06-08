@@ -37,6 +37,7 @@ import org.teiid.rhq.plugin.adapter.impl.PropertyMapToPropertiesValueAdapter;
 import org.teiid.rhq.plugin.adapter.impl.PropertyMapToTableValueAdapter;
 import org.teiid.rhq.plugin.adapter.impl.PropertySimpleToEnumValueAdapter;
 import org.teiid.rhq.plugin.adapter.impl.PropertySimpleToSimpleValueAdapter;
+import org.teiid.rhq.plugin.util.PluginConstants;
 
 import com.sun.istack.Nullable;
 
@@ -45,7 +46,7 @@ import com.sun.istack.Nullable;
  */
 public class PropertyAdapterFactory
 {
-    private static final Log LOG = LogFactory.getLog(PropertyAdapterFactory.class);
+    private static final Log LOG = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 
     public static PropertyAdapter getPropertyAdapter(MetaValue metaValue)
     {

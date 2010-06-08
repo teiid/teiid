@@ -42,7 +42,7 @@ import org.teiid.rhq.plugin.util.ProfileServiceUtil;
  */
 public class PlatformDiscoveryComponent implements ResourceDiscoveryComponent {
 
-	private final Log log = LogFactory.getLog(this.getClass());
+	private final Log log = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 
 	/**
 	 * Review the javadoc for both {@link ResourceDiscoveryComponent} and

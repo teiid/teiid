@@ -37,13 +37,14 @@ import org.rhq.core.domain.configuration.definition.PropertyDefinitionList;
 import org.teiid.rhq.plugin.adapter.api.AbstractPropertyListAdapter;
 import org.teiid.rhq.plugin.adapter.api.PropertyAdapter;
 import org.teiid.rhq.plugin.adapter.api.PropertyAdapterFactory;
+import org.teiid.rhq.plugin.util.PluginConstants;
 
 /**
  *  
  */
 public class PropertyListToCollectionValueAdapter extends AbstractPropertyListAdapter implements PropertyAdapter<PropertyList, PropertyDefinitionList>
 {
-    private static final Log LOG = LogFactory.getLog(PropertyListToCollectionValueAdapter.class);
+    private static final Log LOG = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 
     public void populateMetaValueFromProperty(PropertyList property, MetaValue metaValue, PropertyDefinitionList propertyDefinition)
     {

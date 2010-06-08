@@ -79,7 +79,7 @@ import com.sun.istack.NotNull;
 public class ProfileServiceUtil {
 
 	protected final static Log LOG = LogFactory
-			.getLog(ProfileServiceUtil.class);
+			.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 	private static ComponentType DQPTYPE = new ComponentType("teiid", "dqp");
 	private static String DQPNAME = "org.teiid.jboss.deployers.RuntimeEngineDeployer";
 	private static final Map<String, ComponentType> COMPONENT_TYPE_CACHE = new HashMap<String, ComponentType>();

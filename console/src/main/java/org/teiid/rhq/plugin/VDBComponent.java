@@ -78,7 +78,7 @@ import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.VDB;
  * 
  */
 public class VDBComponent extends Facet {
-	private final Log LOG = LogFactory.getLog(VDBComponent.class);
+	private final Log LOG = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 
 	/*
 	 * (non-Javadoc)

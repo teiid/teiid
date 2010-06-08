@@ -43,7 +43,7 @@ import org.teiid.rhq.plugin.util.ProfileServiceUtil;
  */
 public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 
-	private final Log log = LogFactory.getLog(this.getClass());
+	private final Log log = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 
 	public Set<DiscoveredResourceDetails> discoverResources(
 			ResourceDiscoveryContext discoveryContext)

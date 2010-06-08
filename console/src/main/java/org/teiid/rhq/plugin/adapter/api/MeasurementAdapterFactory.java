@@ -27,11 +27,12 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.metatype.api.types.MetaType;
+import org.teiid.rhq.plugin.util.PluginConstants;
 
 public class MeasurementAdapterFactory
 {
 
-    private static final Log LOG = LogFactory.getLog(MeasurementAdapterFactory.class);
+    private static final Log LOG = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 
     private static Map<String, String> customAdapters = new HashMap<String, String>();
 

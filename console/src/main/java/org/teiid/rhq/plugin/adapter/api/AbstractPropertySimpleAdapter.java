@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.rhq.core.domain.configuration.PropertySimple;
 import org.rhq.core.domain.configuration.definition.PropertyDefinitionSimple;
+import org.teiid.rhq.plugin.util.PluginConstants;
 
 import org.jboss.metatype.api.values.MetaValue;
 
@@ -34,7 +35,7 @@ import org.jboss.metatype.api.values.MetaValue;
  */
 public abstract class AbstractPropertySimpleAdapter implements PropertyAdapter<PropertySimple, PropertyDefinitionSimple>
 {
-    private final Log log = LogFactory.getLog(this.getClass());
+    private final Log log = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 
     public PropertySimple convertToProperty(MetaValue metaValue, PropertyDefinitionSimple propDefSimple)
     {

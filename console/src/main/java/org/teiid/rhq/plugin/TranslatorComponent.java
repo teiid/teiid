@@ -51,7 +51,7 @@ import org.teiid.rhq.plugin.util.ProfileServiceUtil;
  * 
  */
 public class TranslatorComponent extends Facet {
-	private final Log LOG = LogFactory.getLog(TranslatorComponent.class);
+	private final Log LOG = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 
 	public static interface Config {
 		String COMPONENT_TYPE = "componentType";
