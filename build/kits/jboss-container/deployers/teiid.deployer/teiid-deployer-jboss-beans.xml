@@ -8,6 +8,8 @@
     <bean name="ConnectorManagerRepository" class="org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository"/>
     <bean name="SecurityHelper" class="org.teiid.jboss.JBossSecurityHelper"/>    
         
+   <bean name="JBossLifeCycleListener" class="org.teiid.jboss.JBossLifeCycleListener"/>
+        
     <bean name="VDBParserDeployer" class="org.teiid.deployers.VDBParserDeployer">
         <property name="objectSerializer"><inject bean="ObjectSerializer"/></property>
         <property name="managedObjectFactory"><inject bean="ManagedObjectFactory"/></property>
@@ -45,7 +47,8 @@
         <property name="contextCache"><inject bean="ContextCache"/></property>
         <property name="objectSerializer"><inject bean="ObjectSerializer"/></property>
         <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>  
-         <property name="translatorRepository"><inject bean="translatorRepository"/></property>      
+        <property name="translatorRepository"><inject bean="translatorRepository"/></property>      
+        <property name="containerLifeCycleListener"><inject bean="JBossLifeCycleListener"/></property>
         <depends>SystemVDBDeployer</depends>
     </bean>       
     

@@ -62,6 +62,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	private TranslatorRepository translatorRepository;
 	private DQPContextCache contextCache;
 	private ObjectSerializer serializer;
+	private ContainerLifeCycleListener shutdownListener;
 	
 	public VDBDeployer() {
 		super(VDBMetaData.class);
@@ -277,7 +278,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	}
 	
 	private void deleteMetadataStore(VFSDeploymentUnit unit, VDBMetaData vdb) throws IOException {
-		if (!unit.getRoot().exists()) {
+		if (!unit.getRoot().exists() || !shutdownListener.isShutdownInProgress()) {
 			File cacheFileName = this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion()); //$NON-NLS-1$
 			if (cacheFileName.exists()) {
 				FileUtils.removeDirectoryAndChildren(cacheFileName.getParentFile());
@@ -332,4 +333,8 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	public void setTranslatorRepository(TranslatorRepository repo) {
 		this.translatorRepository = repo;
 	}	
+	
+	public void setContainerLifeCycleListener(ContainerLifeCycleListener listener) {
+		shutdownListener = listener;
+	}
 }

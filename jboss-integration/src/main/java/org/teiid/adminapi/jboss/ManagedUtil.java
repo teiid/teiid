@@ -300,6 +300,7 @@ public class ManagedUtil {
 
 	public static void removeArchive(DeploymentManager deploymentManager, String... deploymentNames) throws AdminProcessingException{
 		try {
+			execute(deploymentManager.stop(deploymentNames), IntegrationPlugin.Util.getString("failed_to_remove")); //$NON-NLS-1$
 			execute(deploymentManager.remove(deploymentNames), IntegrationPlugin.Util.getString("failed_to_remove")); //$NON-NLS-1$ 
 		} catch (Exception e) {
 			handleException(e);
