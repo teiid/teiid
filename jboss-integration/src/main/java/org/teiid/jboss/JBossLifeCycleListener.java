@@ -29,12 +29,15 @@ import javax.management.Notification;
 import javax.management.NotificationListener;
 import javax.management.ObjectName;
 
-import org.jboss.bootstrap.spi.Server;
 import org.jboss.system.ServiceMBeanSupport;
 import org.teiid.deployers.ContainerLifeCycleListener;
 
 public class JBossLifeCycleListener extends ServiceMBeanSupport implements NotificationListener, ContainerLifeCycleListener{
 
+	public final String START_NOTIFICATION_TYPE = "org.jboss.system.server.started"; //$NON-NLS-1$
+	/** The JMX notification event type sent on begin of the server shutdown */
+	public final String STOP_NOTIFICATION_TYPE = "org.jboss.system.server.stopped"; //$NON-NLS-1$
+	
 	private boolean shutdownInProgress = false;
 	
 	public JBossLifeCycleListener() {
@@ -52,10 +55,10 @@ public class JBossLifeCycleListener extends ServiceMBeanSupport implements Notif
 	@Override
 	public void handleNotification(Notification msg, Object handback) {
 		String type = msg.getType();
-		if (type.equals(Server.START_NOTIFICATION_TYPE)) {
+		if (type.equals(START_NOTIFICATION_TYPE)) {
 		}
 		
-		if (type.equals(Server.STOP_NOTIFICATION_TYPE)) {
+		if (type.equals(STOP_NOTIFICATION_TYPE)) {
 			shutdownInProgress = true;
 		}	
 	}
