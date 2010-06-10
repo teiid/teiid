@@ -123,7 +123,7 @@ public class XMLQueryReader implements QueryReader {
 	    String msg = "Query file doesn't exist or cannot be read: " + queryFileName + ", ignoring and continuing";
 	    TestLogger.log(msg);
 	    throw new TransactionRuntimeException(msg); //$NON-NLS-1$ //$NON-NLS-2$
-	} else {
+	} 
 	    // Get query set name
 	    //			String querySet = getQuerySetName(queryFileName) ; //$NON-NLS-1$
 
@@ -144,7 +144,7 @@ public class XMLQueryReader implements QueryReader {
 		TestLogger.log(msg);
 		throw new IOException(msg); //$NON-NLS-1$ //$NON-NLS-2$
 	    }
-	}
+
 //	return queries;
     }
 
@@ -170,7 +170,7 @@ public class XMLQueryReader implements QueryReader {
 	}
 
 	_instance.setProperty(PROP_QUERY_FILES_ROOT_DIR, new File(
-		"target/classes/").getAbsolutePath());
+		"src/main/resources/").getAbsolutePath());
 
 	try {
 	    XMLQueryReader reader = new XMLQueryReader("scenario_id",  _instance.getProperties());

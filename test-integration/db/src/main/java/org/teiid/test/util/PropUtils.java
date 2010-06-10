@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.junit.Assert;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
@@ -15,6 +16,7 @@ public class PropUtils {
 
 
 	public static Properties loadProperties(String filename, Properties defaults) {
+	    Assert.assertNotNull(filename);
 	    InputStream in = null;
 		Properties props = new Properties();
 		if (defaults != null) {

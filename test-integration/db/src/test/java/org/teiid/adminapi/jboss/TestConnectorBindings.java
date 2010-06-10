@@ -37,7 +37,7 @@ import org.teiid.adminapi.VDB;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 
-
+@Ignore
 @SuppressWarnings("nls")
 public class TestConnectorBindings extends BaseConnection {
 	static ServerDatasourceConnection ds;

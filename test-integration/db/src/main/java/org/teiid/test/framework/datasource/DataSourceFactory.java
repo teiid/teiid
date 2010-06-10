@@ -91,11 +91,7 @@ public class DataSourceFactory {
 
 	// the DO_NO_USE_DEFAULT will be passed in when the test are run from maven and no property is passed in for UseDataSources 
 	private static final String DO_NOT_USE_DEFAULT="${usedatasources}";
-	
-	private DataSourceMgr dsmgr = DataSourceMgr.getInstance();
-	
-//	private ConfigPropertyLoader configprops;
-	
+		
 	private Properties configprops;
 	
 	// contains the names of the datasources when the -Dusedatasources option is used
@@ -124,7 +120,7 @@ public class DataSourceFactory {
 	public DataSourceFactory(ConfigPropertyLoader config) {
 	    	this.configprops = PropertiesUtils.clone(config.getProperties(), null, true);
 		this.requiredDataBaseTypes = config.getModelAssignedDatabaseTypes();
-		config();
+
 	}
 	
 	public Properties getConfigProperties() {
@@ -143,8 +139,10 @@ public class DataSourceFactory {
 	 *  
 	 * @since
 	 */
-	private void config() {
+	protected void config(DataSourceMgr dsmgr) {
 	    TestLogger.logDebug("Configure Datasource Factory ");
+	    
+	    	dsmgr = DataSourceMgr.getInstance();
 		
 		Map<String, DataSource> availDatasources = dsmgr.getDataSources();
 		
@@ -211,8 +209,10 @@ public class DataSourceFactory {
 				    
 				    // if use a specific db type is specified, then it must match,
 				    // otherwise add it to the available list
-				    if (useDBTypes.size() > 0 && usedstypeprop.contains(ds.getDBType())) {
-        				availDS.put(ds.getName(), ds);
+				    if (useDBTypes.size() > 0)  {
+				            if ( usedstypeprop.contains(ds.getDBType())) {
+				        	availDS.put(ds.getName(), ds);
+				            } 
 				    } else {
 					availDS.put(ds.getName(), ds);
 				    }
@@ -269,8 +269,7 @@ public class DataSourceFactory {
 		return (metDBRequiredTypes ? this.availDS.size() :0);
 	}
 
-	public synchronized DataSource getDatasource(String datasourceid,
-			String modelName) throws QueryTestFailedException {
+	public synchronized DataSource getDatasource(String modelName) throws QueryTestFailedException {
 		DataSource ds = null;
 
 		// map the datasource to the model and datasourceid
@@ -288,11 +287,7 @@ public class DataSourceFactory {
 		// model
 		// will use the same datasource
 		
-		ds = dsmgr.getDataSource(key);
-		if (ds != null) {
-		    return ds;
-		}
-		
+				
 		if (this.hasRequiredDBTypes) {
 			if (this.requiredDataBaseTypes.containsKey(modelName)) {
 				String dbtype = this.requiredDataBaseTypes.get(modelName);
@@ -316,7 +311,7 @@ public class DataSourceFactory {
 			}
 			
 		} else if (useDS != null) {
-				String dsname = useDS.get(datasourceid);
+				String dsname = useDS.get(modelName);
 				if (dsname != null) {
 					ds = availDS.get(dsname);
 					if (ds == null) {
@@ -372,29 +367,22 @@ public class DataSourceFactory {
 			}
 
 		}
-
-		if (ds == null) {
-			throw new QueryTestFailedException(
-					"Unable to assign a datasource for model:datasourceid "
-							+ modelName + ":" + datasourceid);
-
+		
+		if (ds != null) {
+		    assignedDataSources.add(ds.getName());
 		}
 
-		assignedDataSources.add(ds.getName());
-
-		dsmgr.setDataSource(key, ds);
 		return ds;
 
 	}
 
 	public void cleanup() {
 
-	    	dsmgr.clear();
 		assignedDataSources.clear();
-		requiredDataBaseTypes.clear();
+//		requiredDataBaseTypes.clear();
 
 		if (useDS != null) useDS.clear();
-		if (availDS != null) availDS.clear();
+//		if (availDS != null) availDS.clear();
 
 	}
 	
@@ -407,7 +395,7 @@ public class DataSourceFactory {
 		DataSourceFactory factory = new DataSourceFactory(config);
 
 		try {
-			if (factory.getDatasource("1", "model1") == null) {
+			if (factory.getDatasource("model1") == null) {
 				throw new TransactionRuntimeException("No datasource was not found");
 			}
 			
@@ -430,7 +418,7 @@ public class DataSourceFactory {
 
 		try {
 			
-			DataSource dsfind = factory.getDatasource("2", "model2");
+			DataSource dsfind = factory.getDatasource( "model2");
 			if (dsfind == null) {
 				throw new TransactionRuntimeException("No datasource was not found as the 2nd datasource");
 				
@@ -445,7 +433,7 @@ public class DataSourceFactory {
 				
 			}
 			
-			dsfind = factory.getDatasource("1", "model1");
+			dsfind = factory.getDatasource( "model1");
 			if (dsfind == null) {
 				throw new TransactionRuntimeException("No datasource was not found as the 2nd datasource");
 				
@@ -476,7 +464,7 @@ public class DataSourceFactory {
 			for (int i=0; i<n; i++) {
 				
 				String k = String.valueOf(i);
-				DataSource ds1 = factory.getDatasource(k, "model" + k);
+				DataSource ds1 = factory.getDatasource( "model" + k);
 				if (ds1 == null) {
 					throw new TransactionRuntimeException("No datasource was found for: model:" + k);
 					
@@ -486,7 +474,7 @@ public class DataSourceFactory {
 			}
 				
 				
-				DataSource reuse = factory.getDatasource(String.valueOf(n + 1), "model1");
+				DataSource reuse = factory.getDatasource( "model1");
 				if (reuse != null) {
 					
 				} else {
@@ -508,7 +496,7 @@ public class DataSourceFactory {
 			
 				factory = new DataSourceFactory(config);
 
-				DataSource ds1 = factory.getDatasource("1","pm1");
+				DataSource ds1 = factory.getDatasource("pm1");
 				if (!ds1.getDBType().equalsIgnoreCase(DataSourceFactory.DataBaseTypes.ORACLE)) {
 					throw new TransactionRuntimeException("Required DB Type of oracle for model pm1 is :" + ds1.getDBType());
 				}
@@ -528,7 +516,7 @@ public class DataSourceFactory {
 			
 				factory = new DataSourceFactory(config);
 
-				DataSource ds2 = factory.getDatasource("2","pm2");
+				DataSource ds2 = factory.getDatasource("pm2");
 				if (!ds2.getDBType().equalsIgnoreCase(DataSourceFactory.DataBaseTypes.SQLSERVER)) {
 					throw new TransactionRuntimeException("Required DB Type of sqlserver for model pm2 is :" + ds2.getDBType());
 				}
@@ -548,12 +536,12 @@ public class DataSourceFactory {
 			
 				factory = new DataSourceFactory(config);
 
-				DataSource ds3a = factory.getDatasource("2","pm2");
+				DataSource ds3a = factory.getDatasource("pm2");
 				if (!ds3a.getDBType().equalsIgnoreCase(DataSourceFactory.DataBaseTypes.SQLSERVER)) {
 					throw new TransactionRuntimeException("Required DB Type of sqlserver for model pm12 is :" + ds3a.getDBType());
 				}
 				
-				DataSource ds3b = factory.getDatasource("2","pm1");
+				DataSource ds3b = factory.getDatasource("pm1");
 				if (!ds3b.getDBType().equalsIgnoreCase(DataSourceFactory.DataBaseTypes.ORACLE)) {
 					throw new TransactionRuntimeException("Required DB Type of oracle for model pm1  is :" + ds3b.getDBType());
 				}

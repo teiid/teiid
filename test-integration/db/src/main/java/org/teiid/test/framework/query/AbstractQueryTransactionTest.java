@@ -79,20 +79,13 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
 	
     }
     
-    
-//    @Override
-//    protected void compareResults(BufferedReader resultReader,
-//	    BufferedReader expectedReader) throws IOException {
-//	assertEquals(read(expectedReader, compareResultsCaseSensitive()), read(
-//		resultReader, compareResultsCaseSensitive()));
-//    }
-
     @Override
     public ConnectionStrategy getConnectionStrategy() {
 	// TODO Auto-generated method stub
 	return this.connStrategy;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     protected void assignExecutionProperties(Statement stmt) {
 	if (stmt instanceof org.teiid.jdbc.TeiidStatement) {
@@ -189,7 +182,7 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
      * This is because each test could potentially use an include/exclude datasource option
      * that could change the mappings between tests.
      * @param identifier
-     * @return
+     * @return Connection
      * @throws QueryTestFailedException
      */
     public Connection getSource(String identifier)
@@ -227,7 +220,7 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
      * Indicates what should be done when a failure occurs in
      * {@link #testCase()}
      * 
-     * @return
+     * @return boolean
      * 
      * @since
      */
@@ -263,15 +256,7 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
      * end of the test.
      */
     public void cleanup() {
-	super.closeConnection();
-	
 	ConfigPropertyLoader.reset();
-
-	
-	// cleanup all connections created for this test.
-	if (connStrategy != null) {
-	    connStrategy.shutdown();
-	}
 
     }
 

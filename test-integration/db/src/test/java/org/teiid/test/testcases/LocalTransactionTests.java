@@ -4,6 +4,7 @@
  */
 package org.teiid.test.testcases;
 
+import org.junit.Test;
 import org.teiid.jdbc.AbstractQueryTest;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.query.AbstractQueryTransactionTest;
@@ -20,11 +21,6 @@ import org.teiid.test.framework.transaction.LocalTransaction;
 public class LocalTransactionTests extends CommonTransactionTests {
 
 
-    public LocalTransactionTests(String testName) {
-        super(testName);
-    }
-    
-
     @Override
     protected TransactionContainer getTransactionContainter() {
 	// TODO Auto-generated method stub
@@ -37,16 +33,19 @@ public class LocalTransactionTests extends CommonTransactionTests {
      * Batching = Full Processing, Single Connector Batch
      * result = rollback
      */
+    @Test
     public void testSingleSourceMultipleCommandsExplicitRollback() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceMultipleCommandsExplicitRollback") {
-            public void testCase() throws Exception {
+            @Override
+	    public void testCase() throws Exception {
                 for (int i = 200; i < 220; i++) {
                     execute("insert into pm1.g1 (e1, e2) values("+i+",'"+i+"')");
                     execute("insert into pm1.g2 (e1, e2) values("+i+",'"+i+"')");
                 }                
             }
             
-            public boolean rollbackAllways() {
+            @Override
+	    public boolean rollbackAllways() {
                 return true;
             }
         };        
@@ -60,7 +59,7 @@ public class LocalTransactionTests extends CommonTransactionTests {
         test.assertRowCount(0);
         test.execute("select * from g2 where e1 >= 200 and e1 < 220");
         test.assertRowCount(0);        
-        test.closeConnection();        
+      
     } 
     
     /**
@@ -69,6 +68,7 @@ public class LocalTransactionTests extends CommonTransactionTests {
      * Batching = Full Processing, Single Connector Batch
      * result = rollback
      */
+    @Test
     public void testSingleSourceMultipleCommandsReferentialIntegrityRollback() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceMultipleCommandsReferentialIntegrityRollback") {
             public void testCase() throws Exception {
@@ -94,7 +94,7 @@ public class LocalTransactionTests extends CommonTransactionTests {
         AbstractQueryTest test = new QueryExecution(userTxn.getSource("pm1"));
         test.execute("select * from g1 where e1 >= 200 and e1 < 220");
         test.assertRowCount(0);
-        test.closeConnection();        
+    
     }    
     
     /**
@@ -103,6 +103,7 @@ public class LocalTransactionTests extends CommonTransactionTests {
      * Batching = Full Processing, Single Connector Batch
      * result = rollback
      */
+    @Test
     public void testMultipleSourceMultipleCommandsExplicitRollback() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceMultipleCommandsExplicitRollback") {
             public void testCase() throws Exception {
@@ -131,12 +132,11 @@ public class LocalTransactionTests extends CommonTransactionTests {
         AbstractQueryTest test = new QueryExecution(userTxn.getSource("pm1"));
         test.execute("select * from g1 where e1 >= 700 and e1 < 720");
         test.assertRowCount(0);        
-        test.closeConnection();
         
         test = new QueryExecution(userTxn.getSource("pm2"));
         test.execute("select * from g1 where e1 >= 700 and e1 < 720");
         test.assertRowCount(0);        
-        test.closeConnection();        
+     
     }
     
     /**
@@ -145,6 +145,7 @@ public class LocalTransactionTests extends CommonTransactionTests {
      * Batching = Full Processing, Single Connector Batch
      * result = rollback
      */
+    @Test
     public void testMultipleSourceMultipleCommandsReferentialIntegrityRollback() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceMultipleCommandsReferentialIntegrityRollback") {
             public void testCase() throws Exception {
@@ -174,12 +175,12 @@ public class LocalTransactionTests extends CommonTransactionTests {
         AbstractQueryTest test = new QueryExecution(userTxn.getSource("pm1"));
         test.execute("select * from g1 where e1 >= 700 and e1 < 720");
         test.assertRowCount(0);
-        test.closeConnection();        
+  
         
         test = new QueryExecution(userTxn.getSource("pm2"));
         test.execute("select * from g1 where e1 >= 700 and e1 < 720");
         test.assertRowCount(0);        
-        test.closeConnection();        
+     
     }
     
     /**
@@ -188,6 +189,7 @@ public class LocalTransactionTests extends CommonTransactionTests {
      * Batching = Full Processing, Single Connector Batch
      * result = commit 
      */
+    @Test
     public void testMultipleSourceBulkRowInsertRollback() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceBulkRowInsertRollback") {
             public void testCase() throws Exception {
@@ -213,14 +215,12 @@ public class LocalTransactionTests extends CommonTransactionTests {
         AbstractQueryTest test = new QueryExecution(userTxn.getSource("pm1"));
         test.execute("select * from g1 where e1 >= 100 and e1 < 120");
         test.assertRowCount(0);
-        test.closeConnection();
         
         test = new QueryExecution(userTxn.getSource("pm2"));
         test.execute("select * from g1 where e1 >= 100 and e1 < 120");
         test.assertRowCount(0);
         test.execute("select * from g2 where e1 >= 100 and e1 < 120");
         test.assertRowCount(0);        
-        test.closeConnection();
     } 
     
     /**
@@ -229,6 +229,7 @@ public class LocalTransactionTests extends CommonTransactionTests {
      * Batching = Full Processing, Single Connector Batch
      * result = commit
      */
+    @Test
     public void testMultipleSourceMultipleVirtualCommandsRollback() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceMultipleVirtualCommandsRollback") {
             public void testCase() throws Exception {
@@ -267,6 +268,6 @@ public class LocalTransactionTests extends CommonTransactionTests {
         test.assertRowCount(0);
         test.execute("select distinct e2 from g1 where e1 >= 600 and e1 < 615");
         test.assertRowCount(0);
-        test.closeConnection();        
+      
     }        
 }

@@ -26,9 +26,8 @@ public class JEEConnection extends ConnectionStrategy {
     private String jndi_name = null;
 
 
-    public JEEConnection(Properties props,
-	    DataSourceFactory dsf) throws QueryTestFailedException {
-	super(props, dsf);
+    public JEEConnection(Properties props) throws QueryTestFailedException {
+	super(props);
     }
 
     public Connection getConnection() throws QueryTestFailedException {

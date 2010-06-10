@@ -1,5 +1,9 @@
 package org.teiid.test.framework.datasource;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
@@ -27,7 +31,9 @@ public class DataSource {
 	// for the duration of all tests so thats there's not
 	// disconnect/connect being performed over and over
 	private Connection conn=null;
+	private Connection proxyconn = null;
 	private XAConnection xaconn=null;
+	private XAConnection proxyxaconn=null;
 	
 
 	public DataSource(String name, String group, Properties properties) {
@@ -65,30 +71,42 @@ public class DataSource {
 	
 	public Connection getConnection() throws QueryTestFailedException {
 	    if (this.conn == null) return null;
-	    
+   
 	    try {
 		if (this.conn.isClosed()) {
 		    this.conn = null;
+		    this.proxyconn = null;
 		}
 	    } catch (SQLException e) {
 		this.conn = null;
+		this.proxyconn = null;
 	    }
 	    
-	    return this.conn;
+	    return this.proxyconn;
 
 	}
 	
 	public void setConnection(Connection c) {
 	    this.conn = c;
+	    
+	    this.proxyconn = (Connection) Proxy.newProxyInstance(Thread.currentThread()
+			.getContextClassLoader(),
+			new Class[] { java.sql.Connection.class },
+			new CloseInterceptor(conn));
 	}
 	
 	public XAConnection getXAConnection() throws QueryTestFailedException {	    
-	    return this.xaconn;
+	    return this.proxyxaconn;
 
 	}
 	
 	public void setXAConnection(XAConnection xaconn) {
 	    this.xaconn = xaconn;
+	    
+	    this.proxyxaconn =  (XAConnection) Proxy.newProxyInstance(Thread.currentThread()
+ 		.getContextClassLoader(),
+ 		new Class[] { XAConnection.class },
+ 		new CloseInterceptor(xaconn));
 	}
 	
 	public void shutdown() {
@@ -103,19 +121,45 @@ public class DataSource {
 
 		this.conn = null;
 
-		try {
 
-		    if (this.xaconn != null) {
-			this.xaconn.close();
+		if (this.xaconn != null) {
+		    try {			
+			    this.xaconn.close();
+		    } catch (Exception e) {
+			    // ignore..
 		    }
-		} catch (SQLException e) {
-		    // ignore..
-		}
+	}
+
 
 		this.xaconn = null;	    
 
 	}
+	
 
-		
+	 class CloseInterceptor implements InvocationHandler {
+
+		Connection conn;
+		XAConnection xaconn;
+
+		CloseInterceptor(Object conn) {
+		    if (conn instanceof Connection) {
+			this.conn = (Connection) conn;
+		    } else {
+			this.xaconn = (XAConnection) conn;
+		    }
+		}
+
+		public Object invoke(Object proxy, Method method, Object[] args)
+			throws Throwable {
+		    if (method.getName().equals("close")) { //$NON-NLS-1$
+			return null;
+		    }
+		    try {
+			return method.invoke(this.conn, args);
+		    } catch (InvocationTargetException e) {
+			throw e.getTargetException();
+		    }
+		}
+	    }	
 
 }

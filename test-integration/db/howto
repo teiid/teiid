@@ -10,9 +10,9 @@ Creating Unit Tests
 ==========================================
 
 -	Unit test should be created under db/src/test/java 
--	See LocalTransactionDriverFalseOffTest.java as an example 
+-	See LocalTransactionTest.java as an example 
 			
--	Test should extend org.teiid.transaction.test.BaseAbstractTransactionTestCase
+-	Test should extend org.teiid.test.testcases.BaseAbstractTransactionTestCase
 
 
 -	NOTE:  the following is used in a post test phase of validating the data in the datasource 

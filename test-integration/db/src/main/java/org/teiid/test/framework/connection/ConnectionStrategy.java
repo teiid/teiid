@@ -4,29 +4,14 @@
  */
 package org.teiid.test.framework.connection;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.sql.Connection;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Properties;
-import java.util.Set;
 
 import javax.sql.XAConnection;
 
-import org.teiid.adminapi.Admin;
-import org.teiid.adminapi.AdminFactory;
-import org.teiid.adminapi.Model;
-import org.teiid.adminapi.VDB;
 import org.teiid.core.util.PropertiesUtils;
-import org.teiid.jdbc.ConnectionImpl;
-import org.teiid.jdbc.JDBCURL;
 import org.teiid.test.framework.ConfigPropertyLoader;
-import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.datasource.DataSource;
-import org.teiid.test.framework.datasource.DataSourceFactory;
 import org.teiid.test.framework.datasource.DataSourceMgr;
 import org.teiid.test.framework.datasource.DataStore;
 import org.teiid.test.framework.exception.QueryTestFailedException;
@@ -41,10 +26,9 @@ public abstract class ConnectionStrategy {
     // closed and reconnected all the time
     private boolean useProxy = false;
 
-    public ConnectionStrategy(Properties props, DataSourceFactory dsf) {
+    public ConnectionStrategy(Properties props) {
 	this.env = PropertiesUtils.clone(props);
 
-	// this.dsFactory = dsf;
     }
 
     /*
@@ -55,6 +39,7 @@ public abstract class ConnectionStrategy {
      * Returns a connection
      * 
      * @return Connection
+     * @throws QueryTestFailedException 
      */
     public abstract Connection getConnection() throws QueryTestFailedException;
 
@@ -73,6 +58,9 @@ public abstract class ConnectionStrategy {
 
     }
 
+    /**
+     * @throws QueryTestFailedException  
+     */
     public Connection getAdminConnection() throws QueryTestFailedException {
 	return null;
     }
@@ -83,6 +71,9 @@ public abstract class ConnectionStrategy {
 	return autoCommit;
     }
 
+    /**
+     * @throws QueryTestFailedException  
+     */
     public XAConnection getXAConnection() throws QueryTestFailedException {
 	return null;
     }
@@ -106,56 +97,59 @@ public abstract class ConnectionStrategy {
 	this.env.setProperty(key, value);
     }
 
+    /**
+     * @throws QueryTestFailedException  
+     */
     void configure() throws QueryTestFailedException {
-
-	if (this.isDataStoreDisabled()) {
-	    return;
-	} else {
-	    
-	 // commenting out until embedded testing is made available and its required to configure
-	 // the vdb and bindings in this mannder
-
-	    if (true)
-		return;
-	}
-
-	try {
-	    // the the driver strategy is going to be used to connection
-	    // directly to the connector binding
-	    // source, then no administration can be done
-	    Admin admin = AdminFactory.getInstance().createAdmin(
-		    this.env.getProperty("admin.user"),
-		    this.env.getProperty("admin.password").toCharArray(),
-		    this.env.getProperty("admin.url"));
-
-	    java.sql.Connection conn = getConnection();
-
-	    if (!(conn instanceof ConnectionImpl)) {
-		TestLogger
-			.log("ConnectionStrategy configuration:  connection is not of type MMConnection and therefore no vdb setup will be performed");
-		return;
-	    }
-	    
-	   	   
-	    // setupVDBConnectorBindings(admin);
-
-	    // admin.restart();
-
-	    int sleep = 5;
-
-	    TestLogger.log("Bouncing the system..(wait " + sleep + " seconds)"); //$NON-NLS-1$
-	    Thread.sleep(1000 * sleep);
-	    TestLogger.log("done."); //$NON-NLS-1$
-
-	} catch (Throwable e) {
-	    e.printStackTrace();
-
-	    throw new TransactionRuntimeException(e.getMessage());
-	} finally {
-	    // need to close and flush the connection after restarting
-	    // this.shutdown();
-
-	}
+//
+//	if (this.isDataStoreDisabled()) {
+//	    return;
+//	} else {
+//	    
+//	 // commenting out until embedded testing is made available and its required to configure
+//	 // the vdb and bindings in this mannder
+//
+//	    if (true)
+//		return;
+//	}
+//
+//	try {
+//	    // the the driver strategy is going to be used to connection
+//	    // directly to the connector binding
+//	    // source, then no administration can be done
+//	    Admin admin = AdminFactory.getInstance().createAdmin(
+//		    this.env.getProperty("admin.user"),
+//		    this.env.getProperty("admin.password").toCharArray(),
+//		    this.env.getProperty("admin.url"));
+//
+//	    java.sql.Connection conn = getConnection();
+//
+//	    if (!(conn instanceof ConnectionImpl)) {
+//		TestLogger
+//			.log("ConnectionStrategy configuration:  connection is not of type MMConnection and therefore no vdb setup will be performed");
+//		return;
+//	    }
+//	    
+//	   	   
+//	    // setupVDBConnectorBindings(admin);
+//
+//	    // admin.restart();
+//
+//	    int sleep = 5;
+//
+//	    TestLogger.log("Bouncing the system..(wait " + sleep + " seconds)"); //$NON-NLS-1$
+//	    Thread.sleep(1000 * sleep);
+//	    TestLogger.log("done."); //$NON-NLS-1$
+//
+//	} catch (Throwable e) {
+//	    e.printStackTrace();
+//
+//	    throw new TransactionRuntimeException(e.getMessage());
+//	} finally {
+//	    // need to close and flush the connection after restarting
+//	    // this.shutdown();
+//
+//	}
     }
 
     // protected void setupVDBConnectorBindings(Admin api) throws
@@ -257,22 +251,22 @@ public abstract class ConnectionStrategy {
 
 	ConnectionStrategy cs = null;
 	if (identifier == null) {
-	    cs = new DriverConnection(ds.getProperties(), null);
+	    cs = new DriverConnection(ds.getProperties());
 
 	} else {
-	    cs = new DriverConnection(ds.getProperties(), null);
+	    cs = new DriverConnection(ds.getProperties());
 	}
 
-	conn = cs.getConnection();
+//	conn = cs.getConnection();
+//
+//	conn = (Connection) Proxy.newProxyInstance(Thread.currentThread()
+//		.getContextClassLoader(),
+//		new Class[] { java.sql.Connection.class },
+//		new CloseInterceptor(conn));
 
-	conn = (Connection) Proxy.newProxyInstance(Thread.currentThread()
-		.getContextClassLoader(),
-		new Class[] { java.sql.Connection.class },
-		new CloseInterceptor(conn));
+	ds.setConnection(cs.getConnection());
 
-	ds.setConnection(conn);
-
-	return conn;
+	return ds.getConnection();
 
     }
 
@@ -296,48 +290,48 @@ public abstract class ConnectionStrategy {
 
 	ConnectionStrategy cs = null;
 	if (identifier == null) {
-	    cs = new DataSourceConnection(ds.getProperties(), null);
+	    cs = new DataSourceConnection(ds.getProperties());
 	} else {
-	    cs = new DataSourceConnection(ds.getProperties(), null);
+	    cs = new DataSourceConnection(ds.getProperties());
 	}
 
-	conn = cs.getXAConnection();
+//	conn = cs.getXAConnection();
+//
+//	conn = (XAConnection) Proxy.newProxyInstance(Thread.currentThread()
+//		.getContextClassLoader(),
+//		new Class[] { javax.sql.XAConnection.class },
+//		new CloseInterceptor(conn));
 
-	conn = (XAConnection) Proxy.newProxyInstance(Thread.currentThread()
-		.getContextClassLoader(),
-		new Class[] { javax.sql.XAConnection.class },
-		new CloseInterceptor(conn));
+	ds.setXAConnection(cs.getXAConnection());
 
-	ds.setXAConnection(conn);
-
-	return conn;
+	return ds.getXAConnection();
 
     }
 
-    class CloseInterceptor implements InvocationHandler {
-
-	Connection conn;
-	XAConnection xaconn;
-
-	CloseInterceptor(Object conn) {
-	    if (conn instanceof Connection) {
-		this.conn = (Connection) conn;
-	    } else {
-		this.xaconn = (XAConnection) conn;
-	    }
-	}
-
-	public Object invoke(Object proxy, Method method, Object[] args)
-		throws Throwable {
-	    if (method.getName().equals("close")) { //$NON-NLS-1$
-		return null;
-	    }
-	    try {
-		return method.invoke(this.conn, args);
-	    } catch (InvocationTargetException e) {
-		throw e.getTargetException();
-	    }
-	}
-    }
+//    class CloseInterceptor implements InvocationHandler {
+//
+//	Connection conn;
+//	XAConnection xaconn;
+//
+//	CloseInterceptor(Object conn) {
+//	    if (conn instanceof Connection) {
+//		this.conn = (Connection) conn;
+//	    } else {
+//		this.xaconn = (XAConnection) conn;
+//	    }
+//	}
+//
+//	public Object invoke(Object proxy, Method method, Object[] args)
+//		throws Throwable {
+//	    if (method.getName().equals("close")) { //$NON-NLS-1$
+//		return null;
+//	    }
+//	    try {
+//		return method.invoke(this.conn, args);
+//	    } catch (InvocationTargetException e) {
+//		throw e.getTargetException();
+//	    }
+//	}
+//    }
 
 }

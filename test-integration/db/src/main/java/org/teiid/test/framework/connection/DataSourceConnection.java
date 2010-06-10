@@ -16,7 +16,6 @@ import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.BaseDataSource;
 import org.teiid.jdbc.TeiidDataSource;
 import org.teiid.test.framework.TestLogger;
-import org.teiid.test.framework.datasource.DataSourceFactory;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
@@ -56,9 +55,8 @@ public class DataSourceConnection extends ConnectionStrategy {
 
     private XAConnection xaConnection;
 
-    public DataSourceConnection(Properties props,
-	    DataSourceFactory dsf) throws QueryTestFailedException {
-	super(props, dsf);
+    public DataSourceConnection(Properties props) throws QueryTestFailedException {
+	super(props);
     }
 
     public void validate() {
@@ -103,6 +101,7 @@ public class DataSourceConnection extends ConnectionStrategy {
 
     }
 
+    @Override
     public Connection getConnection() throws QueryTestFailedException {
 	try {
 		return getXAConnection().getConnection();		
@@ -114,6 +113,7 @@ public class DataSourceConnection extends ConnectionStrategy {
 	}
     }
 
+    @Override
     public synchronized XAConnection getXAConnection()
 	    throws QueryTestFailedException {
 	if (xaConnection == null) {
@@ -175,7 +175,7 @@ public class DataSourceConnection extends ConnectionStrategy {
 			if (this.xaConnection != null) {
 				this.xaConnection.close();
 			}
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			// ignore..
 		}
 		this.xaConnection = null;

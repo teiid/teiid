@@ -10,7 +10,6 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import org.teiid.test.framework.TestLogger;
-import org.teiid.test.framework.datasource.DataSourceFactory;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
@@ -44,9 +43,8 @@ public class DriverConnection extends ConnectionStrategy {
     private Connection connection;
 
 
-    public DriverConnection(Properties props,
-	    DataSourceFactory dsf) throws QueryTestFailedException {
-	super(props, dsf);
+    public DriverConnection(Properties props) throws QueryTestFailedException {
+	super(props);
 	validate();
     }
 
@@ -112,7 +110,7 @@ public class DriverConnection extends ConnectionStrategy {
     private Connection getJDBCConnection(String driver, String url,
 	    String user, String passwd) throws QueryTestFailedException {
 
-	TestLogger.log("Creating Driver Connection: \"" + url + "\""); //$NON-NLS-1$ //$NON-NLS-2$
+	TestLogger.log("Creating Driver Connection: \"" + url + "\"" + " user:password - " + (user!=null?user:"NA") + ":" + (passwd!=null?passwd:"NA")); //$NON-NLS-1$ //$NON-NLS-2$
 
 	Connection conn = null;
 	try {
@@ -131,6 +129,7 @@ public class DriverConnection extends ConnectionStrategy {
 
     }
 
+    @Override
     public void shutdown() {
 	super.shutdown();
 	if (this.connection != null) {

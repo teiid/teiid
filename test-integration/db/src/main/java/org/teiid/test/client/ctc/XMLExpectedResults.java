@@ -753,7 +753,7 @@ public class XMLExpectedResults implements ExpectedResults {
 		QueryScenario set = ClassFactory.createQueryScenario("testscenario");
 
 		
-		_instance.setProperty(XMLQueryReader.PROP_QUERY_FILES_ROOT_DIR, new File("target/classes/").getAbsolutePath() );
+		_instance.setProperty(XMLQueryReader.PROP_QUERY_FILES_ROOT_DIR, new File("src/main/resources/").getAbsolutePath() );
 		
 
 		

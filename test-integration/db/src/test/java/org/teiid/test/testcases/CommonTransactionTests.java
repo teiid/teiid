@@ -8,6 +8,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 
+import org.junit.Assert;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.teiid.jdbc.AbstractQueryTest;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.test.framework.TransactionContainer;
@@ -20,12 +23,7 @@ import org.teiid.test.framework.query.QueryExecution;
  */
 public abstract class CommonTransactionTests extends BaseAbstractTransactionTestCase {
     
-    public CommonTransactionTests(String name) {
-        super(name);
-    }
-    
-    protected abstract TransactionContainer getTransactionContainter();
-    
+     
 //    void runConcurrentTestCases(int howMany, final String[] sqls) {
 //        
 //        SeparateClient[] clients = new SeparateClient[howMany]; 
@@ -76,6 +74,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * Batching = Full Processing, Single Connector Batch
      * result = commit 
      */
+    @Test
     public void testSingleSourceSelect() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceSelect") {
             public void testCase() throws Exception {
@@ -97,6 +96,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * Batching = Full Processing, Single Connector Batch
      * result = commit 
      */
+    @Test
     public void testSingleSourceUpdate() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceUpdate") {
             public void testCase() throws Exception {
@@ -111,7 +111,6 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
         AbstractQueryTest test = new QueryExecution(userTxn.getSource("pm1"));
         test.execute("select * from g1 where e1 = 100");
         test.assertRowCount(1);
-        test.closeConnection();
     }
     
 
@@ -121,6 +120,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * Batching = Full Processing, Single Connector Batch
      * result = commit 
      */
+    @Test
     public void testSingleSourcePreparedUpdate() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourcePreparedUpdate") {
             
@@ -136,7 +136,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
         AbstractQueryTest test = new QueryExecution(userTxn.getSource("pm1"));
         test.execute("select * from g1 where e1 = 102");
         test.assertRowCount(1);
-        test.closeConnection();        
+      
     }    
     
     /**
@@ -145,6 +145,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * Batching = Full Processing, Single Connector Batch
      * result = commit
      */
+    @Test
     public void testSingleSourceMultipleCommands() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceMultipleCommands") {
             public void testCase() throws Exception {
@@ -171,7 +172,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
         test.assertRowCount(10);
         test.execute("select * from g2 where e1 >= 100");
         test.assertRowCount(10);        
-        test.closeConnection();        
+      
     }
         
     /**
@@ -180,6 +181,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * Batching = Partial Processing, Single Connector Batch
      * result = commit 
      */
+    @Test
     public void testSingleSourcePartialProcessing() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourcePartialProcessing") {
             public void testCase() throws Exception {
@@ -202,6 +204,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * Batching = Full Processing, Single Connector Batch
      * result = commit 
      */
+    @Test
     public void testMultipleSourceSelect() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceSelect") {
             public void testCase() throws Exception {
@@ -220,6 +223,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * Batching = Full Processing, Single Connector Batch
      * result = commit 
      */    
+    @Test
     public void testMultipleSourceVirtualSelect() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceVirtualSelect") {
             public void testCase() throws Exception {
@@ -238,6 +242,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * Batching = Full Processing, Single Connector Batch
      * result = commit 
      */
+    @Test
     public void testMultipleSourceUpdate() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceUpdate") {
             public void testCase() throws Exception {
@@ -257,7 +262,6 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
         test = new QueryExecution(userTxn.getSource("pm2"));
         test.execute("select * from g1 where e2 = '500'");
         test.assertRowCount(1);
-        test.closeConnection();
     }
     
     /**
@@ -266,6 +270,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * Batching = Full Processing, Single Connector Batch
      * result = commit 
      */
+    @Test
     public void testMultipleSourceSelectInto() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceSelectInto") {
             public void testCase() throws Exception {
@@ -281,12 +286,10 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
         AbstractQueryTest test = new QueryExecution(userTxn.getSource("pm1"));
         test.execute("select * from g1 where e2 = '501'");
         test.assertRowCount(1);
-        test.closeConnection();
         
         test = new QueryExecution(userTxn.getSource("pm2"));
         test.execute("select * from g1 where e2 = '501'");
         test.assertRowCount(1);
-        test.closeConnection();
     }    
     
     /**
@@ -295,6 +298,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * Batching = Full Processing, Single Connector Batch
      * result = commit 
      */
+    @Test
     public void testMultipleSourceBulkRowInsert() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceBulkRowInsert") {
             public void testCase() throws Exception {
@@ -313,14 +317,12 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
         AbstractQueryTest test = new QueryExecution(userTxn.getSource("pm1"));
         test.execute("select * from g1 where e1 >= 100 and e1 < 112");
         test.assertRowCount(12);
-        test.closeConnection();
         
         test = new QueryExecution(userTxn.getSource("pm2"));
         test.execute("select * from g1 where e1 >= 100 and e1 < 112");
         test.assertRowCount(12);
         test.execute("select * from g2 where e1 >= 100 and e1 < 112");
         test.assertRowCount(12);        
-        test.closeConnection();
     }    
 
     /**
@@ -329,6 +331,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * Batching = Full Processing, Single Connector Batch
      * result = commit 
      */
+    @Test
     public void testMultipleSourcePreparedUpdate() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourcePreparedUpdate") {
             public void testCase() throws Exception {
@@ -344,12 +347,11 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
         AbstractQueryTest test = new QueryExecution(userTxn.getSource("pm1"));
         test.execute("select * from g1 where e1 = 500");
         test.assertRowCount(1);
-        test.closeConnection();
         
         test = new QueryExecution(userTxn.getSource("pm2"));
         test.execute("select * from g1 where e1 = 500");
         test.assertRowCount(1);
-        test.closeConnection();        
+      
     }    
     
     
@@ -359,6 +361,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * Batching = Full Processing, Single Connector Batch
      * result = commit
      */
+    @Test
     public void testMultipleSourceMultipleCommands() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceMultipleCommands") {
             public void testCase() throws Exception {
@@ -404,7 +407,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
         } else {
             test.assertResultsSetEquals(new String[] {"e2[varchar]", "blah"});
         }
-        test.closeConnection();        
+     
     }
     
     /**
@@ -413,6 +416,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * Batching = Full Processing, Single Connector Batch
      * result = commit
      */
+    @Test
     public void testMultipleSourceMultipleVirtualCommands() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceMultipleVirtualCommands") {
             public void testCase() throws Exception {
@@ -448,7 +452,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
         test.assertRowCount(5);
         test.execute("select distinct e2 from g1 where e1 >= 200 and e1 < 207");
         test.assertResultsSetEquals(new String[] {"e2[varchar2]", "blah"});
-        test.closeConnection();        
+      
     }    
         
     /**
@@ -457,6 +461,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * Batching = Full Processing, Single Connector Batch
      * result = rollback
      */    
+    @Test
     public void testMultipleSourceMultipleCommandsCancel() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceMultipleCommandsCancel") {
             
@@ -492,7 +497,6 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
         test.assertRowCount(0);
         test.execute("select distinct e2 from g1 where e1 >= 600 and e1 < 650");
         test.assertRowCount(0);
-        test.closeConnection(); 
     }
 
     /**
@@ -501,6 +505,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * Batching = Full Processing, Single Connector Batch
      * result = rollback
      */    
+    @Test
     public void testMultipleSourceTimeout() throws Exception{
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceTimeout") {
             public void testCase() throws Exception {
@@ -513,7 +518,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
             
             public void after() {
                 if (!exceptionOccurred()) {
-                    fail("should have failed with time out exception");
+                   	Assert.assertTrue("should have failed with time out exception", false );
                 }
                 else {
                     if (getLastException() != null) {
@@ -538,9 +543,9 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
                  	}
                  	boolean isfound = (msg.indexOf("Operation timed out before completion") != -1 ? true : false);
 
-                	 assertTrue("Exception Message didnt match 'Operation timed out before completion' found: " + msg, isfound );
+                 	Assert.assertTrue("Exception Message didnt match 'Operation timed out before completion' found: " + msg, isfound );
                     } else {
-                	fail("Program Error: it indicates exception occured, but no exception is found" );
+                	Assert.assertTrue("Program Error: it indicates exception occured, but no exception is found", false );
                     }
                 }
             }             
@@ -555,7 +560,7 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
         test.assertRowCount(0);
         test.execute("select distinct e2 from g1 where e1 >= 600 and e1 < 750");
         test.assertRowCount(0);
-        test.closeConnection();         
+      
     }    
     
         
@@ -589,7 +594,9 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * Note: This is producing the below error some times; however this is SQL Server issue.
      * http://support.microsoft.com/?kbid=834849
      */
-    public void xtestMultipleSourcePartialProcessingUsingLimit() throws Exception {
+    @Ignore
+    @Test
+    public void testMultipleSourcePartialProcessingUsingLimit() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourcePartialProcessingUsingLimit") {
             public void testCase() throws Exception {
                 execute("select * from vm.g1 where pm1e1 < 100 limit 10");
@@ -609,7 +616,9 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * Note: This is producing the below error some times; however this is SQL Server issue.
      * http://support.microsoft.com/?kbid=834849
      */
-    public void xtestMultipleSourcePartialProcessingUsingMakedep() throws Exception {
+    @Ignore
+    @Test
+    public void testMultipleSourcePartialProcessingUsingMakedep() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourcePartialProcessingUsingMakedep") {
             public void testCase() throws Exception {
                 execute("select pm1.g1.e1, pm1.g1.e2 from pm1.g1 LEFT OUTER JOIN pm2.g1 MAKENOTDEP ON pm1.g1.e2 = pm2.g1.e2 where pm2.g1.e1 >= 50 and pm2.g1.e1 < 100");

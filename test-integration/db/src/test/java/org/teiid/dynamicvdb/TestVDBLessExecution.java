@@ -25,6 +25,7 @@ package org.teiid.dynamicvdb;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
@@ -33,6 +34,7 @@ import org.teiid.jdbc.AbstractMMQueryTestCase;
 /**
  * Test the DatabaseMetadata results using the Parts VDB.
  */
+@Ignore
 public class TestVDBLessExecution extends AbstractMMQueryTestCase {
 
     private static final String DQP_PROP_FILE = UnitTestUtil.getTestDataPath() + "/vdbless/dqp.properties;user=test"; //$NON-NLS-1$

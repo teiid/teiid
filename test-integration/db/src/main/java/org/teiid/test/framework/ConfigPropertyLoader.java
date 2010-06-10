@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.teiid.core.util.PropertiesUtils;
-import org.teiid.test.framework.datasource.DataSourceFactory;
 import org.teiid.test.framework.datasource.DataStore;
 import org.teiid.test.util.PropUtils;
 
@@ -44,22 +43,22 @@ public class ConfigPropertyLoader {
 	
 	private Map<String, String>modelAssignedDatabaseType = new HashMap<String, String>(5);
 	
-	private DataSourceFactory dsfactory = null;
-
 	private ConfigPropertyLoader() {
 	}
 
 	public static synchronized ConfigPropertyLoader getInstance() {
-	    boolean diff = differentConfigProp();
+ 	    boolean diff = differentConfigProp();
 	    
 
-	    	if (_instance != null && !diff) {
-	    	    return _instance;
-	    	}
 	    	if (_instance != null) {
-	    	    cleanup();
-	    	}
+	    	    if (!diff) {
+	    		return _instance;
+	    	    } 
+	    	    
+	    	    reset();
 	    	
+	    	}
+	    	    	    	
 		_instance = new ConfigPropertyLoader();
 
 		_instance.initialize();
@@ -71,7 +70,7 @@ public class ConfigPropertyLoader {
 	/**
 	 * because a config file could be different for the subsequent test, check
 	 * to see if the file is different.
-	 * @return
+	 * @return boolean
 	 */
 	private static boolean differentConfigProp( ) {
 		String filename = System.getProperty(ConfigPropertyNames.CONFIG_FILE);
@@ -86,27 +85,21 @@ public class ConfigPropertyLoader {
 		return false;
 
 	}
-	
-	private static synchronized void cleanup() {
-	    
-	    _instance.modelAssignedDatabaseType.clear();
-	    _instance.props.clear();
 
-	    if (_instance.dsfactory != null) {
-		_instance.dsfactory.cleanup();
-	    }
-	    
-	    reset();
-	    
-	    _instance = null;
-	    LAST_CONFIG_FILE=null;
-	}
 	
 	/**
 	 * Called after each test to reset any per test settings.
 	 */
 	public static synchronized void reset() {
+	    if (_instance == null) return;
+	    
 	    _instance.overrides.clear();
+	    
+	    _instance.modelAssignedDatabaseType.clear();
+	    _instance.props.clear();
+	    
+	    _instance = null;
+	    LAST_CONFIG_FILE=null;
 
 	}
 
@@ -114,13 +107,8 @@ public class ConfigPropertyLoader {
 	private void initialize() {
 
 	    props = PropUtils.loadProperties(LAST_CONFIG_FILE, null);
-	    dsfactory = new DataSourceFactory(this);
 	}
 	
-	public DataSourceFactory getDataSourceFactory() {
-	    return this.dsfactory;
-	}
-
 
 	public String getProperty(String key) {
 	    String rtn = null;
@@ -162,7 +150,7 @@ public class ConfigPropertyLoader {
          * preconfigured and should not be touched by the {@link DataStore}
          * processing.
          * 
-         * @return
+         * @return boolean
          */
         public boolean isDataStoreDisabled() {
         	String disable_config = this.getProperty(

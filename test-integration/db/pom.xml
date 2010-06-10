@@ -35,6 +35,11 @@
             <artifactId>jta</artifactId>
             <version>1.1</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-client</artifactId>
+        </dependency>
 			
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
@@ -42,6 +47,11 @@
 			<type>test-jar</type>
 			<scope>compile</scope>
 		</dependency>
+
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-common-core</artifactId>
+        </dependency>
 
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
@@ -137,54 +147,77 @@
 			<version>1.0</version>
 		</dependency>
 
+            <dependency>
+                <groupId>postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgresql.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.derby</groupId>
+                <artifactId>derby</artifactId>
+                <version>${derby.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql.connector.version}</version>
+            </dependency>
+
 	</dependencies>	
 
-	      <build>
-			<plugins>
-	  <!-- Specify the compiler options and settings -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-					<showDeprecation>false</showDeprecation>
-					<showWarnings>false</showWarnings>
-				</configuration>
-			</plugin>
-		    	<plugin>
-		      		<groupId>org.apache.maven.plugins</groupId>
-		      		<artifactId>maven-surefire-plugin</artifactId>
-		      		<configuration>
-		        			<skip>true</skip>
-		     		</configuration>
-		    	</plugin>	
-
-					<plugin>
-						<artifactId>maven-assembly-plugin</artifactId>
-						<version>2.2-beta-2</version>
-						<configuration>
-							<descriptors>
-								<descriptor>src/assembly/binaries.xml</descriptor>
-							</descriptors>
-							<outputDirectory>target/distribution</outputDirectory>
-							<workDirectory>target/assembly/work</workDirectory>
-						</configuration>
-						<executions>
-							<execution>
-								<id>make-assembly</id>
-								<phase>package</phase>
-								<goals>
-									<goal>attached</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-			</plugins>
-		</build>
-  
-
 	 <profiles>
+        <profile>
+          <id>default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+
+          <build>
+            <plugins>
+      <!-- Specify the compiler options and settings -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                    <showDeprecation>false</showDeprecation>
+                    <showWarnings>false</showWarnings>
+                </configuration>
+            </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+                            <skip>true</skip>
+                    </configuration>
+                </plugin>   
+
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>2.2-beta-2</version>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/assembly/binaries.xml</descriptor>
+                            </descriptors>
+                            <outputDirectory>target/distribution</outputDirectory>
+                            <workDirectory>target/assembly/work</workDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>make-assembly</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>attached</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+            </plugins>
+        </build>
+    </profile>
+
+
 	    <profile>
 	      <id>runalltests</id>
 	      <build>
@@ -252,7 +285,11 @@
 
 	    <profile>
 	      <id>runsingletest</id>
-
+            <activation>
+                <property>
+                    <name>classname</name>
+                </property>
+            </activation>
 	      <build>
 			<plugins>
 
@@ -263,7 +300,7 @@
 		                <additionalClasspathElement>${basedir}/lib/ojdbc6.jar</additionalClasspathElement>
 		                <additionalClasspathElement>${basedir}/lib/sqljdbc4.jar</additionalClasspathElement>
 		                <additionalClasspathElement>${basedir}/lib/db2jcc4.jar</additionalClasspathElement>
-		          </additionalClasspathElements>
+ 		          </additionalClasspathElements>
 		          <systemProperties>
 		            <property>
 		              <name>usedatasources</name>

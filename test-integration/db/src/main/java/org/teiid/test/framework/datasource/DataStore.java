@@ -63,20 +63,22 @@ public class DataStore {
 	            
 
             Statement stmt = c.createStatement();
-            stmt.addBatch("delete from g2");
-            stmt.addBatch("delete from g1");
+            try {        	
+                stmt.execute("delete from g2");
+                stmt.execute("delete from g1");
+                
+                for (int i = 0; i < 100; i++) {
+                    stmt.execute("insert into g1 (e1, e2) values("+i+",'"+i+"')");
+                }
+                
+                
+                for (int i = 0; i < 50; i++) {
+                    stmt.execute("insert into g2 (e1, e2) values("+i+",'"+i+"')");
+                }
             
-            for (int i = 0; i < 100; i++) {
-                stmt.addBatch("insert into g1 (e1, e2) values("+i+",'"+i+"')");
+            } finally {
+        	stmt.close();
             }
-            
-            
-            for (int i = 0; i < 50; i++) {
-                stmt.addBatch("insert into g2 (e1, e2) values("+i+",'"+i+"')");
-            }
-            
-            stmt.executeBatch();
-            stmt.close();
 
     }
     
@@ -106,11 +108,13 @@ public class DataStore {
     private static void setUpTest(Connection c) throws Exception {
 	
             Statement stmt = c.createStatement();
-            stmt.addBatch("delete from g2 where e1 >= 50"); //$NON-NLS-1$
-            stmt.addBatch("delete from g1 where e1 >= 100"); 
-    
-            stmt.executeBatch();
-            stmt.close();
+            try {
+                stmt.execute("delete from g2 where e1 >= 50"); //$NON-NLS-1$
+                stmt.execute("delete from g1 where e1 >= 100"); 
+
+            } finally {
+        	stmt.close();
+            }
             
 
     }

@@ -22,6 +22,7 @@ public class StandaloneGlobalTransaction extends TransactionContainer {
         super();
     }
         
+    @Override
     protected void before(TransactionQueryTestCase test) {
         try {          
         	xid = createXid();
@@ -41,6 +42,7 @@ public class StandaloneGlobalTransaction extends TransactionContainer {
 		return new XidImpl(0, gid, bid);
 	}
     
+    @Override
     protected void after(TransactionQueryTestCase test) {
         boolean delistSuccessful = false;
         boolean commit = false;

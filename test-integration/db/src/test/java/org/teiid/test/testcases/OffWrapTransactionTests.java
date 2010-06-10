@@ -5,6 +5,7 @@
 package org.teiid.test.testcases;
 
 import java.util.ArrayList;
+import org.junit.Test;
 
 import org.teiid.jdbc.AbstractQueryTest;
 import org.teiid.test.framework.TransactionContainer;
@@ -16,11 +17,7 @@ import org.teiid.test.framework.transaction.TxnAutoTransaction;
 
 public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
     
-   
- 
-    public OffWrapTransactionTests(String testName) {
-        super(testName);
-    }
+
 
     @Override
     protected TransactionContainer getTransactionContainter() {
@@ -35,6 +32,7 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
      * Batching = Full Processing, Single Connector Batch
      * result = commit 
      */
+    @Test
     public void testSingleSourceSelect() throws Exception {
 
 	AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceSelect") {
@@ -56,6 +54,7 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
      * Batching = Full Processing, Single Connector Batch
      * result = commit 
      */
+    @Test
     public void testSingleSourceUpdate() throws Exception {
 	AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceUpdate") {
             public void testCase() throws Exception {
@@ -70,7 +69,6 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
         AbstractQueryTest test = new QueryExecution(userTxn.getSource("pm1"));
         test.execute("select * from g1 where e1 = 100");
         test.assertRowCount(1);
-        test.closeConnection();
     }
     
     /**
@@ -79,6 +77,7 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
      * Batching = Full Processing, Single Connector Batch
      * result = commit
      */
+    @Test
     public void testSingleSourceMultipleCommands() throws Exception {
 	AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceMultipleCommands") {
             public void testCase() throws Exception {
@@ -102,7 +101,7 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
         test.assertRowCount(10);
         test.execute("select * from g2 where e1 >= 100");
         test.assertRowCount(10);        
-        test.closeConnection();        
+      
     }
     
     /**
@@ -111,6 +110,7 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
      * Batching = Full Processing, Single Connector Batch
      * result = rollback
      */
+    @Test
     public void testSingleSourceMultipleCommandsReferentialIntegrityRollback() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceMultipleCommandsReferentialIntegrityRollback") {
             public void testCase() throws Exception {
@@ -136,7 +136,7 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
         AbstractQueryTest test = new QueryExecution(userTxn.getSource("pm1"));
         test.execute("select * from g1 where e1 >= 200");
         test.assertRowCount(10);
-        test.closeConnection();        
+     
     }
     
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -149,6 +149,7 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
      * Batching = Full Processing, Single Connector Batch
      * result = commit 
      */
+    @Test
     public void testMultipleSourceSelect() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceSelect") {
             public void testCase() throws Exception {
@@ -167,6 +168,7 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
      * Batching = Full Processing, Single Connector Batch
      * result = commit 
      */
+    @Test
     public void testMultipleSourceUpdate() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceUpdate") {
             public void testCase() throws Exception {
@@ -181,12 +183,10 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
         AbstractQueryTest test = new QueryExecution(userTxn.getSource("pm1"));
         test.execute("select * from g1 where e1 = 500");
         test.assertRowCount(1);
-        test.closeConnection();
         
         test = new QueryExecution(userTxn.getSource("pm2"));
         test.execute("select * from g1 where e1 = 500");
         test.assertRowCount(1);
-        test.closeConnection();
     }
     
     /**
@@ -195,6 +195,7 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
      * Batching = Full Processing, Single Connector Batch
      * result = rollback
      */
+    @Test
     public void testMultipleSourceMultipleCommandsReferentialIntegrityRollback() throws Exception {
 
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceMultipleCommandsReferentialIntegrityRollback") {
@@ -225,12 +226,12 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
         AbstractQueryTest test = new QueryExecution(userTxn.getSource("pm1"));
         test.execute("select * from g1 where e1 >= 700 and e1 < 710");
         test.assertRowCount(10);
-        test.closeConnection();        
+      
         
         test = new QueryExecution(userTxn.getSource("pm2"));
         test.execute("select * from g1 where e1 >= 700 and e1 < 710");
         test.assertRowCount(10);        
-        test.closeConnection();        
+      
     }     
     
     /**
@@ -239,6 +240,7 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
      * Batching = Full Processing, Single Connector Batch
      * result = commit 
      */
+    @Test
     public void testMultipleSourceBulkRowInsert() throws Exception {
 
 	
@@ -270,13 +272,12 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
         AbstractQueryTest test = new QueryExecution(userTxn.getSource("pm1"));
         test.execute("select * from g1 where e1 >= 800 and e1 < 807");
         test.assertRowCount(7);
-        test.closeConnection();
         
         test = new QueryExecution(userTxn.getSource("pm2"));
         test.execute("select * from g1 where e1 >= 800 and e1 < 807");
         test.assertRowCount(7);
         test.execute("select * from g2 where e1 >= 800 and e1 < 807");
         test.assertRowCount(7);        
-        test.closeConnection();
+
     }     
 }

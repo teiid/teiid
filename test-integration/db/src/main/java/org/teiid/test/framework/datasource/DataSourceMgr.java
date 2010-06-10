@@ -38,7 +38,7 @@ public class DataSourceMgr {
      * Defines the default location where the datasource files will be found.
      * An override can be specified by setting the property {@link ConfigPropertyNames#OVERRIDE_DATASOURCES_LOC}.
      */
-    public static final String DEFAULT_DATASOURCES_LOC="./target/classes/datasources/";
+    public static final String DEFAULT_DATASOURCES_LOC="./src/main/resources/datasources/";
     
     /**
      * When run from maven, the {@link ConfigPropertyNames#OVERRIDE_DATASOURCES_LOC} will be assigned
@@ -58,8 +58,12 @@ public class DataSourceMgr {
     private Map<String, DataSource> modelToDatasourceMap = new HashMap<String, DataSource>(); // key
 											      // =
 											      // modelname
+    
+    private DataSourceFactory dsfactory = null;
+
 
     private DataSourceMgr() {
+	
     }
 
     public static synchronized DataSourceMgr getInstance() {
@@ -76,6 +80,10 @@ public class DataSourceMgr {
 	}
 	return _instance;
     }
+    
+    private static synchronized void reset() {
+	_instance = null;
+    }
 
     public Map<String, DataSource> getDataSources() {
 	Map<String, DataSource> ds = new HashMap<String, DataSource>(
@@ -88,30 +96,85 @@ public class DataSourceMgr {
 	return allDatasourcesMap.size();
     }
 
+    @SuppressWarnings("deprecation")
     public DataSource getDataSource(String modelname) {
 	if (modelToDatasourceMap.containsKey(modelname)) {
 	    return modelToDatasourceMap.get(modelname);
 	}
-	return null;
-    }
-    
-    void clear() {
-	modelToDatasourceMap.clear();
-    }
-    
-    public void shutdown() {
-	if (allDatasourcesMap == null || allDatasourcesMap.size() == 0) {
-	    return;
-	}
 	
+	try {
+	    DataSource ds = dsfactory.getDatasource( modelname);
+	    
+		if (ds == null) {
+		    printAllDatasources();
+		    
+		    try {
+			Thread.sleep(100000);
+		    } catch (InterruptedException e) {
+		    }
+		   Thread.currentThread().getThreadGroup().stop();
+		   
+		   
+//			throw new QueryTestFailedException(
+//					"Unable to assign a datasource for model "
+//							+ modelname );
+
+		}
+	    modelToDatasourceMap.put(modelname, ds);
+	    return ds;
+	} catch (QueryTestFailedException e) {
+	    throw new TransactionRuntimeException(e);
+	}
+    }
+    
+    private void printAllDatasources() {
 	Iterator<String> it=allDatasourcesMap.keySet().iterator();
 	while(it.hasNext()) {
-	    String key = (String) it.next();
+	    String key = it.next();
 	    DataSource ds = allDatasourcesMap.get(key);
-	    ds.shutdown();
+	    TestLogger.log("DataSource: " + ds.getName());
+	    
+	}
+
+    }
+
+    
+    public void shutdown() {
+	 TestLogger.log("Shutting down data sources");
+	 
+	if (allDatasourcesMap != null && allDatasourcesMap.size() > 0) {
+		Iterator<String> it=allDatasourcesMap.keySet().iterator();
+		while(it.hasNext()) {
+		    String key = it.next();
+		    DataSource ds = allDatasourcesMap.get(key);
+		    try {
+			ds.shutdown();
+		    } catch (Throwable t) {
+			
+		    }
+		}
+		
+		allDatasourcesMap.clear();
 	}
 	
-	allDatasourcesMap.clear();
+	if (modelToDatasourceMap != null || modelToDatasourceMap.size() > 0) {
+		Iterator<String> it=modelToDatasourceMap.keySet().iterator();
+		while(it.hasNext()) {
+		    String key = it.next();
+		    DataSource ds = modelToDatasourceMap.get(key);
+		    try {
+			ds.shutdown();
+		    } catch (Throwable t) {
+			
+		    }
+		}
+		
+		modelToDatasourceMap.clear();
+	}
+	
+	dsfactory.cleanup();
+	
+	DataSourceMgr.reset();
 	
     }
 
@@ -158,6 +221,10 @@ public class DataSourceMgr {
 
 	TestLogger.logDebug("Number of total datasource mappings loaded "
 		+ allDatasourcesMap.size());
+	
+	
+	dsfactory = new DataSourceFactory(ConfigPropertyLoader.getInstance());
+	dsfactory.config(this);
 
     }
 

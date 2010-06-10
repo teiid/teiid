@@ -62,11 +62,11 @@ public class CTCQueryScenario extends QueryScenario {
 
 	validateResultsMode(this.getProperties());
 	
-	try {
-		setupVDBs(this.getProperties());
-	} catch (IOException e) {
-		throw new TransactionRuntimeException(e.getMessage());
-	}
+//	try {
+//		setupVDBs(this.getProperties());
+//	} catch (IOException e) {
+//		throw new TransactionRuntimeException(e.getMessage());
+//	}
 
     }
 

@@ -1,42 +1,47 @@
 package org.teiid.test.testcases;
 
-import junit.framework.TestCase;
-
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TransactionContainer;
+import org.teiid.test.framework.datasource.DataSourceMgr;
 
-public abstract class BaseAbstractTransactionTestCase extends TestCase {
+public abstract class BaseAbstractTransactionTestCase {
  
-    public BaseAbstractTransactionTestCase(String name) {
-	super(name);
-
-	
-    }
         
     protected abstract TransactionContainer getTransactionContainter();
     
     
-
-     @Override
-    protected void setUp() throws Exception {
-	// TODO Auto-generated method stub
-	super.setUp();
+    @BeforeClass
+    public static void beforeAll() throws Exception {
+	ConfigPropertyLoader.reset();
+	ConfigPropertyLoader.getInstance();
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-	// TODO Auto-generated method stub
-	super.tearDown();
+    @Before
+    public void beforeEach() throws Exception {
 
     }
 
+    @After
+    public void afterEach() throws Exception {
 
+    }
+    
     protected void addProperty(String key, String value) {
 	
 	ConfigPropertyLoader.getInstance().setProperty(key, value);
 	
     }
-
+    
+    @AfterClass
+    public static void afterAll() {	
+	DataSourceMgr.getInstance().shutdown();
+    }
+    
+    
 
 
 }

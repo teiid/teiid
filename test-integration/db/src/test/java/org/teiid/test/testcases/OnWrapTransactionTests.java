@@ -23,6 +23,8 @@ package org.teiid.test.testcases;
 
 import java.util.ArrayList;
 
+import org.junit.Ignore;
+import org.junit.Test;
 import org.teiid.jdbc.AbstractQueryTest;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.ConfigPropertyNames.TXN_AUTO_WRAP_OPTIONS;
@@ -36,9 +38,6 @@ import org.teiid.test.framework.transaction.TxnAutoTransaction;
  */
 public class OnWrapTransactionTests extends CommonTransactionTests {
 
-    public OnWrapTransactionTests(String testName) {
-	super(testName);
-    }
 
     @Override
     protected TransactionContainer getTransactionContainter() {
@@ -49,6 +48,7 @@ public class OnWrapTransactionTests extends CommonTransactionTests {
      * Sources = 1 Commands = multiple Success Batching = Full Processing,
      * Single Connector Batch result = rollback
      */
+    @Test
     public void testSingleSourceMultipleCommandsReferentialIntegrityRollback()
 	    throws Exception {
 	AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest(
@@ -82,13 +82,13 @@ public class OnWrapTransactionTests extends CommonTransactionTests {
 	test.assertRowCount(10);
 	test.execute("select * from g2 where e1 = 9999");
 	test.assertRowCount(0);
-	test.closeConnection();
     }
 
     /**
      * Sources = 1 Commands = multiple Success Batching = Full Processing,
      * Single Connector Batch result = rollback
      */
+    @Test
     public void testSingleSourceBatchCommandReferentialIntegrityRollback()
 	    throws Exception {
 	AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest(
@@ -120,26 +120,25 @@ public class OnWrapTransactionTests extends CommonTransactionTests {
 	test.assertRowCount(0);
 	test.execute("select * from g2 where e1 = 9999");
 	test.assertRowCount(0);
-	test.closeConnection();
     }
 
     /**
      * Sources = 2 Commands = 1, Update Batching = Full Processing, Single
      * Connector Batch result = commit
      */
+    @Test
     public void testMultipleSourceBulkRowInsertRollback() throws Exception {
 	AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest(
 		"testMultipleSourceBulkRowInsertRollback") {
-	    ArrayList list = new ArrayList();
+	    ArrayList<String> list = new ArrayList<String>();
 
+	    @Override
 	    public void testCase() throws Exception {
 		for (int i = 100; i < 110; i++) {
-		    list
-			    .add("insert into vm.g1 (pm1e1, pm1e2, pm2e1, pm2e2) values("
+		    list.add("insert into vm.g1 (pm1e1, pm1e2, pm2e1, pm2e2) values("
 				    + i + ",'" + i + "'," + i + ",'" + i + "')");
 		}
-		list
-			.add("select pm1.g1.e1, pm1.g1.e2 into pm2.g2 from pm1.g1 where pm1.g1.e1 >= 100");
+		list.add("select pm1.g1.e1, pm1.g1.e2 into pm2.g2 from pm1.g1 where pm1.g1.e1 >= 100");
 
 		// force the rollback by trying to insert an invalid row.
 		list.add("insert into pm1.g2 (e1, e2) values(9999,'9999')");
@@ -147,6 +146,7 @@ public class OnWrapTransactionTests extends CommonTransactionTests {
 		executeBatch((String[]) list.toArray(new String[list.size()]));
 	    }
 
+	    @Override
 	    public boolean exceptionExpected() {
 		return true;
 	    }
@@ -159,13 +159,19 @@ public class OnWrapTransactionTests extends CommonTransactionTests {
 	AbstractQueryTest test = new QueryExecution(userTxn.getSource("pm1"));
 	test.execute("select * from g1 where e1 >= 100 and e1 < 110");
 	test.assertRowCount(0);
-	test.closeConnection();
 
 	test = new QueryExecution(userTxn.getSource("pm2"));
 	test.execute("select * from g1 where e1 >= 100 and e1 < 110");
 	test.assertRowCount(0);
 	test.execute("select * from g2 where e1 >= 100 and e1 < 110");
 	test.assertRowCount(0);
-	test.closeConnection();
     }
+    
+    @Ignore
+    @Test
+    @Override
+    public void testMultipleSourceTimeout() throws Exception{
+	
+    }
+
 }

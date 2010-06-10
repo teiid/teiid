@@ -37,6 +37,7 @@ import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.connection.DataSourceConnection;
 import org.teiid.test.framework.connection.DriverConnection;
+import org.teiid.test.framework.datasource.DataSourceMgr;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
@@ -164,62 +165,67 @@ public class TestClient  {
 	TestClientTransaction userTxn = new TestClientTransaction(queryset);
 	
 	Iterator<String> qsetIt = queryset.getQuerySetIDs().iterator();
-	
 	TestResultsSummary summary = new TestResultsSummary(queryset.getResultsMode());
-
-	// iterate over the query set ID's, which there
-	// should be 1 for each file to be processed
-	while (qsetIt.hasNext()) {
-	    querySetID = qsetIt.next();
-
-	    TestLogger.logInfo("Start Test Query ID [" + querySetID + "]");
-
-	    queryTests = queryset.getQueries(querySetID);
-
-		 // the iterator to process the query tests
-	    Iterator<QueryTest> queryTestIt = null;
-	    queryTestIt = queryTests.iterator();
-	    
-	    ExpectedResults expectedResults = queryset.getExpectedResults(querySetID);
-
-	    
-	    
-	    
-	    long beginTS = System.currentTimeMillis();
-	    long endTS = 0;
-	    
-        	while (queryTestIt.hasNext()) {
-        	    QueryTest q = queryTestIt.next();
+	
+	try {
+        
+        	// iterate over the query set ID's, which there
+        	// should be 1 for each file to be processed
+        	while (qsetIt.hasNext()) {
+        	    querySetID = qsetIt.next();
+        
+        	    TestLogger.logInfo("Start Test Query ID [" + querySetID + "]");
+        
+        	    queryTests = queryset.getQueries(querySetID);
+        
+        		 // the iterator to process the query tests
+        	    Iterator<QueryTest> queryTestIt = null;
+        	    queryTestIt = queryTests.iterator();
+        	    
+        	    ExpectedResults expectedResults = queryset.getExpectedResults(querySetID);
+              	    
+        	    
+        	    long beginTS = System.currentTimeMillis();
+        	    long endTS = 0;
+        	    
+                	while (queryTestIt.hasNext()) {
+                	    QueryTest q = queryTestIt.next();
+                             	    
+                    	    userTxn.init(summary, expectedResults, q);
                      	    
-            	    userTxn.init(summary, expectedResults, q);
-             	    
-        	    // run test
-            	    try {
-            		tc.runTransaction(userTxn);
-            	    } catch (Throwable t) {
-            		TestLogger.logInfo("Testcase run error: " + t.getLocalizedMessage());
-            	    }
-	             
+                	    // run test
+                    	    try {
+                    		tc.runTransaction(userTxn);
+                    	    } catch (Throwable t) {
+                    		TestLogger.logInfo("Testcase run error: " + t.getLocalizedMessage());
+                    	    }
+        	             
+                	}
+                	
+                	endTS = System.currentTimeMillis();
+                	
+                	TestLogger.logInfo("End Test Query ID [" + querySetID + "]");
+                	
+                	summary.printResults(queryset, querySetID,beginTS, endTS);        	
+          
         	}
         	
-        	endTS = System.currentTimeMillis();
-        	
-        	TestLogger.logInfo("End Test Query ID [" + querySetID + "]");
-        	
-        	summary.printResults(queryset, querySetID,beginTS, endTS);        	
-  
+   
+	} finally {	
+	    try {
+    		summary.printTotals(queryset);
+    		summary.cleanup();
+	    } catch (Throwable t) {
+		t.printStackTrace();
+	    }
+	    
+		// cleanup all connections created for this test.
+	    
+	    	DataSourceMgr.getInstance().shutdown();
+//		userTxn.getConnectionStrategy().shutdown();
+		ConfigPropertyLoader.reset();
 	}
-	
-	
-	summary.printTotals(queryset);
-	summary.cleanup();
-	
-	// cleanup all connections created for this test.
-	userTxn.getConnectionStrategy().shutdown();
-	ConfigPropertyLoader.reset();
 
-
-        
 	
     }
 

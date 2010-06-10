@@ -93,48 +93,48 @@ public abstract class QueryScenario {
 	validateResultsMode(this.props);
 	
 	// TODO:  deployprops.loc not needed in remote testing
-	try {
-		setupVDBs(this.getProperties());
-	} catch (IOException e) {
-		throw new TransactionRuntimeException(e.getMessage());
-	}
+//	try {
+//		setupVDBs(this.getProperties());
+//	} catch (IOException e) {
+//		throw new TransactionRuntimeException(e.getMessage());
+//	}
 
     }
 
-    protected void setupVDBs(Properties props) throws IOException {
+ //   protected void setupVDBs(Properties props) throws IOException {
 	// NOTE: this is probably a hack, because the only way I could get all
 	// the vdb's available when running multiple scenarions
 	// was to update the deploy.properties by setting the vdb.definition
 	// property containing the location of
 	// all the vdbs
 
-	
-	// if disabled, no configuration of the vdb is needed
-	if (ConfigPropertyLoader.getInstance().isDataStoreDisabled()) {
-	    return;
-	}
-	
-	String deployPropLoc = props.getProperty("deployprops.loc");
-	Properties deployProperties = PropertiesUtils.load(deployPropLoc);
+//	
+//	// if disabled, no configuration of the vdb is needed
+//	if (ConfigPropertyLoader.getInstance().isDataStoreDisabled()) {
+//	    return;
+//	}
+//	
+//	String deployPropLoc = props.getProperty("deployprops.loc");
+//	Properties deployProperties = PropertiesUtils.load(deployPropLoc);
+//
+//	// set the vdb.definition property that contains all the vdbs
+//	String vdb_loc = props.getProperty("vdb.loc");
+//	File vdbfiles[] = FileUtils.findAllFilesInDirectoryHavingExtension(vdb_loc, ".vdb");
+//	if (vdbfiles == null || vdbfiles.length == 0) {
+//	    throw new TransactionRuntimeException((new StringBuilder()).append(
+//		    "No vdbs found in directory ").append(vdb_loc).toString());
+//	}
+//	StringBuffer vdbdef = new StringBuffer();
+//
+//	for (int i = 0; i < vdbfiles.length; i++) {
+//	    vdbdef.append(vdbfiles[i].getAbsolutePath() + ";");
+//	}
+//	TestLogger.log("=====  Connect to VDBs: " + vdbdef.toString());
+//	
+//	deployProperties.setProperty("vdb.definition", vdbdef.toString());
+//	PropertiesUtils.print(deployPropLoc, deployProperties,"Updated for vdb.definition");
 
-	// set the vdb.definition property that contains all the vdbs
-	String vdb_loc = props.getProperty("vdb.loc");
-	File vdbfiles[] = FileUtils.findAllFilesInDirectoryHavingExtension(vdb_loc, ".vdb");
-	if (vdbfiles == null || vdbfiles.length == 0) {
-	    throw new TransactionRuntimeException((new StringBuilder()).append(
-		    "No vdbs found in directory ").append(vdb_loc).toString());
-	}
-	StringBuffer vdbdef = new StringBuffer();
-
-	for (int i = 0; i < vdbfiles.length; i++) {
-	    vdbdef.append(vdbfiles[i].getAbsolutePath() + ";");
-	}
-	TestLogger.log("=====  Connect to VDBs: " + vdbdef.toString());
-	
-	deployProperties.setProperty("vdb.definition", vdbdef.toString());
-	PropertiesUtils.print(deployPropLoc, deployProperties,"Updated for vdb.definition");
-
-    }
+ //   }
 
 
     protected void validateResultsMode(Properties props) {
