@@ -1,9 +1,8 @@
 <chapter id="lob_support">
 	<title>Handling Large Objects</title>
 	<para>This chapter examines how to use facilities provided by the Teiid
-		Connector API to
-		use large objects such as blobs, clobs, and xml in
-		your connector.</para>
+		API to use large objects such as blobs, clobs, and xml in
+		your Translator.</para>
 
 	<sect1>
 		<title>Large Objects</title>
@@ -11,115 +10,68 @@
 		<sect2>
 			<title>Data Types</title>
 			<para>Teiid supports three large object runtime data types:  blob,
-				clob, and xml.
-				 A blob is a “binary large object”, a clob is a
-				“character large
-				object”, and “xml” is a “xml
-				document”.  Columns
-				modeled as a blob, clob, or xml are treated similarly by
-				the
-				connector
-				framework to support memory-safe streaming.  </para>
+				clob, and xml.	 A blob is a “binary large object”, a clob is a
+				“character large	object”, and “xml” is a “xml
+				document”.  Columns modeled as a blob, clob, or xml are treated similarly by
+				the	translator framework to support memory-safe streaming.  </para>
 		</sect2>
 		<sect2>
 			<title>Why Use Large Object Support?</title>
-			<para>Teiid allows a Connector to return a large object through the
-				Teiid Connector API by just returning a reference to the actual
+			<para>Teiid allows a Translator to return a large object through the
+				Teiid translator API by just returning a reference to the actual
 				large object.  Access to that LOB will be streamed as appropriate rather
-				than retrieved all at once.  This
-				is useful for several reasons:</para>
+				than retrieved all at once.  This is useful for several reasons:</para>
 			<orderedlist>
 				<listitem>
-					<para>Reduces memory usage when returning the result set to the
-						user.</para>
+					<para>Reduces memory usage when returning the result set to the user.</para>
 				</listitem>
 				<listitem>
-					<para>Improves performance by passing less data in the result set.
-					</para>
+					<para>Improves performance by passing less data in the result set.</para>
 				</listitem>
 				<listitem>
-					<para>Allows access to large objects when needed rather than
-						assuming that users will
+					<para>Allows access to large objects when needed rather than assuming that users will
 						always use the large object data.</para>
 				</listitem>
 				<listitem>
 					<para>Allows the passing of arbitrarily large data values.</para>
 				</listitem>
 			</orderedlist>
-			<para>However, these benefits can only truly be gained if the
-				Connector itself does not
-				materialize an entire large object all at
-				once.  For example, the Java JDBC API
-				supports a
-				streaming interface
-				for blob and clob data.    </para>
+			<para>However, these benefits can only truly be gained if the Translator itself does not
+				materialize an entire large object all at once.  For example, the Java JDBC API
+				supports a	streaming interface for blob and clob data.</para>
 		</sect2>
 	</sect1>
 
 	<sect1>
 		<title>Handling Large Objects</title>
-		<para>The Connector API automatically handles large objects
-			(Blob/Clob/SQLXML) through
-			the creation of special purpose wrapper
-			objects when it retrieves results.
+		<para>The Translator API automatically handles large objects	(Blob/Clob/SQLXML) through
+			the creation of special purpose wrapper	objects when it retrieves results.
     </para>
 
 		<para>Once the wrapped object is returned, the streaming of LOB is
-			automatically supported. These LOB objects then can
-			for example appear
-			in client results, in user defined functions, or sent
-			to other
-			connectors.</para>
+			automatically supported. These LOB objects then can for example appear
+			in client results, in user defined functions, or sent to other translators.</para>
 
-		<para>A connector execution is usually closed and the underlying
-			connection is either
-			closed/released as soon as all rows for that
-			execution have been retrieved.
-			 However, LOB
-			objects may need to be
-			read after their initial retrieval of results.  When
-			LOBs are detected
-			the default closing behavior
-			is prevented by setting a flag on the
-			ExecutionContext.</para>
+		<para>A Execution is usually closed and the underlying
+			connection is either closed/released as soon as all rows for that
+			execution have been retrieved. However, LOB	objects may need to be
+			read after their initial retrieval of results.  When LOBs are detected
+			the default closing behavior	is prevented by setting a flag on the
+			ExecutionContext. See ExecutionContext.keepAlive() method. </para>
 
-		<para>Now the connector execution
-			only when the user Statement object
-			is closed. 
-			Note that connectors may at their discretion have
-			executions delayed in their closure by directly setting the keep
-			alive on the ExecutionContext
-		</para>
+		<para>When the "keepAlive" alive flag is set, then the execution object is only closed when user's Statement is closed.</para>
 
 		<programlisting><![CDATA[      
       executionContext.keepExecutionAlive(true);
     ]]></programlisting>
 
-		<para>An important limitation of using the LOB type objects
-			is that
-			streaming is not supported from remote connectors.
-			This is an issue in
-			clustered environments if connectors intended to return
-			LOBs are
-			deployed on only
-			a subset of the hosts or in failover situations. The
-			most appropriate
-			workaround to this
-			limitation is to deploy connectors
-			intended to return LOBs on each host in the
-			cluster.</para>
 	</sect1>
 
 	<sect1>
 		<title>Inserting or Updating Large Objects</title>
-		<para>LOBs will be passed to the Connector in the
-			language objects as
-			an
-			ILiteral containing a java.sql.Blob,  java.sql.Clob, or
-			java.sql.SQLXML.  You
-			can use these interfaces to retrieve the data in
-			the large object and
-			use it for insert or
-			update.</para>
+		<para>LOBs will be passed to the Translator in the
+			language objects as Literal containing a java.sql.Blob,  java.sql.Clob, or
+			java.sql.SQLXML.  You	can use these interfaces to retrieve the data in
+			the large object and	use it for insert or update.</para>
 	</sect1>
 </chapter>

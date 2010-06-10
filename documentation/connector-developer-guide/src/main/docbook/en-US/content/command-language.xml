@@ -8,28 +8,34 @@
   <sect1>
     <title>Language Interfaces</title>
 	<para>
-		Teiid sends commands to your connector in object form. The interfaces
-		for these objects are all defined in the org.teiid.connector.language
+		Teiid sends commands to your Translator in object form. The interfaces
+		for these objects are all defined in the "org.teiid.language"
 		package. These interfaces can be combined to represent any possible
-		command that Teiid may send to the connector. However, it is possible
-		to notify Teiid that your connector can only accept certain kinds of
-		commands via the ConnectorCapabilities class. See the section on using
-		<link linkend="connector_capabilities">Connector Capabilities</link>
+		command that Teiid may send to the Translator. However, it is possible
+		to notify Teiid that your Translator can only accept certain kinds of
+		commands via the capabilities defined on the "ExecutionFactory" class. See the section on using
+		<link linkend="translator_capabilities">Translator Capabilities</link>
 		for more information.
 	</para>
-	<para>The language interfaces all extend from the ILanguageObject interface.
+	<para>The language interfaces all extend from the <emphasis>LanguageObject</emphasis> interface.
 		Language objects should be thought of as a tree where each node is a
 		language object that has zero or more child language objects of types
 		that are dependent on the current node.</para>
-	<para>All commands sent to your connector are in the form of these
-		language trees, where the root of the tree is a subclass of ICommand.
-		ICommand has several sub-interfaces, namely: IQueryCommand, IInsert, IUpdate,
-		IDelete, IBatchedUpdate, and IProcedure.  
-		Important components of
-		these commands are expressions, criteria, and
-		joins, which are examined
-		in closer detail below. Also see the
-		<ulink url="&javaDocUrl;">Teiid JavaDocs</ulink>
+	<para>All commands sent to your Translator are in the form of these
+		language trees, where the root of the tree is a subclass of <emphasis>Command</emphasis>.
+		Command has several sub-interfaces, namely: 
+        
+        <itemizedlist>
+            <listitem><para><code>QueryExpression</code></para></listitem>
+            <listitem><para><code>Insert</code></para></listitem>
+            <listitem><para><code>Update</code></para></listitem>
+            <listitem><para><code>Delete</code></para></listitem>
+            <listitem><para><code>BatchedUpdate</code></para></listitem>
+            <listitem><para><code>Call</code></para></listitem>
+        </itemizedlist>        
+        
+		Important components of	these commands are expressions, criteria, and joins, which are examined
+		in closer detail below. Also see the	<ulink url="&javaDocUrl;">Teiid JavaDocs</ulink>
 		for more on the classes and interfaces described here.
 	</para>
     <sect2>
@@ -43,45 +49,44 @@
       <itemizedlist>
 	<listitem>
 		<para>
-			<code>IExpression</code>
+			<code>Expression</code>
 			– base expression interface
 		</para>
 	</listitem>
 	<listitem>
 		<para>
-			<code>IElement</code>
+			<code>Element</code>
 			– represents an element in the data source
 		</para>
 	</listitem>
 	<listitem>
 		<para>
-			<code>ILiteral</code>
+			<code>Literal</code>
 			– represents a literal scalar value, but may also be multi-valued in
 			the case of bulk updates.
 		</para>
 	</listitem>
 	<listitem>
 		<para>
-			<code>IFunction</code>
-			– represents a scalar function with parameters that are also
-			IExpressions
+			<code>Function</code>
+			– represents a scalar function with parameters that are also Expressions
 		</para>
 	</listitem>
 	<listitem>
 		<para>
-			<code>IAggregate</code>
+			<code>Aggregate</code>
 			– represents an aggregate function which holds a single expression
 		</para>
 	</listitem>
 	<listitem>
 		<para>
-			<code>IScalarSubquery</code>
+			<code>ScalarSubquery</code>
 			– represents a subquery that returns a single value
 		</para>
 	</listitem>
 	<listitem>
 		<para>
-			<code>ISearchedCaseExpression</code>
+			<code>SearchedCase, SearchedWhenClause</code>
 			– represents a searched CASE expression.  The searched CASE
 			expression evaluates the criteria in WHEN clauses till one evaluates
 			to TRUE, then evaluates the associated THEN clause.
@@ -90,110 +95,111 @@
       </itemizedlist>
     </sect2>
     <sect2>
-      <title>Criteria</title>
+      <title>Condition</title>
 		<para>A criteria is a combination of expressions and operators that
 			evaluates to true, false, or unknown.  Criteria are most commonly used in the
 			WHERE or HAVING clauses.</para>
       
       <itemizedlist>
-        <listitem><para><code>ICriteria</code> – the base criteria interface</para></listitem>
-        <listitem><para><code>ILogicalCriteria</code> – used to logically combine other criteria</para></listitem>
-        <listitem><para><code>INotCriteria</code> – used to NOT another criteria</para></listitem>
-        <listitem><para><code>ICompoundCriteria</code> – used to combine other criteria via AND or OR</para></listitem>
-        <listitem><para><code>IPredicateCriteria</code> – a predicate that evaluates to true, false, or unknown</para></listitem>
-        <listitem><para><code>ISubuqeryCompareCriteria</code> – represents a comparison criteria with a subquery including a quantifier such as SOME or ALL</para></listitem>
-        <listitem><para><code>ICompareCriteria</code> – represents a comparison criteria with =, &gt;, &lt;, etc.</para></listitem>
-        <listitem><para><code>IBaseInCriteria</code> – base class for an IN criteria</para></listitem>
-        <listitem><para><code>IInCriteria</code> – represents an IN criteria that has a set of expressions for values</para></listitem>
-        <listitem><para><code>ISubqueryInCriteria</code> – represents an IN criteria that uses a subquery to produce the value set</para></listitem>
-        <listitem><para><code>IIsNullCriteria</code> – represents an IS NULL criteria</para></listitem>
-        <listitem><para><code>IExistsCriteria</code> – represents an EXISTS criteria that determines whether a subquery will return any values</para></listitem>
-        <listitem><para><code>ILikeCriteria</code> – represents a LIKE criteria that compares string values</para></listitem>
+        <listitem><para><code>Condition</code> – the base criteria interface</para></listitem>        
+        <listitem><para><code>Not</code> – used to NOT another criteria</para></listitem>
+        <listitem><para><code>AndOr</code> – used to combine other criteria via AND or OR</para></listitem>
+        <listitem><para><code>SubuqeryComparison</code> – represents a comparison criteria with a subquery including a quantifier such as SOME or ALL</para></listitem>        
+        <listitem><para><code>Comparison</code> – represents a comparison criteria with =, &gt;, &lt;, etc.</para></listitem>        
+        <listitem><para><code>BaseInCondition</code> – base class for an IN criteria</para></listitem>        
+        <listitem><para><code>In</code> – represents an IN criteria that has a set of expressions for values</para></listitem>        
+        <listitem><para><code>SubqueryIn</code> – represents an IN criteria that uses a subquery to produce the value set</para></listitem>
+        <listitem><para><code>IsNull</code> – represents an IS NULL criteria</para></listitem>        
+        <listitem><para><code>Exists</code> – represents an EXISTS criteria that determines whether a subquery will return any values</para></listitem>
+        <listitem><para><code>Like</code> – represents a LIKE criteria that compares string values</para></listitem>
       </itemizedlist>                  
     </sect2>
     
     <sect2>
       <title>The FROM Clause</title>
-		<para>The FROM clause contains a list of IFromItems.  Each IFomItem can
-			either represent a group or a join between two other IFromItems.  This
-			allows joins to be composed into a join tree.</para>
+		<para>The FROM clause contains a list of <emphasis>TableReference</emphasis>.  </para>
       
       <itemizedlist>
-        <listitem><para><code>IGroup</code> – represents a single group</para></listitem>
-        <listitem><para><code>IJoin</code> – has a left and right <code>IFromItem</code> and information on the join between the items</para></listitem>
-        <listitem><para><code>IInlineView</code> – represents a group defined by an inline <code>IQueryCommand</code></para></listitem>
+        <listitem><para><code>TableReference</code> – represents a single Table</para></listitem>
+        <listitem><para><code>Join</code> – has a left and right <code>TableReference</code> and information on the join between the items</para></listitem>
+        <listitem><para><code>DerivedTable</code> – represents a table defined by an inline <code>QueryExpression</code></para></listitem>
       </itemizedlist>
-		<para>A list of IFromItems is used by default in the pushdown query
-			when no outer joins are used. If an outer join is used anywhere in the
-			join tree, there will be a tree of IJoins with a single root. This latter form
-			is the ANSI perfered style. If you wish all pushdown queries
-			containing joins to be in ANSI style have the
-			ConnectorCapability.useAnsiJoin return true.  See <link linkend="command_form_capabilities">Command Form Capabilities</link> for more.</para>
+    <para>
+        A list of <emphasis>TableReference</emphasis>
+        are used by default, in the pushdown query
+        when no outer joins are used. If an outer join is used anywhere in the
+        join tree, there will be a tree of
+        <code>Join</code>
+        s with a single root. This latter form
+        is the ANSI perfered style. If you wish all pushdown queries containing joins to be in ANSI style have the
+        capability "useAnsiJoin" return true. See
+        <link linkend="command_form_capabilities">Command Form Capabilities</link>
+        for more information.
+    </para>
     </sect2>
 	<sect2>
-		<title>IQueryCommand Structure</title>
-		<para>IQueryCommand (refered to in SQL as a Query Expression) is the base for both queries and set queries.  It may optionally take an IOrderBy (representing a SQL ORDER BY clause) and a ILimit (represent a SQL LIMIT clause)</para>
-	</sect2>
-    <sect2>
-      <title>IQuery Structure</title>
-
-		<para>Each IQuery will have an ISelect describing the expressions
-			(typically elements) being selected and an IFrom specifying the group
-			or groups being selected from, along with any join information.  The
-			IQuery may optionally also supply an ICriteria (representing a SQL
-			WHERE clause), an IGroupBy (representing a SQL GROUP BY clause), an
-			an ICriteria (representing a SQL HAVING clause).</para>            
+		<title>QueryExpression Structure</title>
+		<para><emphasis>QueryExpression</emphasis> is the base for both queries and set queries.  It may optionally take an
+         <emphasis>OrderBy</emphasis> (representing a SQL ORDER BY clause) and a <emphasis>Limit</emphasis> (represent a SQL LIMIT clause)</para>
     </sect2>      
 
     <sect2>
-      <title>ISetQuery Structure</title>
+      <title>Select Structure</title>
 
-		<para>An ISetQuery represents on of the SQL set operations (UNION,
-			INTERSECT, EXCEPT) on two IQueryCommands. The all flag may be set to
-			indicate UNION ALL (currently INTERSECT and EXCEPT ALL are not allowed
-			in Teiid)</para>
+		<para>Each <emphasis>QueryExpression</emphasis> can be a <emphasis>Select</emphasis> describing the expressions
+			(typically elements) being selected and an <emphasis>TableReference</emphasis> specifying the table
+			or tables being selected from, along with any join information.  The
+			<emphasis>Select</emphasis> may optionally also supply an <emphasis>Condition</emphasis> (representing a SQL
+			WHERE clause), an <emphasis>GroupBy</emphasis> (representing a SQL GROUP BY clause), an
+			an <emphasis>Condition</emphasis> (representing a SQL HAVING clause).</para>
+    </sect2>
+    
+    <sect2>
+      <title>SetQuery Structure</title>
+
+		<para>A <emphasis>QueryExpression</emphasis> can also be a <emphasis>SetQuery</emphasis> that represents on of the SQL set operations (UNION,
+			INTERSECT, EXCEPT) on two <emphasis>QueryExpression</emphasis>. The all flag may be set to
+			indicate UNION ALL (currently INTERSECT and EXCEPT ALL are not allowed in Teiid)</para>
     </sect2>
         
     <sect2>    
-      <title>IInsert Structure</title>
+      <title>Insert Structure</title>
 
-		<para>Each IInsert will have a single IGroup specifying the group being
-			inserted into.  It will also a list of
-			IElements specifying the columns of the IGroup that are being inserted
-			into and an IInsertValueSource, which will either be a list of IExpression (IInsertExpressionValueSource) or an IQueryCommand.</para>
+		<para>Each <emphasis>Insert</emphasis> will have a single <emphasis>NamedTable</emphasis> specifying the table being
+			inserted into.  It will also has a list of <emphasis>ColumnReference</emphasis> specifying the columns 
+            of the <emphasis>TableReference</emphasis> that are being inserted into. It also has
+            <emphasis>InsertValueSource</emphasis>, which will either be a list of 
+            <emphasis>Expression(ExpressionValueSource)</emphasis>  or <emphasis>QueryExpression</emphasis></para>
     </sect2>
 
     <sect2>
-      <title>IUpdate Structure</title>
+      <title>Update Structure</title>
 
-		<para>Each IUpdate will have a single IGroup specifying the group being
-			updated.  The ISetClauseList contains ISetClause entries that specify
-			IElement and IExpression pairs for the update.
-			The IUpdate may optionally provide a
-			criteria specifying which rows should be updated.</para>
+		<para>Each <emphasis>Update</emphasis> will have a single <emphasis>NamedTable</emphasis> specifying the table being
+			updated and list of <emphasis>SetClause</emphasis> entries that specify <emphasis>ColumnReference</emphasis> 
+            and <emphasis>Expression</emphasis> pairs for the update.	The Update may optionally provide a criteria 
+			<emphasis>Condition</emphasis> specifying which rows should be updated.</para>
     </sect2>
 
     <sect2>
-      <title>IDelete Structure</title>
+      <title>Delete Structure</title>
 
-		<para>Each IDelete will have a single IGroup specifying the group being
-			deleted from. It may also optionally have a criteria specifying which
-			rows should be deleted.  </para>
+		<para>Each <emphasis>Delete</emphasis> will have a single <emphasis>NamedTable</emphasis> specifying the table being
+			deleted from. It may also optionally have a criteria specifying which rows should be deleted.  </para>
     </sect2>
 
     <sect2>
-      <title>IProcedure Structure</title>
+      <title>Call Structure</title>
 
-		<para>Each IProcedure has zero or more IParameter objects. The
-			IParameter objects describe the input parameters, the output result
+		<para>Each <emphasis>Call</emphasis> has zero or more <emphasis>Argument</emphasis> objects. The
+			<emphasis>Argument</emphasis> objects describe the input parameters, the output result
 			set, and the output parameters.  </para>
     </sect2>
     
     <sect2>
-      <title>IBatchedUpdate Structure </title>
-
-		<para>Each IBatchedUpdate has a list of ICommand objects (which must be
-			an IInsert, IUpdate, or IDelete) that compose the batch. </para>    
+      <title>BatchedUpdates Structure </title>
+		<para>Each <emphasis>BatchedUpdates</emphasis> has a list of <emphasis>Command</emphasis> objects (which must be either
+			<emphasis>Insert</emphasis>, <emphasis>Update</emphasis> or <emphasis>Delete</emphasis>) that compose the batch. </para>    
     </sect2>
   </sect1>
 
@@ -203,36 +209,36 @@
     
     <sect2>
       <title>Data Types</title>
-      <para>The Connector API contains an interface TypeFacility that defines data types and provides value translation facilities.  </para>
+      <para>The Translator API contains an interface <emphasis>TypeFacility</emphasis> that defines 
+      data types and provides value translation facilities. This interface can be obtained from calling "getTypeFacility()" 
+      method on the "ExecutionFactory" class.</para>
 
-	<para>This ConnectorEnvironment (provided by Teiid on connector start)
-		is a factory to obtain a TypeFacility instance for the connector using
-		the getTypeFacility() method.
+	<para>
 		The TypeFacitlity interface has methods that support data type
 		transformation and detection of appropriate runtime or JDBC types.
 		 The TypeFacility.RUNTIME_TYPES and TypeFacility.RUNTIME_NAMES
 		interfaces defines constants for all Teiid runtime data types.  All
-		IExpression instances define a data type based on this set of types.
-		 These constants are often needed in understanding or creating
-		language interfaces.</para>
+		<emphasis>Expression</emphasis> instances define a data type based on this set of types.
+		 These constants are often needed in understanding or creating language interfaces.</para>
     </sect2>
 
     <sect2>
       <title>Language Manipulation</title>
-		<para>In connectors that support a fuller set of capabilities (those
+		<para>In Translators that support a fuller set of capabilities (those
 			that generally are translating to a language of comparable to SQL),
 			there is often a need to manipulate or create language interfaces to
 			move closer to the syntax of choice.  Some utilities are provided for
 			this purpose:</para>
-		<para>Similar to the TypeFacility, you can use the ConnectorEnvironment
-			to get a reference to the ILanguageFactory instance for your
-			connector.  This interface is a factory that can be used to create new
+		<para>Similar to the TypeFacility, you can call "getLanguageFactory()" method on 
+            the "ExecutionFactory"
+			to get a reference to the <emphasis>LanguageFactory</emphasis> instance for your
+			translator.  This interface is a factory that can be used to create new
 			instances of all the concrete language interface objects.  </para>
-		<para>Some helpful utilities for working with ICriteria objects are
-			provided in the LanguageUtil class.  This class has methods to combine
-			ICriteria with AND or to break an ICriteria apart based on AND
+		<para>Some helpful utilities for working with <emphasis>Condition</emphasis> objects are
+			provided in the <emphasis>LanguageUtil</emphasis> class.  This class has methods to combine
+			<emphasis>Condition</emphasis> with AND or to break an <emphasis>Condition</emphasis> apart based on AND
 			operators.  These utilities are helpful for breaking apart a criteria
-			into individual filters that your connector can implement.</para>
+			into individual filters that your translator can implement.</para>
     </sect2>      
   </sect1>  
     
@@ -241,55 +247,50 @@
 		<para>Teiid uses a library of metadata, known as "runtime metadata” for
 			each virtual database that is deployed in Teiid. The runtime metadata
 			is a subset of metadata as defined by models in the Teiid models that
-			compose the virtual database.  </para>
-		<para>Connectors can access runtime metadata by using the interfaces
-			defined in org.teiid.connector.metadata.runtime.  This package defines
-			interfaces representing a MetadataID, a MetadataObject, and ways to
-			navigate those IDs and objects.</para>
+			compose the virtual database.  While builing your VDB in the Designer, you can define what 
+            called "Extension Model", that defines any number of arbitary properties on a model and its objects.
+            At runtime, using this runtime metadata interface, you get access to those set properties defined during the 
+            design time, to define/hint any execution behavior. For example, a XML model could define the 'xpath' as 
+            one of the property on Column of a Table.</para>
+                    
+		<para>Translator gets access to the <emphasis>RuntimeMetadata</emphasis> interface at the time of <emphasis>Excecution</emphasis> creation.
+            Translators can access runtime metadata by using the interfaces
+			defined in <emphasis>org.teiid.metadata</emphasis> package.  This package defines
+			API representing a Schema, Table, Columns and Procedures, and ways to navigate these objects.</para>
 
     <sect2>
       <title>Language Objects</title>
-      <para>One language interface, IMetadataReference describes whether a language object has a reference to a MetadataObject.  The following interfaces extend IMetadataReference:</para>
+      <para>All the language objects extend <emphasis>AbstractMetadataRecord</emphasis> class</para>
       <itemizedlist>
-        <listitem><para>IElement</para> - returns an Element MetadataObject</listitem>
-        <listitem><para>IGroup</para> - returns a Group MetadataObject</listitem>
-        <listitem><para>IProcedure</para> - returns a Procedure MetadataObject</listitem>
-        <listitem><para>IParameter</para> - returns a Parameter MetadataObject</listitem>
+        <listitem><para>Column - returns Column metadata record</para></listitem>
+        <listitem><para>Table - returns a Table metadata record</para></listitem>
+        <listitem><para>Procedure - returns a Procedure metadata record</para></listitem>
+        <listitem><para>ProcedureParameter - returns a Procedure Parameter metadata record</para></listitem>
       </itemizedlist>
 
-      <para>Once a MetadataObject has been obtained, it is possible to use it metadata about that object or to find other related or objects.</para>
+      <para>Once a metadata record has been obtained, it is possible to use its metadata about that object or to find other related or objects.</para>
     </sect2>
     <sect2>
       <title>Access to Runtime Metadata</title>
 
-		<para>As mentioned in the previous section, a MetadataID is obtained
-			from one of the language objects. That MetadataID can then be used
-			directly to obtain information about the ID, such as the full name or
-			short name.  </para>
-		<para>The RuntimeMetadata interface is passed in for the creation of an Execution. It provides the ability to look up
-			MetadataObjects based on their fully qualified names in the VDB. There are several kinds of
-			MetadataObjects and they can be used to find more information about
-			the object in runtime metadata.  </para>
-		<para>Currently, only a subset of the most commonly used runtime
-			metadata is available through these interfaces. In the future, more
-			complete information will be available.</para>
+		<para>The RuntimeMetadata interface is passed in for the creation of an "Execution". See "createExecution" 
+            method on the "ExecutionFactory" class. It provides the ability to look up
+			metadta records based on their fully qualified names in the VDB. There are several kinds of
+			metadata objects and they can be used to find more information about
+			the objects in runtime metadata.  </para>
+		
 
-      <para><emphasis>Obtaining MetadataObject Properties Example</emphasis></para>
+      <para><emphasis>Obtaining Metadata Properties Example</emphasis></para>
 
-      <para>The process of getting an element's properties is sometimes needed for connector development.  For example to get the NameInSource property or all extension properties:</para>
+      <para>The process of getting an Table's properties is sometimes needed for translator development.  For example 
+      to get the "NameInSource" property or all extension properties:</para>
       <programlisting><![CDATA[
-//getting the Group metadata from an IGroup is straight-forward
-IGroup igroup = ... //some group on a command
-Group group = igroup.getMetadataObject();
-
-//we could also use the runtime metadata
-RuntimeMetadata rm = ... //Obtained from the creation of the Execution
-
-group = rm.getGroup("fully.qualified.name"); 
-String contextName = group.getNameInSource();
+//getting the Table metadata from an Table is straight-forward
+Table table = runtimeMetadata.getTable("table-name");
+String contextName = table.getNameInSource();
 
 //The props will contain extension properties
-Properties props = group.getProperties();       
+Properties props = table.getProperties();       
       ]]></programlisting>
       
     </sect2>
@@ -300,8 +301,8 @@ Properties props = group.getProperties();
     
     <sect2>
       <title>Framework</title>
-		<para>The Connector API provides a language visitor framework in the
-			org.teiid.connector.visitor.framework package.   The framework
+		<para>The API provides a language visitor framework in the
+			<emphasis>org.teiid.language.visitor</emphasis> package.  The framework
 			provides utilities useful in navigating and extracting information
 			from trees of language objects.</para>
 	
@@ -313,7 +314,7 @@ Properties props = group.getProperties();
 			interface objects and the graph is really a tree rooted at some node.
 			 The provided framework allows for customization of both aspects of
 			visiting.</para>
-		<para>The base LanguageObjectVisitor class defines the visit methods
+		<para>The base <emphasis>AbstractLanguageVisitor</emphasis> class defines the visit methods
 			for all leaf language interfaces that can exist in the tree.  The
 			LanguageObject interface defines an acceptVisitor() method – this
 			method will call back on the visit method of the visitor to complete
@@ -321,31 +322,31 @@ Properties props = group.getProperties();
 			AbstractLanguageVisitor.  The AbstractLanguageVisitor is just a
 			visitor shell – it performs no actions when visiting nodes and does
 			not provide any iteration.</para>
-		<para>The HierarchyVisitor provides the basic code for walking a
-			language object tree.  The HierarchyVisitor performs no action as it
+		<para>The <emphasis>HierarchyVisitor</emphasis> provides the basic code for walking a
+			language object tree.  <emphasis>The HierarchyVisitor</emphasis> performs no action as it
 			walks the tree – it just encapsulates the knowledge of how to walk it.
-			 If your connector wants to provide a custom iteration that walks the
+			 If your translator wants to provide a custom iteration that walks the
 			objects in a special order (to exclude nodes, include nodes multiple
 			times, conditionally include nodes, etc) then you must either extend
 			HierarchyVisitor or build your own iteration visitor.  In general,
 			that is not necessary.</para>
-		<para>The DelegatingHierarchyVisitor is a special subclass of the
+		<para>The <emphasis>DelegatingHierarchyVisitor</emphasis> is a special subclass of the
 			HierarchyVisitor that provides the ability to perform a different
 			visitor’s processing before and after iteration.  This allows users of
 			this class to implement either pre- or post-order processing based on
 			the HierarchyVisitor.  Two helper methods are provided on
-			DelegatingHierarchyVisitor to aid in executing pre- and post-order
+			<emphasis>DelegatingHierarchyVisitor</emphasis> to aid in executing pre- and post-order
 			visitors.   </para>
     </sect2>
     <sect2>
       <title>Provided Visitors</title>
-		<para>The SQLStringVisitor is a special visitor that can traverse a
+		<para>The <emphasis>SQLStringVisitor</emphasis> is a special visitor that can traverse a
 			tree of language interfaces and output the equivalent Teiid SQL.  This
 			visitor can be used to print language objects for debugging and
-			logging.  The SQLStringVisitor does not use the HierarchyVisitor
+			logging.  The <emphasis>SQLStringVisitor</emphasis> does not use the <emphasis>HierarchyVisitor</emphasis>
 			described in the last section; it provides both iteration and
 			processing type functionality in a single custom visitor.    </para>
-		<para>The CollectorVisitor is a handy utility to collect all language
+		<para>The <emphasis>CollectorVisitor</emphasis> is a handy utility to collect all language
 			objects of a certain type in a tree. Some additional helper methods
 			exist to do common tasks such as retrieving all elements in a tree,
 			retrieving all groups in a tree, and so on.  </para>
@@ -358,7 +359,7 @@ Properties props = group.getProperties();
 		<para>Create a subclass of AbstractLanguageVisitor.  Override any visit
 			methods needed for your processing.  For instance, if you wanted to
 			count the number of elements in the tree, you need only override the
-			visit(IElement) method.  Collect any state in local variables and
+			<emphasis>visit(ColumnReference)</emphasis> method.  Collect any state in local variables and
 			provide accessor methods for that state.</para>
 		<para>Decide whether to use pre-order or post-order iteration. Note
 			that visitation order is based upon syntax ordering of SQL clauses -
@@ -367,7 +368,7 @@ Properties props = group.getProperties();
 			DelegatingHierarchyVisitor:</para>
       <programlisting><![CDATA[
 // Get object tree 
-ILanguageObject objectTree = …
+LanguageObject objectTree = …
 
 // Create your visitor initialize as necessary
 MyVisitor visitor = new MyVisitor();
@@ -380,32 +381,27 @@ int count = visitor.getCount();
       ]]></programlisting>      
     </sect2>
   </sect1>
-  <sect1 id="connector_capabilities">
-    <title>Connector Capabilities</title>
-	<para>All connectors must return a ConnectorCapabilities class from the
-		<code>Connection.getCapabilities()</code> or <code>Connector.getCapabilities()</code> method. This class is used by the
-		Connector Manager to determine what kinds of commands the connector is
-		capable of executing. A basic implementation of the
-		ConnectorCapabilities interface is supplied at
-		BasicConnectorCapabilities. This
-		capabilities class specifies that the connector does not support any capability. You should extend
-		this class and override the necessary methods to specify which
-		capabilities your connector supports.  </para>
+  <sect1 id="translator_capabilities">
+    <title>Translator Capabilities</title>
+	<para>The <emphasis>ExecutionFactory</emphasis> class defines all the methods that describe the capabilities of a Translator. 
+       These are used by the Connector Manager to determine what kinds of commands the translator is
+		capable of executing. A base  <emphasis>ExecutionFactory</emphasis> class implements all the basic capabilities, which says
+        your translator does not support any cpabilities. Your extended 
+        <emphasis>ExecutionFactory</emphasis> class must override the the necessary methods to specify which
+		capabilities your translator supports.  </para>
     <sect2>
       <title>Capability Scope</title>
 		<para>
 			Note that if your capabilities will remain unchanged for the lifetime
-			of the connector, you should return them via
-			<code>Connector.getCapabilities()</code>
-			since the engine will cache them for reuse by all connections to the
-			connector.  Capabilities returned by the connection will only be cached for the duration of the user request.
+			of the translator, since the engine will cache them for reuse by all instances of that
+			translator.  Capabilities based on connection/user are not supported.
 		</para>
     </sect2>
     <sect2>
       <title>Capabilities</title>
-        <para>The following table lists the capabilities that can be specified in the ConnectorCapabilities class.</para>
+        <para>The following table lists the capabilities that can be specified in the <emphasis>ExecutionFactory</emphasis> class.</para>
         <table frame='all'>
-          <title>Available Connector Capabilities</title>
+          <title>Available Capabilities</title>
           <tgroup cols='3' align='left' colsep='1' rowsep='1'>
             <colspec colname='c1' colwidth="1.5*" />
             <colspec colname='c2' colwidth="1*" />
@@ -432,7 +428,7 @@ int count = visitor.getCount();
                   <para />
                 </entry>
                 <entry>
-                  <para>Connector can support SELECT DISTINCT in queries.</para>
+                  <para>Translator can support SELECT DISTINCT in queries.</para>
                 </entry>
               </row>
               <row>
@@ -443,33 +439,19 @@ int count = visitor.getCount();
                   <para />
                 </entry>
                 <entry>
-                  <para>Connector can support SELECT of more than just element references.</para>
+                  <para>Translator can support SELECT of more than just column references.</para>
                 </entry>
               </row>
               <row>
                 <entry>
-                  <para>AliasedGroup</para>
+                  <para>AliasedTable</para>
                 </entry>
                 <entry>
                   <para />
                 </entry>
                 <entry>
-                  <para>Connector can support groups in the FROM clause that have an alias.
+                  <para>Translator can support Tables in the FROM clause that have an alias.
                   </para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>SupportedJoinCriteria</para>
-                </entry>
-                <entry>
-                  <para>At least one of the join type supports.</para>
-                </entry>
-                <entry>
-					<para>Returns one of the SupportedJoinCriteria enum types: ANY, THETA,
-						EQUI, KEY. KEY is the most restrictive, indicating that the source
-						only supports equi-join criteria specified on the primary key of at
-						least one of the tables in join.</para>
                 </entry>
               </row>
               <row>
@@ -480,7 +462,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support inner and cross joins</para>
+                  <para>Translator can support inner and cross joins</para>
                 </entry>
               </row>
               <row>
@@ -491,8 +473,8 @@ int count = visitor.getCount();
                   <para>AliasedGroups and at least on of the join type supports.</para>
                 </entry>
                 <entry>
-                  <para>Connector can support a self join between two aliased versions of the
-                    same group.</para>
+                  <para>Translator can support a self join between two aliased versions of the
+                    same Table.</para>
                 </entry>
               </row>
               <row>
@@ -503,7 +485,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support LEFT and RIGHT OUTER JOIN.</para>
+                  <para>Translator can support LEFT and RIGHT OUTER JOIN.</para>
                 </entry>
               </row>
               <row>
@@ -514,7 +496,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support FULL OUTER JOIN.</para>
+                  <para>Translator can support FULL OUTER JOIN.</para>
                 </entry>
               </row>
               <row>
@@ -522,10 +504,10 @@ int count = visitor.getCount();
                   <para>InlineViews</para>
                 </entry>
                 <entry>
-                  <para>AliasedGroup</para>
+                  <para>AliasedTable</para>
                 </entry>
                 <entry>
-                  <para>Connector can support a named subquery in the FROM clause.</para>
+                  <para>Translator can support a named subquery in the FROM clause.</para>
                 </entry>
               </row>
               <row>
@@ -547,7 +529,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support comparison criteria with the operator "=”.</para>
+                  <para>Translator can support comparison criteria with the operator "=”.</para>
                 </entry>
               </row>
               <row>
@@ -558,7 +540,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support comparison criteria with the operator "&gt;” or "&lt;".</para>
+                  <para>Translator can support comparison criteria with the operator "&gt;” or "&lt;".</para>
                 </entry>
               </row>
               <row>
@@ -569,7 +551,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support LIKE criteria.</para>
+                  <para>Translator can support LIKE criteria.</para>
                 </entry>
               </row>
               <row>
@@ -580,7 +562,7 @@ int count = visitor.getCount();
                   <para>LikeCriteria</para>
                 </entry>
                 <entry>
-                  <para>Connector can support LIKE criteria with an ESCAPE character clause.</para>
+                  <para>Translator can support LIKE criteria with an ESCAPE character clause.</para>
                 </entry>
               </row>
               <row>
@@ -588,10 +570,10 @@ int count = visitor.getCount();
                   <para>InCriteria</para>
                 </entry>
                 <entry>
-                  <para/>
+                  <para>MaxInCriteria</para>
                 </entry>
                 <entry>
-                  <para>Connector can support IN predicate criteria.</para>
+                  <para>Translator can support IN predicate criteria.</para>
                 </entry>
               </row>
               <row>
@@ -602,7 +584,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support IN predicate criteria where values are supplied by a
+                  <para>Translator can support IN predicate criteria where values are supplied by a
                     subquery.</para>
                 </entry>
               </row>
@@ -614,7 +596,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support IS NULL predicate criteria.</para>
+                  <para>Translator can support IS NULL predicate criteria.</para>
                 </entry>
               </row>
               <row>
@@ -625,7 +607,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support the OR logical criteria.</para>
+                  <para>Translator can support the OR logical criteria.</para>
                 </entry>
               </row>
               <row>
@@ -636,7 +618,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-					<para>Connector can support the NOT logical criteria. IMPORTANT: This
+					<para>Translator can support the NOT logical criteria. IMPORTANT: This
 						capability also applies to negation of predicates, such as specifying
 						IS NOT NULL, "&lt;=" (not "&gt;"), "&gt;=" (not "&lt;"), etc.</para>
                 </entry>
@@ -649,7 +631,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support EXISTS predicate criteria.</para>
+                  <para>Translator can support EXISTS predicate criteria.</para>
                 </entry>
               </row>
               <row>
@@ -660,7 +642,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support a quantified comparison criteria using the ALL
+                  <para>Translator can support a quantified comparison criteria using the ALL
                     quantifier.</para>
                 </entry>
               </row>
@@ -672,7 +654,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support a quantified comparison criteria using the SOME or ANY
+                  <para>Translator can support a quantified comparison criteria using the SOME or ANY
                     quantifier.</para>
                 </entry>
               </row>
@@ -684,7 +666,7 @@ int count = visitor.getCount();
                   <para />
                 </entry>
                 <entry>
-                  <para>Connector can support the ORDER BY clause in queries.</para>
+                  <para>Translator can support the ORDER BY clause in queries.</para>
                 </entry>
               </row>
               <row>
@@ -695,7 +677,7 @@ int count = visitor.getCount();
                   <para>OrderBy</para>
                 </entry>
                 <entry>
-                  <para>Connector can support the ORDER BY items that are not directly specified in the select clause.</para>
+                  <para>Translator can support the ORDER BY items that are not directly specified in the select clause.</para>
                 </entry>
               </row>
               <row>
@@ -706,7 +688,7 @@ int count = visitor.getCount();
                   <para />
                 </entry>
                 <entry>
-                  <para>Connector can support an explict GROUP BY clause.</para>
+                  <para>Translator can support an explict GROUP BY clause.</para>
                 </entry>
               </row>
               <row>
@@ -717,7 +699,7 @@ int count = visitor.getCount();
                   <para>GroupBy</para>
                 </entry>
                 <entry>
-                  <para>Connector can support the HAVING clause.</para>
+                  <para>Translator can support the HAVING clause.</para>
                 </entry>
               </row>
               <row>
@@ -728,7 +710,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support the AVG aggregate function.</para>
+                  <para>Translator can support the AVG aggregate function.</para>
                 </entry>
               </row>
               <row>
@@ -739,7 +721,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support the COUNT aggregate function.</para>
+                  <para>Translator can support the COUNT aggregate function.</para>
                 </entry>
               </row>
               <row>
@@ -750,7 +732,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support the COUNT(*) aggregate function.</para>
+                  <para>Translator can support the COUNT(*) aggregate function.</para>
                 </entry>
               </row>
               <row>
@@ -761,7 +743,7 @@ int count = visitor.getCount();
                   <para>At least one of the aggregate functions.</para>
                 </entry>
                 <entry>
-                  <para>Connector can support the keyword DISTINCT inside an aggregate function.  This
+                  <para>Translator can support the keyword DISTINCT inside an aggregate function.  This
                     keyword indicates that duplicate values within a group of rows will be ignored.</para>
                 </entry>
               </row>
@@ -773,7 +755,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support the MAX aggregate function.</para>
+                  <para>Translator can support the MAX aggregate function.</para>
                 </entry>
               </row>
               <row>
@@ -784,7 +766,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support the MIN aggregate function.</para>
+                  <para>Translator can support the MIN aggregate function.</para>
                 </entry>
               </row>
               <row>
@@ -795,7 +777,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support the SUM aggregate function.</para>
+                  <para>Translator can support the SUM aggregate function.</para>
                 </entry>
               </row>
               <row>
@@ -806,7 +788,7 @@ int count = visitor.getCount();
                   <para />
                 </entry>
                 <entry>
-                  <para>Connector can support the use of a subquery in a scalar context (wherever an
+                  <para>Translator can support the use of a subquery in a scalar context (wherever an
                     expression is valid).</para>
                 </entry>
               </row>
@@ -818,7 +800,7 @@ int count = visitor.getCount();
                   <para>At least one of the subquery pushdown capabilities.</para>
                 </entry>
                 <entry>
-                  <para>Connector can support a correlated subquery that refers to an element in
+                  <para>Translator can support a correlated subquery that refers to an element in
                     the outer query.</para>
                 </entry>
               </row>
@@ -841,7 +823,7 @@ int count = visitor.getCount();
                   <para />
                 </entry>
                 <entry>
-                  <para>Connector can support "searched” CASE expressions anywhere that expressions are
+                  <para>Translator can support "searched” CASE expressions anywhere that expressions are
                     accepted.</para>
                 </entry>
               </row>
@@ -853,7 +835,7 @@ int count = visitor.getCount();
                   <para />
                 </entry>
                 <entry>
-                  <para>Connector support UNION and UNION ALL</para>
+                  <para>Translator support UNION and UNION ALL</para>
                 </entry>
               </row>
               <row>
@@ -864,7 +846,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector supports INTERSECT</para>
+                  <para>Translator supports INTERSECT</para>
                 </entry>
               </row>
               <row>
@@ -875,7 +857,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector supports Except</para>
+                  <para>Translator supports Except</para>
                 </entry>
               </row>
               <row>
@@ -886,7 +868,7 @@ int count = visitor.getCount();
                   <para>Unions, Intersect, or Except</para>
                 </entry>
                 <entry>
-                  <para>Connector supports set queries with an ORDER BY</para>
+                  <para>Translator supports set queries with an ORDER BY</para>
                 </entry>
               </row>
               <row>
@@ -897,7 +879,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support the limit portion of the limit clause</para>
+                  <para>Translator can support the limit portion of the limit clause</para>
                 </entry>
               </row>
               <row>
@@ -908,7 +890,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support the offset portion of the limit clause</para>
+                  <para>Translator can support the offset portion of the limit clause</para>
                 </entry>
               </row>
               <row>
@@ -930,34 +912,55 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Connector supports INSERT statements with values specified by an IQueryCommand.</para>
+                  <para>Translator supports INSERT statements with values specified by an QueryExpression.</para>
                 </entry>
               </row>
+              <row>
+                <entry>
+                  <para>supportsBatchedUpdates</para>
+                </entry>
+                <entry>
+                  <para/>
+                </entry>
+                <entry>
+                  <para>Translator supports a batch of INSERT, UPDATE and DELETE commands to be executed together.</para>
+                </entry>
+              </row>   
+              <row>
+                <entry>
+                  <para>supportsBulkUpdate</para>
+                </entry>
+                <entry>
+                  <para/>
+                </entry>
+                <entry>
+                  <para>Translator supports updates with multiple value sets</para>
+                </entry>
+              </row>         
             </tbody>
           </tgroup>
         </table>
-		<para>Note that any pushdown subquery must itself be compliant with the
-			connector capabilities.</para>
+		<para>Note that any pushdown subquery must itself be compliant with the	Translator capabilities.</para>
       </sect2>
       
       <sect2 id="command_form_capabilities">
         <title>Command Form</title>
-		<para>The method ConnectorCapabilities.useAnsiJoin() should return true
-			if the Connector prefers the use of ANSI style join structure for
+		<para>The method <emphasis>ExecutionFactory.useAnsiJoin()</emphasis> should return true
+			if the Translator prefers the use of ANSI style join structure for
 			join trees that contain only INNER and CROSS joins.</para>
-		<para>The method ConnectorCapabilities.requiresCriteria() should return
-			true if the Connector requires criteria for any Query, Update, or
+		<para>The method <emphasis>ExecutionFactory.requiresCriteria()</emphasis> should return
+			true if the Translator requires criteria for any Query, Update, or
 			Delete. This is a replacement for the model support property "Where
 			All".</para>
       </sect2>
       
       <sect2>
         <title>Scalar Functions</title>
-		<para>The method ConnectorCapabilities.getSupportedFunctions() can be
-			used to specify which scalar functions the connector supports.  The
+		<para>The method <emphasis>ExecutionFactory.getSupportedFunctions()</emphasis> can be
+			used to specify which scalar functions the Translator supports.  The
 			set of possible functions is based on the set of functions supported
 			by Teiid.  This set can be found in the <ulink url="&docUrl;">Reference</ulink>
-			documentation.  If the connector states that it supports a function,
+			documentation.  If the Translator states that it supports a function,
 			it must support all type combinations and overloaded forms of that
 			function.</para>
 		<para>There are also five standard operators that can also be specified in the
@@ -971,27 +974,25 @@ int count = visitor.getCount();
 
       <sect2>
         <title>Physical Limits</title>
-		<para>The method ConnectorCapabilities.getMaxInCriteriaSize() can be
+		<para>The method <emphasis>ExecutionFactory.getMaxInCriteriaSize()</emphasis> can be
 			used to specify the maximum number of values that can be passed in an
 			IN criteria.  This is an important constraint as an IN criteria is
 			frequently used to pass criteria between one source and another using
 			a dependent join.</para>
-		<para>The method ConnectorCapabilities.getMaxFromGroups() can be used
+		<para>The method <emphasis>ExecutionFactory.getMaxFromGroups()</emphasis> can be used
 			to specify the maximum number of FROM Clause groups that can used in a
 			join. -1 indicates there is no limit.</para>
       </sect2>
       
       <sect2>
         <title>Update Execution Modes</title>
-		<para>The method ConnectorCapabilities.supportsBatchedUpdates() can be
-			used to indicate that the connector supports executing the
-			IBatchedUpdates command.
+		<para>The method <emphasis>ExecutionFactory.supportsBatchedUpdates()</emphasis> can be
+			used to indicate that the Translator supports executing the <emphasis>BatchedUpdates</emphasis> command.
 			</para>
-		<para>The method ConnectorCapabilities.supportsBulkUpdate() can be used
-			to indicate that the connector accepts update commands containg multi valued ILiterals.</para>
-		<para>Note that if the connector does not support either of these
-			update modes, the query engine will compensate by issuing the updates
-			individually.</para>
+		<para>The method <emphasis>ExecutionFactory.supportsBulkUpdate()</emphasis> can be used
+			to indicate that the Translator accepts update commands containg multi valued Literals.</para>
+		<para>Note that if the translator does not support either of these
+			update modes, the query engine will compensate by issuing the updates 	individually.</para>
       </sect2>
       
    </sect1>

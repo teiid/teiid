@@ -107,7 +107,7 @@ public class BasicManagedConnection implements ManagedConnection {
 
 	@Override
 	public XAResource getXAResource() throws ResourceException {
-		return null;
+		return this.physicalConnection.getXAResource();
 	}
 	
 	@Override

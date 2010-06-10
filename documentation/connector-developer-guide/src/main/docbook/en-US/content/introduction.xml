@@ -1,8 +1,17 @@
 <chapter id="introduction">
-  <title>Connectors in Teiid</title>
-  <para>A connector handles all communications with individual enterprise information sources, which can include
-    databases, data feeds, flat files, etc.</para>
-  <para>A connector is used to:</para>
+  <title>Translators and Resource Adapters in Teiid</title>
+  
+  <para>To integrate data from a Enterprise Information System (EIS) into Teiid, Teiid requires two separate modules </para>
+  <itemizedlist>
+    <listitem>
+      <para>Translator</para>
+    </listitem>
+    <listitem>
+      <para>Resource Adapter (also sometimes called as Connector or J2EE Connector or JCA Connector or RAR file) </para>
+    </listitem>
+  </itemizedlist>  
+  
+  <para>A Translator is used to:</para>
   <itemizedlist>
     <listitem>
       <para>Translate a Teiid-specific command into a native command.</para>
@@ -11,63 +20,146 @@
       <para>Execute the command.</para>
     </listitem>
     <listitem>
-      <para>Return batches of results.</para>
+      <para>Return batches of results in relational form.</para>
     </listitem>
   </itemizedlist>
-  <para>Teiid is responsible for reassembling the results from one or more connectors into an
-    answer for the user’s command.</para>
-  <para>
-    For a more detailed workflow, see the chapter
-    <link linkend="connector_api">
-      <emphasis>“Connector API.”</emphasis>
-    </link>
-  </para>
+  
+  <para>A Resource Adapter is:</para>
+  <itemizedlist>
+    <listitem>
+      <para>Handle all communications with individual enterprise information system(EIS), which can include databases, data feeds, flat files, etc.</para>
+    </listitem>
+    <listitem>
+      <para>This adapter can be a <ulink url="http://java.sun.com/j2ee/connector/">JEE JCA Connector</ulink> or any other custom connection provider. 
+      The reason Teiid uses JEE JCA is, this specification defines how one can write, package and configure access to EIS system in consistent manner.
+      Also, there are various commercial/open source software vendors already provide JCA Connectors that provide 
+      access mechanisms to variety of back-end systems.</para>
+    </listitem>
+    <listitem>
+      <para>Helps to execute the command and fetch results from source systems for a given Translator</para>
+    </listitem>    
+  </itemizedlist>
+      
+  <para>Given a combination of a Translator + Resource Adapter, one can connect any EIS system to Teiid for their data integration needs</para>
+  
   <sect1>
-    <title>Do You Need a New Connector?</title>
-    <para>Teiid provides several connectors for common enterprise information system types. If
+    <title>Do You Need a New Translator?</title>
+    <para>Teiid provides several translators for common enterprise information system types. If
       you can use one of these enterprise information systems, you do not need to develop a custom one.
     </para>
-    <para>Teiid offers the following connectors:</para>
+    <para>Teiid offers the following translators:</para>
     <itemizedlist>
       <listitem>
         <para>
           <emphasis>JDBC:</emphasis>
-          Connects to many relational databases. The JDBC Connector is validated against the following database
-          systems: Oracle, Microsoft SQL Server, IBM DB2, MySQL, Postgres, Derby, Sybase, H2, and HSQL. In addition, the JDBC Connector can
+          Works with many relational databases. The JDBC translator is validated against the following database
+          systems: Oracle, Microsoft SQL Server, IBM DB2, MySQL, Postgres, Derby, Sybase, H2, and HSQL. In addition, the JDBC Translator can
           often be used with other 3rd-party drivers and provides a wide range of extensibility options to
           specialize behavior against those drivers.
         </para>
       </listitem>
       <listitem>
         <para>
-          <emphasis>Text:</emphasis>
-          Connects to text files.
+          <emphasis>File:</emphasis>
+          Provides a procedural way to access the file system to handle text files.
         </para>
       </listitem>
       <listitem>
         <para>
-          <emphasis>XML</emphasis>
-          Connects to XML files on disk or by invoking Web services on other enterprise systems.
+          <emphasis>XML:</emphasis> Provides a procedural way to access XML content on the File system or in a Web-Service.
         </para>
       </listitem>
       <listitem>
         <para>
-          <emphasis>LDAP</emphasis>
-          Connects to LDAP directory services.
+          <emphasis>LDAP:</emphasis> Accesses to LDAP directory services.
         </para>
       </listitem>
       <listitem>
         <para>
-          <emphasis>Salesforce</emphasis>
-          Connects to Salesforce.
+          <emphasis>Salesforce:</emphasis> Works with Salesforce interfaces.
         </para>
       </listitem>
     </itemizedlist>
+    
   </sect1>
   <sect1>
-    <title>Required Items to Write a Custom Connector</title>
-    <para>To write a connector, follow this procedure:</para>
+    <title>Do You Need a New Resource Adapter?</title>
+    <para>As mentioned above, for every Translator that needs to gather data from external source systems, it requires a resource adapter.
+    The following resource adapters are provided by Teiid distribution to work with above Translators.
+    </para>
+    
+    <itemizedlist>
+      <listitem>
+        <para><emphasis>Data Source:</emphasis> This is provided by the JBoss AS container. This is used by the JDBC Translator.</para>
+      </listitem>
+      <listitem>
+        <para><emphasis>File:</emphasis> Provides a JEE JCA based Connector to access defined directory on the file system. This used by XML and File Translators</para>
+      </listitem>
+      <listitem>
+        <para><emphasis>XML:</emphasis> Provides JEE JCA Connector to invoke Web Services using JBoss Web services stack. This is used by the XML Translator</para>
+      </listitem>
+      <listitem>
+        <para>
+          <emphasis>LDAP:</emphasis> Provides JEE JCA connector to access LDAP; Used by the LDAP Translator.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <emphasis>Salesforce:</emphasis> Provides JEE JCA connector to access Salesforce by invoking their Web Service interface. Used by the SalesForce Translator.
+        </para>
+      </listitem>
+    </itemizedlist>    
+    <para></para>
+  </sect1>
+  
+  <sect1>
+    <title>Required Items to Write a Custom Translator</title>
+    <para>To write a translator, follow this procedure:</para>
     <orderedlist numeration="arabic">
+      <listitem>
+        <para>Create a new or use a Resource Adapater for the EIS system, to be used with this Translator</para>
+      </listitem>
+      <listitem>
+        <para>Implement the required interfaces defined by the Translator API.</para>
+        <itemizedlist>
+          <listitem>
+            <para>ExecutionFactory – Extend org.teiid.translator.ExecutionFactory class</para>
+          </listitem>
+          <listitem>
+            <para>Execution (and sub-interfaces) – specifies how to execute each type of command</para>
+          </listitem>
+        </itemizedlist>
+      </listitem>
+      <listitem>
+        <para>Define the Template for exposing configuration properties</para>
+      </listitem>
+      <listitem>
+        <para>Deploy your Translator into Teiid.</para>
+        <itemizedlist>
+          <listitem>
+            <para>Deploy a Virtual Database (VDB) with metadata corresponding to your Translator</para>
+          </listitem>
+        </itemizedlist>
+      </listitem>
+      <listitem>
+        <para>Execute queries via Teiid.</para>
+      </listitem>
+    </orderedlist>
+    <para>
+      This guide covers how to do each of these steps in detail. It also provides additional information for
+      advanced topics, such as connection pooling, streaming large objects, and transactions. For a sample
+      Translator code, please check the <ulink url="http://anonsvn.jboss.org/repos/teiid/trunk/connectors/">Teiid source code</ulink>
+    </para>
+  </sect1>
+  
+  <sect1>
+    <title>Required Items to write a JEE JCA based Custom Resource Adaptor</title>
+    <para>To write a resource adaptor, follow this procedure:</para>
+    <orderedlist numeration="arabic">
+        <listitem>
+            <para>The specification is defined by the <ulink url="http://java.sun.com/j2ee/connector/">JEE JCA Connector</ulink>. 
+            You need to have basic idea about what JCA connectors are how they are developed and packaged.</para>
+        </listitem>
       <listitem>
         <para>Gather all necessary information about your Enterprise Information System (EIS). You will need
           to know:</para>
@@ -85,53 +177,35 @@
             <para>The processing constructs, or capabilities, supported by information system.</para>
           </listitem>
           <listitem>
-            <para>Required properties for the connector, such as URL, user name, etc.</para>
+            <para>Required properties for the connection, such as URL, user name, etc.</para>
           </listitem>
         </itemizedlist>
       </listitem>
       <listitem>
-        <para>Implement the required interfaces defined by the Connector API.</para>
+        <para>All the required supporting JCA SPI classes provided by the Teiid API. The JCA CCI support is not provided from Teiid</para>
         <itemizedlist>
           <listitem>
-            <para>Connector – starting point.</para>
+            <para>BasicConnectionFactory – Defines the Connection Factory</para>
           </listitem>
           <listitem>
-            <para>Connection – represents a connection to the source.</para>
+            <para>BasicConnection – represents a connection to the source.</para>
           </listitem>
           <listitem>
-            <para>ConnectorCapabilities – specifies what kinds of commands your connector can
-              execute</para>
-          </listitem>
-          <listitem>
-            <para>Execution (and sub-interfaces) – specifies how to execute each type of command</para>
+            <para>BasicResourceAdapter – Specifies the resource adapter class</para>
           </listitem>
         </itemizedlist>
       </listitem>
       <listitem>
-        <para>Test your connector with Connector Development Kit (CDK) test utilities.</para>
-      </listitem>
+        <para>Package your resource adapter.</para>
+      </listitem>      
       <listitem>
-        <para>Deploy your connector type into Teiid.</para>
-        <itemizedlist>
-          <listitem>
-            <para>Create and import your connector type definition file.</para>
-          </listitem>
-          <listitem>
-            <para>Create a connector binding using the connector type</para>
-          </listitem>
-          <listitem>
-            <para>Deploy a Virtual Database with metadata corresponding to your EIS</para>
-          </listitem>
-        </itemizedlist>
-      </listitem>
-      <listitem>
-        <para>Execute queries via Teiid.</para>
+        <para>Deploy your resource adapter into Teiid.</para>
       </listitem>
     </orderedlist>
     <para>
       This guide covers how to do each of these steps in detail. It also provides additional information for
-      advanced topics, such as connection pooling, streaming large objects, and transactions. For a sample
-      connector code, please check the <ulink url="http://teiid.org">Teiid community</ulink>
+      advanced topics such as streaming large objects and transactions. For a sample
+      connector code, please check the <ulink url="http://anonsvn.jboss.org/repos/teiid/trunk/connectors/">Teiid Source code</ulink>
     </para>
-  </sect1>
+  </sect1>  
 </chapter>

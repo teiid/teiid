@@ -1,0 +1,288 @@
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/custom.dtd">
+%CustomDTD;
+]>
+<chapter id="develop_adapter">
+	<title>Developing JEE JCA Adapters for Teiid Translators</title>
+	<para>This chapter examines how to use facilities provided by the Teiid
+		API to develop a JEE JCA Connector that can be used with the Teiid Translator. Please note that these are 
+        standard JEE JCA connectors, nothing special needs to be done for Teiid. As an aid to our Translator 
+        developers, we provided some base implementation framework to ease the development of these Connectors.
+        If you already have a JCA Connector or some other mechanism to get data from your source system, you can skip this chapter.</para>
+
+    <para>If you are not familiar with JCA API, please read the <ulink url="http://java.sun.com/j2ee/connector/">JCA 1.5 Specification</ulink>. 
+    There are lot of online tutorials on how to design and build a JCA Connector. The below we show you to build very simple connector, 
+    however building actual connector that supports transactions, security can get much more complex.</para>
+    
+    <para>Check out the following links <ulink url="http://docs.jboss.org/jbossas/jboss4guide/r4/html/ch7.chapt.html">Connectors on JBoss</ulink> </para>
+	
+    <sect1>
+		<title>Develop Adapter using the Teiid Framework</title>
+        <para>If you are going to use the Teiid framework for developing a JCA connector, follow these steps. The required classes are in
+        <emphasis>org.teiid.resource.api</emphasis> package. Please note that Teiid framework does not make use JCA's CCI framework. It
+        only uses the JCA's SPI interfaces. </para>
+        
+        <itemizedlist>
+            <listitem>
+                <para>Define Managed Connection Factory</para>
+            </listitem>
+            <listitem>
+                <para>Define the Connection Factory class</para>
+            </listitem>
+            <listitem>
+              <para>Define the Connection class</para>
+            </listitem>
+            <listitem>
+              <para>Define the configuration properties in a "ra.xml" file</para>
+            </listitem>    
+        </itemizedlist>
+
+        <sect2 id="managed_connection_factory">
+            <title>Define Managed Connection Factory</title>
+            <para>Extend the <emphasis>BasicManagedConnectionFactory</emphasis>, and provide a implementation for the 
+            "createConnectionFactory()" method. This method defines a factory method that can create connections.</para>
+            
+            <para>This class also defines configuration variables, like user, password, URL etc to connect to the EIS system. Define an 
+            attribute for each configuration variable, and then provide both "getter" and "setter" methods for them. 
+            Note to use only "java.lang" objects as the attributes, DO NOT use Java primitives for defining and accessing the properties.
+            See the following code for an example.</para>
+            <programlisting><![CDATA[
+           public class MyManagedConnectionFactory extends BasicManagedConnectionFactory {
+               @Override
+	           public Object createConnectionFactory() throws ResourceException {
+                   return new MyConnectionFactory();
+               }
+               
+               // config property name (metadata for these are defined inside the ra.xml)
+               String userName;
+               public String getUserName() {
+                   return this.userName;
+               }
+               public void setUserName(String name) {
+                   this.userName = name;
+               }
+               
+               // config property count  (metadata for these are defined inside the ra.xml)
+               Integer count;
+               public Integer getCount() {
+                   return this.count;
+               }
+               public void setCount(Integer value) {
+                   this.count = value;
+               }               
+           }      
+          ]]></programlisting>
+        </sect2>
+		<sect2>
+			<title>Define the Connection Factory class</title>
+			<para>Extend the <emphasis>BasicConnectionFactory</emphasis> class, and provide a implementation for the "getConnection()" method.</para>
+          <programlisting><![CDATA[
+           public class MyConnectionFactory extends BasicConnectionFactory {
+               @Override
+               public MyConnection getConnection() throws ResourceException {
+                   return new MyConnection();
+               }
+           }      
+          ]]></programlisting>
+          <para>Since the Managed connection object created the "ConnectionFactory" class it has access to all the configuration 
+          parameters, if "getConnection" method needs to do pass any of credentials to the underlying EIS system. 
+          The Connection Factory class can also get reference to the calling user's <emphasis>javax.security.auth.Subject</emphasis> during 
+          "getConnection" method by calling  
+    
+          <programlisting><![CDATA[
+                Subject subject = ConnectionContext.getSubject();     
+          ]]></programlisting>      
+          This "Subject" object can give access to logged-in user's credentials and roles that are defined. Note that this may be null.
+          </para>
+          <para>Note that you can define "security-domain" for this resource adapter, that is separate from 
+          the Teiid defined "security-domain" for validating the JDBC end user. However, it is users responsibility to make the necessary
+          logins before the Container's thread accesses this resource adapter, and this can get overly complex.</para>
+		</sect2>
+        
+        <sect2 id="connection">
+            <title>Define the Connection class</title>
+            <para>Extend the <emphasis>BasicConnection</emphasis> class, and provide a implementation based on your access 
+            of the Connection object in the Translator. If your
+            connection is stateful, then override "isAlive()" and "cleanup()" methods and provide proper implementations. These are called
+            to check if a Connection is stale or need to flush them from the connection pool etc. by the Container.</para>
+          <programlisting><![CDATA[
+           public class MyConnection extends BasicConnection {
+
+                public void doSomeOperation(command){
+                    // do some operation with EIS system..
+                    // This is method you use in the Translator, you should know
+                    // what need to be done here for your source..
+                }
+                
+                @Override
+                public boolean isAlive() {
+                    return true;
+                }
+                 @Override
+                public void cleanUp() {
+                    
+                }
+           } 
+           ]]></programlisting> 
+        </sect2>
+        
+        <sect2>
+            <title>XA Transactions</title>
+            <para>If you EIS source can participate in XA transactions, then on your <link linkend="connection">Connection</link> object, 
+            override the "getXAResource()" method and provide the "XAResource" object for the EIS system. 
+            Also, You need to extend the "BasicResourceAdapter" class and provide implementation for method
+            "public XAResource[] getXAResources(ActivationSpec[] specs)" to participate in crash recovery. </para>
+            
+            <para>Note that, only when the resource adapters are XA capable, then Teiid can make them participate in a distributed
+            transactions. If they are not XA capable, then source can participate in distributed query but will not participate 
+            in the transaction. Transaction semantics at that time defined by how you defined "-ds.xml" file. i.e. with local-tx or no-tx</para>
+        </sect2>        
+        
+        <sect2>
+            <title>Define the configuration properties in a "ra.xml" file</title>
+            <para>Define a "ra.xml" file (sample shown in the <link linkend="appendix_a">appendix-a</link>) in "META-INF" directory of your RAR file.
+            For every configuration property defined inside the <link linkend="managed_connection_factory">ManagedConnectionFactory</link>
+             class, define the following XML configuration 
+            fragment inside the "ra.xml" file. These properties are used by user to configure instance of this Connector inside a 
+            Container. Also, during the startup the Container reads these properties from this file and knows how to inject 
+            provided values in the "-ds.xml" file into a instance of "ManagedConnectionFactory" to create the Connection.</para>
+          <programlisting><![CDATA[
+            <config-property>
+                <description>{$display:"${display-name}",$description:"${description}", $allowed="${allowed}", $required="${true|false}", $defaultValue="${default-value}"}</description>
+                <config-property-name>${property-name}</config-property-name>
+                <config-property-type>${property-type}</config-property-type>
+                <config-property-value>${optioal-property-value}</config-property-value>
+            </config-property>
+           ]]></programlisting> 
+           
+           <para>The format and contents of "&lt;description&gt;" element is a Teiid extension to provide the extended metadata for tooling purpose. The 
+           JCA specification does not define enough metadata on these properties so Teiid fills in the gap with its own extension. 
+           For every property define the following properties
+           
+            <itemizedlist>
+                <listitem>
+                    <para>$display: Display name of the property</para>
+                </listitem>
+                <listitem>
+                    <para>$description: Description about the property</para>
+                </listitem>
+                <listitem>
+                  <para>$required: The property is a required property; or optional and a default is supplied</para>
+                </listitem>
+                <listitem>
+                  <para>$allowed: If property value must be in certain set of legal values, this defines all the allowed values</para>
+                </listitem>    
+                <listitem>
+                  <para>$masked: The tools need to mask the property; Do not show in plain text; used for passwords</para>
+                </listitem>   
+                <listitem>
+                  <para>$advanced: Notes this as Advanced property</para>
+                </listitem>
+                <listitem>
+                  <para>$editable: Property can be modified; or read-only</para>
+                </listitem> 
+            </itemizedlist>
+           
+           Note that all these are optional properties; however in the absence of this metadata, tooling will not work as expected.
+           
+           </para>
+        </sect2>        
+	</sect1>
+
+   <sect1>
+        <title>Packaging the Adapter</title>
+        <para>Once all the required code is developed, it is time to package them into a RAR artifact, that can be deployed
+        into a Conainer. A RAR artifact is lot more similar to a WAR. To put together a RAR file it really depends upon 
+        build system you are using.</para>
+        
+        <itemizedlist>
+            <listitem>
+                <para>Eclipse: You can start out with building Java Connector project, it will produce the RAR file</para>
+            </listitem>
+            <listitem>
+                <para>Ant: If you are using "ant" build tool, there is "rar" build task available</para>
+            </listitem>
+            <listitem>
+              <para>Maven: If you are using maven, use &lt;packaging&gt; element value as "rar". Teiid uses maven, you can look at any of
+              the "connector" projects for sample "pom.xml" file. Here is sample pom.xml file.</para>
+              
+              <programlisting><![CDATA[
+                    <?xml version="1.0" encoding="UTF-8"?>
+                    <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                        <modelVersion>4.0.0</modelVersion>
+                        <artifactId>connector-{name}</artifactId>
+                        <groupId>org.company.project</groupId>
+                        <name>Name Connector</name>
+                        <packaging>rar</packaging>
+                        <description>This connector is a sample</description>
+                    
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.jboss.teiid</groupId>
+                                <artifactId>teiid-api</artifactId>
+                                <scope>provided</scope>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.jboss.teiid</groupId>
+                                <artifactId>teiid-common-core</artifactId>
+                                <scope>provided</scope>
+                            </dependency>
+                            <dependency>
+                                <groupId>javax.resource</groupId>
+                                <artifactId>connector-api</artifactId>
+                                <scope>provided</scope>
+                            </dependency>
+                        </dependencies>
+                    </project>
+              ]]></programlisting>                
+            </listitem>
+         </itemizedlist>
+        <para>Make sure that the RAR file, under its "META-INF" directory has the "ra.xml" file.  If you are using maven 
+        see <ulink url="http://maven.apache.org/plugins/maven-rar-plugin/"></ulink>In the root of the RAR file, 
+        you can embed the JAR file containing your connector code and any dependent library JAR files. </para>
+    </sect1>
+    
+   <sect1>
+        <title>Deploying the Adapter</title>
+        <para>Once the RAR file is built, deploy it by copying the RAR file into "deploy" directory of JBoss AS's choosen profile. 
+        Typically the server does not need to be restarted when a new RAR file is being added. Alternatively, you can also use 
+        "admin-console" a web based monitoring and configuration tool to deploy this file into the container. </para>
+        
+        <para>Once the Connector's RAR file is deployed into the JBoss container, now you can start creating a instance of this
+        connector to be used with your Translator. Creating a instance of this Connector is no different than creating a 
+        "Connection Factory" in JBoss AS. Again, you have have two ways you can create a "ConnectionFactory".</para>
+        
+        <itemizedlist>
+            <listitem>
+                <para>Create "${name}-ds.xml" file, and copy it into "deploy" directory of JBoss AS.
+                  <programlisting><![CDATA[
+                        <!DOCTYPE connection-factories PUBLIC
+                                  "-//JBoss//DTD JBOSS JCA Config 1.5//EN"
+                                  "http://www.jboss.org/j2ee/dtd/jboss-ds_1_5.dtd">
+                        
+                        <connection-factories>
+                            <no-tx-connection-factory>
+                                <jndi-name>${jndi-name}</jndi-name>
+                                <rar-name>${name}.rar</rar-name>
+                                <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>
+                                
+                                <!-- define all the properties defined in the "ra.xml" that required or needs to be modified from defaults -->
+                                <!-- each property is defined in single element --> 
+                                <config-property name="prop-name" type="java.lang.String">prop-value</config-property>
+                                
+                            </no-tx-connection-factory>
+                        </connection-factories>   
+                  ]]></programlisting>     
+                  There are lot more properties that you can define for pooling, transactions, security etc in this file. 
+                  Check JBoss AS documentation for all the avaialble properties.           
+                </para>
+            </listitem>
+            <listitem>
+                <para>Alternatively you can use the web based "admin-console" configration and monitoring program, to create a new 
+                Connection Factory. Just have your RAR file name and needed configuration properties handly and fill out web form 
+                and create the ConnectionFactory.</para>
+            </listitem>
+
+         </itemizedlist>        
+    </sect1>    
+</chapter>

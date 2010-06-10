@@ -57,7 +57,10 @@ public abstract class BasicManagedConnectionFactory implements ManagedConnection
 	@Override
 	public ManagedConnection createManagedConnection(Subject arg0, ConnectionRequestInfo arg1) throws ResourceException {
 		ConnectionRequestInfoWrapper criw = (ConnectionRequestInfoWrapper)arg1;
-		return new BasicManagedConnection(criw.cf.getConnection());
+		ConnectionContext.setSubject(arg0);
+		BasicConnection connection = criw.cf.getConnection();
+		ConnectionContext.setSubject(null);
+		return new BasicManagedConnection(connection);
 	}
 
 	@Override

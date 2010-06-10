@@ -1,45 +1,58 @@
 <appendix id="appendix_a">
-  <title>Connector Type Definition Template</title>
-  <para> This appendix contains an example of the Connector Type Definition file that can be used as a template
-    when creating a new Connector Type Definition.</para>
+  <title>ra.xml file Template</title>
+  <para> This appendix contains an example of the ra.xml file that can be used as a template
+    when creating a new Connector.</para>
   <programlisting><![CDATA[
 <?xml version="1.0" encoding="UTF-8"?>
-<ConfigurationDocument>
-    <Header>
-        <ApplicationCreatedBy>Connector Development Kit</ApplicationCreatedBy>
-        <ApplicationVersionCreatedBy>4.0:1681</ApplicationVersionCreatedBy>
-        <UserCreatedBy>MetaMatrixAdmin</UserCreatedBy>
-        <DocumentTypeVersion>1.0</DocumentTypeVersion>
-        <MetaMatrixSystemVersion>4.0</MetaMatrixSystemVersion>
-        <Time>2008-01-30T15:22:05.296-06:00</Time>
-    </Header>
-    <ComponentTypes>
-        <ComponentType Name="My Connector" ComponentTypeCode="2" Deployable="true" Deprecated="false" Monitorable="false" SuperComponentType="Connector" ParentComponentType="Connectors">
-      <!-- Required by Connector API -->
-            <ComponentTypeDefn Deprecated="false">
-                <PropertyDefinition Name="ConnectorClass" DisplayName="Connector Class" ShortDescription="" DefaultValue="com.mycode.Connector" IsRequired="true" IsMasked="false" IsModifiable="false" />
-            </ComponentTypeDefn>
-            <ComponentTypeDefn Deprecated="false">
-                <PropertyDefinition Name="ConnectorClassPath" DisplayName="Class Path" ShortDescription="" DefaultValue="extensionjar:mycode.jar" IsRequired="true" IsMasked="false"  />
-            </ComponentTypeDefn>
 
-      <!-- Example properties - replace with custom properties -->
-            <ComponentTypeDefn Deprecated="false">
-                <PropertyDefinition Name="ExampleOptional" DisplayName="Example Optional Property" ShortDescription="This property is optional due to not being marked as IsRequired" IsMasked="false" />
-            </ComponentTypeDefn>
-            <ComponentTypeDefn Deprecated="false">
-                <PropertyDefinition Name="ExampleDefaultValue" DisplayName="Example Default Value Property" ShortDescription="This property has a default value" DefaultValue="Default value" IsRequired="true"  IsMasked="false" />
-            </ComponentTypeDefn>
-            <ComponentTypeDefn Deprecated="false">
-                <PropertyDefinition Name="ExampleEncrypted" DisplayName="Example Encrypted Property" ShortDescription="This property is encrypted in storage due to Masked=true" IsRequired="true" IsMasked="true" />
-            </ComponentTypeDefn>
+<connector xmlns="http://java.sun.com/xml/ns/j2ee"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee
+           http://java.sun.com/xml/ns/j2ee/connector_1_5.xsd"
+           version="1.5">
 
-            <ChangeHistory>
-                <Property Name="LastChangedBy">ConfigurationStartup</Property>
-                <Property Name="CreatedBy">ConfigurationStartup</Property>
-            </ChangeHistory>
-        </ComponentType>
-    </ComponentTypes>
-</ConfigurationDocument>  
+   <vendor-name>${comapany-name}</vendor-name>
+   <eis-type>${type-of-connector}</eis-type>
+   <resourceadapter-version>1.0</resourceadapter-version>
+   <license>
+      <description>
+        ${license text}
+      </description>
+      <license-required>true</license-required>
+   </license>
+   <resourceadapter>
+      <resourceadapter-class>org.teiid.resource.spi.BasicResourceAdapter</resourceadapter-class>
+
+      <outbound-resourceadapter>
+         <connection-definition>
+            <managedconnectionfactory-class>${connection-factory-class}</managedconnectionfactory-class>
+
+            <!-- repeat for every configuration property -->
+            <config-property>
+                <description>{$display:"Invocation Type",$description:"Service Invocation type (HTTP or SOAP)", $allowed="HTTP_GET, HTTP_POST, SOAP11, SOAP12", $required="true", $defaultValue="SOAP12"}</description>
+                <config-property-name>${property-name}</config-property-name>
+                <config-property-type>${property-type}</config-property-type>
+                <config-property-value>${optioal-property-value}</config-property-value>
+            </config-property>
+            
+            <!-- use the below as is if you used the Connection Factory interface -->
+            
+            <connectionfactory-interface>javax.resource.cci.ConnectionFactory</connectionfactory-interface>
+            <connectionfactory-impl-class>org.teiid.resource.spi.WrappedConnectionFactory</connectionfactory-impl-class>
+            <connection-interface>javax.resource.cci.Connection</connection-interface>
+            <connection-impl-class>org.teiid.resource.spi.WrappedConnection</connection-impl-class>
+
+         </connection-definition>
+         
+         <transaction-support>NoTransaction</transaction-support>
+        
+        <authentication-mechanism>
+            <authentication-mechanism-type>BasicPassword</authentication-mechanism-type>
+            <credential-interface>javax.resource.spi.security.PasswordCredential</credential-interface>
+        </authentication-mechanism>
+        <reauthentication-support>false</reauthentication-support>
+      </outbound-resourceadapter>
+   </resourceadapter>
+</connector> 
   ]]></programlisting>
 </appendix>

@@ -28,6 +28,7 @@ import javax.resource.cci.Interaction;
 import javax.resource.cci.LocalTransaction;
 import javax.resource.cci.ResultSetInfo;
 import javax.resource.spi.ManagedConnection;
+import javax.transaction.xa.XAResource;
 
 public abstract class BasicConnection implements Connection {
 
@@ -49,6 +50,10 @@ public abstract class BasicConnection implements Connection {
 	@Override
 	public ResultSetInfo getResultSetInfo() throws ResourceException {
 		throw new ResourceException("This operation not supported"); //$NON-NLS-1$
+	}
+	
+	public XAResource getXAResource() throws ResourceException {
+		return null;
 	}
 	
 	/**

@@ -32,7 +32,7 @@
 
     <bookinfo>
         <title>Teiid - Scalable Information Integration</title>
-        <subtitle>Teiid Connector Developer's Guide</subtitle>
+        <subtitle>Teiid Translator and Resource Adapter Developer's Guide</subtitle>
         <releaseinfo>&versionNumber;</releaseinfo>
         <productnumber>&versionNumber;</productnumber>
         <issuenum>1</issuenum>
@@ -46,10 +46,9 @@
     <toc/>
         
     <xi:include href="content/introduction.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/develop-adapter.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/connector-api.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/command-language.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="content/connector-deployment.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="content/connection-pooling.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/lob-support.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/extending-jdbc-connector.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/examples.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
