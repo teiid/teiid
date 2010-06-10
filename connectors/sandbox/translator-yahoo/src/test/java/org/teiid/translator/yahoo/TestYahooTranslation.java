@@ -22,13 +22,13 @@
 
 package org.teiid.translator.yahoo;
 
+import org.teiid.cdk.unittest.FakeTranslationFactory;
 import org.teiid.language.Command;
 import org.teiid.language.Select;
 import org.teiid.translator.yahoo.YahooExecution;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.cdk.unittest.FakeTranslationFactory;
 
 public class TestYahooTranslation extends TestCase {
 	

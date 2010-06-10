@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <vdb name="DynamicPortfolio" version="1">
 
-    <description>A Dynamic</description>
+    <description>A Dynamic VDB</description>
     
     <!-- 
       Setting to use connector supplied metadata. Can be "true" or "cached".  

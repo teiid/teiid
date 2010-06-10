@@ -27,6 +27,8 @@ import static org.junit.Assert.assertEquals;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.cdk.api.TranslationUtility;
+import org.teiid.cdk.unittest.FakeTranslationFactory;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Command;
 import org.teiid.translator.TranslatorException;
@@ -34,8 +36,6 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
 
-import com.metamatrix.cdk.api.TranslationUtility;
-import com.metamatrix.cdk.unittest.FakeTranslationFactory;
 
 /**
  */

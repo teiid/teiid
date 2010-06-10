@@ -45,7 +45,6 @@ import org.teiid.core.CorePlugin;
  * class should no longer be needed and all usage of assertions should be replaced with 
  * use of the built-in JDK assertion facility.
  * </p>
- * @see com.metamatrix.common.util.ArgCheck
  */
 public final class Assertion {
     //============================================================================================================================

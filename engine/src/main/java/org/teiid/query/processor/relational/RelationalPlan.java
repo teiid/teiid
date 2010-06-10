@@ -131,9 +131,6 @@ public class RelationalPlan extends ProcessorPlan {
 		return plan;
 	}
 	
-    /* 
-     * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
-     */
     public PlanNode getDescriptionProperties() {
     	return this.root.getDescriptionProperties();
     }

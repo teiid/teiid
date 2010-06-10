@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.cdk.unittest.FakeTranslationFactory;
 import org.teiid.dqp.internal.datamgr.language.TestAggregateImpl;
 import org.teiid.dqp.internal.datamgr.language.TestCompareCriteriaImpl;
 import org.teiid.dqp.internal.datamgr.language.TestDeleteImpl;
@@ -72,7 +73,6 @@ import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.JoinType;
 
-import com.metamatrix.cdk.unittest.FakeTranslationFactory;
 
 public class TestSQLStringVisitor  {
 

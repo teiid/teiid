@@ -56,6 +56,7 @@ import org.teiid.language.Literal;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.SetQuery;
 import org.teiid.language.Argument.Direction;
+import org.teiid.language.SetQuery.Operation;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
@@ -471,7 +472,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * Gets the database calendar.  This will be set to the time zone
      * specified by the property {@link JDBCPropertyNames#DATABASE_TIME_ZONE}, or
      * the local time zone if none is specified. 
-     * @return
+     * @return the database calendar
      */
     public Calendar getDatabaseCalendar() {
     	return CALENDAR.get();
@@ -482,7 +483,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * if to rely on the default translation.  Override with care.
      * @param command
      * @param context
-     * @return
+     * @return list of translated parts
      */
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
 		List<?> parts = null;
@@ -513,7 +514,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * if to rely on the default translation. 
      * @param command
      * @param context
-     * @return
+     * @return a list of translated parts
      */
     public List<?> translateCommand(Command command, ExecutionContext context) {
     	return null;
@@ -524,7 +525,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * if to rely on the default translation. 
      * @param limit
      * @param context
-     * @return
+     * @return a list of translated parts
      */
     public List<?> translateLimit(Limit limit, ExecutionContext context) {
     	return null;
@@ -657,7 +658,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     /**
      * Set to true to indicate that every branch of a set query
      * should have parenthesis, i.e. (query) union (query)
-     * @return
+     * @return true if parenthesis should be used for each set branch
      */
     public boolean useParensForSetQueries() {
     	return false;
@@ -666,26 +667,26 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     /**
      * Return false to indicate that time support should be emulated 
      * with timestamps.
-     * @return
+     * @return true if database has a time type
      */
     public boolean hasTimeType() {
     	return true;
     }
     
     /**
-     * Returns the name for a given {@link SetQuery.Operation}
+     * Returns the name for a given {@link Operation}
      * @param operation
-     * @return
+     * @return the name for the set operation
      */
     public String getSetOperationString(SetQuery.Operation operation) {
     	return operation.toString();
     }
     
     /**
-     * Returns the source comment for 
+     * Returns the source comment for the given command
      * @param context
      * @param command
-     * @return
+     * @return the comment
      */
     public String getSourceComment(ExecutionContext context, Command command) {
 	    if (addSourceComment() && context != null) {
@@ -698,15 +699,15 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * Override to return a name other than the default [group.]element
      * @param group
      * @param element
-     * @return
+     * @return thre replacement name
      */
     public String replaceElementName(String group, String element) {
     	return null;
     }
     
     /**
-     * Return the precision of timestamp literals.  Defaults to 9
-     * @return
+     * Return the precision of timestamp literals.  Defaults to 9.
+     * @return digits of timestamp nano precision.
      */
     public int getTimestampNanoPrecision() {
     	return 9;
@@ -814,7 +815,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	 * @param results
 	 * @param columnIndex
 	 * @param expectedType
-	 * @return
+	 * @return the value
 	 * @throws SQLException
 	 */
     public Object retrieveValue(ResultSet results, int columnIndex, Class<?> expectedType) throws SQLException {
@@ -908,7 +909,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @param results
      * @param parameterIndex
      * @param expectedType
-     * @return
+     * @return the value
      * @throws SQLException
      */
     public Object retrieveValue(CallableStatement results, int parameterIndex, Class expectedType) throws SQLException{
@@ -1041,7 +1042,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * Create the {@link SQLConversionVisitor} that will perform translation.  Typical custom
      * JDBC connectors will not need to create custom conversion visitors, rather implementors 
      * should override existing {@link JDBCExecutionFactory} methods.
-     * @return
+     * @return the {@link SQLConversionVisitor}
      */
     public SQLConversionVisitor getSQLConversionVisitor() {
     	return new SQLConversionVisitor(this);
@@ -1050,22 +1051,22 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     /**
      * Set to true to indicate that every branch of a join
      * should have parenthesis.
-     * @return
+     * @return true if every branch of a join should use parenthesis
      */
     public boolean useParensForJoins() {
     	return false;
     }
     
     /**
-     * get the default null ordering
-     * @return
+     * Returns the default null ordering
+     * @return the {@link NullOrder}
      */
     public NullOrder getDefaultNullOrder() {
     	return NullOrder.LOW;
     }
     
     /**
-     * 
+     * Returns whether the database supports explicit join ordering.
      * @return true if nulls high|low can be specified
      */
     public boolean supportsExplicitNullOrdering() {
@@ -1073,7 +1074,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     }
     
     /**
-     * 
+     * Returns whether the limit clause is applied to the select clause.
      * @return true if the limit clause is part of the select
      */
     public boolean useSelectLimit() {

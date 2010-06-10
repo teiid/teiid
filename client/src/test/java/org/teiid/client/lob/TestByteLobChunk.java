@@ -33,9 +33,6 @@ import junit.framework.TestCase;
 
 public class TestByteLobChunk extends TestCase {
 
-    /*
-     * Test method for 'com.metamatrix.common.lob.ByteLobChunk.getBytes()'
-     */
     public void testGetBytes() {
         String testString = "This is test string for testing ByteLobChunk"; //$NON-NLS-1$
         LobChunk chunk = new LobChunk(testString.getBytes(), false);        

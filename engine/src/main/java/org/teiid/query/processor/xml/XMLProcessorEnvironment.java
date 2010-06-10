@@ -96,9 +96,6 @@ public class XMLProcessorEnvironment {
         }
     }
     
-    /**
-     * @see com.metamatrix.query.processor.xml.ProcessorEnvironment#getCurrentProgram()
-     */
     public Program getCurrentProgram() {
         // jh case 5266
         if ( this.programStack.size() > 0 ) {
@@ -124,9 +121,6 @@ public class XMLProcessorEnvironment {
         return (programState.recursionCount > ProgramState.NOT_RECURSIVE);
     }
 
-    /**
-     * @see com.metamatrix.query.processor.xml.ProcessorEnvironment#incrementCurrentProgramCounter()
-     */
     public void incrementCurrentProgramCounter() {
         ProgramState programState = this.programStack.getFirst();
         programState.programCounter++;
@@ -142,9 +136,6 @@ public class XMLProcessorEnvironment {
         }        
     }
     
-    /**
-     * @see com.metamatrix.query.processor.xml.ProcessorEnvironment#pushProgram(Program)
-     */
     public void pushProgram(Program program) {
         pushProgram(program, false);
     }
@@ -168,9 +159,6 @@ public class XMLProcessorEnvironment {
         this.programStack.addFirst(programState);
     }
 
-    /** 
-     * @see com.metamatrix.query.processor.xml.ProcessorEnvironment#getCurrentInstruction()
-     */
     public ProcessorInstruction getCurrentInstruction() {
         ProgramState programState = this.programStack.getFirst();
         
@@ -189,9 +177,6 @@ public class XMLProcessorEnvironment {
         return programState.program.getInstructionAt(programState.programCounter);
     }
     
-    /**
-     * @see com.metamatrix.query.processor.xml.ProcessorEnvironment#getProgramRecursionCount(Program)
-     */
     public int getProgramRecursionCount(Program program){
         
         ProgramState programState = getProgramState(program);
@@ -229,52 +214,30 @@ public class XMLProcessorEnvironment {
         return new RelationalPlanExecutor(clone, this.commandContext, this.dataMgr, this.bufferMgr);
     }
     
-    /**
-     * @see com.metamatrix.query.processor.xml.ProcessorEnvironment#getDocumentInProgress()
-     */
     public DocumentInProgress getDocumentInProgress() {
         return this.documentInProgress;
     }
 
-    /**
-     * @see com.metamatrix.query.processor.xml.ProcessorEnvironment#setDocumentInProgress(DocumentInProgress)
-     */
     public void setDocumentInProgress(DocumentInProgress documentInProgress) {
         this.documentInProgress = documentInProgress;
     }
 
-    /**
-     * @see com.metamatrix.query.processor.xml.ProcessorEnvironment#getXMLFormat
-     */
     public String getXMLFormat() {
         return this.xmlFormat;
     }
 
-    /**
-     * @see com.metamatrix.query.processor.xml.ProcessorEnvironment#setXMLFormat
-     */
     public void setXMLFormat(String xmlFormat) {
         this.xmlFormat = xmlFormat;
     }
 
-    /**
-     * @see com.metamatrix.query.processor.xml.ProcessorEnvironment#getDataManager()
-     */
     public ProcessorDataManager getDataManager() {
         return this.dataMgr;
     }
 
-    /**
-     * @see com.metamatrix.query.processor.xml.ProcessorEnvironment#getProcessorContext()
-     */
     public CommandContext getProcessorContext() {
         return this.commandContext;
     }
     
-    
-    /**
-     * @see com.metamatrix.query.processor.xml.ProcessorEnvironment#clone()
-     */
     public Object clone() {
         XMLProcessorEnvironment clone = new XMLProcessorEnvironment();
         copyIntoClone(clone);

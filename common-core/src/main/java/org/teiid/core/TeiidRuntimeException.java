@@ -225,16 +225,10 @@ public class TeiidRuntimeException extends RuntimeException {
         return ExceptionUtil.getLinkedMessages(this);
     }
 
-    /* 
-     * @see com.metamatrix.core.util.MetaMatrixNestedException#superPrintStackTrace(java.io.PrintStream)
-     */
     public void superPrintStackTrace(PrintStream output) {
         super.printStackTrace(output);
     }
 
-    /* 
-     * @see com.metamatrix.core.util.MetaMatrixNestedException#superPrintStackTrace(java.io.PrintWriter)
-     */
     public void superPrintStackTrace(PrintWriter output) {
         super.printStackTrace(output);
     }

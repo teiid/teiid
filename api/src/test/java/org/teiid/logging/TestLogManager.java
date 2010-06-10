@@ -111,9 +111,6 @@ public class TestLogManager extends TestCase {
         public ListLogger() {
         }
         
-        /* (non-Javadoc)
-         * @see com.metamatrix.core.log.LogListener#logMessage(org.eclipse.core.runtime.IStatus, long, java.lang.String, java.lang.String)
-         */
         public void log(int level, String context, Object msg){
             this.messages.add(msg.toString());
         }
@@ -122,9 +119,6 @@ public class TestLogManager extends TestCase {
             this.messages.add(msg.toString());
 		}        
 
-        /* (non-Javadoc)
-         * @see com.metamatrix.core.log.LogListener#shutdown()
-         */
         public void shutdown() {
             messages.clear();
             messages = null;

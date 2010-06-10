@@ -124,9 +124,6 @@ public class RelationalPlanner implements CommandPlanner {
 	private PlanHints hints = new PlanHints();
 	private Option option;
 
-    /**
-     * @see org.teiid.query.optimizer.CommandPlanner#optimize(com.metamatrix.query.optimizer.CommandTreeNode, java.util.Map, org.teiid.query.metadata.QueryMetadataInterface, boolean)
-     */
     public ProcessorPlan optimize(
         Command command,
         IDGenerator idGenerator,

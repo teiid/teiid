@@ -40,8 +40,6 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.ws.Dispatch;
 import javax.xml.ws.WebServiceException;
 import javax.xml.ws.handler.MessageContext;
-import javax.xml.ws.http.HTTPBinding;
-import javax.xml.ws.soap.SOAPBinding;
 
 import org.teiid.core.types.ClobType;
 import org.teiid.language.Argument;
@@ -56,27 +54,12 @@ import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.WSConnection;
 import org.teiid.translator.WSConnection.Util;
+import org.teiid.translator.ws.WSExecutionFactory.Binding;
 
 /**
  * A soap call executor - handles all styles doc/literal, rpc/encoded etc. 
  */
 public class WSProcedureExecution implements ProcedureExecution {
-	
-	public enum InvocationType {
-		HTTP(HTTPBinding.HTTP_BINDING), 
-		SOAP11(SOAPBinding.SOAP11HTTP_BINDING),
-		SOAP12(SOAPBinding.SOAP12HTTP_BINDING);
-		
-		private String bindingId;
-		
-		private InvocationType(String bindingId) {
-			this.bindingId = bindingId;
-		}
-		
-		public String getBindingId() {
-			return bindingId;
-		}
-	};
 	
 	RuntimeMetadata metadata;
     ExecutionContext context;
@@ -131,19 +114,19 @@ public class WSProcedureExecution implements ProcedureExecution {
 	        String endpoint = (String)arguments.get(3).getArgumentValue().getValue();
 	        
 	        if (style == null) {
-	        	style = InvocationType.SOAP12.getBindingId();
+	        	style = executionFactory.getDefaultBinding().getBindingId();
 	        } else {
 	        	try {
-		        	InvocationType type = InvocationType.valueOf(style.toUpperCase());
+		        	Binding type = Binding.valueOf(style.toUpperCase());
 		        	style = type.getBindingId();
 	        	} catch (IllegalArgumentException e) {
-	        		throw new TranslatorException(WSExecutionFactory.UTIL.getString("invalid_invocation", Arrays.toString(InvocationType.values()))); //$NON-NLS-1$
+	        		throw new TranslatorException(WSExecutionFactory.UTIL.getString("invalid_invocation", Arrays.toString(Binding.values()))); //$NON-NLS-1$
 	        	}
 	        }
 	        
 	        Dispatch<Source> dispatch = conn.createDispatch(style, endpoint, Source.class, executionFactory.getDefaultServiceMode()); 
 	
-			if (InvocationType.HTTP.getBindingId().equals(style)) {
+			if (Binding.HTTP.getBindingId().equals(style)) {
 				if (action == null) {
 					action = "POST"; //$NON-NLS-1$
 				}
@@ -183,6 +166,8 @@ public class WSProcedureExecution implements ProcedureExecution {
 				}
 	        }
 		} catch (SQLException e) {
+			throw new TranslatorException(e);
+		} catch (WebServiceException e) {
 			throw new TranslatorException(e);
 		} finally {
 			Util.closeSource(source);

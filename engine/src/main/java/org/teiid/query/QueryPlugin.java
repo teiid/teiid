@@ -35,7 +35,7 @@ import org.teiid.core.BundleUtil;
 public class QueryPlugin { // extends Plugin {
 
 	/**
-	 * The plug-in identifier of this plugin (value <code>"com.metamatrix.common"</code>).
+	 * The plug-in identifier of this plugin 
 	 */
 	public static final String PLUGIN_ID = QueryPlugin.class.getPackage().getName();
 

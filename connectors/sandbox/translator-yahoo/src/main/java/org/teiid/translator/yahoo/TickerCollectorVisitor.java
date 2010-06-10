@@ -55,17 +55,11 @@ public class TickerCollectorVisitor extends HierarchyVisitor {
         return this.exception;
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.ICompareCriteria)
-     */
     public void visit(Comparison obj) {
         Expression expr = obj.getRightExpression();
         addTickerFromExpression(expr);        
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.IInCriteria)
-     */
     public void visit(In obj) {
         List exprs = obj.getRightExpressions();
         Iterator iter = exprs.iterator();

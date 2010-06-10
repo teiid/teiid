@@ -28,13 +28,13 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import org.teiid.cdk.api.ConnectorHost;
+import org.teiid.cdk.api.TranslationUtility;
+import org.teiid.cdk.unittest.FakeTranslationFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.loopback.LoopbackExecution;
 import org.teiid.translator.loopback.LoopbackExecutionFactory;
 
-import com.metamatrix.cdk.api.ConnectorHost;
-import com.metamatrix.cdk.api.TranslationUtility;
-import com.metamatrix.cdk.unittest.FakeTranslationFactory;
 
 public class TestLoopbackExecution extends TestCase {
 

@@ -21,6 +21,7 @@ import org.teiid.core.index.IDocument;
 import org.teiid.core.index.IEntryResult;
 import org.teiid.core.index.IQueryResult;
 import org.teiid.core.util.LRUCache;
+import org.teiid.metadata.index.RuntimeMetadataPlugin;
 
 
 /**
@@ -218,7 +219,7 @@ public class BlocksIndexInput extends IndexInput {
 			raf= vraf.getSafeRandomAccessFile();
 			String sig= raf.readUTF();
 			if (!sig.equals(IIndexConstants.SIGNATURE))
-				throw new IOException(Util.bind("exception.wrongFormat")); //$NON-NLS-1$
+				throw new IOException(RuntimeMetadataPlugin.Util.getString("exception.wrongFormat")); //$NON-NLS-1$
 			int summaryBlockNum= raf.readInt();
 			raf.seek(summaryBlockNum * (long) IIndexConstants.BLOCK_SIZE);
 			summary= new IndexSummary();

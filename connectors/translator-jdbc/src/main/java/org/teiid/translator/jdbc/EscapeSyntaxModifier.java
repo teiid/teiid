@@ -35,10 +35,6 @@ import org.teiid.language.Function;
  */
 public class EscapeSyntaxModifier extends FunctionModifier {
 
-    /** 
-     * @see org.teiid.connector.jdbc.translator.BasicFunctionModifier#translate(org.teiid.language.Function)
-     * @since 5.0
-     */
     public List<?> translate(Function function) {
     	List<Object> objs = new ArrayList<Object>();
         objs.add("{fn "); //$NON-NLS-1$

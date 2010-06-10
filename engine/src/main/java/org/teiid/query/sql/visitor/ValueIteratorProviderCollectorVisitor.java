@@ -40,8 +40,7 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
 
 /**
  * <p>This visitor class will traverse a language object tree and collect all language
- * objects that implement {@link com.metamatrix.sql.util.ValueIteratorProvider.  These
- * all currently also implement {@link com.metamatrix.sql.lang.SubqueryContainer}.  
+ * objects that implement {@link SubqueryContainer}.  
  * By default it uses a java.util.ArrayList to collect the objects in the order 
  * they're found.</p>
  * 
@@ -73,7 +72,7 @@ public class ValueIteratorProviderCollectorVisitor extends LanguageVisitor {
     /**
      * Get the value iterator providers collected by the visitor.  This should best be called 
      * after the visitor has been run on the language object tree.
-     * @return Collection of {@link com.metamatrix.sql.util.ValueIteratorProvider}
+     * @return Collection of {@link SubqueryContainer}
      * (by default, this is a java.util.ArrayList)
      */
     public List<SubqueryContainer> getValueIteratorProviders() { 

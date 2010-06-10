@@ -27,12 +27,12 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
+import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.NamedTable;
 import org.teiid.language.Select;
 import org.teiid.metadata.Table;
 
-import com.metamatrix.cdk.api.TranslationUtility;
 
 /**
  */

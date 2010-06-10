@@ -20,11 +20,11 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.cdk.unittest;
+package org.teiid.cdk.unittest;
 
+import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
-import com.metamatrix.cdk.api.TranslationUtility;
 
 public class FakeTranslationFactory {
 	

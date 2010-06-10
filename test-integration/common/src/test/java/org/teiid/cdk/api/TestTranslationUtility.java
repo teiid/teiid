@@ -20,10 +20,11 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.cdk.api;
+package org.teiid.cdk.api;
 
 import junit.framework.TestCase;
 
+import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Command;
 import org.teiid.language.NamedTable;

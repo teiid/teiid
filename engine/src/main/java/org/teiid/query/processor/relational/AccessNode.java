@@ -215,9 +215,6 @@ public class AccessNode extends RelationalNode {
 		target.command = source.command;
 	}
 
-    /*
-     * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
-     */
     public PlanNode getDescriptionProperties() {
     	PlanNode props = super.getDescriptionProperties();
         props.addProperty(PROP_SQL, this.command.toString());

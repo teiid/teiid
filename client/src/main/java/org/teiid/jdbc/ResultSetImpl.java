@@ -220,12 +220,6 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
          return getObjectDirect(column);
      }
 
-    /**
-     * Get fetch size that will be used if this result set is backed
-     * by a cursor.  This may be the hint fetch size provided by
-     * {@link com.metamatrix.jdbc.ResultsImpl#getFetchSize} or it may
-     * have been reset by the server.
-     */
     public int getFetchSize() throws SQLException {
         return this.fetchSize;
     }

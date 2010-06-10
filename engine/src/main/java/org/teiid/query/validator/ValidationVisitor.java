@@ -1257,6 +1257,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 				if (item.getPrefix().equals("xml") || item.getPrefix().equals("xmlns")) { //$NON-NLS-1$ //$NON-NLS-2$
 					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_namespaces_reserved"), obj); //$NON-NLS-1$
 				}
+				if (item.getUri().length() == 0) {
+					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_namespaces_null_uri"), obj); //$NON-NLS-1$
+				}
 				continue;
 			}
 			if (hasDefault) {

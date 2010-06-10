@@ -447,7 +447,6 @@ public class ProcedurePlan extends ProcessorPlan {
     
     /** 
      * @throws TeiidComponentException 
-     * @see com.metamatrix.query.processor.program.ProgramEnvironment#pop()
      */
     public void pop() throws TeiidComponentException {
     	Program program = this.programs.pop();
@@ -468,9 +467,6 @@ public class ProcedurePlan extends ProcessorPlan {
         this.tempContext.removeLast();
     }
     
-    /** 
-     * @see com.metamatrix.query.processor.program.ProgramEnvironment#push(org.teiid.query.processor.program.Program)
-     */
     public void push(Program program) {
     	program.resetProgramCounter();
         this.programs.push(program);
@@ -486,9 +482,6 @@ public class ProcedurePlan extends ProcessorPlan {
         this.tempContext.add(new HashSet());
     }
     
-    /** 
-     * @see com.metamatrix.query.processor.program.ProgramEnvironment#incrementProgramCounter()
-     */
     public void incrementProgramCounter() throws TeiidComponentException {
         Program program = peek();
         ProgramInstruction instr = program.getCurrentInstruction();

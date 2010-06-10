@@ -63,25 +63,22 @@ public class RecordFactory {
     
     /**
      * The version number that is associated with the change made to change the list
-     * delimiter from {@link com.metamatrix.modeler.core.index.IndexConstants.LIST_DELIMITER_OLD}
-     * to {@link com.metamatrix.modeler.core.index.IndexConstants.LIST_DELIMITER} and also the
-     * property delimiter was changed from {@link com.metamatrix.modeler.core.index.IndexConstants.PROP_DELIMITER_OLD}
-     * to {@link com.metamatrix.modeler.core.index.IndexConstants.PROP_DELIMITER}.  Added 07/22/2004.
-     * @release 4.1.1
+     * delimiter.  Added 07/22/2004.
+     * @since 4.1.1
      */
     public static final int DELIMITER_INDEX_VERSION = 1;
     
     /**
      * The version number that is associated with the change made to add materialization
      * property on tables. Added 08/18/2004.
-     * @release 4.2
+     * @since 4.2
      */
     public static final int TABLE_MATERIALIZATION_INDEX_VERSION = 2;
 
     /**
      * The version number that is associated with the change made to add native type
      * property on columns. Added 08/24/2004.
-     * @release 4.2
+     * @since 4.2
      */
     public static final int COLUMN_NATIVE_TYPE_INDEX_VERSION = 3;
 
@@ -90,7 +87,7 @@ public class RecordFactory {
      * flag on columns.  The flag is used to indicate if an element for a virtual table
      * represents an input parameter.  This change was made to support the Procedural-Relational
      * Mapping project.   Added 09/29/2004.
-     * @release 4.2
+     * @since 4.2
      */
     public static final int COLUMN_INPUT_PARAMETER_FLAG_INDEX_VERSION = 4;
 
@@ -98,7 +95,7 @@ public class RecordFactory {
      * The version number that is associated with the change made to remove property value
      * pairs from the annotation records any properties on annotations would now be indexed
      * as part of the properties index. Added 12/14/2004.
-     * @release 4.2
+     * @since 4.2
      */
     public static final int ANNOTATION_TAGS_INDEX_VERSION = 5;
 
@@ -106,28 +103,28 @@ public class RecordFactory {
      * The version number that is associated with the change made to add uuid for the
      * transformation mapping root on the transformation records, uuids would now be indexed
      * as part of the transformation index. Added 1/13/2005.
-     * @release 4.2
+     * @since 4.2
      */
     public static final int TRANSFORMATION_UUID_INDEX_VERSION = 6;
     
     /**
      * The version number that is associated with the change made to add count of null and
      * distinct values for columns on the column records 7/8/2005.
-     * @release 4.2
+     * @since 4.2
      */
     public static final int COLUMN_NULL_DISTINCT_INDEX_VERSION = 7;
     
     /**
      * The version number that is associated with the change made to add 
      * primitive type ID on datatype records 02/28/2006.
-     * @release 5.0
+     * @since 5.0
      */
     public static final int PRIMITIVE_TYPE_ID_INDEX_VERSION = 8;
     
     /**
      * The version number that is associated with the change made to add 
      * an update count to physical stored and XQuery procedures 04/29/2008.
-     * @release 5.0
+     * @since 5.0
      */
     public static final int PROCEDURE_UPDATE_COUNT_VERSION = 9;
 
@@ -139,9 +136,8 @@ public class RecordFactory {
     private int version = NONVERSIONED_RECORD_INDEX_VERSION;
     
     /**
-     * Return a collection of {@link com.metamatrix.modeler.core.metadata.runtime.MetadataRecord}
+     * Return a collection of {@link AbstractMetadataRecord}
      * instances for the result obtained from executing <code>queryEntriesMatching</code>
-     * method on the {@link com.metamatrix.internal.core.index.impl.Index}
      * @param queryResult
      * @param container Container reference to be set on the record
      */
@@ -157,7 +153,7 @@ public class RecordFactory {
     }
 
     /**
-     * Return the {@link com.metamatrix.modeler.core.metadata.runtime.MetadataRecord}
+     * Return the {@link AbstractMetadataRecord}
      * instances for specified IEntryResult.
      * @param entryResult
      */

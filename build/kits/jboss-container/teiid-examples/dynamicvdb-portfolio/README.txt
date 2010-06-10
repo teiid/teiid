@@ -1,7 +1,7 @@
 Follow the same derby setup instructions as the portfolio example.
 
 Copy the following files to the <jboss.home>/server/default/deploy directory.
-	- portfolio-dynamic-vdb.xml
+	- portfolio-vdb.xml
 	- ../portfolio/marketdata-file-ds.xml
 	- ../portfolio/portfolio-ds.xml 
 

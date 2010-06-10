@@ -254,9 +254,6 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
         target.selectSymbols = this.selectSymbols;
     }
 
-    /*
-     * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
-     */
     public PlanNode getDescriptionProperties() {
     	PlanNode props = super.getDescriptionProperties();
     	AnalysisRecord.addLanaguageObjects(props, PROP_SELECT_COLS, this.selectSymbols);

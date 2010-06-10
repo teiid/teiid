@@ -116,7 +116,7 @@ public class TestUUIDFactory extends TestCase {
     /**
      * Ensure that the variant matches the expected variant.
      * @param uuid the ObjectID
-     * @param expectedVariant one of the {@link com.metamatrix.common.id.UUID.Variant UUID.Variant} constants.
+     * @param expectedVariant 
      */
     public static void helpCheckVariant( ObjectID uuid, int expectedVariant ) {
         if ( UUID.getVariant(uuid) != expectedVariant ) {
@@ -127,7 +127,7 @@ public class TestUUIDFactory extends TestCase {
     /**
      * Ensure that the version matches the expected version.
      * @param uuid the ObjectID
-     * @param expectedVersion one of the {@link com.metamatrix.common.id.UUID.Version UUID.Version} constants.
+     * @param expectedVersion
      */
     public static void helpCheckVersion( ObjectID uuid, int expectedVersion ) {
         if ( UUID.getVersion(uuid) != expectedVersion ) {

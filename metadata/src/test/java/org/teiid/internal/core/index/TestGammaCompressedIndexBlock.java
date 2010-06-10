@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.internal.core.index;
+package org.teiid.internal.core.index;
 
 import junit.framework.TestCase;
 

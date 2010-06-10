@@ -76,7 +76,6 @@ public class WhileInstruction extends ProgramInstruction implements RepeatedInst
     
     /** 
      * @throws TeiidProcessingException 
-     * @see org.teiid.query.processor.proc.RepeatedInstruction#testCondition(com.metamatrix.query.processor.proc.ProcedureEnvironment)
      */
     public boolean testCondition(ProcedurePlan procEnv) throws TeiidComponentException, TeiidProcessingException {
         return procEnv.evaluateCriteria(condition);
@@ -89,9 +88,6 @@ public class WhileInstruction extends ProgramInstruction implements RepeatedInst
         return whileProgram;
     }
 
-    /** 
-     * @see org.teiid.query.processor.proc.RepeatedInstruction#postInstruction(com.metamatrix.query.processor.proc.ProcedureEnvironment)
-     */
     public void postInstruction(ProcedurePlan procEnv) throws TeiidComponentException {
     }
     

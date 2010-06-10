@@ -57,7 +57,6 @@ public final class XMLPlannerEnvironment{
      * {@link ProcessorEnvironment#STRING_RESULT} or
      * {@link ProcessorEnvironment#JDOM_DOCUMENT_RESULT} or
      * This is to be used in conjunction with 
-     * {@link com.metamatrix.query.optimizer.CommandTreeNode CommandTreeNode}
      * property methods.
      */
     public static final Integer XML_FORM_RESULTS_PROPERTY = new Integer(0); 

@@ -201,10 +201,6 @@ public class BatchedUpdatePlan extends ProcessorPlan {
         commandIndex = 0;
     }
 
-    /** 
-     * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
-     * @since 4.2
-     */
     public PlanNode getDescriptionProperties() {
     	PlanNode props = super.getDescriptionProperties();
         for (int i = 0; i < getPlanCount(); i++) {

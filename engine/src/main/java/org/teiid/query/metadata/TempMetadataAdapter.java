@@ -195,9 +195,6 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         return this.actualMetadata.getDefaultValue(elementID);
 	}	
 
-    /* 
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#getMaximumValue(java.lang.Object)
-     */
     public Object getMaximumValue(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if (elementID instanceof TempMetadataID) {
             TempMetadataID id = (TempMetadataID)elementID;
@@ -209,9 +206,6 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         return this.actualMetadata.getMaximumValue(elementID);
     }
 
-    /* 
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#getMinimumValue(java.lang.Object)
-     */
     public Object getMinimumValue(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if (elementID instanceof TempMetadataID) {
             TempMetadataID id = (TempMetadataID)elementID;
@@ -488,9 +482,6 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         return this.actualMetadata.getCardinality(groupID);    
     }
 
-    /* 
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#getXMLSchemas(java.lang.Object)
-     */
     public List getXMLSchemas(Object groupID) throws TeiidComponentException, QueryMetadataException {
         if(groupID instanceof TempMetadataID) {
             return Collections.EMPTY_LIST;
@@ -498,9 +489,6 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         return this.actualMetadata.getXMLSchemas(groupID);
     }
 
-    /* 
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#getExtensionProperties(java.lang.Object)
-     */
     public Properties getExtensionProperties(Object metadataID)
         throws TeiidComponentException, QueryMetadataException {
             
@@ -510,9 +498,6 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         return actualMetadata.getExtensionProperties(metadataID);
     }
 
-    /* (non-Javadoc)
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#getElementLength(java.lang.Object)
-     */
     public int getElementLength(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if (elementID instanceof TempMetadataID) {
             TempMetadataID id = (TempMetadataID)elementID;
@@ -592,9 +577,6 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         return actualMetadata.getNativeType(elementID);
     }
 
-	/*
-	 * @see com.metamatrix.query.metadata.QueryMetadataInterface#isProcedureInputElement(java.lang.Object)
-	 */
 	public boolean isProcedure(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof TempMetadataID) {
             Object oid = ((TempMetadataID) elementID).getOriginalMetadataID();

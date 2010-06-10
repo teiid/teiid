@@ -105,29 +105,6 @@ public class LocateFunctionModifier extends AliasModifier {
 	 * Returns a version of <code>function</code> suitable for executing at the 
 	 * data source.
 	 * <p>
-	 * First, a default function name or the value specified during construction 
-	 * of <code>MODFunctionModifier</code> is set on <code>function</code>.
-	 * <p>
-	 * If <code>function</code> represents <code>LOCATE(searchStr, sourceStr, startIndex)</code>
-	 * and <code>startIndex</code> is a literal value, it is translated for 
-	 * consistency between the built-in system function 
-	 * <code>LOCATE(searchStr, sourceStr, startIndex)</code> and the sources 
-	 * implementation.  This is done by calling {@link #getStartIndexExpression(Literal)} 
-	 * and passing it the literal <code>startIndex</code> value.
-	 * <p>
-	 * If <code>function</code> represents <code>LOCATE(searchStr, sourceStr, startIndex)</code>
-	 * and <code>startIndex</code> is not a literal value, it is translated for 
-	 * consistency between the built-in system function 
-	 * <code>LOCATE(searchStr, sourceStr, startIndex)</code> and the sources 
-	 * implementation.  This is done by calling {@link #getStartIndexExpression(Expression)} 
-	 * and passing it the non-literal <code>startIndex</code> value.
-	 * <p>
-	 * Finally, <code>function</code>'s parameters may be rearranged depending 
-	 * on the value specified by {@link ParameterOrder} during construction of 
-	 * <code>MODFunctionModifier</code>.
-	 * <p>
-	 * The translated <code>function</code> is then returned.
-	 * <p>
 	 * For example:
 	 * <ul>
 	 * <code>locate('a', 'abcdefg')  --->  LOCATE('a', 'abcdefg')</code><br />

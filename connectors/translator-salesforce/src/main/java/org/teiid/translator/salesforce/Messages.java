@@ -23,13 +23,12 @@
 package org.teiid.translator.salesforce;
 
 import java.util.MissingResourceException;
-import java.util.ResourceBundle;
+
+import org.teiid.core.BundleUtil;
 
 public class Messages {
 	
-	private static final String BUNDLE_NAME = "com.metamatrix.connector.salesforce.i18n"; //$NON-NLS-1$
-
-	private static final ResourceBundle RESOURCE_BUNDLE = ResourceBundle.getBundle(BUNDLE_NAME);
+	private static final BundleUtil RESOURCE_BUNDLE = BundleUtil.getBundleUtil(Messages.class);
 
 	public static String getString(String key) {
 		try {

@@ -42,9 +42,6 @@ import org.teiid.query.sql.lang.Command;
  */
 public class BatchedUpdateResolver implements CommandResolver {
     
-    /** 
-     * @see com.metamatrix.query.resolver.command.AbstractCommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, boolean, org.teiid.query.analysis.AnalysisRecord, boolean)
-     */
     public void resolveCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals) 
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 

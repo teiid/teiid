@@ -120,7 +120,6 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 	 * Constructor
 	 * @param executionMode the execution mode.
 	 * @param ctx the execution context.
-	 * @param rm the runtimeMetadata
 	 * @param logger the ConnectorLogger
 	 * @param ldapCtx the LDAP Context
 	 */

@@ -106,9 +106,6 @@ public class SetQuery extends QueryExpression {
         this.rightQuery = rightQuery;
     }
 
-    /**
-     * @see org.teiid.language.LanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
-     */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);
     }

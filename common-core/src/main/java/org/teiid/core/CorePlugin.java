@@ -34,7 +34,6 @@ public class CorePlugin {
     //
     /**
      * The plug-in identifier of this plugin
-     * (value <code>"com.metamatrix.core"</code>).
      */
     public static final String PLUGIN_ID = CorePlugin.class.getPackage().getName();
 

@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.core.util;
+package org.teiid.core.util;
 
 import org.teiid.internal.core.index.CharOperation;
 

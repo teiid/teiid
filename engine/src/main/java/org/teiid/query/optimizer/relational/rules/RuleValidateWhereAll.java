@@ -55,7 +55,6 @@ public final class RuleValidateWhereAll implements OptimizerRule {
      * Verifies that a model with "supports where all" is being passed an atomic
      * query with a criteria.
      * @throws QueryPlannerException if property is not satisfied
-	 * @see com.metamatrix.query.optimizer.OptimizerRule#execute(PlanNode, QueryMetadataInterface, RuleStack)
 	 */
 	public PlanNode execute(
 		PlanNode plan,

@@ -149,9 +149,7 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
             postVisitor.visit(obj);
         }
     }
-    /* 
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.IExistsCriteria)
-     */
+
     public void visit(Exists obj) {
         if (preVisitor != null) {
             preVisitor.visit(obj);

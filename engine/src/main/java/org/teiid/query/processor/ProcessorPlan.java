@@ -154,9 +154,6 @@ public abstract class ProcessorPlan implements Cloneable, BatchProducer {
 		return transactionalReads;
 	}
 	
-    /**
-     * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
-     */
     public PlanNode getDescriptionProperties() {
         PlanNode props = new PlanNode(this.getClass().getSimpleName());
         props.addProperty(PROP_OUTPUT_COLS, AnalysisRecord.getOutputColumnProperties(getOutputElements()));

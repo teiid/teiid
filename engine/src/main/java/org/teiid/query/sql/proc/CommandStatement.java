@@ -62,10 +62,6 @@ public class CommandStatement extends Statement implements SubqueryContainer {
 		return command;	
 	}
 
-    /**
-     * Sets the command. 
-     * @see com.metamatrix.query.sql.lang.SubqueryLanguageObject#setCommand()
-     */
     public void setCommand(Command command){
         this.command = command;
     }

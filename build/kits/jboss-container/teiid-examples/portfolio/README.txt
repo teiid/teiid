@@ -1,3 +1,7 @@
+#
+# NOTE: due to changes affecting the text connector.  This example is currently not functional.
+#
+
 Install a recent version of Derby - see http://db.apache.org/derby/derby_downloads.html
 
 Create the example dataset in Derby by running <derby home>/bin/ij customer-schema.sql

@@ -90,9 +90,6 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
         return props;
     }
 
-    /** 
-     * @see org.teiid.query.processor.proc.RepeatedInstruction#testCondition(com.metamatrix.query.processor.proc.ProcedureEnvironment)
-     */
     public boolean testCondition(ProcedurePlan procEnv) throws TeiidComponentException, TeiidProcessingException {
         if(!procEnv.resultSetExists(rsName)) {
             procEnv.executePlan(plan, rsName);            
@@ -108,9 +105,6 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
         return loopProgram;
     }
 
-    /** 
-     * @see org.teiid.query.processor.proc.RepeatedInstruction#postInstruction(com.metamatrix.query.processor.proc.ProcedureEnvironment)
-     */
     public void postInstruction(ProcedurePlan procEnv) throws TeiidComponentException {
         procEnv.removeResults(rsName);
     }

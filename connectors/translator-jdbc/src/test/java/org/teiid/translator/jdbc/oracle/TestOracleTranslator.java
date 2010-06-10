@@ -29,6 +29,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.cdk.CommandBuilder;
+import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.impl.ExecutionContextImpl;
@@ -48,7 +49,6 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
 
-import com.metamatrix.cdk.api.TranslationUtility;
 
 public class TestOracleTranslator {
 	

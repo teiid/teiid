@@ -164,13 +164,17 @@ public class ExceptionHolder implements Externalizable {
 		return result;
 	}
 	
-	private byte[] writeAsByteArray(Throwable t) throws IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(baos);
-        oos.writeObject(t);
-        oos.flush();
-        oos.close();		
-        return baos.toByteArray();
+	private byte[] writeAsByteArray(Throwable t) {
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ObjectOutputStream oos = new ObjectOutputStream(baos);
+	        oos.writeObject(t);
+	        oos.flush();
+	        oos.close();
+	        return baos.toByteArray();
+		} catch (IOException e) {
+			return null;
+		}
 	}
 	
 	private Throwable readFromByteArray(byte[] contents) throws IOException {

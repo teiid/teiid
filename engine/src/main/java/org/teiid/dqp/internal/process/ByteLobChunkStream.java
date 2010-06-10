@@ -45,9 +45,6 @@ public class ByteLobChunkStream  implements LobChunkProducer {
         this.chunkSize = chunkSize;
     }
     
-    /**  
-     * @see com.metamatrix.common.lob.ByteLobChunkProducer#getNextChunk(int)
-     */
     public LobChunk getNextChunk() throws IOException{
 
         if (this.closed) {
@@ -75,9 +72,6 @@ public class ByteLobChunkStream  implements LobChunkProducer {
         return new LobChunk(cbuf, isLast);
     }
 
-    /** 
-     * @see com.metamatrix.common.lob.ByteLobChunkProducer#close()
-     */
     public void close() throws IOException {
         this.closed = true;
         this.stream.close();

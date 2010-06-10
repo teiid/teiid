@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Select;
 import org.teiid.metadata.Column;
@@ -41,7 +42,6 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.salesforce.execution.visitors.JoinQueryVisitor;
 import org.teiid.translator.salesforce.execution.visitors.SelectVisitor;
 
-import com.metamatrix.cdk.api.TranslationUtility;
 
 public class TestVisitors {
 

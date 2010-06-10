@@ -27,6 +27,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.teiid.cdk.api.TranslationUtility;
+import org.teiid.cdk.unittest.FakeTranslationFactory;
 import org.teiid.language.Condition;
 import org.teiid.language.LanguageFactory;
 import org.teiid.language.LanguageUtil;
@@ -35,8 +37,6 @@ import org.teiid.language.Select;
 import junit.framework.TestCase;
 
 
-import com.metamatrix.cdk.api.TranslationUtility;
-import com.metamatrix.cdk.unittest.FakeTranslationFactory;
 
 /**
  */

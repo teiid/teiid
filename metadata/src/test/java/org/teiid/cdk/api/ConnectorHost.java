@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.cdk.api;
+package org.teiid.cdk.api;
 
 import java.util.ArrayList;
 import java.util.Arrays;

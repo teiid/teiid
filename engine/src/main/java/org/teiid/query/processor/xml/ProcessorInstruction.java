@@ -38,8 +38,7 @@ public abstract class ProcessorInstruction {
    
     /**
      * Allow this ProcessorInstruction to do whatever processing it needs, and to
-     * in turn manipulate the running program, (via the ProcessorEnvironment
-     * {@link ProcessorEnvironment#getProgramStack getProgramStack} method.)
+     * in turn manipulate the running program.
      * A typical instruction should simply {@link Program#incrementProgramCounter increment}
      * the program counter of the current program, but specialized instructions may add
      * sub programs to the stack or not increment the counter (so that they are

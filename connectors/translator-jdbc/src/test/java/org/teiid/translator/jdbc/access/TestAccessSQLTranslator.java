@@ -25,13 +25,13 @@ package org.teiid.translator.jdbc.access;
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
+import org.teiid.cdk.unittest.FakeTranslationFactory;
 import org.teiid.language.Command;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.TranslatedCommand;
 
-import com.metamatrix.cdk.unittest.FakeTranslationFactory;
 
 
 /** 

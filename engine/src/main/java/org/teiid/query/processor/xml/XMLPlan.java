@@ -458,9 +458,6 @@ public class XMLPlan extends ProcessorPlan {
         return xmlPlan;
     }
 
-    /*
-     * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
-     */
     public PlanNode getDescriptionProperties() {
     	PlanNode node = this.originalProgram.getDescriptionProperties();
     	node.addProperty(PROP_OUTPUT_COLS, AnalysisRecord.getOutputColumnProperties(getOutputElements()));

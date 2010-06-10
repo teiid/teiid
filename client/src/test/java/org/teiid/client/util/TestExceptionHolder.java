@@ -1,5 +1,7 @@
 package org.teiid.client.util;
 
+import static org.junit.Assert.*;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
@@ -9,17 +11,15 @@ import java.net.URLClassLoader;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-import junit.framework.TestCase;
-
 import org.junit.Test;
-import org.teiid.client.util.ExceptionHolder;
+import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.core.util.UnitTestUtil;
 
 
-public class TestExceptionHolder extends TestCase {
+public class TestExceptionHolder {
 	
 	//## JDBC4.0-begin ##		
 	@SuppressWarnings("all")
@@ -95,7 +95,27 @@ public class TestExceptionHolder extends TestCase {
         Throwable e = holder.getException();
         assertTrue(e instanceof TeiidRuntimeException);
         assertEquals("Unknown Exception", e.getMessage()); //$NON-NLS-1$
-	}		
+	}	
+	
+	private static class NotSerializable {
+		
+	}
+
+	@Test public void testDeserializationNotSerializable() throws Exception {
+		Exception ex = new TeiidException() {
+			NotSerializable ns = new NotSerializable();
+		};
+		
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(new ExceptionHolder(ex));
+        oos.flush();
+        
+        ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
+        ExceptionHolder holder = (ExceptionHolder)ois.readObject();
+        Throwable e = holder.getException();
+        assertTrue(e instanceof TeiidException);
+	}
 	//## JDBC4.0-end ##
 	
 	/*## JDBC3.0-JDK1.5-begin ##

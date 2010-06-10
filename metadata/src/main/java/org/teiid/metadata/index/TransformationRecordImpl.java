@@ -46,37 +46,22 @@ public class TransformationRecordImpl extends AbstractMetadataRecord {
     private List schemaPaths;
     private String resourcePath;
     
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.TransformationRecord#getTransformation()
-     */
     public String getTransformation() {
         return transformation;
     }
 
-    /*
-     * @see com.metamatrix.modeler.core.metadata.runtime.TransformationRecord#getBindings()
-     */
     public List getBindings() {
         return this.bindings;
     }
 
-    /*
-     * @see com.metamatrix.modeler.core.metadata.runtime.TransformationRecord#getSchemaPaths()
-     */
     public List getSchemaPaths() {
         return schemaPaths;
     }
 
-    /*
-     * @see com.metamatrix.modeler.core.metadata.runtime.TransformationRecord#getTransformationType()
-     */
     public String getTransformationType() {
         return transformationType;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.TransformationRecord#getType()
-     */
     public String getType() {
         return this.transformationType;
     }

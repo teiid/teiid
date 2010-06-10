@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Command;
 import org.teiid.metadata.Column;
@@ -39,7 +40,6 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 
-import com.metamatrix.cdk.api.TranslationUtility;
 
 /**
  */

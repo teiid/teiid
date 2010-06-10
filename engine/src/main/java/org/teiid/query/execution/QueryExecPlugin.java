@@ -35,7 +35,6 @@ public class QueryExecPlugin { // extends Plugin {
 
     /**
      * The plug-in identifier of this plugin
-     * (value <code>"com.metamatrix.common"</code>).
      */
     public static final String PLUGIN_ID = QueryExecPlugin.class.getPackage().getName();
 

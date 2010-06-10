@@ -36,7 +36,7 @@ public interface FunctionMetadataSource {
 
     /**
      * This method requests that the source return all 
-     * {@link com.metamatrix.query.function.FunctionMethod}s
+     * {@link FunctionMethod}s
      * the source knows about.  This can occur in several situations - 
      * on initial registration with the FunctionLibraryManager, on a 
      * general reload, etc.  This may be called multiple times and should

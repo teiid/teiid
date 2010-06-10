@@ -432,8 +432,6 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     /** 
      * This is true only after Postgre version 7.1 
      * However, since version 7 was released in 2000 we'll assume a post 7 instance.
-     * 
-     * @see org.teiid.translator.jdbc.JDBCCapabilities#supportsInlineViews()
      */
     public boolean supportsInlineViews() {
         return true;
@@ -448,17 +446,11 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         return true;
     }
     
-    /** 
-     * @see org.teiid.translator.BasicConnectorCapabilities#supportsExcept()
-     */
     @Override
     public boolean supportsExcept() {
         return true;
     }
     
-    /** 
-     * @see org.teiid.translator.BasicConnectorCapabilities#supportsIntersect()
-     */
     @Override
     public boolean supportsIntersect() {
         return true;

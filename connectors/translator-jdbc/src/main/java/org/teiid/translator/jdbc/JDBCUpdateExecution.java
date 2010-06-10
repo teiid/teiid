@@ -72,10 +72,6 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
         }
     }
 
-    /**
-     * @see com.metamatrix.data.api.BatchedUpdatesExecution#execute(org.teiid.language.Command[])
-     * @since 4.2
-     */
     public int[] execute(BatchedUpdates batchedCommand) throws TranslatorException {
         boolean succeeded = false;
 

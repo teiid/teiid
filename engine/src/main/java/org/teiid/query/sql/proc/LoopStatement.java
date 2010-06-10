@@ -72,7 +72,6 @@ public class LoopStatement extends Statement implements SubqueryContainer {
 
     /**
      * Sets the command. 
-     * @see com.metamatrix.query.sql.lang.SubqueryLanguageObject#setCommand()
      */
     public void setCommand(Command command){
         this.query = command;

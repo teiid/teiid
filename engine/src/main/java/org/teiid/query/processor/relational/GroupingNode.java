@@ -441,9 +441,6 @@ public class GroupingNode extends RelationalNode {
 		return clonedNode;
 	}
 
-    /*
-     * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
-     */
     public PlanNode getDescriptionProperties() {
         // Default implementation - should be overridden
     	PlanNode props = super.getDescriptionProperties();

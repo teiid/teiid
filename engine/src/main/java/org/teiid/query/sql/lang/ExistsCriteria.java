@@ -65,9 +65,6 @@ implements SubqueryContainer, ContextReference {
     	return null;
     }
 
-    /**
-     * @see com.metamatrix.query.sql.lang.SubqueryCriteria#getCommand()
-     */
     public Command getCommand() {
         return this.command;
     }

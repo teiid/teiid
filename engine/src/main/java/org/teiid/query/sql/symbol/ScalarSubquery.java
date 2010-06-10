@@ -95,9 +95,6 @@ public class ScalarSubquery implements Expression, SubqueryContainer, ContextRef
         this.type = type;
     }
 
-    /**
-     * @see com.metamatrix.query.sql.lang.SubqueryLanguageObject#getCommand()
-     */
     public Command getCommand() {
         return this.command;
     }
@@ -105,7 +102,6 @@ public class ScalarSubquery implements Expression, SubqueryContainer, ContextRef
     /**
      * Sets the command.  Also modifies the hash code of this object, so
      * caution should be used in using this method.
-     * @see com.metamatrix.query.sql.lang.SubqueryLanguageObject#setCommand()
      */
     public void setCommand(Command command){
         this.command = command;

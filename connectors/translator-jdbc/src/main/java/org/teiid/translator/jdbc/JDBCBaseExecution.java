@@ -121,9 +121,6 @@ public abstract class JDBCBaseExecution implements Execution  {
         return translatedCommand;
     }
 
-    /*
-     * @see com.metamatrix.data.Execution#close()
-     */
     public synchronized void close() {
         try {
             if (statement != null) {
@@ -134,9 +131,6 @@ public abstract class JDBCBaseExecution implements Execution  {
         } 
     }
 
-    /*
-     * @see com.metamatrix.data.Execution#cancel()
-     */
     public synchronized void cancel() throws TranslatorException {
         // if both the DBMS and driver support aborting an SQL
         try {

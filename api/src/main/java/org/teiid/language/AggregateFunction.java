@@ -80,9 +80,6 @@ public class AggregateFunction extends BaseLanguageObject implements Expression 
         return this.expression;
     }
     
-    /**
-     * @see org.teiid.language.LanguageObject#acceptVisitor(com.metamatrix.data.visitor.LanguageObjectVisitor)
-     */
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);
     }

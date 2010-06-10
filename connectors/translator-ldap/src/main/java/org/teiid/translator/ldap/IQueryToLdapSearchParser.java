@@ -86,8 +86,6 @@ public class IQueryToLdapSearchParser {
 	
 	/**
 	 * Constructor.
-	 * @param logger the connector logger
-	 * @param rm the RuntimeMetadata
 	 */
 	public IQueryToLdapSearchParser(LDAPExecutionFactory factory) {
 		this.executionFactory = factory;

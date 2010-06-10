@@ -25,10 +25,13 @@ package org.teiid.jdbc;
 import org.teiid.client.RequestMessage;
 
 /**
- * MetaMatrix-specific execution properties.  These execution properties can 
- * be set via the {@link com.metamatrix.jdbc.api.Statement#setExecutionProperty(String, String)}
+ * These execution properties can 
+ * be set via the {@link TeiidStatement#setExecutionProperty(String, String)}
  * method.  They affect the subsequent execution of all commands on that Statement
- * instance.   
+ * instance.  
+ * 
+ * They can also be set using a SET statement via JDBC and take effect for the
+ * duration of the session.
  */
 public interface ExecutionProperties {
 

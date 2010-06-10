@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vdb name="weather" version="1">
+
+	<!-- 
+		See the dynamicvdb Portfolio example, or http://community.jboss.org/wiki/DynamicVDBinTeiid70 
+		for more information on the format of a vdb.xml file.
+	 -->
+
+    <description>Shows how to call Web Services</description>
+    
+    <property name="UseConnectorMetadata" value="cached" />
+
+    <model name="Weather">
+        <source name="Weather" translator-name="MessageWeather" connection-jndi-name="java:WeatherDS"/>
+    </model>
+
+    <translator name="MessageWeather" type="ws">
+		<property name="DefaultBinding" value="HTTP"/>
+    </translator>
+
+</vdb>

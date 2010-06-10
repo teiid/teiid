@@ -148,7 +148,6 @@ public class LDAPSearchDetails {
 	
 	/**
 	 * Print Method for Logging - (Detail level logging)
-	 * @param logger the connector logger.
 	 */
 	public void printDetailsToLog() throws NamingException {
 		// Log Search Scope

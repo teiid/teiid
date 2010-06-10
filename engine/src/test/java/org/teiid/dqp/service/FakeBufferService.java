@@ -29,25 +29,16 @@ import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.service.BufferService;
 
-
-/**
- */
 public class FakeBufferService implements BufferService {
 
     private BufferManager bufferMgr;
     
-    /**
-     * 
-     */
     public FakeBufferService() {
         super();
         
         bufferMgr = BufferManagerFactory.getStandaloneBufferManager();            
     }
 
-    /* 
-     * @see com.metamatrix.dqp.service.BufferService#getBufferManager()
-     */
     public BufferManager getBufferManager() {
         return bufferMgr;
     }

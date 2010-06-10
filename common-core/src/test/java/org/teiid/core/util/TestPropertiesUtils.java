@@ -71,7 +71,7 @@ public class TestPropertiesUtils extends TestCase {
 
     
     /**
-     * Tests {@link com.metamatrix.common.utils.PropertiesUtils#print(String, Properties, String header)}
+     * Tests {@link org.teiid.core.util.utils.PropertiesUtils#print(String, Properties, String header)}
      * and {@link org.teiid.core.util.utils.PropertiesUtils#load(String)}
      * and {@link org.teiid.core.util.utils.PropertiesUtils#loadHeader(String)}
      */

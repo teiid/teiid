@@ -122,9 +122,6 @@ implements SubqueryContainer, ContextReference {
         this.predicateQuantifier = predicateQuantifier;
     }
 
-    /**
-     * @see com.metamatrix.query.sql.lang.SubqueryCriteria#getCommand()
-     */
     public Command getCommand() {
         return this.command;
     }

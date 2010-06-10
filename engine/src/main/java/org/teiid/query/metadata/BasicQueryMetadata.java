@@ -152,16 +152,10 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
         return null;
 	}    
 
-    /* 
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#getMaximumValue(java.lang.Object)
-     */
     public Object getMaximumValue(Object elementID) throws TeiidComponentException, QueryMetadataException {
         return null;
     }
 
-    /* 
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#getMinimumValue(java.lang.Object)
-     */
     public Object getMinimumValue(Object elementID) throws TeiidComponentException, QueryMetadataException {
         return null;
     }
@@ -420,30 +414,18 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
     	return QueryMetadataInterface.UNKNOWN_CARDINALITY;
     }
 
-    /* 
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#getXMLSchemas(java.lang.Object)
-     */
     public List getXMLSchemas(Object groupID) throws TeiidComponentException, QueryMetadataException {
         return null;
     }
 
-    /* (non-Javadoc)
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#getNameInSource(java.lang.Object)
-     */
     public String getNameInSource(Object metadataID) throws TeiidComponentException, QueryMetadataException {
         return null;
     }
 
-    /* (non-Javadoc)
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#getElementLength(java.lang.Object)
-     */
     public int getElementLength(Object elementID) throws TeiidComponentException, QueryMetadataException {
         return 0;
     }
 
-    /* 
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#getExtensionProperties(java.lang.Object)
-     */
     public Properties getExtensionProperties(Object metadataID)
         throws TeiidComponentException, QueryMetadataException {
         return null;

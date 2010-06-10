@@ -415,9 +415,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         }
     }
 
-    /* (non-Javadoc)
-	 * @see com.metamatrix.dqp.internal.process.DataTierManager#clearCodeTables()
-	 */
     public void clearCodeTables() {
         this.codeTableCache.clearAll();
     }

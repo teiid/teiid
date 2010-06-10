@@ -128,7 +128,7 @@ public class TestParsingObjectIDs extends TestCase {
     /**
      * Ensure that the variant matches the expected variant.
      * @param uuid the ObjectID
-     * @param expectedVariant one of the {@link com.metamatrix.common.id.UUID.Variant UUID.Variant} constants.
+     * @param expectedVariant .
      */
     public static void helpCheckVariant( UUID uuid, int expectedVariant ) {
 //System.out.println("variant == UUID.Variant.STANDARD        ? " + (UUID.getVariant(uuid)==UUID.Variant.STANDARD) );

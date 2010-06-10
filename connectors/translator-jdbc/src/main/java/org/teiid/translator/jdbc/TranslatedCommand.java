@@ -105,7 +105,7 @@ public class TranslatedCommand {
     
     /**
      * Return List of values to set on a prepared statement, if 
-     * necessary (see {@link #getStatementType})
+     * necessary.
      * @return List of values to be set on a prepared statement
      */
     public List getPreparedValues() {
@@ -113,21 +113,16 @@ public class TranslatedCommand {
     }
     
     /**
-     * Get String SQL of translated command; but use 
-     * {@link #nextLargeSetQuerySQL} if this command is 
-     * a {@link #isLargeSetQuery large set query}
-     * @return SQL of translated command, or null if the
-     * command is a {@link #isLargeSetQuery large set query}
+     * Get String SQL of translated command. 
+     * @return SQL of translated command
      */
     public String getSql() {
         return sql;
     }
 
     /**
-     * Return the statement type, one of {@link #STMT_TYPE_STATEMENT},
-     * {@link #STMT_TYPE_PREPARED_STATEMENT}, or
-     * {@link #STMT_TYPE_CALLABLE_STATEMENT}
-     * @return statement type of translated command
+     * Returns whether the statement is prepared.
+     * @return true if the statement is prepared
      */
     public boolean isPrepared() {
         return prepared;

@@ -48,8 +48,7 @@ public abstract class ProgramInstruction implements Cloneable {
    
     /**
      * Allow this instruction to do whatever processing it needs, and to
-     * in turn manipulate the running program, (via the ProcessorEnvironment
-     * {@link ProgramEnvironment#getProgramStack getProgramStack} method.) A typical instruction should simply {@link
+     * in turn manipulate the running program. A typical instruction should simply {@link
      * Program#incrementProgramCounter increment} the program counter of the current program, but specialized
      * instructions may add sub programs to the stack or not increment the counter (so that they are executed again.)
      */

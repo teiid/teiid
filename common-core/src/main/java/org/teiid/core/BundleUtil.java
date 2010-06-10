@@ -225,10 +225,6 @@ public class BundleUtil {
         return MessageFormat.format(text, parameters);
     }
 
-    /**
-     * @see com.metamatrix.core.PluginUtil#getStringOrKey(java.lang.String)
-     * @since 4.1
-     */
     public String getStringOrKey(final String key) {
         ArgCheck.isNotNull(key);
 

@@ -146,7 +146,6 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
 	/** 
 	 * Closes LDAP context, effectively closing the connection to LDAP.
 	 * (non-Javadoc)
-	 * @see com.metamatrix.connector.pool.PoolAwareConnection#closeSource()
 	 */
 	@Override
     public void close() {
@@ -171,7 +170,6 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
 	 * 
 	 * One possible extension is to implement a UnsolicitedNotificationListener.
 	 * (non-Javadoc)
-	 * @see com.metamatrix.connector.pool.PoolAwareConnection#isAlive()
 	 */
 	public boolean isAlive() {
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "LDAP Connection is alive."); //$NON-NLS-1$

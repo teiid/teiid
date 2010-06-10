@@ -209,9 +209,6 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     	append(condition);
     }
 
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.language.Delete)
-     */
     public void visit(Delete obj) {
         buffer.append(DELETE)
               .append(Tokens.SPACE);
@@ -247,9 +244,6 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         return null;
     }
     
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.language.ColumnReference)
-     */
     public void visit(ColumnReference obj) {
         buffer.append(getElementName(obj, true));
     }
@@ -308,9 +302,6 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         return elementName;
     }
     
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.IExecute)
-     */
     public void visit(Call obj) {              
         buffer.append(EXEC)
               .append(Tokens.SPACE);
@@ -339,9 +330,6 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         buffer.append(Tokens.RPAREN);
     }
 
-    /* 
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.IExistsCriteria)
-     */
     public void visit(Exists obj) {
         buffer.append(EXISTS)
               .append(Tokens.SPACE)
@@ -354,9 +342,6 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     	return infixFunctions.contains(function);
     }
 
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.language.Function)
-     */
     public void visit(Function obj) {
 
         String name = obj.getName();
@@ -448,9 +433,6 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         return true;
     }
 
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.language.GroupBy)
-     */
     public void visit(GroupBy obj) {
         buffer.append(GROUP)
               .append(Tokens.SPACE)
@@ -459,9 +441,6 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         append(obj.getElements());
     }
 
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.language.In)
-     */
     public void visit(In obj) {
         append(obj.getLeftExpression());
         if (obj.isNegated()) {
@@ -488,9 +467,6 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         buffer.append(obj.getCorrelationName());
     }
 
-    /**
-     * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.language.Insert)
-     */
     public void visit(Insert obj) {
     	buffer.append(INSERT).append(Tokens.SPACE);
 		buffer.append(getSourceComment(obj));

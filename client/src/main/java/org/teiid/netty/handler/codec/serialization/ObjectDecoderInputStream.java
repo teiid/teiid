@@ -44,8 +44,7 @@ import org.teiid.core.util.ExternalizeUtil;
 
 
 /**
- * An {@link ObjectInput} which is interoperable with {@link ObjectEncoder}
- * and {@link ObjectEncoderOutputStream}.
+ * An {@link ObjectInput} which is interoperable {@link ObjectEncoderOutputStream}.
  *
  * @author The Netty Project (netty-dev@lists.jboss.org)
  * @author Trustin Lee (tlee@redhat.com)

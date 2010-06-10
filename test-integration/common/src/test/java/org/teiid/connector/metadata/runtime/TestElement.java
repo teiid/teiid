@@ -27,6 +27,7 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
+import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.DerivedColumn;
@@ -35,7 +36,6 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
 
-import com.metamatrix.cdk.api.TranslationUtility;
 
 /**
  */

@@ -54,9 +54,7 @@ import org.teiid.query.util.ErrorMessageKeys;
 public final class RuleAccessPatternValidation implements OptimizerRule {
 
 	/**
-     * Verifies
      * @throws QueryPlannerException if an access pattern has not been satisfied
-	 * @see com.metamatrix.query.optimizer.OptimizerRule#execute(PlanNode, QueryMetadataInterface, RuleStack)
 	 */
 	public PlanNode execute(
 		PlanNode plan,

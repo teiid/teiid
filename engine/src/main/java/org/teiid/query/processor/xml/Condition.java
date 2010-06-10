@@ -28,7 +28,6 @@ import org.teiid.core.TeiidProcessingException;
 /**
  * This is a condition which can be evaluated, and which supplies a 
  * Program instance which should act as the resulting sub Program to be run
- * (placed on the top of the {@link ProcessorEnvironment#getProgramStack program stack})
  * if the condition evaluates to true.
  */
 public abstract class Condition {
@@ -41,9 +40,7 @@ public abstract class Condition {
     
     /**
      * If this Condition {@link #evaluate evaluates} to true, this Program should
-     * be retrieved and placed at the top of the 
-     * {@link ProcessorEnvironment#getProgramStack program stack}, to be run
-     * immediately.
+     * be retrieved to be run immediately.
      * @return Program sub Program to be run if this Condition evaluates to true
      */
     public Program getThenProgram() {
@@ -63,7 +60,7 @@ public abstract class Condition {
      * @param elementMap Map of elements to their index in the currentRowData
      * @param currentRowData List of Objects representing the current row of 
      * the result set(s)
-     * @param env ProcessorEnvironment of the XMLPlan, maintains state of the running
+     * @param env XMLProcessorEnvironment of the XMLPlan, maintains state of the running
      * XML Processor Plan
      */
     public abstract boolean evaluate(XMLProcessorEnvironment env, XMLContext ontext)

@@ -98,9 +98,6 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
         return null;
     }
 
-    /* 
-     * @see com.metamatrix.data.SynchQueryExecution#execute(com.metamatrix.data.language.IQuery, int)
-     */
     @Override
     public void execute() throws TranslatorException {
        
@@ -143,17 +140,11 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
     	return Arrays.asList(new Object[count]);
     }
 
-    /* 
-     * @see com.metamatrix.data.Execution#close()
-     */
     @Override
     public void close() {
         // nothing to do
     }
 
-    /* 
-     * @see com.metamatrix.data.Execution#cancel()
-     */
     @Override
     public void cancel() throws TranslatorException {
 

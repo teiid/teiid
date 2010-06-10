@@ -81,9 +81,6 @@ public class YahooExecution implements ResultSetExecution {
         this.query = query;
     }
     
-    /* 
-     * @see com.metamatrix.data.SynchQueryExecution#execute(com.metamatrix.data.language.IQuery, int)
-     */
     @Override
     public void execute() throws TranslatorException {
         // Log our command
@@ -277,17 +274,11 @@ public class YahooExecution implements ResultSetExecution {
         return output;    
     }
 
-    /* 
-     * @see com.metamatrix.data.Execution#close()
-     */
     @Override
     public void close() {
         // nothing to do
     }
 
-    /* 
-     * @see com.metamatrix.data.Execution#cancel()
-     */
     @Override
     public void cancel() throws TranslatorException {
 

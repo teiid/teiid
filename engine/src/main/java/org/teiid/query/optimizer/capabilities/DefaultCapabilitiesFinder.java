@@ -40,9 +40,6 @@ public class DefaultCapabilitiesFinder implements CapabilitiesFinder {
     	this.capabilities = capabilities;
     }
 
-    /* (non-Javadoc)
-     * @see com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder#findCapabilities(java.lang.Object)
-     */
     public SourceCapabilities findCapabilities(String modelName) throws TeiidComponentException {
         return capabilities;
     }

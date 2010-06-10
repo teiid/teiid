@@ -70,16 +70,10 @@ public class CommandCollectorVisitor extends LanguageVisitor {
         this.commands.add(obj.getCommand());
     }
 
-    /**
-     * @see org.teiid.query.sql.LanguageVisitor#visit(com.metamatrix.query.sql.lang.ScalarSubquery)
-     */
     public void visit(ScalarSubquery obj) {
         this.commands.add(obj.getCommand());
     }
 
-    /**
-     * @see org.teiid.query.sql.LanguageVisitor#visit(org.teiid.query.sql.lang.SubqueryCompareCriteria)
-     */
     public void visit(SubqueryCompareCriteria obj) {
         this.commands.add(obj.getCommand());
     }

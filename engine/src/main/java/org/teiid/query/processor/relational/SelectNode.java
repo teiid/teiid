@@ -150,9 +150,6 @@ public class SelectNode extends SubqueryAwareRelationalNode {
 		target.projectionIndexes = source.projectionIndexes;
 	}
     
-    /* 
-     * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
-     */
     public PlanNode getDescriptionProperties() {   
     	PlanNode props = super.getDescriptionProperties();
     	AnalysisRecord.addLanaguageObjects(props, PROP_CRITERIA, Arrays.asList(this.criteria));

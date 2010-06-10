@@ -36,7 +36,6 @@ public class RuntimeMetadataPlugin {
 
 	/**
      * The plug-in identifier of this plugin
-     * (value <code>"com.metamatrix.metadata.runtime"</code>).
 	 */
 	public static final String PLUGIN_ID = "org.teiid.metadata"; //$NON-NLS-1$
 
