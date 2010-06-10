@@ -90,7 +90,7 @@ public class DataSourceFactory {
 	}
 
 	// the DO_NO_USE_DEFAULT will be passed in when the test are run from maven and no property is passed in for UseDataSources 
-	private static final String DO_NOT_USE_DEFAULT="${usedatasources}";
+	private static final String DO_NOT_USE_DEFAULT="${" + ConfigPropertyNames.USE_DATASOURCES_PROP + "}";
 		
 	private Properties configprops;
 	
