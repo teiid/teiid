@@ -97,6 +97,32 @@
 				<module>documentation</module>
 			</modules>
 		</profile>
+        <profile>
+          <!--
+          This is to enable faster build for development time.
+          -->
+            <id>dev</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>2.2-beta-2</version>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>build/assembly/client-jar.xml</descriptor>
+                                <descriptor>build/assembly/jboss-container/dist.xml</descriptor>
+                                <descriptor>build/assembly/adminshell/adminshell-dist.xml</descriptor>
+                            </descriptors>
+                            <outputDirectory>target/distribution</outputDirectory>
+                            <workDirectory>target/assembly/work</workDirectory>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+            <modules>
+                <module>build</module>
+            </modules>
+        </profile>        
 	</profiles>
 	<build>
 	<!-- This section defines the default plugin settings inherited by child projects. -->
