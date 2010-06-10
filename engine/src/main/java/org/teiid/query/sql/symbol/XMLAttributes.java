@@ -24,7 +24,6 @@ package org.teiid.query.sql.symbol;
 
 import java.util.List;
 
-import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
@@ -54,7 +53,7 @@ public class XMLAttributes implements LanguageObject {
 	
 	@Override
 	public int hashCode() {
-		return HashCodeUtil.hashCode(args.hashCode());
+		return args.hashCode();
 	}
 	
 	public boolean equals(Object obj) {

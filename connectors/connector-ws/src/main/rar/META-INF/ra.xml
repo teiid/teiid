@@ -7,7 +7,7 @@
            version="1.5">
 
    <vendor-name>Red Hat Middleware LLC</vendor-name>
-   <eis-type>Teiid XML SOAP Connector</eis-type>
+   <eis-type>Teiid WS Connector</eis-type>
    <resourceadapter-version>1.0</resourceadapter-version>
    <license>
       <description>
@@ -40,13 +40,6 @@
          <connection-definition>
             <managedconnectionfactory-class>org.teiid.resource.adapter.ws.WSManagedConnectionFactory</managedconnectionfactory-class>
 
-            <config-property>
-                <description>{$display:"Invocation Type",$description:"Service Invocation type (HTTP or SOAP)", $allowed="HTTP_GET, HTTP_POST, SOAP11, SOAP12", $required="true", $defaultValue="SOAP12"}</description>
-                <config-property-name>InvocationType</config-property-name>
-                <config-property-type>java.lang.String</config-property-type>
-                <config-property-value>SOAP12</config-property-value>
-            </config-property>
-            
             <config-property>
                 <description>{$display:"URL, End Point",$description:"URL for HTTP, Service Endpoint for SOAP",$required="true"}</description>
                 <config-property-name>EndPoint</config-property-name>
@@ -81,12 +74,6 @@
             <config-property>
                 <description>{$display:"WS-Security Configuration Name in jboss-wsse-client.xml",$description:"JBoss WS-Security client configuration name to use"}</description>
                 <config-property-name>WsSecurityConfigName</config-property-name>
-                <config-property-type>java.lang.String</config-property-type>
-            </config-property>
-                                
-            <config-property>
-                <description>{$display:"XML Parameter Name", $description="only required for HTTP_GET with an XML based request"}</description>
-                <config-property-name>XMLParamName</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
             </config-property>
                          

@@ -61,6 +61,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.sql.symbol.QueryString;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.XMLElement;
@@ -325,6 +326,11 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     
     public void visit(SetClause obj) {
     	obj.setValue(replaceExpression(obj.getValue()));
+    }
+    
+    @Override
+    public void visit(QueryString obj) {
+    	obj.setPath(replaceExpression(obj.getPath()));
     }
     
     /**

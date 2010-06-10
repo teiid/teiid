@@ -1931,7 +1931,7 @@ public class TestQueryRewriter {
     
     @Test public void testRewriteSelectInto() {
         String sql = "select distinct pm1.g1.e1 into #temp from pm1.g1"; //$NON-NLS-1$
-        String expected = "INSERT INTO #temp (#TEMP.E1) SELECT DISTINCT pm1.g1.e1 FROM pm1.g1"; //$NON-NLS-1$
+        String expected = "INSERT INTO #temp (#TEMP.e1) SELECT DISTINCT pm1.g1.e1 FROM pm1.g1"; //$NON-NLS-1$
                 
         helpTestRewriteCommand(sql, expected);        
     }
@@ -1941,7 +1941,7 @@ public class TestQueryRewriter {
      */
     @Test public void testRewriteSelectInto1() {
         String sql = "select distinct e2, e2, e3, e4 into pm1.g1 from pm1.g2"; //$NON-NLS-1$
-        String expected = "INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4) SELECT PM1_G1_1.E2 AS e1, PM1_G1_1.E2_0 AS e2, PM1_G1_1.E3, PM1_G1_1.E4 FROM (SELECT DISTINCT e2, e2 AS E2_0, e3, e4 FROM pm1.g2) AS pm1_g1_1"; //$NON-NLS-1$
+        String expected = "INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4) SELECT PM1_G1_1.e2 AS e1, PM1_G1_1.E2_0 AS e2, PM1_G1_1.e3, PM1_G1_1.e4 FROM (SELECT DISTINCT e2, e2 AS E2_0, e3, e4 FROM pm1.g2) AS pm1_g1_1"; //$NON-NLS-1$
                 
         helpTestRewriteCommand(sql, expected);        
     }
@@ -1998,7 +1998,7 @@ public class TestQueryRewriter {
         procedure += "Select x from temp;\n"; //$NON-NLS-1$
         procedure += "END\n"; //$NON-NLS-1$
         
-        helpTestRewriteCommand(procedure, "CREATE VIRTUAL PROCEDURE\nBEGIN\nCREATE LOCAL TEMPORARY TABLE temp (x string, y integer, z integer);\nINSERT INTO temp (TEMP.X, TEMP.Y, TEMP.Z) SELECT TEMP_1.E2 AS X, TEMP_1.X AS Y, TEMP_1.X_0 AS Z FROM (SELECT pm1.g1.e2, 1 AS x, 2 AS X_0 FROM pm1.g1 ORDER BY pm1.g1.e2 LIMIT 1) AS temp_1;\nSELECT x FROM temp;\nEND"); //$NON-NLS-1$
+        helpTestRewriteCommand(procedure, "CREATE VIRTUAL PROCEDURE\nBEGIN\nCREATE LOCAL TEMPORARY TABLE temp (x string, y integer, z integer);\nINSERT INTO temp (TEMP.x, TEMP.y, TEMP.z) SELECT TEMP_1.e2 AS x, TEMP_1.x AS y, TEMP_1.X_0 AS z FROM (SELECT pm1.g1.e2, 1 AS x, 2 AS X_0 FROM pm1.g1 ORDER BY pm1.g1.e2 LIMIT 1) AS temp_1;\nSELECT x FROM temp;\nEND"); //$NON-NLS-1$
     }
     
     @Test public void testRewriteNot() {
@@ -2289,6 +2289,12 @@ public class TestQueryRewriter {
     	String original = "select * from xmltable('/' passing 1 + 1 as a columns x string default curdate()) as x"; //$NON-NLS-1$
     	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
     	helpTestRewriteCommand(original, "SELECT * FROM XMLTABLE('/' PASSING 2 AS a COLUMNS x string DEFAULT curdate()) AS x", metadata);
+    }
+    
+    @Test public void testRewriteQueryString() throws Exception {
+    	String original = "querystring('path', 'value' as \"&x\", ' & ' as y, null as z)"; //$NON-NLS-1$
+    	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+    	helpTestRewriteExpression(original, "'path?%26x=value&y=%20%26%20'", metadata);
     }
 
 }

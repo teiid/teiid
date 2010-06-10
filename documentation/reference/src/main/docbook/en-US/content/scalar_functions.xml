@@ -1035,6 +1035,18 @@
               <para>x in {string}</para>
             </entry>
           </row>
+          <row>
+            <entry>
+              <para>QUERYSTRING(path [, expr [AS name] ...])</para>
+            </entry>
+            <entry>
+              <para>Returns a properly encoded query string appended to the given path.  Null valued expressions are omitted, and a null path is treated as ''.</para>
+              <para>e.g. QUERYSTRING('path', 'value' as "&amp;x", ' &amp; ' as y, null as z) returns 'path?%26x=value&amp;y=%20%26%20'</para>
+            </entry>
+            <entry>
+              <para>path, expr in {string}.  name is an identifier</para>
+            </entry>
+          </row>
         </tbody>
       </tgroup>
     </informaltable>

@@ -134,6 +134,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.QueryString;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
@@ -1911,6 +1912,8 @@ public class QueryRewriter {
         } else if (expression instanceof XMLSerialize) {
         	rewriteExpressions(expression);
         } else if (expression instanceof XMLQuery) {
+        	rewriteExpressions(expression);
+        } else if (expression instanceof QueryString) {
         	rewriteExpressions(expression);
         }
     	

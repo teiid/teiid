@@ -832,7 +832,7 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
       	<para>
         Usage:
         	<synopsis label="Usage">XMLTABLE([&lt;NSP&gt;,] xquery-expression [&lt;PASSING&gt;] [COLUMNS &lt;COLUMN&gt;, ... )] AS name</synopsis>
-        	<synopsis label="Usage">COLUMN := name (FOR ORDINALITY | (datatype [PATH string] [DEFAULT expression]))</synopsis> 
+        	<synopsis label="Usage">COLUMN := name (FOR ORDINALITY | (datatype [DEFAULT expression] [PATH string]))</synopsis> 
       	</para>
       	<para>See XMLELEMENT for the definition of NSP - <link linkend="xmlnamespaces">XMLNAMESPACES</link>.</para>
       	<para>See XMLQUERY for the definition of <link linkend="passing">PASSING</link>.</para>

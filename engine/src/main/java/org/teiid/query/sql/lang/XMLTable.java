@@ -172,6 +172,7 @@ public class XMLTable extends TableFunctionReference {
 	@Override
 	public XMLTable clone() {
 		XMLTable clone = new XMLTable();
+		this.copy(clone);
 		for (XMLColumn column : columns) {
 			clone.getColumns().add(column.clone());
 		}

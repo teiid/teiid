@@ -208,7 +208,7 @@ public class SocketUtil {
     public static KeyStore loadKeyStore(String name, String password, String type) throws IOException, NoSuchAlgorithmException, CertificateException, KeyStoreException {
         
         // Check in the classpath
-        InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(name);
+        InputStream stream = SocketUtil.class.getClassLoader().getResourceAsStream(name);
         if (stream == null) {
             try {
                 stream = new FileInputStream(name);

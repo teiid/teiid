@@ -2162,11 +2162,11 @@ XMLTable.XMLColumn xmlColumn(ParseInfo info):
 	  }	
 	) | (
       datatype = dataType()
+      [
+	    <DEFAULT_KEYWORD> defaultExpr = expression(info)
+	  ]
       [ 
 	    nonReserved("PATH") path = stringVal()
-	  ]
-	  [
-	    <DEFAULT_KEYWORD> defaultExpr = expression(info)
 	  ]
 	  {
 		return new XMLTable.XMLColumn(name, (String)datatype.getValue(), path, defaultExpr);
@@ -3226,7 +3226,7 @@ Expression function(ParseInfo info) :
 			expression = null;
 		}
 		<RPAREN>				
-	)		
+	)
 	|
 	LOOKAHEAD(<ID>, {matchesAny(getToken(1).image, "timestampadd", "timestampdiff") != null}) (	
 		funcName = nonReserved("TIMESTAMPADD", "TIMESTAMPDIFF")
@@ -3249,7 +3249,12 @@ Expression function(ParseInfo info) :
 			expression = null;
 		} 
 		<RPAREN>				
-	)		
+	)
+	|
+	LOOKAHEAD(<ID>, {getToken(1).image.equalsIgnoreCase("querystring")}) expression = queryString(info)
+	  {
+		return expression;
+	  }		
 	|
 	(
 		(funcToken = <LEFT> | funcToken = <RIGHT> | funcToken = <CHAR> | funcToken = <USER> 
@@ -3377,6 +3382,27 @@ Expression function(ParseInfo info) :
 		}
 			
 		return new Function(funcName, (Expression[])args.toArray(new Expression[args.size()]));
+	}
+}
+
+QueryString queryString(ParseInfo info) :
+{
+	Expression path = null;
+	DerivedColumn arg = null;
+	ArrayList<DerivedColumn> args = new ArrayList<DerivedColumn>();
+}
+{
+ 	nonReserved("QUERYSTRING") <LPAREN>
+ 	path = expression(info)
+	(<COMMA> arg=derivedColumn(info)
+	 {
+		args.add(arg);
+		arg = null;
+	 }
+	)*
+	<RPAREN>  		
+	{
+		return new QueryString(path, args);
 	}
 }
 

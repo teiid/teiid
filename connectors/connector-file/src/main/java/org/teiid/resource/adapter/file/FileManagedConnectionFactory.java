@@ -24,6 +24,7 @@ package org.teiid.resource.adapter.file;
 import javax.resource.ResourceException;
 import javax.resource.spi.InvalidPropertyException;
 
+import org.teiid.core.BundleUtil;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
@@ -31,13 +32,14 @@ import org.teiid.resource.spi.BasicManagedConnectionFactory;
 public class FileManagedConnectionFactory extends BasicManagedConnectionFactory{
 
 	private static final long serialVersionUID = -1495488034205703625L;
+	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(FileManagedConnectionFactory.class);
 
 	private String parentDirectory;
 	
 	@Override
 	public Object createConnectionFactory() throws ResourceException {
 		if (this.parentDirectory == null) {
-			throw new InvalidPropertyException("ParentDirectory is not set");
+			throw new InvalidPropertyException(UTIL.getString("parentdirectory_not_set")); //$NON-NLS-1$
 		}
 		return new BasicConnectionFactory() {
 			

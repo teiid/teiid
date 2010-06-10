@@ -25,6 +25,7 @@ package org.teiid.query.sql.symbol;
 import java.util.List;
 
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
@@ -75,6 +76,9 @@ public class XMLForest implements Expression {
 	@Override
 	public XMLForest clone() {
 		XMLForest clone = new XMLForest(LanguageObject.Util.deepClone(args, DerivedColumn.class));
+		if (namespaces != null) {
+			clone.namespaces = namespaces.clone();
+		}
 		return clone;
 	}
 	
@@ -91,7 +95,7 @@ public class XMLForest implements Expression {
 			return false;
 		}
 		XMLForest other = (XMLForest)obj;
-		return args.equals(other.args);
+		return args.equals(other.args) && EquivalenceUtil.areEqual(namespaces, other.namespaces);
 	}
 	
 	@Override

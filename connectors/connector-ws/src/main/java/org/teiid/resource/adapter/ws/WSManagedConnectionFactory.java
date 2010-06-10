@@ -23,6 +23,7 @@ package org.teiid.resource.adapter.ws;
 
 import javax.resource.ResourceException;
 
+import org.teiid.core.BundleUtil;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
@@ -30,38 +31,28 @@ import org.teiid.resource.spi.BasicManagedConnectionFactory;
 public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 
 	private static final long serialVersionUID = -2998163922934555003L;
+	
+	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(WSManagedConnectionFactory.class);
 
-	public enum InvocationType {HTTP_GET, HTTP_POST, SOAP11, SOAP12};
 	public enum SecurityType {None,HTTPBasic,WSSecurity}
 	
-	private String invocationType = InvocationType.SOAP12.name();
 	private String endPoint;
-	
 	private String securityType = SecurityType.None.name(); // None, HTTPBasic, WS-Security
 	private String wsSecurityConfigURL; // path to the "jboss-wsse-client.xml" file
 	private String wsSecurityConfigName; // ws-security config name in the above file
 	private String authPassword; // httpbasic - password
 	private String authUserName; // httpbasic - username
-	private String xmlParamName; // used only in the http get invocation
 
 	@Override
-	public Object createConnectionFactory() throws ResourceException {
+	public BasicConnectionFactory createConnectionFactory() throws ResourceException {
 		return new BasicConnectionFactory() {
 			@Override
 			public BasicConnection getConnection() throws ResourceException {
-				return new WSConnection(WSManagedConnectionFactory.this);
+				return new WSConnectionImpl(WSManagedConnectionFactory.this);
 			}
 		};
 	}
 	
-	public InvocationType getInvocationType() {
-		return InvocationType.valueOf(invocationType);
-	}
-
-	public void setInvocationType(String invocationType) {
-		this.invocationType = invocationType;
-	}
-
 	public String getAuthPassword() {
 		return this.authPassword;
 	}
@@ -110,11 +101,4 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 		this.wsSecurityConfigName = wsSecurityConfigName;
 	}
 	
-	public String getXMLParamName() {
-		return xmlParamName;
-	}
-
-	public void setXMLParamName(String xMLParamName) {
-		this.xmlParamName = xMLParamName;
-	}
 }

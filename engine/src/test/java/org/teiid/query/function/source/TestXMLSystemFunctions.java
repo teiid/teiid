@@ -25,8 +25,6 @@ package org.teiid.query.function.source;
 import static org.junit.Assert.*;
 
 import java.io.File;
-import java.io.Reader;
-import java.io.StringReader;
 import java.sql.Timestamp;
 import java.util.TimeZone;
 
@@ -201,6 +199,14 @@ public class TestXMLSystemFunctions {
     
 	@Test public void testInvokeXmlElement2() throws Exception {
 		assertEquals("1969-12-31T18:00:00", XMLSystemFunctions.getStringValue(new Timestamp(0)));
+    }
+	
+	@Test public void testNameEscaping() throws Exception {
+		assertEquals("_u003A_b", XMLSystemFunctions.escapeName(":b", true));
+    }
+	
+	@Test public void testNameEscaping1() throws Exception {
+		assertEquals("a_u005F_x", XMLSystemFunctions.escapeName("a_x", true));
     }
 	
 	@BeforeClass static public void setUpOnce() {

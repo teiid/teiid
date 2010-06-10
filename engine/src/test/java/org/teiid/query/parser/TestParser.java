@@ -135,6 +135,7 @@ public class TestParser {
 
 		assertEquals("Parse string does not match: ", expectedString, actualString); //$NON-NLS-1$
 		assertEquals("Command objects do not match: ", expectedCommand, actualCommand);				 //$NON-NLS-1$
+		assertEquals("Cloned command objects do not match: ", expectedCommand, actualCommand.clone());				 //$NON-NLS-1$
 	}
 
 	static void helpTestExpression(String sql, String expectedString, Expression expected) throws QueryParserException {
@@ -143,6 +144,7 @@ public class TestParser {
 
 		assertEquals("Parse string does not match: ", expectedString, actualString); //$NON-NLS-1$
 		assertEquals("Command objects do not match: ", expected, actual);				 //$NON-NLS-1$
+		assertEquals("Cloned command objects do not match: ", expected, actual.clone());				 //$NON-NLS-1$
 	}
 
     static void helpException(String sql) {
@@ -200,7 +202,7 @@ public class TestParser {
 			new ElementSymbol("g1.a1"), //$NON-NLS-1$
 			CompareCriteria.EQ,
 			new ElementSymbol("g2.a2")); //$NON-NLS-1$
-		ArrayList crits = new ArrayList();
+		ArrayList<Criteria> crits = new ArrayList<Criteria>();
 		crits.add(jcrit);		
 		JoinPredicate jp = new JoinPredicate(g1, g2, JoinType.JOIN_INNER, crits);
 		From from = new From();
@@ -398,7 +400,7 @@ public class TestParser {
 			new ElementSymbol("g2.a"), //$NON-NLS-1$
 			CompareCriteria.EQ,
 			new ElementSymbol("g3.a")); //$NON-NLS-1$
-		ArrayList crits = new ArrayList();
+		ArrayList<Criteria> crits = new ArrayList<Criteria>();
 		crits.add(jcrit);		
 		JoinPredicate jp = new JoinPredicate(g2, g3, JoinType.JOIN_INNER, crits);
 		From from = new From();
@@ -425,7 +427,7 @@ public class TestParser {
 			new ElementSymbol("myG.x"), //$NON-NLS-1$
 			CompareCriteria.EQ,
 			new ElementSymbol("myH.x")); //$NON-NLS-1$
-		ArrayList crits = new ArrayList();
+		ArrayList<Criteria> crits = new ArrayList<Criteria>();
 		crits.add(jcrit);		
 		JoinPredicate jp = new JoinPredicate(g, h, JoinType.JOIN_RIGHT_OUTER, crits);
 		From from = new From();
@@ -452,7 +454,7 @@ public class TestParser {
 			new ElementSymbol("myG.x"), //$NON-NLS-1$
 			CompareCriteria.EQ,
 			new ElementSymbol("myH.x")); //$NON-NLS-1$
-		ArrayList crits = new ArrayList();
+		ArrayList<Criteria> crits = new ArrayList<Criteria>();
 		crits.add(jcrit);		
 		JoinPredicate jp = new JoinPredicate(g, h, JoinType.JOIN_RIGHT_OUTER, crits);
 		From from = new From();
@@ -479,7 +481,7 @@ public class TestParser {
 			new ElementSymbol("myG.x"), //$NON-NLS-1$
 			CompareCriteria.EQ,
 			new ElementSymbol("myH.x")); //$NON-NLS-1$
-		ArrayList crits = new ArrayList();
+		ArrayList<Criteria> crits = new ArrayList<Criteria>();
 		crits.add(jcrit);		
 		JoinPredicate jp = new JoinPredicate(g, h, JoinType.JOIN_LEFT_OUTER, crits);
 		From from = new From();
@@ -506,7 +508,7 @@ public class TestParser {
 			new ElementSymbol("myG.x"), //$NON-NLS-1$
 			CompareCriteria.EQ,
 			new ElementSymbol("myH.x")); //$NON-NLS-1$
-		ArrayList crits = new ArrayList();
+		ArrayList<Criteria> crits = new ArrayList<Criteria>();
 		crits.add(jcrit);		
 		JoinPredicate jp = new JoinPredicate(g, h, JoinType.JOIN_LEFT_OUTER, crits);
 		From from = new From();
@@ -533,7 +535,7 @@ public class TestParser {
 			new ElementSymbol("myG.x"), //$NON-NLS-1$
 			CompareCriteria.EQ,
 			new ElementSymbol("myH.x")); //$NON-NLS-1$
-		ArrayList crits = new ArrayList();
+		ArrayList<Criteria> crits = new ArrayList<Criteria>();
 		crits.add(jcrit);		
 		JoinPredicate jp = new JoinPredicate(g, h, JoinType.JOIN_FULL_OUTER, crits);
 		From from = new From();
@@ -560,7 +562,7 @@ public class TestParser {
 			new ElementSymbol("g.x"), //$NON-NLS-1$
 			CompareCriteria.EQ,
 			new ElementSymbol("h.x")); //$NON-NLS-1$
-		ArrayList crits = new ArrayList();
+		ArrayList<Criteria> crits = new ArrayList<Criteria>();
 		crits.add(jcrit);		
 		JoinPredicate jp = new JoinPredicate(g, h, JoinType.JOIN_FULL_OUTER, crits);
 		From from = new From();
@@ -6736,7 +6738,7 @@ public class TestParser {
     
     @Test public void testXmlNamespaces() throws Exception {
     	XMLForest f = new XMLForest(Arrays.asList(new DerivedColumn("table", new ElementSymbol("a"))));
-    	f.setNamespaces(new XMLNamespaces(Arrays.asList(new XMLNamespaces.NamespaceItem(), new XMLNamespaces.NamespaceItem("x", "http://foo"))));
+    	f.setNamespaces(new XMLNamespaces(Arrays.asList(new XMLNamespaces.NamespaceItem(), new XMLNamespaces.NamespaceItem("http://foo", "x"))));
     	helpTestExpression("xmlforest(xmlnamespaces(no default, 'http://foo' as x), a as \"table\")", "XMLFOREST(XMLNAMESPACES(NO DEFAULT, 'http://foo' AS x), a AS \"table\")", f);
     }
     
@@ -6792,7 +6794,7 @@ public class TestParser {
     }
     
     @Test public void testXMLTable() throws Exception {
-    	String sql = "SELECT * from xmltable(xmlnamespaces(no default), '/' columns x for ordinality, y date path '@date' default {d'2000-01-01'}) as x"; //$NON-NLS-1$
+    	String sql = "SELECT * from xmltable(xmlnamespaces(no default), '/' columns x for ordinality, y date default {d'2000-01-01'} path '@date') as x"; //$NON-NLS-1$
         Query query = new Query();
         query.setSelect(new Select(Arrays.asList(new AllSymbol())));
         XMLTable xt = new XMLTable();
@@ -6804,7 +6806,7 @@ public class TestParser {
         columns.add(new XMLTable.XMLColumn("y", "date", "@date", new Constant(Date.valueOf("2000-01-01"))));
         xt.setColumns(columns);
         query.setFrom(new From(Arrays.asList(xt)));
-        helpTest(sql, "SELECT * FROM XMLTABLE(XMLNAMESPACES(NO DEFAULT), '/' COLUMNS x FOR ORDINALITY, y date PATH '@date' DEFAULT {d'2000-01-01'}) AS x", query);
+        helpTest(sql, "SELECT * FROM XMLTABLE(XMLNAMESPACES(NO DEFAULT), '/' COLUMNS x FOR ORDINALITY, y date DEFAULT {d'2000-01-01'} PATH '@date') AS x", query);
     }
     
     @Test public void testXmlSerialize() throws Exception {

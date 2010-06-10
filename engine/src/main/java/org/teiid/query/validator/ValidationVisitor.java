@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import net.sf.saxon.om.Name11Checker;
+import net.sf.saxon.om.QNameException;
 import net.sf.saxon.trans.XPathException;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
@@ -101,9 +103,11 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.QueryString;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.XMLAttributes;
+import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
 import org.teiid.query.sql.symbol.XMLNamespaces;
 import org.teiid.query.sql.symbol.XMLQuery;
@@ -1140,20 +1144,60 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     
     @Override
     public void visit(XMLForest obj) {
+    	validateDerivedColumnNames(obj, obj.getArgs());
     	for (DerivedColumn dc : obj.getArgs()) {
+			if (dc.getAlias() == null) {
+				continue;
+			}
+			validateQName(obj, dc.getAlias());
+		}
+    }
+
+	private String[] validateQName(LanguageObject obj, String name) {
+		try {
+			return Name11Checker.getInstance().getQNameParts(name);
+		} catch (QNameException e) {
+			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_invalid_qname", name), obj); //$NON-NLS-1$
+		}
+		return null;
+	}
+
+	private void validateDerivedColumnNames(LanguageObject obj, List<DerivedColumn> cols) {
+		for (DerivedColumn dc : cols) {
     		if (dc.getAlias() == null && !(dc.getExpression() instanceof ElementSymbol)) {
     			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.expression_requires_name"), obj); //$NON-NLS-1$
-        	}	
+        	} 
+		}
+	}
+    
+    @Override
+    public void visit(XMLAttributes obj) {
+    	validateDerivedColumnNames(obj, obj.getArgs());
+    	for (DerivedColumn dc : obj.getArgs()) {
+			if (dc.getAlias() == null) {
+				continue;
+			}
+			if ("xmlns".equals(dc.getAlias())) { //$NON-NLS-1$
+				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_attributes_reserved"), obj); //$NON-NLS-1$
+			}
+			String[] parts = validateQName(obj, dc.getAlias());
+			if (parts == null) {
+				continue;
+			}
+			if ("xmlns".equals(parts[0])) { //$NON-NLS-1$
+				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_attributes_reserved", dc.getAlias()), obj); //$NON-NLS-1$
+			}
 		}
     }
     
     @Override
-    public void visit(XMLAttributes obj) {
-    	for (DerivedColumn dc : obj.getArgs()) {
-    		if (dc.getAlias() == null && !(dc.getExpression() instanceof ElementSymbol)) {
-    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.expression_requires_name"), obj); //$NON-NLS-1$
-        	}	
-		}
+    public void visit(XMLElement obj) {
+    	validateQName(obj, obj.getName());
+    }
+    
+    @Override
+    public void visit(QueryString obj) {
+    	validateDerivedColumnNames(obj, obj.getArgs());
     }
     
     @Override

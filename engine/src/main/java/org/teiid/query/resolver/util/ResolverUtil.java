@@ -243,6 +243,10 @@ public class ResolverUtil {
 	        	return null;
 	        }
         
+	        if (!(constant.getValue() instanceof Comparable)) {
+	        	return null; //this is the case for xml constants
+	        }
+	        
 	        Constant reverse = getProperlyTypedConstant(result.getValue(), constant.getType());
 	        
 	        if (((Comparable)constant.getValue()).compareTo(reverse.getValue()) == 0) {

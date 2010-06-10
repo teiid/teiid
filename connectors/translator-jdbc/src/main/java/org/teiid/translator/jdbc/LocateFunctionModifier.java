@@ -78,8 +78,7 @@ public class LocateFunctionModifier extends AliasModifier {
     private boolean sourceStringFirst;
     
 	/**
-	 * Constructs a {@link BasicFunctionModifier} object that can be used to 
-	 * translate the scalar function LOCATE() to a source specific scalar 
+	 * Translates the scalar function LOCATE() to a source specific scalar 
 	 * function or expression.
 	 * 
 	 * @param langFactory the language factory associated with translation
@@ -89,8 +88,7 @@ public class LocateFunctionModifier extends AliasModifier {
     }
 
 	/**
-	 * Constructs a {@link BasicFunctionModifier} object that can be used to 
-	 * translate the scalar function LOCATE() to a source specific scalar 
+	 * Translates the scalar function LOCATE() to a source specific scalar 
 	 * function or expression.
 	 * 
 	 * @param langFactory the language factory associated with translation

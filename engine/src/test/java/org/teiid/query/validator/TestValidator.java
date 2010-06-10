@@ -2022,5 +2022,13 @@ public class TestValidator {
     @Test public void testXMLQueryPassingContextType() {
     	helpValidate("select xmlquery('/' passing 2)", new String[] {"XMLQUERY('/' PASSING 2)"}, FakeMetadataFactory.example1Cached());
     }
+    
+    @Test public void testQueryString() {
+    	helpValidate("select querystring('/', '1')", new String[] {"QUERYSTRING('/', '1')"}, FakeMetadataFactory.example1Cached());
+    }
+
+    @Test public void testXmlNameValidation() throws Exception {
+    	helpValidate("select xmlelement(\":\")", new String[] {"XMLELEMENT(NAME \":\")"}, FakeMetadataFactory.example1Cached());
+    }
 
 }

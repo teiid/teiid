@@ -90,11 +90,6 @@
 
     <module>sandbox</module>
     
-    <module>translator-xml</module>
-    <!-- 
-    <module>connector-xml-file</module>
-    <module>connector-xml-soap</module>
-    <module>connector-xml-http</module>
-     -->
+    <module>translator-ws</module>
   </modules>
 </project>

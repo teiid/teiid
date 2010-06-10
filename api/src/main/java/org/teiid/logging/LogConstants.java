@@ -41,4 +41,6 @@ public interface LogConstants {
 	public static final String CTX_QUERY_RESOLVER = CTX_QUERY_PLANNER + ".RESOLVER"; //$NON-NLS-1$
 	public static final String CTX_XML_PLANNER = CTX_QUERY_PLANNER + ".XML_PLANNER"; //$NON-NLS-1$
 	public static final String CTX_XML_PLAN = CTX_DQP + ".XML_PLAN"; //$NON-NLS-1$
+	
+	public static final String CTX_WS = LogConstants.CTX_CONNECTOR + ".WS"; //$NON-NLS-1$
 }

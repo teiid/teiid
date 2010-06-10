@@ -9,7 +9,6 @@ import net.sf.saxon.expr.PathMap.PathMapArc;
 import net.sf.saxon.expr.PathMap.PathMapNode;
 import net.sf.saxon.expr.PathMap.PathMapRoot;
 import net.sf.saxon.om.Axis;
-import net.sf.saxon.om.Item;
 import net.sf.saxon.pattern.NodeTest;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.Type;
@@ -186,9 +185,4 @@ class PathMapFilter extends ProxyReceiver {
 		}
 	}
 
-	@Override
-	public void append(Item item, int locationId,
-			int copyNamespaces) throws XPathException {
-		super.append(item, locationId, copyNamespaces);
-	}
 }

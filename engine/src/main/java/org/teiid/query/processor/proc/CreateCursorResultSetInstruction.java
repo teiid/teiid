@@ -49,7 +49,7 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
     }
     
     /**
-     * If the result set named rsName does not exist yet in the {@link ProcessorEnvironment}, then
+     * If the result set named rsName does not exist yet in the {@link ProcedurePlan}, then
      * this instruction will define that result set.  It will then throw a BlockedException if
      * this result set is selecting from other than temp groups (because those results will be
      * delivered asynchronously).  IF the result set named rsName does already exist, this 

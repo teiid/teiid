@@ -135,14 +135,14 @@ public interface ExecutionContext {
 
 	/**
 	 * Get a item that has been placed previously from cache. If no such object then a null will be returned. 
-	 * The item is placed in {@link CacheScope.REQUEST} scope.
+	 * The item is placed in {@link CacheScope#REQUEST} scope.
 	 * @param key
 	 * @return
 	 */
 	Object get(Object key);
 	
 	/**
-	 * Place a item in the Cache in {@link CacheScope.REQUEST} scope.
+	 * Place a item in the Cache in {@link CacheScope#REQUEST} scope.
 	 * @param key
 	 * @param value
 	 */

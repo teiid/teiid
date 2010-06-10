@@ -148,7 +148,7 @@ public class ExceptionHolder implements Externalizable {
 		Throwable result = null;
 		for (String className : classNames) {
 			try {
-				result = (Throwable)ReflectionHelper.create(className, args, Thread.currentThread().getContextClassLoader());
+				result = (Throwable)ReflectionHelper.create(className, args, ExceptionHolder.class.getClassLoader());
 				result.setStackTrace(stackTrace);
 				break;
 			} catch (TeiidException e1) {
@@ -177,7 +177,7 @@ public class ExceptionHolder implements Externalizable {
 		// only for top level we would have the contents as not null.
 		if (contents != null) {
 			ByteArrayInputStream bais = new ByteArrayInputStream(contents);
-			ObjectInputStream ois = new ObjectInputStreamWithClassloader(bais, Thread.currentThread().getContextClassLoader());
+			ObjectInputStream ois = new ObjectInputStreamWithClassloader(bais, ExceptionHolder.class.getClassLoader());
 			try {
 				return (Throwable)ois.readObject();
 			} catch (ClassNotFoundException e) {

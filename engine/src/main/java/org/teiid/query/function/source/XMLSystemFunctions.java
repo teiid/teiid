@@ -57,6 +57,7 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.xpath.XPathExpressionException;
 
 import net.sf.saxon.om.Item;
+import net.sf.saxon.om.Name11Checker;
 import net.sf.saxon.sxpath.XPathEvaluator;
 import net.sf.saxon.sxpath.XPathExpression;
 import net.sf.saxon.trans.XPathException;
@@ -72,9 +73,11 @@ import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.XMLTranslator;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.types.XMLType.Type;
+import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.processor.xml.XMLUtil;
 import org.teiid.query.util.CommandContext;
+import org.teiid.translator.WSConnection.Util;
 
 
 /** 
@@ -84,17 +87,7 @@ import org.teiid.query.util.CommandContext;
  */
 public class XMLSystemFunctions {
 	
-	public static class NameValuePair<T> {
-		String name;
-		T value;
-		
-		public NameValuePair(String name, T value) {
-			this.name = name;
-			this.value = value;
-		}
-	}
-	
-    //YEAR 0 in the server timezone. used to determine negative years
+	//YEAR 0 in the server timezone. used to determine negative years
     public static long YEAR_ZERO;
     static String DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"; //$NON-NLS-1$
     
@@ -131,34 +124,14 @@ public class XMLSystemFunctions {
 			}, Streamable.STREAMING_BATCH_SIZE_IN_BYTES);
 			return DataTypeManager.transformValue(new XMLType(result), DataTypeManager.DefaultDataClasses.CLOB);
 		} finally {
-			closeSource(styleSource);
-			closeSource(xmlSource);
+			Util.closeSource(styleSource);
+			Util.closeSource(xmlSource);
 		}
     }
 
-	private static void closeSource(final Source source) {
-		if (!(source instanceof StreamSource)) {
-			return;
-		}
-		
-		StreamSource stream = (StreamSource)source;
-		try {
-			if (stream.getInputStream() != null) {
-				stream.getInputStream().close();
-			}
-		} catch (IOException e) {
-		}
-		try {
-			if (stream.getReader() != null) {
-				stream.getReader().close();
-			}
-		} catch (IOException e) {
-		}
-	}
-		
-	public static XMLType xmlForest(final CommandContext context, final NameValuePair[] namespaces, final NameValuePair[] values) throws TeiidComponentException, TeiidProcessingException {
+	public static XMLType xmlForest(final CommandContext context, final Evaluator.NameValuePair[] namespaces, final Evaluator.NameValuePair[] values) throws TeiidComponentException, TeiidProcessingException {
 		boolean valueExists = false;
-		for (NameValuePair nameValuePair : values) {
+		for (Evaluator.NameValuePair nameValuePair : values) {
 			if (nameValuePair.value != null) {
 				valueExists = true;
 				break;
@@ -177,7 +150,7 @@ public class XMLSystemFunctions {
 					XMLOutputFactory factory = XMLOutputFactory.newInstance();
 					XMLEventWriter eventWriter = factory.createXMLEventWriter(writer);
 					XMLEventFactory eventFactory = XMLEventFactory.newInstance();
-					for (NameValuePair nameValuePair : values) {
+					for (Evaluator.NameValuePair nameValuePair : values) {
 						if (nameValuePair.value == null) {
 							continue;
 						}
@@ -202,7 +175,7 @@ public class XMLSystemFunctions {
 	 * @throws TeiidProcessingException 
 	 */
 	public static XMLType xmlElement(CommandContext context, final String name, 
-			final NameValuePair<String>[] namespaces, final NameValuePair<?>[] attributes, final List<?> contents) throws TeiidComponentException, TeiidProcessingException {
+			final Evaluator.NameValuePair<String>[] namespaces, final Evaluator.NameValuePair<?>[] attributes, final List<?> contents) throws TeiidComponentException, TeiidProcessingException {
 		XMLType result = new XMLType(XMLUtil.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
 			
 			@Override
@@ -224,10 +197,10 @@ public class XMLSystemFunctions {
 	}
 	
 	private static void addElement(final String name, Writer writer, XMLEventWriter eventWriter, XMLEventFactory eventFactory,
-			NameValuePair<String> namespaces[], NameValuePair<?> attributes[], List<?> contents) throws XMLStreamException, IOException, TransformerException {
+			Evaluator.NameValuePair<String> namespaces[], Evaluator.NameValuePair<?> attributes[], List<?> contents) throws XMLStreamException, IOException, TransformerException {
 		eventWriter.add(eventFactory.createStartElement("", null, name)); //$NON-NLS-1$
 		if (namespaces != null) {
-			for (NameValuePair<String> nameValuePair : namespaces) {
+			for (Evaluator.NameValuePair<String> nameValuePair : namespaces) {
 				if (nameValuePair.name == null) {
 					if (nameValuePair.value == null) {
 						eventWriter.add(eventFactory.createNamespace(XMLConstants.NULL_NS_URI));
@@ -240,7 +213,7 @@ public class XMLSystemFunctions {
 			}
 		}
 		if (attributes != null) {
-			for (NameValuePair<?> nameValuePair : attributes) {
+			for (Evaluator.NameValuePair<?> nameValuePair : attributes) {
 				if (nameValuePair.value != null) {
 					eventWriter.add(eventFactory.createAttribute(new QName(nameValuePair.name), getStringValue(nameValuePair.value)));
 				}
@@ -464,7 +437,7 @@ public class XMLSystemFunctions {
             // Return string representation of non-node value
             return o.toString();
         } finally {
-        	closeSource(s);
+        	Util.closeSource(s);
         }
     }
     
@@ -483,4 +456,51 @@ public class XMLSystemFunctions {
         eval.createExpression(xpath);
     }
     
+    public static String escapeName(String name, boolean fully) {
+    	StringBuilder sb = new StringBuilder();
+    	char[] chars = name.toCharArray();
+    	int i = 0;
+    	if (fully && name.regionMatches(true, 0, "xml", 0, 3)) { //$NON-NLS-1$
+			sb.append(escapeChar(name.charAt(0)));
+			sb.append(chars, 1, 2);
+			i = 3;
+    	}
+    	for (; i < chars.length; i++) {
+    		char chr = chars[i];
+    		switch (chr) {
+    		case ':':
+    			if (fully || i == 0) {
+    				sb.append(escapeChar(chr));
+    				continue;
+    			} 
+    			break;
+    		case '_':
+    			if (chars.length > i && chars[i+1] == 'x') {
+    				sb.append(escapeChar(chr));
+    				continue;
+    			}
+    			break;
+    		default:
+    			//TODO: there should be handling for surrogates
+    			//      and invalid chars
+    			if (i == 0) {
+    				if (!Name11Checker.getInstance().isNCNameStartChar(chr)) {
+    					sb.append(escapeChar(chr));
+    					continue;
+    				}
+    			} else if (!Name11Checker.getInstance().isNCNameChar(chr)) {
+    				sb.append(escapeChar(chr));
+    				continue;
+    			}
+    			break;
+    		}
+			sb.append(chr);
+		}
+    	return sb.toString();
+    }
+
+	private static String escapeChar(char chr) {
+		return "_u00" + Integer.toHexString(chr).toUpperCase() + "_"; //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
 }

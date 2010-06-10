@@ -111,6 +111,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.QueryString;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
@@ -1722,17 +1723,17 @@ public class SQLStringVisitor extends LanguageVisitor {
 	    			parts.add(NonReserved.ORDINALITY); 
 	    		} else {
 	    			parts.add(col.getType());
-		    		if (col.getPath() != null) {
-		        		parts.add(SPACE);
-		    			parts.add(NonReserved.PATH); 
-		            	parts.add(SPACE);
-		    			parts.add(new Constant(col.getPath()));
-		    		}
 		    		if (col.getDefaultExpression() != null) {
 		        		parts.add(SPACE);
 		    			parts.add(DEFAULT);
 		            	parts.add(SPACE);
 		    			parts.add(registerNode(col.getDefaultExpression()));
+		    		}
+		    		if (col.getPath() != null) {
+		        		parts.add(SPACE);
+		    			parts.add(NonReserved.PATH); 
+		            	parts.add(SPACE);
+		    			parts.add(new Constant(col.getPath()));
 		    		}
 	    		}
 	    		if (cols.hasNext()) {
@@ -1806,6 +1807,19 @@ public class SQLStringVisitor extends LanguageVisitor {
         	parts.add(obj.getTypeString());
     	}
     	parts.add(Tokens.RPAREN);
+    }
+    
+    @Override
+    public void visit(QueryString obj) {
+    	parts.add(NonReserved.QUERYSTRING);
+    	parts.add("("); //$NON-NLS-1$
+    	parts.add(registerNode(obj.getPath()));
+    	if (!obj.getArgs().isEmpty()) {
+    		parts.add(","); //$NON-NLS-1$
+	    	parts.add(SPACE);
+	    	registerNodes(obj.getArgs(), 0);
+    	}
+    	parts.add(")"); //$NON-NLS-1$
     }
 
     public static String escapeSinglePart(String part) {

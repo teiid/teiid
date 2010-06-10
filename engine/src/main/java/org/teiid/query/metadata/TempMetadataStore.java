@@ -122,7 +122,7 @@ public class TempMetadataStore implements Serializable {
 
     private TempMetadataID createElementSymbol(String tempName, SingleElementSymbol symbol, boolean isTempTable) {
         // Create new element name
-        String elementName = tempName + SingleElementSymbol.SEPARATOR + symbol.getShortCanonicalName();
+        String elementName = tempName + SingleElementSymbol.SEPARATOR + symbol.getShortName();
         
         Object metadataID = null;
         

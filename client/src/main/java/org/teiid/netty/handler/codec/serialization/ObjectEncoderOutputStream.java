@@ -33,8 +33,7 @@ import org.teiid.core.util.ExternalizeUtil;
 
 
 /**
- * An {@link ObjectOutput} which is interoperable with {@link ObjectDecoder}
- * and {@link ObjectDecoderInputStream}.
+ * An {@link ObjectOutput} which is interoperable with {@link ObjectDecoderInputStream}.
  *
  * @author The Netty Project (netty-dev@lists.jboss.org)
  * @author Trustin Lee (tlee@redhat.com)

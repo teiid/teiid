@@ -75,7 +75,7 @@ public class CompactObjectInputStream extends ObjectInputStream {
             if (classLoader == null) {
                 clazz = Class.forName(
                         className, true,
-                        Thread.currentThread().getContextClassLoader());
+                        CompactObjectInputStream.class.getClassLoader());
             } else {
                 clazz = Class.forName(className, true, classLoader);
             }

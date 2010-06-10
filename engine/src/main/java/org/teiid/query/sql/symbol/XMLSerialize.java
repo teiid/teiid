@@ -84,6 +84,10 @@ public class XMLSerialize implements Expression {
 	@Override
 	public XMLSerialize clone() {
 		XMLSerialize clone = new XMLSerialize();
+		clone.document = this.document;
+		clone.expression = (Expression)this.expression.clone();
+		clone.typeString = this.typeString;
+		clone.type = this.type;
 		return clone;
 	}
 	

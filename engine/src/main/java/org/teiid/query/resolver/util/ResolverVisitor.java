@@ -58,10 +58,12 @@ import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.symbol.CaseExpression;
 import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.DerivedColumn;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.QueryString;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.XMLQuery;
@@ -346,6 +348,18 @@ public class ResolverVisitor extends LanguageVisitor {
 			obj.compileXqueryExpression();
 		} catch (QueryResolverException e) {
 			handleException(e); 
+		}
+    }
+    
+    @Override
+    public void visit(QueryString obj) {
+    	try {
+			obj.setPath(ResolverUtil.convertExpression(obj.getPath(), DataTypeManager.DefaultDataTypes.STRING, metadata));
+			for (DerivedColumn col : obj.getArgs()) {
+				col.setExpression(ResolverUtil.convertExpression(col.getExpression(), DataTypeManager.DefaultDataTypes.STRING, metadata));
+			}
+		} catch (QueryResolverException e) {
+			handleException(new QueryResolverException(e, QueryPlugin.Util.getString("XMLQuery.resolvingError", obj))); //$NON-NLS-1$
 		}
     }
 

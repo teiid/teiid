@@ -133,7 +133,7 @@ public class ConnectorManager  {
 		MetadataFactory factory = new MetadataFactory(modelName, datatypes, importProperties);
 		ExecutionFactory executionFactory = getExecutionFactory();
 		Object connectionFactory = getConnectionFactory();
-		Object connection = executionFactory.getConnection(executionFactory);
+		Object connection = executionFactory.getConnection(connectionFactory);
 		try {
 			executionFactory.getMetadata(factory, connection);
 		} finally {

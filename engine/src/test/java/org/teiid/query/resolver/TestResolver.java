@@ -953,11 +953,11 @@ public class TestResolver {
         List elements = (List) ElementCollectorVisitor.getElements(resolvedQuery.getSelect(), false);
         
         ElementSymbol elem1 = (ElementSymbol)elements.get(0);
-        assertEquals("Did not get expected element", "X.E1", elem1.getName() ); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals("Did not get expected element", "X.e1", elem1.getName() ); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals("Did not get expected type", DataTypeManager.DefaultDataClasses.STRING, elem1.getType()); //$NON-NLS-1$
 
         ElementSymbol elem2 = (ElementSymbol)elements.get(1);
-        assertEquals("Did not get expected element", "X.E2", elem2.getName() ); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals("Did not get expected element", "X.e2", elem2.getName() ); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals("Did not get expected type", DataTypeManager.DefaultDataClasses.INTEGER, elem2.getType()); //$NON-NLS-1$
     }
 
@@ -2719,7 +2719,7 @@ public class TestResolver {
         
         Command cmd = helpResolve(proc.toString()); 
 
-        String sExpected = "CREATE VIRTUAL PROCEDURE\nBEGIN\nCREATE LOCAL TEMPORARY TABLE #matt (x integer);\nINSERT INTO #matt (#MATT.X) VALUES (1);\nEND\n\tCREATE LOCAL TEMPORARY TABLE #matt (x integer)\n\tINSERT INTO #matt (#MATT.X) VALUES (1)\n";   //$NON-NLS-1$
+        String sExpected = "CREATE VIRTUAL PROCEDURE\nBEGIN\nCREATE LOCAL TEMPORARY TABLE #matt (x integer);\nINSERT INTO #matt (#MATT.x) VALUES (1);\nEND\n\tCREATE LOCAL TEMPORARY TABLE #matt (x integer)\n\tINSERT INTO #matt (#MATT.x) VALUES (1)\n";   //$NON-NLS-1$
         String sActual = cmd.printCommandTree(); 
         assertEquals( sExpected, sActual );
     }
@@ -2944,6 +2944,10 @@ public class TestResolver {
     @Test public void testCorrelatedTextTable() {
     	Command command = helpResolve("select x.* from pm1.g1, texttable(e1 COLUMNS x string) x"); //$NON-NLS-1$
     	assertEquals(1, command.getProjectedSymbols().size());
+    }
+    
+    @Test public void testQueryString() throws Exception {
+    	helpResolveException("select querystring({x '<a/>'})");
     }
     
 }

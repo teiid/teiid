@@ -154,7 +154,8 @@ public class TeiidException extends Exception {
      * Get the exception which is linked to this exception.
      *
      * @return The linked exception
-     * @deprecated - {@see #getCause()}
+     * @see #getCause()
+     * @deprecated 
      */
     public Throwable getChild() {
         return super.getCause();

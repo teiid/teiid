@@ -164,8 +164,8 @@ public class TestSqlServerConversionVisitor {
         Command command = tu.parseCommand("select max(x) from bar"); //$NON-NLS-1$
         TranslationHelper.helpTestVisitor("SELECT MAX(cast(bar.x as char(36))) FROM bar", trans, command); //$NON-NLS-1$
         
-        command = tu.parseCommand("select * from (select max(x) from bar) x"); //$NON-NLS-1$
-        TranslationHelper.helpTestVisitor("SELECT x.MAX FROM (SELECT MAX(cast(bar.x as char(36))) FROM bar) x", trans, command); //$NON-NLS-1$
+        command = tu.parseCommand("select * from (select max(x) as max from bar) x"); //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor("SELECT x.max FROM (SELECT MAX(cast(bar.x as char(36))) AS max FROM bar) x", trans, command); //$NON-NLS-1$
     }
        
 }

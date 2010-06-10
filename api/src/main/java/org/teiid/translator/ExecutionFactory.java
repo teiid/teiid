@@ -162,6 +162,7 @@ public class ExecutionFactory<F, C> {
 			} catch (ResourceException e) {
 				LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Error closing"); //$NON-NLS-1$
 			}
+			return;
 		}
 		throw new AssertionError("A connection was created, but no implementation provided for closeConnection"); //$NON-NLS-1$
 	}

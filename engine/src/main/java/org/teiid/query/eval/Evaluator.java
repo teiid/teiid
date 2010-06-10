@@ -57,7 +57,6 @@ import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.function.source.XMLSystemFunctions;
-import org.teiid.query.function.source.XMLSystemFunctions.NameValuePair;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.AbstractSetCriteria;
@@ -83,6 +82,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.sql.symbol.QueryString;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
@@ -98,11 +98,22 @@ import org.teiid.query.sql.util.ValueIteratorSource;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.ErrorMessageKeys;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression;
+import org.teiid.translator.WSConnection.Util;
 
 
 public class Evaluator {
 
-    private final static char[] REGEX_RESERVED = new char[] {'$', '(', ')', '*', '.', '?', '[', '\\', ']', '^', '{', '|', '}'}; //in sorted order
+    public static class NameValuePair<T> {
+		public String name;
+		public T value;
+		
+		public NameValuePair(String name, T value) {
+			this.name = name;
+			this.value = value;
+		}
+	}
+
+	private final static char[] REGEX_RESERVED = new char[] {'$', '(', ')', '*', '.', '?', '[', '\\', ']', '^', '{', '|', '}'}; //in sorted order
     private final static MatchCriteria.PatternTranslator LIKE_TO_REGEX = new MatchCriteria.PatternTranslator(".*", ".", REGEX_RESERVED, '\\');  //$NON-NLS-1$ //$NON-NLS-2$
 
     private Map elements;
@@ -580,71 +591,122 @@ public class Evaluator {
 	   } else if(expression instanceof ScalarSubquery) {
 	       return evaluate((ScalarSubquery) expression, tuple);
 	   } else if (expression instanceof XMLElement){
-		   XMLElement function = (XMLElement)expression;
-		   List<Expression> content = function.getContent();
+		   return evaluateXMLElement(tuple, (XMLElement)expression);
+	   } else if (expression instanceof XMLForest){
+		   return evaluateXMLForest(tuple, (XMLForest)expression);
+	   } else if (expression instanceof XMLSerialize){
+		   return evaluateXMLSerialize(tuple, (XMLSerialize)expression);
+	   } else if (expression instanceof XMLQuery) {
+		   return evaluateXMLQuery(tuple, (XMLQuery)expression);
+	   } else if (expression instanceof QueryString) {
+		   return evaluateQueryString(tuple, (QueryString)expression);
+	   } else {
+	       throw new TeiidComponentException(ErrorMessageKeys.PROCESSOR_0016, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0016, expression.getClass().getName()));
+	   }
+	}
+
+	//TODO: exception if length is too long?
+	private Object evaluateQueryString(List tuple, QueryString queryString)
+			throws ExpressionEvaluationException, BlockedException,
+			TeiidComponentException {
+		Evaluator.NameValuePair<Object>[] pairs = getNameValuePairs(tuple, queryString.getArgs(), false);
+		String path = (String)internalEvaluate(queryString.getPath(), tuple);
+		if (path == null) {
+			path = ""; //$NON-NLS-1$
+		} 
+		boolean appendedAny = false;
+		StringBuilder result = new StringBuilder();
+		for (Evaluator.NameValuePair<Object> nameValuePair : pairs) {
+			if (nameValuePair.value == null) {
+				continue;
+			}
+			if (appendedAny) {
+				result.append('&');
+			}
+			appendedAny = true;
+			result.append(Util.httpURLEncode(nameValuePair.name)).append('=').append(Util.httpURLEncode((String)nameValuePair.value));
+		}
+		if (!appendedAny) {
+			return path;
+		}
+		result.insert(0, '?');
+		result.insert(0, path);
+		return result.toString();
+	}
+
+	private Object evaluateXMLQuery(List tuple, XMLQuery xmlQuery)
+			throws BlockedException, TeiidComponentException,
+			FunctionExecutionException {
+		boolean emptyOnEmpty = true;
+		if (xmlQuery.getEmptyOnEmpty() != null)  {
+			emptyOnEmpty = xmlQuery.getEmptyOnEmpty();
+		}   
+		try {
+			SequenceIterator iter = evaluateXQuery(xmlQuery.getXQueryExpression(), xmlQuery.getPassing(), tuple);
+			return xmlQuery.getXQueryExpression().createXMLType(iter, emptyOnEmpty);
+		} catch (TeiidProcessingException e) {
+			throw new FunctionExecutionException(e, QueryPlugin.Util.getString("Evaluator.xmlquery", e.getMessage())); //$NON-NLS-1$
+		} catch (XPathException e) {
+			throw new FunctionExecutionException(e, QueryPlugin.Util.getString("Evaluator.xmlquery", e.getMessage())); //$NON-NLS-1$
+		}
+	}
+	
+	private Object evaluateXMLSerialize(List tuple, XMLSerialize xs)
+			throws ExpressionEvaluationException, BlockedException,
+			TeiidComponentException, FunctionExecutionException {
+		XMLType value = (XMLType) internalEvaluate(xs.getExpression(), tuple);
+		if (value == null) {
+			return null;
+		}
+		try {
+			if (!xs.isDocument()) {
+				return DataTypeManager.transformValue(value, xs.getType());
+			}
+			if (value.getType() == Type.UNKNOWN) {
+				Type type = StringToSQLXMLTransform.isXml(value.getCharacterStream());
+				value.setType(type);
+			}
+			if (value.getType() == Type.DOCUMENT || value.getType() == Type.ELEMENT) {
+				return DataTypeManager.transformValue(value, xs.getType());
+			}
+		} catch (SQLException e) {
+			throw new FunctionExecutionException(e, e.getMessage());
+		} catch (TransformationException e) {
+			throw new FunctionExecutionException(e, e.getMessage());
+		}
+		throw new FunctionExecutionException(QueryPlugin.Util.getString("Evaluator.xmlserialize")); //$NON-NLS-1$
+	}
+
+	private Object evaluateXMLForest(List tuple, XMLForest function)
+			throws ExpressionEvaluationException, BlockedException,
+			TeiidComponentException, FunctionExecutionException {
+		List<DerivedColumn> args = function.getArgs();
+		Evaluator.NameValuePair<Object>[] nameValuePairs = getNameValuePairs(tuple, args, true); 
+			
+		try {
+			return XMLSystemFunctions.xmlForest(context, namespaces(function.getNamespaces()), nameValuePairs);
+		} catch (TeiidProcessingException e) {
+			throw new FunctionExecutionException(e, e.getMessage());
+		}
+	}
+
+	private Object evaluateXMLElement(List tuple, XMLElement function)
+			throws ExpressionEvaluationException, BlockedException,
+			TeiidComponentException, FunctionExecutionException {
+		List<Expression> content = function.getContent();
 		   List<Object> values = new ArrayList<Object>(content.size());
 		   for (Expression exp : content) {
 			   values.add(internalEvaluate(exp, tuple));
 		   }
 		   try {
-			   NameValuePair<Object>[] attributes = null;
+			   Evaluator.NameValuePair<Object>[] attributes = null;
 			   if (function.getAttributes() != null) {
-				   attributes = getNameValuePairs(tuple, function.getAttributes().getArgs());
+				   attributes = getNameValuePairs(tuple, function.getAttributes().getArgs(), true);
 			   }
 			   return XMLSystemFunctions.xmlElement(context, function.getName(), namespaces(function.getNamespaces()), attributes, values);
 		   } catch (TeiidProcessingException e) {
 			   throw new FunctionExecutionException(e, e.getMessage());
 		   }
-	   } else if (expression instanceof XMLForest){
-		   XMLForest function = (XMLForest)expression;
-		   List<DerivedColumn> args = function.getArgs();
-		   NameValuePair<Object>[] nameValuePairs = getNameValuePairs(tuple, args); 
-		   
-		   try {
-			   return XMLSystemFunctions.xmlForest(context, namespaces(function.getNamespaces()), nameValuePairs);
-		   } catch (TeiidProcessingException e) {
-			   throw new FunctionExecutionException(e, e.getMessage());
-		   }
-	   } else if (expression instanceof XMLSerialize){
-		   XMLSerialize xs = (XMLSerialize)expression;
-		   XMLType value = (XMLType) internalEvaluate(xs.getExpression(), tuple);
-		   if (value == null) {
-			   return null;
-		   }
-		   try {
-			   if (!xs.isDocument()) { 
-				   return DataTypeManager.transformValue(value, xs.getType());
-			   }
-			   if (value.getType() == Type.UNKNOWN) {
-				   Type type = StringToSQLXMLTransform.isXml(value.getCharacterStream());
-				   value.setType(type);
-			   }
-			   if (value.getType() == Type.DOCUMENT || value.getType() == Type.ELEMENT) {
-				   return DataTypeManager.transformValue(value, xs.getType());			   
-			   }
-		   } catch (SQLException e) {
-			   throw new FunctionExecutionException(e, e.getMessage());
-		   } catch (TransformationException e) {
-			   throw new FunctionExecutionException(e, e.getMessage());
-		   }
-		   throw new FunctionExecutionException(QueryPlugin.Util.getString("Evaluator.xmlserialize")); //$NON-NLS-1$
-	   } else if (expression instanceof XMLQuery) {
-		   XMLQuery xmlQuery = (XMLQuery)expression;
-		   boolean emptyOnEmpty = true;
-		   if (xmlQuery.getEmptyOnEmpty() != null)  {
-			   emptyOnEmpty = xmlQuery.getEmptyOnEmpty();
-		   }   
-		   try {
-			   SequenceIterator iter = evaluateXQuery(xmlQuery.getXQueryExpression(), xmlQuery.getPassing(), tuple);
-			   return xmlQuery.getXQueryExpression().createXMLType(iter, emptyOnEmpty);
-		   } catch (TeiidProcessingException e) {
-			   throw new FunctionExecutionException(e, QueryPlugin.Util.getString("Evaluator.xmlquery", e.getMessage())); //$NON-NLS-1$
-		   } catch (XPathException e) {
-			   throw new FunctionExecutionException(e, QueryPlugin.Util.getString("Evaluator.xmlquery", e.getMessage())); //$NON-NLS-1$
-		   }
-	   } else {
-	       throw new TeiidComponentException(ErrorMessageKeys.PROCESSOR_0016, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0016, expression.getClass().getName()));
-	   }
 	}
 	
 	public SequenceIterator evaluateXQuery(SaxonXQueryExpression xquery, List<DerivedColumn> cols, List<?> tuple) 
@@ -662,30 +724,33 @@ public class Evaluator {
 		return xquery.evaluateXQuery(contextItem, parameters);
 	}
 
-	private NameValuePair<Object>[] getNameValuePairs(List tuple, List<DerivedColumn> args)
+	private Evaluator.NameValuePair<Object>[] getNameValuePairs(List tuple, List<DerivedColumn> args, boolean xmlNames)
 			throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
-		NameValuePair<Object>[] nameValuePairs = new NameValuePair[args.size()];
+		Evaluator.NameValuePair<Object>[] nameValuePairs = new Evaluator.NameValuePair[args.size()];
 		for (int i = 0; i < args.size(); i++) {
 			DerivedColumn symbol = args.get(i);
 			String name = symbol.getAlias();
 			Expression ex = symbol.getExpression();
 			if (name == null && ex instanceof ElementSymbol) {
 				name = ((ElementSymbol)ex).getShortName();
+				if (xmlNames) {
+					name = XMLSystemFunctions.escapeName(name, true);
+				}
 			}
-			nameValuePairs[i] = new NameValuePair<Object>(name, internalEvaluate(ex, tuple));
+			nameValuePairs[i] = new Evaluator.NameValuePair<Object>(name, internalEvaluate(ex, tuple));
 		}
 		return nameValuePairs;
 	}
 	
-	private NameValuePair<String>[] namespaces(XMLNamespaces namespaces) {
+	private Evaluator.NameValuePair<String>[] namespaces(XMLNamespaces namespaces) {
 		if (namespaces == null) {
 			return null;
 		}
 	    List<NamespaceItem> args = namespaces.getNamespaceItems();
-	    NameValuePair<String>[] nameValuePairs = new NameValuePair[args.size()];
+	    Evaluator.NameValuePair<String>[] nameValuePairs = new Evaluator.NameValuePair[args.size()];
 	    for(int i=0; i < args.size(); i++) {
 	    	NamespaceItem item = args.get(i);
-	    	nameValuePairs[i] = new NameValuePair<String>(item.getPrefix(), item.getUri());
+	    	nameValuePairs[i] = new Evaluator.NameValuePair<String>(item.getPrefix(), item.getUri());
 	    } 
 	    return nameValuePairs;
 	}

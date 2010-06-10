@@ -27,8 +27,8 @@ import static org.teiid.query.processor.TestProcessor.*;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
 @SuppressWarnings({"nls", "unchecked"})
@@ -41,12 +41,7 @@ public class TestSQLXMLProcessing {
         		Arrays.asList("<foo>&lt;bar&gt;<bar1/></foo>"),
         };    
     
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
-        
-        helpProcess(plan, dataManager, expected);
+        process(sql, expected);
     }
 	
 	/**
@@ -60,15 +55,10 @@ public class TestSQLXMLProcessing {
         		Arrays.asList("<foo>&lt;bar&gt;<bar1></bar1></foo>"),
         };    
     
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
-        
-        helpProcess(plan, dataManager, expected);
+        process(sql, expected);
 	}
 	
-    @Test public void testXmlElement() {
+    @Test public void testXmlElement() throws Exception {
         String sql = "SELECT xmlelement(e1, e2) from pm1.g1 order by e1, e2"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
@@ -80,15 +70,10 @@ public class TestSQLXMLProcessing {
                 Arrays.asList("<e1>1</e1>"),
         };    
     
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
-        
-        helpProcess(plan, dataManager, expected);
+        process(sql, expected);
     }
     
-    @Test public void testXmlElementWithConcat() {
+    @Test public void testXmlElementWithConcat() throws Exception {
         String sql = "SELECT xmlelement(e1, e2, xmlconcat(xmlelement(x), xmlelement(y, e3))) from pm1.g1 order by e1, e2"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
@@ -100,15 +85,10 @@ public class TestSQLXMLProcessing {
                 Arrays.asList("<e1>1<x></x><y>true</y></e1>"),
         };    
     
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
-        
-        helpProcess(plan, dataManager, expected);
+        process(sql, expected);
     }
     
-    @Test public void testXmlElementWithForest() {
+    @Test public void testXmlElementWithForest() throws Exception {
         String sql = "SELECT xmlelement(x, xmlforest(e1, e2, '1' as val)) from pm1.g1 order by e1, e2 limit 2"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
@@ -116,15 +96,10 @@ public class TestSQLXMLProcessing {
         		Arrays.asList("<x><e1>a</e1><e2>0</e2><val>1</val></x>"),
         };    
     
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
-        
-        helpProcess(plan, dataManager, expected);
+        process(sql, expected);
     }
     
-    @Test public void testXmlElementWithAttributes() {
+    @Test public void testXmlElementWithAttributes() throws Exception {
         String sql = "SELECT xmlelement(x, xmlattributes(e1, e2, '1' as val)) from pm1.g1 order by e1, e2 limit 2"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
@@ -132,30 +107,20 @@ public class TestSQLXMLProcessing {
         		Arrays.asList("<x e1=\"a\" e2=\"0\" val=\"1\"></x>"),
         };    
     
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
-        
-        helpProcess(plan, dataManager, expected);
+        process(sql, expected);
     }
     
-    @Test public void testXmlElementWithPi() {
+    @Test public void testXmlElementWithPi() throws Exception {
         String sql = "SELECT xmlelement(x, xmlpi(name e1, '  1'))"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
         		Arrays.asList("<x><?e1 1?></x>"),
         };    
     
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
-        
-        helpProcess(plan, dataManager, expected);
+        process(sql, expected);
     }
     
-    @Test public void testXmlElementWithNamespaces() {
+    @Test public void testXmlElementWithNamespaces() throws Exception {
         String sql = "SELECT xmlelement(x, xmlnamespaces(no default, 'http://foo' as x, 'http://foo1' as y), xmlattributes(e1), e2) from pm1.g1 order by e1, e2 limit 2"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
@@ -163,60 +128,40 @@ public class TestSQLXMLProcessing {
         		Arrays.asList("<x xmlns=\"\" xmlns:x=\"http://foo\" xmlns:y=\"http://foo1\" e1=\"a\">0</x>"),
         };    
     
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
-        
-        helpProcess(plan, dataManager, expected);
+        process(sql, expected);
     }
     
-    @Test public void testXmlAgg() {
+    @Test public void testXmlAgg() throws Exception {
         String sql = "SELECT xmlelement(parent, xmlAgg(xmlelement(x, xmlattributes(e1, e2)))) from pm1.g1"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
         		Arrays.asList("<parent><x e1=\"a\" e2=\"0\"></x><x e2=\"1\"></x><x e1=\"a\" e2=\"3\"></x><x e1=\"c\" e2=\"1\"></x><x e1=\"b\" e2=\"2\"></x><x e1=\"a\" e2=\"0\"></x></parent>"), 
         };    
     
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
-        
-        helpProcess(plan, dataManager, expected);
+        process(sql, expected);
     }
     
-    @Test public void testXmlAggOrderBy() {
+    @Test public void testXmlAggOrderBy() throws Exception {
         String sql = "SELECT xmlelement(parent, xmlAgg(xmlelement(x, xmlattributes(e1, e2)) order by e2)) from pm1.g1"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
         		Arrays.asList("<parent><x e1=\"a\" e2=\"0\"></x><x e1=\"a\" e2=\"0\"></x><x e2=\"1\"></x><x e1=\"c\" e2=\"1\"></x><x e1=\"b\" e2=\"2\"></x><x e1=\"a\" e2=\"3\"></x></parent>"), 
         };    
     
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
-        
-        helpProcess(plan, dataManager, expected);
+        process(sql, expected);
     }
     
-    @Test public void testXmlSerialize() {
+    @Test public void testXmlSerialize() throws Exception {
     	String sql = "SELECT xmlserialize(document xmlelement(parent) as string)"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
         		Arrays.asList("<parent></parent>"), 
         };    
     
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
-        
-        helpProcess(plan, dataManager, expected);
+        process(sql, expected);
     }
     
-    @Test public void testXmlTable() {
+    @Test public void testXmlTable() throws Exception {
         String sql = "select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">second</b></a>', xml) columns x string path '@x', val string path '/.') as x"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
@@ -224,31 +169,21 @@ public class TestSQLXMLProcessing {
         		Arrays.asList("attr", "second"),
         };    
     
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
-        
-        helpProcess(plan, dataManager, expected);
+        process(sql, expected);
     }
     
-	@Test public void testXmlTableDefaultAndParent() {
-        String sql = "select * from xmltable('/a/b' passing convert('<a y=\"rev\"><b>first</b><b x=\"1\">second</b></a>', xml) columns x integer path '@x' default -1, val string path '../@y') as x"; //$NON-NLS-1$
+	@Test public void testXmlTableDefaultAndParent() throws Exception {
+        String sql = "select * from xmltable('/a/b' passing convert('<a y=\"rev\"><b>first</b><b x=\"1\">second</b></a>', xml) columns x integer default -1 path '@x' , val string path '../@y') as x"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
         		Arrays.asList(-1, "rev"),
         		Arrays.asList(1, "rev"),
         };    
     
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
-        
-        helpProcess(plan, dataManager, expected);
+        process(sql, expected);
     }
     
-    @Test public void testXmlTableReturnXml() {
+    @Test public void testXmlTableReturnXml() throws Exception {
         String sql = "select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"1\">second</b></a>', xml) columns val xml path '.') as x"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
@@ -256,45 +191,30 @@ public class TestSQLXMLProcessing {
         		Arrays.asList("<b x=\"1\">second</b>"),
         };    
     
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
-        
-        helpProcess(plan, dataManager, expected);
+        process(sql, expected);
     }
     
-    @Test public void testXmlTableNoColumns() {
+    @Test public void testXmlTableNoColumns() throws Exception {
         String sql = "select * from xmltable('/a' passing convert('<a><b>first</b><b x=\"1\">second</b></a>', xml)) as x"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
         		Arrays.asList("<a><b>first</b><b x=\"1\">second</b></a>"),
         };    
     
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
-        
-        helpProcess(plan, dataManager, expected);
+        process(sql, expected);
     }
     
-    @Test public void testXmlTablePassing() {
+    @Test public void testXmlTablePassing() throws Exception {
         String sql = "select * from xmltable('<root>{for $x in $a/a/b return <c>{$x}</c>}</root>' passing convert('<a><b>first</b><b x=\"1\">second</b></a>', xml) as a columns x xml path 'c[1]/b') as x"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
         		Arrays.asList("<b>first</b>"),
         };    
     
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
-        
-        helpProcess(plan, dataManager, expected);
+        process(sql, expected);
     }
     
-    @Test public void testXmlTableForOrdinalityAndDefaultPath() {
+    @Test public void testXmlTableForOrdinalityAndDefaultPath() throws Exception {
         String sql = "select * from xmltable('/a/b' passing convert('<a><b><c>1</c></b><b>1</b><b><c>1</c></b><b>1</b></a>', xml) columns x for ordinality, c integer) as x"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
@@ -304,42 +224,27 @@ public class TestSQLXMLProcessing {
         		Arrays.asList(4, null),
         };    
     
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
-        
-        helpProcess(plan, dataManager, expected);
+        process(sql, expected);
     }
     
-    @Test public void testXmlTableDescendantPath() {
+    @Test public void testXmlTableDescendantPath() throws Exception {
         String sql = "select * from xmltable('<a>{for $i in (1 to 5) return $i}</a>' columns x string path '//text()') as x"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
         		Arrays.asList("1 2 3 4 5"),
         };    
     
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
-        
-        helpProcess(plan, dataManager, expected);
+        process(sql, expected);
     }
 
-    @Test public void testXmlQuery() {
+    @Test public void testXmlQuery() throws Exception {
         String sql = "select xmlquery('for $i in (1 to 5) return $i')"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
         		Arrays.asList("1 2 3 4 5"),
         };    
     
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
-        
-        helpProcess(plan, dataManager, expected);
+        process(sql, expected);
     }
     
     @Test public void testXmlQueryEmptyNull() throws Exception {
@@ -349,12 +254,29 @@ public class TestSQLXMLProcessing {
         		Arrays.asList((String)null)
         };    
     
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
+        process(sql, expected);
+    }
+    
+    @Test public void testXmlNameEscaping() throws Exception {
+    	String sql = "select xmlforest(\"xml\") from (select 1 as \"xml\") x"; //$NON-NLS-1$
         
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("<_u0078_ml>1</_u0078_ml>")
+        };    
+    
+        process(sql, expected);
+    }
+    
+    private static FakeDataManager dataManager = new FakeDataManager();
+    
+    @BeforeClass public static void oneTimeSetUp() {
+    	sampleData1(dataManager);
+    }
+    
+	private void process(String sql, List<?>[] expected) throws Exception {
         ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
         
         helpProcess(plan, createCommandContext(), dataManager, expected);
-    }
+	}
 
 }
