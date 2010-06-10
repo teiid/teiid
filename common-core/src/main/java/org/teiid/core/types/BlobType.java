@@ -24,6 +24,7 @@ package org.teiid.core.types;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectOutput;
 import java.io.OutputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
@@ -142,12 +143,13 @@ public final class BlobType extends Streamable<Blob> implements Blob {
 		}
 	}
 	
-	private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
 		try {
 			length();
 		} catch (SQLException e) {
 		}
-		out.defaultWriteObject();
+		super.writeExternal(out);
 	}
 	
 }

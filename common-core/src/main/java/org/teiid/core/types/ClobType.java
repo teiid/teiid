@@ -24,6 +24,7 @@ package org.teiid.core.types;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectOutput;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringWriter;
@@ -217,12 +218,13 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
 		}
 	}
 	
-	private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
 		try {
 			length();
 		} catch (SQLException e) {
 		}
-		out.defaultWriteObject();
+		super.writeExternal(out);
 	}
 
 }

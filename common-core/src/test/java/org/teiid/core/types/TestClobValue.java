@@ -65,6 +65,8 @@ public class TestClobValue extends TestCase {
         // now read back the object from serilized state
         ObjectInputStream in = new ObjectInputStream(new FileInputStream(saved));
         ClobType read = (ClobType)in.readObject();
+        
+        assertTrue(read.length() > 0);
                 
         // make sure we have kept the reference stream id
         assertEquals(key, read.getReferenceStreamId());
