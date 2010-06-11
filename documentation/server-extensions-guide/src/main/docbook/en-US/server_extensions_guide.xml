@@ -46,9 +46,6 @@
     <toc/>
         
     <xi:include href="content/introduction.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="content/logging.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="content/security.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="content/appendix-a.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     
 </book>
 

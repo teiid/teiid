@@ -19,6 +19,11 @@
         <extensions>true</extensions>
         <dependencies>
           <dependency>
+            <groupId>net.sf.docbook</groupId>
+            <artifactId>docbook</artifactId>
+            <version>1.74.0</version>
+          </dependency>        
+          <dependency>
             <groupId>org.jboss</groupId>
             <artifactId>jbossorg-docbook-xslt</artifactId>
             <version>1.1.0</version>
@@ -47,11 +52,11 @@
               <stylesheetResource>classpath:/xslt/org/jboss/pdf.xsl</stylesheetResource>
               <finalName>teiid_admin_guide.pdf</finalName>
             </format>
-            <!-- <format>
+            <format>
               <formatName>html_single</formatName>
               <stylesheetResource>classpath:/xslt/org/jboss/xhtml-single.xsl</stylesheetResource>
               <finalName>index.html</finalName>
-            </format> -->
+            </format>
             <format>
               <formatName>html</formatName>
               <stylesheetResource>classpath:/xslt/org/jboss/xhtml.xsl</stylesheetResource>
@@ -60,6 +65,8 @@
           </formats>
           <options>
             <xincludeSupported>true</xincludeSupported>
+            <xmlTransformerType>saxon</xmlTransformerType>  
+            <docbookVersion>1.72.0</docbookVersion>             
             <localeSeparator>-</localeSeparator>
             <useRelativeImageUris>false</useRelativeImageUris>
           </options>

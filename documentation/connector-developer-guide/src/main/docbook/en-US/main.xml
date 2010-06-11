@@ -52,7 +52,10 @@
     <xi:include href="content/lob-support.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/extending-jdbc-connector.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/jdbc-translator-examples.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/logging.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/security.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/appendix-a.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/appendix-b.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     
 </book>
 
