@@ -37,8 +37,45 @@
       </includes>
       <outputDirectory>lib</outputDirectory>      
     </fileSet>
-    
+
+    <fileSet>
+        <directory>target/distribution/teiid-${version}-docs.dir/admin-guide/en-US/pdf</directory>
+        <includes>
+            <include>teiid_admin_guide.pdf</include>
+        </includes>        
+        <outputDirectory>teiid-docs</outputDirectory>
+    </fileSet>
+    <fileSet>
+        <directory>target/distribution/teiid-${version}-docs.dir/reference/en-US/pdf</directory>
+        <includes>
+            <include>teiid_reference.pdf</include>
+        </includes>                
+        <outputDirectory>teiid-docs</outputDirectory>
+    </fileSet>
+    <fileSet>
+        <directory>target/distribution/teiid-${version}-docs.dir/quick-start-example/en-US/pdf</directory>
+        <includes>
+            <include>quick_start_example.pdf</include>
+        </includes>                
+        <outputDirectory>teiid-docs</outputDirectory>
+    </fileSet>
+    <fileSet>
+        <directory>target/distribution/teiid-${version}-docs.dir/connector-developer-guide/en-US/pdf</directory>
+        <includes>
+            <include>connector_developer_guide.pdf</include>
+        </includes>                
+        <outputDirectory>teiid-docs</outputDirectory>
+    </fileSet>
+    <fileSet>
+        <directory>client/src/main/resources</directory>
+        <includes>
+            <include>vdb-deployer.xsd</include>
+        </includes>                
+        <outputDirectory>teiid-docs/schema</outputDirectory>
+    </fileSet>        
   </fileSets>
+  
+ 
   
   <!--  these have external dependent clients like connectors-->
   <moduleSets>
