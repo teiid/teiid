@@ -321,7 +321,7 @@ public void setFoo(String value) {
 		</sect2>
 	</sect1>
     
-    <sect1>
+    <sect1 id="translator_package">
         <title>Packaging</title>
         <para>Once the "ExecutionFactory" class is implemented, package it in a JAR file. The only 
          additional requirement is provide a file called "jboss-beans.xml" in the "META-INF" directory of the JAR file, with
@@ -353,7 +353,7 @@ public void setFoo(String value) {
                 available properties in configuration for this Translator for tooling and Admin API.</para>
     </sect1>
     
-    <sect1>
+    <sect1 id="translator_deploy">
         <title>Deployment</title>
         <para>Copy the JAR file that defines the Translator into "deploy" directory of the JBoss AS's chosen profile, and 
         Translator will be deployed automatically. There is no restriction that, JBoss AS need to be restarted. However, if your Translator
