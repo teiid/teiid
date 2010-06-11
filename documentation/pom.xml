@@ -15,7 +15,6 @@
     <module>admin-guide</module>
     <module>reference</module>
     <module>connector-developer-guide</module>
-    <module>server-extensions-guide</module>
     <module>quick-start-example</module>
     <module>salesforce-connector-guide</module>
   </modules>
