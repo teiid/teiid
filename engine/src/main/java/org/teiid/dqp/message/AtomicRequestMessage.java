@@ -78,6 +78,9 @@ public class AtomicRequestMessage implements Serializable {
     private RequestID requestID;
     private Serializable executionPayload;
     
+    private boolean exceptionOnMaxRows;
+    private int maxRows;
+    
     private DQPWorkContext workContext;
     
     public AtomicRequestMessage() {
@@ -90,6 +93,22 @@ public class AtomicRequestMessage implements Serializable {
     	this.requestID = new RequestID(parent.getSessionId(), requestMessage.getExecutionId());
         this.atomicRequestId = new AtomicRequestID(this.requestID, nodeId, EXECUTION_COUNT.getAndIncrement());
     }
+    
+    public int getMaxResultRows() {
+		return maxRows;
+	}
+    
+    public void setMaxResultRows(int maxRows) {
+		this.maxRows = maxRows;
+	}
+    
+    public boolean isExceptionOnMaxRows() {
+		return exceptionOnMaxRows;
+	}
+    
+    public void setExceptionOnMaxRows(boolean exceptionOnMaxRows) {
+		this.exceptionOnMaxRows = exceptionOnMaxRows;
+	}
 
     public AtomicRequestID getAtomicRequestID() {
         return this.atomicRequestId;

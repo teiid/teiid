@@ -182,12 +182,12 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 					for (Procedure proc : schema.getProcedures().values()) {
 						for (ProcedureParameter param : proc.getParameters()) {
 							rows.add(Arrays.asList(vdbName, proc.getParent().getName(), proc.getName(), param.getName(), param.getDatatype().getRuntimeTypeName(), param.getPosition(), param.getType().toString(), param.isOptional(), 
-									param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID()));
+									param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID(), param.getAnnotation()));
 						}
 						if (proc.getResultSet() != null) {
 							for (Column param : proc.getResultSet().getColumns()) {
 								rows.add(Arrays.asList(vdbName, proc.getParent().getName(), proc.getName(), param.getName(), param.getDatatype().getRuntimeTypeName(), param.getPosition(), "ResultSet", false, //$NON-NLS-1$ 
-										param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID()));
+										param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID(), param.getAnnotation()));
 							}
 						}
 					}
@@ -326,6 +326,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         AtomicRequestMessage aqr = new AtomicRequestMessage(request, workItem.getDqpWorkContext(), nodeID);
         aqr.setCommand(command);
         aqr.setModelName(modelName);
+        aqr.setMaxResultRows(requestMgr.getMaxSourceRows());
+        aqr.setExceptionOnMaxRows(requestMgr.isExceptionOnMaxSourceRows());
         aqr.setPartialResults(request.supportsPartialResults());
         if (nodeID >= 0) {
         	aqr.setTransactionContext(workItem.getTransactionContext());

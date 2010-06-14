@@ -4,7 +4,7 @@
 	<title>Preface</title>
 	<para> This document shows how to model the metadata of an hosted
 		Salesforce application with Teiid Designer, and details the SQL semantics
-		supported by the connector in Teiid Embedded. This document contains
+		supported by the connector in Teiid. This document contains
 		an overview of the process, including:</para>
 	<itemizedlist>
 		<listitem>
@@ -32,7 +32,7 @@
 			application. This example takes advantage of only a
 			minimal set of
 			features from
-			Teiid Embedded for the sake of simplicity and time.
+			Teiid for the sake of simplicity and time.
 		</para>
 	</note>
 </preface>

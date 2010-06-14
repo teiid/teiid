@@ -58,7 +58,8 @@ public class TestOracleTranslator {
 
     @Before 
     public void setup() throws Exception {
-        TRANSLATOR = new OracleExecutionFactory();     
+        TRANSLATOR = new OracleExecutionFactory();  
+        TRANSLATOR.setUseBindVariables(false);
         TRANSLATOR.start();
     }
 
@@ -520,7 +521,7 @@ public class TestOracleTranslator {
         if (dbmsTimeZone != null) {
         	translator.setDatabaseTimeZone(dbmsTimeZone);
         }
-        
+        translator.setUseBindVariables(false);
         translator.start();
         // Convert back to SQL
         TranslatedCommand tc = new TranslatedCommand(context, translator);

@@ -126,7 +126,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
     
     protected TransactionContext transactionContext;
     protected ConnectorManagerRepository connectorManagerRepo; 
-    private int chunkSize;
     
     protected Command userCommand;
     protected boolean returnsUpdateCount;
@@ -139,7 +138,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
                               boolean procDebugAllowed,
                               TempTableStore tempTableStore,
                               DQPWorkContext workContext,
-                              int chunckSize,
                               ConnectorManagerRepository repo,
                               boolean useEntitlements) {
 
@@ -154,7 +152,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
         idGenerator.setDefaultFactory(new IntegerIDFactory());
         this.workContext = workContext;
         this.requestId = workContext.getRequestID(this.requestMsg.getExecutionId());
-        this.chunkSize = chunckSize;
         this.connectorManagerRepo = repo;
         this.useEntitlements = useEntitlements;
     }
@@ -237,7 +234,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
                 this.requestMsg.getShowPlan() != ShowPlan.OFF);
         this.context.setProcessorBatchSize(bufferManager.getProcessorBatchSize());
         this.context.setConnectorBatchSize(bufferManager.getConnectorBatchSize());
-        this.context.setStreamingBatchSize(chunkSize);
         
         if (multiSourceModels != null) {
             MultiSourcePlanToProcessConverter modifier = new MultiSourcePlanToProcessConverter(

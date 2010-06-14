@@ -1,5 +1,0 @@
-VDBName[string]	SchemaName[string]	Name[string]	NameInSource[string]	ReturnsResults[boolean]	UID[string]	Description[string]
-PartsSupplier	SYS	getBinaryVDBResource	null	true	mmuuid:9bc0b701-b36e-4209-a986-9d38420d2c20	null
-PartsSupplier	SYS	getCharacterVDBResource	null	true	mmuuid:72464082-00fc-44f0-98b9-8c8f637c6570	null
-PartsSupplier	SYS	getVDBResourcePaths	null	true	mmuuid:1204d4b2-6f92-428d-bcc5-7b3a0da9a113	null
-PartsSupplier	SYS	getXMLSchemas	null	true	mmuuid:2d51a2a4-9966-4bd8-861d-9c0ae8e4b869	null

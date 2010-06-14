@@ -45,7 +45,8 @@ public class TestDB2SqlTranslator {
 
     @BeforeClass
     public static void setUp() throws TranslatorException {
-        TRANSLATOR = new DB2ExecutionFactory();        
+        TRANSLATOR = new DB2ExecutionFactory();
+        TRANSLATOR.setUseBindVariables(false);
         TRANSLATOR.start();
     }
     

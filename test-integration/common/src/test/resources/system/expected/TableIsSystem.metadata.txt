@@ -1,2 +1,0 @@
-ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName	
-Name	12	string	java.lang.String	0	Tables	SYS	PartsSupplier	

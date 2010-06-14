@@ -1,9 +1,0 @@
-VDBName[string]	SchemaName[string]	TableName[string]	Name[string]	Description[string]	NameInSource[string]	Type[string]	IsIndexed[boolean]	RefKeyUID[string]	UID[string]
-PartsSupplier	PartsSupplier	PARTSSUPPLIER.SUPPLIER_PARTS	FK_SPLIER_PRTS_PRTS	null	FK_SPLIER_PRTS_PRTS	Foreign	false	mmuuid:07db4240-73ff-1edc-a81c-ecf397b10590	mmuuid:66ddc4c0-73ff-1edc-a81c-ecf397b10590
-PartsSupplier	PartsSupplier	PARTSSUPPLIER.SUPPLIER	FK_SPLIER_STATS	null	FK_SPLIER_STATS	Foreign	false	mmuuid:25a8a740-73ff-1edc-a81c-ecf397b10590	mmuuid:5ac43c00-73ff-1edc-a81c-ecf397b10590
-PartsSupplier	PartsSupplier	PARTSSUPPLIER.SUPPLIER_PARTS	FK_SPLY_PRTS_SPLY	null	FK_SPLY_PRTS_SPLY	Foreign	false	mmuuid:375c8380-73ff-1edc-a81c-ecf397b10590	mmuuid:66ddc4c1-73ff-1edc-a81c-ecf397b10590
-PartsSupplier	PartsSupplier	PARTSSUPPLIER.PARTS	PK_PARTS	null	null	Primary	false	null	mmuuid:07db4240-73ff-1edc-a81c-ecf397b10590
-PartsSupplier	PartsSupplier	PARTSSUPPLIER.SHIP_VIA	PK_SHIP_VIA	null	null	Primary	false	null	mmuuid:18aa3cc0-73ff-1edc-a81c-ecf397b10590
-PartsSupplier	PartsSupplier	PARTSSUPPLIER.STATUS	PK_STATUS	null	null	Primary	false	null	mmuuid:25a8a740-73ff-1edc-a81c-ecf397b10590
-PartsSupplier	PartsSupplier	PARTSSUPPLIER.SUPPLIER	PK_SUPPLIER	null	null	Primary	false	null	mmuuid:375c8380-73ff-1edc-a81c-ecf397b10590
-PartsSupplier	PartsSupplier	PARTSSUPPLIER.SUPPLIER_PARTS	PK_SUPPLIER_PARTS	null	null	Primary	false	null	mmuuid:455e5440-73ff-1edc-a81c-ecf397b10590

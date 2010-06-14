@@ -208,10 +208,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
      * @throws TranslatorException
      */
     private boolean getAutoCommit(TranslatedCommand tCommand) throws TranslatorException {
-    	if (this.context.isTransactional()) {
-    		return false;
-    	}
-        try {
+    	try {
             return connection.getAutoCommit();
         } catch (SQLException err) {
         	throw new JDBCExecutionException(err, tCommand);

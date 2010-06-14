@@ -132,7 +132,7 @@ public class WSProcedureExecution implements ProcedureExecution {
 				}
 				dispatch.getRequestContext().put(MessageContext.HTTP_REQUEST_METHOD, action);
 				if (source != null && !"POST".equalsIgnoreCase(action)) { //$NON-NLS-1$
-					if (this.executionFactory.getXmlParamName() == null) {
+					if (this.executionFactory.getXMLParamName() == null) {
 						throw new WebServiceException(WSExecutionFactory.UTIL.getString("http_usage_error")); //$NON-NLS-1$
 					}
 					try {
@@ -140,7 +140,7 @@ public class WSProcedureExecution implements ProcedureExecution {
 						StringWriter writer = new StringWriter();
 						//TODO: prevent this from being too large 
 				        t.transform(source, new StreamResult(writer));
-						String param = Util.httpURLEncode(this.executionFactory.getXmlParamName())+"="+Util.httpURLEncode(writer.toString()); //$NON-NLS-1$
+						String param = Util.httpURLEncode(this.executionFactory.getXMLParamName())+"="+Util.httpURLEncode(writer.toString()); //$NON-NLS-1$
 						endpoint = WSConnection.Util.appendQueryString(endpoint, param);
 					} catch (TransformerException e) {
 						throw new WebServiceException(e);

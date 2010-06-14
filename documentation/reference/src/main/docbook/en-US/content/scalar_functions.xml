@@ -1041,6 +1041,7 @@
             </entry>
             <entry>
               <para>Returns a properly encoded query string appended to the given path.  Null valued expressions are omitted, and a null path is treated as ''.</para>
+              <para>Names are optional for column reference expressions.</para>
               <para>e.g. QUERYSTRING('path', 'value' as "&amp;x", ' &amp; ' as y, null as z) returns 'path?%26x=value&amp;y=%20%26%20'</para>
             </entry>
             <entry>
@@ -1923,7 +1924,7 @@
       </tgroup>
     </informaltable>
   </sect1>
-  <sect1>
+  <sect1 id="xml_functions">
     <title>XML Functions</title>
     <para>XML functions provide functionality for working with XML data. </para>
     <informaltable frame="all">
@@ -1982,6 +1983,7 @@
               <para>The ON EMPTY clause is used to specify the result when the evaluted sequence is empty.  
               EMPTY ON EMPTY, the default, returns an empty XML result.  NULL ON EMPTY returns a null result.</para>
               <para>See also <link linkend="xmltable">XMLTABLE</link></para>
+              <note><para>A technique known as document projection is used to reduce the memory footprint of the context item document.  Only the parts of the document needed by the xquery will be loaded into memory.</para></note>
             </entry>
             <entry>
               <para>xquery in string. Return value is xml.

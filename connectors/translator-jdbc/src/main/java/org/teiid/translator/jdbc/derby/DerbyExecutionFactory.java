@@ -25,15 +25,12 @@ package org.teiid.translator.jdbc.derby;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.jdbc.EscapeSyntaxModifier;
 import org.teiid.translator.jdbc.db2.DB2ExecutionFactory;
 import org.teiid.translator.jdbc.oracle.LeftOrRightFunctionModifier;
-
-
 
 /** 
  * @since 4.3
@@ -46,10 +43,9 @@ public class DerbyExecutionFactory extends DB2ExecutionFactory {
 	public static final String TEN_4 = "10.4"; //$NON-NLS-1$
 	public static final String TEN_5 = "10.5"; //$NON-NLS-1$
 	
-	private String version = TEN_1;
-	
 	public DerbyExecutionFactory() {
 		setSupportsFullOuterJoins(false); //Derby supports only left and right outer joins.
+		setDatabaseVersion(TEN_1);
 	}
 	
 	@Override
@@ -71,30 +67,21 @@ public class DerbyExecutionFactory extends DB2ExecutionFactory {
     
     @Override
     public boolean supportsExplicitNullOrdering() {
-    	return version.compareTo(TEN_4) >= 0;
+    	return getDatabaseVersion().compareTo(TEN_4) >= 0;
     }
     
-    @TranslatorProperty(display="Database Version", description= "Derby Database Version")
-    public String getDatabaseVersion() {
-    	return this.version;
-    }    
-    
-    public void setDatabaseVersion(String version) {
-    	this.version = version;
-    }
-
     @Override
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.addAll(super.getDefaultSupportedFunctions());
 
         supportedFunctions.add("ABS"); //$NON-NLS-1$
-        if (version.compareTo(TEN_2) >= 0) {
+        if (getDatabaseVersion().compareTo(TEN_2) >= 0) {
         	supportedFunctions.add("ACOS"); //$NON-NLS-1$
         	supportedFunctions.add("ASIN"); //$NON-NLS-1$
         	supportedFunctions.add("ATAN"); //$NON-NLS-1$
         }
-        if (version.compareTo(TEN_4) >= 0) {
+        if (getDatabaseVersion().compareTo(TEN_4) >= 0) {
         	supportedFunctions.add("ATAN2"); //$NON-NLS-1$
         }
         // These are executed within the server and never pushed down
@@ -102,7 +89,7 @@ public class DerbyExecutionFactory extends DB2ExecutionFactory {
         //supportedFunctions.add("BITNOT"); //$NON-NLS-1$
         //supportedFunctions.add("BITOR"); //$NON-NLS-1$
         //supportedFunctions.add("BITXOR"); //$NON-NLS-1$
-        if (version.compareTo(TEN_2) >= 0) {
+        if (getDatabaseVersion().compareTo(TEN_2) >= 0) {
 	        supportedFunctions.add("CEILING"); //$NON-NLS-1$
 	        supportedFunctions.add("COS"); //$NON-NLS-1$
 	        supportedFunctions.add("COT"); //$NON-NLS-1$
@@ -113,12 +100,12 @@ public class DerbyExecutionFactory extends DB2ExecutionFactory {
 	        supportedFunctions.add("LOG10"); //$NON-NLS-1$
         }
         supportedFunctions.add("MOD"); //$NON-NLS-1$
-        if (version.compareTo(TEN_2) >= 0) {
+        if (getDatabaseVersion().compareTo(TEN_2) >= 0) {
         	supportedFunctions.add("PI"); //$NON-NLS-1$
         	//supportedFunctions.add("POWER"); //$NON-NLS-1$
         	supportedFunctions.add("RADIANS"); //$NON-NLS-1$
         	//supportedFunctions.add("ROUND"); //$NON-NLS-1$
-        	if (version.compareTo(TEN_4) >= 0) {
+        	if (getDatabaseVersion().compareTo(TEN_4) >= 0) {
         		supportedFunctions.add("SIGN"); //$NON-NLS-1$
         	}
         	supportedFunctions.add("SIN"); //$NON-NLS-1$
@@ -191,7 +178,7 @@ public class DerbyExecutionFactory extends DB2ExecutionFactory {
     
     @Override
     public boolean supportsRowLimit() {
-    	return this.version.compareTo(TEN_5) >= 0;
+    	return this.getDatabaseVersion().compareTo(TEN_5) >= 0;
     }
     
 	@Override

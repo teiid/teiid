@@ -48,6 +48,7 @@ import org.teiid.core.util.ReaderInputStream;
 import org.teiid.language.Call;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.translator.DataNotAvailableException;
@@ -197,20 +198,25 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, FileConnection connection) throws TranslatorException {
-		Procedure p = metadataFactory.addProcedure(GETTEXTFILES); 
-		metadataFactory.addProcedureParameter("pathAndPattern", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
+		Procedure p = metadataFactory.addProcedure(GETTEXTFILES);
+		p.setAnnotation("Returns text files that match the given path and pattern as CLOBs");
+		ProcedureParameter param = metadataFactory.addProcedureParameter("pathAndPattern", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
+		param.setAnnotation("The path and pattern of what files to return.  Currently the only pattern supported is *.<ext>, which returns only the files matching the given extension at the given path.");
 		metadataFactory.addProcedureResultSetColumn("file", TypeFacility.RUNTIME_NAMES.CLOB, p); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("filePath", TypeFacility.RUNTIME_NAMES.STRING, p); //$NON-NLS-1$
 		
 		Procedure p1 = metadataFactory.addProcedure(GETFILES);
-		metadataFactory.addProcedureParameter("pathAndPattern", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p1); //$NON-NLS-1$
+		p1.setAnnotation("Returns text files that match the given path and pattern as BLOBs");
+		param = metadataFactory.addProcedureParameter("pathAndPattern", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p1); //$NON-NLS-1$
+		param.setAnnotation("The path and pattern of what files to return.  Currently the only pattern supported is *.<ext>, which returns only the files matching the given extension at the given path.");
 		metadataFactory.addProcedureResultSetColumn("file", TypeFacility.RUNTIME_NAMES.BLOB, p1); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("filePath", TypeFacility.RUNTIME_NAMES.STRING, p1); //$NON-NLS-1$
 		
 		Procedure p2 = metadataFactory.addProcedure(SAVEFILE);
+		p2.setAnnotation("Saves the given vale to the given path.  Any existing file will be overriden.");
 		metadataFactory.addProcedureParameter("filePath", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p2); //$NON-NLS-1$
-		//reporting as object, but can be one of xml, clob, blob
-		metadataFactory.addProcedureParameter("file", TypeFacility.RUNTIME_NAMES.OBJECT, Type.In, p2); //$NON-NLS-1$
+		param = metadataFactory.addProcedureParameter("file", TypeFacility.RUNTIME_NAMES.OBJECT, Type.In, p2); //$NON-NLS-1$
+		param.setAnnotation("The contents to save.  Can be one of CLOB, BLOB, or XML");
 	} 
 	
 }

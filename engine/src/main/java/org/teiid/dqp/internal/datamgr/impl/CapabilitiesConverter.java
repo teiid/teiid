@@ -41,10 +41,10 @@ public class CapabilitiesConverter {
     }
 
     public static SourceCapabilities convertCapabilities(ExecutionFactory srcCaps) {
-        return convertCapabilities(srcCaps, null, false);
+        return convertCapabilities(srcCaps, null);
     }
     
-    public static BasicSourceCapabilities convertCapabilities(ExecutionFactory srcCaps, String connectorID, boolean isXa) {
+    public static BasicSourceCapabilities convertCapabilities(ExecutionFactory srcCaps, String connectorID) {
         BasicSourceCapabilities tgtCaps = new BasicSourceCapabilities();
         
         tgtCaps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, srcCaps.supportsSelectExpression());

@@ -117,10 +117,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     	VDBMetaData vdb = requestMsg.getWorkContext().getVDB();
     	this.queryMetadata = vdb.getAttachment(QueryMetadataInterface.class);
         this.queryMetadata = new TempMetadataAdapter(this.queryMetadata, new TempMetadataStore());
-        
-        if (requestMsg.isTransactional() &&  this.connector.isXaCapable()) {
-    		this.securityContext.setTransactional(true);
-        }
+		this.securityContext.setTransactional(requestMsg.isTransactional());
         this.awi = awi;
     }
     
@@ -329,13 +326,13 @@ public class ConnectorWorkItem implements ConnectorWork {
             	correctTypes(row);
             	rows.add(row);
 	            // Check for max result rows exceeded
-	            if(this.connector.getMaxResultRows() > -1 && this.rowCount >= this.connector.getMaxResultRows()){
-	                if (this.rowCount == this.connector.getMaxResultRows() && !this.connector.isExceptionOnMaxRows()) {
-		                LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Exceeded max, returning", this.connector.getMaxResultRows()}); //$NON-NLS-1$
+	            if(this.requestMsg.getMaxResultRows() > -1 && this.rowCount >= this.requestMsg.getMaxResultRows()){
+	                if (this.rowCount == this.requestMsg.getMaxResultRows() && !this.requestMsg.isExceptionOnMaxRows()) {
+		                LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Exceeded max, returning", this.requestMsg.getMaxResultRows()}); //$NON-NLS-1$
 		        		this.lastBatch = true;
 		        		break;
-	            	} else if (this.rowCount > this.connector.getMaxResultRows() && this.connector.isExceptionOnMaxRows()) {
-	                    String msg = DQPPlugin.Util.getString("ConnectorWorker.MaxResultRowsExceed", this.connector.getMaxResultRows()); //$NON-NLS-1$
+	            	} else if (this.rowCount > this.requestMsg.getMaxResultRows() && this.requestMsg.isExceptionOnMaxRows()) {
+	                    String msg = DQPPlugin.Util.getString("ConnectorWorker.MaxResultRowsExceed", this.requestMsg.getMaxResultRows()); //$NON-NLS-1$
 	                    throw new TranslatorException(msg);
 	                }
 	            }

@@ -1,9 +1,0 @@
-VDBName[string]	SchemaName[string]	ProcedureName[string]	Name[string]	DataType[string]	Position[integer]	Type[string]	Optional[boolean]	Precision[integer]	TypeLength[integer]	Scale[integer]	Radix[integer]	NullType[string]	UID[string]
-PartsSupplier	SYS	getVDBResourcePaths	ResourcePath	string	1	ResultSet	false	50	50	0	10	Nullable	mmuuid:ebbffdab-ac7e-41ab-974f-62785b3086f9
-PartsSupplier	SYS	getBinaryVDBResource	VdbResource	blob	1	ResultSet	false	0	0	0	10	Nullable	mmuuid:90d1f79d-bd98-46f4-ae8f-adacc329cf0b
-PartsSupplier	SYS	getCharacterVDBResource	VdbResource	clob	1	ResultSet	false	0	0	0	10	Nullable	mmuuid:111f9fa8-74c9-479a-a184-8db64a1eab3c
-PartsSupplier	SYS	getXMLSchemas	document	string	1	In	false	0	0	0	10	No Nulls	mmuuid:41f00dca-7bc1-4593-b2a7-a7d64936c2d4
-PartsSupplier	SYS	getVDBResourcePaths	isBinary	boolean	2	ResultSet	false	1	1	0	10	Nullable	mmuuid:e8d087da-9833-4422-a255-f0e0fea2cb61
-PartsSupplier	SYS	getBinaryVDBResource	resourcePath	string	1	In	false	50	50	0	10	No Nulls	mmuuid:25e5065a-454e-4a87-bf71-b6f71b98319f
-PartsSupplier	SYS	getCharacterVDBResource	resourcePath	string	1	In	false	50	50	0	10	No Nulls	mmuuid:c54e777f-3cd0-45ad-a18b-e4e93532984f
-PartsSupplier	SYS	getXMLSchemas	schema	xml	1	ResultSet	false	0	0	0	10	Nullable	mmuuid:f0cb82f2-111e-4433-ae77-59a27fa93991

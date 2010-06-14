@@ -259,7 +259,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         .append(PRECISION_MAPPING).append("',','), integer) ELSE TypeLength END AS LENGTH, convert(Scale, short) AS SCALE") //$NON-NLS-1$
         .append(", Radix AS RADIX, convert(decodeString(NullType, '") //$NON-NLS-1$
         .append(PROC_COLUMN_NULLABILITY_MAPPING).append("', ','), integer) AS NULLABLE") //$NON-NLS-1$
-        .append(", convert(null, string) AS REMARKS, NULL AS COLUMN_DEF") //$NON-NLS-1$
+        .append(", p.Description AS REMARKS, NULL AS COLUMN_DEF") //$NON-NLS-1$
         .append(", NULL AS SQL_DATA_TYPE, NULL AS SQL_DATETIME_SUB, NULL AS CHAR_OCTET_LENGTH, p.Position AS ORDINAL_POSITION") //$NON-NLS-1$
         .append(", CASE NullType WHEN 'Nullable' THEN 'YES' WHEN 'No Nulls' THEN 'NO' ELSE '' END AS IS_NULLABLE, p.ProcedureName as SPECIFIC_NAME FROM ") //$NON-NLS-1$
         .append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME)

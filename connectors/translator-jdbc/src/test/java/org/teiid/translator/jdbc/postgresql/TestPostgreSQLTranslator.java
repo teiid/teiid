@@ -32,7 +32,8 @@ public class TestPostgreSQLTranslator {
     private static PostgreSQLExecutionFactory TRANSLATOR; 
 
     @BeforeClass public static void setupOnce() throws Exception {
-        TRANSLATOR = new PostgreSQLExecutionFactory();        
+        TRANSLATOR = new PostgreSQLExecutionFactory(); 
+        TRANSLATOR.setUseBindVariables(false);
         TRANSLATOR.start();
     }
     

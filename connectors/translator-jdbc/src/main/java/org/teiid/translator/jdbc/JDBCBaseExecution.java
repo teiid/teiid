@@ -56,7 +56,6 @@ public abstract class JDBCBaseExecution implements Execution  {
     // Derived from properties
     protected boolean trimString;
     protected int fetchSize;
-    protected int maxResultRows;
 
     // Set during execution
     protected Statement statement;
@@ -72,16 +71,7 @@ public abstract class JDBCBaseExecution implements Execution  {
         this.executionFactory = jef;
         
         trimString = jef.isTrimStrings();
-        fetchSize = (jef.getFetchSize() != -1)?jef.getFetchSize():context.getBatchSize();
-        maxResultRows = jef.getMaxResultRows();
-      
-        //if the connector work needs to throw an excpetion, set the size plus 1
-        if (maxResultRows > 0 && jef.isExceptionOnMaxRows()) {
-        	maxResultRows++;
-        }
-        if (maxResultRows > 0) {
-        	fetchSize = Math.min(fetchSize, maxResultRows);
-        }
+        fetchSize = context.getBatchSize();
     }
     
     /**
@@ -145,9 +135,6 @@ public abstract class JDBCBaseExecution implements Execution  {
     }
 
     protected void setSizeContraints(Statement statement) throws SQLException {
-        if (maxResultRows > 0) {
-            statement.setMaxRows(maxResultRows);
-        }
     	statement.setFetchSize(fetchSize);
     }
 

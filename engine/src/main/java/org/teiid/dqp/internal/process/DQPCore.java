@@ -188,6 +188,9 @@ public class DQPCore implements DQP {
     private int processorTimeslice = DQPConfiguration.DEFAULT_PROCESSOR_TIMESLICE;
     private boolean processorDebugAllowed;
     
+    private int maxSourceRows = DQPConfiguration.DEFAULT_MAX_SOURCE_ROWS;
+    private boolean exceptionOnMaxSourceRows = true;
+    
     private int chunkSize = Streamable.STREAMING_BATCH_SIZE_IN_BYTES;
     
 	private Map<RequestID, RequestWorkItem> requests = new ConcurrentHashMap<RequestID, RequestWorkItem>();			
@@ -321,7 +324,7 @@ public class DQPCore implements DQP {
 	    request.initialize(requestMsg, bufferManager,
 				dataTierMgr, transactionService, processorDebugAllowed,
 				state.tempTableStoreImpl, workContext,
-				chunkSize, connectorManagerRepository, this.useEntitlements);
+				connectorManagerRepository, this.useEntitlements);
 		
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
         RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
@@ -635,6 +638,8 @@ public class DQPCore implements DQP {
         this.maxCodeRecords = config.getCodeTablesMaxRows();
         this.useEntitlements = config.useEntitlements();
         this.queryThreshold = config.getQueryThresholdInSecs();
+        this.maxSourceRows = config.getMaxSourceRows();
+        this.exceptionOnMaxSourceRows = config.isExceptionOnMaxSourceRows();
         
         this.chunkSize = config.getLobChunkSizeInKB() * 1024;
         
@@ -819,4 +824,13 @@ public class DQPCore implements DQP {
 	public ConnectorManagerRepository getConnectorManagerRepository() {
 		return this.connectorManagerRepository;
 	}
+	
+	public boolean isExceptionOnMaxSourceRows() {
+		return exceptionOnMaxSourceRows;
+	}
+	
+	public int getMaxSourceRows() {
+		return maxSourceRows;
+	}
+	
 }

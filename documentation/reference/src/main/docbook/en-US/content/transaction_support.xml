@@ -75,7 +75,7 @@
 							safest, but may introduce performance overhead.</entry>
 					</row>
 					<row>
-						<entry>AUTO</entry>
+						<entry>DETECT</entry>
 						<entry>
 						    This is the default setting. Will automatically wrap commands in a transaction, but only if
 							the command seems to be transactionally unsafe.
@@ -140,7 +140,7 @@
 					</row>
 					<row>
 						<entry>*</entry>
-						<entry>Any number greater than 1 indicates that exection is
+						<entry>Any number greater than 1 indicates that execution is
 							transactionally unsafe and an XA transaction will be required.
 						</entry>
 					</row>

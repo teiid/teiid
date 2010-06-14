@@ -40,88 +40,85 @@ import org.teiid.translator.jdbc.TranslatedCommand;
 @SuppressWarnings("nls")
 public class TestModeShapeSqlTranslator {
 
-    private static ModeShapeExecutionFactory TRANSLATOR; 
-    
-    private static String MODESHAPE_VDB = (UnitTestUtil.getTestDataPath() != null ? UnitTestUtil.getTestDataPath() : "src/test/resources") + "/ModeShape.vdb";
- 
-    @BeforeClass
-    public static void setUp() throws TranslatorException {
-        TRANSLATOR = new ModeShapeExecutionFactory();        
-        TRANSLATOR.start();
-        
-    }
-    
-    
-    public void helpTestVisitor(TranslationUtility util, String input, String expectedOutput) throws TranslatorException {
-        // Convert from sql to objects
-        Command obj = util.parseCommand(input);
-        
-        TranslatedCommand tc = new TranslatedCommand(Mockito.mock(ExecutionContext.class), TRANSLATOR);
-        tc.translateCommand(obj);
-        
-        System.out.println("Input: "+ tc.getSql() + "  Expected: " + expectedOutput);
-        assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
-    }
+	private static ModeShapeExecutionFactory TRANSLATOR;
 
-    @Test
-    public void testSimpleSelect() throws Exception {        
-       String input = "select Model from Car"; //$NON-NLS-1$
-        String output = "SELECT [car:Model] FROM [car:Car]";  //$NON-NLS-1$
-	        
-	        // FakeTranslationFactory.getInstance().getExampleTranslationUtility(),
-        helpTestVisitor(new TranslationUtility(MODESHAPE_VDB),
-                input, 
-                output);
+	private static String MODESHAPE_VDB = (UnitTestUtil.getTestDataPath() != null ? UnitTestUtil
+			.getTestDataPath()
+			: "src/test/resources")
+			+ "/ModeShape.vdb";
 
-    }
-    
-    @Test
-    public void testWhereClause() throws Exception {
+	@BeforeClass
+	public static void setUp() throws TranslatorException {
+		TRANSLATOR = new ModeShapeExecutionFactory();
+		TRANSLATOR.start();
 
-	String input = "select Model from Car WHERE Make = 'Honda'"; //$NON-NLS-1$
-	String output = "SELECT [car:Model] FROM [car:Car] WHERE [car:Make] = 'Honda'"; //$NON-NLS-1$
+	}
 
-	// FakeTranslationFactory.getInstance().getExampleTranslationUtility(),
-	helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
+	public void helpTestVisitor(TranslationUtility util, String input,
+			String expectedOutput) throws TranslatorException {
+		// Convert from sql to objects
+		Command obj = util.parseCommand(input);
 
-    }
+		TranslatedCommand tc = new TranslatedCommand(Mockito
+				.mock(ExecutionContext.class), TRANSLATOR);
+		tc.translateCommand(obj);
+		assertEquals("Did not get correct sql", expectedOutput, tc.getSql()); //$NON-NLS-1$
+	}
 
-    @Test
-    public void testOrderBy() throws Exception {
+	@Test
+	public void testSimpleSelect() throws Exception {
+		String input = "select Model from Car"; //$NON-NLS-1$
+		String output = "SELECT [car:Model] FROM [car:Car]"; //$NON-NLS-1$
 
-	String input = "select Model from Car ORDER BY Make"; //$NON-NLS-1$
-	String output = "SELECT [car:Model] FROM [car:Car] ORDER BY [car:Make]"; //$NON-NLS-1$
+		// FakeTranslationFactory.getInstance().getExampleTranslationUtility(),
+		helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
 
-	// FakeTranslationFactory.getInstance().getExampleTranslationUtility(),
-	helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
+	}
 
-    }
+	@Test
+	public void testWhereClause() throws Exception {
 
-    @Ignore
-    @Test
-    public void testUsingAlias() throws Exception {
+		String input = "select Model from Car WHERE Make = 'Honda'"; //$NON-NLS-1$
+		String output = "SELECT [car:Model] FROM [car:Car] WHERE [car:Make] = 'Honda'"; //$NON-NLS-1$
 
-	String input = "select c.Model from Car As c"; //$NON-NLS-1$
-	String output = "SELECT c.[car:Model] FROM [car:Car] As c"; //$NON-NLS-1$
+		// FakeTranslationFactory.getInstance().getExampleTranslationUtility(),
+		helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
 
-	// FakeTranslationFactory.getInstance().getExampleTranslationUtility(),
-	helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
+	}
 
-    }
-    
-    @Ignore
-    @Test
-    public void testUsingNameFunction() throws Exception {
+	@Test
+	public void testOrderBy() throws Exception {
 
-	String input = "select Model from Car as car WHERE PATH('car') LIKE '%/Hybrid/%'"; //$NON-NLS-1$
-	String output = "SELECT [car:Model] FROM [car:Car] WHERE PATH(car:Car) LIKE '%/Hybrid/%'"; //$NON-NLS-1$
+		String input = "select Model from Car ORDER BY Make"; //$NON-NLS-1$
+		String output = "SELECT [car:Model] FROM [car:Car] ORDER BY [car:Make]"; //$NON-NLS-1$
 
-	// FakeTranslationFactory.getInstance().getExampleTranslationUtility(),
-	helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
-	
+		// FakeTranslationFactory.getInstance().getExampleTranslationUtility(),
+		helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
 
-    }
-    
+	}
 
+	@Ignore
+	@Test
+	public void testUsingAlias() throws Exception {
+
+		String input = "select c.Model from Car As c"; //$NON-NLS-1$
+		String output = "SELECT c.[car:Model] FROM [car:Car] As c"; //$NON-NLS-1$
+
+		// FakeTranslationFactory.getInstance().getExampleTranslationUtility(),
+		helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
+
+	}
+
+	@Ignore
+	@Test
+	public void testUsingNameFunction() throws Exception {
+
+		String input = "select Model from Car as car WHERE PATH('car') LIKE '%/Hybrid/%'"; //$NON-NLS-1$
+		String output = "SELECT [car:Model] FROM [car:Car] WHERE PATH(car:Car) LIKE '%/Hybrid/%'"; //$NON-NLS-1$
+
+		// FakeTranslationFactory.getInstance().getExampleTranslationUtility(),
+		helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
+
+	}
 
 }

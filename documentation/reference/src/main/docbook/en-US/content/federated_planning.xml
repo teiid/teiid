@@ -376,12 +376,7 @@ if(warning instanceof PartialResultsWarning) {
         The SQL options available are as follows:</para>
       <itemizedlist>
         <listitem>
-          <para>OPTION SHOWPLAN - Returns the plan in addition to
-            any results</para>
-        </listitem>
-        <listitem>
-          <para>OPTION PLANONLY - Returns the plan, does not
-            execute the command though</para>
+          <para>SHOWPLAN [ON|DEBUG]- Returns the plan or the plan and the full planner debug log.</para>
         </listitem>
       </itemizedlist>
       <para>
@@ -983,7 +978,7 @@ System.out.println(queryPlan);</programlisting>
           should be used to determine the strategy cost.  </para>
         </listitem>
             <listitem>
-        <para>- RuleCollapseSource - this rule removes all nodes below an
+        <para>RuleCollapseSource - this rule removes all nodes below an
           Access node and collapses them into an equivalent query that is
           placed in the Access node.</para>
         </listitem>

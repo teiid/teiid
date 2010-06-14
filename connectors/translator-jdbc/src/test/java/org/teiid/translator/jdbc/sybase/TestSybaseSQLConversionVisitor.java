@@ -22,18 +22,16 @@
 
 package org.teiid.translator.jdbc.sybase;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.language.Command;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
-import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
 
 /**
  */
@@ -43,6 +41,7 @@ public class TestSybaseSQLConversionVisitor {
     
     @BeforeClass
     public static void setup() throws TranslatorException {
+    	trans.setUseBindVariables(false);
         trans.start();
     }
 

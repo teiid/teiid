@@ -32,7 +32,6 @@ import java.util.TimeZone;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.types.Streamable;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.SecurityFunctionEvaluator;
@@ -43,7 +42,6 @@ import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.util.VariableContext;
-
 
 /** 
  * Defines the context that a command is processing in.  For example, this defines
@@ -79,8 +77,6 @@ public class CommandContext implements Cloneable {
 	        
 	    /** Indicate whether statistics should be collected for relational node processing*/
 	    private boolean collectNodeStatistics;
-	    
-	    private int streamingBatchSize = Streamable.STREAMING_BATCH_SIZE_IN_BYTES;
 	    
 	    private Random random = null;
 	    
@@ -274,15 +270,6 @@ public class CommandContext implements Cloneable {
     public boolean getCollectNodeStatistics() {
         return this.globalState.collectNodeStatistics;
     }
-    
-	public int getStreamingBatchSize() {
-		return globalState.streamingBatchSize;
-	}
-
-	public void setStreamingBatchSize(int streamingBatchSize) {
-		this.globalState.streamingBatchSize = streamingBatchSize;
-	}
-
     
     public int getConnectorBatchSize() {
         return this.globalState.connectorBatchSize;

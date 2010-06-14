@@ -166,7 +166,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	}
 
 	private void createConnectorManagers(final VDBMetaData deployment) throws DeploymentException {
-		IdentityHashMap<Translator, ExecutionFactory> map = new IdentityHashMap<Translator, ExecutionFactory>();
+		IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map = new IdentityHashMap<Translator, ExecutionFactory<Object, Object>>();
 		
 		for (Model model:deployment.getModels()) {
 			if (model.getName().equals(CoreConstants.SYSTEM_MODEL)){
@@ -183,7 +183,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 					throw new DeploymentException(RuntimePlugin.Util.getString("translator_not_found", name)); //$NON-NLS-1$
 				}
 			
-				ExecutionFactory ef = map.get(translator);
+				ExecutionFactory<Object, Object> ef = map.get(translator);
 				if ( ef == null) {
 					ef = TranslatorUtil.buildExecutionFactory(translator);
 					map.put(translator, ef);

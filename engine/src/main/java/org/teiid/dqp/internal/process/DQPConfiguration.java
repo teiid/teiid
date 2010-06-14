@@ -37,8 +37,8 @@ public class DQPConfiguration{
     static final int DEFAULT_MAX_RESULTSET_CACHE_ENTRIES = 1024;
     static final int DEFAULT_QUERY_THRESHOLD = 600;
     static final String PROCESS_PLAN_QUEUE_NAME = "QueryProcessorQueue"; //$NON-NLS-1$
-    public static final int DEFAULT_MAX_PROCESS_WORKERS = 16;
-	
+    public static final int DEFAULT_MAX_PROCESS_WORKERS = 32;
+	public static final int DEFAULT_MAX_SOURCE_ROWS = -1;
     
 	private int maxThreads = DEFAULT_MAX_PROCESS_WORKERS;
 	private int timeSliceInMilli = DEFAULT_PROCESSOR_TIMESLICE;
@@ -53,8 +53,10 @@ public class DQPConfiguration{
 	private int maxResultSetCacheEntries = DQPConfiguration.DEFAULT_MAX_RESULTSET_CACHE_ENTRIES;
 	private boolean useEntitlements = false;
 	private int queryThresholdInSecs = DEFAULT_QUERY_THRESHOLD;
+	private boolean exceptionOnMaxSourceRows = true;
+	private int maxSourceRows = -1;
 	
-	@ManagementProperty(description="Process pool maximum thread count. (default 16) Increase this value if your load includes a large number of XQueries or if the system's available processors is larger than 8")
+	@ManagementProperty(description="Process pool maximum thread count. (default 32) Increase this value if the system's available processors is larger than 8")
 	public int getMaxThreads() {
 		return maxThreads;
 	}
@@ -178,5 +180,31 @@ public class DQPConfiguration{
 	@ManagementProperty(description="Teiid runtime version", readOnly=true)
 	public String getRuntimeVersion() {
 		return ApplicationInfo.getInstance().getBuildNumber();
+	}
+	
+	/**
+	 * Throw exception if there are more rows in the result set than specified in the MaxSourceRows setting.
+	 * @return
+	 */
+	@ManagementProperty(description="Indicates if an exception should be thrown if the specified value for Maximum Source Rows is exceeded; only up to the maximum rows will be consumed.")
+	public boolean isExceptionOnMaxSourceRows() {
+		return exceptionOnMaxSourceRows;
+	}
+	
+	public void setExceptionOnMaxSourceRows(boolean exceptionOnMaxSourceRows) {
+		this.exceptionOnMaxSourceRows = exceptionOnMaxSourceRows;
+	}
+
+	/**
+	 * Maximum source set rows to fetch
+	 * @return
+	 */
+	@ManagementProperty(description="Maximum rows allowed from a source query. -1 indicates no limit. (default -1)")
+	public int getMaxSourceRows() {
+		return maxSourceRows;
+	}
+
+	public void setMaxSourceRows(int maxSourceRows) {
+		this.maxSourceRows = maxSourceRows;
 	}
 }

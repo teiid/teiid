@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.FakeServer;
+import org.teiid.jdbc.TestMMDatabaseMetaData;
 
 
 /**
@@ -66,7 +67,7 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
     
     protected void checkResult(String testName, String query) throws Exception {
     	execute(query);
-    	super.checkResult(testName, this.internalResultSet, "system"); //$NON-NLS-1$
+    	TestMMDatabaseMetaData.compareResultSet("TestSystemVirtualModel/" + testName, this.internalResultSet);
     }
     
 	@Test public void testModels() throws Exception {

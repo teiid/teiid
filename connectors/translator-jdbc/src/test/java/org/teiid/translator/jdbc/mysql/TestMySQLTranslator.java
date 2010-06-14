@@ -35,7 +35,8 @@ public class TestMySQLTranslator {
     private static MySQLExecutionFactory TRANSLATOR; 
     
     @BeforeClass public static void oneTimeSetup() throws TranslatorException {
-        TRANSLATOR = new MySQLExecutionFactory();        
+        TRANSLATOR = new MySQLExecutionFactory();       
+        TRANSLATOR.setUseBindVariables(false);
         TRANSLATOR.start();
     }
 

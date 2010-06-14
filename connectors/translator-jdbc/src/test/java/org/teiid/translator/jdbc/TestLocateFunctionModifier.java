@@ -101,7 +101,7 @@ public class TestLocateFunctionModifier {
 				registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory(), locateFunctionName, parameterOrder));
 			}
     	};
-    	
+    	trans.setUseBindVariables(false);
         trans.start();
 
         SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 

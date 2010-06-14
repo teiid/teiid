@@ -88,7 +88,7 @@ public class ConnectorManager  {
 	private LinkedList<ConnectorWorkItem> queuedRequests = new LinkedList<ConnectorWorkItem>();
 	
 	private volatile boolean stopped;
-	private ExecutionFactory executionFactory;
+	private ExecutionFactory<Object, Object> executionFactory;
 	
     public ConnectorManager(String translatorName, String connectionName) {
     	this.translatorName = translatorName;
@@ -97,7 +97,7 @@ public class ConnectorManager  {
     
     public String getStausMessage() {
     	StringBuilder sb = new StringBuilder();
-    	ExecutionFactory ef = getExecutionFactory();
+    	ExecutionFactory<Object, Object> ef = getExecutionFactory();
 		
     	if(ef != null) {
     		if (ef.isSourceRequired()) {
@@ -127,11 +127,10 @@ public class ConnectorManager  {
     		throw BlockedException.INSTANCE;
     	}
     }
-        
     
     public MetadataStore getMetadata(String modelName, Map<String, Datatype> datatypes, Properties importProperties) throws TranslatorException {
 		MetadataFactory factory = new MetadataFactory(modelName, datatypes, importProperties);
-		ExecutionFactory executionFactory = getExecutionFactory();
+		ExecutionFactory<Object, Object> executionFactory = getExecutionFactory();
 		Object connectionFactory = getConnectionFactory();
 		Object connection = executionFactory.getConnection(connectionFactory);
 		try {
@@ -148,8 +147,8 @@ public class ConnectorManager  {
     	}
 
 		checkStatus();
-		ExecutionFactory translator = getExecutionFactory();
-		BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(translator, this.connectorId, translator.isXaCapable());
+		ExecutionFactory<Object, Object> translator = getExecutionFactory();
+		BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(translator, this.connectorId);
 		resultCaps.setScope(Scope.SCOPE_GLOBAL);
 		cachedCapabilities = resultCaps;
 		return resultCaps;
@@ -255,19 +254,18 @@ public class ConnectorManager  {
      * Get the <code>Translator</code> object managed by this  manager.
      * @return the <code>ExecutionFactory</code>.
      */
-    @SuppressWarnings("unused")
-	protected ExecutionFactory getExecutionFactory() {
+	protected ExecutionFactory<Object, Object> getExecutionFactory() {
     	if (this.executionFactory == null) {
 	    	try {
 				InitialContext ic = new InitialContext();
-				return (ExecutionFactory)ic.lookup(this.translatorName);
+				return (ExecutionFactory<Object, Object>)ic.lookup(this.translatorName);
 			} catch (NamingException e) {
 			}
     	}
 		return this.executionFactory;
     }
     
-	public void setExecutionFactory(ExecutionFactory ef) {
+	public void setExecutionFactory(ExecutionFactory<Object, Object> ef) {
 		this.executionFactory = ef;
 	}
     

@@ -134,15 +134,10 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.QueryString;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.query.sql.symbol.XMLElement;
-import org.teiid.query.sql.symbol.XMLForest;
-import org.teiid.query.sql.symbol.XMLQuery;
-import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.util.ValueIterator;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
@@ -1905,17 +1900,9 @@ public class QueryRewriter {
         	} else {
             	expression = rewriteExpressionDirect(((ExpressionSymbol)expression).getExpression());
         	}
-        } else if (expression instanceof XMLElement) {
+        } else {
         	rewriteExpressions(expression);
-        } else if (expression instanceof XMLForest) {
-        	rewriteExpressions(expression);
-        } else if (expression instanceof XMLSerialize) {
-        	rewriteExpressions(expression);
-        } else if (expression instanceof XMLQuery) {
-        	rewriteExpressions(expression);
-        } else if (expression instanceof QueryString) {
-        	rewriteExpressions(expression);
-        }
+        } 
     	
         if(dataMgr == null) {
         	if (!EvaluatableVisitor.isFullyEvaluatable(expression, true)) {

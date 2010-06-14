@@ -56,6 +56,7 @@ public class TestSQLConversionVisitor {
     @BeforeClass public static void oneTimeSetup() throws TranslatorException {
     	TRANSLATOR = new JDBCExecutionFactory();
     	TRANSLATOR.setTrimStrings(true);
+    	TRANSLATOR.setUseBindVariables(false);
     	TRANSLATOR.start();
     }
     
@@ -69,9 +70,7 @@ public class TestSQLConversionVisitor {
     
     public void helpTestVisitor(String vdb, String input, String expectedOutput, boolean usePreparedStatement) {
     	JDBCExecutionFactory trans = new JDBCExecutionFactory();
-        if (usePreparedStatement) {
-        	trans.setUseBindVariables(true);
-        }
+    	trans.setUseBindVariables(usePreparedStatement);
         try {
 			trans.start();
 	        TranslationHelper.helpTestVisitor(vdb, input, expectedOutput, trans);
@@ -85,6 +84,7 @@ public class TestSQLConversionVisitor {
     private String getStringWithContext(LanguageObject obj) throws TranslatorException {
     	JDBCExecutionFactory env = new JDBCExecutionFactory();
     	env.setUseCommentsInSourceQuery(true);
+    	env.setUseBindVariables(false);
         env.start();
         
         SQLConversionVisitor visitor = env.getSQLConversionVisitor();

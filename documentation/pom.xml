@@ -14,11 +14,10 @@
   <modules>
     <module>admin-guide</module>
     <module>reference</module>
-    <module>connector-developer-guide</module>
+    <module>developer-guide</module>
     <module>quick-start-example</module>
-    <module>salesforce-connector-guide</module>
   </modules>
-  <repositories>
+  <!--<repositories>
     <repository>
       <id>apiviz.release</id>
       <name>APIviz releases</name>
@@ -30,7 +29,7 @@
         <enabled>false</enabled>
       </snapshots>
     </repository>
-  </repositories>
+  </repositories>-->
   <pluginRepositories>
     <pluginRepository>
       <id>jboss</id>

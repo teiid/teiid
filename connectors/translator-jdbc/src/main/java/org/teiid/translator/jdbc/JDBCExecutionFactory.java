@@ -140,12 +140,12 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     
     private Map<String, FunctionModifier> functionModifiers = new HashMap<String, FunctionModifier>();
 	
-	private boolean useBindVariables;
+	private boolean useBindVariables = true;
 	private String databaseTimeZone;
 	private boolean trimStrings;
 	private boolean useCommentsInSourceQuery;
-	private int fetchSize = 1024;
-	
+	private String version;
+
 	boolean initialConnection = true;
 	
 	public JDBCExecutionFactory() {
@@ -167,6 +167,15 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         		CALENDAR.set(Calendar.getInstance(tz));
             }
         }  		
+    }
+	
+    @TranslatorProperty(display="Database Version", description= "Database Version")
+    public String getDatabaseVersion() {
+    	return this.version;
+    }    
+    
+    public void setDatabaseVersion(String version) {
+    	this.version = version;
     }
     
 	@TranslatorProperty(display="Use Bind Variables", description="Use prepared statements and bind variables",advanced=true)
@@ -196,7 +205,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 		this.trimStrings = trimStrings;
 	}
 
-	@TranslatorProperty(display="Use informational comments in Source Queries", description="This will embed /*comment*/ style comment with session/request id in source SQL query for informational purposes", advanced=true)
+	@TranslatorProperty(display="Use informational comments in Source Queries", description="This will embed a /*comment*/ leading comment with session/request id in source SQL query for informational purposes", advanced=true)
 	public boolean useCommentsInSourceQuery() {
 		return this.useCommentsInSourceQuery;
 	}
@@ -205,21 +214,11 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 		this.useCommentsInSourceQuery = useCommentsInSourceQuery;
 	}
 
-	
-	@TranslatorProperty(display="Fetch Size", description="fetch size used from the connector to its underlying source.", advanced=true)
-	public int getFetchSize() {
-		return this.fetchSize;
-	}
-	
 	@Override
 	public boolean isSourceRequired() {
 		return true;
 	}
 
-	public void setFetchSize(int fetchSize) {
-		this.fetchSize = fetchSize;
-	}
-	
     @Override
     public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
     		throws TranslatorException {

@@ -151,7 +151,7 @@
               java.sql.Blob
               <footnote>
                 <para>The concrete type is expected to be
-                  com.metamatrix.common.types.BlobType</para>
+                  org.teiid.core.types.BlobType</para>
               </footnote>
             </entry>
             <entry>BLOB</entry>
@@ -165,7 +165,7 @@
               java.sql.Clob
               <footnote>
                 <para>The concrete type is expected to be
-                  com.metamatrix.common.types.ClobType</para>
+                  org.teiid.core.types.ClobType</para>
               </footnote>
             </entry>
             <entry>CLOB</entry>
@@ -178,7 +178,7 @@
               java.sql.SQLXML
               <footnote>
                 <para>The concrete type is expected to be
-                  com.metamatrix.common.types.XMLType</para>
+                  org.teiid.core.types.XMLType</para>
               </footnote>
             </entry>
             <entry>JAVA_OBJECT</entry>

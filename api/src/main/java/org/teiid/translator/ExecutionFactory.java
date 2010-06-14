@@ -74,7 +74,6 @@ public class ExecutionFactory<F, C> {
 
 	public static final int DEFAULT_MAX_FROM_GROUPS = -1;
 	public static final int DEFAULT_MAX_IN_CRITERIA_SIZE = -1;
-	public static final int DEFAULT_MAX_ROWS = -1;
 
 	private static final TypeFacility TYPE_FACILITY = new TypeFacility();
 	
@@ -82,9 +81,6 @@ public class ExecutionFactory<F, C> {
 	 * Managed execution properties
 	 */
 	private boolean immutable;
-	private boolean exceptionOnMaxRows = true;
-	private int maxResultRows = DEFAULT_MAX_ROWS;
-	private boolean xaCapable;
 	private boolean sourceRequired = true;
 	
 	/*
@@ -167,45 +163,6 @@ public class ExecutionFactory<F, C> {
 		throw new AssertionError("A connection was created, but no implementation provided for closeConnection"); //$NON-NLS-1$
 	}
 	
-	/**
-	 * Throw exception if there are more rows in the result set than specified in the MaxResultRows setting.
-	 * @return
-	 */
-	@TranslatorProperty(display="Exception on Exceeding Max Rows",description="Indicates if an Exception should be thrown if the specified value for Maximum Result Rows is exceeded; else no exception and no more than the maximum will be returned",advanced=true)
-	public boolean isExceptionOnMaxRows() {
-		return exceptionOnMaxRows;
-	}
-	
-	public void setExceptionOnMaxRows(boolean arg0) {
-		this.exceptionOnMaxRows = arg0;
-	}
-
-	/**
-	 * Maximum result set rows to fetch
-	 * @return
-	 */
-	@TranslatorProperty(display="Maximum Result Rows", description="Maximum Result Rows allowed", advanced=true)
-	public int getMaxResultRows() {
-		return maxResultRows;
-	}
-
-	public void setMaxResultRows(int arg0) {
-		this.maxResultRows = arg0;
-	}
-	
-	/**
-	 * Shows the XA transaction capability of the Connector.
-	 * @return
-	 */
-	@TranslatorProperty(display="Is XA Capable", description="True, if this connector supports XA Transactions")
-	public boolean isXaCapable() {
-		return xaCapable;
-	}
-
-	public void setXaCapable(boolean arg0) {
-		this.xaCapable = arg0;
-	}
-	    
     /**
      * Flag that indicates if a underlying source connection required for this execution factory to work 
      * @return

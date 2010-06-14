@@ -36,11 +36,10 @@ import org.teiid.language.LanguageObject;
 import org.teiid.language.Limit;
 import org.teiid.language.Literal;
 import org.teiid.language.SQLConstants.NonReserved;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
@@ -67,8 +66,10 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 	public static final String EIGHT_3 = "8.3"; //$NON-NLS-1$
 	public static final String EIGHT_4 = "8.4"; //$NON-NLS-1$
     
-	private String version = EIGHT_0;	
-
+	public PostgreSQLExecutionFactory() {
+		setDatabaseVersion(EIGHT_0);
+	}
+	
     public void start() throws TranslatorException {
         //TODO: all of the functions (except for convert) can be handled through just the escape syntax
         super.start();
@@ -222,7 +223,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public boolean supportsExplicitNullOrdering() {
-    	return version.compareTo(EIGHT_4) >= 0;
+    	return getDatabaseVersion().compareTo(EIGHT_4) >= 0;
     }
     
     @Override
@@ -308,7 +309,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 //        supportedFunctions.add("PARSETIMESTAMP"); //$NON-NLS-1$
         supportedFunctions.add("QUARTER"); //$NON-NLS-1$
         supportedFunctions.add("SECOND"); //$NON-NLS-1$
-        if (this.version.compareTo(EIGHT_2) >= 0) {
+        if (this.getDatabaseVersion().compareTo(EIGHT_2) >= 0) {
         	supportedFunctions.add("TIMESTAMPADD"); //$NON-NLS-1$
         	supportedFunctions.add("TIMESTAMPDIFF"); //$NON-NLS-1$
         }
@@ -456,12 +457,4 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         return true;
     }
     
-    @TranslatorProperty(description= "PostgreSQL Database Version")
-    public String getDatabaseVersion() {
-    	return this.version;
-    }
-    
-    public void setDatabaseVersion(String version) {
-    	this.version = version;
-    }    
 }

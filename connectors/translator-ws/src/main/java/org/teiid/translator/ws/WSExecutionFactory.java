@@ -92,11 +92,12 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		this.defaultBinding = defaultInvocationType;
 	}
 	
-	public String getXmlParamName() {
+	@TranslatorProperty(description="Used with the HTTP binding (typically with the GET method) to indicate that the request document should be part of the query string.", display="XML Param Name")
+	public String getXMLParamName() {
 		return xmlParamName;
 	}
 	
-	public void setXmlParamName(String xmlParamName) {
+	public void setXMLParamName(String xmlParamName) {
 		this.xmlParamName = xmlParamName;
 	}
 	
@@ -119,6 +120,7 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 	public void getMetadata(MetadataFactory metadataFactory,
 			WSConnection conn) throws TranslatorException {
 		Procedure p = metadataFactory.addProcedure("invoke"); //$NON-NLS-1$ 
+		p.setAnnotation("Invokes a webservice that returns an XML result");
 
 		ProcedureParameter param = metadataFactory.addProcedureParameter("binding", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("The invocation binding (HTTP, SOAP11, SOAP12).  May be set or allowed to default to null to use the default binding.");
@@ -138,6 +140,10 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		param.setNullType(NullType.Nullable);
 		
 		metadataFactory.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.XML, Type.ReturnValue, p); //$NON-NLS-1$
+		
+		//invokeHttp
+		
+		
 	}
 
 }
