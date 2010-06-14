@@ -60,7 +60,7 @@
         <outputDirectory>teiid-docs</outputDirectory>
     </fileSet>
     <fileSet>
-        <directory>target/distribution/teiid-${version}-docs.dir/connector-developer-guide/en-US/pdf</directory>
+        <directory>target/distribution/teiid-${version}-docs.dir/developer-guide/en-US/pdf</directory>
         <includes>
             <include>connector_developer_guide.pdf</include>
         </includes>                
