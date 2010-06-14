@@ -131,14 +131,6 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 		}, FunctionModifier.BOOLEAN);
      }    
     
-    
-    
-	@Override
-    public SQLConversionVisitor getSQLConversionVisitor() {
-	return new ModeShapeSQLConversionVisitor(this);
-    }
-
-
 
 	@Override
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
