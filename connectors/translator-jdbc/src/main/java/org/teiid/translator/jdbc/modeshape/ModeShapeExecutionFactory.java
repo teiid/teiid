@@ -36,16 +36,13 @@ import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Literal;
 import org.teiid.language.NamedTable;
-import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
-import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
-import org.teiid.translator.jdbc.SQLConversionVisitor;
 
 
 
@@ -218,9 +215,4 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 		return false;
 	}
     
-	@Override
-	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory) throws TranslatorException {
-		throw new TranslatorException("Unsupported Execution");//$NON-NLS-1$
-	}  
-
 }

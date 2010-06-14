@@ -22,22 +22,22 @@
 
 package org.teiid.translator.jdbc.modeshape;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Command;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslatedCommand;
 
-import com.metamatrix.cdk.api.TranslationUtility;
-
 /**
  */
+@SuppressWarnings("nls")
 public class TestModeShapeSqlTranslator {
 
     private static ModeShapeExecutionFactory TRANSLATOR; 
