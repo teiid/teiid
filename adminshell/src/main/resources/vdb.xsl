@@ -40,8 +40,15 @@
 					</xsl:for-each>
 					<xsl:for-each select="ConnectorBindings/Connector">
 						<source>
+						    <xsl:variable name="connector-name" select="@Name"/>
 							<xsl:attribute name="name"><xsl:value-of select="@Name" /></xsl:attribute>
-							<xsl:attribute name="jndi-name"><xsl:value-of select="concat('java:',translate(@Name, ' ', '_'))" /></xsl:attribute>
+                            <xsl:attribute name="connection-jndi-name"><xsl:value-of select="concat('java:',translate(@Name, ' ', '_'))" /></xsl:attribute>
+
+							<xsl:for-each select="//ConnectorBindings/Connector">
+							    <xsl:if test="@Name=$connector-name">
+        							<xsl:attribute name="translator-name"><xsl:value-of select="translate(substring-before(@ComponentType, ' '), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')"/></xsl:attribute>
+    							</xsl:if>
+							</xsl:for-each>
 						</source>
 					</xsl:for-each>
 				</model>

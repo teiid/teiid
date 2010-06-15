@@ -58,17 +58,14 @@ public class MigrationUtil {
 					"\n  7.0 compatible replacement files will be created in the same directory " +
 					"\n  as your file." +
 					"\n  If you supply a vdb, the new vdb file will have a _70.vdb suffix." +
-					"\n  If you supply a dynamic vdb file, then two new files will be created: " +
-					"\n  <file name>-vdb.xml and <file name>-bindings.xml" +
-					"\n\nNote: this program will only create connector binding connection factories " +
-					"\n      if the bindings are present in the specified file." +
+					"\n  If you supply a dynamic vdb file, <file name>-vdb.xml is created " +					
+					"\n\nNote: This program will create translator names by Connector's Component Type name" +
+					"\n  As they are not gureented to match; recheck their for their validity" +
 					"\n\nNote: this program will NOT create the -ds.xml files needed by JBoss to " +
 					"\n      create underlying DataSource connection pools." +
 					"\n      You will need to manually create one -ds.xml for each JDBC DataSource " +
 					"\n      with a JNDI name of <connector binding name>DS, " +
-					"\n      where any spaces in the name are replace by _" +
-					"\n\nNode: depending upon the connectors used, you may need to manually edit the " +
-					"        -bindings.xml file."); 
+					"\n      where any spaces in the name are replace by _"); 
 			System.exit(-1);
 		}
 		File file = new File(args[0]);
@@ -101,7 +98,6 @@ public class MigrationUtil {
 					manifest.delete();
 				}
 				transformConfig(config, "/vdb.xsl", new StreamResult(new File(metainf, "vdb.xml")));
-				transformConfig(config, "/connector.xsl", new StreamResult(new File(file.getParentFile(), fileName + "-bindings-ds.xml")));
 				config.delete();
 				FileOutputStream out = new FileOutputStream(new File(file.getParent(), fileName + "_70.vdb"));
 				ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(out));
@@ -114,7 +110,6 @@ public class MigrationUtil {
 		} else if (ext.endsWith("xml") || ext.endsWith("def")){
 			File parent = file.getParentFile();
 			transformConfig(file, "/vdb.xsl", new StreamResult(new File(parent, fileName + "-vdb.xml")));
-			transformConfig(file, "/connector.xsl", new StreamResult(new File(parent, fileName + "-bindings-ds.xml")));
 		} else {
 			System.err.println(fullName + " is not a vdb or xml file.  Run with no arguments for help."); //$NON-NLS-1$
 			System.exit(-1);
