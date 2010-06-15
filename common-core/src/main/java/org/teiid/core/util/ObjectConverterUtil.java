@@ -109,8 +109,11 @@ public class ObjectConverterUtil {
 	        	writen += l_nbytes;
 	        }
         } finally {
-    		is.close();
-        	out.close();
+        	try {
+        		is.close();
+        	} finally {
+        		out.close();
+        	}
         }
     }
     
@@ -128,8 +131,11 @@ public class ObjectConverterUtil {
 	        	writen += l_nbytes;
 	        }
         } finally {
-    		is.close();
-        	out.close();
+        	try {
+        		is.close();
+        	} finally {
+        		out.close();
+        	}
         }
     }
 

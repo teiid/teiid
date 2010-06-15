@@ -2066,17 +2066,33 @@
             </entry>
           </row>
           <row>
-            <entry>
+            <entry id="xmlserialize">
               <para><code>XMLSERIALIZE((DOCUMENT|CONTENT) exp [AS datatype])</code></para>
             </entry>
             <entry>
-              <para>Returns a character type representation of the exp. 
-              Only a character type (string, varchar, clob) may be specified as the datatype.  
+              <para>Returns a character type representation of the exp expression. 
+              Only a character type (string, clob) may be specified as the datatype.  
               If DOCUMENT is specified and the xml is not a valid document or fragment, then an exception is raised. 
               </para>
             </entry>
             <entry>
               <para>Exp is xml. Return value mathces datatype.
+              </para>
+            </entry>
+          </row>
+          <row>
+            <entry id="xmlparse">
+              <para><code>XMLPARSE((DOCUMENT|CONTENT) exp [WELLFORMED])</code></para>
+            </entry>
+            <entry>
+              <para>Returns an XML type representation of the exp expression.  If DOCIMENT is specfied then the expression must have a single
+              root element and may or may not contain an XML declaration.</para>
+              <para>
+              If WELLFORMED is specified then validation is skipped; this is especially useful for CLOB and BLOB known to already be valid.  
+              </para>
+            </entry>
+            <entry>
+              <para>Exp in {string, clob, blob}. Return value is xml.
               </para>
             </entry>
           </row>

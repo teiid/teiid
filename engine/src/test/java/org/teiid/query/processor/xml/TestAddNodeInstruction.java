@@ -24,22 +24,16 @@ package org.teiid.query.processor.xml;
 
 import java.util.Properties;
 
+import junit.framework.TestCase;
+
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.FileStore;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.types.Streamable;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.query.mapping.xml.MappingNodeConstants;
-import org.teiid.query.processor.xml.AddNodeInstruction;
-import org.teiid.query.processor.xml.DocumentInProgress;
-import org.teiid.query.processor.xml.NodeDescriptor;
-import org.teiid.query.processor.xml.ProcessorInstruction;
-import org.teiid.query.processor.xml.Program;
-import org.teiid.query.processor.xml.SAXDocumentInProgress;
-import org.teiid.query.processor.xml.XMLContext;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.util.VariableContext;
-
-import junit.framework.TestCase;
 
 
 /**
@@ -417,7 +411,7 @@ public class TestAddNodeInstruction extends TestCase {
 		env.pushProgram(program);
         
 		FileStore fs = BufferManagerFactory.getStandaloneBufferManager().createFileStore("test"); //$NON-NLS-1$
-        DocumentInProgress doc = new SAXDocumentInProgress(fs);
+        DocumentInProgress doc = new DocumentInProgress(fs, Streamable.ENCODING);
         env.setDocumentInProgress(doc);
         
         //add fake root, move to child
@@ -431,7 +425,7 @@ public class TestAddNodeInstruction extends TestCase {
         doc.moveToParent();
         doc.markAsFinished();
         
-        String actualDoc = new String(ObjectConverterUtil.convertToByteArray(fs.createInputStream(0)));
+        String actualDoc = ObjectConverterUtil.convertToString(doc.getSQLXML().getCharacterStream());
         return actualDoc;    
     }
 

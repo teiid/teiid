@@ -23,9 +23,12 @@
 package org.teiid.query.processor.xml;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 
 import javax.xml.transform.TransformerException;
@@ -33,50 +36,77 @@ import javax.xml.transform.TransformerException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.FileStore.FileStoreOutputStream;
-import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.types.XMLTranslator;
-
-
 
 /** 
  * Utility methods to be used with the XML and XQuery processing.
  */
 public class XMLUtil {
 	
-	//horrible hack
-	private static BufferManager bufferManager;
-	
-	public static void setBufferManager(BufferManager bufferManager) {
-		XMLUtil.bufferManager = bufferManager;
+	public static final class FileStoreInputStreamFactory extends InputStreamFactory {
+		private final FileStore lobBuffer;
+		private final FileStoreOutputStream fsos;
+
+		public FileStoreInputStreamFactory(FileStore lobBuffer, String encoding) {
+			super(encoding);
+			this.lobBuffer = lobBuffer;
+			fsos = lobBuffer.createOutputStream(DataTypeManager.MAX_LOB_MEMORY_BYTES);
+			this.lobBuffer.setCleanupReference(this);
+		}
+
+		@Override
+		public InputStream getInputStream() throws IOException {
+			if (!fsos.bytesWritten()) {
+				return new ByteArrayInputStream(fsos.getBuffer(), 0, fsos.getCount());
+			}
+			//TODO: adjust the buffer size, and/or develop a shared buffer strategy
+			return new BufferedInputStream(lobBuffer.createInputStream(0));
+		}
+
+		@Override
+		public long getLength() {
+			return lobBuffer.getLength();
+		}
+
+		public Writer getWriter() {
+			try {
+				return new OutputStreamWriter(fsos, Streamable.ENCODING);
+			} catch (UnsupportedEncodingException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		
+		public OutputStream getOuptStream() {
+			return fsos;
+		}
+
+		@Override
+		public void free() throws IOException {
+			lobBuffer.remove();
+		}
 	}
-	
-	public static SQLXMLImpl saveToBufferManager(XMLTranslator translator) throws TeiidComponentException, TeiidProcessingException {
-		return saveToBufferManager(bufferManager, translator, Streamable.STREAMING_BATCH_SIZE_IN_BYTES);
-	}
-	
+
     /**
      * This method saves the given XML object to the buffer manager's disk process
      * Documents less than the maxMemorySize will be held directly in memory
      */
-    public static SQLXMLImpl saveToBufferManager(BufferManager bufferMgr, XMLTranslator translator, int maxMemorySize) 
+    public static SQLXMLImpl saveToBufferManager(BufferManager bufferMgr, XMLTranslator translator) 
         throws TeiidComponentException, TeiidProcessingException {        
         boolean success = false;
         final FileStore lobBuffer = bufferMgr.createFileStore("xml"); //$NON-NLS-1$
+        FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(lobBuffer, Streamable.ENCODING);
         try{  
-        	FileStoreOutputStream fsos = lobBuffer.createOutputStream(maxMemorySize);
-            Writer writer = new OutputStreamWriter(fsos, Streamable.ENCODING);
+        	Writer writer = fsisf.getWriter();
             translator.translate(writer);
             writer.close();
-            if (!fsos.bytesWritten()) {
-            	return new SQLXMLImpl(fsos.toByteArray());
-            }
             success = true;
-            return createSQLXML(lobBuffer);
+            return new SQLXMLImpl(fsisf);
         } catch(IOException e) {
             throw new TeiidComponentException(e);
         } catch(TransformerException e) {
@@ -88,21 +118,4 @@ public class XMLUtil {
         }
     }
 
-	public static SQLXMLImpl createSQLXML(final FileStore lobBuffer) {
-		SQLXMLImpl sqlXML = new SQLXMLImpl(new InputStreamFactory(Streamable.ENCODING) {
-			@Override
-			public InputStream getInputStream() throws IOException {
-				//TODO: adjust the buffer size, and/or develop a shared buffer strategy
-				return new BufferedInputStream(lobBuffer.createInputStream(0));
-			}
-			
-			@Override
-			public void free() throws IOException {
-				lobBuffer.remove();
-			}
-		});     
-		lobBuffer.setCleanupReference(sqlXML);
-		return sqlXML;
-	}
-    
 }

@@ -135,4 +135,5 @@ public abstract class LanguageVisitor {
     public void visit(XMLSerialize obj) {}
     public void visit(XMLQuery obj) {}
     public void visit(QueryString obj) {}
+    public void visit(XMLParse obj) {}
 }

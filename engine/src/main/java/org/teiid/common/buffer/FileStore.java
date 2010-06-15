@@ -27,13 +27,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.PhantomReference;
 import java.lang.ref.ReferenceQueue;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Set;
 
 import org.teiid.core.TeiidComponentException;
-
 
 public abstract class FileStore {
 	
@@ -94,13 +92,17 @@ public abstract class FileStore {
 			}
 		}
 		
+		public byte[] getBuffer() {
+			return buffer;
+		}
+		
+		public int getCount() {
+			return count;
+		}
+		
 		public boolean bytesWritten() {
 			return bytesWritten;
 		}
-		
-	    public byte toByteArray()[] {
-	        return Arrays.copyOf(buffer, count);
-	    }
 		
 		@Override
 		public void close() throws IOException {

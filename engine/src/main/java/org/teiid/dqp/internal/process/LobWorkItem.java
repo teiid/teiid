@@ -121,7 +121,7 @@ public class LobWorkItem implements Work {
         try {
             if (streamable instanceof XMLType) {
                 XMLType xml = (XMLType)streamable;
-                return new ByteLobChunkStream(new ReaderInputStream(xml.getCharacterStream(), Charset.forName(Streamable.ENCODING)), chunkSize);
+                return new ByteLobChunkStream(xml.getBinaryStream(), chunkSize);
             }
             else if (streamable instanceof ClobType) {
                 ClobType clob = (ClobType)streamable;

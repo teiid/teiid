@@ -22,11 +22,19 @@
 
 package org.teiid.query.eval;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
+import java.nio.charset.Charset;
+import java.sql.Blob;
+import java.sql.Clob;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,13 +52,18 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.BaseLob;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.Sequencable;
+import org.teiid.core.types.Streamable;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.types.XMLType.Type;
 import org.teiid.core.types.basic.StringToSQLXMLTransform;
-import org.teiid.core.util.Assertion;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
@@ -90,6 +103,7 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
 import org.teiid.query.sql.symbol.XMLNamespaces;
+import org.teiid.query.sql.symbol.XMLParse;
 import org.teiid.query.sql.symbol.XMLQuery;
 import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.sql.symbol.XMLNamespaces.NamespaceItem;
@@ -103,7 +117,51 @@ import org.teiid.translator.WSConnection.Util;
 
 public class Evaluator {
 
-    public static class NameValuePair<T> {
+    private final class SequenceReader extends Reader {
+		private LinkedList<Reader> readers;
+		private Reader current = null;
+		
+		public SequenceReader(LinkedList<Reader> readers) {
+			this.readers = readers;
+		}
+
+		@Override
+		public void close() throws IOException {
+			for (Reader reader : readers) {
+				try {
+					reader.close();
+				} catch (IOException e) {
+					
+				}
+			}
+		}
+
+		@Override
+		public int read(char[] cbuf, int off, int len)
+				throws IOException {
+			if (current == null && !readers.isEmpty()) {
+				current = readers.removeFirst();
+			}
+			if (current == null) {
+				return -1;
+			}
+			int read = current.read(cbuf, off, len);
+			if (read == -1) {
+				current.close();
+				current = null;
+				read = 0;
+			} 
+			if (read < len) {
+				int nextRead = read(cbuf, off + read, len - read);
+				if (nextRead > 0) {
+					read += nextRead;
+				}
+			}
+			return read;
+		}
+	}
+
+	public static class NameValuePair<T> {
 		public String name;
 		public T value;
 		
@@ -140,13 +198,13 @@ public class Evaluator {
 		this.dataMgr = dataMgr;
 	}
 
-	public boolean evaluate(Criteria criteria, List tuple)
+	public boolean evaluate(Criteria criteria, List<?> tuple)
         throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
 
         return Boolean.TRUE.equals(evaluateTVL(criteria, tuple));
     }
 
-    public Boolean evaluateTVL(Criteria criteria, List tuple)
+    public Boolean evaluateTVL(Criteria criteria, List<?> tuple)
         throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
     	
 		if(criteria instanceof CompoundCriteria) {
@@ -170,7 +228,7 @@ public class Evaluator {
 		}
 	}
 
-	public Boolean evaluate(CompoundCriteria criteria, List tuple)
+	public Boolean evaluate(CompoundCriteria criteria, List<?> tuple)
 		throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
 
 		List subCrits = criteria.getCriteria();
@@ -194,7 +252,7 @@ public class Evaluator {
 		return result;
 	}
 
-	public Boolean evaluate(NotCriteria criteria, List tuple)
+	public Boolean evaluate(NotCriteria criteria, List<?> tuple)
 		throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
 
 		Criteria subCrit = criteria.getCriteria();
@@ -208,7 +266,7 @@ public class Evaluator {
         return Boolean.TRUE;
 	}
 
-	public Boolean evaluate(CompareCriteria criteria, List tuple)
+	public Boolean evaluate(CompareCriteria criteria, List<?> tuple)
 		throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
 
 		// Evaluate left expression
@@ -265,7 +323,7 @@ public class Evaluator {
         return ((Comparable<Object>)leftValue).compareTo(rightValue);
     }
 
-	public Boolean evaluate(MatchCriteria criteria, List tuple)
+	public Boolean evaluate(MatchCriteria criteria, List<?> tuple)
 		throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
 
         boolean result = false;
@@ -330,7 +388,7 @@ public class Evaluator {
 		}
 	}
 
-	private Boolean evaluate(AbstractSetCriteria criteria, List tuple)
+	private Boolean evaluate(AbstractSetCriteria criteria, List<?> tuple)
 		throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
 
 		// Evaluate expression
@@ -372,7 +430,7 @@ public class Evaluator {
 				throw new CriteriaEvaluationException(e, e.getMessage());
 			}
         } else {
-        	Assertion.failed("unknown set criteria type"); //$NON-NLS-1$
+        	throw new AssertionError("unknown set criteria type"); //$NON-NLS-1$
         }
         while(valueIter.hasNext()) {
             Object possibleValue = valueIter.next();
@@ -403,7 +461,7 @@ public class Evaluator {
         return Boolean.valueOf(criteria.isNegated());
 	}
 
-	public boolean evaluate(IsNullCriteria criteria, List tuple)
+	public boolean evaluate(IsNullCriteria criteria, List<?> tuple)
 		throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
 
 		// Evaluate expression
@@ -417,7 +475,7 @@ public class Evaluator {
 		return (value == null ^ criteria.isNegated());
 	}
 
-    private Boolean evaluate(SubqueryCompareCriteria criteria, List tuple)
+    private Boolean evaluate(SubqueryCompareCriteria criteria, List<?> tuple)
         throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
 
         // Evaluate expression
@@ -528,7 +586,7 @@ public class Evaluator {
         return result;
     }
 
-    public boolean evaluate(ExistsCriteria criteria, List tuple)
+    public boolean evaluate(ExistsCriteria criteria, List<?> tuple)
         throws BlockedException, TeiidComponentException, CriteriaEvaluationException {
 
         ValueIterator valueIter;
@@ -543,7 +601,7 @@ public class Evaluator {
         return false;
     }
     
-	public Object evaluate(Expression expression, List tuple)
+	public Object evaluate(Expression expression, List<?> tuple)
 		throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 	
 	    try {
@@ -553,7 +611,7 @@ public class Evaluator {
 	    }
 	}
 	
-	private Object internalEvaluate(Expression expression, List tuple)
+	private Object internalEvaluate(Expression expression, List<?> tuple)
 	   throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 	
 	   if(expression instanceof SingleElementSymbol) {
@@ -600,13 +658,88 @@ public class Evaluator {
 		   return evaluateXMLQuery(tuple, (XMLQuery)expression);
 	   } else if (expression instanceof QueryString) {
 		   return evaluateQueryString(tuple, (QueryString)expression);
+	   } else if (expression instanceof XMLParse){
+		   return evaluateXMLParse(tuple, (XMLParse)expression);
 	   } else {
 	       throw new TeiidComponentException(ErrorMessageKeys.PROCESSOR_0016, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0016, expression.getClass().getName()));
 	   }
 	}
 
+	private Object evaluateXMLParse(List<?> tuple, final XMLParse xp) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
+		Object value = internalEvaluate(xp.getExpression(), tuple);
+		if (value == null) {
+			return null;
+		}
+		XMLType.Type type = Type.DOCUMENT;
+		XMLType result = null;
+		try {
+			if (value instanceof String) {
+				String string = (String)value;
+				result = new XMLType(new SQLXMLImpl(string));
+				if (!xp.isWellFormed()) {
+					Reader r = new StringReader(string);
+					type = validate(xp, r);
+				}
+			} else {
+				InputStreamFactory isf = null;
+				Streamable<?> s = (Streamable<?>)value;
+				if (s.getReference() instanceof BaseLob) {
+					BaseLob baseLob = (BaseLob)s.getReference();
+					isf = baseLob.getStreamFactory();
+				} else {
+					if (s instanceof Clob) {
+						isf = new InputStreamFactory.ClobInputStreamFactory((Clob)s.getReference());
+					} else {
+						isf = new InputStreamFactory.BlobInputStreamFactory((Blob)s.getReference());
+					}
+				}
+				result = new XMLType(new SQLXMLImpl(isf));
+				if (!xp.isWellFormed()) {
+					String encoding = null;
+					Reader r = null;
+					if (s instanceof Clob) {
+						r = isf.getCharacterStream();
+					} else {
+						encoding = XMLType.getEncoding(result); //look for the xml declaration
+						if (encoding == null) {
+							encoding = "UTF-8"; //$NON-NLS-1$
+						}
+						r = new InputStreamReader(isf.getInputStream(), encoding);
+					}
+					type = validate(xp, r);
+					if (encoding != null) {
+						isf.setEncoding(encoding);
+					}
+				}
+			}
+		} catch (TransformationException e) {
+			throw new ExpressionEvaluationException(e, e.getMessage());
+		} catch (IOException e) {
+			throw new ExpressionEvaluationException(e, e.getMessage());
+		} catch (SQLException e) {
+			throw new ExpressionEvaluationException(e, e.getMessage());
+		}
+		if (!xp.isDocument()) {
+			type = Type.CONTENT;
+		}
+		result.setType(type);
+		return result;
+	}
+
+	private Type validate(final XMLParse xp, Reader r)
+			throws TransformationException {
+		if (!xp.isDocument()) {
+			LinkedList<Reader> readers = new LinkedList<Reader>();
+			readers.add(new StringReader("<r>")); //$NON-NLS-1$
+			readers.add(r);
+			readers.add(new StringReader("</r>")); //$NON-NLS-1$
+			r = new SequenceReader(readers);
+		}
+		return StringToSQLXMLTransform.isXml(r);
+	}
+
 	//TODO: exception if length is too long?
-	private Object evaluateQueryString(List tuple, QueryString queryString)
+	private Object evaluateQueryString(List<?> tuple, QueryString queryString)
 			throws ExpressionEvaluationException, BlockedException,
 			TeiidComponentException {
 		Evaluator.NameValuePair<Object>[] pairs = getNameValuePairs(tuple, queryString.getArgs(), false);
@@ -634,7 +767,7 @@ public class Evaluator {
 		return result.toString();
 	}
 
-	private Object evaluateXMLQuery(List tuple, XMLQuery xmlQuery)
+	private Object evaluateXMLQuery(List<?> tuple, XMLQuery xmlQuery)
 			throws BlockedException, TeiidComponentException,
 			FunctionExecutionException {
 		boolean emptyOnEmpty = true;
@@ -643,7 +776,7 @@ public class Evaluator {
 		}   
 		try {
 			SequenceIterator iter = evaluateXQuery(xmlQuery.getXQueryExpression(), xmlQuery.getPassing(), tuple);
-			return xmlQuery.getXQueryExpression().createXMLType(iter, emptyOnEmpty);
+			return xmlQuery.getXQueryExpression().createXMLType(iter, this.context.getBufferManager(), emptyOnEmpty);
 		} catch (TeiidProcessingException e) {
 			throw new FunctionExecutionException(e, QueryPlugin.Util.getString("Evaluator.xmlquery", e.getMessage())); //$NON-NLS-1$
 		} catch (XPathException e) {
@@ -651,7 +784,7 @@ public class Evaluator {
 		}
 	}
 	
-	private Object evaluateXMLSerialize(List tuple, XMLSerialize xs)
+	private Object evaluateXMLSerialize(List<?> tuple, XMLSerialize xs)
 			throws ExpressionEvaluationException, BlockedException,
 			TeiidComponentException, FunctionExecutionException {
 		XMLType value = (XMLType) internalEvaluate(xs.getExpression(), tuple);
@@ -660,14 +793,14 @@ public class Evaluator {
 		}
 		try {
 			if (!xs.isDocument()) {
-				return DataTypeManager.transformValue(value, xs.getType());
+				return serialize(xs, value);
 			}
 			if (value.getType() == Type.UNKNOWN) {
 				Type type = StringToSQLXMLTransform.isXml(value.getCharacterStream());
 				value.setType(type);
 			}
 			if (value.getType() == Type.DOCUMENT || value.getType() == Type.ELEMENT) {
-				return DataTypeManager.transformValue(value, xs.getType());
+				return serialize(xs, value);
 			}
 		} catch (SQLException e) {
 			throw new FunctionExecutionException(e, e.getMessage());
@@ -677,7 +810,22 @@ public class Evaluator {
 		throw new FunctionExecutionException(QueryPlugin.Util.getString("Evaluator.xmlserialize")); //$NON-NLS-1$
 	}
 
-	private Object evaluateXMLForest(List tuple, XMLForest function)
+	private Object serialize(XMLSerialize xs, XMLType value)
+			throws SQLException, TransformationException {
+		if (xs.getType() == DataTypeManager.DefaultDataClasses.STRING) {
+			return DataTypeManager.transformValue(value, xs.getType());
+		}
+		InputStreamFactory isf = null;
+		if (value.getReference() instanceof BaseLob) {
+			BaseLob baseLob = (BaseLob)value.getReference();
+			isf = baseLob.getStreamFactory();
+		} else {
+			isf = new InputStreamFactory.SQLXMLInputStreamFactory(value.getReference());
+		}
+		return new ClobType(new ClobImpl(isf, -1));
+	}
+
+	private Object evaluateXMLForest(List<?> tuple, XMLForest function)
 			throws ExpressionEvaluationException, BlockedException,
 			TeiidComponentException, FunctionExecutionException {
 		List<DerivedColumn> args = function.getArgs();
@@ -690,7 +838,7 @@ public class Evaluator {
 		}
 	}
 
-	private Object evaluateXMLElement(List tuple, XMLElement function)
+	private Object evaluateXMLElement(List<?> tuple, XMLElement function)
 			throws ExpressionEvaluationException, BlockedException,
 			TeiidComponentException, FunctionExecutionException {
 		List<Expression> content = function.getContent();
@@ -724,7 +872,7 @@ public class Evaluator {
 		return xquery.evaluateXQuery(contextItem, parameters);
 	}
 
-	private Evaluator.NameValuePair<Object>[] getNameValuePairs(List tuple, List<DerivedColumn> args, boolean xmlNames)
+	private Evaluator.NameValuePair<Object>[] getNameValuePairs(List<?> tuple, List<DerivedColumn> args, boolean xmlNames)
 			throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 		Evaluator.NameValuePair<Object>[] nameValuePairs = new Evaluator.NameValuePair[args.size()];
 		for (int i = 0; i < args.size(); i++) {
@@ -755,7 +903,7 @@ public class Evaluator {
 	    return nameValuePairs;
 	}
 	
-	private Object evaluate(CaseExpression expr, List tuple)
+	private Object evaluate(CaseExpression expr, List<?> tuple)
 	throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 	    Object exprVal = internalEvaluate(expr.getExpression(), tuple);
 	    for (int i = 0; i < expr.getWhenCount(); i++) {
@@ -769,7 +917,7 @@ public class Evaluator {
 	    return null;
 	}
 	
-	private Object evaluate(SearchedCaseExpression expr, List tuple)
+	private Object evaluate(SearchedCaseExpression expr, List<?> tuple)
 	throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 	    for (int i = 0; i < expr.getWhenCount(); i++) {
 	        try {
@@ -786,7 +934,7 @@ public class Evaluator {
 	    return null;
 	}
 	
-	private Object evaluate(Function function, List tuple)
+	private Object evaluate(Function function, List<?> tuple)
 		throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 	
 	    // Get function based on resolved function info
@@ -837,7 +985,7 @@ public class Evaluator {
 		return result;        
 	}
 	
-	private Object evaluate(ScalarSubquery scalarSubquery, List tuple)
+	private Object evaluate(ScalarSubquery scalarSubquery, List<?> tuple)
 	    throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 		
 	    Object result = null;
@@ -858,7 +1006,7 @@ public class Evaluator {
 	    return result;
 	}
 	
-	protected ValueIterator evaluateSubquery(SubqueryContainer container, List tuple) 
+	protected ValueIterator evaluateSubquery(SubqueryContainer container, List<?> tuple) 
 	throws TeiidProcessingException, BlockedException, TeiidComponentException {
 		throw new UnsupportedOperationException("Subquery evaluation not possible with a base Evaluator"); //$NON-NLS-1$
 	}

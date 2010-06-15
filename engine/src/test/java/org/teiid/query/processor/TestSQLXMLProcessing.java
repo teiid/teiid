@@ -24,11 +24,19 @@ package org.teiid.query.processor;
 
 import static org.teiid.query.processor.TestProcessor.*;
 
+import java.io.FileInputStream;
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.api.exception.query.ExpressionEvaluationException;
+import org.teiid.core.types.BlobImpl;
+import org.teiid.core.types.BlobType;
+import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.UnitTestUtil;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
 @SuppressWarnings({"nls", "unchecked"})
@@ -267,6 +275,75 @@ public class TestSQLXMLProcessing {
         process(sql, expected);
     }
     
+    @Test public void testXmlParseDoc() throws Exception {
+    	String sql = "select xmlparse(document '<a/>')"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("<a/>")
+        };    
+    
+        process(sql, expected);
+    }
+    
+    @Test(expected=ExpressionEvaluationException.class) public void testXmlParseDocException() throws Exception {
+    	String sql = "select xmlparse(document 'a<a/>')"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        };    
+    
+        process(sql, expected);
+    }
+    
+    @Test public void testXmlParseContent() throws Exception {
+    	String sql = "select xmlparse(content 'a<a/>')"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("a<a/>")
+        };    
+    
+        process(sql, expected);
+    }
+    
+    @Test(expected=ExpressionEvaluationException.class) public void testXmlParseContentException() throws Exception {
+    	String sql = "select xmlparse(content 'a<')"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        };    
+    
+        process(sql, expected);
+    }
+    
+    //by pass the validation
+    @Test public void testXmlParseContentWellformed() throws Exception {
+    	String sql = "select xmlparse(content 'a<' WELLFORMED)"; //$NON-NLS-1$
+        
+    	List<?>[] expected = new List<?>[] {
+        		Arrays.asList("a<")
+        };   
+    
+        process(sql, expected);
+    }
+    
+	@Test public void testXmlParseClob() throws Exception {
+    	String sql = "select xmlparse(document cast(? as clob)) x"; //$NON-NLS-1$
+    	
+        List[] expected = new List[] {
+        		Arrays.asList(ObjectConverterUtil.convertToString(new FileInputStream(UnitTestUtil.getTestDataFile("udf.xmi")))),
+        };    
+    
+        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), Arrays.asList(TestTextTable.clobFromFile("udf.xmi")));
+    }
+	
+	@Test public void testXmlParseBlob() throws Exception {
+    	String sql = "select xmlparse(document cast(? as blob)) x"; //$NON-NLS-1$
+    	
+        List[] expected = new List[] {
+        		Arrays.asList(ObjectConverterUtil.convertToString(new FileInputStream(UnitTestUtil.getTestDataFile("udf.xmi")))),
+        };    
+    
+        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), Arrays.asList(blobFromFile("udf.xmi")));
+    }
+
     private static FakeDataManager dataManager = new FakeDataManager();
     
     @BeforeClass public static void oneTimeSetUp() {
@@ -274,9 +351,13 @@ public class TestSQLXMLProcessing {
     }
     
 	private void process(String sql, List<?>[] expected) throws Exception {
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), createCommandContext());
         
         helpProcess(plan, createCommandContext(), dataManager, expected);
+	}
+	
+	public static BlobType blobFromFile(final String file) {
+		return new BlobType(new BlobImpl(new InputStreamFactory.FileInputStreamFactory(UnitTestUtil.getTestDataFile(file))));
 	}
 
 }

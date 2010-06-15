@@ -61,6 +61,7 @@ import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.core.types.Streamable;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.core.util.SqlUtil;
@@ -725,11 +726,11 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
 	}
 
 	public void setClob(int parameterIndex, final Reader reader) throws SQLException {
-		this.setObject(parameterIndex, new ClobImpl(new InputStreamFactory() {
+		this.setObject(parameterIndex, new ClobImpl(new InputStreamFactory(Streamable.ENCODING) {
 			
 			@Override
 			public InputStream getInputStream() throws IOException {
-				return new ReaderInputStream(reader, Charset.defaultCharset());
+				return new ReaderInputStream(reader, Charset.forName(Streamable.ENCODING));
 			}
 		}, -1));
 	}

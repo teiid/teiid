@@ -135,13 +135,15 @@ public class TestProcessor {
     }
     
 	static ProcessorPlan helpGetPlan(Command command, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) {
-        CommandContext context = new CommandContext();
-        context.setProcessorBatchSize(2000);
-        context.setConnectorBatchSize(2000);
-	    return helpGetPlan(command, metadata, capFinder, context);
+        CommandContext context = createCommandContext();
+	    try {
+			return helpGetPlan(command, metadata, capFinder, context);
+		} catch (TeiidException e) {
+			throw new RuntimeException(e);
+		}
     }
 	
-    static ProcessorPlan helpGetPlan(Command command, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, CommandContext context) {
+    static ProcessorPlan helpGetPlan(Command command, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, CommandContext context) throws TeiidException {
 		if(DEBUG) System.out.println("\n####################################\n" + command); //$NON-NLS-1$
 		AnalysisRecord analysisRecord = new AnalysisRecord(false, DEBUG);
 		try {
@@ -163,10 +165,6 @@ public class TestProcessor {
 	        assertNotNull("Output elements of process plan are null", process.getOutputElements()); //$NON-NLS-1$
 
 			return process;
-        } catch (TeiidComponentException e) {
-            throw new RuntimeException(e);
-		} catch (TeiidProcessingException e) {
-			throw new RuntimeException(e);
 		} finally {
             if(DEBUG) {
                 System.out.println(analysisRecord.getDebugLog());

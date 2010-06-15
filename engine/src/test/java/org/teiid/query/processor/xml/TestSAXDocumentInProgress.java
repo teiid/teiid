@@ -24,9 +24,10 @@ package org.teiid.query.processor.xml;
 
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.FileStore;
+import org.teiid.core.types.Streamable;
 import org.teiid.query.mapping.xml.MappingNodeConstants;
 import org.teiid.query.processor.xml.NodeDescriptor;
-import org.teiid.query.processor.xml.SAXDocumentInProgress;
+import org.teiid.query.processor.xml.DocumentInProgress;
 
 import junit.framework.TestCase;
 
@@ -40,7 +41,7 @@ public class TestSAXDocumentInProgress extends TestCase {
     
     public void testLargeDocument()throws Exception{
 		FileStore fs = BufferManagerFactory.getStandaloneBufferManager().createFileStore("test"); //$NON-NLS-1$
-    	SAXDocumentInProgress doc = new SAXDocumentInProgress(fs);
+    	DocumentInProgress doc = new DocumentInProgress(fs, Streamable.ENCODING);
     	//long startTime = System.currentTimeMillis();
     	doc.setDocumentFormat(true);
         NodeDescriptor descriptor = NodeDescriptor.createNodeDescriptor("Root", null, true, null, null, null,false, null, MappingNodeConstants.NORMALIZE_TEXT_PRESERVE);//$NON-NLS-1$
@@ -63,14 +64,14 @@ public class TestSAXDocumentInProgress extends TestCase {
     }
     
     public void testNormalizationPreserve() throws Exception{
-        assertEquals(SAXDocumentInProgress.normalizeText(originalText,MappingNodeConstants.NORMALIZE_TEXT_PRESERVE), originalText);
+        assertEquals(DocumentInProgress.normalizeText(originalText,MappingNodeConstants.NORMALIZE_TEXT_PRESERVE), originalText);
     }
     public void testNormalizationReplace() throws Exception{
         String expectedResult = "  Hello   my        tests for preserve,      replace, collapse.   "; //$NON-NLS-1$
-        assertEquals(SAXDocumentInProgress.normalizeText(originalText,MappingNodeConstants.NORMALIZE_TEXT_REPLACE), expectedResult);
+        assertEquals(DocumentInProgress.normalizeText(originalText,MappingNodeConstants.NORMALIZE_TEXT_REPLACE), expectedResult);
     }
     public void testNormalizationCollapse() throws Exception{
         String expectedResult = "Hello my tests for preserve, replace, collapse."; //$NON-NLS-1$
-        assertEquals(SAXDocumentInProgress.normalizeText(originalText,MappingNodeConstants.NORMALIZE_TEXT_COLLAPSE), expectedResult);
+        assertEquals(DocumentInProgress.normalizeText(originalText,MappingNodeConstants.NORMALIZE_TEXT_COLLAPSE), expectedResult);
     }
 }

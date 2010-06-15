@@ -30,8 +30,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.SQLException;
+import java.sql.SQLXML;
 
 import javax.xml.transform.Source;
+
+import org.teiid.core.util.ReaderInputStream;
 
 public abstract class InputStreamFactory implements Source {
 	
@@ -46,7 +52,6 @@ public abstract class InputStreamFactory implements Source {
 	private long length = -1;
 	
 	public InputStreamFactory() {
-		this(Charset.defaultCharset().name());
 	}
 	
 	public InputStreamFactory(String encoding) {
@@ -61,6 +66,10 @@ public abstract class InputStreamFactory implements Source {
     
     public String getEncoding() {
 		return encoding;
+	}
+    
+    public void setEncoding(String encoding) {
+		this.encoding = encoding;
 	}
     
     @Override
@@ -86,7 +95,11 @@ public abstract class InputStreamFactory implements Source {
 	}
     
     public Reader getCharacterStream() throws IOException {
-		return new InputStreamReader(this.getInputStream(), this.getEncoding());
+    	String enc = this.getEncoding();
+    	if (enc == null) {
+    		enc = Charset.defaultCharset().displayName();
+    	}
+		return new InputStreamReader(this.getInputStream(), enc);
     }
     
     public static class FileInputStreamFactory extends InputStreamFactory {
@@ -94,7 +107,7 @@ public abstract class InputStreamFactory implements Source {
     	private File f;
     	
     	public FileInputStreamFactory(File f) {
-    		this(f, Charset.defaultCharset().displayName());
+    		this(f, null);
     	}
     	
     	public FileInputStreamFactory(File f, String encoding) {
@@ -111,6 +124,91 @@ public abstract class InputStreamFactory implements Source {
     	@Override
     	public InputStream getInputStream() throws IOException {
     		return new BufferedInputStream(new FileInputStream(f));
+    	}
+    	
+    }
+    
+    public static class ClobInputStreamFactory extends InputStreamFactory {
+    	
+    	private Clob clob;
+    	
+    	public ClobInputStreamFactory(Clob clob) {
+    		super(Streamable.ENCODING);
+    		this.clob = clob;
+    	}
+    	
+    	@Override
+    	public InputStream getInputStream() throws IOException {
+    		try {
+				return new ReaderInputStream(clob.getCharacterStream(), Charset.forName(Streamable.ENCODING));
+			} catch (SQLException e) {
+				throw new IOException(e);
+			}
+    	}
+    	
+    	@Override
+    	public Reader getCharacterStream() throws IOException {
+    		try {
+				return clob.getCharacterStream();
+			} catch (SQLException e) {
+				throw new IOException(e);
+			}
+    	}
+    	
+    }
+    
+    public static class BlobInputStreamFactory extends InputStreamFactory {
+    	
+    	private Blob blob;
+    	
+    	public BlobInputStreamFactory(Blob blob) {
+    		this.blob = blob;
+    	}
+    	
+    	@Override
+    	public InputStream getInputStream() throws IOException {
+    		try {
+				return blob.getBinaryStream();
+			} catch (SQLException e) {
+				throw new IOException(e);
+			}
+    	}
+    	
+    	@Override
+    	public long getLength() {
+    		try {
+				return blob.length();
+			} catch (SQLException e) {
+				return -1;
+			}
+    	}
+    	
+    }
+    
+    public static class SQLXMLInputStreamFactory extends InputStreamFactory {
+    	
+    	private SQLXML sqlxml;
+    	
+    	public SQLXMLInputStreamFactory(SQLXML sqlxml) {
+    		this.sqlxml = sqlxml;
+    	}
+    	
+    	@Override
+    	public InputStream getInputStream() throws IOException {
+    		try {
+				return sqlxml.getBinaryStream();
+			} catch (SQLException e) {
+				throw new IOException(e);
+			}
+    	}
+    	
+    	@Override
+    	public Reader getCharacterStream() throws IOException {
+    		try {
+				return sqlxml.getCharacterStream();
+			} catch (SQLException e) {
+				throw new IOException(e);
+			}
     	}
     	
     }

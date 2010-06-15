@@ -26,24 +26,39 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.sax.SAXSource;
+import javax.xml.transform.stax.StAXSource;
 import javax.xml.transform.stream.StreamSource;
 
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.SqlUtil;
-
-
+import org.w3c.dom.Node;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 /** 
  * Default SQLXML impl
+ * 
+ * NOTE that this representation of XML does not become unreadable after
+ * read operations.
  */
 public class SQLXMLImpl extends BaseLob implements SQLXML {
+	
+	private boolean inMemory;
     
 	public SQLXMLImpl() {
 		
@@ -60,6 +75,7 @@ public class SQLXMLImpl extends BaseLob implements SQLXML {
 				return new ByteArrayInputStream(bytes);
 			}
 		});
+    	inMemory = true;
 	}
     
     public SQLXMLImpl(final String str) {
@@ -70,17 +86,57 @@ public class SQLXMLImpl extends BaseLob implements SQLXML {
         super(factory);
     }
     
+    @Override
+    public Reader getCharacterStream() throws SQLException {
+    	setEncoding();
+    	return super.getCharacterStream();
+    }
+
+	private void setEncoding() throws SQLException {
+		String encoding = XMLType.getEncoding(this);
+		if (encoding != null) {
+    		this.getStreamFactory().setEncoding(encoding);
+		}
+	}
+    
+    public boolean isInMemory() {
+		return inMemory;
+	}
+    
     @SuppressWarnings("unchecked")
 	public <T extends Source> T getSource(Class<T> sourceClass) throws SQLException {
 		if (sourceClass == null || sourceClass == StreamSource.class) {
 			return (T)new StreamSource(getBinaryStream(), this.getStreamFactory().getSystemId());
+		} else if (sourceClass == StAXSource.class) {
+			XMLInputFactory factory = XMLInputFactory.newInstance();
+			try {
+				return (T) new StAXSource(factory.createXMLStreamReader(getBinaryStream()));
+			} catch (XMLStreamException e) {
+				throw new SQLException(e);
+			}
+		} else if (sourceClass == SAXSource.class) {
+			return (T) new SAXSource(new InputSource(getBinaryStream()));
+		} else if (sourceClass == DOMSource.class) {
+			try {
+				DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+				dbf.setNamespaceAware(true);
+				DocumentBuilder docBuilder = dbf.newDocumentBuilder();
+	            Node doc = docBuilder.parse(new InputSource(getBinaryStream()));
+	            return (T) new DOMSource(doc);
+			} catch (ParserConfigurationException e) {
+				throw new SQLException(e);
+			} catch (SAXException e) {
+				throw new SQLException(e);
+			} catch (IOException e) {
+				throw new SQLException(e);
+			}
 		}
         throw new SQLException("Unsupported source type " + sourceClass); //$NON-NLS-1$
     }
 
     public String getString() throws SQLException {
         try {
-            return new String(ObjectConverterUtil.convertToByteArray(getBinaryStream()), this.getStreamFactory().getEncoding());
+            return ObjectConverterUtil.convertToString(getCharacterStream());
         } catch (IOException e) {
 			SQLException ex = new SQLException(e.getMessage());
 			ex.initCause(e);
@@ -98,14 +154,6 @@ public class SQLXMLImpl extends BaseLob implements SQLXML {
 
     public void setString(String value) throws SQLException {
         throw SqlUtil.createFeatureNotSupportedException();
-    }
-
-    public String toString() {
-        try {
-            return getString();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
     }
 
 	public <T extends Result> T setResult(Class<T> resultClass)

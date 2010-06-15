@@ -110,6 +110,7 @@ import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
 import org.teiid.query.sql.symbol.XMLNamespaces;
+import org.teiid.query.sql.symbol.XMLParse;
 import org.teiid.query.sql.symbol.XMLQuery;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
@@ -1314,6 +1315,15 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_newline"), obj); //$NON-NLS-1$
 			}
 		}
+    }
+    
+    @Override
+    public void visit(XMLParse obj) {
+    	if (obj.getExpression().getType() != DataTypeManager.DefaultDataClasses.STRING && 
+    			obj.getExpression().getType() != DataTypeManager.DefaultDataClasses.CLOB &&
+    			obj.getExpression().getType() != DataTypeManager.DefaultDataClasses.BLOB) {
+    		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xmlserialize_type"), obj); //$NON-NLS-1$
+    	}
     }
         
 }

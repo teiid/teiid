@@ -275,7 +275,9 @@
             <entry>string</entry>
             <entry>clob</entry>
             <entry>char, boolean, byte, short, integer, long,
-              biginteger, float, double, bigdecimal, xml</entry>
+              biginteger, float, double, bigdecimal, xml<footnote>
+                  <para>See also <link linkend="xmlparse">XMLPARSE</link></para>
+                </footnote></entry>
           </row>
           <row>
             <entry>char</entry>
@@ -342,12 +344,14 @@
           <row>
             <entry>clob</entry>
             <entry></entry>
-            <entry>string, xml</entry>
+            <entry>string</entry>
           </row>
           <row>
             <entry>xml</entry>
             <entry></entry>
-            <entry>string, clob</entry>
+            <entry>string<footnote>
+                  <para>See also <link linkend="xmlserialize">XMLSERIALIZE</link></para>
+                </footnote></entry>
           </row>
         </tbody>
       </tgroup>

@@ -84,12 +84,10 @@ public class InitializeDocumentInstruction extends ProcessorInstruction {
         // program stack (don't want to start a new doc in the middle of 
         // recursive processing)
         if (!env.isRecursiveProgramInStack()) {
-            DocumentInProgress doc = new SAXDocumentInProgress(env.getBufferManager().createFileStore("xml")); //$NON-NLS-1$
+        	DocumentInProgress doc = new DocumentInProgress(env.getBufferManager().createFileStore("xml"), encoding); //$NON-NLS-1$
             //DocumentInProgress doc = new JDOMDocumentInProgress();
             env.setDocumentInProgress(doc);
                 
-            doc.setDocumentEncoding(encoding);
-
             // Override the xml format flag from the model with
             // the format specified with the user's query request, if any.
             boolean formatted = this.isFormatted;

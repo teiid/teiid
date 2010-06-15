@@ -82,8 +82,10 @@ public class SQLConstants {
 		public static final String RETURNING = "RETURNING"; //$NON-NLS-1$
 		public static final String SEQUENCE = "SEQUENCE"; //$NON-NLS-1$
 		public static final String EMPTY = "EMPTY"; //$NON-NLS-1$
-		
+		//querystring function
 		public static final String QUERYSTRING = "QUERYSTRING"; //$NON-NLS-1$
+		//xmlparse
+		public static final String WELLFORMED = "WELLFORMED"; //$NON-NLS-1$
 	}
 	
 	public interface Reserved {

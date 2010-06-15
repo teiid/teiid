@@ -114,6 +114,7 @@ import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
 import org.teiid.query.sql.symbol.XMLNamespaces;
+import org.teiid.query.sql.symbol.XMLParse;
 import org.teiid.query.sql.symbol.XMLQuery;
 import org.teiid.query.sql.symbol.XMLSerialize;
 
@@ -6823,6 +6824,14 @@ public class TestParser {
     	f.setEmptyOnEmpty(false);
     	f.setPassing(Arrays.asList(new DerivedColumn(null, new ElementSymbol("foo"))));
     	helpTestExpression("xmlquery('/x' passing foo null on empty)", "XMLQUERY('/x' PASSING foo NULL ON EMPTY)", f);
+    }
+    
+    @Test public void testXmlParse() throws Exception {
+    	XMLParse f = new XMLParse();
+    	f.setDocument(true);
+    	f.setExpression(new ElementSymbol("x"));
+    	f.setWellFormed(true);
+    	helpTestExpression("xmlparse(document x wellformed)", "XMLPARSE(DOCUMENT x WELLFORMED)", f);
     }
 
 }

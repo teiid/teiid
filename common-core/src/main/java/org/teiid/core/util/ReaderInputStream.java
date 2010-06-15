@@ -32,12 +32,11 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 
-import org.teiid.core.types.Streamable;
-
+import org.teiid.core.types.DataTypeManager;
 
 public class ReaderInputStream extends InputStream {
 	
-	private static final int DEFAULT_BUFFER_SIZE = Streamable.STREAMING_BATCH_SIZE_IN_BYTES;
+	private static final int DEFAULT_BUFFER_SIZE = DataTypeManager.MAX_LOB_MEMORY_BYTES;
 	
 	private final Reader reader;
 	private final Charset charSet;

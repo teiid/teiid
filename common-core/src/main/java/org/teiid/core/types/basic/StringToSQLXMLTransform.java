@@ -26,8 +26,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 
-import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.events.XMLEvent;
 
 import org.teiid.core.CorePlugin;
@@ -62,12 +62,13 @@ public class StringToSQLXMLTransform extends Transform {
 		Type type = Type.ELEMENT;
 		XMLInputFactory inputFactory = XMLInputFactory.newInstance();
         try{        
-             XMLEventReader xmlReader = inputFactory.createXMLEventReader(reader);
+             XMLStreamReader xmlReader = inputFactory.createXMLStreamReader(reader);
+             int event = xmlReader.getEventType();
+        	 if  (event == XMLEvent.START_DOCUMENT && xmlReader.getLocation().getColumnNumber() != 1) {
+        		 type = Type.DOCUMENT;
+        	 } 
              while (xmlReader.hasNext()) {
-            	 XMLEvent event = xmlReader.nextEvent();
-            	 if  (event.isStartDocument() && event.getLocation().getColumnNumber() != 1) {
-            		 type = Type.DOCUMENT;
-            	 }
+            	 xmlReader.next();
              }
         } catch (Exception e){
             throw new TransformationException(e, CorePlugin.Util.getString("invalid_string")); //$NON-NLS-1$

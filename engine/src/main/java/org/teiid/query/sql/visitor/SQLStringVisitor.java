@@ -24,6 +24,7 @@ package org.teiid.query.sql.visitor;
 
 import static org.teiid.language.SQLConstants.Reserved.*;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -32,6 +33,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.XMLType;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
@@ -121,6 +123,7 @@ import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
 import org.teiid.query.sql.symbol.XMLNamespaces;
+import org.teiid.query.sql.symbol.XMLParse;
 import org.teiid.query.sql.symbol.XMLQuery;
 import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.sql.symbol.XMLNamespaces.NamespaceItem;
@@ -1154,8 +1157,16 @@ public class SQLStringVisitor extends LanguageVisitor {
             } else if(type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
                 constantParts = new Object[] { "{d'", obj.getValue().toString(), "'}" }; //$NON-NLS-1$ //$NON-NLS-2$
             } else if(type.equals(DataTypeManager.DefaultDataClasses.XML)){
-            	constantParts = new Object[] { "{x '", escapeStringValue(obj.getValue().toString(), "'"), "'}" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            } else {
+            	XMLType value = (XMLType)obj.getValue();
+            	if (Boolean.TRUE.equals(value.isInMemory())) {
+                	try {
+						constantParts = new Object[] { "{x '", escapeStringValue(value.getString(), "'"), "'}" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					} catch (SQLException e) {
+						
+					} 
+            	}
+            } 
+            if (constantParts == null) {
             	String strValue = obj.getValue().toString();
 		        strValue = escapeStringValue(strValue, "'"); //$NON-NLS-1$
 			    constantParts = new Object[] { "'", strValue, "'" }; //$NON-NLS-1$ //$NON-NLS-2$
@@ -1820,6 +1831,24 @@ public class SQLStringVisitor extends LanguageVisitor {
 	    	registerNodes(obj.getArgs(), 0);
     	}
     	parts.add(")"); //$NON-NLS-1$
+    }
+    
+    @Override
+    public void visit(XMLParse obj) {
+    	parts.add(XMLPARSE);
+    	parts.add(Tokens.LPAREN);
+    	if (obj.isDocument()) {
+    		parts.add(NonReserved.DOCUMENT);
+    	} else {
+    		parts.add(NonReserved.CONTENT);
+    	}
+    	parts.add(SPACE);
+    	parts.add(registerNode(obj.getExpression()));
+    	if (obj.isWellFormed()) {
+    		parts.add(SPACE);
+    		parts.add(NonReserved.WELLFORMED);
+    	}
+    	parts.add(Tokens.RPAREN);
     }
 
     public static String escapeSinglePart(String part) {

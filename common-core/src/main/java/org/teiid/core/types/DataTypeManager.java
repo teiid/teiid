@@ -48,7 +48,6 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.basic.AnyToObjectTransform;
 import org.teiid.core.types.basic.AnyToStringTransform;
 import org.teiid.core.types.basic.BooleanToNumberTransform;
-import org.teiid.core.types.basic.ClobToSQLXMLTransform;
 import org.teiid.core.types.basic.FixedNumberToBigDecimalTransform;
 import org.teiid.core.types.basic.FixedNumberToBigIntegerTransform;
 import org.teiid.core.types.basic.FloatingNumberToBigDecimalTransform;
@@ -62,7 +61,6 @@ import org.teiid.core.types.basic.NumberToIntegerTransform;
 import org.teiid.core.types.basic.NumberToLongTransform;
 import org.teiid.core.types.basic.NumberToShortTransform;
 import org.teiid.core.types.basic.ObjectToAnyTransform;
-import org.teiid.core.types.basic.SQLXMLToClobTransform;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.core.util.PropertiesUtils;
@@ -135,6 +133,7 @@ public class DataTypeManager {
 	private static Map<Class<?>, ValueCache<?>> valueMaps = new HashMap<Class<?>, ValueCache<?>>(128); 
 
 	public static final int MAX_STRING_LENGTH = 4000;
+	public static final int MAX_LOB_MEMORY_BYTES = 1 << 13;
 	
 	public static final class DataTypeAliases {
 		public static final String VARCHAR = "varchar"; //$NON-NLS-1$
@@ -688,10 +687,8 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.StringToSQLXMLTransform());
 		
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.ClobToStringTransform());
-		DataTypeManager.addTransform(new ClobToSQLXMLTransform());
-
-		DataTypeManager.addTransform(new org.teiid.core.types.basic.SQLXMLToStringTransform());		
-		DataTypeManager.addTransform(new SQLXMLToClobTransform());		
+		
+		DataTypeManager.addTransform(new org.teiid.core.types.basic.SQLXMLToStringTransform());
 		
 		for (Class<?> type : getAllDataTypeClasses()) {
 			if (type != DefaultDataClasses.OBJECT) {

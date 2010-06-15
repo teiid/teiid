@@ -142,7 +142,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 						continue;
 					}
 					if (proColumn.getSymbol().getType() == DataTypeManager.DefaultDataClasses.XML) {
-						XMLType value = table.getXQueryExpression().createXMLType(pathIter.getAnother(), false);
+						XMLType value = table.getXQueryExpression().createXMLType(pathIter.getAnother(), this.getBufferManager(), false);
 						tuple.add(value);
 						continue;
 					}

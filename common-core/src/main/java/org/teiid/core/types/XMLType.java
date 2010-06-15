@@ -22,26 +22,27 @@
 
 package org.teiid.core.types;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.sql.SQLException;
-//## JDBC4.0-begin ##
 import java.sql.SQLXML;
-//## JDBC4.0-end ##
 
-/*## JDBC3.0-JDK1.5-begin ##
-import com.metamatrix.core.jdbc.SQLXML; 
-## JDBC3.0-JDK1.5-end ##*/
-
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 
 /**
- * This class represents the SQLXML object along with the Streamable interface. This is
- * class used everywhere in the MetaMatrix framework, but clients are restricted to use
- * only SQLXML interface on top of this.
+ * This class represents the SQLXML object along with the Streamable interface.
+ * 
+ * NOTE that this representation of XML does not become unreadable after
+ * read operations.
  */
 public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 	
@@ -52,6 +53,7 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 	private static final long serialVersionUID = -7922647237095135723L;
 	
 	private transient Type type = Type.UNKNOWN;
+	private String encoding;
     
     public XMLType(){
         
@@ -106,4 +108,70 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 		this.type = type;
 	}
 	
+	public Boolean isInMemory() {
+		if (this.reference instanceof SQLXMLImpl) {
+			return (((SQLXMLImpl) this.reference).isInMemory());
+		}
+		return null;
+	}
+	
+	public String getEncoding() {
+		return encoding;
+	}
+	
+	public void setEncoding(String encoding) {
+		this.encoding = encoding;
+	}
+	
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		super.readExternal(in);
+		this.encoding = (String)in.readObject();
+	}
+	
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		super.writeExternal(out);
+		if (this.encoding == null) {
+			this.encoding = getEncoding(this);
+		}
+		out.writeObject(this.encoding);
+	}
+
+	/**
+	 * Returns the encoding or null if it cannot be determined
+	 * @param xml
+	 * @return
+	 */
+	public static String getEncoding(SQLXML xml) {
+		InputStream is = null;
+		try {
+			if (xml instanceof XMLType) {
+				XMLType type = (XMLType)xml;
+				xml = type.reference;
+			}
+			if (xml instanceof SQLXMLImpl) {
+				String encoding = ((SQLXMLImpl)xml).getStreamFactory().getEncoding();
+				if (encoding != null) {
+					return encoding;
+				}
+			}
+			XMLInputFactory factory = XMLInputFactory.newInstance();
+			is = xml.getBinaryStream();
+			XMLStreamReader reader = factory.createXMLStreamReader(is);
+			return reader.getEncoding();
+		} catch (SQLException e) {
+			return null;
+		} catch (XMLStreamException e) {
+			return null;
+		} finally {
+			if (is != null) {
+				try {
+					is.close();
+				} catch (IOException e) {
+				}
+			}
+		}
+	}
 }

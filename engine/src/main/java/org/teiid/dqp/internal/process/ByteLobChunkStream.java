@@ -35,7 +35,7 @@ import org.teiid.core.CorePlugin;
  * A wrapper class, given a InputStream object can convert a underlying 
  * stream into sequence of ByteLobChunk objects of given chunk size. 
  */
-public class ByteLobChunkStream  implements LobChunkProducer {
+public class ByteLobChunkStream implements LobChunkProducer {
     private PushbackInputStream stream;
     private int chunkSize;
     private boolean closed;

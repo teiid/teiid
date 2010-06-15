@@ -183,7 +183,7 @@ public class TestTextTable {
         helpProcess(plan, createCommandContext(), dataManager, expectedResults);
     }
 	
-	public ClobType clobFromFile(final String file) {
+	public static ClobType clobFromFile(final String file) {
 		return new ClobType(new ClobImpl(new InputStreamFactory.FileInputStreamFactory(UnitTestUtil.getTestDataFile(file)), -1));
 	}
 	

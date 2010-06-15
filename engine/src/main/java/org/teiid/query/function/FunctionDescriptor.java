@@ -267,6 +267,12 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         	}
             result = DataTypeManager.convertToRuntimeType(result);
             result = DataTypeManager.transformValue(result, getReturnType());
+            if (result instanceof String) {
+            	String s = (String)result;
+        		if (s.length() > DataTypeManager.MAX_STRING_LENGTH) {
+        			return s.substring(0, DataTypeManager.MAX_STRING_LENGTH);
+        		}
+            }
             return result;
         } catch(InvocationTargetException e) {
             throw new FunctionExecutionException(e.getTargetException(), ErrorMessageKeys.FUNCTION_0003, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0003, getName()));

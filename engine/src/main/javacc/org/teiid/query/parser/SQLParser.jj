@@ -3317,7 +3317,11 @@ Expression function(ParseInfo info) :
 			)*
 		]
 		<RPAREN>
-	)  			
+	)  
+	| expression = xmlParse(info)
+	  {
+	  	return expression;
+	  }
 	| expression = xmlElement(info)
 	  {
 	  	return expression;
@@ -3382,6 +3386,31 @@ Expression function(ParseInfo info) :
 		}
 			
 		return new Function(funcName, (Expression[])args.toArray(new Expression[args.size()]));
+	}
+}
+
+XMLParse xmlParse(ParseInfo info) :
+{
+	Expression expr = null;
+	String doc = null;
+	boolean wellformed = false;
+}
+{
+	<XMLPARSE><LPAREN>
+	doc = nonReserved("DOCUMENT", "CONTENT")
+	expr = expression(info)
+	[nonReserved("WELLFORMED")
+	 {
+	   wellformed = true;
+	 }
+	]
+	<RPAREN>
+	{
+		XMLParse result = new XMLParse();
+		result.setDocument("document".equalsIgnoreCase(doc));
+		result.setExpression(expr);
+		result.setWellFormed(wellformed);
+		return result;
 	}
 }
 

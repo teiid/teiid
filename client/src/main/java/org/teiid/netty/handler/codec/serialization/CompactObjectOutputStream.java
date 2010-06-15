@@ -201,6 +201,7 @@ public class CompactObjectOutputStream extends ObjectOutputStream {
 	    		references.add(sfr);
 	    		return sfr;
 	    	} else if (obj instanceof Clob) {
+	    		//TODO: see if this is a ClobImpl and grab the underlying stream
 	    		streams.add(new ReaderInputStream(((Clob)obj).getCharacterStream(), Charset.forName(Streamable.ENCODING)));
 	    		StreamFactoryReference sfr = new ClobImpl();
 	    		references.add(sfr);

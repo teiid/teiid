@@ -2268,7 +2268,7 @@ public class TestQueryRewriter {
     }
     
     @Test public void testRewriteXmlElement() throws Exception {
-    	String original = "convert(xmlelement(name a, xmlattributes('b' as c)), string)"; //$NON-NLS-1$
+    	String original = "xmlserialize(document xmlelement(name a, xmlattributes('b' as c)) as string)"; //$NON-NLS-1$
     	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
     	helpTestRewriteExpression(original, "'<a c=\"b\"></a>'", metadata);
     }

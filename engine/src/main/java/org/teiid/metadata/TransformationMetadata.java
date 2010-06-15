@@ -86,6 +86,34 @@ import org.teiid.query.sql.lang.SPParameter;
  */
 public class TransformationMetadata extends BasicQueryMetadata implements Serializable {
 	
+	private final class VirtualFileInputStreamFactory extends
+			InputStreamFactory {
+		private final VirtualFile f;
+
+		private VirtualFileInputStreamFactory(VirtualFile f) {
+			this.f = f;
+		}
+
+		@Override
+		public InputStream getInputStream() throws IOException {
+			return f.openStream();
+		}
+		
+		@Override
+		public long getLength() {
+			try {
+				return f.getSize();
+			} catch (IOException e) {
+			}
+			return super.getLength();
+		}
+		
+		@Override
+		public void free() throws IOException {
+			f.close();
+		}
+	}
+
 	public static class Resource {
 		public Resource(VirtualFile file, boolean visible) {
 			this.file = file;
@@ -901,13 +929,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     	if (f == null) {
     		return null;
     	}
-		return new ClobImpl(new InputStreamFactory() {
-			
-			@Override
-			public InputStream getInputStream() throws IOException {
-				return f.openStream();
-			}
-		}, -1);
+		return new ClobImpl(new VirtualFileInputStreamFactory(f), -1);
     }
     
     public SQLXMLImpl getVDBResourceAsSQLXML(String resourcePath) {
@@ -915,13 +937,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     	if (f == null) {
     		return null;
     	}
-		return new SQLXMLImpl(new InputStreamFactory() {
-			
-			@Override
-			public InputStream getInputStream() throws IOException {
-				return f.openStream();
-			}
-		});
+		return new SQLXMLImpl(new VirtualFileInputStreamFactory(f));
     }
     
     public BlobImpl getVDBResourceAsBlob(String resourcePath) {
@@ -929,18 +945,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     	if (f == null) {
     		return null;
     	}
-    	InputStreamFactory isf = new InputStreamFactory() {
-			
-			@Override
-			public InputStream getInputStream() throws IOException {
-				return f.openStream();
-			}
-		};
-		try {
-			isf.setLength(f.getSize());
-		} catch (IOException e) {
-		}
-		return new BlobImpl(isf);
+    	return new BlobImpl(new VirtualFileInputStreamFactory(f));
     }
     
     private VirtualFile getFile(String resourcePath) {

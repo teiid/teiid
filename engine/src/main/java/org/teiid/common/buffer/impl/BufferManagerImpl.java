@@ -58,7 +58,6 @@ import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.SourceTransform;
 import org.teiid.core.types.StandardXMLTranslator;
-import org.teiid.core.types.Streamable;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogConstants;
@@ -376,7 +375,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				StandardXMLTranslator sxt = new StandardXMLTranslator(value);
 				SQLXMLImpl sqlxml;
 				try {
-					sqlxml = XMLUtil.saveToBufferManager(BufferManagerImpl.this, sxt, Streamable.STREAMING_BATCH_SIZE_IN_BYTES);
+					sqlxml = XMLUtil.saveToBufferManager(BufferManagerImpl.this, sxt);
 				} catch (TeiidComponentException e) {
 					throw new TeiidRuntimeException(e);
 				} catch (TeiidProcessingException e) {
@@ -385,7 +384,6 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				return new XMLType(sqlxml);
 			}
 		});
-		XMLUtil.setBufferManager(this);
 	}
 	
     @Override

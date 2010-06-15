@@ -70,6 +70,7 @@ import net.sf.saxon.type.TypeHierarchy;
 import net.sf.saxon.value.SequenceType;
 
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
@@ -389,7 +390,7 @@ public class SaxonXQueryExpression {
         }       
     }
     
-	public XMLType createXMLType(final SequenceIterator iter, boolean emptyOnEmpty) throws XPathException, TeiidComponentException, TeiidProcessingException {
+	public XMLType createXMLType(final SequenceIterator iter, BufferManager bufferManager, boolean emptyOnEmpty) throws XPathException, TeiidComponentException, TeiidProcessingException {
 		Item item = iter.next();
 		if (item == null && !emptyOnEmpty) {
 			return null;
@@ -413,7 +414,7 @@ public class SaxonXQueryExpression {
 		if (next != null) {
 			type = Type.CONTENT;
 		}
-		SQLXMLImpl xml = XMLUtil.saveToBufferManager(new XMLTranslator() {
+		SQLXMLImpl xml = XMLUtil.saveToBufferManager(bufferManager, new XMLTranslator() {
 			
 			@Override
 			public void translate(Writer writer) throws TransformerException,

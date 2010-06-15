@@ -2031,4 +2031,7 @@ public class TestValidator {
     	helpValidate("select xmlelement(\":\")", new String[] {"XMLELEMENT(NAME \":\")"}, FakeMetadataFactory.example1Cached());
     }
 
+    @Test public void testXmlParse() throws Exception {
+    	helpValidate("select xmlparse(content e2) from pm1.g1", new String[] {"XMLPARSE(CONTENT e2)"}, FakeMetadataFactory.example1Cached());
+    }
 }

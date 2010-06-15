@@ -162,7 +162,7 @@ public class XMLPlan extends ProcessorPlan {
                 DocumentInProgress doc = env.getDocumentInProgress();
                 if (doc != null && doc.isFinished()) {
                     this.env.setDocumentInProgress(null);
-                    XMLType xml = new XMLType(XMLUtil.createSQLXML(doc.getFileStore()));
+                    XMLType xml = new XMLType(doc.getSQLXML());
                     // check to see if we need to do any post validation on the document.
                     if (getContext().validateXML()){
                     	Reader reader;

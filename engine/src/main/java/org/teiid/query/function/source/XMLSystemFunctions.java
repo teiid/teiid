@@ -65,10 +65,10 @@ import net.sf.saxon.trans.XPathException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.SQLXMLImpl;
-import org.teiid.core.types.Streamable;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.XMLTranslator;
 import org.teiid.core.types.XMLType;
@@ -113,7 +113,7 @@ public class XMLSystemFunctions {
             final Transformer transformer = factory.newTransformer(styleSource);
             
 			//this creates a non-validated sqlxml - it may not be valid xml/root-less xml
-			SQLXML result = XMLUtil.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
+			SQLXMLImpl result = XMLUtil.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
 				
 				@Override
 				public void translate(Writer writer) throws TransformerException {
@@ -121,8 +121,8 @@ public class XMLSystemFunctions {
 	                // Feed the resultant I/O stream into the XSLT processor
 					transformer.transform(xmlParam, new StreamResult(writer));
 				}
-			}, Streamable.STREAMING_BATCH_SIZE_IN_BYTES);
-			return DataTypeManager.transformValue(new XMLType(result), DataTypeManager.DefaultDataClasses.CLOB);
+			});
+			return new ClobType(new ClobImpl(result.getStreamFactory(), -1));
 		} finally {
 			Util.closeSource(styleSource);
 			Util.closeSource(xmlSource);
@@ -160,7 +160,7 @@ public class XMLSystemFunctions {
 					throw new TransformerException(e);
 				} 
 			}
-		}, context.getStreamingBatchSize()));
+		}));
 		result.setType(Type.CONTENT);
 		return result;
 	}
@@ -191,7 +191,7 @@ public class XMLSystemFunctions {
 				} 
 			}
 
-		}, context.getStreamingBatchSize()));
+		}));
 		result.setType(Type.ELEMENT);
 		return result;
 	}
@@ -228,6 +228,27 @@ public class XMLSystemFunctions {
 	}
 	
 	public static XMLType xmlConcat(CommandContext context, final XMLType xml, final Object... other) throws TeiidComponentException, TeiidProcessingException {
+		//determine if there is just a single xml value and return it
+		XMLType singleValue = xml;
+		XMLType.Type type = null;
+		for (Object object : other) {
+			if (object != null) {
+				if (singleValue != null) {
+					type = Type.CONTENT;
+					break;
+				}
+				if (object instanceof XMLType) {
+					singleValue = (XMLType)object;
+				} else {
+					type = Type.CONTENT;
+					break;
+				}
+			}
+		}
+		if (type == null) {
+			return singleValue;
+		}
+		
 		XMLType result = new XMLType(XMLUtil.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
 			
 			@Override
@@ -245,7 +266,7 @@ public class XMLSystemFunctions {
 					throw new TransformerException(e);
 				} 
 			}
-		}, context.getStreamingBatchSize()));
+		}));
 		result.setType(Type.CONTENT);
 		return result;
 	}
@@ -280,11 +301,11 @@ public class XMLSystemFunctions {
 		}
 	}
 	
-	static void convertValue(Writer writer, XMLEventWriter eventWriter, XMLEventFactory eventFactory, Object object) throws IOException,
+	static int convertValue(Writer writer, XMLEventWriter eventWriter, XMLEventFactory eventFactory, Object object) throws IOException,
 			FactoryConfigurationError, XMLStreamException,
 			TransformerException {
 		if (object == null) {
-			return;
+			return 0;
 		}
 		Reader r = null;
 		try {
@@ -308,6 +329,7 @@ public class XMLSystemFunctions {
 				r.close();
 			}
 		}
+		return 1;
 		//TODO: blob - with base64 encoding
 	}
 

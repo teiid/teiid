@@ -26,22 +26,16 @@ import static org.junit.Assert.*;
 
 import java.sql.Types;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.Set;
 
 import javax.sql.rowset.serial.SerialBlob;
 
 import org.junit.Test;
-import org.teiid.core.types.BlobType;
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.JDBCSQLTypeInfo;
-import org.teiid.core.types.Transform;
-import org.teiid.core.types.TransformationException;
 
 public class TestDataTypeManager {
 
-    private void helpDetermineDataType(Object value, Class expectedClass) { 
-        Class actualClass = DataTypeManager.determineDataTypeClass(value);
+    private void helpDetermineDataType(Object value, Class<?> expectedClass) { 
+        Class<?> actualClass = DataTypeManager.determineDataTypeClass(value);
         assertNotNull("Should never receive null when determining data type of object: " + value); //$NON-NLS-1$
         assertEquals("Mismatch in expected and actual MetaMatrix type class for [" + value + "]: ", expectedClass, actualClass); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -81,19 +75,17 @@ public class TestDataTypeManager {
         /*timestamp*/   {   'I','N','N','N','N','N','N','N','N','N','N','C','C','O','I','N','N','N'     },
         /*object*/      {   'C','C','C','C','C','C','C','C','C','C','C','C','C','C','O','C','C','C'     },
         /*blob*/        {   'N','N','N','N','N','N','N','N','N','N','N','N','N','N','I','O','N','N'     },
-        /*clob*/        {   'C','N','N','N','N','N','N','N','N','N','N','N','N','N','I','N','O','C'     },
-        /*xml*/         {   'C','N','N','N','N','N','N','N','N','N','N','N','N','N','I','N','C','O'     }
+        /*clob*/        {   'C','N','N','N','N','N','N','N','N','N','N','N','N','N','I','N','O','N'     },
+        /*xml*/         {   'C','N','N','N','N','N','N','N','N','N','N','N','N','N','I','N','N','O'     }
     };
     
 
 	// ################################## ACTUAL TESTS ################################
 	
 	@Test public void testTypeMappings() {
-		Set dataTypeNames = DataTypeManager.getAllDataTypeNames();
-		Iterator iter = dataTypeNames.iterator();
-		while(iter.hasNext()) { 
-			String dataTypeName = (String) iter.next();
-			Class dataTypeClass = DataTypeManager.getDataTypeClass(dataTypeName);
+		Set<String> dataTypeNames = DataTypeManager.getAllDataTypeNames();
+		for (String dataTypeName : dataTypeNames) {
+			Class<?> dataTypeClass = DataTypeManager.getDataTypeClass(dataTypeName);
 			assertNotNull("Data type class was null for type " + dataTypeName, dataTypeClass); //$NON-NLS-1$
 			String dataTypeName2 = DataTypeManager.getDataTypeName(dataTypeClass);
 			assertEquals("Name to class to name not equals: ", dataTypeName, dataTypeName2); //$NON-NLS-1$
@@ -141,15 +133,9 @@ public class TestDataTypeManager {
     }
     
     @Test public void testCheckAllConversions() {
-        Set allTypes = DataTypeManager.getAllDataTypeNames();
-        Iterator srcIter = allTypes.iterator();
-        while(srcIter.hasNext()) { 
-            String src = (String) srcIter.next();
-            
-            Iterator tgtIter = allTypes.iterator();
-            while(tgtIter.hasNext()) { 
-                String tgt = (String) tgtIter.next();    
-                
+        Set<String> allTypes = DataTypeManager.getAllDataTypeNames();
+        for (String src : allTypes) {
+        	for (String tgt : allTypes) {
                 boolean isImplicit = DataTypeManager.isImplicitConversion(src, tgt);
                 boolean isExplicit = DataTypeManager.isExplicitConversion(src, tgt);
                 
