@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="admin-console">
+   <title>Teiid Admin Console</title>
+   <para>Teiid admin console is a web based administrative and monitoring tool for Teiid. 
+   This is built using the <ulink url="http://www.jboss.org/embjopr">Embedded JOPR</ulink> library that is built to manage the 
+   JBoss AS instances. Teiid adds a additional plugin into the Embeeded JOPR program already available in the 
+   <ulink url="http://www.jboss.org/jbossas">JBoss AS</ulink>, to provide the Teiid specific functionality.</para>
+
+   <sect1>
+     <title>What can be monitored and/or configured?</title>
+     <para>Here are the steps to follow to install Teiid</para>
+
+     <orderedlist>
+        <listitem> <para><emphasis>The Teiid Runtime Engine</emphasis> (Data Services node in the tree)</para> </listitem>
+        <listitem> <para><emphasis>VDBs</emphasis> - Virtual databases</para> 
+            <orderedlist>
+                <listitem> <para><emphasis>Models</emphasis></para> 
+                    <orderedlist>
+                        <listitem> <para><emphasis>Source</emphasis>- these are physical sources</para></listitem>
+                        <listitem> <para><emphasis>Multi-source</emphasis> - these are multiple sourced models</para></listitem>
+                        <listitem> <para><emphasis>Logical</emphasis> - these are virtual sources</para></listitem>
+                    </orderedlist>
+                </listitem>
+                <listitem> <para><emphasis>Translator instances</emphasis>- any Translator instances defined for use by this VDB</para> </listitem>
+            </orderedlist>
+        </listitem>
+        <listitem> <para>Translators - These are the extensions to supported datasources that come with Teiid out-of-the-box.</para> </listitem>
+     </orderedlist>
+     
+     <note>
+        <para>The creation/modification of the datasource is managed by the JBossAS plugin.</para>
+     </note>    
+    
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="../images/admin_console.png"/>
+      </imageobject>
+    </mediaobject>
+    
+    <sect2>
+        <title>Configuration</title>
+        <orderedlist>
+            <listitem> <para>Runtime Engine properties</para> </listitem>
+            <listitem> <para>Buffer Service</para> </listitem>
+            <listitem> <para>Jdbc Socket configuration</para> </listitem>
+            <listitem> <para>Session Service</para> </listitem>
+        </orderedlist>
+    </sect2>
+    
+    <sect2>
+        <title>Metrics</title>
+        <orderedlist>
+            <listitem> <para>Long Running Query count</para> </listitem>
+            <listitem> <para>Active Query count</para> </listitem>
+            <listitem> <para>Active Session count</para> </listitem>
+        </orderedlist>
+    </sect2>    
+   
+    <sect2>
+        <title>Control (Operations)</title>
+        <orderedlist>
+            <listitem> <para>View Long Running Queries</para> </listitem>
+            <listitem> <para>View Current Sessions</para> </listitem>
+            <listitem> <para>Terminate Session</para> </listitem>
+            <listitem> <para>View Current Requests</para> </listitem>
+            <listitem> <para>Terminate requests</para> </listitem>
+            <listitem> <para>View Current Transactions</para> </listitem>
+            <listitem> <para>Terminate Transaction</para> </listitem>
+        </orderedlist>
+    </sect2>
+    
+    <sect2 id="vdb_deploy">
+        <title>Deploying the VDB</title>
+        <para>VDB archive files created it the Designer Tool or Dynamic VDBs can be deployed into Teiid server using
+        this "admin-console" tool.</para>
+        
+        <orderedlist>
+            <listitem> <para>Select the Virtual Database node in the Admin Console tree and click the Add New Resource button.</para> </listitem>
+            <listitem> <para>Select the VDB archive file from the file system and click continue.</para> </listitem>
+            <listitem> <para>The VDB will deploy if no fatal errors are found in the archive. The status of
+             the VDB will be UP if no errors are found with the models in the VDB.</para> </listitem>
+            <listitem> <para>If there are model errors, the VDB will be deployed with a status of DOWN and the errors will be 
+            listed on the configuration tab of the VDB. VDBs that are not UP will be marked with a red X in the tree.</para> </listitem>
+        </orderedlist>       
+        
+        <para>Only Model's "connection-jndi-name" can be modified using this tool by clicking on the "configuration" 
+        tab, all other proeprties are read-only.</para> 
+    </sect2>    
+        
+   </sect1>   
+   
+</chapter>

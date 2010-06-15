@@ -36,7 +36,7 @@
           </dependency>
         </dependencies>
         <configuration>
-          <sourceDocumentName>adminshell_guide.xml</sourceDocumentName>
+          <sourceDocumentName>admin_guide.xml</sourceDocumentName>
           <imageResource>
             <directory>${basedir}/src/main/docbook/en-US</directory>
             <excludes>
