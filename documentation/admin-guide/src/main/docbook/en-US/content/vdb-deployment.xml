@@ -18,21 +18,25 @@
             <title>By Copying the File</title>
             <para>Copy the VDB file into the "&lt;jboss-install&gt;/server/&lt;profile&gt;/deploy" directory. 
             Make sure that there are no other VDB files with the same name. If a VDB already exists with 
-            the same name, then this VDB will be replaced with the new VDB. T
-            his is the simplest way to deploy a VDB.</para>
+            the same name, then this VDB will be replaced with the new VDB. This is the simplest way to deploy a VDB. This is mostly
+            designed for quick deployment during development, when the Teiid server is available 
+            locally on the developer machine.</para>
         </sect2>
                   
         <sect2>
             <title>By Using Admin API</title>
             <para>The Admin API (look in org.teiid.adminpi.*) provides Java API methods that 
-            let's a user connect to a Teiid runtime and deploy a VDB. If you need to programmatically deploy a VDB use this method.</para>
+            lets a user connect to a Teiid runtime and deploy a VDB. If you need to programmatically 
+            deploy a VDB use this method. This method is preferable for OEM users, who are trying to extend the
+            Teiid's capabilities through their applications.</para>
         </sect2>
         
         <sect2>
             <title>By Using Admin Shell</title>
             <para>Teiid provides "groovy" based Admin Shell scripting tool, which can be used to deploy
             a VDB. Check out the "deployVDB" method. Check out more information about <emphasis>Admin Shell</emphasis> 
-            <link linkend="adminshell_introduction">here</link>. </para>
+            <link linkend="adminshell_introduction">here</link>. Note that using the AdminShell scripting, you can automate
+            the deployment of artifacts in your environment.</para>
         </sect2>         
                  
         <sect2>
@@ -42,7 +46,11 @@
 
             <programlisting><![CDATA[
                 http://<host>:<port>/admin-console
-            ]]></programlisting>              
+            ]]></programlisting>    
+            
+            <para>More details for this can be found <link linkend="vdb_deploy">here.</link> This is preferred way
+            to deploy a VDB, when the Teiid server is shared among multiple users and/or Teiid Server is in a remote 
+            location.</para>          
         </sect2>                      
    </sect1>
 
