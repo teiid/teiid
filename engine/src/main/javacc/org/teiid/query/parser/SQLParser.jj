@@ -368,7 +368,6 @@ TOKEN : /* User variables and literals */
 | 	< TIMETYPE: "{" "t" >
 | 	< TIMESTAMPTYPE: "{" "ts" >
 | 	< BOOLEANTYPE: "{" "b" >
-| 	< XMLTYPE: "{" "x" >
 
 |	< INTEGERVAL: (<MINUS>)?(<DIGIT>)+ >
 |   < FLOATVAL: (<MINUS>)? (<DIGIT>)* <PERIOD> (<DIGIT>)+ 
@@ -1919,7 +1918,7 @@ XMLSerialize xmlSerialize(ParseInfo info) :
 }
 {
 	<XMLSERIALIZE> <LPAREN>
-	doc = nonReserved("DOCUMENT", "CONTENT")
+	[LOOKAHEAD(<ID>, {matchesAny(getToken(1).image, "document", "content") != null}) doc = nonReserved("DOCUMENT", "CONTENT")]
 	expr = expression(info)
 	[
 		<AS> (t = <STRING> | t = <VARCHAR> | t = <CLOB>)
@@ -1928,7 +1927,9 @@ XMLSerialize xmlSerialize(ParseInfo info) :
 	{
 		XMLSerialize result = new XMLSerialize();
 		result.setExpression(expr);
-		result.setDocument("document".equalsIgnoreCase(doc));
+		if (doc != null) {
+			result.setDocument("document".equalsIgnoreCase(doc));
+		}
 		if (t != null) {
 			result.setTypeString(t.image);
 		}
@@ -3228,6 +3229,23 @@ Expression function(ParseInfo info) :
 		<RPAREN>				
 	)
 	|
+	LOOKAHEAD(<ID>, {matchesAny(getToken(1).image, "encode", "decode") != null}) (	
+		funcName = nonReserved("ENCODE", "DECODE")
+		<LPAREN>
+		expression = expression(info) 
+		{		
+			args.add(expression);
+			expression = null;
+		}
+		<COMMA>
+		expression = stringConstant()
+		{
+			args.add(expression);
+			expression = null;
+		} 
+		<RPAREN>				
+	)
+	|
 	LOOKAHEAD(<ID>, {matchesAny(getToken(1).image, "timestampadd", "timestampdiff") != null}) (	
 		funcName = nonReserved("TIMESTAMPADD", "TIMESTAMPDIFF")
 		<LPAREN>
@@ -3386,6 +3404,17 @@ Expression function(ParseInfo info) :
 		}
 			
 		return new Function(funcName, (Expression[])args.toArray(new Expression[args.size()]));
+	}
+}
+
+Constant stringConstant() :
+{
+	String val = null;
+}
+{
+	val = stringVal()
+	{
+		return new Constant(val);
 	}
 }
 
@@ -3699,8 +3728,7 @@ Constant literal() :
         ( (<BOOLEANTYPE>   { escapeType=DataTypeManager.DefaultDataClasses.BOOLEAN; } |
           <TIMESTAMPTYPE> { escapeType=DataTypeManager.DefaultDataClasses.TIMESTAMP; } | 
           <DATETYPE>      { escapeType=DataTypeManager.DefaultDataClasses.DATE; } |
-          <TIMETYPE>      { escapeType=DataTypeManager.DefaultDataClasses.TIME; } |
-          <XMLTYPE>      { escapeType=DataTypeManager.DefaultDataClasses.XML; }) strVal=stringVal() { 
+          <TIMETYPE>      { escapeType=DataTypeManager.DefaultDataClasses.TIME; }) strVal=stringVal() { 
 	        	try {
 	        		constant = new Constant(DataTypeManager.transformValue(strVal, escapeType), escapeType);
 	        	} catch (TransformationException e) {

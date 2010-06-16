@@ -256,7 +256,7 @@ public class TestSQLXMLProcessing {
     }
     
     @Test public void testXmlQueryEmptyNull() throws Exception {
-    	String sql = "select xmlquery('/a' passing {x '<x/>'} null on empty)"; //$NON-NLS-1$
+    	String sql = "select xmlquery('/a' passing xmlparse(document '<x/>') null on empty)"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] {
         		Arrays.asList((String)null)

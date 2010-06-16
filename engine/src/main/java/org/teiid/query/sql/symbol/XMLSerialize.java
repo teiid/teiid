@@ -30,7 +30,7 @@ public class XMLSerialize implements Expression {
 
 	private static final long serialVersionUID = -6574662238317329252L;
 	
-	private boolean document;
+	private Boolean document;
 	private Expression expression;
 	private String typeString;
 	private Class<?> type;
@@ -51,11 +51,11 @@ public class XMLSerialize implements Expression {
 		return expression;
 	}
 	
-	public boolean isDocument() {
+	public Boolean isDocument() {
 		return document;
 	}
 	
-	public void setDocument(boolean document) {
+	public void setDocument(Boolean document) {
 		this.document = document;
 	}
 	

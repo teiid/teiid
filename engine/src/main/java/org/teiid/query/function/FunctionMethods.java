@@ -25,6 +25,13 @@ package org.teiid.query.function;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
+import java.nio.charset.CoderResult;
+import java.sql.Blob;
+import java.sql.Clob;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -38,8 +45,15 @@ import java.util.TimeZone;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.core.types.BlobImpl;
+import org.teiid.core.types.BlobType;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
+import org.teiid.core.types.InputStreamFactory.BlobInputStreamFactory;
+import org.teiid.core.types.InputStreamFactory.ClobInputStreamFactory;
+import org.teiid.core.util.Base64;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.QueryPlugin;
@@ -1245,5 +1259,103 @@ public final class FunctionMethods {
         
         return TimestampWithTimezone.createTimestamp(value, context.getServerTimeZone(), cal);
     } 
+    
+    public static Blob decode(ClobType value, String encoding) {
+    	/*if ("HEX".equalsIgnoreCase(encoding)) {
+    		
+    	} 
+    	if ("BASE64".equalsIgnoreCase(encoding)) {
+    		
+    	}*/
+    	ClobInputStreamFactory cisf = new ClobInputStreamFactory(value.getReference());
+    	cisf.setCharset(Charset.forName(encoding));
+    	return new BlobType(new BlobImpl(cisf));
+    }
+    
+    public static Clob encode(BlobType value, String encoding) {
+    	/*if ("HEX".equalsIgnoreCase(encoding)) {
+    		
+    	} 
+    	if ("BASE64".equalsIgnoreCase(encoding)) {
+    		
+    	}*/
+    	BlobInputStreamFactory bisf = new BlobInputStreamFactory(value.getReference());
+    	ClobImpl clob = new ClobImpl(bisf, -1);
+    	clob.setEncoding(encoding);
+    	return new ClobType(clob);
+    }
+    
+    public static class Base64Encoder extends CharsetEncoder {
+
+    	private CharBuffer cb = CharBuffer.wrap(new char[4]);
+    	
+    	protected Base64Encoder() {
+			super(Charset.forName("US-ASCII"), .75f, 1); //$NON-NLS-1$
+		}
+
+		@Override
+    	protected CoderResult encodeLoop(CharBuffer in, ByteBuffer out) {
+		    while (in.hasRemaining()) {
+	    		cb.put(in.get());
+	    		if (!cb.hasRemaining()) {
+					if (!out.hasRemaining()) {
+					    return CoderResult.OVERFLOW;
+					}
+					cb.position(0);
+					out.put(Base64.decode(cb));
+					cb.clear();
+	    		}
+		    }
+		    return CoderResult.UNDERFLOW;
+    	}
+		
+		@Override
+		protected CoderResult implFlush(ByteBuffer out) {
+			if (cb.position() != 0) {
+				return CoderResult.unmappableForLength(cb.position());
+			}
+			return super.implFlush(out);
+		}
+    }
+    
+/*  This does not seem to work, since the flush is never called  
+ 	public static class Base64Decoder extends CharsetDecoder {
+
+    	private ByteBuffer bb = ByteBuffer.wrap(new byte[3]);
+    	
+		protected Base64Decoder() {
+			super(Charset.forName("US-ASCII"), 1.25f, 3); //$NON-NLS-1$
+		}
+
+		@Override
+		protected CoderResult decodeLoop(ByteBuffer in, CharBuffer out) {
+		    while (in.hasRemaining()) {
+	    		bb.put(in.get());
+	    		if (!bb.hasRemaining()) {
+					if (!out.hasRemaining()) {
+					    return CoderResult.OVERFLOW;
+					}
+					bb.position(0);
+					out.put(Base64.encodeBytes(bb.array()));
+					bb.clear();
+	    		}
+		    }
+		    return CoderResult.UNDERFLOW;
+		}
+		
+		@Override
+		protected CoderResult implFlush(CharBuffer out) {
+			if (bb.position() != 0) {
+				if (!out.hasRemaining()) {
+				    return CoderResult.OVERFLOW;
+				}
+				byte[] bytes = Arrays.copyOf(bb.array(), bb.position());
+				out.put(Base64.encodeBytes(bytes));
+				bb.clear();
+			}
+			return super.implFlush(out);
+		}
+    }
+*/    
     
 }

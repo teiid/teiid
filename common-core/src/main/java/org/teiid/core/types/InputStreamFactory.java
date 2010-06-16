@@ -27,7 +27,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
 import java.sql.Blob;
@@ -47,30 +46,14 @@ public abstract class InputStreamFactory implements Source {
 		
 	}
 	
-	private String encoding;
 	private String systemId;
 	private long length = -1;
-	
-	public InputStreamFactory() {
-	}
-	
-	public InputStreamFactory(String encoding) {
-		this.encoding = encoding;
-	}
 	
     /**
      * Get a new InputStream
      * @return
      */
     public abstract InputStream getInputStream() throws IOException;
-    
-    public String getEncoding() {
-		return encoding;
-	}
-    
-    public void setEncoding(String encoding) {
-		this.encoding = encoding;
-	}
     
     @Override
     public String getSystemId() {
@@ -95,11 +78,7 @@ public abstract class InputStreamFactory implements Source {
 	}
     
     public Reader getCharacterStream() throws IOException {
-    	String enc = this.getEncoding();
-    	if (enc == null) {
-    		enc = Charset.defaultCharset().displayName();
-    	}
-		return new InputStreamReader(this.getInputStream(), enc);
+    	return null;
     }
     
     public static class FileInputStreamFactory extends InputStreamFactory {
@@ -107,11 +86,6 @@ public abstract class InputStreamFactory implements Source {
     	private File f;
     	
     	public FileInputStreamFactory(File f) {
-    		this(f, null);
-    	}
-    	
-    	public FileInputStreamFactory(File f, String encoding) {
-    		super(encoding);
     		this.f = f;
     		this.setSystemId(f.toURI().toASCIIString());
 		}
@@ -131,16 +105,24 @@ public abstract class InputStreamFactory implements Source {
     public static class ClobInputStreamFactory extends InputStreamFactory {
     	
     	private Clob clob;
+    	private Charset charset = Charset.forName(Streamable.ENCODING);
     	
     	public ClobInputStreamFactory(Clob clob) {
-    		super(Streamable.ENCODING);
     		this.clob = clob;
     	}
+    	
+    	public Charset getCharset() {
+			return charset;
+		}
+    	
+    	public void setCharset(Charset charset) {
+			this.charset = charset;
+		}
     	
     	@Override
     	public InputStream getInputStream() throws IOException {
     		try {
-				return new ReaderInputStream(clob.getCharacterStream(), Charset.forName(Streamable.ENCODING));
+				return new ReaderInputStream(clob.getCharacterStream(), charset);
 			} catch (SQLException e) {
 				throw new IOException(e);
 			}

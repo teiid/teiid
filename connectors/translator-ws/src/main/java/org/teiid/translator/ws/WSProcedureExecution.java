@@ -22,10 +22,8 @@
 
 package org.teiid.translator.ws;
 
-import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.util.Arrays;
@@ -41,7 +39,7 @@ import javax.xml.ws.Dispatch;
 import javax.xml.ws.WebServiceException;
 import javax.xml.ws.handler.MessageContext;
 
-import org.teiid.core.types.ClobType;
+import org.teiid.core.types.XMLType;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.logging.LogConstants;
@@ -84,33 +82,10 @@ public class WSProcedureExecution implements ProcedureExecution {
         
         String style = (String)arguments.get(0).getArgumentValue().getValue();
         String action = (String)arguments.get(1).getArgumentValue().getValue();
-        Object docObject = arguments.get(2).getArgumentValue().getValue();
+        XMLType docObject = (XMLType)arguments.get(2).getArgumentValue().getValue();
         Source source = null;
     	try {
-	        if (docObject instanceof SQLXML) {
-	        	SQLXML xml = (SQLXML)docObject;
-	        	source = xml.getSource(null);
-	            if (LogManager.isMessageToBeRecorded(LogConstants.CTX_WS, MessageLevel.DETAIL)) { 
-	    			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Request " + xml.getString()); //$NON-NLS-1$
-	            }
-	        } else if (docObject instanceof Clob) {
-	        	Clob clob = (Clob)docObject;
-	        	source = new StreamSource(clob.getCharacterStream());
-	        	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_WS, MessageLevel.DETAIL)) {
-	    			try {
-						LogManager.logDetail(LogConstants.CTX_CONNECTOR, "WebService Request: " + ClobType.getString(clob)); //$NON-NLS-1$
-					} catch (IOException e) {
-					} 
-	            }
-	        } else if (docObject instanceof String) {
-	        	String string = (String)docObject;
-	        	source = new StreamSource(new StringReader(string));
-	        	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_WS, MessageLevel.DETAIL)) {
-	    			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Request " + string); //$NON-NLS-1$
-	            }
-	        } else if (docObject != null) {
-	        	throw new TranslatorException(WSExecutionFactory.UTIL.getString("unknown_doc_type")); //$NON-NLS-1$
-	        }
+	        source = converToSource(docObject);
 	        String endpoint = (String)arguments.get(3).getArgumentValue().getValue();
 	        
 	        if (style == null) {
@@ -173,6 +148,16 @@ public class WSProcedureExecution implements ProcedureExecution {
 			Util.closeSource(source);
 		}
     }
+
+	private StreamSource converToSource(SQLXML xml) throws SQLException {
+		if (xml == null) {
+			return null;
+		}
+		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_WS, MessageLevel.DETAIL)) { 
+			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Request " + xml.getString()); //$NON-NLS-1$
+	    }
+		return xml.getSource(StreamSource.class);
+	}
     
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {

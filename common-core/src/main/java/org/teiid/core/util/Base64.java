@@ -413,23 +413,13 @@ public class Base64
      * @return the decoded data
      * @since 1.4
      */
-    public static byte[] decode( String s )
+    public static byte[] decode( CharSequence s )
 	{
-		byte[] source;
-        try
-        {
-        	source = s.getBytes( PREFERRED_ENCODING );
-        }   // end try
-        catch( java.io.UnsupportedEncodingException uee )
-        {
-        	source = s.getBytes();
-        }   // end catch
-		//</change>
-        if (source.length % 4 != 0) {
+        if (s.length() % 4 != 0) {
         	throw new IllegalArgumentException("Source bytes are not valid"); //$NON-NLS-1$
         }
         byte[] DECODABET = _STANDARD_DECODABET;
-    	int len = source.length;
+    	int len = s.length();
         byte[] outBuff = new byte[ len * 3 / 4 ]; // Upper limit on size of output
         int    outBuffPosn = 0;
         
@@ -440,7 +430,7 @@ public class Base64
         byte   sbiDecode = 0;
         for( i = 0; i < len; i++ )
         {
-            sbiCrop = (byte)(source[i] & 0x7f); // Only the low seven bits
+            sbiCrop = (byte)(s.charAt(i) & 0x7f); // Only the low seven bits
             sbiDecode = DECODABET[ sbiCrop ];
             
             if( sbiDecode >= WHITE_SPACE_ENC ) // White space, Equals sign or better

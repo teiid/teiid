@@ -42,7 +42,6 @@ import org.jboss.netty.handler.codec.serialization.ObjectEncoder;
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.StorageManager;
 import org.teiid.core.types.InputStreamFactory;
-import org.teiid.core.types.Streamable;
 import org.teiid.core.types.InputStreamFactory.StreamFactoryReference;
 import org.teiid.core.util.ExternalizeUtil;
 import org.teiid.netty.handler.codec.serialization.CompactObjectInputStream;
@@ -146,7 +145,7 @@ public class ObjectDecoder extends FrameDecoder {
 	        	store = storageManager.createFileStore("temp-stream"); //$NON-NLS-1$
 		        StreamFactoryReference sfr = streams.get(streamIndex);
 		        store.setCleanupReference(sfr);
-		        sfr.setStreamFactory(new InputStreamFactory(Streamable.ENCODING) {
+		        sfr.setStreamFactory(new InputStreamFactory() {
 					FileStore fs = store;
 					@Override
 					public InputStream getInputStream() throws IOException {

@@ -127,12 +127,12 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		param.setNullType(NullType.Nullable);
 
 		param = metadataFactory.addProcedureParameter("action", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
-		param.setAnnotation("With a SOAP invocation, action sets the SOAPAction.  With HTTP it sets the HTTP Method (GET, POST, etc.).");
+		param.setAnnotation("With a SOAP invocation, action sets the SOAPAction.  With HTTP it sets the HTTP Method (GET, POST - default, etc.).");
 		param.setNullType(NullType.Nullable);
 
 		//can be one of string, xml, clob
-		param = metadataFactory.addProcedureParameter("request", TypeFacility.RUNTIME_NAMES.OBJECT, Type.In, p); //$NON-NLS-1$
-		param.setAnnotation("The String, XML, or CLOB value containing an XML document or fragment that represents the request (valid with SOAP or HTTP/POST invocations).  If the ExecutionFactory is configured in with a DefaultServiceMode or MESSAGE then SOAP request must contain the entire SOAP message.");
+		param = metadataFactory.addProcedureParameter("request", TypeFacility.RUNTIME_NAMES.XML, Type.In, p); //$NON-NLS-1$
+		param.setAnnotation("The XML document or root element that represents the request.  If the ExecutionFactory is configured in with a DefaultServiceMode or MESSAGE then SOAP request must contain the entire SOAP message.");
 		param.setNullType(NullType.Nullable);
 		
 		param = metadataFactory.addProcedureParameter("endpoint", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
@@ -141,9 +141,24 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		
 		metadataFactory.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.XML, Type.ReturnValue, p); //$NON-NLS-1$
 		
-		//invokeHttp
+		/*p = metadataFactory.addProcedure("invokeHttp"); //$NON-NLS-1$ 
+		p.setAnnotation("Invokes a webservice that returns an binary result");
+
+		param = metadataFactory.addProcedureParameter("method", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
+		param.setAnnotation("Sets the HTTP Method (GET, POST - default, etc.).");
+		param.setNullType(NullType.Nullable);
+
+		//can be one of string, xml, clob
+		param = metadataFactory.addProcedureParameter("request", TypeFacility.RUNTIME_NAMES.OBJECT, Type.In, p); //$NON-NLS-1$
+		param.setAnnotation("The String, XML, BLOB, or CLOB value containing a payload request.");
+		param.setNullType(NullType.Nullable);
 		
+		param = metadataFactory.addProcedureParameter("endpoint", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
+		param.setAnnotation("The relative or abolute endpoint to use.  May be set or allowed to default to null to use the default endpoint address.");
+		param.setNullType(NullType.Nullable);
 		
+		metadataFactory.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.BLOB, Type.ReturnValue, p); //$NON-NLS-1$
+		metadataFactory.addProcedureParameter("contentType", TypeFacility.RUNTIME_NAMES.STRING, Type.Out, p); //$NON-NLS-1$*/	
 	}
 
 }

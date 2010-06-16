@@ -1999,7 +1999,7 @@ public class TestValidator {
     }
     
     @Test public void testXMLTablePassingMultipleContext() {
-    	helpValidate("select * from pm1.g1, xmltable('/' passing {x '<a/>'}, {x '<b/>'}) as x", new String[] {"XMLTABLE('/' PASSING {x '<a/>'}, {x '<b/>'}) AS x"}, FakeMetadataFactory.example1Cached());
+    	helpValidate("select * from pm1.g1, xmltable('/' passing xmlparse(DOCUMENT '<a/>'), xmlparse(DOCUMENT '<b/>')) as x", new String[] {"XMLTABLE('/' PASSING XMLPARSE(DOCUMENT '<a/>'), XMLPARSE(DOCUMENT '<b/>')) AS x"}, FakeMetadataFactory.example1Cached());
     }
 
     @Ignore("this is actually handled by saxon and will show up during resolving")
@@ -2012,7 +2012,7 @@ public class TestValidator {
     }
 
     @Test public void testXMLTableMultipleOrdinals() {
-    	helpValidate("select * from pm1.g1, xmltable('/' passing {x '<a/>'} columns x for ordinality, y for ordinality) as x", new String[] {"XMLTABLE('/' PASSING {x '<a/>'} COLUMNS x FOR ORDINALITY, y FOR ORDINALITY) AS x"}, FakeMetadataFactory.example1Cached());
+    	helpValidate("select * from pm1.g1, xmltable('/' passing XMLPARSE(DOCUMENT '<a/>') columns x for ordinality, y for ordinality) as x", new String[] {"XMLTABLE('/' PASSING XMLPARSE(DOCUMENT '<a/>') COLUMNS x FOR ORDINALITY, y FOR ORDINALITY) AS x"}, FakeMetadataFactory.example1Cached());
     }
     
     @Test public void testXMLTableContextRequired() {
@@ -2034,4 +2034,9 @@ public class TestValidator {
     @Test public void testXmlParse() throws Exception {
     	helpValidate("select xmlparse(content e2) from pm1.g1", new String[] {"XMLPARSE(CONTENT e2)"}, FakeMetadataFactory.example1Cached());
     }
+    
+    @Test public void testDecode() throws Exception {
+    	helpValidate("select decode(e1, '?') from pm1.g1", new String[] {"decode(e1, '?')"}, FakeMetadataFactory.example1Cached());
+    }
+
 }

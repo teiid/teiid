@@ -27,25 +27,27 @@ package org.teiid.core.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
+import java.io.Writer;
 import java.nio.charset.Charset;
 
 import org.teiid.core.types.DataTypeManager;
 
+/**
+ * Implements a buffered {@link InputStream} for a given {@link Reader} and {@link Charset}
+ */
 public class ReaderInputStream extends InputStream {
 	
+	//even though we're dealing with chars, we'll use the same default
 	private static final int DEFAULT_BUFFER_SIZE = DataTypeManager.MAX_LOB_MEMORY_BYTES;
 	
 	private final Reader reader;
-	private final Charset charSet;
+	private Writer writer;
 	private char[] charBuffer;
-	
+	private AccessibleByteArrayOutputStream out = new AccessibleByteArrayOutputStream();
 	private boolean hasMore = true;
-	private ByteBuffer currentBuffer;
-	private int prefixBytes;
-	private boolean needsPrefix = true;
+	private int pos = 0;
 	
 	public ReaderInputStream(Reader reader, Charset charSet) {
 		this(reader, charSet, DEFAULT_BUFFER_SIZE);
@@ -53,31 +55,27 @@ public class ReaderInputStream extends InputStream {
 
 	public ReaderInputStream(Reader reader, Charset charSet, int bufferSize) {
 		this.reader = reader;
-		this.charSet = charSet;
+		this.writer = new OutputStreamWriter(out, charSet);
 		this.charBuffer = new char[bufferSize];
-		if (charSet.displayName().equalsIgnoreCase("UTF-16")) { //$NON-NLS-1$
-			prefixBytes = 2;
-		}
 	}
 
 	@Override
 	public int read() throws IOException {
-		if (currentBuffer == null || !currentBuffer.hasRemaining()) {
-			if (!hasMore) {
-				return -1;
-			}
+		if (!hasMore) {
+			return -1;
+		}
+		while (pos >= out.getCount()) {
+			out.reset();
+			pos = 0;
 			int charsRead = reader.read(charBuffer);
 			if (charsRead == -1) {
 	            hasMore = false;
 				return -1;
 			}
-			currentBuffer = charSet.encode(CharBuffer.wrap(charBuffer, 0, charsRead));
-			if (!needsPrefix) {
-				currentBuffer.position(prefixBytes);
-			}
-			needsPrefix = false;
+			writer.write(charBuffer, 0, charsRead);
+			writer.flush();
 		}
-		return currentBuffer.get() & 0xff;
+		return out.getBuffer()[pos++] & 0xff;
 	}
 	
 	@Override

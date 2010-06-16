@@ -38,7 +38,6 @@ import java.io.StreamCorruptedException;
 import java.util.List;
 
 import org.teiid.core.types.InputStreamFactory;
-import org.teiid.core.types.Streamable;
 import org.teiid.core.types.InputStreamFactory.StreamFactoryReference;
 import org.teiid.core.util.ExternalizeUtil;
 
@@ -104,7 +103,7 @@ public class ObjectDecoderInputStream extends ObjectInputStream {
 	        if (stream == null) {
 	        	final File f = File.createTempFile("teiid", null); //$NON-NLS-1$
 		        StreamFactoryReference sfr = streams.get(streamIndex);
-		        sfr.setStreamFactory(new InputStreamFactory(Streamable.ENCODING) {
+		        sfr.setStreamFactory(new InputStreamFactory() {
 					
 					@Override
 					public InputStream getInputStream() throws IOException {

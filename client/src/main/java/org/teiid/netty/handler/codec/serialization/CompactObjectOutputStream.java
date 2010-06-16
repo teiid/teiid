@@ -25,6 +25,7 @@ package org.teiid.netty.handler.codec.serialization;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
@@ -196,7 +197,7 @@ public class CompactObjectOutputStream extends ObjectOutputStream {
 	    		references.add(sfr);
 	    		return sfr;
 	    	} else if (obj instanceof SQLXML) {
-				streams.add(new ReaderInputStream(((SQLXML)obj).getCharacterStream(), Charset.forName(Streamable.ENCODING)));
+				streams.add(((SQLXML)obj).getBinaryStream());
 	    		StreamFactoryReference sfr = new SQLXMLImpl();
 	    		references.add(sfr);
 	    		return sfr;
@@ -273,7 +274,7 @@ public class CompactObjectOutputStream extends ObjectOutputStream {
 		@Override
 		public int read(char[] cbuf, int off, int len) throws IOException {
 			if (r == null) {
-				r = isf.getCharacterStream();
+				r = new InputStreamReader(isf.getInputStream(), Streamable.ENCODING);
 			}
 			return r.read(cbuf, off, len);
 		}

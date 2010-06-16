@@ -295,15 +295,16 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
             	}
         	}
             if(currentValue instanceof ClobType){
-            	currentValue = new ClobImpl(createInputStreamFactory((ClobType)currentValue, null), ((ClobType)currentValue).getLength());
+            	currentValue = new ClobImpl(createInputStreamFactory((ClobType)currentValue), ((ClobType)currentValue).getLength());
             }
             else if (currentValue instanceof BlobType) {
-            	InputStreamFactory isf = createInputStreamFactory((BlobType)currentValue, null);
+            	InputStreamFactory isf = createInputStreamFactory((BlobType)currentValue);
             	isf.setLength(((BlobType)currentValue).getLength());
             	currentValue = new BlobImpl(isf);
             }
             else if (currentValue instanceof XMLType) {
-            	currentValue = new SQLXMLImpl(createInputStreamFactory((XMLType)currentValue, ((XMLType)currentValue).getEncoding()));
+            	currentValue = new SQLXMLImpl(createInputStreamFactory((XMLType)currentValue));
+            	((SQLXMLImpl)currentValue).setEncoding(((XMLType)currentValue).getEncoding());
             } 
         } 
         else if (currentValue instanceof java.util.Date) {
@@ -316,12 +317,9 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
         return currentValue;
     }
     
-	private InputStreamFactory createInputStreamFactory(Streamable<?> type, String encoding) {
-		if (encoding == null) {
-			encoding = Streamable.ENCODING;
-		}
+	private InputStreamFactory createInputStreamFactory(Streamable<?> type) {
 		final StreamingLobChunckProducer.Factory factory = new StreamingLobChunckProducer.Factory(this.statement.getDQP(), this.requestID, type);
-		InputStreamFactory isf = new InputStreamFactory(encoding) {
+		InputStreamFactory isf = new InputStreamFactory() {
 			@Override
 			public InputStream getInputStream() throws IOException {
 				return new LobChunkInputStream(factory.getLobChunkProducer());

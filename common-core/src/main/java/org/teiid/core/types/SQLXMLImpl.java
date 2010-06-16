@@ -26,7 +26,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
@@ -57,9 +56,7 @@ import org.xml.sax.SAXException;
  * read operations.
  */
 public class SQLXMLImpl extends BaseLob implements SQLXML {
-	
-	private boolean inMemory;
-    
+		
 	public SQLXMLImpl() {
 		
 	}
@@ -69,13 +66,13 @@ public class SQLXMLImpl extends BaseLob implements SQLXML {
      * @param bytes
      */
     public SQLXMLImpl(final byte[] bytes) {
-    	super(new InputStreamFactory(Streamable.ENCODING) {
+    	super(new InputStreamFactory() {
 			@Override
 			public InputStream getInputStream() throws IOException {
 				return new ByteArrayInputStream(bytes);
 			}
 		});
-    	inMemory = true;
+    	setEncoding(Streamable.ENCODING);
 	}
     
     public SQLXMLImpl(final String str) {
@@ -87,21 +84,20 @@ public class SQLXMLImpl extends BaseLob implements SQLXML {
     }
     
     @Override
-    public Reader getCharacterStream() throws SQLException {
-    	setEncoding();
-    	return super.getCharacterStream();
-    }
-
-	private void setEncoding() throws SQLException {
-		String encoding = XMLType.getEncoding(this);
-		if (encoding != null) {
-    		this.getStreamFactory().setEncoding(encoding);
+    public String getEncoding() {
+    	String enc = super.getEncoding();
+    	if (enc != null) {
+    		return enc;
+    	}
+    	try {
+			enc = XMLType.getEncoding(this.getBinaryStream());
+			if (enc != null) {
+				setEncoding(enc);
+			}
+		} catch (SQLException e) {
 		}
-	}
-    
-    public boolean isInMemory() {
-		return inMemory;
-	}
+    	return Streamable.ENCODING;
+    }
     
     @SuppressWarnings("unchecked")
 	public <T extends Source> T getSource(Class<T> sourceClass) throws SQLException {
@@ -160,4 +156,5 @@ public class SQLXMLImpl extends BaseLob implements SQLXML {
 			throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
+	
 }

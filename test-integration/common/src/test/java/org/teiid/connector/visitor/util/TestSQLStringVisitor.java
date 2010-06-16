@@ -252,7 +252,7 @@ public class TestSQLStringVisitor  {
         assertEquals(expected, getString(TestLiteralImpl.example("string'Literal"))); //$NON-NLS-1$
         expected = "1000"; //$NON-NLS-1$
         assertEquals(expected, getString(TestLiteralImpl.example(new Integer(1000))));
-        expected = "{b 'true'}"; //$NON-NLS-1$
+        expected = "TRUE"; //$NON-NLS-1$
         assertEquals(expected, getString(TestLiteralImpl.example(Boolean.TRUE)));
         long now = System.currentTimeMillis();
         Date date = new Date(now);

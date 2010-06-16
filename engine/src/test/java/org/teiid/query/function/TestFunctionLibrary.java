@@ -26,6 +26,8 @@ import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Blob;
+import java.sql.Clob;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -36,15 +38,20 @@ import java.util.Iterator;
 import java.util.Properties;
 import java.util.TimeZone;
 
+import javax.sql.rowset.serial.SerialBlob;
+import javax.sql.rowset.serial.SerialClob;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.NullType;
 import org.teiid.core.types.XMLType;
+import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants.NonReserved;
@@ -1360,5 +1367,16 @@ public class TestFunctionLibrary {
         String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
         assertEquals("<!--comment-->", xml);
     }
+	
+	@Test public void testEncode() throws Exception {
+		Clob result = (Clob)helpInvokeMethod("encode", new Class[] {DefaultDataClasses.BLOB, DefaultDataClasses.STRING}, new Object[] { new BlobType(new SerialBlob("hello world".getBytes("ASCII"))), "ASCII" }, null); //$NON-NLS-1$
+		String string = result.getSubString(1, (int)result.length());
+		assertEquals("hello world", string);
+	}
+	
+	@Test public void testDecode() throws Exception {
+		Blob result = (Blob)helpInvokeMethod("decode", new Class[] {DefaultDataClasses.CLOB, DefaultDataClasses.STRING}, new Object[] { new ClobType(new SerialClob("hello world".toCharArray())), "UTF32" }, null); //$NON-NLS-1$
+		assertEquals(44, result.length()); //4 bytes / char
+	}
 	
 }

@@ -108,13 +108,6 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 		this.type = type;
 	}
 	
-	public Boolean isInMemory() {
-		if (this.reference instanceof SQLXMLImpl) {
-			return (((SQLXMLImpl) this.reference).isInMemory());
-		}
-		return null;
-	}
-	
 	public String getEncoding() {
 		return encoding;
 	}
@@ -145,32 +138,35 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 	 * @return
 	 */
 	public static String getEncoding(SQLXML xml) {
-		InputStream is = null;
 		try {
 			if (xml instanceof XMLType) {
 				XMLType type = (XMLType)xml;
+				if (type.encoding != null) {
+					return type.encoding;
+				}
 				xml = type.reference;
 			}
 			if (xml instanceof SQLXMLImpl) {
-				String encoding = ((SQLXMLImpl)xml).getStreamFactory().getEncoding();
-				if (encoding != null) {
-					return encoding;
-				}
+				return ((SQLXMLImpl)xml).getEncoding();
 			}
-			XMLInputFactory factory = XMLInputFactory.newInstance();
-			is = xml.getBinaryStream();
-			XMLStreamReader reader = factory.createXMLStreamReader(is);
-			return reader.getEncoding();
+			return getEncoding(xml.getBinaryStream());
 		} catch (SQLException e) {
 			return null;
+		}
+	}
+
+	public static String getEncoding(InputStream is) {
+		XMLInputFactory factory = XMLInputFactory.newInstance();
+		XMLStreamReader reader;
+		try {
+			reader = factory.createXMLStreamReader(is);
+			return reader.getEncoding();
 		} catch (XMLStreamException e) {
 			return null;
 		} finally {
-			if (is != null) {
-				try {
-					is.close();
-				} catch (IOException e) {
-				}
+			try {
+				is.close();
+			} catch (IOException e) {
 			}
 		}
 	}

@@ -24,9 +24,6 @@ package org.teiid.query.optimizer.relational.rules;
 
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -44,7 +41,6 @@ import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.util.CommandContext;
@@ -67,8 +63,7 @@ public class TestRuleAccessPatternValidation {
 	 * be below the access node after the rule is run
 	 */
 	private void helpTestAccessPatternValidation(String command) throws Exception {
-		Collection groups = new ArrayList();
-		PlanNode node = this.helpPlan(command, groups);
+		PlanNode node = this.helpPlan(command);
 
         if(DEBUG) {
             System.out.println("\nfinal plan node:\n"+node); //$NON-NLS-1$
@@ -85,12 +80,9 @@ public class TestRuleAccessPatternValidation {
 	 * @param groups Collection to add parsed and resolved GroupSymbols to
 	 * @return the root PlanNode of the query plan
 	 */
-	private PlanNode helpPlan(String command, Collection groups) throws Exception {
+	private PlanNode helpPlan(String command) throws Exception {
 		Command query = QueryParser.getQueryParser().parseCommand(command);
 		QueryResolver.resolveCommand(query, METADATA);
-		
-		//save groups for later
-		GroupCollectorVisitor.getGroups(query, groups);
 		
 		//Generate canonical plan
     	RelationalPlanner p = new RelationalPlanner();

@@ -104,11 +104,13 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 			}
 			ArrayList<Object> result = new ArrayList<Object>(2);
 			final File file = files[index++];
-			FileInputStreamFactory isf = new FileInputStreamFactory(file, encoding);
+			FileInputStreamFactory isf = new FileInputStreamFactory(file);
 			isf.setLength(file.length());
 			Object value = null;
 			if (isText) {
-				value = new ClobType(new ClobImpl(isf, -1));
+				ClobImpl clob = new ClobImpl(isf, -1);
+				clob.setEncoding(encoding);
+				value = new ClobType(clob);
 			} else {
 				value = new BlobType(new BlobImpl(isf));
 			}

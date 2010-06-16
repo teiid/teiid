@@ -28,8 +28,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.nio.charset.Charset;
 
 import javax.xml.transform.TransformerException;
 
@@ -52,9 +52,10 @@ public class XMLUtil {
 	public static final class FileStoreInputStreamFactory extends InputStreamFactory {
 		private final FileStore lobBuffer;
 		private final FileStoreOutputStream fsos;
+		private String encoding;
 
 		public FileStoreInputStreamFactory(FileStore lobBuffer, String encoding) {
-			super(encoding);
+			this.encoding = encoding;
 			this.lobBuffer = lobBuffer;
 			fsos = lobBuffer.createOutputStream(DataTypeManager.MAX_LOB_MEMORY_BYTES);
 			this.lobBuffer.setCleanupReference(this);
@@ -75,14 +76,10 @@ public class XMLUtil {
 		}
 
 		public Writer getWriter() {
-			try {
-				return new OutputStreamWriter(fsos, Streamable.ENCODING);
-			} catch (UnsupportedEncodingException e) {
-				throw new RuntimeException(e);
-			}
+			return new OutputStreamWriter(fsos, Charset.forName(encoding));
 		}
 		
-		public OutputStream getOuptStream() {
+		public OutputStream getOuputStream() {
 			return fsos;
 		}
 

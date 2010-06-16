@@ -920,6 +920,19 @@
           </row>
           <row>
             <entry>
+              <para>(7.0+) QUERYSTRING(path [, expr [AS name] ...])</para>
+            </entry>
+            <entry>
+              <para>Returns a properly encoded query string appended to the given path.  Null valued expressions are omitted, and a null path is treated as ''.</para>
+              <para>Names are optional for column reference expressions.</para>
+              <para>e.g. QUERYSTRING('path', 'value' as "&amp;x", ' &amp; ' as y, null as z) returns 'path?%26x=value&amp;y=%20%26%20'</para>
+            </entry>
+            <entry>
+              <para>path, expr in {string}.  name is an identifier</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
               <para>REPEAT(str1,instances)</para>
             </entry>
             <entry>
@@ -1033,19 +1046,6 @@
             </entry>
             <entry>
               <para>x in {string}</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>QUERYSTRING(path [, expr [AS name] ...])</para>
-            </entry>
-            <entry>
-              <para>Returns a properly encoded query string appended to the given path.  Null valued expressions are omitted, and a null path is treated as ''.</para>
-              <para>Names are optional for column reference expressions.</para>
-              <para>e.g. QUERYSTRING('path', 'value' as "&amp;x", ' &amp; ' as y, null as z) returns 'path?%26x=value&amp;y=%20%26%20'</para>
-            </entry>
-            <entry>
-              <para>path, expr in {string}.  name is an identifier</para>
             </entry>
           </row>
         </tbody>
@@ -1191,6 +1191,18 @@
           </row>
           <row>
             <entry>
+              <para>FROM_UNIXTIME (unix_timestamp)</para>
+            </entry>
+            <entry>
+              <para>Return the Unix timestamp (in seconds) as a Timestamp value
+              </para>
+            </entry>
+            <entry>
+              <para>Unix timestamp (in seconds)</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
               <para>HOUR(x)</para>
             </entry>
             <entry>
@@ -1213,6 +1225,40 @@
           </row>
           <row>
             <entry>
+              <para>MODIFYTIMEZONE (timestamp, startTimeZone,
+                endTimeZone)</para>
+            </entry>
+            <entry>
+              <para>Returns a timestamp based upon the incoming timestamp
+                adjusted for the differential between the start and end time
+                zones.  i.e. if the server is in GMT-6, then modifytimezone({ts
+                '2006-01-10 04:00:00.0'},'GMT-7', 'GMT-8') will return the
+                timestamp {ts '2006-01-10 05:00:00.0'} as read in GMT-6.  The
+                value has been adjusted 1 hour ahead to compensate for the
+                difference between GMT-7 and GMT-8.</para>
+            </entry>
+            <entry>
+              <para>startTimeZone and endTimeZone are strings,
+                returns a timestamp</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>MODIFYTIMEZONE (timestamp, endTimeZone)</para>
+            </entry>
+            <entry>
+              <para>Return a timestamp in the same manner as
+                modifytimezone(timestamp, startTimeZone, endTimeZone), but will
+                assume that the startTimeZone is the same as the server process.
+              </para>
+            </entry>
+            <entry>
+              <para>Timestamp is a timestamp; endTimeZone is a string,
+                returns a timestamp</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
               <para>MONTH(x)</para>
             </entry>
             <entry>
@@ -1231,17 +1277,6 @@
             </entry>
             <entry>
               <para>x in {date, timestamp}, returns string</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>QUARTER(x)</para>
-            </entry>
-            <entry>
-              <para>Return quarter</para>
-            </entry>
-            <entry>
-              <para>x in {date, timestamp}, returns integer</para>
             </entry>
           </row>
           <row>
@@ -1275,6 +1310,17 @@
             </entry>
             <entry>
               <para>x, y in {string}, returns timestamp</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>QUARTER(x)</para>
+            </entry>
+            <entry>
+              <para>Return quarter</para>
+            </entry>
+            <entry>
+              <para>x in {date, timestamp}, returns integer</para>
             </entry>
           </row>
           <row>
@@ -1383,52 +1429,6 @@
             </entry>
             <entry>
               <para>x in {date, timestamp}, returns integer</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>MODIFYTIMEZONE (timestamp, startTimeZone,
-                endTimeZone)</para>
-            </entry>
-            <entry>
-              <para>Returns a timestamp based upon the incoming timestamp
-                adjusted for the differential between the start and end time
-                zones.  i.e. if the server is in GMT-6, then modifytimezone({ts
-                '2006-01-10 04:00:00.0'},'GMT-7', 'GMT-8') will return the
-                timestamp {ts '2006-01-10 05:00:00.0'} as read in GMT-6.  The
-                value has been adjusted 1 hour ahead to compensate for the
-                difference between GMT-7 and GMT-8.</para>
-            </entry>
-            <entry>
-              <para>startTimeZone and endTimeZone are strings,
-                returns a timestamp</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>MODIFYTIMEZONE (timestamp, endTimeZone)</para>
-            </entry>
-            <entry>
-              <para>Return a timestamp in the same manner as
-                modifytimezone(timestamp, startTimeZone, endTimeZone), but will
-                assume that the startTimeZone is the same as the server process.
-              </para>
-            </entry>
-            <entry>
-              <para>Timestamp is a timestamp; endTimeZone is a string,
-                returns a timestamp</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>FROM_UNIXTIME (unix_timestamp)</para>
-            </entry>
-            <entry>
-              <para>Return the Unix timestamp (in seconds) as a Timestamp value
-              </para>
-            </entry>
-            <entry>
-              <para>Unix timestamp (in seconds)</para>
             </entry>
           </row>
         </tbody>
@@ -1578,6 +1578,17 @@
           </row>
           <row>
             <entry>
+              <para>COALESCE(x,y+)</para>
+            </entry>
+            <entry>
+              <para>Returns the first non-null parameter</para>
+            </entry>
+            <entry>
+              <para>x and all y's can be any compatible types</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
               <para>IFNULL(x,y)</para>
             </entry>
             <entry>
@@ -1609,17 +1620,6 @@
             </entry>
             <entry>
               <para>param1 and param2 must be compatable comparable types</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>COALESCE(x,y+)</para>
-            </entry>
-            <entry>
-              <para>Returns the first non-null parameter</para>
-            </entry>
-            <entry>
-              <para>x and all y's can be any compatible types</para>
             </entry>
           </row>
         </tbody>
@@ -1870,31 +1870,6 @@
         <tbody>
           <row>
             <entry>
-              <para><code>USER()</code></para>
-            </entry>
-            <entry>
-              <para>Retrieve the name of the user executing the
-                query</para>
-            </entry>
-            <entry>
-              <para>return is string</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para><code>ENV(key)</code></para>
-            </entry>
-            <entry>
-              <para>Retrieve an environment property. The only key
-                currently allowed is ‘sessionid’, although this will expand
-                in the future.</para>
-            </entry>
-            <entry>
-              <para>key in {string}, return is string</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
               <para><code>COMMANDPAYLOAD()</code></para>
             </entry>
             <entry>
@@ -1918,6 +1893,31 @@
             </entry>
             <entry>
               <para>key in {string}, return is string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para><code>ENV(key)</code></para>
+            </entry>
+            <entry>
+              <para>Retrieve an environment property. The only key
+                currently allowed is ‘sessionid’, although this will expand
+                in the future.</para>
+            </entry>
+            <entry>
+              <para>key in {string}, return is string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para><code>USER()</code></para>
+            </entry>
+            <entry>
+              <para>Retrieve the name of the user executing the
+                query</para>
+            </entry>
+            <entry>
+              <para>return is string</para>
             </entry>
           </row>
         </tbody>
@@ -1959,7 +1959,7 @@
           </row>
           <row>
             <entry>
-              <para><code>XSLTRANSFORM(doc, xsl)</code></para>
+              <para><code>(7.0+) XSLTRANSFORM(doc, xsl)</code></para>
             </entry>
             <entry>
               <para>Applies an xsl stylesheet to the given document.  If either argument is null, the result is null.</para>
@@ -1971,7 +1971,7 @@
           </row>
           <row id="xmlquery">
             <entry>
-              <para><code>XMLQUERY([&lt;NSP&gt;] xquery [&lt;PASSING&gt;] [(NULL|EMPTY) ON EMPTY]]</code></para>
+              <para><code>(7.0+) XMLQUERY([&lt;NSP&gt;] xquery [&lt;PASSING&gt;] [(NULL|EMPTY) ON EMPTY]]</code></para>
               <para>PASSING:=<code>PASSING exp [AS name] [, exp [AS name]]*</code></para>
             </entry>
             <entry>
@@ -2067,11 +2067,11 @@
           </row>
           <row>
             <entry id="xmlserialize">
-              <para><code>XMLSERIALIZE((DOCUMENT|CONTENT) exp [AS datatype])</code></para>
+              <para><code>XMLSERIALIZE([(DOCUMENT|CONTENT)] exp [AS datatype])</code></para>
             </entry>
             <entry>
               <para>Returns a character type representation of the exp expression. 
-              Only a character type (string, clob) may be specified as the datatype.  
+              Only a character type (string, varchar, clob) may be specified as the datatype.  CONTENT is the default.  
               If DOCUMENT is specified and the xml is not a valid document or fragment, then an exception is raised. 
               </para>
             </entry>

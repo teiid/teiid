@@ -607,9 +607,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
             if(Number.class.isAssignableFrom(type)) {
                 buffer.append(val);
             } else if(type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
-                buffer.append("{b '") //$NON-NLS-1$
-                      .append(val)
-                      .append("'}"); //$NON-NLS-1$
+            	buffer.append(obj.getValue().equals(Boolean.TRUE) ? TRUE : FALSE);
             } else if(type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
                 buffer.append("{ts '") //$NON-NLS-1$
                       .append(val)

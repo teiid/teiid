@@ -52,35 +52,29 @@ public class DocumentInProgress {
     private Element currentParent;
     private Element currentObject;
     private boolean finished;
-    private String documentEncoding = MappingNodeConstants.Defaults.DEFAULT_DOCUMENT_ENCODING;
     private boolean isFormatted = MappingNodeConstants.Defaults.DEFAULT_FORMATTED_DOCUMENT.booleanValue();
     private SQLXMLImpl xml;
     
     public DocumentInProgress(FileStore store, String encoding) throws TeiidComponentException{
     	final FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(store, encoding);
         this.xml = new SQLXMLImpl(fsisf);
+        this.xml.setEncoding(encoding);
         SAXTransformerFactory factory = new TransformerFactoryImpl();
         try {
 			//SAX2.0 ContentHandler
 			handler = factory.newTransformerHandler();
-			handler.setResult(new StreamResult(fsisf.getOuptStream()));
+			handler.setResult(new StreamResult(fsisf.getOuputStream()));
 		} catch (Exception e) {
 			throw new TeiidComponentException(e);
 		}
         transformer = handler.getTransformer();
+        transformer.setOutputProperty(OutputKeys.ENCODING, encoding);
     }
     
     public SQLXMLImpl getSQLXML() {
     	return xml;
     }
     
-	/**
-	 * @see org.teiid.query.processor.xml.DocumentInProgress#setDocumentEncoding(java.lang.String)
-	 */
-	public void setDocumentEncoding(String documentEncoding) {
-		this.documentEncoding = documentEncoding;
-	}
-
 	/**
 	 * @see org.teiid.query.processor.xml.DocumentInProgress#setDocumentFormat(boolean)
 	 */
@@ -287,7 +281,6 @@ public class DocumentInProgress {
 	
 	private void startDocument() throws SAXException{
         showState( "startDocument - TOP" );  //$NON-NLS-1$
-		transformer.setOutputProperty(OutputKeys.ENCODING, documentEncoding);
 		if(isFormatted){
 			transformer.setOutputProperty(OutputKeys.INDENT, "yes");//$NON-NLS-1$
 		}

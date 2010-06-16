@@ -6833,5 +6833,12 @@ public class TestParser {
     	f.setWellFormed(true);
     	helpTestExpression("xmlparse(document x wellformed)", "XMLPARSE(DOCUMENT x WELLFORMED)", f);
     }
+    
+    @Test public void testXmlSerialize1() throws Exception {
+    	XMLSerialize f = new XMLSerialize();
+    	f.setExpression(new ElementSymbol("x"));
+    	f.setTypeString("CLOB");
+    	helpTestExpression("xmlserialize(x as CLOB)", "XMLSERIALIZE(x AS CLOB)", f);
+    }
 
 }

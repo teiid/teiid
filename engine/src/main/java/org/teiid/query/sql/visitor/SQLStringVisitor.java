@@ -24,7 +24,6 @@ package org.teiid.query.sql.visitor;
 
 import static org.teiid.language.SQLConstants.Reserved.*;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,7 +32,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.XMLType;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
@@ -1156,15 +1154,6 @@ public class SQLStringVisitor extends LanguageVisitor {
                 constantParts = new Object[] { "{t'", obj.getValue().toString(), "'}" }; //$NON-NLS-1$ //$NON-NLS-2$
             } else if(type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
                 constantParts = new Object[] { "{d'", obj.getValue().toString(), "'}" }; //$NON-NLS-1$ //$NON-NLS-2$
-            } else if(type.equals(DataTypeManager.DefaultDataClasses.XML)){
-            	XMLType value = (XMLType)obj.getValue();
-            	if (Boolean.TRUE.equals(value.isInMemory())) {
-                	try {
-						constantParts = new Object[] { "{x '", escapeStringValue(value.getString(), "'"), "'}" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					} catch (SQLException e) {
-						
-					} 
-            	}
             } 
             if (constantParts == null) {
             	String strValue = obj.getValue().toString();
@@ -1571,7 +1560,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     
     @Override
     public void visit(XMLAttributes obj) {
-    	parts.add(FunctionLibrary.XMLATTRIBUTES);
+    	parts.add(XMLATTRIBUTES);
     	parts.add("("); //$NON-NLS-1$
     	registerNodes(obj.getArgs(), 0);
     	parts.add(")"); //$NON-NLS-1$
@@ -1579,7 +1568,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     
     @Override
     public void visit(XMLElement obj) {
-    	parts.add(FunctionLibrary.XMLELEMENT);
+    	parts.add(XMLELEMENT);
     	parts.add("(NAME "); //$NON-NLS-1$
     	outputDisplayName(obj.getName());
     	if (obj.getNamespaces() != null) {
@@ -1599,7 +1588,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     
     @Override
     public void visit(XMLForest obj) {
-    	parts.add(FunctionLibrary.XMLFOREST);
+    	parts.add(XMLFOREST);
     	parts.add("("); //$NON-NLS-1$
     	if (obj.getNamespaces() != null) {
     		parts.add(registerNode(obj.getNamespaces()));
@@ -1611,7 +1600,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     
     @Override
     public void visit(XMLNamespaces obj) {
-    	parts.add(FunctionLibrary.XMLNAMESPACES);
+    	parts.add(XMLNAMESPACES);
     	parts.add("("); //$NON-NLS-1$
     	for (Iterator<NamespaceItem> items = obj.getNamespaceItems().iterator(); items.hasNext();) {
     		NamespaceItem item = items.next();
@@ -1804,12 +1793,14 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit(XMLSerialize obj) {
     	parts.add(XMLSERIALIZE);
     	parts.add(Tokens.LPAREN);
-    	if (obj.isDocument()) {
-    		parts.add(NonReserved.DOCUMENT);
-    	} else {
-    		parts.add(NonReserved.CONTENT);
+    	if (obj.isDocument() != null) {
+	    	if (obj.isDocument()) {
+	    		parts.add(NonReserved.DOCUMENT);
+	    	} else {
+	    		parts.add(NonReserved.CONTENT);
+	    	}
+	    	parts.add(SPACE);
     	}
-    	parts.add(SPACE);
     	parts.add(registerNode(obj.getExpression()));
     	if (obj.getTypeString() != null) {
     		parts.add(SPACE);
@@ -1882,5 +1873,5 @@ public class SQLStringVisitor extends LanguageVisitor {
     	}
    		return SQLConstants.isReservedWord(string);
     }
-
+    
 }

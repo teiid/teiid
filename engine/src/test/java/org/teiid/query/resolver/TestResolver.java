@@ -2947,7 +2947,7 @@ public class TestResolver {
     }
     
     @Test public void testQueryString() throws Exception {
-    	helpResolveException("select querystring({x '<a/>'})");
+    	helpResolveException("select querystring(xmlparse(document '<a/>'))");
     }
     
 }

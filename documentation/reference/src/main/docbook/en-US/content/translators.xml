@@ -97,6 +97,7 @@ It will commonly be used with the <link linkend="texttable">TEXTTABLE</link> or 
 </tbody>
 </tgroup>
 </table>
+<para>There are file importer settings, but it does provide metadata for dynamic vdbs.</para>
 <sect3><title>Usage</title>
 <para>Retrieve all files as BLOBs with the given extension at the given path. <programlisting>call getFiles('path/*.ext')</programlisting>
 If the extension pattern is not specified and the path is a directory, then all files in the directory will be returned.  If the path or filename doesn't exist, then no results will be returned.
@@ -360,7 +361,7 @@ If the extension pattern is not specified and the path is a directory, then all 
 </tbody>
 </tgroup>
 </table>
-<para>There are no import settings for the Loopback translator.</para>
+<para>There are no import settings for the Loopback translator; it also does not provide metadata - it should be used as a testing stub.</para>
 </sect2>
 <sect2>
 <title>Salesforce Translator</title>
@@ -687,14 +688,15 @@ It will commonly be used with the <link linkend="texttable">TEXTTABLE</link> or 
 </tbody>
 </tgroup>
 </table>
+<para>There are ws importer settings, but it does provide metadata for dynamic vdbs.</para>
 <sect3><title>Usage</title>
 <para>The main procedure, invoke, allows for multiple binding, or protocol modes, including HTTP, SOAP11, and SOAP12. 
-<programlisting>Procedure invoke(binding in STRING, action in STRING, request in OBJECT, endpoint in STRING) returns XML</programlisting>
+<programlisting>Procedure invoke(binding in STRING, action in STRING, request in XML, endpoint in STRING) returns XML</programlisting>
 </para>
 <para>The binding may be one of null (to use the default) HTTP, SOAP11, or SOAP12.  Action with a SOAP binding indicates the SOAPAction value.  Action with a HTTP binding indicates the HTTP method (GET, POST, etc.), which defaults to POST.</para>
 <para>A null value for the binding or endpoint will use the default value.  The default endpoint is specified in the WS resource adapter configuration.  The endpoint URL may be absolute or relative.  If it's relative then it will be combined with the default endpoint.</para>
 <para>Since multiple parameters are not required to have values, it is often more clear to call the invoke procedure with named parameter syntax. e.g. <programlisting>call invoke(binding='HTTP', action='GET')</programlisting></para>
-<para>The request can be an XML, STRING, or CLOB value and should be a valid XML document.</para>
+<para>The request XML should be a valid XML document or root element.</para>
 <para>See the ws-weather example in the kit and database metadata for a full description of invoke.</para>
 </sect3>
 </sect2>

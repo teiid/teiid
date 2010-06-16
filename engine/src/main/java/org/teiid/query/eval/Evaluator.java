@@ -23,13 +23,12 @@
 package org.teiid.query.eval;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
-import java.nio.charset.Charset;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
+import java.sql.SQLXML;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -53,6 +52,7 @@ import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BaseLob;
+import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
@@ -113,7 +113,6 @@ import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.ErrorMessageKeys;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression;
 import org.teiid.translator.WSConnection.Util;
-
 
 public class Evaluator {
 
@@ -671,11 +670,12 @@ public class Evaluator {
 			return null;
 		}
 		XMLType.Type type = Type.DOCUMENT;
-		XMLType result = null;
+		SQLXMLImpl result = null;
 		try {
 			if (value instanceof String) {
 				String string = (String)value;
-				result = new XMLType(new SQLXMLImpl(string));
+				result = new SQLXMLImpl(string);
+				result.setEncoding(Streamable.ENCODING);
 				if (!xp.isWellFormed()) {
 					Reader r = new StringReader(string);
 					type = validate(xp, r);
@@ -683,38 +683,14 @@ public class Evaluator {
 			} else {
 				InputStreamFactory isf = null;
 				Streamable<?> s = (Streamable<?>)value;
-				if (s.getReference() instanceof BaseLob) {
-					BaseLob baseLob = (BaseLob)s.getReference();
-					isf = baseLob.getStreamFactory();
-				} else {
-					if (s instanceof Clob) {
-						isf = new InputStreamFactory.ClobInputStreamFactory((Clob)s.getReference());
-					} else {
-						isf = new InputStreamFactory.BlobInputStreamFactory((Blob)s.getReference());
-					}
-				}
-				result = new XMLType(new SQLXMLImpl(isf));
+				isf = getInputStreamFactory(s);
+				result = new SQLXMLImpl(isf);
 				if (!xp.isWellFormed()) {
-					String encoding = null;
-					Reader r = null;
-					if (s instanceof Clob) {
-						r = isf.getCharacterStream();
-					} else {
-						encoding = XMLType.getEncoding(result); //look for the xml declaration
-						if (encoding == null) {
-							encoding = "UTF-8"; //$NON-NLS-1$
-						}
-						r = new InputStreamReader(isf.getInputStream(), encoding);
-					}
+					Reader r = result.getCharacterStream();
 					type = validate(xp, r);
-					if (encoding != null) {
-						isf.setEncoding(encoding);
-					}
 				}
 			}
 		} catch (TransformationException e) {
-			throw new ExpressionEvaluationException(e, e.getMessage());
-		} catch (IOException e) {
 			throw new ExpressionEvaluationException(e, e.getMessage());
 		} catch (SQLException e) {
 			throw new ExpressionEvaluationException(e, e.getMessage());
@@ -722,8 +698,19 @@ public class Evaluator {
 		if (!xp.isDocument()) {
 			type = Type.CONTENT;
 		}
-		result.setType(type);
-		return result;
+		XMLType xml = new XMLType(result);
+		xml.setType(type);
+		return xml;
+	}
+
+	//TODO: determine when wrapping is not needed
+	public static InputStreamFactory getInputStreamFactory(Streamable<?> s) {
+		if (s instanceof ClobType) {
+			return new InputStreamFactory.ClobInputStreamFactory((Clob)s.getReference());
+		} else if (s instanceof BlobType){
+			return new InputStreamFactory.BlobInputStreamFactory((Blob)s.getReference());
+		}
+		return new InputStreamFactory.SQLXMLInputStreamFactory((SQLXML)s.getReference());
 	}
 
 	private Type validate(final XMLParse xp, Reader r)
@@ -792,7 +779,7 @@ public class Evaluator {
 			return null;
 		}
 		try {
-			if (!xs.isDocument()) {
+			if (xs.isDocument() == null || !xs.isDocument()) {
 				return serialize(xs, value);
 			}
 			if (value.getType() == Type.UNKNOWN) {
@@ -810,18 +797,11 @@ public class Evaluator {
 		throw new FunctionExecutionException(QueryPlugin.Util.getString("Evaluator.xmlserialize")); //$NON-NLS-1$
 	}
 
-	private Object serialize(XMLSerialize xs, XMLType value)
-			throws SQLException, TransformationException {
+	private Object serialize(XMLSerialize xs, XMLType value) throws TransformationException {
 		if (xs.getType() == DataTypeManager.DefaultDataClasses.STRING) {
 			return DataTypeManager.transformValue(value, xs.getType());
 		}
-		InputStreamFactory isf = null;
-		if (value.getReference() instanceof BaseLob) {
-			BaseLob baseLob = (BaseLob)value.getReference();
-			isf = baseLob.getStreamFactory();
-		} else {
-			isf = new InputStreamFactory.SQLXMLInputStreamFactory(value.getReference());
-		}
+		InputStreamFactory isf = getInputStreamFactory(value);
 		return new ClobType(new ClobImpl(isf, -1));
 	}
 

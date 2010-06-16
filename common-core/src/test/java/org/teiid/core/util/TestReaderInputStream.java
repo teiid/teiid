@@ -22,19 +22,18 @@
 
 package org.teiid.core.util;
 
+import static org.junit.Assert.*;
+
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.StringReader;
 import java.nio.charset.Charset;
 
-import org.teiid.core.util.ReaderInputStream;
+import org.junit.Test;
 
-import junit.framework.TestCase;
-
-
-public class TestReaderInputStream extends TestCase {
+public class TestReaderInputStream {
 	
-	public void testUTF8() throws Exception {
+	@Test public void testUTF8() throws Exception {
 		FileInputStream fis = new FileInputStream(UnitTestUtil.getTestDataFile("legal_notice.xml")); //$NON-NLS-1$
 		ReaderInputStream ris = new ReaderInputStream(new FileReader(UnitTestUtil.getTestDataFile("legal_notice.xml")), Charset.forName("UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
 		
@@ -48,8 +47,7 @@ public class TestReaderInputStream extends TestCase {
 		}
 	}
 	
-	//the encoding strategy is roughly equivalent to utf-16
-	public void testUTF16() throws Exception {
+	@Test public void testUTF16() throws Exception {
 		String actual = "!?abc"; //$NON-NLS-1$
 		ReaderInputStream ris = new ReaderInputStream(new StringReader(actual), Charset.forName("UTF-16"), 1); //$NON-NLS-1$
 		byte[] result = new byte[(actual.length()) * 2 + 2];
@@ -58,7 +56,7 @@ public class TestReaderInputStream extends TestCase {
 		assertEquals(resultString, actual);
 	}
 	
-	public void testASCII() throws Exception  {
+	@Test public void testASCII() throws Exception  {
 		String actual = "!?abc"; //$NON-NLS-1$
 		ReaderInputStream ris = new ReaderInputStream(new StringReader(actual), Charset.forName("US-ASCII"), 1); //$NON-NLS-1$
 		byte[] result = new byte[actual.length()];

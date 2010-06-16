@@ -276,7 +276,7 @@
             <entry>clob</entry>
             <entry>char, boolean, byte, short, integer, long,
               biginteger, float, double, bigdecimal, xml<footnote>
-                  <para>See also <link linkend="xmlparse">XMLPARSE</link></para>
+                  <para>string to xml is equivlant to XMLPARSE(DOCUMENT exp) - See also <link linkend="xmlparse">XMLPARSE</link></para>
                 </footnote></entry>
           </row>
           <row>
@@ -350,7 +350,7 @@
             <entry>xml</entry>
             <entry></entry>
             <entry>string<footnote>
-                  <para>See also <link linkend="xmlserialize">XMLSERIALIZE</link></para>
+                  <para>xml to string is equivalent to XMLSERIALIZE(exp AS STRING) - see also <link linkend="xmlserialize">XMLSERIALIZE</link></para>
                 </footnote></entry>
           </row>
         </tbody>

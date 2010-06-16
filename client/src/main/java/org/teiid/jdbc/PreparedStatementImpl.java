@@ -678,7 +678,7 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
 
 	public void setAsciiStream(int parameterIndex, final InputStream x)
 			throws SQLException {
-		this.setObject(parameterIndex, new ClobImpl(new InputStreamFactory("US-ASCII") { //$NON-NLS-1$
+		this.setObject(parameterIndex, new ClobImpl(new InputStreamFactory() { 
 			@Override
 			public InputStream getInputStream() throws IOException {
 				return x;
@@ -726,7 +726,7 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
 	}
 
 	public void setClob(int parameterIndex, final Reader reader) throws SQLException {
-		this.setObject(parameterIndex, new ClobImpl(new InputStreamFactory(Streamable.ENCODING) {
+		this.setObject(parameterIndex, new ClobImpl(new InputStreamFactory() {
 			
 			@Override
 			public InputStream getInputStream() throws IOException {
