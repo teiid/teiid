@@ -35,6 +35,7 @@ import java.sql.SQLException;
 import javax.sql.rowset.serial.SerialClob;
 
 import org.teiid.core.CorePlugin;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.core.util.SqlUtil;
 
@@ -122,19 +123,21 @@ public class ClobImpl extends BaseLob implements Clob {
         } else if ((pos+length) > length()) {
             length = (int)(length()-pos);
         }
-        char[] dataCopy = new char[length];
         Reader in = getCharacterStream();
         try {
 	        try {
-	        	in.skip(pos);
-	        	in.read(dataCopy);
+	        	long skipped = 0;
+	        	while (pos > 0) {
+	        		skipped = in.skip(pos);
+	        		pos -= skipped;
+	        	}
+	        	return new String(ObjectConverterUtil.convertToCharArray(in, length));
 	        } finally {
 	        	in.close();
 	        } 
         } catch (IOException e) {
         	throw new SQLException(e);
         }
-        return new String(dataCopy);
     }
 
     /**

@@ -25,6 +25,7 @@ package org.teiid.jdbc;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.nio.charset.Charset;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -38,12 +39,16 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.client.DQP;
 import org.teiid.client.ResultsMessage;
+import org.teiid.client.lob.LobChunk;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.XMLType;
 
-
-public class TestMMResultSet {
+@SuppressWarnings("nls")
+public class TestResultSet {
 
     /** test next() without walking through */
     @Test public void testNext1() throws SQLException {  
@@ -701,6 +706,25 @@ public class TestMMResultSet {
         assertTrue(cs.isAfterLast());
         assertEquals(2, cs.getOutputParamValue(2));
         assertEquals(3, cs.getOutputParamValue(3));
+    }
+    
+    @Test public void testXML() throws Exception {
+    	StatementImpl statement = createMockStatement(ResultSet.TYPE_FORWARD_ONLY);
+    	ResultsFuture<LobChunk> future = new ResultsFuture<LobChunk>();
+    	future.getResultsReceiver().receiveResults(new LobChunk("<a/>".getBytes(Charset.forName("UTF-8")), true));
+    	Mockito.stub(statement.getDQP().requestNextLobChunk(0, 0, null)).toReturn(future);
+        ResultsMessage resultsMsg = new ResultsMessage();
+        XMLType result = new XMLType();
+        result.setEncoding("UTF-8");
+        resultsMsg.setResults(new List<?>[] {Arrays.asList(result)});
+        resultsMsg.setLastRow(1);
+        resultsMsg.setFirstRow(1);
+        resultsMsg.setFinalRow(1);
+        resultsMsg.setColumnNames(new String[] {"x"}); //$NON-NLS-1$
+        resultsMsg.setDataTypes(new String[] {"xml"}); //$NON-NLS-1$
+        ResultSetImpl cs = new ResultSetImpl(resultsMsg, statement);
+        cs.next();
+        assertEquals("<a/>", cs.getString(1));
     }
          
     /////////////////////// Helper Method ///////////////////

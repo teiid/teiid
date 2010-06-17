@@ -22,33 +22,32 @@
 
 package org.teiid.core.types;
 
+import static org.junit.Assert.*;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Reader;
 
 import javax.sql.rowset.serial.SerialClob;
 
-import org.teiid.core.types.ClobType;
+import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
 
+public class TestClobValue {
 
-import junit.framework.TestCase;
-
-
-public class TestClobValue extends TestCase {
-
-    public void testClobValue() throws Exception {
+    @Test public void testClobValue() throws Exception {
         String testString = "this is test clob"; //$NON-NLS-1$
         SerialClob clob = new SerialClob(testString.toCharArray()); 
         
         ClobType cv = new ClobType(clob);
         assertEquals(testString, cv.getSubString(1L, (int)cv.length()));
     }
-
     
-    public void testClobValuePersistence() throws Exception {
+    @Test public void testClobValuePersistence() throws Exception {
         String testString = "this is test clob"; //$NON-NLS-1$
         SerialClob clob = new SerialClob(testString.toCharArray());
         
@@ -75,6 +74,34 @@ public class TestClobValue extends TestCase {
         assertNull(read.getReference());
         
         saved.delete();
+    }
+    
+    @Test public void testClobSubstring() throws Exception {
+    	ClobImpl clob = new ClobImpl() {
+    		public java.io.Reader getCharacterStream() throws java.sql.SQLException {
+    			return new Reader() {
+
+    				int pos = 0;
+    				
+					@Override
+					public void close() throws IOException {
+						
+					}
+
+					@Override
+					public int read(char[] cbuf, int off, int len)
+							throws IOException {
+						if (pos < 2) {
+							cbuf[off] = 'a';
+							pos++;
+							return 1;
+						}
+						return -1;
+					}
+    			};
+    		}
+    	};
+    	assertEquals("aa", clob.getSubString(1, 3));
     }
     
 }

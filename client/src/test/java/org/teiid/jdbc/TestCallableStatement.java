@@ -44,7 +44,7 @@ import org.teiid.jdbc.ResultSetImpl;
 import org.teiid.net.ServerConnection;
 
 
-public class TestMMCallableStatement extends TestCase {
+public class TestCallableStatement extends TestCase {
 	
 	public void testWasNull() throws Exception {
 		CallableStatementImpl mmcs = getCallableStatement();

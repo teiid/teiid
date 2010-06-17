@@ -33,6 +33,7 @@ import javax.sql.rowset.serial.SerialBlob;
 
 import org.teiid.core.CorePlugin;
 import org.teiid.core.types.LobSearchUtil.StreamProvider;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.SqlUtil;
 
 
@@ -89,19 +90,22 @@ public class BlobImpl extends BaseLob implements Blob, StreamProvider {
         else if (pos + length > length()) {
             length = (int)(length() - pos);
         }
-        byte[] dataCopy = new byte[length];
         InputStream in = getBinaryStream();
         try {
-	        try {
-	        	in.skip(pos);
-	        	in.read(dataCopy);
-	        } finally {
-	        	in.close();
-	        } 
+        	long skipped = 0;
+        	while (pos > 0) {
+        		skipped = in.skip(pos);
+        		pos -= skipped;
+        	}
+        	return ObjectConverterUtil.convertToByteArray(in, length);
         } catch (IOException e) {
         	throw new SQLException(e);
+        } finally {
+        	try {
+				in.close();
+			} catch (IOException e) {
+			}
         }
-        return dataCopy;
     }
 
     /**

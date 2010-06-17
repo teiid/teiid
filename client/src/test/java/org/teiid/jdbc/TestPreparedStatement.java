@@ -51,7 +51,7 @@ import org.teiid.net.ServerConnection;
  * Test case to validate general operations on an <code>MMPreparedStatement
  * </code> 
  */
-public class TestMMPreparedStatement {
+public class TestPreparedStatement {
 
 	/**
 	 * Test that <code>MMPreparedStatement</code>'s <code>execute()</code> method

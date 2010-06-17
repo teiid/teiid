@@ -43,14 +43,14 @@ import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.net.ServerConnection;
 
 
-public class TestMMConnection extends TestCase {
+public class TestConnection extends TestCase {
 
 	protected static final String STD_DATABASE_NAME         = "QT_Ora9DS"; //$NON-NLS-1$
     protected static final int STD_DATABASE_VERSION      = 1; 
     
     static String serverUrl = "jdbc:metamatrix:QT_Ora9DS@mm://localhost:7001;version=1;user=metamatrixadmin;password=mm"; //$NON-NLS-1$
 
-    public TestMMConnection(String name) {
+    public TestConnection(String name) {
         super(name);
     }
     

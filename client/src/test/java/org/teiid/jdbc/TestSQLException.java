@@ -42,7 +42,7 @@ import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 
 
-public class TestMMSQLException extends TestCase {
+public class TestSQLException extends TestCase {
   
 	/*
 	 * Test method for 'com.metamatrix.jdbc.MMSQLException.MMSQLException()'

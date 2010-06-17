@@ -37,7 +37,7 @@ import junit.framework.TestCase;
 /** 
  * @since 4.3
  */
-public class TestMMJDBCURL extends TestCase {
+public class TestJDBCURL extends TestCase {
 
     // Need to allow embedded spaces and ='s within optional properties
     public final void testCredentials() throws Exception {

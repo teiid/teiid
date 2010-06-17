@@ -40,7 +40,7 @@ import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.jdbc.StatementImpl;
 
 
-public class TestMMStatement {
+public class TestStatement {
 
 	@Test(expected=TeiidSQLException.class) public void testUpdateException() throws Exception {
 		StatementImpl statement = new StatementImpl(Mockito.mock(ConnectionImpl.class), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);

@@ -36,11 +36,11 @@ import junit.framework.TestCase;
 
 
 
-public class TestMMXAConnection extends TestCase {
+public class TestXAConnection extends TestCase {
 	
 	public void testConnectionClose() throws Exception {
 
-		final ConnectionImpl mmConn = TestMMConnection.getMMConnection();
+		final ConnectionImpl mmConn = TestConnection.getMMConnection();
 
 		XAConnectionImpl xaConn = new XAConnectionImpl(new XAConnectionImpl.ConnectionSource() {
 			//## JDBC4.0-begin ##

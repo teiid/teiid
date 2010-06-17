@@ -47,7 +47,6 @@ public class TestBlobValue extends TestCase {
         assertEquals(testString, new String(bv.getBytes(1L, (int)bv.length())));
     }
 
-    
     public void testBlobValuePersistence() throws Exception {
         String testString = "this is test clob"; //$NON-NLS-1$
         SerialBlob blob = new SerialBlob(testString.getBytes());

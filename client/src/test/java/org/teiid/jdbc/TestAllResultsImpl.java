@@ -62,7 +62,7 @@ public class TestAllResultsImpl {
 	private StatementImpl statement;
 
 	@Before public void setUp() throws Exception {
-		statement = TestMMResultSet.createMockStatement(TYPE_SCROLL_SENSITIVE);
+		statement = TestResultSet.createMockStatement(TYPE_SCROLL_SENSITIVE);
 	}
 	
 	/** test hasNext(), actual result set should return FALSE. */
@@ -766,14 +766,14 @@ public class TestAllResultsImpl {
 	private ResultSetImpl helpGetResultSetImpl(int type)
 			throws SQLException {
 		ResultsMessage rsMsg = exampleResultsMsg2();
-		statement = TestMMResultSet.createMockStatement(type);
+		statement = TestResultSet.createMockStatement(type);
 		ResultSetImpl rs = new ResultSetImpl(rsMsg, statement);
 		return rs;
 	}
 
 	private ResultSetImpl helpGetNoResults(int type) throws SQLException {
 		ResultsMessage rsMsg = exampleResultsMsg3();
-		statement = TestMMResultSet.createMockStatement(type);
+		statement = TestResultSet.createMockStatement(type);
 		ResultSetImpl rs = new ResultSetImpl(rsMsg, statement);
 		return rs;
 	}

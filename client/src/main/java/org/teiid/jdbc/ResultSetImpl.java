@@ -286,9 +286,9 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
         // defect 13539 - set the currentValue (defined in MMResultSet) so that wasNull() accurately returns whether this value was null
         currentValue = cursorRow.get(column-1);
             
-        if (currentValue instanceof Streamable) {
+        if (currentValue instanceof Streamable<?>) {
         	if (Boolean.getBoolean(Streamable.FORCE_STREAMING)) {
-        		Object reference = ((Streamable)currentValue).getReference();
+        		Object reference = ((Streamable<?>)currentValue).getReference();
             	if (reference != null) {
             		currentValue = reference;
             		return currentValue;
@@ -303,8 +303,9 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
             	currentValue = new BlobImpl(isf);
             }
             else if (currentValue instanceof XMLType) {
-            	currentValue = new SQLXMLImpl(createInputStreamFactory((XMLType)currentValue));
-            	((SQLXMLImpl)currentValue).setEncoding(((XMLType)currentValue).getEncoding());
+            	XMLType val = (XMLType)currentValue;
+            	currentValue = new SQLXMLImpl(createInputStreamFactory(val));
+            	((SQLXMLImpl)currentValue).setEncoding(val.getEncoding());
             } 
         } 
         else if (currentValue instanceof java.util.Date) {
