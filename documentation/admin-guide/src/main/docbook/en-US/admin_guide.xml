@@ -29,7 +29,7 @@
 ]>
 
 <book>
-
+    
     <bookinfo>
         <title>Teiid - Scalable Information Integration</title>
         <subtitle>Teiid Administrator's Guide</subtitle>
@@ -47,6 +47,8 @@
         
     <xi:include href="content/installation.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/vdb-deployment.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/security.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/logging.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/admin-console.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />        
     <xi:include href="content/adminshell-introduction.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/getting-started.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />

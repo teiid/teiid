@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="custom_security">
+	<title>Teiid Security</title>
+	<para>The Teiid system provides a range of built-in and extensible security features to enable the
+		secure access of data.  </para>
+	<sect1>
+		<title>Authentication</title>
+		<para>JDBC clients may use simple passwords to authenticate a user.</para>
+		<para>Typically a user name is required, however user names may be considered optional if the
+			identity of the user can be discerned by the password credential alone.  In
+			any case it is up to the configured security domain to determine whether a user can be
+			authenticated.</para>
+	</sect1>
+	<sect1>
+		<title>Authorization</title>
+		<para>Authorization covers both administrative activities and data
+			roles.  A data role is a collection of permissions (also referred to as entitlements) and a
+			collection of entitled principals or groups. With the deployment of a VDB
+			the deployer can choose which principals and groups have which data roles.</para>
+	</sect1>
+	<sect1>
+		<title>Encryption</title>
+		<para>At a transport level Teiid provides built-in support for JDBC
+			over SSL or just sensitive message encryption when SSL is not in use.
+		</para>
+		<para>
+			Passwords in configuration files however are by default stored in
+			plain text. If you need these values to be encrypted, please see
+			<ulink
+				url="http://community.jboss.org/wiki/maskingpasswordsinjbossasxmlconfiguration">encrypting passwords</ulink>
+			for instructions on encryption facilities provided by the container.
+		</para>
+	</sect1>
+	<sect1>
+		<title>LoginModules</title>
+		<para>
+			LoginModules are an essential part of the JAAS security
+			framework and provide Teiid customizable user authentication and the
+			ability to reuse existing LoginModules defined for JBossAS. See
+			<ulink
+				url="http://docs.jboss.org/jbossas/admindevel326/html/ch8.chapter.html">JBossAS Security</ulink>
+			for general information on configuring security in JBossAS.</para>
+		<para>
+			Teiid can be configured with multiple named application policies
+			that group together relevant LoginModules. Each of these application
+			policy (or domains) names can be used to fully
+			qualify user names to
+			authenticate only against that domain.  The format for a qualified
+			name is username@domainname.
+		</para>
+		<para>If a user name is not fully qualified, then the installed
+			domains will be consulted in order until a domain
+			successfully or unsuccessfully authenticates the
+			user.
+		</para>
+		<para>If no domain can authenticate the user, the logon
+			attempt will fail.
+			Details of the failed attempt including invalid users, which
+			domains were consulted, etc. will be in the server log with appropriate
+			levels of severity.</para>
+		<sect2>
+			<title>Built-in LoginModules</title>
+			<para>JBossAS provides several LoginModules for common authentication needs, such as authenticating from text files or LDAP.</para>
+			<para>The UsersRolesLoginModule, which utilizes simple text files
+				to authenticate users and to define
+				their groups.  The teiid-jboss-beans.xml configuration file contains an example of how to use UsersRolesLoginModule.  
+				Note that this is typically not for production use.
+	        </para>
+	        <para>See <ulink url="http://community.jboss.org/docs/DOC-11253">LDAP LoginModule configuration</ulink> for utilizing LDAP based authentication.
+            If you want use a your own Custom Login module, check out the Developer's Guide for instructions.
+	        </para>
+		</sect2>
+	</sect1>
+    <note>
+        <para>The security-domain defined for the JDBC connection and Admin connections are separate.
+            The default name of JDBC connection's security-domain is "teiid-security". The default name for Admin connection
+            is "jmx-console". For the Admin connection's security domain, the user is allowed 
+            to change which LoginModule that "jmx-console" pointing to, however should not change the name of the domain, as this name is
+            shared between the "admin-console" application.</para>
+    </note>    
+</chapter>

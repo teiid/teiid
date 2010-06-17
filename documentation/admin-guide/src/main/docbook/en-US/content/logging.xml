@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/custom.dtd">
+%CustomDTD;
+]>
+<chapter id="logging">
+	<title>Logging</title>
+	<sect1 id="general_logging">
+		<title>General Logging</title>
+		<para>
+			The Teiid system provides a wealth of information via logging. To
+			control logging level, contexts, and log locations, you should be
+			familiar with
+			<ulink url="http://logging.apache.org/log4j/">log4j</ulink>
+			and the container's jboss-log4j.xml configuration file.  
+			Teiid also provides a &lt;profile&gt;/conf/jboss-teiid-log4j.xml containing much of information from chapter.
+		</para>
+		<para>
+			All the logs
+			produced by Teiid are prefixed by "org.teiid". This makes it extremely
+			easy to control of of Teiid logging from a single context. Note however that changes to the log configuration file
+			require a restart to take affect			
+		</para>
+		<sect2>
+			<title>Logging Contexts</title>
+			<para>While all of Teiid's logs are prefixed with "org.teiid", there
+				are more specific contexts depending on the functional area of the
+				system. Note that logs originating from third-party code, including
+				integrated org.jboss components, will be logged through their
+				respective contexts and not through org.teiid. See the table below for information on contexts
+				relevant to Teiid. See the container's jboss-log4j.xml for a more
+				complete listing of logging contexts used in the container.  
+				</para>
+			<informaltable frame="all">
+				<tgroup cols="2">
+					<thead>
+						<row>
+							<entry>
+								<para>Context</para>
+							</entry>
+							<entry>
+								<para>Description</para>
+							</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>
+								<para>com.arjuna</para>
+							</entry>
+							<entry>
+								<para>Third-party transaction manager. This will include
+									information about all transactions, not just those for Teiid.
+								</para>
+							</entry>
+						</row>
+						<row>
+							<entry>
+								<para>org.teiid</para>
+							</entry>
+							<entry>
+								<para>Root context for all Teiid logs. Note: there are
+									potentially other contexts used under org.teiid than are shown
+									in this table.</para>
+							</entry>
+						</row>
+						<row>
+							<entry>
+								<para>org.teiid.PROCESSOR</para>
+							</entry>
+							<entry>
+								<para>Query processing logs. See also org.teiid.PLANNER for
+									query planning logs.</para>
+							</entry>
+						</row>
+						<row>
+							<entry>
+								<para>org.teiid.PLANNER</para>
+							</entry>
+							<entry>
+								<para>Query planning logs.</para>
+							</entry>
+						</row>
+						<row>
+							<entry>
+								<para>org.teiid.SECURITY</para>
+							</entry>
+							<entry>
+								<para>Session/Authentication events - see also AUDIT logging</para>
+							</entry>
+						</row>
+						<row>
+							<entry>
+								<para>org.teiid.TRANSPORT</para>
+							</entry>
+							<entry>
+								<para>Events related to the socket transport.</para>
+							</entry>
+						</row>
+						<row>
+							<entry>
+								<para>org.teiid.RUNTIME</para>
+							</entry>
+							<entry>
+								<para>Events related to work management and system start/stop.</para>
+							</entry>
+						</row>
+						<row>
+							<entry>
+								<para>org.teiid.CONNECTOR</para>
+							</entry>
+							<entry>
+								<para>Connector logs.</para>
+							</entry>
+						</row>
+						<row>
+							<entry>
+								<para>org.teiid.BUFFER_MGR</para>
+							</entry>
+							<entry>
+								<para>Buffer and storage management logs.</para>
+							</entry>
+						</row>
+						<row>
+							<entry>
+								<para>org.teiid.TXN_LOG</para>
+							</entry>
+							<entry>
+								<para>Detail log of all transaction operations.</para>
+							</entry>
+						</row>
+						<row>
+							<entry>
+								<para>org.teiid.COMMAND_LOG</para>
+							</entry>
+							<entry>
+								<para>
+									See
+									<link linkend="command_logigng">command logging</link>
+								</para>
+							</entry>
+						</row>
+						<row>
+							<entry>
+								<para>org.teiid.AUDIT_LOG</para>
+							</entry>
+							<entry>
+								<para>
+									See
+									<link linkend="audit_logigng">audit logging</link>
+								</para>
+							</entry>
+						</row>
+						<row>
+							<entry>
+								<para>org.teiid.ADMIN_API</para>
+							</entry>
+							<entry>
+								<para>Admin API logs.</para>
+							</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</informaltable>
+		</sect2>
+	</sect1>
+	<sect1 id="command_logging">
+		<title>Command Logging</title>
+		<para>Command logging captures executing commands in the	Teiid System.
+			Both user commands (that have been submitted to Teiid) and data source
+			commands (that are being executed by the connectors) are tracked
+			through command logging.</para>
+		<para>To enable command logging to the default log location, simply
+			enable the DETAIL level of logging for the org.teiid.COMMAND_LOG
+			context.</para>
+		<para>
+			To enable command logging to an alternative file location,
+			configure a separate file appender for the DETAIL logging of the
+			org.teiid.COMMAND_LOG context. An example of this is shown below and
+			can also be found in the jboss-log4j.xml distributed with Teiid.
+			<programlisting><![CDATA[
+	<appender name="COMMAND" class="org.apache.log4j.RollingFileAppender">
+      <param name="File" value="log/command.log"/>
+     <param name="MaxFileSize" value="1000KB"/>
+     <param name="MaxBackupIndex" value="25"/>
+      <layout class="org.apache.log4j.PatternLayout">
+         <param name="ConversionPattern" value="%d %p [%t] %c - %m%n"/>
+      </layout>
+   </appender>   
+    
+   <category name="org.teiid.COMMAND_LOG">
+      <priority value="INFO"/>
+      <appender-ref ref="COMMAND"/>
+   </category>
+			]]>
+			</programlisting>
+            
+            See Developer's Guide if the file based logging is not sufficient and would need a custom logging solution.
+		</para>
+	</sect1>
+	<sect1 id="audit_logging">
+		<title>Audit Logging</title>
+		<para>Audit logging captures important security events. This includes
+			the enforcement of permissions, authentication success/failures, etc.
+		</para>
+		<para>To enable audit logging to the default log location, simply
+			enable the DETAIL level of logging for the org.teiid.AUDIT_LOG
+			context.</para>
+		<para>To enable audit logging to an alternative file location,
+			configure a separate file appender for the DETAIL logging of the
+			org.teiid.AUDIT_LOG context. An example of this is already in
+			the	log4j.xml distributed with Teiid. See Developer's Guide if the 
+            file based logging is not sufficient and would need a custom logging solution.</para>
+	</sect1>
+</chapter>
