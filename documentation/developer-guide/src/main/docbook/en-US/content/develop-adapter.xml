@@ -5,9 +5,9 @@
 <chapter id="develop_adapter">
 	<title>Developing JEE Connectors</title>
 	<para>This chapter examines how to use facilities provided by the Teiid
-		API to develop a JEE JCA Connector that can be used with the Teiid Translator. Please note that these are 
+		API to develop a JEE JCA Connector. Please note that these are 
         standard JEE JCA connectors, nothing special needs to be done for Teiid. As an aid to our Translator 
-        developers, we provided some base implementation framework to ease the development of these Connectors.
+        developers, we provided a base implementation framework.
         If you already have a JCA Connector or some other mechanism to get data from your source system, you can skip this chapter.</para>
 
     <para>If you are not familiar with JCA API, please read the <ulink url="http://java.sun.com/j2ee/connector/">JCA 1.5 Specification</ulink>. 
@@ -19,8 +19,7 @@
     <sect1>
 		<title>Using the Teiid Framework</title>
         <para>If you are going to use the Teiid framework for developing a JCA connector, follow these steps. The required classes are in
-        <code>org.teiid.resource.api</code> package. Please note that Teiid framework does not make use JCA's CCI framework. It
-        only uses the JCA's SPI interfaces. </para>
+        <code>org.teiid.resource.api</code> package. Please note that Teiid framework does not make use JCA's CCI framework, only the JCA's SPI interfaces. </para>
         
         <itemizedlist>
             <listitem>
@@ -145,11 +144,9 @@
     <config-property-value>${optioal-property-value}</config-property-value>
 </config-property>]]></programlisting> 
            
-           <para>The format and contents of "&lt;description&gt;" element is a Teiid extension to provide the extended metadata for tooling purpose. The 
-           JCA specification does not define enough metadata on these properties so Teiid fills in the gap with its own extension. 
-           For every property define the following properties
-           
+           <para>The format and contents of "&lt;description&gt;" element may be used as extended metadata for tooling.  The special format must begin and end with curly braces e.g. {...}.  This use of the special format and all properties is optional.  Property names begin with '$' and are separated from the value with ':'.  Double quotes identifies a single value.  A pair of square brackets, e.g. [...], containing comma separated double quoted entries denotes a list value. 
             <itemizedlist>
+            	<para>Extended metadata properties</para>
                 <listitem>
                     <para>$display: Display name of the property</para>
                 </listitem>
@@ -173,13 +170,13 @@
                 </listitem> 
             </itemizedlist>
            
-           Note that all these are optional properties; however in the absence of this metadata, tooling will not work as expected.
+           Note that all these are optional properties; however in the absence of this metadata, Teiid tooling may not work as expected.
            
            </para>
         </sect2>        
 	</sect1>
 
-   <sect1>
+   <sect1 id="ra_package">
         <title>Packaging the Adapter</title>
         <para>Once all the required code is developed, it is time to package them into a RAR artifact, that can be deployed
         into a Conainer. A RAR artifact is lot more similar to a WAR. To put together a RAR file it really depends upon 
@@ -230,7 +227,7 @@
         you can embed the JAR file containing your connector code and any dependent library JAR files. </para>
     </sect1>
     
-   <sect1>
+   <sect1 id="ra_deploy">
         <title>Deploying the Adapter</title>
         <para>Once the RAR file is built, deploy it by copying the RAR file into "deploy" directory of JBoss AS's choosen profile. 
         Typically the server does not need to be restarted when a new RAR file is being added. Alternatively, you can also use 

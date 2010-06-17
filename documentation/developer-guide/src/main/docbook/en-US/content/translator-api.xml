@@ -34,7 +34,7 @@
              "ExecutionFactory" class. Then define a "get" and "set" methods for each of them. Also, annotate each "get" method with
               <code>@TranslatorProperty</code> annotation and provide the metadata about the property. For example, if you need a
               property called "foo",
-                    <programlisting><![CDATA[String foo = "balh";
+                    <programlisting><![CDATA[private String foo = "balh";
 
 @TranslatorProperty(display="Foo property", description="description about Foo") 
 public String getFoo() {

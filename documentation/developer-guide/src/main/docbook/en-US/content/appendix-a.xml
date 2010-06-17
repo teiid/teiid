@@ -54,5 +54,4 @@
    </resourceadapter>
 </connector>]]></programlisting>
 	<para>${...} indicates a value to be supplied by the developer.</para>
-	<para>The description entry can utilize a special format in {}, where extended metadata properties can be supplied.  This use of the special format and all properties is optional.  Property names begin with $ and are separated from the value with :.  Double quotes identifies a single value.  A pair of square brackets [] containing comma separated double quoted entries denotes a list value.</para>
 </appendix>
