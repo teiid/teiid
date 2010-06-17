@@ -7,9 +7,7 @@
 		<link linkend="sql_support">SQL Support</link>
 		and
 		<link linkend="datatypes">Datatypes</link>
-		. In addition, Teiid provides the capability for
-		<link linkend="udfs">user defined functions or UDFs</link>
-		.
+		. In addition, Teiid provides the capability for user defined functions or UDFs.  See the Developers Guide for adding UDFs.  Once added UDFs may be called just like any other function.
 	</para>
 	<sect1 id="numeric_functions">
 		<title>Numeric Functions</title>
@@ -767,7 +765,7 @@
             </entry>
             <entry>
               <para>Provide the character for ASCII value x 
-              	<footnote label="1" id="nonAscii"><para>Non-ASCII range characters or integers used in these functions 
+              	<footnote id="nonAscii"><para>Non-ASCII range characters or integers used in these functions 
               	may produce different results or exceptions depending on where the function is evalutated (Teiid vs. source).  
               	Teiid's uses Java default int to char and char to int conversions, which operates over UTF16 values.</para></footnote>
               </para>
@@ -799,6 +797,27 @@
             </entry>
             <entry>
               <para>x, y in {string}</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>ENCODE(x, encoding)</para>
+            </entry>
+            <entry>
+              <para>Return a clob from the blob with the given encoding.  The builtin Java Charset<footnote id="charset"><para>See the <ulink url="http://java.sun.com/j2se/1.5.0/docs/api/java/nio/charset/Charset.html">Charset JavaDoc</ulink></para></footnote> names are valid values for encoding.</para>
+            </entry>
+            <entry>
+              <para>x is a blob, encoding is a string, and returns a clob</para>
+            </entry>
+          </row><row>
+            <entry>
+              <para>DECODE(x, encoding)</para>
+            </entry>
+            <entry>
+              <para>Return a blob from the clob with the given encoding.  The builtin Java Charset<footnoteref linkend="charset"/> names are valid values for encoding.</para>
+            </entry>
+            <entry>
+              <para>x in a clob, encoding is a string, and returns a blob</para>
             </entry>
           </row>
           <row>
@@ -920,7 +939,7 @@
           </row>
           <row>
             <entry>
-              <para>(7.0+) QUERYSTRING(path [, expr [AS name] ...])</para>
+              <para>QUERYSTRING(path [, expr [AS name] ...])</para>
             </entry>
             <entry>
               <para>Returns a properly encoded query string appended to the given path.  Null valued expressions are omitted, and a null path is treated as ''.</para>
@@ -1783,8 +1802,7 @@
       <itemizedlist>
         <listitem>
           <para>The keyColumn is expected to contain unique key
-            values. If the column contains duplicate values, an exception will be thrown. The
-            lookup caches can be flushed via the svcmgr.</para>
+            values. If the column contains duplicate values, an exception will be thrown.</para>
         </listitem>
         <listitem>
           <para>Cached lookup tables might consume significant memory. You
@@ -1831,23 +1849,6 @@
         </tbody>
       </tgroup>
     </informaltable>
-    <sect2>
-      <!-- TODO: move to administrative section -->
-      <title>Clearing the Cache</title>
-      <para>You can force a cache clearing by using the expert mode of
-        the svcmgr command, found under the \bin directory of your
-        Teiid server installation.</para>
-      <para>Launch the appropriate command:</para>
-      <orderedlist>
-        <listitem>
-          <para><command>svcmgr.cmd</command> (Windows)</para>
-        </listitem>
-        <listitem>
-          <para><command>svcmgr.sh</command> (Solaris or Linux)</para>
-        </listitem>
-      </orderedlist>
-      <para>From the command line enter ClearCodeTableCaches.</para>
-    </sect2>
   </sect1>
   <sect1>
     <title>System Functions</title>
@@ -1927,419 +1928,112 @@
   <sect1 id="xml_functions">
     <title>XML Functions</title>
     <para>XML functions provide functionality for working with XML data. </para>
-    <informaltable frame="all">
-      <tgroup cols="3">
-        <thead>
-          <row>
-            <entry>
-              <para>Function</para>
-            </entry>
-            <entry>
-              <para>Definition</para>
-            </entry>
-            <entry>
-              <para>Datatype Constraint</para>
-            </entry>
-          </row>
-        </thead>
-        <tbody>
-          <row>
-            <entry>
-              <para><code>XPATHVALUE(doc, xpath)</code></para>
-            </entry>
-            <entry>
-              <para>Applies the XPATH query to the document and returns a
-                string value for the first matching result. An attempt is made to provide a
-                meaningful result for non-text nodes.</para>
-            </entry>
-            <entry>
-              <para>Doc in {string, clob, xml} and xpath. Return value is a string.
-              </para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para><code>(7.0+) XSLTRANSFORM(doc, xsl)</code></para>
-            </entry>
-            <entry>
-              <para>Applies an xsl stylesheet to the given document.  If either argument is null, the result is null.</para>
-            </entry>
-            <entry>
-              <para>Doc, xsl in {string, clob, xml}. Return value is a clob.
-              </para>
-            </entry>
-          </row>
-          <row id="xmlquery">
-            <entry>
-              <para><code>(7.0+) XMLQUERY([&lt;NSP&gt;] xquery [&lt;PASSING&gt;] [(NULL|EMPTY) ON EMPTY]]</code></para>
-              <para>PASSING:=<code>PASSING exp [AS name] [, exp [AS name]]*</code></para>
-            </entry>
-            <entry>
-              <para>Returns the XML result from evaluating the given xquery.</para>
-              <para>See XMLELEMENT for the definition of NSP - <link linkend="xmlnamespaces">XMLNAMESPACES</link>.</para><para>Namespaces may also be directly declared in the xquery prolog.</para>
-              <para id="passing">The optional PASSING clause is used to provide the context item, which does not have a name, and named global variable values.  
-              If the xquery uses a context item and none is provided, then an exception will be raised.  
-              Only one context item may be specified and should be an XML type.  All non-context non-XML passing values will be converted to an appropriate XML type.</para>
-              <para>The ON EMPTY clause is used to specify the result when the evaluted sequence is empty.  
-              EMPTY ON EMPTY, the default, returns an empty XML result.  NULL ON EMPTY returns a null result.</para>
-              <para>See also <link linkend="xmltable">XMLTABLE</link></para>
-              <note><para>A technique known as document projection is used to reduce the memory footprint of the context item document.  Only the parts of the document needed by the xquery will be loaded into memory.</para></note>
-            </entry>
-            <entry>
-              <para>xquery in string. Return value is xml.
-              </para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para><code>XMLELEMENT([NAME] name [, &lt;NSP&gt;] [, &lt;ATTR&gt;][, exp]*)</code></para>
-              <para>ATTR:=<code>XMLATTRIBUTES(exp [AS name] [, exp [AS name]]*)</code></para>
-              <para>NSP:=<code>XMLNAMESPACES((uri AS prefix | DEFAULT uri | NO DEFAULT))+</code></para>
-            </entry>
-            <entry>
-              <para>Returns an XML element with the given name and content.  If the content value is of a type other than xml, 
-              it will be escaped when added to the parent element.  Null content values are ignored.  
-              Whitespace in XML or the string values of the content is preserved, but no whitespace is added between content values.</para>
-              <para id="xmlnamespaces">XMLNAMESPACES is used provide namespace information.  NO DEFAULT is equivalent to defining the default namespace to the null uri - xmlns="".  
-              Only one DEFAULT or NO DEFAULT namespace item may be specified.  The namespace prefixes xmlns and xml are reserved.</para>
-              <para>If a attribute name is not supplied, the expression must be a column reference, in which case the attribute name will be the column name. Null attribute values are ignored.</para>
-              <para>Example: with an xml_value of &lt;doc/&gt;, <code>xmlelement('elem', 1, '&lt;2/&gt;', xml_value)</code>
-              		Returns: <code>&lt;elem&gt;1&amp;lt;2/&amp;gt;&lt;doc/&gt;&lt;elem/&gt;</code>
-              </para>
-            </entry>
-            <entry>
-              <para>Name, prefix are identifiers. uri is a string literal. exp can be any type. Return value is xml.
-              </para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para><code>XMLCONCAT(xml [, other]*)</code></para>
-            </entry>
-            <entry>
-              <para>Returns an XML with the concatination of the given xml types.  If a value is null, it will be ignored.
-              </para>
-            </entry>
-            <entry>
-              <para>Name is an identifier.  Content can be any type. Return value is xml.
-              </para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para><code>XMLFOREST(exp [AS name] [, &lt;NSP&gt;] [, exp [AS name]]*)</code></para>
-            </entry>
-            <entry>
-              <para>Returns an concatination of an XML element for each non-null expression exp.  If a name is not supplied, the expression must be a column reference, in which case the element name will be the column name.
-              </para>
-              <para>See XMLELEMENT for the definition of NSP - <link linkend="xmlnamespaces">XMLNAMESPACES</link>.</para>
-            </entry>
-            <entry>
-              <para>Name is an identifier. Exp can be any type. Return value is xml.
-              </para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para><code>XMLCOMMENT(comment)</code></para>
-            </entry>
-            <entry>
-              <para>Returns an xml comment.
-              </para>
-            </entry>
-            <entry>
-              <para>Comment is a string.  Return value is xml.
-              </para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para><code>XMLPI([NAME] name [, content])</code></para>
-            </entry>
-            <entry>
-              <para>Returns an xml processing instruction.
-              </para>
-            </entry>
-            <entry>
-              <para>Name is an identifier. Content is a string. Return value is xml.
-              </para>
-            </entry>
-          </row>
-          <row>
-            <entry id="xmlserialize">
-              <para><code>XMLSERIALIZE([(DOCUMENT|CONTENT)] exp [AS datatype])</code></para>
-            </entry>
-            <entry>
-              <para>Returns a character type representation of the exp expression. 
-              Only a character type (string, varchar, clob) may be specified as the datatype.  CONTENT is the default.  
+    <sect2>
+    	<title>XMLCOMMENT</title>
+    	<para>Returns an xml comment.</para>
+    	<para><synopsis>XMLCOMMENT(comment)</synopsis></para>
+    	<para>Comment is a string.  Return value is xml.</para>
+    </sect2>
+    <sect2>
+    	<title>XMLCONCAT</title>
+    	<para>Returns an XML with the concatination of the given xml types.</para>
+    	<para><synopsis>XMLCONCAT(content [, content]*)</synopsis></para>
+    	<para>Content is xml. Return value is xml.</para>
+    	<para>If a value is null, it will be ignored.  If all values are null, null is returned.</para>
+    </sect2>
+    <sect2>
+    	<title>XMLELEMENT</title>
+    	<para>Returns an XML element with the given name and content.</para>
+    	<para><synopsis>XMLELEMENT([NAME] name [, &lt;NSP&gt;] [, &lt;ATTR&gt;][, content]*)</synopsis></para>
+          <para><synopsis>ATTR:=XMLATTRIBUTES(exp [AS name] [, exp [AS name]]*)</synopsis></para>
+          <para><synopsis>NSP:=XMLNAMESPACES((uri AS prefix | DEFAULT uri | NO DEFAULT))+</synopsis></para>
+          <para>If the content value is of a type other than xml, it will be escaped when added to the parent element.  Null content values are ignored.  
+          Whitespace in XML or the string values of the content is preserved, but no whitespace is added between content values.</para>
+          <para id="xmlnamespaces">XMLNAMESPACES is used provide namespace information.  NO DEFAULT is equivalent to defining the default namespace to the null uri - xmlns="".  
+          Only one DEFAULT or NO DEFAULT namespace item may be specified.  The namespace prefixes xmlns and xml are reserved.</para>
+          <para>If a attribute name is not supplied, the expression must be a column reference, in which case the attribute name will be the column name. Null attribute values are ignored.</para>
+		<para>Name, prefix are identifiers. uri is a string literal. content can be any type. Return value is xml.  The return value is valid for use in places where a document is expected.</para>            
+           <para><emphasis>Example</emphasis>: with an xml_value of &lt;doc/&gt;, <programlisting>xmlelement('elem', 1, '&lt;2/&gt;', xml_value)</programlisting>
+           		Returns: <code>&lt;elem&gt;1&amp;lt;2/&amp;gt;&lt;doc/&gt;&lt;elem/&gt;</code>
+           </para>
+    </sect2>
+    <sect2>
+    	<title>XMLFOREST</title>
+    	<para>Returns an concatination of XML elements for each content item.</para>
+    	<para><synopsis>XMLFOREST(content [AS name] [, &lt;NSP&gt;] [, content [AS name]]*)</synopsis></para>
+        <para>See XMLELEMENT for the definition of NSP - <link linkend="xmlnamespaces">XMLNAMESPACES</link>.</para>
+   		<para>Name is an identifier. Content can be any type. Return value is xml.</para>
+		<para>If a name is not supplied for a content item, the expression must be a column reference, in which case the element name will be a partially escaped version of the column name.</para>
+    </sect2>
+    <sect2 id="xmlparse">
+    	<title>XMLPARSE</title>
+    	<para>Returns an XML type representation of the string value expression.</para>
+        <para><synopsis>XMLPARSE((DOCUMENT|CONTENT) expr [WELLFORMED])</synopsis></para>
+        <para>expr in {string, clob, blob}. Return value is xml.</para>
+        <para>If DOCIMENT is specfied then the expression must have a single
+        root element and may or may not contain an XML declaration.</para>
+        <para>
+              If WELLFORMED is specified then validation is skipped; this is especially useful for CLOB and BLOB known to already be valid.  
+        </para>
+    </sect2>
+    <sect2>
+    	<title>XMLPI</title>
+    	<para>Returns an xml processing instruction.</para>
+        <para><synopsis>XMLPI([NAME] name [, content])</synopsis></para>
+        <para>Name is an identifier. Content is a string. Return value is xml.</para>
+    </sect2>
+    <sect2 id="xmlquery">
+    	<title>XMLQUERY</title>
+    	<para>Returns the XML result from evaluating the given xquery.</para>
+    	<para><synopsis>XMLQUERY([&lt;NSP&gt;] xquery [&lt;PASSING&gt;] [(NULL|EMPTY) ON EMPTY]]</synopsis></para>
+    	<para><synopsis>PASSING:=PASSING exp [AS name] [, exp [AS name]]*</synopsis></para>
+    	<para>See XMLELEMENT for the definition of NSP - <link linkend="xmlnamespaces">XMLNAMESPACES</link>.</para><para>Namespaces may also be directly declared in the xquery prolog.</para>
+             <para id="passing">The optional PASSING clause is used to provide the context item, which does not have a name, and named global variable values.  
+             If the xquery uses a context item and none is provided, then an exception will be raised.  
+             Only one context item may be specified and should be an XML type.  All non-context non-XML passing values will be converted to an appropriate XML type.</para>
+             <para>The ON EMPTY clause is used to specify the result when the evaluted sequence is empty.  
+             EMPTY ON EMPTY, the default, returns an empty XML result.  NULL ON EMPTY returns a null result.</para>
+             <para>xquery in string. Return value is xml.</para>
+             <para>XMLQUERY is part of the SQL/XML 2006 specification.</para>
+             <para>See also <link linkend="xmltable">XMLTABLE</link></para>
+             <note><para>A technique known as document projection is used to reduce the memory footprint of the context item document.  Only the parts of the document needed by the xquery will be loaded into memory.</para></note>
+             
+    </sect2>
+    <sect2 id="xmlserialize">
+    	<title>XMLSERIALIZE</title>
+    	<para>Returns a character type representation of the xml expression.</para>
+        <para><synopsis>XMLSERIALIZE([(DOCUMENT|CONTENT)] xml [AS datatype])</synopsis></para>
+        <para>Return value mathces datatype.</para>
+		<para>Only a character type (string, varchar, clob) may be specified as the datatype.  CONTENT is the default.  
               If DOCUMENT is specified and the xml is not a valid document or fragment, then an exception is raised. 
               </para>
-            </entry>
-            <entry>
-              <para>Exp is xml. Return value mathces datatype.
-              </para>
-            </entry>
-          </row>
-          <row>
-            <entry id="xmlparse">
-              <para><code>XMLPARSE((DOCUMENT|CONTENT) exp [WELLFORMED])</code></para>
-            </entry>
-            <entry>
-              <para>Returns an XML type representation of the exp expression.  If DOCIMENT is specfied then the expression must have a single
-              root element and may or may not contain an XML declaration.</para>
-              <para>
-              If WELLFORMED is specified then validation is skipped; this is especially useful for CLOB and BLOB known to already be valid.  
-              </para>
-            </entry>
-            <entry>
-              <para>Exp in {string, clob, blob}. Return value is xml.
-              </para>
-            </entry>
-          </row>
-        </tbody>
-      </tgroup>
-    </informaltable>
+    </sect2>
+    <sect2>
+    	<title>XSLTRANSFORM</title>
+    	<para>Applies an XSL stylesheet to the given document.</para>
+    	<para><synopsis>XSLTRANSFORM(doc, xsl)</synopsis></para>
+    	<para>Doc, xsl in {string, clob, xml}. Return value is a clob.</para>
+    	<para>If either argument is null, the result is null.</para>
+    </sect2>
+    <sect2>
+    	<title>XPATHVALUE</title>
+    	<para>Applies the XPATH expression to the document and returns a
+               string value for the first matching result.</para>
+    	<para><synopsis>XPATHVALUE(doc, xpath)</synopsis></para>
+    	<para>Doc and xpath in {string, clob, xml}. Return value is a string.</para>
+    	<para>An attempt is made to provide a meaningful result for non-text nodes.</para>
+    </sect2>
   </sect1>
   <sect1>
     <title>Security Functions</title>
     <para>Security functions provide the ability to interact
     with the security system.</para>
-    <informaltable frame="all">
-      <tgroup cols="3">
-        <thead>
-          <row>
-            <entry>
-              <para>Function</para>
-            </entry>
-            <entry>
-              <para>Definition</para>
-            </entry>
-            <entry>
-              <para>Datatype Constraint</para>
-            </entry>
-          </row>
-        </thead>
-        <tbody>
-          <row>
-            <entry>
-              <para><code>hasRole(roleName)</code>
-              </para>
-            </entry>
-            <entry>
-              <para>Whether the current caller has the role
-                roleName.</para>
-            </entry>
-            <entry>
-              <para>roleName must be a string, the return
-                type is Boolean.</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para><code>hasRole(roleType, roleName)</code>
-              </para>
-            </entry>
-            <entry>
-              <para>Whether the current caller has the role
-                roleName of roleType.  See the 1 argument version above.</para>
-            </entry>
-            <entry>
-              <para>roleType must be 'data' and roleName must be a string, the return
-                type is Boolean.</para>
-            </entry>
-          </row>
-        </tbody>
-      </tgroup>
-    </informaltable>
-  </sect1>
-  <sect1 id="udfs">
-    <title>User Defined Functions</title>
-    <para>If you need to extends Teiid's scalar function library,
-      then Teiid provides a means to define custom scalar functions or
-      User Defined Functions(UDF). The following steps need to be taken in
-      creating a UDF.</para>
-    <sect2 id="define_udf">
-      <title>UDF Definition</title>
-      <para>The FunctionDefinition.xmi file provides metadata to the
-        query engine on User Defined Functions. See our product document on
-        "Creating User-defined Functions" for a more extensive reference on
-        creating that file through the Designer Tool.</para>
-      <itemizedlist>
-        <para>The following are used to define a UDF.</para>
-        <listitem>
-          <para>
-            <emphasis>Function Name</emphasis>
-            When you create the function name, keep these requirements in
-            mind:
-            <itemizedlist>
-              <listitem>
-                <para>You cannot use a reserved word, which includes
-                  existing Teiid System function names.  You cannot
-                  overload existing Teiid System functions.</para>
-              </listitem>
-              <listitem>
-                <para>The function name must be unique among user-defined
-                  functions for the number of arguments.  You can use the
-                  same function name for different numbers of types of
-                  arguments.  Hence, you can overload your user-defined
-                  functions.</para>
-              </listitem>
-              <listitem>
-                <para>The function name can only contain letters,
-                  numbers, and the underscore (_).  Your function name must
-                  start with a letter.</para>
-              </listitem>
-              <listitem>
-                <para>The function name cannot exceed 128 characters.
-                </para>
-              </listitem>
-            </itemizedlist>
-          </para>
-        </listitem>
-        <listitem>
-          <para>
-            <emphasis>Input Parameters</emphasis>
-            - defines a type specific signature list. All arguments are considered
-            required.</para>
-        </listitem>
-        <listitem>
-          <para>
-            <emphasis>Return Type</emphasis> - the expected type of the returned scalar value.
-          </para>
-        </listitem>
-        <listitem>
-          <para>
-            <emphasis>Pushdown</emphasis>
-            - can be one of REQUIRED, NEVER, ALLOWED. Indicates the expected
-            pushdown behavior. If NEVER or ALLOWED are specified then a Java
-            implementation of the function should be supplied.</para>
-        </listitem>
-        <listitem>
-          <para>
-            <emphasis>invocationClass/invocationMethod
-            </emphasis>
-            - optional properties indicating the static method to invoke when
-            the UDF is not pushed down.
-          </para>
-        </listitem>
-        <listitem>
-          <para><emphasis>Deterministic</emphasis> - if the method will always return the same result for the same input parameters.
-          </para>
-        </listitem>
-      </itemizedlist>
-    </sect2>
     <sect2>
-      <title>Source Supported UDF</title>
-      <para>While Teiid provides an extensive scalar function
-        library, it contains only those functions that can be evaluated
-        within the query engine. In many circumstances, especially for
-        performance, a user defined function allows for calling a source
-        specific function.</para>
-      <para>For example, suppose you want to use the Oracle-specific functions score and contains:
-      </para>
-      <informalexample>
-        <programlisting>SELECT score(1), ID, FREEDATA FROM Docs WHERE contains(freedata, 'nick', 1) &gt; 0</programlisting>
-      </informalexample>
-      <para>
-        The
-        <function>score</function>
-        and
-        <function>contains</function>
-        functions are not part of built-in scalar function library. While
-        you could write your own custom scalar function to mimic their
-        behavior, it's more likely that you would want to use the actual
-        Oracle functions that are provided by Oracle when using the Oracle
-        Free Text functionality.</para>
-      <para>
-        In addition to the normal steps outlined in the section to create and install a function model (FunctionDefinitions.xmi), you will need to extend the appropriate connector(s).
-      </para>
-      <itemizedlist>
-        <para>For example, to extend the Oracle Connector</para>
-        <listitem>
-          <para><emphasis>Required</emphasis> - extend OracleCapabilities and set up SCORE and CONTAINS as supported functions (this lets Teiid know that the connector can accept these functions).</para>
-        </listitem>
-        <listitem>
-          <para>Optionally extend the OracleSQLTranslator to insert new FunctionModifiers to handle translation of these functions. Given that the syntax of these functions is same as other typical functions, this probably isn't needed - the default translation should work.</para>
-        </listitem>
-        <listitem>
-          <para>Create a new connector - The easiest way is to copy JDBC connector rar file from the distribution and modify the "ra.xml" file. Change the capabilities class (to use the extended version) and possibly the translation class (if that was extended for b. Also, include a new jar of your changes above in the same rar file. Rename the RAR file to different name to differentiate from original JDBC rar file.</para>
-        </listitem>
-      </itemizedlist>
-    </sect2>
-    <sect2>
-      <title>Non-pushdown Support for User-Defined Functions</title>
-      <para>Non-pushdown support requires a Java function
-        that matches the metadata supplied in the FunctionDefinitions.xmi
-        file. You must create a Java method that contains the function’s
-        logic. This Java method should accept the necessary arguments, which
-        the Teiid System will pass to it at runtime, and function should
-        return the calculated or altered value.</para>
-      <sect3>
-        <title>Java Code</title>
-        <itemizedlist>
-          <para>Code Requirements</para>
-          <listitem>
-            <para>The java class containing the function method must be defined public.
-            </para>
-          </listitem>
-          <listitem>
-            <para>The function method must be public and static.</para>
-          </listitem>
-          <listitem>
-            <para>
-              Number of input arguments must match the function metadata defined in section
-              <link linkend="define_udf">Install user-defined functions</link>
-            </para>
-          </listitem>
-          <listitem>
-            <para>Any exception can be thrown, but Teiid will rethrow the exception as a <classname>FunctionExecutionException</classname>.</para>
-          </listitem>          
-        </itemizedlist>
-        <example>
-          <title>Sample code</title>
-          <programlisting><![CDATA[package userdefinedfunctions;
-
-public class TempConv {
-              
-    /**
-     * Converts the given Celsius temperature to Fahrenheit, and returns the
-     * value.
-     * @param doubleCelsiusTemp 
-     * @return Fahrenheit 
-     */
-    public static Double celsiusToFahrenheit(Double doubleCelsiusTemp){
-        if (doubleCelsiusTemp == null) {
-        	return null;
-        }
-        return (doubleCelsiusTemp)*9/5 + 32;
-    }
-}]]></programlisting>
-        </example>
-      </sect3>
-      <sect3>
-        <title>Post Code Activities</title>
-        <orderedlist>
-          <listitem>
-            <para> After coding the functions you should compile the Java
-              code into a Java Archive (JAR) file, so that you can add it to
-              the Teiid System as an Extension Module.</para>
-          </listitem>
-          <listitem>
-            <para> After adding the jar file as an extension module, the
-              name of jar file need to be added to user defined functions
-              classpath using Console tool.</para>
-          </listitem>
-        </orderedlist>
-      </sect3>
-    </sect2>
-    <sect2>
-      <title>Installing user-defined functions</title>
-      <para>
-        Once a user-defined function model (FunctionDefinitions.xmi) has been
-        created in in the Designer Tool, it should be installed by replacing
-        the existing version under the Extension Modules (for the Enterprise
-        product this will be done through the Console). That will allow the
-        query engine to know about and use functions</para>
+    	<title>HASROLE</title>
+    	<para>Whether the current caller has the role roleName.</para>
+    	<para><synopsis>hasRole([roleType,] roleName)</synopsis></para>
+        <para>roleName must be a string, the return type is boolean.</para>
+        <para>The two argument form is provided for backwards compatibility. roleType is a string and must be 'data'</para>
     </sect2>
   </sect1>
   <sect1 id="nondeterministic_functions">

@@ -1,13 +1,13 @@
 <chapter id="introduction">
-  <title>Translators and Resource Adapters in Teiid</title>
+  <title>Translators and Resource Adapters</title>
   
-  <para>To integrate data from a Enterprise Information System (EIS) into Teiid, Teiid requires two separate modules </para>
   <itemizedlist>
-    <listitem>
-      <para>Translator</para>
+  	<para>Integrating data from a Enterprise Information System (EIS) into Teiid, is separated into two parts.</para>
+  	<listitem>
+      <para>A Translator, which is required.</para>
     </listitem>
     <listitem>
-      <para>Resource Adapter (also sometimes called as Connector or J2EE Connector or JCA Connector or RAR file) </para>
+      <para>An optional Resource Adapter, which will typically be a JCA Resource Adapter (also called a JEE Connector) </para>
     </listitem>
   </itemizedlist>  
   
@@ -20,27 +20,26 @@
       <para>Execute the command.</para>
     </listitem>
     <listitem>
-      <para>Return batches of results in relational form.</para>
+      <para>Return batches of results translated to expected Teiid types.</para>
     </listitem>
   </itemizedlist>
   
-  <para>A Resource Adapter is:</para>
+  <para>A Resource Adapter:</para>
   <itemizedlist>
     <listitem>
-      <para>Handle all communications with individual enterprise information system(EIS), which can include databases, data feeds, flat files, etc.</para>
+      <para>Handles all communications with individual enterprise information system (EIS), which can include databases, data feeds, flat files, etc.</para>
     </listitem>
     <listitem>
-      <para>This adapter can be a <ulink url="http://java.sun.com/j2ee/connector/">JEE JCA Connector</ulink> or any other custom connection provider. 
-      The reason Teiid uses JEE JCA is, this specification defines how one can write, package and configure access to EIS system in consistent manner.
-      Also, there are various commercial/open source software vendors already provide JCA Connectors that provide 
-      access mechanisms to variety of back-end systems.</para>
+      <para>Can be a <ulink url="http://java.sun.com/j2ee/connector/">JCA Connector</ulink> or any other custom connection provider. 
+      The reason Teiid recommends and uses JCA is this specification defines how one can write, package, and configure access to EIS system in consistent manner.
+      There are also various commercial/open source software vendors already providing JCA Connectors to access a variety of back-end systems.</para>
     </listitem>
     <listitem>
-      <para>Helps to execute the command and fetch results from source systems for a given Translator</para>
+      <para>Abstracts Translators from many common concerns, such as connection information, resource pooling, or authentication.</para>
     </listitem>    
   </itemizedlist>
       
-  <para>Given a combination of a Translator + Resource Adapter, one can connect any EIS system to Teiid for their data integration needs</para>
+  <para>Given a combination of a Translator + Resource Adapter, one can connect any EIS system to Teiid for their data integration needs.</para>
   
   <sect1>
     <title>Do You Need a New Translator?</title>
@@ -66,7 +65,7 @@
       </listitem>
       <listitem>
         <para>
-          <emphasis>XML:</emphasis> Provides a procedural way to access XML content on the File system or in a Web-Service.
+          <emphasis>WS:</emphasis> Provides procedural access to XML content via Web Services.
         </para>
       </listitem>
       <listitem>
@@ -85,18 +84,18 @@
   <sect1>
     <title>Do You Need a New Resource Adapter?</title>
     <para>As mentioned above, for every Translator that needs to gather data from external source systems, it requires a resource adapter.
-    The following resource adapters are provided by Teiid distribution to work with above Translators.
     </para>
     
     <itemizedlist>
+    <para>The following resource adapters are available to Teiid.</para>
       <listitem>
         <para><emphasis>Data Source:</emphasis> This is provided by the JBoss AS container. This is used by the JDBC Translator.</para>
       </listitem>
       <listitem>
-        <para><emphasis>File:</emphasis> Provides a JEE JCA based Connector to access defined directory on the file system. This used by XML and File Translators</para>
+        <para><emphasis>File:</emphasis> Provides a JEE JCA based Connector to access defined directory on the file system.  This is used by the File Translator</para>
       </listitem>
       <listitem>
-        <para><emphasis>XML:</emphasis> Provides JEE JCA Connector to invoke Web Services using JBoss Web services stack. This is used by the XML Translator</para>
+        <para><emphasis>WS:</emphasis> Provides JEE JCA Connector to invoke Web Services using JBoss Web services stack. This is used by the WS Translator</para>
       </listitem>
       <listitem>
         <para>
@@ -113,7 +112,7 @@
   </sect1>
   
   <sect1>
-    <title>Required Items to Write a Custom Translator</title>
+    <title>Custom Translators</title>
     <para>To write a translator, follow this procedure:</para>
     <orderedlist numeration="arabic">
       <listitem>

@@ -435,10 +435,7 @@
             </row>
             <row>
               <entry>
-                yyyy-mm-dd hh:mm:ss.fffffffff
-                <footnote>
-                  <para>fractional seconds are optional</para>
-                </footnote>
+                yyyy-mm-dd hh:mm:ss.[fff...]
               </entry>
               <entry>TIMESTAMP</entry>
             </row>
@@ -474,10 +471,6 @@
         </thead>
         <tbody>
           <row>
-            <entry>BOOLEAN</entry>
-            <entry>{b 'true'} or {b 'false'}</entry>
-          </row>
-          <row>
             <entry>DATE</entry>
             <entry>{d 'yyyy-mm-dd'}</entry>
           </row>
@@ -488,16 +481,7 @@
           <row>
             <entry>TIMESTAMP</entry>
             <entry>
-              {ts 'yyyy-mm-dd hh:mm:ss.fffffffff'}
-              <footnote>
-                <para>fractional seconds are optional</para>
-              </footnote>
-            </entry>
-          </row>
-          <row>
-            <entry>XML</entry>
-            <entry>
-              {x 'well-formed doc'}
+              {ts 'yyyy-mm-dd hh:mm:ss.[fff...]'}
             </entry>
           </row>
         </tbody>

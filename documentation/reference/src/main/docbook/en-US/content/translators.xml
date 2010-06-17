@@ -266,12 +266,12 @@ If the extension pattern is not specified and the path is a directory, then all 
 </row>
 <row>
 <entry>widenUnsignedTypes</entry>
-<entry>(7.0+) true to convert unsigned types to the next widest type.  For example SQL Server reports tinyint as an unsigned type.  With this option enabled, tinyint would be imported as a short instead of a byte.</entry>
+<entry>true to convert unsigned types to the next widest type.  For example SQL Server reports tinyint as an unsigned type.  With this option enabled, tinyint would be imported as a short instead of a byte.</entry>
 <entry>true</entry>
 </row>
 <row>
 <entry>quoteNameInSource</entry>
-<entry>(7.0+) false will override the default and direct Teiid to create source queries using unquoted identifiers.</entry>
+<entry>false will override the default and direct Teiid to create source queries using unquoted identifiers.</entry>
 <entry>true</entry>
 </row>
 </tbody>

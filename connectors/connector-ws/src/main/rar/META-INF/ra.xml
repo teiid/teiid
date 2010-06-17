@@ -41,13 +41,13 @@
             <managedconnectionfactory-class>org.teiid.resource.adapter.ws.WSManagedConnectionFactory</managedconnectionfactory-class>
 
             <config-property>
-                <description>{$display:"URL, End Point",$description:"URL for HTTP, Service Endpoint for SOAP",$required="true"}</description>
+                <description>{$display:"URL, End Point",$description:"URL for HTTP, Service Endpoint for SOAP",$required:"true"}</description>
                 <config-property-name>EndPoint</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
             </config-property>
             
             <config-property>
-                <description>{$display:"WebService Security Used(None, HTTPBasic, WS-Security)",$allowed="None,HTTPBasic,WSSecurity", $description:"Type of Authentication to used with the web service; If WS-Secuirty is being used, then WS-Secuirty type must be defined", $required:"true", $defaultValue="None"}</description>
+                <description>{$display:"WebService Security Used",$allowed:["None","HTTPBasic","WSSecurity"], $description:"Type of Authentication to used with the web service.", $required:"true", $defaultValue:"None"}</description>
                 <config-property-name>SecurityType</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
                 <config-property-value>None</config-property-value>

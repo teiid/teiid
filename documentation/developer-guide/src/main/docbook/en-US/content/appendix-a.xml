@@ -2,8 +2,7 @@
   <title>ra.xml file Template</title>
   <para> This appendix contains an example of the ra.xml file that can be used as a template
     when creating a new Connector.</para>
-  <programlisting><![CDATA[
-<?xml version="1.0" encoding="UTF-8"?>
+  <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
 
 <connector xmlns="http://java.sun.com/xml/ns/j2ee"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -29,10 +28,10 @@
 
             <!-- repeat for every configuration property -->
             <config-property>
-                <description>{$display:"Invocation Type",$description:"Service Invocation type (HTTP or SOAP)", $allowed="HTTP_GET, HTTP_POST, SOAP11, SOAP12", $required="true", $defaultValue="SOAP12"}</description>
+                <description>{$display:"${short-name}",$description:"${description}", $allowed:[${value-list}], $required:"${required-boolean}", $defaultValue:"${default-value}"}</description>
                 <config-property-name>${property-name}</config-property-name>
                 <config-property-type>${property-type}</config-property-type>
-                <config-property-value>${optioal-property-value}</config-property-value>
+                <config-property-value>${optional-property-value}</config-property-value>
             </config-property>
             
             <!-- use the below as is if you used the Connection Factory interface -->
@@ -53,6 +52,7 @@
         <reauthentication-support>false</reauthentication-support>
       </outbound-resourceadapter>
    </resourceadapter>
-</connector> 
-  ]]></programlisting>
+</connector>]]></programlisting>
+	<para>${...} indicates a value to be supplied by the developer.</para>
+	<para>The description entry can utilize a special format in {}, where extended metadata properties can be supplied.  This use of the special format and all properties is optional.  Property names begin with $ and are separated from the value with :.  Double quotes identifies a single value.  A pair of square brackets [] containing comma separated double quoted entries denotes a list value.</para>
 </appendix>

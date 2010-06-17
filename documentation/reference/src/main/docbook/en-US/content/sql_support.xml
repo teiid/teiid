@@ -724,7 +724,7 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
       </note>
       <sect3 id="nested_table">
 		<title>Nested Table Reference</title>
-		<para>(7.0+) Nested tables may appear in the FROM clause with the TABLE
+		<para>Nested tables may appear in the FROM clause with the TABLE
 			keyword. They are an alternative to using a view with normal join
 			semantics.  The columns projected from the command contained in the nested table
 			 may be used just as any of the other FROM clause projected columns in join criteria, the where clause, etc.
@@ -748,7 +748,7 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
 	  </sect3>
 	  <sect3 id="texttable">
 		<title>TEXTTABLE</title>
-		<para>(7.0+) The TEXTTABLE funciton processes character input to produce tabular ouptut.  It supports both fixed and delimited file format parsing.  
+		<para>The TEXTTABLE funciton processes character input to produce tabular ouptut.  It supports both fixed and delimited file format parsing.  
 			The function itself defines what columns it projects.  
 		    The TEXTTABLE function is implicitly a nested table and may be correlated to preceeding FROM clause entries.
       	</para>
@@ -826,7 +826,7 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
 	  </sect3>
 	  <sect3 id="xmltable">
 		<title>XMLTABLE</title>
-		<para>(7.0+) The XMLTABLE funciton uses XQuery to produce tabular ouptut.  
+		<para>The XMLTABLE funciton uses XQuery to produce tabular ouptut.  
 		    The XMLTABLE function is implicitly a nested table and may be correlated to preceeding FROM clause entries.  XMLTABLE is part of the SQL/XML 2006 specification. 
       	</para>
       	<para>

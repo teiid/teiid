@@ -75,7 +75,7 @@ public abstract class JDBCBaseExecution implements Execution  {
     }
     
     /**
-     * Return true if this is a batched update
+     * Bind the values in the TranslatedCommand to the PreparedStatement
      */
     protected void bindPreparedStatementValues(PreparedStatement stmt, TranslatedCommand tc, int rowCount) throws SQLException {
         List<?> params = tc.getPreparedValues();

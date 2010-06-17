@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="udfs">
+	<title>User Defined Functions</title>
+	<para>If you need to extends Teiid's scalar function library,
+		then Teiid provides a means to define custom scalar functions or
+		User Defined Functions(UDF). The following steps need to be taken in
+		creating a UDF.</para>
+	<sect1 id="define_udf">
+		<title>UDF Definition</title>
+		<para>The FunctionDefinition.xmi file provides metadata to the
+			query engine on User Defined Functions. See the Designer Documentation for more on creating a Function Definition Model.</para>
+		<itemizedlist>
+			<para>The following are used to define a UDF.</para>
+			<listitem>
+				<para>
+					<emphasis>Function Name</emphasis>
+					When you create the function name, keep these requirements in
+					mind:
+					<itemizedlist>
+						<listitem>
+							<para>You cannot use a reserved word, which includes
+								existing Teiid System function names.  You cannot
+								overload existing Teiid System functions.</para>
+						</listitem>
+						<listitem>
+							<para>The function name must be unique among user-defined
+								functions for the number of arguments.  You can use the
+								same function name for different numbers of types of
+								arguments.  Hence, you can overload your user-defined
+								functions.</para>
+						</listitem>
+						<listitem>
+							<para>The function name can only contain letters,
+								numbers, and the underscore (_).  Your function name must
+								start with a letter.</para>
+						</listitem>
+						<listitem>
+							<para>The function name cannot exceed 128 characters.
+                </para>
+						</listitem>
+					</itemizedlist>
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<emphasis>Input Parameters</emphasis>
+					- defines a type specific signature list. All arguments are
+					considered
+					required.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<emphasis>Return Type</emphasis>
+					- the expected type of the returned scalar value.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<emphasis>Pushdown</emphasis>
+					- can be one of REQUIRED, NEVER, ALLOWED. Indicates the expected
+					pushdown behavior. If NEVER or ALLOWED are specified then a Java
+					implementation of the function should be supplied.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<emphasis>invocationClass/invocationMethod
+            </emphasis>
+					- optional properties indicating the static method to invoke when
+					the UDF is not pushed down.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<emphasis>Deterministic</emphasis>
+					- if the method will always return the same result for the same
+					input parameters.
+				</para>
+			</listitem>
+		</itemizedlist>
+		    <para>Even pushdown required functions need to be added as a UDF to allow  
+    Teiid to properly parse and resolve the function. Pushdown scalar functions differ from normal user-defined functions in that no code is provided for evaluation in the engine. 
+     An exception will be raised if a pushdown required function cannot be evaluated by the appropriate source.</para>
+	</sect1>
+	<sect1>
+		<title>Source Supported UDF</title>
+		<para>While Teiid provides an extensive scalar function
+			library, it contains only those functions that can be evaluated
+			within the query engine. In many circumstances, especially for
+			performance, a user defined function allows for calling a source
+			specific function.</para>
+			
+		<para>For example, suppose you want to use the Oracle-specific
+			functions score and contains:
+      </para>
+		<informalexample>
+			<programlisting>SELECT score(1), ID, FREEDATA FROM Docs WHERE contains(freedata, 'nick', 1) &gt; 0</programlisting>
+		</informalexample>
+		<para>
+			The
+			<function>score</function>
+			and
+			<function>contains</function>
+			functions are not part of built-in scalar function library. While
+			you could write your own custom scalar function to mimic their
+			behavior, it's more likely that you would want to use the actual
+			Oracle functions that are provided by Oracle when using the Oracle
+			Free Text functionality.
+		</para>
+		<para>
+			In addition to the normal steps outlined in the section to create and
+			install a function model (FunctionDefinitions.xmi), you will need to
+			extend the appropriate connector(s).
+      </para>
+		<itemizedlist>
+			<para>For example, to extend the Oracle Connector</para>
+			<listitem>
+				<para>
+					<emphasis>Required</emphasis>
+					- extend the OracleExecutionFactory and add SCORE and CONTAINS as
+					supported functions. For this example, we'll call the class
+					MyOracleExecutionFactory. Add the
+					<code>org.teiid.translator.Translator</code>
+					annotation to the class, e.g.
+					<code>@Translator(name="myoracle")</code>
+				</para>
+			</listitem>
+			<listitem>
+				<para>Optionally register new FunctionModifiers on the start of the
+					ExecutionFactory to handle translation of these functions. Given
+					that the syntax of these functions is same as other typical
+					functions, this probably isn't needed - the default translation
+					should work.</para>
+			</listitem>
+			<listitem>
+				<para>
+					Create a new translator jar containing your custom
+					ExecutionFactory. See <link linkend="translator_package">packaging</link> and <link linkend="translator_deploy">deployment</link> instructions for using the jar.</para>
+			</listitem>
+		</itemizedlist>
+	</sect1>
+	<sect1>
+		<title>Non-pushdown Support for User-Defined Functions</title>
+		<para>Non-pushdown support requires a Java function
+			that matches the metadata supplied in the FunctionDefinitions.xmi
+			file. You must create a Java method that contains the function’s
+			logic. This Java method should accept the necessary arguments, which
+			the Teiid System will pass to it at runtime, and function should
+			return the calculated or altered value.</para>
+		<sect2>
+			<title>Java Code</title>
+			<itemizedlist>
+				<para>Code Requirements</para>
+				<listitem>
+					<para>The java class containing the function method must be defined
+						public.
+            </para>
+				</listitem>
+				<listitem>
+					<para>The function method must be public and static.</para>
+				</listitem>
+				<listitem>
+					<para>
+						Number of input arguments must match the function metadata defined
+						in section
+						<link linkend="define_udf">Install user-defined functions</link>
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Any exception can be thrown, but Teiid will rethrow the exception
+						as a
+						<classname>FunctionExecutionException</classname>
+						.
+					</para>
+				</listitem>
+			</itemizedlist>
+			<example>
+				<title>Sample code</title>
+				<programlisting><![CDATA[package org.something;
+
+public class TempConv {
+              
+    /**
+     * Converts the given Celsius temperature to Fahrenheit, and returns the
+     * value.
+     * @param doubleCelsiusTemp 
+     * @return Fahrenheit 
+     */
+    public static Double celsiusToFahrenheit(Double doubleCelsiusTemp){
+        if (doubleCelsiusTemp == null) {
+        	return null;
+        }
+        return (doubleCelsiusTemp)*9/5 + 32;
+    }
+}]]></programlisting>
+			</example>
+		</sect2>
+		<sect2>
+			<title>Post Code Activities</title>
+			<orderedlist>
+				<listitem>
+					<para> After coding the functions you should compile the Java
+						code into a Java Archive (JAR) file.</para>
+				</listitem>
+				<listitem>
+					<para>The JAR should be available in the classpath of Teiid - this
+						could be the server profile lib, or the deployers/teiid.deployer
+						directory depending upon your preference.</para>
+				</listitem>
+			</orderedlist>
+		</sect2>
+	</sect1>
+	<sect1>
+		<title>Installing user-defined functions</title>
+		<para>
+			Once a user-defined function model (FunctionDefinitions.xmi) has been
+			created in in the Designer Tool, it can be added to the VDB for use
+			by Teiid.</para>
+	</sect1>
+</chapter>
