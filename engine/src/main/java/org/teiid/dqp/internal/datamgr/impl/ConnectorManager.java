@@ -67,6 +67,8 @@ import org.teiid.translator.TranslatorException;
  */
 public class ConnectorManager  {
 	
+	private static final String JAVA_CONTEXT = "java:"; //$NON-NLS-1$
+
 	public static final int DEFAULT_MAX_THREADS = 20;
 	
 	private static AtomicInteger ID_SEQUENCE = new AtomicInteger();
@@ -276,9 +278,20 @@ public class ConnectorManager  {
      */
     protected Object getConnectionFactory() {
     	if (this.connectionName != null) {
-	    	try {
-				InitialContext ic = new InitialContext();
-				return ic.lookup(this.connectionName);
+    		String jndiName = this.connectionName;
+    		if (!this.connectionName.startsWith(JAVA_CONTEXT)) {
+    			jndiName = JAVA_CONTEXT + jndiName;
+    		}
+
+			try {
+				InitialContext ic = new InitialContext();    		
+				try {
+					return ic.lookup(jndiName);
+				} catch (NamingException e) {
+					if (!jndiName.equals(this.connectionName)) {
+						return ic.lookup(this.connectionName);
+					}
+				}
 			} catch (NamingException e) {
 			}    		
     	}
