@@ -22,7 +22,6 @@
 
 package org.teiid.query.validator;
 
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -46,6 +45,7 @@ import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionLibrary;
+import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.resolver.util.ResolverUtil;
@@ -348,9 +348,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                 	handleValidationError(QueryPlugin.Util.getString("QueryResolver.invalid_xpath", e.getMessage()), obj); //$NON-NLS-1$
                 }
 	        }
-        } else if(obj.getFunctionDescriptor().getName().equalsIgnoreCase(SourceSystemFunctions.ENCODE) || obj.getFunctionDescriptor().getName().equalsIgnoreCase(SourceSystemFunctions.DECODE)) {
+        } else if(obj.getFunctionDescriptor().getName().equalsIgnoreCase(SourceSystemFunctions.TO_BYTES) || obj.getFunctionDescriptor().getName().equalsIgnoreCase(SourceSystemFunctions.TO_CHARS)) {
         	try {
-        		Charset.forName((String)((Constant)obj.getArg(1)).getValue());
+        		FunctionMethods.getCharset((String)((Constant)obj.getArg(1)).getValue());
         	} catch (IllegalArgumentException e) {
         		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.invalid_encoding", obj.getArg(1)), obj); //$NON-NLS-1$
         	}

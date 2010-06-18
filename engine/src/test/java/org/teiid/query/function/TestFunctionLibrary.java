@@ -52,6 +52,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.NullType;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
+import org.teiid.core.util.Base64;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants.NonReserved;
@@ -1369,14 +1370,31 @@ public class TestFunctionLibrary {
     }
 	
 	@Test public void testEncode() throws Exception {
-		Clob result = (Clob)helpInvokeMethod("encode", new Class[] {DefaultDataClasses.BLOB, DefaultDataClasses.STRING}, new Object[] { new BlobType(new SerialBlob("hello world".getBytes("ASCII"))), "ASCII" }, null); //$NON-NLS-1$
+		Clob result = (Clob)helpInvokeMethod("to_chars", new Class[] {DefaultDataClasses.BLOB, DefaultDataClasses.STRING}, new Object[] { new BlobType(new SerialBlob("hello world".getBytes("ASCII"))), "ASCII" }, null); //$NON-NLS-1$
 		String string = result.getSubString(1, (int)result.length());
 		assertEquals("hello world", string);
 	}
 	
 	@Test public void testDecode() throws Exception {
-		Blob result = (Blob)helpInvokeMethod("decode", new Class[] {DefaultDataClasses.CLOB, DefaultDataClasses.STRING}, new Object[] { new ClobType(new SerialClob("hello world".toCharArray())), "UTF32" }, null); //$NON-NLS-1$
+		Blob result = (Blob)helpInvokeMethod("to_bytes", new Class[] {DefaultDataClasses.CLOB, DefaultDataClasses.STRING}, new Object[] { new ClobType(new SerialClob("hello world".toCharArray())), "UTF32" }, null); //$NON-NLS-1$
 		assertEquals(44, result.length()); //4 bytes / char
+	}
+	
+	@Test public void testEncode1() throws Exception {
+		Clob result = (Clob)helpInvokeMethod("to_chars", new Class[] {DefaultDataClasses.BLOB, DefaultDataClasses.STRING}, new Object[] { new BlobType(new SerialBlob("hello world".getBytes("ASCII"))), "BASE64" }, null); //$NON-NLS-1$
+		String string = result.getSubString(1, (int)result.length());
+		assertEquals("hello world", new String(Base64.decode(string), "ASCII"));
+	}
+	
+	@Test public void testEncode2() throws Exception {
+		Clob result = (Clob)helpInvokeMethod("to_chars", new Class[] {DefaultDataClasses.BLOB, DefaultDataClasses.STRING}, new Object[] { new BlobType(new SerialBlob("hello world".getBytes("ASCII"))), "HEX" }, null); //$NON-NLS-1$
+		String string = result.getSubString(1, (int)result.length());
+		assertEquals("68656C6C6F20776F726C64", string);
+	}
+	
+	@Test public void testDecode2() throws Exception {
+		Blob result = (Blob)helpInvokeMethod("to_bytes", new Class[] {DefaultDataClasses.CLOB, DefaultDataClasses.STRING}, new Object[] { new ClobType(new SerialClob("68656C6C6F20776F726C64".toCharArray())), "HEX" }, null); //$NON-NLS-1$
+		assertEquals("hello world", new String(ObjectConverterUtil.convertToCharArray(result.getBinaryStream(), -1, "ASCII")));
 	}
 	
 }

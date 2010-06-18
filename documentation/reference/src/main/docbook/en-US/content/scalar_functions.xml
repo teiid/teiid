@@ -801,27 +801,6 @@
           </row>
           <row>
             <entry>
-              <para>ENCODE(x, encoding)</para>
-            </entry>
-            <entry>
-              <para>Return a clob from the blob with the given encoding.  The builtin Java Charset<footnote id="charset"><para>See the <ulink url="http://java.sun.com/j2se/1.5.0/docs/api/java/nio/charset/Charset.html">Charset JavaDoc</ulink></para></footnote> names are valid values for encoding.</para>
-            </entry>
-            <entry>
-              <para>x is a blob, encoding is a string, and returns a clob</para>
-            </entry>
-          </row><row>
-            <entry>
-              <para>DECODE(x, encoding)</para>
-            </entry>
-            <entry>
-              <para>Return a blob from the clob with the given encoding.  The builtin Java Charset<footnoteref linkend="charset"/> names are valid values for encoding.</para>
-            </entry>
-            <entry>
-              <para>x in a clob, encoding is a string, and returns a blob</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
               <para>INITCAP(x)</para>
             </entry>
             <entry>
@@ -1042,6 +1021,27 @@
             </entry>
             <entry>
               <para>y, z in {integer}</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>TO_CHARS(x, encoding)</para>
+            </entry>
+            <entry>
+              <para>Return a clob from the blob with the given encoding.  BASE64, HEX, and the builtin Java Charset<footnote id="charset"><para>See the <ulink url="http://java.sun.com/j2se/1.5.0/docs/api/java/nio/charset/Charset.html">Charset JavaDoc</ulink></para></footnote> names are valid values for the encoding.</para>
+            </entry>
+            <entry>
+              <para>x is a blob, encoding is a string, and returns a clob</para>
+            </entry>
+          </row><row>
+            <entry>
+              <para>TO_BYTES(x, encoding)</para>
+            </entry>
+            <entry>
+              <para>Return a blob from the clob with the given encoding.  BASE64, HEX, and the builtin Java Charset<footnoteref linkend="charset"/> names are valid values for the encoding.</para>
+            </entry>
+            <entry>
+              <para>x in a clob, encoding is a string, and returns a blob</para>
             </entry>
           </row>
           <row>

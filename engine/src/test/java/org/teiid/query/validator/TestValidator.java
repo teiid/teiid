@@ -2036,7 +2036,7 @@ public class TestValidator {
     }
     
     @Test public void testDecode() throws Exception {
-    	helpValidate("select decode(e1, '?') from pm1.g1", new String[] {"decode(e1, '?')"}, FakeMetadataFactory.example1Cached());
+    	helpValidate("select to_bytes(e1, '?') from pm1.g1", new String[] {"to_bytes(e1, '?')"}, FakeMetadataFactory.example1Cached());
     }
 
 }

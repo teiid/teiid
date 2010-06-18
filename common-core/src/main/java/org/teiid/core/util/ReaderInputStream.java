@@ -47,15 +47,15 @@ public class ReaderInputStream extends InputStream {
 	private char[] charBuffer;
 	private AccessibleByteArrayOutputStream out = new AccessibleByteArrayOutputStream();
 	private boolean hasMore = true;
-	private int pos = 0;
+	private int pos;
 	
-	public ReaderInputStream(Reader reader, Charset charSet) {
-		this(reader, charSet, DEFAULT_BUFFER_SIZE);
+	public ReaderInputStream(Reader reader, Charset charset) {
+		this(reader, charset, DEFAULT_BUFFER_SIZE);
 	}
 
-	public ReaderInputStream(Reader reader, Charset charSet, int bufferSize) {
+	public ReaderInputStream(Reader reader, Charset charset, int bufferSize) {
 		this.reader = reader;
-		this.writer = new OutputStreamWriter(out, charSet);
+		this.writer = new OutputStreamWriter(out, charset);
 		this.charBuffer = new char[bufferSize];
 	}
 

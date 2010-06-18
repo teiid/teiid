@@ -144,8 +144,8 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         addClobFunction("lower", QueryPlugin.Util.getString("SystemSource.LowerClob_result"), "lowerCase", DataTypeManager.DefaultDataTypes.CLOB); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         addClobFunction("upper", QueryPlugin.Util.getString("SystemSource.UpperClob_result"), "upperCase", DataTypeManager.DefaultDataTypes.CLOB); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         
-        addEncodeFunction();
-        addDecodeFunction();
+        addToCharsFunction();
+        addToBytesFunction();
         
         // conversion
         addConversionFunctions();   
@@ -580,18 +580,18 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Insert_result")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
-	private void addEncodeFunction() {
+	private void addToCharsFunction() {
 		functions.add(
-			new FunctionMethod("encode", QueryPlugin.Util.getString("SystemSource.encode_desc"), CONVERSION, FUNCTION_CLASS, "encode", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  
+			new FunctionMethod("to_chars", QueryPlugin.Util.getString("SystemSource.encode_desc"), CONVERSION, FUNCTION_CLASS, "toChars", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  
 				new FunctionParameter[] {
 					new FunctionParameter("value", DataTypeManager.DefaultDataTypes.BLOB, QueryPlugin.Util.getString("SystemSource.encode_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
 					new FunctionParameter("encoding", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.encode_arg2"))}, //$NON-NLS-1$ //$NON-NLS-2$
 				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.CLOB, QueryPlugin.Util.getString("SystemSource.encode_result")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
-	private void addDecodeFunction() {
+	private void addToBytesFunction() {
 		functions.add(
-			new FunctionMethod("decode", QueryPlugin.Util.getString("SystemSource.decode_desc"), CONVERSION, FUNCTION_CLASS, "decode", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  
+			new FunctionMethod("to_bytes", QueryPlugin.Util.getString("SystemSource.decode_desc"), CONVERSION, FUNCTION_CLASS, "toBytes", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  
 				new FunctionParameter[] {
 					new FunctionParameter("value", DataTypeManager.DefaultDataTypes.CLOB, QueryPlugin.Util.getString("SystemSource.decode_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
 					new FunctionParameter("encoding", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.decode_arg2"))}, //$NON-NLS-1$ //$NON-NLS-2$

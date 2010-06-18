@@ -3229,8 +3229,8 @@ Expression function(ParseInfo info) :
 		<RPAREN>				
 	)
 	|
-	LOOKAHEAD(<ID>, {matchesAny(getToken(1).image, "encode", "decode") != null}) (	
-		funcName = nonReserved("ENCODE", "DECODE")
+	LOOKAHEAD(<ID>, {matchesAny(getToken(1).image, "to_chars", "to_bytes") != null}) (	
+		funcName = nonReserved("TO_CHARS", "TO_BYTES")
 		<LPAREN>
 		expression = expression(info) 
 		{		

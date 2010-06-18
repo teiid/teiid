@@ -74,6 +74,7 @@ import org.teiid.core.types.XMLTranslator;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.types.XMLType.Type;
 import org.teiid.query.eval.Evaluator;
+import org.teiid.query.function.CharsetUtils;
 import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.processor.xml.XMLUtil;
 import org.teiid.query.util.CommandContext;
@@ -522,7 +523,11 @@ public class XMLSystemFunctions {
     }
 
 	private static String escapeChar(char chr) {
-		return "_u00" + Integer.toHexString(chr).toUpperCase() + "_"; //$NON-NLS-1$ //$NON-NLS-2$
+		CharBuffer cb = CharBuffer.allocate(7);
+		cb.append("_u");  //$NON-NLS-1$
+		CharsetUtils.toHex(cb, (byte)(chr >> 8));
+		CharsetUtils.toHex(cb, (byte)chr);
+		return cb.append("_").flip().toString();  //$NON-NLS-1$
 	}
 	
 }

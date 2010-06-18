@@ -26,6 +26,7 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.nio.charset.Charset;
 
 import org.teiid.core.CorePlugin;
 
@@ -43,6 +44,7 @@ public abstract class Streamable<T> implements Externalizable {
 	private static final long serialVersionUID = -8252488562134729374L;
 	
 	public static final String ENCODING = "UTF-8"; //$NON-NLS-1$
+	public static final Charset CHARSET = Charset.forName(ENCODING);
     public static final String FORCE_STREAMING = "FORCE_STREAMING"; //$NON-NLS-1$
     public static final int STREAMING_BATCH_SIZE_IN_BYTES = 102400; // 100K
 

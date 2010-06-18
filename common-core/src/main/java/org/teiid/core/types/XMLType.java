@@ -29,6 +29,7 @@ import java.io.ObjectOutput;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 
@@ -147,7 +148,10 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 				xml = type.reference;
 			}
 			if (xml instanceof SQLXMLImpl) {
-				return ((SQLXMLImpl)xml).getEncoding();
+				Charset cs = ((SQLXMLImpl)xml).getCharset();
+				if (cs != null) {
+					return cs.displayName();
+				}
 			}
 			return getEncoding(xml.getBinaryStream());
 		} catch (SQLException e) {

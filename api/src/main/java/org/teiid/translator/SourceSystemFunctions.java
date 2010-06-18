@@ -40,8 +40,6 @@ public class SourceSystemFunctions {
 	public static final String ASCII = "ascii"; //$NON-NLS-1$
 	public static final String CHAR = "char"; //$NON-NLS-1$
 	public static final String CONCAT = "concat"; //$NON-NLS-1$
-	public static final String DECODE = "decode"; //$NON-NLS-1$
-	public static final String ENCODE = "encode"; //$NON-NLS-1$
 	//public static final String DIFFERENCE = "difference";
 	public static final String INITCAP = "initcap"; //$NON-NLS-1$
 	public static final String INSERT = "insert"; //$NON-NLS-1$
@@ -58,6 +56,8 @@ public class SourceSystemFunctions {
 	public static final String RTRIM = "rtrim"; //$NON-NLS-1$
 	//public static final String SOUNDEX = "soundex";
 	public static final String SUBSTRING = "substring"; //$NON-NLS-1$
+	public static final String TO_BYTES = "to_bytes"; //$NON-NLS-1$
+	public static final String TO_CHARS = "to_chars"; //$NON-NLS-1$
 	public static final String UCASE = "ucase"; //$NON-NLS-1$
 	
 	//numeric

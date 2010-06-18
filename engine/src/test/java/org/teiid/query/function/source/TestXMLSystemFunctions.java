@@ -209,6 +209,10 @@ public class TestXMLSystemFunctions {
 		assertEquals("a_u005F_x", XMLSystemFunctions.escapeName("a_x", true));
     }
 	
+	@Test public void testNameEscaping2() throws Exception {
+		assertEquals("_u000A_", XMLSystemFunctions.escapeName(new String(new char[] {10}), true));
+    }
+	
 	@BeforeClass static public void setUpOnce() {
 		TimeZone.setDefault(TimeZone.getTimeZone("GMT-6:00"));
 	}
