@@ -77,14 +77,14 @@
 				<plugins>
 					<plugin>
 						<artifactId>maven-assembly-plugin</artifactId>
-						<version>2.2-beta-2</version>
+						<version>2.2-beta-5</version>
 						<configuration>
 							<descriptors>
 								<descriptor>build/assembly/src.xml</descriptor>
+                                <descriptor>build/assembly/docs.xml</descriptor>                                
 								<descriptor>build/assembly/client-jar.xml</descriptor>
                                 <descriptor>build/assembly/jboss-container/dist.xml</descriptor>
-                                <descriptor>build/assembly/adminshell/adminshell-dist.xml</descriptor>
-								<descriptor>documentation/assembly/docs.xml</descriptor>
+                                <descriptor>build/assembly/adminshell/adminshell-dist.xml</descriptor>								
 							</descriptors>
 							<outputDirectory>target/distribution</outputDirectory>
 							<workDirectory>target/assembly/work</workDirectory>
@@ -106,7 +106,7 @@
                 <plugins>
                     <plugin>
                         <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-2</version>
+                        <version>2.2-beta-5</version>
                         <configuration>
                             <descriptors>
                                 <descriptor>build/assembly/client-jar.xml</descriptor>

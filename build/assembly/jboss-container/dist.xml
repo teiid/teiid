@@ -39,34 +39,6 @@
     </fileSet>
 
     <fileSet>
-        <directory>target/distribution/teiid-${version}-docs.dir/admin-guide/en-US/pdf</directory>
-        <includes>
-            <include>teiid_admin_guide.pdf</include>
-        </includes>        
-        <outputDirectory>teiid-docs</outputDirectory>
-    </fileSet>
-    <fileSet>
-        <directory>target/distribution/teiid-${version}-docs.dir/reference/en-US/pdf</directory>
-        <includes>
-            <include>teiid_reference.pdf</include>
-        </includes>                
-        <outputDirectory>teiid-docs</outputDirectory>
-    </fileSet>
-    <fileSet>
-        <directory>target/distribution/teiid-${version}-docs.dir/quick-start-example/en-US/pdf</directory>
-        <includes>
-            <include>quick_start_example.pdf</include>
-        </includes>                
-        <outputDirectory>teiid-docs</outputDirectory>
-    </fileSet>
-    <fileSet>
-        <directory>target/distribution/teiid-${version}-docs.dir/developer-guide/en-US/pdf</directory>
-        <includes>
-            <include>connector_developer_guide.pdf</include>
-        </includes>                
-        <outputDirectory>teiid-docs</outputDirectory>
-    </fileSet>
-    <fileSet>
         <directory>client/src/main/resources</directory>
         <includes>
             <include>vdb-deployer.xsd</include>
@@ -75,7 +47,25 @@
     </fileSet>        
   </fileSets>
   
- 
+    <files>
+        <file>
+            <source>target/distribution/teiid-${version}-docs/admin-guide/en-US/pdf/teiid_admin_guide.pdf</source>
+            <outputDirectory>teiid-docs</outputDirectory>
+        </file>
+        <file>
+            <source>target/distribution/teiid-${version}-docs/reference/en-US/pdf/teiid_reference.pdf</source>
+            <outputDirectory>teiid-docs</outputDirectory>
+        </file>
+        <file>
+            <source>target/distribution/teiid-${version}-docs/quick-start-example/en-US/pdf/quick_start_example.pdf</source>
+            <outputDirectory>teiid-docs</outputDirectory>
+        </file>
+        <file>
+            <source>target/distribution/teiid-${version}-docs/developer-guide/en-US/pdf/developer_guide.pdf</source>
+            <outputDirectory>teiid-docs</outputDirectory>
+        </file>
+    </files>
+     
   
   <!--  these have external dependent clients like connectors-->
   <moduleSets>
