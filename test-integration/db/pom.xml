@@ -10,7 +10,7 @@
 	<parent>
 		<artifactId>teiid-test-integration</artifactId>
 		<groupId>org.jboss.teiid</groupId>
-		<version>7.0.0-SNAPSHOT</version>
+		<version>7.1.0-SNAPSHOT</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -20,7 +20,7 @@
  	<groupId>org.jboss.teiid.teiid-test-integration</groupId>
 	<description>Integration tests that require external database dependencies </description>
 
-	<version>7.0.0-SNAPSHOT</version>
+	<version>7.1.0-SNAPSHOT</version>
 
 	<dependencies>
 
