@@ -45,9 +45,10 @@ public final class CharsetUtils {
 	    		char[] chars = new char[2]; 
 
 		    	@Override
-		    	protected void encode(ByteBuffer out) {
+		    	protected CoderResult encode(ByteBuffer out) {
 		    		this.cb.get(chars);
 		    		out.put((byte)(Integer.parseInt(new String(chars), 16) & 0xff));
+		    		return CoderResult.UNDERFLOW;
 		    	}
 
 		    };
@@ -84,8 +85,13 @@ public final class CharsetUtils {
 			return new FixedEncoder(this, 4, .75f, 1) {
 
 		    	@Override
-		    	protected void encode(ByteBuffer out) {
-		    		out.put(Base64.decode(cb));
+		    	protected CoderResult encode(ByteBuffer out) {
+		    		try {
+		    			out.put(Base64.decode(cb));
+		    			return CoderResult.UNDERFLOW;
+		    		} catch (IllegalArgumentException e) {
+		    			return CoderResult.unmappableForLength(4);
+		    		}
 		    	}
 
 		    };
@@ -130,14 +136,17 @@ public final class CharsetUtils {
 					    return CoderResult.OVERFLOW;
 					}
 					cb.flip();
-					encode(out);
+					CoderResult result = encode(out);
+					if (result != CoderResult.UNDERFLOW) {
+						return result;
+					}
 					cb.clear();
 	    		}
 		    }
 		    return CoderResult.UNDERFLOW;
     	}
 
-		abstract protected void encode(ByteBuffer out);
+		abstract protected CoderResult encode(ByteBuffer out);
 		
 		@Override
 		protected CoderResult implFlush(ByteBuffer out) {

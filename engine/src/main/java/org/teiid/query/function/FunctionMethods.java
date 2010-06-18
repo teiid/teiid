@@ -22,6 +22,8 @@
 
 package org.teiid.query.function;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -1265,10 +1267,22 @@ public final class FunctionMethods {
     	return new ClobType(clob);
     }
     
-    public static Blob toBytes(ClobType value, String encoding) {
+    public static Blob toBytes(ClobType value, String encoding) throws IOException {
     	Charset cs = getCharset(encoding);
     	ClobInputStreamFactory cisf = new ClobInputStreamFactory(value.getReference());
     	cisf.setCharset(cs);
+    	if (CharsetUtils.BASE64_NAME.equalsIgnoreCase(encoding) || CharsetUtils.HEX_NAME.equalsIgnoreCase(encoding)) {
+    		//validate that the binary conversion is possible
+    		//TODO: cache the result in a filestore
+    		InputStream is = cisf.getInputStream();
+    		try {
+	    		while (is.read() != -1) {
+	    			
+	    		}
+    		} finally {
+    			is.close();
+    		}
+    	}
     	return new BlobType(new BlobImpl(cisf));
 	}
     

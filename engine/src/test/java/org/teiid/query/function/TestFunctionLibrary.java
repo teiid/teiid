@@ -1369,32 +1369,36 @@ public class TestFunctionLibrary {
         assertEquals("<!--comment-->", xml);
     }
 	
-	@Test public void testEncode() throws Exception {
+	@Test public void testToChars() throws Exception {
 		Clob result = (Clob)helpInvokeMethod("to_chars", new Class[] {DefaultDataClasses.BLOB, DefaultDataClasses.STRING}, new Object[] { new BlobType(new SerialBlob("hello world".getBytes("ASCII"))), "ASCII" }, null); //$NON-NLS-1$
 		String string = result.getSubString(1, (int)result.length());
 		assertEquals("hello world", string);
 	}
 	
-	@Test public void testDecode() throws Exception {
+	@Test public void testToBytes() throws Exception {
 		Blob result = (Blob)helpInvokeMethod("to_bytes", new Class[] {DefaultDataClasses.CLOB, DefaultDataClasses.STRING}, new Object[] { new ClobType(new SerialClob("hello world".toCharArray())), "UTF32" }, null); //$NON-NLS-1$
 		assertEquals(44, result.length()); //4 bytes / char
 	}
 	
-	@Test public void testEncode1() throws Exception {
+	@Test public void testToChars1() throws Exception {
 		Clob result = (Clob)helpInvokeMethod("to_chars", new Class[] {DefaultDataClasses.BLOB, DefaultDataClasses.STRING}, new Object[] { new BlobType(new SerialBlob("hello world".getBytes("ASCII"))), "BASE64" }, null); //$NON-NLS-1$
 		String string = result.getSubString(1, (int)result.length());
 		assertEquals("hello world", new String(Base64.decode(string), "ASCII"));
 	}
 	
-	@Test public void testEncode2() throws Exception {
+	@Test public void testToChars2() throws Exception {
 		Clob result = (Clob)helpInvokeMethod("to_chars", new Class[] {DefaultDataClasses.BLOB, DefaultDataClasses.STRING}, new Object[] { new BlobType(new SerialBlob("hello world".getBytes("ASCII"))), "HEX" }, null); //$NON-NLS-1$
 		String string = result.getSubString(1, (int)result.length());
 		assertEquals("68656C6C6F20776F726C64", string);
 	}
 	
-	@Test public void testDecode2() throws Exception {
+	@Test public void testToBytes2() throws Exception {
 		Blob result = (Blob)helpInvokeMethod("to_bytes", new Class[] {DefaultDataClasses.CLOB, DefaultDataClasses.STRING}, new Object[] { new ClobType(new SerialClob("68656C6C6F20776F726C64".toCharArray())), "HEX" }, null); //$NON-NLS-1$
 		assertEquals("hello world", new String(ObjectConverterUtil.convertToCharArray(result.getBinaryStream(), -1, "ASCII")));
+	}
+	
+	@Test(expected=FunctionExecutionException.class) public void testToBytes3() throws Exception {
+		helpInvokeMethod("to_bytes", new Class[] {DefaultDataClasses.CLOB, DefaultDataClasses.STRING}, new Object[] { new ClobType(new SerialClob("a".toCharArray())), "BASE64" }, null); //$NON-NLS-1$
 	}
 	
 }

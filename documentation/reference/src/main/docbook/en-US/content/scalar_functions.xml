@@ -1028,7 +1028,8 @@
               <para>TO_CHARS(x, encoding)</para>
             </entry>
             <entry>
-              <para>Return a clob from the blob with the given encoding.  BASE64, HEX, and the builtin Java Charset<footnote id="charset"><para>See the <ulink url="http://java.sun.com/j2se/1.5.0/docs/api/java/nio/charset/Charset.html">Charset JavaDoc</ulink></para></footnote> names are valid values for the encoding.</para>
+              <para>Return a clob from the blob with the given encoding.  
+              BASE64, HEX, and the builtin Java Charset names are valid values for the encoding.<footnote id="charset"><para>See the <ulink url="http://java.sun.com/j2se/1.5.0/docs/api/java/nio/charset/Charset.html">Charset JavaDoc</ulink> for more on supported Charset names.  For charsets, unmappable chars will be replaced with the charset default character.  binary formats, such as BASE64, will error in their conversion to bytes is a unrecognizable character is encountered.</para></footnote></para>
             </entry>
             <entry>
               <para>x is a blob, encoding is a string, and returns a clob</para>
@@ -1038,7 +1039,8 @@
               <para>TO_BYTES(x, encoding)</para>
             </entry>
             <entry>
-              <para>Return a blob from the clob with the given encoding.  BASE64, HEX, and the builtin Java Charset<footnoteref linkend="charset"/> names are valid values for the encoding.</para>
+              <para>Return a blob from the clob with the given encoding.  
+              BASE64, HEX, and the builtin Java Charset names are valid values for the encoding.<footnoteref linkend="charset"/></para>
             </entry>
             <entry>
               <para>x in a clob, encoding is a string, and returns a blob</para>

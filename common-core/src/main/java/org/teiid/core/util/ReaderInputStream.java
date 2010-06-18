@@ -61,16 +61,17 @@ public class ReaderInputStream extends InputStream {
 
 	@Override
 	public int read() throws IOException {
-		if (!hasMore) {
-			return -1;
-		}
 		while (pos >= out.getCount()) {
+			if (!hasMore) {
+				return -1;
+			}
 			out.reset();
 			pos = 0;
 			int charsRead = reader.read(charBuffer);
 			if (charsRead == -1) {
+				writer.close();
 	            hasMore = false;
-				return -1;
+				continue;
 			}
 			writer.write(charBuffer, 0, charsRead);
 			writer.flush();
