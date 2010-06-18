@@ -689,6 +689,9 @@ It will commonly be used with the <link linkend="texttable">TEXTTABLE</link> or 
 </tgroup>
 </table>
 <para>There are ws importer settings, but it does provide metadata for dynamic vdbs.</para>
+<note>
+<para>Setting the org.teiid.CONNECTOR.WS logging context to detail will show the request/response documents as part of the log.</para>
+</note>
 <sect3><title>Usage</title>
 <para>The main procedure, invoke, allows for multiple binding, or protocol modes, including HTTP, SOAP11, and SOAP12. 
 <programlisting>Procedure invoke(binding in STRING, action in STRING, request in XML, endpoint in STRING) returns XML</programlisting>
