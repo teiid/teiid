@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/custom.dtd">
+%CustomDTD;
+]>
+<chapter>
+	<title>AdminShell</title>
+<sect1 id="adminshell_introduction">
+   <title>Introduction</title>
+   <para>
+     The AdminShell tooling provides scripting based programming environments that enable user to access, monitor and control a Teiid
+     Server. Both the command line and graphical console tools are built on functionality provide by the Groovy (
+     <ulink url="http://groovy.codehaus.org/">http://groovy.codehaus.org/</ulink>
+     ) project.  The AdminShell tools can be used in ad-hoc scripting mode or to run pre-defined scripts.  
+   </para>
+   <orderedlist>
+   	 <title>AdminShell features:</title>
+     <listitem>
+       <para>fully functional programming environment with resource flow control and exception
+         management. See <ulink url="http://groovy.codehaus.org/">Groovy</ulink> docs for the full power of the language.</para>
+     </listitem>
+     <listitem>
+       <para>quick administrative tool. The user can connect to a running Teiid Server and invoke any of
+         the AdminAPI methods, such as "deployVDB" or "stopConnectionFactory", to control the Teiid System. 
+         Since this can be script driven, these tasks can be automated and re-run at a later time.</para>
+     </listitem>
+     <listitem>
+       <para>simplified data access tool. The user can connect to a VDB, issue any SQL commands, and view the
+         results of the query via <ulink url="http://groovy.codehaus.org/Database+features">Groovy Sql</ulink> extensions.</para>
+     </listitem>
+     <listitem>
+       <para>migration tool. This can be used to develop scripts like moving the Virtual Databases
+         (VDB), Connection Factories, and Configuration from one development environment to another. This will
+         enable users to test and automate their migration scripts before production deployments.</para>
+     </listitem>
+     <listitem>
+       <para>testing tool. The JUnit (
+         <ulink url="http://junit.org/">http://junit.org</ulink>
+         ) test framework is built in, see <ulink url="http://groovy.codehaus.org/Unit+Testing">Groovy Unit Tests</ulink>. User can write regression tests for checking system health, or data
+         integrity that can be used to validate a system functionality automatically instead of manual
+         verification by QA personnel.
+       </para>
+     </listitem>
+   </orderedlist>
+   <sect2>
+     <title>Download</title>
+     <para>AdminShell is distributed along with other Teiid downloads under "teiid-&versionNumber;-adminshell-dist.zip" name. Download and unzip this
+       file to any directory. Once you have unzipped the file, in root directory
+       you will find "adminshell" and "adminshell-console" executable scripts to launch the command line and graphical tools respectively.</para>
+     <para>Windows: Double click or execute "adminshell.cmd"</para>
+     <para>*nix: Execute the "adminshell.sh" script</para>
+   </sect2>
+</sect1>
+
+<sect1 id="getting_started">
+	<title>Getting Started</title>
+	<para>
+		To learn the basics of
+		<ulink url="http://groovy.codehaus.org/">Groovy</ulink>
+		take a look at their documents and tutorials on their website.
+	</para>
+	<para>
+		Basic knowledge of the Java programming language and types is required
+		in order to effectively design and develop
+		scripts using the AdminShell. To learn Java language find learning resources
+		at <ulink url="http://java.sun.com/">http://java.sun.com</ulink>.
+	</para>
+	<para>You can learn about the Teiid AdminAPI either using
+		“adminHelp()” function or by using the JavaDocs.</para>
+	<para>AdminShell is a specialized version of Groovy which works in
+		several different modes: interactive shell, graphical console, or script
+		run mode. In interactive shell mode (launched via adminshell), the user can invoke connect to a live
+		Teiid system and issue any ad-hoc commands to control the system. The interactive buffer can be used to
+		develop a script and the interactive session input and output can be
+		captured into a log file, more on this later in the document.</para>
+	<para>In graphical mode (lanched via adminshell-console), the user can develop and run scripts using a text editor that supports syntax highlighting.</para>
+	<para>In the script run mode, the user can execute/play back previously
+		developed scripts. This mode especially useful to automate any testing or to perform any repeated
+		configurations/migrations changes to a Teiid system.</para>
+	<sect2>
+		<title>Essential Rules</title>
+		<para>To use AdminShell successfully, there are some basic syntactical rules to keep in mind.</para>
+		<orderedlist>
+			<listitem>
+				<para>In interactive shell mode, most commands (as seen by the help command) are used to control shell behavior and are not general Groovy scripting constructs. Admin methods will typically be called using functional notation:</para>
+				<programlisting><![CDATA[connectAsAdmin()]]></programlisting>
+			</listitem>
+			<listitem>
+				<para>All commands and functions are case sensitive.</para>
+			</listitem>
+			<listitem>
+				<para>An ending semicolon is optional for Groovy statements.</para>
+			</listitem>
+			<listitem>
+				<para>If a function requires input parameter(s), they should be
+					declared inside "(" and ")".  A function may have more than
+					one parameter.  String parameters can be wrapped in double or single quotes.  Example:</para>
+				<programlisting><![CDATA[
+          connectAsAdmin("mm://localhost:34413", "user", "password")
+        ]]></programlisting>
+			</listitem>
+			<listitem>
+				<para>Other Java methods and classes can be used from your scripts, if the
+					required Java class libraries are already in class path. You may place additional jars in the 
+					lib directory to have be automatically part of the class path.  An example showing an import:
+        </para>
+				<programlisting><![CDATA[import my.package.*;
+myObject = new MyClass();
+myObject.doSomething();]]></programlisting>
+			</listitem>
+		</orderedlist>
+		<para>To execute the commands and arbitrary script in interactive mode you enter them first
+			and press enter to execute, then enter the next line, so on.</para>
+		<para>To exit the tool in the interactive mode, first disconnect if
+			you are connected to the Teiid
+			system by executing “disconnect();” then type "exit". In the script
+			mode, when execution of the
+			script finishes the tool will exit automatically, however you still have to
+			disconnect from Teiid
+			system in the script.</para>
+		<para>Note: If SSL is turned on the Teiid server, you would need to
+			adjust the connection URL and the client SSL settings as necessary (typically this will only be needed for 2-way SSL).
+		</para>
+	</sect2>
+		<sect2>
+		<title>Help</title>
+		<para>The adminHelp() methods lists all the available administrative API
+			methods in the AdminShell. Please note
+			that none of the Groovy Shell commands or other available function calls will be shown in
+			this list</para>
+		<programlisting><![CDATA[adminHelp();]]></programlisting>
+		<para>To get a specific definition about a method and it's required
+			input parameters, use adminHelp("method")</para>
+		<programlisting><![CDATA[adminHelp("deployVDB");
+
+/*
+ *Deploy a VDB from file
+ */
+void deployVDB(
+    String /* file name */)
+  throws AdminException
+  throws FileNotFoundException]]></programlisting>
+		<para />
+		<para>The sqlHelp() methods lists all Sql extension 
+			methods.</para>
+		<programlisting><![CDATA[sqlHelp();]]></programlisting>
+		<para>To get a specific definition about a method and it's required
+			input parameters, use sqlHelp("method")</para>
+		<para />
+	</sect2>
+	<sect2>
+		<title>Basic Commands</title>
+		<para>The list below contains some common commands used in AdminShell.</para>
+		<programlisting><![CDATA[   
+println "xxx";   // print something to console
+
+adminHelp();     // shows all the available admin commands; 
+
+sql = connect(); // get an extended Groovy Sql connection using connection.properties file
+
+sql.execute(<SQL>); // run any SQL command. 
+
+connectAsAdmin(); // connect as admin; no need have the vdb name. SQL commands will not work under this connection
+
+println getConnectionName();  // returns the current connection name
+
+useConnection(<connection name>); // switches to using the given connection settings
+
+disconnect();   // disconnects the current connection in the context
+        ]]></programlisting>
+	</sect2>
+</sect1>
+  <sect1>
+    <title>Executing a script file</title>
+    <para>To execute a script file "foo.groovy" in a directory "some/directory" in the interactive comamnd line tool, execute as
+      following</para>
+    <programlisting><![CDATA[. some/directory/foo.groovy]]></programlisting>
+    <para>"foo.groovy" is read into current context of the shell as if you typed in the whole document. If
+      your script only contained method calls, you can explicitly invoke the call to execute.</para>
+    <para>Full execute syntax may also be used, and is required outside of the interactive command line tool:</para>
+    <programlisting><![CDATA[evaluate("some/directory/foo.groovy" as File) ]]></programlisting>
+    <para>To execute the same file without entering interactive mode, run</para>
+    <programlisting><![CDATA[./adminshell.sh . some/directory/foo.groovy]]></programlisting>
+    <para>Parameters can be passed in as Java System properties. For example</para>
+    <programlisting><![CDATA[./adminshell.sh -Dparam=value . some/directory/foo.groovy]]></programlisting>
+    <para>Inside the script file, you can access these properties using System.getProperty</para>
+    <programlisting><![CDATA[value = System.getProperty(“param”); // will return "value"]]></programlisting>
+  </sect1>
+    
+  <sect1>
+    <title>Log File and Recorded Script file</title>
+    <para>During the interactive mode, input is recorded in a history file. This file can be accessed via the up arrow in the interactive shell.
+    </para>
+    <para>User can also capture the commands entered during a interactive session to their own script file by
+      using “startRecording” and “stopRecording” commands. For example,</para>
+    <para />
+    <programlisting><![CDATA[record start directory/filename.txt
+<commands and script ..>
+record stop]]></programlisting>
+    <para>All input and output between the start and stop are captured in the “directory/filename.txt” file. 
+      This gives the user an option to capture only certain portions of the interactive session and to later refine a script out of recorded file.</para>
+    <para />
+  </sect1>
+    <sect1>
+    <title>Default Connection Properties</title>
+    <para>The file "connection.properties" in the installation directory of the AdminShell defines the default
+      connection properties with which user can connect to Teiid system. The following properties can be
+      defined using this file</para>
+    <programlisting><![CDATA[
+admin.url = <server host name or ip address>
+admin.name = <user name>
+admin.password = <password>
+
+jdbc.url = <server host name or ip address>
+jdbc.user = <user name>
+jdbc.password = <password>
+      ]]></programlisting>
+    <para>A call to "connect()" or "connectionAsAdmin()" without any input parameters, will connect to
+      the Teiid system using the properties defined in properties file. However, a user can always pass in
+      parameters in the connect method to connect to a same or different server than one mentioned in the
+      “connection.properties”.  Look all the all the different connect methods using the “adminHelp()” method.  </para>
+    <para>Note that it is not secure to leave the passwords in clear text, as defined above. Please take
+      necessary measures to secure the properties file, or do not use this feature and always pass in password
+      interactively or some other secure way.</para>
+    <para>Note: At any given time user can be actively connected to more than one system or have more than one
+      connection to same system.  To manage the connections correctly each connection is created given a unique
+      connection name. To learn more about this look at <link linkend="mutiple_connections">Handling Multiple Connections</link>.</para>
+    <para />
+  </sect1>
+  <sect1 id="mutiple_connections">
+    <title>Handling Multiple Connections</title>
+    <para>Using AdminShell, a user can actively manage more than one connection to a single or multiple Teiid
+      systems. For example, two separate connections can be maintained, one to the development server and one to
+      the integration server at the same time. This is possible because AdminShell supports a feature called named
+      connections.</para>
+    <para>Every time a connection is made, the connection has an explicit or an implicitly assigned name.  
+      If another connect command is executed then a new
+      connection is made with a unique name and execution will be switched to use the new connection.  
+      The previous connection will be held as it is in its current state, and will not be closed.</para>
+    <para />
+    <para>You can use the following command to find out the current connection's name</para>
+    <programlisting><![CDATA[
+name = getConnectionName();    
+      ]]></programlisting>
+    <para>Knowing the names of the connection that user is working with is important to switch the active connection to a previous connection.  
+    To switch the active connection, use the following command and supply the name of the connection to be used</para>
+    <para />
+    <programlisting><![CDATA[
+useConnection("name");    
+      ]]></programlisting>
+    <para>If user supplies the same name as the active connection as they are currently participating in, then
+      this operation will simply return with out any modifications. There is no limitation the number of
+      simultaneous connections.</para>
+    <para />
+    <para>The following shows an example of using and switching between two connections.</para>
+    <programlisting><![CDATA[// creates a connection 
+connectAsAdmin();	        	
+
+//capture the connection name
+conn1 = getConnectionName();
+
+deployVDB("file.vdb")
+
+// creates a second connection 
+connectAsAdmin();		
+
+conn2 = getConnectionName();
+
+deployVDB("file.vdb")
+
+// switch the connection to "conn1"
+useConnection(conn1);	
+
+// close the connection in the "conn1"
+disconnectAll();]]></programlisting>
+  </sect1>
+  
+</chapter>

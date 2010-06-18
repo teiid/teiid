@@ -5,9 +5,8 @@
    <para>
     A <ulink url="http://www.jboss.org/teiid/basics/virtualdatabases.html">VDB</ulink>is the primary means to define a 
     Virtual Database in Teiid. A user can create a VDB using 
-    <ulink url="http://www.jboss.org/teiiddesigner.html">Teiid Designer</ulink> or follow the instructions in the "reference" guide
-     create a "Dynamic VDB" without Designer for data integration purposes. If you do not know what a VDB is, 
-    then please start with these <ulink url="http://www.jboss.org/teiid/basics/virtualdatabases.html">documents</ulink>   
+    <ulink url="http://www.jboss.org/teiiddesigner.html">Teiid Designer</ulink> or follow the instructions in the Reference Guide to
+     create a "Dynamic VDB" without Teiid Designer. 
    </para>
 
    <sect1>
@@ -15,49 +14,42 @@
         <para>Once you have a "VDB" built it can be deployed in Teiid runtime in different ways.</para>
         
         <sect2>
-            <title>By Copying the File</title>
+            <title>Direct File Deployment</title>
             <para>Copy the VDB file into the "&lt;jboss-install&gt;/server/&lt;profile&gt;/deploy" directory. 
             Make sure that there are no other VDB files with the same name. If a VDB already exists with 
             the same name, then this VDB will be replaced with the new VDB. This is the simplest way to deploy a VDB. This is mostly
             designed for quick deployment during development, when the Teiid server is available 
             locally on the developer machine.</para>
         </sect2>
+        
+        <sect2>
+            <title>Admin Console Deployment (Web)</title>
+            <para>Use the JOPR-based web console configuration system. Check out the JOPR plugin at:</para>
+
+            <programlisting><![CDATA[http://<host>:<port>/admin-console]]></programlisting>    
+            
+            <para>More details for this can be found in the <link linkend="vdb_deploy">Admin Console VDB deployment section.</link>This is the easiest way
+            to deploy a VDB to a remote server.</para>          
+        </sect2>
                   
         <sect2>
-            <title>By Using Admin API</title>
+            <title>AdminShell Deployment</title>
+            <para>Teiid provides a groovy based AdminShell scripting tool, which can be used to deploy
+            a VDB. Check out the "deployVDB" method.  Consult the  
+            <link linkend="adminshell">AdminShell documentation</link> for more information. Note that using the AdminShell scripting, you can automate
+            the deployment of artifacts in your environment.</para>
+        </sect2>         
+
+        <sect2>
+            <title>Admin API Deployment</title>
             <para>The Admin API (look in org.teiid.adminpi.*) provides Java API methods that 
             lets a user connect to a Teiid runtime and deploy a VDB. If you need to programmatically 
             deploy a VDB use this method. This method is preferable for OEM users, who are trying to extend the
             Teiid's capabilities through their applications.</para>
         </sect2>
-        
-        <sect2>
-            <title>By Using Admin Shell</title>
-            <para>Teiid provides "groovy" based Admin Shell scripting tool, which can be used to deploy
-            a VDB. Check out the "deployVDB" method. Check out more information about <emphasis>Admin Shell</emphasis> 
-            <link linkend="adminshell_introduction">here</link>. Note that using the AdminShell scripting, you can automate
-            the deployment of artifacts in your environment.</para>
-        </sect2>         
                  
-        <sect2>
-            <title>By Using Admin-Console (JOPR Based Web tool )</title>
-            <para>Use the JOPR-based web console configuration system, which will enable users to connect 
-            to a running Teiid and provide a way to deploy a VDB. Check out the JOPR plugin at:</para>
-
-            <programlisting><![CDATA[
-                http://<host>:<port>/admin-console
-            ]]></programlisting>    
-            
-            <para>More details for this can be found <link linkend="vdb_deploy">here.</link> This is preferred way
-            to deploy a VDB, when the Teiid server is shared among multiple users and/or Teiid Server is in a remote 
-            location.</para>          
-        </sect2>                      
    </sect1>
 
-   <para>Option 1 can be used for local development VDB deployment or deployment in a
-        manually controlled environment. Options 2, 3 and 4 can be used when your Teiid runtime
-        instance is a remote instance or if you need a programmatic way to control your deployment.</para>  
-   
    <sect1>
      <title>Deploying VDB Dependencies</title>
         <para>Apart from deploying the VDB, the user is also responsible for providing all the necessary 
@@ -67,71 +59,73 @@
         <para>For example, if you are trying to integrate Oracle and File sources in your VDB, then you are responsible for 
         providing the JDBC driver for the Oracle source, and any necessary documents and configuration that are needed by the File Translator.</para> 
         
+        <para>Once the VDB and its dependencies are deployed, then client applications can connect using the JDBC API.  If there are any errors in the deployment, a connection attempt will not be successful and a message will be logged. You can use the
+   		<link linkend="admin-console">admin-console</link> tool or check the log files for errors and correct them before proceeding.</para>    
+        
         <sect2>
-            <title>Creating Oracle Data source</title>
+            <title>Creating An Oracle Data Source</title>
             <orderedlist>
                 <listitem> <para>Copy the Oracle JDBC JAR file into "&lt;jboss-install&gt;/server/&lt;profile&gt;/lib" directory </para> </listitem>
                 <listitem> <para>Create a "data source" to the Oracle instance in the JBoss container. This typically 
                 done by creating "xxx-ds.xml" file and copying this file to the "&lt;jboss-install&gt;/server/%lt;profile&gt;/deploy" 
                 directory. The following shows a "-ds.xml" file template for Oracle. You can also use admin-console to create this data source. </para>
-                <programlisting><![CDATA[
-                    <?xml version="1.0" encoding="UTF-8"?>
-                    <datasources>
-                      <xa-datasource>
-                        <jndi-name>OracleDS</jndi-name>
-                        <!-- uncomment to enable interleaving <interleaving/> -->
-                        <isSameRM-override-value>false</isSameRM-override-value>
-                        <xa-datasource-class>oracle.jdbc.xa.client.OracleXADataSource</xa-datasource-class>
-                        <xa-datasource-property name="URL">jdbc:oracle:oci8:@tc</xa-datasource-property>
-                        <xa-datasource-property name="User">scott</xa-datasource-property>
-                        <xa-datasource-property name="Password">tiger</xa-datasource-property>
-                        <!-- Uses the pingDatabase method to check a connection is still valid before handing it out from the pool -->
-                        <!--valid-connection-checker-class-name>org.jboss.resource.adapter.jdbc.vendor.OracleValidConnectionChecker</valid-connection-checker-class-name-->
-                        <!-- Checks the Oracle error codes and messages for fatal errors -->
-                        <exception-sorter-class-name>org.jboss.resource.adapter.jdbc.vendor.OracleExceptionSorter</exception-sorter-class-name>
-                        <!-- Oracles XA datasource cannot reuse a connection outside a transaction once enlisted in a global transaction and vice-versa -->
-                        <no-tx-separate-pools/>
-                          <!-- corresponding type-mapping in the standardjbosscmp-jdbc.xml (optional) -->
-                          <metadata>
-                             <type-mapping>Oracle9i</type-mapping>
-                          </metadata>
-                      </xa-datasource>
-                    </datasources>
-                ]]></programlisting>     
+                <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<datasources>
+  <xa-datasource>
+    <jndi-name>OracleDS</jndi-name>
+    <!-- uncomment to enable interleaving <interleaving/> -->
+    <isSameRM-override-value>false</isSameRM-override-value>
+    <xa-datasource-class>oracle.jdbc.xa.client.OracleXADataSource</xa-datasource-class>
+    <xa-datasource-property name="URL">jdbc:oracle:oci8:@tc</xa-datasource-property>
+    <xa-datasource-property name="User">scott</xa-datasource-property>
+    <xa-datasource-property name="Password">tiger</xa-datasource-property>
+    <!-- Uses the pingDatabase method to check a connection is still valid before handing it out from the pool -->
+    <!--valid-connection-checker-class-name>
+    	org.jboss.resource.adapter.jdbc.vendor.OracleValidConnectionChecker
+    </valid-connection-checker-class-name-->
+    
+    <!-- Checks the Oracle error codes and messages for fatal errors -->
+    <exception-sorter-class-name>
+    	org.jboss.resource.adapter.jdbc.vendor.OracleExceptionSorter
+    </exception-sorter-class-name>
+    
+    <!-- Oracles XA datasource cannot reuse a connection outside a transaction once enlisted in a global transaction and vice-versa -->
+    <no-tx-separate-pools/>
+      <!-- corresponding type-mapping in the standardjbosscmp-jdbc.xml (optional) -->
+      <metadata>
+         <type-mapping>Oracle9i</type-mapping>
+      </metadata>
+  </xa-datasource>
+</datasources>]]></programlisting>     
                 </listitem>
             </orderedlist>
             <para>There are templates for all the data sources in the "&lt;jboss-install&gt;/docs/examples/jca" directory.</para>                           
             
         </sect2>        
         <sect2>
-            <title>Creating File Data source</title>
+            <title>Creating A File Data Source</title>
             <para>File data source uses Teiid specific JCA connector. You  need to create "-ds.xml" file and copy it to the 
-            "&lt;jboss-install&gt;/server/%lt;profile&gt;/deploy" directory. The below is template for creating a File based data source</para>
-            
-                <programlisting><![CDATA[
-                    <?xml version="1.0" encoding="UTF-8"?>
-                    <connection-factories>
-                       <no-tx-connection-factory>
-                          <jndi-name>text-source</jndi-name>
-                          <rar-name>connector-file-{version}.rar</rar-name>
-                          <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>      
-                          <config-property name="ParentDirectory" type="java.lang.String">path-to-the-directory-of-data-file</config-property>
-                          <max-pool-size>1</max-pool-size>
-                        </no-tx-connection-factory>
-                    </connection-factories>
-                ]]></programlisting>             
+            "&lt;jboss-install&gt;/server/%lt;profile&gt;/deploy" directory.</para>
+            <example>
+            	<title>Template for creating a File based data source</title>
+                <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<connection-factories>
+   <no-tx-connection-factory>
+      <jndi-name>text-source</jndi-name>
+      <rar-name>connector-file-{version}.rar</rar-name>
+      <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>      
+      <config-property name="ParentDirectory" type="java.lang.String">path-to-the-directory-of-data-file</config-property>
+      <max-pool-size>1</max-pool-size>
+    </no-tx-connection-factory>
+</connection-factories>]]></programlisting></example>             
         </sect2>
    </sect1>
-   
-   <para>Once the VDB and its dependencies are deployed, then your client application can connect to the 
-   deployed VDB using the JDBC API. If there are any errors in the deployment, the connection will not be successful. You can use the
-   <link linkend="admin-console">admin-console</link> tool or check the log files for errors and correct them before proceeding.</para>    
    
    <sect1>
     <title>Migrating VDBs from 6.x</title>
     <para>VDBs from prior release contain an older configuration file version that is no longer supported.  
     You can use the migration utility (bin/migrate.sh or bin/migrate.bat) supplied with the 
-    <link linkend="adminshell_introduction">Admin Shell</link> download 
+    <link linkend="adminshell">AdminShell</link> download 
     to update these VDBs for use with Teiid 7.  Note - XML and File based sources from previous releases are changed, so do not work
     as is. The VDB models need to be updated for this as these are breaking changes.</para>
    </sect1>

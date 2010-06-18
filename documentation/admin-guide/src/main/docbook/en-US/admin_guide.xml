@@ -50,10 +50,7 @@
     <xi:include href="content/security.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/logging.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/admin-console.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />        
-    <xi:include href="content/adminshell-introduction.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="content/getting-started.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="content/working-with-scripts.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="content/connection-management.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/adminshell.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/appendix-a.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/appendix-b.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     

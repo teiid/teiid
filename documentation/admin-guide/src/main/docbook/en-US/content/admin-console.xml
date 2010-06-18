@@ -2,10 +2,9 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="admin-console">
    <title>Teiid Admin Console</title>
-   <para>Teiid admin console is a web based administrative and monitoring tool for Teiid. 
-   This is built using the <ulink url="http://www.jboss.org/embjopr">Embedded JOPR</ulink> library that is built to manage the 
-   JBoss AS instances. Teiid adds a additional plugin into the Embeeded JOPR program already available in the 
-   <ulink url="http://www.jboss.org/jbossas">JBoss AS</ulink>, to provide the Teiid specific functionality.</para>
+   <para>The Teiid Admin Console is a web based administrative and monitoring tool for Teiid. 
+   Teiid's Admin Console is built using the <ulink url="http://www.jboss.org/embjopr">Embedded JOPR</ulink> library and adds a additional plugin into the Embeeded JOPR program already available in the 
+   <ulink url="http://www.jboss.org/jbossas">JBoss AS</ulink>.</para>
 
    <sect1>
      <title>What can be monitored and/or configured?</title>
@@ -73,7 +72,7 @@
     <sect2 id="vdb_deploy">
         <title>Deploying the VDB</title>
         <para>VDB archive files created it the Designer Tool or Dynamic VDBs can be deployed into Teiid server using
-        this "admin-console" tool.</para>
+        the Admin Console.</para>
         
         <orderedlist>
             <listitem> <para>Select the Virtual Database node in the Admin Console tree and click the Add New Resource button.</para> </listitem>

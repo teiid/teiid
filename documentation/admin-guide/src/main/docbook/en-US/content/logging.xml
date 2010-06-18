@@ -178,8 +178,7 @@
 			configure a separate file appender for the DETAIL logging of the
 			org.teiid.COMMAND_LOG context. An example of this is shown below and
 			can also be found in the jboss-log4j.xml distributed with Teiid.
-			<programlisting><![CDATA[
-	<appender name="COMMAND" class="org.apache.log4j.RollingFileAppender">
+			<programlisting><![CDATA[<appender name="COMMAND" class="org.apache.log4j.RollingFileAppender">
       <param name="File" value="log/command.log"/>
      <param name="MaxFileSize" value="1000KB"/>
      <param name="MaxBackupIndex" value="25"/>
@@ -191,11 +190,9 @@
    <category name="org.teiid.COMMAND_LOG">
       <priority value="INFO"/>
       <appender-ref ref="COMMAND"/>
-   </category>
-			]]>
-			</programlisting>
+   </category>]]></programlisting>
             
-            See Developer's Guide if the file based logging is not sufficient and would need a custom logging solution.
+            See the Developer's Guide to develop a custom logging solution if file based, or any other built-in Log4j, logging is not sufficient.
 		</para>
 	</sect1>
 	<sect1 id="audit_logging">
@@ -209,7 +206,6 @@
 		<para>To enable audit logging to an alternative file location,
 			configure a separate file appender for the DETAIL logging of the
 			org.teiid.AUDIT_LOG context. An example of this is already in
-			the	log4j.xml distributed with Teiid. See Developer's Guide if the 
-            file based logging is not sufficient and would need a custom logging solution.</para>
+			the	log4j.xml distributed with Teiid. See the Developer's Guide to develop a custom logging solution if file based, or any other built-in Log4j, logging is not sufficient.</para>
 	</sect1>
 </chapter>

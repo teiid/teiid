@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/custom.dtd">
+%CustomDTD;
+]>
 <chapter id="OpenConnection">
   <title>Connecting to a VDB through JDBC</title>
   <para>At this point you have deployed Teiid and your VDB. Now it's time to connect the sample application
@@ -9,7 +12,7 @@
     <title>Stand-alone Java Application Deployment</title>
     
     <para>Before you can make a JDBC connection to the Teiid VDB, add the Teiid's driver jar file to your application's classpath</para>
-    <programlisting><![CDATA[${jboss-install}/server/${profile}/lib/teiid-${version}-client.jar]]> </programlisting>  
+    <programlisting>${jboss-install}/server/${profile}/lib/teiid-&versionNumber;-client.jar</programlisting>  
           
     <para>
       For a Java application to connect to a JDBC source, it needs a URL, user-id, and password. To

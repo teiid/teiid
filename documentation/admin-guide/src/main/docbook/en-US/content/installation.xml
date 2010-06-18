@@ -1,32 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/custom.dtd">
+%CustomDTD;
+]>
 <chapter id="installation">
    <title>Installation Guide</title>
    <para>Teiid 7.0 installation is entirely different from previous versions. Previously Teiid could be installed 
-   as a standalone or embedded server. Starting with this release Teiid needs to be installed into an 
-   existing JBoss AS installation.  Teiid does not support the "embedded" mode in 7.0 version. ("embedded" version
-   will be coming in a future release soon).
+   as a standalone or embedded server. Starting with 7.0 Teiid needs to be installed into an 
+   existing JBoss AS installation.  Teiid does not support the "embedded" mode in &versionNumber; version. ("embedded" will be coming in a future release).
    </para>
 
    <sect1>
-     <title>Installation:</title>
-     <para>Here are the steps to follow to install Teiid</para>
+     <title>Installation</title>
      <orderedlist numeration="arabic">
+     	<para>Steps to install Teiid</para>
         <listitem>
             <para>Download the <ulink url="http://www.jboss.org/jbossas/downloads.html">JBoss AS 5.1.0</ulink> application server. 
             Install the server by unzipping into a known location. Ex: /apps/jboss-5.1.0</para>
         </listitem>
         <listitem>
-            <para>Download <ulink url="http://www.jboss.org/teiid/downloads.html">Teiid 7.0</ulink>. Unzip the downloaded artifact inside any "profiles" 
-            inside the JBoss AS installation. We suggest using either "default" or "all". 
-            Teiid 7.0 for the administrative purposes uses a service called "profile service" that 
-            is only installed in "default" and "all" profiles, so installing into one  of these 
-            profiles is required.  Ex: /apps/jboss-5.10/server/default</para>
+            <para>Download <ulink url="http://www.jboss.org/teiid/downloads.html">Teiid &versionNumber;</ulink>. Unzip the downloaded artifact inside any "profile" 
+            in the JBoss AS installation. Teiid 7.0 uses a JBoss AS service called the "profile service" that 
+            is only installed in "default" and "all" profiles, so installing into one of these 
+            profiles is required.  The default profile is the typical installation location, for example "&lt;jboss-install&gt;/server/default". 
+            The Teiid runtime directory structure matches JBoss profiles directly - it is just an overlay.
+            </para>
         </listitem>
         
         <listitem>
-        <para>Start the JBoss AS server by executing "/apps/jboss-5.1.0/bin/run.sh" if you installed in the 
-        "default" profile. Other wise use "/apps/jboss-5.1.0/bin/run.sh -c &lt;profilename&gt;"
+        <para>Start the JBoss AS server by executing "&lt;jboss-install&gt;/bin/run.sh" if you installed in the 
+        "default" profile. Otherwise use "&lt;jboss-install&gt;/bin/run.sh -c &lt;profilename&gt;"
         </para> 
         </listitem>
 
@@ -35,7 +38,7 @@
         </listitem>
 
         <listitem>
-            <para>Users can now connect their JDBC applications to Teiid. If you need help on connecting your application to the 
+            <para>Once VDBs have been deployed, users can now connect their JDBC applications to Teiid. If you need help on connecting your application to the 
             Teiid using JDBC check out the "Client Developer's Guide".
         </para> 
         </listitem>        
@@ -43,28 +46,27 @@
    </sect1>
    <sect1>
      <title>Directory Structure Explained</title>
-     <para>The below file structure shows the contents of the Teiid 7.0 deployment. This directory 
-     structure is "exactly" same as what is under any JBoss profile directory structure like "default"</para>
-     
-    <programlisting><![CDATA[
-        teiid
-          /conf
-             /props
-                teiid-security-roles.properties
-                teiid-security-users.properties
-             jboss-teiid-log4j.xml
-          /deploy
-             /teiid
-                 /connectors
-                 teiid-jboss-beans.xml
-                 teiid-connector-templates-jboss-beans.xml
-             admin-console.war
-          /deployers
-             /teiid.deployer
-          /lib
-          /teiid-examples
-    ]]></programlisting>     
-
+     <example>
+     <title>Directory Structure</title>
+     <para>This shows the contents of the Teiid 7.0 deployment. The directory 
+     structure is exactly the same under any JBoss profile.</para>
+    <programlisting><![CDATA[teiid
+	/conf
+	   /props
+	      teiid-security-roles.properties
+	      teiid-security-users.properties
+	   jboss-teiid-log4j.xml
+	/deploy
+	   /teiid
+	       /connectors
+	       teiid-jboss-beans.xml
+	       teiid-connector-templates-jboss-beans.xml
+	   admin-console.war
+	/deployers
+	   /teiid.deployer
+	/lib
+	/teiid-examples]]></programlisting>     
+	</example>
     <sect2>
         <title>/deploy/teiid/teiid-jboss-beans.xml</title>
         <para>Master configuration file for Teiid system. This file contains its own documentation, 
@@ -73,13 +75,20 @@
     
     <sect2>
         <title>/deploy/teiid/connectors</title>
-        <para>This directory contains all the connector RAR files that are supplied as part of the Teiid installation.</para>
+        <para>This directory contains all the translator JAR and connector RAR files that are supplied as part of the Teiid installation.</para>
     </sect2>
     
     <sect2>
         <title>/conf/props</title>
-        <para> /teiid-security-users.properties</para>
-        <para> /teiid-security-roles.properties</para>
+        <itemizedlist>
+        	<para>Relevant Files</para>
+        	<listitem>
+        		<para>/teiid-security-users.properties</para>	
+        	</listitem>
+        	<listitem>
+        		<para>/teiid-security-roles.properties</para>	
+        	</listitem>
+        </itemizedlist>
         <para>These files define the allowed users and their defined roles in Teiid using the default security domain. Edit these 
         files to add uses. If you want to use a different security domain look for details in main configuration file.</para>
     </sect2>  
@@ -89,7 +98,7 @@
         <para>This file contains the Teiid specific logging contexts to be included in the "jboss-log4j.xml" file. 
          If you need to turn ON or OFF specific logging in Teiid, 
          then copy the contents of this file into "jboss-log4j.xml" in the 
-         installation directory.  See the Server Extension Guide for more on logging.</para>
+         installation directory.  See the Developers Guide for more on customizing logging.</para>
     </sect2>
      
     <sect2>
@@ -98,13 +107,8 @@
         Teiid's "admin-console", go to http://&lt;host&gt;:&lt;port&gt;/admin-console</para>
     </sect2>
 
-    <sect2>
-        <title>/deployers/teiid.deployer</title>
-        <para>This directory contains all the connector RAR files that are supplied as part of the Teiid installation.</para>
-    </sect2>
-
-    <sect2>
-        <title>/deploy/teiid/connectors</title>
+	<sect2>
+    	<title>/deployers/teiid.deployer</title>
         <para>This directory contains Teiid runtime specific configuration files and its libraries. 
         These configuration files define VDB deployers, connector binding deployers etc. 
         Typically user never need to edit any files in this directory.</para>
@@ -112,8 +116,8 @@
     
     <sect2>
         <title>lib</title>
-        <para>This directory contains Teiid client libraries. It has the Teiid JDBC driver jar, "teiid-{version}-client.jar", 
-        and also contains "teiid-hibernate-dialect-{version}.jar" that contains Teiid's Hibernate dialect.</para>
+        <para>This directory contains Teiid client libraries. It has the Teiid JDBC driver jar, "teiid-&versionNumber;-client.jar", 
+        and also contains "teiid-hibernate-dialect-&versionNumber;.jar" that contains Teiid's Hibernate dialect.</para>
     </sect2>
     
     <sect2>
