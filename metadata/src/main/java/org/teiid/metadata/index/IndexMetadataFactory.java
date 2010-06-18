@@ -194,7 +194,12 @@ public class IndexMetadataFactory {
 		LinkedHashMap<String, Resource> visibilityMap = new LinkedHashMap<String, Resource>();
 		for(VirtualFile f: root.getChildrenRecursively()) {
 			if (f.isLeaf()) {
-				visibilityMap.put("/" + f.getPathName(), new Resource(f, isFileVisible(f.getPathName(), vdb))); //$NON-NLS-1$
+				// remove the leading vdb name from the entry
+				String path = f.getPathName().substring(root.getPathName().length());
+				if (!path.startsWith("/")) { //$NON-NLS-1$
+					path = "/" + path; //$NON-NLS-1$
+				}
+				visibilityMap.put(path, new Resource(f, isFileVisible(f.getPathName(), vdb))); 
 			}
 		}
 		this.vdbEntries = visibilityMap;
