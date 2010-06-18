@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-<chapter id="designer">
+<chapter id="step-3">
+  <title>Building a VDB</title>
+  <para>A VDB can be built with either the <link linkend="designer">Designer</link> tool or through a simple XML file called a dynamic VDB.  See the dyanmicvdb-portolio for an example dynamic VDB.  You can skip the next section if you choose to use a dynamic VDB.</para>
+  <sect1 id="designer">
   <title>Using Teiid Designer to build a VDB</title>
-  <sect1>
+    <sect2>
     <title>Download Teiid Designer</title>
     
     <note>
@@ -16,16 +19,14 @@
     <para>
       The Teiid Designer project provides a Eclipse based designer tool for this purpose of building a VDB. You can
       download Teiid Designer
-      <ulink url="http://teiid.org/teiiddesigner.html">here</ulink>
+      <ulink url="http://www.jboss.org/teiiddesigner/downloads.html">here</ulink>
       Once downloaded, please follow the installation instructions. Start the Teiid Designer and return here to continue
       building the VDB.
     </para>
-  </sect1>
-  <sect1 id="step-3">
-    <title>Building a VDB</title>
+  </sect2>
+      
     <para>Once you start the Designer, there are several steps you must perform to create a VDB. These steps are 
-    summarized in the following table. This is a <ulink url="../images/EmbeddedDesignerExampleVideo.swf">video</ulink> 
-    will take you though all the steps involved. (please note this video is based on old version of Designer, a updated one coming soon..)</para>
+    summarized in the following table.</para>
     <orderedlist>
       <listitem>
         <para>Switch to the Designer Perspective, by opening the "Window->Open Perspective.."</para>
@@ -39,9 +40,6 @@
       <listitem>
         <para>Manually create the view model for the "Text File". Create a Table called "Price" with
           "stock" and "price" as column names. In the transformation window add the following SQL</para>
-        <programlisting><![CDATA[
-            SQL text here..         
-         ]]> </programlisting>          
       </listitem>
       <listitem>
         <para>Create a view model called "AccountView"</para>
@@ -64,5 +62,5 @@
         <para>Export or copy the VDB for use in your application.</para>
       </listitem>
     </orderedlist>
-  </sect1>
+    </sect1>
 </chapter>

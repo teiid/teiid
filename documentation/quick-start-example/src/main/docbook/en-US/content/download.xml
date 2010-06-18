@@ -4,31 +4,31 @@
   <title>Download</title>
   <para>
     You need to download the binaries for
-    <ulink url="http://teiid.org/Download.html">Teiid</ulink>
+    <ulink url="http://www.jboss.org/teiid/downloads.html">Teiid</ulink>
     . Note that there are three different artifacts are available for download.
   </para>
   <orderedlist>
     <listitem>
-      <para>Teiid Source - contains all the source code for all modules</para>
+      <para>Teiid Source - contains all of the source code</para>
     </listitem>
     <listitem>
-      <para>Teiid Adminshell - contains the admin client binary code</para>
+      <para>Teiid Adminshell - contains the admin client</para>
     </listitem>
     <listitem>
-      <para>Teiid Kit - contains only required modules and their required 3rd party
+      <para>Teiid Runtime - contains the Teiid engine and required 3rd party
         dependencies</para>
     </listitem>
   </orderedlist>
   <para>
     For this Quick Start, download and install <ulink url="http://www.jboss.org/jbossas/downloads.html">JBoss AS 5.1.0</ulink>. 
-    Then download <emphasis>Teiid</emphasis> runtime and unzip the contents of the Teiid under any of one of the JBoss AS profiles 
-    like "default" or "all". For example in "&lt;jboss-install&gt;/server/default". The Teiid runtime directory structure matches that 
-    of the JBoss profile directly, so you can just overlay the needed classes.
+    Then download Teiid runtime and unzip the contents of the Teiid under any of one of the JBoss AS profiles 
+    like "default" or "all". The default profile is the typical installation location, for example "&lt;jboss-install&gt;/server/default". The Teiid runtime directory structure matches that 
+    of the JBoss profile directly.
   </para>
   <para>In the "&lt;jboss-install&gt;/server/&lt;profile&gt;/lib" directory, you will find "teiid-${version}-client.jar", which 
     is the main client binary jar file for Teiid. This jar file contains the Teiid's JDBC driver and data source classes. </para>
   <note>
-    <para>JBoss AS requires <ulink url="http://java.sun.com/javase/downloads">Java 6</ulink> to run.
+    <para>JBoss AS 5.1 requires <ulink url="http://java.sun.com/javase/downloads">Java 6</ulink> to run.
     </para>
   	<para>
       Access to physical data sources such as Oracle, MS-SQL Server, DB2, and Sybase through Teiid relies upon

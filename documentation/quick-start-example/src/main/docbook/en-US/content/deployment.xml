@@ -21,16 +21,14 @@
         
         <para>For this example we need to create three (2) different data sources. You would first need to create a data source to Derby, 
         then to File source. See or copy the following</para>
-        <programlisting><![CDATA[
-                ${teiid-examples}/portfolio/PortfolioModel/portfolio-ds.xml
-                ${teiid-examples}/portfolio/PortfolioModel/marketdata-file-ds.xml
-         ]]> </programlisting>  
+        <programlisting><![CDATA[${teiid-examples}/portfolio/portfolio-ds.xml
+${teiid-examples}/portfolio/marketdata-file-ds.xml]]> </programlisting>  
         <para>files into "${jboss-install}/server/{profile}/deploy" directory.</para>
       </listitem>      
       <listitem>
-        <para>The above data sources provide the data to your VDB. Now to deploy your VDB, place your VDB in a the "${jboss-install}/server/{profile}/deploy" directory. 
+        <para>The above data sources provide the data to your VDB. Now to deploy your VDBl place your VDB file (either the dynamicvdb-portfolio/portfolio-vdb.xml file or the full .vdb file) in a the "${jboss-install}/server/{profile}/deploy" directory. 
         If the JBoss AS is not already started, start by running the "${jboss-install}/bin/run.sh" or "${jboss-install}/bin/run.bat" scripts. 
-        Make sure there were no errors during the deply of the VDB
+        Check the logs or the console to make sure there were no errors during the deployment of the VDB.
         </para>
       </listitem>
       <listitem>

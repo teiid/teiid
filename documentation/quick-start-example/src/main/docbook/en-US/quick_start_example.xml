@@ -48,7 +48,6 @@
   <toc />
   <xi:include href="content/preface.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="content/download.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="content/learn.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="content/example-explained.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="content/buildvdb.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="content/deployment.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />    

@@ -9,77 +9,69 @@
     <title>Stand-alone Java Application Deployment</title>
     
     <para>Before you can make a JDBC connection to the Teiid VDB, add the Teiid's driver jar file to your application's classpath</para>
-    <programlisting><![CDATA[
-      ${jboss-install}/server/${profile}/lib/teiid-${version}-client.jar
-     ]]> </programlisting>  
+    <programlisting><![CDATA[${jboss-install}/server/${profile}/lib/teiid-${version}-client.jar]]> </programlisting>  
           
     <para>
       For a Java application to connect to a JDBC source, it needs a URL, user-id, and password. To
       connect to your VDB all you need is a URL and any additional optional properties that you would like to set.
        Teiid defaults to allowing the "admin" as user with password as "teiid".  Additional user accounts can be added.
         A JDBC connection can be obtained through the Teiid driver
-      <emphasis>"org.teiid.jdbc.TeiidDriver"</emphasis>
+      <code>"org.teiid.jdbc.TeiidDriver"</code>
       with the URL syntax of
     </para>
     <para>
-      <emphasis>jdbc:teiid:&lt;VDB-Name&gt;@(mm|mms)://&lt;host name&gt;:&lt;port&gt;</emphasis>
+      <emphasis>jdbc:teiid:&lt;VDB-Name&gt;@mm(s)://&lt;host name&gt;:&lt;port&gt;</emphasis>
     </para>
 	<para>
 		You can add optional properties at the end of the URL using a semi-colon(;) name=value
 		format. For example</para>
 	<para />
     <para>
-      <emphasis>jdbc:teiid:&lt;VDB-Name&gt;@(mm|mms)://&lt;host name&gt;:&lt;port&gt;;autoCommitTxn=DETECT</emphasis>
+      <emphasis>jdbc:teiid:&lt;VDB-Name&gt;@mm(s)://&lt;host name&gt;:&lt;port&gt;;autoCommitTxn=DETECT</emphasis>
     </para>
-    <para />
     <para>
       You can use any of these <ulink url="https://www.jboss.org/community/docs/DOC-13157"> optional connection properties </ulink>
       in your URL. Here is sample code showing how to make JDBC connection.
     </para>
-    <programlisting><![CDATA[
-      public void execute() throws SQLException {
-          String url = "jdbc:metamatrix:Portfolio@mm://localhost:31000";
-          String sql = "select firstname, lastname from customer";
-          
-          Class.forName("org.teiid.jdbc.TeiidDriver");
-          
-          Connection connection;
-          try{
-              connection = DriverManager.getConnection(url, "admin", "teiid");
-              Statement statement = connection.createStatement();
-              ResultSet results = statement.executeQuery(sql);
-              while(results.next()) {
-                System.out.println(results.getString(1));
-                System.out.println(results.getString(2));
-                ...
-              }
-              results.close();
-              statement.close();
-          } catch (SQLException e){
-              e.printStackTrace();
-              throw e;
-          } finally {
-              try{
-                connection.close();
-              }catch(SQLException e1){
-                // ignore
-              }              
-          }
-      }      
-    ]]></programlisting>
-    <para>You can also use <emphasis>org.teiid.jdbc.TeiidDataSource</emphasis>
+    <programlisting><![CDATA[public void execute() throws SQLException {
+    String url = "jdbc:teiid:Portfolio@mm://localhost:31000";
+    String sql = "select firstname, lastname from customer";
+    
+    Class.forName("org.teiid.jdbc.TeiidDriver");
+    
+    Connection connection;
+    try{
+        connection = DriverManager.getConnection(url, "admin", "teiid");
+        Statement statement = connection.createStatement();
+        ResultSet results = statement.executeQuery(sql);
+        while(results.next()) {
+          System.out.println(results.getString(1));
+          System.out.println(results.getString(2));
+          ...
+        }
+        results.close();
+        statement.close();
+    } catch (SQLException e){
+        e.printStackTrace();
+        throw e;
+    } finally {
+        try{
+          connection.close();
+        }catch(SQLException e1){
+          // ignore
+        }              
+    }
+}]]></programlisting>
+    <para>You can also use <code>org.teiid.jdbc.TeiidDataSource</code>
       to make connection in your Java application. For example, you can use following code fragment to make a 
       connection to the VDB and issuing the query exactly same as in the above example</para>
-      <programlisting><![CDATA[
-        TeiidDataSource ds = new TeiidDataSource(); 
-        ds.setDatabaseName("Portfolio");
-        ds.setEmbeddedBootstrapFile("<teiid home>/deploy.properties");
-        ds.setUser("admin");
-        ds.setPassword("teiid");
-        
-        Connection connection = ds.getConnection();
-        ...
-      ]]></programlisting>
+      <programlisting><![CDATA[TeiidDataSource ds = new TeiidDataSource(); 
+ds.setDatabaseName("Portfolio");
+ds.setUser("admin");
+ds.setPassword("teiid");
+
+Connection connection = ds.getConnection();
+...]]></programlisting>
       <para>TeiidDataSource source also provides an option to set optional parameters using the "set" methods on the 
        data source look. For all the allowable properties at the 
        <ulink url="https://www.jboss.org/community/docs/DOC-13158">data source properties</ulink>.</para>       
@@ -93,16 +85,13 @@
     <listitem><para>Change to the ${jboss-install}/server/profile/teiid-examples/portfolio directory</para></listitem>
     <listitem><para>Execute the run script (either for Linux or Windows)</para></listitem>
   </orderedlist>
-    <para>The sample query, "select * from CustomerAccount", queries the view model and, from that, queries the two underlying
-    data sources: one relational, one file-based. All the sample Java class does is connect to the VDB, issue the query, 
-    and print the results. Teiid does the "heavy lifting" of integrating the results. 
-    (For the complete code used in this example, look in the "examples/portfolio" directory.)</para>
-    <para>
-    You are encouraged to experiment with queries that go beyond the simple "select * from CustomerAccount". 
+    <para>Depending on the VDB you deployed, see the relevant README file for example queries.  If you are using a graphical client, such
+    as <ulink url="http://www.squirrelsql.org/">SQuirreL</ulink>, have a look at the metadata tree to see not only what is exposed by your
+    VDB, but also the SYS schema tables.
    </para>
      
   <para>If your application is Web based, you can create data source for your VDB using the above  and treat it as any other JDBC source using 
-  <emphasis>org.teiid.jdbc.TeiidDataSource</emphasis> and assigning it a JNDI name. 
+  <code>org.teiid.jdbc.TeiidDataSource</code> and assigning it a JNDI name. 
   Refer to <ulink url="https://community.jboss.org/docs/DOC-13888">deployment to application server</ulink> for more information. 
   </para>
   <note><para>"embedded" mode is only available in versions of Teiid up to 6.2</para></note>
