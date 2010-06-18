@@ -34,6 +34,7 @@ import java.util.Properties;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.util.ResultsFuture;
@@ -160,6 +161,7 @@ public class TestSocketServerInstanceImpl {
 		}
 	}
 	
+	@Ignore
 	@Test public void testVersionMismatch() throws Exception {
 		Handshake h = new Handshake();
 		h.setVersion("foo"); //$NON-NLS-1$
