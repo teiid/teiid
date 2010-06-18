@@ -5,9 +5,11 @@
 ]>
 <chapter id="installation">
    <title>Installation Guide</title>
-   <para>Teiid 7.0 installation is entirely different from previous versions. Previously Teiid could be installed 
-   as a standalone or embedded server. Starting with 7.0 Teiid needs to be installed into an 
-   existing JBoss AS installation.  Teiid does not support the "embedded" mode in &versionNumber; version. ("embedded" will be coming in a future release).
+   <para>Starting with the 7.0 release Teiid needs to be installed into an 
+   existing JBoss AS installation, which is entirely different from previous versions.
+   <note>
+   <para>Teiid does not support the "embedded" mode in &versionNumber; version. ("embedded" will be coming in a future release).</para>
+   </note>
    </para>
 
    <sect1>
@@ -20,7 +22,7 @@
         </listitem>
         <listitem>
             <para>Download <ulink url="http://www.jboss.org/teiid/downloads.html">Teiid &versionNumber;</ulink>. Unzip the downloaded artifact inside any "profile" 
-            in the JBoss AS installation. Teiid 7.0 uses a JBoss AS service called the "profile service" that 
+            in the JBoss AS installation. Teiid &versionNumber; uses a JBoss AS service called the "profile service" that 
             is only installed in "default" and "all" profiles, so installing into one of these 
             profiles is required.  The default profile is the typical installation location, for example "&lt;jboss-install&gt;/server/default". 
             The Teiid runtime directory structure matches JBoss profiles directly - it is just an overlay.
@@ -48,7 +50,7 @@
      <title>Directory Structure Explained</title>
      <example>
      <title>Directory Structure</title>
-     <para>This shows the contents of the Teiid 7.0 deployment. The directory 
+     <para>This shows the contents of the Teiid &versionNumber; deployment. The directory 
      structure is exactly the same under any JBoss profile.</para>
     <programlisting><![CDATA[teiid
 	/conf
