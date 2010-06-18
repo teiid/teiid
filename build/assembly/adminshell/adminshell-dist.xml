@@ -68,7 +68,6 @@
   <files>
         <file>
             <source>target/distribution/teiid-${version}-docs/admin-guide/en-US/pdf/teiid_admin_guide.pdf</source>
-            <outputDirectory>teiid-docs</outputDirectory>
         </file>
     </files>
     
