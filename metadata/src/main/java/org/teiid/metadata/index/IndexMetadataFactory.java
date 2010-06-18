@@ -195,7 +195,11 @@ public class IndexMetadataFactory {
 		for(VirtualFile f: root.getChildrenRecursively()) {
 			if (f.isLeaf()) {
 				// remove the leading vdb name from the entry
-				visibilityMap.put(f.getPathName().substring(root.getPathName().length()), new Resource(f, isFileVisible(f.getPathName(), vdb))); 
+				String path = f.getPathName().substring(root.getPathName().length());
+				if (!path.startsWith("/")) { //$NON-NLS-1$
+					path = "/" + path; //$NON-NLS-1$
+				}
+				visibilityMap.put(path, new Resource(f, isFileVisible(f.getPathName(), vdb))); 
 			}
 		}
 		this.vdbEntries = visibilityMap;
