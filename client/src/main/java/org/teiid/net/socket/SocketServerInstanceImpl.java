@@ -144,9 +144,9 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
     	}
 
         try {
-            if (!getVersionInfo().equals(handshake.getVersion())) {
+            /*if (!getVersionInfo().equals(handshake.getVersion())) {
                 throw new CommunicationException(NetPlugin.Util.getString("SocketServerInstanceImpl.version_mismatch", getVersionInfo(), handshake.getVersion())); //$NON-NLS-1$
-            }
+            }*/
             
             handshake.setVersion(getVersionInfo());
             
