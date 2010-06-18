@@ -272,4 +272,20 @@
             <parameter class="java.lang.String">teradata</parameter>
         </constructor>
     </bean>
+    
+    <!-- MODESHAPE -->
+    <bean name="translator-modeshape-template" class="org.teiid.templates.TranslatorDeploymentTemplate">
+        <property name="info"><inject bean="translator-modeshape" /> </property>
+        <property name="managedObjectFactory"> <inject bean="ManagedObjectFactory" /> </property>
+    </bean>
+
+    <bean name="translator-modeshape" class="org.teiid.templates.TranslatorTemplateInfo">
+        <constructor factoryMethod="createTemplateInfo">
+            <factory bean="TranslatorDeploymentTemplateInfoFactory" />
+            <parameter class="java.lang.Class">org.teiid.templates.TranslatorTemplateInfo</parameter>
+            <parameter class="java.lang.Class">org.teiid.translator.jdbc.modeshape.ModeShapeExecutionFactory</parameter>
+            <parameter class="java.lang.String">translator-modeshape</parameter>
+            <parameter class="java.lang.String">Modeshape</parameter>
+        </constructor>
+    </bean>    
 </deployment>

@@ -52,13 +52,13 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 @Translator(name="modeshape")
 public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 	
-    private String version = "2.0";	
+    private String version = "2.0";	 //$NON-NLS-1$
 
     @Override
     public void start() throws TranslatorException {
         super.start();
         
-        registerFunctionModifier("PATH", new FunctionModifier() {
+        registerFunctionModifier("PATH", new FunctionModifier() { //$NON-NLS-1$
             
             @Override
             public List<?> translate(Function function) {
@@ -137,14 +137,14 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 	    NamedTable nt = (NamedTable) obj;
 	    List<String> ntlist = new ArrayList<String>(1);
 
-	    ntlist.add("[" + nt.getMetadataObject().getNameInSource() + "]");
+	    ntlist.add("[" + nt.getMetadataObject().getNameInSource() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 	    return ntlist;
 	}
 
 	if (obj instanceof ColumnReference) {
 	    ColumnReference elem = (ColumnReference) obj;
 	    List<String> ntlist = new ArrayList<String>(1);
-	    ntlist.add("[" + elem.getMetadataObject().getNameInSource() + "]");
+	    ntlist.add("[" + elem.getMetadataObject().getNameInSource() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 	    return ntlist;
 
 	}
