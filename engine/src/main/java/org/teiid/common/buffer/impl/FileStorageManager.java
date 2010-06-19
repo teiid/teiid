@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.StorageManager;
@@ -47,7 +48,11 @@ public class FileStorageManager implements StorageManager {
 	
 	public static final int DEFAULT_MAX_OPEN_FILES = 64;
 	public static final long DEFAULT_MAX_FILESIZE = 2L * 1024L;
+	public static final long DEFAULT_MAX_BUFFERSPACE = 50L * 1024L * 1024L * 1024L;
 	private static final String FILE_PREFIX = "b_"; //$NON-NLS-1$
+	
+	private long maxBufferSpace = DEFAULT_MAX_BUFFERSPACE;
+	private AtomicLong usedBufferSpace = new AtomicLong();
 	
 	private class FileInfo {
     	private File file;
@@ -122,6 +127,11 @@ public class FileStorageManager implements StorageManager {
 	     * Concurrent writes are prevented by FileStore, but in general should not happen since processing is single threaded.
 	     */
 		public void writeDirect(byte[] bytes, int offset, int length) throws TeiidComponentException {
+			long used = usedBufferSpace.addAndGet(length);
+			if (used > maxBufferSpace) {
+				usedBufferSpace.addAndGet(-length);
+				throw new TeiidComponentException(QueryExecPlugin.Util.getString("FileStoreageManager.space_exhausted", maxBufferSpace)); //$NON-NLS-1$
+			}
 			Map.Entry<Long, FileInfo> entry = this.storageFiles.lastEntry();
 			boolean createNew = false;
 			FileInfo fileInfo = null;
@@ -157,6 +167,7 @@ public class FileStorageManager implements StorageManager {
 		}
 		
 		public synchronized void removeDirect() {
+			usedBufferSpace.addAndGet(-len);
 			for (FileInfo info : storageFiles.values()) {
 				info.delete();
 			}
@@ -252,5 +263,21 @@ public class FileStorageManager implements StorageManager {
     public int getOpenFiles() {
     	return this.fileCache.size();
     }
+    
+    /**
+     * Get the used buffer space in bytes
+     * @return
+     */
+    public long getUsedBufferSpace() {
+		return usedBufferSpace.get();
+	}
+    
+    /**
+     * Set the max amount of buffer space in bytes
+     * @param maxBufferSpace
+     */
+    public void setMaxBufferSpace(long maxBufferSpace) {
+		this.maxBufferSpace = maxBufferSpace;
+	}
 
 }

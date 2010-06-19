@@ -274,6 +274,22 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	private AtomicInteger readAttempts = new AtomicInteger();
 	private AtomicInteger referenceHit = new AtomicInteger();
 	
+	public long getBatchesAdded() {
+		return batchAdded.get();
+	}
+	
+	public long getReadCount() {
+		return readCount.get();
+	}
+	
+	public long getWriteCount() {
+		return writeCount.get();
+	}
+	
+	public long getReadAttempts() {
+		return readAttempts.get();
+	}
+	
 	@Override
     public int getMaxProcessingBatchColumns() {
 		return maxProcessingBatches;

@@ -44,14 +44,15 @@ import org.teiid.runtime.RuntimePlugin;
 
 
 /**
- * Implement the BufferService for the DQP Embedded component.  This implementation
- * may use either an all-memory model (which is prone to OutOfMemoryErrors) or 
+ * Implements the BufferService.  This implementation
+ * may use either an all-memory model (which is typically only for testing) or 
  * a mixed disk/memory model which requires use of a directory on the disk 
  * for file service access.
  */
 @ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class BufferServiceImpl implements BufferService, Serializable {
 	private static final long serialVersionUID = -6217808623863643531L;
+	private static final long MB = 1<<20;
 
     // Instance
     private BufferManagerImpl bufferMgr;
@@ -65,6 +66,8 @@ public class BufferServiceImpl implements BufferService, Serializable {
     private long maxFileSize = FileStorageManager.DEFAULT_MAX_FILESIZE; // 2GB
     private int maxProcessingBatchesColumns = BufferManager.DEFAULT_MAX_PROCESSING_BATCHES;
     private int maxReserveBatchColumns = BufferManager.DEFAULT_RESERVE_BUFFERS;
+    private long maxBufferSpace = FileStorageManager.DEFAULT_MAX_BUFFERSPACE;
+	private FileStorageManager fsm;
 	
     /**
      * Clean the file storage directory on startup 
@@ -90,10 +93,11 @@ public class BufferServiceImpl implements BufferService, Serializable {
             // If necessary, add disk storage manager
             if(useDisk) {
                 // Get the properties for FileStorageManager and create.
-                FileStorageManager fsm = new FileStorageManager();
+                fsm = new FileStorageManager();
                 fsm.setStorageDirectory(bufferDir.getCanonicalPath());
                 fsm.setMaxFileSize(maxFileSize);
                 fsm.setMaxOpenFiles(maxOpenFiles);
+                fsm.setMaxBufferSpace(maxBufferSpace*MB);
                 fsm.initialize();        
                 this.bufferMgr.setStorageManager(fsm);
                 
@@ -139,7 +143,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
 	}
 
 	public void setDiskDirectory(String dir) {
-		this.bufferDir = new File(dir, "buffer");
+		this.bufferDir = new File(dir, "buffer"); //$NON-NLS-1$
 		if (!bufferDir.exists()) {
 			this.bufferDir.mkdirs();
 		}
@@ -191,7 +195,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
     	this.maxProcessingBatchesColumns  = value;
     }
 
-    @ManagementProperty(description="Max file size for buffer files (default 2GB)")
+    @ManagementProperty(description="Max file size, in MB, for buffer files (default 2GB)")
 	public long getMaxFileSize() {
 		return maxFileSize;
 	}
@@ -201,17 +205,54 @@ public class BufferServiceImpl implements BufferService, Serializable {
 		this.maxOpenFiles = maxOpenFiles;
 	}
 
-    @ManagementProperty(description="#The number of batch columns guarenteed to a processing operation.  Set this value lower if the workload typically" + 
+    @ManagementProperty(description="The number of batch columns guarenteed to a processing operation.  Set this value lower if the workload typically" + 
     		"processes larger numbers of concurrent queries with large intermediate results from operations such as sorting, " + 
     		"grouping, etc. (default 128)")
 	public int getMaxProcessingBatchesColumns() {
 		return maxProcessingBatchesColumns;
 	}
 
-    @ManagementProperty(description="#The number of batch columns to allow in memory (default 16384).  " + 
+    @ManagementProperty(description="The number of batch columns to allow in memory (default 16384).  " + 
     		"This value should be set lower or higher depending on the available memory to Teiid in the VM.  " + 
     		"16384 is considered a good default for a dedicated 32-bit VM running Teiid with a 1 gig heap.")
 	public int getMaxReserveBatchColumns() {
 		return maxReserveBatchColumns;
+	}
+    
+    @ManagementProperty(description="Max file storage space, in MB, to be used for buffer files (default 256G)")
+	public long getMaxBufferSpace() {
+		return maxBufferSpace;
+	}
+    
+    public void setMaxBufferSpace(long maxBufferSpace) {
+		this.maxBufferSpace = maxBufferSpace;
+	}
+
+    @ManagementProperty(description="The currently used file buffer space in MB.", readOnly=true)
+    public long getUserBufferSpace() {
+    	if (fsm != null) {
+    		return fsm.getUsedBufferSpace()/MB;
+    	}
+    	return 0;
+    }
+
+    @ManagementProperty(description="The total number of batches added to the buffer mananger.", readOnly=true)
+	public long getBatchesAdded() {
+		return bufferMgr.getBatchesAdded();
+	}
+
+    @ManagementProperty(description="The total number of batches read from storage.", readOnly=true)
+	public long getReadCount() {
+		return bufferMgr.getReadCount();
+	}
+
+    @ManagementProperty(description="The total number of batches written to storage.", readOnly=true)
+    public long getWriteCount() {
+		return bufferMgr.getWriteCount();
+	}
+
+    @ManagementProperty(description="The total number of batch read attempts.", readOnly=true)
+	public long getReadAttempts() {
+		return bufferMgr.getReadAttempts();
 	}
 }

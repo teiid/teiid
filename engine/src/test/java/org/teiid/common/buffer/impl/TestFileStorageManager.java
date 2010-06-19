@@ -32,11 +32,8 @@ import java.util.Random;
 
 import org.junit.Test;
 import org.teiid.common.buffer.FileStore;
-import org.teiid.common.buffer.StorageManager;
-import org.teiid.common.buffer.impl.FileStorageManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.UnitTestUtil;
-
 
 public class TestFileStorageManager {
 		
@@ -53,14 +50,14 @@ public class TestFileStorageManager {
         return sm;
 	}
     
-    @Test public void testAddGetBatch1() throws Exception {
-        StorageManager sm = getStorageManager(null, null, null);        
+    @Test public void testWrite() throws Exception {
+        FileStorageManager sm = getStorageManager(null, null, null);        
         String tsID = "0";     //$NON-NLS-1$
-        // Add one batch
         FileStore store = sm.createFileStore(tsID);
         writeBytes(store);
-        // Get that batch
+        assertEquals(2048, sm.getUsedBufferSpace());
         store.remove();
+        assertEquals(0, sm.getUsedBufferSpace());
     }
             
     @Test public void testCreatesSpillFiles() throws Exception {
@@ -80,6 +77,15 @@ public class TestFileStorageManager {
         store.remove();
         
         assertEquals(0, cache.size());
+    }
+    
+    @Test(expected=TeiidComponentException.class) public void testMaxSpace() throws Exception {
+    	FileStorageManager sm = getStorageManager(null, null, null); 
+    	sm.setMaxBufferSpace(1);
+        String tsID = "0";     //$NON-NLS-1$
+        // Add one batch
+        FileStore store = sm.createFileStore(tsID);
+        writeBytes(store);
     }
 
     static Random r = new Random();

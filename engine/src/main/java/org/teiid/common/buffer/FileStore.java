@@ -132,7 +132,7 @@ public abstract class FileStore {
 	}
 	
 	private boolean removed;
-	private long len;
+	protected long len;
 	
 	public void setCleanupReference(Object o) {
 		REFERENCES.add(new CleanupReference(o, this));
