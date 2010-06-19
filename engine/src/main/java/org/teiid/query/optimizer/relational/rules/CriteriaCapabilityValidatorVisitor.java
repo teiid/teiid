@@ -60,12 +60,16 @@ import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.CaseExpression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.QueryString;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
 import org.teiid.query.sql.symbol.XMLNamespaces;
+import org.teiid.query.sql.symbol.XMLParse;
+import org.teiid.query.sql.symbol.XMLQuery;
+import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
@@ -116,6 +120,26 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     
     @Override
     public void visit(XMLElement obj) {
+    	markInvalid();
+    }
+    
+    @Override
+    public void visit(XMLSerialize obj) {
+    	markInvalid();
+    }
+    
+    @Override
+    public void visit(XMLParse obj) {
+    	markInvalid();
+    }
+    
+    @Override
+    public void visit(XMLQuery obj) {
+    	markInvalid();
+    }
+    
+    @Override
+    public void visit(QueryString obj) {
     	markInvalid();
     }
     
