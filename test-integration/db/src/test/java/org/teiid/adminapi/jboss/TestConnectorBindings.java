@@ -1,18 +1,12 @@
 package org.teiid.adminapi.jboss;
 
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertNull;
-import static junit.framework.Assert.assertTrue;
-import static junit.framework.Assert.fail;
+import static junit.framework.Assert.*;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.util.Collection;
 import java.util.List;
@@ -34,7 +28,6 @@ import org.teiid.adminapi.Session;
 import org.teiid.adminapi.Transaction;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
-import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 
 @Ignore
@@ -291,21 +284,6 @@ public class TestConnectorBindings extends BaseConnection {
 		assertEquals("org.teiid.translator.jdbc.oracle.OracleSQLTranslator", translator.getPropertyValue("ExtensionTranslationClassName")); //$NON-NLS-1$
 		assertEquals(false, translator.getPropertyValue("XaCapable"));
 	}
-	
-	@Test
-	public void testExportVDB() throws Exception{
-		File f = new File(UnitTestUtil.getTestScratchPath()+"/TransactionsRevisited.vdb"); //$NON-NLS-1$
-		
-		assertTrue(!f.exists());
-		
-		InputStream contents = admin.exportVDB("TransactionsRevisited", 1); //$NON-NLS-1$
-		if (contents != null) {
-			ObjectConverterUtil.write(contents, f.getCanonicalPath());
-		}
-		
-		assertTrue(f.exists());
-		f.delete();
-	}	
 	
 	@Test public void testAssignConnectorBinding() throws Exception {
 		admin.assignToModel("TransactionsRevisited", 1, "pm1", "mysql", "mysql", "jndi:FOO"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
