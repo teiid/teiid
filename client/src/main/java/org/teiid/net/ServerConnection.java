@@ -23,6 +23,7 @@
 package org.teiid.net;
 
 import org.teiid.client.security.LogonResult;
+import org.teiid.client.util.ResultsFuture;
 
 public interface ServerConnection {
 	
@@ -32,7 +33,7 @@ public interface ServerConnection {
 	
 	void close();
 	
-	boolean isOpen();
+	ResultsFuture<?> isOpen();
 	
 	LogonResult getLogonResult();
 	

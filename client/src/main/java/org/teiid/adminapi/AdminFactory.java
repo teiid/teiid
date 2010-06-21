@@ -27,9 +27,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 
 import org.teiid.client.security.LogonException;
 import org.teiid.client.util.ExceptionUtil;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.net.CommunicationException;
@@ -66,8 +68,18 @@ public class AdminFactory {
     		if (closed) {
     			throw new AdminComponentException(NetPlugin.Util.getString("ERR.014.001.0001")); //$NON-NLS-1$
     		}
-    		if (target != null && registry.isOpen()) {
-    			return target;
+    		if (target != null) {
+    			ResultsFuture<?> ping = registry.isOpen();
+    			if (ping != null) {
+    				try {
+						ping.get();
+	    				return target;
+					} catch (InterruptedException e) {
+						throw new CommunicationException(e);
+					} catch (ExecutionException e) {
+						//assume recoverable
+					}
+    			}
     		}
     		try {
     			registry = serverConnectionFactory.getConnection(p);
@@ -88,23 +100,19 @@ public class AdminFactory {
 				return null;
 			}
 			Throwable t = null;
-			for (int i = 0; i < 3; i++) {
-				try {
-					return method.invoke(getTarget(), args);
-				} catch (InvocationTargetException e) {
-					if (ExceptionUtil.getExceptionOfType(e, CommunicationException.class) != null) {
-						// communication exception occurred, lose the old connection and try again.
-						this.target = null;
-						if (method.getName().endsWith("restart")) { //$NON-NLS-1$
-							bounceSystem(true);
-							return null;
-						}
-						continue;
+			try {
+				return method.invoke(getTarget(), args);
+			} catch (InvocationTargetException e) {
+				if (ExceptionUtil.getExceptionOfType(e, CommunicationException.class) != null) {
+					this.target = null;
+					if (method.getName().endsWith("restart")) { //$NON-NLS-1$
+						bounceSystem(true);
+						return null;
 					}
-					throw e.getTargetException();
-				} catch (CommunicationException e) {
-					t = e;
 				}
+				throw e.getTargetException();
+			} catch (CommunicationException e) {
+				t = e;
 			}
 			throw t;
 		}
@@ -222,7 +230,6 @@ public class AdminFactory {
 		p = PropertiesUtils.clone(p);
 		p.remove(TeiidURL.JDBC.VDB_NAME);
 		p.remove(TeiidURL.JDBC.VDB_VERSION);
-    	p.setProperty(TeiidURL.CONNECTION.AUTO_FAILOVER, Boolean.TRUE.toString());
     	p.setProperty(TeiidURL.CONNECTION.ADMIN, Boolean.TRUE.toString());
     	
 		try {
