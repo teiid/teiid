@@ -171,6 +171,8 @@ public class CapabilitiesUtil {
             if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_MAX)) {
                 return false;
             }
+        } else {
+        	return false;
         }
         
         // Check DISTINCT if necessary

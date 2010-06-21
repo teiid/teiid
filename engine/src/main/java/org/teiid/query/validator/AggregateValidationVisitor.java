@@ -75,8 +75,10 @@ public class AggregateValidationVisitor extends AbstractValidationVisitor {
         String aggregateFunction = obj.getAggregateFunction();
         if((aggregateFunction.equals(NonReserved.SUM) || aggregateFunction.equals(NonReserved.AVG)) && obj.getType() == null) {
             handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0041, new Object[] {aggregateFunction, obj}), obj);
-        } else if (aggregateFunction.equals(Reserved.XMLAGG) && obj.getType() != DataTypeManager.DefaultDataClasses.XML) {
-        	handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_xml", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
+        } else if (obj.getType() != DataTypeManager.DefaultDataClasses.NULL) {
+        	if (aggregateFunction.equals(Reserved.XMLAGG) && aggExp.getType() != DataTypeManager.DefaultDataClasses.XML) {
+        		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_xml", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
+        	}
         }
         if((obj.isDistinct() || aggregateFunction.equals(NonReserved.MIN) || aggregateFunction.equals(NonReserved.MAX)) && DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(aggExp.getType()))) {
     		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_comparable", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
