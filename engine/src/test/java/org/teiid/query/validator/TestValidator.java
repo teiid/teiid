@@ -2038,5 +2038,9 @@ public class TestValidator {
     @Test public void testDecode() throws Exception {
     	helpValidate("select to_bytes(e1, '?') from pm1.g1", new String[] {"to_bytes(e1, '?')"}, FakeMetadataFactory.example1Cached());
     }
+    
+    @Test public void testValidateXMLAGG() {        
+        helpValidate("SELECT XMLAGG(e1) from pm1.g1", new String[] {"XMLAGG(e1)"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+	}
 
 }
