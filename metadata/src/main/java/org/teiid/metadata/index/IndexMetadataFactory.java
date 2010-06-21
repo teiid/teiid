@@ -538,7 +538,7 @@ public class IndexMetadataFactory {
 		// Query based on fully qualified name
 		else {
 			String prefixString  = getPrefixPattern(recordType,entityName);
-			results = queryIndex(recordType, prefixString.toCharArray(), true, true, true);
+			results = queryIndex(recordType, prefixString.toCharArray(), true, true, entityName != null);
 		}
 
 		return results;
