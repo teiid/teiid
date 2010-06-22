@@ -922,5 +922,84 @@ public class TestJoinOptimization {
                 0       // UnionAll
     	});
     }
+    
+
+    /**
+     * Test for Case 836073: 
+     */
+    @Test public void testForCase836073_1() {
+        String sql = "select bqt1.smalla.intkey, bqt1.smallb.intkey from bqt1.smalla, bqt1.smallb WHERE formatdate(bqt1.smalla.DateValue,'yyyyMM') = '200309' AND bqt1.smalla.intkey = bqt1.smallb.intkey"; //$NON-NLS-1$
+             
+        // Plan query
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), new String[] {"SELECT bqt1.smalla.DateValue, bqt1.smalla.intkey, bqt1.smallb.intkey FROM bqt1.smalla, bqt1.smallb WHERE bqt1.smalla.intkey = bqt1.smallb.intkey"}); //$NON-NLS-1$
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            1,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // Join
+            0,      // MergeJoin
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            1,      // Select
+            0,      // Sort
+            0       // UnionAll
+        });
+    }
+    
+    @Test public void testForCase836073_2() {
+        String sql = "select bqt1.smalla.intkey, bqt1.smallb.intkey from bqt1.smalla left outer join bqt1.smallb on bqt1.smalla.intkey = bqt1.smallb.intkey WHERE formatdate(bqt1.smalla.DateValue,'yyyyMM') = '200309'"; //$NON-NLS-1$
+        
+        // Plan query
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), new String[] {"SELECT bqt1.smalla.DateValue, bqt1.smalla.intkey, bqt1.smallb.intkey FROM bqt1.smalla LEFT OUTER JOIN bqt1.smallb ON bqt1.smalla.intkey = bqt1.smallb.intkey"}); //$NON-NLS-1$ 
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            1,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // Join
+            0,      // MergeJoin
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            1,      // Select
+            0,      // Sort
+            0       // UnionAll
+        });
+    }
+    
+    /**
+     * Note that we don't allow pushdown here because the criteria placement matters
+     */
+    @Test public void testForCase836073_3() {
+        String sql = "select bqt1.smalla.intkey, b.intkey from bqt1.smalla left outer join (select * from bqt1.smallb where formatdate(bqt1.smallb.DateValue,'yyyyMM') = '200309') b on bqt1.smalla.intkey = b.intkey"; //$NON-NLS-1$
+        
+        // Plan query
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.intkey AS c_0 FROM bqt1.smalla AS g_0 ORDER BY c_0", "SELECT g_0.DateValue AS c_0, g_0.IntKey AS c_1 FROM bqt1.smallb AS g_0 ORDER BY c_1"}); //$NON-NLS-1$ //$NON-NLS-2$
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // Join
+            1,      // MergeJoin
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            1,      // Select
+            0,      // Sort
+            0       // UnionAll
+        });
+    }
         
 }

@@ -4386,17 +4386,17 @@ public class TestOptimizer {
             "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA, BQT1.SmallB WHERE (BQT1.SmallA.IntKey = lookup('BQT1.SmallB', 'IntKey', 'StringKey', BQT1.SmallB.StringKey)) AND (BQT1.SmallA.IntKey = 1)",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA WHERE BQT1.SmallA.IntKey = 1", "SELECT BQT1.SmallB.StringKey FROM BQT1.SmallB"}, //$NON-NLS-1$ //$NON-NLS-2$
+            new String[] {"SELECT g_1.StringKey, g_0.IntKey FROM BQT1.SmallA AS g_0, BQT1.SmallB AS g_1 WHERE g_0.IntKey = 1"}, //$NON-NLS-1$ //$NON-NLS-2$
             SHOULD_SUCCEED );
 
         checkNodeTypes(plan, new int[] {
-            2,      // Access
+            1,      // Access
             0,      // DependentAccess
             0,      // DependentSelect
             0,      // DependentProject
             0,      // DupRemove
             0,      // Grouping
-            1,      // NestedLoopJoinStrategy
+            0,      // NestedLoopJoinStrategy
             0,      // MergeJoinStrategy
             0,      // Null
             0,      // PlanExecution

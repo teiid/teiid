@@ -164,10 +164,66 @@ public final class RuleRaiseAccess implements OptimizerRule {
                 return performRaise(rootNode, accessNode, parentNode);
             case NodeConstants.Types.SELECT:            
             {
-                if (!parentNode.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET) && canRaiseOverSelect(accessNode, metadata, capFinder, parentNode)) {
+            	if (parentNode.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)) {
+            		return null;
+            	}
+            	if (canRaiseOverSelect(accessNode, metadata, capFinder, parentNode)) {
                     RulePushSelectCriteria.satisfyAccessPatterns(parentNode, accessNode);
                     return performRaise(rootNode, accessNode, parentNode);                      
-                }
+            	}
+            	//determine if we should push the select back up
+            	if (parentNode.getParent() == null) {
+            		return null;
+            	}
+        		PlanNode selectRoot = parentNode;
+        		while (selectRoot.getParent() != null && selectRoot.getParent().getType() == NodeConstants.Types.SELECT) {
+        			selectRoot = selectRoot.getParent();
+        		}
+        		if (selectRoot.getParent() == null || selectRoot.getParent().getType() == NodeConstants.Types.PROJECT) {
+        			return null;
+        		}
+    			PlanNode grandParent = selectRoot.getParent();
+    			boolean isLeft = false;
+				isLeft = grandParent.getFirstChild() == selectRoot;
+				if (grandParent.getType() == NodeConstants.Types.JOIN) {
+					JoinType jt = (JoinType)grandParent.getProperty(NodeConstants.Info.JOIN_TYPE);
+					if (jt == JoinType.JOIN_FULL_OUTER || (jt == JoinType.JOIN_LEFT_OUTER && !isLeft)) {
+						return null;
+					}
+				}
+				grandParent.removeChild(selectRoot);
+				if (isLeft) {
+					grandParent.addFirstChild(accessNode);
+				} else {
+					grandParent.addLastChild(accessNode);
+				}
+    			PlanNode newParent = grandParent.getParent();
+				//TODO: use costing or heuristics instead of always raising
+    			PlanNode newRoot = raiseAccessNode(rootNode, accessNode, metadata, capFinder, afterJoinPlanning);
+    			if (newRoot == null) {
+					//return the tree to its original state
+    				parentNode.addFirstChild(accessNode);
+    				if (isLeft) {
+    					grandParent.addFirstChild(selectRoot);
+    				} else {
+    					grandParent.addLastChild(selectRoot);
+    				}
+    			} else {
+    				//attach the select nodes above the access node
+    				accessNode = grandParent.getParent();
+					if (newParent != null) {
+    					isLeft = newParent.getFirstChild() == accessNode;
+    					if (isLeft) {
+    						newParent.addFirstChild(selectRoot);
+    					} else {
+    						newParent.addLastChild(selectRoot);
+    					}
+    				} else {
+    					newRoot = selectRoot;
+    				}
+					parentNode.addFirstChild(accessNode);
+    				return newRoot;
+    			}
                 return null;
             }   
             case NodeConstants.Types.SOURCE:
