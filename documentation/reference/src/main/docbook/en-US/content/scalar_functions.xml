@@ -39,7 +39,7 @@
 						</entry>
 						<entry>
 							<para>x in {integer, long, float, double, biginteger,
-								bigdecimal}, return type is same as x</para>
+								bigdecimal}, return type is same as x <footnote>The precision and scale of non-bigdecimal arithmetic function functions results matches that of Java.  The results of bigdecimal operations match Java, except for division, which uses a preferred scale of max(16, dividend.scale + divisor.precision + 1), which then has trailing zeros removed by setting the scale to max(dividend.scale, normalized scale)</footnote></para>
 						</entry>
 					</row>
 					<row>

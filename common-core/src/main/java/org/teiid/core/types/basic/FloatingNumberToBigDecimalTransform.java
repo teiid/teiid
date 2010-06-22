@@ -47,7 +47,7 @@ public class FloatingNumberToBigDecimalTransform extends Transform {
 	 */
 	public Object transformDirect(Object value) throws TransformationException {
 		BigDecimal result = BigDecimal.valueOf(((Number)value).doubleValue());
-		result = result.setScale(Math.max(result.scale(), value instanceof Double ? 12 : 4));
+		result = result.setScale(Math.max(result.scale(), (value instanceof Double ? 16 : 8) - result.precision()));
 		return result;
 	}
 

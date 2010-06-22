@@ -127,7 +127,7 @@ public class TestFunctionResolving {
     	return func;
 	}
 
-	private Expression getExpression(String sql) throws QueryParserException,
+	public static Expression getExpression(String sql) throws QueryParserException,
 			TeiidComponentException, QueryResolverException {
 		Expression func = QueryParser.getQueryParser().parseExpression(sql);
 		ResolverVisitor.resolveLanguageObject(func, FakeMetadataFactory.example1Cached());
