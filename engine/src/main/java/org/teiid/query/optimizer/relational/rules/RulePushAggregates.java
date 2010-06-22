@@ -352,10 +352,14 @@ public class RulePushAggregates implements
         		projectedViewSymbols.add(agg);
         	} else {
         		if (agg.getAggregateFunction().equals(NonReserved.COUNT)) {
-        			SearchedCaseExpression count = new SearchedCaseExpression(Arrays.asList(new IsNullCriteria(agg.getExpression())), Arrays.asList(new Constant(Integer.valueOf(0))));
-        			count.setElseExpression(new Constant(Integer.valueOf(1)));
-        			count.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-    				projectedViewSymbols.add(new ExpressionSymbol("stagedAgg", count)); //$NON-NLS-1$
+        			if (agg.getExpression() == null) {
+	    				projectedViewSymbols.add(new ExpressionSymbol("stagedAgg", new Constant(1))); //$NON-NLS-1$
+        			} else { 
+	        			SearchedCaseExpression count = new SearchedCaseExpression(Arrays.asList(new IsNullCriteria(agg.getExpression())), Arrays.asList(new Constant(Integer.valueOf(0))));
+	        			count.setElseExpression(new Constant(Integer.valueOf(1)));
+	        			count.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+	    				projectedViewSymbols.add(new ExpressionSymbol("stagedAgg", count)); //$NON-NLS-1$
+        			}
         		} else { //min, max, sum
         			Expression ex = agg.getExpression();
         			ex = ResolverUtil.convertExpression(ex, DataTypeManager.getDataTypeName(agg.getType()), metadata);
@@ -689,7 +693,10 @@ public class RulePushAggregates implements
                 AggregateSymbol sumSumAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, sumAgg); //$NON-NLS-1$
                 AggregateSymbol sumCountAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, countAgg); //$NON-NLS-1$
 
-                Function divideFunc = new Function("/", new Expression[] {sumSumAgg, sumCountAgg}); //$NON-NLS-1$
+                Expression convertedSum = new Function(FunctionLibrary.CONVERT, new Expression[] {sumSumAgg, new Constant(DataTypeManager.getDataTypeName(partitionAgg.getType()))});
+                Expression convertCount = new Function(FunctionLibrary.CONVERT, new Expression[] {sumCountAgg, new Constant(DataTypeManager.getDataTypeName(partitionAgg.getType()))});
+                
+                Function divideFunc = new Function("/", new Expression[] {convertedSum, convertCount}); //$NON-NLS-1$
                 ResolverVisitor.resolveLanguageObject(divideFunc, metadata);
 
                 newExpression = divideFunc;

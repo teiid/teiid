@@ -32,6 +32,7 @@ import javax.resource.spi.work.Work;
 import javax.resource.spi.work.WorkManager;
 import javax.resource.spi.work.WorkRejectedException;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.dqp.internal.process.StatsCapturingWorkManager;
@@ -61,6 +62,7 @@ public class TestStatsCapturingWorkManager {
         assertEquals("Expected threads to be maxed out", MAX_THREADS, stats.getHighestActiveThreads()); //$NON-NLS-1$
     }
 
+    @Ignore
     @Test public void testThreadReuse() throws Exception {
         final long SINGLE_WAIT = 50;
         final long NUM_THREADS = 5;
