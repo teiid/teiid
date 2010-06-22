@@ -49,7 +49,7 @@ public class JavaLogger implements org.teiid.logging.Logger {
     	Logger logger = Logger.getLogger(context);
     	
     	Level javaLevel = convertLevel(level);
-		logger.log(javaLevel, msg.toString(), t);
+		logger.log(javaLevel, msg != null ? msg.toString() : null, t);
     }
     
     public Level convertLevel(int level) {

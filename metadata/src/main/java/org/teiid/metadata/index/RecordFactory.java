@@ -972,11 +972,8 @@ public class RecordFactory {
         record.setUUID(getObjectValue(objectID));
         if (fullName != null) {
         	String name = fullName;
-            if (record instanceof Column || record instanceof ProcedureParameter || record instanceof KeyRecord) { //take only the last part
-                int index = fullName.lastIndexOf(IndexConstants.NAME_DELIM_CHAR);
-                if (index > 0) {
-                	name = fullName.substring(index + 1);
-                }
+            if (record instanceof ProcedureParameter || record instanceof KeyRecord) { //take only the last part
+                name = getShortName(fullName);
             } else { //remove model name
 	            int index = fullName.indexOf(IndexConstants.NAME_DELIM_CHAR);
 	            if (index > 0) {
@@ -987,6 +984,14 @@ public class RecordFactory {
         }
         record.setNameInSource(getObjectValue(nameInSource));
     }
+
+	static String getShortName(String fullName) {
+		int index = fullName.lastIndexOf(IndexConstants.NAME_DELIM_CHAR);
+		if (index > 0) {
+			fullName = fullName.substring(index + 1);
+		}
+		return fullName;
+	}
 
     /**
      * Set the "footer" values on the specified MetadataRecord.

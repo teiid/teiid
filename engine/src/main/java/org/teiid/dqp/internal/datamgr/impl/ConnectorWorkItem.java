@@ -53,12 +53,12 @@ import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 
 
@@ -179,8 +179,13 @@ public class ConnectorWorkItem implements ConnectorWork {
         } catch (Throwable e) {
             LogManager.logError(LogConstants.CTX_CONNECTOR, e, e.getMessage());
         } finally {
-    		this.connector.closeConnection(connection, connectionFactory);
-            manager.removeState(this.id);
+        	try {
+        		this.connector.closeConnection(connection, connectionFactory);
+        	} catch (Throwable e) {
+        		LogManager.logError(LogConstants.CTX_CONNECTOR, e, e.getMessage());
+        	} finally {
+        		manager.removeState(this.id);
+        	}
 		    LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Closed connection"}); //$NON-NLS-1$
         } 
     }
