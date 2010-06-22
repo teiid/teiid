@@ -653,6 +653,9 @@ public class QueryRewriter {
 		if (query.getGroupBy() == null) {
 			return query;
 		}
+		if (isDistinctWithGroupBy(query)) {
+			query.getSelect().setDistinct(false);
+		}
         // we check for group by expressions here to create an ANSI SQL plan
         boolean hasExpression = false;
         for (final Iterator iterator = query.getGroupBy().getSymbols().iterator(); !hasExpression && iterator.hasNext();) {
@@ -722,6 +725,23 @@ public class QueryRewriter {
         query = outerQuery;
         rewriteExpressions(innerSelect);
 		return query;
+	}
+	
+	public static boolean isDistinctWithGroupBy(Query query) {
+		GroupBy groupBy = query.getGroupBy();
+		if (groupBy == null) {
+			return false;
+		}
+		HashSet<Expression> selectExpressions = new HashSet<Expression>();
+		for (SingleElementSymbol selectExpr : (List<SingleElementSymbol>)query.getSelect().getProjectedSymbols()) {
+			selectExpressions.add(SymbolMap.getExpression(selectExpr));
+		}
+		for (SingleElementSymbol groupByExpr :  (List<SingleElementSymbol>)groupBy.getSymbols()) {
+			if (!selectExpressions.contains(groupByExpr)) {
+				return false;
+			}
+		}
+		return true;
 	}
     
     private void rewriteExpressions(LanguageObject obj) throws TeiidComponentException, TeiidProcessingException{

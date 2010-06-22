@@ -135,7 +135,7 @@ public class TestInlineView  {
 	
 	public static InlineViewCase createInlineViewWithDistinctAndOrderBy() throws Exception {
 		String userQuery = "select Q1.a from (select distinct count(bqt1.smalla.intkey) as a, bqt1.smalla.intkey from bqt1.smalla group by bqt1.smalla.intkey order by bqt1.smalla.intkey) q1 inner join bqt1.smallb as q2 on q1.intkey = q2.intkey where q1.a = 1 and q1.a + q1.intkey = 2"; //$NON-NLS-1$
-        String optimizedQuery = "SELECT v_0.c_0 FROM (SELECT DISTINCT COUNT(g_0.intkey) AS c_0, g_0.intkey AS c_1 FROM bqt1.smalla AS g_0 GROUP BY g_0.intkey HAVING ((COUNT(g_0.intkey) + g_0.intkey) = 2) AND (COUNT(g_0.intkey) = 1)) AS v_0, bqt1.smallb AS g_1 WHERE v_0.c_1 = g_1.intkey"; //$NON-NLS-1$
+        String optimizedQuery = "SELECT v_0.c_1 FROM (SELECT g_0.intkey AS c_0, COUNT(g_0.intkey) AS c_1 FROM bqt1.smalla AS g_0 GROUP BY g_0.intkey HAVING ((COUNT(g_0.intkey) + g_0.intkey) = 2) AND (COUNT(g_0.intkey) = 1)) AS v_0, bqt1.smallb AS g_1 WHERE v_0.c_0 = g_1.intkey"; //$NON-NLS-1$
 
 		List expectedResults = new ArrayList();
 		List row1 = new ArrayList();
@@ -173,7 +173,7 @@ public class TestInlineView  {
 	
 	public static InlineViewCase createInlineViewWithOuterOrderAndGroup() throws Exception {
 		String userQuery = "select count(Q1.a) b from (select distinct count(bqt1.smalla.intkey) as a, bqt1.smalla.intkey from bqt1.smalla group by bqt1.smalla.intkey order by bqt1.smalla.intkey) q1 inner join bqt1.smallb as q2 on q1.intkey = q2.intkey where q1.a = 1 and q1.a + q1.intkey = 2 group by Q1.a order by b"; //$NON-NLS-1$
-		String optimizedQuery = "SELECT COUNT(v_0.c_0) AS c_0 FROM (SELECT DISTINCT COUNT(g_0.intkey) AS c_0, g_0.intkey AS c_1 FROM bqt1.smalla AS g_0 GROUP BY g_0.intkey HAVING ((COUNT(g_0.intkey) + g_0.intkey) = 2) AND (COUNT(g_0.intkey) = 1)) AS v_0, bqt1.smallb AS g_1 WHERE v_0.c_1 = g_1.intkey GROUP BY v_0.c_0 ORDER BY c_0"; //$NON-NLS-1$
+		String optimizedQuery = "SELECT COUNT(v_0.c_1) AS c_0 FROM (SELECT g_0.intkey AS c_0, COUNT(g_0.intkey) AS c_1 FROM bqt1.smalla AS g_0 GROUP BY g_0.intkey HAVING ((COUNT(g_0.intkey) + g_0.intkey) = 2) AND (COUNT(g_0.intkey) = 1)) AS v_0, bqt1.smallb AS g_1 WHERE v_0.c_0 = g_1.intkey GROUP BY v_0.c_1 ORDER BY c_0"; //$NON-NLS-1$
 
 		List expectedResults = new ArrayList();
 		List row1 = new ArrayList();
@@ -193,7 +193,7 @@ public class TestInlineView  {
 	
 	public static InlineViewCase crateInlineViewsInUnions() throws Exception {
 		String userQuery = "select q1.a from (select count(bqt1.smalla.intkey) as a, bqt1.smalla.intkey from bqt1.smalla group by bqt1.smalla.intkey) q1 left outer join bqt1.smallb on q1.a = bqt1.smallb.intkey where q1.intkey = 1 union all (select count(Q1.a) b from (select distinct count(bqt1.smalla.intkey) as a, bqt1.smalla.intkey from bqt1.smalla group by bqt1.smalla.intkey order by bqt1.smalla.intkey) q1 inner join bqt1.smallb as q2 on q1.intkey = q2.intkey where q1.a = 1 and q1.a + q1.intkey = 2 group by Q1.a order by b)"; //$NON-NLS-1$
-		String optimizedQuery = "SELECT v_1.c_0 FROM (SELECT COUNT(g_2.intkey) AS c_0 FROM bqt1.smalla AS g_2 WHERE g_2.intkey = 1 GROUP BY g_2.intkey) AS v_1 LEFT OUTER JOIN bqt1.smallb AS g_3 ON v_1.c_0 = g_3.intkey UNION ALL SELECT COUNT(v_0.c_0) AS c_0 FROM (SELECT DISTINCT COUNT(g_0.IntKey) AS c_0, g_0.IntKey AS c_1 FROM bqt1.smalla AS g_0 GROUP BY g_0.IntKey HAVING ((COUNT(g_0.IntKey) + g_0.IntKey) = 2) AND (COUNT(g_0.IntKey) = 1)) AS v_0, bqt1.smallb AS g_1 WHERE v_0.c_1 = g_1.intkey GROUP BY v_0.c_0"; //$NON-NLS-1$
+		String optimizedQuery = "SELECT v_1.c_0 FROM (SELECT COUNT(g_2.intkey) AS c_0 FROM bqt1.smalla AS g_2 WHERE g_2.intkey = 1 GROUP BY g_2.intkey) AS v_1 LEFT OUTER JOIN bqt1.smallb AS g_3 ON v_1.c_0 = g_3.intkey UNION ALL SELECT COUNT(v_0.c_1) AS c_0 FROM (SELECT g_0.IntKey AS c_0, COUNT(g_0.IntKey) AS c_1 FROM bqt1.smalla AS g_0 GROUP BY g_0.IntKey HAVING ((COUNT(g_0.IntKey) + g_0.IntKey) = 2) AND (COUNT(g_0.IntKey) = 1)) AS v_0, bqt1.smallb AS g_1 WHERE v_0.c_0 = g_1.intkey GROUP BY v_0.c_1"; //$NON-NLS-1$
 
 		List expectedResults = new ArrayList();
 		List row1 = new ArrayList();
@@ -218,7 +218,7 @@ public class TestInlineView  {
 	public static InlineViewCase createUnionInInlineView() throws Exception{
 		
 	    String userQuery = "select t1.intkey from (select case when q1.a=1 then 2 else 1 end as a from (select count(bqt1.smalla.intkey) as a, bqt1.smalla.intkey from bqt1.smalla group by bqt1.smalla.intkey) q1 left outer join bqt1.smallb on q1.a = bqt1.smallb.intkey where q1.intkey = 1 union all (select count(Q1.a) b from (select distinct count(bqt1.smalla.intkey) as a, bqt1.smalla.intkey from bqt1.smalla group by bqt1.smalla.intkey order by bqt1.smalla.intkey) q1 inner join bqt1.smallb as q2 on q1.intkey = q2.intkey where q1.a = 1 and q1.a + q1.intkey = 2 group by Q1.a order by b)) as q3, bqt1.smallb as t1 where q3.a = t1.intkey order by t1.intkey"; //$NON-NLS-1$
-		String optimizedQuery = "SELECT g_4.intkey AS c_0 FROM (SELECT CASE WHEN v_1.c_0 = 1 THEN 2 ELSE 1 END AS c_0 FROM (SELECT COUNT(g_2.intkey) AS c_0 FROM bqt1.smalla AS g_2 WHERE g_2.intkey = 1 GROUP BY g_2.intkey) AS v_1 LEFT OUTER JOIN bqt1.smallb AS g_3 ON v_1.c_0 = g_3.intkey UNION ALL SELECT COUNT(v_0.c_0) AS c_0 FROM (SELECT DISTINCT COUNT(g_0.IntKey) AS c_0, g_0.IntKey AS c_1 FROM bqt1.smalla AS g_0 GROUP BY g_0.IntKey HAVING ((COUNT(g_0.IntKey) + g_0.IntKey) = 2) AND (COUNT(g_0.IntKey) = 1)) AS v_0, bqt1.smallb AS g_1 WHERE v_0.c_1 = g_1.intkey GROUP BY v_0.c_0) AS v_2, bqt1.smallb AS g_4 WHERE v_2.c_0 = g_4.intkey ORDER BY c_0"; //$NON-NLS-1$
+		String optimizedQuery = "SELECT g_4.intkey AS c_0 FROM (SELECT CASE WHEN v_1.c_0 = 1 THEN 2 ELSE 1 END AS c_0 FROM (SELECT COUNT(g_2.intkey) AS c_0 FROM bqt1.smalla AS g_2 WHERE g_2.intkey = 1 GROUP BY g_2.intkey) AS v_1 LEFT OUTER JOIN bqt1.smallb AS g_3 ON v_1.c_0 = g_3.intkey UNION ALL SELECT COUNT(v_0.c_1) AS c_0 FROM (SELECT g_0.IntKey AS c_0, COUNT(g_0.IntKey) AS c_1 FROM bqt1.smalla AS g_0 GROUP BY g_0.IntKey HAVING ((COUNT(g_0.IntKey) + g_0.IntKey) = 2) AND (COUNT(g_0.IntKey) = 1)) AS v_0, bqt1.smallb AS g_1 WHERE v_0.c_0 = g_1.intkey GROUP BY v_0.c_1) AS v_2, bqt1.smallb AS g_4 WHERE v_2.c_0 = g_4.intkey ORDER BY c_0"; //$NON-NLS-1$
 
 		List expectedResults = new ArrayList();
 		List row1 = new ArrayList();
@@ -257,7 +257,7 @@ public class TestInlineView  {
         QueryMetadataInterface metadata = createInlineViewMetadata(capFinder);
         
         ProcessorPlan plan = helpPlan("select a, b from (select distinct count(intNum) a, count(stringKey), bqt1.smalla.intkey as b from bqt1.smalla group by bqt1.smalla.intkey) q1 order by q1.a", //$NON-NLS-1$
-                metadata, null, capFinder, new String[] {"SELECT a, b FROM (SELECT DISTINCT COUNT(intNum) AS a, COUNT(stringKey) AS count1, bqt1.smalla.intkey AS b FROM bqt1.smalla GROUP BY bqt1.smalla.intkey) AS q1 ORDER BY a"}, true); //$NON-NLS-1$
+                metadata, null, capFinder, new String[] {"SELECT COUNT(g_0.intNum) AS c_0, g_0.intkey AS c_1 FROM bqt1.smalla AS g_0 GROUP BY g_0.intkey ORDER BY c_0"}, true); //$NON-NLS-1$
 
         checkNodeTypes(plan, FULL_PUSHDOWN);    
     }
