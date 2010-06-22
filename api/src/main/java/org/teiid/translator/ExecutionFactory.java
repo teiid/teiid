@@ -533,6 +533,14 @@ public class ExecutionFactory<F, C> {
     public boolean supportsAggregatesDistinct() {
     	return false;
     }
+    
+    /**
+     * Support indicates connector can accept STDDEV_POP, STDDEV_VAR, VAR_POP, VAR_SAMP
+     * @since 7.1
+     */
+    public boolean supportsAggregatesEnhancedNumeric() {
+    	return false;
+    }
 
     /** 
      * Support indicates connector can accept scalar subqueries in the SELECT, WHERE, and

@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import org.teiid.api.exception.query.CriteriaEvaluationException;
 import org.teiid.common.buffer.IndexedTupleSource;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
@@ -222,7 +221,7 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
         
     @Override
     protected void process() throws TeiidComponentException,
-    		CriteriaEvaluationException, TeiidProcessingException {
+    		TeiidProcessingException {
     	if (this.processingSortLeft != SortOption.PARTITION && this.processingSortRight != SortOption.PARTITION) {
     		super.process();
     	}

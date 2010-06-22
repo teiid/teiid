@@ -44,14 +44,12 @@ import java.util.regex.PatternSyntaxException;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.trans.XPathException;
 
-import org.teiid.api.exception.query.CriteriaEvaluationException;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.types.BaseLob;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
@@ -178,7 +176,7 @@ public class Evaluator {
     protected ProcessorDataManager dataMgr;
     protected CommandContext context;
     
-    public static boolean evaluate(Criteria criteria) throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
+    public static boolean evaluate(Criteria criteria) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
     	return new Evaluator(Collections.emptyMap(), null, null).evaluate(criteria, Collections.emptyList());
     }
     
@@ -198,13 +196,13 @@ public class Evaluator {
 	}
 
 	public boolean evaluate(Criteria criteria, List<?> tuple)
-        throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
+        throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 
         return Boolean.TRUE.equals(evaluateTVL(criteria, tuple));
     }
 
     public Boolean evaluateTVL(Criteria criteria, List<?> tuple)
-        throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
+        throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
     	
 		if(criteria instanceof CompoundCriteria) {
 			return evaluate((CompoundCriteria)criteria, tuple);
@@ -223,12 +221,12 @@ public class Evaluator {
         } else if(criteria instanceof ExistsCriteria) {
             return Boolean.valueOf(evaluate((ExistsCriteria)criteria, tuple));
 		} else {
-            throw new CriteriaEvaluationException(ErrorMessageKeys.PROCESSOR_0010, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0010, criteria));
+            throw new ExpressionEvaluationException(ErrorMessageKeys.PROCESSOR_0010, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0010, criteria));
 		}
 	}
 
 	public Boolean evaluate(CompoundCriteria criteria, List<?> tuple)
-		throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
+		throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 
 		List subCrits = criteria.getCriteria();
 		Iterator subCritIter = subCrits.iterator();
@@ -252,7 +250,7 @@ public class Evaluator {
 	}
 
 	public Boolean evaluate(NotCriteria criteria, List<?> tuple)
-		throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
+		throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 
 		Criteria subCrit = criteria.getCriteria();
 		Boolean result = evaluateTVL(subCrit, tuple);
@@ -266,14 +264,14 @@ public class Evaluator {
 	}
 
 	public Boolean evaluate(CompareCriteria criteria, List<?> tuple)
-		throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
+		throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 
 		// Evaluate left expression
 		Object leftValue = null;
 		try {
 			leftValue = evaluate(criteria.getLeftExpression(), tuple);
 		} catch(ExpressionEvaluationException e) {
-            throw new CriteriaEvaluationException(e, ErrorMessageKeys.PROCESSOR_0011, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0011, new Object[] {"left", criteria})); //$NON-NLS-1$
+            throw new ExpressionEvaluationException(e, ErrorMessageKeys.PROCESSOR_0011, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0011, new Object[] {"left", criteria})); //$NON-NLS-1$
 		}
 
 		// Shortcut if null
@@ -286,7 +284,7 @@ public class Evaluator {
 		try {
 			rightValue = evaluate(criteria.getRightExpression(), tuple);
 		} catch(ExpressionEvaluationException e) {
-            throw new CriteriaEvaluationException(e, ErrorMessageKeys.PROCESSOR_0011, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0011, new Object[]{"right", criteria})); //$NON-NLS-1$
+            throw new ExpressionEvaluationException(e, ErrorMessageKeys.PROCESSOR_0011, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0011, new Object[]{"right", criteria})); //$NON-NLS-1$
 		}
 
 		// Shortcut if null
@@ -309,7 +307,7 @@ public class Evaluator {
 			case CompareCriteria.GE:
 				return Boolean.valueOf((compareValues(leftValue, rightValue) >= 0));
 			default:
-                throw new CriteriaEvaluationException(ErrorMessageKeys.PROCESSOR_0012, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0012, criteria.getOperator()));
+                throw new ExpressionEvaluationException(ErrorMessageKeys.PROCESSOR_0012, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0012, criteria.getOperator()));
 		}
 	}
 
@@ -323,7 +321,7 @@ public class Evaluator {
     }
 
 	public Boolean evaluate(MatchCriteria criteria, List<?> tuple)
-		throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
+		throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 
         boolean result = false;
 		// Evaluate left expression
@@ -331,7 +329,7 @@ public class Evaluator {
 		try {
 			value = evaluate(criteria.getLeftExpression(), tuple);
 		} catch(ExpressionEvaluationException e) {
-            throw new CriteriaEvaluationException(e, ErrorMessageKeys.PROCESSOR_0011, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0011, new Object[]{"left", criteria})); //$NON-NLS-1$
+            throw new ExpressionEvaluationException(e, ErrorMessageKeys.PROCESSOR_0011, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0011, new Object[]{"left", criteria})); //$NON-NLS-1$
 		}
 
 		// Shortcut if null
@@ -347,7 +345,7 @@ public class Evaluator {
             try {
                 leftValue = ((Sequencable)value).getCharSequence();
             } catch (SQLException err) {
-                throw new CriteriaEvaluationException(err, err.getMessage()); 
+                throw new ExpressionEvaluationException(err, err.getMessage()); 
             }
         }
 
@@ -356,7 +354,7 @@ public class Evaluator {
 		try {
 			rightValue = (String) evaluate(criteria.getRightExpression(), tuple);
 		} catch(ExpressionEvaluationException e) {
-            throw new CriteriaEvaluationException(e, ErrorMessageKeys.PROCESSOR_0011, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0011, new Object[]{"right", criteria})); //$NON-NLS-1$
+            throw new ExpressionEvaluationException(e, ErrorMessageKeys.PROCESSOR_0011, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0011, new Object[]{"right", criteria})); //$NON-NLS-1$
 		}
 
 		// Shortcut if null
@@ -370,7 +368,7 @@ public class Evaluator {
 	}
 
 	private boolean match(String pattern, char escape, CharSequence search)
-		throws CriteriaEvaluationException {
+		throws ExpressionEvaluationException {
 
 		StringBuffer rePattern = LIKE_TO_REGEX.translate(pattern, escape);
 		
@@ -383,19 +381,19 @@ public class Evaluator {
             Matcher matcher = patternRegex.matcher(search);
             return matcher.matches();
 		} catch(PatternSyntaxException e) {
-            throw new CriteriaEvaluationException(e, ErrorMessageKeys.PROCESSOR_0014, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0014, new Object[]{pattern, e.getMessage()}));
+            throw new ExpressionEvaluationException(e, ErrorMessageKeys.PROCESSOR_0014, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0014, new Object[]{pattern, e.getMessage()}));
 		}
 	}
 
 	private Boolean evaluate(AbstractSetCriteria criteria, List<?> tuple)
-		throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
+		throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 
 		// Evaluate expression
 		Object leftValue = null;
 		try {
 			leftValue = evaluate(criteria.getExpression(), tuple);
 		} catch(ExpressionEvaluationException e) {
-            throw new CriteriaEvaluationException(e, ErrorMessageKeys.PROCESSOR_0015, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0015, criteria));
+            throw new ExpressionEvaluationException(e, ErrorMessageKeys.PROCESSOR_0015, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0015, criteria));
 		}
 
 		// Shortcut if null
@@ -414,7 +412,7 @@ public class Evaluator {
     		try {
     			values = vis.getCachedSet(ref.getValueExpression());
     		} catch (TeiidProcessingException e) {
-    			throw new CriteriaEvaluationException(e, e.getMessage());
+    			throw new ExpressionEvaluationException(e, e.getMessage());
     		}
         	if (values != null) {
         		return values.contains(leftValue);
@@ -426,7 +424,7 @@ public class Evaluator {
         	try {
 				valueIter = evaluateSubquery((SubquerySetCriteria)criteria, tuple);
 			} catch (TeiidProcessingException e) {
-				throw new CriteriaEvaluationException(e, e.getMessage());
+				throw new ExpressionEvaluationException(e, e.getMessage());
 			}
         } else {
         	throw new AssertionError("unknown set criteria type"); //$NON-NLS-1$
@@ -438,7 +436,7 @@ public class Evaluator {
     			try {
     				value = evaluate((Expression) possibleValue, tuple);
     			} catch(ExpressionEvaluationException e) {
-                    throw new CriteriaEvaluationException(e, ErrorMessageKeys.PROCESSOR_0015, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0015, possibleValue));
+                    throw new ExpressionEvaluationException(e, ErrorMessageKeys.PROCESSOR_0015, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0015, possibleValue));
     			}
             } else {
                 value = possibleValue;
@@ -461,28 +459,28 @@ public class Evaluator {
 	}
 
 	public boolean evaluate(IsNullCriteria criteria, List<?> tuple)
-		throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
+		throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 
 		// Evaluate expression
 		Object value = null;
 		try {
 			value = evaluate(criteria.getExpression(), tuple);
 		} catch(ExpressionEvaluationException e) {
-            throw new CriteriaEvaluationException(e, ErrorMessageKeys.PROCESSOR_0015, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0015, criteria));
+            throw new ExpressionEvaluationException(e, ErrorMessageKeys.PROCESSOR_0015, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0015, criteria));
 		}
 
 		return (value == null ^ criteria.isNegated());
 	}
 
     private Boolean evaluate(SubqueryCompareCriteria criteria, List<?> tuple)
-        throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
+        throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 
         // Evaluate expression
         Object leftValue = null;
         try {
             leftValue = evaluate(criteria.getLeftExpression(), tuple);
         } catch(ExpressionEvaluationException e) {
-            throw new CriteriaEvaluationException(e, ErrorMessageKeys.PROCESSOR_0015, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0015, criteria));
+            throw new ExpressionEvaluationException(e, ErrorMessageKeys.PROCESSOR_0015, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0015, criteria));
         }
 
         // Shortcut if null
@@ -504,7 +502,7 @@ public class Evaluator {
 		try {
 			valueIter = evaluateSubquery(criteria, tuple);
 		} catch (TeiidProcessingException e) {
-			throw new CriteriaEvaluationException(e, e.getMessage());
+			throw new ExpressionEvaluationException(e, e.getMessage());
 		}
         while(valueIter.hasNext()) {
             Object value = valueIter.next();
@@ -532,7 +530,7 @@ public class Evaluator {
                         result = Boolean.valueOf((compareValues(leftValue, value) >= 0));
                         break;
                     default:
-                        throw new CriteriaEvaluationException(ErrorMessageKeys.PROCESSOR_0012, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0012, criteria.getOperator()));
+                        throw new ExpressionEvaluationException(ErrorMessageKeys.PROCESSOR_0012, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0012, criteria.getOperator()));
                 }
 
                 switch(criteria.getPredicateQuantifier()) {
@@ -550,11 +548,11 @@ public class Evaluator {
                         if (valueIter.hasNext()){
                             // The subquery should be scalar, but has produced
                             // more than one result value - this is an exception case
-                            throw new CriteriaEvaluationException(ErrorMessageKeys.PROCESSOR_0056, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0056, criteria));
+                            throw new ExpressionEvaluationException(ErrorMessageKeys.PROCESSOR_0056, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0056, criteria));
                         }
                         return result;
                     default:
-                        throw new CriteriaEvaluationException(ErrorMessageKeys.PROCESSOR_0057, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0057, criteria.getPredicateQuantifier()));
+                        throw new ExpressionEvaluationException(ErrorMessageKeys.PROCESSOR_0057, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0057, criteria.getPredicateQuantifier()));
                 }
 
             } else { // value is null
@@ -570,12 +568,12 @@ public class Evaluator {
                         if (valueIter.hasNext()){
                             // The subquery should be scalar, but has produced
                             // more than one result value - this is an exception case
-                            throw new CriteriaEvaluationException(ErrorMessageKeys.PROCESSOR_0056, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0056, criteria));
+                            throw new ExpressionEvaluationException(ErrorMessageKeys.PROCESSOR_0056, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0056, criteria));
                         }
                         // null value means unknown for the single-value comparison
                         return null;
                     default:
-                        throw new CriteriaEvaluationException(ErrorMessageKeys.PROCESSOR_0057, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0057, criteria.getPredicateQuantifier()));
+                        throw new ExpressionEvaluationException(ErrorMessageKeys.PROCESSOR_0057, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0057, criteria.getPredicateQuantifier()));
                 }
             }
 
@@ -586,13 +584,13 @@ public class Evaluator {
     }
 
     public boolean evaluate(ExistsCriteria criteria, List<?> tuple)
-        throws BlockedException, TeiidComponentException, CriteriaEvaluationException {
+        throws BlockedException, TeiidComponentException, ExpressionEvaluationException {
 
         ValueIterator valueIter;
 		try {
 			valueIter = evaluateSubquery(criteria, tuple);
 		} catch (TeiidProcessingException e) {
-			throw new CriteriaEvaluationException(e, e.getMessage());
+			throw new ExpressionEvaluationException(e, e.getMessage());
 		}
         if(valueIter.hasNext()) {
             return true;
@@ -647,6 +645,8 @@ public class Evaluator {
 		   return internalEvaluate(ref.getExpression(), tuple);
 	   } else if(expression instanceof ScalarSubquery) {
 	       return evaluate((ScalarSubquery) expression, tuple);
+	   } else if (expression instanceof Criteria) {
+		   return evaluate((Criteria)expression, tuple);
 	   } else if (expression instanceof XMLElement){
 		   return evaluateXMLElement(tuple, (XMLElement)expression);
 	   } else if (expression instanceof XMLForest){
@@ -904,7 +904,7 @@ public class Evaluator {
 	            if (evaluate(expr.getWhenCriteria(i), tuple)) {
 	                return internalEvaluate(expr.getThenExpression(i), tuple);
 	            }
-	        } catch (CriteriaEvaluationException e) {
+	        } catch (ExpressionEvaluationException e) {
 	            throw new ExpressionEvaluationException(e, ErrorMessageKeys.PROCESSOR_0033, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0033, "CASE", expr.getWhenCriteria(i))); //$NON-NLS-1$
 	        }
 	    }

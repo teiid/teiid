@@ -25,6 +25,7 @@ package org.teiid.query.processor;
 import static org.teiid.query.processor.TestProcessor.*;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,11 +36,11 @@ import org.teiid.query.optimizer.TestAggregatePushdown;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
-import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.translator.SourceSystemFunctions;
 
-
+@SuppressWarnings("nls")
 public class TestAggregateProcessing {
 
 	static void sampleDataBQT3(FakeDataManager dataMgr) throws Exception {
@@ -281,6 +282,72 @@ public class TestAggregateProcessing {
             };    
     	
     	helpProcess(plan, dataManager, expected);
+    }
+	
+    @Test public void testPushDownOverUnionMixed1() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestAggregatePushdown.getAggregateCapabilities();
+        caps.setFunctionSupport(SourceSystemFunctions.POWER, true);
+        caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
+        capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm1", TestOptimizer.getTypicalCapabilities()); //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpGetPlan(helpParse("select max(e2), count(*), stddev_pop(e2), var_samp(e2) from (select e1, e2 from pm1.g1 union all select e1, e2 from pm2.g2) z"), FakeMetadataFactory.example1Cached(), capFinder); //$NON-NLS-1$
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT g_0.e2 FROM pm1.g1 AS g_0", new List[] {Arrays.asList(1), Arrays.asList(2)});
+        dataManager.addData("SELECT MAX(v_0.c_0), COUNT(*), COUNT(v_0.c_0), SUM(power(v_0.c_0, 2)), SUM(v_0.c_0) FROM (SELECT g_0.e2 AS c_0 FROM pm2.g2 AS g_0) AS v_0 HAVING COUNT(*) > 0", new List[] {Arrays.asList(5, 6, 4, BigInteger.valueOf(50l), 10l)});
+        
+        List[] expected = new List[] {
+    		Arrays.asList(5, 8, 2.1213203435596424, 5.4),
+        }; 
+        
+        helpProcess(plan, dataManager, expected);
+    }
+
+    @Test public void testBooleanAgg() {
+    	String sql = "select every(e3), any(e3) from pm1.g1"; //$NON-NLS-1$
+    	
+        List[] expected = new List[] {
+        		Arrays.asList(Boolean.FALSE, Boolean.TRUE),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testStatsFunctions() {
+    	String sql = "select stddev_pop(e2), var_samp(e2) from pm1.g1"; //$NON-NLS-1$
+    	
+        List[] expected = new List[] {
+        		Arrays.asList(1.0671873729054748, 1.3666666666666667),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testStatsFunctions1() {
+    	String sql = "select stddev_samp(e2), var_pop(e2) from (select 2 e2) x"; //$NON-NLS-1$
+    	
+        List[] expected = new List[] {
+        		Arrays.asList(null, 0.0),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
     }
 
 }

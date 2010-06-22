@@ -1077,6 +1077,17 @@ int count = visitor.getCount();
               </row>
               <row>
                 <entry>
+                  <para>AggregatesEnhancedNumeric</para>
+                </entry>
+                <entry>
+                  <para/>
+                </entry>
+                <entry>
+                  <para>Translator can support the VAR_SAMP, VAR_POP, STDDEV_SAMP, STDDEV_POP aggregate functions.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
                   <para>ScalarSubqueries</para>
                 </entry>
                 <entry>

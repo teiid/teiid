@@ -245,4 +245,9 @@ public class DB2ExecutionFactory extends JDBCExecutionFactory {
 	public boolean supportsIntersect() {
 		return true;
 	}
+	
+	@Override
+	public boolean supportsAggregatesEnhancedNumeric() {
+		return true;
+	}
 }

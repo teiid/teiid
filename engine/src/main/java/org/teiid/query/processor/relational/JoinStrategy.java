@@ -25,7 +25,6 @@ package org.teiid.query.processor.relational;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.api.exception.query.CriteriaEvaluationException;
 import org.teiid.common.buffer.BufferManager.BufferReserveMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
@@ -84,7 +83,7 @@ public abstract class JoinStrategy {
         return combinedRow; 
     }
     
-    protected abstract void process() throws TeiidComponentException, CriteriaEvaluationException, TeiidProcessingException;
+    protected abstract void process() throws TeiidComponentException, TeiidProcessingException;
     
     public abstract JoinStrategy clone();
     

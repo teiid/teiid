@@ -35,6 +35,7 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.translator.SourceSystemFunctions;
 
 
 public class TestAggregatePushdown {
@@ -268,6 +269,36 @@ public class TestAggregatePushdown {
         String sql = "SELECT avg(y.e2) from pm1.g1 x, pm2.g1 y where x.e3 = y.e3 group by x.e2, y.e1"; //$NON-NLS-1$
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, 
                                       new String[] {"SELECT g_0.e3, g_0.e2 FROM pm1.g1 AS g_0 GROUP BY g_0.e3, g_0.e2", "SELECT g_0.e3, g_0.e1, SUM(g_0.e2), COUNT(g_0.e2) FROM pm2.g1 AS g_0 GROUP BY g_0.e3, g_0.e1"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
+        
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            1,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        }); 
+    }
+    
+    @Test public void testStddevAggregate() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        caps.setFunctionSupport(SourceSystemFunctions.POWER, true);
+        caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
+        
+        String sql = "SELECT stddev_pop(y.e2) from pm1.g1 x, pm2.g1 y where x.e3 = y.e3 group by x.e2, y.e1"; //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, 
+                                      new String[] {"SELECT DISTINCT g_0.e3 AS c_0, g_0.e1 AS c_1, COUNT(g_0.e2) AS c_2, SUM(power(g_0.e2, 2)) AS c_3, SUM(g_0.e2) AS c_4 FROM pm2.g1 AS g_0 GROUP BY g_0.e3, g_0.e1 ORDER BY c_0", "SELECT DISTINCT g_0.e3 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 GROUP BY g_0.e3, g_0.e2 ORDER BY c_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -816,8 +847,8 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", TestOptimizer.getTypicalCapabilities()); //$NON-NLS-1$
         
-        ProcessorPlan plan = TestOptimizer.helpPlan("select max(e2) from (select e1, e2 from pm1.g1 union all select e1, e2 from pm2.g2) z", FakeMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
-            new String[]{"SELECT MAX(v_0.c_0) FROM (SELECT g_0.e2 AS c_0 FROM pm1.g1 AS g_0) AS v_0 HAVING COUNT(*) > 0", //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select max(e2), count(*) from (select e1, e2 from pm1.g1 union all select e1, e2 from pm2.g2) z", FakeMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+            new String[]{"SELECT MAX(v_0.c_0), COUNT(*) FROM (SELECT g_0.e2 AS c_0 FROM pm1.g1 AS g_0) AS v_0 HAVING COUNT(*) > 0", //$NON-NLS-1$
         	"SELECT g_0.e2 FROM pm2.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access

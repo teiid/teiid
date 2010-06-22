@@ -33,7 +33,6 @@ import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.Assertion;
-import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -277,8 +276,13 @@ public class RuleRemoveOptionalJoins implements
 
 	static boolean areAggregatesCardinalityDependent(Set<AggregateSymbol> aggs) {
 		for (AggregateSymbol aggregateSymbol : aggs) {
-			if (aggregateSymbol.getAggregateFunction().equalsIgnoreCase(NonReserved.COUNT) || 
-					aggregateSymbol.getAggregateFunction().equalsIgnoreCase(NonReserved.AVG)) {
+			switch (aggregateSymbol.getAggregateFunction()) {
+			case COUNT:
+			case AVG:
+			case STDDEV_POP:
+			case STDDEV_SAMP:
+			case VAR_POP:
+			case VAR_SAMP:
 				return true;
 			}
 		}

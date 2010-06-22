@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.teiid.api.exception.query.CriteriaEvaluationException;
+import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
@@ -289,7 +289,7 @@ public class JoinNode extends SubqueryAwareRelationalNode {
         return this.joinCriteria;
     }
     
-    boolean matchesCriteria(List outputTuple) throws BlockedException, TeiidComponentException, CriteriaEvaluationException {
+    boolean matchesCriteria(List outputTuple) throws BlockedException, TeiidComponentException, ExpressionEvaluationException {
 		return (this.joinCriteria == null || getEvaluator(this.combinedElementMap).evaluate(this.joinCriteria, outputTuple));
     }
 

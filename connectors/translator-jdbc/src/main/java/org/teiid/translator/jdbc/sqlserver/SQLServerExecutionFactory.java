@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.language.AggregateFunction;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
@@ -62,6 +63,17 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 			if (TypeFacility.RUNTIME_TYPES.STRING.equals(elem.getType()) && elem.getMetadataObject() != null && "uniqueidentifier".equalsIgnoreCase(elem.getMetadataObject().getNativeType())) { //$NON-NLS-1$
 				return Arrays.asList("cast(", elem, " as char(36))"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
+    	} else if (obj instanceof AggregateFunction) {
+    		AggregateFunction af = (AggregateFunction)obj;
+    		if (af.getName().equals(AggregateFunction.STDDEV_POP)) {
+    			af.setName("STDDEVP"); //$NON-NLS-1$
+    		} else if (af.getName().equals(AggregateFunction.STDDEV_SAMP)) {
+    			af.setName("STDDEV"); //$NON-NLS-1$
+    		} else if (af.getName().equals(AggregateFunction.VAR_POP)) {
+    			af.setName("VARP"); //$NON-NLS-1$
+    		} else if (af.getName().equals(AggregateFunction.VAR_SAMP)) {
+    			af.setName("VAR"); //$NON-NLS-1$
+    		}
     	}
     	return super.translate(obj, context);
     }
@@ -170,6 +182,11 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     @Override
     public int getMaxInCriteriaSize() {
     	return JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA;
-    }    
+    } 
+    
+    @Override
+    public boolean supportsAggregatesEnhancedNumeric() {
+    	return true;
+    }
      
 }

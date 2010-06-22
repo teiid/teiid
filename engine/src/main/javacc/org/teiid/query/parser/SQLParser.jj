@@ -1638,7 +1638,7 @@ SingleElementSymbol selectExpression(ParseInfo info) :
 			String func = null;
 			if(expression instanceof AggregateSymbol) {
 		    	es = (AggregateSymbol)expression;
-		    	func = ((AggregateSymbol)expression).getAggregateFunction();
+		    	func = ((AggregateSymbol)expression).getAggregateFunction().name();
 			} else {
 				String functionName = generateFunctionName(info, null);
 				es = new ExpressionSymbol(functionName, expression);
@@ -1725,9 +1725,14 @@ AggregateSymbol aggregateSymbol(ParseInfo info) :
 			<RPAREN> )	|
 			
 		// Remaining aggregates
-		(	func = nonReserved("COUNT", "SUM", "AVG", "MIN", "MAX")
+		(	(func = nonReserved("COUNT", "SUM", "AVG", "MIN", "MAX", "EVERY", "STDDEV_POP", "STDDEV_SAMP", "VAR_SAMP", "VAR_POP") 
+				|
+				<ANY> { func = "ANY"; }
+				|
+				<SOME> { func = "SOME"; }
+			)
 			<LPAREN>
-			[ <DISTINCT> {isDistinct=true;} ]
+			[ <DISTINCT> {isDistinct=true;} | <ALL>]
 			expression = expression(info)
 			<RPAREN>
 		) 
@@ -1799,29 +1804,16 @@ FromClause tableReference(ParseInfo info) :
 	(
 		(	
 			<LBRACE> nonReserved("OJ")
-			result=tableReferenceUnescaped(info)
+			result=joinedTable(info)
 			<RBRACE>
 		) 
 		|
-		result=tableReferenceUnescaped(info)
+		result=joinedTable(info)
 	)
 	{
 		return result;
 	}
 }	
-
-FromClause tableReferenceUnescaped(ParseInfo info) :
-{
-	FromClause result = null;
-}
-{
-	(	LOOKAHEAD(tablePrimary(info) ((<UNION><JOIN>)|<CROSS>|<LEFT>|<RIGHT>|<INNER>|<FULL>|<JOIN>)) result = joinedTable(info)
-		| result = tablePrimary(info)
-	)
-	{
-		return result;
-	}
-}
 
 FromClause joinedTable(ParseInfo info) :
 {
@@ -1838,7 +1830,7 @@ FromClause joinedTable(ParseInfo info) :
 			jp.setLeftClause(result);
 			result = jp;
 		}
-	) +
+	) *
 	{
 		return result;
 	}
@@ -1895,11 +1887,11 @@ FromClause tablePrimary(ParseInfo info) :
 		|
 		LOOKAHEAD(subqueryFromClause(info)) clause = subqueryFromClause(info) 
 	    |			
-		(	lparen = <LPAREN> clause = joinedTable(info) 
-		{
+		(lparen = <LPAREN> clause = joinedTable(info) 
+		 {
 			setFromClauseOptions(lparen, clause);
-		}
-		<RPAREN> 
+		 }
+		 <RPAREN> 
 		)
 	)
 	[	(<MAKEDEP>  { clause.setMakeDep(true); })
@@ -2341,7 +2333,7 @@ Criteria notCrit(ParseInfo info) :
 }
 {
 	[<NOT> {isNot=true;}] 
-	crit=primary(info)
+	crit=booleanPrimary(info)
 
 	{
   		if(isNot) { 
@@ -2358,7 +2350,7 @@ Criteria notCrit(ParseInfo info) :
  * @return Parsed primary criteria
  * @throws ParseException if parsing failed
  */
-Criteria primary(ParseInfo info) :
+Criteria booleanPrimary(ParseInfo info) :
 {
     Criteria crit = null;
 }
@@ -2380,46 +2372,63 @@ Criteria primary(ParseInfo info) :
 PredicateCriteria predicate(ParseInfo info) :
 {
     PredicateCriteria pdCrit = null;
+    Expression ex = null;
 }
 {
-	(	LOOKAHEAD(subqueryCompareCriteria(info)) pdCrit=subqueryCompareCriteria(info) |
-		LOOKAHEAD(compareCrit(info)) 	pdCrit=compareCrit(info) |
-		LOOKAHEAD(matchCrit(info)) 	    pdCrit=matchCrit(info) |
-		LOOKAHEAD(betweenCrit(info)) 	pdCrit=betweenCrit(info) |
-		LOOKAHEAD(setCrit(info)) 		pdCrit=setCrit(info) |
-		LOOKAHEAD(existsCriteria(info)) pdCrit=existsCriteria(info) |
-		pdCrit = hasCriteria() |
-		LOOKAHEAD(translateCriteria(info)) pdCrit = translateCriteria(info) |
-		pdCrit = isNullCrit(info) 
-	)
-
+    (
+		LOOKAHEAD(2) pdCrit = translateCriteria(info)
+		|
+	    (ex = commonValueExpression(info)
+	     (
+			LOOKAHEAD(2) pdCrit=betweenCrit(info, ex) |
+			LOOKAHEAD(2) pdCrit=matchCrit(info, ex) |
+			pdCrit=setCrit(info, ex) |
+			pdCrit = isNullCrit(info, ex) |
+			LOOKAHEAD(operator() expression(info)) pdCrit=compareCrit(info, ex) |
+			pdCrit=subqueryCompareCriteria(info, ex) 
+	     )
+	    )
+	    |
+		pdCrit=existsCriteria(info) |
+		pdCrit = hasCriteria() 
+    )
 	{
 		return pdCrit;
 	}
 }
+
+Token operator() :
+{
+	Token operator = null;
+}
+{
+	(operator=<EQ> |
+    operator=<NE> |
+    operator=<NE2> |
+    operator=<LT> |
+    operator=<LE> |
+    operator=<GT> |
+    operator=<GE>
+    )
+    {
+    	return operator;
+    }
+}
+
 
 /**
  * <p>Parse a compare criteria.</p>
  * @return Parsed compare criteria
  * @throws ParseException if parsing failed
  */
-CompareCriteria compareCrit(ParseInfo info) :
+CompareCriteria compareCrit(ParseInfo info, Expression expression) :
 {
-	Expression expression = null;
     Expression value = null;
     Token operator = null;
 }
 {
-	expression=expression(info)
-	( operator=<EQ> |
-	  operator=<NE> |
-	  operator=<NE2> |
-	  operator=<LT> |
-	  operator=<LE> |
-	  operator=<GT> |
-	  operator=<GE>
-	)
-	value=expression(info)
+	operator=operator()
+	value=commonValueExpression(info)
 
 	{
 		CompareCriteria compareCriteria = new CompareCriteria();
@@ -2455,9 +2464,8 @@ Command subquery(ParseInfo info) :
  * @return Parsed subquery compare criteria
  * @throws ParseException if parsing failed
  */
-SubqueryCompareCriteria subqueryCompareCriteria(ParseInfo info) :
+SubqueryCompareCriteria subqueryCompareCriteria(ParseInfo info, Expression expression) :
 {
-	Expression expression = null;
     SubqueryCompareCriteria subqueryCrit = null;
     Command subquery = null;
     Token operator = null;
@@ -2465,15 +2473,7 @@ SubqueryCompareCriteria subqueryCompareCriteria(ParseInfo info) :
     
 }
 {
-	expression=expression(info)
-	( operator=<EQ> |
-	  operator=<NE> |
-	  operator=<NE2> |
-	  operator=<LT> |
-	  operator=<LE> |
-	  operator=<GT> |
-	  operator=<GE>
-	)
+	operator=operator()
 	( quantifier=<ANY> |
 	  quantifier=<SOME> |
 	  quantifier=<ALL>
@@ -2508,22 +2508,19 @@ SubqueryCompareCriteria subqueryCompareCriteria(ParseInfo info) :
  * @return Parsed match criteria
  * @throws ParseException if parsing failed
  */
-MatchCriteria matchCrit(ParseInfo info) :
+MatchCriteria matchCrit(ParseInfo info, Expression expression) :
 {
     Character esc = null;
-	Expression expression = null;
 	Expression value = null;
 	boolean negated = false;
 }
 {
-    (	expression=expression(info)
-    	[<NOT> {negated = true;}]
-	    <LIKE>
-    	value=expression(info)
-	    [   <ESCAPE> esc = charVal(info, "LIKE ESCAPE") |
-            (<LBRACE> <ESCAPE> esc = charVal(info, "LIKE ESCAPE") <RBRACE>) 
-        ]
-    )        
+	[<NOT> {negated = true;}]
+    <LIKE>
+	value=commonValueExpression(info)
+    [   <ESCAPE> esc = charVal(info, "LIKE ESCAPE") |
+        (<LBRACE> <ESCAPE> esc = charVal(info, "LIKE ESCAPE") <RBRACE>) 
+    ]
 	{
     	MatchCriteria matchcriteria = new MatchCriteria(expression, value);
 		matchcriteria.setNegated(negated);
@@ -2553,18 +2550,17 @@ Character charVal(ParseInfo info, String type) :
  * @return Parsed BETWEEN criteria
  * @throws ParseException if parsing failed
  */
-BetweenCriteria betweenCrit(ParseInfo info) :
+BetweenCriteria betweenCrit(ParseInfo info, Expression expression) :
 {
-	Expression expression = null, lowerExpression = null, upperExpression = null;
+	Expression lowerExpression = null, upperExpression = null;
 	boolean negated = false;
 }
 {
-	expression = expression(info)
 	[<NOT> {negated=true;}]
 	<BETWEEN>
-	lowerExpression = expression(info)
+	lowerExpression = commonValueExpression(info)
 	<AND>
-	upperExpression = expression(info)
+	upperExpression = commonValueExpression(info)
 	
 	{
 		BetweenCriteria criteria = new BetweenCriteria(expression, lowerExpression, upperExpression);
@@ -2578,14 +2574,12 @@ BetweenCriteria betweenCrit(ParseInfo info) :
  * @return Parsed IS NULL criteria
  * @throws ParseException if parsing failed
  */
-IsNullCriteria isNullCrit(ParseInfo info) :
+IsNullCriteria isNullCrit(ParseInfo info, Expression expression) :
 {
-	Expression expression = null;
 	boolean negated = false;
 	IsNullCriteria criteria = null;
 }
 {
-	expression=expression(info)
 	<IS>
 	[<NOT> {negated = true;}]
 	<NULL>
@@ -2602,9 +2596,8 @@ IsNullCriteria isNullCrit(ParseInfo info) :
  * @return Parsed set criteria
  * @throws ParseException if parsing failed
  */
-AbstractSetCriteria setCrit(ParseInfo info) :
+AbstractSetCriteria setCrit(ParseInfo info, Expression expression) :
 {
-	Expression expression = null;
 	Expression value = null;
 	List setList = new ArrayList();
 	Command command = null;
@@ -2612,19 +2605,18 @@ AbstractSetCriteria setCrit(ParseInfo info) :
 	AbstractSetCriteria criteria = null;
 }
 {
-	expression=expression(info)
 	[<NOT> {negated = true;}]
 	<IN>
 	(
 		LOOKAHEAD(subquery(info)) (command = subquery(info)) |
 		(
 			<LPAREN>
-			value = expression(info)
+			value = commonValueExpression(info)
 			{
 				setList.add(value);
 			}
 			( <COMMA>
-				value = expression(info)
+				value = commonValueExpression(info)
 				{
 					setList.add(value);
 				}
@@ -2909,18 +2901,13 @@ Expression expression(ParseInfo info) :
 	Expression expression = null;
 }
 {
-	expression = concatExpression(info)
+    expression = commonValueExpression(info)
 	{
 		return expression;
 	}
 }
 
-/**
- * <p>Parse an expression - made up of literals and functions.</p>
- * @return Expression
- * @throws ParseException if parsing failed
- */
-Expression concatExpression(ParseInfo info) :
+Expression commonValueExpression(ParseInfo info) :
 {
 	Expression leftExpression = null;
 	Expression rightExpression = null;
@@ -3002,10 +2989,10 @@ Expression timesExpression(ParseInfo info) :
 	String operator = null;
 }
 {
-	(	leftExpression=basicExpression(info)
+	(	leftExpression=valueExpressionPrimary(info)
 		(
 			operator=timesOperator()
-			rightExpression=basicExpression(info) 
+			rightExpression=valueExpressionPrimary(info) 
 			{
 				leftExpression = new Function(operator, new Expression[] {leftExpression, rightExpression});
 				rightExpression = null;
@@ -3043,7 +3030,7 @@ String timesOperator() :
  * @return Expression
  * @throws ParseException if parsing failed
  */
-Expression basicExpression(ParseInfo info) :
+Expression valueExpressionPrimary(ParseInfo info) :
 {
 	Token refToken = null;
 	Expression expression = null;
@@ -3066,7 +3053,11 @@ Expression basicExpression(ParseInfo info) :
 		)
 		|
 		// Aggregate function
-		LOOKAHEAD(<ID>, {matchesAny(getToken(1).image, "count", "min", "max", "sum", "avg") != null}) (expression=aggregateSymbol(info))
+		LOOKAHEAD(<ID>, {matchesAny(getToken(1).image, "count", "min", "max", "sum", "avg", "every", "STDDEV_POP", "STDDEV_SAMP", "VAR_SAMP", "VAR_POP") != null}) (expression=aggregateSymbol(info))
+		|
+		LOOKAHEAD(<ANY>) (expression=aggregateSymbol(info))
+		|
+		LOOKAHEAD(<SOME>) (expression=aggregateSymbol(info))
 		|
 		(expression=xmlAgg(info))
 		|
@@ -3093,11 +3084,11 @@ Expression basicExpression(ParseInfo info) :
 		|
 		subquery = subquery(info)
 		|
-		// Non-searched CASE expressions
-		LOOKAHEAD(caseExpression(info)) expression = caseExpression(info)
-		|
 		// Searched CASE expressions
-		LOOKAHEAD(searchedCaseExpression(info)) expression = searchedCaseExpression(info)
+		LOOKAHEAD(2) expression = searchedCaseExpression(info)
+		|
+		// Non-searched CASE expressions
+		expression = caseExpression(info)
 	)						
 		
 	{

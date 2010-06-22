@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Properties;
 
 import org.junit.Test;
 import org.teiid.common.buffer.BufferManager;
@@ -46,9 +45,6 @@ import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
-import org.teiid.query.processor.BatchCollector;
-import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;

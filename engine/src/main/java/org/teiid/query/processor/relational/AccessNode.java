@@ -27,7 +27,6 @@ import static org.teiid.query.analysis.AnalysisRecord.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.api.exception.query.CriteriaEvaluationException;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.plan.PlanNode;
@@ -116,7 +115,7 @@ public class AccessNode extends RelationalNode {
 
 	static boolean prepareCommand(Command atomicCommand, RelationalNode node, CommandContext context, QueryMetadataInterface metadata)
 			throws ExpressionEvaluationException, TeiidComponentException,
-			TeiidProcessingException, CriteriaEvaluationException {
+			TeiidProcessingException {
         try {
             // Defect 16059 - Rewrite the command once the references have been replaced with values.
             QueryRewriter.evaluateAndRewrite(atomicCommand, node.getDataManager(), context, metadata);

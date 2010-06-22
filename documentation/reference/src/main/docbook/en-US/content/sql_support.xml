@@ -206,22 +206,40 @@
           <para>COUNT(*) – count the number of values (including nulls and duplicates) in a group</para>
         </listitem>
         <listitem>
-          <para>COUNT(expression) – count the number of values (excluding nulls) in a group</para>
+          <para>COUNT(x) – count the number of values (excluding nulls) in a group</para>
         </listitem>
         <listitem>
-          <para>SUM(expression) – sum of the values (excluding nulls) in a group</para>
+          <para>SUM(x) – sum of the values (excluding nulls) in a group</para>
         </listitem>
         <listitem>
-          <para>AVG(expression) – average of the values (excluding nulls) in a group</para>
+          <para>AVG(x) – average of the values (excluding nulls) in a group</para>
         </listitem>
         <listitem>
-          <para>MIN(expression) – minimum value in a group (excluding null)</para>
+          <para>MIN(x) – minimum value in a group (excluding null)</para>
         </listitem>
         <listitem>
-          <para>MAX(expression) – maximum value in a group (excluding null)</para>
+          <para>MAX(x) – maximum value in a group (excluding null)</para>
         </listitem>
         <listitem>
-          <para>XMLAGG(xml expression <link linkend="orderby_clause">[ORDER BY ...]</link>) – xml concatination of all xml expressions in a group (excluding null)</para>
+          <para>ANY(x)/SOME(x) – returns TRUE if any value in the group is TRUE (excluding null)</para>
+        </listitem>
+        <listitem>
+          <para>EVERY(x) – returns TRUE if every value in the group is TRUE (excluding null)</para>
+        </listitem>
+        <listitem>
+          <para>VAR_POP(x) – biased variance (excluding null) logically equals (sum(x^2) - sum(x)^2/count(x))/count(x); returns a double; null if count = 0</para>
+        </listitem>
+        <listitem>
+          <para>VAR_SAMP(x) – sample variance (excluding null) logically equals (sum(x^2) - sum(x)^2/count(x))/(count(x) - 1); returns a double; null if count &lt; 2</para>
+        </listitem>
+        <listitem>
+          <para>STDDEV_POP(x) – standard deviation (excluding null) logically equals SQRT(VAR_POP(x))</para>
+        </listitem>
+        <listitem>
+          <para>STDDEV_SAMP(x) – sample standar deviation (excluding null) logically equals SQRT(VAR_SAMP(x))</para>
+        </listitem>
+        <listitem>
+          <para>XMLAGG(xml_expr <link linkend="orderby_clause">[ORDER BY ...]</link>) – xml concatination of all xml expressions in a group (excluding null)</para>
         </listitem>
       </itemizedlist>
       <itemizedlist>

@@ -94,6 +94,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.QUERY_HAVING, srcCaps.supportsHaving());
         tgtCaps.setCapabilitySupport(Capability.INSERT_WITH_QUERYEXPRESSION, srcCaps.supportsInsertWithQueryExpression());
         tgtCaps.setCapabilitySupport(Capability.QUERY_ORDERBY_UNRELATED, srcCaps.supportsOrderByUnrelated());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_ENHANCED_NUMERIC, srcCaps.supportsAggregatesEnhancedNumeric());
         
         List functions = srcCaps.getSupportedFunctions();
         if(functions != null && functions.size() > 0) {

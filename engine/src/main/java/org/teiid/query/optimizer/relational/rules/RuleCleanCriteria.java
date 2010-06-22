@@ -22,7 +22,7 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
-import org.teiid.api.exception.query.CriteriaEvaluationException;
+import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
@@ -83,7 +83,7 @@ public final class RuleCleanCriteria implements OptimizerRule {
             //none of the following exceptions should ever occur
             } catch(BlockedException e) {
                 throw new TeiidComponentException(e);
-            } catch (CriteriaEvaluationException e) {
+            } catch (ExpressionEvaluationException e) {
                 throw new TeiidComponentException(e);
             } 
         } 

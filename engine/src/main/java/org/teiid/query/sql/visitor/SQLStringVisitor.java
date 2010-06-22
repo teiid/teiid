@@ -1095,7 +1095,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     // ############ Visitor methods for symbol objects ####################
 
     public void visit(AggregateSymbol obj) {
-        parts.add(obj.getAggregateFunction());
+        parts.add(obj.getAggregateFunction().name());
 		parts.add("("); //$NON-NLS-1$
 
 		if(obj.isDistinct()) {

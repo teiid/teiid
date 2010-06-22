@@ -189,5 +189,10 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsIntersect() {
         return true;
-    }	
+    }
+    
+    @Override
+    public boolean supportsAggregatesEnhancedNumeric() {
+    	return true;
+    }
 }

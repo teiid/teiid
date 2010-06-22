@@ -24,7 +24,6 @@ package org.teiid.query.processor.relational;
 
 import java.util.List;
 
-import org.teiid.api.exception.query.CriteriaEvaluationException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.processor.relational.SourceState.ImplicitBuffer;
@@ -137,7 +136,7 @@ public class MergeJoinStrategy extends JoinStrategy {
     
     @Override
     protected void process() throws TeiidComponentException,
-    		CriteriaEvaluationException, TeiidProcessingException {
+    		TeiidProcessingException {
         while (this.mergeState != MergeState.DONE) {
             
             while (this.mergeState == MergeState.SCAN) {

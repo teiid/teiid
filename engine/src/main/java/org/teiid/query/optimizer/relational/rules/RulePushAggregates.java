@@ -76,12 +76,14 @@ import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.util.CommandContext;
+import org.teiid.translator.SourceSystemFunctions;
 
 
 /**
@@ -191,8 +193,9 @@ public class RulePushAggregates implements
 		
 		SymbolMap parentMap = (SymbolMap)child.getProperty(NodeConstants.Info.SYMBOL_MAP);
 		List<ElementSymbol> virtualElements = parentMap.getKeys();
-
-		Map<AggregateSymbol, Expression> aggMap = buildAggregateMap(new ArrayList<SingleElementSymbol>(aggregates), metadata, aggregates);
+		List<SingleElementSymbol> copy = new ArrayList<SingleElementSymbol>(aggregates);
+		aggregates.clear();
+		Map<AggregateSymbol, Expression> aggMap = buildAggregateMap(copy, metadata, aggregates);
 
 		boolean shouldPushdown = false;
 		List<Boolean> pushdownList = new ArrayList<Boolean>(unionChildren.size());
@@ -351,11 +354,15 @@ public class RulePushAggregates implements
         	if (pushdown) {
         		projectedViewSymbols.add(agg);
         	} else {
-        		if (agg.getAggregateFunction().equals(NonReserved.COUNT)) {
-        			SearchedCaseExpression count = new SearchedCaseExpression(Arrays.asList(new IsNullCriteria(agg.getExpression())), Arrays.asList(new Constant(Integer.valueOf(0))));
-        			count.setElseExpression(new Constant(Integer.valueOf(1)));
-        			count.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-    				projectedViewSymbols.add(new ExpressionSymbol("stagedAgg", count)); //$NON-NLS-1$
+        		if (agg.getAggregateFunction() == Type.COUNT) {
+        			if (agg.getExpression() == null) {
+	    				projectedViewSymbols.add(new ExpressionSymbol("stagedAgg", new Constant(1))); //$NON-NLS-1$
+        			} else { 
+	        			SearchedCaseExpression count = new SearchedCaseExpression(Arrays.asList(new IsNullCriteria(agg.getExpression())), Arrays.asList(new Constant(Integer.valueOf(0))));
+	        			count.setElseExpression(new Constant(Integer.valueOf(1)));
+	        			count.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+	    				projectedViewSymbols.add(new ExpressionSymbol("stagedAgg", count)); //$NON-NLS-1$
+        			}
         		} else { //min, max, sum
         			Expression ex = agg.getExpression();
         			ex = ResolverUtil.convertExpression(ex, DataTypeManager.getDataTypeName(agg.getType()), metadata);
@@ -668,20 +675,18 @@ public class RulePushAggregates implements
            
             Expression newExpression = null;
 
-            String aggFunction = partitionAgg.getAggregateFunction();
-            if (aggFunction.equals(NonReserved.COUNT)) {
+            Type aggFunction = partitionAgg.getAggregateFunction();
+            if (aggFunction == Type.COUNT) {
                 //COUNT(x) -> CONVERT(SUM(COUNT(x)), INTEGER)
                 AggregateSymbol newAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, partitionAgg); //$NON-NLS-1$
 
                 // Build conversion function to convert SUM (which returns LONG) back to INTEGER
-                Constant convertTargetType = new Constant(DataTypeManager.getDataTypeName(partitionAgg.getType()),
-                                                          DataTypeManager.DefaultDataClasses.STRING);
-                Function convertFunc = new Function(FunctionLibrary.CONVERT, new Expression[] {newAgg, convertTargetType});
+                Function convertFunc = new Function(FunctionLibrary.CONVERT, new Expression[] {newAgg, new Constant(DataTypeManager.getDataTypeName(partitionAgg.getType()))});
                 ResolverVisitor.resolveLanguageObject(convertFunc, metadata);
 
                 newExpression = convertFunc;  
                 nestedAggregates.add(partitionAgg);
-            } else if (aggFunction.equals(NonReserved.AVG)) {
+            } else if (aggFunction == Type.AVG) {
                 //AVG(x) -> SUM(SUM(x)) / SUM(COUNT(x))
                 AggregateSymbol countAgg = new AggregateSymbol("stagedAgg", NonReserved.COUNT, false, partitionAgg.getExpression()); //$NON-NLS-1$
                 AggregateSymbol sumAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, partitionAgg.getExpression()); //$NON-NLS-1$
@@ -689,15 +694,56 @@ public class RulePushAggregates implements
                 AggregateSymbol sumSumAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, sumAgg); //$NON-NLS-1$
                 AggregateSymbol sumCountAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, countAgg); //$NON-NLS-1$
 
-                Function divideFunc = new Function("/", new Expression[] {sumSumAgg, sumCountAgg}); //$NON-NLS-1$
+                Expression convertedSum = new Function(FunctionLibrary.CONVERT, new Expression[] {sumSumAgg, new Constant(DataTypeManager.getDataTypeName(partitionAgg.getType()))});
+                Expression convertCount = new Function(FunctionLibrary.CONVERT, new Expression[] {sumCountAgg, new Constant(DataTypeManager.getDataTypeName(partitionAgg.getType()))});
+                
+                Function divideFunc = new Function("/", new Expression[] {convertedSum, convertCount}); //$NON-NLS-1$
                 ResolverVisitor.resolveLanguageObject(divideFunc, metadata);
 
                 newExpression = divideFunc;
                 nestedAggregates.add(countAgg);
                 nestedAggregates.add(sumAgg);
+            } else if (partitionAgg.isEnhancedNumeric()) {
+            	//e.g. STDDEV_SAMP := CASE WHEN COUNT(X) > 1 THEN SQRT((SUM(X^2) - SUM(X)^2/COUNT(X))/(COUNT(X) - 1))
+            	AggregateSymbol countAgg = new AggregateSymbol("stagedAgg", NonReserved.COUNT, false, partitionAgg.getExpression()); //$NON-NLS-1$
+                AggregateSymbol sumAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, partitionAgg.getExpression()); //$NON-NLS-1$
+                AggregateSymbol sumSqAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, new Function(SourceSystemFunctions.POWER, new Expression[] {partitionAgg.getExpression(), new Constant(2)})); //$NON-NLS-1$
+                
+                AggregateSymbol sumSumAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, sumAgg); //$NON-NLS-1$
+                AggregateSymbol sumCountAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, countAgg); //$NON-NLS-1$
+                AggregateSymbol sumSumSqAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, sumSqAgg); //$NON-NLS-1$
+                
+                Expression convertedSum = new Function(FunctionLibrary.CONVERT, new Expression[] {sumSumAgg, new Constant(DataTypeManager.DefaultDataTypes.DOUBLE)});
+
+                Function divideFunc = new Function(SourceSystemFunctions.DIVIDE_OP, new Expression[] {new Function(SourceSystemFunctions.POWER, new Expression[] {convertedSum, new Constant(2)}), sumCountAgg}); 
+                
+                Function minusFunc = new Function(SourceSystemFunctions.SUBTRACT_OP, new Expression[] {sumSumSqAgg, divideFunc}); 
+                Expression divisor = null;
+                if (aggFunction == Type.STDDEV_SAMP || aggFunction == Type.VAR_SAMP) {
+                	divisor = new Function(SourceSystemFunctions.SUBTRACT_OP, new Expression[] {sumCountAgg, new Constant(1)}); 
+                } else {
+                	divisor = sumCountAgg;
+                }
+                Expression result = new Function(SourceSystemFunctions.DIVIDE_OP, new Expression[] {minusFunc, divisor}); 
+                if (aggFunction == Type.STDDEV_POP || aggFunction == Type.STDDEV_SAMP) {
+                	result = new Function(SourceSystemFunctions.SQRT, new Expression[] {result});
+                } else {
+                    result = new Function(FunctionLibrary.CONVERT, new Expression[] {result, new Constant(DataTypeManager.DefaultDataTypes.DOUBLE)});
+                }
+                Expression n = new Constant(0);
+                if (aggFunction == Type.STDDEV_SAMP || aggFunction == Type.VAR_SAMP) {
+                	n = new Constant(1);
+                }
+                result = new SearchedCaseExpression(Arrays.asList(new CompareCriteria(sumCountAgg, CompareCriteria.GT, n)), Arrays.asList(result));
+                ResolverVisitor.resolveLanguageObject(result, metadata);
+
+                newExpression = result;
+                nestedAggregates.add(countAgg);
+                nestedAggregates.add(sumAgg);
+                nestedAggregates.add(sumSqAgg);
             } else {
                 //AGG(X) -> AGG(AGG(X))
-                newExpression = new AggregateSymbol("stagedAgg", aggFunction, false, partitionAgg); //$NON-NLS-1$
+                newExpression = new AggregateSymbol("stagedAgg", aggFunction.name(), false, partitionAgg); //$NON-NLS-1$
                 nestedAggregates.add(partitionAgg);
             }
 

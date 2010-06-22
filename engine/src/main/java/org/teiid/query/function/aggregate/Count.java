@@ -46,7 +46,7 @@ public class Count extends AggregateFunction {
      * @see org.teiid.query.function.aggregate.AggregateFunction#getResult()
      */
     public Object getResult() {
-        return new Integer(count);
+        return Integer.valueOf(count);
     }
 
 }

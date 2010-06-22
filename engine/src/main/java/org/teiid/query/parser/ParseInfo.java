@@ -22,15 +22,14 @@
 
 package org.teiid.query.parser;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 public class ParseInfo {
 
-	public int anonExprCount = 0;
-	public int anonCountCount = 0;
-	public int anonSumCount = 0;
-	public int anonAvgCount = 0;
-	public int anonMinCount = 0;
-	public int anonMaxCount = 0;
+	public Map<String, Integer> nameCounts = new HashMap<String, Integer>();
+	
     public int referenceCount = 0;
 
 	// This gets set according to the current clause

@@ -28,7 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.teiid.api.exception.query.CriteriaEvaluationException;
+import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.eval.Evaluator;
@@ -80,7 +80,7 @@ public class CriteriaCondition extends Condition {
 
         try {
 			return new Evaluator(elementMap, env.getDataManager(), env.getProcessorContext()).evaluate(this.criteria, data);
-		} catch (CriteriaEvaluationException e) {
+		} catch (ExpressionEvaluationException e) {
             throw new TeiidComponentException(e);
 		}
 	}

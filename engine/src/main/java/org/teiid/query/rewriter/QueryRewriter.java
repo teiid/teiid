@@ -41,7 +41,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import org.teiid.api.exception.query.CriteriaEvaluationException;
+import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
@@ -138,6 +138,7 @@ import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.util.ValueIterator;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
@@ -1131,7 +1132,7 @@ public class QueryRewriter {
                 
                 return FALSE_CRITERIA;                
                 
-            } catch(CriteriaEvaluationException e) {
+            } catch(ExpressionEvaluationException e) {
                 throw new QueryValidatorException(e, ErrorMessageKeys.REWRITER_0001, QueryExecPlugin.Util.getString(ErrorMessageKeys.REWRITER_0001, crit));
             }
         }
@@ -1920,8 +1921,14 @@ public class QueryRewriter {
 	}
     
     private Expression rewriteExpression(AggregateSymbol expression) {
-    	if (!expression.getAggregateFunction().equals(NonReserved.COUNT)
-				&& !expression.getAggregateFunction().equals(NonReserved.SUM)
+    	if (expression.isBoolean()) {
+    		if (expression.getAggregateFunction() == Type.EVERY) {
+    			expression.setAggregateFunction(Type.MIN);
+    		} else {
+    			expression.setAggregateFunction(Type.MAX);
+    		}
+    	}
+    	if ((expression.getAggregateFunction() == Type.MAX || expression.getAggregateFunction() == Type.MIN)
 				&& EvaluatableVisitor.willBecomeConstant(expression.getExpression())) {
 			try {
 				return new ExpressionSymbol(expression.getName(), ResolverUtil

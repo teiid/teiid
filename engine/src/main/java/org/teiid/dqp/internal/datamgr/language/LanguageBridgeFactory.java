@@ -516,7 +516,7 @@ public class LanguageBridgeFactory {
     }
 
     AggregateFunction translate(AggregateSymbol symbol) {
-        return new AggregateFunction(symbol.getAggregateFunction(), 
+        return new AggregateFunction(symbol.getAggregateFunction().name(), 
                                 symbol.isDistinct(), 
                                 translate(symbol.getExpression()),
                                 symbol.getType());

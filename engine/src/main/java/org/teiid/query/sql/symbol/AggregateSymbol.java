@@ -23,19 +23,13 @@
 package org.teiid.query.sql.symbol;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
-import org.teiid.language.SQLConstants.NonReserved;
-import org.teiid.language.SQLConstants.Reserved;
-import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -58,25 +52,32 @@ import org.teiid.query.util.ErrorMessageKeys;
  * bigdecimal.</p>
  */
 public class AggregateSymbol extends ExpressionSymbol {
+	
+	public enum Type {
+		COUNT,
+		SUM,
+		AVG,
+		MIN,
+		MAX,
+		XMLAGG,
+		ANY,
+		SOME,
+		EVERY,
+		STDDEV_POP,
+		STDDEV_SAMP,
+		VAR_POP,
+		VAR_SAMP;
+	}
 
-	private String aggregate;
+	private Type aggregate;
 	private boolean distinct;
 	private OrderBy orderBy;
 
 	private static final Class<Integer> COUNT_TYPE = DataTypeManager.DefaultDataClasses.INTEGER;
-	private static final Set<String> AGGREGATE_FUNCTIONS;
 	private static final Map<Class<?>, Class<?>> SUM_TYPES;
     private static final Map<Class<?>, Class<?>> AVG_TYPES;
 
 	static {
-		AGGREGATE_FUNCTIONS = new HashSet<String>();
-		AGGREGATE_FUNCTIONS.add(NonReserved.COUNT);
-		AGGREGATE_FUNCTIONS.add(NonReserved.SUM);
-		AGGREGATE_FUNCTIONS.add(NonReserved.AVG);
-		AGGREGATE_FUNCTIONS.add(NonReserved.MIN);
-		AGGREGATE_FUNCTIONS.add(NonReserved.MAX);
-		AGGREGATE_FUNCTIONS.add(Reserved.XMLAGG);
-
 		SUM_TYPES = new HashMap<Class<?>, Class<?>>();
 		SUM_TYPES.put(DataTypeManager.DefaultDataClasses.BYTE, DataTypeManager.DefaultDataClasses.LONG);
 		SUM_TYPES.put(DataTypeManager.DefaultDataClasses.SHORT, DataTypeManager.DefaultDataClasses.LONG);
@@ -104,10 +105,9 @@ public class AggregateSymbol extends ExpressionSymbol {
      * @param canonicalName
      * @since 4.3
      */
-    protected AggregateSymbol(String name, String canonicalName, String aggregateFunction, boolean isDistinct, Expression expression) {
+    protected AggregateSymbol(String name, String canonicalName, Type aggregateFunction, boolean isDistinct, Expression expression) {
         super(name, canonicalName, expression);
-        
-        setAggregateFunction(aggregateFunction);
+        this.aggregate = aggregateFunction;
         this.distinct = isDistinct;
     }
     
@@ -120,8 +120,7 @@ public class AggregateSymbol extends ExpressionSymbol {
 	 */
 	public AggregateSymbol(String name, String aggregateFunction, boolean isDistinct, Expression expression) {
 		super(name, expression);
-
-		setAggregateFunction(aggregateFunction);
+		this.aggregate = Type.valueOf(aggregateFunction);
 		this.distinct = isDistinct;
 	}
 	
@@ -135,11 +134,7 @@ public class AggregateSymbol extends ExpressionSymbol {
 	 * @see org.teiid.language.SQLConstants.NonReserved#MIN
 	 * @see org.teiid.language.SQLConstants.NonReserved#MAX
 	 */
-	private void setAggregateFunction(String aggregateFunction) {
-		// Validate aggregate
-		if(! AGGREGATE_FUNCTIONS.contains(aggregateFunction)) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0013, new Object[] {aggregateFunction, AGGREGATE_FUNCTIONS}));
-		}
+	public void setAggregateFunction(Type aggregateFunction) {
 		this.aggregate = aggregateFunction;
 	}
 
@@ -147,13 +142,8 @@ public class AggregateSymbol extends ExpressionSymbol {
 	 * Get the aggregate function type - this will map to one of the reserved words
 	 * for the aggregate functions.
 	 * @return Aggregate function type
-	 * @see org.teiid.language.SQLConstants.NonReserved#COUNT
-	 * @see org.teiid.language.SQLConstants.NonReserved#SUM
-	 * @see org.teiid.language.SQLConstants.NonReserved#AVG
-	 * @see org.teiid.language.SQLConstants.NonReserved#MIN
-	 * @see org.teiid.language.SQLConstants.NonReserved#MAX
 	 */
-	public String getAggregateFunction() {
+	public Type getAggregateFunction() {
 		return this.aggregate;
 	}
 
@@ -172,17 +162,34 @@ public class AggregateSymbol extends ExpressionSymbol {
 	 * @return Type of the symbol
 	 */
 	public Class<?> getType() {
-		if(this.aggregate.equals(NonReserved.COUNT)) {
+		if(this.aggregate == Type.COUNT) {
 			return COUNT_TYPE;
-		} else if(this.aggregate.equals(NonReserved.SUM) ) {
+		} else if(this.aggregate == Type.SUM ) {
 			Class<?> expressionType = this.getExpression().getType();
 			return SUM_TYPES.get(expressionType);
-        } else if (this.aggregate.equals(NonReserved.AVG)) {
+        } else if (this.aggregate == Type.AVG) {
             Class<?> expressionType = this.getExpression().getType();
             return AVG_TYPES.get(expressionType);
+		} else if (isBoolean()) {
+			return DataTypeManager.DefaultDataClasses.BOOLEAN;
+		} else if (isEnhancedNumeric()) {
+			return DataTypeManager.DefaultDataClasses.DOUBLE;
 		} else {
 			return this.getExpression().getType();
 		}
+	}
+
+	public boolean isBoolean() {
+		return this.aggregate == Type.EVERY 
+				|| this.aggregate == Type.SOME 
+				|| this.aggregate == Type.ANY;
+	}
+	
+	public boolean isEnhancedNumeric() {
+		return this.aggregate == Type.STDDEV_POP 
+		|| this.aggregate == Type.STDDEV_SAMP
+		|| this.aggregate == Type.VAR_SAMP
+		|| this.aggregate == Type.VAR_POP;
 	}
 
     public void acceptVisitor(LanguageVisitor visitor) {

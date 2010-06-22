@@ -86,6 +86,12 @@ public class SQLConstants {
 		public static final String QUERYSTRING = "QUERYSTRING"; //$NON-NLS-1$
 		//xmlparse
 		public static final String WELLFORMED = "WELLFORMED"; //$NON-NLS-1$
+		//agg
+		public static final String EVERY = "EVERY"; //$NON-NLS-1$
+		public static final String STDDEV_POP = "STDDEV_POP"; //$NON-NLS-1$
+		public static final String STDDEV_SAMP = "STDDEV_SAMP"; //$NON-NLS-1$
+		public static final String VAR_SAMP = "VAR_SAMP"; //$NON-NLS-1$
+		public static final String VAR_POP = "VAR_POP"; //$NON-NLS-1$
 	}
 	
 	public interface Reserved {

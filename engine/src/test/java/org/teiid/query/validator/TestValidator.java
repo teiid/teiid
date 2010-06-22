@@ -2038,5 +2038,17 @@ public class TestValidator {
     @Test public void testDecode() throws Exception {
     	helpValidate("select to_bytes(e1, '?') from pm1.g1", new String[] {"to_bytes(e1, '?')"}, FakeMetadataFactory.example1Cached());
     }
+    
+    @Test public void testValidateXMLAGG() {        
+        helpValidate("SELECT XMLAGG(e1) from pm1.g1", new String[] {"XMLAGG(e1)"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+    
+    @Test public void testValidateBooleanAgg() {        
+        helpValidate("SELECT EVERY(e1) from pm1.g1", new String[] {"EVERY(e1)"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+    
+    @Test public void testValidateStatAgg() {        
+        helpValidate("SELECT stddev_pop(distinct e2) from pm1.g1", new String[] {"STDDEV_POP(DISTINCT e2)"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+	}
 
 }

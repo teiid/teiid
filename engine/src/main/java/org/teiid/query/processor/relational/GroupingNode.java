@@ -47,6 +47,7 @@ import org.teiid.query.function.aggregate.ConstantFunction;
 import org.teiid.query.function.aggregate.Count;
 import org.teiid.query.function.aggregate.Max;
 import org.teiid.query.function.aggregate.Min;
+import org.teiid.query.function.aggregate.StatsFunction;
 import org.teiid.query.function.aggregate.Sum;
 import org.teiid.query.function.aggregate.XMLAgg;
 import org.teiid.query.processor.ProcessorDataManager;
@@ -57,6 +58,7 @@ import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.util.CommandContext;
 
 
@@ -162,20 +164,30 @@ public class GroupingNode extends RelationalNode {
                 	Expression ex = aggSymbol.getExpression();
                 	inputType = ex.getType();
                 	int index = collectExpression(ex);
-                	String function = aggSymbol.getAggregateFunction();
-                    if(function.equals(NonReserved.COUNT)) {
-                        functions[i] = new Count();
-                    } else if(function.equals(NonReserved.SUM)) {
-                        functions[i] = new Sum();
-                    } else if(function.equals(NonReserved.AVG)) {
-                        functions[i] = new Avg();
-                    } else if(function.equals(NonReserved.MIN)) {
-                        functions[i] = new Min();
-                    } else if (function.equals(NonReserved.MAX)){
-                        functions[i] = new Max();
-                    } else {
-                    	functions[i] = new XMLAgg(context);
-                    }
+                	Type function = aggSymbol.getAggregateFunction();
+                	switch (function) {
+                	case COUNT:
+                		functions[i] = new Count();
+                		break;
+                	case SUM:
+                		functions[i] = new Sum();
+                		break;
+                	case AVG:
+                		functions[i] = new Avg();
+                		break;
+                	case MIN:
+                		functions[i] = new Min();
+                		break;
+                	case MAX:
+                		functions[i] = new Max();
+                		break;
+                	case XMLAGG:
+                		functions[i] = new XMLAgg(context);
+                		break;
+                	default:
+                		functions[i] = new StatsFunction(function);
+                	
+                	}
 
                     if(aggSymbol.isDistinct() && !function.equals(NonReserved.MIN) && !function.equals(NonReserved.MAX)) {
                         SortingFilter filter = new SortingFilter(functions[i], getBufferManager(), getConnectionID(), true);

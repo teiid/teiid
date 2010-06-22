@@ -457,4 +457,9 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         return true;
     }
     
+    @Override
+    public boolean supportsAggregatesEnhancedNumeric() {
+    	return getDatabaseVersion().compareTo(EIGHT_2) >= 0;
+    }
+    
 }

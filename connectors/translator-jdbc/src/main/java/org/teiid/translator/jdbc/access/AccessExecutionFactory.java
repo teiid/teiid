@@ -26,6 +26,9 @@ package org.teiid.translator.jdbc.access;
 
 import java.util.List;
 
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.LanguageObject;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.Translator;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
@@ -43,6 +46,23 @@ public class AccessExecutionFactory extends SybaseExecutionFactory {
             return "-1"; //$NON-NLS-1$
         }
         return "0"; //$NON-NLS-1$
+    }
+    
+    @Override
+    public List<?> translate(LanguageObject obj, ExecutionContext context) {
+    	if (obj instanceof AggregateFunction) {
+    		AggregateFunction af = (AggregateFunction)obj;
+    		if (af.getName().equals(AggregateFunction.STDDEV_POP)) {
+    			af.setName("StDevP"); //$NON-NLS-1$
+    		} else if (af.getName().equals(AggregateFunction.STDDEV_SAMP)) {
+    			af.setName("StDev"); //$NON-NLS-1$
+    		} else if (af.getName().equals(AggregateFunction.VAR_POP)) {
+    			af.setName("VarP"); //$NON-NLS-1$
+    		} else if (af.getName().equals(AggregateFunction.VAR_SAMP)) {
+    			af.setName("Var"); //$NON-NLS-1$
+    		}
+    	}
+    	return super.translate(obj, context);
     }
     
     @Override
@@ -83,5 +103,10 @@ public class AccessExecutionFactory extends SybaseExecutionFactory {
     @Override
     public List<String> getSupportedFunctions() {
     	return getDefaultSupportedFunctions();
+    }
+    
+    @Override
+    public boolean supportsAggregatesEnhancedNumeric() {
+    	return true;
     }
 }

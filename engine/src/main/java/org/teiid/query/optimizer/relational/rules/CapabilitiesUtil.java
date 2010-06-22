@@ -30,7 +30,6 @@ import java.util.List;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -44,6 +43,7 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.translator.ExecutionFactory.SupportedJoinCriteria;
 
@@ -144,8 +144,9 @@ public class CapabilitiesUtil {
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
 
         // Check particular function
-        String func = aggregate.getAggregateFunction();
-        if(func.equals(NonReserved.COUNT)) {
+        Type func = aggregate.getAggregateFunction();
+        switch (func) {
+        case COUNT:
             if(aggregate.getExpression() == null) {
                 if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_COUNT_STAR)) {
                     return false;
@@ -155,22 +156,36 @@ public class CapabilitiesUtil {
                     return false;
                 }                
             }
-        } else if(func.equals(NonReserved.SUM)) {
+            break;
+        case SUM:
             if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_SUM)) {
                 return false;
             }
-        } else if(func.equals(NonReserved.AVG)) {
+            break;
+        case AVG:
             if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_AVG)) {
                 return false;
             }
-        } else if(func.equals(NonReserved.MIN)) {
+            break;
+        case MIN:
             if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_MIN)) {
                 return false;
             }
-        } else if(func.equals(NonReserved.MAX)) {
+            break;
+        case MAX:
             if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_MAX)) {
                 return false;
             }
+            break;
+        default:
+        	if (aggregate.isEnhancedNumeric()) { 
+        		if (!caps.supportsCapability(Capability.QUERY_AGGREGATES_ENHANCED_NUMERIC)) {
+        			return false;
+        		}
+        	} else {
+        		return false;
+        	}
+        	break;
         }
         
         // Check DISTINCT if necessary

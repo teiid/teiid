@@ -47,6 +47,14 @@ import org.teiid.translator.jdbc.ModFunctionModifier;
 
 @Translator(name="sybase")
 public class SybaseExecutionFactory extends JDBCExecutionFactory {
+	
+	public static final String TWELVE_5 = "12.5"; //$NON-NLS-1$
+	public static final String FIFTEEN_0_2 = "15.0.2"; //$NON-NLS-1$
+	public static final String FIFTEEN_5 = "15.5"; //$NON-NLS-1$
+	
+	public SybaseExecutionFactory() {
+		setDatabaseVersion(TWELVE_5);
+	}
     
     public void start() throws TranslatorException {
         super.start();
@@ -288,5 +296,10 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
     @Override
     public int getMaxFromGroups() {
         return 50;
-    }    
+    } 
+    
+    @Override
+    public boolean supportsAggregatesEnhancedNumeric() {
+    	return getDatabaseVersion().compareTo(FIFTEEN_0_2) >= 0;
+    }
 }

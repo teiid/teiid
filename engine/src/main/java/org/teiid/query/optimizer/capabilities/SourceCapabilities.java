@@ -202,6 +202,12 @@ public interface SourceCapabilities {
          */
         QUERY_AGGREGATES_MAX,
         /**
+         * Support indicates connector can accept the enhanced numeric aggregates
+         * 
+         * @since 3.1 SP2
+         */
+        QUERY_AGGREGATES_ENHANCED_NUMERIC,
+        /**
          * Support indicates connector can accept the COUNT aggregate function
          * 
          * @since 3.1 SP2

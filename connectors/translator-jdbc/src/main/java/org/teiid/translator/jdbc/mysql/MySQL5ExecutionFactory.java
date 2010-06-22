@@ -60,5 +60,10 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
     public boolean supportsInlineViews() {
     	return true;
     }
+    
+    @Override
+    public boolean supportsAggregatesEnhancedNumeric() {
+    	return true;
+    }
 	
 }

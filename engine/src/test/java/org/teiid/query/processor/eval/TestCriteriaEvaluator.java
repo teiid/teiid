@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
-import org.teiid.api.exception.query.CriteriaEvaluationException;
+import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
@@ -59,7 +59,7 @@ public class TestCriteriaEvaluator {
 
 	// ################################## TEST HELPERS ################################
 	
-    private void helpTestMatch(String value, String pattern, char escape, boolean negated, boolean expectedMatch) throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
+    private void helpTestMatch(String value, String pattern, char escape, boolean negated, boolean expectedMatch) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
         MatchCriteria crit = new MatchCriteria(new Constant(value), new Constant(pattern), escape);
         crit.setNegated(negated);
         boolean actualMatch = Evaluator.evaluate(crit);
@@ -67,11 +67,11 @@ public class TestCriteriaEvaluator {
         assertEquals("Match criteria test failed for value=[" + value + "], pattern=[" + pattern + "], hasEscape=" + (escape != MatchCriteria.NULL_ESCAPE_CHAR) + ": ", expectedMatch, actualMatch); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
     
-    private void helpTestMatch(String value, String pattern, char escape, boolean expectedMatch) throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
+    private void helpTestMatch(String value, String pattern, char escape, boolean expectedMatch) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
         helpTestMatch(value, pattern, escape, false, expectedMatch);
     }
 	
-    private void helpTestIsNull(String value, boolean negated, boolean expectedMatch) throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
+    private void helpTestIsNull(String value, boolean negated, boolean expectedMatch) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
         IsNullCriteria criteria = new IsNullCriteria(new Constant(value));
         criteria.setNegated(negated);
         
@@ -79,11 +79,11 @@ public class TestCriteriaEvaluator {
         assertEquals("Result did not match expected value", expectedMatch, result); //$NON-NLS-1$
     }
     
-    private void helpTestSetCriteria(int value, boolean negated, boolean expectedMatch) throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
+    private void helpTestSetCriteria(int value, boolean negated, boolean expectedMatch) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
         helpTestSetCriteria(new Integer(value), negated, expectedMatch);
     }
     
-    private void helpTestSetCriteria(Integer value, boolean negated, boolean expectedMatch) throws CriteriaEvaluationException, BlockedException, TeiidComponentException {
+    private void helpTestSetCriteria(Integer value, boolean negated, boolean expectedMatch) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
         Collection constants = new ArrayList(2);
         constants.add(new Constant(new Integer(1000)));
         constants.add(new Constant(new Integer(5000)));
@@ -93,7 +93,7 @@ public class TestCriteriaEvaluator {
         assertEquals("Result did not match expected value", expectedMatch, result); //$NON-NLS-1$
     }
         
-    private void helpTestCompareSubqueryCriteria(Criteria crit, boolean expectedResult, final Collection values) throws CriteriaEvaluationException, BlockedException, TeiidComponentException{
+    private void helpTestCompareSubqueryCriteria(Criteria crit, boolean expectedResult, final Collection values) throws ExpressionEvaluationException, BlockedException, TeiidComponentException{
         
         Map elementMap = new HashMap();
         ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
@@ -334,7 +334,7 @@ public class TestCriteriaEvaluator {
     @Test public void testMatch49() throws Exception {
         try {
             helpTestMatch("abc", "a", 'a', true); //$NON-NLS-1$ //$NON-NLS-2$
-        } catch (CriteriaEvaluationException cee) {
+        } catch (ExpressionEvaluationException cee) {
             assertEquals("Invalid escape sequence \"a\" with escape character \"a\"", cee.getMessage()); //$NON-NLS-1$
         }
     }
@@ -343,7 +343,7 @@ public class TestCriteriaEvaluator {
     @Test public void testMatch50() throws Exception {
         try {
             helpTestMatch("abc", "ab", 'a', true); //$NON-NLS-1$ //$NON-NLS-2$
-        } catch (CriteriaEvaluationException cee) {
+        } catch (ExpressionEvaluationException cee) {
             assertEquals("Invalid escape sequence \"ab\" with escape character \"a\"", cee.getMessage()); //$NON-NLS-1$
         }
     }
@@ -502,7 +502,7 @@ public class TestCriteriaEvaluator {
         values.add("c"); //$NON-NLS-1$
         try {
         	helpTestCompareSubqueryCriteria(crit, false, values);
-        } catch (CriteriaEvaluationException e) {
+        } catch (ExpressionEvaluationException e) {
         	assertEquals("Error Code:ERR.015.006.0056 Message:The subquery of this compare criteria has to be scalar, but returned more than one value: e1 = (<undefined>)", e.getMessage()); //$NON-NLS-1$
         }
     }

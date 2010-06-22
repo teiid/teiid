@@ -36,6 +36,13 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
  */
 @Translator(name="teiid")
 public class TeiidExecutionFactory extends JDBCExecutionFactory {
+	
+	public static final String SEVEN_0 = "7.0"; //$NON-NLS-1$
+	public static final String SEVEN_1 = "7.1"; //$NON-NLS-1$
+	
+	public TeiidExecutionFactory() {
+		setDatabaseVersion(SEVEN_0);
+	}
     
 	@Override
     public List<String> getSupportedFunctions() {
@@ -159,5 +166,10 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsIntersect() {
     	return true;
+    }
+    
+    @Override
+    public boolean supportsAggregatesEnhancedNumeric() {
+    	return getDatabaseVersion().compareTo(SEVEN_1) >= 0;
     }
 }

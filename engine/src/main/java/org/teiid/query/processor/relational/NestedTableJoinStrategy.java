@@ -25,7 +25,6 @@ package org.teiid.query.processor.relational;
 import java.util.List;
 import java.util.Map;
 
-import org.teiid.api.exception.query.CriteriaEvaluationException;
 import org.teiid.common.buffer.IndexedTupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
@@ -88,7 +87,7 @@ public class NestedTableJoinStrategy extends JoinStrategy {
 	
 	@Override
 	protected void process() throws TeiidComponentException,
-			CriteriaEvaluationException, TeiidProcessingException {
+			TeiidProcessingException {
 		
 		if (leftMap != null && !leftSource.open) {
 			for (Map.Entry<ElementSymbol, Expression> entry : leftMap.asMap().entrySet()) {

@@ -26,8 +26,6 @@ import java.util.Collection;
 import java.util.Set;
 
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.language.SQLConstants.NonReserved;
-import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
@@ -38,11 +36,10 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
+import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.util.ErrorMessageKeys;
-
-
 
 /** 
  * Validate that all ElementSymbol and ExpressionSymbols used in the HAVING 
@@ -72,14 +69,26 @@ public class AggregateValidationVisitor extends AbstractValidationVisitor {
         }
         
         // Verify data type of aggregate expression
-        String aggregateFunction = obj.getAggregateFunction();
-        if((aggregateFunction.equals(NonReserved.SUM) || aggregateFunction.equals(NonReserved.AVG)) && obj.getType() == null) {
+        Type aggregateFunction = obj.getAggregateFunction();
+        if((aggregateFunction == Type.SUM || aggregateFunction == Type.AVG) && obj.getType() == null) {
             handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0041, new Object[] {aggregateFunction, obj}), obj);
-        } else if (aggregateFunction.equals(Reserved.XMLAGG) && obj.getType() != DataTypeManager.DefaultDataClasses.XML) {
-        	handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_xml", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
+        } else if (obj.getType() != DataTypeManager.DefaultDataClasses.NULL) {
+        	if (aggregateFunction == Type.XMLAGG && aggExp.getType() != DataTypeManager.DefaultDataClasses.XML) {
+        		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_xml", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
+        	} else if (obj.isBoolean() && aggExp.getType() != DataTypeManager.DefaultDataClasses.BOOLEAN) {
+        		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_boolean", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
+        	}
         }
-        if((obj.isDistinct() || aggregateFunction.equals(NonReserved.MIN) || aggregateFunction.equals(NonReserved.MAX)) && DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(aggExp.getType()))) {
+        if((obj.isDistinct() || aggregateFunction == Type.MIN || aggregateFunction == Type.MAX) && DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(aggExp.getType()))) {
     		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_comparable", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
+        }
+        if(obj.isEnhancedNumeric()) {
+        	if (!Number.class.isAssignableFrom(aggExp.getType())) {
+        		handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0041, new Object[] {aggregateFunction, obj}), obj);
+        	}
+        	if (obj.isDistinct()) {
+        		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.invalid_distinct", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
+        	}
         }
         validateBelow = false;
     }

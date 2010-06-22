@@ -61,6 +61,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
 import org.teiid.query.tempdata.TempTableStore;
 
@@ -307,8 +308,8 @@ public class MetaDataProcessor {
                                         AggregateSymbol symbol) throws QueryMetadataException, TeiidComponentException {
         
         Expression expression = symbol.getExpression();
-        String function = symbol.getAggregateFunction();
-        if(function.equals(NonReserved.MIN) || function.equals(NonReserved.MAX)){
+        Type function = symbol.getAggregateFunction();
+        if(function == Type.MIN || function == Type.MAX){
             if(expression instanceof ElementSymbol) {
                 return createColumnMetadata(shortColumnName, (ElementSymbol)expression);
             }

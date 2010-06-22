@@ -122,7 +122,7 @@ If the extension pattern is not specified and the path is a directory, then all 
 <para><emphasis>db2</emphasis> - for use with DB2 8 or later.</para>
 </listitem>
 <listitem>
-<para><emphasis>derby</emphasis> - for use with Derby 10.1 or later.  Setting the specific 10.x version improves pushdown support - see the DatabaseVersion execution property.</para>
+<para><emphasis>derby</emphasis> - for use with Derby 10.1 or later.</para>
 </listitem>
 <listitem>
 <para><emphasis>h2</emphasis> - for use with H2 version 1.1 or later.</para>
@@ -146,7 +146,7 @@ If the extension pattern is not specified and the path is a directory, then all 
 <para><emphasis>oracle</emphasis> - for use with Oracle 9i or later.</para>
 </listitem>
 <listitem>
-<para><emphasis>postgresql</emphasis> - for use with 8.0 or later clients and 7.1 or later server.  Setting the specific 8.x version improves pushdown support - see the DatabaseVersion execution property.</para>
+<para><emphasis>postgresql</emphasis> - for use with 8.0 or later clients and 7.1 or later server.</para>
 </listitem>
 <listitem>
 <para><emphasis>sybase</emphasis> - for use with Sybase version 12.5 or later.</para>

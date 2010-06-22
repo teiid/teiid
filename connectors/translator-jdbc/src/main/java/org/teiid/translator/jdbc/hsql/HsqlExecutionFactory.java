@@ -180,4 +180,9 @@ public class HsqlExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsIntersect() {
         return true;
     }
+    
+    @Override
+    public boolean supportsAggregatesEnhancedNumeric() {
+    	return true;
+    }
 }

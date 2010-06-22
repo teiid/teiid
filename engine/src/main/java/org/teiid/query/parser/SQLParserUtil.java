@@ -28,7 +28,6 @@ import java.util.List;
 
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.StringUtil;
-import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.lang.Command;
@@ -234,37 +233,18 @@ public class SQLParserUtil {
      * @param functionType Null for expression, the function name for aggregates
      * @return New unique function name
      */
-    String generateFunctionName(ParseInfo info, String functionType) throws ParseException {
-        if(functionType == null) { 
-            int num = info.anonExprCount++;
-            return "expr" + (num == 0 ? "" : ""+num); //$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
-
-        } else if(functionType.equals(NonReserved.COUNT)) { 
-            int num = info.anonCountCount++;
-            return "count" + (num == 0 ? "" : ""+num);//$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
-
-        } else if(functionType.equals(NonReserved.SUM)) { 
-            int num = info.anonSumCount++;
-            return "sum" + (num == 0 ? "" : ""+num);//$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
-
-        } else if(functionType.equals(NonReserved.AVG)) { 
-            int num = info.anonAvgCount++;
-            return "avg" + (num == 0 ? "" : ""+num);//$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
-
-        } else if(functionType.equals(NonReserved.MIN)) { 
-            int num = info.anonMinCount++;
-            return "min" + (num == 0 ? "" : ""+num);//$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
-
-        } else if(functionType.equals(NonReserved.MAX)) { 
-            int num = info.anonMaxCount++;
-            return "max" + (num == 0 ? "" : ""+num);//$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
-        } else if(functionType.equals(Reserved.XMLAGG)) { 
-            int num = info.anonMaxCount++;
-            return "xmlagg" + (num == 0 ? "" : ""+num);//$NON-NLS-1$   //$NON-NLS-2$   //$NON-NLS-3$
-        } else {
-            Object[] params = new Object[] { functionType };
-            throw new ParseException(QueryPlugin.Util.getString("SQLParser.Unknown_agg_func", params)); //$NON-NLS-1$
+    String generateFunctionName(ParseInfo info, String functionType) {
+    	if (functionType == null) {
+    		functionType = "expr"; //$NON-NLS-1$
+    	} else {
+    		functionType = functionType.toLowerCase();
+    	}
+        Integer num = info.nameCounts.get(functionType);
+        if (num == null) {
+        	num = 0;
         }
+        info.nameCounts.put(functionType, num + 1);
+        return functionType + (num == 0 ? "" : ""+num); //$NON-NLS-1$   //$NON-NLS-2$  
     }
     
     int getOperator(String opString) {

@@ -34,6 +34,10 @@ public class AggregateFunction extends BaseLanguageObject implements Expression 
     public static final String SUM = "SUM"; //$NON-NLS-1$
     public static final String MIN = "MIN"; //$NON-NLS-1$
     public static final String MAX = "MAX";     //$NON-NLS-1$
+    public static final String STDDEV_POP = "STDDEV_POP"; //$NON-NLS-1$
+	public static final String STDDEV_SAMP = "STDDEV_SAMP"; //$NON-NLS-1$
+	public static final String VAR_SAMP = "VAR_SAMP"; //$NON-NLS-1$
+	public static final String VAR_POP = "VAR_POP"; //$NON-NLS-1$
 	
     private Expression expression;
     private String aggName;
@@ -50,11 +54,6 @@ public class AggregateFunction extends BaseLanguageObject implements Expression 
     /** 
      * Get the name of the aggregate function.  This will be one of the constants defined
      * in this class.
-     * @see #COUNT
-     * @see #AVG
-     * @see #SUM
-     * @see #MIN
-     * @see #MAX
      */
     public String getName() {
         return this.aggName;
@@ -88,11 +87,6 @@ public class AggregateFunction extends BaseLanguageObject implements Expression 
      * Set the name of the aggregate function.  This will be one of the constants defined
      * in this class.
      * @param name New aggregate function name
-     * @see #COUNT
-     * @see #AVG
-     * @see #SUM
-     * @see #MIN
-     * @see #MAX
      */
     public void setName(String name) {
         this.aggName = name;

@@ -29,7 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.teiid.api.exception.query.CriteriaEvaluationException;
+import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleSource;
@@ -38,7 +38,6 @@ import org.teiid.logging.LogManager;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
-import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
@@ -180,7 +179,7 @@ public class FakeDataManager implements ProcessorDataManager {
 	    				if(new Evaluator(lookupMap, null, null).evaluate(query.getCriteria(), tuples[i])) {
 	                        filteredTuples.add(tuples[i]);
 	                    }
-	                } catch(CriteriaEvaluationException e) {
+	                } catch(ExpressionEvaluationException e) {
 	                    throw new TeiidComponentException(e, e.getMessage());
 	                }
 			    }
@@ -221,7 +220,7 @@ public class FakeDataManager implements ProcessorDataManager {
 			    				if(new Evaluator(lookupMap, null, null).evaluate(update.getCriteria(), tuples[i])) {
 			                        updated++;
 			                    }
-			                } catch(CriteriaEvaluationException e) {
+			                } catch(ExpressionEvaluationException e) {
 			                    throw new TeiidComponentException(e, e.getMessage());
 			                }
 					    }

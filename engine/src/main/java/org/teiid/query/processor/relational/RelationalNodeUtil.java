@@ -22,7 +22,7 @@
 
 package org.teiid.query.processor.relational;
 
-import org.teiid.api.exception.query.CriteriaEvaluationException;
+import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.eval.Evaluator;
@@ -55,9 +55,10 @@ public class RelationalNodeUtil {
      * @throws TeiidComponentException 
      * @throws BlockedException 
      * @throws TeiidComponentException
+     * @throws ExpressionEvaluationException 
      * @since 4.2
      */
-    private static boolean evaluateCriteria(Criteria criteria) throws CriteriaEvaluationException, TeiidComponentException {
+    private static boolean evaluateCriteria(Criteria criteria) throws TeiidComponentException, ExpressionEvaluationException {
         if(criteria == null) {
             return true;
         }
@@ -72,9 +73,10 @@ public class RelationalNodeUtil {
      * @param simplifyCriteria wheter to simplify the criteria of the command if they always evaluate to true
      * @return true if this command should be executed by the connector; false otherwise.
      * @throws TeiidComponentException
+     * @throws ExpressionEvaluationException 
      * @since 4.2
      */
-    public static boolean shouldExecute(Command command, boolean simplifyCriteria) throws CriteriaEvaluationException, TeiidComponentException {
+    public static boolean shouldExecute(Command command, boolean simplifyCriteria) throws TeiidComponentException, ExpressionEvaluationException {
         int cmdType = command.getType();
         Criteria criteria = null;
         switch(cmdType) {

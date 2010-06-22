@@ -24,7 +24,7 @@ package org.teiid.query.sql.lang;
 
 import java.util.Arrays;
 
-import org.teiid.api.exception.query.CriteriaEvaluationException;
+import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.QueryPlugin;
@@ -250,7 +250,7 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 	        this.newWildCard = newWildCard;
 	    }
 	    
-	    public StringBuffer translate(String pattern, char escape) throws CriteriaEvaluationException {
+	    public StringBuffer translate(String pattern, char escape) throws ExpressionEvaluationException {
 	        
 	        StringBuffer newPattern = new StringBuffer();
 	        
@@ -282,14 +282,14 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 	                }
 	            } else {
 	                if (escaped) {
-	                    throw new CriteriaEvaluationException(QueryPlugin.Util.getString("MatchCriteria.invalid_escape", new Object[] {pattern, new Character(escape)})); //$NON-NLS-1$
+	                    throw new ExpressionEvaluationException(QueryPlugin.Util.getString("MatchCriteria.invalid_escape", new Object[] {pattern, new Character(escape)})); //$NON-NLS-1$
 	                }
 	                appendCharacter(newPattern, character);
 	            }
 	        }
 	        
 	        if (escaped) {
-	            throw new CriteriaEvaluationException(QueryPlugin.Util.getString("MatchCriteria.invalid_escape", new Object[] {pattern, new Character(escape)})); //$NON-NLS-1$	
+	            throw new ExpressionEvaluationException(QueryPlugin.Util.getString("MatchCriteria.invalid_escape", new Object[] {pattern, new Character(escape)})); //$NON-NLS-1$	
 	        }
 	        
 	        return newPattern;
