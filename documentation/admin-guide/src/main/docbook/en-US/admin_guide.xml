@@ -53,6 +53,6 @@
     <xi:include href="content/adminshell.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/appendix-a.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/appendix-b.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    
+    <xi:include href="content/appendix-c.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 </book>
 
