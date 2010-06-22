@@ -37,7 +37,7 @@ import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.translator.SourceSystemFunctions;
 
-
+@SuppressWarnings("nls")
 public class TestAggregatePushdown {
 
 	public static BasicSourceCapabilities getAggregateCapabilities() {
@@ -866,6 +866,38 @@ public class TestAggregatePushdown {
             0,      // Sort
             1       // UnionAll
         }); 
+    }
+    
+    /**
+     * Ensures that we do not raise criteria over a group by
+     * TODO: check if the criteria only depends on grouping columns
+     */
+    @Test public void testForCase836073GroupBy() throws Exception {
+        String sql = "select count(*) from bqt1.smallb where formatdate(bqt1.smallb.DateValue,'yyyyMM') = '200309'"; 
+        
+        // Plan query
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
+                FakeMetadataFactory.exampleBQTCached(),
+                null, getAggregatesFinder(),
+                new String[] {"SELECT g_0.DateValue FROM bqt1.smallb AS g_0"},  
+                              TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING );
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            1,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            1,      // Grouping
+            0,      // Join
+            0,      // MergeJoin
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            1,      // Select
+            0,      // Sort
+            0       // UnionAll
+        });
     }
         
 }

@@ -179,7 +179,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
         		while (selectRoot.getParent() != null && selectRoot.getParent().getType() == NodeConstants.Types.SELECT) {
         			selectRoot = selectRoot.getParent();
         		}
-        		if (selectRoot.getParent() == null || selectRoot.getParent().getType() == NodeConstants.Types.PROJECT) {
+        		if (selectRoot.getParent() == null || (selectRoot.getParent().getType() & (NodeConstants.Types.PROJECT|NodeConstants.Types.GROUP)) == selectRoot.getParent().getType()) {
         			return null;
         		}
     			PlanNode grandParent = selectRoot.getParent();
