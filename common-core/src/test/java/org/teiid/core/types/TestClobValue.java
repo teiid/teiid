@@ -37,6 +37,7 @@ import javax.sql.rowset.serial.SerialClob;
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
 
+@SuppressWarnings("nls")
 public class TestClobValue {
 
     @Test public void testClobValue() throws Exception {

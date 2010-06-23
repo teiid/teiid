@@ -74,7 +74,22 @@ public class ExecResolver extends ProcedureContainerResolver implements Variable
 
         StoredProcedure storedProcedureCommand = (StoredProcedure) command;
         
-        StoredProcedureInfo storedProcedureInfo = metadata.getStoredProcedureInfoForProcedure(storedProcedureCommand.getProcedureName());
+        StoredProcedureInfo storedProcedureInfo = null;
+        try {
+        	storedProcedureInfo = metadata.getStoredProcedureInfoForProcedure(storedProcedureCommand.getProcedureName());
+        } catch (QueryMetadataException e) {
+        	String[] parts = storedProcedureCommand.getProcedureName().split("\\.", 2); //$NON-NLS-1$
+	    	if (parts.length > 1 && parts[0].equalsIgnoreCase(metadata.getVirtualDatabaseName())) {
+	            try {
+	            	storedProcedureInfo = metadata.getStoredProcedureInfoForProcedure(parts[1]);
+	            	storedProcedureCommand.setProcedureName(parts[1]);
+	            } catch(QueryMetadataException e1) {
+	            } 
+	        }
+	    	if (storedProcedureInfo == null) {
+	    		throw e;
+	    	}
+        }
 
         storedProcedureCommand.setUpdateCount(storedProcedureInfo.getUpdateCount());
         storedProcedureCommand.setModelID(storedProcedureInfo.getModelID());

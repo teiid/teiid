@@ -879,22 +879,16 @@ public class ResolverUtil {
 	    // If that didn't work, try to strip a vdb name from potentialID
 	    String vdbName = null;
 	    if(groupID == null) {
-			String newPotentialID = potentialID;
-	        int vdbIndex = potentialID.indexOf(ElementSymbol.SEPARATOR);
-	        if(vdbIndex >= 0) {
-	            String potentialVdbName = potentialID.substring(0, vdbIndex);
-	            if (potentialVdbName.equalsIgnoreCase(metadata.getVirtualDatabaseName())) {
-		            newPotentialID = potentialID.substring(vdbIndex+1);
-		
-		            try {
-		                groupID = metadata.getGroupID(newPotentialID);
-		                vdbName = potentialVdbName;
-		            } catch(QueryMetadataException e) {
-		                // ignore - just didn't find it
-		            } 
-		            if(groupID != null) {
-		            	potentialID = newPotentialID;
-		            }
+	    	String[] parts = potentialID.split("\\.", 2); //$NON-NLS-1$
+	    	if (parts.length > 1 && parts[0].equalsIgnoreCase(metadata.getVirtualDatabaseName())) {
+	            try {
+	                groupID = metadata.getGroupID(parts[1]);
+	            } catch(QueryMetadataException e) {
+	                // ignore - just didn't find it
+	            } 
+	            if(groupID != null) {
+	            	potentialID = parts[1];
+	            	vdbName = parts[0];
 	            }
 	        }
 	    }

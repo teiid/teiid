@@ -697,31 +697,10 @@ public final class StringUtil {
      * @since   JDK1. 0
      */
     public static boolean startsWithIgnoreCase(final String text, final String prefix) {
-        if (isEmpty(text)) {
+        if (text == null || prefix == null) {
             return false;
         }
-        if (prefix == null) {
-            return false;
-        }
-        int textLength   = text.length();
-        int prefixLength = prefix.length();
-        if (prefixLength == 0) {
-            return true;
-        }
-        if (prefixLength > textLength) {
-            return false;
-        }
-        char[] chArray = prefix.toCharArray();
-        for (int i = 0; i != chArray.length; ++i) {
-            char ch1 = chArray[i];
-            char ch2 = text.charAt(i);
-            if (ch1 == ch2 || Character.toLowerCase(ch1) == Character.toLowerCase(ch2)) {
-                // continue
-            } else {
-                return false;
-            }
-        }
-        return true;
+        return text.regionMatches(true, 0, prefix, 0, prefix.length());
     }
     
     /**
@@ -738,32 +717,10 @@ public final class StringUtil {
      *          suffix argument is null <code>false</code> is returned.
      */
     public static boolean endsWithIgnoreCase(final String text, final String suffix) {
-        if (isEmpty(text)) {
+    	if (text == null || suffix == null) {
             return false;
         }
-        if (suffix == null) {
-            return false;
-        }
-        int textLength   = text.length();
-        int suffixLength = suffix.length();
-        if (suffixLength == 0) {
-            return true;
-        }
-        if (suffixLength > textLength) {
-            return false;
-        }
-        int offset = textLength - suffixLength;
-        char[] chArray = suffix.toCharArray();
-        for (int i = 0; i != chArray.length; ++i) {
-            char ch1 = chArray[i];
-            char ch2 = text.charAt(offset + i);
-            if (ch1 == ch2 || Character.toLowerCase(ch1) == Character.toLowerCase(ch2)) {
-                // continue
-            } else {
-                return false;
-            }
-        }
-        return true;
+        return text.regionMatches(true, text.length() - suffix.length(), suffix, 0, suffix.length());
     }
  
     /**
@@ -1064,4 +1021,5 @@ public final class StringUtil {
 	    }
 	    return (String[]) result.toArray(new String[result.size()]);
 	}
+	
 }

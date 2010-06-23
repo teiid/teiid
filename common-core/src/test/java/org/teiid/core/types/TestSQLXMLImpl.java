@@ -22,29 +22,24 @@
 
 package org.teiid.core.types;
 
+import static org.junit.Assert.*;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.sql.SQLException;
 
 import javax.xml.transform.stream.StreamSource;
 
-import org.teiid.core.types.SQLXMLImpl;
-import org.teiid.core.types.Streamable;
+import org.junit.Test;
 import org.teiid.core.util.ObjectConverterUtil;
 
-import junit.framework.TestCase;
-
-
-/**
- * Basically we want to make sure that nobody has changed the fundamental contract
- * of translator
- */
-public class TestSQLXMLImpl extends TestCase {
+@SuppressWarnings("nls")
+public class TestSQLXMLImpl {
 
     String testStr = "<foo>test</foo>"; //$NON-NLS-1$
         
 	//## JDBC4.0-begin ##
-    public void testGetSource() throws Exception {        
+    @Test public void testGetSource() throws Exception {        
         SQLXMLImpl xml = new SQLXMLImpl(testStr);
         assertTrue(xml.getSource(null) instanceof StreamSource);
         
@@ -53,57 +48,62 @@ public class TestSQLXMLImpl extends TestCase {
     }
 	//## JDBC4.0-end ##
     
-    public void testGetCharacterStream() throws Exception {
+    @Test public void testGetCharacterStream() throws Exception {
         SQLXMLImpl xml = new SQLXMLImpl(testStr);
-        assertEquals(testStr, getContents(xml.getCharacterStream()));
+        assertEquals(testStr, ObjectConverterUtil.convertToString(xml.getCharacterStream()));
     }
 
-    public void testGetBinaryStream() throws Exception {
+    @Test public void testGetBinaryStream() throws Exception {
         SQLXMLImpl xml = new SQLXMLImpl(testStr);
         assertEquals(testStr, new String(ObjectConverterUtil.convertToByteArray(xml.getBinaryStream()), Streamable.ENCODING));
     }
 
-    public void testGetString() throws Exception {
+    @Test public void testGetString() throws Exception {
         SQLXMLImpl xml = new SQLXMLImpl(testStr);
         assertEquals(testStr, xml.getString());
     }
 
-    public void testSetBinaryStream() throws Exception {
+    @Test(expected=SQLException.class) public void testSetBinaryStream() throws Exception {
         SQLXMLImpl xml = new SQLXMLImpl(testStr);        
-        try {
-            xml.setBinaryStream();
-            fail("we do not support this yet.."); //$NON-NLS-1$
-        } catch (SQLException e) {
-        }
+        xml.setBinaryStream();
     }
 
-    public void testSetCharacterStream() throws Exception {
+    @Test(expected=SQLException.class) public void testSetCharacterStream() throws Exception {
         SQLXMLImpl xml = new SQLXMLImpl(testStr);        
-        try {
-            xml.setCharacterStream();
-            fail("we do not support this yet.."); //$NON-NLS-1$
-        } catch (SQLException e) {
-        }
+        xml.setCharacterStream();
     }
 
-    public void testSetString() throws Exception {
+    @Test(expected=SQLException.class) public void testSetString() throws Exception {
         SQLXMLImpl xml = new SQLXMLImpl(testStr);        
-        try {
-            xml.setString(testStr);
-            fail("we do not support this yet.."); //$NON-NLS-1$
-        } catch (SQLException e) {
-        }
+        xml.setString(testStr);
     }
     
-    private String getContents(Reader reader) throws IOException {
-        StringBuffer sb = new StringBuffer();
-        int chr = reader.read();
-        while(chr != -1) {
-            sb.append((char)chr);
-            chr = reader.read();
-        }
-        reader.close();       
-        return sb.toString();
-    } 
+    @Test public void testGetString1() throws Exception {
+    	SQLXMLImpl clob = new SQLXMLImpl() {
+    		public java.io.Reader getCharacterStream() throws java.sql.SQLException {
+    			return new Reader() {
+
+    				int pos = 0;
+    				
+					@Override
+					public void close() throws IOException {
+						
+					}
+
+					@Override
+					public int read(char[] cbuf, int off, int len)
+							throws IOException {
+						if (pos < 5) {
+							cbuf[off] = 'a';
+							pos++;
+							return 1;
+						}
+						return -1;
+					}
+    			};
+    		}
+    	};
+    	assertEquals("aaaaa", clob.getString());
+    }
     
 }

@@ -1619,4 +1619,8 @@ public class TestProcedureResolving {
         TestResolver.helpResolve(proc.toString(), FakeMetadataFactory.example1Cached(), null); 
     }
     
+    @Test public void testVDBQualified() throws Exception {
+        helpResolve("EXEC myvdb.pm1.vsp29()", FakeMetadataFactory.example1Cached());   //$NON-NLS-1$
+    }
+    
 }
