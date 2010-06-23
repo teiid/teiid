@@ -88,6 +88,7 @@ import org.teiid.translator.WSConnection.Util;
  */
 public class XMLSystemFunctions {
 	
+	private static final String P_OUTPUT_VALIDATE_STRUCTURE = "com.ctc.wstx.outputValidateStructure";
 	//YEAR 0 in the server timezone. used to determine negative years
     public static long YEAR_ZERO;
     static String DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"; //$NON-NLS-1$
@@ -148,7 +149,7 @@ public class XMLSystemFunctions {
 			public void translate(Writer writer) throws TransformerException,
 					IOException {
 				try {
-					XMLOutputFactory factory = XMLOutputFactory.newInstance();
+					XMLOutputFactory factory = getOutputFactory();
 					XMLEventWriter eventWriter = factory.createXMLEventWriter(writer);
 					XMLEventFactory eventFactory = XMLEventFactory.newInstance();
 					for (Evaluator.NameValuePair nameValuePair : values) {
@@ -157,6 +158,7 @@ public class XMLSystemFunctions {
 						}
 						addElement(nameValuePair.name, writer, eventWriter, eventFactory, namespaces, null, Collections.singletonList(nameValuePair.value));
 					}
+					eventWriter.close();
 				} catch (XMLStreamException e) {
 					throw new TransformerException(e);
 				} 
@@ -183,10 +185,11 @@ public class XMLSystemFunctions {
 			public void translate(Writer writer) throws TransformerException,
 					IOException {
 				try {
-					XMLOutputFactory factory = XMLOutputFactory.newInstance();
+					XMLOutputFactory factory = getOutputFactory();
 					XMLEventWriter eventWriter = factory.createXMLEventWriter(writer);
 					XMLEventFactory eventFactory = XMLEventFactory.newInstance();
 					addElement(name, writer, eventWriter, eventFactory, namespaces, attributes, contents);
+					eventWriter.close();
 				} catch (XMLStreamException e) {
 					throw new TransformerException(e);
 				} 
@@ -256,13 +259,14 @@ public class XMLSystemFunctions {
 			public void translate(Writer writer) throws TransformerException,
 					IOException {
 				try {
-					XMLOutputFactory factory = XMLOutputFactory.newInstance();
+					XMLOutputFactory factory = getOutputFactory();
 					XMLEventWriter eventWriter = factory.createXMLEventWriter(writer);
 					XMLEventFactory eventFactory = XMLEventFactory.newInstance();
 					convertValue(writer, eventWriter, eventFactory, xml);
 					for (Object object : other) {
 						convertValue(writer, eventWriter, eventFactory, object);
 					}
+					eventWriter.flush(); //woodstox needs a flush rather than a close
 				} catch (XMLStreamException e) {
 					throw new TransformerException(e);
 				} 
@@ -270,6 +274,14 @@ public class XMLSystemFunctions {
 		}));
 		result.setType(Type.CONTENT);
 		return result;
+	}
+	
+	private static XMLOutputFactory getOutputFactory() throws FactoryConfigurationError {
+		XMLOutputFactory factory = XMLOutputFactory.newInstance();
+		if (factory.isPropertySupported(P_OUTPUT_VALIDATE_STRUCTURE)) {
+			factory.setProperty(P_OUTPUT_VALIDATE_STRUCTURE, false);
+		}
+		return factory;
 	}
 	
 	public static XMLType xmlPi(String name) {
@@ -302,11 +314,11 @@ public class XMLSystemFunctions {
 		}
 	}
 	
-	static int convertValue(Writer writer, XMLEventWriter eventWriter, XMLEventFactory eventFactory, Object object) throws IOException,
+	static void convertValue(Writer writer, XMLEventWriter eventWriter, XMLEventFactory eventFactory, Object object) throws IOException,
 			FactoryConfigurationError, XMLStreamException,
 			TransformerException {
 		if (object == null) {
-			return 0;
+			return;
 		}
 		Reader r = null;
 		try {
@@ -330,7 +342,6 @@ public class XMLSystemFunctions {
 				r.close();
 			}
 		}
-		return 1;
 		//TODO: blob - with base64 encoding
 	}
 
