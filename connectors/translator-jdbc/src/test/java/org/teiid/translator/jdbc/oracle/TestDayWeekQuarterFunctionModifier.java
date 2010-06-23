@@ -63,9 +63,9 @@ public class TestDayWeekQuarterFunctionModifier extends TestCase {
     }
 
     public void test1() throws Exception {
-        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 10, 5, 0, 0), Timestamp.class);
+        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 10, 5, 0, 10000000), Timestamp.class);
         helpTestMod(arg1, SourceSystemFunctions.DAYOFYEAR, 
-            "to_number(TO_CHAR({ts '2004-01-21 10:05:00.0'}, 'DDD'))"); //$NON-NLS-1$
+            "to_number(TO_CHAR({ts '2004-01-21 10:05:00.01'}, 'DDD'))"); //$NON-NLS-1$
     }
 
     public void test2() throws Exception {
@@ -75,9 +75,9 @@ public class TestDayWeekQuarterFunctionModifier extends TestCase {
     }
     
     public void test9() throws Exception {
-        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 10, 5, 0, 0), Timestamp.class);
+        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 10, 5, 0, 10000000), Timestamp.class);
         helpTestMod(arg1, SourceSystemFunctions.QUARTER,
-            "to_number(TO_CHAR({ts '2004-01-21 10:05:00.0'}, 'Q'))"); //$NON-NLS-1$
+            "to_number(TO_CHAR({ts '2004-01-21 10:05:00.01'}, 'Q'))"); //$NON-NLS-1$
     }
 
     public void test10() throws Exception {

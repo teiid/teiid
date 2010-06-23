@@ -564,9 +564,16 @@ public class TestOracleTranslator {
 
     @Test public void testTimestampLiteral() throws Exception {
         helpTestVisitor(getTestVDB(),
+            "select {ts '2002-12-31 13:59:59.1'} FROM parts", //$NON-NLS-1$
+            null,
+            "SELECT {ts '2002-12-31 13:59:59.1'} FROM PARTS"); //$NON-NLS-1$
+    }
+    
+    @Test public void testTimestampLiteral1() throws Exception {
+        helpTestVisitor(getTestVDB(),
             "select {ts '2002-12-31 13:59:59'} FROM parts", //$NON-NLS-1$
             null,
-            "SELECT {ts '2002-12-31 13:59:59.0'} FROM PARTS"); //$NON-NLS-1$
+            "SELECT to_date('2002-12-31 13:59:59', 'YYYY-MM-DD HH24:MI:SS') FROM PARTS"); //$NON-NLS-1$
     }
 
     @Test public void testUnionOrderByWithThreeBranches() throws Exception {

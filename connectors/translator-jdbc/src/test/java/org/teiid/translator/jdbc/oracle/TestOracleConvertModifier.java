@@ -497,18 +497,18 @@ public class TestOracleConvertModifier {
     // Source = TIMESTAMP
     
     @Test public void testTimestampToString() throws Exception {
-        Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 0);        
-        helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "string", "to_char({ts '2003-11-01 12:05:02.0'}, 'YYYY-MM-DD HH24:MI:SS.FF')"); //$NON-NLS-1$ //$NON-NLS-2$
+        Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 10000000);        
+        helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "string", "to_char({ts '2003-11-01 12:05:02.01'}, 'YYYY-MM-DD HH24:MI:SS.FF')"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testTimestampToDate() throws Exception {
-        Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 0);        
-        helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "date", "trunc(cast({ts '2003-11-01 12:05:02.0'} AS date))"); //$NON-NLS-1$ //$NON-NLS-2$
+        Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 10000000);        
+        helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "date", "trunc(cast({ts '2003-11-01 12:05:02.01'} AS date))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testTimestampToTime() throws Exception {
-        Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 0);        
-        helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "time", "case when {ts '2003-11-01 12:05:02.0'} is null then null else to_date('1970-01-01 ' || to_char({ts '2003-11-01 12:05:02.0'}, 'HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') end"); //$NON-NLS-1$ //$NON-NLS-2$
+        Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 10000000);        
+        helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "time", "case when {ts '2003-11-01 12:05:02.01'} is null then null else to_date('1970-01-01 ' || to_char({ts '2003-11-01 12:05:02.01'}, 'HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') end"); //$NON-NLS-1$ //$NON-NLS-2$
     }    
 
 }

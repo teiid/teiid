@@ -77,9 +77,6 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     private ConnectionImpl driverConnection;
     private Properties execProps;
 
-    // the string which is the XSLT style sheet
-    private String styleSheet;
-
     // fetch size value. This is the default fetch size used by the server
     private int fetchSize = BaseDataSource.DEFAULT_FETCH_SIZE;
 
@@ -821,7 +818,6 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         reqMsg.setExecutionPayload(this.payload);        
         reqMsg.setCursorType(this.resultSetType);
         reqMsg.setFetchSize(this.fetchSize);
-        reqMsg.setStyleSheet(this.styleSheet);
         reqMsg.setRowLimit(this.maxRows);
         reqMsg.setTransactionIsolation(this.driverConnection.getTransactionIsolation());
 
@@ -867,23 +863,6 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 
     long getCurrentRequestID() {
         return this.currentRequestID;
-    }
-
-    /**
-     * <p> This method sets a style sheet to this object. The style sheet is
-     * to perform transformations.
-     * @param reader The reader object from which the styleSheet is to be read
-     * @throws IOException if unable to read the style sheet from the Reader object.
-     */
-    public void attachStylesheet(Reader reader) throws IOException {
-        this.styleSheet = ObjectConverterUtil.convertToString(reader);
-    }
-
-    /**
-     * <p> This method removes any existing style sheet on this object.
-     */
-    public void clearStylesheet() {
-        this.styleSheet = null;
     }
 
     /**

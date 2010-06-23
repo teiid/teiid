@@ -62,9 +62,9 @@ public class TestMonthOrDayNameFunctionModifier extends TestCase {
     }
 
     public void test1() throws Exception {
-        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 10, 5, 0, 0), Timestamp.class);
+        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 10, 5, 0, 10000000), Timestamp.class);
         helpTestMod(arg1, "Month", //$NON-NLS-1$
-            "rtrim(TO_CHAR({ts '2004-01-21 10:05:00.0'}, 'Month'))"); //$NON-NLS-1$
+            "rtrim(TO_CHAR({ts '2004-01-21 10:05:00.01'}, 'Month'))"); //$NON-NLS-1$
     }
 
     public void test2() throws Exception {
@@ -74,9 +74,9 @@ public class TestMonthOrDayNameFunctionModifier extends TestCase {
     }
     
     public void test3() throws Exception {
-        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 10, 5, 0, 0), Timestamp.class);
+        Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 10, 5, 0, 10000000), Timestamp.class);
         helpTestMod(arg1, "Day",  //$NON-NLS-1$
-            "rtrim(TO_CHAR({ts '2004-01-21 10:05:00.0'}, 'Day'))"); //$NON-NLS-1$
+            "rtrim(TO_CHAR({ts '2004-01-21 10:05:00.01'}, 'Day'))"); //$NON-NLS-1$
     }
 
     public void test4() throws Exception {

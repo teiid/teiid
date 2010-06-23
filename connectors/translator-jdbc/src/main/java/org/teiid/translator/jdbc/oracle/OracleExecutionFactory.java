@@ -29,6 +29,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,10 +54,10 @@ import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
@@ -69,6 +70,11 @@ import org.teiid.translator.jdbc.LocateFunctionModifier;
 
 @Translator(name="oracle")
 public class OracleExecutionFactory extends JDBCExecutionFactory {
+
+	private static final String TIME_FORMAT = "HH24:MI:SS"; //$NON-NLS-1$
+	private static final String DATE_FORMAT = "YYYY-MM-DD"; //$NON-NLS-1$
+	private static final String DATETIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT; //$NON-NLS-1$
+	private static final String TIMESTAMP_FORMAT = DATETIME_FORMAT + ".FF";  //$NON-NLS-1$
 
 	/*
 	 * Spatial Functions
@@ -142,17 +148,17 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 				return Arrays.asList("trunc(cast(",function.getParameters().get(0)," AS date))"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		});
-    	convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", "YYYY-MM-DD")); //$NON-NLS-1$ //$NON-NLS-2$
-    	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", "HH24:MI:SS")); //$NON-NLS-1$ //$NON-NLS-2$
+    	convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", DATE_FORMAT)); //$NON-NLS-1$ 
+    	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", TIME_FORMAT)); //$NON-NLS-1$
     	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
 				//if column and type is date, just use date format
 				Expression ex = function.getParameters().get(0);
-				String format = "YYYY-MM-DD HH24:MI:SS.FF"; //$NON-NLS-1$
+				String format = TIMESTAMP_FORMAT; 
 				if (ex instanceof ColumnReference) {
 					if ("date".equals(((ColumnReference)ex).getMetadataObject().getNativeType())) { //$NON-NLS-1$
-						format = "YYYY-MM-DD HH24:MI:SS"; //$NON-NLS-1$
+						format = DATETIME_FORMAT; 
 					}
 				} else if (!(ex instanceof Function) && !(ex instanceof Literal)) {
 					//this isn't needed in every case, but it's simpler than inspecting the expression more
@@ -161,9 +167,9 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 				return Arrays.asList("to_char(", ex, ", '", format, "')"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 		});
-    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DATE, new ConvertModifier.FormatModifier("to_date", "YYYY-MM-DD")); //$NON-NLS-1$ //$NON-NLS-2$
-    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIME, new ConvertModifier.FormatModifier("to_date", "HH24:MI:SS")); //$NON-NLS-1$ //$NON-NLS-2$
-    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", "YYYY-MM-DD HH24:MI:SS.FF")); //$NON-NLS-1$ //$NON-NLS-2$
+    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DATE, new ConvertModifier.FormatModifier("to_date", DATE_FORMAT)); //$NON-NLS-1$ 
+    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIME, new ConvertModifier.FormatModifier("to_date", TIME_FORMAT)); //$NON-NLS-1$ 
+    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", TIMESTAMP_FORMAT)); //$NON-NLS-1$ 
     	convertModifier.addTypeConversion(new ConvertModifier.FormatModifier("to_char"), FunctionModifier.STRING); //$NON-NLS-1$
     	//NOTE: numeric handling in Oracle is split only between integral vs. floating/decimal types
     	convertModifier.addTypeConversion(new ConvertModifier.FormatModifier("to_number"), //$NON-NLS-1$
@@ -508,6 +514,16 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(OracleExecutionFactory.NEAREST_NEIGHBOR_DISTANCE);
         supportedFunctions.add(OracleExecutionFactory.WITHIN_DISTANCE);
         return supportedFunctions;
+    }
+    
+    @Override
+    public String translateLiteralTimestamp(Timestamp timestampValue) {
+    	if (timestampValue.getNanos() == 0) {
+    		String val = formatDateValue(timestampValue);
+    		val = val.substring(0, val.length() - 2);
+    		return "to_date('" + val + "', '" + DATETIME_FORMAT + "')"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    	}
+    	return super.translateLiteralTimestamp(timestampValue);
     }
     
     @Override
