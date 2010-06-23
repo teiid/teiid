@@ -33,7 +33,7 @@
       <emphasis>jdbc:teiid:&lt;VDB-Name&gt;@mm(s)://&lt;host name&gt;:&lt;port&gt;;autoCommitTxn=DETECT</emphasis>
     </para>
     <para>
-      You can use any of these <ulink url="https://www.jboss.org/community/docs/DOC-13157"> optional connection properties </ulink>
+      Check out Client Developer's guide for all the optional connection properties
       in your URL. Here is sample code showing how to make JDBC connection.
     </para>
     <programlisting><![CDATA[public void execute() throws SQLException {
@@ -76,8 +76,7 @@ ds.setPassword("teiid");
 Connection connection = ds.getConnection();
 ...]]></programlisting>
       <para>TeiidDataSource source also provides an option to set optional parameters using the "set" methods on the 
-       data source look. For all the allowable properties at the 
-       <ulink url="https://www.jboss.org/community/docs/DOC-13158">data source properties</ulink>.</para>       
+       data source look. For all the allowable data source properties check out Client Developer's Guide.</para>       
   </sect1>
   <sect1>
   <title>Testing Your Teiid Deployment</title>
@@ -95,7 +94,7 @@ Connection connection = ds.getConnection();
      
   <para>If your application is Web based, you can create data source for your VDB using the above  and treat it as any other JDBC source using 
   <code>org.teiid.jdbc.TeiidDataSource</code> and assigning it a JNDI name. 
-  Refer to <ulink url="https://community.jboss.org/docs/DOC-13888">deployment to application server</ulink> for more information. 
+  Refer to Client Developer's Guide deployment for more information on creating a DataSource. 
   </para>
   <note><para>"embedded" mode is only available in versions of Teiid up to 6.2</para></note>
   </sect1>   
