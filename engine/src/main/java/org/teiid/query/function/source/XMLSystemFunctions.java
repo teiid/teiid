@@ -88,7 +88,7 @@ import org.teiid.translator.WSConnection.Util;
  */
 public class XMLSystemFunctions {
 	
-	private static final String P_OUTPUT_VALIDATE_STRUCTURE = "com.ctc.wstx.outputValidateStructure";
+	private static final String P_OUTPUT_VALIDATE_STRUCTURE = "com.ctc.wstx.outputValidateStructure"; //$NON-NLS-1$
 	//YEAR 0 in the server timezone. used to determine negative years
     public static long YEAR_ZERO;
     static String DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"; //$NON-NLS-1$
@@ -348,23 +348,25 @@ public class XMLSystemFunctions {
 	private static void convertReader(Writer writer,
 			XMLEventWriter eventWriter, Reader r, Type type)
 			throws XMLStreamException, IOException, FactoryConfigurationError {
-		if (!(r instanceof BufferedReader)) {
-			r = new BufferedReader(r);
-		}
 		switch(type) {
 		case CONTENT:
 		case ELEMENT: 
 		case PI:
-		case COMMENT: //write the value directly to the writer
+		case COMMENT: {//write the value directly to the writer
 			eventWriter.flush();
-			int chr = -1;
-			while ((chr = r.read()) != -1) {
-				writer.write(chr);
+			char[] buf = new char[1 << 13];
+			int read = -1;
+			while ((read = r.read(buf)) != -1) {
+				writer.write(buf, 0, read);
 			}
 			break;
+		}
 		case UNKNOWN:  //assume a document
 		case DOCUMENT: //filter the doc declaration
 			XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+			if (!(r instanceof BufferedReader)) {
+				r = new BufferedReader(r);
+			}
 			XMLEventReader eventReader = inputFactory.createXMLEventReader(r);
 			eventReader = inputFactory.createFilteredReader(eventReader, new EventFilter() {
 				@Override
@@ -375,11 +377,11 @@ public class XMLSystemFunctions {
 			eventWriter.add(eventReader);
 			break;
 		case TEXT:
-			CharBuffer buffer = CharBuffer.allocate(1 << 13);
 			XMLEventFactory eventFactory = XMLEventFactory.newInstance();
-			while (r.read(buffer) != -1) {
-				eventWriter.add(eventFactory.createCharacters(new String(buffer.array(), 0, buffer.position())));
-				buffer.reset();
+			char[] buf = new char[1 << 13];
+			int read = -1;
+			while ((read = r.read(buf)) != -1) {
+				eventWriter.add(eventFactory.createCharacters(new String(buf, 0, read)));
 			}
 			break;
 		}
