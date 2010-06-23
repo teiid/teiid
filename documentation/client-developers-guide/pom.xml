@@ -37,7 +37,7 @@
           </dependency>
         </dependencies>
         <configuration>
-          <sourceDocumentName>DataCaching.xml</sourceDocumentName>
+          <sourceDocumentName>main.xml</sourceDocumentName>
           <imageResource>
             <directory>${basedir}/src/main/docbook/en-US</directory>
             <excludes>

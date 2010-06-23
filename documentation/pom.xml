@@ -16,32 +16,6 @@
     <module>reference</module>
     <module>developer-guide</module>
     <module>quick-start-example</module>
+    <module>client-developers-guide</module>
   </modules>
-  <!--<repositories>
-    <repository>
-      <id>apiviz.release</id>
-      <name>APIviz releases</name>
-      <url>http://apiviz.googlecode.com/svn/site/repo/mvn/release</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-  </repositories>-->
-  <pluginRepositories>
-    <pluginRepository>
-      <id>jboss</id>
-      <url>http://repository.jboss.com/maven2</url>
-    </pluginRepository>
-    <pluginRepository>
-      <id>jboss-org</id>
-      <url>http://repository.jboss.org/maven2</url>
-    </pluginRepository>
-    <pluginRepository>
-      <id>jboss-snapshot</id>
-      <url>http://snapshots.jboss.org/maven2</url>
-    </pluginRepository>
-  </pluginRepositories>
 </project>

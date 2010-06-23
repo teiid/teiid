@@ -1,0 +1,460 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/custom.dtd">
+%CustomDTD;
+]>
+<chapter id="teiid_connection">
+    <title>Connecting to Teiid Server</title>
+    
+    <para>The Teiid JDBC API provides Java Database Connectivity (JDBC) access any Virtual Database (VDB) that 
+    is deployed in the Teiid Server. 
+    The Teiid JDBC API supports the JDBC 4.0 specification; however, it is not fully JDBC Compliant.  
+    It does not support advanced features such as updatable result sets or SQL3 data types. </para>
+    
+    <para>Java client applications connecting to a Teiid Server will need to use Java 1.6 JDK. Previous versions of Java is
+    is not supported.</para>
+    
+    <para>Before you can connect to the Teiid Server using the Teiid JDBC API, please do following tasks first.</para>
+    <orderedlist>
+        <listitem> <para>Install the Teiid Server. Check "Admin Guide" for instructions. </para> </listitem>
+        <listitem> <para>Build a Virtual Database (VDB). You can either build a "Dynamic VDB" (Designer not required), 
+        or you can use Eclipse based GUI tool <ulink url="http://www.jboss.org/teiiddesigner.html">Designer</ulink>.          
+        Check "Reference Guide" for instructions on how to build a VDB. If you do not know what VDB is, then start with this 
+        <ulink url="http://www.jboss.org/teiid/basics/virtualdatabases.html">document</ulink>.</para> </listitem>
+        <listitem> <para>Deploy the VDB into Teiid Server. Check "Admin Guide" for instructions. </para> </listitem>
+        <listitem> <para>Start the Teiid Server (JBoss AS), if it is not already running.</para> </listitem>
+    </orderedlist>
+    
+    <para>Now that you have the VDB deployed in Teiid Server, client applications 
+    can connect to Teiid Server and issue SQL queries against deployed VDB using Teiid's JDBC API. If you are new to JDBC, learn about 
+    <ulink url="http://java.sun.com/docs/books/tutorial/jdbc/index.html">JDBC</ulink> here. Teiid kit ships with
+    <code>teiid-{version}-client.jar</code> in the <code>"jboss-install/server/&lt;profile&gt;/lib"</code> directory. This JAR file 
+    contains Teiid JDBC Driver and DataSource classes. Add this JAR to your Java client application's classpath.
+    </para>
+    
+    <orderedlist numeration="arabic">
+        <listitem> <para><code>TeiidDriver</code> - JDBC connections using 
+        <ulink url="http://java.sun.com/javase/6/docs/api/java/sql/DriverManager.html">DriverManager</ulink> class.</para> </listitem>
+        <listitem> <para><code>TeiidDatasource</code> - JDBC connections using 
+        <ulink url="http://java.sun.com/javase/6/docs/api/javax/sql/DataSource.html">DataSource</ulink> class. You can use this to create JDBC XA connections. </para> </listitem>
+    </orderedlist>
+    
+    <sect1 id="driver_connection">
+        <title>Driver Based Connection</title>
+        <para>Add the above jar file in your application's class path and use <code>org.teiid.jdbc.TeiidDriver</code> as the driver class.  
+        Use the following URL format for JDBC connections:
+        </para>
+        
+        <para><emphasis>jdbc:teiid:&lt;vdb-name&gt;@mm[s]://&lt;host&gt;:&lt;port&gt;;[prop-name=prop-value;]*</emphasis></para>
+
+        <para>Where</para>
+        <orderedlist>
+            <listitem><para>&lt;vdb-name&gt; - Name of the VDB you are connecting to</para></listitem>
+            <listitem><para>mm - defines Teiid JDBC protocol, mms defines a secure channel (see how to turn on <link linkend="ssl">SSL</link>)</para></listitem>
+            <listitem><para>&lt;host&gt; - defines the server where the Teiid Server is installed</para></listitem>
+            <listitem><para>&lt;port&gt; - defines the port on which the Teiid Server is listening for incoming JDBC connections.</para></listitem>
+            <listitem><para>[prop-name=prop-value] - additionally you can supply any number of name value pairs separated by semi-colon 
+            [;], further refining the connection. All supported URL properties are defined <link linkend="connection_properties">here</link>.</para></listitem>
+        </orderedlist>
+       
+       <para>Sample Code:</para>
+       <programlisting><![CDATA[
+        public class TeiidClient {
+            public Connection getConnection(String user, String password) throws Exception {
+                String url = "jdbc:teiid:myVDB@mm://localhost:31000;ApplicationName=myApp";
+                Class.forName("org.teiid.jdbc.TeiidDriver");
+                return DriverManager.getConnection(url, user, password);
+            }
+        }       
+       ]]></programlisting>       
+ 
+    </sect1>
+    
+    <sect1 id="datasource_connection">
+        <title>Datasource Based Connection</title>
+        <para>To use a data source based connection use <code>org.teiid.jdbc.TeiidDataSource</code> as the data source class. 
+        If your JDBC connection needs to participate in an XA transaction, you must use the 
+        data source connection. Teiid DataSource class is also Serializable, so it possible for it to be used with
+        JNDI naming services.</para>
+        
+       <para>Sample Code:</para>
+       <programlisting><![CDATA[
+        public class TeiidClient {
+            public Connection getConnection(String user, String password) throws Exception {
+                TeiidDataSource ds = new TeiidDataSource();
+                ds.setUser(user);
+                ds.setPassword(password);
+                ds.setServerName("localhost");
+                ds.setPortNumber(31000);
+                ds.setDatabaseName("myVDB");
+                return ds.getConnection();
+            }
+        }     
+       ]]></programlisting>        
+       
+       <para>All the Teiid Data Source supported properties are defined <link linkend="connection_properties">here</link>.</para>
+       
+       <note><para>Teiid supports the XA protocol, if all sources that Teiid is integrating 
+       also support XA and are configured as XA data sources. If one or more sources are not XA capable, they can be 
+       marked as read-only and still participate in an XA transaction with the remaining sources.</para>
+       </note> 
+    </sect1>
+    
+    <sect1 id="ds_in_jbossas">
+        <title>As Data Source in JBoss AS</title>
+        <para>Teiid can be configured as a JDBC data source in the JBoss Application Server and can be accessed 
+        from the JNDI for your JEE application.  Deploying Teiid as data source in JBoss AS is exactly same as  
+        deploying any other RDBMS resources like Oracle or DB2.  </para>
+        
+        <para>Defining as data source is not limited to 
+        JBoss AS, you can also deploy as data source in Glassfish, Tomcat, Websphere, Weblogic etc servers, however their
+        configuration files are different than JBoss AS. Consult the respective documentation of the environment 
+        in which you are deploying.</para>
+        <orderedlist numeration="arabic">
+            <listitem><para>Copy the <code>teiid-${version}-client.jar</code>  into 
+            <code>&lt;jboss-install&gt;/server/default/lib</code> directory.</para></listitem>
+            <listitem><para>Create a "teiid-ds.xml" file in <code>&lt;jboss-install&gt;/server/&lt;profile&gt;/deploy</code> 
+            directory.  Based on the type of deployment the contents of the deployment file will look like the below 
+            code fragment.</para></listitem>
+        </orderedlist>
+        <sect2 id="as_xa_connection">
+           <title>DataSource based connection</title>
+           <para>The below XML code sample will create  an XA data source in the JBoss AS using the 
+           Teiid DataSource class <code>org.teiid.jdbc.TeiidDataSource</code>. Make sure  
+           you supply the correct DatabaseName, ServerName, Port number and credentials that are specific 
+           to your deployment environment. Then deploy this file into the JBoss AS and access the above data source from 
+           the JNDI in your JEE application with the specified JNDI name.</para>        
+            
+           <programlisting><![CDATA[
+              <datasources>
+              <xa-datasource>
+                <jndi-name>TEIID-DS</jndi-name>
+                <xa-datasource-class>org.teiid.jdbc.TeiidDataSource</xa-datasource-class>
+                <xa-datasource-property name="DatabaseName">myVDB</xa-datasource-property>
+                <xa-datasource-property name="serverName">localhost</xa-datasource-property> 
+                <xa-datasource-property name="portNumber">31000</xa-datasource-property> 
+                <xa-datasource-property name="user">admin</xa-datasource-property> 
+                <xa-datasource-property name="password">password</xa-datasource-property> 
+                <track-connection-by-tx>true</track-connection-by-tx>
+                <isSameRM-override-value>false</isSameRM-override-value>
+                <no-tx-separate-pools />
+            
+                <!-- pool and other JBoss datasource properties -->
+                <min-pool-size>5</min-pool-size> 
+                <max-pool-size>10</max-pool-size>                
+              </xa-datasource>        
+              </datasources> 
+           ]]></programlisting>          
+       </sect2>
+       <sect2 id="as_driver_connection">
+           <title>Driver based connection</title>
+           <para>You can also use Teiid's JDBC driver class <code>org.teiid.jdbc.TeiidDriver</code> to create a data source</para>
+           <programlisting><![CDATA[
+                <datasources> 
+                  <local-tx-datasource> 
+                    <jndi-name>TEIID-DS</jndi-name> 
+                    <connection-url>jdbc:metamatrix:myVDB@mm://localhost:31000</connection-url> 
+                    <driver-class>org.teiid.jdbc.TeiidDriver</driver-class>              
+                    <user-name>admin</user-name>
+                    <password>teiid</password>
+                    
+                    <!-- pool and other JBoss datasource properties -->
+                    <min-pool-size>5</min-pool-size> 
+                    <max-pool-size>10</max-pool-size>
+                  </local-tx-datasource> 
+                </datasources>
+           ]]></programlisting>   
+        </sect2>
+        <sect2 id="local_connection">
+            <title>Local JDBC Connection</title>
+            <para>If you are deploying your client application on the same JBoss AS instance as the Teiid runtime is installed, then
+           there is no reason for your client application to open socket based JDBC connection, as the 
+           both applications are running in the same Java VM process.
+           You can use slightly modified data source configuration to make the "local" connection, that does not involve socket based
+           communication. Here is an example:</para>
+           <programlisting><![CDATA[
+              <datasources>
+              <xa-datasource>
+                <jndi-name>TEIID-DS</jndi-name>
+                <xa-datasource-class>org.teiid.jdbc.TeiidDataSource</xa-datasource-class>
+                <xa-datasource-property name="DatabaseName">myVDB</xa-datasource-property>
+                <xa-datasource-property name="user">admin</xa-datasource-property> 
+                <xa-datasource-property name="password">password</xa-datasource-property> 
+                <track-connection-by-tx>true</track-connection-by-tx>
+                <isSameRM-override-value>false</isSameRM-override-value>
+                <no-tx-separate-pools />
+            
+                <!-- pool and other JBoss datasource properties -->
+                <min-pool-size>5</min-pool-size> 
+                <max-pool-size>10</max-pool-size>                
+              </xa-datasource>        
+              </datasources> 
+           ]]></programlisting>
+           <para>In the absense of the "ServerName" and "PortNumber", the JDBC API will lookup a local Teiid runtime in 
+           the same VM.</para>            
+        </sect2>
+              
+    </sect1>
+    
+    <sect1>
+        <title>Using Multiple Hosts</title>
+        <para>When Teiid Server is deployed on multiple servers for scalbility, then your application that using
+        Teiid JDBC API can automatically use all Teiid Servers in that group. To enable this feature the client application needs 
+        to specify all the Teiid Servers connection information (host name and port number) on the URL connection string. During the
+        connection and authentication, client will randomly pick any one the Teiid server from the list and will have session 
+        established with that server. In the case of failure of the connected server, the client will try to automatically failover 
+        to other available servers, if the "autoFailover" connection property is set to "true". Here is example URL connection string</para>
+        
+           <programlisting><![CDATA[
+            jdbc:teiid:&lt;vdb-name&gt;@mm://host1:31000, host1:31001, host2:31000;version=2
+           ]]></programlisting>        
+        
+        <para>Currently when the fail over happens, the user is re-authenticated with the new server. The clustering 
+        feature coming up in the Teiid 7.1 release will define how the transparent session fail over will occur with out the 
+        re-authentication.</para>
+        
+        <para>You can also use this feature to distribute the query load among various avaialble Teiid Servers available. 
+        Load balancing happens automatically, when you are using a data source along with connection pooling. Each time a connection is 
+        grabbed from the pool, it will randomly select a Teiid Server to distribute the load. Note, that load balacing feature 
+        is not avaialble if you are using Teiid Driver to make your connection.</para>
+        
+        <para>If you are using DataSource to connect to Teiid Server, use "AlternateServers" property/method to define the failover servers.
+        Check out the Javadoc on the format of the string.</para>
+    </sect1>
+    
+    <sect1 id="connection_properties">
+        <title>JDBC Connection Properties</title>
+        <para>The following table shows all the supported connection properties that can used with Teiid 
+        JDBC Driver URL connection string, or on the Teiid JDBC Data Source class.</para>
+
+        <table frame='all'>
+            <title>Connection Properties</title>
+            <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+                <colspec colname='c1' colwidth="1*" />
+                <colspec colname='c2' colwidth="1*" />
+                <colspec colname='c3' colwidth="2*" />
+                <thead>
+                    <row>
+                        <entry>Property Name</entry>
+                        <entry>Type</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>
+                            <code>ApplicationName</code>
+                        </entry>
+                        <entry>
+                            <code>String</code>
+                        </entry>
+                        <entry>Name of the client application; allows the administrator to identify the connections</entry>
+                    </row>
+                      <row>
+                        <entry>
+                            <code>FetchSize</code>
+                        </entry>
+                        <entry>
+                            <code>int</code>
+                        </entry>
+                        <entry>Size of the resultset; The default size if 500. &lt;=0 indicates that the value is not set</entry>
+                    </row>
+                      <row>
+                        <entry>
+                            <code>partialResultsMode</code>
+                        </entry>
+                        <entry>
+                            <code>String</code>
+                        </entry>
+                        <entry>Enable/disable support partial results mode. Default is "off". Allowed values are "on" or "off"</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <code>autoCommitTxn</code>
+                        </entry>
+                        <entry>
+                            <code>String</code>
+                        </entry>
+                        <entry>Only applies only when "autoCommit" is set to "true".
+
+                                This determines how a executed command needs to be transactionally wrapped inside the 
+                                Teiid engine to maintain the data integrity.
+                                <orderedlist>
+                                    <listitem><para>ON  - Always wrap command in distributed transaction</para></listitem>
+                                    <listitem><para>OFF - Never wrap command in distributed transaction</para></listitem>
+                                    <listitem><para>DETECT (default)- If the executed command is spanning more than one source it automatically uses distributed transaction.</para></listitem>
+                                </orderedlist>
+                        </entry>
+                    </row>
+                      <row>
+                        <entry>
+                            <code>disableLocalTxn</code>
+                        </entry>
+                        <entry>
+                            <code>boolean</code>
+                        </entry>
+                        <entry> If "true", the autoCommit setting, commit and rollback will be ignored for local transactions.</entry>
+                    </row>
+                      <row>
+                        <entry>
+                            <code>user</code>
+                        </entry>
+                        <entry>
+                            <code>String</code>
+                        </entry>
+                        <entry>User name</entry>
+                    </row>
+                      <row>
+                        <entry>
+                            <code>Password</code>
+                        </entry>
+                        <entry>
+                            <code>String</code>
+                        </entry>
+                        <entry>Credential for user</entry>
+                    </row>
+                      <row>
+                        <entry>
+                            <code>ansiQuotedIdentifiers</code>
+                        </entry>
+                        <entry>
+                            <code>boolean</code>
+                        </entry>
+                        <entry>Sets the parsing behavior for double quoted entries in SQL.  The default, true, parses dobuled 
+                        quoted entries as identifiers.  If set to false, then double quoted values that 
+                        are valid string literals will be parsed as string literals.</entry>
+                    </row>
+                      <row>
+                        <entry>
+                            <code>version</code>
+                        </entry>
+                        <entry>
+                            <code>integer</code>
+                        </entry>
+                        <entry>Version number of the VDB</entry>
+                    </row>
+                    
+                      <row>
+                        <entry>
+                            <code>resultSetCacheMode</code>
+                        </entry>
+                        <entry>
+                            <code>boolean</code>
+                        </entry>
+                        <entry>ResultSet caching is turned on/off; Valid values are true|false</entry>
+                    </row>     
+                    
+                    <row>
+                        <entry>
+                            <code>SHOWPLAN</code>
+                        </entry>
+                        <entry>
+                            <code>String</code>
+                        </entry>
+                        <entry>Can be one of ON|OFF|DEBUG</entry>
+                    </row>
+                    
+                    <row>
+                        <entry>
+                            <code>NoExec</code>
+                        </entry>
+                        <entry>
+                            <code>boolean</code>
+                        </entry>
+                        <entry>true|false</entry>
+                    </row>                    
+                    
+                    <row>
+                        <entry>
+                            <code>autoFailover</code>
+                        </entry>
+                        <entry>
+                            <code>boolean</code>
+                        </entry>
+                        <entry>If true, will automatically select a new server instance after a communication exception.</entry>
+                    </row>                    
+                </tbody>
+            </tgroup>
+        </table>      
+        
+        <para>All the above properties have "set" methods on the <code>org.teiid.jdbc.TeiidDataSource</code>. 
+        Some of the the properties that are assumed from the URL string have addtional "set" methods, those proeprties are described in the
+        following table.</para>         
+        
+        <table frame='all'>
+            <title>Datasource Properties</title>
+            <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+                <colspec colname='c1' colwidth="1*" />
+                <colspec colname='c2' colwidth="1*" />
+                <colspec colname='c3' colwidth="2*" />
+                <thead>
+                    <row>
+                        <entry>Property Name</entry>
+                        <entry>Type</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>
+                            <code>DatabaseName</code>
+                        </entry>
+                        <entry>
+                            <code>String</code>
+                        </entry>
+                        <entry>The name of a virtual database (VDB) deployed to Teiid</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <code>ServerName</code>
+                        </entry>
+                        <entry>
+                            <code>String</code>
+                        </entry>
+                        <entry>Server where the Teiid runtime installed</entry>
+                    </row>
+                   <row>
+                        <entry>
+                            <code>PortNumber</code>
+                        </entry>
+                        <entry>
+                            <code>integer</code>
+                        </entry>
+                        <entry>Port number on which the Server process is listening on.</entry>
+                    </row>
+                   <row>
+                        <entry>
+                            <code>secure</code>
+                        </entry>
+                        <entry>
+                            <code>boolean</code>
+                        </entry>
+                        <entry>Secure connection. Flag to indicate to use SSH based connection between client and server</entry>
+                    </row>
+                   <row>
+                        <entry>
+                            <code>DatabaseVersion</code>
+                        </entry>
+                        <entry>
+                            <code>integer</code>
+                        </entry>
+                        <entry>VDB version</entry>
+                    </row>
+                   <row>
+                        <entry>
+                            <code>DataSourceName</code>
+                        </entry>
+                        <entry>
+                            <code>String</code>
+                        </entry>
+                        <entry>Name given to this data source</entry>
+                    </row>                                                                                                                                         
+                </tbody>
+            </tgroup>
+        </table>          
+        
+        <para>Once you have established a connection with the Teiid Server, you can use any standard JDBC API like 
+        DatabaseMetadata and ResultSetMetadata classes to interrogate metadata of the deployed VDB. You can also use        
+         data processing classes and objects and process the results. </para>            
+    </sect1>
+</chapter>
