@@ -418,5 +418,12 @@ public class TestSQLStringVisitor  {
     	Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
     	assertEquals("SELECT g_0.IntKey AS c_0 FROM SmallA AS g_0 ORDER BY c_0", command.toString()); //$NON-NLS-1$
     }
+    
+    @Test public void testOrderByNullOrdering() throws Exception {
+    	String sql = "select intkey as x from bqt1.smalla order by x nulls first"; //$NON-NLS-1$ 
+    	
+    	Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
+    	assertEquals("SELECT g_0.IntKey AS c_0 FROM SmallA AS g_0 ORDER BY c_0 NULLS FIRST", command.toString()); //$NON-NLS-1$
+    }
 
 }

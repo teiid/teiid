@@ -972,7 +972,18 @@ int count = visitor.getCount();
                   <para>OrderBy</para>
                 </entry>
                 <entry>
-                  <para>Translator can support the ORDER BY items that are not directly specified in the select clause.</para>
+                  <para>Translator can support ORDER BY items that are not directly specified in the select clause.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>OrderByNullOrdering</para>
+                </entry>
+                <entry>
+                  <para>OrderBy</para>
+                </entry>
+                <entry>
+                  <para>Translator can support ORDER BY items with NULLS FIRST/LAST.</para>
                 </entry>
               </row>
               <row>
@@ -1299,6 +1310,11 @@ int count = visitor.getCount();
 			to indicate that the Translator accepts update commands containg multi valued Literals.</para>
 		<para>Note that if the translator does not support either of these
 			update modes, the query engine will compensate by issuing the updates 	individually.</para>
+      </sect3>
+      
+      <sect3>
+      	<title>Default Behavior</title>
+      	<para>The method <code>ExecutionFactory.getDefaultNullOrder()</code> specifies the default null order.  Can be one of UNKNOWN, LOW, HIGH, FIRST, LAST.  This is only used if ORDER BY is supported, but null ordering is not.</para>
       </sect3>
       
    </sect2>

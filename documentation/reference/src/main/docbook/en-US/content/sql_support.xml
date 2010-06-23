@@ -113,8 +113,7 @@
     <title>Expressions</title>
     <para> Identifiers, literals, and functions can be combined into
       expressions. Expressions can be used almost anywhere in a query --
-      SELECT, FROM (if specifying join criteria, WHERE, GROUP BY, HAVING.
-      However you currently cannot use expressions in an ORDER BY clause.</para>
+      SELECT, FROM (if specifying join criteria), WHERE, GROUP BY, HAVING, or ORDER BY.</para>
     <itemizedlist>
       <para>Teiid supports the following types of expressions:
       </para>
@@ -973,7 +972,7 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
       </para>
       <para>
         Usage:
-        <synopsis label="Usage">ORDER BY expression [ASC|DESC], ...</synopsis>
+        <synopsis label="Usage">ORDER BY expression [ASC|DESC] [NULLS (FIRST|LAST)], ...</synopsis>
       </para>
       <itemizedlist>
         <para>Syntax Rules:
@@ -1003,6 +1002,12 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
           <para>If an ORDER BY is used in an inline view or view
 	         definition without a limit clause, it will be removed by the Teiid
 	         optimizer.</para>
+        </listitem>
+        <listitem>
+        	<para>If NULLS FIRST/LAST is specified, then nulls are guaranteed to be sorted either first or last.  If the null ordering is not specified, then results will 
+        	typically be sorted with nulls as low values, which is Teiid's internal default sorting behavior.   
+        	However not all sources return results with nulss sorted as low values by default, and Teiid may return results with different null orderings. 
+        	</para>
         </listitem>
       </itemizedlist>
       <warning>

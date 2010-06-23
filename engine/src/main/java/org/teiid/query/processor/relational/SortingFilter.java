@@ -35,6 +35,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.function.aggregate.AggregateFunction;
 import org.teiid.query.processor.relational.SortUtility.Mode;
+import org.teiid.query.sql.lang.OrderByItem;
 
 /**
  */
@@ -49,8 +50,7 @@ public class SortingFilter extends AggregateFunction {
 
     // Derived and static - can be reused
     private List elements;
-    private List sortTypes;
-    private List sortElements;
+    private List<OrderByItem> sortItems;
     
     private int[] indecies = NO_INDECIES;
 
@@ -78,16 +78,12 @@ public class SortingFilter extends AggregateFunction {
 		this.elements = elements;
 	}
     
-    public void setSortTypes(List sortTypes) {
-		this.sortTypes = sortTypes;
-	}
-    
     public void setIndecies(int[] indecies) {
 		this.indecies = indecies;
 	}
     
-    public void setSortElements(List sortElements) {
-		this.sortElements = sortElements;
+    public void setSortItems(List<OrderByItem> sortItems) {
+		this.sortItems = sortItems;
 	}
     
     /**
@@ -138,7 +134,7 @@ public class SortingFilter extends AggregateFunction {
 
             // Sort
             if (sortUtility == null) {
-            	sortUtility = new SortUtility(collectionBuffer.createIndexedTupleSource(), sortElements, sortTypes, removeDuplicates?Mode.DUP_REMOVE_SORT:Mode.SORT, mgr, groupName);
+            	sortUtility = new SortUtility(collectionBuffer.createIndexedTupleSource(), sortItems, removeDuplicates?Mode.DUP_REMOVE_SORT:Mode.SORT, mgr, groupName);
             }
             TupleBuffer sorted = sortUtility.sort();
             sorted.setForwardOnly(true);

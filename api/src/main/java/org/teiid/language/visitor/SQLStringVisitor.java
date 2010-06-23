@@ -650,6 +650,12 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
             buffer.append(Tokens.SPACE)
                   .append(DESC);
         } // Don't print default "ASC"
+        if (obj.getNullOrdering() != null) {
+        	buffer.append(Tokens.SPACE)
+            	.append(NonReserved.NULLS)
+        		.append(Tokens.SPACE)
+        		.append(obj.getNullOrdering().name());
+        }
     }
 
     public void visit(Argument obj) {

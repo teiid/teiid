@@ -36,7 +36,6 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SQLConstants.Tokens;
-import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.AtomicCriteria;
@@ -126,7 +125,6 @@ import org.teiid.query.sql.symbol.XMLQuery;
 import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.sql.symbol.XMLNamespaces.NamespaceItem;
 import org.teiid.translator.SourceSystemFunctions;
-
 
 /**
  * <p>The SQLStringVisitor will visit a set of language objects and return the
@@ -726,6 +724,12 @@ public class SQLStringVisitor extends LanguageVisitor {
             parts.add(SPACE);
             parts.add(DESC);
         } // Don't print default "ASC"
+        if (obj.getNullOrdering() != null) {
+        	parts.add(SPACE);
+        	parts.add(NonReserved.NULLS);
+        	parts.add(SPACE);
+        	parts.add(obj.getNullOrdering().name());
+        }
     }
     
     public void visit(DynamicCommand obj) {

@@ -7254,30 +7254,6 @@ public class TestProcessor {
     }           
     
     /**
-     * A control test to ensure that y will still exist for sorting
-     */
-    @Test public void testOrderByWithDuplicateExpressions() throws Exception {
-        String sql = "select e1 as x, e1 as y from pm1.g1 order by y ASC"; //$NON-NLS-1$
-        
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata);
-        
-        List[] expected = new List[] { 
-            Arrays.asList(null, null),
-            Arrays.asList("a", "a"), //$NON-NLS-1$ //$NON-NLS-2$
-            Arrays.asList("a", "a"), //$NON-NLS-1$ //$NON-NLS-2$
-            Arrays.asList("a", "a"), //$NON-NLS-1$ //$NON-NLS-2$
-            Arrays.asList("b", "b"), //$NON-NLS-1$ //$NON-NLS-2$
-            Arrays.asList("c", "c"), //$NON-NLS-1$ //$NON-NLS-2$
-        };
-
-        FakeDataManager manager = new FakeDataManager();
-        sampleData1(manager);
-        helpProcess(plan, manager, expected);
-    }
-    
-    /**
      * This is a control test.  It should work regardless of whether the reference is aliased
      * since accessnodes are now fully positional
      */
@@ -7368,47 +7344,6 @@ public class TestProcessor {
         assertEquals(2, dataManager.getCommandHistory().size());
     }
     
-    @Test public void testOrderByOutsideOfSelect() {
-        // Create query 
-        String sql = "SELECT e1 FROM (select e1, e2 || e3 as e2 from pm1.g2) x order by e2"; //$NON-NLS-1$
-        
-        //a, a, null, c, b, a
-        // Create expected results
-        List[] expected = new List[] { 
-            Arrays.asList("a"),
-            Arrays.asList("a"),
-            Arrays.asList(new String[] {null}),
-            Arrays.asList("c"),
-            Arrays.asList("b"),
-            Arrays.asList("a"),
-        };    
-    
-        // Construct data manager with data
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        // Plan query
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
-        
-        // Run query
-        helpProcess(plan, dataManager, expected);
-    }
-    
-    @Test public void testOrderByUnrelatedExpression() {
-        String sql = "SELECT e1, e2 + 1 from pm1.g2 order by e3 || e2 limit 1"; //$NON-NLS-1$
-        
-        List[] expected = new List[] { 
-            Arrays.asList("a", 1),
-        };    
-    
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
-        
-        helpProcess(plan, dataManager, expected);
-    }
-
     /**
      * Test a query that uses ambiguous alias names in the top level query and 
      * its sub-query and uses columns belonging to the alias as a parameter to a 
@@ -7441,21 +7376,6 @@ public class TestProcessor {
         FakeDataManager manager = new FakeDataManager();
         sampleData1(manager);
         helpProcess(plan, manager, expected);
-    }
-    
-    @Test public void testOrderByDescAll() {
-        String sql = "SELECT distinct e1 from pm1.g2 order by e1 desc limit 1"; //$NON-NLS-1$
-        
-        List[] expected = new List[] { 
-            Arrays.asList("c"),
-        };    
-    
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
-        
-        helpProcess(plan, dataManager, expected);
     }
     
     @Test public void testImplicitAggregateWithInlineView() {

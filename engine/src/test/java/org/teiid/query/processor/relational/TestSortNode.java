@@ -40,9 +40,7 @@ import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.query.processor.relational.ListNestedSortComparator;
-import org.teiid.query.processor.relational.SortNode;
-import org.teiid.query.processor.relational.SortUtility;
+import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -63,7 +61,7 @@ public class TestSortNode {
         dataNode.initialize(context, mgr, null);    
         
         SortNode sortNode = new SortNode(1);
-    	sortNode.setSortElements(sortElements, sortTypes);
+    	sortNode.setSortElements(new OrderBy(sortElements, sortTypes).getOrderByItems());
         sortNode.setMode(mode);
         sortNode.setElements(elements);
         sortNode.addChild(dataNode);        
@@ -133,11 +131,11 @@ public class TestSortNode {
         
         int rows = batches * BATCH_SIZE;
 
-        ListNestedSortComparator comparator = new ListNestedSortComparator(new int[] {0}, OrderBy.DESC);
+        ListNestedSortComparator<Integer> comparator = new ListNestedSortComparator<Integer>(new int[] {0}, OrderBy.DESC);
 
-        List[] expected = new List[rows];
-        List[] data = new List[rows];
-        TreeSet<List> distinct = new TreeSet<List>(comparator);
+        List<Integer>[] expected = new List[rows];
+        List<Integer>[] data = new List[rows];
+        TreeSet<List<Integer>> distinct = new TreeSet<List<Integer>>(comparator);
         for(int i=0; i<rows; i++) { 
             Integer value = new Integer((i*51) % 11);
             data[i] = Arrays.asList(value);
@@ -157,6 +155,26 @@ public class TestSortNode {
         for (Mode mode : Mode.values()) {
     		helpTestSort(elements, data, sortElements, sortTypes, mode==Mode.SORT?expected:expectedDistinct, mode);
         }
+    }
+    
+    @Test public void testComparatorNullOrdering() {
+    	ListNestedSortComparator<Integer> comparator = new ListNestedSortComparator<Integer>(new int[] {0}, OrderBy.DESC);
+    	comparator.setNullOrdering(Arrays.asList(NullOrdering.FIRST));
+    	List<Integer>[] data = new List[3];
+        data[0] = Arrays.asList(1);
+        data[1] = Arrays.asList((Integer)null);
+        data[2] = Arrays.asList(2);
+        Arrays.sort(data, comparator);
+        assertNull(data[0].get(0));
+        comparator.setNullOrdering(Arrays.asList(NullOrdering.LAST));
+        Arrays.sort(data, comparator);
+        assertNull(data[2].get(0));
+        comparator = new ListNestedSortComparator<Integer>(new int[] {0}, OrderBy.ASC);
+        Arrays.sort(data, comparator);
+        assertNull(data[0].get(0));
+        comparator.setNullOrdering(Arrays.asList(NullOrdering.LAST));
+        Arrays.sort(data, comparator);
+        assertNull(data[2].get(0));
     }
         
     @Test public void testNoSort() throws Exception {

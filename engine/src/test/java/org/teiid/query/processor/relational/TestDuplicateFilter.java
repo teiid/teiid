@@ -56,7 +56,6 @@ public class TestDuplicateFilter extends TestCase {
         ElementSymbol element = new ElementSymbol("val"); //$NON-NLS-1$
         element.setType(dataType);
         filter.setElements(Arrays.asList(element));
-        filter.setSortElements(filter.getElements());
         filter.reset();
         
         // Add inputs

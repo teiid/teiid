@@ -435,7 +435,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     }
     
     @Override
-    public boolean supportsExplicitNullOrdering() {
+    public boolean supportsOrderByNullOrdering() {
     	return true;
     }    
     

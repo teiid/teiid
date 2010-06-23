@@ -304,7 +304,7 @@ public class TestRuleMergeVirtual {
         		new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$  
         
         SortNode node = (SortNode)plan.getRootNode();
-        assertTrue("Alias was not accounted for in sort node", node.getElements().containsAll(node.getSortElements())); //$NON-NLS-1$
+        assertTrue("Alias was not accounted for in sort node", node.getElements().get(0).equals(node.getSortElements().get(0).getSymbol())); //$NON-NLS-1$
     }
     
     @Test public void testMergeImplicitGroupBy() throws Exception {

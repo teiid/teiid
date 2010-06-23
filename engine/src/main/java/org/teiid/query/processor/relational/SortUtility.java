@@ -39,11 +39,12 @@ import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
+import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 
 
 /**
@@ -106,7 +107,7 @@ public class SortUtility {
     private static final int DONE = 3;
 	private Collection<List<?>> workingTuples;
     
-    public SortUtility(TupleSource sourceID, List sortElements, List<Boolean> sortTypes, Mode mode, BufferManager bufferMgr,
+    public SortUtility(TupleSource sourceID, List<OrderByItem> items, Mode mode, BufferManager bufferMgr,
                         String groupName) {
         this.source = sourceID;
         this.mode = mode;
@@ -114,34 +115,49 @@ public class SortUtility {
         this.groupName = groupName;
         this.schema = this.source.getSchema();
         this.schemaSize = bufferManager.getSchemaSize(this.schema);
-        int distinctIndex = sortElements != null? sortElements.size() - 1:0;
-        if (mode != Mode.SORT) {
-	        if (sortElements == null) {
-	    		sortElements = this.schema;
-	    		sortTypes = Collections.nCopies(sortElements.size(), OrderBy.ASC);
-	        } else if (sortElements.size() < schema.size()) {
-	        	sortElements = new ArrayList(sortElements);
+        int distinctIndex = items != null? items.size() - 1:0;
+        List<Expression> sortElements = null;
+        List<Boolean> sortTypes = null;
+        List<NullOrdering> nullOrderings = null;
+        if (items == null) {
+    		sortElements = (List<Expression>) this.schema;
+    		sortTypes = Collections.nCopies(sortElements.size(), OrderBy.ASC);
+        } else {
+        	sortElements = new ArrayList(items.size());
+        	sortTypes = new ArrayList<Boolean>(items.size());
+        	nullOrderings = new ArrayList<NullOrdering>(items.size());
+        	for (OrderByItem orderByItem : items) {
+				sortElements.add(orderByItem.getSymbol());
+				sortTypes.add(orderByItem.isAscending());
+				nullOrderings.add(orderByItem.getNullOrdering());
+			}
+            if (items.size() < schema.size() && mode != Mode.SORT) {
 	        	List<Expression> toAdd = new ArrayList<Expression>(schema);
 	        	toAdd.removeAll(sortElements);
 	        	sortElements.addAll(toAdd);
-	        	sortTypes = new ArrayList<Boolean>(sortTypes);
 	        	sortTypes.addAll(Collections.nCopies(sortElements.size() - sortTypes.size(), OrderBy.ASC));
-        	}
+	        	nullOrderings.addAll(Collections.nCopies(sortElements.size() - nullOrderings.size(), (NullOrdering)null));
+            }
         }
         
         int[] cols = new int[sortElements.size()];
-
-        for (ListIterator<SingleElementSymbol> iter = sortElements.listIterator(); iter.hasNext();) {
-            SingleElementSymbol elem = iter.next();
+        for (ListIterator<Expression> iter = sortElements.listIterator(); iter.hasNext();) {
+        	Expression elem = iter.next();
             
             cols[iter.previousIndex()] = schema.indexOf(elem);
             Assertion.assertTrue(cols[iter.previousIndex()] != -1);
         }
         this.comparator = new ListNestedSortComparator(cols, sortTypes);
         this.comparator.setDistinctIndex(distinctIndex);
+        this.comparator.setNullOrdering(nullOrderings);
     }
     
-    public boolean isDone() {
+    public SortUtility(TupleSource ts, List expressions, List<Boolean> types,
+			Mode mode, BufferManager bufferManager, String connectionID) {
+		this(ts, new OrderBy(expressions, types).getOrderByItems(), mode, bufferManager, connectionID);
+	}
+
+	public boolean isDone() {
     	return this.doneReading && this.phase == DONE;
     }
     

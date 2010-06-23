@@ -22,6 +22,7 @@
 
 package org.teiid.query.sql.lang;
 
+import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
@@ -34,6 +35,7 @@ public class OrderByItem implements LanguageObject {
 	private Integer expressionPosition; //set during resolving to the select clause position
 	private boolean ascending = true;
 	private SingleElementSymbol symbol;
+	private NullOrdering nullOrdering;
 
 	public OrderByItem(SingleElementSymbol symbol, boolean ascending) {
 		this.symbol = symbol;
@@ -63,6 +65,14 @@ public class OrderByItem implements LanguageObject {
 	public void setSymbol(SingleElementSymbol symbol) {
 		this.symbol = symbol;
 	}
+	
+	public NullOrdering getNullOrdering() {
+		return nullOrdering;
+	}
+	
+	public void setNullOrdering(NullOrdering nullOrdering) {
+		this.nullOrdering = nullOrdering;
+	}
 
 	/**
 	 * 
@@ -81,6 +91,7 @@ public class OrderByItem implements LanguageObject {
 	public OrderByItem clone() {
 		OrderByItem clone = new OrderByItem((SingleElementSymbol)this.symbol.clone(), ascending);
 		clone.expressionPosition = this.expressionPosition;
+		clone.nullOrdering = this.nullOrdering;
 		return clone;
 	}
 	
@@ -93,7 +104,7 @@ public class OrderByItem implements LanguageObject {
 			return false;
 		}
 		OrderByItem o = (OrderByItem)obj;
-		return o.symbol.equals(symbol) && o.ascending == this.ascending;
+		return o.symbol.equals(symbol) && o.ascending == this.ascending && o.nullOrdering == this.nullOrdering;
 	}
 	
 	@Override

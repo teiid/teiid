@@ -129,4 +129,9 @@ public class MetaMatrixExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsRowOffset() {
         return true;
     }
+    
+    @Override
+    public NullOrder getDefaultNullOrder() {
+    	return NullOrder.UNKNOWN;
+    }
 }

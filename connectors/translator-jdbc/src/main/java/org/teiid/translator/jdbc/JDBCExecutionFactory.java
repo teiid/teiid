@@ -81,13 +81,6 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 
 	public static final int DEFAULT_MAX_IN_CRITERIA = 1000;
 
-	public enum NullOrder {
-		HIGH,
-		LOW,
-		FIRST,
-		LAST
-	}
-	
 	// Because the retrieveValue() method will be hit for every value of 
     // every JDBC result set returned, we do lots of weird special stuff here 
     // to improve the performance (most importantly to remove big if/else checks
@@ -1056,20 +1049,9 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     	return false;
     }
     
-    /**
-     * Returns the default null ordering
-     * @return the {@link NullOrder}
-     */
+    @Override
     public NullOrder getDefaultNullOrder() {
     	return NullOrder.LOW;
-    }
-    
-    /**
-     * Returns whether the database supports explicit join ordering.
-     * @return true if nulls high|low can be specified
-     */
-    public boolean supportsExplicitNullOrdering() {
-    	return false;
     }
     
     /**

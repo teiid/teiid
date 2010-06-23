@@ -71,6 +71,14 @@ public class ExecutionFactory<F, C> {
 		 */
 		KEY
 	}
+	
+	public enum NullOrder {
+		HIGH,
+		LOW,
+		FIRST,
+		LAST,
+		UNKNOWN
+	}
 
 	public static final int DEFAULT_MAX_FROM_GROUPS = -1;
 	public static final int DEFAULT_MAX_IN_CRITERIA_SIZE = -1;
@@ -461,6 +469,24 @@ public class ExecutionFactory<F, C> {
     public boolean supportsOrderByUnrelated() {
     	return false;
     }
+    
+    /**
+     * Returns the default null ordering
+     * @since 7.1
+     * @return the {@link NullOrder}
+     */
+    public NullOrder getDefaultNullOrder() {
+    	return NullOrder.UNKNOWN;
+    }
+    
+	/**
+	 * Returns whether the database supports explicit join ordering.
+	 * @since 7.1
+	 * @return true if nulls high|low can be specified
+	 */
+	public boolean supportsOrderByNullOrdering() {
+		return false;
+	}
     
     /**
      * Whether the source supports an explicit GROUP BY clause

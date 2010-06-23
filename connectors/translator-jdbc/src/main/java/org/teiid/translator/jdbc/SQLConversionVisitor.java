@@ -47,16 +47,13 @@ import org.teiid.language.Like;
 import org.teiid.language.Literal;
 import org.teiid.language.SearchedCase;
 import org.teiid.language.SetClause;
-import org.teiid.language.SortSpecification;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.SetQuery.Operation;
-import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.jdbc.JDBCExecutionFactory.NullOrder;
 
 
 /**
@@ -131,22 +128,6 @@ public class SQLConversionVisitor extends SQLStringVisitor{
         this.replaceWithBinding = replacementMode;
     }
     
-	@Override
-	public void visit(SortSpecification obj) {
-		super.visit(obj);
-		NullOrder nullOrder = this.executionFactory.getDefaultNullOrder();
-		if (!this.executionFactory.supportsExplicitNullOrdering() || nullOrder == NullOrder.LOW) {
-			return;
-		}
-		if (obj.getOrdering() == Ordering.ASC) {
-			if (nullOrder != NullOrder.FIRST) {
-				buffer.append(" NULLS FIRST"); //$NON-NLS-1$
-			}
-		} else if (nullOrder == NullOrder.FIRST) {
-			buffer.append(" NULLS LAST"); //$NON-NLS-1$
-		}
-	}
-
     /**
      * @param type
      * @param object

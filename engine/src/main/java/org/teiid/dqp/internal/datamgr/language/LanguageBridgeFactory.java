@@ -429,6 +429,7 @@ public class LanguageBridgeFactory {
             } else {
             	orderByItem = new SortSpecification(direction, translate(symbol));                                
             }
+            orderByItem.setNullOrdering(items.get(i).getNullOrdering());
             translatedItems.add(orderByItem);
         }
         return new org.teiid.language.OrderBy(translatedItems);

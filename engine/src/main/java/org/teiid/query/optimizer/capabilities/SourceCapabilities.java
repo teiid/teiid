@@ -164,6 +164,8 @@ public interface SourceCapabilities {
         QUERY_ORDERBY,
         
         QUERY_ORDERBY_UNRELATED,
+        QUERY_ORDERBY_NULL_ORDERING,
+        QUERY_ORDERBY_DEFAULT_NULL_ORDER,
         /**
          * Composite support for group by and having - not
          * used by the connector layer

@@ -2741,35 +2741,42 @@ Criteria having(ParseInfo info) :
  */
 OrderBy orderby(ParseInfo info) :
 {
-    SingleElementSymbol ex = null;
-    Token type = null;
     OrderBy orderby = new OrderBy();
-    boolean ascending = true;    
+    OrderByItem item = null;
 }
 {
 	<ORDER> <BY>
-	ex=sortKey(info) [<ASC> | type=<DESC>]
+	item = sortSpecification(info)
 	{
-        ascending = true;
-       	if(type != null) {
-       		ascending = false;
-       		type=null;
-       	} 
-    	orderby.addVariable(ex, ascending);
+    	orderby.getOrderByItems().add(item);
 	}
 	(<COMMA>
-		ex=sortKey(info) [<ASC> | type=<DESC>]
+		item = sortSpecification(info)
 		{
-            ascending = true;
-            if(type != null) {
-                ascending = false;
-                type=null;
-            }
-            orderby.addVariable(ex, ascending);
-        }
+    		orderby.getOrderByItems().add(item);
+		}
 	)*
 	{
 	    return orderby;
+	}
+}
+
+OrderByItem sortSpecification(ParseInfo info) :
+{
+    SingleElementSymbol ex = null;
+    boolean ascending = true;
+    String nullOrdering = null;    
+}
+{
+	ex=sortKey(info) 
+	[<ASC> | <DESC> {ascending=false;}]
+	[nonReserved("NULLS") nullOrdering = nonReserved("FIRST", "LAST")] 
+	{
+    	OrderByItem item = new OrderByItem(ex, ascending);
+    	if (nullOrdering != null) {
+    		item.setNullOrdering(org.teiid.language.SortSpecification.NullOrdering.valueOf(nullOrdering.toUpperCase()));
+    	}
+    	return item;
 	}
 }
 

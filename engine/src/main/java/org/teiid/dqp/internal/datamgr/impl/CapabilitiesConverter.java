@@ -95,6 +95,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.INSERT_WITH_QUERYEXPRESSION, srcCaps.supportsInsertWithQueryExpression());
         tgtCaps.setCapabilitySupport(Capability.QUERY_ORDERBY_UNRELATED, srcCaps.supportsOrderByUnrelated());
         tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_ENHANCED_NUMERIC, srcCaps.supportsAggregatesEnhancedNumeric());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_ORDERBY_NULL_ORDERING, srcCaps.supportsOrderByNullOrdering());
         
         List functions = srcCaps.getSupportedFunctions();
         if(functions != null && functions.size() > 0) {
@@ -109,6 +110,7 @@ public class CapabilitiesConverter {
         tgtCaps.setSourceProperty(Capability.CONNECTOR_ID, connectorID);
         tgtCaps.setSourceProperty(Capability.MAX_QUERY_FROM_GROUPS, new Integer(srcCaps.getMaxFromGroups()));
         tgtCaps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, srcCaps.getSupportedJoinCriteria());
+        tgtCaps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, srcCaps.getDefaultNullOrder());
         return tgtCaps;
     }
 

@@ -28,8 +28,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.saxon.expr.PathMap.PathMapRoot;
-
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.CoreConstants;
@@ -343,7 +341,7 @@ public class PlanToProcessConverter {
                 SortNode sortNode = new SortNode(getID());
                 OrderBy orderBy = (OrderBy) node.getProperty(NodeConstants.Info.SORT_ORDER);
 				if (orderBy != null) {
-					sortNode.setSortElements(orderBy.getSortKeys(), orderBy.getTypes());
+					sortNode.setSortElements(orderBy.getOrderByItems());
 				}
 				if (node.getType() == NodeConstants.Types.DUP_REMOVE) {
 					sortNode.setMode(Mode.DUP_REMOVE);

@@ -24,8 +24,7 @@ package org.teiid.query.processor.relational;
 
 import java.util.List;
 
-import org.teiid.core.util.Assertion;
-
+import org.teiid.language.SortSpecification.NullOrdering;
 
 /**
  * This class can be used for comparing lists of elements, when the fields to
@@ -56,7 +55,7 @@ import org.teiid.core.util.Assertion;
  *      { "a2", "b2", "c2" } 
  * </pre>
  */
-public class ListNestedSortComparator implements java.util.Comparator, java.io.Serializable {
+public class ListNestedSortComparator<T extends Comparable<? super T>> implements java.util.Comparator<List<T>> {
 
     /**
      * Specifies which fields to sort on.
@@ -72,10 +71,12 @@ public class ListNestedSortComparator implements java.util.Comparator, java.io.S
     /**
      * List of booleans indicating the order in which each column should be sorted
      */
-    private List orderTypes = null;
+    private List<Boolean> orderTypes = null;
     
     private boolean isDistinct = true;
     private int distinctIndex;
+    
+    private List<NullOrdering> nullOrdering;
 
     /**
      * Constructs an instance of this class given the indicies of the parameters
@@ -101,7 +102,7 @@ public class ListNestedSortComparator implements java.util.Comparator, java.io.S
      * to sort on, and orderList used to determine the order in which each column
      * is sorted.
      */
-    public ListNestedSortComparator( int[] sortParameters, List orderTypes ) {
+    public ListNestedSortComparator( int[] sortParameters, List<Boolean> orderTypes ) {
         this.sortParameters = sortParameters;
         this.orderTypes = orderTypes;
     }
@@ -112,6 +113,10 @@ public class ListNestedSortComparator implements java.util.Comparator, java.io.S
     
     public void setDistinctIndex(int distinctIndex) {
 		this.distinctIndex = distinctIndex;
+	}
+    
+    public void setNullOrdering(List<NullOrdering> nullOrdering) {
+		this.nullOrdering = nullOrdering;
 	}
 
     /**
@@ -129,14 +134,12 @@ public class ListNestedSortComparator implements java.util.Comparator, java.io.S
      * @param o1 The first object being compared
      * @param o2 The second object being compared
      */
-    public int compare( Object o1, Object o2 ) {
-        List list1 = (List)o1;
-        List list2 = (List)o2;
-
+    
+    public int compare(java.util.List<T> list1, java.util.List<T> list2) {
         int compare = 0;
         for (int k = 0; k < sortParameters.length; k++) {
-            Object param1 = list1.get(sortParameters[k]);
-            Object param2 = list2.get(sortParameters[k]);
+            T param1 = list1.get(sortParameters[k]);
+            T param2 = list2.get(sortParameters[k]);
 
             if( param1 == null ) {
 				if(param2 == null ) {
@@ -145,23 +148,42 @@ public class ListNestedSortComparator implements java.util.Comparator, java.io.S
 				} else {
 					// param1 = null, so is less than a non-null
 					compare = -1;
+					NullOrdering no = getNullOrdering(k);
+					if (no != null) {
+						if (nullOrdering.get(k) == NullOrdering.FIRST) {
+							return -1;
+						} 
+						return 1;
+					}
 				}
-			} else if( param2 == null ) {
+            } else if( param2 == null ) {
 				// param1 != null, param2 == null
 				compare = 1;
-			} else if ( param1 instanceof Comparable ) {
-                compare = ((Comparable)param1).compareTo(param2);
-            } else {
-            	Assertion.failed("Expected comparable types"); //$NON-NLS-1$
-            }
+				NullOrdering no = getNullOrdering(k);
+				if (no != null) {
+					if (nullOrdering.get(k) == NullOrdering.FIRST) {
+						return 1;
+					} 
+					return -1;
+				}
+            } else  {
+                compare = param1.compareTo(param2);
+            } 
             if (compare != 0) {
-            	boolean asc = orderTypes != null?((Boolean)orderTypes.get(k)).booleanValue():this.ascendingOrder;
+            	boolean asc = orderTypes != null?orderTypes.get(k):this.ascendingOrder;
                 return asc ? compare : -compare;
             } else if (k == distinctIndex) {
         		isDistinct = false;
         	}
         }
     	return 0;
+    }
+    
+    private NullOrdering getNullOrdering(int index) {
+    	if (nullOrdering != null) {
+    		return nullOrdering.get(index);
+    	}
+    	return null;	
     }
     
 } // END CLASS    

@@ -136,10 +136,6 @@ public class OrderBy implements LanguageObject {
         visitor.visit(this);
     }
 
-    // =========================================================================
-    //          O V E R R I D D E N     O B J E C T     M E T H O D S
-    // =========================================================================
-
     /**
      * Return deep copy of this ORDER BY clause.
      */

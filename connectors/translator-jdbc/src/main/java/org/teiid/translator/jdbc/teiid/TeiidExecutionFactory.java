@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.translator.Translator;
+import org.teiid.translator.ExecutionFactory.NullOrder;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 
 
@@ -171,5 +172,10 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
     	return getDatabaseVersion().compareTo(SEVEN_1) >= 0;
+    }
+    
+    @Override
+    public NullOrder getDefaultNullOrder() {
+    	return NullOrder.UNKNOWN;
     }
 }

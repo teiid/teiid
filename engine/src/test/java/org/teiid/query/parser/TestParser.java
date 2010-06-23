@@ -39,6 +39,7 @@ import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SQLConstants.Reserved;
+import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.query.sql.lang.BetweenCriteria;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.CompareCriteria;
@@ -61,6 +62,7 @@ import org.teiid.query.sql.lang.Limit;
 import org.teiid.query.sql.lang.MatchCriteria;
 import org.teiid.query.sql.lang.NotCriteria;
 import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.PredicateCriteria;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SPParameter;
@@ -2643,30 +2645,18 @@ public class TestParser {
 
 	/** SELECT a FROM db.g WHERE b = aString order by c desc*/
 	@Test public void testOrderByDesc(){
-		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
-
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
-		select.addSymbol(a);
-
-		Criteria crit = new CompareCriteria(new ElementSymbol("b"), CompareCriteria.EQ, new ElementSymbol("aString")); //$NON-NLS-1$ //$NON-NLS-2$
-
 		ArrayList elements = new ArrayList();
 		elements.add(new ElementSymbol("c")); //$NON-NLS-1$
 		ArrayList orderTypes = new ArrayList();
 		orderTypes.add(Boolean.FALSE);
 		OrderBy orderBy = new OrderBy(elements, orderTypes);
-
-		Query query = new Query(select, from, crit, orderBy, null);
+		
+		Query query = getOrderByQuery(orderBy);
 		helpTest("SELECT a FROM db.g WHERE b = aString ORDER BY c desc",  //$NON-NLS-1$
 				 "SELECT a FROM db.g WHERE b = aString ORDER BY c DESC",  //$NON-NLS-1$
 				 query);
-	}	
-
-	/** SELECT a FROM db.g WHERE b = aString order by c,d*/
-	@Test public void testOrderBys(){
+	}
+	private Query getOrderByQuery(OrderBy orderBy) {
 		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
 		From from = new From();
 		from.addGroup(g);
@@ -2677,12 +2667,18 @@ public class TestParser {
 
 		Criteria crit = new CompareCriteria(new ElementSymbol("b"), CompareCriteria.EQ, new ElementSymbol("aString")); //$NON-NLS-1$ //$NON-NLS-2$
 
+		Query query = new Query(select, from, crit, orderBy, null);
+		return query;
+	}	
+
+	/** SELECT a FROM db.g WHERE b = aString order by c,d*/
+	@Test public void testOrderBys(){
 		ArrayList elements = new ArrayList();
 		elements.add(new ElementSymbol("c")); //$NON-NLS-1$
 		elements.add(new ElementSymbol("d")); //$NON-NLS-1$
 		OrderBy orderBy = new OrderBy(elements);
 
-		Query query = new Query(select, from, crit, orderBy, null);
+		Query query = getOrderByQuery(orderBy);
 		helpTest("SELECT a FROM db.g WHERE b = aString ORDER BY c,d",  //$NON-NLS-1$
 				 "SELECT a FROM db.g WHERE b = aString ORDER BY c, d",  //$NON-NLS-1$
 				 query);
@@ -2690,16 +2686,6 @@ public class TestParser {
 
 	/** SELECT a FROM db.g WHERE b = aString order by c desc,d desc*/
 	@Test public void testOrderBysDesc(){
-		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
-
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
-		select.addSymbol(a);
-
-		Criteria crit = new CompareCriteria(new ElementSymbol("b"), CompareCriteria.EQ, new ElementSymbol("aString")); //$NON-NLS-1$ //$NON-NLS-2$
-
 		ArrayList elements = new ArrayList();
 		elements.add(new ElementSymbol("c")); //$NON-NLS-1$
 		elements.add(new ElementSymbol("d")); //$NON-NLS-1$
@@ -2708,7 +2694,7 @@ public class TestParser {
 		orderTypes.add(Boolean.FALSE);
 		OrderBy orderBy = new OrderBy(elements, orderTypes);
 
-		Query query = new Query(select, from, crit, orderBy, null);
+		Query query = getOrderByQuery(orderBy);
 		helpTest("SELECT a FROM db.g WHERE b = aString ORDER BY c desc,d desc",  //$NON-NLS-1$
 				 "SELECT a FROM db.g WHERE b = aString ORDER BY c DESC, d DESC",  //$NON-NLS-1$
 				 query);
@@ -2716,16 +2702,6 @@ public class TestParser {
 	
 	/** SELECT a FROM db.g WHERE b = aString order by c desc,d*/
 	@Test public void testMixedOrderBys(){
-		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
-
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
-		select.addSymbol(a);
-
-		Criteria crit = new CompareCriteria(new ElementSymbol("b"), CompareCriteria.EQ, new ElementSymbol("aString")); //$NON-NLS-1$ //$NON-NLS-2$
-
 		ArrayList elements = new ArrayList();
 		elements.add(new ElementSymbol("c")); //$NON-NLS-1$
 		elements.add(new ElementSymbol("d")); //$NON-NLS-1$
@@ -2734,11 +2710,26 @@ public class TestParser {
 		orderTypes.add(Boolean.TRUE);
 		OrderBy orderBy = new OrderBy(elements, orderTypes);
 
-		Query query = new Query(select, from, crit, orderBy, null);
+		Query query = getOrderByQuery(orderBy);
 		helpTest("SELECT a FROM db.g WHERE b = aString ORDER BY c desc,d",  //$NON-NLS-1$
 				 "SELECT a FROM db.g WHERE b = aString ORDER BY c DESC, d",  //$NON-NLS-1$
 				 query);
 	}	
+	
+	@Test public void testOrderByNullOrdering(){
+		OrderBy orderBy = new OrderBy();
+		OrderByItem item = new OrderByItem(new ElementSymbol("c"), true);
+		item.setNullOrdering(NullOrdering.FIRST);
+		orderBy.getOrderByItems().add(item);
+		item = new OrderByItem(new ElementSymbol("d"), false);
+		item.setNullOrdering(NullOrdering.LAST);
+		orderBy.getOrderByItems().add(item);
+
+		Query query = getOrderByQuery(orderBy);
+		helpTest("SELECT a FROM db.g WHERE b = aString ORDER BY c NULLS FIRST,d desc nulls last",  //$NON-NLS-1$
+				 "SELECT a FROM db.g WHERE b = aString ORDER BY c NULLS FIRST, d DESC NULLS LAST",  //$NON-NLS-1$
+				 query);
+	}
 
 	// ================================== match ====================================
 

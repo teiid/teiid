@@ -31,6 +31,7 @@ import java.util.Set;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
@@ -46,6 +47,7 @@ import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -54,6 +56,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.util.CommandContext;
+import org.teiid.translator.ExecutionFactory.NullOrder;
 import org.teiid.translator.ExecutionFactory.SupportedJoinCriteria;
 
 
@@ -317,11 +320,36 @@ public final class RuleRaiseAccess implements OptimizerRule {
             return false;
         } 
         
-        //TODO: this check shouldn't be necessary, since the order by is not introducing new expressions
-        List<SingleElementSymbol> sortCols = ((OrderBy)parentNode.getProperty(NodeConstants.Info.SORT_ORDER)).getSortKeys();
-        for (SingleElementSymbol symbol : sortCols) {
-            if(! canPushSymbol(symbol, true, modelID, metadata, capFinder)) {
+        List<OrderByItem> sortCols = ((OrderBy)parentNode.getProperty(NodeConstants.Info.SORT_ORDER)).getOrderByItems();
+        for (OrderByItem symbol : sortCols) {
+            //TODO: this check shouldn't be necessary, since the order by is not introducing new expressions
+            if(! canPushSymbol(symbol.getSymbol(), true, modelID, metadata, capFinder)) {
                 return false;
+            }
+            boolean supportsNullOrdering = CapabilitiesUtil.supports(Capability.QUERY_ORDERBY_NULL_ORDERING, modelID, metadata, capFinder);
+            NullOrder defaultNullOrder = CapabilitiesUtil.getDefaultNullOrder(modelID, metadata, capFinder);
+            if (symbol.getNullOrdering() != null) {
+        		if (!supportsNullOrdering) {
+        			if (symbol.getNullOrdering() == NullOrdering.FIRST) {
+        				if (defaultNullOrder != NullOrder.FIRST && !(symbol.isAscending() && defaultNullOrder == NullOrder.LOW) 
+        						&& !(!symbol.isAscending() && defaultNullOrder == NullOrder.HIGH)) {
+        					return false;
+        				}
+        			} else if (defaultNullOrder != NullOrder.LAST && !(symbol.isAscending() && defaultNullOrder == NullOrder.HIGH) 
+        					&& !(!symbol.isAscending() && defaultNullOrder == NullOrder.LOW)) {
+    					return false;
+    				} 
+    				symbol.setNullOrdering(null);
+        		} 
+            } else if (supportsNullOrdering && defaultNullOrder != NullOrder.LOW) {
+            	//try to match the expected default of low
+        		if (symbol.isAscending()) {
+        			if (defaultNullOrder != NullOrder.FIRST) {
+        				symbol.setNullOrdering(NullOrdering.FIRST);
+        			}
+        		} else if (defaultNullOrder != NullOrder.LAST) {
+        			symbol.setNullOrdering(NullOrdering.LAST);
+        		}
             }
         }
         

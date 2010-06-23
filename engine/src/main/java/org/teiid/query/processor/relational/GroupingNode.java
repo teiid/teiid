@@ -194,11 +194,10 @@ public class GroupingNode extends RelationalNode {
                         ElementSymbol element = new ElementSymbol("val"); //$NON-NLS-1$
                         element.setType(inputType);
                         filter.setElements(Arrays.asList(element));
-                        filter.setSortElements(filter.getElements());
                         functions[i] = filter;
                     } else if (aggSymbol.getOrderBy() != null) { //handle the xmlagg case
                 		int[] orderIndecies = new int[aggSymbol.getOrderBy().getOrderByItems().size()];
-                		List<Boolean> aggSortTypes = new ArrayList<Boolean>(orderIndecies.length);
+                		List<OrderByItem> orderByItems = new ArrayList<OrderByItem>(orderIndecies.length);
                 		List<ElementSymbol> schema = new ArrayList<ElementSymbol>(orderIndecies.length + 1);
                 		ElementSymbol element = new ElementSymbol("val"); //$NON-NLS-1$
                         element.setType(inputType);
@@ -206,16 +205,17 @@ public class GroupingNode extends RelationalNode {
                 		for (ListIterator<OrderByItem> iterator = aggSymbol.getOrderBy().getOrderByItems().listIterator(); iterator.hasNext();) {
                 			OrderByItem item = iterator.next();
                 			orderIndecies[iterator.previousIndex()] = collectExpression(item.getSymbol());
-                			aggSortTypes.add(item.isAscending());
                 			element = new ElementSymbol(String.valueOf(iterator.previousIndex()));
                             element.setType(inputType);
                 			schema.add(element);
+                			OrderByItem newItem = item.clone();
+                			newItem.setSymbol(element);
+                			orderByItems.add(newItem);
 						}
                 		SortingFilter filter = new SortingFilter(functions[i], getBufferManager(), getConnectionID(), false);
-                		filter.setSortTypes(aggSortTypes);
                 		filter.setIndecies(orderIndecies);
                 		filter.setElements(schema);
-                		filter.setSortElements(schema.subList(1, schema.size()));
+                		filter.setSortItems(orderByItems);
                         functions[i] = filter;
                 	}
                     functions[i].setExpressionIndex(index);

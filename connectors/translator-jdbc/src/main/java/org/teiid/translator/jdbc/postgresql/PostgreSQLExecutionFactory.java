@@ -222,7 +222,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     }
     
     @Override
-    public boolean supportsExplicitNullOrdering() {
+    public boolean supportsOrderByNullOrdering() {
     	return getDatabaseVersion().compareTo(EIGHT_4) >= 0;
     }
     

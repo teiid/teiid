@@ -66,7 +66,7 @@ public class DerbyExecutionFactory extends DB2ExecutionFactory {
     }
     
     @Override
-    public boolean supportsExplicitNullOrdering() {
+    public boolean supportsOrderByNullOrdering() {
     	return getDatabaseVersion().compareTo(TEN_4) >= 0;
     }
     

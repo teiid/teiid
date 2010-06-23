@@ -45,6 +45,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
+import org.teiid.translator.ExecutionFactory.NullOrder;
 import org.teiid.translator.ExecutionFactory.SupportedJoinCriteria;
 
 
@@ -338,6 +339,18 @@ public class CapabilitiesUtil {
         	return SupportedJoinCriteria.ANY;
         }
         return crits;
+    }
+    
+    public static NullOrder getDefaultNullOrder(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException {
+        if (metadata.isVirtualModel(modelID)){
+            return NullOrder.UNKNOWN;
+        }
+        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
+        NullOrder order = (NullOrder)caps.getSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER);
+        if (order == null) {
+        	return NullOrder.UNKNOWN;
+        }
+        return order;
     }
     
     public static boolean supportsRowLimit(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 

@@ -24,7 +24,6 @@ package org.teiid.query.processor.relational;
 
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.client.plan.PlanNode;
@@ -36,13 +35,12 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.processor.BatchIterator;
 import org.teiid.query.processor.relational.SortUtility.Mode;
-import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.OrderByItem;
 
 
 public class SortNode extends RelationalNode {
 
-	private List sortElements;
-	private List<Boolean> sortTypes;
+	private List<OrderByItem> items;
     private Mode mode = Mode.SORT;
 
     private SortUtility sortUtility;
@@ -65,13 +63,12 @@ public class SortNode extends RelationalNode {
         outputTs = null;
     }
 
-	public void setSortElements(List sortElements, List<Boolean> sortTypes) {
-		this.sortElements = sortElements;
-		this.sortTypes = sortTypes;
+	public void setSortElements(List<OrderByItem> items) {
+		this.items = items;
 	}
 	
-	public List getSortElements() {
-		return this.sortElements;
+	public List<OrderByItem> getSortElements() {
+		return this.items;
 	}
 	
 	public Mode getMode() {
@@ -93,8 +90,7 @@ public class SortNode extends RelationalNode {
 
     private void sortPhase() throws BlockedException, TeiidComponentException, TeiidProcessingException {
     	if (this.sortUtility == null) {
-	        this.sortUtility = new SortUtility(new BatchIterator(getChildren()[0]), sortElements,
-	                                            sortTypes, this.mode, getBufferManager(),
+	        this.sortUtility = new SortUtility(new BatchIterator(getChildren()[0]), items, this.mode, getBufferManager(),
 	                                            getConnectionID());
 		}
 		this.output = this.sortUtility.sort();
@@ -141,14 +137,13 @@ public class SortNode extends RelationalNode {
 		super.getNodeString(str);
 		str.append("[").append(mode).append("] "); //$NON-NLS-1$ //$NON-NLS-2$
 		if (this.mode != Mode.DUP_REMOVE) {
-			str.append(sortElements);
+			str.append(this.items);
 		}
 	}
 
 	protected void copy(SortNode source, SortNode target){
 		super.copy(source, target);
-		target.sortElements = source.sortElements;
-		target.sortTypes = source.sortTypes;
+		target.items = source.items;
 		target.mode = source.mode;
 	}
 
@@ -162,18 +157,8 @@ public class SortNode extends RelationalNode {
     public PlanNode getDescriptionProperties() {
     	PlanNode props = super.getDescriptionProperties();
         
-        if(this.mode != Mode.DUP_REMOVE && this.sortElements != null) {
-            Boolean ASC_B = Boolean.valueOf(OrderBy.ASC);
-            List<String> cols = new ArrayList<String>(this.sortElements.size());
-            for(int i=0; i<this.sortElements.size(); i++) {
-                String elemName = this.sortElements.get(i).toString();
-                if(this.sortTypes.get(i).equals(ASC_B)) {
-                    cols.add(elemName + " ASC");  //$NON-NLS-1$
-                } else {
-                    cols.add(elemName + " DESC"); //$NON-NLS-1$
-                }
-            }
-            props.addProperty(PROP_SORT_COLS, cols);
+        if(this.mode != Mode.DUP_REMOVE && this.items != null) {
+            props.addProperty(PROP_SORT_COLS, this.items.toString());
         }
         
         props.addProperty(PROP_SORT_MODE, this.mode.toString());
