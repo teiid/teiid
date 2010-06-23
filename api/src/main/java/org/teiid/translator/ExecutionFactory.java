@@ -482,7 +482,7 @@ public class ExecutionFactory<F, C> {
 	/**
 	 * Returns whether the database supports explicit join ordering.
 	 * @since 7.1
-	 * @return true if nulls high|low can be specified
+	 * @return true if nulls first/last can be specified
 	 */
 	public boolean supportsOrderByNullOrdering() {
 		return false;
