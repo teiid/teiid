@@ -126,8 +126,16 @@
         </includes>
 
         <binaries>        
-          <includeDependencies>false</includeDependencies>
+          <includeDependencies>true</includeDependencies>
           <unpack>false</unpack>
+            <dependencySets>
+                <dependencySet>
+                    <useProjectArtifact>true</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>false</useTransitiveDependencies>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+            </dependencySets>          
           <outputDirectory>deploy/teiid/connectors</outputDirectory>
         </binaries>
       
