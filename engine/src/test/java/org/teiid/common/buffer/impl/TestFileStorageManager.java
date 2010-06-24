@@ -33,11 +33,12 @@ import java.util.Random;
 import org.junit.Test;
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.StorageManager;
+import org.teiid.common.buffer.FileStore.FileStoreOutputStream;
 import org.teiid.common.buffer.impl.FileStorageManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.UnitTestUtil;
 
-
+@SuppressWarnings("nls")
 public class TestFileStorageManager {
 		
 	public FileStorageManager getStorageManager(Integer maxFileSize, Integer openFiles, String dir) throws TeiidComponentException {
@@ -80,6 +81,16 @@ public class TestFileStorageManager {
         store.remove();
         
         assertEquals(0, cache.size());
+    }
+    
+    @Test public void testFlush() throws Exception {
+    	FileStorageManager sm = getStorageManager(null, null, null);
+    	FileStore store = sm.createFileStore("0");
+    	FileStoreOutputStream fsos = store.createOutputStream(2);
+    	fsos.write(new byte[3]);
+    	fsos.write(1);
+    	fsos.flush();
+    	assertEquals(0, fsos.getCount());
     }
 
     static Random r = new Random();
