@@ -113,8 +113,7 @@
     <title>Expressions</title>
     <para> Identifiers, literals, and functions can be combined into
       expressions. Expressions can be used almost anywhere in a query --
-      SELECT, FROM (if specifying join criteria, WHERE, GROUP BY, HAVING.
-      However you currently cannot use expressions in an ORDER BY clause.</para>
+      SELECT, FROM (if specifying join criteria), WHERE, GROUP BY, HAVING, or ORDER BY.</para>
     <itemizedlist>
       <para>Teiid supports the following types of expressions:
       </para>
