@@ -51,7 +51,7 @@
             <format>
               <formatName>pdf</formatName>
               <stylesheetResource>classpath:/xslt/org/jboss/pdf.xsl</stylesheetResource>
-              <finalName>quick_start_example.pdf</finalName>
+              <finalName>teiid_quick_start_example.pdf</finalName>
             </format>
             <format>
               <formatName>html_single</formatName>

@@ -17,5 +17,11 @@
 			Value caching is used dynamically when buffer memory is running low to reuse identical values, but at a computational cost.  
 			If there is memory available, you should first increase the buffer memory rather than disabling value caching.</para>
 		</listitem>
+		<listitem>
+			<para><emphasis>org.teiid.ansiQuotedIdentifiers</emphasis> - defaults to true.  
+			Set to false to emulate Teiid 6.x and prior behavior of treating double quoted values without leading identifier parts as string literals, which is not
+			expected by the SQL specification.
+			</para>
+		</listitem>
 	</itemizedlist>
 </appendix>

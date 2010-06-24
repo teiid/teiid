@@ -126,8 +126,7 @@
     <para>VDBs from prior release contain an older configuration file version that is no longer supported.  
     You can use the migration utility (bin/migrate.sh or bin/migrate.bat) supplied with the 
     <link linkend="adminshell">AdminShell</link> download 
-    to update these VDBs for use with Teiid 7.  Note - XML and File based sources from previous releases are changed, so do not work
-    as is. The VDB models need to be updated for this as these are breaking changes.</para>
+    to update these VDBs for use with Teiid 7.  Note - XML and File based sources from previous releases have changed, and require manual changes to the VDB.</para>
    </sect1>
    
 </chapter>

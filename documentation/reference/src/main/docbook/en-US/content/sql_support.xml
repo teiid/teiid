@@ -496,7 +496,7 @@
     </sect2>
     <sect2 id="exec_command">
       <title>EXECUTE Command</title>
-      <para>The EXECUTE command is used to execute a procedure, such as a virtual procedure or a stored procedure. Procedures may have zero or more scalar input parameters. The return value from a procedure is a result set, the same as is returned from a SELECT. Note that EXEC can be used as a short form of this command. 
+      <para>The EXECUTE command is used to execute a procedure, such as a virtual procedure or a stored procedure. Procedures may have zero or more scalar input parameters. The return value from a procedure is a result set, the same as is returned from a SELECT. Note that EXEC or CALL can be used as a short form of this command. 
       </para>
       <itemizedlist>
         <para>Example Syntax</para>
@@ -529,10 +529,15 @@
           </para>
         </listitem>
         <listitem>
-          <para>If the procedure does not return a result set, the values from the RETURN, OUT, and IN_OUT parameters will be returned as a single row.
+          <para>If the procedure does not return a result set, the values from the RETURN, OUT, and IN_OUT parameters will be returned as a single row when used as an inline view query.
           </para>
         </listitem>
       </itemizedlist>
+    </sect2>
+    <sect2 id="cache_hint">
+    	<title>Cache Hint</title>
+    	<para>Non-update user commands may be preceded with a cache hint, e.g. /* cache */ select ..., to inform the engine that the results of command should be cached.  The scope of the result, either session or global, will be deteremined automatically from the determinism level of the source queries and functions executed.</para>
+    	<para>ResultSet caching must be enabled for this hint to have an effect.</para>
     </sect2>
     <sect2 id="procedural_relational">
 	  <title>Procedural Relational Command</title>
