@@ -192,7 +192,7 @@ public class XAResourceImpl implements XAResource{
         
     private ConnectionImpl getMMConnection() throws XAException{
     	try{
-    	    return this.mmConnection.getMMConnection();
+    	    return this.mmConnection.getConnectionImpl();
     	}catch(SQLException e){
     		throw new XAException(XAException.XAER_RMFAIL);
     	}
