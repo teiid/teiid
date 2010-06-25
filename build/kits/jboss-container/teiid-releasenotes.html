@@ -97,6 +97,26 @@ See the See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for m
   <li>Parallel execution of source queries within a query plan has been temporarily disabled.
 </ul>
 
+<h4>Salesforce as Source</h4>
+Before Salesforce is used in your data integration project, the below issues need to be resolved.
+<ul>
+  <li>Manually copy the following libraries from the JBOSS_HOME/client directory to the JBOSS_HOME/lib/endorsed directory, so that the JAX-WS 2.0 apis supported by JBossWS are used:
+  	<ul>
+    	<li>jbossws-native-saaj.jar</li>
+    	<li>jbossws-native-jaxrpc.jar</li>
+    	<li>jbossws-native-jaxws.jar</li>
+    	<li>jbossws-native-jaxws-ext.jar</li>
+    </ul>
+  </li>
+  <li>There is issue with invoking "https" based URL with out specifying the either a keystore or truststore properties with JBoss remoting 2.5.1. Generally you do not need to specify the truststore as a anonymous truststore will be negotiated, however if you fail to supply the following system properties there will be a error message in the log (query will execute even with out the properties). Add these to JBOSS_INSTALL/bin/run.conf file under JAVA_OPTS
+  	<ul>
+    	<li>-Djava.net.ssl.keyStore=&lt;path-to-truststore&gt;</li>
+    	<li>-Djava.net.ssl.keyStoreType=&lt;certificate-type&gt;</li>
+    	<li>-Djava.net.ssl.keyStorePassword=&lt;password&gt;</li>
+    </ul>  	
+  </li>
+</ul>
+
 <h2><a name="LibraryUpdates">Thirdparty Library Updates</a></h2>
 
 The following components have been updated:
