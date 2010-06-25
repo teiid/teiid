@@ -1551,7 +1551,7 @@
 							<para>getXMLSchemas</para>
 						</entry>
 						<entry>
-							<para>string document</para>
+							<para>(string document)</para>
 						</entry>
 						<entry>
 							<para>A single column containing the schemas as clobs.</para>
