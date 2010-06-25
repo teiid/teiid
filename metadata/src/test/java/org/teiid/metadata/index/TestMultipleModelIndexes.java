@@ -20,23 +20,25 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.net;
+package org.teiid.metadata.index;
 
-import org.teiid.client.security.LogonResult;
-import org.teiid.client.util.ResultsFuture;
+import static org.junit.Assert.*;
 
-public interface ServerConnection {
-	
-	public static final int PING_INTERVAL = 120000;
+import java.util.Collection;
 
-	<T> T getService(Class<T> iface);
-	
-	void close();
-	
-	ResultsFuture<?> isOpen();
-	
-	LogonResult getLogonResult();
-	
-	boolean isSameInstance(ServerConnection conn) throws CommunicationException;
+import org.junit.Test;
+import org.teiid.core.util.UnitTestUtil;
+import org.teiid.metadata.TransformationMetadata;
+
+@SuppressWarnings("nls")
+public class TestMultipleModelIndexes {
+
+	@Test public void testMultiple() throws Exception {
+		TransformationMetadata tm = VDBMetadataFactory.getVDBMetadata(UnitTestUtil.getTestDataPath() + "/ZZZ.vdb");
+		Collection<String> names = tm.getGroupsForPartialName("PRODUCTDATA");
+		assertEquals(1, names.size());
+		names = tm.getGroupsForPartialName("PARTS");
+		assertEquals(1, names.size());
+	}
 	
 }

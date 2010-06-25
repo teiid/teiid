@@ -143,7 +143,9 @@ If the extension pattern is not specified and the path is a directory, then all 
 <para><emphasis>mysql5</emphasis> - for use with MySQL version 5 or later.</para>
 </listitem>
 <listitem>
-<para><emphasis>oracle</emphasis> - for use with Oracle 9i or later.</para>
+<para><emphasis>oracle</emphasis> - for use with Oracle 9i or later.  Sequences may be used with the Oracle translator.  
+A sequence may be modeled as a table with a name in source of DUAL and columns with the name in source set to &lt;sequencesequence name&gt;.[nextval|currentval].  
+You can use a sequence as the default value for insert columns by setting the column to autoincrement and the name in source to &lt;element name&gt;:SEQUENCE=&lt;sequence name&gt;.&lt;sequence value&gt;.</para>
 </listitem>
 <listitem>
 <para><emphasis>postgresql</emphasis> - for use with 8.0 or later clients and 7.1 or later server.</para>

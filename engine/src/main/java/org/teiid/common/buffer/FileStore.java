@@ -105,10 +105,15 @@ public abstract class FileStore {
 		}
 		
 		@Override
-		public void close() throws IOException {
+		public void flush() throws IOException {
 			if (bytesWritten) {
 				flushBuffer();
 			}
+		}
+		
+		@Override
+		public void close() throws IOException {
+			flush();
 		}
 		
 	}

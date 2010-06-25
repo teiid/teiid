@@ -1505,7 +1505,7 @@
 							<para>Procedure</para>
 						</entry>
 						<entry>
-							<para>Parameter Datatypes</para>
+							<para>Parameters</para>
 						</entry>
 						<entry>
 							<para>ResultSet</para>
@@ -1515,10 +1515,10 @@
 				<tbody>
 					<row>
 						<entry>
-							<para>getCharacterVDBResource(resourcePath)</para>
+							<para>getCharacterVDBResource</para>
 						</entry>
 						<entry>
-							<para>resourcePath is a string</para>
+							<para>(string resourcePath)/para>
 						</entry>
 						<entry>
 							<para>A single column containing the resource as a clob.</para>
@@ -1526,10 +1526,10 @@
 					</row>
 					<row>
 						<entry>
-							<para>getBinaryVDBResource(resourcePath)</para>
+							<para>getBinaryVDBResource</para>
 						</entry>
 						<entry>
-							<para>resourcePath is a string</para>
+							<para>(sting resourcePath)</para>
 						</entry>
 						<entry>
 							<para>A single column containing the resource as a blob.</para>
@@ -1537,10 +1537,10 @@
 					</row>
 					<row>
 						<entry>
-							<para>getVDBResourcePaths()</para>
+							<para>getVDBResourcePaths</para>
 						</entry>
 						<entry>
-							<para></para>
+							<para>()</para>
 						</entry>
 						<entry>
 							<para>A single column containing the resource paths as strings.</para>
@@ -1548,10 +1548,10 @@
 					</row>
 					<row>
 						<entry>
-							<para>getXMLSchemas(document)</para>
+							<para>getXMLSchemas</para>
 						</entry>
 						<entry>
-							<para>document is a string</para>
+							<para>string document</para>
 						</entry>
 						<entry>
 							<para>A single column containing the schemas as clobs.</para>

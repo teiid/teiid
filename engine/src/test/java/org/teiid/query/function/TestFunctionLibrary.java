@@ -611,7 +611,7 @@ public class TestFunctionLibrary {
 
     // one digit precision
     @Test public void testInvokeDivide6() {
-        helpInvokeMethod("/", new Object[] { new BigDecimal("3"), new BigDecimal("2") }, new BigDecimal("2"));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        helpInvokeMethod("/", new Object[] { new BigDecimal("3"), new BigDecimal("2") }, new BigDecimal("1.5"));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
     
     @Test public void testInvokeDivide7() throws Exception {

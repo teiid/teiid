@@ -64,16 +64,6 @@ public interface Admin {
     void deleteVDB(String vdbName, int vdbVersion) throws AdminException;
     
     /**
-     * Export VDB to byte array
-     *
-     * @param vdbName identifier of the {@link VDB}
-     * @param vdbVersion {@link VDB} version
-     * @return InputStream of the VDB
-     * @throws AdminException 
-     */
-    InputStream exportVDB(String vdbName, int vdbVersion) throws AdminException;    
-    
-    /**
      * Set a process level property. 
      * @param propertyName - name of the property
      * @param propertyValue - value of the property

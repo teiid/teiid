@@ -22,10 +22,7 @@
 
 package org.teiid.adminapi.jboss;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -172,17 +169,6 @@ public class Admin extends TeiidAdmin {
 		}
 	}
 
-	private InputStream exportDeployment(String url) throws AdminComponentException {
-		try {
-			URL contentURL = new URL(url);
-			return contentURL.openStream();
-		} catch (MalformedURLException e) {
-			throw new AdminComponentException(e);
-		} catch (IOException e) {
-			throw new AdminComponentException(e);
-		}
-	}	
-	
     boolean matches(String regEx, String value) {
         regEx = regEx.replaceAll(AdminObject.ESCAPED_WILDCARD, ".*"); //$NON-NLS-1$ 
         regEx = regEx.replaceAll(AdminObject.ESCAPED_DELIMITER, ""); //$NON-NLS-1$ 
@@ -205,15 +191,6 @@ public class Admin extends TeiidAdmin {
 			ManagedUtil.removeArchive(getDeploymentManager(), mc.getDeployment().getName());
 		}
 	}	
-	
-	@Override
-	public InputStream exportVDB(String vdbName, int vdbVersion) throws AdminException{
-		ManagedComponent mc = getVDBManagedComponent(vdbName, vdbVersion);
-		if (mc != null) {
-			return exportDeployment(mc.getDeployment().getName());
-		}
-		return null;
-	}
 	
 	@Override
 	public VDB getVDB(String vdbName, int vdbVersion) throws AdminException{

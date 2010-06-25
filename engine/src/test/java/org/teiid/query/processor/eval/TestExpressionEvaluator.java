@@ -22,7 +22,10 @@
 
 package org.teiid.query.processor.eval;
 
+import static org.junit.Assert.*;
+
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,16 +33,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.resolver.TestFunctionResolving;
 import org.teiid.query.sql.lang.CollectionValueIterator;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SubqueryContainer;
@@ -56,31 +61,19 @@ import org.teiid.query.sql.symbol.TestSearchedCaseExpression;
 import org.teiid.query.sql.util.ValueIterator;
 import org.teiid.query.util.CommandContext;
 
-import junit.framework.TestCase;
-
-
-/**
- */
-public class TestExpressionEvaluator extends TestCase {
-
-    /**
-     * Constructor for TestExpressionEvaluator.
-     * @param name
-     */
-    public TestExpressionEvaluator(String name) {
-        super(name);
-    }
+@SuppressWarnings("nls")
+public class TestExpressionEvaluator {
 
     public void helpTestEval(Expression expr, SingleElementSymbol[] elementList, Object[] valueList, ProcessorDataManager dataMgr, CommandContext context, Object expectedValue) {
         try {
-            Object actualValue = helpEval(expr, elementList, valueList, dataMgr, context, expectedValue);
+            Object actualValue = helpEval(expr, elementList, valueList, dataMgr, context);
             assertEquals("Did not get expected result", expectedValue, actualValue); //$NON-NLS-1$
         } catch(TeiidException e) {
             fail("Received unexpected exception: " + e.getFullMessage()); //$NON-NLS-1$
         }
     }
 
-    public Object helpEval(Expression expr, SingleElementSymbol[] elementList, Object[] valueList, ProcessorDataManager dataMgr, CommandContext context, Object expectedValue) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
+    public Object helpEval(Expression expr, SingleElementSymbol[] elementList, Object[] valueList, ProcessorDataManager dataMgr, CommandContext context) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
         Map elements = new HashMap();
         if (elementList != null) {
             for(int i=0; i<elementList.length; i++) {
@@ -97,7 +90,7 @@ public class TestExpressionEvaluator extends TestCase {
         return new Evaluator(elements, dataMgr, context).evaluate(expr, tuple);
     }
     
-    public void testCaseExpression1() {
+    @Test public void testCaseExpression1() {
         CaseExpression expr = TestCaseExpression.example(3);
         expr.setExpression(new Constant("a")); //$NON-NLS-1$
         helpTestEval(expr, null, null, null, null, new Integer(0));
@@ -109,7 +102,7 @@ public class TestExpressionEvaluator extends TestCase {
         helpTestEval(expr, null, null, null, null, new Integer(9999));
     }
     
-    public void testSearchedCaseExpression1() {
+    @Test public void testSearchedCaseExpression1() {
         SearchedCaseExpression expr = TestSearchedCaseExpression.example(3);
         helpTestEval(expr,
                      new SingleElementSymbol[] {new ElementSymbol("x")}, //$NON-NLS-1$
@@ -137,11 +130,11 @@ public class TestExpressionEvaluator extends TestCase {
                      new Integer(9999));
     }
     
-    public void testConstant() {
+    @Test public void testConstant() {
         helpTestEval(new Constant("xyz", String.class), new SingleElementSymbol[0], new Object[0], null, null, "xyz"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testElement1() {
+    @Test public void testElement1() {
         ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
         ElementSymbol e2 = new ElementSymbol("e2"); //$NON-NLS-1$
         
@@ -156,7 +149,7 @@ public class TestExpressionEvaluator extends TestCase {
         helpTestEval(e1, elements, values, null, null, "xyz"); //$NON-NLS-1$
     }
 
-    public void testElement2() {
+    @Test public void testElement2() {
         ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
         ElementSymbol e2 = new ElementSymbol("e2"); //$NON-NLS-1$
         
@@ -174,7 +167,7 @@ public class TestExpressionEvaluator extends TestCase {
     /**
      * Element Symbols must have values set during evaluation
      */
-    public void testElement3() throws Exception {
+    @Test public void testElement3() throws Exception {
         ElementSymbol e2 = new ElementSymbol("e2"); //$NON-NLS-1$
         
         SingleElementSymbol[] elements = new SingleElementSymbol[] {};
@@ -184,7 +177,7 @@ public class TestExpressionEvaluator extends TestCase {
         };
 
         try {
-            helpEval(e2, elements, values, null, null, null); 
+            helpEval(e2, elements, values, null, null); 
             fail("Exception expected"); //$NON-NLS-1$
         } catch (TeiidComponentException e){
         	//this should be a componentexception, since it is unexpected
@@ -192,7 +185,7 @@ public class TestExpressionEvaluator extends TestCase {
         }
     }
 
-    public void testFunction1() {
+    @Test public void testFunction1() {
         ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
         e1.setType(String.class);        
         ElementSymbol e2 = new ElementSymbol("e2"); //$NON-NLS-1$
@@ -214,7 +207,7 @@ public class TestExpressionEvaluator extends TestCase {
         helpTestEval(func, elements, values, null, null, "xyzabc"); //$NON-NLS-1$
     }
 
-    public void testFunction2() {
+    @Test public void testFunction2() {
         ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
         e1.setType(String.class);        
         ElementSymbol e2 = new ElementSymbol("e2"); //$NON-NLS-1$
@@ -235,7 +228,7 @@ public class TestExpressionEvaluator extends TestCase {
         helpTestEval(func, elements, values, null, null, "abcxyz"); //$NON-NLS-1$
     }
     
-    public void testLookupFunction() {
+    @Test public void testLookupFunction() {
         ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
         e1.setType(String.class);        
         ElementSymbol e2 = new ElementSymbol("e2"); //$NON-NLS-1$
@@ -261,7 +254,7 @@ public class TestExpressionEvaluator extends TestCase {
         helpTestEval(func, elements, values, dataMgr, null, new Integer(5));
     }
 
-    public void testScalarSubquery() throws Exception{
+    @Test public void testScalarSubquery() throws Exception{
         ScalarSubquery expr = new ScalarSubquery(new Query());
         ArrayList values = new ArrayList(1);
         values.add("a"); //$NON-NLS-1$
@@ -286,19 +279,19 @@ public class TestExpressionEvaluator extends TestCase {
         }.evaluate(expr, null) );
 	}
 
-    public void testScalarSubquery2() throws Exception{
+    @Test public void testScalarSubquery2() throws Exception{
         ScalarSubquery expr = new ScalarSubquery(new Query());
         ArrayList values = new ArrayList(1);
         values.add(null);
         helpTestWithValueIterator(expr, values, null);
     }
 
-    public void testScalarSubquery3() throws Exception{
+    @Test public void testScalarSubquery3() throws Exception{
         ScalarSubquery expr = new ScalarSubquery(new Query());
         helpTestWithValueIterator(expr, Collections.emptyList(), null);
     }
 
-    public void testScalarSubqueryFails() throws Exception{
+    @Test public void testScalarSubqueryFails() throws Exception{
         ScalarSubquery expr = new ScalarSubquery(new Query());
         ArrayList values = new ArrayList(2);
         values.add("a"); //$NON-NLS-1$
@@ -312,7 +305,7 @@ public class TestExpressionEvaluator extends TestCase {
         } 
     }
 
-    public void testUser() throws Exception {
+    @Test public void testUser() throws Exception {
         Function func = new Function("user", new Expression[] {}); //$NON-NLS-1$
         FunctionDescriptor desc = SystemFunctionManager.getSystemFunctionLibrary().findFunction("user", new Class[] {} );         //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
@@ -329,7 +322,7 @@ public class TestExpressionEvaluator extends TestCase {
      * these files.
      * @throws Exception
      */
-    public void testEnv() throws Exception {
+    @Test public void testEnv() throws Exception {
         Function func = new Function("env", new Expression[] {}); //$NON-NLS-1$
         FunctionDescriptor desc = SystemFunctionManager.getSystemFunctionLibrary().findFunction("env", new Class[] {String.class} );         //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
@@ -370,46 +363,51 @@ public class TestExpressionEvaluator extends TestCase {
         assertEquals(expectedValue, actual);
     }
     
-    public void testCommandPayloadNoArgsWithPayload() throws Exception {
+    @Test public void testCommandPayloadNoArgsWithPayload() throws Exception {
         helpTestCommandPayload("blah", null, "blah"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testCommandPayloadNoArgsWithoutPayload() throws Exception {
+    @Test public void testCommandPayloadNoArgsWithoutPayload() throws Exception {
         helpTestCommandPayload(null, null, null);
     }
 
-    public void testCommandPayloadNoArgsWithNonStringPayload() throws Exception {
+    @Test public void testCommandPayloadNoArgsWithNonStringPayload() throws Exception {
         helpTestCommandPayload(Boolean.TRUE, null, "true"); //$NON-NLS-1$
     }
     
-    public void testCommandPayloadArgWithPayload() throws Exception {
+    @Test public void testCommandPayloadArgWithPayload() throws Exception {
         Properties props = new Properties();
         props.setProperty("p1", "v1"); //$NON-NLS-1$ //$NON-NLS-2$
         props.setProperty("p2", "v2"); //$NON-NLS-1$ //$NON-NLS-2$
         helpTestCommandPayload(props, "p1", "v1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testCommandPayloadArgWithPayloadMissingProp() throws Exception {
+    @Test public void testCommandPayloadArgWithPayloadMissingProp() throws Exception {
         Properties props = new Properties();
         props.setProperty("p1", "v1"); //$NON-NLS-1$ //$NON-NLS-2$
         props.setProperty("p2", "v2"); //$NON-NLS-1$ //$NON-NLS-2$
         helpTestCommandPayload(props, "BOGUS", null); //$NON-NLS-1$
     }
 
-    public void testCommandPayloadArgWithoutPayload() throws Exception {
+    @Test public void testCommandPayloadArgWithoutPayload() throws Exception {
         Properties props = new Properties();
         props.setProperty("p1", "v1"); //$NON-NLS-1$ //$NON-NLS-2$
         props.setProperty("p2", "v2"); //$NON-NLS-1$ //$NON-NLS-2$
         helpTestCommandPayload(null, "BOGUS", null); //$NON-NLS-1$
     }
 
-    public void testCommandPayloadArgWithBadPayload() throws Exception {
-        try {
-            helpTestCommandPayload(Boolean.TRUE, "BOGUS", null); //$NON-NLS-1$
-            fail("Expected exception but got none"); //$NON-NLS-1$
-        } catch(ExpressionEvaluationException e) {
-            // expected
-        }
-    }    
+    @Test(expected=ExpressionEvaluationException.class) public void testCommandPayloadArgWithBadPayload() throws Exception {
+        helpTestCommandPayload(Boolean.TRUE, "BOGUS", null); //$NON-NLS-1$
+    } 
+    
+    @Test public void testBigDecimalFromDoubleDivision() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("convert(1.0, bigdecimal)/3");
+    	assertEquals(new BigDecimal("0.3333333333333333"), Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testBigDecimalDivision() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("1/convert('3.0', bigdecimal)");
+    	assertEquals(new BigDecimal("0.3333333333333333"), Evaluator.evaluate(ex));
+    }
     
 }

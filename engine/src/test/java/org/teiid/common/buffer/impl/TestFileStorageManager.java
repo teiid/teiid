@@ -32,6 +32,7 @@ import java.util.Random;
 
 import org.junit.Test;
 import org.teiid.common.buffer.FileStore;
+import org.teiid.common.buffer.FileStore.FileStoreOutputStream;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.UnitTestUtil;
 
@@ -86,6 +87,16 @@ public class TestFileStorageManager {
         // Add one batch
         FileStore store = sm.createFileStore(tsID);
         writeBytes(store);
+    }
+    
+    @Test public void testFlush() throws Exception {
+    	FileStorageManager sm = getStorageManager(null, null, null);
+    	FileStore store = sm.createFileStore("0");
+    	FileStoreOutputStream fsos = store.createOutputStream(2);
+    	fsos.write(new byte[3]);
+    	fsos.write(1);
+    	fsos.flush();
+    	assertEquals(0, fsos.getCount());
     }
 
     static Random r = new Random();

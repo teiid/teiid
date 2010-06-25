@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.io.OptionalDataException;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
@@ -121,7 +122,11 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
 		super.readExternal(in);
-		this.encoding = (String)in.readObject();
+		try {
+			this.encoding = (String)in.readObject();
+		} catch (OptionalDataException e) {
+			this.encoding = Streamable.ENCODING;
+		}
 	}
 	
 	@Override

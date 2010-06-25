@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.nio.charset.Charset;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -163,7 +164,8 @@ public final class FunctionMethods {
 	}
 	
 	public static Object divide(BigDecimal x, BigDecimal y) {
-		return x.divide(y, BigDecimal.ROUND_HALF_UP);
+		BigDecimal bd = x.divide(y, Math.max(16, x.scale() + y.precision() + 1), RoundingMode.HALF_UP).stripTrailingZeros();
+		return bd.setScale(Math.max(x.scale(), bd.scale()));
 	}
 
 	// ================== Function = abs =====================

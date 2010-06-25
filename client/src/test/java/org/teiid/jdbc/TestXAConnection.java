@@ -22,23 +22,23 @@
 
 package org.teiid.jdbc;
 
+import static org.junit.Assert.*;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import javax.sql.ConnectionEvent;
+import javax.sql.ConnectionEventListener;
 import javax.transaction.xa.XAResource;
 
+import org.junit.Test;
+import org.mockito.Mockito;
+import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.xa.XidImpl;
-import org.teiid.jdbc.ConnectionImpl;
-import org.teiid.jdbc.StatementImpl;
-import org.teiid.jdbc.XAConnectionImpl;
 
-import junit.framework.TestCase;
-
-
-
-public class TestXAConnection extends TestCase {
+public class TestXAConnection {
 	
-	public void testConnectionClose() throws Exception {
+	@Test public void testConnectionClose() throws Exception {
 
 		final ConnectionImpl mmConn = TestConnection.getMMConnection();
 
@@ -67,6 +67,28 @@ public class TestXAConnection extends TestCase {
 		
 		assertTrue(stmt.isClosed());
 		assertTrue(conn.getAutoCommit());
+	}
+	
+	@Test public void testNotification() throws Exception {
+		XAConnectionImpl xaConn = new XAConnectionImpl(new XAConnectionImpl.ConnectionSource() {
+			//## JDBC4.0-begin ##
+			@Override
+			//## JDBC4.0-end ##
+			public ConnectionImpl createConnection() throws SQLException {
+				ConnectionImpl c = Mockito.mock(ConnectionImpl.class);
+				Mockito.doThrow(new SQLException(new InvalidSessionException())).when(c).commit();
+				return c;
+			}
+		});
+		ConnectionEventListener cel = Mockito.mock(ConnectionEventListener.class);
+		xaConn.addConnectionEventListener(cel);
+		Connection c = xaConn.getConnection();
+		try {
+			c.commit();
+		} catch (SQLException e) {
+			
+		}
+		Mockito.verify(cel).connectionErrorOccurred((ConnectionEvent) Mockito.anyObject());
 	}
 
 }

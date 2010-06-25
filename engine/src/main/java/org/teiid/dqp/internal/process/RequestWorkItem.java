@@ -212,9 +212,6 @@ public class RequestWorkItem extends AbstractWorkItem {
         } finally {
         	if (this.state == ProcessingState.CLOSE && !isClosed) {
         		attemptClose();
-        		if (this.processingException != null) {
-        			sendError();
-        		}
         	} else if (isClosed) {
         		/*
         		 * since there may be a client waiting notify them of a problem

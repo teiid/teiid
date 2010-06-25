@@ -1,0 +1,699 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE>Teiid 7.0 Final Release Notes</TITLE>
+	<META NAME="CHANGEDBY" CONTENT="Steve Hawkins">
+	</STYLE>
+</HEAD>
+<BODY LANG="en-US" DIR="LTR">
+<P><A HREF="http://www.teiid.org/"><IMG SRC="https://www.jboss.org/dms/teiid/images/teiid_banner.png" NAME="graphics1" ALT="Teiid" ALIGN=BOTTOM WIDTH=800></A>
+
+<H1>Teiid 7.0 Final Release Notes</H1>
+<P>Teiid 7.0 is a major redesign of the project containing many new
+features. 
+
+<H2>Overview</H2>
+<UL>
+	<LI><A HREF="#Highlights">Highlights</A>
+	<LI><A HREF="#Compatibility">Compatibility Issues</A> 
+	<LI><A HREF="#Configuration">Configuration Issues</A> 
+	<LI><A HREF="#Other">Other Issues</A> 
+	<LI><A HREF="#LibraryUpdates">Thirdparty Library Updates</A> 
+	<LI><A HREF="#Details">Detailed Release Notes</A> 
+	<LI><A HREF="#Documentation">Additional Docs and Help</A> 
+	<LI><A HREF="#Licenses">Licenses</A> 
+	<LI><A HREF="#About">About JBoss</A> 
+</UL>
+<H2><A NAME="Highlights"></A>Highlights</H2>
+<UL>
+	<LI><B>JBoss AS Integration</B> - Teiid now requires a <a href="http://www.jboss.org/jbossas/downloads.html">JBoss AS 5.1</a> instance.
+	 This change allows Teiid to leverage many AS/MC features, including transaction management, JCA, hot file drop VDB deployment, and the profile service for configuration.   
+	<LI><B>New Admin Console</B> - This
+	release includes a preview release of our new administration
+	console. See it's <A HREF="http://community.jboss.org/wiki/TeiidPluginforMonitoringandConfigurationusingEmbeddedJopr">feature
+	overview</A>.  Once Teiid is installed, the Teiid Admin Console is automatically contributed to the JBoss Admin Console. 
+	<LI><B>Translators and JCA components</B>
+	- This release separates the old connector API into light-weight
+	Translators and JCA components. This greatly simplifies the process
+	of adding new integration sources to Teiid, since it cleanly separates container provided functionality (JCA) from the Teiid specific 
+	classes knwon as a Translator.  See the <a href="teiid-docs/teiid_developers_guide.pdf">Developer's Guide</a> for more information.
+	<LI><B>Text Integration</B> - Structured text file processing is
+	now handled by the TEXTTABLE table function and the .
+	<LI><B>SQL/XML</B> - Nearly all of SQL/XML 2003 support has been
+	added, as well as XMLTABLE and XMLQUERY from SQL/XML 2006.
+	<LI><B>Web Services Integration</B> - XML/Relational logic has
+	been replaced by the SQL/XML XMLTABLE and web services execution is
+	now done through the WS Translator/WS Resource Adapter.
+	<LI><B>Expanded Dynamic VDB Support</B> - Every source type
+	except for LDAP can now be integrated in a Dynamic VDB.
+	<LI><B>Other SQL Support</B> - Queries can now contain nested tables
+	that allow for correlated variables to preceding from clause items.  Expressions are supported in the order by clause.  
+	Double quoted identifiers are allowed by default.  Added the functions to_bytes, to_chars, and querystring. 
+	ResultSet caching can now be utilized with the /* cache */ query hint.    
+	<LI><B>Improved Buffering</B> - Forward only cursors will typically not buffer results on the server.  Algorithms for
+	storing and retrieving buffers have also been improved.
+</UL>
+
+<h2><a name="Compatibility">Compatibility Issues</a></h2>
+<h4>from 6.2</h4>
+<ul>
+  <li>The connector API has changed substantially.  Custom connectors need to be retargeted to the new Translator API.  See <a href="https://jira.jboss.org/browse/TEIID-1003">TEIID-1003</a> and the <a href="teiid-docs/teiid_developers_guide.pdf">Developer's Guide</a> for more information.
+  <li>Connector bindings are no longer valid.  Use the Designer Tooling or see the AdminShell download for a migration utility.
+  <li>Calling out to web services and xml processing has been dramatically simplified and improved, but is a breaking change from prior releases.
+  XML/Relational processing has been replaced by XMLTABLE, retrieving XML from file has been replaced by the File Translator/Resource Adapter, and
+  web service calls have been replaced by the WS Translator/Resource Adapter.  See <a href="https://jira.jboss.org/browse/TEIID-1118">TEIID-1118</a>, <a href="https://jira.jboss.org/browse/TEIID-1114">TEIID-1114</a>, and the <a href="teiid-docs/teiid_reference.pdf">Reference</a> guide for more information.
+  <li>The direct usage of XQuery has been replaced with the XMLQuery function.
+  <li>The text connector file processing has been replaced with the TEXTTABLE function.  See <a href="https://jira.jboss.org/browse/TEIID-1102">TEIID-1102</a> and the <a href="teiid-docs/teiid_reference.pdf">Reference</a> guide for more information
+  <li>Double quoted values are now parsed as identifiers by default.  See <a href="https://jira.jboss.org/browse/TEIID-145">TEIID-145</a> and the <a href="teiid-docs/teiid_reference.pdf">Reference</a> guide for more information.
+  <li>The system information schema has changed from System to SYS.  The tables and table structures have also changed.  See <a href="https://jira.jboss.org/browse/TEIID-871">TEIID-871</a> and the <a href="teiid-docs/teiid_reference.pdf">Reference</a> guide for more information.
+  <li>Client control over query plans has changed.  OPTION PLANONLY, DEBUG, and SHOWPLAN are no longer allowed.  This behavior should not be controlled by the SET statement, SET SHOWPLAN (ON|OFF|DEBUG) and SET NOEXEC (ON|OFF).  Usage of the client PlanNode class will also need to be updated.   
+  <li>Teiid specific JDBC client interfaces and methods have changed.  In general these custom features have mostly been moved to other more standard locations or been removed. See <a href="https://jira.jboss.org/browse/TEIID-1020">TEIID-1020</a> and the <a href="teiid-docs/teiid_client_developers_guide.pdf">Client Developers</a> guide for more information.  
+  <li>Teiid's reserved words have changed.  Many of the Teiid specific reseverd words have become non-reserved words.  All of SQL Foundation and SQL/MED 2003, and SQL/XML from SQL 2006 reserved words have been added as reserved words.  It is generally required to double quote all reserved words.  It is advisable to double quote all non-reserved words as well.
+  <li>The AdminApi has been redesigned for use with the new Translator/JCA split and for deployment in JBoss AS.
+  <li>The AdminShell is based on Groovy.  Most BeanShell syntax is also valid in Groovy, but there are extensive changes in the AdminAPI that may necessitate rewriting scripts.
+  <li>OPTION NO CACHE &lt;table list&gt; will now only by-pass cache for the given tables at their immediate view layer.  Previously all caches would have transitively been skipped.  See <a href="https://jira.jboss.org/browse/TEIID-900">TEIID-900</a> for more information.
+  <li>Nan and +-Infinity are no longer allowed as numerical results by default.  This may be changed via the system property org.teiid.allowNanInfinity.
+  <li>The scale of BigDecimal values is now adjusted to allow for more intuitive results.  Conversion from floating numeric types will preserve the approximate scale and division results will allow for additional scale.  See <a href="https://jira.jboss.org/browse/TEIID-159">TEIID-159</a> for more information.
+  <li>The 7.0 client is not compatible with 6.x or vice versa.  It is expected that 7.0 clients will be compatible with 7.x releases for standard JDBC operations.
+</ul>
+
+<h2><a name="Configuration">Configuration Issues</a></h2>
+
+See the See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
+
+<h4>from 6.2</h4>
+<ul>
+  <li>A JBoss AS instance is now required.  Embedded mode is also currently not supported.</li>
+  <li>Engine configuration is now handled through the admin console or deploy/teiid/teiid-jboss-beans.xml 
+  <li>Logging is now done through the container's log4j instance.  Any Teiid specific logging changes, see the conf/jboss-teiid-log4j.xml, need to be incorporated into the master jboss-log4j.xml.
+</ul>
+
+<h2><a name="Other">Other Issues</a></h2>
+
+<h4>From 6.2</h4>
+<ul>
+  <li>Start time is now significantly longer due to the container deployment.  However many operations can be performed on configruation files that will trigger a redeployment without the need for a restart.
+  <li>Parallel execution of source queries within a query plan has been temporarily disabled.
+</ul>
+
+<h2><a name="LibraryUpdates">Thirdparty Library Updates</a></h2>
+
+The following components have been updated:
+<ul>
+	<li>Netty was upgraded to 3.1.5
+	<li>Saxon was upgraded to 9.1.0.8
+	<li>A 5.1 container's version of Arjuna is newer than what was previously included in Teiid 6.x.
+	<li>Various other dependencies have been removed as they are no longer needed or now provided by the container.
+</ul>
+
+<h2><a name="Details">Detailed Release Notes</a></h2>
+        Detailed Release Notes - Teiid - Version 7.0
+    
+<h2>        Bug
+</h2>
+<ul>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-26'>TEIID-26</a>] -         Need to add logic to determine if a command is deterministic
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-41'>TEIID-41</a>] -         Non selectable columns should be omitted from metadata
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-46'>TEIID-46</a>] -         Fully-qualified names should not be required when referencing virtual procedures that have unique unqualified names
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-93'>TEIID-93</a>] -         when a fairly complex query is pushed down to the XML-HTTP Connector, it fails
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-409'>TEIID-409</a>] -         server port number should be checked for availability when creating a second mmprocess
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-430'>TEIID-430</a>] -         Root access needs enforced for subsystem admin api edits of security properties
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-465'>TEIID-465</a>] -         Error message in server process log refers to binding by UUID, not name
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-563'>TEIID-563</a>] -         Exporting the configuration, via console or utility, the configuration system properties now contains everything in the system, not just defined by the Configuration component type
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-608'>TEIID-608</a>] -         Prevent duplicate hostcontroller launches
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-610'>TEIID-610</a>] -         Deleted connector bindings remain in the system state
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-704'>TEIID-704</a>] -         Missing message for key &quot;MembershipServiceImpl.Logon_failed&quot;
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-728'>TEIID-728</a>] -         Pushing blank-padded literals to source may fail to return correct results
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-792'>TEIID-792</a>] -         Index connector does not accept certian criteria forms
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-803'>TEIID-803</a>] -         The AdminAPI connector binding name needs to be assigned the name assigned by the designer
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-830'>TEIID-830</a>] -         AdminShell row count is not accurate
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-848'>TEIID-848</a>] -         Insert with out of order variables and query expression is incorrect
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-849'>TEIID-849</a>] -         subquery as input to procedure fails
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-850'>TEIID-850</a>] -         Misspellings in Teiid Reference Guide
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-852'>TEIID-852</a>] -         Oracle timestamp to time conversion null handling
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-858'>TEIID-858</a>] -         DependentSetCriteria not being replaced
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-865'>TEIID-865</a>] -         WS-Relational SOAP Connector is sending empty SOAP-ACTION header.
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-866'>TEIID-866</a>] -         AdminShell is not able to handle SELECT * INTO #TEMP FROM foo; (statement does not return a result set)
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-867'>TEIID-867</a>] -         Possibly Teiid embedded clients (Designer) not pinging query engine, causing session timeouts
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-875'>TEIID-875</a>] -         DatabaseMetadata issues
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-876'>TEIID-876</a>] -         Server Times Out Session Despite Configuration
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-879'>TEIID-879</a>] -         validate min/max non-comparable
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-889'>TEIID-889</a>] -         2 CommonTransactionTests Hang, commented out for now
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-890'>TEIID-890</a>] -         AdminShell issues
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-893'>TEIID-893</a>] -         XML Formatting error in Dynamic VDB (.def) file presents to user as file not found
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-894'>TEIID-894</a>] -         Query inexplicably failing Query Testing only with MySQL
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-895'>TEIID-895</a>] -         Update the SalesForce API to version 17 (winter 10).
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-896'>TEIID-896</a>] -         INSERT failing with SF connector on types other than a string
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-898'>TEIID-898</a>] -         Named procedure parameter error message too terse.
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-899'>TEIID-899</a>] -         Virtual Procedure queries with input variables failing with &quot;No value was available.&quot;
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-901'>TEIID-901</a>] -         NPE encountered when doing an INSERT into SFDC Account table
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-904'>TEIID-904</a>] -         Error executing the Procedural releational query with out a where clause
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-905'>TEIID-905</a>] -         block clone method is incorrect
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-909'>TEIID-909</a>] -         PropertiesUtils.resolveNestedProperties(Properties) goes in a loop 
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-911'>TEIID-911</a>] -         Prepared Batch Update against a view table fails with &quot;Unable to evaluate $param/pos0: No value was available&quot;
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-917'>TEIID-917</a>] -         xml stream handling is inconsistent
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-919'>TEIID-919</a>] -         Planner created incomplete identifiers when GROUP BY of inline view with UNION ALL
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-920'>TEIID-920</a>] -         Dup removal doesn't respect desc ordering if all projected columns are sorted on
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-922'>TEIID-922</a>] -         Teiid Quick Start Example documentation errors
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-923'>TEIID-923</a>] -         Oracle queries with a TimeStamp in the WHERE clause are failing if multiple TimeStamps are used in &quot;AND&quot;, &quot;OR', and &quot;IN&quot; situations
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-925'>TEIID-925</a>] -         dup removal results include duplicat rows
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-932'>TEIID-932</a>] -         Misleading error message when using quotation marks: Parse error... encountered (
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-934'>TEIID-934</a>] -         MySql Queries - SQL syntax error on pushdown queries when using functions like LPAD, REPLACE, etc
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-936'>TEIID-936</a>] -         Query never returns from processing
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-939'>TEIID-939</a>] -         MySQL nested set query pushdown failure
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-941'>TEIID-941</a>] -         MOD function in Postgres push down is producing connector error
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-945'>TEIID-945</a>] -         WS security tokens are configured but not provided to the service.
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-947'>TEIID-947</a>] -         UNION query with different datatypes on each side of UNION is producing inconsistent results 
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-948'>TEIID-948</a>] -         Spurious wake-up error with connector work item
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-949'>TEIID-949</a>] -         Criteria on constant column with aggregate function doesn't push criteria down correctly
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-969'>TEIID-969</a>] -         Time, date, and timestamp literals are being sent to Oracle as to_timestamp() regardless of their data type
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-973'>TEIID-973</a>] -         Quick Start Guide / Examples needs to add derbyclient.jar to UDFs for previewing
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-974'>TEIID-974</a>] -         XML-Relational connectors have trouble with reponse XMLs that contain DTD reference
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-981'>TEIID-981</a>] -         Ability to cache XML documents
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-988'>TEIID-988</a>] -         3 argument locate function on postgres reports the wrong value
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-989'>TEIID-989</a>] -         Pushdown query ORDER BY  is not always ordering results properly on Sql2000 
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1009'>TEIID-1009</a>] -         BQT Pushdown query &quot;ORDER BY&quot; is not always ordering results properly
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1025'>TEIID-1025</a>] -         Help incomplete for showPlan
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1036'>TEIID-1036</a>] -         AdminShell &amp; Migrate shell scripts should be executable
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1038'>TEIID-1038</a>] -         SF connector fails to connect.
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1042'>TEIID-1042</a>] -         AdminShell/AdminAPI - deployVDB assumes the -vdb.xml file is in the server's deploy folder
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1043'>TEIID-1043</a>] -         Invalid serialized attachments should be ingored.
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1044'>TEIID-1044</a>] -         Export connection factory does not always correct properties
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1046'>TEIID-1046</a>] -         Component Name of the VDB is null through Profile Service
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1047'>TEIID-1047</a>] -         Teiid host resolution should match that of the JBoss AS
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1051'>TEIID-1051</a>] -         Make the Connector (type) and RAR name be the same
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1053'>TEIID-1053</a>] -         NPE in Teiid JOPR when running control at vdb level - View VDB requests
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1054'>TEIID-1054</a>] -         When running the control:  View VDB Session, at the vdb level, the actions indicate its disabled
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1056'>TEIID-1056</a>] -         Required Connector Properties Should Have A Default Value If They Are Marked As An Expert Property
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1057'>TEIID-1057</a>] -         Calling getRequests() on RuntimeEngineDeployer Results in MethodNotFound 
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1063'>TEIID-1063</a>] -         PropertyDefinition.getPropertyTypeClassName() Should Always Return A Java Class Name
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1065'>TEIID-1065</a>] -         PropertyDefinition.getDisplayName() Should Agree With The Display Name Shown In JON
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1067'>TEIID-1067</a>] -         Managed connector  connection factory always closes the physical connection.
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1072'>TEIID-1072</a>] -         XML-Relational connector sometimes uses same ResponseOut/ResponseIn value for different web service queries
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1073'>TEIID-1073</a>] -         Logging not working in Teiid Jopr Plugin
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1076'>TEIID-1076</a>] -         When running BQT tests, an Assertion error is seen when batches are being processed
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1083'>TEIID-1083</a>] -         When running either control at the vdb level while the vdb is being access produces an exception
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1084'>TEIID-1084</a>] -         Exception in BatchIterator
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1085'>TEIID-1085</a>] -         AdminShell (Groovy) shows connectionName even after that connection has been disconnected
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1086'>TEIID-1086</a>] -         Possible missing I18N bundle for AdminShell
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1088'>TEIID-1088</a>] -         AdminShell deployVDB method prepends the path to server's deploy directory to VDB location 
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1094'>TEIID-1094</a>] -         XML literal input to HTTP-SOAP connector is being URL encoded
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1100'>TEIID-1100</a>] -         Teiid Examples run.sh should be executable when extracted from archive
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1101'>TEIID-1101</a>] -         Teiid Example PortfolioDS specifies a username &amp; password for Derby source where none is required
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1108'>TEIID-1108</a>] -         Receiving NPE when querying DynamicPortfolio VDB with more complicated query
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1109'>TEIID-1109</a>] -         NPE Connecting to a Teiid DataSource (XA) Without Setting Expected Properties 
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1110'>TEIID-1110</a>] -         NPE Connecting to a Teiid DataSource (XA) as Anonymous User
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1115'>TEIID-1115</a>] -         java.lang.IllegalStateException: Failed to find template for: translator-file  while attempting to call Admin.getTemplatePropertyDefinitions(&quot;file&quot;)
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1116'>TEIID-1116</a>] -         AdminConsole for DataServices indicates, by default, that SSL Enabled is true, but the teiid-jboss-beans.xml indicates sslEnabled is false
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1117'>TEIID-1117</a>] -         When VDBis deleted the cached medata files are not cleaned up
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1119'>TEIID-1119</a>] -         Trying to add new functions to be supported by a new connector and the Connector developers guide refers to the JDBCCapabilities class, which doesn't exist anymore.  Have the steps changed to add a new scalar function?
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1121'>TEIID-1121</a>] -         Fix the migrate utility for the Translator changes
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1122'>TEIID-1122</a>] -         attempting to getTemplatePropertyDefinitions() for the DefaultDS or JMSDS are throwing Admin AdminComponentException exceptions. They need to get filtered out on API calls for Data Source info.
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1125'>TEIID-1125</a>] -         Re-connecting proxy may lead to error in execution
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1126'>TEIID-1126</a>] -         Web Service VDB Execution Error
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1127'>TEIID-1127</a>] -         java.lang.ClassCastException Executing Virtual Procedure from Web Service Model
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1128'>TEIID-1128</a>] -         Invalid Resolver Error 
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1129'>TEIID-1129</a>] -         Unable to execute SQL Queries through VDB's with more than one model in it from Designer/DTP
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1130'>TEIID-1130</a>] -         NPE when using exportVDB from adminshell
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1132'>TEIID-1132</a>] -         Teiid Kit missing SalesForce JAR
+</li>
+</ul>
+        
+<h2>        Feature Request
+</h2>
+<ul>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-145'>TEIID-145</a>] -         Parse double quoted literals as identifiers by default
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-150'>TEIID-150</a>] -         Improve nested loop (in merge join) matching 
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-153'>TEIID-153</a>] -         Support IS NULL criteria in the xml connector
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-155'>TEIID-155</a>] -         Revisit TransformationMetadataFacade cache sizes
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-159'>TEIID-159</a>] -         Modify our handling of BigDecimal division to use MathContext.DECIMAL128 as our rounding mode to improve scale and precision of results
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-162'>TEIID-162</a>] -         Delete and update support in temp table
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-165'>TEIID-165</a>] -         Connector support for more converts
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-168'>TEIID-168</a>] -         Refine caching behavior
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-171'>TEIID-171</a>] -         Add SQL/XML support
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-173'>TEIID-173</a>] -         ProductAdmin role can deploy a vdb but cannot create connector bindings
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-180'>TEIID-180</a>] -         Consider using Salesforce retrieve() rather than generic query() call for queries with IN criteria
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-183'>TEIID-183</a>] -         user &quot;or&quot; and &quot;in&quot; criteria should generate multiple queries in some situations
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-186'>TEIID-186</a>] -         Expose catalog information and props in Connector API metadata [PEC]
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-207'>TEIID-207</a>] -         Forward and Backward Compatibility of MetaMatrix JDBC Driver
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-208'>TEIID-208</a>] -         LDAP Connector should implement Connection.isAlive(), in order to properly report connection status when monitored
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-216'>TEIID-216</a>] -         Query timeout should be enforced by the server
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-222'>TEIID-222</a>] -         Procedural relational execution should support disjunctive criteria
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-236'>TEIID-236</a>] -         Procedural access pattern
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-249'>TEIID-249</a>] -         Need well-known multi-payload container
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-251'>TEIID-251</a>] -         Support SQL 2003 order by with expressions
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-367'>TEIID-367</a>] -         Add a validation step to security provider definition.
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-371'>TEIID-371</a>] -         System state should reflect the state and allow start/stop/restart of Membership Domains
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-404'>TEIID-404</a>] -         1-way and 2-way SSL to MMx must support different keystore file names within a cluster
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-533'>TEIID-533</a>] -         HostController Process is redundent and should be removed
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-750'>TEIID-750</a>] -         Add more filtering in the internal processing of queries so that hidden items do not requires fully qualified names to be used
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-807'>TEIID-807</a>] -         Develop the new Teiid Console using JOPR for its core framework
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-822'>TEIID-822</a>] -         Add hsql translator
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-833'>TEIID-833</a>] -         Support tighter integration with container deployments
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-844'>TEIID-844</a>] -         Implement metadata creation in the SalesForce connector.
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-845'>TEIID-845</a>] -         AdminShell needs to be able to produce and display a Query Plan
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-851'>TEIID-851</a>] -         API improvements for custom connector development
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-873'>TEIID-873</a>] -         Add support for quoted identifier aliases
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-881'>TEIID-881</a>] -         SOAP Connector should expose property to control HTTP Header Transfer-Encoding: chunked
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-891'>TEIID-891</a>] -         Add JDBC import logic to correct unsigned types
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-897'>TEIID-897</a>] -         Create a new autowrap mode to replace pessimistic/optimistic
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-900'>TEIID-900</a>] -         Refine option no cache behavior
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-906'>TEIID-906</a>] -         Add support for a set statement
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-943'>TEIID-943</a>] -         Fully implement client streaming of lobs/readers/streams
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-963'>TEIID-963</a>] -         Need to add XPath 2.0 support for services in and out of MM
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-966'>TEIID-966</a>] -         User (principal) name in MetaMatrix should be consistently the same string
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-980'>TEIID-980</a>] -         Add ability to apply XSLT stylesheets at the datasource level
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1003'>TEIID-1003</a>] -         Connector api language changes
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1005'>TEIID-1005</a>] -         Update reserved words
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1007'>TEIID-1007</a>] -         Remove unnecessary inline views over group bys
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1019'>TEIID-1019</a>] -         Request ability to turn on/off Auto Staging tables
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1021'>TEIID-1021</a>] -         Enable better support for mixed database encoding
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1029'>TEIID-1029</a>] -         Provide sample scripts that show the use of the AdminAPI in an alternative scripting manner
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1033'>TEIID-1033</a>] -         Add state to request metadata
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1039'>TEIID-1039</a>] -         Provide a solution to  'merge' two VDBs
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1040'>TEIID-1040</a>] -         Refine client control of query plans
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1045'>TEIID-1045</a>] -         Provide a admin method to &quot;export&quot; a Data Source.
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1052'>TEIID-1052</a>] -         Replace beanshell based adminshell with Groovy
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1062'>TEIID-1062</a>] -         Expose the Teiid Runtime Version as a ManagedOperation/ManagedProperty
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1071'>TEIID-1071</a>] -         Modify validation errors element in schema for VDB configuration file to include attribute for location of error
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1075'>TEIID-1075</a>] -         Separate Connector Binding into Translation Layer and Connection Layer
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1097'>TEIID-1097</a>] -         Add support for nested table references
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1102'>TEIID-1102</a>] -         Create a replacement for the text translator
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1105'>TEIID-1105</a>] -         Add Translator Instance Information from the VDB to the VDB Configuration Tab
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1112'>TEIID-1112</a>] -         Add getRequestsForVDB() Method on RuntimeEngine
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1118'>TEIID-1118</a>] -         Provide alternative webservices calling ability
+</li>
+</ul>
+        
+<h2>        Quality Risk
+</h2>
+<ul>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-254'>TEIID-254</a>] -         Metadata query for procedure columns needs work
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-853'>TEIID-853</a>] -         Dynamic command projection should be positional
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-869'>TEIID-869</a>] -         Clean up metadata
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-874'>TEIID-874</a>] -         Wiki documentation on SSL Encryption is misleading
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-880'>TEIID-880</a>] -         SQL Server uniqueidentifier handling
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-915'>TEIID-915</a>] -         Error results in illegalstateexception
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-916'>TEIID-916</a>] -         Initial client socket timeout is too low under load
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-918'>TEIID-918</a>] -         Change all package names to org.teiid
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-926'>TEIID-926</a>] -         Reduce use of map look ups for projection
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1001'>TEIID-1001</a>] -         Source string format for float/double/bigdecimal/timestamp can vary
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1004'>TEIID-1004</a>] -         Check for common math exceptions
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1012'>TEIID-1012</a>] -         Update logging contexts
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1015'>TEIID-1015</a>] -         Move threading concerns to the engine
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1016'>TEIID-1016</a>] -         Include documentation about system properties in server configuration
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1018'>TEIID-1018</a>] -         Review all translator properties
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1020'>TEIID-1020</a>] -         Remove the use of Teiid specific JDBC extensions
+</li>
+</ul>
+            
+<h2>        Task
+</h2>
+<ul>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-278'>TEIID-278</a>] -         Upgrade Axis2 to Axis2 1.4
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-673'>TEIID-673</a>] -         Need to Document Alternate Means of Achieving Web Services and XML Usage Scenarios for Teiid
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-790'>TEIID-790</a>] -         Teiid Server uses Sun JDK specific JMX server, thus portability to other JDKs is not possible
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-854'>TEIID-854</a>] -         Remove the legacy &quot;server&quot; project from the SCM
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-868'>TEIID-868</a>] -         Simplify handling of parse format date/time functions
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-878'>TEIID-878</a>] -         Fix capabilities caching
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-902'>TEIID-902</a>] -         Restructure planning
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-912'>TEIID-912</a>] -         Add unit test methods from JBEDSP-1137: StackOverflowError when top level query uses the same symbol name and group alias that is in a second level query or sub-query
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-913'>TEIID-913</a>] -         Refine buffer management
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-927'>TEIID-927</a>] -         Remove the legacy JDBC Datasource and Driver classes
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-990'>TEIID-990</a>] -         Remove the Axis library dependency on the XML Connectors
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-995'>TEIID-995</a>] -         The management console should support deploying VDB to EDS
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1002'>TEIID-1002</a>] -         Remove unnecessary sandbox connectors
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1023'>TEIID-1023</a>] -         Chanage &quot;MaxResultRows&quot; Connector Property to default to &quot;unlimited&quot;
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1026'>TEIID-1026</a>] -         Refine plan/annotation logic
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1037'>TEIID-1037</a>] -         Document execution properties in the client developers guide.
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1041'>TEIID-1041</a>] -         Create a CTC kit to be used to deploy Teiid/EDS query testing across all supported platforms in the Hudson QA Lab
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1050'>TEIID-1050</a>] -         Update the build process to use new Nexus Maven repository
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1074'>TEIID-1074</a>] -         Make VDB work with Model based index files
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1098'>TEIID-1098</a>] -         Add Long Running Query Limit Property to Teiid Engine Managed Component
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1099'>TEIID-1099</a>] -         Update Jopr Plugin to Use Long Running Query Property and Method on Teiid Engine
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1111'>TEIID-1111</a>] -         Add Teiid Version to Summary Page of Engine Resource in Teiid Jopr Plugin
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1120'>TEIID-1120</a>] -         Provide single HTML page for all the documents
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1124'>TEIID-1124</a>] -         Confusion with &quot;java:&quot; prefix in the DataSource from tooling
+</li>
+</ul>
+    
+<h2>        Thirdparty Change
+</h2>
+<ul>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-938'>TEIID-938</a>] -         MySql queries pushed down to the source producing error:  Invalid conversion from type class com.metamatrix.common.types.BlobType with value 'javax.sql.rowset.serial.SerialBlob@1b1395dc' to type class java.lang.Character
+</li>
+</ul>
+        
+<h2>        Sub-task
+</h2>
+<ul>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-137'>TEIID-137</a>] -         Remove the HTTPClient Usage from the XML Connector and use the Common XML Connector
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-138'>TEIID-138</a>] -         Convert Common XML Connector to Axis2
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-143'>TEIID-143</a>] -         Query should 'find' connector types and jars rather than have them predefined in the config.
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-199'>TEIID-199</a>] -         Integration with JBoss Identity project
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-218'>TEIID-218</a>] -         Security URL properties handling
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-315'>TEIID-315</a>] -         Add JDBC Connector developers guide
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-396'>TEIID-396</a>] -         Authorization Provider can not deleted using the Admin API
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-429'>TEIID-429</a>] -         Use DataSources in creating the ConnectorBindings instead of creating one using the Driver
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-441'>TEIID-441</a>] -         Expand the requires restart property
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-464'>TEIID-464</a>] -         Shared Installation Option
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-502'>TEIID-502</a>] -         Allow Multiple UDF Definition Models
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-674'>TEIID-674</a>] -         Document/test a Means of Top-down WSDL Consumption
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-675'>TEIID-675</a>] -         Document/test a Means of Bottom-up Web Services in Teiid
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-676'>TEIID-676</a>] -         Document/test a means of creating service that executes ad-hoc SQL commands inTeiid
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-678'>TEIID-678</a>] -         Document/test Alternative Means to Achieve Current XML Document Scenarios
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-781'>TEIID-781</a>] -         Move the CTC testing framework to the teiid community
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-782'>TEIID-782</a>] -         Add the ability to test transactions to CTC testing client
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-788'>TEIID-788</a>] -         Change internal handling of insert with query expression
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-789'>TEIID-789</a>] -         Provide JMX access from remote computers
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-808'>TEIID-808</a>] -         Revisit the prior issues with extending the JOPR JMX plugin and verify if the problems have been fixed
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-838'>TEIID-838</a>] -         Runtime discovery of VDBs
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-859'>TEIID-859</a>] -         Connector API must extend the JCA 1.5 API
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-861'>TEIID-861</a>] -         All Teiid Connectors  must be modified and packaged as JCA Connectors.
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-862'>TEIID-862</a>] -         Teiid engine needs to be exposed as a JCA Connector
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-863'>TEIID-863</a>] -         Remove Trusted payload, credential map for authenticating connector sources
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-864'>TEIID-864</a>] -         Need new deployment packing that works with JBoss AS or JBoss Embedded
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-870'>TEIID-870</a>] -         Standardize the JDBC metadata
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-871'>TEIID-871</a>] -         Refactor system vdb
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-877'>TEIID-877</a>] -         Membership Domain Documentation is Out of Date
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-883'>TEIID-883</a>] -         Convert model/group/element to schema/table/column
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-884'>TEIID-884</a>] -         Calling restart on adminapi throws an exception
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-907'>TEIID-907</a>] -         Add a sample connector template for starting a new connector development
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-910'>TEIID-910</a>] -         Convert the Admin API implemention based on Profile Service
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-924'>TEIID-924</a>] -         Remove metadataobjects
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-944'>TEIID-944</a>] -         Provide a separate Admin connection
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-997'>TEIID-997</a>] -         Investigate adding new metrics that added value for the user to monitor their servers
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-998'>TEIID-998</a>] -         Define a new schema based VDB deployer xml (previously defined by ConfigurationInfo.def)
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1013'>TEIID-1013</a>] -         Load the UDF based on the information provided in the vdb.xml
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1017'>TEIID-1017</a>] -         Move defining the Data Roles to VDB deployer XML file. Map the roles to container roles
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1024'>TEIID-1024</a>] -         Support conversion between clob and sql/xml
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1032'>TEIID-1032</a>] -         Change nomenclature of &quot;Connector Binding&quot; to &quot;Connection Factory&quot;
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1068'>TEIID-1068</a>] -         Provide a single Connector, that represents the DS and Teiid Connector for JDBC sources.
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1069'>TEIID-1069</a>] -         Admin API Data Source method are not needed
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1077'>TEIID-1077</a>] -         Split all Connector projects to define their &quot;Translator&quot; modules and &quot;Connection&quot; modules
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1078'>TEIID-1078</a>] -         Build annotation based configuration for the Connector Translation layer 
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1079'>TEIID-1079</a>] -         Provide deployer for the Translation Layer components.
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1080'>TEIID-1080</a>] -         Change Admin API, to support the Translation Layer and Connection layer concepts.
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1081'>TEIID-1081</a>] -         Provide pre built &quot;Translator&quot; for all the popular data sources
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1087'>TEIID-1087</a>] -         Add Function to Extract fragments from XML
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1089'>TEIID-1089</a>] -         Combine the ExecutionFactory and Capabilities class into single class
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1113'>TEIID-1113</a>] -         Change Get Request for VDB Operation to Call getRequestsForVDB() on the RuntimeEngine
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1114'>TEIID-1114</a>] -         Add support for xmltable
+</li>
+</ul>
+
+ 
+<h2><a name="Documentation">Documentation and Help</a></h2>
+
+The <a href="http://www.jboss.org/teiid/">Teiid community project</a> is hosted on jboss.org.
+Documentation and help may be obtained from the local distribution under <a href="teiid-docs">teiid-docs</a> or the following locations.
+<ul>
+
+<li><a href="http://www.jboss.org/teiid/docs">Online Documentation</a></li>
+<li><a href="https://community.jboss.org/wiki/TheTeiidProject">Wiki</a></li>
+<li><a href="http://jira.jboss.org/jira/browse/TEIID">JIRA</a></li>
+<li><a href="http://community.jboss.org/en/teiid?view=discussions">Forums</a></li>
+</ul>
+
+
+<h2><a name="Licenses">Licenses</a></h2>
+
+<p>Teiid is licensed under the <a href="LICENSE-lgpl-2.1.txt">LGPL</a>. The
+license texts for Teiid and the thirdparty components it uses may be found in the teiid-docs/licenses
+directory of the distribution. <a href="teiid-docs/licenses">Browse
+Licenses</a>
+
+</p>
+
+<h2><a name="About">About JBoss, a
+division of Red Hat</a></h2>
+
+<p>JBoss, a division of <a href="http://www.redhat.com/jboss/">Red
+Hat</a>, is in the business of
+providing
+superior technical support to our customers. Our goal is to make
+Professional Open Source&trade; the <b>SAFE
+CHOICE</b>
+for you. We accomplish this by backing up our open source Java products
+with technical support services that are delivered by the core
+developers themselves. We can help you to train your staff and provide
+you with support at every stage of the application lifecycle - from
+development and integration through deployment and maintenance. Visit
+the <a href="http://www.jboss.com/services/index">JBoss
+Services</a> page for more
+information.</p>
+
+</BODY>
+</HTML>

@@ -38,6 +38,7 @@ import org.teiid.client.security.ILogon;
 import org.teiid.client.security.LogonException;
 import org.teiid.client.security.LogonResult;
 import org.teiid.client.util.ExceptionUtil;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.dqp.internal.process.DQPWorkContext;
@@ -90,7 +91,7 @@ public class LocalServerConnection implements ServerConnection {
 		return iface.cast(Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new InvocationHandler() {
 
 			public Object invoke(Object arg0, final Method arg1, final Object[] arg2) throws Throwable {
-				if (!isOpen()) {
+				if (shutdown) {
 					throw ExceptionUtil.convertException(arg1, new TeiidComponentException(NetPlugin.Util.getString("LocalTransportHandler.Transport_shutdown"))); //$NON-NLS-1$
 				}
 				try {
@@ -109,8 +110,12 @@ public class LocalServerConnection implements ServerConnection {
 		}));
 	}
 
-	public boolean isOpen() {
-		return !shutdown;
+	@Override
+	public ResultsFuture<?> isOpen() {
+		if (shutdown) {
+			return null;
+		}
+		return ResultsFuture.NULL_FUTURE;
 	}
 
 	public void close() {

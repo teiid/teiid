@@ -310,15 +310,6 @@ public class AdminShell {
 		ObjectConverterUtil.write(contents, fileName);	
 	}
 	
-	@Doc(text = "Export a VDB to file")
-	public static void exportVDB(
-			@Doc(text = "vdb name") String vdbName, 
-			@Doc(text = "vdb version") int vdbVersion, 
-			@Doc(text = "file name") String fileName) throws AdminException, IOException{
-	    InputStream contents = getAdmin().exportVDB(vdbName, vdbVersion);
-	    writeFile(vdbName, fileName, contents);
-	}
-	
 	@Doc(text = "Deploy a VDB from file")
 	public static void deployVDB(
 			@Doc(text = "file name") String vdbFile) throws AdminException, FileNotFoundException {

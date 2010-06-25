@@ -50,10 +50,10 @@ public class TestRuleMergeVirtual {
     }
     
     @Test public void testSimpleMergeGroupBy1() {
-        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x FROM (SELECT distinct e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x FROM (SELECT distinct min(e1), max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
                                       FakeMetadataFactory.example1Cached(), null, TestAggregatePushdown.getAggregatesFinder(),
                                       new String[] {
-                                          "SELECT v_0.c_1 FROM (SELECT DISTINCT g_0.e1 AS c_0, MAX(g_0.e2) AS c_1 FROM pm1.g1 AS g_0 GROUP BY g_0.e1) AS v_0"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
+                                          "SELECT v_0.c_1 FROM (SELECT DISTINCT MIN(g_0.e1) AS c_0, MAX(g_0.e2) AS c_1 FROM pm1.g1 AS g_0 GROUP BY g_0.e1) AS v_0"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }
@@ -75,10 +75,10 @@ public class TestRuleMergeVirtual {
     @Test public void testSimpleMergeGroupBy3() {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
-        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT distinct x, e1 FROM (SELECT e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT distinct x, e1 FROM (SELECT min(e1) as e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
                                       metadata, null, TestAggregatePushdown.getAggregatesFinder(),
                                       new String[] {
-                                          "SELECT DISTINCT MAX(e2) AS x, e1 FROM pm1.g1 GROUP BY e1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
+                                          "SELECT DISTINCT MAX(e2) AS x, MIN(e1) FROM pm1.g1 GROUP BY e1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }
@@ -113,10 +113,10 @@ public class TestRuleMergeVirtual {
     @Test public void testSimpleMergeGroupBy7() {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
-        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT distinct x, e1 FROM (SELECT distinct e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT distinct x, e1 FROM (SELECT distinct min(e1) as e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
                                       metadata, null, TestAggregatePushdown.getAggregatesFinder(),
                                       new String[] {
-                                          "SELECT DISTINCT MAX(e2) AS x, e1 FROM pm1.g1 GROUP BY e1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
+                                          "SELECT DISTINCT MAX(e2) AS x, MIN(e1) FROM pm1.g1 GROUP BY e1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }

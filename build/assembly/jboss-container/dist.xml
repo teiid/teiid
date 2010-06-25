@@ -57,11 +57,11 @@
             <outputDirectory>teiid-docs</outputDirectory>
         </file>
         <file>
-            <source>target/distribution/teiid-${version}-docs/quick-start-example/en-US/pdf/quick_start_example.pdf</source>
+            <source>target/distribution/teiid-${version}-docs/quick-start-example/en-US/pdf/teiid_quick_start_example.pdf</source>
             <outputDirectory>teiid-docs</outputDirectory>
         </file>
         <file>
-            <source>target/distribution/teiid-${version}-docs/developer-guide/en-US/pdf/developer_guide.pdf</source>
+            <source>target/distribution/teiid-${version}-docs/developer-guide/en-US/pdf/teiid_developer_guide.pdf</source>
             <outputDirectory>teiid-docs</outputDirectory>
         </file>
         <file>

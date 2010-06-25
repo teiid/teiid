@@ -39,6 +39,12 @@ import javax.sql.StatementEventListener;
 import javax.sql.XAConnection;
 import javax.transaction.xa.XAResource;
 
+import org.teiid.client.security.InvalidSessionException;
+import org.teiid.client.util.ExceptionUtil;
+import org.teiid.net.CommunicationException;
+import org.teiid.net.ServerConnection;
+import org.teiid.net.socket.SingleInstanceCommunicationException;
+
 /**
  * Implementation of XAConnection.
  */
@@ -71,7 +77,25 @@ public class XAConnectionImpl implements XAConnection{
             try {
 				return method.invoke(this.proxiedConnection, args);
 			} catch (InvocationTargetException e) {
-				//TODO: notify listeners about critical errors
+				Exception ex = ExceptionUtil.getExceptionOfType(e, InvalidSessionException.class);
+				if (ex == null) {
+					ex = ExceptionUtil.getExceptionOfType(e, CommunicationException.class);
+					if (ex instanceof SingleInstanceCommunicationException) {
+						ServerConnection sc = proxiedConnection.getServerConnection();
+						if (sc.isOpen() != null) {
+							ex = null;
+						}
+					}
+				}
+				if (ex != null) {
+					SQLException se = null;
+					if (e.getCause() instanceof SQLException) {
+						se = (SQLException)e.getCause();
+					} else {
+						se = TeiidSQLException.create(e.getCause());
+					}
+					notifyListener(se);
+				} 
 				throw e.getTargetException();
 			}
         }
@@ -93,14 +117,14 @@ public class XAConnectionImpl implements XAConnection{
 	}
 		
 	public Connection getConnection() throws SQLException{
-        ConnectionImpl conn = getMMConnection();
+        ConnectionImpl conn = getConnectionImpl();
 		
 		Connection result = (Connection)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {Connection.class}, new CloseInterceptor(conn));
 		
 		return result;
 	}
 	
-	ConnectionImpl getMMConnection() throws SQLException {
+	ConnectionImpl getConnectionImpl() throws SQLException {
 	    if(isClosed){
             throw new SQLException(JDBCPlugin.Util.getString("MMXAConnection.connection_is_closed")); //$NON-NLS-1$
         }

@@ -177,9 +177,9 @@ public class TestAggregateProcessing {
 		// Create expected results
 		List[] expected = new List[] {
 				Arrays.asList(new Object[] { new Integer(1),
-						new BigDecimal("110.5") }), //$NON-NLS-1$
+						new BigDecimal("110.5000000") }), //$NON-NLS-1$
 				Arrays.asList(new Object[] { new Integer(2),
-						new BigDecimal("254.5") }) //$NON-NLS-1$
+						new BigDecimal("254.5000000") }) //$NON-NLS-1$
 		};
 
 		// Construct data manager with data
@@ -299,7 +299,7 @@ public class TestAggregateProcessing {
         dataManager.addData("SELECT MAX(v_0.c_0), COUNT(*), COUNT(v_0.c_0), SUM(power(v_0.c_0, 2)), SUM(v_0.c_0) FROM (SELECT g_0.e2 AS c_0 FROM pm2.g2 AS g_0) AS v_0 HAVING COUNT(*) > 0", new List[] {Arrays.asList(5, 6, 4, BigInteger.valueOf(50l), 10l)});
         
         List[] expected = new List[] {
-    		Arrays.asList(5, 8, 2.1213203435596424, 5.4),
+    		Arrays.asList(5, 8, 2.1147629234082532, 5.366666666666666),
         }; 
         
         helpProcess(plan, dataManager, expected);

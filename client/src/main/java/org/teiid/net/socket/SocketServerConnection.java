@@ -49,6 +49,7 @@ import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.security.LogonException;
 import org.teiid.client.security.LogonResult;
 import org.teiid.client.util.ExceptionUtil;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
@@ -100,20 +101,25 @@ public class SocketServerConnection implements ServerConnection {
 	private void schedulePing() {
 		if (this.pingTimer != null) {
         	this.pingTimer.schedule(new TimerTask() {
+        		
+        		private ResultsFuture<?> ping;
+        		
     			@Override
     			public void run() {
-    				try {
-    					if (isOpen()) {
-    						logon.ping();
-    						return;
-    					} 
-    				} catch (InvalidSessionException e) {
-    					shutdown(false);
-    				} catch (TeiidComponentException e) {
-    					close();
+    				if (ping == null || !ping.isDone()) {
+    					ping = isOpen();
     				} 
-    				this.cancel();
+    				if (ping != null && ping.isDone()) {
+    					try {
+							ping.get();
+							return;
+						} catch (Throwable e) {
+							handlePingError(e);
+						}
+    				}
+					this.cancel();
     			}
+				
         	}, PING_INTERVAL, PING_INTERVAL);
         }
 	}
@@ -128,10 +134,8 @@ public class SocketServerConnection implements ServerConnection {
 		if (closed) {
 			throw new CommunicationException(NetPlugin.Util.getString("SocketServerConnection.closed")); //$NON-NLS-1$ 
 		}
-		if (this.serverInstance != null) {
-			if (this.serverInstance.isOpen()) {
-				return this.serverInstance;
-			}
+		if (this.serverInstance != null && (!failOver || this.serverInstance.isOpen())) {
+			return this.serverInstance;
 		}
 		List<HostInfo> hostKeys = new ArrayList<HostInfo>(this.serverDiscovery.getKnownHosts(logonResult, this.serverInstance));
 		closeServerInstance();
@@ -221,15 +225,10 @@ public class SocketServerConnection implements ServerConnection {
 	            } catch (Throwable t) {
 	            	exception = t;
 	            }
-	            if (exception instanceof SingleInstanceCommunicationException
-						|| exception.getCause() instanceof SingleInstanceCommunicationException) {
-	            	if (!failOver || !isOpen()) {
-	            		break;
-	            	}
-	            	invalidateTarget();
-	            } else {
+	            if (!failOver || ExceptionUtil.getExceptionOfType(exception, SingleInstanceCommunicationException.class) == null) {
 	            	break;
 	            }
+            	invalidateTarget();
 	            //TODO: look for invalid session exception
 			}
 	        throw ExceptionUtil.convertException(method, exception);
@@ -275,15 +274,30 @@ public class SocketServerConnection implements ServerConnection {
 		this.closed = true;
 		this.serverDiscovery.shutdown();
 	}
-
-	public synchronized boolean isOpen() {
+	
+	public synchronized ResultsFuture<?> isOpen() {
 		if (this.closed) {
-			return false;
+			return null;
 		}
 		try {
-			return selectServerInstance().isOpen();
+			if (!selectServerInstance().isOpen()) {
+				return null;
+			}
 		} catch (CommunicationException e) {
-			return false;
+			return null;
+		}
+		try {
+			return logon.ping();
+		} catch (Throwable th) {
+			return null;
+		} 
+	}
+
+	private void handlePingError(Throwable th) {
+		if (ExceptionUtil.getExceptionOfType(th, InvalidSessionException.class) != null) {
+			shutdown(false);
+		} else {
+			close();
 		}
 	}
 

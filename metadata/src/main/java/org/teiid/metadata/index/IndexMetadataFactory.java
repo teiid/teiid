@@ -279,6 +279,10 @@ public class IndexMetadataFactory {
 		        for (Column columnRecordImpl : columns) {
 		    		columnRecordImpl.setDatatype(getDatatypeCache().get(columnRecordImpl.getDatatypeUUID()));
 		    		columnRecordImpl.setParent(tableRecord);
+		    		String fullName = columnRecordImpl.getName();
+		    		if (fullName.startsWith(tableRecord.getName() + '.')) {
+		    			columnRecordImpl.setName(fullName.substring(tableRecord.getName().length() + 1));
+		    		}
 				}
 		        Collections.sort(columns);
 		        tableRecord.setColumns(columns);
@@ -414,7 +418,7 @@ public class IndexMetadataFactory {
 		            ColumnSet<Procedure> resultRecord = (ColumnSet<Procedure>) getRecordByType(result.getUUID(), MetadataConstants.RECORD_TYPE.RESULT_SET, false);
 		            if (resultRecord != null) {
 		            	resultRecord.setParent(procedureRecord);
-		            	resultRecord.setName("RSParam"); //$NON-NLS-1$
+		            	resultRecord.setName(RecordFactory.getShortName(resultRecord.getName()));
 			            loadColumnSetRecords(resultRecord, null);
 			            procedureRecord.setResultSet(resultRecord);
 		            }
@@ -460,6 +464,7 @@ public class IndexMetadataFactory {
 				c = columns.get(uuid);
 			} else {
 				c = findElement(uuid);
+				c.setName(RecordFactory.getShortName(c.getName()));
 			}
 			indexRecord.getColumns().set(i, c);
 			c.setParent(indexRecord);
@@ -538,7 +543,7 @@ public class IndexMetadataFactory {
 		// Query based on fully qualified name
 		else {
 			String prefixString  = getPrefixPattern(recordType,entityName);
-			results = queryIndex(recordType, prefixString.toCharArray(), true, true, true);
+			results = queryIndex(recordType, prefixString.toCharArray(), true, true, entityName != null);
 		}
 
 		return results;
