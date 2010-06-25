@@ -1518,7 +1518,7 @@
 							<para>getCharacterVDBResource</para>
 						</entry>
 						<entry>
-							<para>(string resourcePath)/para>
+							<para>(string resourcePath)</para>
 						</entry>
 						<entry>
 							<para>A single column containing the resource as a clob.</para>
