@@ -6,12 +6,11 @@
 <chapter id="jdbc_extensions">
     <title>Teiid extensions to the JDBC API</title>
     
-    <sect1>
+    <sect1 id="statement_extensions">
         <title>Statement Extensions</title>
-        <para>Teiid provides some extensions to the JDBC statement interface.  The Teiid Statement extension interface 
-        is defined by <code>org.teiid.jdbc.TeiidStatement</code>. To use the extension interface, simply 
-        cast or unwap the statement returned by the Connection to the extension interface.  
-        The following methods are provided on the extension interface:</para>
+        <para>The Teiid statement extension interface, 
+        <code>org.teiid.jdbc.TeiidStatement</code>, provides functionality beyond the JDBC standard. To use the extension interface, simply 
+        cast or unwap the statement returned by the Connection.  The following methods are provided on the extension interface:</para>
         
         <table frame='all'>
             <title>Connection Properties</title>
@@ -27,78 +26,159 @@
                 <tbody>
                     <row>
                         <entry>
-                            <code>getAnnotations()</code>
+                            <code>getAnnotations</code>
                         </entry>
                         <entry>
-                            <code>Get the query engine annotations if the previously executed command used OPTION PLANONLY or OPTION SHOWPLAN</code>
+                            <para>Get the query engine annotations if the statement was last executed with SHOWPLAN ON|DEBUG.  Each <code>org.teiid.client.plan.Annotation</code> contains a description, 
+        a category, a severity, and possibly a resolution of notes recorded during query planning that can be used to understand choices made by the query planner.</para>
                         </entry>
                     </row>
                     
                     <row>
                         <entry>
-                            <code>getDebugLog()</code>
+                            <code>getDebugLog</code>
                         </entry>
                         <entry>
-                            <code>Get the debug log if the previously executed command used OPTION DEBUG.</code>
-                        </entry>
-                    </row>
-
-                    <row>
-                        <entry>
-                            <code>getExecutionProperty(String)</code>
-                        </entry>
-                        <entry>
-                            <code>Get the current value of an execution property on this statement object.</code>
+                            <para>Get the debug log if the statement was last executed with SHOWPLAN DEBUG.</para>
                         </entry>
                     </row>
 
                     <row>
                         <entry>
-                            <code>getPlanDescription()</code>
+                            <code>getExecutionProperty</code>
                         </entry>
                         <entry>
-                            <code>Get the query plan description if the previously executed command used OPTION PLANONLY or OPTION SHOWPLAN.</code>
-                        </entry>
-                    </row>
-
-                    <row>
-                        <entry>
-                            <code>getRequestIdentifier()</code>
-                        </entry>
-                        <entry>
-                            <code>Get an identifier for the last command executed on this statement.  If no command has been executed yet, null is returned.</code>
+                            <para>Get the current value of an execution property on this statement object.</para>
                         </entry>
                     </row>
 
                     <row>
                         <entry>
-                            <code>setExecutionProperty(String, String)</code>
+                            <code>getPlanDescription</code>
                         </entry>
                         <entry>
-                            <code>Set the execution property on this statement.  Execution properties are described in more detail below.</code>
+                            <para>Get the query plan description if the statement was last executed with SHOWPLAN ON|DEBUG.  The plan is a tree made up of <code>org.teiid.client.plan.PlanNode</code> objects.  
+                            Typically <code>PlanNode.toString()</code> or <code>PlanNode.toXml()</code></para> will be used to convert the plan into a textual form.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <code>getRequestIdentifier</code>
+                        </entry>
+                        <entry>
+                            <para>Get an identifier for the last command executed on this statement.  If no command has been executed yet, null is returned.</para>
                         </entry>
                     </row>
 
                     <row>
                         <entry>
-                            <code>setPayload(Serializable)</code>
+                            <code>setExecutionProperty</code>
                         </entry>
                         <entry>
-                            <code>Set a per-command payload to pass to translators. Currently 
-                            this only used for sending hints for Oracle 
-                            data source. For security purposes, this is no longer recommended.</code>
+                            <para>Set the execution property on this statement.  See the <link linkend="execution_properties">execution properties</link> section for more information.  
+                            It is generally preferable to use the <link linkend="set_statement">SET statement</link> unless the execution property applies only to the statement being executed.</para>
+                        </entry>
+                    </row>
+
+                    <row>
+                        <entry>
+                            <code>setPayload</code>
+                        </entry>
+                        <entry>
+                            <para>Set a per-command payload to pass to translators. Currently 
+                            the only built-in use is for sending hints for Oracle 
+                            data source.</para>
                         </entry>
                     </row>
                 </tbody>
             </tgroup>
-       </table>    
+       	 </table>
+       </sect1>
        
-       <sect2>
-        <title>Debug Information</title>
+       <sect1 id="execution_properties">
+        <title>Execution Properties</title>
+        <para>Execution properties may be set on a per statement basis through the <link linkend="statement_extensions"><code>TeiidStatement</code></link> interface or on the connection via the <link linkend="set_statement">SET statement</link>.
+        For convenience, the property keys are defined by constants on the <code>org.teiid.jdbc.ExecutionProperties</code> interface.</para>
         
-        <para>Debug information is only returned when using query options.
-        These options are set on the session using the 
-        <code>SET</code> keyword.  The available options for debugging purposes are:</para>
+        <table frame='all'>
+            <title>Execution Properties</title>
+            <tgroup cols='2' align='left' colsep='1' rowsep='1'>
+                <colspec colname='c1' colwidth="1*" />
+                <colspec colname='c2' colwidth="2*" />
+                <thead>
+                    <row>
+                        <entry>Property Name/String Constant</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>
+                            <code>PROP_TXN_AUTO_WRAP / autoCommitTxn</code>
+                        </entry>
+                        <entry>
+                            <para>Same as the connection property.</para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <code>PROP_PARTIAL_RESULTS_MODE / partialResultsMode</code>
+                        </entry>
+                        <entry>
+                            <para>See the <link linkend="partial_results">partial results</link> section.</para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <code>PROP_XML_FORMAT / XMLFormat</code>
+                        </entry>
+                        <entry>
+                            <para>Determines the formatting of XML documents returned by XML document models.  See the <link linkend="document_formatting">document formatting</link> section.</para>
+                        </entry>
+                    </row>      
+                    <row>
+                        <entry>
+                            <code>PROP_XML_VALIDATION / XMLValidation</code>
+                        </entry>
+                        <entry>
+                            <para>Determines whether XML documents returned by XML document models will be validated 
+                            against their schema after processing.  See the <link linkend="document_validation">document validation</link> section.</para>
+                        </entry>
+                    </row>      
+                    <row>
+                        <entry>
+                            <code>RESULT_SET_CACHE_MODE / resultSetCacheMode</code>
+                        </entry>
+                        <entry>
+                            <para>Same as the connection property.</para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <code>SQL_OPTION_SHOWPLAN / SHOWPLAN</code>
+                        </entry>
+                        <entry>
+                            <para>Same as the connection property.</para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <code>NOEXEC / NOEXEC</code>
+                        </entry>
+                        <entry>
+                            <para>Same as the connection property.</para>
+                        </entry>
+                    </row>
+                 </tbody>
+             </tgroup>
+        </table>        
+       </sect1>    
+       
+       <sect1 id="set_statement">
+        <title>Set Statement</title>
+        
+        <para>Execution properties may also be set on the connection by using the SET statement.  
+        The SET statement is not yet a language feature of Teiid and is handled only in the JDBC client.</para>
         
         <itemizedlist>
             <para>SET Syntax:
@@ -118,118 +198,32 @@
                 <para>The value is also not treated as an expression and will not be evaluated prior to being set as the parameter value.</para>
             </listitem>
         </itemizedlist>
-        <para>The SET command can be used to control planning and execution.
-        </para>
+        <para>The SET statement is most commonly used to control planning and execution.</para>
         <itemizedlist>
             <listitem>
-                <para>SET SHOWPLAN [ON|DEBUG|OFF] - ON returns the query plan along with the results and DEBUG additionally prints the query planner debug information in the log and returns it with the results.  Both the plan and the log are available through JDBC API extensions.</para>
+                <para>SET SHOWPLAN (ON|DEBUG|OFF)</para>
             </listitem>
             <listitem>
-                <para>SET NOEXEC [ON|OFF] - ON prevents query execution, but parsing and planning will still occur.</para>
+                <para>SET NOEXEC (ON|OFF)</para>
             </listitem>
         </itemizedlist>        
         
-        <para>Use the Statement object to execute the above command to set the required options.</para>
-        
-        <para><emphasis>getDebugLog()</emphasis> - method can be used to obtain the output from 
-        the <code>SET SHOWPLAN DEBUG</code> option.</para>
-        
-        <para><emphasis>getPlanDescription()</emphasis> - method be used to obtain the query plan from SET SHOWPLAN ON.  
-        The plan is a tree made up of <code>PlanNode</code> objects.  The <code>PlanNode</code> interface is 
-        also in the <code>org.teiid.client.plan</code> package.  A PlanNode simply has a set of properties and 
-        the ability to traverse to a parent node and the child nodes.  The property keys in the 
-        query plan nodes are dependent on the type of plan and the command itself.</para>
-        
-        <para><emphasis>getAnnotations()</emphasis> - method can be called to obtain any annotations 
-         objects.  Each annotation contains a description, 
-        a category, a severity, and possibly a resolution of notes recorded during query planning 
-        that can be used to understand choices made by the query planner. This is also available when SET SHOWPLAN is used.</para>
-       </sect2>
+        <example>
+        	<title>Enabling Plan Debug</title>
+        	<programlisting>Statement s = connection.createStatement();
+s.execute("SET SHOWPLAN DEBUG");
+...
+Statement s1 = connection.createStatement();
+ResultSet rs = s1.executeQuery("select col from table");
+TeiidStatement ts = s1.unwrap(TeiidStatement.class);
+String debugLog = ts.getDebugLog();        	
+        	</programlisting>
+        </example>
+       </sect1>
                             
-       <sect2 id="execution_properties">
-        <title>Execution Properties</title>
-        <para>When your application executes queries, it can specify optional features for each query.  
-        Your application can use some of these options only in certain contexts.  These execution properties 
-        share a common interface when they are being set.  The execution properties are defined by 
-        constants in the <code>org.teiid.jdbc.ExecutionProperties</code> interface.</para>
-        <para>You can get and set the following execution properties to modify the behavior of query execution by calling
-        <code>setExecutionProperty</code> method on the <code>org.teiid.jdbc.TeiidStatement</code> class.</para>
-        
-        <table frame='all'>
-            <title>Execution Properties</title>
-            <tgroup cols='2' align='left' colsep='1' rowsep='1'>
-                <colspec colname='c1' colwidth="1*" />
-                <colspec colname='c2' colwidth="2*" />
-                <thead>
-                    <row>
-                        <entry>Property Name</entry>
-                        <entry>Description</entry>
-                    </row>
-                </thead>
-                <tbody>
-                    <row>
-                        <entry>
-                            <code>PROP_TXN_AUTO_WRAP</code>
-                        </entry>
-                        <entry>
-                            <para>Determines how transactions are automatically wrapped used with 
-                            commands when auto commit mode is set to “true”.  Does not affect transaction 
-                            behavior when auto commit mode is set to “false”.   See 
-                            <link linkend="jdbc_transactions">“Transactions with JDBC”</link> for more information.</para>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>
-                            <code>PROP_PARTIAL_RESULTS_MODE</code>
-                        </entry>
-                        <entry>
-                            <para>Determines whether partial results mode is used for this query or not.</para>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>
-                            <code>PROP_XML_FORMAT</code>
-                        </entry>
-                        <entry>
-                            <para>Determines the formatting of the returned XML documents.  The two supported 
-                            formats are XML_TREE_FORMAT, which is a formatted tree with indentation and 
-                            linefeeds or XML_COMPACT_FORMAT which is a compact message with no extra whitespace.  
-                            If no value is set for this property (the default), then the formatting mode 
-                            specified in the XML document model is used.</para>
-                        </entry>
-                    </row>      
-                    <row>
-                        <entry>
-                            <code>PROP_XML_VALIDATION</code>
-                        </entry>
-                        <entry>
-                            <para>Determines whether xml result documents will be validated 
-                            against their schema before being returned.  If schema validation fails, 
-                            a warning message is returned along with the result documents.  
-                            Using validation significantly reduces performance.</para>
-                        </entry>
-                    </row>      
-                    <row>
-                        <entry>
-                            <code>RESULT_SET_CACHE_MODE</code>
-                        </entry>
-                        <entry>
-                            <para>Result set caching provides caching of complete result sets based on exact query matches. 
-                            Result set caching is not enabled by default. Result set caching needs to enabled on Server too. 
-                            Once result set caching is enabled, all user 
-                            queries will use the result set cache.  Additional control is provided in the JDBC 
-                            driver to turn off use of the result set cache on a per-query basis.</para>
-                        </entry>
-                    </row>                                                                    
-                 </tbody>
-             </tgroup>
-        </table>        
-        <para>Each of these properties are described in detail in the following sections.</para>                    
-       </sect2>
-       
-       <sect2>
+       <sect1 id="partial_results">
         <title>Partial Results Mode</title>
-        <para>The Teiid Server supports a “partial results” query mode.  This mode changes the behavior of the 
+        <para>The Teiid Server supports a "partial results" query mode.  This mode changes the behavior of the 
         query processor so the server returns results even when some data sources are unavailable.</para>
         
         <para>For example, suppose that two data sources exist for different suppliers and your 
@@ -240,7 +234,7 @@
         the same query in “partial results” query mode, the server returns data from the 
         running data source and no data from the data source that is down.</para>
         
-        <para>When using “partial results” mode, if a source throws an exception during 
+        <para>When using "partial results" mode, if a source throws an exception during 
         processing it does not cause the user’s query to fail.  Rather, that source is treated 
         as returning no more rows after the failure point.  
         Most commonly, that source will return 0 rows. </para>
@@ -253,63 +247,34 @@
         <para>For each source that is excluded from the query, a warning will be generated 
         describing the source and the failure.  These warnings can be obtained from the 
         <code>ResultSet.getWarnings()</code> method.  This method returns a <code>SQLWarning</code> object but 
-        in the case of “partial results” warnings, this will be an object of 
+        in the case of "partial results" warnings, this will be an object of 
         type <code>org.teiid.jdbc.PartialResultsWarning</code> class.  This class can be 
         used to obtain a list of all the failed sources by name and to obtain 
         the specific exception thrown by each resource adaptor. </para>
         
         <para>Below is an example of printing the list of failed sources:</para>
-       <programlisting><![CDATA[
-            statement.setExecutionProperty(PROP_PARTIAL_RESULTS_MODE, “true”);
-            ResultSet results = statement.executeQuery(“SELECT Name FROM Accounts”);
-            SQLWarning warning = results.getWarnings();
-            if(warning instanceof PartialResultsWarning) {
-            	PartialResultsWarning partialWarning = (PartialResultsWarning) warning;
-            	Collection failedConnectors = partialWarning.getFailedConnectors();
-            	Iterator iter = failedConnectors.iterator();
-            	while(iter.hasNext()) {
-            		String connectorName = (String) iter.next();
-            		SQLException connectorException =  partialWarning.getConnectorException(connectorName);
-            		System.out.println(connectorName + “: “ +ConnectorException.getMessage();
-                }
-           }      
-       ]]></programlisting>         
-       </sect2>
+       <programlisting><![CDATA[statement.setExecutionProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE, “true”);
+ResultSet results = statement.executeQuery(“SELECT Name FROM Accounts”);
+SQLWarning warning = results.getWarnings();
+if(warning instanceof PartialResultsWarning) {
+	PartialResultsWarning partialWarning = (PartialResultsWarning) warning;
+ 	Collection failedConnectors = partialWarning.getFailedConnectors();
+ 	Iterator iter = failedConnectors.iterator();
+ 	while(iter.hasNext()) {
+ 		String connectorName = (String) iter.next();
+ 		SQLException connectorException =  partialWarning.getConnectorException(connectorName);
+ 		System.out.println(connectorName + “: “ +ConnectorException.getMessage();
+    }
+}]]></programlisting>         
+       </sect1>
        
-       <sect2>
+       <sect1>
         <title>XML extensions</title>
-        <para>Your application can use a statement object to execute queries that return XML documents.  
-        The query must specify a valid document in VDB, or should have used SQL XML functions 
-        to create a XMl document. When your 
-        application executes an XML query, the Teiid Server returns a ResultSet 
-        object that has a single column named xml and often a single row, which 
-        represents a document.  Depending on the XML virtual document model, 
-        multiple documents may be returned</para>
-        <sect3>
-            <title>XML Streaming</title>
-            <para>XML documents are streamed from Teiid Server to the Teiid JDBC API.   
-            Normally, the document never materializes in the server memory, avoiding potential 
-            out-of-memory issues and improving the first response time for large documents. 
-            When using style sheets, schema validation, or XQuery, the whole document 
-            must be materialized on the server.  Therefore memory issues may occur for large documents. 
-            A result document can be obtained from the JDBC resultset using <code>getSQLXML</code> method.
-            </para>
-            <para>The document is broken into pieces when being created and streamed.  
-            The maximum size of each piece in the stream can be configured with the 
-            <code>"lobChunkSizeInKB"</code> system property on the Server. The default value is 100 KB.  
-            At any given time, this is the maximum amount of memory that can be held by a particular 
-            XML query against the system.  In heavily loaded or memory-constrained scenarios, 
-            this value can decrease the amount of memory used.  As a side effect, streaming will o
-            ccur in smaller pieces, reducing initial document response time while 
-            increasing full response time (as this is less efficient).  Conversely, increasing this value in 
-            lightly loaded scenarios uses more server memory and increase the initial 
-            response time but can make the full response time less</para>
-        </sect3>
-        
-        <sect3>
+        <para>The XML extensions apply on to XML resutls from queries to XML document models, and not to XML produced by SQL/XML or read from some other source.</para>
+        <sect2 id="document_formatting">
             <title>Document formatting</title>
             <para>The PROP_XML_FORMAT execution property can be set to modify the way that 
-            XML documents are formatted on return.  Valid values for the constant 
+            XML documents are formatted from XML document models.  Valid values for the constant 
             are defined in the same ExecutionProperties interface:</para>
             <orderedlist>
                 <listitem><para><code>XML_TREE_FORMAT</code> - Returns a version of the XML formatted for display.  
@@ -319,37 +284,18 @@
                 optimal performance.  The XML is a single long string without any 
                 unnecessary white space.  </para></listitem>
                 <listitem><para>Not Set - If no format is set, the formatting flag on the 
-                XML document in the original model is honored.</para></listitem>
+                XML document in the original model is honored.  This may produce either the “tree” or “compact” 
+            form of the document depending on the document setting.</para></listitem>
             </orderedlist>
-            <para>The default is to set neither format and to use the formatting flag specified 
-            in the document model itself.  This may produce either the “tree” or “compact” 
-            form of the document depending on the document setting. </para>
-        </sect3>
+        </sect2>
         
-        <sect3>
+        <sect2 id="schema_validation">
             <title>Schema validation</title>
             <para>The <code>PROP_XML_VALIDATION</code> execution property can be set to indicate that 
-            the server should validate documents against their schema before returning them 
-            to the client.  If schema validation is on, then the server will throw 
-            an exception if the document does not conform to the schema it is associated with.  
+            the server should validate XML document model documents against their schema before returning them 
+            to the client.  If schema validation is on, then the server send a SQLWarning if the document does not conform to the schema it is associated with.  
             Using schema validation will reduce the performance of your XML queries. </para>
-            
-            <note><para>Schema validation must materialize the entire document on the server to 
-            validate the schema.  Thus, schema validation will prevent streaming of 
-            XML results and may increase server memory usage.</para></note>
-            
-        </sect3>
-       </sect2>
+        </sect2>
+       </sect1>
        
-    </sect1>
-    
-       <sect1>
-        <title>ResultSet Limitations</title>
-        <orderedlist>
-            <listitem><para>Supports only <code>FORWARD_ONLY</code> and <code>SCROLL_INSENSITIVE</code> scroll modes. </para></listitem>
-            <listitem><para>Supports only <code>READ_ONLY</code> result sets. <code>UPDATABLE</code> ResultSets are not supported.</para></listitem>
-            <listitem><para>Returning multiple ResultSets from Procedure execution is not supported.</para></listitem>
-            <listitem><para>Closing the ResultSet does not close the Statement object. Statement must be closed to free the resources.</para> </listitem>
-        </orderedlist>
-       </sect1>    
 </chapter>

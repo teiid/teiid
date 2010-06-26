@@ -49,7 +49,6 @@
     <xi:include href="content/jdbc-extensions.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/jdbc-transactions.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/ssl.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="content/entitlements.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/using-hibernate.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/appendix-unsupported-jdbc.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/appendix-selfcerts.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />

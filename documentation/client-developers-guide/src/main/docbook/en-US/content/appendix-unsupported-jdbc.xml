@@ -14,6 +14,15 @@
    then only those forms of the method specified are not supported.</para>
    
    <sect1>
+   	<title>ResultSet Limitations</title>
+        <itemizedlist>
+            <listitem><para>TYPE_SCROLL_SENSITIVE is not supported.</para></listitem>
+            <listitem><para><code>UPDATABLE</code> ResultSets are not supported.</para></listitem>
+            <listitem><para>Returning multiple ResultSets from Procedure execution is not supported.</para></listitem>
+        </itemizedlist>
+   </sect1>    
+   
+   <sect1>
     <title>Unsupported Classes and Methods in "java.sql"</title>
         <table frame='all'>
             <title>Connection Properties</title>
