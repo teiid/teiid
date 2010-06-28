@@ -28,7 +28,9 @@ import java.io.FileInputStream;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TimeZone;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
@@ -36,6 +38,7 @@ import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.unittest.FakeMetadataFactory;
@@ -359,7 +362,12 @@ public class TestSQLXMLProcessing {
     private static FakeDataManager dataManager = new FakeDataManager();
     
     @BeforeClass public static void oneTimeSetUp() {
+    	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
     	sampleData1(dataManager);
+    }
+    
+    @AfterClass public static void oneTimeTearDown() {
+    	TimestampWithTimezone.resetCalendar(null); //$NON-NLS-1$
     }
     
 	private void process(String sql, List<?>[] expected) throws Exception {
