@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/custom.dtd">
+%CustomDTD;
+]>
+<chapter id="entitlements">
+    <title>Data Roles</title>
+    <para>Data roles, also called entitlements, are sets of permissions that are defined 
+    per VDB that dictate data access (create, read,  update, delete). The use of data roles is controlled system wide with the property in 
+    <code>&lt;jboss-install&gt;/server/&lt;profile&gt;/deploy/teiid/teiid-jboss-beans.xml</code> file
+    in bean configuration section of <code>RuntimeEngineDeployer</code> with property <code>useEntitlements</code>.</para>
+    
+    <para>Once data roles are enabled, the access permissions defined in a VDB will be enforced by the Teiid Server.</para>
+    
+    <sect1>
+    	<title>Permissions</title>
+   	    <orderedlist>
+	        <para>To process a <code>SELECT</code> statement or a stored procedure execution, the user account requires the following access rights:</para>
+	        <listitem> <para><code>READ</code> - on the Table(s) being accessed or the procedure being called.</para></listitem>
+	        <listitem> <para><code>READ</code> - on every column referenced.</para></listitem>
+	    </orderedlist>   
+	    
+	    <orderedlist>
+	        <para>To process an <code>INSERT</code> statement, the user account requires the following access rights:</para>
+	        <listitem> <para><code>CREATE</code> - on the Table being inserted into.</para></listitem>
+	        <listitem> <para><code>CREATE</code> - on every column being inserted on that Table.</para></listitem>
+	    </orderedlist>   
+	    
+	    <orderedlist>
+	        <para>To process an <code>UPDATE</code> statement, the user account requires the following access rights:</para>
+	        <listitem> <para><code>UPDATE</code> - on the Table being updated.</para></listitem>
+	        <listitem> <para><code>UPDATE</code> - on every column being updated on that Table.</para></listitem>
+	        <listitem> <para><code>READ</code> - on every column referenced in the criteria.</para></listitem>
+	    </orderedlist>    
+	    
+	    <orderedlist>
+	    	<para>To process a <code>DELETE</code> statement, the user account requires the following access rights:</para>
+	        <listitem> <para><code>DELETE</code> - on the Table being deleted.</para></listitem>
+	        <listitem> <para><code>READ</code> - on every column referenced in the criteria.</para></listitem>
+	    </orderedlist>    
+    </sect1>
+
+	<sect1>
+		<title>XML Definition</title>
+	    <para>Data roles are defined inside the <code>vdb.xml</code> file (inside the .vdb Zip archive under META-INF/vdb.xml) if you used Designer. 
+    This example will show a sample "vdb.xml" file with few simple data rules.</para>
+    
+    <para>For example, if a VDB defines a table "TableA" in schema "modelName" with columns (column1, column2) - note that the column types do not matter.  And we wish to define three roles "RoleA", "RoleB", "RoleC" with following permissions:
+   <orderedlist>
+    <listitem><para>RoleA has privileges to read, write access to TableA, but can not delete.</para></listitem>
+    <listitem><para>RoleB has no privileges that allow access to TableA</para></listitem>
+    <listitem><para>RoleC has privileges that only allow read access to TableA.column1</para></listitem>
+   </orderedlist>
+	</para>
+    <example><title>vdb.xml defining RoleA, RoleB, and RoleC</title>
+   <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<vdb name="sample" version="1">
+
+    <model name="modelName">
+        <source name="source-name" translator-name="oracle" connection-jndi-name="java:myDS" />
+    </model>
+
+    <data-policy name="RoleA">
+        <description>Allow all, except Delete</description>
+
+        <permission>
+            <resource-name>modelName.TableA</resource-name>
+            <allow-create />
+            <allow-read />
+            <allow-update />
+        </permission>
+
+        <permission>
+            <resource-name>modelName.TableA.colum1</resource-name>
+            <allow-create />
+            <allow-read />
+            <allow-update />
+        </permission>
+
+        <permission>
+            <resource-name>modelName.TableA.column2</resource-name>
+            <allow-create />
+            <allow-read />
+            <allow-update />
+        </permission>
+
+        <mapped-role-name>role1</mapped-role-name>
+
+    </data-policy>
+
+    <data-policy name="RoleC">
+        <description>Allow read only</description>
+
+        <permission>
+            <resource-name>modelName.TableA</resource-name>
+            <allow-read />
+        </permission>
+
+        <permission>
+            <resource-name>modelName.TableA.colum1</resource-name>
+            <allow-read />
+        </permission>
+
+        <mapped-role-name>role2</mapped-role-name>
+    </data-policy>
+</vdb>]]></programlisting>    
+</example>   
+   <para>The above XML defined two data roles, "RoleA" which allows everything except delete on the table, "RoleC" that 
+   allows only read operation on the table. Since Teiid uses deny by default, there is no explict data-policy entry needed for "RoleB".  The "mapped-role-name" defines the "role" to whom these policies are applicable. Each data-policy 
+   must define a "role" to be enforced by the Teiid Server.</para>
+   
+   <para>For assigning the roles to your users, in the JBoss AS, 
+   check out the instructions for the selected Login Module. Check "Admin Guide" for configuring Login Modules.</para> 
+   
+   <para>"vdb.xml" file is checked against the schema file <code>vdb-deployer.xsd</code>, check the documents sections of the Teiid kit
+   to find a copy of the schema file.</para>
+   
+   <note><para>Currently there is no GUI tooling support in the Designer or any other management tool to create this data roles 
+   permissions xml, however this is in our roadmap for future releases to provide.</para></note>
+	</sect1>
+
+</chapter>
