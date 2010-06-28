@@ -223,7 +223,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
     		throws TranslatorException {
     	//TODO: This is not correct; this should be only called once for connection creation    	
-    	afterConnectionCreation(conn);
+    	obtainedConnection(conn);
     	return new JDBCQueryExecution(command, conn, executionContext, this);
     }
     
@@ -231,7 +231,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
     		throws TranslatorException {
 		//TODO: This is not correct; this should be only called once for connection creation    	
-		afterConnectionCreation(conn);
+		obtainedConnection(conn);
 		return new JDBCProcedureExecution(command, conn, executionContext, this);
     }
 
@@ -239,7 +239,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
     		throws TranslatorException {
 		//TODO: This is not correct; this should be only called once for connection creation
-		afterConnectionCreation(conn);
+		obtainedConnection(conn);
 		return new JDBCUpdateExecution(command, conn, executionContext, this);
     }	
     
@@ -996,12 +996,12 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * Called exactly once for this source.
      * @param connection
      */
-    protected void afterInitialConnectionCreation(Connection connection) {
+    protected void afterInitialConnectionObtained(Connection connection) {
         // now dig some details about this driver/database for log.
         try {
-            StringBuffer sb = new StringBuffer();
+            StringBuffer sb = new StringBuffer(getClass().getSimpleName());
             DatabaseMetaData dbmd = connection.getMetaData();
-            sb.append("Commit=").append(connection.getAutoCommit()); //$NON-NLS-1$
+            sb.append(" Commit=").append(connection.getAutoCommit()); //$NON-NLS-1$
             sb.append(";DatabaseProductName=").append(dbmd.getDatabaseProductName()); //$NON-NLS-1$
             sb.append(";DatabaseProductVersion=").append(dbmd.getDatabaseProductVersion()); //$NON-NLS-1$
             sb.append(";DriverMajorVersion=").append(dbmd.getDriverMajorVersion()); //$NON-NLS-1$
@@ -1019,18 +1019,18 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     
     /**
      * Provides a hook to call source specific logic when 
-     * a connection is created.
+     * a connection is obtained.
      * 
      * defect request 13979 & 13978
      */
-    public void afterConnectionCreation(Connection connection) {
+    public void obtainedConnection(Connection connection) {
         if (initialConnection) {
         	synchronized (this) {
         		if (!initialConnection) {
         			return;
         		}
 	            initialConnection = false;
-	            afterInitialConnectionCreation(connection);
+	            afterInitialConnectionObtained(connection);
         	}
         }
     }

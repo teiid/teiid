@@ -22,10 +22,7 @@
 
 package org.teiid.translator.jdbc.mysql;
 
-import java.sql.Connection;
 import java.sql.Date;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -33,11 +30,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.language.Function;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
@@ -129,26 +124,6 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
 		return 0;
 	}
 	
-	@Override
-	public void afterConnectionCreation(Connection connection) {
-		super.afterConnectionCreation(connection);
-		
-		Statement stmt = null;
-		try {
-			stmt = connection.createStatement();
-			stmt.execute("set SESSION sql_mode = 'ANSI'"); //$NON-NLS-1$
-		} catch (SQLException e) {
-			LogManager.logError(LogConstants.CTX_CONNECTOR,  e, "Error setting ANSI mode"); //$NON-NLS-1$
-		} finally {
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (SQLException e) {
-					LogManager.logDetail("Error closing statement", e); //$NON-NLS-1$
-				}
-			}
-		}
-	}
 	@Override
     public boolean useParensForJoins() {
     	return true;
