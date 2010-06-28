@@ -252,28 +252,9 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         		values = newValues;
         	}
             Object result = method.invoke(null, values);
-            if (!ALLOW_NAN_INFINITY) {
-        		if (result instanceof Double) {
-	            	Double floatVal = (Double)result;
-	            	if (Double.isInfinite(floatVal) || Double.isNaN(floatVal)) {
-	            		throw new FunctionExecutionException(new ArithmeticException("Infinite or invalid result"), ErrorMessageKeys.FUNCTION_0003, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0003, getName())); //$NON-NLS-1$
-	            	}
-	            } else if (result instanceof Float) {
-	            	Float floatVal = (Float)result;
-	            	if (Float.isInfinite(floatVal) || Float.isNaN(floatVal)) {
-	            		throw new FunctionExecutionException(new ArithmeticException("Infinite or invalid result"), ErrorMessageKeys.FUNCTION_0003, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0003, getName())); //$NON-NLS-1$
-	            	}
-	            }
-        	}
-            result = DataTypeManager.convertToRuntimeType(result);
-            result = DataTypeManager.transformValue(result, getReturnType());
-            if (result instanceof String) {
-            	String s = (String)result;
-        		if (s.length() > DataTypeManager.MAX_STRING_LENGTH) {
-        			return s.substring(0, DataTypeManager.MAX_STRING_LENGTH);
-        		}
-            }
-            return result;
+            return importValue(result, getReturnType());
+        } catch(ArithmeticException e) {
+    		throw new FunctionExecutionException(e, ErrorMessageKeys.FUNCTION_0003, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0003, getName()));
         } catch(InvocationTargetException e) {
             throw new FunctionExecutionException(e.getTargetException(), ErrorMessageKeys.FUNCTION_0003, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0003, getName()));
         } catch(IllegalAccessException e) {
@@ -281,5 +262,31 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         } catch (TransformationException e) {
         	throw new FunctionExecutionException(e, e.getMessage());
 		}
+	}
+
+	public static Object importValue(Object result, Class<?> expectedType)
+			throws ArithmeticException, TransformationException {
+		if (!ALLOW_NAN_INFINITY) {
+			if (result instanceof Double) {
+		    	Double floatVal = (Double)result;
+		    	if (Double.isInfinite(floatVal) || Double.isNaN(floatVal)) {
+		    		throw new ArithmeticException("Infinite or invalid result");  //$NON-NLS-1$
+		    	}
+		    } else if (result instanceof Float) {
+		    	Float floatVal = (Float)result;
+		    	if (Float.isInfinite(floatVal) || Float.isNaN(floatVal)) {
+		    		throw new ArithmeticException("Infinite or invalid result");  //$NON-NLS-1$
+		    	}
+		    }
+		}
+		result = DataTypeManager.convertToRuntimeType(result);
+		result = DataTypeManager.transformValue(result, expectedType);
+		if (result instanceof String) {
+			String s = (String)result;
+			if (s.length() > DataTypeManager.MAX_STRING_LENGTH) {
+				return s.substring(0, DataTypeManager.MAX_STRING_LENGTH);
+			}
+		}
+		return result;
 	}    
 }

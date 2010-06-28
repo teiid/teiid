@@ -358,13 +358,20 @@ public class SaxonXQueryExpression {
     public SequenceIterator evaluateXQuery(Object context, Map<String, Object> parameterValues) throws TeiidProcessingException {
         DynamicQueryContext dynamicContext = new DynamicQueryContext(config);
         
-        for (Map.Entry<String, Object> entry : parameterValues.entrySet()) {
-            Object value = entry.getValue();
-            if(value instanceof SQLXML) {                    
-            	value = XMLSystemFunctions.convertToSource(value);
-            }
-            dynamicContext.setParameter(entry.getKey(), value);                
-		}
+        try {
+	        for (Map.Entry<String, Object> entry : parameterValues.entrySet()) {
+	            Object value = entry.getValue();
+	            if(value instanceof SQLXML) {                    
+	            	value = XMLSystemFunctions.convertToSource(value);
+	            } else if (value instanceof java.util.Date) {
+	            	java.util.Date d = (java.util.Date)value;
+	            	value = XMLSystemFunctions.convertToAtomicValue(value);
+	            }
+	            dynamicContext.setParameter(entry.getKey(), value);                
+	        }
+        } catch (TransformerException e) {
+        	throw new TeiidProcessingException(e);
+        }
         
         if (context != null) {
         	Source source = XMLSystemFunctions.convertToSource(context);

@@ -25,7 +25,6 @@ package org.teiid.query.function.source;
 import static org.junit.Assert.*;
 
 import java.io.File;
-import java.sql.Timestamp;
 import java.util.TimeZone;
 
 import net.sf.saxon.trans.XPathException;
@@ -40,6 +39,7 @@ import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.util.FileUtil;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.query.unittest.TimestampUtil;
 
 @SuppressWarnings("nls")
 public class TestXMLSystemFunctions {
@@ -197,8 +197,16 @@ public class TestXMLSystemFunctions {
         helpTestXpathValue(xmlFilePath,xpath, "false"); //$NON-NLS-1$
     }
     
-	@Test public void testInvokeXmlElement2() throws Exception {
-		assertEquals("1969-12-31T18:00:00", XMLSystemFunctions.getStringValue(new Timestamp(0)));
+	@Test public void testAtomicValueTimestamp() throws Exception {
+		assertEquals("1910-04-01T07:01:02.000055Z", XMLSystemFunctions.convertToAtomicValue(TimestampUtil.createTimestamp(10, 3, 1, 1, 1, 2, 55001)).getStringValue());
+    }
+	
+	@Test public void testAtomicValueTime() throws Exception {
+		assertEquals("16:03:01Z", XMLSystemFunctions.convertToAtomicValue(TimestampUtil.createTime(10, 3, 1)).getStringValue());
+    }
+
+	@Test public void testAtomicValueDate() throws Exception {
+		assertEquals("1920-03-03Z", XMLSystemFunctions.convertToAtomicValue(TimestampUtil.createDate(20, 2, 3)).getStringValue());
     }
 	
 	@Test public void testNameEscaping() throws Exception {

@@ -30,10 +30,11 @@ import java.io.Writer;
 import java.nio.CharBuffer;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.SQLXML;
+import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
@@ -56,26 +57,28 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.xpath.XPathExpressionException;
 
+import net.sf.saxon.expr.JPConverter;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.Name11Checker;
 import net.sf.saxon.sxpath.XPathEvaluator;
 import net.sf.saxon.sxpath.XPathExpression;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.value.AtomicValue;
+import net.sf.saxon.value.DateTimeValue;
+import net.sf.saxon.value.DateValue;
+import net.sf.saxon.value.DayTimeDurationValue;
+import net.sf.saxon.value.TimeValue;
 
-import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.SQLXMLImpl;
-import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.XMLTranslator;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.types.XMLType.Type;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.CharsetUtils;
-import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.processor.xml.XMLUtil;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.WSConnection.Util;
@@ -89,20 +92,6 @@ import org.teiid.translator.WSConnection.Util;
 public class XMLSystemFunctions {
 	
 	private static final String P_OUTPUT_VALIDATE_STRUCTURE = "com.ctc.wstx.outputValidateStructure"; //$NON-NLS-1$
-	//YEAR 0 in the server timezone. used to determine negative years
-    public static long YEAR_ZERO;
-    static String DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"; //$NON-NLS-1$
-    
-    static String TIMESTAMP_MICROZEROS = "000000000"; //$NON-NLS-1$
-    
-    static {
-        Calendar cal = Calendar.getInstance();
-    
-        for (int i = 0; i <= Calendar.MILLISECOND; i++) {
-            cal.set(i, 0);
-        }
-        YEAR_ZERO = cal.getTimeInMillis();
-    }
     
 	public static ClobType xslTransform(CommandContext context, Object xml, Object styleSheet) throws Exception {
     	Source styleSource = null; 
@@ -219,7 +208,7 @@ public class XMLSystemFunctions {
 		if (attributes != null) {
 			for (Evaluator.NameValuePair<?> nameValuePair : attributes) {
 				if (nameValuePair.value != null) {
-					eventWriter.add(eventFactory.createAttribute(new QName(nameValuePair.name), getStringValue(nameValuePair.value)));
+					eventWriter.add(eventFactory.createAttribute(new QName(nameValuePair.name), convertToAtomicValue(nameValuePair.value).getStringValue()));
 				}
 			}
 		}
@@ -299,19 +288,22 @@ public class XMLSystemFunctions {
 		return result;
 	}
 	
-	static String getStringValue(Object object) throws TransformerException {
-		if (object instanceof Timestamp) {
-			try {
-				return timestampToDateTime((Timestamp)object);
-			} catch (FunctionExecutionException e) {
-				throw new TransformerException(e);
-			}
-		}
-		try {
-			return DataTypeManager.transformValue(object, DataTypeManager.DefaultDataClasses.STRING);
-		} catch (TransformationException e) {
-			throw new TransformerException(e);
-		}
+	public static AtomicValue convertToAtomicValue(Object value) throws TransformerException {
+		if (value instanceof java.util.Date) { //special handling for time types
+        	java.util.Date d = (java.util.Date)value;
+        	DateTimeValue tdv = DateTimeValue.fromJavaDate(d);
+        	if (value instanceof Date) {
+        		value = new DateValue(tdv.getYear(), tdv.getMonth(), tdv.getDay(), tdv.getTimezoneInMinutes());
+        	} else if (value instanceof Time) {
+        		value = new TimeValue(tdv.getHour(), tdv.getMinute(), tdv.getSecond(), tdv.getMicrosecond(), tdv.getTimezoneInMinutes());
+        	} else if (value instanceof Timestamp) {
+        		Timestamp ts = (Timestamp)value;
+        		value = tdv.add(DayTimeDurationValue.fromMicroseconds(ts.getNanos() / 1000));
+        	}
+        	return (AtomicValue)value;
+        }
+		JPConverter converter = JPConverter.allocate(value.getClass(), null);
+		return (AtomicValue)converter.convert(value, null);
 	}
 	
 	static void convertValue(Writer writer, XMLEventWriter eventWriter, XMLEventFactory eventFactory, Object object) throws IOException,
@@ -332,7 +324,7 @@ public class XMLSystemFunctions {
 				r = clob.getCharacterStream();
 				convertReader(writer, eventWriter, r, Type.TEXT);
 			} else {
-				String val = getStringValue(object);
+				String val = convertToAtomicValue(object).getStringValue();
 				eventWriter.add(eventFactory.createCharacters(val));
 			}
 		} catch (SQLException e) {
@@ -391,44 +383,6 @@ public class XMLSystemFunctions {
 		return new XMLType(new SQLXMLImpl("<!--" + comment + "-->")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	/**
-	 * Formats a timestamp to an xs:dateTime.  This uses DATETIME_FORMAT
-	 * with a trailing string for nanoseconds (without right zeros). 
-	 */
-	public static String timestampToDateTime(Timestamp time) throws FunctionExecutionException {
-	    String result = FunctionMethods.format(time, DATETIME_FORMAT);
-	    int nanos = time.getNanos();
-	    if (nanos == 0) {
-	        return result;
-	    }
-	    
-	    StringBuffer resultBuffer = new StringBuffer();
-	    boolean first = true;
-	    int i = 0;
-	    for (; i < 9 && nanos > 0; i++) {
-	        int digit = nanos%10;
-	        if (first) {
-	            if (digit > 0) {
-	                resultBuffer.insert(0, digit);
-	                first = false;
-	            }
-	        } else {
-	            resultBuffer.insert(0, digit);
-	        }
-	        nanos /= 10;
-	    }
-	    if (i < 9) {
-	        resultBuffer.insert(0, TIMESTAMP_MICROZEROS.substring(i));
-	    }
-	    resultBuffer.insert(0, "."); //$NON-NLS-1$
-	    resultBuffer.insert(0, result);
-	    if (time.getTime() < YEAR_ZERO) {
-	        resultBuffer.insert(0, "-"); //$NON-NLS-1$
-	    }
-	    return resultBuffer.toString();
-	    
-	}
-	
     public static Source convertToSource(Object value) throws TeiidProcessingException {
     	if (value == null) {
     		return null;

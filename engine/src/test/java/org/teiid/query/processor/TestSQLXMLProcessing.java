@@ -25,6 +25,7 @@ package org.teiid.query.processor;
 import static org.teiid.query.processor.TestProcessor.*;
 
 import java.io.FileInputStream;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 
@@ -38,6 +39,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.TimestampUtil;
 
 @SuppressWarnings({"nls", "unchecked"})
 public class TestSQLXMLProcessing {
@@ -342,6 +344,16 @@ public class TestSQLXMLProcessing {
         };    
     
         processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), Arrays.asList(blobFromFile("udf.xmi")));
+    }
+	
+    @Test public void testXmlTableTypes() throws Exception {
+        String sql = "select * from xmltable('/a' passing xmlparse(document '<a>2000-01-01T01:01:00.2-06:00</a>') columns x timestamp path 'xs:dateTime(./text())', y timestamp path '.') as x"; //$NON-NLS-1$
+        Timestamp ts = TimestampUtil.createTimestamp(100, 0, 1, 1, 1, 0, 200000000);
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList(ts, ts),
+        };    
+    
+        process(sql, expected);
     }
 
     private static FakeDataManager dataManager = new FakeDataManager();

@@ -24,13 +24,19 @@ package org.teiid.query.processor.relational;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.sxpath.XPathDynamicContext;
 import net.sf.saxon.sxpath.XPathExpression;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.type.BuiltInAtomicType;
+import net.sf.saxon.type.ConversionResult;
+import net.sf.saxon.value.AtomicValue;
+import net.sf.saxon.value.StringValue;
 import net.sf.saxon.value.Value;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
@@ -41,6 +47,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.XMLType;
 import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 
@@ -49,6 +56,16 @@ import org.teiid.query.sql.lang.XMLTable.XMLColumn;
  */
 public class XMLTableNode extends SubqueryAwareRelationalNode {
 
+	private static Map<Class<?>, BuiltInAtomicType> typeMapping = new HashMap<Class<?>, BuiltInAtomicType>();
+	
+	static {
+		typeMapping.put(DataTypeManager.DefaultDataClasses.TIMESTAMP, BuiltInAtomicType.DATE_TIME);
+		typeMapping.put(DataTypeManager.DefaultDataClasses.TIME, BuiltInAtomicType.TIME);
+		typeMapping.put(DataTypeManager.DefaultDataClasses.DATE, BuiltInAtomicType.DATE);
+		typeMapping.put(DataTypeManager.DefaultDataClasses.FLOAT, BuiltInAtomicType.FLOAT);
+		typeMapping.put(DataTypeManager.DefaultDataClasses.DOUBLE, BuiltInAtomicType.DOUBLE);
+	}
+	
 	private XMLTable table;
 	private List<XMLColumn> projectedColumns;
 	
@@ -151,10 +168,20 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 					}
 					Object value = Value.convertToJava(colItem);
 					if (value instanceof Item) {
-						value = ((Item)value).getStringValue();
+						Item i = (Item)value;
+						BuiltInAtomicType bat = typeMapping.get(proColumn.getSymbol().getType());
+						if (bat != null) {
+							ConversionResult cr = StringValue.convertStringToBuiltInType(i.getStringValueCS(), bat, null);
+							value = cr.asAtomic();
+							value = Value.convertToJava((AtomicValue)value);
+							if (value instanceof Item) {
+								value = ((Item)value).getStringValue();
+							}
+						} else {
+							value = i.getStringValue();
+						}
 					}
-					value = DataTypeManager.convertToRuntimeType(value);
-					value = DataTypeManager.transformValue(value, proColumn.getSymbol().getType());
+					value = FunctionDescriptor.importValue(value, proColumn.getSymbol().getType());
 					tuple.add(value);
 				} catch (XPathException e) {
 					throw new TeiidProcessingException(e, QueryExecPlugin.Util.getString("XMLTableNode.path_error", proColumn.getName())); //$NON-NLS-1$

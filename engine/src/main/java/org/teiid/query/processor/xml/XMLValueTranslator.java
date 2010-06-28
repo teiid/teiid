@@ -27,6 +27,11 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.xml.transform.TransformerException;
+
+import net.sf.saxon.value.DateTimeValue;
+import net.sf.saxon.value.GYearMonthValue;
+
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
@@ -48,7 +53,6 @@ public final class XMLValueTranslator {
     
     private static String GMONTHDAY_FORMAT = "--MM-dd"; //$NON-NLS-1$
     private static String GYEAR_FORMAT = "0000"; //$NON-NLS-1$
-    private static String GYEARMONTH_FORMAT = "yyyy-MM"; //$NON-NLS-1$
     
     public static final String DATETIME    = "dateTime"; //$NON-NLS-1$
     public static final String DOUBLE      = "double"; //$NON-NLS-1$
@@ -118,7 +122,11 @@ public final class XMLValueTranslator {
             
             switch (type) {
                 case DATETIME_CODE:
-                    valueStr = XMLSystemFunctions.timestampToDateTime((Timestamp)value);
+				try {
+					valueStr = XMLSystemFunctions.convertToAtomicValue(value).getStringValue();
+				} catch (TransformerException e) {
+					throw new TransformationException(e, e.getMessage());
+				}
                     break;
                 case DOUBLE_CODE:
                     valueStr = doubleToDouble((Double)value);
@@ -139,7 +147,13 @@ public final class XMLValueTranslator {
                     valueStr = FunctionMethods.format((BigInteger)value, GYEAR_FORMAT);
                     break;
                 case GYEARMONTH_CODE:
-                    valueStr = timestampTogYearMonth(value);
+				DateTimeValue dtv;
+				try {
+					dtv = ((DateTimeValue)XMLSystemFunctions.convertToAtomicValue(value));
+				} catch (TransformerException e) {
+					throw new TransformationException(e, e.getMessage());
+				}
+                	valueStr = new GYearMonthValue(dtv.getYear(), dtv.getMonth(), dtv.getTimezoneInMinutes()).getStringValue();
                     break;
                 default:
                     valueStr = defaultTranslation(value);
@@ -156,22 +170,6 @@ public final class XMLValueTranslator {
         return valueStr;
     }
 
-    /** 
-     * @param value
-     * @return
-     * @throws FunctionExecutionException
-     * @since 4.3
-     */
-    private static String timestampTogYearMonth(Object value) throws FunctionExecutionException {
-        String valueStr;
-        Timestamp time = (Timestamp)value;
-        valueStr = FunctionMethods.format(time, GYEARMONTH_FORMAT);
-        if (time.getTime() < XMLSystemFunctions.YEAR_ZERO) {
-            valueStr = "-" + valueStr; //$NON-NLS-1$
-        }
-        return valueStr;
-    }
-    
     /**
      * Translate any non-null value to a string by using the Object toString() method.
      * This works in any case where the Java string representation of an object is the 

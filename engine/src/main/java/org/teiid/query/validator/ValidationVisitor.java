@@ -1158,6 +1158,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 				continue;
 			}
 			validateQName(obj, dc.getAlias());
+			validateXMLContentTypes(dc.getExpression(), obj);
 		}
     }
 
@@ -1200,7 +1201,16 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     
     @Override
     public void visit(XMLElement obj) {
+    	for (Expression expression : obj.getContent()) {
+    		validateXMLContentTypes(expression, obj);
+    	}
     	validateQName(obj, obj.getName());
+    }
+    
+    public void validateXMLContentTypes(Expression expression, LanguageObject parent) {
+		if (expression.getType() == DataTypeManager.DefaultDataClasses.OBJECT || expression.getType() == DataTypeManager.DefaultDataClasses.BLOB) {
+			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_content_type", expression), parent); //$NON-NLS-1$
+		}
     }
     
     @Override
@@ -1248,8 +1258,11 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     				hadError = true;
     			}
     			context = true;
-        	} else if (!names.add(dc.getAlias().toUpperCase())) {
-    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.duplicate_passing", dc.getAlias()), obj); //$NON-NLS-1$
+        	} else { 
+        		validateXMLContentTypes(dc.getExpression(), obj);
+        		if (!names.add(dc.getAlias().toUpperCase())) {
+        			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.duplicate_passing", dc.getAlias()), obj); //$NON-NLS-1$
+        		}
         	}
 		}
     	if (xqe.usesContextItem() && !context) {

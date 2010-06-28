@@ -24,6 +24,7 @@ package org.teiid.dqp.internal.process;
 
 import java.io.FileInputStream;
 import java.math.BigInteger;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -40,7 +41,6 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.HardcodedDataManager;
-import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.translator.SourceSystemFunctions;
 
 
@@ -71,22 +71,25 @@ public class TestXMLTypeTranslations extends BaseQueryTest {
         models.add("sample"); //$NON-NLS-1$
         dataMgr.setValidModels(models);
         
+        Timestamp ts = new Timestamp(-2106305630000l);
+        ts.setNanos(3000000);
+        
         dataMgr.addData("SELECT g_0.\"timestamp\", g_0.\"double\", g_0.\"float\", convert(g_0.\"double\", biginteger), convert(g_0.\"double\", biginteger), convert(g_0.\"date\", timestamp), convert(g_0.\"double\", biginteger), convert(g_0.\"date\", timestamp), '1' FROM sample.RUNTIMEVALUE AS g_0", //$NON-NLS-1$ 
                         
                         new List[] { Arrays.asList(new Object[] { 
-                            TimestampUtil.createTimestamp(3, 3, 4, 5, 6, 10, 200), 
+                            ts, 
                             new Double(Double.NEGATIVE_INFINITY), 
                             new Float(Float.POSITIVE_INFINITY), 
                             new BigInteger("100"), //$NON-NLS-1$
                             new BigInteger("100"), //$NON-NLS-1$
-                            TimestampUtil.createTimestamp(3, 3, 4, 5, 6, 7, 0), 
+                            ts, 
                             new BigInteger("100"), //$NON-NLS-1$
-                            TimestampUtil.createTimestamp(3, 3, 4, 5, 6, 7, 0),
+                            ts,
                             "1" //$NON-NLS-1$
                                                    })});
         
         
-        List[] expected = new List[] { Arrays.asList(new Object[] {"<?xml version=\"1.0\" encoding=\"UTF-8\"?><XSDTypesNS:test xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:XSDTypesNS=\"http://www.metamatrix.com/XMLSchema/DataSets/XSDTypes\"><book><datetime>1903-04-04T05:06:10.0000002</datetime><double>-INF</double><float>INF</float><gday>---100</gday><gmonth>--100</gmonth><gmonthday>--04-04</gmonthday><gyear>0100</gyear><gyearmonth>1903-04</gyearmonth><string>1</string></book></XSDTypesNS:test>" })};                     //$NON-NLS-1$
+        List[] expected = new List[] { Arrays.asList(new Object[] {"<?xml version=\"1.0\" encoding=\"UTF-8\"?><XSDTypesNS:test xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:XSDTypesNS=\"http://www.metamatrix.com/XMLSchema/DataSets/XSDTypes\"><book><datetime>1903-04-04T11:06:10.006Z</datetime><double>-INF</double><float>INF</float><gday>---100</gday><gmonth>--100</gmonth><gmonthday>--04-04</gmonthday><gyear>0100</gyear><gyearmonth>1903-04Z</gyearmonth><string>1</string></book></XSDTypesNS:test>" })};                     //$NON-NLS-1$
         doProcess(metadata,  
                 sql, 
                 finder, dataMgr , expected, DEBUG);
@@ -117,5 +120,4 @@ public class TestXMLTypeTranslations extends BaseQueryTest {
         
     }
     
-
 }
