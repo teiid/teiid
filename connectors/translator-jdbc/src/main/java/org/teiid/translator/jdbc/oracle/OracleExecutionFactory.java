@@ -24,11 +24,8 @@
  */
 package org.teiid.translator.jdbc.oracle;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
@@ -51,8 +48,6 @@ import org.teiid.language.Select;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.language.visitor.CollectorVisitor;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
@@ -64,7 +59,6 @@ import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.ExtractFunctionModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
-import org.teiid.translator.jdbc.JDBCPlugin;
 import org.teiid.translator.jdbc.LocateFunctionModifier;
 
 
@@ -392,41 +386,6 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     		return;
     	}
     	super.bindValue(stmt, param, paramType, i);
-    }
-    
-    @Override
-    public void afterInitialConnectionCreation(Connection connection) {
-    	String errorStr = JDBCPlugin.Util.getString("ConnectionListener.failed_to_report_oracle_connection_details"); //$NON-NLS-1$
-    	ResultSet rs = null;
-        Statement stmt = null;
-        try {                
-            stmt = connection.createStatement();
-            rs = stmt.executeQuery("select * from v$instance"); //$NON-NLS-1$ 
-            
-            int columnCount = rs.getMetaData().getColumnCount();
-            while (rs.next()) {
-                StringBuffer sb = new StringBuffer();
-                for (int i = 1; i <= columnCount; i++) {
-                    sb.append(rs.getMetaData().getColumnName(i)).append("=").append(rs.getString(i)).append(";"); //$NON-NLS-1$ //$NON-NLS-2$
-                }                    
-                // log the queried information
-                LogManager.logInfo(LogConstants.CTX_CONNECTOR, sb.toString());                    
-            }                
-            
-        } catch (SQLException e) {
-        	LogManager.logInfo(LogConstants.CTX_CONNECTOR, errorStr); 
-        }finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                } 
-                if (stmt != null) {
-                    stmt.close();
-                }
-            } catch (SQLException e1) {
-            	LogManager.logInfo(LogConstants.CTX_CONNECTOR, errorStr);
-            }
-        }
     }
     
     @Override

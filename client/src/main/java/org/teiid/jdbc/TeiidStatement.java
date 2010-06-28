@@ -64,7 +64,7 @@ public interface TeiidStatement extends java.sql.Statement {
     /**
      * Obtain the query planner debug log from the last command 
      * executed on this Statement, if it was requested with
-     * OPTION DEBUG.  If no debug output was requested, this 
+     * SHOWPLAN DEBUG.  If no debug output was requested, this 
      * method will return null. 
      * @return Debug log or null if no log exists
      */

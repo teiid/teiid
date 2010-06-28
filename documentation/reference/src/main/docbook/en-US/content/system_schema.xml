@@ -1518,7 +1518,7 @@
 							<para>getCharacterVDBResource</para>
 						</entry>
 						<entry>
-							<para>(string resourcePath)/para>
+							<para>(string resourcePath)</para>
 						</entry>
 						<entry>
 							<para>A single column containing the resource as a clob.</para>
@@ -1551,7 +1551,7 @@
 							<para>getXMLSchemas</para>
 						</entry>
 						<entry>
-							<para>string document</para>
+							<para>(string document)</para>
 						</entry>
 						<entry>
 							<para>A single column containing the schemas as clobs.</para>

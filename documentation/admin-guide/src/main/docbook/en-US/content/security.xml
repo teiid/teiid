@@ -3,7 +3,7 @@
 <chapter id="custom_security">
 	<title>Teiid Security</title>
 	<para>The Teiid system provides a range of built-in and extensible security features to enable the
-		secure access of data.  </para>
+		secure access of data.</para>
 	<sect1>
 		<title>Authentication</title>
 		<para>JDBC clients may use simple passwords to authenticate a user.</para>
@@ -11,6 +11,13 @@
 			identity of the user can be discerned by the password credential alone.  In
 			any case it is up to the configured security domain to determine whether a user can be
 			authenticated.</para>
+			
+			<note><para>By default, access to Teiid is NOT secure. The default login modules are only 
+	        backed by file based authentication, which has a well known user 
+	        name and password.
+	        The same is true for making connections to the Admin Console application. 
+	        We DO NOT recommend leaving the default security profile as defined when you 
+	        are exposing sensitive data.</para></note>
 	</sect1>
 	<sect1>
 		<title>Authorization</title>
@@ -59,6 +66,14 @@
 			Details of the failed attempt including invalid users, which
 			domains were consulted, etc. will be in the server log with appropriate
 			levels of severity.</para>
+			    <note>
+        <para>The security-domain defined for the JDBC connection and Admin connections are separate.
+            The default name of JDBC connection's security-domain is "teiid-security". The default name for Admin connection
+            is "jmx-console". For the Admin connection's security domain, the user is allowed 
+            to change which LoginModule that "jmx-console" pointing to, however should not change the name of the domain, as this name is
+            shared between the "admin-console" application.</para>
+    </note>    
+			
 		<sect2>
 			<title>Built-in LoginModules</title>
 			<para>JBossAS provides several LoginModules for common authentication needs, such as authenticating from text files or LDAP.</para>
@@ -71,12 +86,52 @@
             If you want use a your own Custom Login module, check out the Developer's Guide for instructions.
 	        </para>
 		</sect2>
+		
 	</sect1>
-    <note>
-        <para>The security-domain defined for the JDBC connection and Admin connections are separate.
-            The default name of JDBC connection's security-domain is "teiid-security". The default name for Admin connection
-            is "jmx-console". For the Admin connection's security domain, the user is allowed 
-            to change which LoginModule that "jmx-console" pointing to, however should not change the name of the domain, as this name is
-            shared between the "admin-console" application.</para>
-    </note>    
+	
+	<sect1 id="connfigure_server">
+        <title>Configuring SSL</title>
+        <para>The Teiid's configuration file 
+        <code>&lt;jboss-install&gt;/server/&lt;profile&gt;/deploy/teiid/teiid-jboss-beans.xml</code>, 
+        contains the properties to configure SSL.</para>
+        <itemizedlist>
+        	<para>There are two separate connection profiles:</para>
+            <listitem><para>JDBC Connection - The <code>JdbcSslConfiguration</code> bean configuration defines this.</para></listitem>
+            <listitem><para>Admin Connection - The <code>AdminSslConfiguration</code> bean configuration defines this.</para></listitem>
+        </itemizedlist>
+        <example><title>Example Configuration</title>
+	    <programlisting><![CDATA[<bean name="JdbcSslConfiguration" class="org.teiid.transport.SSLConfiguration">
+    <property name="sslEnabled">false</property>
+    <property name="keystoreFilename">cert.keystore</property>
+    <property name="keystorePassword">passwd</property>
+    <property name="keystoreType">JKS</property>
+    <property name="sslProtocol">SSLv3</property>
+    <property name="keymanagementAlgorithm">false</property>
+    <property name="truststoreFilename">cert.truststore</property>
+    <property name="truststorePassword">passwd</property>
+    <!--  1-way, 2-way, anonymous -->
+    <property name="authenticationMode">1-way</property>
+    <property name="clientEncryptionEnabled">true</property>
+</bean>]]></programlisting>       
+</example>
+           <orderedlist>
+           	<title>Properties</title>
+            <listitem><para>sslEnabled - true|false, SSL usage either turned ON or OFF </para></listitem>
+            <listitem><para>sslProtocol- Type of SSL protocol to be used. Default is SSLv3</para></listitem>
+            <listitem><para>keystoreType - Keystore type created by the keytool. Default "JKS" is used.</para></listitem>
+            <listitem><para>authenticationMode - anonymous|1-way|2-way,  Type of SSL mode, see  
+            above about different <link linkend="ssl_modes">SSL modes</link> available.</para></listitem>
+            <listitem><para>keymanagementAlgorithm - Type of key algorithm used. Default 
+            is based upon the VM, e.g. "SunX509"</para></listitem>
+            <listitem><para>keystoreFilename - The file name of the keystore, which contains the 
+            private key of the Server. This must be available in the classpath of Teiid Server</para></listitem>
+            <listitem><para>keystorePassword - password for the keystore.</para></listitem>
+            <listitem><para>truststoreFilename - if "authenticationMode" is chosen 
+            as "2-way", then this property must be provided. This is the truststore that contains the 
+            public key for the client. Depending upon how you created the keystore and truststores, 
+            this may be same file as defined under  "keystoreFilename" property.</para></listitem>
+            <listitem><para>truststorePassword - password for the truststore. </para></listitem>
+           </orderedlist>  
+           
+    </sect1>
 </chapter>
