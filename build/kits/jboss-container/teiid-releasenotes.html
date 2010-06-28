@@ -95,6 +95,8 @@ See the See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for m
 <ul>
   <li>Start time is now significantly longer due to the container deployment.  However many operations can be performed on configruation files that will trigger a redeployment without the need for a restart.
   <li>Parallel execution of source queries within a query plan has been temporarily disabled.
+  <li>Inversion of parse, format, and convert system functions is not used if it can be narrowing.  In situations where a predicate has the form: parseTime(column, 'format') = {t 'time value'} may lead to reduced performance, since
+      the parseTime function cannot be pushed down.  This should be addressed in future releases.   
 </ul>
 
 <h4>Salesforce as Source</h4>
