@@ -64,6 +64,10 @@
             <source>target/distribution/teiid-${version}-docs/developer-guide/en-US/pdf/teiid_developer_guide.pdf</source>
             <outputDirectory>teiid-docs</outputDirectory>
         </file>
+        <file>
+            <source>target/distribution/teiid-${version}-docs/client-developer-guide/en-US/pdf/teiid_client_developers_guide.pdf</source>
+            <outputDirectory>teiid-docs</outputDirectory>
+        </file>
     </files>
      
   
