@@ -93,7 +93,7 @@ import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorReport;
 
-@SuppressWarnings("nls")
+@SuppressWarnings({"nls", "unchecked"})
 public class TestProcessor {
 
 	// ################################## TEST HELPERS ################################
@@ -1342,6 +1342,34 @@ public class TestProcessor {
         // Run query
         helpProcess(plan, dataManager, expected);
     }   
+    
+    @Test public void testSortedFullOuterJoin() throws Exception { 
+        // Create query 
+        String sql = "SELECT pm1.g1.e2, pm2.g1.e2 FROM pm1.g1 FULL OUTER JOIN pm2.g1 ON pm1.g1.e2=pm2.g1.e2 and pm1.g1.e2 > 3"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { null, 2 }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { 3, null }), //$NON-NLS-1$ //$NON-NLS-2$
+            Arrays.asList(new Object[] { null, 3 }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { null, 4 }), //$NON-NLS-1$
+        };    
+        
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_0.e2 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0", new List[] {
+        		Arrays.asList(3),
+        });
+        hdm.addData("SELECT g_0.e2 AS c_0 FROM pm2.g1 AS g_0 ORDER BY c_0", new List[] {
+        		Arrays.asList(2),
+        		Arrays.asList(3),
+        		Arrays.asList(4),
+        		
+        });
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        CommandContext cc = createCommandContext();
+        cc.setProcessorBatchSize(2);
+        helpProcess(plan, cc, hdm, expected);
+    } 
     
     @Test public void testFullOuterJoin3() throws Exception { 
         // Create query 
@@ -6821,7 +6849,7 @@ public class TestProcessor {
         sampleData1(manager);
         helpProcess(plan, manager, expected);
         //note that the e1 column is not used in the source query
-        assertEquals("SELECT pm1.g1.e3, pm1.g1.e2 FROM pm1.g1", (String)manager.getQueries().iterator().next()); //$NON-NLS-1$
+        assertEquals("SELECT pm1.g1.e3, pm1.g1.e2 FROM pm1.g1", manager.getQueries().iterator().next()); //$NON-NLS-1$
     }
     
     @Test public void testSortWithLimit2() {
