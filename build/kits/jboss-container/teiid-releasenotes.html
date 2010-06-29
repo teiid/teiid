@@ -137,6 +137,8 @@ The following components have been updated:
 <ul>
 <li>[<a href='https://jira.jboss.org/browse/TEIID-26'>TEIID-26</a>] -         Need to add logic to determine if a command is deterministic
 </li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-36'>TEIID-36</a>] -         XAConnection needs to notify when it is no longer valid
+</li>
 <li>[<a href='https://jira.jboss.org/browse/TEIID-41'>TEIID-41</a>] -         Non selectable columns should be omitted from metadata
 </li>
 <li>[<a href='https://jira.jboss.org/browse/TEIID-46'>TEIID-46</a>] -         Fully-qualified names should not be required when referencing virtual procedures that have unique unqualified names
@@ -186,8 +188,6 @@ The following components have been updated:
 <li>[<a href='https://jira.jboss.org/browse/TEIID-876'>TEIID-876</a>] -         Server Times Out Session Despite Configuration
 </li>
 <li>[<a href='https://jira.jboss.org/browse/TEIID-879'>TEIID-879</a>] -         validate min/max non-comparable
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-889'>TEIID-889</a>] -         2 CommonTransactionTests Hang, commented out for now
 </li>
 <li>[<a href='https://jira.jboss.org/browse/TEIID-890'>TEIID-890</a>] -         AdminShell issues
 </li>
@@ -343,6 +343,12 @@ The following components have been updated:
 </li>
 <li>[<a href='https://jira.jboss.org/browse/TEIID-1132'>TEIID-1132</a>] -         Teiid Kit missing SalesForce JAR
 </li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1133'>TEIID-1133</a>] -         Error creating SSL Socket Factory for client invoker: Error initializing socket factory SSL context: Can not find truststore url.
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1135'>TEIID-1135</a>] -         NPE when getting RowCount for SalesForce (from SQuirreL)
+</li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1136'>TEIID-1136</a>] -         MySql_5.0 OUTER JOIN - Unexpected Query Results  
+</li>
 </ul>
         
 <h2>        Feature Request
@@ -361,8 +367,6 @@ The following components have been updated:
 <li>[<a href='https://jira.jboss.org/browse/TEIID-162'>TEIID-162</a>] -         Delete and update support in temp table
 </li>
 <li>[<a href='https://jira.jboss.org/browse/TEIID-165'>TEIID-165</a>] -         Connector support for more converts
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-168'>TEIID-168</a>] -         Refine caching behavior
 </li>
 <li>[<a href='https://jira.jboss.org/browse/TEIID-171'>TEIID-171</a>] -         Add SQL/XML support
 </li>
@@ -558,6 +562,8 @@ The following components have been updated:
 </li>
 <li>[<a href='https://jira.jboss.org/browse/TEIID-1124'>TEIID-1124</a>] -         Confusion with &quot;java:&quot; prefix in the DataSource from tooling
 </li>
+<li>[<a href='https://jira.jboss.org/browse/TEIID-1134'>TEIID-1134</a>] -         For salesforce adapter to work the following JAR need to be added. This needs to be documented
+</li>
 </ul>
     
 <h2>        Thirdparty Change
@@ -675,7 +681,6 @@ The following components have been updated:
 <li>[<a href='https://jira.jboss.org/browse/TEIID-1114'>TEIID-1114</a>] -         Add support for xmltable
 </li>
 </ul>
-
  
 <h2><a name="Documentation">Documentation and Help</a></h2>
 
