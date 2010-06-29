@@ -10,7 +10,7 @@ Note that the query is in quotes so that it is understood as a single argument.
 
 e.g. With the portfolio vdb deployed:
 
-$./run.sh localhost 31000 portfolio "select * from customeraccounts"
+$./run.sh localhost 31000 dynamicportfolio "select * from tables"
 
 See the other examples for deployable .vdb and .xml files to create vdbs.
 
