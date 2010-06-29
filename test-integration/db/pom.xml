@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 <!--
 	The database dependent tests are meant to be run on their own, not as part of the continous or nightly
@@ -10,7 +9,7 @@
 	<parent>
 		<artifactId>teiid-test-integration</artifactId>
 		<groupId>org.jboss.teiid</groupId>
-		<version>7.0.0-SNAPSHOT</version>
+		<version>7.0.0</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -20,7 +19,7 @@
  	<groupId>org.jboss.teiid.teiid-test-integration</groupId>
 	<description>Integration tests that require external database dependencies </description>
 
-	<version>7.0.0-SNAPSHOT</version>
+	<version>7.0.0</version>
 
 	<dependencies>
 
@@ -360,9 +359,9 @@
 							<configuration>
 								<tasks>
 									<property name="maven.runtime.classpath" refid="maven.runtime.classpath" />
-									<property name="relative.resources.dir" value="src/main/resources"></property>
-									<property name="datasourceloc" value="${datasourceloc}"></property>
-									<ant antfile="src/main/resources/ddl/manage_schemas.xml"  />
+									<property name="relative.resources.dir" value="src/main/resources" />
+									<property name="datasourceloc" value="${datasourceloc}" />
+									<ant antfile="src/main/resources/ddl/manage_schemas.xml" />
 								</tasks>
 							</configuration>
 							<goals>
@@ -413,12 +412,12 @@
 							<configuration>
 								<tasks>
 
-									<property name="single" value="${datasource}"></property>
+									<property name="single" value="${datasource}" />
 									<property name="maven.runtime.classpath" refid="maven.runtime.classpath" />
-									<property name="datasourceloc" value="${datasourceloc}"></property>
+									<property name="datasourceloc" value="${datasourceloc}" />
 
-									<property name="relative.resources.dir" value="src/main/resources"></property>
-									<ant antfile="src/main/resources/ddl/manage_schemas.xml"  />
+									<property name="relative.resources.dir" value="src/main/resources" />
+									<ant antfile="src/main/resources/ddl/manage_schemas.xml" />
 								</tasks>
 							</configuration>
 							<goals>
@@ -469,15 +468,15 @@
 							<tasks>
 								
 								<property name="maven.runtime.classpath" refid="maven.runtime.classpath" />
-								<property name="scenario.dir"  value="${scenario.dir}"></property>
-								<property name="queryset.artifacts.dir"  value="${queryset.artifacts.dir}"></property>
-								<property name="vdb.artifacts.dir"  value="${vdb.artifacts.dir}"></property>
+								<property name="scenario.dir" value="${scenario.dir}" />
+								<property name="queryset.artifacts.dir" value="${queryset.artifacts.dir}" />
+								<property name="vdb.artifacts.dir" value="${vdb.artifacts.dir}" />
 								<!-- optional properties -->
-								<property name="config.file"  value="${config.file}"></property>
-								<property name="query.scenario.classname"  value="${query.scenario.classname}"></property>
+								<property name="config.file" value="${config.file}" />
+								<property name="query.scenario.classname" value="${query.scenario.classname}" />
 								<property name="proj.dir" value="${project.basedir}/target/" />
-								<property name="usedatasources"  value="${usedatasources}"></property>
-								<property name="datasourceloc"  value="${datasourceloc}"></property>
+								<property name="usedatasources" value="${usedatasources}" />
+								<property name="datasourceloc" value="${datasourceloc}" />
 
 								<ant antfile="src/main/resources/ctc_tests/ctc.xml" />
 
