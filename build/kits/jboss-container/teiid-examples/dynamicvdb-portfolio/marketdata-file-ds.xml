@@ -11,7 +11,7 @@
         file mentioned above. 
        -->
              
-      <config-property name="ParentDirectory" type="java.lang.String">${jboss.server.home.dir}/teiid-examples/portfolio/data</config-property>
+      <config-property name="ParentDirectory" type="java.lang.String">${jboss.server.home.dir}/teiid-examples/dynamicvdb-portfolio/data</config-property>
             
       <max-pool-size>20</max-pool-size>
 

@@ -22,12 +22,15 @@
 
 package org.teiid.query.processor;
 
+import static org.junit.Assert.*;
+
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.query.processor.BatchIterator;
 import org.teiid.query.processor.relational.FakeRelationalNode;
@@ -50,6 +53,23 @@ public class TestBatchIterator {
 		bi.nextTuple();
 		bi.reset();
 		bi.nextTuple();
+	}
+	
+	@Test public void testReset1() throws Exception {
+		BatchIterator bi = new BatchIterator(new FakeRelationalNode(1, new List[] {
+			Arrays.asList(1),
+			Arrays.asList(2),
+			Arrays.asList(3)
+		}, 2));
+		BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+		TupleBuffer tb = bm.createTupleBuffer(Arrays.asList(new ElementSymbol("x")), "test", TupleSourceType.PROCESSOR);
+		bi.setBuffer(tb, true);  //$NON-NLS-1$
+		bi.nextTuple();
+		bi.mark();
+		bi.nextTuple();
+		bi.reset();
+		assertEquals(2, bi.getCurrentIndex());
+		assertEquals(2, bi.nextTuple().get(0));
 	}
 	
 }

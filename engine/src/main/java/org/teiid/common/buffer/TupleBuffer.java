@@ -44,100 +44,7 @@ import org.teiid.query.sql.symbol.Expression;
 
 public class TupleBuffer {
 	
-	class TupleSourceImpl implements IndexedTupleSource {
-	    private int currentRow = 1;
-	    private int mark = 1;
-		private List<?> currentTuple;
-		private TupleBatch batch;
-
-	    @Override
-	    public int getCurrentIndex() {
-	    	return this.currentRow;
-	    }
-
-	    @Override
-	    public List getSchema(){
-	        return schema;
-	    }
-
-	    @Override
-	    public List<?> nextTuple()
-	    throws TeiidComponentException{
-	    	List<?> result = null;
-	    	if (currentTuple != null){
-				result = currentTuple;
-				currentTuple = null;
-	    	} else {
-	    		result = getCurrentTuple();
-	    	} 
-	    	if (result != null) {
-	    		currentRow++;
-	    	}
-	        return result;
-	    }
-
-		private List<?> getCurrentTuple() throws TeiidComponentException,
-				BlockedException {
-			if (currentRow <= rowCount) {
-				//if (forwardOnly) {
-					if (batch == null || !batch.containsRow(currentRow)) {
-						batch = getBatch(currentRow);
-					}
-					return batch.getTuple(currentRow);
-				//} 
-				//TODO: determine if we should directly hold a soft reference here
-				//return getRow(currentRow);
-			}
-			batch = null;
-			if(isFinal) {
-	            return null;
-	        } 
-	        throw BlockedException.INSTANCE;
-		}
-
-	    @Override
-	    public void closeSource() {
-	    	batch = null;
-	        mark = 1;
-	        reset();
-	    }
-	    
-	    @Override
-		public boolean hasNext() throws TeiidComponentException {
-	        if (this.currentTuple != null) {
-	            return true;
-	        }
-	        
-	        this.currentTuple = getCurrentTuple();
-			return this.currentTuple != null;
-		}
-
-		@Override
-		public void reset() {
-			this.setPosition(mark);
-			this.mark = 1;
-		}
-
-	    @Override
-	    public void mark() {
-	        this.mark = currentRow;
-	    }
-
-	    @Override
-	    public void setPosition(int position) {
-	        if (this.currentRow != position) {
-		        this.currentRow = position;
-		        this.currentTuple = null;
-	        }
-	    }
-	    
-	    @Override
-	    public int available() {
-	    	return rowCount - currentRow + 1;
-	    }
-	}
-	
-    /**
+	/**
      * Gets the data type names for each of the input expressions, in order.
      * @param expressions List of Expressions
      * @return
@@ -407,7 +314,31 @@ public class TupleBuffer {
 	 * @return
 	 */
 	public IndexedTupleSource createIndexedTupleSource() {
-		return new TupleSourceImpl();
+		return new AbstractTupleSource() {
+			
+			@Override
+			public List<? extends Expression> getSchema() {
+				return (List<? extends Expression>) schema;
+			}
+			
+			@Override
+			protected List<?> finalRow() throws BlockedException {
+				if(isFinal) {
+		            return null;
+		        } 
+		        throw BlockedException.INSTANCE;
+			}
+			
+			@Override
+			public int available() {
+				return rowCount - getCurrentIndex() + 1;
+			}
+			
+			@Override
+			protected TupleBatch getBatch(int row) throws TeiidComponentException {
+				return TupleBuffer.this.getBatch(row);
+			}
+		};
 	}
 	
 	@Override

@@ -24,13 +24,14 @@ package org.teiid.query.processor;
 
 import java.util.List;
 
-import org.teiid.common.buffer.IndexedTupleSource;
+import org.teiid.common.buffer.AbstractTupleSource;
+import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 
 
 /**
@@ -40,68 +41,69 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
  * 
  * Note that the saveOnMark buffering only lasts until the next mark is set.
  */
-public class BatchIterator implements IndexedTupleSource {
+public class BatchIterator extends AbstractTupleSource {
 
     private final BatchProducer source;
     private boolean saveOnMark;
     private TupleBuffer buffer;
-    private IndexedTupleSource bufferedTs;
+    private boolean done;
+    private boolean mark;
 
     public BatchIterator(BatchProducer source) {
         this.source = source;
     }
-
-    private boolean done;
-    private int currentRow = 1;
-    private TupleBatch currentBatch;
-    private List currentTuple;
-    private int bufferedIndex;
-    private boolean mark;
     
-    @Override
-    public boolean hasNext() throws TeiidComponentException,
-                            TeiidProcessingException {
-    	
-    	if (done && this.bufferedTs == null) {
-            return false;
-        }
-        while (currentTuple == null) {
-            if (currentBatch == null) {
-            	if (this.bufferedTs != null) {
-            		if (this.currentRow <= this.bufferedIndex) {
-	            		this.bufferedTs.setPosition(currentRow++);
-	            		this.currentTuple = this.bufferedTs.nextTuple();
-	            		return true;
-            		}
-            		if (done) {
-            			return false;
-            		}
-            	} 
-                currentBatch = this.source.nextBatch();
-                if (buffer != null && !saveOnMark) {
-                	buffer.addTupleBatch(currentBatch, true);
-                	bufferedIndex = currentBatch.getEndRow();
-                }
+	@Override
+	protected TupleBatch getBatch(int row) throws TeiidComponentException, TeiidProcessingException {
+		throw new UnsupportedOperationException();
+	}
+	
+	@Override
+	protected List<?> finalRow() throws TeiidComponentException, TeiidProcessingException {
+		if (this.buffer != null && this.getCurrentIndex() <= this.buffer.getRowCount()) {
+			batch = this.buffer.getBatch(this.getCurrentIndex());
+    	}
+		while (available() < 1) {
+			if (done) {
+				return null;
+			}
+			batch = source.nextBatch();
+			done = batch.getTerminationFlag();
+			if (buffer != null && !saveOnMark) {
+            	buffer.addTupleBatch(batch, true);
             }
+		}
+		return getCurrentTuple();
+	}
+	
+	@Override
+	protected List<?> getCurrentTuple() throws TeiidComponentException,
+			BlockedException, TeiidProcessingException {
+		List<?> tuple = super.getCurrentTuple();
+		if (mark && saveOnMark && this.getCurrentIndex() > this.buffer.getRowCount()) {
+        	this.buffer.setRowCount(this.getCurrentIndex() - 1);
+        	this.buffer.addTuple(tuple);
+        }
+		return tuple;
+	}
+	
+	@Override
+	public int available() {
+		if (batch != null && batch.containsRow(getCurrentIndex())) {
+			return batch.getEndRow() - getCurrentIndex() + 1;
+		}
+		return 0;
+	}
 
-            if (currentBatch.containsRow(currentRow)) {
-                this.currentTuple = currentBatch.getTuple(currentRow++);
-            } else {
-                done = currentBatch.getTerminationFlag();
-                currentBatch = null;
-                if (done) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-    
+	@Override
+	public List<? extends Expression> getSchema() {
+		return source.getOutputElements();
+	}
+	
     public void setBuffer(TupleBuffer buffer, boolean saveOnMark) {
 		this.buffer = buffer;
-		this.bufferedTs = this.buffer.createIndexedTupleSource();
 		this.saveOnMark = saveOnMark;
-	}
+	}   
     
     @Override
     public void closeSource() {
@@ -112,80 +114,29 @@ public class BatchIterator implements IndexedTupleSource {
     }
     
     @Override
-    public List<SingleElementSymbol> getSchema() {
-    	return source.getOutputElements();
-    }
-    
-    @Override
-    public List<?> nextTuple() throws TeiidComponentException,
-    		TeiidProcessingException {
-        if (currentTuple == null && !hasNext()) {
-            return null;
-        }
-        List result = currentTuple;
-        currentTuple = null;
-        if (mark && saveOnMark && this.currentRow - 1 > this.buffer.getRowCount()) {
-        	this.buffer.setRowCount(this.currentRow - 2);
-        	this.buffer.addTuple(result);
-        	this.bufferedIndex = this.currentRow - 1;
-        }
-        return result;
-    }
-
     public void reset() {
-    	if (this.bufferedTs != null) {
+    	super.reset();
+    	if (this.buffer != null) {
     		mark = false;
-    		this.bufferedTs.reset();
-    		if (this.currentRow != this.bufferedTs.getCurrentIndex()) {
-    			this.currentRow = this.bufferedTs.getCurrentIndex();
-    			this.currentTuple = null;
-    		}
     		return;
     	}
-        throw new UnsupportedOperationException();
     }
 
+    @Override
     public void mark() {
-    	if (this.bufferedTs != null) {
-    		this.bufferedTs.mark();
-    		if (saveOnMark && this.currentRow > this.bufferedIndex) {
-    			this.buffer.purge();
-    			this.bufferedIndex = 0;
-    		}
+    	super.mark();
+    	if (this.buffer != null && saveOnMark && this.getCurrentIndex() > this.buffer.getRowCount()) {
+			this.buffer.purge();
     	}
     	mark = true;
     }
-
-    @Override
-    public int getCurrentIndex() {
-        return currentRow;
-    }
-
-    public void setPosition(int position) {
-    	if (this.bufferedTs != null) {
-    		this.bufferedTs.setPosition(position);
-    		this.currentRow = position;
-    	}
-    	if (this.currentBatch == null && position < this.currentRow) {
-			throw new UnsupportedOperationException("Backwards positioning is not allowed"); //$NON-NLS-1$
-    	}
-    	this.currentRow = position;
-        this.currentTuple = null;
-    	if (this.currentBatch == null || !this.currentBatch.containsRow(position)) {
-        	this.currentBatch = null;
-    	}
-    }
     
     @Override
-    public int available() {
-    	if (this.currentRow <= this.bufferedIndex) {
-    		this.bufferedTs.setPosition(this.currentRow);
-    		return this.bufferedTs.available();
+    public void setPosition(int position) {
+    	super.setPosition(position);
+    	if (this.buffer == null && position < getCurrentIndex() && position < (this.batch != null ? batch.getBeginRow() : Integer.MAX_VALUE)) {
+			throw new UnsupportedOperationException("Backwards positioning is not allowed"); //$NON-NLS-1$
     	}
-    	if (currentBatch != null) {
-    		return currentBatch.getEndRow() - currentRow + 1;
-    	}
-    	return 0;
     }
     
 }

@@ -27,6 +27,8 @@
         <excludes>
           <exclude>**/*.sh</exclude>
         </excludes>      
+        <fileMode>0644</fileMode>
+        <directoryMode>0755</directoryMode>
     </fileSet>
           
     <!-- only true dependency file for any client --> 
@@ -35,7 +37,8 @@
       <includes>
         <include>teiid-${version}-client.jar</include>
       </includes>
-      <outputDirectory>lib</outputDirectory>      
+      <outputDirectory>lib</outputDirectory>
+      <fileMode>0644</fileMode>
     </fileSet>
 
     <fileSet>
@@ -44,31 +47,50 @@
             <include>vdb-deployer.xsd</include>
         </includes>                
         <outputDirectory>teiid-docs/schema</outputDirectory>
-    </fileSet>        
+        <fileMode>0644</fileMode>        
+    </fileSet>
+    
+	<!-- We may want to do this if including multiple doc types or languages
+	     as the parent directory structure will be copied.  However the parent
+	     directory permissions still seem wrong.
+	<fileSet>
+	  	<directory>target/distribution/teiid-${version}-docs</directory>
+	  	<includes>
+	  		<include>**/*.pdf</include>
+	  	</includes>
+	    <outputDirectory>teiid-docs</outputDirectory>
+	    <fileMode>0644</fileMode>
+	    <directoryMode>0755</directoryMode>
+	</fileSet> -->
+	
   </fileSets>
   
     <files>
         <file>
             <source>target/distribution/teiid-${version}-docs/admin-guide/en-US/pdf/teiid_admin_guide.pdf</source>
             <outputDirectory>teiid-docs</outputDirectory>
+            <fileMode>0644</fileMode>
         </file>
         <file>
             <source>target/distribution/teiid-${version}-docs/reference/en-US/pdf/teiid_reference.pdf</source>
             <outputDirectory>teiid-docs</outputDirectory>
+            <fileMode>0644</fileMode>
         </file>
         <file>
             <source>target/distribution/teiid-${version}-docs/quick-start-example/en-US/pdf/teiid_quick_start_example.pdf</source>
             <outputDirectory>teiid-docs</outputDirectory>
+            <fileMode>0644</fileMode>
         </file>
         <file>
             <source>target/distribution/teiid-${version}-docs/developer-guide/en-US/pdf/teiid_developer_guide.pdf</source>
             <outputDirectory>teiid-docs</outputDirectory>
+            <fileMode>0644</fileMode>
         </file>
         <file>
-            <source>target/distribution/teiid-${version}-docs/client-developers-guide/en-US/pdf/client_developers_guide.pdf</source>
+            <source>target/distribution/teiid-${version}-docs/client-developers-guide/en-US/pdf/teiid_client_developers_guide.pdf</source>
             <outputDirectory>teiid-docs</outputDirectory>
-        </file>        
-        
+            <fileMode>0644</fileMode>
+        </file>       
     </files>
      
   
