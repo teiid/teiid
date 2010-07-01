@@ -190,9 +190,7 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
         throw new TeiidSQLException(msg);
     }
 
-	//## JDBC4.0-begin ##
 	@Override
-	//## JDBC4.0-end ##
     public boolean execute() throws SQLException {
         executeSql(new String[] {this.prepareSql}, false, ResultsMode.EITHER);
         return hasResultSet();
@@ -211,17 +209,13 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
 	   	return this.updateCounts;
     }
 
-	//## JDBC4.0-begin ##
 	@Override
-	//## JDBC4.0-end ##
     public ResultSet executeQuery() throws SQLException {
         executeSql(new String[] {this.prepareSql}, false, ResultsMode.RESULTSET);
         return resultSet;
     }
 
-	//## JDBC4.0-begin ##
 	@Override
-	//## JDBC4.0-end ##
     public int executeUpdate() throws SQLException {
         executeSql(new String[] {this.prepareSql}, false, ResultsMode.UPDATECOUNT);
         return this.updateCounts[0];
@@ -750,11 +744,9 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
-	//## JDBC4.0-begin ##
 	public void setNClob(int parameterIndex, NClob value) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	//## JDBC4.0-end ##
 
 	public void setNClob(int parameterIndex, Reader reader) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
@@ -774,11 +766,9 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
-	//## JDBC4.0-begin ##
 	public void setRowId(int parameterIndex, RowId x) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	//## JDBC4.0-end ##
 
 	public void setUnicodeStream(int parameterIndex, InputStream x, int length)
 			throws SQLException {

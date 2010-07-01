@@ -33,15 +33,9 @@ import java.sql.Clob;
 import java.sql.Date;
 import java.sql.Ref;
 import java.sql.SQLException;
-//## JDBC4.0-begin ##
 import java.sql.SQLXML;
 import java.sql.NClob;
 import java.sql.RowId;
-//## JDBC4.0-end ##
-
-/*## JDBC3.0-JDK1.5-begin ##
-import com.metamatrix.core.jdbc.SQLXML; 
-## JDBC3.0-JDK1.5-end ##*/
 
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -468,17 +462,13 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
-	//## JDBC4.0-begin ##
 	public NClob getNClob(int parameterIndex) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	//## JDBC4.0-end ##
 
-	//## JDBC4.0-begin ##
 	public NClob getNClob(String parameterName) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	//## JDBC4.0-end ##
 
 	public String getNString(int parameterIndex) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
@@ -508,17 +498,13 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
-	//## JDBC4.0-begin ##    
 	public RowId getRowId(int parameterIndex) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
-    //## JDBC4.0-end ##
 
-	//## JDBC4.0-begin ##
 	public RowId getRowId(String parameterName) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	//## JDBC4.0-end ##
 	
 	public SQLXML getSQLXML(String parameterName) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
@@ -687,11 +673,9 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
-	//## JDBC4.0-begin ##
 	public void setNClob(String parameterName, NClob value) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	//## JDBC4.0-end ##
 
 	public void setNClob(String parameterName, Reader reader)
 			throws SQLException {
@@ -731,11 +715,9 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
-	//## JDBC4.0-begin ##
 	public void setRowId(String parameterName, RowId x) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	//## JDBC4.0-end ##
 
 	public void setSQLXML(String parameterName, SQLXML xmlObject)
 			throws SQLException {

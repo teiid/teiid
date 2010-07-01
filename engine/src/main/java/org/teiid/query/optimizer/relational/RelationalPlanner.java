@@ -88,7 +88,6 @@ import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.TableFunctionReference;
-import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.symbol.GroupSymbol;

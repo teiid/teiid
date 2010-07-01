@@ -56,23 +56,17 @@ public class TestSocketServerInstanceImpl {
 			this.readMsgs = readMsgs;
 		}
 
-		//## JDBC4.0-begin ##
 		@Override
-		//## JDBC4.0-end ##
 		public void close() {
 			
 		}
 
-		//## JDBC4.0-begin ##
 		@Override
-		//## JDBC4.0-end ##
 		public boolean isOpen() {
 			return true;
 		}
 
-		//## JDBC4.0-begin ##
 		@Override
-		//## JDBC4.0-end ##
 		public Future<?> write(Object msg) {
 			msgs.add(msg);
 			ResultsFuture<?> result = new ResultsFuture<Void>();
@@ -80,9 +74,7 @@ public class TestSocketServerInstanceImpl {
 			return result;
 		}
 		
-		//## JDBC4.0-begin ##
 		@Override
-		//## JDBC4.0-end ##
 		public Object read() throws IOException,
 				ClassNotFoundException {
 		    if (readCount >= readMsgs.size()) {
@@ -102,24 +94,18 @@ public class TestSocketServerInstanceImpl {
 			return msg;
 		}
 		
-		//## JDBC4.0-begin ##
 		@Override
-		//## JDBC4.0-end ##
 		public SocketAddress getRemoteAddress() {
 			return null;
 		}
 		
-		//## JDBC4.0-begin ##
 		@Override
-		//## JDBC4.0-end ##
 		public ObjectChannel createObjectChannel(SocketAddress address,
 				boolean ssl) throws IOException, CommunicationException {
 			return this;
 		}
 		
-		//## JDBC4.0-begin ##
 		@Override
-		//## JDBC4.0-end ##
 		public int getSoTimeout() {
 			return 1;
 		}

@@ -105,16 +105,12 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
         }
     }
     
-	//## JDBC4.0-begin ##
 	@Override
-	//## JDBC4.0-end ##
     public HostInfo getHostInfo() {
     	return this.hostInfo;
     }
     
-	//## JDBC4.0-begin ##
 	@Override
-	//## JDBC4.0-end ##
     public SocketAddress getRemoteAddress() {
     	return this.socketChannel.getRemoteAddress();
     }
@@ -286,9 +282,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
     }
 
 	@SuppressWarnings("unchecked")
-	//## JDBC4.0-begin ##
 	@Override
-	//## JDBC4.0-end ##
 	public <T> T getService(Class<T> iface) {
 		return (T)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new RemoteInvocationHandler(iface));
 	}
@@ -303,9 +297,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 			this.secure = ILogon.class.isAssignableFrom(targetClass);
 		}
 
-		//## JDBC4.0-begin ##
 		@Override
-		//## JDBC4.0-end ##
 		public Object invoke(Object proxy, Method method, Object[] args)
 				throws Throwable {
 			Throwable t = null;

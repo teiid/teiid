@@ -23,17 +23,12 @@
 package org.teiid.jdbc;
 
 import java.sql.SQLException;
-//## JDBC4.0-begin ##
 import java.sql.Wrapper;
 
 import org.teiid.core.util.ArgCheck;
 
 
-public class WrapperImpl 
-	//## JDBC4.0-begin ##
-	implements Wrapper 
-	//## JDBC4.0-end ##	
-	{
+public class WrapperImpl implements Wrapper {
 	public boolean isWrapperFor(Class<?> iface) throws SQLException {
 		ArgCheck.isNotNull(iface);
 		

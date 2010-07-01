@@ -22,8 +22,6 @@
 
 package org.teiid.jdbc;
 
-import java.io.IOException;
-import java.io.Reader;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -56,9 +54,8 @@ import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.client.plan.Annotation;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidException;
-import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.SqlUtil;
 
 
@@ -299,17 +296,13 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         }
     }
 
-	//## JDBC4.0-begin ##
 	@Override
-	//## JDBC4.0-end ##
     public boolean execute(String sql) throws SQLException {
         executeSql(new String[] {sql}, false, ResultsMode.EITHER);
         return hasResultSet();
     }
     
-	//## JDBC4.0-begin ##
 	@Override
-	//## JDBC4.0-end ##
     public int[] executeBatch() throws SQLException {
         if (batchedUpdates == null || batchedUpdates.isEmpty()) {
             return new int[0];
@@ -319,17 +312,13 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         return updateCounts;
     }
 
-	//## JDBC4.0-begin ##
 	@Override
-	//## JDBC4.0-end ##
     public ResultSet executeQuery(String sql) throws SQLException {
         executeSql(new String[] {sql}, false, ResultsMode.RESULTSET);
         return resultSet;
     }
 
-	//## JDBC4.0-begin ##
 	@Override
-	//## JDBC4.0-end ##
     public int executeUpdate(String sql) throws SQLException {
         String[] commands = new String[] {sql};
         executeSql(commands, false, ResultsMode.UPDATECOUNT);

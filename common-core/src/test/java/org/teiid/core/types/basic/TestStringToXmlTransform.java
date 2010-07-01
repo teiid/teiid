@@ -22,7 +22,6 @@
 
 package org.teiid.core.types.basic;
 
-//## JDBC4.0-begin ##
 import static org.junit.Assert.*;
 
 import java.sql.SQLXML;

@@ -406,9 +406,7 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 		checkClosed(); // check to see if the ResultSet is closed
 	}
 
-	//## JDBC4.0-begin ##
 	@Override
-	//## JDBC4.0-end ##
 	public void clearWarnings() throws SQLException {
 		// do nothing
 		checkClosed(); // check to see if the ResultSet is closed
@@ -1263,7 +1261,6 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
-	//## JDBC4.0-begin ##
 	public NClob getNClob(int columnIndex) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
@@ -1271,7 +1268,6 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 	public NClob getNClob(String columnLabel) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	//## JDBC4.0-end ##
 	
 	public String getNString(int columnIndex) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
@@ -1299,17 +1295,13 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 		throw SqlUtil.createFeatureNotSupportedException();	
 	}
 
-	//## JDBC4.0-begin ##
 	public RowId getRowId(int columnIndex) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	//## JDBC4.0-end ##
 
-	//## JDBC4.0-begin ##
 	public RowId getRowId(String columnLabel) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	//## JDBC4.0-end ##
 
 	public SQLXML getSQLXML(String columnLabel) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
@@ -1625,11 +1617,9 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 		
 	}
 
-	//## JDBC4.0-begin ##
 	public void updateNClob(int columnIndex, NClob clob) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	//## JDBC4.0-end ##
 
 	public void updateNClob(int columnIndex, Reader reader, long length)
 			throws SQLException {
@@ -1640,11 +1630,9 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
-	//## JDBC4.0-begin ##
 	public void updateNClob(String columnLabel, NClob clob) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	//## JDBC4.0-end ##
 
 	public void updateNClob(String columnLabel, Reader reader, long length)
 			throws SQLException {
@@ -1704,17 +1692,13 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 		throw SqlUtil.createFeatureNotSupportedException();	
 	}
 
-	//## JDBC4.0-begin ##
 	public void updateRowId(int columnIndex, RowId x) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	//## JDBC4.0-end ##
 
-	//## JDBC4.0-begin ##
 	public void updateRowId(String columnLabel, RowId x) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	//## JDBC4.0-end ##
 
 	public void updateShort(int columnIndex, short x) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();	

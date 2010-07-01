@@ -200,15 +200,14 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
             
         };
     }
-    //## JDBC4.0-begin ##
-	public void free() throws SQLException {
+
+    public void free() throws SQLException {
 		this.reference.free();
 	}
 
 	public Reader getCharacterStream(long pos, long length) throws SQLException {
 		return this.reference.getCharacterStream(pos, length);
 	}
-	//## JDBC4.0-end ##
 	
 	public static SerialClob createClob(char[] chars) {
 		try {

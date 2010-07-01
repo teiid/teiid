@@ -52,13 +52,7 @@ class WarningUtil {
         		return warning;
         	}
         }
-        //## JDBC4.0-begin ##
         return new SQLWarning(ex);
-        //## JDBC4.0-end ##
-		/*## JDBC3.0-JDK1.5-begin ##
-		return new SQLWarning(ex.getMessage()); 
-	      ## JDBC3.0-JDK1.5-end ##*/
-        
     }
 
     /**

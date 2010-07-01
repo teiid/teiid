@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.nio.charset.Charset;
 import java.sql.Blob;
@@ -34,6 +35,7 @@ import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 
+import javax.activation.DataSource;
 import javax.xml.transform.Source;
 
 import org.teiid.core.util.ReaderInputStream;
@@ -102,7 +104,7 @@ public abstract class InputStreamFactory implements Source {
     	
     }
     
-    public static class ClobInputStreamFactory extends InputStreamFactory {
+    public static class ClobInputStreamFactory extends InputStreamFactory implements DataSource {
     	
     	private Clob clob;
     	private Charset charset = Charset.forName(Streamable.ENCODING);
@@ -136,10 +138,25 @@ public abstract class InputStreamFactory implements Source {
 				throw new IOException(e);
 			}
     	}
+
+		@Override
+		public String getContentType() {
+			return "text/plain"; //$NON-NLS-1$
+		}
+
+		@Override
+		public String getName() {
+			return "clob"; //$NON-NLS-1$
+		}
+
+		@Override
+		public OutputStream getOutputStream() throws IOException {
+			throw new UnsupportedOperationException();
+		}
     	
     }
     
-    public static class BlobInputStreamFactory extends InputStreamFactory {
+    public static class BlobInputStreamFactory extends InputStreamFactory implements DataSource {
     	
     	private Blob blob;
     	
@@ -165,9 +182,24 @@ public abstract class InputStreamFactory implements Source {
 			}
     	}
     	
+    	@Override
+		public String getContentType() {
+			return "application/octet-stream"; //$NON-NLS-1$
+		}
+
+		@Override
+		public String getName() {
+			return "blob"; //$NON-NLS-1$
+		}
+
+		@Override
+		public OutputStream getOutputStream() throws IOException {
+			throw new UnsupportedOperationException();
+		}
+    	
     }
     
-    public static class SQLXMLInputStreamFactory extends InputStreamFactory {
+    public static class SQLXMLInputStreamFactory extends InputStreamFactory implements DataSource {
     	
     	private SQLXML sqlxml;
     	
@@ -192,6 +224,21 @@ public abstract class InputStreamFactory implements Source {
 				throw new IOException(e);
 			}
     	}
+    	
+    	@Override
+		public String getContentType() {
+			return "application/xml"; //$NON-NLS-1$
+		}
+
+		@Override
+		public String getName() {
+			return "sqlxml"; //$NON-NLS-1$
+		}
+
+		@Override
+		public OutputStream getOutputStream() throws IOException {
+			throw new UnsupportedOperationException();
+		}
     	
     }
     

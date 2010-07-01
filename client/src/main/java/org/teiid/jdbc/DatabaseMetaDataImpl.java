@@ -2382,11 +2382,9 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
-	//## JDBC4.0-begin ##
 	public RowIdLifetime getRowIdLifetime() throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	//## JDBC4.0-end ##
 
 	public ResultSet getSchemas(String catalog, String schemaPattern)
 			throws SQLException {

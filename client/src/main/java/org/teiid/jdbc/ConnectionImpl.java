@@ -32,15 +32,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
-//## JDBC4.0-begin ##
 import java.sql.SQLClientInfoException;
 import java.sql.NClob;
 import java.sql.SQLXML;
-//## JDBC4.0-end ##
 
-/*## JDBC3.0-JDK1.5-begin ##
-import com.metamatrix.core.jdbc.SQLXML; 
-## JDBC3.0-JDK1.5-end ##*/
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
@@ -52,6 +47,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -841,21 +839,19 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
     }
     
 	public boolean isValid(int timeout) throws SQLException {
-		Statement statement = null;
-		try {
-			statement = createStatement();
-			statement.setQueryTimeout(timeout);
-			statement.execute("select 1"); //$NON-NLS-1$
-			return true;
-		} catch (SQLException e) {
+		ResultsFuture<?> future = this.getServerConnection().isOpen();
+		if (future == null) {
 			return false;
-		} finally {
-			if (statement != null) {
-				try {
-					statement.close();
-				} catch (SQLException e) {
-				}
-			}
+		}
+		try {
+			future.get(timeout, TimeUnit.SECONDS);
+			return true;
+		} catch (InterruptedException e) {
+			return false;
+		} catch (ExecutionException e) {
+			return false;
+		} catch (TimeoutException e) {
+			return false;
 		}
 	}
 	
@@ -891,7 +887,6 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
 		return this.serverConn.isSameInstance(conn.serverConn);
 	}
 	
-	//## JDBC4.0-begin ##
 	public void setClientInfo(Properties properties)
 		throws SQLClientInfoException {
 	}
@@ -899,7 +894,6 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
 	public void setClientInfo(String name, String value)
 		throws SQLClientInfoException {
 	}
-	//## JDBC4.0-end ##
 	
 	public Properties getClientInfo() throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
@@ -922,11 +916,9 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
-	//## JDBC4.0-begin ##
 	public NClob createNClob() throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	//## JDBC4.0-end ##
 
 	public SQLXML createSQLXML() throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();

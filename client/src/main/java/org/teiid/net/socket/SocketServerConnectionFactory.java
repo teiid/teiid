@@ -74,9 +74,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 			this.key = key;
 		}
 
-		//## JDBC4.0-begin ##
 		@Override
-		//## JDBC4.0-end ##
 		public Object invoke(Object arg0, Method arg1, Object[] arg2)
 				throws Throwable {
 			if (arg1.getName().equals("shutdown")) { //$NON-NLS-1$

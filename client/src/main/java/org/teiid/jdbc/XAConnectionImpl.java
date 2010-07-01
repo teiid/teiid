@@ -33,9 +33,7 @@ import java.util.Iterator;
 
 import javax.sql.ConnectionEvent;
 import javax.sql.ConnectionEventListener;
-//## JDBC4.0-begin ##
 import javax.sql.StatementEventListener;
-//## JDBC4.0-end ##
 import javax.sql.XAConnection;
 import javax.transaction.xa.XAResource;
 
@@ -190,11 +188,9 @@ public class XAConnectionImpl implements XAConnection{
 		}	
 	}
 
-	//## JDBC4.0-begin ##
 	public void addStatementEventListener(StatementEventListener arg0) {
 	}
 
 	public void removeStatementEventListener(StatementEventListener arg0) {
 	}
-	//## JDBC4.0-end ##
 }

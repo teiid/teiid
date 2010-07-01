@@ -43,13 +43,7 @@ public class UnitTestUtil {
 	
 	public static final String PATH_SEPARATOR = "/"; //$NON-NLS-1$
 
-	//## JDBC4.0-begin ##
 	private static final String DEFAULT_TESTDATA_PATH = "src/test/resources"; //$NON-NLS-1$
-	//## JDBC4.0-end ##
-
-	/*## JDBC3.0-JDK1.5-begin ##
-	private static final String DEFAULT_TESTDATA_PATH = "target/generated-sources/test/resources"; //$NON-NLS-1$ 
-	## JDBC3.0-JDK1.5-end ##*/
 	
 	private static final String DEFAULT_TEMP_DIR = "target/scratch"; //$NON-NLS-1$
 	

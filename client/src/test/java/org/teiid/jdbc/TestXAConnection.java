@@ -43,9 +43,7 @@ public class TestXAConnection {
 		final ConnectionImpl mmConn = TestConnection.getMMConnection();
 
 		XAConnectionImpl xaConn = new XAConnectionImpl(new XAConnectionImpl.ConnectionSource() {
-			//## JDBC4.0-begin ##
 			@Override
-			//## JDBC4.0-end ##
 			public ConnectionImpl createConnection() throws SQLException {
 				return mmConn;
 			}
@@ -71,9 +69,7 @@ public class TestXAConnection {
 	
 	@Test public void testNotification() throws Exception {
 		XAConnectionImpl xaConn = new XAConnectionImpl(new XAConnectionImpl.ConnectionSource() {
-			//## JDBC4.0-begin ##
 			@Override
-			//## JDBC4.0-end ##
 			public ConnectionImpl createConnection() throws SQLException {
 				ConnectionImpl c = Mockito.mock(ConnectionImpl.class);
 				Mockito.doThrow(new SQLException(new InvalidSessionException())).when(c).commit();

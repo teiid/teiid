@@ -24,13 +24,8 @@ package org.teiid.core.types;
 
 import java.sql.Blob;
 import java.sql.Clob;
-//## JDBC4.0-begin ##
 import java.sql.SQLXML;
-//## JDBC4.0-end ##
 
-/*## JDBC3.0-JDK1.5-begin ##
-import com.metamatrix.core.jdbc.SQLXML; 
-## JDBC3.0-JDK1.5-end ##*/
 import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
@@ -86,12 +81,7 @@ public final class JDBCSQLTypeInfo {
     public static final String OBJECT_CLASS = DataTypeManager.DefaultDataClasses.OBJECT.getName();
     public static final String CLOB_CLASS = Clob.class.getName();
     public static final String BLOB_CLASS = Blob.class.getName();
-    //## JDBC4.0-begin ##
     public static final String XML_CLASS = SQLXML.class.getName();
-    //## JDBC4.0-end ##
-    /*## JDBC3.0-JDK1.5-begin ##
-    public static final String XML_CLASS = DataTypeManager.DefaultDataClasses.OBJECT.getName(); 
-    ## JDBC3.0-JDK1.5-end ##*/
     
     private static Map<String, Integer> NAME_TO_TYPE_MAP = new HashMap<String, Integer>();
     private static Map<Integer, String> TYPE_TO_NAME_MAP = new HashMap<Integer, String>();
@@ -119,17 +109,11 @@ public final class JDBCSQLTypeInfo {
         
         addTypeMapping(NULL, null, Types.NULL);
         
-        //## JDBC4.0-begin ##
         addTypeMapping(XML, XML_CLASS, Types.SQLXML);
 		TYPE_TO_NAME_MAP.put(Types.NVARCHAR, STRING);
         TYPE_TO_NAME_MAP.put(Types.LONGNVARCHAR, STRING);
 		TYPE_TO_NAME_MAP.put(Types.NCHAR, CHAR);
 		TYPE_TO_NAME_MAP.put(Types.NCLOB, CLOB);
-		//## JDBC4.0-end ##
-		
-		/*## JDBC3.0-JDK1.5-begin ##
-	    NAME_TO_CLASSNAME.put(XML, OBJECT_CLASS); 
-	    ## JDBC3.0-JDK1.5-end ##*/
     }
 
 	private static void addTypeMapping(String typeName, String javaClass, int sqlType, int ... secondaryTypes) {

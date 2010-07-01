@@ -172,9 +172,7 @@ public class TestDataTypeManager {
         }
         
         assertEquals(Types.TIMESTAMP, JDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.DefaultDataClasses.TIMESTAMP));
-        //## JDBC4.0-begin ##
         assertEquals(Types.SQLXML, JDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.DefaultDataClasses.XML));
-        //## JDBC4.0-end ##
         assertEquals(DataTypeManager.DefaultDataTypes.STRING, JDBCSQLTypeInfo.getTypeName(Types.CHAR));
         assertEquals(Types.CHAR, JDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.DefaultDataClasses.CHAR));
     }

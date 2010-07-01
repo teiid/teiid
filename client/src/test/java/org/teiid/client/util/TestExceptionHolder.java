@@ -21,7 +21,6 @@ import org.teiid.core.util.UnitTestUtil;
 
 public class TestExceptionHolder {
 	
-	//## JDBC4.0-begin ##		
 	@SuppressWarnings("all")
 	public static class BadException extends TeiidProcessingException {
 		private Object obj;
@@ -116,11 +115,4 @@ public class TestExceptionHolder {
         Throwable e = holder.getException();
         assertTrue(e instanceof TeiidException);
 	}
-	//## JDBC4.0-end ##
-	
-	/*## JDBC3.0-JDK1.5-begin ##
-	public void testPass(){
-	// since the jar files required are built with 1.6, it will always fail, so just comment the test for 1.5
-	} 
-	## JDBC3.0-JDK1.5-end ##*/
 }

@@ -61,25 +61,19 @@ public class TestSocketServerConnection extends TestCase {
 		
 		Throwable t;
 		
-		//## JDBC4.0-begin ##
 		@Override
-		//## JDBC4.0-end ##
 		public void assertIdentity(SessionToken sessionId)
 				throws InvalidSessionException, TeiidComponentException {
 			
 		}
 
-		//## JDBC4.0-begin ##
 		@Override
-		//## JDBC4.0-end ##
 		public ResultsFuture<?> logoff()
 				throws InvalidSessionException {
 			return null;
 		}
 
-		//## JDBC4.0-begin ##
 		@Override
-		//## JDBC4.0-end ##
 		public LogonResult logon(
 				Properties connectionProperties)
 				throws LogonException,
@@ -87,9 +81,7 @@ public class TestSocketServerConnection extends TestCase {
 			return new LogonResult(new SessionToken(1, "fooUser"), "foo", 1, "fake"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 
-		//## JDBC4.0-begin ##
 		@Override
-		//## JDBC4.0-end ##
 		public ResultsFuture<?> ping()
 				throws InvalidSessionException,
 				TeiidComponentException {
@@ -129,9 +121,7 @@ public class TestSocketServerConnection extends TestCase {
 	public void testLogonFailsWithMultipleHosts() throws Exception {
 		Properties p = new Properties();
 		SocketServerInstanceFactory instanceFactory = new SocketServerInstanceFactory() {
-			//## JDBC4.0-begin ##
 			@Override
-			//## JDBC4.0-end ##
 			public SocketServerInstance getServerInstance(HostInfo info,
 					boolean ssl) throws CommunicationException, IOException {
 				throw new SingleInstanceCommunicationException();
@@ -193,9 +183,7 @@ public class TestSocketServerConnection extends TestCase {
 		Properties p = new Properties();
 		ServerDiscovery discovery = new UrlServerDiscovery(new TeiidURL(hostInfo.getHostName(), hostInfo.getPortNumber(), false));
 		SocketServerInstanceFactory instanceFactory = new SocketServerInstanceFactory() {
-			//## JDBC4.0-begin ##
 			@Override
-			//## JDBC4.0-end ##
 			public SocketServerInstance getServerInstance(final HostInfo info,
 					boolean ssl) throws CommunicationException, IOException {
 				SocketServerInstance instance = Mockito.mock(SocketServerInstance.class);

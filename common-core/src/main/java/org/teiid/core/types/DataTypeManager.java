@@ -704,50 +704,38 @@ public class DataTypeManager {
 
 	static void loadSourceConversions() {
 		sourceConverters.put(Clob.class, new SourceTransform<Clob, ClobType>() {
-			//## JDBC4.0-begin ##
 			@Override
-			//## JDBC4.0-end ##
 			public ClobType transform(Clob value) {
 				return new ClobType(value);
 			}
 		});
 		sourceConverters.put(char[].class, new SourceTransform<char[], ClobType>() {
-			//## JDBC4.0-begin ##
 			@Override
-			//## JDBC4.0-end ##
 			public ClobType transform(char[] value) {
 				return new ClobType(ClobType.createClob(value));
 			}
 		});
 		sourceConverters.put(Blob.class, new SourceTransform<Blob, BlobType>() {
-			//## JDBC4.0-begin ##
 			@Override
-			//## JDBC4.0-end ##
 			public BlobType transform(Blob value) {
 				return new BlobType(value);
 			}
 		});
 		addSourceTransform(byte[].class, new SourceTransform<byte[], BlobType>() {
-			//## JDBC4.0-begin ##
 			@Override
-			//## JDBC4.0-end ##
 			public BlobType transform(byte[] value) {
 				return new BlobType(BlobType.createBlob(value));
 			}
 		});
 		addSourceTransform(SQLXML.class, new SourceTransform<SQLXML, XMLType>() {
-			//## JDBC4.0-begin ##
 			@Override
-			//## JDBC4.0-end ##
 			public XMLType transform(SQLXML value) {
 				return new XMLType(value);
 			}
 		});
 		//Note: the default transform from non-InputStreamFactory source is a fully materialized string
 		addSourceTransform(Source.class, new SourceTransform<Source, XMLType>() {
-			//## JDBC4.0-begin ##
 			@Override
-			//## JDBC4.0-end ##
 			public XMLType transform(Source value) {
 				if (value instanceof InputStreamFactory) {
 					return new XMLType(new SQLXMLImpl((InputStreamFactory)value));
@@ -761,9 +749,7 @@ public class DataTypeManager {
 			}
 		});
 		addSourceTransform(Date.class, new SourceTransform<Date, Timestamp>() {
-			//## JDBC4.0-begin ##
 			@Override
-			//## JDBC4.0-end ##
 			public Timestamp transform(Date value) {
 				return new Timestamp(value.getTime());
 			}

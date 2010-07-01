@@ -33,6 +33,7 @@ import java.lang.reflect.Proxy;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Timer;
@@ -181,7 +182,8 @@ public class SocketServerConnection implements ServerConnection {
         // Log on to server
         try {
             this.logonResult = logon.logon(connProps);
-            if (this.serverDiscovery.getKnownHosts(logonResult, this.serverInstance).size() > 1) {
+            List<HostInfo> knownHosts = this.serverDiscovery.getKnownHosts(logonResult, this.serverInstance);
+            if (knownHosts.size() > 1 && !new HashSet<HostInfo>(knownHosts).equals(new HashSet<HostInfo>(this.serverDiscovery.getKnownHosts(logonResult, null)))) {
             	//if there are multiple instances, allow for load-balancing
             	closeServerInstance();
             }

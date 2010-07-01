@@ -38,7 +38,6 @@ public class TestSQLXMLImpl {
 
     String testStr = "<foo>test</foo>"; //$NON-NLS-1$
         
-	//## JDBC4.0-begin ##
     @Test public void testGetSource() throws Exception {        
         SQLXMLImpl xml = new SQLXMLImpl(testStr);
         assertTrue(xml.getSource(null) instanceof StreamSource);
@@ -46,7 +45,6 @@ public class TestSQLXMLImpl {
         StreamSource ss = (StreamSource)xml.getSource(null);
         assertEquals(testStr, new String(ObjectConverterUtil.convertToByteArray(ss.getInputStream()), Streamable.ENCODING));
     }
-	//## JDBC4.0-end ##
     
     @Test public void testGetCharacterStream() throws Exception {
         SQLXMLImpl xml = new SQLXMLImpl(testStr);

@@ -121,7 +121,6 @@ public final class BlobType extends Streamable<Blob> implements Blob {
         this.reference.truncate(len);
     }
     
-    //## JDBC4.0-begin ##
 	public void free() throws SQLException {
 		this.reference.free();
 	}
@@ -130,7 +129,6 @@ public final class BlobType extends Streamable<Blob> implements Blob {
 			throws SQLException {
 		return this.reference.getBinaryStream(pos, length);
 	}
-	//## JDBC4.0-end ##
 	
 	public static SerialBlob createBlob(byte[] bytes) {
 		if (bytes == null) {
