@@ -31,6 +31,7 @@
             </dependencySet>
           </dependencySets>
           <outputDirectory>lib</outputDirectory>
+          <fileMode>0644</fileMode>
         </binaries>
       
     </moduleSet>
@@ -52,7 +53,8 @@
         <outputDirectory>/</outputDirectory>      
         <excludes>
           <exclude>**/*.sh</exclude>
-        </excludes>      
+        </excludes>
+        <fileMode>0644</fileMode>      
     </fileSet>      
     
     <fileSet>
@@ -60,7 +62,8 @@
       <includes>
         <include>teiid-${version}-client.jar</include>
       </includes>
-      <outputDirectory>lib</outputDirectory>      
+      <outputDirectory>lib</outputDirectory>
+      <fileMode>0644</fileMode>      
     </fileSet>
         
   </fileSets>
@@ -68,6 +71,7 @@
   <files>
         <file>
             <source>target/distribution/teiid-${version}-docs/admin-guide/en-US/pdf/teiid_admin_guide.pdf</source>
+            <fileMode>0644</fileMode>
         </file>
     </files>
     

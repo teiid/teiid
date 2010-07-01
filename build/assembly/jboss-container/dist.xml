@@ -127,6 +127,7 @@
                 </dependencySet>
             </dependencySets>
             <outputDirectory>deployers/teiid.deployer</outputDirectory>
+            <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>
     
@@ -159,6 +160,7 @@
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>deploy/teiid/connectors</outputDirectory>
+          <fileMode>0644</fileMode>
         </binaries>
       
     </moduleSet>
@@ -175,6 +177,7 @@
           <includeDependencies>false</includeDependencies>
           <unpack>false</unpack>
           <outputDirectory>deploy/admin-console.war/plugins</outputDirectory>
+          <fileMode>0644</fileMode>
         </binaries>
       
     </moduleSet>        
