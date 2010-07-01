@@ -180,7 +180,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 				String name = model.getSourceTranslatorName(source);
 				Translator translator = VDBDeployer.this.translatorRepository.getTranslatorMetaData(new VDBKey(deployment.getName(), deployment.getVersion()), name);
 				if (translator == null) {
-					throw new DeploymentException(RuntimePlugin.Util.getString("translator_not_found", name)); //$NON-NLS-1$
+					throw new DeploymentException(RuntimePlugin.Util.getString("translator_not_found", deployment.getName(), deployment.getVersion(), name)); //$NON-NLS-1$
 				}
 			
 				ExecutionFactory<Object, Object> ef = map.get(translator);
