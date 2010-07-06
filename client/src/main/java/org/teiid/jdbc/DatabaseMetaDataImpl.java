@@ -433,7 +433,8 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
 
     public ResultSet getCatalogs() throws SQLException {
         // list containing records/rows in the ResultSet
-        List records = new ArrayList (0);
+        List<List<String>> records = new ArrayList<List<String>> (1);
+        records.add(Arrays.asList(this.driverConnection.getCatalog()));
 
         /***********************************************************************
         * Hardcoding JDBC column names for the columns returned in results object
