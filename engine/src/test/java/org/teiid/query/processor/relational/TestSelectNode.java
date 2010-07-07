@@ -22,12 +22,15 @@
 
 package org.teiid.query.processor.relational;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Test;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
@@ -35,13 +38,13 @@ import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.processor.BatchIterator;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.ProcessorDataManager;
-import org.teiid.query.processor.relational.RelationalNode;
-import org.teiid.query.processor.relational.SelectNode;
+import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.symbol.Constant;
@@ -50,34 +53,28 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.util.CommandContext;
 
-import junit.framework.TestCase;
+public class TestSelectNode {
 
-
-/**
- */
-public class TestSelectNode extends TestCase {
-
-    /**
-     * Constructor for TestSelectNode.
-     * @param arg0
-     */
-    public TestSelectNode(String arg0) {
-        super(arg0);
-    }
-    
     public void helpTestSelect(List elements, Criteria criteria, List[] data, List childElements, ProcessorDataManager dataMgr, List[] expected) throws TeiidComponentException, TeiidProcessingException {
     	helpTestSelect(elements, criteria, childElements, dataMgr, expected, new FakeRelationalNode(2, data));
     }
     
     public void helpTestSelect(List elements, Criteria criteria, List childElements, ProcessorDataManager dataMgr, List[] expected, RelationalNode child) throws TeiidComponentException, TeiidProcessingException {
-        BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
+        SelectNode selectNode = new SelectNode(1);
+        helpTestSelect(elements, criteria, childElements, dataMgr, expected, child, selectNode);
+    }
+
+	private void helpTestSelect(List elements, Criteria criteria, List childElements,
+			ProcessorDataManager dataMgr, List[] expected,
+			RelationalNode child,
+			SelectNode selectNode) throws TeiidComponentException,
+			TeiidProcessingException {
+		BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
         CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         
         child.setElements(childElements);
-        child.initialize(context, mgr, dataMgr);    
-        
-        SelectNode selectNode = new SelectNode(1);
-        selectNode.setCriteria(criteria);
+        child.initialize(context, mgr, dataMgr);
+		selectNode.setCriteria(criteria);
         selectNode.setElements(elements);
         selectNode.addChild(child);
         selectNode.initialize(context, mgr, dataMgr);
@@ -93,16 +90,18 @@ public class TestSelectNode extends TestCase {
 	        		break;
 	        	} catch (BlockedException e) {
 	        		continue;
+	        	} catch (QueryProcessor.ExpiredTimeSliceException e) {
+	        		continue;
 	        	}
         	}
 		}  
         assertFalse(iterator.hasNext());
-    }
+	}
     
     /**
      * Ensures that a final empty batch is reindexed so that the batch iterator works correctly
      */
-    public void testEmptyBatchIndexing() throws TeiidComponentException, TeiidProcessingException {
+    @Test public void testEmptyBatchIndexing() throws TeiidComponentException, TeiidProcessingException {
     	ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 
@@ -138,7 +137,38 @@ public class TestSelectNode extends TestCase {
     	helpTestSelect(elements, crit, childElements, null, new List[0], child);
     }
     
-    public void testNoRows() throws TeiidComponentException, TeiidProcessingException {
+    @Test public void testTimeslicing() throws TeiidComponentException, TeiidProcessingException {
+        ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
+        es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+
+        List elements = new ArrayList();
+        elements.add(es1);
+        
+        CompareCriteria crit = new CompareCriteria(es1, CompareCriteria.EQ, new Constant(new Integer(1)));
+        
+        List[] data = new List[] {
+        	Arrays.asList(1),
+        	Arrays.asList(1),
+        	Arrays.asList(1)
+        };
+        
+        List childElements = new ArrayList();
+        childElements.add(es1);
+        
+        helpTestSelect(elements, crit, childElements, null, data, new FakeRelationalNode(2, data), new SelectNode(3) {
+        	int i = 0;
+        	
+        	@Override
+        	protected Evaluator getEvaluator(Map elementMap) {
+        		if (i++ == 1) {
+        			throw new QueryProcessor.ExpiredTimeSliceException();
+        		}
+        		return super.getEvaluator(elementMap);
+        	}
+        });
+    }
+    
+    @Test public void testNoRows() throws TeiidComponentException, TeiidProcessingException {
         ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 
@@ -160,7 +190,7 @@ public class TestSelectNode extends TestCase {
         
     }
 
-    public void testSimpleSelect() throws TeiidComponentException, TeiidProcessingException {
+    @Test public void testSimpleSelect() throws TeiidComponentException, TeiidProcessingException {
         ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 
@@ -195,7 +225,7 @@ public class TestSelectNode extends TestCase {
 
     }
 
-    public void testSelectWithLookup() throws TeiidComponentException, TeiidProcessingException {
+    @Test public void testSelectWithLookup() throws TeiidComponentException, TeiidProcessingException {
         ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 

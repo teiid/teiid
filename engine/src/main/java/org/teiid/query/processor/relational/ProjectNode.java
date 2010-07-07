@@ -61,7 +61,7 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
 
     // Saved state when blocked on evaluating a row - must be reset
     private TupleBatch currentBatch;
-    private int currentRow;
+    private int currentRow = 1;
 
 	public ProjectNode(int nodeID) {
 		super(nodeID);
@@ -71,7 +71,7 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
         super.reset();
 
         currentBatch = null;
-        currentRow = 0;
+        currentRow = 1;
     }
 
     /**
@@ -147,70 +147,50 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
 	
 	public TupleBatch nextBatchDirect()
 		throws BlockedException, TeiidComponentException, TeiidProcessingException {
-
-        // currentBatch and currentRow hold temporary state saved in the case
-        // of a BlockedException while evaluating an expression.  If that has
-        // not occurred, currentBatch will be null and currentRow will be < 0.
-        // blockedOnPrepare indicates that the BlockedException happened 
-        // during the call to prepareToProcessTuple
-
-        TupleBatch batch = this.currentBatch;
-        int beginRow = this.currentRow;
-
-        if(batch == null) {
+		
+        if(currentBatch == null) {
             // There was no saved batch, so get a new one
             //in the case of select with no from, should return only
             //one batch with one row
             if(this.getChildren()[0] == null){
-                batch = new TupleBatch(0, new List[]{Arrays.asList(new Object[] {})});
-                batch.setTerminationFlag(true);
+            	currentBatch = new TupleBatch(1, new List[]{Arrays.asList(new Object[] {})});
+            	currentBatch.setTerminationFlag(true);
             }else{
-                batch = this.getChildren()[0].nextBatch();
+            	currentBatch = this.getChildren()[0].nextBatch();
             }
 
             // Check for no project needed and pass through
-            if(batch.getRowCount() == 0 || !needsProject) {
-                // Just pass the batch through without processing
-                return batch;
+            if(!needsProject) {
+            	TupleBatch result = currentBatch;
+            	currentBatch = null;
+                return result;
             }
-
-            // Set the beginRow based on beginning row of the batch
-            beginRow = batch.getBeginRow();
-
-        } else {
-            // There was a saved batch, but we grabbed the state so it can now be removed
-            this.currentBatch = null;
-            this.currentRow = 0;
         }
 
-        for(int row = beginRow; row <= batch.getEndRow(); row++) {
-    		List tuple = batch.getTuple(row);
+        while (currentRow <= currentBatch.getEndRow() && !isBatchFull()) {
+    		List tuple = currentBatch.getTuple(currentRow);
 
 			List projectedTuple = new ArrayList(selectSymbols.size());
 
 			// Walk through symbols
-            try {
-                for(int i=0; i<selectSymbols.size(); i++) {
-    				SelectSymbol symbol = (SelectSymbol) selectSymbols.get(i);
-    				updateTuple(symbol, tuple, projectedTuple);
-    			}
-            } catch(BlockedException e) {
-                // Expression blocked, so save state and rethrow
-                this.currentBatch = batch;
-                this.currentRow = row;
-                throw e;
-            }
+            for(int i=0; i<selectSymbols.size(); i++) {
+				SelectSymbol symbol = (SelectSymbol) selectSymbols.get(i);
+				updateTuple(symbol, tuple, projectedTuple);
+			}
 
             // Add to batch
             addBatchRow(projectedTuple);
+            currentRow++;
 		}
-
-        // Check for termination tuple
-        if(batch.getTerminationFlag()) {
-            terminateBatches();
+        
+        if (currentRow > currentBatch.getEndRow()) {
+	        if(currentBatch.getTerminationFlag()) {
+	            terminateBatches();
+	        }
+	        currentBatch = null;
         }
-
-        return pullBatch();
+        
+    	return pullBatch();
 	}
 
 	private void updateTuple(SelectSymbol symbol, List values, List tuple)

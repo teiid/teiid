@@ -23,7 +23,6 @@
 package org.teiid.query.processor.relational;
 
 import java.util.List;
-import java.util.Map;
 
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;

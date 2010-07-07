@@ -54,8 +54,7 @@ public class IfInstruction extends ProcessorInstruction {
     private DefaultCondition defaultCondition;
 
     // State if condition evaluation blocked
-    private boolean blockedOnCondition = false;
-    private int blockedConditionIndex = 0;
+    private int conditionIndex = 0;
 
     /**
      * Constructor for IfInstruction.
@@ -148,37 +147,22 @@ public class IfInstruction extends ProcessorInstruction {
 	        thens.add(defaultCondition);
         }
         
-        int conditionIndex = this.blockedConditionIndex;
-        if(blockedOnCondition) {
-            // Remove state - we have recovered and will reset if necessary
-            this.blockedOnCondition = false;
-            this.blockedConditionIndex = 0;            
-        } else{
-            conditionIndex = 0;
-        }
-        
         Condition condition = null;
         boolean foundTrueCondition = false;
 
         for(; conditionIndex < thens.size(); conditionIndex++){            
             condition = (Condition)thens.get(conditionIndex);
                              
-             // evaluate may block if criteria evaluation blocks
-             try {
-                 if(condition.evaluate(env, context)) {
-                     foundTrueCondition = true;
-                     //break from the loop; only the first "then" Program
-                     //whose criteria evaluates to true will be executed 
-                     break;
-                 }
-             } catch(BlockedException e) {
-                 // Save state and rethrow
-                 this.blockedOnCondition = true;
-                 this.blockedConditionIndex = conditionIndex; 
-                 throw e;
+            // evaluate may block if criteria evaluation blocks
+             if(condition.evaluate(env, context)) {
+                 foundTrueCondition = true;
+                 //break from the loop; only the first "then" Program
+                 //whose criteria evaluates to true will be executed 
+                 break;
              }
             
         }
+        conditionIndex = 0;
 
         // This IF instruction should be processed exactly once, so the 
         // program containing the IF instruction needs to have it's

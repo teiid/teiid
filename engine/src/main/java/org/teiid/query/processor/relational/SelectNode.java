@@ -49,10 +49,8 @@ public class SelectNode extends SubqueryAwareRelationalNode {
     private int[] projectionIndexes;
 	
     // State if blocked on evaluating a criteria
-    private boolean blockedOnCriteria = false;
-    private boolean blockedOnPrepare = false;
-    private TupleBatch blockedBatch = null;
-    private int blockedRow = 0;
+    private TupleBatch currentBatch;
+    private int currentRow = 1;
     
 	public SelectNode(int nodeID) {
 		super(nodeID);
@@ -61,10 +59,8 @@ public class SelectNode extends SubqueryAwareRelationalNode {
     public void reset() {
         super.reset();
         
-        blockedOnCriteria = false;
-        blockedOnPrepare = false;
-        blockedBatch = null;
-        blockedRow = 0;
+        currentBatch = null;
+        currentRow = 1;
     }
 
 	public void setCriteria(Criteria criteria) { 
@@ -91,45 +87,28 @@ public class SelectNode extends SubqueryAwareRelationalNode {
      */
 	public TupleBatch nextBatchDirect()
 		throws BlockedException, TeiidComponentException, TeiidProcessingException {
+		
+        if(currentBatch == null) {
+        	currentBatch = this.getChildren()[0].nextBatch();
+        }
 
-        TupleBatch batch = blockedBatch; 		
-        if(! blockedOnCriteria && ! blockedOnPrepare) {	
-            batch = this.getChildren()[0].nextBatch();
-        }
-                
-        int row = blockedRow;
-        if(! blockedOnCriteria && ! blockedOnPrepare) {
-            row = batch.getBeginRow();               
-        } else {
-            // Reset blocked state
-            blockedOnCriteria = false;
-            blockedOnPrepare = false;
-            blockedBatch = null;
-            blockedRow = 0;
-        }
-        
-        for(; row <= batch.getEndRow(); row++) {             
-            List tuple = batch.getTuple(row);
-        
-            // Evaluate criteria with tuple
-            try {
-                if(getEvaluator(this.elementMap).evaluate(this.criteria, tuple)) {
-                    addBatchRow(projectTuple(this.projectionIndexes, tuple));
-                }
-            } catch(BlockedException e) {
-                // Save state and rethrow
-                blockedOnCriteria = true;
-                blockedBatch = batch;
-                blockedRow = row;
-                throw e;   
+        while (currentRow <= currentBatch.getEndRow() && !isBatchFull()) {
+    		List tuple = currentBatch.getTuple(currentRow);
+
+            if(getEvaluator(this.elementMap).evaluate(this.criteria, tuple)) {
+                addBatchRow(projectTuple(this.projectionIndexes, tuple));
             }
-        }   
-
-        if(batch.getTerminationFlag()) { 
-            terminateBatches();
+            currentRow++;
+		}
+        
+        if (currentRow > currentBatch.getEndRow()) {
+	        if(currentBatch.getTerminationFlag()) {
+	            terminateBatches();
+	        }
+	        currentBatch = null;
         }
-
-        return pullBatch();            
+        
+    	return pullBatch();
 	}
     
 	protected void getNodeString(StringBuffer str) {

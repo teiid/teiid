@@ -107,13 +107,16 @@ public class SocketServerConnection implements ServerConnection {
         		
     			@Override
     			public void run() {
-    				if (ping == null || !ping.isDone()) {
+    				if (ping == null) {
     					ping = isOpen();
     				} 
-    				if (ping != null && ping.isDone()) {
+    				if (ping != null) {
     					try {
-							ping.get();
+    						ping.get(1, TimeUnit.SECONDS);
+    						ping = null;
 							return;
+    					} catch (TimeoutException e) {
+    						return;
 						} catch (Throwable e) {
 							handlePingError(e);
 						}

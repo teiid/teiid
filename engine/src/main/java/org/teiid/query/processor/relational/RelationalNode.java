@@ -41,6 +41,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
@@ -285,6 +286,11 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
                 // stop timer for this batch (BlockedException)
                 this.nodeStatistics.stopBatchTimer();
                 this.nodeStatistics.collectCumulativeNodeStats(null, RelationalNodeStatistics.BLOCKEDEXCEPTION_STOP);
+            }
+            throw e;
+        } catch (QueryProcessor.ExpiredTimeSliceException e) {
+        	if(recordStats && this.context.getCollectNodeStatistics()) {
+                this.nodeStatistics.stopBatchTimer();
             }
             throw e;
         } catch (TeiidComponentException e) {
