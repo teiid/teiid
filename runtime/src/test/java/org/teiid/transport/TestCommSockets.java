@@ -128,6 +128,7 @@ public class TestCommSockets {
 		FakeService fs = conn.getService(FakeService.class);
 		assertEquals(150, fs.lobMethod(new ByteArrayInputStream(new byte[100]), new StringReader(new String(new char[50]))));
 		assertEquals(0, fs.lobMethod(new ByteArrayInputStream(new byte[0]), new StringReader(new String(new char[0]))));
+		assertEquals((1 << 17) + 50, fs.lobMethod(new ByteArrayInputStream(new byte[1 << 17]), new StringReader(new String(new char[50]))));
 	}
 	
 	@Test public void testServerRemoteStreaming() throws Exception {

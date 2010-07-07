@@ -63,7 +63,7 @@ import org.teiid.netty.handler.codec.serialization.ObjectDecoderInputStream;
 @ChannelPipelineCoverage("all")
 public class ObjectEncoder implements ChannelDownstreamHandler {
     private static final byte[] LENGTH_PLACEHOLDER = new byte[4];
-	private static final int CHUNK_SIZE = 1 << 16;
+	private static final int CHUNK_SIZE = (1 << 16) - 1;
 
     private final int estimatedLength;
 

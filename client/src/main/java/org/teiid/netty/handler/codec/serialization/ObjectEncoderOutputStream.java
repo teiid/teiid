@@ -63,7 +63,7 @@ public class ObjectEncoderOutputStream extends ObjectOutputStream {
         
         out.writeInt(baos.getCount()); //includes the lob references
         out.write(baos.getBuffer(), 0, baos.getCount());
-        byte[] chunk = new byte[1 << 16];
+        byte[] chunk = new byte[(1 << 16) - 1];
         for (InputStream is : oout.getStreams()) {
         	while (true) {
 	        	int bytes = is.read(chunk);

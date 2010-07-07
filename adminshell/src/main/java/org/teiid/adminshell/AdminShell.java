@@ -26,7 +26,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Properties;
@@ -37,7 +36,6 @@ import java.util.logging.Logger;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminFactory;
-import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.ProcessObject;
 import org.teiid.adminapi.PropertyDefinition;
 import org.teiid.adminapi.Request;
@@ -47,7 +45,6 @@ import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.WorkerPoolStatistics;
 import org.teiid.adminshell.Help.Doc;
-import org.teiid.core.util.ObjectConverterUtil;
 
 
 /**
@@ -302,13 +299,13 @@ public class AdminShell {
 	    return false;
 	}
 
-	private static void writeFile(String deployedName, String fileName,
+	/*private static void writeFile(String deployedName, String fileName,
 			InputStream contents) throws IOException, AdminProcessingException {
 		if (contents == null) {
 	    	throw new AdminProcessingException(deployedName + " not found for exporting");//$NON-NLS-1$
 	    }
 		ObjectConverterUtil.write(contents, fileName);	
-	}
+	}*/
 	
 	@Doc(text = "Deploy a VDB from file")
 	public static void deployVDB(
