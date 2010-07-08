@@ -80,7 +80,7 @@ public class TestSybaseSQLConversionVisitor {
     @Test
     public void testConcatFunction() {
         String input = "SELECT concat(part_name, 'b') FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT (PARTS.PART_NAME + 'b') FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT CASE WHEN PARTS.PART_NAME IS NULL THEN NULL ELSE (PARTS.PART_NAME + 'b') END FROM PARTS"; //$NON-NLS-1$
         
         helpTestVisitor(getTestVDB(),
             input, 
@@ -142,6 +142,15 @@ public class TestSybaseSQLConversionVisitor {
         String output = "SELECT cast(PARTS.PART_ID AS int) FROM PARTS"; //$NON-NLS-1$
     
         helpTestVisitor(getTestVDB(),
+            input, 
+            output);
+    }
+    
+    @Test public void testConvertTimestampTime() {
+        String input = "SELECT convert(TIMESTAMPVALUE, time) FROM BQT1.SMALLA"; //$NON-NLS-1$
+        String output = "SELECT cast(CASE WHEN SmallA.TimestampValue IS NOT NULL THEN '1970-01-01 ' + convert(varchar, SmallA.TimestampValue, 8) END AS datetime) FROM SmallA"; //$NON-NLS-1$
+    
+        helpTestVisitor(getBQTVDB(),
             input, 
             output);
     }

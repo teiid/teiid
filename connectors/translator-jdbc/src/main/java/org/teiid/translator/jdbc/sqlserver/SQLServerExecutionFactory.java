@@ -189,4 +189,9 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	return true;
     }
      
+    @Override
+    public boolean nullPlusNonNullIsNull() {
+    	return true;
+    }
+    
 }

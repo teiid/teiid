@@ -86,7 +86,7 @@ public class ConcatFunctionModifier extends FunctionModifier {
         return Arrays.asList(langFactory.createSearchedCaseExpression(cases, function, TypeFacility.RUNTIME_TYPES.STRING));
     }
     
-    private boolean isNotNull(Expression expr) {
+    public static boolean isNotNull(Expression expr) {
     	if (expr instanceof Literal) {
     		Literal literal = (Literal)expr;
     		return literal.getValue() != null;

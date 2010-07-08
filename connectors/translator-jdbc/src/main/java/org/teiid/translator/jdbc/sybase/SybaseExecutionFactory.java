@@ -43,6 +43,7 @@ import org.teiid.translator.jdbc.EscapeSyntaxModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.ModFunctionModifier;
+import org.teiid.translator.jdbc.oracle.ConcatFunctionModifier;
 
 
 @Translator(name="sybase")
@@ -59,8 +60,18 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
     public void start() throws TranslatorException {
         super.start();
         
-        registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier("%", getLanguageFactory())); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.CONCAT, new AliasModifier("+")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier("%", getLanguageFactory())); //$NON-NLS-1$
+        if (nullPlusNonNullIsNull()) {
+        	registerFunctionModifier(SourceSystemFunctions.CONCAT, new AliasModifier("+")); //$NON-NLS-1$
+        } else {
+        	registerFunctionModifier(SourceSystemFunctions.CONCAT, new ConcatFunctionModifier(getLanguageFactory()) {
+        		@Override
+        		public List<?> translate(Function function) {
+        			function.setName("+"); //$NON-NLS-1$
+        			return super.translate(function);
+        		}
+        	});
+        }
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("isnull")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$ 
@@ -100,8 +111,18 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
 			public List<?> translate(Function function) {
 				List<Object> result = new ArrayList<Object>();
 				result.add("cast("); //$NON-NLS-1$
+				boolean needsEnd = false;
+				if (!nullPlusNonNullIsNull() && !ConcatFunctionModifier.isNotNull(function.getParameters().get(0))) {
+					result.add("CASE WHEN "); //$NON-NLS-1$
+					result.add(function.getParameters().get(0));
+					result.add(" IS NOT NULL THEN "); //$NON-NLS-1$
+					needsEnd = true;
+				} 
 				result.add("'1970-01-01 ' + "); //$NON-NLS-1$
 				result.addAll(convertTimeToString(function));
+				if (needsEnd) {
+					result.add(" END"); //$NON-NLS-1$
+				}
 				result.add(" AS datetime)"); //$NON-NLS-1$
 				return result;
 			}
@@ -301,5 +322,9 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
     	return getDatabaseVersion().compareTo(FIFTEEN_0_2) >= 0;
+    }
+    
+    public boolean nullPlusNonNullIsNull() {
+    	return false;
     }
 }
