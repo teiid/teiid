@@ -37,8 +37,9 @@ public class DQPConfiguration{
     static final int DEFAULT_MAX_RESULTSET_CACHE_ENTRIES = 1024;
     static final int DEFAULT_QUERY_THRESHOLD = 600;
     static final String PROCESS_PLAN_QUEUE_NAME = "QueryProcessorQueue"; //$NON-NLS-1$
-    public static final int DEFAULT_MAX_PROCESS_WORKERS = 32;
+    public static final int DEFAULT_MAX_PROCESS_WORKERS = 64;
 	public static final int DEFAULT_MAX_SOURCE_ROWS = -1;
+	public static final int DEFAULT_MAX_ACTIVE_PLANS = 20;
     
 	private int maxThreads = DEFAULT_MAX_PROCESS_WORKERS;
 	private int timeSliceInMilli = DEFAULT_PROCESSOR_TIMESLICE;
@@ -55,8 +56,18 @@ public class DQPConfiguration{
 	private int queryThresholdInSecs = DEFAULT_QUERY_THRESHOLD;
 	private boolean exceptionOnMaxSourceRows = true;
 	private int maxSourceRows = -1;
+	private int maxActivePlans = DEFAULT_MAX_ACTIVE_PLANS;
+
+	@ManagementProperty(description="Max active plans (default 20).  Increase this value, and max threads, on highly concurrent systems - but ensure that the underlying pools can handle the increased load without timeouts.")
+	public int getMaxActivePlans() {
+		return maxActivePlans;
+	}
 	
-	@ManagementProperty(description="Process pool maximum thread count. (default 32) Increase this value if the system's available processors is larger than 8")
+	public void setMaxActivePlans(int maxActivePlans) {
+		this.maxActivePlans = maxActivePlans;
+	}
+	
+	@ManagementProperty(description="Process pool maximum thread count. (default 64)")
 	public int getMaxThreads() {
 		return maxThreads;
 	}

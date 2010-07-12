@@ -22,46 +22,38 @@
 
 package org.teiid.query.processor.relational;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Test;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.query.processor.relational.RelationalNode;
-import org.teiid.query.processor.relational.UnionAllNode;
+import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.util.CommandContext;
-
-import junit.framework.TestCase;
 
 
 /**
  */
-public class TestUnionAllNode extends TestCase {
+public class TestUnionAllNode {
 
-    /**
-     * Constructor for TestUnionAllNode.
-     * @param arg0
-     */
-    public TestUnionAllNode(String arg0) {
-        super(arg0);
-    }
-    
     public void helpTestUnion(RelationalNode[] children, RelationalNode union, List[] expected) throws TeiidComponentException, TeiidProcessingException {
         BufferManager mgr = NodeTestUtil.getTestBufferManager(1, 2);
         CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
-        
+        FakeDataManager fdm = new FakeDataManager();
         for(int i=0; i<children.length; i++) {
             union.addChild(children[i]);
-            children[i].initialize(context, mgr, null);
+            children[i].initialize(context, mgr, fdm);
         }
         
-        union.initialize(context, mgr, null);
+        union.initialize(context, mgr, fdm);
         
         union.open();
         
@@ -90,7 +82,7 @@ public class TestUnionAllNode extends TestCase {
         assertEquals("Didn't match expected counts", expected.length, currentRow-1); //$NON-NLS-1$
     }
     
-    public void testNoRows() throws TeiidComponentException, TeiidProcessingException {
+    @Test public void testNoRows() throws TeiidComponentException, TeiidProcessingException {
         ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 
@@ -151,7 +143,7 @@ public class TestUnionAllNode extends TestCase {
         helpTestUnion(nodes, union, expected);           
     }
     
-    public void testBasicUnion() throws TeiidComponentException, TeiidProcessingException {
+    @Test public void testBasicUnion() throws TeiidComponentException, TeiidProcessingException {
         List expected[] = new List[] {
             Arrays.asList(new Object[] { new Integer(0) }),    
             Arrays.asList(new Object[] { new Integer(0) }),    
@@ -164,7 +156,7 @@ public class TestUnionAllNode extends TestCase {
         
     }
 
-    public void testBasicUnionMultipleSources() throws TeiidComponentException, TeiidProcessingException {
+    @Test public void testBasicUnionMultipleSources() throws TeiidComponentException, TeiidProcessingException {
         List expected[] = new List[] {
             Arrays.asList(new Object[] { new Integer(0) }),    
             Arrays.asList(new Object[] { new Integer(0) }),    
@@ -181,7 +173,7 @@ public class TestUnionAllNode extends TestCase {
         helpTestUnionConfigs(5, -1, 2, 50, expected);
     }
 
-    public void testMultipleSourcesHalfBlockingNodes() throws TeiidComponentException, TeiidProcessingException  {
+    @Test public void testMultipleSourcesHalfBlockingNodes() throws TeiidComponentException, TeiidProcessingException  {
         List expected[] = new List[] {
             Arrays.asList(new Object[] { new Integer(1) }),    
             Arrays.asList(new Object[] { new Integer(0) }),    
@@ -193,7 +185,7 @@ public class TestUnionAllNode extends TestCase {
         helpTestUnionConfigs(5, 2, 1, 50, expected);
     }
     
-    public void testMultipleSourcesAllBlockingNodes() throws TeiidComponentException, TeiidProcessingException {
+    @Test public void testMultipleSourcesAllBlockingNodes() throws TeiidComponentException, TeiidProcessingException {
         List expected[] = new List[] {
             Arrays.asList(new Object[] { new Integer(0) }),    
             Arrays.asList(new Object[] { new Integer(1) }),    
@@ -205,7 +197,7 @@ public class TestUnionAllNode extends TestCase {
         helpTestUnionConfigs(5, 1, 1, 50, expected);       
     }    
     
-    public void testMultipleSourceMultiBatchAllBlocking() throws TeiidComponentException, TeiidProcessingException {
+    @Test public void testMultipleSourceMultiBatchAllBlocking() throws TeiidComponentException, TeiidProcessingException {
         List expected[] = new List[] {
             Arrays.asList(new Object[] { new Integer(0) }),    
             Arrays.asList(new Object[] { new Integer(1) }),    

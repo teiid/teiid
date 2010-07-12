@@ -32,6 +32,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 
 import javax.security.auth.Subject;
 
@@ -166,32 +168,29 @@ public class DQPWorkContext implements Serializable {
 		return session.getVdb();
 	}
 	
-	public <V> V runInContext(Callable<V> callable) throws Exception {
+	public <V> V runInContext(Callable<V> callable) throws Throwable {
+		FutureTask<V> task = new FutureTask<V>(callable);
+		runInContext(task);
+		try {
+			return task.get();
+		} catch (ExecutionException e) {
+			throw e.getCause();
+		}
+	}
+	
+	public void runInContext(final Runnable runnable) {
 		DQPWorkContext.setWorkContext(this);
 		boolean associated = false;
 		if (securityHelper != null && this.getSubject() != null) {
 			associated = securityHelper.assosiateSecurityContext(this.getSecurityDomain(), this.getSecurityContext());			
 		}
 		try {
-			return callable.call();
+			runnable.run();
 		} finally {
 			if (associated) {
 				securityHelper.clearSecurityContext(this.getSecurityDomain());			
 			}
 			DQPWorkContext.releaseWorkContext();
-		}
-	}
-	
-	public void runInContext(final Runnable runnable) {
-		try {
-			runInContext(new Callable<Void>() {
-				@Override
-				public Void call() {
-					runnable.run();
-					return null;
-				}
-			});
-		} catch (Exception e) {
 		}
 	}
 

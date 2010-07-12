@@ -30,10 +30,12 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.RequestMessage;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleSource;
@@ -77,9 +79,11 @@ import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.util.CommandContext;
-import org.teiid.translator.TranslatorException;
 
-
+/**
+ * Full {@link ProcessorDataManager} implementation that 
+ * controls access to {@link ConnectorManager}s and handles system queries.
+ */
 public class DataTierManagerImpl implements ProcessorDataManager {
 	
 	private enum SystemTables {
@@ -130,7 +134,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		}
 		
 		AtomicRequestMessage aqr = createRequest(processorId, command, modelName, connectorBindingId, nodeID);
-        return new DataTierTupleSource(aqr.getCommand().getProjectedSymbols(), aqr, this, aqr.getConnectorName(), workItem);
+		ConnectorWork work = getCM(aqr.getConnectorName()).registerRequest(aqr);
+        return new DataTierTupleSource(aqr, workItem, work, this);
 	}
 
 	/**
@@ -348,10 +353,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		return aqr;
 	}
 	
-	ConnectorWork executeRequest(AtomicRequestMessage aqr, AbstractWorkItem awi, String connectorName) throws TranslatorException {
-		return getCM(connectorName).executeRequest(aqr, awi);
-	}
-
     /** 
      * Notify each waiting request that the code table data is now available.
      * @param requests
@@ -419,6 +420,14 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 
     public void clearCodeTables() {
         this.codeTableCache.clearAll();
+    }
+    
+    <T> ResultsFuture<T> addWork(Callable<T> callable, int priority) {
+    	return requestMgr.addWork(callable, priority);
+    }
+    
+    void scheduleWork(Runnable r, int priority, long delay) {
+    	requestMgr.scheduleWork(r, priority, delay);
     }
     
 }

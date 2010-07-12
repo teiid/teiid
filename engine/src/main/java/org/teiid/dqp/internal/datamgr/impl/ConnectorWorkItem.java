@@ -37,7 +37,6 @@ import org.teiid.core.util.Assertion;
 import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
 import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
-import org.teiid.dqp.internal.process.AbstractWorkItem;
 import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
@@ -64,18 +63,12 @@ import org.teiid.translator.UpdateExecution;
 
 public class ConnectorWorkItem implements ConnectorWork {
 	
-	enum PermitMode {
-		BLOCKED, ACQUIRED, NOT_ACQUIRED
-	}
-	
 	/* Permanent state members */
 	private AtomicRequestID id;
     private ConnectorManager manager;
     private AtomicRequestMessage requestMsg;
     private ExecutionFactory connector;
     private QueryMetadataInterface queryMetadata;
-    private PermitMode permitMode = PermitMode.NOT_ACQUIRED;
-    private AbstractWorkItem awi;
     
     /* Created on new request */
     private Object connection;
@@ -95,7 +88,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     
     private AtomicBoolean isCancelled = new AtomicBoolean();
     
-    ConnectorWorkItem(AtomicRequestMessage message, AbstractWorkItem awi, ConnectorManager manager) {
+    ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager) {
         this.id = message.getAtomicRequestID();
         this.requestMsg = message;
         this.manager = manager;
@@ -118,30 +111,12 @@ public class ConnectorWorkItem implements ConnectorWork {
     	this.queryMetadata = vdb.getAttachment(QueryMetadataInterface.class);
         this.queryMetadata = new TempMetadataAdapter(this.queryMetadata, new TempMetadataStore());
 		this.securityContext.setTransactional(requestMsg.isTransactional());
-        this.awi = awi;
     }
     
     public AtomicRequestID getId() {
 		return id;
 	}
     
-    public PermitMode getPermitMode() {
-		return permitMode;
-	}
-    
-    public void setPermitMode(PermitMode permitMode) {
-		this.permitMode = permitMode;
-	}
-    
-    public AbstractWorkItem getParent() {
-		return awi;
-	}
-    
-    @Override
-    public boolean isQueued() {
-    	return this.permitMode == PermitMode.BLOCKED;
-    }
-
     public void cancel() {
     	try {
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing CANCEL request"}); //$NON-NLS-1$
@@ -189,8 +164,6 @@ public class ConnectorWorkItem implements ConnectorWork {
 		    LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Closed connection"}); //$NON-NLS-1$
         } 
     }
-
-
     
     private TranslatorException handleError(Throwable t) {
     	if (t instanceof DataNotAvailableException) {
@@ -224,10 +197,6 @@ public class ConnectorWorkItem implements ConnectorWork {
     		throw new TranslatorException("Request canceled"); //$NON-NLS-1$
     	}
         
-        if (!this.securityContext.isTransactional()) {
-        	this.manager.acquireConnectionLock(this);
-        }
-
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Processing NEW request:", this.requestMsg.getCommand()}); //$NON-NLS-1$                                     
     	try {
 	    	this.connectionFactory = this.manager.getConnectionFactory();

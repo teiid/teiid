@@ -47,6 +47,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
+import org.teiid.dqp.internal.process.ThreadReuseExecutor.PrioritizedRunnable;
 import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.TransactionContext;
@@ -64,10 +65,8 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.translator.DataNotAvailableException;
 
-
-public class RequestWorkItem extends AbstractWorkItem {
+public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunnable {
 	
 	private enum ProcessingState {NEW, PROCESSING, CLOSE}
 	private ProcessingState state = ProcessingState.NEW;
@@ -86,6 +85,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 	private CacheID cid;
 	private final TransactionService transactionService;
 	private final DQPWorkContext dqpWorkContext;
+	boolean active;
 	
     /*
      * obtained during new
@@ -105,16 +105,17 @@ public class RequestWorkItem extends AbstractWorkItem {
     private Map<AtomicRequestID, DataTierTupleSource> connectorInfo = new ConcurrentHashMap<AtomicRequestID, DataTierTupleSource>(4);
     // This exception contains details of all the atomic requests that failed when query is run in partial results mode.
     private List<TeiidException> warnings = new LinkedList<TeiidException>();
-    private boolean doneProducingBatches;
+    private volatile boolean doneProducingBatches;
     private volatile boolean isClosed;
     private volatile boolean isCanceled;
     private volatile boolean closeRequested;
+
 	//results request
 	private ResultsReceiver<ResultsMessage> resultsReceiver;
 	private int begin;
 	private int end;
     private TupleBatch savedBatch;
-    private Map<Integer, LobWorkItem> lobStreams = new ConcurrentHashMap<Integer, LobWorkItem>(4);
+    private Map<Integer, LobWorkItem> lobStreams = new ConcurrentHashMap<Integer, LobWorkItem>(4);    
     
     /**The time when command begins processing on the server.*/
     private long processingTimestamp = System.currentTimeMillis();
@@ -155,7 +156,11 @@ public class RequestWorkItem extends AbstractWorkItem {
 
 	@Override
 	protected void resumeProcessing() {
-		dqpCore.addWork(this);
+		if (doneProducingBatches && !closeRequested && !isCanceled) {
+			this.run(); // just run in the IO thread
+		} else {
+			dqpCore.addWork(this);
+		}
 	}
 	
 	@Override
@@ -184,9 +189,6 @@ public class RequestWorkItem extends AbstractWorkItem {
         } catch (QueryProcessor.ExpiredTimeSliceException e) {
             LogManager.logDetail(LogConstants.CTX_DQP, "Request Thread", requestID, "- time slice expired"); //$NON-NLS-1$ //$NON-NLS-2$
             this.moreWork();
-        } catch (DataNotAvailableException e) { 
-        	LogManager.logDetail(LogConstants.CTX_DQP, "Request Thread", requestID, "- data not available"); //$NON-NLS-1$ //$NON-NLS-2$
-            this.dqpCore.scheduleWork(this, e.getRetryDelay());
         } catch (Throwable e) {
         	LogManager.logDetail(LogConstants.CTX_DQP, e, "Request Thread", requestID, "- error occurred"); //$NON-NLS-1$ //$NON-NLS-2$
             
@@ -227,7 +229,6 @@ public class RequestWorkItem extends AbstractWorkItem {
 
 	private void resume() throws XATransactionException {
 		if (this.transactionState == TransactionState.ACTIVE && this.transactionContext.getTransaction() != null) {
-			//there's no need to do this for xa transactions, as that is done by the workmanager
 			this.transactionService.resume(this.transactionContext);
 		}
 	}
@@ -339,7 +340,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 				this.resultsBuffer = cr.getResults();
 				this.analysisRecord = cr.getAnalysisRecord();
 				this.originalCommand = cr.getCommand();
-				this.doneProducingBatches = true;
+				this.doneProducingBatches();
 				return;
 			}
 		}
@@ -357,7 +358,9 @@ public class RequestWorkItem extends AbstractWorkItem {
 					super.flushBatchDirect(batch, add);
 					added = true;
 				}
-				doneProducingBatches = batch.getTerminationFlag();
+				if (batch.getTerminationFlag()) {
+					doneProducingBatches();
+				}
 				if (doneProducingBatches && cid != null) {
 			    	boolean sessionScope = processor.getContext().isSessionFunctionEvaluated();
 	            	CachedResults cr = new CachedResults();
@@ -381,7 +384,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 			this.transactionState = TransactionState.ACTIVE;
 		}
 		if (requestMsg.isNoExec()) {
-		    doneProducingBatches = true;
+		    doneProducingBatches();
             resultsBuffer.close();
             this.cid = null;
 		}
@@ -608,7 +611,9 @@ public class RequestWorkItem extends AbstractWorkItem {
         	}
 		}
     	this.closeRequested = true;
-    	this.requestCancel(); //pending work should be canceled for fastest clean up
+    	if (!this.doneProducingBatches) {
+    		this.requestCancel(); //pending work should be canceled for fastest clean up
+    	}
     	this.moreWork();
     }
     
@@ -692,5 +697,20 @@ public class RequestWorkItem extends AbstractWorkItem {
 			LogManager.logWarning(LogConstants.CTX_DQP, e, "Failed to cancel " + requestID); //$NON-NLS-1$
 		}
 	}
+
+	private void doneProducingBatches() {
+		this.doneProducingBatches = true;
+		dqpCore.finishProcessing(this);
+	}
 	
+	@Override
+	public int getPriority() {
+		return (closeRequested || isCanceled) ? 0 : 1000;
+	}
+	
+	@Override
+	public long getCreationTime() {
+		return processingTimestamp;
+	}
+
 }

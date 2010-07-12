@@ -24,104 +24,177 @@ package org.teiid.dqp.internal.process;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 import org.teiid.client.SourceWarning;
+import org.teiid.client.util.ResultsFuture;
+import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.Assertion;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWork;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
+import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.TranslatorException;
 
 
 /**
  * This tuple source impl can only be used once; once it is closed, it 
  * cannot be reopened and reused.
+ * 
+ * TODO: the handling of DataNotAvailable is awkward.
+ * In the multi-threaded case we'd like to not even
+ * notify the parent plan and just schedule the next poll. 
  */
 public class DataTierTupleSource implements TupleSource {
 
     // Construction state
-    private final List schema;
     private final AtomicRequestMessage aqr;
-    private final DataTierManagerImpl dataMgr;
-    private final String connectorName;
     private final RequestWorkItem workItem;
+    private final ConnectorWork cwi;
+    private final DataTierManagerImpl dtm;
     
     // Data state
-    private ConnectorWork cwi;
     private int index;
     private int rowsProcessed;
     private volatile AtomicResultsMessage arm;
     private boolean closed;
     private volatile boolean canceled;
+    private boolean executed;
     
+    private volatile ResultsFuture<AtomicResultsMessage> futureResult;
     private volatile boolean running;
     
-    /**
-     * Constructor for DataTierTupleSource.
-     */
-    public DataTierTupleSource(List schema, AtomicRequestMessage aqr, DataTierManagerImpl dataMgr, String connectorName, RequestWorkItem workItem) {
-        this.schema = schema;       
+    public DataTierTupleSource(AtomicRequestMessage aqr, RequestWorkItem workItem, ConnectorWork cwi, DataTierManagerImpl dtm) {
         this.aqr = aqr;
-        this.dataMgr = dataMgr;
-        this.connectorName = connectorName;
         this.workItem = workItem;
+        this.cwi = cwi;
+        this.dtm = dtm;
+    	Assertion.isNull(workItem.getConnectorRequest(aqr.getAtomicRequestID()));
+        workItem.addConnectorRequest(aqr.getAtomicRequestID(), this);
+        if (!aqr.isTransactional()) {
+        	addWork();
+        }
     }
 
-    /**
-     * @see TupleSource#getSchema()
-     */
+	private void addWork() {
+		futureResult = dtm.addWork(new Callable<AtomicResultsMessage>() {
+			@Override
+			public AtomicResultsMessage call() throws Exception {
+				return getResults();
+			}
+		}, 100);
+		futureResult.addCompletionListener(new ResultsFuture.CompletionListener<AtomicResultsMessage>() {
+			public void onCompletion(ResultsFuture<AtomicResultsMessage> future) {
+				workItem.moreWork();
+			}
+		});
+	}
+
     public List getSchema() {
-        return this.schema;
+        return this.aqr.getCommand().getProjectedSymbols();
     }
 
-    public List nextTuple() throws TeiidComponentException, TeiidProcessingException {
-    	if (this.arm == null) {
-    		open();
-    	}
+    public List<?> nextTuple() throws TeiidComponentException, TeiidProcessingException {
     	while (true) {
+    		if (arm == null) {
+    			AtomicResultsMessage results = null;
+    			try {
+	    			if (futureResult != null || !aqr.isTransactional()) {
+	    				results = asynchGet();
+	    			} else {
+	    				results = getResults();
+	    			}
+    			} catch (TranslatorException e) {
+    				exceptionOccurred(e, true);
+    			} catch (DataNotAvailableException e) {
+    				dtm.scheduleWork(new Runnable() {
+    					@Override
+    					public void run() {
+							workItem.moreWork();
+    					}
+    				}, 10, e.getRetryDelay());
+    				throw BlockedException.INSTANCE;
+    			} 
+    			receiveResults(results);
+    		}
 	    	if (index < arm.getResults().length) {
 	            return this.arm.getResults()[index++];
 	        }
+	    	arm = null;
 	    	if (isDone()) {
 	    		return null;
 	    	}
-	    	try {
-	    		running = true;
-				receiveResults(this.cwi.more());
-			} catch (TranslatorException e) {
-	        	exceptionOccurred(e, true);
-			} finally {
-				running = false;
-			}
     	}
     }
+
+	private AtomicResultsMessage asynchGet()
+			throws BlockedException, TeiidProcessingException,
+			TeiidComponentException, TranslatorException {
+		if (futureResult == null) {
+			addWork();
+		}
+		if (!futureResult.isDone()) {
+			throw BlockedException.INSTANCE;
+		}
+		ResultsFuture<AtomicResultsMessage> currentResults = futureResult;
+		futureResult = null;
+		AtomicResultsMessage results = null;
+		try {
+			results = currentResults.get();
+			addWork();
+		} catch (InterruptedException e) {
+			throw new TeiidRuntimeException(e);
+		} catch (ExecutionException e) {
+			if (e.getCause() instanceof TeiidProcessingException) {
+				throw (TeiidProcessingException)e.getCause();
+			}
+			if (e.getCause() instanceof TeiidComponentException) {
+				throw (TeiidComponentException)e.getCause();
+			}
+			if (e.getCause() instanceof TranslatorException) {
+				throw (TranslatorException)e.getCause();
+			}
+			if (e.getCause() instanceof RuntimeException) {
+				throw (RuntimeException)e.getCause();
+			}
+			//shouldn't happen
+			throw new RuntimeException(e);
+		}
+		return results;
+	}
+
+	private AtomicResultsMessage getResults()
+			throws BlockedException, TeiidComponentException,
+			TranslatorException {
+		AtomicResultsMessage results = null;
+		try {
+			running = true;
+			if (!executed) {
+				results = cwi.execute();
+				executed = true;
+			} else {
+				results = cwi.more();
+			}
+		} finally {
+			running = false;
+		}
+		return results;
+	}
     
     public boolean isQueued() {
-    	return this.cwi != null && this.cwi.isQueued();
+    	ResultsFuture<AtomicResultsMessage> future = futureResult;
+    	return !running && future != null && !future.isDone();
     }
 
 	public boolean isDone() {
-		return this.arm != null && this.arm.getFinalRow() >= 0;
+		AtomicResultsMessage results = this.arm;
+		return results != null && results.getFinalRow() >= 0;
 	}
-    
-    void open() throws TeiidComponentException, TeiidProcessingException {
-        try {
-	        if (this.cwi == null) {
-	        	this.cwi = this.dataMgr.executeRequest(aqr, this.workItem, this.connectorName);
-	        	Assertion.isNull(workItem.getConnectorRequest(aqr.getAtomicRequestID()));
-	            workItem.addConnectorRequest(aqr.getAtomicRequestID(), this);
-	        }
-	        running = true;
-	        receiveResults(this.cwi.execute());
-        } catch (TranslatorException e) {
-        	exceptionOccurred(e, true);
-        } finally {
-        	running = false;
-        }
-    }
     
     public boolean isRunning() {
 		return running;
@@ -131,7 +204,27 @@ public class DataTierTupleSource implements TupleSource {
     	if (!closed) {
     		if (cwi != null) {
 		    	workItem.closeAtomicRequest(this.aqr.getAtomicRequestID());
-				this.cwi.close();
+		    	if (!aqr.isTransactional()) {
+		    		if (futureResult != null && !futureResult.isDone()) {
+		    			futureResult.addCompletionListener(new ResultsFuture.CompletionListener<AtomicResultsMessage>() {
+		    				@Override
+		    				public void onCompletion(
+		    						ResultsFuture<AtomicResultsMessage> future) {
+		    					cwi.close(); // there is a small chance that this will be done in the processing thread
+		    				}
+						});
+		    		} else {
+		    			dtm.addWork(new Callable<Void>() {
+		    				@Override
+		    				public Void call() throws Exception {
+		    					cwi.close();
+		    					return null;
+		    				}
+		    			}, 0);
+		    		}
+		    	} else {
+		    		this.cwi.close();
+		    	}
     		}
 			closed = true;
     	}
@@ -165,7 +258,7 @@ public class DataTierTupleSource implements TupleSource {
 			AtomicResultsMessage emptyResults = new AtomicResultsMessage(new List[0], null);
 			emptyResults.setWarnings(Arrays.asList((Exception)exception));
 			emptyResults.setFinalRow(this.rowsProcessed);
-			receiveResults(arm);
+			receiveResults(emptyResults);
 		} else {
     		if (exception.getCause() instanceof TeiidComponentException) {
     			throw (TeiidComponentException)exception.getCause();
@@ -194,14 +287,11 @@ public class DataTierTupleSource implements TupleSource {
 	}
 
 	public String getConnectorName() {
-		return this.connectorName;
+		return this.aqr.getConnectorName();
 	}
 	
 	public boolean isTransactional() {
-		if (this.arm == null) {
-			return false;
-		}
-		return this.arm.isTransactional();
+		return this.aqr.isTransactional();
 	}
 	
 	@Override

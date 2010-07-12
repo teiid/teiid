@@ -23,11 +23,13 @@
 package org.teiid.dqp.internal.process;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 import junit.framework.TestCase;
 
+import org.mockito.Mockito;
 import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.SourceWarning;
@@ -50,12 +52,12 @@ public class TestDQPCoreRequestHandling extends TestCase {
     }
 
     private void compareReqInfos(Collection<RequestID> reqs1, Collection<RequestMetadata> reqs2) {
-        Set reqIDs2 = new HashSet();
+        Set<RequestID> reqIDs2 = new HashSet<RequestID>();
         for (RequestMetadata requestInfo : reqs2) {
             reqIDs2.add(new RequestID(requestInfo.getSessionId(), requestInfo.getExecutionId()));
         }
         
-        assertEquals("Collections of request infos are not the same: ", new HashSet(reqs1), reqIDs2); //$NON-NLS-1$
+        assertEquals("Collections of request infos are not the same: ", new HashSet<RequestID>(reqs1), reqIDs2); //$NON-NLS-1$
     }
 
     /**
@@ -63,8 +65,8 @@ public class TestDQPCoreRequestHandling extends TestCase {
      */
     public void testGetRequestsSessionToken1() {
         DQPCore rm = new DQPCore();
-        Set reqs = new HashSet();                
-        Collection actualReqs = rm.getRequestsForSession(SESSION_STRING); 
+        Set<RequestID> reqs = Collections.emptySet();                
+        Collection<RequestMetadata> actualReqs = rm.getRequestsForSession(SESSION_STRING); 
         compareReqInfos(reqs, actualReqs);
     }
 
@@ -74,7 +76,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
     public void testGetRequestsSessionToken2() {
     	DQPCore rm = new DQPCore();
     	rm.setTransactionService(new FakeTransactionService());
-    	Set reqs = new HashSet();
+    	Set<RequestID> reqs = new HashSet<RequestID>();
         RequestID id = addRequest(rm, SESSION_STRING, 1);
         reqs.add(id);
 
@@ -95,13 +97,13 @@ public class TestDQPCoreRequestHandling extends TestCase {
     public void testGetRequestsSessionToken3() {
         DQPCore rm = new DQPCore();
         rm.setTransactionService(new FakeTransactionService());
-        Set reqs = new HashSet();
+        Set<RequestID> reqs = new HashSet<RequestID>();
          
         reqs.add(addRequest(rm, SESSION_STRING, 0));
         reqs.add(addRequest(rm, SESSION_STRING, 1));
         reqs.add(addRequest(rm, SESSION_STRING, 2));
                 
-        Collection actualReqs = rm.getRequestsForSession(SESSION_STRING); 
+        Collection<RequestMetadata> actualReqs = rm.getRequestsForSession(SESSION_STRING); 
         compareReqInfos(reqs, actualReqs);
     }
     
@@ -158,7 +160,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
         RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null);
         AtomicRequestMessage atomicReq = new AtomicRequestMessage(workItem.requestMsg, workItem.getDqpWorkContext(), 1);
 
-        DataTierTupleSource info = new DataTierTupleSource(null, atomicReq, null, "connID", workItem); //$NON-NLS-1$
+        DataTierTupleSource info = Mockito.mock(DataTierTupleSource.class);
         workItem.addConnectorRequest(atomicReq.getAtomicRequestID(), info);
         
         DataTierTupleSource arInfo = workItem.getConnectorRequest(atomicReq.getAtomicRequestID());
@@ -173,7 +175,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
         RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null);
         AtomicRequestMessage atomicReq = new AtomicRequestMessage(workItem.requestMsg, workItem.getDqpWorkContext(), 1);
 
-        DataTierTupleSource info = new DataTierTupleSource(null, atomicReq, null,"connID", workItem); //$NON-NLS-1$
+        DataTierTupleSource info = Mockito.mock(DataTierTupleSource.class);
         workItem.addConnectorRequest(atomicReq.getAtomicRequestID(), info);
         
         workItem.closeAtomicRequest(atomicReq.getAtomicRequestID());

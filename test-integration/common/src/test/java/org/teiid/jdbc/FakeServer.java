@@ -32,7 +32,6 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
-import org.teiid.common.queue.FakeWorkManager;
 import org.teiid.deployers.MetadataStoreGroup;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
@@ -48,7 +47,6 @@ import org.teiid.metadata.index.VDBMetadataFactory;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.services.SessionServiceImpl;
-import org.teiid.translator.TranslatorException;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
 import org.teiid.transport.LocalServerConnection;
@@ -70,15 +68,13 @@ public class FakeServer extends ClientServiceRegistryImpl {
 		this.repo.setSystemStore(systemStore);
 		
         this.sessionService.setVDBRepository(repo);
-        this.dqp.setWorkManager(new FakeWorkManager());
         this.dqp.setBufferService(new FakeBufferService());
         this.dqp.setTransactionService(new FakeTransactionService());
         
         ConnectorManagerRepository cmr = Mockito.mock(ConnectorManagerRepository.class);
         Mockito.stub(cmr.getConnectorManager("source")).toReturn(new ConnectorManager("x", "x") {
         	@Override
-        	public SourceCapabilities getCapabilities()
-        			throws TranslatorException {
+        	public SourceCapabilities getCapabilities() {
         		return new BasicSourceCapabilities();
         	}
         });

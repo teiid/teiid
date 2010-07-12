@@ -246,7 +246,7 @@ public class TransactionServerImpl implements TransactionService {
 							public Transaction call() throws Exception {
 								return transactionManager.getTransaction();
 							}
-						});
+						}, 0);
 						workManager.doWork(work, WorkManager.INDEFINITE, tc, null);
 						tc.setTransaction(work.getResult().get());
 					}

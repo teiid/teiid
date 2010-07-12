@@ -25,33 +25,34 @@ package org.teiid.common.queue;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.resource.spi.work.Work;
-import javax.resource.spi.work.WorkManager;
-import javax.resource.spi.work.WorkRejectedException;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
-import org.teiid.dqp.internal.process.StatsCapturingWorkManager;
+import org.teiid.dqp.internal.process.ThreadReuseExecutor;
+import org.teiid.dqp.internal.process.DQPCore.FutureWork;
 
 /**
  */
-public class TestStatsCapturingWorkManager {
+public class TestThreadReuseExecutor {
 	
-	private WorkManager manager = new FakeWorkManager();
-
     @Test public void testQueuing() throws Exception {
         final long SINGLE_WAIT = 50;
         final int WORK_ITEMS = 10;
         final int MAX_THREADS = 5;
 
-        final StatsCapturingWorkManager pool = new StatsCapturingWorkManager("test", MAX_THREADS, manager); //$NON-NLS-1$
+        final ThreadReuseExecutor pool = new ThreadReuseExecutor("test", MAX_THREADS); //$NON-NLS-1$
         
         for(int i=0; i<WORK_ITEMS; i++) {
-            pool.scheduleWork(new FakeWorkItem(SINGLE_WAIT));
+            pool.execute(new FakeWorkItem(SINGLE_WAIT));
         }
         
         pool.shutdown();        
@@ -62,15 +63,14 @@ public class TestStatsCapturingWorkManager {
         assertEquals("Expected threads to be maxed out", MAX_THREADS, stats.getHighestActiveThreads()); //$NON-NLS-1$
     }
 
-    @Ignore
     @Test public void testThreadReuse() throws Exception {
         final long SINGLE_WAIT = 50;
         final long NUM_THREADS = 5;
 
-        StatsCapturingWorkManager pool = new StatsCapturingWorkManager("test", 5, manager); //$NON-NLS-1$
+        ThreadReuseExecutor pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
         
         for(int i=0; i<NUM_THREADS; i++) {            
-        	pool.scheduleWork(new FakeWorkItem(SINGLE_WAIT));
+        	pool.execute(new FakeWorkItem(SINGLE_WAIT));
             
             try {
                 Thread.sleep(SINGLE_WAIT*2);
@@ -86,14 +86,14 @@ public class TestStatsCapturingWorkManager {
         pool.awaitTermination(1000, TimeUnit.MILLISECONDS);
     }
     
-    @Test(expected=WorkRejectedException.class) public void testShutdown() throws Exception {
-    	StatsCapturingWorkManager pool = new StatsCapturingWorkManager("test", 5, manager); //$NON-NLS-1$
+    @Test(expected=RejectedExecutionException.class) public void testShutdown() throws Exception {
+    	ThreadReuseExecutor pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
         pool.shutdown();
-    	pool.scheduleWork(new FakeWorkItem(1));
+    	pool.execute(new FakeWorkItem(1));
     }
     
-    /*@Test public void testScheduleCancel() throws Exception {
-    	StatsCapturingWorkManager pool = new StatsCapturingWorkManager("test", 5); //$NON-NLS-1$
+    @Test public void testScheduleCancel() throws Exception {
+    	ThreadReuseExecutor pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
     	ScheduledFuture<?> future = pool.scheduleAtFixedRate(new Runnable() {
     		@Override
     		public void run() {
@@ -101,12 +101,12 @@ public class TestStatsCapturingWorkManager {
     	}, 0, 5, TimeUnit.MILLISECONDS);
     	future.cancel(true);
     	assertFalse(future.cancel(true));    	
-    }*/
+    }
     
     @Test public void testSchedule() throws Exception {
-    	StatsCapturingWorkManager pool = new StatsCapturingWorkManager("test", 5, manager); //$NON-NLS-1$
+    	ThreadReuseExecutor pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
         final ArrayList<String> result = new ArrayList<String>(); 
-    	pool.scheduleWork(new Work() {
+    	pool.schedule(new Work() {
 			
 			@Override
 			public void run() {
@@ -117,15 +117,15 @@ public class TestStatsCapturingWorkManager {
 			public void release() {
 				
 			}
-		}, null, 5);
+		}, 5, TimeUnit.MILLISECONDS);
     	Thread.sleep(100);
     	pool.shutdown();
     	pool.awaitTermination(1000, TimeUnit.MILLISECONDS);
     	assertEquals(1, result.size());
     }
     
-    /*@Test(expected=ExecutionException.class) public void testScheduleException() throws Exception {
-    	StatsCapturingWorkManager pool = new StatsCapturingWorkManager("test", 5); //$NON-NLS-1$
+    @Test(expected=ExecutionException.class) public void testScheduleException() throws Exception {
+    	ThreadReuseExecutor pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
     	ScheduledFuture<?> future = pool.schedule(new Runnable() {
     		@Override
     		public void run() {
@@ -133,13 +133,13 @@ public class TestStatsCapturingWorkManager {
     		}
     	}, 0, TimeUnit.MILLISECONDS);
     	future.get();
-    }*/
+    }
     
     /**
      * Here each execution exceeds the period
      */
-    /*@Test public void testScheduleRepeated() throws Exception {
-    	StatsCapturingWorkManager pool = new StatsCapturingWorkManager("test", 5); //$NON-NLS-1$
+    @Test public void testScheduleRepeated() throws Exception {
+    	ThreadReuseExecutor pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
     	final ArrayList<String> result = new ArrayList<String>();
     	ScheduledFuture<?> future = pool.scheduleAtFixedRate(new Runnable() {
     		@Override
@@ -151,16 +151,16 @@ public class TestStatsCapturingWorkManager {
 					throw new RuntimeException(e);
 				}
     		}
-    	}, 0, 10, TimeUnit.MILLISECONDS);
-    	Thread.sleep(100);
+    	}, 0, 30, TimeUnit.MILLISECONDS);
+    	Thread.sleep(140);
     	future.cancel(true);
     	assertEquals(2, result.size());
-    }*/
+    }
     
     @Test public void testFailingWork() throws Exception {
-    	StatsCapturingWorkManager pool = new StatsCapturingWorkManager("test", 5, manager); //$NON-NLS-1$
+    	ThreadReuseExecutor pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
     	final AtomicInteger count = new AtomicInteger();
-    	pool.scheduleWork(new Work() {
+    	pool.execute(new Work() {
     		@Override
     		public void run() {
     			count.getAndIncrement();
@@ -174,6 +174,53 @@ public class TestStatsCapturingWorkManager {
     	});
     	Thread.sleep(100);
     	assertEquals(1, count.get());
+    }
+    
+    @Test public void testPriorities() throws Exception {
+    	final ThreadReuseExecutor pool = new ThreadReuseExecutor("test", 1); //$NON-NLS-1$
+    	FutureWork<Boolean> work1 = new FutureWork<Boolean>(new Callable<Boolean>() {
+    		public Boolean call() throws Exception {
+    			synchronized (pool) {
+    				while (pool.getSubmittedCount() < 4) {
+    					pool.wait();
+    				}
+				}
+    			return true;
+    		}
+		}, 0);
+    	final ConcurrentLinkedQueue<Integer> order = new ConcurrentLinkedQueue<Integer>();
+    	FutureWork<Boolean> work2 = new FutureWork<Boolean>(new Callable<Boolean>() {
+    		public Boolean call() throws Exception {
+    			order.add(2);
+    			return true;
+    		}
+		}, 2);
+    	FutureWork<Boolean> work3 = new FutureWork<Boolean>(new Callable<Boolean>() {
+    		public Boolean call() throws Exception {
+    			order.add(3);
+    			return false;
+    		}
+		}, 1);
+    	FutureWork<Boolean> work4 = new FutureWork<Boolean>(new Callable<Boolean>() {
+    		public Boolean call() throws Exception {
+    			order.add(4);
+    			return false;
+    		}
+		}, 2);
+    	pool.execute(work1);
+    	pool.execute(work2);
+    	pool.execute(work3);
+    	pool.execute(work4);
+    	synchronized (pool) {
+        	pool.notifyAll();
+		}
+    	work1.getResult().get();
+    	work2.getResult().get();
+    	work3.getResult().get();
+    	work4.getResult().get();
+    	assertEquals(Integer.valueOf(3), order.remove());
+    	assertEquals(Integer.valueOf(2), order.remove());
+    	assertEquals(Integer.valueOf(4), order.remove());
     }
         
 }

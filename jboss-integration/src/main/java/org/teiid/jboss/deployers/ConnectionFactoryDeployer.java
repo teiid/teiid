@@ -29,8 +29,6 @@ import org.jboss.deployers.structure.spi.DeploymentUnit;
 import org.jboss.resource.metadata.mcf.ManagedConnectionFactoryDeploymentGroup;
 import org.jboss.resource.metadata.mcf.ManagedConnectionFactoryDeploymentMetaData;
 import org.teiid.deployers.VDBStatusChecker;
-import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
-import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 
 /**
  * This deployer listens to the data source load and unload events and manages the connectionManager status based 
@@ -38,7 +36,6 @@ import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
  */
 public class ConnectionFactoryDeployer extends AbstractSimpleRealDeployer<ManagedConnectionFactoryDeploymentGroup> {
 	
-	private ConnectorManagerRepository connectorManagerRepository;
 	private VDBStatusChecker vdbChecker;
 	
 	public ConnectionFactoryDeployer() {
@@ -52,13 +49,6 @@ public class ConnectionFactoryDeployer extends AbstractSimpleRealDeployer<Manage
 		
 		for (ManagedConnectionFactoryDeploymentMetaData data : deployments) {
             this.vdbChecker.dataSourceAdded(data.getJndiName());   
-            
-            // set the number of available connections on the cm
-            for (ConnectorManager cm:this.connectorManagerRepository.getConnectorManagers()) {
-            	if (cm.getConnectionName().equals(data.getJndiName())) {
-            		cm.setMaxConnections(data.getMaxSize());
-            	}
-            }
 		}
 	}
     
@@ -71,10 +61,6 @@ public class ConnectionFactoryDeployer extends AbstractSimpleRealDeployer<Manage
 			this.vdbChecker.dataSourceRemoved(data.getJndiName());
 		}
 	}
-	
-	public void setConnectorManagerRepository(ConnectorManagerRepository repo) {
-		this.connectorManagerRepository = repo;
-	}	
 	
 	public void setVDBStatusChecker(VDBStatusChecker checker) {
 		this.vdbChecker = checker;

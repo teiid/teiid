@@ -28,9 +28,6 @@ package org.teiid.dqp.internal.datamgr.impl;
 
 import junit.framework.TestCase;
 
-import org.mockito.Mockito;
-import org.teiid.common.buffer.BlockedException;
-import org.teiid.dqp.internal.process.AbstractWorkItem;
 import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
@@ -54,7 +51,6 @@ public final class TestConnectorManager extends TestCase {
 				return c.getConnection();
 			}
 		};
-		cm.setMaxConnections(1);
 		cm.start();
 		return cm;
 	}
@@ -74,7 +70,7 @@ public final class TestConnectorManager extends TestCase {
     }
 
     void helpAssureOneState() throws Exception {
-    	csm.executeRequest(request, Mockito.mock(AbstractWorkItem.class));
+    	csm.registerRequest(request);
     	ConnectorWork state = csm.getState(request.getAtomicRequestID());
     	assertEquals(state, csm.getState(request.getAtomicRequestID()));
     }
@@ -106,34 +102,5 @@ public final class TestConnectorManager extends TestCase {
 
         assertEquals("Expected size of 1", 1, csm.size()); //$NON-NLS-1$
     }
-    
-    public void testQueuing() throws Exception {
-    	ConnectorWork workItem = csm.executeRequest(request, Mockito.mock(AbstractWorkItem.class));
-    	workItem.execute();
-    	
-    	AbstractWorkItem awi1 = Mockito.mock(AbstractWorkItem.class);
-    	ConnectorWork workItem1 = csm.executeRequest(TestConnectorWorkItem.createNewAtomicRequestMessage(2, 1), awi1);
-    	
-    	AbstractWorkItem awi2 = Mockito.mock(AbstractWorkItem.class);
-    	ConnectorWork workItem2 = csm.executeRequest(TestConnectorWorkItem.createNewAtomicRequestMessage(3, 1), awi2);
-
-    	try {
-    		workItem1.execute();
-    		fail("expected exception"); //$NON-NLS-1$
-    	} catch (BlockedException e) {
-    		
-    	}
-    	workItem.close();
-    	
-    	try {
-    		workItem2.execute(); //ensure that another item cannot jump in the queue
-    		fail("expected exception"); //$NON-NLS-1$
-    	} catch (BlockedException e) {
-    		
-    	}
-
-    	Mockito.verify(awi1).moreWork();
-    	workItem1.execute();
-    }
-        
+           
 }

@@ -56,7 +56,6 @@ public class TestDQPCore {
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(new AutoGenDataService());
         
         core = new DQPCore();
-        core.setWorkManager(new FakeWorkManager());
         core.setBufferService(new FakeBufferService());
         core.setConnectorManagerRepository(repo);
         core.setTransactionService(new FakeTransactionService());

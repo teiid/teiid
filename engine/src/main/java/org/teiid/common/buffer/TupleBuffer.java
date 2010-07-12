@@ -23,12 +23,11 @@
 package org.teiid.common.buffer;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.teiid.core.TeiidComponentException;
@@ -295,7 +294,7 @@ public class TupleBuffer {
             		lob.setReferenceStreamId(id);
             	}
             	if (this.lobReferences == null) {
-            		this.lobReferences = Collections.synchronizedMap(new HashMap<String, Streamable<?>>());
+            		this.lobReferences = new ConcurrentHashMap<String, Streamable<?>>();
             	}
             	this.lobReferences.put(id, lob);
                 if (lob.getReference() == null) {

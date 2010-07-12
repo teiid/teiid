@@ -35,9 +35,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.resource.spi.work.Work;
 import javax.resource.spi.work.WorkEvent;
-import javax.resource.spi.work.WorkException;
 import javax.resource.spi.work.WorkListener;
-import javax.resource.spi.work.WorkManager;
 import javax.transaction.xa.Xid;
 
 import org.teiid.adminapi.Admin;
@@ -58,12 +56,11 @@ import org.teiid.client.xa.XidImpl;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.Streamable;
-import org.teiid.core.util.Assertion;
 import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
+import org.teiid.dqp.internal.process.ThreadReuseExecutor.PrioritizedRunnable;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.BufferService;
@@ -84,15 +81,17 @@ import org.teiid.query.tempdata.TempTableStoreImpl;
  */
 public class DQPCore implements DQP {
 	
-	public final static class FutureWork<T> implements Work, WorkListener {
+	//TODO: replace with FutureTask
+	public final static class FutureWork<T> implements Work, WorkListener, PrioritizedRunnable {
 		private final Callable<T> toCall;
-		private DQPWorkContext workContext;
 		private ResultsFuture<T> result = new ResultsFuture<T>();
 		private ResultsReceiver<T> receiver = result.getResultsReceiver();
+		private int priority;
+		private long creationTime = System.currentTimeMillis();
 
-		public FutureWork(Callable<T> processor) {
-			this.workContext = DQPWorkContext.getWorkContext();
+		public FutureWork(Callable<T> processor, int priority) {
 			this.toCall = processor;
+			this.priority = priority;
 		}
 		
 		public ResultsFuture<T> getResult() {
@@ -102,7 +101,7 @@ public class DQPCore implements DQP {
 		@Override
 		public void run() {
 			try {
-				receiver.receiveResults(workContext.runInContext(toCall));
+				receiver.receiveResults(toCall.call());
 			} catch (Throwable t) {
 				receiver.exceptionOccurred(t);
 			}
@@ -131,6 +130,16 @@ public class DQPCore implements DQP {
 		@Override
 		public void workStarted(WorkEvent arg0) {
 			
+		}
+
+		@Override
+		public int getPriority() {
+			return priority;
+		}
+		
+		@Override
+		public long getCreationTime() {
+			return creationTime;
 		}
 	}	
 	
@@ -164,8 +173,7 @@ public class DQPCore implements DQP {
 		
 	}
 	
-    private WorkManager workManager;
-    private StatsCapturingWorkManager processWorkerPool;
+	private ThreadReuseExecutor processWorkerPool;
     
     // System properties for Code Table
     private int maxCodeTableRecords = DQPConfiguration.DEFAULT_MAX_CODE_TABLE_RECORDS;
@@ -197,6 +205,11 @@ public class DQPCore implements DQP {
 	private Map<String, ClientState> clientState = Collections.synchronizedMap(new HashMap<String, ClientState>());
 	private DQPContextCache contextCache;
     private boolean useEntitlements = false;
+    
+    private int maxActivePlans = DQPConfiguration.DEFAULT_MAX_ACTIVE_PLANS;
+    private int currentlyActivePlans;
+    private LinkedList<RequestWorkItem> waitingPlans = new LinkedList<RequestWorkItem>();
+    
     /**
      * perform a full shutdown and wait for 10 seconds for all threads to finish
      */
@@ -330,8 +343,13 @@ public class DQPCore implements DQP {
         RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
     	logMMCommand(workItem, Event.NEW, null); 
         addRequest(requestID, workItem, state);
-        
-        this.addWork(workItem);      
+        synchronized (waitingPlans) {
+			if (currentlyActivePlans < maxActivePlans) {
+				startActivePlan(workItem);
+			} else {
+				waitingPlans.add(workItem);
+			}
+		}
         return resultsFuture;
     }
 	
@@ -351,8 +369,28 @@ public class DQPCore implements DQP {
 		this.requests.put(requestID, workItem);
 		state.addRequest(requestID);
 	}
+
+	private void startActivePlan(RequestWorkItem workItem) {
+		workItem.active = true;
+		this.addWork(workItem);
+		this.currentlyActivePlans++;
+	}
+	
+    void finishProcessing(final RequestWorkItem workItem) {
+    	synchronized (waitingPlans) {
+    		if (!workItem.active) {
+        		return;
+        	}
+        	workItem.active = false;
+    		currentlyActivePlans--;
+			if (!waitingPlans.isEmpty()) {
+				startActivePlan(waitingPlans.remove());
+			}
+		}
+    }
     
     void removeRequest(final RequestWorkItem workItem) {
+    	finishProcessing(workItem);
     	this.requests.remove(workItem.requestID);
     	ClientState state = getClientState(workItem.getDqpWorkContext().getSessionId(), false);
     	if (state != null) {
@@ -361,36 +399,18 @@ public class DQPCore implements DQP {
     	contextCache.removeRequestScopedCache(workItem.requestID.toString());
     }
     
-    void addWork(Work work) {
-    	try {
-			this.processWorkerPool.scheduleWork(work);
-		} catch (WorkException e) {
-			//TODO: cancel? close?
-			throw new TeiidRuntimeException(e);
-		}
+    void addWork(Runnable work) {
+		this.processWorkerPool.execute(work);
     }
     
-    void scheduleWork(final RequestWorkItem work, long delay) {
-    	try {
-			this.processWorkerPool.scheduleWork(new Work() {
-				
-				@Override
-				public void run() {
-					work.moreWork();
-				}
-				
-				@Override
-				public void release() {
-					
-				}
-			}, null, delay);
-		} catch (WorkException e) {
-			throw new TeiidRuntimeException(e);
-		}
-    }
-    
-    public void setWorkManager(WorkManager mgr) {
-    	this.workManager = mgr;
+    void scheduleWork(final Runnable r, int priority, long delay) {
+		this.processWorkerPool.schedule(new FutureWork<Void>(new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				r.run();
+				return null;
+			}
+		}, priority), delay, TimeUnit.MILLISECONDS);
     }
     
 	public ResultsFuture<?> closeLobChunkStream(int lobRequestId,
@@ -446,13 +466,8 @@ public class DQPCore implements DQP {
     	return this.requests.get(processorID);
 	}
 	
-    /**
-     * Returns a list of QueueStats objects that represent the queues in
-     * this service.
-     * If there are no queues, an empty Collection is returned.
-     */
     public WorkerPoolStatisticsMetadata getWorkManagerStatistics() {
-        return processWorkerPool.getStats();
+    	return this.processWorkerPool.getStats();
     }
            
     public void terminateSession(String sessionId) {
@@ -627,9 +642,6 @@ public class DQPCore implements DQP {
 	}
 	
 	public void start(DQPConfiguration config) {
-		
-		Assertion.isNotNull(this.workManager);
-
 		this.processorTimeslice = config.getTimeSliceInMilli();
         this.maxFetchSize = config.getMaxRowsFetchSize();
         this.processorDebugAllowed = config.isProcessDebugAllowed();
@@ -658,7 +670,7 @@ public class DQPCore implements DQP {
         this.bufferManager = bufferService.getBufferManager();
         this.contextCache = bufferService.getContextCache();
 
-        this.processWorkerPool = new StatsCapturingWorkManager(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, config.getMaxThreads(), this.workManager);
+        this.processWorkerPool = new ThreadReuseExecutor(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, config.getMaxThreads());
         
         dataTierMgr = new DataTierManagerImpl(this,
                                             this.connectorManagerRepository,
@@ -706,7 +718,7 @@ public class DQPCore implements DQP {
 				return null;
 			}
 		};
-		return addWork(processor);
+		return addWork(processor, 0);
 	}
 	
 	// local txn
@@ -719,7 +731,7 @@ public class DQPCore implements DQP {
 				return null;
 			}
 		};
-		return addWork(processor);
+		return addWork(processor, 0);
 	}
 
 	// global txn
@@ -732,7 +744,7 @@ public class DQPCore implements DQP {
 				return null;
 			}
 		};
-		return addWork(processor);
+		return addWork(processor, 0);
 	}
 	// global txn
 	public ResultsFuture<?> end(XidImpl xid, int flags) throws XATransactionException {
@@ -756,16 +768,12 @@ public class DQPCore implements DQP {
 				return getTransactionService().prepare(workContext.getSessionId(),xid, workContext.getSession().isEmbedded());
 			}
 		};
-		return addWork(processor);
+		return addWork(processor, 10);
 	}
 
-	private <T> ResultsFuture<T> addWork(Callable<T> processor) {
-		FutureWork<T> work = new FutureWork<T>(processor);
-		try {
-			this.workManager.scheduleWork(work);
-		} catch (WorkException e) {
-			throw new TeiidRuntimeException(e);
-		}
+	<T> ResultsFuture<T> addWork(Callable<T> processor, int priority) {
+		FutureWork<T> work = new FutureWork<T>(processor, priority);
+		this.addWork(work);
 		return work.getResult();
 	}
 	
@@ -786,7 +794,7 @@ public class DQPCore implements DQP {
 				return null;
 			}
 		};
-		return addWork(processor);
+		return addWork(processor, 0);
 	}
 	// global txn
 	public ResultsFuture<?> start(final XidImpl xid, final int flags, final int timeout)
@@ -799,7 +807,7 @@ public class DQPCore implements DQP {
 				return null;
 			}
 		};
-		return addWork(processor);
+		return addWork(processor, 100);
 	}
 
 	public MetadataResult getMetadata(long requestID)

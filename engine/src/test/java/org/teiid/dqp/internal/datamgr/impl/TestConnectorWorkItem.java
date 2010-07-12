@@ -22,8 +22,7 @@
 
 package org.teiid.dqp.internal.datamgr.impl;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.fail;
+import static junit.framework.Assert.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -35,7 +34,6 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.client.RequestMessage;
 import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
-import org.teiid.dqp.internal.process.AbstractWorkItem;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
@@ -49,8 +47,8 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.unittest.FakeMetadataFactory;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ProcedureExecution;
+import org.teiid.translator.TranslatorException;
 
 
 public class TestConnectorWorkItem {
@@ -117,8 +115,7 @@ public class TestConnectorWorkItem {
 		Command command = helpGetCommand("update bqt1.smalla set stringkey = 1 where stringkey = 2", EXAMPLE_BQT); //$NON-NLS-1$
 		AtomicRequestMessage arm = createNewAtomicRequestMessage(1, 1);
 		arm.setCommand(command);
-		ConnectorWorkItem synchConnectorWorkItem = new ConnectorWorkItem(arm, Mockito.mock(AbstractWorkItem.class), 
-				TestConnectorManager.getConnectorManager());
+		ConnectorWorkItem synchConnectorWorkItem = new ConnectorWorkItem(arm, TestConnectorManager.getConnectorManager());
 		return synchConnectorWorkItem.execute();
 	}
 	
@@ -152,7 +149,7 @@ public class TestConnectorWorkItem {
 				return Mockito.mock(Xid.class);
 			}} );
 		
-		new ConnectorWorkItem(requestMsg, Mockito.mock(AbstractWorkItem.class), cm);
+		new ConnectorWorkItem(requestMsg, cm);
     }
     
 	@Ignore
@@ -180,7 +177,7 @@ public class TestConnectorWorkItem {
 				return Mockito.mock(Xid.class);
 			}} );
 		
-		new ConnectorWorkItem(requestMsg, Mockito.mock(AbstractWorkItem.class), cm);
+		new ConnectorWorkItem(requestMsg, cm);
     }
 
 }

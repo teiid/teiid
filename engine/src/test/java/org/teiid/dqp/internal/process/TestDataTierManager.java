@@ -22,8 +22,9 @@
 
 package org.teiid.dqp.internal.process;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
 
+import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.client.RequestMessage;
 import org.teiid.core.TeiidException;
@@ -33,6 +34,8 @@ import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.AutoGenDataService;
 import org.teiid.dqp.service.FakeBufferService;
+import org.teiid.dqp.service.TransactionContext;
+import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.parser.QueryParser;
@@ -40,10 +43,9 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.util.CommandContext;
+import org.teiid.translator.TranslatorException;
 
-
-
-public class TestDataTierManager extends TestCase {
+public class TestDataTierManager {
     
     private DQPCore rm;
     private DataTierManagerImpl dtm;
@@ -53,10 +55,6 @@ public class TestDataTierManager extends TestCase {
     private DataTierTupleSource info;
     private AutoGenDataService connectorManager;
     private RequestWorkItem workItem;
-    
-    public TestDataTierManager(String name) {
-        super(name);
-    }
     
     private static Command helpGetCommand(String sql, QueryMetadataInterface metadata) throws Exception {
         Command command = QueryParser.getQueryParser().parseCommand(sql);
@@ -75,7 +73,8 @@ public class TestDataTierManager extends TestCase {
         connectorManager = new AutoGenDataService();
         rm = new DQPCore();
         rm.setTransactionService(new FakeTransactionService());
-        
+        rm.setBufferService(new FakeBufferService());
+        rm.start(new DQPConfiguration());
         FakeBufferService bs = new FakeBufferService();
 
         ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
@@ -92,7 +91,7 @@ public class TestDataTierManager extends TestCase {
         
         RequestMessage original = new RequestMessage();
         original.setExecutionId(1);
-        
+        original.setPartialResults(true);
         RequestID requestID = workContext.getRequestID(original.getExecutionId());
         
         context = new CommandContext();
@@ -105,11 +104,13 @@ public class TestDataTierManager extends TestCase {
         request = new AtomicRequestMessage(original, workContext, nodeId);
         request.setCommand(command);
         request.setConnectorName("FakeConnectorID"); //$NON-NLS-1$
-
-        info = new DataTierTupleSource(command.getProjectedSymbols(), request, dtm, request.getConnectorName(), workItem);
+        TransactionContext tc = new TransactionContext();
+        tc.setTransactionType(Scope.GLOBAL);
+        request.setTransactionContext(tc);
+        info = new DataTierTupleSource(request, workItem, connectorManager.registerRequest(request), dtm);
     }
     
-    public void testDataTierTupleSource() throws Exception {
+    @Test public void testDataTierTupleSource() throws Exception {
     	helpSetup(1);
     	info.nextTuple();
         assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
@@ -117,7 +118,13 @@ public class TestDataTierManager extends TestCase {
         assertNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
     }
     
-    public void testCodeTableResponseException() throws Exception {
+    @Test public void testPartialResults() throws Exception {
+    	helpSetup(1);
+    	info.exceptionOccurred(new TranslatorException(), true);
+    	assertNull(info.nextTuple());
+    }
+    
+    @Test public void testCodeTableResponseException() throws Exception {
     	helpSetup(3);
     	this.connectorManager.throwExceptionOnExecute = true;
         
@@ -129,13 +136,13 @@ public class TestDataTierManager extends TestCase {
         }
     }
     
-    public void testNoRowsException() throws Exception {
+    @Test public void testNoRowsException() throws Exception {
     	helpSetup(3);
     	this.connectorManager.setRows(0);
     	assertNull(info.nextTuple());
     }
     
-    public void testCodeTableResponseDataNotAvailable() throws Exception {
+    @Test public void testCodeTableResponseDataNotAvailable() throws Exception {
     	helpSetup(3);
     	this.connectorManager.dataNotAvailable = 5;
         

@@ -31,8 +31,8 @@ import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.BufferManager.BufferReserveMode;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogConstants;
@@ -41,9 +41,10 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
 import org.teiid.query.util.CommandContext;
-import org.teiid.translator.DataNotAvailableException;
 
-
+/**
+ * Driver for plan processing.
+ */
 public class QueryProcessor implements BatchProducer {
 	
 	public static class ExpiredTimeSliceException extends TeiidRuntimeException {
@@ -110,11 +111,6 @@ public class QueryProcessor implements BatchProducer {
 	    			throw e;
 	    		}
 	    		continue;
-	    	} catch (DataNotAvailableException e) {
-	    		if (!nonBlocking) {
-	    			throw e;
-	    		}
-	    		wait = e.getRetryDelay();
 	    	} catch (BlockedException e) {
 	    		if (!nonBlocking) {
 	    			throw e;
@@ -147,6 +143,9 @@ public class QueryProcessor implements BatchProducer {
 	
 			long currentTime = System.currentTimeMillis();
 			Assertion.assertTrue(!processorClosed);
+			
+			//TODO: see if there is pending work before preempting
+			
 	        while(currentTime < context.getTimeSliceEnd()) {
 	        	if (requestCanceled) {
 	                throw new TeiidProcessingException(QueryExecPlugin.Util.getString("QueryProcessor.request_cancelled", getProcessID())); //$NON-NLS-1$

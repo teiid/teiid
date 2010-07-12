@@ -34,12 +34,10 @@ public interface ConnectorWork {
 
 	void cancel();
 
-	AtomicResultsMessage more() throws TranslatorException;
+	AtomicResultsMessage more() throws TranslatorException, BlockedException;
 
 	void close();
 
 	AtomicResultsMessage execute() throws TranslatorException, BlockedException;
-	
-	boolean isQueued();
 	
 }

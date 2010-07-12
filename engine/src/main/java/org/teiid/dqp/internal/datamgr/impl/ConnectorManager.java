@@ -26,21 +26,18 @@
  */
 package org.teiid.dqp.internal.datamgr.impl;
 
-import java.util.LinkedList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import org.teiid.common.buffer.BlockedException;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.Assertion;
 import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.cache.DQPContextCache;
-import org.teiid.dqp.internal.datamgr.impl.ConnectorWorkItem.PermitMode;
-import org.teiid.dqp.internal.process.AbstractWorkItem;
 import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.service.BufferService;
@@ -69,13 +66,8 @@ public class ConnectorManager  {
 	
 	private static final String JAVA_CONTEXT = "java:"; //$NON-NLS-1$
 
-	public static final int DEFAULT_MAX_THREADS = 20;
-	
-	private static AtomicInteger ID_SEQUENCE = new AtomicInteger();
-	
 	private String translatorName;
 	private String connectionName;
-	private String connectorId = String.valueOf(ID_SEQUENCE.getAndIncrement());
 	
     //services acquired in start
     private BufferService bufferService;
@@ -84,10 +76,6 @@ public class ConnectorManager  {
     private ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem> requestStates = new ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem>();
 	
 	private SourceCapabilities cachedCapabilities;
-	
-	private int currentConnections;
-	private int maxConnections = DEFAULT_MAX_THREADS;
-	private LinkedList<ConnectorWorkItem> queuedRequests = new LinkedList<ConnectorWorkItem>();
 	
 	private volatile boolean stopped;
 	private ExecutionFactory<Object, Object> executionFactory;
@@ -115,24 +103,8 @@ public class ConnectorManager  {
     	return sb.toString();
     }
     
-    public synchronized void acquireConnectionLock(ConnectorWorkItem item) throws BlockedException {
-    	switch (item.getPermitMode()) {
-    	case NOT_ACQUIRED: 
-    		if (currentConnections < maxConnections) {
-	    		currentConnections++;
-	    		item.setPermitMode(PermitMode.ACQUIRED);
-	    		return;
-	    	}
-	    	queuedRequests.add(item);
-	    	item.setPermitMode(PermitMode.BLOCKED);	
-    	case BLOCKED:
-    		throw BlockedException.INSTANCE;
-    	}
-    }
-    
     public MetadataStore getMetadata(String modelName, Map<String, Datatype> datatypes, Properties importProperties) throws TranslatorException {
 		MetadataFactory factory = new MetadataFactory(modelName, datatypes, importProperties);
-		ExecutionFactory<Object, Object> executionFactory = getExecutionFactory();
 		Object connectionFactory = getConnectionFactory();
 		Object connection = executionFactory.getConnection(connectionFactory);
 		try {
@@ -143,26 +115,26 @@ public class ConnectorManager  {
 		return factory.getMetadataStore();
 	}    
     
-    public SourceCapabilities getCapabilities() throws TranslatorException {
+    public SourceCapabilities getCapabilities() throws TeiidComponentException {
     	if (cachedCapabilities != null) {
     		return cachedCapabilities;
     	}
 
 		checkStatus();
 		ExecutionFactory<Object, Object> translator = getExecutionFactory();
-		BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(translator, this.connectorId);
+		BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(translator, Arrays.asList(translatorName, connectionName));
 		resultCaps.setScope(Scope.SCOPE_GLOBAL);
 		cachedCapabilities = resultCaps;
 		return resultCaps;
     }
     
-    public ConnectorWork executeRequest(AtomicRequestMessage message, AbstractWorkItem awi) throws TranslatorException {
+    public ConnectorWork registerRequest(AtomicRequestMessage message) throws TeiidComponentException {
         // Set the connector ID to be used; if not already set. 
     	checkStatus();
     	AtomicRequestID atomicRequestId = message.getAtomicRequestID();
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {atomicRequestId, "Create State"}); //$NON-NLS-1$
 
-    	ConnectorWorkItem item = new ConnectorWorkItem(message, awi, this);
+    	ConnectorWorkItem item = new ConnectorWorkItem(message, this);
         Assertion.isNull(requestStates.put(atomicRequestId, item), "State already existed"); //$NON-NLS-1$
         return item;
     }
@@ -178,17 +150,6 @@ public class ConnectorManager  {
     void removeState(AtomicRequestID id) {
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {id, "Remove State"}); //$NON-NLS-1$
         ConnectorWorkItem cwi = requestStates.remove(id);
-        if (cwi != null && cwi.getPermitMode() == PermitMode.ACQUIRED) {
-        	synchronized (this) {
-	        	ConnectorWorkItem next = queuedRequests.pollFirst();
-	        	if (next == null) {
-	        		currentConnections--;
-	        		return;
-	        	}
-	        	next.setPermitMode(PermitMode.ACQUIRED);
-	        	next.getParent().moreWork();
-        	}
-        }
     }
 
     int size() {
@@ -257,13 +218,6 @@ public class ConnectorManager  {
      * @return the <code>ExecutionFactory</code>.
      */
 	protected ExecutionFactory<Object, Object> getExecutionFactory() {
-    	if (this.executionFactory == null) {
-	    	try {
-				InitialContext ic = new InitialContext();
-				return (ExecutionFactory<Object, Object>)ic.lookup(this.translatorName);
-			} catch (NamingException e) {
-			}
-    	}
 		return this.executionFactory;
     }
     
@@ -306,14 +260,10 @@ public class ConnectorManager  {
     	return null;
     }
     
-    private void checkStatus() throws TranslatorException {
+    private void checkStatus() throws TeiidComponentException {
     	if (stopped) {
-    		throw new TranslatorException(DQPPlugin.Util.getString("ConnectorManager.not_in_valid_state", this.translatorName)); //$NON-NLS-1$
+    		throw new TeiidComponentException(DQPPlugin.Util.getString("ConnectorManager.not_in_valid_state", this.translatorName)); //$NON-NLS-1$
     	}
-    }
-    
-    public void setMaxConnections(int value) {
-    	this.maxConnections = value;
     }
     
     public String getTranslatorName() {

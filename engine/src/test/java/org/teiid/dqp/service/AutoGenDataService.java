@@ -28,11 +28,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWork;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWorkItem;
-import org.teiid.dqp.internal.process.AbstractWorkItem;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -68,10 +68,10 @@ public class AutoGenDataService extends ConnectorManager{
     }
 
     @Override
-    public ConnectorWork executeRequest(AtomicRequestMessage message, AbstractWorkItem awi)
-    		throws TranslatorException {
+    public ConnectorWork registerRequest(AtomicRequestMessage message)
+    		throws TeiidComponentException {
     	if (throwExceptionOnExecute) {
-    		throw new TranslatorException("Connector Exception"); //$NON-NLS-1$
+    		throw new TeiidComponentException("Connector Exception"); //$NON-NLS-1$
     	}
         List projectedSymbols = (message.getCommand()).getProjectedSymbols();               
         List[] results = createResults(projectedSymbols);
@@ -105,10 +105,6 @@ public class AutoGenDataService extends ConnectorManager{
 				
 			}
 			
-			@Override
-			public boolean isQueued() {
-				return false;
-			}
 		};
     }
     

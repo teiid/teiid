@@ -57,7 +57,6 @@
     </bean>      
              
     <bean name="ConnectionFactoryDeployer" class="org.teiid.jboss.deployers.ConnectionFactoryDeployer">
-        <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>
         <property name="VDBStatusChecker"><inject bean="VDBStatusChecker"/></property>
     </bean>
         

@@ -43,7 +43,7 @@ public class ConnectorManagerRepository implements Serializable{
 	}
 	
 	public List<ConnectorManager> getConnectorManagers() {
-		return new ArrayList(this.repo.values());
+		return new ArrayList<ConnectorManager>(this.repo.values());
 	}
 	
 	
