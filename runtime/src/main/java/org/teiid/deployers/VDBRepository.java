@@ -109,6 +109,10 @@ public class VDBRepository implements Serializable{
         throw new VirtualDatabaseException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, latestVersion)); //$NON-NLS-1$
 	}
 	
+	public MetadataStore getSystemStore() {
+		return systemStore;
+	}
+	
 	public void setSystemStore(MetadataStore store) {
 		this.systemStore = store;
 	}

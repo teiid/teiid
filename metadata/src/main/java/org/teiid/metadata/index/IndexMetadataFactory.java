@@ -112,7 +112,7 @@ public class IndexMetadataFactory {
 		addEntriesPlusVisibilities(vdb, new VDBMetaData());
 	}
     
-	public MetadataStore getMetadataStore() throws IOException {
+	public MetadataStore getMetadataStore(Collection<Datatype> systemDatatypes) throws IOException {
 		if (this.store == null) {
 			this.store = new MetadataStore();
 	    	ArrayList<Index> tmp = new ArrayList<Index>();
@@ -124,7 +124,12 @@ public class IndexMetadataFactory {
 			this.indexes = tmp.toArray(new Index[tmp.size()]);
 			getAnnotationCache();
 			getExtensionCache();			
-			getDatatypeCache();
+			Map<String, Datatype> datatypes = getDatatypeCache();
+			if (systemDatatypes != null) {
+				for (Datatype datatype : systemDatatypes) {
+					datatypes.put(datatype.getUUID(), datatype);
+				}
+			}
 			List<KeyRecord> keys = findMetadataRecords(MetadataConstants.RECORD_TYPE.PRIMARY_KEY, null, false);
 			for (KeyRecord keyRecord : keys) {
 				this.primaryKeyCache.put(keyRecord.getUUID(), keyRecord);

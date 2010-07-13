@@ -11,6 +11,7 @@
    <bean name="JBossLifeCycleListener" class="org.teiid.jboss.JBossLifeCycleListener"/>
         
     <bean name="VDBParserDeployer" class="org.teiid.deployers.VDBParserDeployer">
+        <property name="vdbRepository"><inject bean="VDBRepository"/></property>
         <property name="objectSerializer"><inject bean="ObjectSerializer"/></property>
         <property name="managedObjectFactory"><inject bean="ManagedObjectFactory"/></property>
     </bean>

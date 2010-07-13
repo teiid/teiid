@@ -161,8 +161,8 @@ public class TestParams extends TestCase {
                        0,
                        CONNECTOR_METADATA_UTILITY, 
                        "http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#timestamp",  //$NON-NLS-1$
-                       "http://www.w3.org/2001/XMLSchema#dateTime",  //$NON-NLS-1$
-                       "http://www.w3.org/2001/XMLSchema#dateTime"); //$NON-NLS-1$
+                       "http://www.w3.org/2001/XMLSchema#string",  //$NON-NLS-1$
+                       "http://www.w3.org/2001/XMLSchema#string"); //$NON-NLS-1$
 
         checkParameter((Argument)params.get(3),
                        "inOptional", //$NON-NLS-1$

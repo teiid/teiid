@@ -42,11 +42,11 @@ public class SystemVDBDeployer {
 			if (url == null) {
 				throw new TeiidRuntimeException(RuntimeMetadataPlugin.Util.getString("system_vdb_not_found")); //$NON-NLS-1$
 			}
-			this.vdbRepository.setSystemStore(new IndexMetadataFactory(url).getMetadataStore());
+			this.vdbRepository.setSystemStore(new IndexMetadataFactory(url).getMetadataStore(null));
 		} catch (URISyntaxException e) {
-			throw new TeiidRuntimeException(e, RuntimePlugin.Util.getString("failed_to_deployed", CoreConstants.SYSTEM_VDB)); //$NON-NLS-1$
+			throw new TeiidRuntimeException(e, RuntimePlugin.Util.getString("system_vdb_load_error")); //$NON-NLS-1$
 		} catch (IOException e) {
-			throw new TeiidRuntimeException(e, RuntimePlugin.Util.getString("failed_to_deployed", CoreConstants.SYSTEM_VDB)); //$NON-NLS-1$
+			throw new TeiidRuntimeException(e, RuntimePlugin.Util.getString("system_vdb_load_error")); //$NON-NLS-1$
 		}
 	}
 

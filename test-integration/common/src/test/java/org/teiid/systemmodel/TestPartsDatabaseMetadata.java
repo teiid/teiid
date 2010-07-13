@@ -26,8 +26,8 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
@@ -45,14 +45,14 @@ public class TestPartsDatabaseMetadata {
     
     static final String VDB = "PartsSupplier";
     
-	@Before public void setUp() throws Exception {
+	@BeforeClass public static void setUp() throws Exception {
     	FakeServer server = new FakeServer();
     	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
     	connection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$		
     	dbMetadata = connection.getMetaData();
     }
     
-    @After public void tearDown() throws SQLException {
+    @AfterClass public static void tearDown() throws SQLException {
     	connection.close();
     }
     

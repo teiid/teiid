@@ -61,6 +61,7 @@ import org.xml.sax.SAXException;
  */
 public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaData> implements ManagedObjectCreator {
 	private ObjectSerializer serializer;
+	private VDBRepository vdbRepository;
 	 
 	public VDBParserDeployer() {
 		super(VDBMetaData.class, getCustomMappings(), IndexConstants.NAME_DELIM_CHAR+IndexConstants.INDEX_EXT, IndexMetadataFactory.class, VdbConstants.MODEL_EXT, UDFMetaData.class);
@@ -146,7 +147,7 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 				MetadataStoreGroup stores = this.serializer.loadSafe(cacheFile, MetadataStoreGroup.class);
 				if (stores == null) {
 					stores = new MetadataStoreGroup();
-					stores.addStore(imf.getMetadataStore());
+					stores.addStore(imf.getMetadataStore(vdbRepository.getSystemStore().getDatatypes()));
 				}
 				unit.addAttachment(MetadataStoreGroup.class, stores);				
 			}
@@ -179,7 +180,11 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 		
 		LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+unit.getRoot().getName()+" has been parsed."); //$NON-NLS-1$ //$NON-NLS-2$
 		return vdb;
-	}	
+	}
+	
+	public void setVdbRepository(VDBRepository vdbRepository) {
+		this.vdbRepository = vdbRepository;
+	}
 	
 	public void setObjectSerializer(ObjectSerializer serializer) {
 		this.serializer = serializer;

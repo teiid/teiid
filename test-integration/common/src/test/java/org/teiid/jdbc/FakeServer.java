@@ -52,21 +52,17 @@ import org.teiid.transport.ClientServiceRegistryImpl;
 import org.teiid.transport.LocalServerConnection;
 import org.teiid.transport.LogonImpl;
 
-
+@SuppressWarnings("nls")
 public class FakeServer extends ClientServiceRegistryImpl {
 
 	SessionServiceImpl sessionService = new SessionServiceImpl();
 	LogonImpl logon;
 	DQPCore dqp = new DQPCore();
 	VDBRepository repo = new VDBRepository();
-	MetadataStore systemStore;
 	
 	public FakeServer() {
 		this.logon = new LogonImpl(sessionService, null);
-
-		systemStore = VDBMetadataFactory.getSystemVDBMetadataStore();
-		this.repo.setSystemStore(systemStore);
-		
+		this.repo.setSystemStore(VDBMetadataFactory.getSystem());
         this.sessionService.setVDBRepository(repo);
         this.dqp.setBufferService(new FakeBufferService());
         this.dqp.setTransactionService(new FakeTransactionService());
@@ -90,13 +86,13 @@ public class FakeServer extends ClientServiceRegistryImpl {
 	public void deployVDB(String vdbName, String vdbPath) throws Exception {
 		
 		IndexMetadataFactory imf = VDBMetadataFactory.loadMetadata(new File(vdbPath).toURI().toURL());
-		MetadataStore metadata = imf.getMetadataStore();
+		MetadataStore metadata = imf.getMetadataStore(repo.getSystemStore().getDatatypes());
 		
         VDBMetaData vdbMetaData = new VDBMetaData();
         vdbMetaData.setName(vdbName);
         vdbMetaData.setStatus(VDB.Status.ACTIVE);
         
-        for (Schema schema : systemStore.getSchemas().values()) {
+        for (Schema schema : repo.getSystemStore().getSchemas().values()) {
         	ModelMetaData model = new ModelMetaData();
             model.setName(schema.getName());
             vdbMetaData.addModel(model);

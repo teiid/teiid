@@ -28,6 +28,7 @@ import java.util.Collection;
 
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.metadata.Table;
 import org.teiid.metadata.TransformationMetadata;
 
 @SuppressWarnings("nls")
@@ -39,6 +40,10 @@ public class TestMultipleModelIndexes {
 		assertEquals(1, names.size());
 		names = tm.getGroupsForPartialName("PARTS");
 		assertEquals(1, names.size());
+		
+		//ensure that datatypes are set
+		Table t = (Table)tm.getGroupID(names.iterator().next());
+		assertNotNull(t.getColumns().get(0).getDatatype());
 	}
 	
 }

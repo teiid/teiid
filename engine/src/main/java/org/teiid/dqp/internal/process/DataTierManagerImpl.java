@@ -186,12 +186,14 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				for (Schema schema : getVisibleSchemas(vdb, metadata)) {
 					for (Procedure proc : schema.getProcedures().values()) {
 						for (ProcedureParameter param : proc.getParameters()) {
-							rows.add(Arrays.asList(vdbName, proc.getParent().getName(), proc.getName(), param.getName(), param.getDatatype().getRuntimeTypeName(), param.getPosition(), param.getType().toString(), param.isOptional(), 
+							Datatype dt = param.getDatatype();
+							rows.add(Arrays.asList(vdbName, proc.getParent().getName(), proc.getName(), param.getName(), dt!=null?dt.getRuntimeTypeName():null, param.getPosition(), param.getType().toString(), param.isOptional(), 
 									param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID(), param.getAnnotation()));
 						}
 						if (proc.getResultSet() != null) {
 							for (Column param : proc.getResultSet().getColumns()) {
-								rows.add(Arrays.asList(vdbName, proc.getParent().getName(), proc.getName(), param.getName(), param.getDatatype().getRuntimeTypeName(), param.getPosition(), "ResultSet", false, //$NON-NLS-1$ 
+								Datatype dt = param.getDatatype();
+								rows.add(Arrays.asList(vdbName, proc.getParent().getName(), proc.getName(), param.getName(), dt!=null?dt.getRuntimeTypeName():null, param.getPosition(), "ResultSet", false, //$NON-NLS-1$ 
 										param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID(), param.getAnnotation()));
 							}
 						}
@@ -233,13 +235,11 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 							break;
 						case COLUMNS:
 							for (Column column : table.getColumns()) {
-								if (column.getDatatype() == null) {
-									continue; //some mapping classes don't set the datatype
-								}
+								Datatype dt = column.getDatatype();
 								rows.add(Arrays.asList(vdbName, schema.getName(), table.getName(), column.getName(), column.getPosition(), column.getNameInSource(), 
-										column.getDatatype().getRuntimeTypeName(), column.getScale(), column.getLength(), column.isFixedLength(), column.isSelectable(), column.isUpdatable(),
+										dt!=null?dt.getRuntimeTypeName():null, column.getScale(), column.getLength(), column.isFixedLength(), column.isSelectable(), column.isUpdatable(),
 										column.isCaseSensitive(), column.isSigned(), column.isCurrency(), column.isAutoIncremented(), column.getNullType().toString(), column.getMinimumValue(), 
-										column.getMaximumValue(), column.getSearchType().toString(), column.getFormat(), column.getDefaultValue(), column.getDatatype().getJavaClassName(), column.getPrecision(), 
+										column.getMaximumValue(), column.getSearchType().toString(), column.getFormat(), column.getDefaultValue(), dt!=null?dt.getJavaClassName():null, column.getPrecision(), 
 										column.getCharOctetLength(), column.getRadix(), column.getUUID(), column.getAnnotation()));
 							}
 							break;

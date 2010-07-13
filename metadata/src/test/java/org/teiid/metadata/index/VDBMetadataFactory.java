@@ -49,6 +49,7 @@ import org.teiid.query.function.metadata.FunctionMethod;
 public class VDBMetadataFactory {
 	
 	public static LRUCache<URL, TransformationMetadata> VDB_CACHE = new LRUCache<URL, TransformationMetadata>(10);
+	private static MetadataStore system;
 	
 	public static TransformationMetadata getVDBMetadata(String vdbFile) {
 		try {
@@ -58,10 +59,12 @@ public class VDBMetadataFactory {
 		}
     }
 	
-	public static MetadataStore getSystemVDBMetadataStore() {
+	public static MetadataStore getSystem() {
 		try {
-			IndexMetadataFactory imf = loadMetadata(Thread.currentThread().getContextClassLoader().getResource(CoreConstants.SYSTEM_VDB));
-			return imf.getMetadataStore();
+			if (system == null) {
+				system = loadMetadata(Thread.currentThread().getContextClassLoader().getResource(CoreConstants.SYSTEM_VDB)).getMetadataStore(null);
+			}
+			return system;
 		} catch (Exception e) {
 			throw new TeiidRuntimeException("System VDB not found");
 		}
@@ -80,8 +83,8 @@ public class VDBMetadataFactory {
 			if (udfFile != null) {
 				methods = FunctionMetadataReader.loadFunctionMethods(udfFile.openStream());
 			}
-			MetadataStore system = loadMetadata(Thread.currentThread().getContextClassLoader().getResource(CoreConstants.SYSTEM_VDB)).getMetadataStore();
-			vdbmetadata = new TransformationMetadata(null, new CompositeMetadataStore(Arrays.asList(system, imf.getMetadataStore())), imf.getEntriesPlusVisibilities(), methods); 
+			
+			vdbmetadata = new TransformationMetadata(null, new CompositeMetadataStore(Arrays.asList(getSystem(), imf.getMetadataStore(getSystem().getDatatypes()))), imf.getEntriesPlusVisibilities(), methods); 
 			VDB_CACHE.put(vdbURL, vdbmetadata);
 			return vdbmetadata;
 		} catch (URISyntaxException e) {
