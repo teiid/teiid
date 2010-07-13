@@ -146,13 +146,13 @@ public class TestThreadReuseExecutor {
     		public void run() {
     			result.add("hello"); //$NON-NLS-1$
     			try {
-					Thread.sleep(75);
+					Thread.sleep(70);
 				} catch (InterruptedException e) {
 					throw new RuntimeException(e);
 				}
     		}
     	}, 0, 30, TimeUnit.MILLISECONDS);
-    	Thread.sleep(140);
+    	Thread.sleep(120);
     	future.cancel(true);
     	assertEquals(2, result.size());
     }
@@ -201,6 +201,7 @@ public class TestThreadReuseExecutor {
     			return false;
     		}
 		}, 1);
+    	Thread.sleep(20); //ensure a later timestamp
     	FutureWork<Boolean> work4 = new FutureWork<Boolean>(new Callable<Boolean>() {
     		public Boolean call() throws Exception {
     			order.add(4);
