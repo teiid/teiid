@@ -25,6 +25,9 @@ package org.teiid.query.function.metadata;
 import java.io.Serializable;
 import java.util.Arrays;
 
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+
 import org.teiid.core.util.HashCodeUtil;
 
 
@@ -53,6 +56,10 @@ import org.teiid.core.util.HashCodeUtil;
  * @see FunctionCategoryConstants
  */
 public class FunctionMethod implements Serializable {
+	
+	private static final String NOT_ALLOWED = "NOT_ALLOWED"; //$NON-NLS-1$
+	private static final String ALLOWED = "ALLOWED"; //$NON-NLS-1$
+	private static final String REQUIRED = "REQUIRED"; //$NON-NLS-1$
 
     public static final int CAN_PUSHDOWN = 0;
     public static final int CANNOT_PUSHDOWN = 1;
@@ -188,6 +195,7 @@ public class FunctionMethod implements Serializable {
      * Return name of method
      * @return Name
      */
+    @XmlAttribute
     public String getName() {
         return this.name;
     }
@@ -204,6 +212,7 @@ public class FunctionMethod implements Serializable {
      * Get description of method
      * @return Description
      */
+    @XmlAttribute
     public String getDescription() { 
         return this.description;
     }        
@@ -221,6 +230,7 @@ public class FunctionMethod implements Serializable {
      * @return Category
      * @see FunctionCategoryConstants
      */
+    @XmlAttribute
     public String getCategory() { 
         return this.category;
     }        
@@ -250,10 +260,26 @@ public class FunctionMethod implements Serializable {
         this.pushdown = pushdown;
     }
     
+    @XmlAttribute
+    public void setPushDown(String pushdown) {
+    	if (pushdown != null) {
+			if (pushdown.equals(REQUIRED)) {
+				this.pushdown = FunctionMethod.MUST_PUSHDOWN;
+			} else if (pushdown.equals(ALLOWED)) {
+				this.pushdown = FunctionMethod.CAN_PUSHDOWN;
+			} else if (pushdown.equals(NOT_ALLOWED)) {
+				this.pushdown = FunctionMethod.CANNOT_PUSHDOWN;
+			}
+		} else {
+			this.pushdown = FunctionMethod.CAN_PUSHDOWN;
+		}
+    }
+    
     /**
      * Get invocation class name
      * @return Invocation class name
      */
+    @XmlAttribute
     public String getInvocationClass() { 
         return this.invocationClass;
     }        
@@ -270,6 +296,7 @@ public class FunctionMethod implements Serializable {
      * Get invocation method name
      * @return Invocation method name
      */
+    @XmlAttribute
     public String getInvocationMethod() { 
         return this.invocationMethod;
     }        
@@ -297,6 +324,7 @@ public class FunctionMethod implements Serializable {
      * Get input parameters
      * @return Array of input parameters, may be null if 0 parameters
      */
+    @XmlElement
     public FunctionParameter[] getInputParameters() { 
         return this.inputParameters;
     }
@@ -313,6 +341,7 @@ public class FunctionMethod implements Serializable {
      * Get ouput parameter.
      * @return Output parameter or return argument
      */
+    @XmlElement(name="returnParameter")
     public FunctionParameter getOutputParameter() { 
         return this.outputParameter;
     }
@@ -321,7 +350,10 @@ public class FunctionMethod implements Serializable {
      * Set ouput parameter.
      * @param param Output Parameter
      */
-    public void setOutputParameter(FunctionParameter param) { 
+    public void setOutputParameter(FunctionParameter param) {
+    	if (param != null) {
+    		param.setName(FunctionParameter.OUTPUT_PARAMETER_NAME);
+    	}
         this.outputParameter = param;
     }
     
@@ -464,7 +496,12 @@ public class FunctionMethod implements Serializable {
     public int getDeterministic() {
         return this.deterministic;
     }
-
+    
+    @XmlAttribute(name="deterministic")
+    public void setDeterministicBoolean(boolean deterministic) {
+    	this.deterministic = deterministic ? FunctionMethod.DETERMINISTIC : FunctionMethod.NONDETERMINISTIC;
+    }
+    
     public void setDeterministic(int deterministic) {
         this.deterministic = deterministic;
     }

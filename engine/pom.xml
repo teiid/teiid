@@ -78,11 +78,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>jdom</groupId>
-			<artifactId>jdom</artifactId>
-		</dependency>
-
-		<dependency>
 			<groupId>net.sourceforge.saxon</groupId>
 			<artifactId>saxon</artifactId>
 		</dependency>

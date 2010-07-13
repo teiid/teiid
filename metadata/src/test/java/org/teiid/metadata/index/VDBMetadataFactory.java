@@ -31,6 +31,8 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 
+import javax.xml.bind.JAXBException;
+
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.FileUtils;
@@ -83,6 +85,8 @@ public class VDBMetadataFactory {
 			VDB_CACHE.put(vdbURL, vdbmetadata);
 			return vdbmetadata;
 		} catch (URISyntaxException e) {
+			throw new IOException(e);
+		} catch (JAXBException e) {
 			throw new IOException(e);
 		}
     }

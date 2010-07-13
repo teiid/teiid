@@ -22,21 +22,27 @@
 
 package org.teiid.query.mapping.xml;
 
-import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.JDOMException;
-import org.jdom.input.SAXBuilder;
-import org.teiid.internal.core.xml.SAXBuilderHelper;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.teiid.query.QueryPlugin;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 
 /**
@@ -62,26 +68,23 @@ public class MappingLoader {
      */
     public MappingDocument loadDocument(InputStream stream) throws MappingException {
         try {
-            SAXBuilder builder = SAXBuilderHelper.createSAXBuilder( false );   // Do not validate XML
-            Document doc = builder.build(stream);
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            dbf.setValidating(false);
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            Document doc = db.parse(stream);
             return loadContents(doc);
-        } catch (JDOMException e) {
-            throw new MappingException(e);
         } catch (IOException e) {
             throw new MappingException(e);
-        }
+        } catch (ParserConfigurationException e) {
+        	throw new MappingException(e);
+		} catch (SAXException e) {
+			throw new MappingException(e);
+		}
     }
     
-    public MappingDocument loadDocument(String fileName) throws MappingException {
-        try {
-            SAXBuilder builder = SAXBuilderHelper.createSAXBuilder( false );   // Do not validate XML
-            Document doc = builder.build(new File(fileName) );
-            return loadContents(doc);
-        } catch (JDOMException e) {
-            throw new MappingException(e);
-        } catch (IOException e) {
-            throw new MappingException(e);
-        }
+    public MappingDocument loadDocument(String fileName) throws MappingException, FileNotFoundException {
+    	FileInputStream fis = new FileInputStream(fileName);
+    	return loadDocument(fis);
     }    
 
     /**
@@ -90,10 +93,10 @@ public class MappingLoader {
     MappingDocument loadContents(Document document) throws MappingException {
         MappingDocument doc = new MappingDocument(false);
         
-        loadDocumentProperties(doc, document.getRootElement());
+        loadDocumentProperties(doc, document.getDocumentElement());
         
         // now load all the children
-        Collection mappingChildren = document.getRootElement().getChildren(MappingNodeConstants.Tags.MAPPING_NODE_NAME); 
+        Collection mappingChildren = getChildren(document.getDocumentElement(), MappingNodeConstants.Tags.MAPPING_NODE_NAME); 
         doc = (MappingDocument)recursiveLoadContents(mappingChildren, doc);
         return doc;
     }
@@ -107,10 +110,33 @@ public class MappingLoader {
 
             node = processMappingNode(elem, parent);
 
-            Collection childrenMappingNodes = elem.getChildren(MappingNodeConstants.Tags.MAPPING_NODE_NAME);
+            Collection childrenMappingNodes = getChildren(elem, MappingNodeConstants.Tags.MAPPING_NODE_NAME);
             recursiveLoadContents(childrenMappingNodes, node);
         }
         return parent;
+    }
+    
+    public Collection<Element> getChildren(Element elem, String name) {
+    	NodeList children = elem.getChildNodes();
+    	LinkedList<Element> results = new LinkedList<Element>();
+    	for (int i = 0; i < children.getLength(); i++) {
+    		Node node = children.item(i);
+    		if (node instanceof Element && node.getNodeName().equals(name)) {
+    			results.add((Element)node);
+    		}
+    	}
+    	return results;
+    }
+    
+    public Element getChild(Element elem, String name) {
+    	NodeList children = elem.getChildNodes();
+    	for (int i = 0; i < children.getLength(); i++) {
+    		Node node = children.item(i);
+    		if (node instanceof Element && node.getNodeName().equals(name)) {
+    			return (Element)node;
+    		}
+    	}
+    	return null;
     }
 
     /**
@@ -379,63 +405,65 @@ public class MappingLoader {
      */
     private Namespace[] getNamespaceDeclarations(Element element) {
         ArrayList namespaces = new ArrayList();
-        Iterator elements = this.getElements(element, MappingNodeConstants.Tags.NAMESPACE_DECLARATION).iterator();
+        Iterator elements = getChildren(element, MappingNodeConstants.Tags.NAMESPACE_DECLARATION).iterator();
         while (elements.hasNext()){
             Element namespace = (Element)elements.next();
             Element prefixEl = getElement(namespace, MappingNodeConstants.Tags.NAMESPACE_DECLARATION_PREFIX);
             Element uriEl = getElement(namespace, MappingNodeConstants.Tags.NAMESPACE_DECLARATION_URI);
-            String prefix = (prefixEl != null ? prefixEl.getTextTrim() : MappingNodeConstants.DEFAULT_NAMESPACE_PREFIX);
-            String uri = uriEl.getTextTrim();
+            String prefix = (prefixEl != null ? getTextTrim(prefixEl) : MappingNodeConstants.DEFAULT_NAMESPACE_PREFIX);
+            String uri = getTextTrim(uriEl);
             namespaces.add(new Namespace(prefix, uri));
         }
         return (Namespace[])namespaces.toArray(new Namespace[namespaces.size()]);
+    }
+    
+    static String getTextTrim(Element element) {
+    	if (element == null) {
+    		return null;
+    	}
+    	String result = element.getTextContent();
+    	if (result != null) {
+    		return result.trim();
+    	}
+    	return result;
     }
 
     /**
      * Get a specific child element of an element.
      */
     Element getElement( Element element, String childName ) {
-        return element.getChild(childName);
+        return getChild(element, childName);
     }
 
     String getElementValue( Element element, String childName ) {
-        Element child = element.getChild(childName);
-        if (child != null) {
-            return child.getTextTrim();
-        }
-        return null;
+        Element child = getChild(element, childName);
+        return getTextTrim(child);
     }
     
     String getElementValue( Element element, String childName , String defalt) {
-        Element child = element.getChild(childName);
-        if (child != null) {
-            return child.getTextTrim();
+        Element child = getChild(element, childName);
+        String result = getTextTrim(child);
+        if (result == null) {
+        	return defalt;
         }
-        return defalt;
+        return result;
     }    
     
     int getIntElementValue( Element element, String childName , int defalt) {
-        Element child = element.getChild(childName);
+        Element child = getChild(element, childName);
         if (child != null) {
-            return Integer.valueOf(child.getTextTrim()).intValue();
+            return Integer.valueOf(getTextTrim(child)).intValue();
         }
         return defalt;
     } 
     
     boolean getBooleanElementValue( Element element, String childName , boolean defalt) {
-        Element child = element.getChild(childName);
+        Element child = getChild(element, childName);
         if (child != null) {
-            return Boolean.valueOf(child.getTextTrim()).booleanValue();
+            return Boolean.valueOf(getTextTrim(child)).booleanValue();
         }
         return defalt;
     } 
-    
-    /**
-     * Get Collection of specifically-named child element of an element.
-     */
-    Collection getElements( Element element, String childName ) {
-        return element.getChildren(childName);
-    }
     
     String getName(Element element) {
         return getElementValue(element, MappingNodeConstants.Tags.NAME);
@@ -531,10 +559,10 @@ public class MappingLoader {
 
     List getStagingTableNames(Element element) { 
         ArrayList cacheGroups = new ArrayList();
-        Collection tempGroupElements = getElements(element, MappingNodeConstants.Tags.TEMP_GROUP_NAME);
+        Collection tempGroupElements = getChildren(element, MappingNodeConstants.Tags.TEMP_GROUP_NAME);
         for (Iterator i = tempGroupElements.iterator(); i.hasNext();) {
             Element tempGroup = (Element)i.next();
-            cacheGroups.add(tempGroup.getTextTrim());            
+            cacheGroups.add(getTextTrim(tempGroup));            
         }
         return cacheGroups;
     }

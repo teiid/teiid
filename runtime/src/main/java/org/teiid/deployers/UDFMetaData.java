@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
+import javax.xml.bind.JAXBException;
+
 import org.jboss.managed.api.annotation.ManagementObject;
 import org.jboss.virtual.VirtualFile;
 import org.teiid.query.function.metadata.FunctionMetadataReader;
@@ -44,7 +46,7 @@ public class UDFMetaData {
 	}
 	
 	
-	void buildFunctionModelFile(String name) throws IOException {
+	void buildFunctionModelFile(String name) throws IOException, JAXBException {
 		VirtualFile file = this.files.get(name);
 		if (file != null) {
 			this.methods.addAll(FunctionMetadataReader.loadFunctionMethods(file.openStream()));

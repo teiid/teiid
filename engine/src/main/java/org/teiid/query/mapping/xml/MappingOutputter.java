@@ -30,11 +30,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.Namespace;
-import org.jdom.output.XMLOutputter;
-import org.teiid.internal.core.xml.JdomHelper;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
+
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.util.ErrorMessageKeys;
 
@@ -49,43 +48,36 @@ import org.teiid.query.util.ErrorMessageKeys;
  */
 public class MappingOutputter {
 
-    private static final String NS_NAME                 = null;
-    private static final String NS_URL                  = null;
     private static final String ELEM_ROOT               = MappingNodeConstants.Tags.MAPPING_ROOT_NAME;
     private static final String ELEM_NODE               = MappingNodeConstants.Tags.MAPPING_NODE_NAME;
-
-    /** The namespace for the XML mapping document. */
-    private Namespace namespace = Namespace.getNamespace( NS_NAME, NS_URL );
+    
+    XMLStreamWriter writer;
 
     /**
-     * <p>Ouput the current JDOM <code>Document</code> to the output stream.</p>
-     *
      * @param stream The output stream
      *
      * @throws IOException if there are problems writing to the file.
      */
     public void write(MappingDocument doc, PrintWriter stream) throws IOException {
-        write(doc, stream,false,false);
+        try {
+        	XMLOutputFactory xof = XMLOutputFactory.newInstance();
+        	writer = xof.createXMLStreamWriter(stream);
+        	writer.writeStartDocument("UTF-8", "1.0"); //$NON-NLS-1$ //$NON-NLS-2$
+        	writer.writeStartElement(ELEM_ROOT);
+        	writeElement(MappingNodeConstants.Tags.DOCUMENT_ENCODING, doc.getDocumentEncoding());
+        	writeElement(MappingNodeConstants.Tags.FORMATTED_DOCUMENT, Boolean.toString(doc.isFormatted()));
+        	loadNode(doc.getRootNode());
+        	writer.writeEndElement();
+        	writer.writeEndDocument();
+		} catch (XMLStreamException e) {
+			throw new IOException(e);
+		}
     }
-
-    /**
-     * <p>Ouput the current JDOM <code>Document</code> to the output stream.</p>
-     *
-     * @param stream The output stream
-     * @param newlines true if the output should contain newline characters, or false otherwise
-     * @param indent true if the output should be indented, or false otherwise.
-     *
-     * @throws IOException if there are problems writing to the file.
-     */
-    public void write(MappingDocument doc, PrintWriter stream, final boolean newlines, final boolean indent ) 
-        throws IOException {
-        
-        String indentString = ""; //$NON-NLS-1$
-        if (indent) {
-            indentString = "    "; //$NON-NLS-1$
-        }
-        XMLOutputter outputter = new XMLOutputter(JdomHelper.getFormat(indentString, newlines));
-        outputter.output( loadDocument(doc), stream );
+    
+    void writeElement(String name, String content) throws XMLStreamException {
+    	writer.writeStartElement(name);
+    	writer.writeCharacters(content);
+    	writer.writeEndElement();
     }
 
     // =========================================================================
@@ -94,112 +86,76 @@ public class MappingOutputter {
 
     /**
      * <p>Load XML document from domain object. </p>
+     * @throws XMLStreamException 
      */
-     Document loadDocument(MappingDocument mappingDoc) {
-        Document xmlDoc = new Document(new Element(ELEM_ROOT, namespace));
-        setDocumentProperties(mappingDoc, xmlDoc.getRootElement());
-        
-        loadNode(mappingDoc.getRootNode(), xmlDoc.getRootElement());
-        return xmlDoc;
-     }
-
-     /**
-      * Set the document spefic properties
-      */
-     void setDocumentProperties(MappingDocument mappingDoc, Element rootElement) {
-         rootElement.addContent(new Element(MappingNodeConstants.Tags.DOCUMENT_ENCODING).setText(mappingDoc.getDocumentEncoding()));
-         rootElement.addContent(new Element(MappingNodeConstants.Tags.FORMATTED_DOCUMENT).setText(Boolean.toString(mappingDoc.isFormatted())));
-     }
-     
-    /**
-     * <p>Load XML document from domain object. </p>
-     */
-    void loadNode( MappingNode node, Element parentElement ) {
-
-        Element element = processNode( node, parentElement );
-
-        Iterator children = node.getChildren().iterator();
-        while ( children.hasNext() ) {
-            MappingNode child = (MappingNode)children.next();
-            loadNode( child, element );
-        }
-    }
-
-    /**
-     * Process a mapping node, creating an XML element for it.
-     */
-    Element processNode( MappingNode node, Element parentElement ) {
-
-        Element element = new Element( ELEM_NODE, namespace );
-        parentElement.addContent( element );
+    void loadNode( MappingNode node ) throws XMLStreamException {
+    	writer.writeStartElement(ELEM_NODE);
 
         //namespace declarations have to be handled specially
         Properties namespaces = (Properties)node.getProperty(MappingNodeConstants.Properties.NAMESPACE_DECLARATIONS);
         if (namespaces != null){
-            addNamespaceDeclarations(element, namespaces);
+            addNamespaceDeclarations(namespaces);
         }
 
         // Only get the property values actually stored in the MappingNode, not
         // default values also
         Map properties = node.getNodeProperties();
 
-        addElementProperties( element, properties );
+        addElementProperties(properties );
 
-        return element;
+        Iterator children = node.getChildren().iterator();
+        while ( children.hasNext() ) {
+            MappingNode child = (MappingNode)children.next();
+            loadNode( child );
+        }
+        writer.writeEndElement();
     }
 
-    private void addNamespaceDeclarations(Element element, Properties namespaces){
+    private void addNamespaceDeclarations(Properties namespaces) throws XMLStreamException{
         Enumeration e = namespaces.propertyNames();
         while (e.hasMoreElements()){
             String prefix = (String)e.nextElement();
             String uri = namespaces.getProperty(prefix);
-            Element namespaceDeclaration = new Element(MappingNodeConstants.Tags.NAMESPACE_DECLARATION, namespace);
+            writer.writeStartElement(MappingNodeConstants.Tags.NAMESPACE_DECLARATION);
             if (!prefix.equals(MappingNodeConstants.DEFAULT_NAMESPACE_PREFIX)){
-                namespaceDeclaration.addContent( new Element(MappingNodeConstants.Tags.NAMESPACE_DECLARATION_PREFIX).setText(prefix) );
+            	writeElement(MappingNodeConstants.Tags.NAMESPACE_DECLARATION_PREFIX, prefix);
             }
-            namespaceDeclaration.addContent( new Element(MappingNodeConstants.Tags.NAMESPACE_DECLARATION_URI).setText(uri) );
-            element.addContent( namespaceDeclaration);
-        }
-    }
-
-    /**
-     * Utility to put a property into a map only if the value is not null.
-     */
-    void addProperty( Map map, String name, Object value ) {
-        if ( value != null ) {
-            map.put( name, value );
+            writeElement(MappingNodeConstants.Tags.NAMESPACE_DECLARATION_URI, uri);
+            writer.writeEndElement();
         }
     }
 
     /**
      * Add a set of properties to an XML node.
+     * @throws XMLStreamException 
      */
-    void addElementProperties( Element element, Map properties ) {
+    void addElementProperties(Map properties ) throws XMLStreamException {
         Iterator propNames = MappingNodeConstants.Tags.OUTPUTTER_PROPERTY_TAGS.iterator();
         while ( propNames.hasNext() ) {
             String propName = (String)propNames.next();
             Integer propKey = MappingNodeConstants.getPropertyInteger(propName);
             if ( properties.containsKey(propKey) ) {
                 Object value = properties.get(propKey);
-                addElementProperty( element, propName, value );
+                addElementProperty( propName, value );
             }
         }
     }
 
     /**
      * Add a single property to an XML node.
+     * @throws XMLStreamException 
      */
-    void addElementProperty( Element element, String name, Object value ) {
+    void addElementProperty(String name, Object value ) throws XMLStreamException {
         if ( value == null ) {
             throw new IllegalArgumentException( QueryPlugin.Util.getString(ErrorMessageKeys.MAPPING_0010, name) );
         }
         if (value instanceof Collection){
             Iterator i = ((Collection)value).iterator();
             while (i.hasNext()) {
-                element.addContent( new Element(name,namespace).setText(getXMLText(i.next())));
+            	writeElement(name, getXMLText(i.next()));
 			}
         } else {
-            element.addContent( new Element(name,namespace).setText(getXMLText(value)));
+        	writeElement(name, getXMLText(value));
         }
     }
 

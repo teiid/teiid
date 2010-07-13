@@ -26,13 +26,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.List;
 
+import junit.framework.TestCase;
+
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.function.metadata.FunctionMetadataReader;
 import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.function.metadata.FunctionParameter;
-
-
-import junit.framework.TestCase;
 
 public class TestFunctionMetadataReader extends TestCase {
 

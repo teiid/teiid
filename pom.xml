@@ -355,11 +355,6 @@
       
       <!-- External dependencies -->
 			<dependency>
-				<groupId>jdom</groupId>
-				<artifactId>jdom</artifactId>
-				<version>1.0</version>
-			</dependency>
-			<dependency>
 				<groupId>javax.resource</groupId>
 				<artifactId>connector-api</artifactId>
 				<version>1.5</version>

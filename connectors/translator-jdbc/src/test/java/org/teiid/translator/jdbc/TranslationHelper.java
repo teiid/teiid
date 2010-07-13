@@ -27,6 +27,8 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.util.Collection;
 
+import javax.xml.bind.JAXBException;
+
 import junit.framework.Assert;
 
 import org.mockito.Mockito;
@@ -64,6 +66,8 @@ public class TranslationHelper {
 				Collection <FunctionMethod> methods = FunctionMetadataReader.loadFunctionMethods(TranslationHelper.class.getResource(udf).openStream());
 				util.setUDF(methods);
 			} catch (IOException e) {
+				throw new TeiidRuntimeException("failed to load UDF"); //$NON-NLS-1$
+			} catch (JAXBException e) {
 				throw new TeiidRuntimeException("failed to load UDF"); //$NON-NLS-1$
 			}
     	}

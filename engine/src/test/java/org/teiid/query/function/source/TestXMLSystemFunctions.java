@@ -29,8 +29,6 @@ import java.util.TimeZone;
 
 import net.sf.saxon.trans.XPathException;
 
-import org.jdom.Attribute;
-import org.jdom.Element;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -60,43 +58,6 @@ public class TestXMLSystemFunctions {
         final String xmlContent = getContentOfTestFile(xmlFilePath);
         return XMLSystemFunctions.xpathValue(xmlContent,xpath);
     }
-
-    public void helpCheckElement(final Object jdomNode, final String name, final String prefix, final String namespaceUri,
-                                 final String textContent) {
-        assertTrue("Supplied JDOM node is not an Element", jdomNode instanceof Element); //$NON-NLS-1$
-        final Element element = (Element)jdomNode;
-        assertEquals(name, element.getName());
-        assertEquals(prefix, element.getNamespacePrefix());
-        assertEquals(namespaceUri, element.getNamespaceURI());
-
-        final String actualTextContent = element.getText();
-        if (textContent == null) {
-            assertEquals(0, actualTextContent.length());
-        } else {
-            assertEquals(textContent, actualTextContent);
-        }
-    }
-
-    public void helpCheckElement(final Object jdomNode, final String name, final String prefix, final String namespaceUri) {
-        assertTrue("Supplied JDOM node is not an Element", jdomNode instanceof Element); //$NON-NLS-1$
-        final Element element = (Element)jdomNode;
-        assertEquals(name, element.getName());
-        assertEquals(prefix, element.getNamespacePrefix());
-        assertEquals(namespaceUri, element.getNamespaceURI());
-    }
-
-    public void helpCheckAttribute(final Object jdomNode, final String name,
-                                 final String prefix, final String namespaceUri,
-                                 final String value ) {
-       assertTrue("Supplied JDOM node is not an Attribute",jdomNode instanceof Attribute); //$NON-NLS-1$
-       final Attribute attribute = (Attribute)jdomNode;
-       assertEquals(name,attribute.getName());
-       assertEquals(prefix,attribute.getNamespacePrefix());
-       assertEquals(namespaceUri,attribute.getNamespaceURI());
-       
-       final String actualTextContent = attribute.getValue();
-       assertEquals(value,actualTextContent);
-   }
 
     @Test public void testElement() throws Exception {
         String doc = "<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>"; //$NON-NLS-1$

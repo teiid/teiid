@@ -27,6 +27,7 @@
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <UL>
     <LI><B>SQL Support</B> - added NULLS FIST/LAST handling - including pushdown support and enhanced numeric stat aggregate functions STDDEV_POP, STDDEV_SAMP, VAR_POP, VAR_SAMP.  Added support for the boolean aggregate functions ANY, SOME, EVERY.
+    <LI><B>Parallel Source Queries</B> - reestablished parallel execution of source queries within a query plan along with a prioritized work system to help prevent resource contention.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -71,7 +72,6 @@ See the See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for m
 <h4>From 6.2</h4>
 <ul>
   <li>Start time is now significantly longer due to the container deployment.  However many operations can be performed on configruation files that will trigger a redeployment without the need for a restart.
-  <li>Parallel execution of source queries within a query plan has been temporarily disabled.
   <li>Inversion of parse, format, and convert system functions is not used if it can be narrowing.  In situations where a predicate has the form: parseTime(column, 'format') = {t 'time value'} may lead to reduced performance, since
       the parseTime function cannot be pushed down.  This should be addressed in future releases.   
 </ul>
@@ -99,6 +99,17 @@ Before Salesforce is used in your data integration project, the below issues nee
 <h2><a name="LibraryUpdates">Thirdparty Library Updates</a></h2>
 
 The following components have been updated:
+<h4>From 7.0</h4>
+<ul>
+	<li>JDOM was removed.
+</ul>
+<h4>From 6.2</h4>
+<ul>
+	<li>Netty was upgraded to 3.1.5
+	<li>Saxon was upgraded to 9.1.0.8
+    <li>A 5.1 container's version of Arjuna is newer than what was previously included in Teiid 6.x.
+	<li>Various other dependencies have been removed as they are no longer needed or now provided by the container.
+</ul> 
 
 <h2><a name="Details">Detailed Release Notes</a></h2>
         Detailed Release Notes - Teiid - Version 7.1
