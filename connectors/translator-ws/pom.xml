@@ -8,7 +8,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>translator-ws</artifactId>
     <groupId>org.jboss.teiid.connectors</groupId>
-    <name>Web ervice Translator</name>
+    <name>Web service Translator</name>
     <description>This translator provides access to Web Services.</description>
     <dependencies>
         <dependency>
@@ -24,11 +24,6 @@
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>jdom</groupId>
-            <artifactId>jdom</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>

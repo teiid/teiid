@@ -45,9 +45,6 @@ public class XMLProcessorEnvironment {
     /** XML result documents should be in String form */
     public static final String STRING_RESULT = "String"; //$NON-NLS-1$
 
-    /** XML result documents should be in JDOM document form */
-    public static final String JDOM_DOCUMENT_RESULT = "JDOM Document"; //$NON-NLS-1$
-    
     /* Stack <ProgramState> */
     private LinkedList<ProgramState> programStack = new LinkedList<ProgramState>();
     
