@@ -248,22 +248,8 @@ public class TestCaseExpression extends TestCase {
             helpTestWhenExpressions(caseExpr, 4);
             helpTestThenExpressions(caseExpr, 4);
         }
-        try {
-            caseExpr.setWhen(TestSearchedCaseExpression.getWhenCriteria(3), getThenExpressions(3));
-            fail("Setting WHEN non Expression types should have failed."); //$NON-NLS-1$
-        } catch (IllegalArgumentException e) {
-            // There should be no side-effects of an illegal argument
-            helpTestWhenExpressions(caseExpr, 4);
-            helpTestThenExpressions(caseExpr, 4);
-        }
-        try {
-            caseExpr.setWhen(getWhenExpressions(3), TestSearchedCaseExpression.getWhenCriteria(3));
-            fail("Setting THEN non Expression types should have failed."); //$NON-NLS-1$
-        } catch (IllegalArgumentException e) {
-            // There should be no side-effects of an illegal argument
-            helpTestWhenExpressions(caseExpr, 4);
-            helpTestThenExpressions(caseExpr, 4);
-        }
+        caseExpr.setWhen(TestSearchedCaseExpression.getWhenCriteria(3), getThenExpressions(3));
+        caseExpr.setWhen(getWhenExpressions(3), TestSearchedCaseExpression.getWhenCriteria(3));
         ArrayList whens = new ArrayList();
         whens.add(new Constant("abc")); //$NON-NLS-1$
         whens.add(new Constant("xyz")); //$NON-NLS-1$

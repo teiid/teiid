@@ -48,6 +48,7 @@ import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.BetweenCriteria;
 import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.ExpressionCriteria;
 import org.teiid.query.sql.lang.GroupContext;
 import org.teiid.query.sql.lang.IsNullCriteria;
 import org.teiid.query.sql.lang.MatchCriteria;
@@ -360,6 +361,15 @@ public class ResolverVisitor extends LanguageVisitor {
 			}
 		} catch (QueryResolverException e) {
 			handleException(new QueryResolverException(e, QueryPlugin.Util.getString("XMLQuery.resolvingError", obj))); //$NON-NLS-1$
+		}
+    }
+    
+    @Override
+    public void visit(ExpressionCriteria obj) {
+		try {
+			obj.setExpression(ResolverUtil.convertExpression(obj.getExpression(), DataTypeManager.DefaultDataTypes.BOOLEAN, metadata));
+		} catch (QueryResolverException e) {
+			handleException(e);
 		}
     }
 

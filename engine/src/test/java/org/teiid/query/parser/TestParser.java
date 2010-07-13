@@ -50,6 +50,7 @@ import org.teiid.query.sql.lang.Delete;
 import org.teiid.query.sql.lang.Drop;
 import org.teiid.query.sql.lang.DynamicCommand;
 import org.teiid.query.sql.lang.ExistsCriteria;
+import org.teiid.query.sql.lang.ExpressionCriteria;
 import org.teiid.query.sql.lang.From;
 import org.teiid.query.sql.lang.FromClause;
 import org.teiid.query.sql.lang.GroupBy;
@@ -2852,8 +2853,10 @@ public class TestParser {
 	}
 
 	/** SELECT a or b from g */
-	@Test public void testFailsOrInSelect(){
-		helpException("SELECT a or b from g");		 //$NON-NLS-1$
+	@Test public void testOrInSelect(){
+		Query query = new Query();
+		query.setSelect(new Select(Arrays.asList(new ExpressionSymbol("foo", new CompoundCriteria(CompoundCriteria.OR, Arrays.asList(new ExpressionCriteria(new ElementSymbol("a")), new ExpressionCriteria(new ElementSymbol("b")))))))); 
+		helpTest("select a or b", "SELECT (a) OR (b)", query);
 	}
 	
 	/** SELECT a FROM g WHERE a LIKE x*/
@@ -6405,8 +6408,8 @@ public class TestParser {
         parameter.setName("param1"); //$NON-NLS-1$
         parameter.setParameterType(ParameterInfo.IN);
         storedQuery.setParameter(parameter);
-        helpTest("Exec proc1(param1 = 'paramValue1')", "EXEC proc1(param1 = 'paramValue1')", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
-        helpTest("execute proc1(param1 = 'paramValue1')", "EXEC proc1(param1 = 'paramValue1')", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest("Exec proc1(param1 = 'paramValue1')", "EXEC proc1(param1 => 'paramValue1')", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest("execute proc1(param1 = 'paramValue1')", "EXEC proc1(param1 => 'paramValue1')", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testCase3281NamedVariables() {
@@ -6421,19 +6424,17 @@ public class TestParser {
         param2.setName("param2"); //$NON-NLS-1$
         param2.setParameterType(ParameterInfo.IN);
         storedQuery.setParameter(param2);
-        helpTest("Exec proc1(param1 = 'paramValue1', param2 = 'paramValue2')", "EXEC proc1(param1 = 'paramValue1', param2 = 'paramValue2')", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
-        helpTest("execute proc1(param1 = 'paramValue1', param2 = 'paramValue2')", "EXEC proc1(param1 = 'paramValue1', param2 = 'paramValue2')", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest("Exec proc1(param1 = 'paramValue1', param2 = 'paramValue2')", "EXEC proc1(param1 => 'paramValue1', param2 => 'paramValue2')", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest("execute proc1(param1 = 'paramValue1', param2 = 'paramValue2')", "EXEC proc1(param1 => 'paramValue1', param2 => 'paramValue2')", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testCase3281QuotedNamedVariableFails2() {
-        try {
-            QueryParser.getQueryParser().parseCommand("Exec proc1('param1' = 'paramValue1')"); //$NON-NLS-1$
-            fail("Named parameter name cannot be quoted"); //$NON-NLS-1$
-        }catch(QueryParserException e) {
-            // this is expected.
-            //e.printStackTrace();
-            //assertEquals("Unable to parse named parameter name: 'param1'", e.getMessage()); //$NON-NLS-1$
-        }
+    	StoredProcedure storedQuery = new StoredProcedure();
+        storedQuery.setProcedureName("proc1"); //$NON-NLS-1$
+        SPParameter param1 = new SPParameter(1, new CompareCriteria(new Constant("a"), CompareCriteria.EQ, new Constant("b"))); //$NON-NLS-1$ 
+        param1.setParameterType(ParameterInfo.IN);
+        storedQuery.setParameter(param1);
+        helpTest("Exec proc1('a' = 'b')", "EXEC proc1(('a' = 'b'))", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /** Test what happens if the name of a parameter is a reserved word.  It must be quoted (double-ticks). */
@@ -6449,8 +6450,8 @@ public class TestParser {
         param2.setName("in2"); //$NON-NLS-1$
         param2.setParameterType(ParameterInfo.IN);
         storedQuery.setParameter(param2);
-        helpTest("Exec proc1(\"in\" = 'paramValue1', in2 = 'paramValue2')", "EXEC proc1(\"in\" = 'paramValue1', in2 = 'paramValue2')", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
-        helpTest("execute proc1(\"in\" = 'paramValue1', in2 = 'paramValue2')", "EXEC proc1(\"in\" = 'paramValue1', in2 = 'paramValue2')", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest("Exec proc1(\"in\" = 'paramValue1', in2 = 'paramValue2')", "EXEC proc1(\"in\" => 'paramValue1', in2 => 'paramValue2')", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest("execute proc1(\"in\" = 'paramValue1', in2 = 'paramValue2')", "EXEC proc1(\"in\" => 'paramValue1', in2 => 'paramValue2')", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
     }    
     
     @Test public void testExceptionMessageWithLocation() {
@@ -6830,6 +6831,16 @@ public class TestParser {
     	f.setExpression(new ElementSymbol("x"));
     	f.setTypeString("CLOB");
     	helpTestExpression("xmlserialize(x as CLOB)", "XMLSERIALIZE(x AS CLOB)", f);
+    }
+    
+    @Test public void testExpressionCriteria() throws Exception {
+    	SearchedCaseExpression sce = new SearchedCaseExpression(Arrays.asList(new ExpressionCriteria(new ElementSymbol("x"))), Arrays.asList(new ElementSymbol("y")));
+    	helpTestExpression("case when x then y end", "CASE WHEN x THEN y END", sce);
+    }
+    
+    @Test public void testExpressionCriteria1() throws Exception {
+    	SearchedCaseExpression sce = new SearchedCaseExpression(Arrays.asList(new NotCriteria(new ExpressionCriteria(new ElementSymbol("x")))), Arrays.asList(new ElementSymbol("y")));
+    	helpTestExpression("case when not x then y end", "CASE WHEN NOT (x) THEN y END", sce);
     }
 
 }

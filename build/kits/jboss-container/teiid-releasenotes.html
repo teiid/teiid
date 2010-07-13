@@ -26,11 +26,21 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <UL>
-    <LI><B>SQL Support</B> - added NULLS FIST/LAST handling - including pushdown support and enhanced numeric stat aggregate functions STDDEV_POP, STDDEV_SAMP, VAR_POP, VAR_SAMP.  Added support for the boolean aggregate functions ANY, SOME, EVERY.
+    <LI><B>SQL Support</B>
+        <ul> 
+           <li>Added NULLS FIST/LAST handling - including pushdown support.  
+           <li>Added enhanced numeric stat aggregate functions STDDEV_POP, STDDEV_SAMP, VAR_POP, VAR_SAMP, with pushdown and aggregate decomposition.  
+           <li>Added support for the boolean aggregate functions ANY, SOME, EVERY.
+           <li>Added support for using boolean value expression as both criteria and expressions, e.g. "... where boolean_value" or "select x = 1 as boolean_value ...".
+           <li>Changed named procedure syntax to accept param=>value, rather than param=value.
+        </ul>
     <LI><B>Parallel Source Queries</B> - reestablished parallel execution of source queries within a query plan along with a prioritized work system to help prevent resource contention.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
+<ul>
+  <li>Support for named parameter syntax using param=value has been deprecated, since it is ambiguous with a comparison predicate boolean value expression.  param<b>=></b>value should be used instead.  
+</ul>
 <h4>from 6.2</h4>
 <ul>
   <li>The connector API has changed substantially.  Custom connectors need to be retargeted to the new Translator API.  See <a href="https://jira.jboss.org/browse/TEIID-1003">TEIID-1003</a> and the <a href="teiid-docs/teiid_developers_guide.pdf">Developer's Guide</a> for more information.
@@ -65,6 +75,10 @@ See the See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for m
 </ul>
 
 <h2><a name="Other">Other Issues</a></h2>
+<ul>
+	<li>For compatability with the 7.0 release if a stored procedure parameter list begins with identifier=, then it will be parsed as a named parameter invocation even if the intent was to use a comparison predicate 
+	as the first parameter value.  The workaround is to use nesting parens, e.g. call proc((identifier=value), ...), which clarifies that this is positional value.  This workaround will not be needed in later releases.  
+</ul>
 <h4>from 7.0</h4>
 <ul>
   <li>Fixed xsd type handling for SQL/XML and XML document models.  xsd:date, xsd:dateTime, and xsd:time types will now all be displayed using the GMT timezone (Z).  SQL types, such as timestamp, used for an XMLTABLE column will now expect their values to be in the form of the corresponding xsd type.

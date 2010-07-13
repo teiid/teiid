@@ -80,6 +80,7 @@ import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Delete;
 import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.ExistsCriteria;
+import org.teiid.query.sql.lang.ExpressionCriteria;
 import org.teiid.query.sql.lang.From;
 import org.teiid.query.sql.lang.FromClause;
 import org.teiid.query.sql.lang.GroupBy;
@@ -1033,6 +1034,8 @@ public class QueryRewriter {
 		    rewriteSubqueryContainer((SubqueryContainer)criteria, true);
         } else if (criteria instanceof DependentSetCriteria) {
             criteria = rewriteDependentSetCriteria((DependentSetCriteria)criteria);
+        } else if (criteria instanceof ExpressionCriteria) {
+        	return new CompareCriteria(((ExpressionCriteria) criteria).getExpression(), CompareCriteria.EQ, new Constant(Boolean.TRUE));
         }
     	
         return evaluateCriteria(criteria);
@@ -1921,6 +1924,8 @@ public class QueryRewriter {
         	} else {
             	expression = rewriteExpressionDirect(((ExpressionSymbol)expression).getExpression());
         	}
+        } else if (expression instanceof Criteria) {
+        	expression = rewriteCriteria((Criteria)expression);
         } else {
         	rewriteExpressions(expression);
         } 

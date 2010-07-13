@@ -95,7 +95,6 @@ import org.teiid.query.sql.proc.HasCriteria;
 import org.teiid.query.sql.proc.IfStatement;
 import org.teiid.query.sql.proc.TranslateCriteria;
 import org.teiid.query.sql.proc.WhileStatement;
-import org.teiid.query.sql.symbol.AbstractCaseExpression;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.DerivedColumn;
@@ -197,8 +196,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
             if(symbol instanceof ExpressionSymbol) {
                 ExpressionSymbol exprSymbol = (ExpressionSymbol) symbol;
                 Expression expr = exprSymbol.getExpression();
-                if(! (expr instanceof Function || expr instanceof AbstractCaseExpression)) {
-                    handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.Expr_in_GROUP_BY_must_be_elem_func_case", expr), expr); //$NON-NLS-1$                        
+                if (!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr).isEmpty() || expr instanceof Constant || expr instanceof Reference) {
+                	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.groupby_subquery", expr), expr); //$NON-NLS-1$
                 }
             }                
 		}

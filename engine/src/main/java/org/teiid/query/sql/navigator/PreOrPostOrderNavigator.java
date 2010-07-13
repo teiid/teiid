@@ -37,6 +37,7 @@ import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.Drop;
 import org.teiid.query.sql.lang.DynamicCommand;
 import org.teiid.query.sql.lang.ExistsCriteria;
+import org.teiid.query.sql.lang.ExpressionCriteria;
 import org.teiid.query.sql.lang.From;
 import org.teiid.query.sql.lang.GroupBy;
 import org.teiid.query.sql.lang.Insert;
@@ -596,6 +597,13 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     
     @Override
     public void visit(XMLParse obj) {
+    	preVisitVisitor(obj);
+    	visitNode(obj.getExpression());
+    	postVisitVisitor(obj);
+    }
+    
+    @Override
+    public void visit(ExpressionCriteria obj) {
     	preVisitVisitor(obj);
     	visitNode(obj.getExpression());
     	postVisitVisitor(obj);

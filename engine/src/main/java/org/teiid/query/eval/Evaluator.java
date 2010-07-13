@@ -77,6 +77,7 @@ import org.teiid.query.sql.lang.CompoundCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.ExistsCriteria;
+import org.teiid.query.sql.lang.ExpressionCriteria;
 import org.teiid.query.sql.lang.IsNullCriteria;
 import org.teiid.query.sql.lang.MatchCriteria;
 import org.teiid.query.sql.lang.NotCriteria;
@@ -220,6 +221,8 @@ public class Evaluator {
             return evaluate((SubqueryCompareCriteria)criteria, tuple);
         } else if(criteria instanceof ExistsCriteria) {
             return Boolean.valueOf(evaluate((ExistsCriteria)criteria, tuple));
+        } else if (criteria instanceof ExpressionCriteria) {
+        	return (Boolean)evaluate(((ExpressionCriteria)criteria).getExpression(), tuple);
 		} else {
             throw new ExpressionEvaluationException(ErrorMessageKeys.PROCESSOR_0010, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0010, criteria));
 		}
@@ -643,6 +646,8 @@ public class Evaluator {
 			   return getContext(ref).getVariableContext().getGlobalValue(ref.getContextSymbol());
 		   }
 		   return internalEvaluate(ref.getExpression(), tuple);
+	   } else if(expression instanceof Criteria) {
+	       return evaluate((Criteria) expression, tuple);
 	   } else if(expression instanceof ScalarSubquery) {
 	       return evaluate((ScalarSubquery) expression, tuple);
 	   } else if (expression instanceof Criteria) {

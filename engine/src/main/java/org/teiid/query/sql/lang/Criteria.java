@@ -29,7 +29,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.teiid.query.sql.LanguageObject;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
@@ -38,7 +39,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  * constraints on the data values to be retrieved for each parameter in the
  * select clause. <p>
  */
-public abstract class Criteria implements LanguageObject {
+public abstract class Criteria implements Expression {
     
     /**
      * Constructs a default instance of this class.
@@ -248,6 +249,16 @@ public abstract class Criteria implements LanguageObject {
         }
         
         return new CompoundCriteria(!dnf?CompoundCriteria.AND:CompoundCriteria.OR, newCrits);
+    }
+    
+    @Override
+    public Class getType() {
+    	return DataTypeManager.DefaultDataClasses.BOOLEAN;
+    }
+    
+    @Override
+    public boolean isResolved() {
+    	return true;
     }
 	
 }  // END CLASS

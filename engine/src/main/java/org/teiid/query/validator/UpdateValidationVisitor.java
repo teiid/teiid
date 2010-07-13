@@ -33,6 +33,7 @@ import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.symbol.*;
+import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.util.ErrorMessageKeys;
 
@@ -144,14 +145,11 @@ public class UpdateValidationVisitor extends AbstractValidationVisitor {
             if(symbol instanceof AliasSymbol) {
                 symbol = ((AliasSymbol)symbol).getSymbol();
             }
-
-            if(symbol instanceof AggregateSymbol) {
+            
+            Expression ex = SymbolMap.getExpression(symbol);
+            
+            if (!(ex instanceof ElementSymbol || ex instanceof Constant)) {
                 handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0007, symbol));
-            } else if(symbol instanceof ExpressionSymbol) {
-                Expression expr = ((ExpressionSymbol)symbol).getExpression();
-                if(expr == null || expr instanceof Function) {
-                    handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0008, symbol));
-                }
             }
     	}
 

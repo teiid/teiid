@@ -1348,7 +1348,7 @@ public class TestSQLStringVisitor extends TestCase {
         SPParameter param = new SPParameter(1, new Reference(0));
         param.setName("p1");//$NON-NLS-1$
         proc.setParameter(param);
-        helpTest(proc, "EXEC myproc(p1 = ?)"); //$NON-NLS-1$
+        helpTest(proc, "EXEC myproc(p1 => ?)"); //$NON-NLS-1$
     }
 
     public void testExecNamedParams() {
@@ -1361,7 +1361,7 @@ public class TestSQLStringVisitor extends TestCase {
         SPParameter param2 = new SPParameter(2, new Reference(0));
         param2.setName("p2");//$NON-NLS-1$
         proc.setParameter(param2);
-        helpTest(proc, "EXEC myproc(p1 = ?, p2 = ?)"); //$NON-NLS-1$
+        helpTest(proc, "EXEC myproc(p1 => ?, p2 => ?)"); //$NON-NLS-1$
     }
     
     /**
@@ -1381,7 +1381,7 @@ public class TestSQLStringVisitor extends TestCase {
         SPParameter param2 = new SPParameter(2, new Reference(0));
         param2.setName("in2");//$NON-NLS-1$
         proc.setParameter(param2);
-        helpTest(proc, "EXEC myproc(\"in\" = ?, in2 = ?)"); //$NON-NLS-1$
+        helpTest(proc, "EXEC myproc(\"in\" => ?, in2 => ?)"); //$NON-NLS-1$
     }    
 
     // Test methods for Update Procedure Language Objects
@@ -1869,7 +1869,7 @@ public class TestSQLStringVisitor extends TestCase {
     
     public void testNullExpressionInNamedParameter() {
         
-        String expected = "EXEC sp1(PARAM = sp1.PARAM)"; //$NON-NLS-1$
+        String expected = "EXEC sp1(PARAM => sp1.PARAM)"; //$NON-NLS-1$
         
         StoredProcedure sp = new StoredProcedure();
         sp.setDisplayNamedParameters(true);

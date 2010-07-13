@@ -449,6 +449,8 @@ public class LanguageBridgeFactory {
             return translate((SearchedCaseExpression)expr);
         } else if (expr instanceof SingleElementSymbol) {
             return translate((SingleElementSymbol)expr);
+        } else if (expr instanceof Criteria) {
+        	return translate((Criteria)expr);
         }
         throw new AssertionError();
     }

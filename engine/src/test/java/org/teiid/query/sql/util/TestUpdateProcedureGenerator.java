@@ -63,6 +63,7 @@ public class TestUpdateProcedureGenerator extends TestCase{
 	        if (expectedProc == null) {
 	        	assertNull(actualProc);
 	        } else {
+	        	assertNotNull(actualProc);
 	        	assertEquals("Didn't get expected generated procedure", expectedProc, actualProc.toString()); //$NON-NLS-1$
 		        QueryParser.getQueryParser().parseCommand(actualProc.toString());
 	        }

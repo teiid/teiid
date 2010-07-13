@@ -26,8 +26,8 @@ to extract row values.  Note that the default invocation binding has been set in
 to HTTP, which is the proper setting for REST.
    
 select t.* from 
-	(call weather.invoke(action='GET', 
-		endpoint=querystring('', '38.99,-77.02 39.70,-104.80 47.6,-122.30' as listLatLon, 
+	(call weather.invoke(action=>'GET', 
+		endpoint=>querystring('', '38.99,-77.02 39.70,-104.80 47.6,-122.30' as listLatLon, 
 			'time-series' as product, '2004-01-01T00:00:00' as "begin", 
 			'2013-04-20T00:00:00' as "end", 'maxt' as maxt, 'mint' as  mint)
 	)) w, 
@@ -41,10 +41,10 @@ the use of the endpoint here with an absolute URL, which will be used instead of
 on the datasource. 
 
 select xmlserialize(document w.result as string) from 
-	(call weather.invoke(action='http://www.weather.gov/forecasts/xml/DWMLgen/wsdl/ndfdXML.wsdl#LatLonListZipCode', 
-		endpoint='http://www.weather.gov/forecasts/xml/SOAP_server/ndfdXMLserver.php',
-		binding='SOAP11',
-		request='
+	(call weather.invoke(action=>'http://www.weather.gov/forecasts/xml/DWMLgen/wsdl/ndfdXML.wsdl#LatLonListZipCode', 
+		endpoint=>'http://www.weather.gov/forecasts/xml/SOAP_server/ndfdXMLserver.php',
+		binding=>'SOAP11',
+		request=>'
 			<ns1:LatLonListZipCode xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
 					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" 
 					xmlns:ns1="http://www.weather.gov/forecasts/xml/DWMLgen/wsdl/ndfdXML.wsdl">

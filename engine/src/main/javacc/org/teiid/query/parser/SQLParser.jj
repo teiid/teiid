@@ -1240,7 +1240,7 @@ StoredProcedure executeNamedParams(ParseInfo info, StoredProcedure storedProcedu
 		storedProcedure.setDisplayNamedParameters(true);
 	}
 	(name=id()
-	 <EQ>
+	 <EQ> [<GT>]
 	 value = expression(info)
 		{
 			parameter = new SPParameter(parameterIndex++, value);
@@ -1251,7 +1251,7 @@ StoredProcedure executeNamedParams(ParseInfo info, StoredProcedure storedProcedu
 		}
 		(	<COMMA>
 		 	name=id()
-	 		<EQ>
+	 		<EQ> [<GT>]
 	 		value = expression(info)
 			{
 				parameter = new SPParameter(parameterIndex++, value);
@@ -2344,56 +2344,43 @@ Criteria notCrit(ParseInfo info) :
 	}
 }
 
-/** 
- * <p>Parses the basic atomic criteria - either a predicate criteria or
- * a criteria wrapped in ( ).</p>
- * @return Parsed primary criteria
+/**
+ * <p>Parse a boolean primary.</p>
+ * @return criteria
  * @throws ParseException if parsing failed
  */
 Criteria booleanPrimary(ParseInfo info) :
 {
+    Expression ex = null;
     Criteria crit = null;
 }
 {
-	( LOOKAHEAD(predicate(info)) 	crit = predicate(info)	|
-	  (<LPAREN> crit=criteria(info) <RPAREN>)
-	)
-
-	{
-		return crit;
-	}
-}
-
-/**
- * <p>Parse a predicate criteria.</p>
- * @return Parsed predicate criteria
- * @throws ParseException if parsing failed
- */
-PredicateCriteria predicate(ParseInfo info) :
-{
-    PredicateCriteria pdCrit = null;
-    Expression ex = null;
-}
-{
     (
-		LOOKAHEAD(2) pdCrit = translateCriteria(info)
+		LOOKAHEAD(2) crit = translateCriteria(info)
 		|
 	    (ex = commonValueExpression(info)
-	     (
-			LOOKAHEAD(2) pdCrit=betweenCrit(info, ex) |
-			LOOKAHEAD(2) pdCrit=matchCrit(info, ex) |
-			pdCrit=setCrit(info, ex) |
-			pdCrit = isNullCrit(info, ex) |
-			LOOKAHEAD(operator() expression(info)) pdCrit=compareCrit(info, ex) |
-			pdCrit=subqueryCompareCriteria(info, ex) 
-	     )
+	     {
+		  	 if (ex instanceof Criteria) {
+		  	 	crit = (Criteria)ex;
+		  	 } else {
+		     	crit = new ExpressionCriteria(ex);
+		     }
+	     }
+	     [(
+			LOOKAHEAD(2) crit=betweenCrit(info, ex) |
+			LOOKAHEAD(2) crit=matchCrit(info, ex) |
+			crit=setCrit(info, ex) |
+			crit=isNullCrit(info, ex) |
+			LOOKAHEAD(operator() (<ANY>|<SOME>|<ALL>) subquery(info)) crit=subqueryCompareCriteria(info, ex) |
+			crit=compareCrit(info, ex)
+	     )]
 	    )
 	    |
-		pdCrit=existsCriteria(info) |
-		pdCrit = hasCriteria() 
+		crit=existsCriteria(info) |
+		crit = hasCriteria() 
     )
 	{
-		return pdCrit;
+		return crit;
 	}
 }
 
@@ -2908,8 +2895,11 @@ Expression expression(ParseInfo info) :
 	Expression expression = null;
 }
 {
-    expression = commonValueExpression(info)
+    expression = criteria(info)
 	{
+		if (expression instanceof ExpressionCriteria) {
+			return ((ExpressionCriteria)expression).getExpression();
+		}
 		return expression;
 	}
 }
@@ -3082,14 +3072,12 @@ Expression valueExpressionPrimary(ParseInfo info) :
 			}
 		)
 		|
-		// Grouped expression
-		LOOKAHEAD(<LPAREN> expression(info))
+		LOOKAHEAD(subquery(info)) subquery = subquery(info)
+		|
 		( <LPAREN> 
  			expression = expression(info)
 		  <RPAREN>
 		)
-		|
-		subquery = subquery(info)
 		|
 		// Searched CASE expressions
 		LOOKAHEAD(2) expression = searchedCaseExpression(info)

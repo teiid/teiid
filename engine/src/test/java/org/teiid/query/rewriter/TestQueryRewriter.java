@@ -2296,5 +2296,9 @@ public class TestQueryRewriter {
     	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
     	helpTestRewriteExpression(original, "'path?%26x=value&y=%20%26%20'", metadata);
     }
+    
+    @Test public void testRewriteExpressionCriteria() throws Exception {
+    	helpTestRewriteCriteria("pm1.g1.e3", "pm1.g1.e3 = true");
+    }
 
 }

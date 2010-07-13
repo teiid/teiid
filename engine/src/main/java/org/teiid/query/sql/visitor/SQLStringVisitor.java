@@ -50,6 +50,7 @@ import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.Drop;
 import org.teiid.query.sql.lang.DynamicCommand;
 import org.teiid.query.sql.lang.ExistsCriteria;
+import org.teiid.query.sql.lang.ExpressionCriteria;
 import org.teiid.query.sql.lang.From;
 import org.teiid.query.sql.lang.FromClause;
 import org.teiid.query.sql.lang.GroupBy;
@@ -989,7 +990,7 @@ public class SQLStringVisitor extends LanguageVisitor {
                 
             	if (obj.displayNamedParameters()) {
             	    parts.add(escapeSinglePart(ElementSymbol.getShortName(param.getParameterSymbol().getOutputName())));
-                    parts.add(" = "); //$NON-NLS-1$
+                    parts.add(" => "); //$NON-NLS-1$
                 }
                 
                 if(param.getExpression() == null) {
@@ -999,7 +1000,14 @@ public class SQLStringVisitor extends LanguageVisitor {
                         parts.add("?"); //$NON-NLS-1$
                     }
                 } else {
+                	boolean addParens = !obj.displayNamedParameters() && param.getExpression() instanceof CompareCriteria;
+                	if (addParens) {
+                		parts.add(Tokens.LPAREN);
+                	}
                     parts.add(registerNode(param.getExpression()));
+                    if (addParens) {
+                		parts.add(Tokens.RPAREN);
+                	}
                 }
                 if(iter.hasNext()) {
                     parts.add(", "); //$NON-NLS-1$
@@ -1844,6 +1852,11 @@ public class SQLStringVisitor extends LanguageVisitor {
     		parts.add(NonReserved.WELLFORMED);
     	}
     	parts.add(Tokens.RPAREN);
+    }
+    
+    @Override
+    public void visit(ExpressionCriteria obj) {
+    	obj.getExpression().acceptVisitor(this);
     }
 
     public static String escapeSinglePart(String part) {

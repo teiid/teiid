@@ -36,6 +36,7 @@ import org.teiid.query.sql.lang.BetweenCriteria;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.DynamicCommand;
+import org.teiid.query.sql.lang.ExpressionCriteria;
 import org.teiid.query.sql.lang.GroupBy;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.IsNullCriteria;
@@ -337,6 +338,11 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     @Override
     public void visit(QueryString obj) {
     	obj.setPath(replaceExpression(obj.getPath()));
+    }
+    
+    @Override
+    public void visit(ExpressionCriteria obj) {
+    	obj.setExpression(replaceExpression(obj.getExpression()));
     }
     
     /**

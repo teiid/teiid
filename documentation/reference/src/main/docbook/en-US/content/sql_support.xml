@@ -311,14 +311,18 @@
   <sect1 id="criteria">
     <title>Criteria</title>
     <itemizedlist>
-      <para>Criteria are of two basic forms:
+      <para>Criteria may be:
       </para>
       <listitem>
         <para>Predicates that evaluate to true or false
         </para>      
       </listitem>
       <listitem>
-        <para>Logical criteria that combine predicates (AND, OR, NOT)
+        <para>Logical criteria that combines criteria (AND, OR, NOT)
+        </para>      
+      </listitem>
+      <listitem>
+        <para>A value expression with type boolean
         </para>      
       </listitem>
     </itemizedlist>
@@ -355,6 +359,10 @@
       </listitem>
       <listitem>
         <para>NOT criteria
+        </para>
+      </listitem>
+      <listitem>
+        <para>expression
         </para>
       </listitem>
       <listitem>
@@ -527,7 +535,7 @@
           </para>
         </listitem>
         <listitem>
-          <para>EXECUTE proc(name1=value1,name4=param4, ...) - named parameter syntax
+          <para>EXECUTE proc(name1=>value1,name4=>param4, ...) - named parameter syntax
           </para>
         </listitem>
       </itemizedlist>
