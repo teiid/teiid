@@ -33,6 +33,7 @@ import org.teiid.runtime.RuntimePlugin;
 
 
 public class VDBStatusChecker {
+	private static final String JAVA_CONTEXT = "java:"; //$NON-NLS-1$
 	private VDBRepository vdbRepository;
 	private ConnectorManagerRepository connectorManagerRepository;
 	
@@ -45,10 +46,16 @@ public class VDBStatusChecker {
 	}
 	
 	public void dataSourceAdded(String dataSourceName) {
+		if (dataSourceName.startsWith(JAVA_CONTEXT)) {
+			dataSourceName = dataSourceName.substring(5);
+		}
 		resourceAdded(dataSourceName, false);
 	}
 	
 	public void dataSourceRemoved(String dataSourceName) {
+		if (dataSourceName.startsWith(JAVA_CONTEXT)) {
+			dataSourceName = dataSourceName.substring(5);
+		}
 		resourceremoved(dataSourceName, false);
 	}	
 	
@@ -129,11 +136,18 @@ public class VDBStatusChecker {
 
 	private String getSourceName(String translatorName, ModelMetaData model, boolean translator) {
 		for (String sourceName:model.getSourceNames()) {
-			if (translator && translatorName.equals(model.getSourceTranslatorName(sourceName))) {
-				return sourceName;
-			}
-			else  if (translatorName.equals(model.getSourceConnectionJndiName(sourceName))) {
-				return sourceName;
+			if (translator) {
+				if (translatorName.equals(model.getSourceTranslatorName(sourceName))) {
+					return sourceName;
+				}
+			} else {
+				String jndiName = model.getSourceConnectionJndiName(sourceName);
+				if (jndiName.startsWith(JAVA_CONTEXT)) {
+					jndiName = jndiName.substring(5);
+				}
+				if (translatorName.equals(jndiName)) {
+					return sourceName;
+				}
 			}
 		}
 		return null;

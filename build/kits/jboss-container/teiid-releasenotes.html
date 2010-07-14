@@ -66,6 +66,10 @@
 <h2><a name="Configuration">Configuration Issues</a></h2>
 
 See the See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
+<h4>from 7.0</h4>
+<ul>
+	<li>Rar file names no longer contain version numbers.  -ds.xml files should be updated from connector-XXX-version.rar to teiid-connector-XXX.rar
+<ul>
 
 <h4>from 6.2</h4>
 <ul>
@@ -76,7 +80,7 @@ See the See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for m
 
 <h2><a name="Other">Other Issues</a></h2>
 <ul>
-	<li>For compatability with the 7.0 release if a stored procedure parameter list begins with identifier=, then it will be parsed as a named parameter invocation even if the intent was to use a comparison predicate 
+	<li>For compatibility with the 7.0 release if a stored procedure parameter list begins with identifier=, then it will be parsed as a named parameter invocation even if the intent was to use a comparison predicate 
 	as the first parameter value.  The workaround is to use nesting parens, e.g. call proc((identifier=value), ...), which clarifies that this is positional value.  This workaround will not be needed in later releases.  
 </ul>
 <h4>from 7.0</h4>

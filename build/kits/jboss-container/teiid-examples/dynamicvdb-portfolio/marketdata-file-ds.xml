@@ -4,7 +4,7 @@
 
    <no-tx-connection-factory>
       <jndi-name>marketdata-file</jndi-name>
-      <rar-name>connector-file-${project.version}.rar</rar-name>
+      <rar-name>teiid-connector-file.rar</rar-name>
       <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>      
       <!--
         All the available properties for this connector are defined inside the "ra.xml" defined inside the rar

@@ -41,7 +41,7 @@
          <parameter class="java.lang.String">connector-ldap</parameter>
          <parameter class="java.lang.String">LDAP Connection</parameter>
       </constructor>
-      <property name="rarName">connector-ldap-${project.version}.rar</property>
+      <property name="rarName">teiid-connector-ldap.rar</property>
    </bean>    
    
    <bean name="connector-salesforce-${project.version}" class="org.teiid.templates.connector.ConnectorDeploymentTemplate">
@@ -56,7 +56,7 @@
          <parameter class="java.lang.String">connector-salesforce</parameter>
          <parameter class="java.lang.String">Salesforce Connection</parameter>
       </constructor>
-      <property name="rarName">connector-salesforce-${project.version}.rar</property>
+      <property name="rarName">teiid-connector-salesforce.rar</property>
    </bean>    
    
    <bean name="connector-file-${project.version}" class="org.teiid.templates.connector.ConnectorDeploymentTemplate">
@@ -71,7 +71,7 @@
          <parameter class="java.lang.String">connector-file</parameter>
          <parameter class="java.lang.String">File Connection</parameter>
       </constructor>
-      <property name="rarName">connector-file-${project.version}.rar</property>
+      <property name="rarName">teiid-connector-file.rar</property>
    </bean>    
    
    <bean name="connector-ws-${project.version}" class="org.teiid.templates.connector.ConnectorDeploymentTemplate">
@@ -86,7 +86,7 @@
          <parameter class="java.lang.String">connector-ws</parameter>
          <parameter class="java.lang.String">WS Connection</parameter>
       </constructor>
-      <property name="rarName">connector-ws-${project.version}.rar</property>
+      <property name="rarName">teiid-connector-ws.rar</property>
    </bean>  
    
 </deployment>

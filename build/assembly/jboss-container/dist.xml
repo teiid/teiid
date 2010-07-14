@@ -136,15 +136,40 @@
         <includeSubModules>true</includeSubModules>
                
         <includes>
+            <include>org.jboss.teiid.connectors:connector-file:rar</include>
+            <include>org.jboss.teiid.connectors:connector-ldap:rar</include>
+            <include>org.jboss.teiid.connectors:connector-salesforce:rar</include>
+            <include>org.jboss.teiid.connectors:connector-ws:rar</include>
+        </includes>
+
+        <binaries>   
+          <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
+          <includeDependencies>true</includeDependencies>
+          <unpack>false</unpack>
+            <dependencySets>
+                <dependencySet>
+                    <useProjectArtifact>true</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>false</useTransitiveDependencies>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+            </dependencySets>          
+          <outputDirectory>deploy/teiid/connectors</outputDirectory>
+          <fileMode>0644</fileMode>
+        </binaries>
+      
+    </moduleSet>
+    
+    <!-- These are built in translators  -->
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+               
+        <includes>
             <include>org.jboss.teiid.connectors:translator-jdbc</include>
             <include>org.jboss.teiid.connectors:translator-loopback</include>
             <include>org.jboss.teiid.connectors:translator-file</include>
-            <include>org.jboss.teiid.connectors:connector-file:rar</include>
             <include>org.jboss.teiid.connectors:translator-ldap</include>
-            <include>org.jboss.teiid.connectors:connector-ldap:rar</include>
             <include>org.jboss.teiid.connectors:translator-salesforce</include>
-            <include>org.jboss.teiid.connectors:connector-salesforce:rar</include>
-            <include>org.jboss.teiid.connectors:connector-ws:rar</include>
             <include>org.jboss.teiid.connectors:translator-ws</include>
         </includes>
 
