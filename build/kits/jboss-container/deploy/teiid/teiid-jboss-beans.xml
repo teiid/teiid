@@ -1,21 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <deployment xmlns="urn:jboss:bean-deployer:2.0">
-
-   <interceptor xmlns="urn:jboss:aop-beans:1.0" name="JndiAspect" class="org.jboss.aop.microcontainer.aspects.jndi.JndiIntroduction">
-      <property name="env">
-           <map class="java.util.Properties" keyClass="java.lang.String" valueClass="java.lang.String">
-              <entry><key>java.naming.factory.initial</key><value>org.jnp.interfaces.NamingContextFactory</value></entry>
-           </map>
-      </property>
-   </interceptor>
-   
-   <introduction xmlns="urn:jboss:aop-beans:1.0" class="@org.jboss.aop.microcontainer.aspects.jndi.JndiBinding">
-      <interfaces>org.jboss.kernel.spi.dependency.KernelControllerContextAware</interfaces>
-   </introduction>
-
-   <bind xmlns="urn:jboss:aop-beans:1.0" pointcut="execution(* $instanceof{org.jboss.kernel.spi.dependency.KernelControllerContextAware}->$implements{org.jboss.kernel.spi.dependency.KernelControllerContextAware}(..))">
-      <interceptor-ref name="JndiAspect"/>
-   </bind>
     
     <!-- Teiid Services -->
     <bean name="SessionService" class="org.teiid.services.SessionServiceImpl">
@@ -63,7 +47,8 @@
     </bean>
     
     <bean name="RuntimeEngineDeployer" class="org.teiid.jboss.deployers.RuntimeEngineDeployer">
-        <annotation>@org.jboss.aop.microcontainer.aspects.jndi.JndiBinding(name="teiid/engine-deployer")</annotation>
+        <property name="jndiName">teiid/engine-deployer</property>
+        <property name="profileService"><inject bean="ProfileService"/></property>
         <property name="jdbcSocketConfiguration"><inject bean="JdbcSocketConfiguration"/></property>
         <property name="adminSocketConfiguration"><inject bean="AdminSocketConfiguration"/></property>
         <property name="workManager"><inject bean="WorkManager"/></property>

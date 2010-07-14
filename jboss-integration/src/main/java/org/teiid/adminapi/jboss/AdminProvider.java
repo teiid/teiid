@@ -45,6 +45,11 @@ import org.jboss.profileservice.spi.ProfileService;
 import org.teiid.adminapi.AdminComponentException;
 
 public class AdminProvider {
+	
+	public static Admin getLocal(final ProfileService profileService) {
+		ProfileConnection pc = new ProfileConnection(profileService);
+		return new Admin(pc.getManagementView(), pc.getDeploymentManager());
+	}
 
 	public static Admin getLocal() throws AdminComponentException {
 		ProfileConnection pc = new ProfileConnection();
@@ -89,9 +94,9 @@ public class AdminProvider {
 	    private String password;
 	    
 	    
-	    public ProfileConnection() throws AdminComponentException {
-	    	this.profileService = connect(null, null, null);
-	    }	    
+	    public ProfileConnection(final ProfileService profileService) {
+	    	this.profileService = profileService;
+	    }	    	        
 	    
 	    public ProfileConnection(String providerURL, String user, String password) throws AdminComponentException {
 	    	this.userName = user;
@@ -113,7 +118,7 @@ public class AdminProvider {
 	        	// local connection
 	        	if (providerURL == null) {
 	                InitialContext ic  = new InitialContext();
-	                return (ProfileService)ic.lookup(PROFILE_SERVICE_JNDI_NAME);	        		
+                	return (ProfileService)ic.lookup(PROFILE_SERVICE_JNDI_NAME);
 	        	}
 	        	
 	        	Properties env = new Properties();

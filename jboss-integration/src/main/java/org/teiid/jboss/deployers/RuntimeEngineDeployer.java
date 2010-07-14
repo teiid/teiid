@@ -30,6 +30,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.resource.spi.XATerminator;
 import javax.resource.spi.work.WorkManager;
 import javax.transaction.TransactionManager;
@@ -42,6 +44,8 @@ import org.jboss.managed.api.annotation.ManagementParameter;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.jboss.managed.api.annotation.ViewUse;
+import org.jboss.profileservice.spi.ProfileService;
+import org.jboss.util.naming.Util;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
@@ -96,6 +100,9 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	private transient ClientServiceRegistryImpl csr = new ClientServiceRegistryImpl();	
 	private transient VDBRepository vdbRepository;
 
+	private transient ProfileService profileService;
+	private transient String jndiName;
+	
     public RuntimeEngineDeployer() {
 		// TODO: this does not belong here
 		LogManager.setLogListener(new Log4jListener());
@@ -136,9 +143,27 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_not_enabled", "admin connections")); //$NON-NLS-1$ //$NON-NLS-2$
     	}
     	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("engine_started", new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
+    	if (jndiName != null) {
+	    	final InitialContext ic ;
+	    	try {
+	    		ic = new InitialContext() ;
+	    		Util.bind(ic, jndiName, this) ;
+	    	} catch (final NamingException ne) {
+	    		// Add jndi_failed to bundle
+	        	LogManager.logError(LogConstants.CTX_RUNTIME, ne, IntegrationPlugin.Util.getString("jndi_failed", new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
+	    	}
+    	}
 	}	
     
     public void stop() {
+    	if (jndiName != null) {
+	    	final InitialContext ic ;
+	    	try {
+	    		ic = new InitialContext() ;
+	    		Util.unbind(ic, jndiName) ;
+	    	} catch (final NamingException ne) {
+	    	}
+    	}
     	
     	try {
 	    	this.dqpCore.stop();
@@ -164,11 +189,15 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		this.dqpCore.start(this);
 		
 		this.logon = new LogonImpl(this.sessionService, "teiid-cluster"); //$NON-NLS-1$
-    	try {
-    		this.admin = AdminProvider.getLocal();
-    	} catch (AdminComponentException e) {
-    		throw new TeiidRuntimeException(e.getCause());
-    	}		        
+		if (profileService != null) {
+			this.admin = AdminProvider.getLocal(profileService);
+		} else {
+			try {
+				this.admin = AdminProvider.getLocal();
+			} catch (AdminComponentException e) {
+				throw new TeiidRuntimeException(e.getCause());
+			}
+		}
 	}    
 	
 	/**
@@ -232,6 +261,14 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	
 	public void setVDBRepository(VDBRepository repo) {
 		this.vdbRepository = repo;
+	}
+	
+	public void setProfileService(final ProfileService profileService) {
+		this.profileService = profileService ;
+	}
+	
+	public void setJndiName(final String jndiName) {
+		this.jndiName = jndiName ;
 	}
 	
 	@Override
