@@ -93,6 +93,9 @@ public class AdminProvider {
 	    private String userName;
 	    private String password;
 	    
+	    public ProfileConnection() throws AdminComponentException {
+	    	this.profileService = connect(null, null, null);
+	    }	
 	    
 	    public ProfileConnection(final ProfileService profileService) {
 	    	this.profileService = profileService;
