@@ -211,6 +211,9 @@ public class RulePlanSorts implements OptimizerRule {
 	}
 
 	private boolean mergeSortWithDupRemoval(PlanNode node) {
+		if (node.getFirstChild() == null) {
+			return false;
+		}
 		switch (node.getFirstChild().getType()) {
 		case NodeConstants.Types.SET_OP:
 			if (node.getFirstChild().getProperty(NodeConstants.Info.SET_OPERATION) == SetQuery.Operation.UNION && !node.getFirstChild().hasBooleanProperty(NodeConstants.Info.USE_ALL)) {

@@ -175,6 +175,16 @@ public class TestTextTable {
 
         process(sql, expected);
     }
+	
+	@Test public void testTextTableGroupBy() throws Exception {
+    	String sql = "select max(x) from texttable('a' || ',' || '1' COLUMNS x string, y integer) x group by y"; //$NON-NLS-1$
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("a"),
+        };    
+
+        process(sql, expected);
+    }
 
     public static void process(String sql, List[] expectedResults) throws Exception {    
     	FakeDataManager dataManager = new FakeDataManager();
