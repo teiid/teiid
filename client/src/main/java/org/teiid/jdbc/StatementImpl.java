@@ -416,7 +416,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         				records.add(row);
         			}
         			createResultSet(records, new String[] {"PLAN_TEXT", "PLAN_XML", "DEBUG_LOG"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        					new String[] {JDBCSQLTypeInfo.STRING, JDBCSQLTypeInfo.XML, JDBCSQLTypeInfo.STRING});
+        					new String[] {JDBCSQLTypeInfo.CLOB, JDBCSQLTypeInfo.XML, JDBCSQLTypeInfo.CLOB});
             		return;
         		}
         		if (show.equalsIgnoreCase("ANNOTATIONS")) { //$NON-NLS-1$

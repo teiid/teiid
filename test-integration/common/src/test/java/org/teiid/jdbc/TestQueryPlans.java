@@ -28,6 +28,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLXML;
 import java.sql.Statement;
+import java.sql.Types;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -69,6 +70,7 @@ public class TestQueryPlans {
 		
 		rs = s.executeQuery("show plan");
 		assertTrue(rs.next());
+		assertEquals(rs.getMetaData().getColumnType(1), Types.CLOB);
 		SQLXML plan = rs.getSQLXML(2);
 		assertTrue(plan.getString().startsWith("<?xml"));
 		assertNull(rs.getObject("DEBUG_LOG"));
