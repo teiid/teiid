@@ -25,11 +25,13 @@ package org.teiid.jdbc;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -51,11 +53,15 @@ import org.teiid.client.ResultsMessage;
 import org.teiid.client.RequestMessage.ResultsMode;
 import org.teiid.client.RequestMessage.ShowPlan;
 import org.teiid.client.metadata.ParameterInfo;
+import org.teiid.client.metadata.ResultsMetadataConstants;
+import org.teiid.client.metadata.ResultsMetadataDefaults;
 import org.teiid.client.plan.Annotation;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.util.SqlUtil;
 
 
@@ -139,7 +145,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     protected Map outParamIndexMap = new HashMap();
     
     private static Pattern SET_STATEMENT = Pattern.compile("\\s*set\\s*(\\w+)\\s*(\\w*)", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    
+    private static Pattern SHOW_STATEMENT = Pattern.compile("\\s*show\\s*(\\w*)", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     /**
      * Factory Constructor 
      * @param driverConnection
@@ -289,7 +295,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
      * throws an exception if it is closed. </p>
      * @throws SQLException if the statement object is closed.
      */
-    protected void checkStatement() throws SQLException {
+    protected void checkStatement() throws TeiidSQLException {
         //Check to see the connection is closed and proceed if it is not
         if ( isClosed ) {
             throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Stmt_closed")); //$NON-NLS-1$
@@ -377,18 +383,71 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 	}
     
     protected void executeSql(String[] commands, boolean isBatchedCommand, ResultsMode resultsMode)
-        throws SQLException, TeiidSQLException {
+        throws SQLException {
         checkStatement();
         resetExecutionState();
         
-        //handle set statement
-        if (commands.length == 1 && resultsMode != ResultsMode.RESULTSET) {
+        if (commands.length == 1) {
         	Matcher match = SET_STATEMENT.matcher(commands[0]);
         	if (match.matches()) {
+        		if (resultsMode == ResultsMode.RESULTSET) {
+        			throw new TeiidSQLException(JDBCPlugin.Util.getString("StatementImpl.set_result_set")); //$NON-NLS-1$
+        		}
         		String key = match.group(1);
         		String value = match.group(2);
         		JDBCURL.addNormalizedProperty(key, value, this.driverConnection.getConnectionProperties());
         		this.updateCounts = new int[] {0};
+        		return;
+        	}
+        	match = SHOW_STATEMENT.matcher(commands[0]);
+        	if (match.matches()) {
+        		if (resultsMode == ResultsMode.UPDATECOUNT) {
+        			throw new TeiidSQLException(JDBCPlugin.Util.getString("StatementImpl.show_update_count")); //$NON-NLS-1$
+        		}
+        		String show = match.group(1);
+        		if (show.equalsIgnoreCase("PLAN")) { //$NON-NLS-1$
+        			List<ArrayList<Object>> records = new ArrayList<ArrayList<Object>>(1);
+        			PlanNode plan = driverConnection.getCurrentPlanDescription();
+        			if (plan != null) {
+        				ArrayList<Object> row = new ArrayList<Object>(3);
+            			row.add(DataTypeTransformer.getClob(plan.toString()));
+        				row.add(new SQLXMLImpl(plan.toXml()));
+        				row.add(DataTypeTransformer.getClob(driverConnection.getDebugLog()));
+        				records.add(row);
+        			}
+        			createResultSet(records, new String[] {"PLAN_TEXT", "PLAN_XML", "DEBUG_LOG"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        					new String[] {JDBCSQLTypeInfo.STRING, JDBCSQLTypeInfo.XML, JDBCSQLTypeInfo.STRING});
+            		return;
+        		}
+        		if (show.equalsIgnoreCase("ANNOTATIONS")) { //$NON-NLS-1$
+        			List<ArrayList<Object>> records = new ArrayList<ArrayList<Object>>(1);
+        			Collection<Annotation> annos = driverConnection.getAnnotations();
+        			for (Annotation annotation : annos) {
+        				ArrayList<Object> row = new ArrayList<Object>(4);
+            			row.add(annotation.getCategory());
+            			row.add(annotation.getPriority().name());
+            			row.add(annotation.getAnnotation());
+            			row.add(annotation.getResolution());
+        				records.add(row);
+        			}
+        			createResultSet(records, new String[] {"CATEGORY", "PRIORITY", "ANNOTATION", "RESOLUTION"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        					new String[] {JDBCSQLTypeInfo.STRING, JDBCSQLTypeInfo.STRING, JDBCSQLTypeInfo.STRING, JDBCSQLTypeInfo.STRING});
+            		return;
+        		}
+        		if (show.equalsIgnoreCase("ALL")) { //$NON-NLS-1$
+        			List<ArrayList<Object>> records = new ArrayList<ArrayList<Object>>(1);
+        			for (String key : driverConnection.getConnectionProperties().stringPropertyNames()) {
+        				ArrayList<Object> row = new ArrayList<Object>(4);
+            			row.add(key);
+            			row.add(driverConnection.getConnectionProperties().get(key));
+        				records.add(row);
+        			}
+        			createResultSet(records, new String[] {"NAME", "VALUE"}, //$NON-NLS-1$ //$NON-NLS-2$
+        					new String[] {JDBCSQLTypeInfo.STRING, JDBCSQLTypeInfo.STRING});
+            		return;
+        		}
+        		List<List<String>> records = Collections.singletonList(Collections.singletonList(driverConnection.getConnectionProperties().getProperty(JDBCURL.getValidKey(show))));
+    			createResultSet(records, new String[] {show}, new String[] {JDBCSQLTypeInfo.STRING});
         		return;
         	}
         }
@@ -913,7 +972,10 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 	protected void setAnalysisInfo(ResultsMessage resultsMsg) {
         this.debugLog = resultsMsg.getDebugLog();
         this.currentPlanDescription = resultsMsg.getPlanDescription();
-        this.annotations = resultsMsg.getAnnotations();            
+        this.annotations = resultsMsg.getAnnotations(); 
+        this.driverConnection.setDebugLog(debugLog);
+        this.driverConnection.setCurrentPlanDescription(currentPlanDescription);
+        this.driverConnection.setAnnotations(annotations);
 	}
     
     Calendar getDefaultCalendar() {
@@ -987,5 +1049,70 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
             throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Invalid_field_size")); //$NON-NLS-1$
         }
 		this.maxFieldSize = max;
+	}
+	
+	ResultSetImpl createResultSet(List records, String[] columnNames, String[] dataTypes) throws SQLException {
+        Map[] metadata = new Map[columnNames.length];
+        for (int i = 0; i < columnNames.length; i++) {
+            metadata[i] = getColumnMetadata(null, columnNames[i], dataTypes[i], ResultsMetadataConstants.NULL_TYPES.UNKNOWN, driverConnection);
+        }
+		return createResultSet(records, metadata);
+	}
+	
+    ResultSetImpl createResultSet(List records, Map[] columnMetadata) throws SQLException {
+        ResultSetMetaData rsmd = new ResultSetMetaDataImpl(new MetadataProvider(columnMetadata));
+
+        return createResultSet(records, rsmd);
+    }
+
+    ResultSetImpl createResultSet(List records, ResultSetMetaData rsmd) throws SQLException {
+    	rsmd.getScale(1); //force the load of the metadata
+        ResultsMessage resultsMsg = createDummyResultsMessage(null, null, records);
+		resultSet = new ResultSetImpl(resultsMsg, this, rsmd, 0);
+		resultSet.setMaxFieldSize(this.maxFieldSize);
+        return resultSet;
+    }
+
+    static ResultsMessage createDummyResultsMessage(String[] columnNames, String[] dataTypes, List records) {
+        ResultsMessage resultsMsg = new ResultsMessage();
+        resultsMsg.setColumnNames(columnNames);
+        resultsMsg.setDataTypes(dataTypes);
+        resultsMsg.setFirstRow(1);
+        resultsMsg.setLastRow(records.size());
+        resultsMsg.setFinalRow(records.size());
+        resultsMsg.setResults((List[])records.toArray(new List[records.size()]));
+        return resultsMsg;
+    }
+    
+    static Map<Integer, Object> getColumnMetadata(String tableName, String columnName, String dataType, Integer nullable, ConnectionImpl driverConnection) throws SQLException {
+        return getColumnMetadata(tableName, columnName, dataType, nullable, ResultsMetadataConstants.SEARCH_TYPES.UNSEARCHABLE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, driverConnection);
+	}
+	
+	static Map<Integer, Object> getColumnMetadata(String tableName, String columnName, String dataType, Integer nullable, Integer searchable, Boolean writable, Boolean signed, Boolean caseSensitive, ConnectionImpl driverConnection) throws SQLException {
+	
+	    // map that would contain metadata details
+	    Map<Integer, Object> metadataMap = new HashMap<Integer, Object>();
+	
+	    /*******************************************************
+	     HardCoding Column metadata details for the given column
+	    ********************************************************/
+	
+	    metadataMap.put(ResultsMetadataConstants.VIRTUAL_DATABASE_NAME, driverConnection.getVDBName());
+	    metadataMap.put(ResultsMetadataConstants.GROUP_NAME, tableName);
+	    metadataMap.put(ResultsMetadataConstants.ELEMENT_NAME, columnName);
+	    metadataMap.put(ResultsMetadataConstants.DATA_TYPE, dataType);
+	    metadataMap.put(ResultsMetadataConstants.PRECISION, ResultsMetadataDefaults.getDefaultPrecision(dataType));
+	    metadataMap.put(ResultsMetadataConstants.RADIX, new Integer(10));
+	    metadataMap.put(ResultsMetadataConstants.SCALE, new Integer(0));
+	    metadataMap.put(ResultsMetadataConstants.AUTO_INCREMENTING, Boolean.FALSE);
+	    metadataMap.put(ResultsMetadataConstants.CASE_SENSITIVE, caseSensitive);
+	    metadataMap.put(ResultsMetadataConstants.NULLABLE, nullable);
+	    metadataMap.put(ResultsMetadataConstants.SEARCHABLE, searchable);
+	    metadataMap.put(ResultsMetadataConstants.SIGNED, signed);
+	    metadataMap.put(ResultsMetadataConstants.WRITABLE, writable);
+	    metadataMap.put(ResultsMetadataConstants.CURRENCY, Boolean.FALSE);
+	    metadataMap.put(ResultsMetadataConstants.DISPLAY_SIZE, ResultsMetadataDefaults.getMaxDisplaySize(dataType));
+	
+	    return metadataMap;
 	}
 }

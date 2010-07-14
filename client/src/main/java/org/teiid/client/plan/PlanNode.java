@@ -40,6 +40,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ExternalizeUtil;
 
 
@@ -168,13 +169,18 @@ public class PlanNode implements Externalizable {
      * document form.
      * @return an XML document of this PlanNode
      */
-    public String toXml() throws JAXBException {
-    	JAXBContext jc = JAXBContext.newInstance(new Class<?>[] {PlanNode.class});
-		Marshaller marshaller = jc.createMarshaller();
-		marshaller.setProperty("jaxb.formatted.output", Boolean.TRUE); //$NON-NLS-1$
-		StringWriter writer = new StringWriter();
-		marshaller.marshal(this, writer);
-		return writer.toString();
+    public String toXml() {
+    	try {
+	    	JAXBContext jc = JAXBContext.newInstance(new Class<?>[] {PlanNode.class});
+			Marshaller marshaller = jc.createMarshaller();
+			marshaller.setProperty("jaxb.formatted.output", Boolean.TRUE); //$NON-NLS-1$
+			StringWriter writer = new StringWriter();
+			marshaller.marshal(this, writer);
+			return writer.toString();
+    	} catch (JAXBException e) {
+    		//shouldn't happen
+    		throw new TeiidRuntimeException(e);
+    	}
     }
     
     @Override

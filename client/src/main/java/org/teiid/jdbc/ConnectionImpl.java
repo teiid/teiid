@@ -27,15 +27,13 @@ import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
+import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
-import java.sql.SQLClientInfoException;
-import java.sql.NClob;
 import java.sql.SQLXML;
-
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
@@ -56,13 +54,15 @@ import java.util.logging.Logger;
 import javax.transaction.xa.Xid;
 
 import org.teiid.client.DQP;
+import org.teiid.client.plan.Annotation;
+import org.teiid.client.plan.PlanNode;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
 import org.teiid.core.util.SqlUtil;
 import org.teiid.net.CommunicationException;
-import org.teiid.net.TeiidURL;
 import org.teiid.net.ServerConnection;
+import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.SocketServerConnection;
 
 
@@ -94,7 +94,7 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
     // collection of all open statements on this connection
     private Collection<StatementImpl> statements = new ArrayList<StatementImpl>();
     // cached DatabaseMetadata
-    private DatabaseMetaData dbmm;
+    private DatabaseMetaDataImpl dbmm;
 
    //Xid for participating in TXN
     private XidImpl transactionXid;
@@ -106,6 +106,13 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
     private DQP dqp;
     protected ServerConnection serverConn;
     private int transactionIsolation = DEFAULT_ISOLATION;
+    
+    //  the last query plan description
+    private PlanNode currentPlanDescription;
+    // the last query debug log
+    private String debugLog;
+    // the last query annotations
+    private Collection<Annotation> annotations;
         
     public ConnectionImpl(ServerConnection serverConn, Properties info, String url) {        
     	this.serverConn = serverConn;
@@ -157,6 +164,30 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
         
         this.disableLocalTransactions = Boolean.valueOf(this.propInfo.getProperty(ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS)).booleanValue();
     }
+    
+    public Collection<Annotation> getAnnotations() {
+		return annotations;
+	}
+    
+    public void setAnnotations(Collection<Annotation> annotations) {
+		this.annotations = annotations;
+	}
+    
+    public String getDebugLog() {
+		return debugLog;
+	}
+    
+    public void setDebugLog(String debugLog) {
+		this.debugLog = debugLog;
+	}
+    
+    public PlanNode getCurrentPlanDescription() {
+		return currentPlanDescription;
+	}
+    
+    public void setCurrentPlanDescription(PlanNode currentPlanDescription) {
+		this.currentPlanDescription = currentPlanDescription;
+	}
     
     protected Properties getConnectionProperties() {
         return this.propInfo;
@@ -458,7 +489,7 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
         return this.serverConn.getLogonResult().getUserName();
     }
     
-    public DatabaseMetaData getMetaData() throws SQLException {
+    public DatabaseMetaDataImpl getMetaData() throws SQLException {
         //Check to see the connection is open
         checkConnection();
         
@@ -613,7 +644,7 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
      * @return a PreparedStatement object
      * @throws SQLException if there is an error creating a prepared statement object
      */
-    public PreparedStatement prepareStatement(String sql) throws SQLException {
+    public PreparedStatementImpl prepareStatement(String sql) throws SQLException {
         return prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
     }
 
@@ -626,7 +657,7 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
      * @param intValue indicating the ResultSet's concurrency
      * @return a PreparedStatement object
      */
-    public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
+    public PreparedStatementImpl prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
         //Check to see the connection is open
         checkConnection();
         

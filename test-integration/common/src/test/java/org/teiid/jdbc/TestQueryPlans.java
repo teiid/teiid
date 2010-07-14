@@ -26,9 +26,11 @@ import static org.junit.Assert.*;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLXML;
 import java.sql.Statement;
 
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
 
@@ -36,13 +38,17 @@ import org.teiid.core.util.UnitTestUtil;
 @SuppressWarnings("nls")
 public class TestQueryPlans {
 
-	private Connection conn;
+	private static Connection conn;
 	
-	@Before public void setUp() throws Exception {
+	@BeforeClass public static void setUp() throws Exception {
     	FakeServer server = new FakeServer();
     	server.deployVDB("test", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb");
     	conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$ //$NON-NLS-2$		
     }
+	
+	@AfterClass public static void tearDown() throws Exception {
+		conn.close();
+	}
 	
 	@Test public void testNoExec() throws Exception {
 		Statement s = conn.createStatement();
@@ -60,13 +66,39 @@ public class TestQueryPlans {
 		ResultSet rs = s.executeQuery("select * from all_tables");
 		assertNotNull(s.unwrap(TeiidStatement.class).getPlanDescription());
 		assertNull(s.unwrap(TeiidStatement.class).getDebugLog());
+		
+		rs = s.executeQuery("show plan");
+		assertTrue(rs.next());
+		SQLXML plan = rs.getSQLXML(2);
+		assertTrue(plan.getString().startsWith("<?xml"));
+		assertNull(rs.getObject("DEBUG_LOG"));
+		assertNotNull(rs.getObject("PLAN_TEXT"));
+		
 		s.execute("SET showplan debug");
 		rs = s.executeQuery("select * from all_tables");
 		assertNotNull(s.unwrap(TeiidStatement.class).getDebugLog());
+		
+		rs = s.executeQuery("show plan");
+		assertTrue(rs.next());
+		assertNotNull(rs.getObject("DEBUG_LOG"));
+		
 		s.execute("SET showplan off");
 		rs = s.executeQuery("select * from all_tables");
 		assertNull(s.unwrap(TeiidStatement.class).getPlanDescription());
 		assertTrue(rs.next());
+	}
+	
+	@Test public void testShow() throws Exception {
+		Statement s = conn.createStatement();
+		ResultSet rs = s.executeQuery("show all");
+		assertTrue(rs.next());
+		assertNotNull(rs.getString("NAME"));
+		
+		s.execute("set showplan on");
+		
+		rs = s.executeQuery("show showplan");
+		rs.next();
+		assertEquals("on", rs.getString(1));
 	}
 	
 }

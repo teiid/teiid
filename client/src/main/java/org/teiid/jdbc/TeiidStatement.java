@@ -40,7 +40,7 @@ public interface TeiidStatement extends java.sql.Statement {
      * Get the execution property value.
      * @param name Execution property name
      * @return Execution property value or null if not set
-     * @deprecated
+     * @deprecated use show statement
      */
     String getExecutionProperty(String name);
 
@@ -48,7 +48,7 @@ public interface TeiidStatement extends java.sql.Statement {
      * Set the execution property value.
      * @param name Execution property name
      * @param value Execution property value 
-     * @deprecated use set property value
+     * @deprecated use set statement
      */
     void setExecutionProperty(String name, String value);
 
@@ -67,6 +67,7 @@ public interface TeiidStatement extends java.sql.Statement {
      * SHOWPLAN DEBUG.  If no debug output was requested, this 
      * method will return null. 
      * @return Debug log or null if no log exists
+     * @deprecated use show statement
      */
     String getDebugLog();
     
@@ -74,6 +75,7 @@ public interface TeiidStatement extends java.sql.Statement {
      * Get collection of annotations from the query planner from
      * the last command executed on the Statement  
      * @return Collection of {@link Annotation}s, may return null
+     * @deprecated use show statement
      */
     Collection<Annotation> getAnnotations();
      

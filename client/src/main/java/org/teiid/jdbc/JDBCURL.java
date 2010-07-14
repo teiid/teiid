@@ -291,7 +291,7 @@ public class JDBCURL {
         target.put(validKey, value);
     }
 
-    private static String getValidKey(String key) {
+    public static String getValidKey(String key) {
         // figure out the valid key based on its case
         for (int i = 0; i < KNOWN_PROPERTIES.length; i++) {
             if (key.equalsIgnoreCase(KNOWN_PROPERTIES[i])) {

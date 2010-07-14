@@ -9,8 +9,8 @@
 	<sect1 id="connecting">
 		<title>Connecting</title>
 		<para>An AdminAPI connection, which is represented by the <code>org.teiid.adminapi.Admin</code> interface, is obtained through the <code>org.teiid.adminapi.AdminFactory.createAdmin</code> methods.  
-		<code>AdminFactory</code> is a singleton, see <code>AdminFactory.getInstance()</code>, so there is no need to create instance.  The <code>Admin</code> instance automatically tests its connection and reconnects to a server in the event of a failure.  The <code>close</code> method should be called to terminate the connection.</para>
-		<para>See your Teiid installation for the appropriate admin port, which by default 31443.</para>
+		<code>AdminFactory</code> is a singleton, see <code>AdminFactory.getInstance()</code>.  The <code>Admin</code> instance automatically tests its connection and reconnects to a server in the event of a failure.  The <code>close</code> method should be called to terminate the connection.</para>
+		<para>See your Teiid installation for the appropriate admin port - the default is 31443.</para>
 	</sect1>
 	<sect1 id="admin_methods">
 		<title>Admin Methods</title>
