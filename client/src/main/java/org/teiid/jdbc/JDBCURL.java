@@ -24,10 +24,14 @@ package org.teiid.jdbc;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.teiid.net.TeiidURL;
 
@@ -43,27 +47,34 @@ public class JDBCURL {
     private static final String UTF_8 = "UTF-8"; //$NON-NLS-1$
     public static final String JDBC_PROTOCOL = "jdbc:teiid:"; //$NON-NLS-1$
     private static final String OLD_JDBC_PROTOCOL = "jdbc:metamatrix:"; //$NON-NLS-1$
+
+    public static final Set<String> EXECUTION_PROPERTIES = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(
+            ExecutionProperties.PROP_TXN_AUTO_WRAP,
+            ExecutionProperties.PROP_PARTIAL_RESULTS_MODE,
+            ExecutionProperties.RESULT_SET_CACHE_MODE,
+            ExecutionProperties.ANSI_QUOTED_IDENTIFIERS,
+            ExecutionProperties.SQL_OPTION_SHOWPLAN,
+            ExecutionProperties.NOEXEC,
+            ExecutionProperties.PROP_FETCH_SIZE,
+            ExecutionProperties.PROP_XML_FORMAT,
+            ExecutionProperties.PROP_XML_VALIDATION,
+            ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS)));
     
-    public static final String[] KNOWN_PROPERTIES = {
-        BaseDataSource.APP_NAME,
-        BaseDataSource.VDB_NAME,
-        BaseDataSource.VERSION,
-        BaseDataSource.VDB_VERSION,
-        BaseDataSource.USER_NAME,
-        BaseDataSource.PASSWORD,
-        ExecutionProperties.PROP_TXN_AUTO_WRAP,
-        ExecutionProperties.PROP_PARTIAL_RESULTS_MODE,
-        ExecutionProperties.RESULT_SET_CACHE_MODE,
-        ExecutionProperties.ANSI_QUOTED_IDENTIFIERS,
-        ExecutionProperties.SQL_OPTION_SHOWPLAN,
-        ExecutionProperties.NOEXEC,
-        ExecutionProperties.PROP_FETCH_SIZE,
-        ExecutionProperties.PROP_XML_FORMAT,
-        ExecutionProperties.PROP_XML_VALIDATION,
-        ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS,
-        TeiidURL.CONNECTION.AUTO_FAILOVER,
-        TeiidURL.CONNECTION.DISCOVERY_STRATEGY
-    };
+    public static final Set<String> KNOWN_PROPERTIES = getKnownProperties();
+    
+    private static Set<String> getKnownProperties() {
+    	Set<String> props = new HashSet<String>(Arrays.asList(
+    	        BaseDataSource.APP_NAME,
+    	        BaseDataSource.VDB_NAME,
+    	        BaseDataSource.VERSION,
+    	        BaseDataSource.VDB_VERSION,
+    	        BaseDataSource.USER_NAME,
+    	        BaseDataSource.PASSWORD,
+    	        TeiidURL.CONNECTION.AUTO_FAILOVER,
+    	        TeiidURL.CONNECTION.DISCOVERY_STRATEGY));
+    	props.addAll(EXECUTION_PROPERTIES);
+    	return Collections.unmodifiableSet(props);
+    }
     
     private String vdbName;
     private String connectionURL;
@@ -292,13 +303,12 @@ public class JDBCURL {
     }
 
     public static String getValidKey(String key) {
-        // figure out the valid key based on its case
-        for (int i = 0; i < KNOWN_PROPERTIES.length; i++) {
-            if (key.equalsIgnoreCase(KNOWN_PROPERTIES[i])) {
-                return KNOWN_PROPERTIES[i];
-            }
+    	for (String prop : KNOWN_PROPERTIES) {
+    		if (prop.equalsIgnoreCase(key)) {
+    			return prop;
+    		}
         }
-        return key;
+    	return key;
     }
     
     private static Object getValidValue(Object value) {

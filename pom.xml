@@ -469,11 +469,6 @@
               <scope>provided</scope>
             </dependency>            
 			<dependency>
-				<groupId>beanshell</groupId>
-				<artifactId>bsh</artifactId>
-				<version>2.0b4</version>
-			</dependency>
-			<dependency>
 				<groupId>net.sourceforge.saxon</groupId>
 				<artifactId>saxon</artifactId>
 				<version>9.1.0.8</version>

@@ -175,7 +175,7 @@
        </sect1>    
        
        <sect1 id="set_statement">
-        <title>Set Statement</title>
+        <title>SET Statement</title>
         
         <para>Execution properties may also be set on the connection by using the SET statement.  
         The SET statement is not yet a language feature of Teiid and is handled only in the JDBC client.</para>
@@ -208,17 +208,50 @@
             </listitem>
         </itemizedlist>        
         
-        <example>
+        <example id="plan_debug">
         	<title>Enabling Plan Debug</title>
         	<programlisting>Statement s = connection.createStatement();
 s.execute("SET SHOWPLAN DEBUG");
 ...
 Statement s1 = connection.createStatement();
 ResultSet rs = s1.executeQuery("select col from table");
-TeiidStatement ts = s1.unwrap(TeiidStatement.class);
-String debugLog = ts.getDebugLog();        	
+
+ResultSet planRs = s1.exeuteQuery("SHOW PLAN");
+planRs.next();
+String debugLog = planRs.getString("DEBUG_LOG"); 
         	</programlisting>
         </example>
+       </sect1>
+
+       <sect1 id="show_statement">
+        <title>SHOW Statement</title>
+        
+        <para>The SHOW statement can be used to see a varitey of information.  
+        The SHOW statement is not yet a language feature of Teiid and is handled only in the JDBC client.</para>
+        
+        <itemizedlist>
+            <para>SHOW Usage:
+            </para>
+            <listitem>
+                <para>SHOW <emphasis>PLAN</emphasis> - returns a resultset with a clob column PLAN_TEXT, an xml column PLAN_XML, and a clob column DEBUG_LOG with a row containing the values from the previously executed query.  
+                If SHOWPLAN is OFF or no plan is available, no rows are returned.  If SHOWPLAN is not set to DEBUG, then DEBUG_LOG will return a null value.
+                </para>
+            </listitem>
+            <listitem>
+                <para>SHOW <emphasis>ANNOTATIONS</emphasis> - returns a resultset with string columns CATEGORY, PRIORITY, ANNOTATION, RESOLUTION and a row for each annotation on the previously executed query.  
+                If SHOWPLAN is OFF or no plan is available, no rows are returned.
+                </para>
+            </listitem>
+            <listitem>
+                <para>SHOW property - the inverse of SET, shows the property value for the given property, returns a resultset with a single string column with a name matching the property key.
+                </para>
+            </listitem>
+            <listitem>
+                <para>SHOW <emphasis>ALL</emphasis> - returns a resultset with a NAME string column and a VALUE string column with a row entry for every property value.
+                </para>
+            </listitem>
+        </itemizedlist>
+        <para>The SHOW statement is most commonly used to retrieve the query plan, see the plan <link linkend="plan_debug">debug example</link>.</para>        
        </sect1>
                             
        <sect1 id="partial_results">

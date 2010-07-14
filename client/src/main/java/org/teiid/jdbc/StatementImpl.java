@@ -166,7 +166,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         this.driverConnection = driverConnection;
         this.resultSetType = resultSetType;
         this.resultSetConcurrency = resultSetConcurrency;
-        this.execProps = new Properties(this.driverConnection.getConnectionProperties());
+        this.execProps = new Properties(this.driverConnection.getExecutionProperties());
         
         // Set initial fetch size
         String fetchSizeStr = this.execProps.getProperty(ExecutionProperties.PROP_FETCH_SIZE);
@@ -395,7 +395,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         		}
         		String key = match.group(1);
         		String value = match.group(2);
-        		JDBCURL.addNormalizedProperty(key, value, this.driverConnection.getConnectionProperties());
+        		JDBCURL.addNormalizedProperty(key, value, this.driverConnection.getExecutionProperties());
         		this.updateCounts = new int[] {0};
         		return;
         	}
@@ -436,17 +436,17 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         		}
         		if (show.equalsIgnoreCase("ALL")) { //$NON-NLS-1$
         			List<ArrayList<Object>> records = new ArrayList<ArrayList<Object>>(1);
-        			for (String key : driverConnection.getConnectionProperties().stringPropertyNames()) {
+        			for (String key : driverConnection.getExecutionProperties().stringPropertyNames()) {
         				ArrayList<Object> row = new ArrayList<Object>(4);
             			row.add(key);
-            			row.add(driverConnection.getConnectionProperties().get(key));
+            			row.add(driverConnection.getExecutionProperties().get(key));
         				records.add(row);
         			}
         			createResultSet(records, new String[] {"NAME", "VALUE"}, //$NON-NLS-1$ //$NON-NLS-2$
         					new String[] {JDBCSQLTypeInfo.STRING, JDBCSQLTypeInfo.STRING});
             		return;
         		}
-        		List<List<String>> records = Collections.singletonList(Collections.singletonList(driverConnection.getConnectionProperties().getProperty(JDBCURL.getValidKey(show))));
+        		List<List<String>> records = Collections.singletonList(Collections.singletonList(driverConnection.getExecutionProperties().getProperty(JDBCURL.getValidKey(show))));
     			createResultSet(records, new String[] {show}, new String[] {JDBCSQLTypeInfo.STRING});
         		return;
         	}
@@ -948,12 +948,6 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         return this.annotations;
     }
     
-    public void setPartialResults(boolean isPartialResults){
-        if(isPartialResults){
-            this.execProps.put(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE, "true"); //$NON-NLS-1$
-        }
-    }
-
     public String getRequestIdentifier() {
         if(this.currentRequestID >= 0) {
             return Long.toString(this.currentRequestID);

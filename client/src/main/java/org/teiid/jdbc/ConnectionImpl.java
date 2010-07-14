@@ -65,9 +65,9 @@ import org.teiid.net.ServerConnection;
 import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.SocketServerConnection;
 
-
-
-
+/**
+ * Teiid's Connection implementation.
+ */
 public class ConnectionImpl extends WrapperImpl implements Connection {
 	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
 
@@ -119,51 +119,59 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
         this.url = url;
         this.dqp = serverConn.getService(DQP.class);
         
-        // set default properties if not overridden
+        logger.fine(JDBCPlugin.Util.getString("MMConnection.Session_success")); //$NON-NLS-1$
+        logConnectionProperties(url, info);
+        
+        setExecutionProperties(info);
+        
+        this.disableLocalTransactions = Boolean.valueOf(this.propInfo.getProperty(ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS)).booleanValue();
+    }
+
+	private void setExecutionProperties(Properties info) {
+		this.propInfo = new Properties();
+        
         String overrideProp = info.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP);
         if ( overrideProp == null || overrideProp.trim().length() == 0 ) {
-            info.put(ExecutionProperties.PROP_TXN_AUTO_WRAP, ExecutionProperties.TXN_WRAP_DETECT);
+        	propInfo.put(ExecutionProperties.PROP_TXN_AUTO_WRAP, ExecutionProperties.TXN_WRAP_DETECT);
         }
 
-        // Get default fetch size
         String defaultFetchSize = info.getProperty(ExecutionProperties.PROP_FETCH_SIZE);
         if (defaultFetchSize != null) {
-            info.put(ExecutionProperties.PROP_FETCH_SIZE, defaultFetchSize);
+        	propInfo.put(ExecutionProperties.PROP_FETCH_SIZE, defaultFetchSize);
         } else {
-            info.put(ExecutionProperties.PROP_FETCH_SIZE, ""+BaseDataSource.DEFAULT_FETCH_SIZE); //$NON-NLS-1$
+        	propInfo.put(ExecutionProperties.PROP_FETCH_SIZE, String.valueOf(BaseDataSource.DEFAULT_FETCH_SIZE)); 
         }
 
-        // Get partial results mode
         String partialResultsMode = info.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE);
         if (partialResultsMode != null) {
-            info.put(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE, partialResultsMode);
+        	propInfo.put(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE, partialResultsMode);
         } else {
-            info.put(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE, BaseDataSource.DEFAULT_PARTIAL_RESULTS_MODE);
+        	propInfo.put(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE, BaseDataSource.DEFAULT_PARTIAL_RESULTS_MODE);
         }
         
-        // Get result set cache mode
         String resultSetCacheMode = info.getProperty(ExecutionProperties.RESULT_SET_CACHE_MODE);
         if (resultSetCacheMode != null) {
-            info.put(ExecutionProperties.RESULT_SET_CACHE_MODE, resultSetCacheMode);
+        	propInfo.put(ExecutionProperties.RESULT_SET_CACHE_MODE, resultSetCacheMode);
         } else {
-            info.put(ExecutionProperties.RESULT_SET_CACHE_MODE, BaseDataSource.DEFAULT_RESULT_SET_CACHE_MODE);
+        	propInfo.put(ExecutionProperties.RESULT_SET_CACHE_MODE, BaseDataSource.DEFAULT_RESULT_SET_CACHE_MODE);
         }
 
         String ansiQuotes = info.getProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS);
         if (ansiQuotes != null) {
-            info.put(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS, ansiQuotes);
+        	propInfo.put(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS, ansiQuotes);
         } else {
-            info.put(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS, Boolean.TRUE.toString());
+        	propInfo.put(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS, Boolean.TRUE.toString());
         }
-                
-        logger.fine(JDBCPlugin.Util.getString("MMConnection.Session_success")); //$NON-NLS-1$
-        logConnectionProperties(url, info);
-                
-        // properties object used in obtaining connection
-        this.propInfo = info;
-        
-        this.disableLocalTransactions = Boolean.valueOf(this.propInfo.getProperty(ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS)).booleanValue();
-    }
+                                
+        for (String key : info.stringPropertyNames()) {
+        	for (String prop : JDBCURL.EXECUTION_PROPERTIES) {
+        		if (prop.equalsIgnoreCase(key)) {
+            		propInfo.setProperty(key, info.getProperty(key));
+            		break;
+        		}
+        	}
+		}
+	}
     
     public Collection<Annotation> getAnnotations() {
 		return annotations;
@@ -189,7 +197,7 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
 		this.currentPlanDescription = currentPlanDescription;
 	}
     
-    protected Properties getConnectionProperties() {
+    protected Properties getExecutionProperties() {
         return this.propInfo;
     }
     
