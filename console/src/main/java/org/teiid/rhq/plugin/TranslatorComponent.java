@@ -34,6 +34,7 @@ import org.jboss.managed.api.ManagedProperty;
 import org.jboss.metatype.api.types.MetaType;
 import org.jboss.metatype.api.values.MetaValue;
 import org.jboss.metatype.api.values.MetaValueFactory;
+import org.mc4j.ems.connection.EmsConnection;
 import org.rhq.core.domain.configuration.Configuration;
 import org.rhq.core.domain.configuration.PropertyList;
 import org.rhq.core.domain.configuration.PropertyMap;
@@ -43,11 +44,12 @@ import org.rhq.core.domain.measurement.MeasurementReport;
 import org.rhq.core.domain.measurement.MeasurementScheduleRequest;
 import org.rhq.core.pluginapi.inventory.ResourceContext;
 import org.rhq.core.pluginapi.measurement.MeasurementFacet;
+import org.rhq.plugins.jbossas5.connection.ProfileServiceConnection;
 import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 
 /**
- * Component class for the MetaMatrix Host Controller process.
+ * Component class for the Teiid Translator.
  * 
  */
 public class TranslatorComponent extends Facet {
@@ -131,7 +133,7 @@ public class TranslatorComponent extends Facet {
 		ManagedComponent translator = null;
 		try {
 			translator = ProfileServiceUtil
-			.getManagedComponent(new ComponentType(
+			.getManagedComponent(getConnection(), new ComponentType(
 					PluginConstants.ComponentType.Translator.TYPE,
 					PluginConstants.ComponentType.Translator.SUBTYPE), this.name);
 		} catch (NamingException e) {
@@ -183,4 +185,16 @@ public class TranslatorComponent extends Facet {
 
 	}
 
+	@Override
+	public ProfileServiceConnection getConnection() {
+		return ((PlatformComponent)this.resourceContext.getParentResourceComponent()).getConnection();
+	}
+
+
+	@Override
+	public EmsConnection getEmsConnection() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
 }

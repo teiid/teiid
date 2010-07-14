@@ -34,6 +34,7 @@ import org.jboss.managed.api.ComponentType;
 import org.jboss.managed.api.ManagedComponent;
 import org.jboss.managed.api.ManagedProperty;
 import org.jboss.managed.api.RunState;
+import org.mc4j.ems.connection.EmsConnection;
 import org.rhq.core.domain.configuration.Configuration;
 import org.rhq.core.domain.configuration.ConfigurationUpdateStatus;
 import org.rhq.core.domain.configuration.PropertySimple;
@@ -42,7 +43,12 @@ import org.rhq.core.domain.measurement.MeasurementDataNumeric;
 import org.rhq.core.domain.measurement.MeasurementReport;
 import org.rhq.core.domain.measurement.MeasurementScheduleRequest;
 import org.rhq.core.pluginapi.configuration.ConfigurationUpdateReport;
+import org.rhq.core.pluginapi.inventory.InvalidPluginConfigurationException;
+import org.rhq.core.pluginapi.inventory.ResourceComponent;
 import org.rhq.core.pluginapi.inventory.ResourceContext;
+import org.rhq.plugins.jbossas5.ApplicationServerComponent;
+import org.rhq.plugins.jbossas5.ProfileServiceComponent;
+import org.rhq.plugins.jbossas5.connection.ProfileServiceConnection;
 import org.teiid.rhq.admin.DQPManagementView;
 import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
@@ -86,7 +92,7 @@ public class PlatformComponent extends Facet {
 
 		RunState runState;
 		try {
-			runState = ProfileServiceUtil.getDQPManagementView().getRunState();
+			runState = ProfileServiceUtil.getDQPManagementView(getConnection()).getRunState();
 		} catch (NamingException e) {
 			LOG
 					.error("Naming exception getting: "
@@ -138,7 +144,7 @@ public class PlatformComponent extends Facet {
 				// Initialize any parameters to be used in the retrieval of
 				// metric values
 				
-				Object metricReturnObject = view.getMetric(getComponentType(),
+				Object metricReturnObject = view.getMetric(getConnection(), getComponentType(),
 						this.getComponentIdentifier(), name, valueMap);
 
 				try {
@@ -210,8 +216,7 @@ public class PlatformComponent extends Facet {
 		report.setStatus(ConfigurationUpdateStatus.SUCCESS);
 		try {
 
-			managementView = ProfileServiceUtil.getManagementView(
-					ProfileServiceUtil.getProfileService(), true);
+			managementView = getConnection().getManagementView();
 
 			for (String serviceName : PLATFORM_SERVICES_NAMES) {
 
@@ -270,7 +275,7 @@ public class PlatformComponent extends Facet {
 		Set<ManagedComponent> mcSet = null;
 		try {
 			mcSet = ProfileServiceUtil
-					.getManagedComponents(new org.jboss.managed.api.ComponentType(
+					.getManagedComponents(getConnection(),new org.jboss.managed.api.ComponentType(
 							PluginConstants.ComponentType.Platform.TEIID_TYPE,
 							PluginConstants.ComponentType.Platform.TEIID_SUB_TYPE));
 		} catch (NamingException e) {
@@ -305,6 +310,17 @@ public class PlatformComponent extends Facet {
 								+ e.getMessage());
 			}
 		}
+	}
+
+	@Override
+	public ProfileServiceConnection getConnection() {
+		return ((ApplicationServerComponent)this.resourceContext.getParentResourceComponent()).getConnection();
+	}
+
+	@Override
+	public EmsConnection getEmsConnection() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

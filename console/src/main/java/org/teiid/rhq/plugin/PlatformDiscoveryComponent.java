@@ -34,6 +34,8 @@ import org.rhq.core.pluginapi.inventory.DiscoveredResourceDetails;
 import org.rhq.core.pluginapi.inventory.InvalidPluginConfigurationException;
 import org.rhq.core.pluginapi.inventory.ResourceDiscoveryComponent;
 import org.rhq.core.pluginapi.inventory.ResourceDiscoveryContext;
+import org.rhq.plugins.jbossas5.ApplicationServerComponent;
+import org.rhq.plugins.jbossas5.connection.ProfileServiceConnection;
 import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 
@@ -56,14 +58,20 @@ public class PlatformDiscoveryComponent implements ResourceDiscoveryComponent {
 			throws InvalidPluginConfigurationException, Exception {
 
 		Set<DiscoveredResourceDetails> discoveredResources = new HashSet<DiscoveredResourceDetails>();
-
-		ManagedComponent mc = ProfileServiceUtil.getManagedComponent(
+		ProfileServiceConnection connection = ((ApplicationServerComponent) discoveryContext.getParentResourceComponent()).getConnection();
+		
+		ManagedComponent mc = ProfileServiceUtil.getManagedComponent(connection,
 				new ComponentType(
 						PluginConstants.ComponentType.Platform.TEIID_TYPE,
 						PluginConstants.ComponentType.Platform.TEIID_SUB_TYPE),
-				PluginConstants.ComponentType.Platform.TEIID_RUNTIME_ENGINE);
+						PluginConstants.ComponentType.Platform.TEIID_RUNTIME_ENGINE);
 		
-		String version = ProfileServiceUtil.getSimpleValue(mc, "runtimeVersion", String.class);
+		if (mc==null){
+			//No Teiid instance found
+			return discoveredResources;
+		}
+		
+		String version = ProfileServiceUtil.getSimpleValue(mc, "runtimeVersion", String.class); //$NON-NLS-1$
 			
 		/**
 		 * 
@@ -88,7 +96,7 @@ public class PlatformDiscoveryComponent implements ResourceDiscoveryComponent {
 
 		// Add to return values
 		discoveredResources.add(detail);
-		log.info("Discovered Teiid instance: " + mc.getName());
+		log.info("Discovered Teiid instance: " + mc.getName()); //$NON-NLS-1$
 		return discoveredResources;
 
 	}

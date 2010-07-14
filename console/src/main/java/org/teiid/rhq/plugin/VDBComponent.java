@@ -50,6 +50,7 @@ import org.jboss.metatype.api.values.MetaValue;
 import org.jboss.metatype.api.values.MetaValueFactory;
 import org.jboss.metatype.api.values.SimpleValue;
 import org.jboss.metatype.api.values.SimpleValueSupport;
+import org.mc4j.ems.connection.EmsConnection;
 import org.rhq.core.domain.configuration.Configuration;
 import org.rhq.core.domain.configuration.ConfigurationUpdateStatus;
 import org.rhq.core.domain.configuration.Property;
@@ -64,7 +65,10 @@ import org.rhq.core.domain.measurement.MeasurementScheduleRequest;
 import org.rhq.core.pluginapi.configuration.ConfigurationFacet;
 import org.rhq.core.pluginapi.configuration.ConfigurationUpdateReport;
 import org.rhq.core.pluginapi.inventory.CreateResourceReport;
+import org.rhq.core.pluginapi.inventory.InvalidPluginConfigurationException;
+import org.rhq.core.pluginapi.inventory.ResourceComponent;
 import org.rhq.core.pluginapi.inventory.ResourceContext;
+import org.rhq.plugins.jbossas5.connection.ProfileServiceConnection;
 import org.teiid.adminapi.impl.PropertyMetadata;
 import org.teiid.rhq.admin.DQPManagementView;
 import org.teiid.rhq.plugin.util.PluginConstants;
@@ -132,7 +136,7 @@ public class VDBComponent extends Facet {
 		// TODO Remove vdb version after no longer viable in Teiid
 		String version = this.resourceConfiguration.getSimpleValue(
 				"version", null);
-		String status = DQPManagementView.getVDBStatus(this.name, Integer.parseInt(version));
+		String status = DQPManagementView.getVDBStatus(getConnection(), this.name, Integer.parseInt(version));
 		if (status.equals("ACTIVE")) {
 			return AvailabilityType.UP;
 		}
@@ -162,7 +166,7 @@ public class VDBComponent extends Facet {
 			String name = request.getName();
 			LOG.debug("Measurement name = " + name); //$NON-NLS-1$
 
-			Object metricReturnObject = view.getMetric(getComponentType(), this
+			Object metricReturnObject = view.getMetric(getConnection(), getComponentType(), this
 					.getComponentIdentifier(), name, valueMap);
 
 			try {
@@ -255,8 +259,7 @@ public class VDBComponent extends Facet {
 		report.setStatus(ConfigurationUpdateStatus.SUCCESS);
 		try {
 
-			managementView = ProfileServiceUtil.getManagementView(
-					ProfileServiceUtil.getProfileService(), true);
+			managementView = getConnection().getManagementView();
 			managedComponent = managementView.getComponent(this.name,
 					componentType);
 			ManagedProperty mp = managedComponent.getProperty("models");//$NON-NLS-1$
@@ -343,7 +346,7 @@ public class VDBComponent extends Facet {
 
 		ManagedComponent mcVdb = null;
 		try {
-			mcVdb = ProfileServiceUtil.getManagedComponent(
+			mcVdb = ProfileServiceUtil.getManagedComponent( getConnection(),
 					new org.jboss.managed.api.ComponentType(
 							PluginConstants.ComponentType.VDB.TYPE,
 							PluginConstants.ComponentType.VDB.SUBTYPE),
@@ -641,6 +644,18 @@ public class VDBComponent extends Facet {
 			throw new IllegalStateException(pValue
 					+ " is not a Collection type");
 		}
+	}
+
+	@Override
+	public ProfileServiceConnection getConnection() {
+		return ((PlatformComponent)this.resourceContext.getParentResourceComponent()).getConnection();
+	}
+
+
+	@Override
+	public EmsConnection getEmsConnection() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
