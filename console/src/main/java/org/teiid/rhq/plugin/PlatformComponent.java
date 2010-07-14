@@ -61,8 +61,8 @@ import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.Platform;
 public class PlatformComponent extends Facet {
 	private final Log LOG = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 
-	String[] PLATFORM_SERVICES_NAMES = { "org.teiid.jboss.deployers.RuntimeEngineDeployer",
-			"org.teiid.services.BufferServiceImpl", "org.teiid.services.SessionServiceImpl", "org.teiid.transport.SocketConfiguration" };
+	String[] PLATFORM_SERVICES_NAMES = { "RuntimeEngineDeployer",
+			"BufferService", "SessionService", "AdminSocketConfiguration" };
 
 	/*
 	 * (non-Javadoc)
@@ -168,7 +168,7 @@ public class PlatformComponent extends Facet {
 											PluginConstants.ComponentType.Platform.Metrics.LONG_RUNNING_QUERIES)) {
 								report.addData(new MeasurementDataNumeric(
 										request, (Double) metricReturnObject));
-							}
+							} 
 
 						}
 					}

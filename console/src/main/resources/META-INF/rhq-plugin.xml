@@ -309,6 +309,10 @@
 			</c:group>
 			<c:group name="bufferServiceProperties" displayName="Buffer Service Properties"
 				hiddenByDefault="false">
+				<c:simple-property name="maxBufferSpace"
+					displayName="Max Buffer Space"
+					description="Max file storage space, in MB, to be used for buffer files (default 256G)"
+					required="false" readOnly="false" />
 				<c:simple-property name="processorBatchSize"
 					displayName="Processor Batch Size"
 					description="The max row count of a batch sent internally within the query processor. Should be &lt;= the connectorBatchSize. (default 256)"
