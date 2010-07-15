@@ -219,7 +219,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
 		return maxReserveBatchColumns;
 	}
     
-    @ManagementProperty(description="Max file storage space, in MB, to be used for buffer files (default 256G)")
+    @ManagementProperty(description="Max file storage space, in MB, to be used for buffer files (default 50G)")
 	public long getMaxBufferSpace() {
 		return maxBufferSpace;
 	}
