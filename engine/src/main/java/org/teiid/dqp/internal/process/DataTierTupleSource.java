@@ -65,6 +65,7 @@ public class DataTierTupleSource implements TupleSource {
     private boolean closed;
     private volatile boolean canceled;
     private boolean executed;
+    private volatile boolean done;
     
     private volatile ResultsFuture<AtomicResultsMessage> futureResult;
     private volatile boolean running;
@@ -146,7 +147,9 @@ public class DataTierTupleSource implements TupleSource {
 		AtomicResultsMessage results = null;
 		try {
 			results = currentResults.get();
-			addWork();
+			if (results.getFinalRow() < 0) {
+				addWork();
+			}
 		} catch (InterruptedException e) {
 			throw new TeiidRuntimeException(e);
 		} catch (ExecutionException e) {
@@ -192,8 +195,7 @@ public class DataTierTupleSource implements TupleSource {
     }
 
 	public boolean isDone() {
-		AtomicResultsMessage results = this.arm;
-		return results != null && results.getFinalRow() >= 0;
+		return done;
 	}
     
     public boolean isRunning() {
@@ -280,6 +282,9 @@ public class DataTierTupleSource implements TupleSource {
 		        workItem.addSourceFailureDetails(sourceFailure);
 			}
 		}
+		if (response.getFinalRow() >= 0) {
+    		done = true;
+    	}
 	}
 	
 	public AtomicRequestMessage getAtomicRequestMessage() {

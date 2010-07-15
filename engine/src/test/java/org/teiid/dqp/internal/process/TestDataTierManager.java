@@ -27,6 +27,7 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.client.RequestMessage;
+import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidException;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
@@ -34,8 +35,6 @@ import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.AutoGenDataService;
 import org.teiid.dqp.service.FakeBufferService;
-import org.teiid.dqp.service.TransactionContext;
-import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.parser.QueryParser;
@@ -104,16 +103,21 @@ public class TestDataTierManager {
         request = new AtomicRequestMessage(original, workContext, nodeId);
         request.setCommand(command);
         request.setConnectorName("FakeConnectorID"); //$NON-NLS-1$
-        TransactionContext tc = new TransactionContext();
-        tc.setTransactionType(Scope.GLOBAL);
-        request.setTransactionContext(tc);
         info = new DataTierTupleSource(request, workItem, connectorManager.registerRequest(request), dtm);
     }
     
     @Test public void testDataTierTupleSource() throws Exception {
     	helpSetup(1);
-    	info.nextTuple();
+    	for (int i = 0; i < 10;) {
+	    	try {
+	    		info.nextTuple();
+	    		i++;
+	    	} catch (BlockedException e) {
+	    		Thread.sleep(50);
+	    	}
+    	}
         assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
+        assertNull(info.nextTuple());
         info.closeSource();
         assertNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
     }
@@ -139,7 +143,14 @@ public class TestDataTierManager {
     @Test public void testNoRowsException() throws Exception {
     	helpSetup(3);
     	this.connectorManager.setRows(0);
-    	assertNull(info.nextTuple());
+    	while (true) {
+	    	try {
+	        	assertNull(info.nextTuple());
+	    		break;
+	    	} catch (BlockedException e) {
+	    		Thread.sleep(50);
+	    	}
+    	}
     }
     
     @Test public void testCodeTableResponseDataNotAvailable() throws Exception {

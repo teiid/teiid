@@ -26,11 +26,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import org.teiid.core.TeiidException;
-import org.teiid.core.util.FileUtil;
-import org.teiid.core.util.FileUtils;
-
 import junit.framework.TestCase;
+
+import org.teiid.core.TeiidException;
 
 
 /**
@@ -154,11 +152,11 @@ public final class TestFileUtils extends TestCase {
      * @since 4.3
      */
     public void testCopy() throws Exception {
-        String contents1 = new FileUtil(FILE_NAME).read();
+        String contents1 = ObjectConverterUtil.convertFileToString(new File(FILE_NAME));
         
         //positive case
         FileUtils.copy(FILE_NAME, TEMP_FILE_NAME, false);
-        String contents2 = new FileUtil(TEMP_FILE_NAME).read();
+        String contents2 = ObjectConverterUtil.convertFileToString(new File(TEMP_FILE_NAME));
         assertEquals("Expected file contents to be the same", contents1, contents2);  //$NON-NLS-1$
         assertTrue("Expected original file to still exist", new File(FILE_NAME).exists());  //$NON-NLS-1$
 
@@ -172,7 +170,7 @@ public final class TestFileUtils extends TestCase {
         
         //positive case: should succeed because we've specified to overwrite
         FileUtils.copy(FILE_NAME, TEMP_FILE_NAME, true);
-        contents2 = new FileUtil(TEMP_FILE_NAME).read();
+        contents2 = ObjectConverterUtil.convertFileToString(new File(TEMP_FILE_NAME));
         assertEquals("Expected file contents to be the same", contents1, contents2);  //$NON-NLS-1$
         assertTrue("Expected original file to still exist", new File(FILE_NAME).exists());  //$NON-NLS-1$
         
@@ -184,13 +182,13 @@ public final class TestFileUtils extends TestCase {
      * @since 4.3
      */
     public void testRename() throws Exception {
-        String contents1 = new FileUtil(FILE_NAME).read();
+        String contents1 = ObjectConverterUtil.convertFileToString(new File(FILE_NAME));
         
 
         //positive case
         FileUtils.copy(FILE_NAME, TEMP_FILE_NAME, true);
         FileUtils.rename(TEMP_FILE_NAME, TEMP_FILE_NAME2, false);
-        String contents2 = new FileUtil(TEMP_FILE_NAME2).read();
+        String contents2 = ObjectConverterUtil.convertFileToString(new File(TEMP_FILE_NAME2));
         assertEquals("Expected file contents to be the same", contents1, contents2);  //$NON-NLS-1$
         assertFalse("Expected original file to not exist", new File(TEMP_FILE_NAME).exists());  //$NON-NLS-1$
 
@@ -209,7 +207,7 @@ public final class TestFileUtils extends TestCase {
         FileUtils.copy(FILE_NAME, TEMP_FILE_NAME, true);
         FileUtils.copy(FILE_NAME, TEMP_FILE_NAME2, true);
         FileUtils.rename(TEMP_FILE_NAME, TEMP_FILE_NAME2, true);
-        contents2 = new FileUtil(TEMP_FILE_NAME2).read();
+        contents2 = ObjectConverterUtil.convertFileToString(new File(TEMP_FILE_NAME2));
         assertEquals("Expected file contents to be the same", contents1, contents2);  //$NON-NLS-1$
         assertFalse("Expected original file to not exist", new File(TEMP_FILE_NAME).exists());  //$NON-NLS-1$
 

@@ -25,6 +25,7 @@ package org.teiid.query.function.source;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.TimeZone;
 
 import net.sf.saxon.trans.XPathException;
@@ -35,26 +36,25 @@ import org.junit.Test;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.XMLType;
-import org.teiid.core.util.FileUtil;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.unittest.TimestampUtil;
 
 @SuppressWarnings("nls")
 public class TestXMLSystemFunctions {
 	
-    public String getContentOfTestFile( final String testFilePath ) {
+    public String getContentOfTestFile( final String testFilePath ) throws IOException {
         final File file = UnitTestUtil.getTestDataFile(testFilePath);
-        final FileUtil util = new FileUtil(file.getAbsolutePath());
-        return util.read();
+        return ObjectConverterUtil.convertFileToString(file);
     }
     
-    public String helpTestXpathValue(final String xmlFilePath, final String xpath, final String expected) throws XPathException, TeiidProcessingException {
+    public String helpTestXpathValue(final String xmlFilePath, final String xpath, final String expected) throws XPathException, TeiidProcessingException, IOException {
         final String actual = helpGetNode(xmlFilePath,xpath);
         assertEquals(expected,actual);
         return actual;
     }
 
-    public String helpGetNode(final String xmlFilePath, final String xpath ) throws XPathException, TeiidProcessingException {
+    public String helpGetNode(final String xmlFilePath, final String xpath ) throws XPathException, TeiidProcessingException, IOException {
         final String xmlContent = getContentOfTestFile(xmlFilePath);
         return XMLSystemFunctions.xpathValue(xmlContent,xpath);
     }
