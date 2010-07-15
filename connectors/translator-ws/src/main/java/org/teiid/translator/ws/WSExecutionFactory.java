@@ -140,8 +140,8 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		param.setNullType(NullType.Nullable);
 		
 		metadataFactory.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.XML, Type.ReturnValue, p); //$NON-NLS-1$
-		
-		p = metadataFactory.addProcedure("invokeHttp"); //$NON-NLS-1$ 
+		/*
+		p = metadataFactory.addProcedure(INVOKE_HTTP);
 		p.setAnnotation("Invokes a webservice that returns an binary result"); //$NON-NLS-1$
 
 		param = metadataFactory.addProcedureParameter("method", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
@@ -150,7 +150,7 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 
 		//can be one of string, xml, clob
 		param = metadataFactory.addProcedureParameter("request", TypeFacility.RUNTIME_NAMES.OBJECT, Type.In, p); //$NON-NLS-1$
-		param.setAnnotation("The String, XML, BLOB, or CLOB value containing a payload request."); //$NON-NLS-1$
+		param.setAnnotation("The String, XML, BLOB, or CLOB value containing a payload (only for POST)."); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
 		
 		param = metadataFactory.addProcedureParameter("endpoint", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
@@ -159,6 +159,7 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		
 		metadataFactory.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.BLOB, Type.ReturnValue, p); //$NON-NLS-1$
 		metadataFactory.addProcedureParameter("contentType", TypeFacility.RUNTIME_NAMES.STRING, Type.Out, p); //$NON-NLS-1$	
+		*/
 	}
 
 }
