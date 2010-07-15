@@ -249,6 +249,9 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     
     @Override
     public void closeConnection(Connection connection, DataSource factory) {
+    	if (connection == null) {
+    		return;
+    	}
     	try {
 			connection.close();
 		} catch (SQLException e) {
