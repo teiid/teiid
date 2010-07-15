@@ -74,6 +74,7 @@ public interface PluginConstants {
 				public final static String GET_REQUESTS = "getRequests"; //$NON-NLS-1$
 				public final static String GET_TRANSACTIONS = "getTransactions"; //$NON-NLS-1$
 				public final static String GET_SESSIONS = "getSessions"; //$NON-NLS-1$
+				public final static String GET_BUFFER_USAGE = "userBufferSpace"; //$NON-NLS-1$
 
 			}
 
@@ -82,6 +83,7 @@ public interface PluginConstants {
 				public final static String QUERY_COUNT = "queryCount"; //$NON-NLS-1$            
 				public final static String SESSION_COUNT = "sessionCount"; //$NON-NLS-1$
 				public final static String LONG_RUNNING_QUERIES = "longRunningQueries"; //$NON-NLS-1$     
+				public final static String BUFFER_USAGE = "userBufferSpace"; //$NON-NLS-1$     
 
 			}
 		}

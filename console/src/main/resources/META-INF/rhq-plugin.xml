@@ -242,7 +242,7 @@
 
 		<metric displayName="Query Count" defaultOn="true" displayType="detail"
 			category="throughput" property="queryCount"
-			description="The number of queries for a given point in time" />
+			description="The number of queries currently active." />
 
 		<metric displayName="Long Running Queries" defaultOn="true"
 			displayType="detail" category="performance" property="longRunningQueries"
@@ -250,7 +250,11 @@
 
 		<metric displayName="Session Count" defaultOn="true"
 			displayType="detail" category="throughput" property="sessionCount"
-			description="The number of user connections for a given point in time" />
+			description="The number of user connections currently active." />
+
+		<metric displayName="Used Buffer Space" defaultOn="true"
+			displayType="detail" category="throughput" property="userBufferSpace"
+			description="The currently used file buffer space in MB." />
 
 		<resource-configuration>
 			<c:group name="teiidProperties" displayName="Runtime Engine Properties"
@@ -304,8 +308,9 @@
 					displayName="Active Session Count" description="Count of active sessions"
 					required="false" readOnly="false" />
 				<c:simple-property name="queryThresholdInSecs"
-					displayName="Long Running Query Threshold" description="Length of time in seconds before a query is considered long running"
-					required="false" readOnly="false" />	
+					displayName="Long Running Query Threshold"
+					description="Length of time in seconds before a query is considered long running"
+					required="false" readOnly="false" />
 			</c:group>
 			<c:group name="bufferServiceProperties" displayName="Buffer Service Properties"
 				hiddenByDefault="false">
@@ -470,26 +475,29 @@
 					<c:simple-property name="url" type="string"
 						description="The Virtual Database URL" required="false" readOnly="true" />
 				</c:group>
-				<c:group name="Translators" displayName="Translators" hiddenByDefault="false">
-					<c:list-property name="translators" displayName="Overrides" readOnly="true"
-						description="The translator overrides for this VDB">
-						<c:map-property name="map" description="Translator Overrides for this VDB">
+				<c:group name="Translators" displayName="Translators"
+					hiddenByDefault="false">
+					<c:list-property name="translators" displayName="Overrides"
+						readOnly="true" description="The translator overrides for this VDB">
+						<c:map-property name="map"
+							description="Translator Overrides for this VDB">
 							<c:simple-property name="name" displayName="Name"
-								description="Name of this translator instance" required="true" readOnly="true" />
-							<c:simple-property name="type"
-								displayName="Translator type" description="Translator type"
-								required="false" readOnly="true" />
+								description="Name of this translator instance" required="true"
+								readOnly="true" />
+							<c:simple-property name="type" displayName="Translator type"
+								description="Translator type" required="false" readOnly="true" />
 							<c:simple-property name="propertyName"
 								displayName="Property Name" description="Property Name"
-								required="false" readOnly="true"/>
-							<c:simple-property name="propertyValue" displayName="Property Value"
-								description="Property Value" required="false" />
+								required="false" readOnly="true" />
+							<c:simple-property name="propertyValue"
+								displayName="Property Value" description="Property Value"
+								required="false" />
 						</c:map-property>
 					</c:list-property>
 				</c:group>
 				<c:group name="Models" displayName="Models" hiddenByDefault="false">
-					<c:list-property name="singleSourceModels" readOnly="true"
-						description="The source models for this VDB">
+					<c:list-property name="singleSourceModels"
+						readOnly="true" description="The source models for this VDB">
 						<c:map-property name="map" description="Properties for this model">
 							<c:simple-property name="name" displayName="Name"
 								description="Name of the model" required="true" readOnly="true" />
@@ -498,17 +506,17 @@
 								required="false" readOnly="true" />
 							<c:simple-property name="translatorName"
 								displayName="Translator Name" description="Name of the translator"
-								required="false" readOnly="true"/>
+								required="false" readOnly="true" />
 							<c:simple-property name="jndiName" displayName="Connection JNDI Name"
 								description="JNDI name for this connection" required="false" />
 							<c:simple-property name="visibility"
 								displayName="Visible" description="Visibility of the model"
-								required="true" type="boolean" readOnly="true"> 
+								required="true" type="boolean" readOnly="true">
 							</c:simple-property>
 							<c:simple-property name="supportsMultiSource"
 								displayName="Supports Multi-source?"
 								description="Determines if this model supports multi-source bindings"
-								required="true" default="true" type="boolean" readOnly="true"/>
+								required="true" default="true" type="boolean" readOnly="true" />
 						</c:map-property>
 					</c:list-property>
 
@@ -518,7 +526,8 @@
 							<c:simple-property name="name" displayName="Name"
 								description="Name of the model" required="true" readOnly="true" />
 							<c:simple-property name="sourceName"
-								displayName="Source Name" description="Source name for this model" readOnly="true"/>
+								displayName="Source Name" description="Source name for this model"
+								readOnly="true" />
 							<c:simple-property name="translatorName"
 								displayName="Translator Name" description="Name of the translator"
 								required="true" />
@@ -536,7 +545,7 @@
 								description="type of logical model" required="true" readOnly="true" />
 							<c:simple-property name="visibility"
 								displayName="Visible" description="Visbility of the model"
-								required="true" default="true" readOnly="true"/>
+								required="true" default="true" readOnly="true" />
 						</c:map-property>
 					</c:list-property>
 				</c:group>
@@ -560,12 +569,15 @@
 			createDeletePolicy="both" creationDataType="configuration">
 
 			<resource-configuration>
-				<c:simple-property name="name" displayName="Name" description="Name of the translator" readOnly="true" required="false"/>
-				<c:list-property name="translatorList" readOnly="true" required="false"
-                			displayName="Properties" description="Translator properties">
+				<c:simple-property name="name" displayName="Name"
+					description="Name of the translator" readOnly="true" required="false" />
+				<c:list-property name="translatorList" readOnly="true"
+					required="false" displayName="Properties" description="Translator properties">
 					<c:map-property name="properties" readOnly="true">
-						<c:simple-property name="name" displayName="Name" description="Name of this property" readOnly="true" />
-						<c:simple-property name="value" displayName="Value"	description="Value of this property" readOnly="true"/>
+						<c:simple-property name="name" displayName="Name"
+							description="Name of this property" readOnly="true" />
+						<c:simple-property name="value" displayName="Value"
+							description="Value of this property" readOnly="true" />
 					</c:map-property>
 				</c:list-property>
 

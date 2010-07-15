@@ -82,6 +82,7 @@ public class ProfileServiceUtil {
 			.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY); 
 	private static ComponentType DQPTYPE = new ComponentType("teiid", "dqp"); //$NON-NLS-1$ //$NON-NLS-2$
 	private static String DQPNAME = "RuntimeEngineDeployer"; //$NON-NLS-1$
+	private static String BUFFERSERVICE = "BufferService"; //$NON-NLS-1$
 	private static final Map<String, ComponentType> COMPONENT_TYPE_CACHE = new HashMap<String, ComponentType>();
 	
 	protected static final String PLUGIN = "ProfileService"; //$NON-NLS-1$
@@ -240,11 +241,18 @@ public class ProfileServiceUtil {
 		return deployDir;
 	}
 
-	public static ManagedComponent getDQPManagementView(
+	public static ManagedComponent getRuntimeEngineDeployer(
 			ProfileServiceConnection connection) throws NamingException,
 			Exception {
 
 		return getManagedComponent(connection, DQPTYPE, DQPNAME);
+	}
+	
+	public static ManagedComponent getBufferService(
+			ProfileServiceConnection connection) throws NamingException,
+			Exception {
+
+		return getManagedComponent(connection, DQPTYPE, BUFFERSERVICE);
 	}
 
 	public static String stringValue(MetaValue v1) throws Exception {
@@ -271,6 +279,18 @@ public class ProfileServiceUtil {
 		return null;
 	}
 
+	public static Double doubleValue(MetaValue v1) throws Exception {
+		if (v1 != null) {
+			MetaType type = v1.getMetaType();
+			if (type instanceof SimpleMetaType) {
+				SimpleValue simple = (SimpleValue) v1;
+				return Double.valueOf(simple.getValue().toString());
+			}
+			throw new Exception("Failed to convert value to boolean value"); //$NON-NLS-1$
+		}
+		return null;
+	}
+	
 	public static <T> T getSimpleValue(ManagedComponent mc, String prop,
 			Class<T> expectedType) {
 		ManagedProperty mp = mc.getProperty(prop);

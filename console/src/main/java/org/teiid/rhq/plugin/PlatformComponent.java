@@ -59,10 +59,11 @@ import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.Platform;
  * 
  */
 public class PlatformComponent extends Facet {
-	private final Log LOG = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
+	private final Log LOG = LogFactory
+			.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 
 	String[] PLATFORM_SERVICES_NAMES = { "RuntimeEngineDeployer",
-			"BufferService", "SessionService", "AdminSocketConfiguration" };
+			"BufferService", "SessionService", "JdbcSocketConfiguration" };
 
 	/*
 	 * (non-Javadoc)
@@ -92,7 +93,8 @@ public class PlatformComponent extends Facet {
 
 		RunState runState;
 		try {
-			runState = ProfileServiceUtil.getDQPManagementView(getConnection()).getRunState();
+			runState = ProfileServiceUtil.getRuntimeEngineDeployer(getConnection())
+					.getRunState();
 		} catch (NamingException e) {
 			LOG
 					.error("Naming exception getting: "
@@ -143,9 +145,10 @@ public class PlatformComponent extends Facet {
 
 				// Initialize any parameters to be used in the retrieval of
 				// metric values
-				
-				Object metricReturnObject = view.getMetric(getConnection(), getComponentType(),
-						this.getComponentIdentifier(), name, valueMap);
+
+				Object metricReturnObject = view.getMetric(getConnection(),
+						getComponentType(), this.getComponentIdentifier(),
+						name, valueMap);
 
 				try {
 					if (request
@@ -168,8 +171,16 @@ public class PlatformComponent extends Facet {
 											PluginConstants.ComponentType.Platform.Metrics.LONG_RUNNING_QUERIES)) {
 								report.addData(new MeasurementDataNumeric(
 										request, (Double) metricReturnObject));
-							} 
-
+							} else {
+								if (request
+										.getName()
+										.equals(
+												PluginConstants.ComponentType.Platform.Metrics.BUFFER_USAGE)) {
+									report.addData(new MeasurementDataNumeric(
+											request,
+											(Double) metricReturnObject));
+								}
+							}
 						}
 					}
 
@@ -275,9 +286,11 @@ public class PlatformComponent extends Facet {
 		Set<ManagedComponent> mcSet = null;
 		try {
 			mcSet = ProfileServiceUtil
-					.getManagedComponents(getConnection(),new org.jboss.managed.api.ComponentType(
-							PluginConstants.ComponentType.Platform.TEIID_TYPE,
-							PluginConstants.ComponentType.Platform.TEIID_SUB_TYPE));
+					.getManagedComponents(
+							getConnection(),
+							new org.jboss.managed.api.ComponentType(
+									PluginConstants.ComponentType.Platform.TEIID_TYPE,
+									PluginConstants.ComponentType.Platform.TEIID_SUB_TYPE));
 		} catch (NamingException e) {
 			LOG
 					.error("NamingException getting components in Platform loadConfiguration(): "
@@ -298,7 +311,8 @@ public class PlatformComponent extends Facet {
 	 * @param mcMap
 	 * @param configuration
 	 */
-	private void setProperties(Map<String, ManagedProperty> mcMap, Configuration configuration) {
+	private void setProperties(Map<String, ManagedProperty> mcMap,
+			Configuration configuration) {
 		for (ManagedProperty mProp : mcMap.values()) {
 			try {
 				String value = ProfileServiceUtil.stringValue(mProp.getValue());
@@ -314,7 +328,8 @@ public class PlatformComponent extends Facet {
 
 	@Override
 	public ProfileServiceConnection getConnection() {
-		return ((ApplicationServerComponent)this.resourceContext.getParentResourceComponent()).getConnection();
+		return ((ApplicationServerComponent) this.resourceContext
+				.getParentResourceComponent()).getConnection();
 	}
 
 	@Override
