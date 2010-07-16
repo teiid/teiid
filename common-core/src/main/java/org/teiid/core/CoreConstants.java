@@ -52,6 +52,8 @@ public interface CoreConstants {
 
     public static final String SYSTEM_MODEL = "SYS"; //$NON-NLS-1$
     
+    public static final String ODBC_MODEL = "pg_catalog"; //$NON-NLS-1$
+    
     public static final String SYSTEM_VDB = "System.vdb"; //$NON-NLS-1$
 
     public static final String PRODUCT_OWNER_NAME_PROPERTY = "ownerName"; //$NON-NLS-1$

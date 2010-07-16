@@ -164,7 +164,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				for (Datatype datatype : metadata.getDatatypes()) {
 					rows.add(Arrays.asList(datatype.getName(), datatype.isBuiltin(), datatype.isBuiltin(), datatype.getName(), datatype.getJavaClassName(), datatype.getScale(), 
 							datatype.getLength(), datatype.getNullType().toString(), datatype.isSigned(), datatype.isAutoIncrement(), datatype.isCaseSensitive(), datatype.getPrecisionLength(), 
-							datatype.getRadix(), datatype.getSearchType().toString(), datatype.getUUID(), datatype.getRuntimeTypeName(), datatype.getBasetypeName(), datatype.getAnnotation()));
+							datatype.getRadix(), datatype.getSearchType().toString(), datatype.getUUID(), datatype.getRuntimeTypeName(), datatype.getBasetypeName(), datatype.getAnnotation(), datatype.getUUID().hashCode()));
 				}
 				break;
 			case VIRTUALDATABASES:
@@ -172,13 +172,13 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				break;
 			case SCHEMAS:
 				for (Schema model : getVisibleSchemas(vdb, metadata)) {
-					rows.add(Arrays.asList(vdbName, model.getName(), model.isPhysical(), model.getUUID(), model.getAnnotation(), model.getPrimaryMetamodelUri()));
+					rows.add(Arrays.asList(vdbName, model.getName(), model.isPhysical(), model.getUUID(), model.getAnnotation(), model.getPrimaryMetamodelUri(), model.getUUID().hashCode()));
 				}
 				break;
 			case PROCEDURES:
 				for (Schema schema : getVisibleSchemas(vdb, metadata)) {
 					for (Procedure proc : schema.getProcedures().values()) {
-						rows.add(Arrays.asList(vdbName, proc.getParent().getName(), proc.getName(), proc.getNameInSource(), proc.getResultSet() != null, proc.getUUID(), proc.getAnnotation()));
+						rows.add(Arrays.asList(vdbName, proc.getParent().getName(), proc.getName(), proc.getNameInSource(), proc.getResultSet() != null, proc.getUUID(), proc.getAnnotation(),proc.getUUID().hashCode()));
 					}
 				}
 				break;
@@ -188,13 +188,13 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 						for (ProcedureParameter param : proc.getParameters()) {
 							Datatype dt = param.getDatatype();
 							rows.add(Arrays.asList(vdbName, proc.getParent().getName(), proc.getName(), param.getName(), dt!=null?dt.getRuntimeTypeName():null, param.getPosition(), param.getType().toString(), param.isOptional(), 
-									param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID(), param.getAnnotation()));
+									param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID(), param.getAnnotation(), param.getUUID().hashCode()));
 						}
 						if (proc.getResultSet() != null) {
 							for (Column param : proc.getResultSet().getColumns()) {
 								Datatype dt = param.getDatatype();
 								rows.add(Arrays.asList(vdbName, proc.getParent().getName(), proc.getName(), param.getName(), dt!=null?dt.getRuntimeTypeName():null, param.getPosition(), "ResultSet", false, //$NON-NLS-1$ 
-										param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID(), param.getAnnotation()));
+										param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID(), param.getAnnotation(), param.getUUID().hashCode()));
 							}
 						}
 					}
@@ -221,7 +221,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				}
 				for (AbstractMetadataRecord record : records) {
 					for (Map.Entry<String, String> entry : record.getProperties().entrySet()) {
-						rows.add(Arrays.asList(entry.getKey(), entry.getValue(), record.getUUID()));
+						rows.add(Arrays.asList(entry.getKey(), entry.getValue(), record.getUUID(), record.getUUID().hashCode()));
 					}
 				}
 				break;
@@ -231,7 +231,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 						switch (sysTable) {
 						case TABLES:
 							rows.add(Arrays.asList(vdbName, schema.getName(), table.getName(), table.getTableType().toString(), table.getNameInSource(), 
-									table.isPhysical(), table.supportsUpdate(), table.getUUID(), table.getCardinality(), table.getAnnotation(), table.isSystem(), table.isMaterialized()));
+									table.isPhysical(), table.supportsUpdate(), table.getUUID(), table.getCardinality(), table.getAnnotation(), table.isSystem(), table.isMaterialized(), table.getUUID().hashCode()));
 							break;
 						case COLUMNS:
 							for (Column column : table.getColumns()) {
@@ -240,13 +240,13 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 										dt!=null?dt.getRuntimeTypeName():null, column.getScale(), column.getLength(), column.isFixedLength(), column.isSelectable(), column.isUpdatable(),
 										column.isCaseSensitive(), column.isSigned(), column.isCurrency(), column.isAutoIncremented(), column.getNullType().toString(), column.getMinimumValue(), 
 										column.getMaximumValue(), column.getSearchType().toString(), column.getFormat(), column.getDefaultValue(), dt!=null?dt.getJavaClassName():null, column.getPrecision(), 
-										column.getCharOctetLength(), column.getRadix(), column.getUUID(), column.getAnnotation()));
+										column.getCharOctetLength(), column.getRadix(), column.getUUID(), column.getAnnotation(), column.getUUID().hashCode()));
 							}
 							break;
 						case KEYS:
 							for (KeyRecord key : table.getAllKeys()) {
 								rows.add(Arrays.asList(vdbName, table.getParent().getName(), table.getName(), key.getName(), key.getAnnotation(), key.getNameInSource(), key.getType().toString(), 
-										false, (key instanceof ForeignKey)?((ForeignKey)key).getUniqueKeyID():null, key.getUUID()));
+										false, (key instanceof ForeignKey)?((ForeignKey)key).getUniqueKeyID():null, key.getUUID(), key.getUUID().hashCode()));
 							}
 							break;
 						case KEYCOLUMNS:
@@ -254,7 +254,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 								int postition = 1;
 								for (Column column : key.getColumns()) {
 									rows.add(Arrays.asList(vdbName, schema.getName(), table.getName(), column.getName(), key.getName(), key.getType().toString(), 
-											(key instanceof ForeignKey)?((ForeignKey)key).getUniqueKeyID():null, key.getUUID(), postition++));
+											(key instanceof ForeignKey)?((ForeignKey)key).getUniqueKeyID():null, key.getUUID(), postition++, key.getUUID().hashCode()));
 								}
 							}
 							break;

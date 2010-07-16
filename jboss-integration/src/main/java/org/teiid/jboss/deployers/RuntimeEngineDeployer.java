@@ -79,6 +79,7 @@ import org.teiid.security.SecurityHelper;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
 import org.teiid.transport.LogonImpl;
+import org.teiid.transport.ODBCSocketListener;
 import org.teiid.transport.SocketConfiguration;
 import org.teiid.transport.SocketListener;
 
@@ -88,9 +89,11 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	private static final long serialVersionUID = -4676205340262775388L;
 
 	private transient SocketConfiguration jdbcSocketConfiguration;
-	private transient SocketConfiguration adminSocketConfiguration;	
+	private transient SocketConfiguration adminSocketConfiguration;
+	private transient SocketConfiguration odbcSocketConfiguration;
 	private transient SocketListener jdbcSocket;	
 	private transient SocketListener adminSocket;
+	private transient SocketListener odbcSocket;
 	private transient TransactionServerImpl transactionServerImpl = new TransactionServerImpl();
 		
 	private transient DQPCore dqpCore = new DQPCore();
@@ -142,6 +145,15 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	} else {
     		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_not_enabled", "admin connections")); //$NON-NLS-1$ //$NON-NLS-2$
     	}
+    	
+    	if (this.odbcSocketConfiguration.isEnabled()) {
+    		this.vdbRepository.odbcEnabled();
+	    	this.odbcSocket = new ODBCSocketListener(this.odbcSocketConfiguration, csr, this.dqpCore.getBufferManager());
+	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("odbc_enabled","Teiid ODBC - SSL=", (this.odbcSocketConfiguration.getSSLConfiguration().isSslEnabled()?"ON":"OFF")+" Host = "+this.odbcSocketConfiguration.getHostAddress().getHostName()+" Port = "+this.odbcSocketConfiguration.getPortNumber())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+    	} else {
+    		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("odbc_not_enabled")); //$NON-NLS-1$
+    	}    	
+    	
     	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("engine_started", new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
     	if (jndiName != null) {
 	    	final InitialContext ic ;
@@ -180,7 +192,12 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	if (this.adminSocket != null) {
     		this.adminSocket.stop();
     		this.adminSocket = null;
-    	}    	
+    	}    
+    	
+    	if (this.odbcSocket != null) {
+    		this.odbcSocket.stop();
+    		this.odbcSocket = null;
+    	}      	
     	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("engine_stopped", new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
     }
     
@@ -228,6 +245,10 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	
 	public void setAdminSocketConfiguration(SocketConfiguration socketConfig) {
 		this.adminSocketConfiguration = socketConfig;
+	}
+	
+	public void setOdbcSocketConfiguration(SocketConfiguration socketConfig) {
+		this.odbcSocketConfiguration = socketConfig;
 	}
     
     public void setXATerminator(XATerminator xaTerminator){

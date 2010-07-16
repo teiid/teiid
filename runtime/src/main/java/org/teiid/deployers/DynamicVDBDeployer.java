@@ -26,10 +26,7 @@ import javax.xml.bind.Unmarshaller;
 import org.jboss.deployers.vfs.spi.deployer.AbstractVFSParsingDeployer;
 import org.jboss.deployers.vfs.spi.structure.VFSDeploymentUnit;
 import org.jboss.virtual.VirtualFile;
-import org.teiid.adminapi.Model;
-import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.core.CoreConstants;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 
@@ -49,20 +46,10 @@ public class DynamicVDBDeployer extends AbstractVFSParsingDeployer<VDBMetaData> 
 		vdb.setUrl(unit.getRoot().toURL().toExternalForm());
 		vdb.setDynamic(true);
 		
-		// Add system model to the deployed VDB
-		ModelMetaData system = new ModelMetaData();
-		system.setName(CoreConstants.SYSTEM_MODEL);
-		system.setVisible(true);
-		system.setModelType(Model.Type.PHYSICAL);
-		system.addSourceMapping(CoreConstants.SYSTEM_MODEL, CoreConstants.SYSTEM_MODEL, CoreConstants.SYSTEM_MODEL); 
-		system.setSupportsMultiSourceBindings(false);
-		vdb.addModel(system);		
-		
 		LogManager.logDetail(LogConstants.CTX_RUNTIME,"VDB "+unit.getRoot().getName()+" has been parsed.");  //$NON-NLS-1$ //$NON-NLS-2$
 		
 		// The loading of metadata from data sources will be done during the real deploy
 		// as the resources are guaranteed to be available by that time.
-		
 		return vdb;
 	}
 }

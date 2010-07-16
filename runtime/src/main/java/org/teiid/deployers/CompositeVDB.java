@@ -45,17 +45,17 @@ public class CompositeVDB {
 	private LinkedHashMap<String, Resource> visibilityMap;
 	private UDFMetaData udf;
 	private LinkedHashMap<VDBKey, CompositeVDB> children;
-	private MetadataStore systemStore;
+	private MetadataStore[] additionalStores;
 	
 	// used as cached item to avoid rebuilding
 	private VDBMetaData mergedVDB;
 	
-	public CompositeVDB(VDBMetaData vdb, MetadataStoreGroup stores, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, MetadataStore systemStore) {
+	public CompositeVDB(VDBMetaData vdb, MetadataStoreGroup stores, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, MetadataStore... additionalStores) {
 		this.vdb = vdb;
 		this.stores = stores;
 		this.visibilityMap = visibilityMap;
 		this.udf = udf;
-		this.systemStore = systemStore;
+		this.additionalStores = additionalStores;
 		update(this.vdb);
 	}
 	
@@ -88,7 +88,9 @@ public class CompositeVDB {
 		}
 		
 		CompositeMetadataStore compositeStore = new CompositeMetadataStore(stores.getStores());
-		compositeStore.addMetadataStore(this.systemStore);
+		for (MetadataStore s:this.additionalStores) {
+			compositeStore.addMetadataStore(s);
+		}
 		
 		TransformationMetadata metadata =  new TransformationMetadata(vdb, compositeStore, visibilityMap, methods);
 				

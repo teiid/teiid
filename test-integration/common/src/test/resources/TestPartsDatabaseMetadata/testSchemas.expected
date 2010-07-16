@@ -2,7 +2,8 @@ string                                                             string
 TABLE_SCHEM                                                        TABLE_CATALOG                                                    
 PartsSupplier                                                      PartsSupplier                                                    
 SYS                                                                PartsSupplier                                                    
-Row Count : 2
+pg_catalog                                                         PartsSupplier                                                    
+Row Count : 3
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
 TABLE_SCHEM    12             PartsSupplier   java.lang.String    TABLE_SCHEM     string             SYS            Schemas       255                   255           0         false            true             false       true                  1           false       true          true      true        
 TABLE_CATALOG  12             PartsSupplier   java.lang.String    TABLE_CATALOG   string             SYS            Schemas       255                   255           0         false            true             false       true                  1           false       true          true      true        

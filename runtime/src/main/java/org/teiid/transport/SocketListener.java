@@ -82,7 +82,7 @@ public class SocketListener implements ChannelListenerFactory {
         ChannelFactory factory = new NioServerSocketChannelFactory(this.nettyPool, this.nettyPool, Math.min(Runtime.getRuntime().availableProcessors(), maxWorkers));
         
         ServerBootstrap bootstrap = new ServerBootstrap(factory);
-        this.channelHandler = new SSLAwareChannelHandler(this, config, Thread.currentThread().getContextClassLoader(), storageManager);
+        this.channelHandler = createChannelPipelineFactory(config, storageManager);
         bootstrap.setPipelineFactory(channelHandler);
         if (inputBufferSize != 0) {
         	bootstrap.setOption("receiveBufferSize", new Integer(inputBufferSize)); //$NON-NLS-1$
@@ -117,6 +117,10 @@ public class SocketListener implements ChannelListenerFactory {
         return stats;
     }
 
+    protected SSLAwareChannelHandler createChannelPipelineFactory(SSLConfiguration config, StorageManager storageManager) {
+    	return new SSLAwareChannelHandler(this, config, Thread.currentThread().getContextClassLoader(), storageManager);
+    }
+    
 	public ChannelListener createChannelListener(ObjectChannel channel) {
 		return new SocketClientInstance(channel, csr, this.isClientEncryptionEnabled);
 	}

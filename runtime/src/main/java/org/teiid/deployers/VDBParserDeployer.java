@@ -168,16 +168,7 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 			// If the UDF file is enclosed then attach it to the deployment artifact
 			unit.addAttachment(UDFMetaData.class, udf);
 		}
-		
-		// Add system model to the deployed VDB
-		ModelMetaData system = new ModelMetaData();
-		system.setName(CoreConstants.SYSTEM_MODEL);
-		system.setVisible(true);
-		system.setModelType(Model.Type.PHYSICAL);
-		system.addSourceMapping(CoreConstants.SYSTEM_MODEL, CoreConstants.SYSTEM_MODEL, CoreConstants.SYSTEM_MODEL); 
-		system.setSupportsMultiSourceBindings(false);
-		vdb.addModel(system);		
-		
+				
 		LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+unit.getRoot().getName()+" has been parsed."); //$NON-NLS-1$ //$NON-NLS-2$
 		return vdb;
 	}
@@ -200,7 +191,7 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 		if (vdbMO != null) {
 			VDBMetaData vdb = (VDBMetaData) vdbMO.getAttachment();
 			for (Model m : vdb.getModels()) {
-				if (m.getName().equals(CoreConstants.SYSTEM_MODEL)) {
+				if (m.getName().equals(CoreConstants.SYSTEM_MODEL) || m.getName().equals(CoreConstants.ODBC_MODEL) ) {
 					continue;
 				}
 				ManagedObject mo = this.mof.initManagedObject(m, ModelMetaData.class, m.getName(),m.getName());

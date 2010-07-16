@@ -1923,6 +1923,17 @@
               <para>return is string</para>
             </entry>
           </row>
+          <row>
+            <entry>
+              <para><code>CURRENT_DATABASE()</code></para>
+            </entry>
+            <entry>
+              <para>Retrieve the catalog name of the database. Currently VDB's name is also the catalog name.</para>
+            </entry>
+            <entry>
+              <para>return is string</para>
+            </entry>
+          </row>          
         </tbody>
       </tgroup>
     </informaltable>

@@ -28,18 +28,26 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.jboss.deployers.spi.DeploymentException;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
+import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.core.CoreConstants;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.Datatype;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.TransformationMetadata.Resource;
 import org.teiid.runtime.RuntimePlugin;
+import org.teiid.translator.TranslatorException;
 import org.teiid.vdb.runtime.VDBKey;
 
 
@@ -51,6 +59,8 @@ public class VDBRepository implements Serializable{
 	
 	private Map<VDBKey, CompositeVDB> vdbRepo = new ConcurrentHashMap<VDBKey, CompositeVDB>();
 	private MetadataStore systemStore;
+	private MetadataStore odbcStore;
+	private boolean odbcEnabled = false;
 	
 	public void addVDB(VDBMetaData vdb, MetadataStoreGroup stores, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf) throws DeploymentException {
 		if (getVDB(vdb.getName(), vdb.getVersion()) != null) {
@@ -60,9 +70,41 @@ public class VDBRepository implements Serializable{
 		// get the system VDB metadata store
 		if (this.systemStore == null) {
 			throw new DeploymentException(RuntimePlugin.Util.getString("system_vdb_load_error")); //$NON-NLS-1$
-		}		
+		}	
 		
-		this.vdbRepo.put(vdbId(vdb), new CompositeVDB(vdb, stores, visibilityMap, udf, this.systemStore));
+		if (this.odbcEnabled && odbcStore == null) {
+			this.odbcStore = getODBCMetadataStore();
+		}
+		
+		if (this.odbcStore == null) {
+			addSystemModel(vdb);
+			this.vdbRepo.put(vdbId(vdb), new CompositeVDB(vdb, stores, visibilityMap, udf, this.systemStore));
+		}
+		else {
+			addSystemModel(vdb);
+			addODBCModel(vdb);
+			this.vdbRepo.put(vdbId(vdb), new CompositeVDB(vdb, stores, visibilityMap, udf, this.systemStore, odbcStore));
+		}
+	}
+
+	private void addODBCModel(VDBMetaData vdb) {
+		// add the ODBC model
+		ModelMetaData odbcSystem = new ModelMetaData();
+		odbcSystem.setName(CoreConstants.ODBC_MODEL);
+		odbcSystem.setVisible(true);
+		odbcSystem.setModelType(Model.Type.VIRTUAL);
+		vdb.addModel(odbcSystem);
+	}
+	
+	private void addSystemModel(VDBMetaData vdb) {
+		// Add system model to the deployed VDB
+		ModelMetaData system = new ModelMetaData();
+		system.setName(CoreConstants.SYSTEM_MODEL);
+		system.setVisible(true);
+		system.setModelType(Model.Type.PHYSICAL);
+		system.addSourceMapping(CoreConstants.SYSTEM_MODEL, CoreConstants.SYSTEM_MODEL, CoreConstants.SYSTEM_MODEL); 
+		system.setSupportsMultiSourceBindings(false);
+		vdb.addModel(system);		
 	}
 	
 	public VDBMetaData getVDB(String name, int version) {
@@ -113,8 +155,27 @@ public class VDBRepository implements Serializable{
 		return systemStore;
 	}
 	
+	public MetadataStore getODBCStore() {
+		return this.odbcStore;
+	}	
+	
 	public void setSystemStore(MetadataStore store) {
 		this.systemStore = store;
+	}
+
+	private MetadataStore getODBCMetadataStore() {
+		MetadataFactory factory = new MetadataFactory(CoreConstants.ODBC_MODEL, getBuiltinDatatypes(), new Properties()); 
+		try {
+			PgCatalogMetadataStore pg = new PgCatalogMetadataStore(factory);
+			return  pg.getMetadataStore();
+		} catch (TranslatorException e) {
+			LogManager.logError(LogConstants.CTX_DQP, RuntimePlugin.Util.getString("failed_to_load_odbc_metadata")); //$NON-NLS-1$
+		}
+		return null;
+	}
+	
+	public void odbcEnabled() {
+		this.odbcEnabled = true;
 	}
 	
 	public synchronized void removeVDB(String vdbName, int vdbVersion) {
@@ -144,15 +205,22 @@ public class VDBRepository implements Serializable{
 	public void mergeVDBs(String sourceVDBName, int sourceVDBVersion, String targetVDBName, int targetVDBVersion) throws AdminException{
 		CompositeVDB source = this.vdbRepo.get(new VDBKey(sourceVDBName, sourceVDBVersion));
 		if (source == null) {
-			throw new AdminProcessingException(RuntimePlugin.Util.getString("vdb_not_found", sourceVDBName, sourceVDBVersion));
+			throw new AdminProcessingException(RuntimePlugin.Util.getString("vdb_not_found", sourceVDBName, sourceVDBVersion)); //$NON-NLS-1$
 		}
 		
 		CompositeVDB target = this.vdbRepo.get(new VDBKey(targetVDBName, targetVDBVersion));
 		if (target == null) {
-			throw new AdminProcessingException(RuntimePlugin.Util.getString("vdb_not_found", sourceVDBName, sourceVDBVersion));
+			throw new AdminProcessingException(RuntimePlugin.Util.getString("vdb_not_found", sourceVDBName, sourceVDBVersion)); //$NON-NLS-1$
 		}		
 		
 		// merge them
 		target.addChild(source);
+	}
+	
+	// this is called by mc
+	public void start() {
+		if (this.odbcEnabled) {
+			this.odbcStore = getODBCMetadataStore();
+		}
 	}
 }

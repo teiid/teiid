@@ -114,7 +114,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		if (store == null && deployment.isDynamic()) {
 			MetadataStoreGroup dynamicStore = new MetadataStoreGroup();
 			for (Model model:deployment.getModels()) {
-				if (model.getName().equals(CoreConstants.SYSTEM_MODEL)){
+				if (model.getName().equals(CoreConstants.SYSTEM_MODEL) || model.getName().equals(CoreConstants.ODBC_MODEL)){
 					continue;
 				}
 				dynamicStore.addStore(buildDynamicMetadataStore((VFSDeploymentUnit)unit, deployment, (ModelMetaData)model));
@@ -138,6 +138,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		// add the metadata objects as attachments
 		deployment.removeAttachment(IndexMetadataFactory.class);
 		deployment.removeAttachment(UDFMetaData.class);
+		deployment.removeAttachment(MetadataStoreGroup.class);
 		
 		// add transformation metadata to the repository.
 		this.vdbRepository.addVDB(deployment, store, visibilityMap, udf);
@@ -169,7 +170,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map = new IdentityHashMap<Translator, ExecutionFactory<Object, Object>>();
 		
 		for (Model model:deployment.getModels()) {
-			if (model.getName().equals(CoreConstants.SYSTEM_MODEL)){
+			if (model.getName().equals(CoreConstants.SYSTEM_MODEL) || model.getName().equals(CoreConstants.ODBC_MODEL)){
 				continue;
 			}			
 			for (String source:model.getSourceNames()) {
@@ -202,7 +203,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 			ModelMetaData model = (ModelMetaData)m;
 			List<SourceMappingMetadata> mappings = model.getSourceMappings();
 			for (SourceMappingMetadata mapping:mappings) {
-				if (mapping.getName().equals(CoreConstants.SYSTEM_MODEL)) {
+				if (mapping.getName().equals(CoreConstants.SYSTEM_MODEL) || model.getName().equals(CoreConstants.ODBC_MODEL)) {
 					continue;
 				}
 				ConnectorManager cm = this.connectorManagerRepository.getConnectorManager(mapping.getName());
@@ -228,7 +229,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		// there is chance that two different VDBs using the same source name, and their
 		// connector manager is removed. should we prefix vdb name??
 		for (Model model:deployment.getModels()) {
-			if (model.getName().equals(CoreConstants.SYSTEM_MODEL)){
+			if (model.getName().equals(CoreConstants.SYSTEM_MODEL) || model.getName().equals(CoreConstants.ODBC_MODEL)){
 				continue;
 			}
 			for (String source:model.getSourceNames()) {

@@ -471,7 +471,7 @@ public abstract class AbstractQueryTest {
             assertResults(expected);
         }
         else {
-            printResults();
+            printResults(true);
         }    	
     }
 }

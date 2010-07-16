@@ -62,7 +62,11 @@ public class FakeServer extends ClientServiceRegistryImpl {
 	
 	public FakeServer() {
 		this.logon = new LogonImpl(sessionService, null);
+		
 		this.repo.setSystemStore(VDBMetadataFactory.getSystem());
+		this.repo.odbcEnabled();
+		this.repo.start();
+		
         this.sessionService.setVDBRepository(repo);
         this.dqp.setBufferService(new FakeBufferService());
         this.dqp.setTransactionService(new FakeTransactionService());
@@ -93,17 +97,15 @@ public class FakeServer extends ClientServiceRegistryImpl {
         vdbMetaData.setStatus(VDB.Status.ACTIVE);
         
         for (Schema schema : repo.getSystemStore().getSchemas().values()) {
-        	ModelMetaData model = new ModelMetaData();
-            model.setName(schema.getName());
-            vdbMetaData.addModel(model);
-            model.addSourceMapping("source", "translator", "jndi:source"); 
+        	addModel(vdbMetaData, schema); 
         }
         
+        for (Schema schema : repo.getODBCStore().getSchemas().values()) {
+        	addModel(vdbMetaData, schema); 
+        }        
+        
         for (Schema schema : metadata.getSchemas().values()) {
-        	ModelMetaData model = new ModelMetaData();
-            model.setName(schema.getName());
-            vdbMetaData.addModel(model);
-            model.addSourceMapping("source", "translator", "jndi:source"); 
+        	addModel(vdbMetaData, schema); 
         }
                         
         try {
@@ -113,6 +115,13 @@ public class FakeServer extends ClientServiceRegistryImpl {
 		} catch (DeploymentException e) {
 			throw new RuntimeException(e);
 		}		
+	}
+
+	private void addModel(VDBMetaData vdbMetaData, Schema schema) {
+		ModelMetaData model = new ModelMetaData();
+		model.setName(schema.getName());
+		vdbMetaData.addModel(model);
+		model.addSourceMapping("source", "translator", "jndi:source");
 	}
 	
 	public void undeployVDB(String vdbName) {

@@ -58,6 +58,7 @@ public class CachedFinder implements CapabilitiesFinder {
         this.connectorRepo = repo;
         this.vdb = vdb;
     	userCache.put(CoreConstants.SYSTEM_MODEL, SYSTEM_CAPS);
+    	userCache.put(CoreConstants.ODBC_MODEL, SYSTEM_CAPS);
     }
 
     /**

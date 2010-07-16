@@ -1196,6 +1196,10 @@ public final class FunctionMethods {
     public static Object user(CommandContext context) {
         return context.getUserName();
     }
+    
+    public static Object current_database(CommandContext context) {
+    	return context.getVdbName();
+    }
 
     // ================= Function - COMMANDPAYLOAD ========================
     public static Object commandPayload(CommandContext context) {
