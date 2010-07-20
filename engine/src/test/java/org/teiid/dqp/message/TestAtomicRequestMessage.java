@@ -26,7 +26,7 @@ import junit.framework.TestCase;
 
 import org.teiid.client.RequestMessage;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.dqp.internal.datamgr.language.TestQueryImpl;
+import org.teiid.dqp.internal.datamgr.TestQueryImpl;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;

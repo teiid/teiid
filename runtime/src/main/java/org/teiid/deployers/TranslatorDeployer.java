@@ -28,7 +28,7 @@ import org.jboss.deployers.spi.deployer.helpers.AbstractSimpleRealDeployer;
 import org.jboss.deployers.structure.spi.DeploymentUnit;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.TranslatorMetaData;
-import org.teiid.dqp.internal.datamgr.impl.TranslatorRepository;
+import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.runtime.RuntimePlugin;

@@ -34,7 +34,7 @@ import org.teiid.client.RequestMessage;
 import org.teiid.client.metadata.MetadataResult;
 import org.teiid.client.metadata.ResultsMetadataConstants;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.dqp.internal.datamgr.impl.FakeTransactionService;
+import org.teiid.dqp.internal.datamgr.FakeTransactionService;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;

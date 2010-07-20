@@ -26,7 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.dqp.internal.datamgr.impl.CapabilitiesConverter;
+import org.teiid.dqp.internal.datamgr.CapabilitiesConverter;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;

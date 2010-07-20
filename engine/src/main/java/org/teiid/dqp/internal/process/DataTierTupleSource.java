@@ -35,7 +35,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.Assertion;
-import org.teiid.dqp.internal.datamgr.impl.ConnectorWork;
+import org.teiid.dqp.internal.datamgr.ConnectorWork;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.translator.DataNotAvailableException;

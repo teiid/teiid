@@ -59,7 +59,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.Streamable;
 import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.cache.DQPContextCache;
-import org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor.PrioritizedRunnable;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;

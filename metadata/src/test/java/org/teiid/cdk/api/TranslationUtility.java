@@ -27,7 +27,7 @@ import java.net.URL;
 import java.util.Collection;
 
 import org.teiid.cdk.CommandBuilder;
-import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
+import org.teiid.dqp.internal.datamgr.RuntimeMetadataImpl;
 import org.teiid.language.Command;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.index.VDBMetadataFactory;

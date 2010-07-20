@@ -35,7 +35,7 @@ import org.jboss.deployers.structure.spi.DeploymentUnit;
 import org.jboss.managed.api.ManagedObject;
 import org.jboss.managed.api.factory.ManagedObjectFactory;
 import org.teiid.adminapi.impl.TranslatorMetaData;
-import org.teiid.dqp.internal.datamgr.impl.TranslatorRepository;
+import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.runtime.RuntimePlugin;

@@ -171,14 +171,18 @@ public class TupleBatch implements Externalizable {
     }
 
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        rowOffset = in.readInt();
+        //rowOffset = in.readInt();
         terminationFlag = in.readBoolean();
         tuples = BatchSerializer.readBatch(in, types);
     }
     public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeInt(rowOffset);
+        //out.writeInt(rowOffset);
         out.writeBoolean(terminationFlag);
         BatchSerializer.writeBatch(out, types, tuples);
     }
+    
+    public void setRowOffset(int rowOffset) {
+		this.rowOffset = rowOffset;
+	}
 }
 

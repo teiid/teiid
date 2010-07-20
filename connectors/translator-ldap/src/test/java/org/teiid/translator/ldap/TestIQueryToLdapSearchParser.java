@@ -35,7 +35,7 @@ import junit.framework.TestCase;
 
 import org.teiid.cdk.CommandBuilder;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
+import org.teiid.dqp.internal.datamgr.RuntimeMetadataImpl;
 import org.teiid.language.Command;
 import org.teiid.language.Select;
 import org.teiid.metadata.Column;

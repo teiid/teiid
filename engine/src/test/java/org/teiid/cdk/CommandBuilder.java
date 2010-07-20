@@ -28,7 +28,7 @@ import java.util.List;
 
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
+import org.teiid.dqp.internal.datamgr.LanguageBridgeFactory;
 import org.teiid.language.LanguageFactory;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.relational.AliasGenerator;

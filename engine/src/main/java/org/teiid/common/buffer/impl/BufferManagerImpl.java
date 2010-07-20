@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -151,7 +150,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 
 		@Override
 		public TupleBatch getBatch(boolean cache, String[] types) throws TeiidComponentException {
-			int reads = readAttempts.incrementAndGet();
+			long reads = readAttempts.incrementAndGet();
 			LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, id, "getting batch", reads, "reference hits", referenceHit.get()); //$NON-NLS-1$ //$NON-NLS-2$
 			synchronized (activeBatches) {
 				TupleBufferInfo tbi = activeBatches.remove(this.id);
@@ -188,13 +187,14 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 						return batch;
 					}
 				}
-				int count = readCount.incrementAndGet();
+				long count = readCount.incrementAndGet();
 				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, id, beginRow, "reading batch from disk, total reads:", count); //$NON-NLS-1$
 				try {
 		            ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(store.createInputStream(this.offset), IO_BUFFER_SIZE));
 		            batch = new TupleBatch();
 		            batch.setDataTypes(types);
 		            batch.readExternal(ois);
+		            batch.setRowOffset(this.beginRow);
 			        batch.setDataTypes(null);
 			        if (cache) {
 			        	this.activeBatch = batch;
@@ -214,7 +214,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				TupleBatch batch = activeBatch;
 				if (batch != null) {
 					if (!persistent) {
-						int count = writeCount.incrementAndGet();
+						long count = writeCount.incrementAndGet();
 						LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, id, beginRow, "writing batch to disk, total writes: ", count); //$NON-NLS-1$
 						synchronized (store) {
 							offset = store.getLength();
@@ -268,11 +268,11 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     private StorageManager diskMgr;
 
     private AtomicLong currentTuple = new AtomicLong();
-    private AtomicInteger batchAdded = new AtomicInteger();
-    private AtomicInteger readCount = new AtomicInteger();
-	private AtomicInteger writeCount = new AtomicInteger();
-	private AtomicInteger readAttempts = new AtomicInteger();
-	private AtomicInteger referenceHit = new AtomicInteger();
+    private AtomicLong batchAdded = new AtomicLong();
+    private AtomicLong readCount = new AtomicLong();
+	private AtomicLong writeCount = new AtomicLong();
+	private AtomicLong readAttempts = new AtomicLong();
+	private AtomicLong referenceHit = new AtomicLong();
 	
 	public long getBatchesAdded() {
 		return batchAdded.get();

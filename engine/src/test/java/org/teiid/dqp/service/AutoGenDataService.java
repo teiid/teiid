@@ -30,9 +30,9 @@ import java.util.List;
 
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
-import org.teiid.dqp.internal.datamgr.impl.ConnectorWork;
-import org.teiid.dqp.internal.datamgr.impl.ConnectorWorkItem;
+import org.teiid.dqp.internal.datamgr.ConnectorManager;
+import org.teiid.dqp.internal.datamgr.ConnectorWork;
+import org.teiid.dqp.internal.datamgr.ConnectorWorkItem;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
