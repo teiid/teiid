@@ -20,6 +20,7 @@
                     <include>**/*.properties</include>
                     <include>**/*.sh</include>
                     <include>**/*.bat</include>
+                    <include>**/*.html</include>
                 </includes>
             </resource>
             <resource>
@@ -30,6 +31,7 @@
                     <exclude>**/*.properties</exclude>
                     <exclude>**/*.sh</exclude>
                     <exclude>**/*.bat</exclude>
+                    <exclude>**/*.html</exclude>
                 </excludes>
             </resource>
         </resources>
