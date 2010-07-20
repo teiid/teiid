@@ -58,7 +58,6 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.Streamable;
 import org.teiid.dqp.DQPPlugin;
-import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor.PrioritizedRunnable;
 import org.teiid.dqp.message.AtomicRequestMessage;
@@ -203,7 +202,6 @@ public class DQPCore implements DQP {
     
 	private Map<RequestID, RequestWorkItem> requests = new ConcurrentHashMap<RequestID, RequestWorkItem>();			
 	private Map<String, ClientState> clientState = Collections.synchronizedMap(new HashMap<String, ClientState>());
-	private DQPContextCache contextCache;
     private boolean useEntitlements = false;
     
     private int maxActivePlans = DQPConfiguration.DEFAULT_MAX_ACTIVE_PLANS;
@@ -396,7 +394,6 @@ public class DQPCore implements DQP {
     	if (state != null) {
     		state.removeRequest(workItem.requestID);
     	}
-    	contextCache.removeRequestScopedCache(workItem.requestID.toString());
     }
     
     void addWork(Runnable work) {
@@ -489,7 +486,6 @@ public class DQPCore implements DQP {
         } catch (XATransactionException err) {
             LogManager.logWarning(LogConstants.CTX_DQP, "rollback failed for requestID=" + sessionId); //$NON-NLS-1$
         } 
-        contextCache.removeSessionScopedCache(sessionId);
     }
 
     public boolean cancelRequest(String sessionId, long requestId) throws TeiidComponentException {
@@ -668,7 +664,6 @@ public class DQPCore implements DQP {
                         
         //get buffer manager
         this.bufferManager = bufferService.getBufferManager();
-        this.contextCache = bufferService.getContextCache();
 
         this.processWorkerPool = new ThreadReuseExecutor(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, config.getMaxThreads());
         
@@ -683,13 +678,8 @@ public class DQPCore implements DQP {
 	
 	public void setBufferService(BufferService service) {
 		this.bufferService = service;
-		setContextCache(service.getContextCache());
 	}
 	
-	public void setContextCache(DQPContextCache cache) {
-		this.contextCache = cache;
-	}
-
 	public void setTransactionService(TransactionService service) {
 		this.transactionService = service;
 	}

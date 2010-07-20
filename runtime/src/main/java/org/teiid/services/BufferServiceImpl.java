@@ -38,7 +38,6 @@ import org.teiid.common.buffer.impl.MemoryStorageManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.FileUtils;
-import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.runtime.RuntimePlugin;
 
@@ -58,7 +57,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
     private BufferManagerImpl bufferMgr;
 	private File bufferDir;
 	private boolean useDisk = true;
-	private DQPContextCache contextCache;
 	private int processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
 	private int connectorBatchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
 	private CacheFactory cacheFactory;
@@ -128,15 +126,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
     public BufferManager getBufferManager() {
         return this.bufferMgr;
     }
-
-	@Override
-	public DQPContextCache getContextCache() {
-		return this.contextCache;
-	}
-	
-	public void setContextCache(DQPContextCache cache) {
-		this.contextCache = cache;
-	}
 	
 	public void setUseDisk(boolean flag) {
 		this.useDisk = flag;
@@ -174,11 +163,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
 		return this.connectorBatchSize;
 	}
 
-	@Override
-	public CacheFactory getCacheFactory() {
-		return this.cacheFactory;
-	}
-	
 	public void setCacheFactory(CacheFactory cf) {
 		this.cacheFactory = cf;
 	}

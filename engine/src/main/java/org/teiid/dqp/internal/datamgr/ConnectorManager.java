@@ -37,7 +37,6 @@ import javax.naming.NamingException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.Assertion;
 import org.teiid.dqp.DQPPlugin;
-import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.service.BufferService;
@@ -248,14 +247,6 @@ public class ConnectorManager  {
 				}
 			} catch (NamingException e) {
 			}    		
-    	}
-    	return null;
-    }
-    
-    
-    DQPContextCache getContextCache() {
-     	if (bufferService != null) {
-    		return bufferService.getContextCache();
     	}
     	return null;
     }

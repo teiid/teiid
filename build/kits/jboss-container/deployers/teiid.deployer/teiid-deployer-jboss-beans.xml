@@ -45,7 +45,6 @@
             </parameter>
         </uninstall>
         <property name="VDBRepository"><inject bean="VDBRepository"/></property>
-        <property name="contextCache"><inject bean="ContextCache"/></property>
         <property name="objectSerializer"><inject bean="ObjectSerializer"/></property>
         <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>  
         <property name="translatorRepository"><inject bean="translatorRepository"/></property>      
@@ -98,79 +97,4 @@
     <!--  used for the translators -->
    <bean name="TranslatorDeploymentTemplateInfoFactory" class="org.teiid.templates.TranslatorTemplateInfoFactory"/>
            
-   <!--  JBOSS Cache -->
-   <!-- Uncomment for JBoss Cache -->
-   <!-- 
-   <bean name="TeiidJBossCacheConfig" class="org.jboss.cache.config.Configuration">
-      <property name="runtimeConfig">
-         <bean class="org.jboss.cache.config.RuntimeConfig">
-            <property name="transactionManager">
-               <inject bean="TransactionManager" property="transactionManager"/>
-            </property>
-         </bean>
-      </property>
-    
-      <property name="isolationLevel">READ_COMMITTED</property>
-
-      <property name="cacheMode">LOCAL</property>     
-
-      <property name="lockAcquisitionTimeout">15000</property>
-
-      <property name="exposeManagementStatistics">true</property>
-
-      <property name="evictionConfig">
-         <bean class="org.jboss.cache.config.EvictionConfig">
-            <property name="defaultEvictionPolicyClass">org.jboss.cache.eviction.LRUPolicy</property>
-            <property name="wakeupIntervalSeconds">15</property>
-            <property name="evictionRegionConfigs">
-               <list>
-                  <bean class="org.jboss.cache.config.EvictionRegionConfig">
-                     <property name="regionName">/_default_</property>
-                     <property name="evictionAlgorithmConfig">
-                        <bean class="org.jboss.cache.eviction.LRUAlgorithmConfig">
-                           <property name="maxAge">-1</property>
-                           <property name="timeToLive">-1</property>
-                           <property name="maxNodes">10000</property>
-                        </bean>
-                     </property>
-                  </bean>
-               </list>
-            </property>
-         </bean>
-      </property>
-   </bean>
-
-   <bean name="TeiidDefaultCacheFactory" class="org.jboss.cache.DefaultCacheFactory">      
-      <constructor factoryClass="org.jboss.cache.DefaultCacheFactory" factoryMethod="getInstance"/>
-   </bean>
-
-   <bean name="TeiidJBossCache" class="org.jboss.cache.Cache">  
-      <constructor factoryMethod="createCache">
-          <factory bean="TeiidDefaultCacheFactory"/>
-          <parameter class="org.jboss.cache.config.Configuration"><inject bean="TeiidJBossCacheConfig"/></parameter>
-          <parameter class="boolean">false</parameter>
-      </constructor>
-   </bean>
-   
-   <bean name="TeiidJBossCacheMBean" class="org.jboss.cache.jmx.CacheJmxWrapper">
-        <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="jboss.cache:service=TeiidCache",exposedInterface=org.jboss.cache.jmx.CacheJmxWrapperMBean.class,registerDirectly=true)</annotation> 
-        <constructor>
-          <parameter class="org.jboss.cache.Cache"><inject bean="TeiidJBossCache"/></parameter>
-      </constructor>
-   </bean>
-   
-    <bean name="TeiidCache" class="com.metamatrix.cache.jboss.JBossCacheFactory">
-        <property name="cacheName">jboss.cache:service=TeiidCache</property>
-        <demand>TransactionManager</demand>
-        <demand>TeiidJBossCacheMBean</demand>
-    </bean>       
-    --> 
-    
-    <bean name="TeiidCache" class="org.teiid.cache.DefaultCacheFactory">
-    </bean> 
-    
-    <bean name="ContextCache" class="org.teiid.dqp.internal.cache.DQPContextCache">
-        <property name="cacheFactory"><inject bean="TeiidCache"/></property>
-        <property name="processName">localhost</property>
-    </bean>    
 </deployment>

@@ -45,10 +45,6 @@
       <artifactId>teiid-metadata</artifactId>
     </dependency>
     <dependency>
-    	<groupId>org.jboss.teiid</groupId>
-    	<artifactId>teiid-cache-jbosscache</artifactId>
-    </dependency>
-    <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
       <scope>provided</scope>
@@ -56,6 +52,7 @@
     <dependency>
         <groupId>commons-logging</groupId>
         <artifactId>commons-logging</artifactId>
+        <scope>provided</scope>
     </dependency>
     <dependency>
         <groupId>org.jboss.netty</groupId>

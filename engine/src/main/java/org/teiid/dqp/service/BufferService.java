@@ -22,19 +22,10 @@
 
 package org.teiid.dqp.service;
 
-import org.teiid.cache.CacheFactory;
 import org.teiid.common.buffer.BufferManager;
-import org.teiid.dqp.internal.cache.DQPContextCache;
 
 
-/**
- */
 public interface BufferService {
-
     BufferManager getBufferManager();
-
-    DQPContextCache getContextCache();
-    
-    CacheFactory getCacheFactory();
- }
+}
 

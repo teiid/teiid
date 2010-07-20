@@ -41,7 +41,6 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.util.FileUtils;
-import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
@@ -60,7 +59,6 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	private VDBRepository vdbRepository;
 	private ConnectorManagerRepository connectorManagerRepository;
 	private TranslatorRepository translatorRepository;
-	private DQPContextCache contextCache;
 	private ObjectSerializer serializer;
 	private ContainerLifeCycleListener shutdownListener;
 	
@@ -245,11 +243,6 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 			this.vdbRepository.removeVDB(deployment.getName(), deployment.getVersion());
 		}
 		
-		if (this.contextCache != null) {
-			// remove any vdb specific context cache
-			this.contextCache.removeVDBScopedCache(deployment.getName(), deployment.getVersion());			
-		}
-
 		try {
 			deleteMetadataStore((VFSDeploymentUnit)unit, deployment);
 		} catch (IOException e) {
@@ -259,10 +252,6 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_undeployed", deployment)); //$NON-NLS-1$
 	}
 
-	public void setContextCache(DQPContextCache cache) {
-		this.contextCache = cache;
-	}
-	
 	public void setObjectSerializer(ObjectSerializer serializer) {
 		this.serializer = serializer;
 	}		

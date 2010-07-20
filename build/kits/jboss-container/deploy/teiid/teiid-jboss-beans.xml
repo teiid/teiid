@@ -16,8 +16,6 @@
     </bean>
     
     <bean name="BufferService" class="org.teiid.services.BufferServiceImpl">
-        <property name="contextCache"><inject bean="ContextCache"/></property>
-        <property name="cacheFactory"><inject bean="TeiidCache"/></property>
         <!-- Use disk for buffer management -->
         <property name="useDisk">true</property>
         <!-- Directory location for the buffer files -->

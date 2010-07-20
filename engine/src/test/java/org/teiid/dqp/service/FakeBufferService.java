@@ -22,12 +22,8 @@
 
 package org.teiid.dqp.service;
 
-import org.teiid.cache.CacheFactory;
-import org.teiid.cache.FakeCache.FakeCacheFactory;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
-import org.teiid.dqp.internal.cache.DQPContextCache;
-import org.teiid.dqp.service.BufferService;
 
 public class FakeBufferService implements BufferService {
 
@@ -43,16 +39,4 @@ public class FakeBufferService implements BufferService {
         return bufferMgr;
     }
 
-	@Override
-	public DQPContextCache getContextCache() {
-		DQPContextCache cache =  new DQPContextCache();
-		cache.setCacheFactory(new FakeCacheFactory());
-		cache.setProcessName("test");
-		return cache;
-	}
-
-	@Override
-	public CacheFactory getCacheFactory() {
-		return null;
-	}
 }

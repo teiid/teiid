@@ -30,13 +30,8 @@ import java.util.List;
 
 import javax.security.auth.Subject;
 
-import org.teiid.cache.Cache;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.util.HashCodeUtil;
-import org.teiid.dqp.DQPPlugin;
-import org.teiid.dqp.internal.cache.DQPContextCache;
-import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.translator.CacheScope;
 import org.teiid.translator.ExecutionContext;
 
 
@@ -66,7 +61,6 @@ public class ExecutionContextImpl implements ExecutionContext {
     private boolean keepAlive = false;
     
     private boolean isTransactional;
-    private DQPContextCache contextCache;
     
     private int batchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
 	private List<Exception> warnings = new LinkedList<Exception>();
@@ -210,79 +204,4 @@ public class ExecutionContextImpl implements ExecutionContext {
 		warnings.clear();
 		return result;
 	}
-	
-	public void setContextCache(DQPContextCache cache) {
-		this.contextCache = cache;
-	}
-	
-	@Override
-	public Object get(Object key) {
-		if (this.contextCache != null) {
-			Cache cache = contextCache.getRequestScopedCache(getRequestIdentifier());
-			return cache.get(key);
-		}
-		return null;
-	}
-	
-	@Override
-	public void put(Object key, Object value) {
-		if (this.contextCache != null) {
-			Cache cache = contextCache.getRequestScopedCache(getRequestIdentifier());
-			cache.put(key, value);
-		}
-	}	
-	
-	
-	@Override
-	public Object getFromCache(CacheScope scope, Object key) {
-		DQPWorkContext context = DQPWorkContext.getWorkContext();
-		checkScopeValidity(scope, context);
-
-		Cache cache = getScopedCache(scope, context);
-		if (cache != null) {
-			return cache.get(key);
-		}
-		return null;
-	}
-	
-	@Override
-	public void storeInCache(CacheScope scope, Object key, Object value) {
-		DQPWorkContext context = DQPWorkContext.getWorkContext();
-		checkScopeValidity(scope, context);
-		Cache cache = getScopedCache(scope, context);
-		if (cache != null) {
-			cache.put(key, value);
-		}
-	}
-	
-	private Cache getScopedCache(CacheScope scope, DQPWorkContext context) {
-		switch (scope) {
-			case SERVICE:
-				return contextCache.getServiceScopedCache(getConnectorIdentifier());
-			case SESSION:
-				return contextCache.getSessionScopedCache(String.valueOf(context.getSessionToken().getSessionID()));
-			case VDB:
-				return contextCache.getVDBScopedCache(context.getVdbName(), context.getVdbVersion());
-			case GLOBAL:
-				return contextCache.getGlobalScopedCache();
-		}
-		return null;
-	}
-	
-	private void checkScopeValidity(CacheScope scope, DQPWorkContext context) {
-		if (scope == CacheScope.REQUEST) {
-			throw new IllegalStateException(DQPPlugin.Util.getString("ConnectorEnvironmentImpl.request_scope_error")); //$NON-NLS-1$
-		}
-		
-		if (scope == CacheScope.SESSION) {
-			if (context == null || context.getSessionToken() == null) {
-				throw new IllegalStateException(DQPPlugin.Util.getString("ConnectorEnvironmentImpl.session_scope_error")); //$NON-NLS-1$
-			}
-		}
-		else if (scope == CacheScope.VDB) {
-			if (context == null || context.getVdbName() == null || context.getVdbVersion() == 0) {
-				throw new IllegalStateException(DQPPlugin.Util.getString("ConnectorEnvironmentImpl.vdb_scope_error")); //$NON-NLS-1$
-			}
-		}
-	}	
 }
