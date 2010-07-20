@@ -231,4 +231,21 @@
         </sect2>
         
     </sect1>
+    
+    <sect1>
+        <title>DSN Less Connection</title>
+        <para>You can also connect to Teiid VDB using ODBC with out explicitly creating a DSN. However, in these scenarios your 
+        application needs, what is called as "DSN less connection string". The below is a sample connection string </para>
+        
+        <para>For Windows:</para>
+        <programlisting><![CDATA[
+           ODBC;DRIVER={PostgreSQL Unicode};DATABASE=<vdb-name>;SERVER=<host-name>;PORT=<port>;Uid=<username>;Pwd=<password>            
+        ]]></programlisting>
+        
+        <para>>For *nix:</para>
+        <programlisting><![CDATA[
+           ODBC;DRIVER={PostgreSQL};DATABASE=<vdb-name>;SERVER=<host-name>;PORT=<port>;Uid=<username>;Pwd=<password>            
+        ]]></programlisting>  
+                  
+    </sect1>
 </chapter>
