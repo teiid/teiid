@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="system_schema">
+    <title>System Schema</title>
 	<sect1 id="system_tables">
 		<title>System Tables</title>
 		<sect2>
