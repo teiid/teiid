@@ -122,6 +122,17 @@
 									<para>Unique ID</para>
 								</entry>
 							</row>
+                            <row>
+                                <entry>
+                                    <para>OID</para>
+                                </entry>
+                                <entry>
+                                    <para>integer</para>
+                                </entry>
+                                <entry>
+                                    <para>Unique ID</para>
+                                </entry>
+                            </row>                            
 							<row>
 								<entry>
 									<para>Description</para>
@@ -204,6 +215,17 @@
 									<para>Key unique ID</para>
 								</entry>
 							</row>
+                            <row>
+                                <entry>
+                                    <para>OID</para>
+                                </entry>
+                                <entry>
+                                    <para>integer</para>
+                                </entry>
+                                <entry>
+                                    <para>Unique ID</para>
+                                </entry>
+                            </row>                             
 						</tbody>
 					</tgroup>
 				</informaltable>
@@ -321,6 +343,17 @@
 									<para>Group unique ID</para>
 								</entry>
 							</row>
+                            <row>
+                                <entry>
+                                    <para>OID</para>
+                                </entry>
+                                <entry>
+                                    <para>integer</para>
+                                </entry>
+                                <entry>
+                                    <para>Unique ID</para>
+                                </entry>
+                            </row>                             
 							<row>
 								<entry>
 									<para>Cardinality</para>
@@ -706,6 +739,17 @@
 									<para>Element unique ID</para>
 								</entry>
 							</row>
+                            <row>
+                                <entry>
+                                    <para>OID</para>
+                                </entry>
+                                <entry>
+                                    <para>integer</para>
+                                </entry>
+                                <entry>
+                                    <para>Unique ID</para>
+                                </entry>
+                            </row>                             
 							<row>
 								<entry>
 									<para>Description</para>
@@ -854,6 +898,17 @@
 									<para>Key unique ID</para>
 								</entry>
 							</row>
+                            <row>
+                                <entry>
+                                    <para>OID</para>
+                                </entry>
+                                <entry>
+                                    <para>integer</para>
+                                </entry>
+                                <entry>
+                                    <para>Unique ID</para>
+                                </entry>
+                            </row>                             
 						</tbody>
 					</tgroup>
 				</informaltable>
@@ -968,6 +1023,17 @@
 									<para>Key UID</para>
 								</entry>
 							</row>
+                            <row>
+                                <entry>
+                                    <para>OID</para>
+                                </entry>
+                                <entry>
+                                    <para>integer</para>
+                                </entry>
+                                <entry>
+                                    <para>Unique ID</para>
+                                </entry>
+                            </row>                             
 							<row>
 								<entry>
 									<para>Position</para>
@@ -1075,6 +1141,17 @@
 									<para>Procedure UID</para>
 								</entry>
 							</row>
+                            <row>
+                                <entry>
+                                    <para>OID</para>
+                                </entry>
+                                <entry>
+                                    <para>integer</para>
+                                </entry>
+                                <entry>
+                                    <para>Unique ID</para>
+                                </entry>
+                            </row>                             
 							<row>
 								<entry>
 									<para>Description</para>
@@ -1457,6 +1534,17 @@
 									<para>Data type unique ID</para>
 								</entry>
 							</row>
+                            <row>
+                                <entry>
+                                    <para>OID</para>
+                                </entry>
+                                <entry>
+                                    <para>integer</para>
+                                </entry>
+                                <entry>
+                                    <para>Unique ID</para>
+                                </entry>
+                            </row>                             
 							<row>
 								<entry>
 									<para>RuntimeType</para>
