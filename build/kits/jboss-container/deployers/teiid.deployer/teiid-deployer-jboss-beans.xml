@@ -5,7 +5,7 @@
     <!-- Deployer specific Stuff -->
     <bean name="VDBStructure" class="org.teiid.deployers.VDBStructure" />
     <bean name="VDBRepository" class="org.teiid.deployers.VDBRepository"/>
-    <bean name="ConnectorManagerRepository" class="org.teiid.dqp.internal.datamgr.impl.ConnectorManagerRepository"/>
+    <bean name="ConnectorManagerRepository" class="org.teiid.dqp.internal.datamgr.ConnectorManagerRepository"/>
     <bean name="SecurityHelper" class="org.teiid.jboss.JBossSecurityHelper"/>    
         
    <bean name="JBossLifeCycleListener" class="org.teiid.jboss.JBossLifeCycleListener"/>
@@ -60,7 +60,7 @@
         <property name="VDBStatusChecker"><inject bean="VDBStatusChecker"/></property>
     </bean>
         
-    <bean name="translatorRepository" class="org.teiid.dqp.internal.datamgr.impl.TranslatorRepository"/>   
+    <bean name="translatorRepository" class="org.teiid.dqp.internal.datamgr.TranslatorRepository"/>   
      
     <bean name="TranslatorParserDeployer" class="org.teiid.deployers.TranslatorParserDeployer"/>
     <bean name="TranslatorDeployer" class="org.teiid.deployers.TranslatorDeployer">
