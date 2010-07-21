@@ -169,7 +169,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	@Override
 	public void logon(String databaseName, String user, String password) {
 		try {
-			this.connection =  (ConnectionImpl)DriverManager.getConnection("jdbc:teiid:"+databaseName, user, password); //$NON-NLS-1$
+			this.connection =  (ConnectionImpl)DriverManager.getConnection("jdbc:teiid:"+databaseName+";ApplicationName=ODBC", user, password); //$NON-NLS-1$ //$NON-NLS-2$
 			int hash = this.connection.getConnectionId().hashCode();
 			this.client.authenticationSucess(hash, hash);
 			sync();
