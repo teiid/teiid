@@ -150,11 +150,11 @@ public class SessionServiceImpl implements SessionService {
         if (!domains.isEmpty()) {
 	        // Authenticate user...
 	        // if not authenticated, this method throws exception
-	        TeiidLoginContext membership = authenticate(userName, credentials, applicationName, domains);
+	        TeiidLoginContext membership = authenticate(userName, credentials, applicationName, domains, this.securityHelper);
 	        loginContext = membership.getLoginContext();
 	        userName = membership.getUserName();
 	        securityDomain = membership.getSecurityDomain();
-	        securityContext = membership.getSecurityContext(securityHelper);
+	        securityContext = membership.getSecurityContext();
         }
 
         // Validate VDB and version if logging on to server product...
@@ -204,9 +204,9 @@ public class SessionServiceImpl implements SessionService {
         return newSession;
 	}
 
-	protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains)
+	protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains, SecurityHelper helper)
 			throws LoginException {
-		TeiidLoginContext membership = new TeiidLoginContext();
+		TeiidLoginContext membership = new TeiidLoginContext(helper);
         membership.authenticateUser(userName, credentials, applicationName, domains);                        
 		return membership;
 	}

@@ -28,6 +28,7 @@ import java.security.Principal;
 import javax.security.auth.Subject;
 
 import org.jboss.security.SecurityContext;
+import org.jboss.security.SubjectInfo;
 import org.teiid.security.SecurityHelper;
 
 public class JBossSecurityHelper implements SecurityHelper, Serializable {
@@ -64,6 +65,17 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
 	public Object createSecurityContext(String securityDomain, Principal p, Object credentials, Subject subject) {
 		SecurityActions.pushSecurityContext(p, credentials, subject, securityDomain);
 		return getSecurityContext(securityDomain);
+	}
+
+	@Override
+	public Subject getSubjectInContext(String securityDomain) {
+		SecurityContext sc = SecurityActions.getSecurityContext();
+		if (sc != null && sc.getSecurityDomain().equals(securityDomain)) {
+			SubjectInfo si = sc.getSubjectInfo();
+			Subject subject = si.getAuthenticatedSubject();
+			return subject;
+		}		
+		return null;
 	}
 	
 }

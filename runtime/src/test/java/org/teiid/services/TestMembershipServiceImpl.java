@@ -51,7 +51,7 @@ public class TestMembershipServiceImpl extends TestCase {
     }
 
     private TeiidLoginContext createMembershipService() throws Exception {
-        TeiidLoginContext membershipService = new TeiidLoginContext() {
+        TeiidLoginContext membershipService = new TeiidLoginContext(null) {
 			public LoginContext createLoginContext(String domain, CallbackHandler handler) throws LoginException {
         		LoginContext context =  Mockito.mock(LoginContext.class);
         		return context;

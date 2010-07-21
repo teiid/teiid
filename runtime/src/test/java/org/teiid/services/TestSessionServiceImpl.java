@@ -15,6 +15,7 @@ import org.mockito.Mockito;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.client.security.InvalidSessionException;
 import org.teiid.security.Credentials;
+import org.teiid.security.SecurityHelper;
 import org.teiid.services.TeiidLoginContext;
 import org.teiid.services.SessionServiceImpl;
 
@@ -30,7 +31,7 @@ public class TestSessionServiceImpl {
 
 		SessionServiceImpl ssi = new SessionServiceImpl() {
 			@Override
-			protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains)
+			protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains, SecurityHelper helper)
 				throws LoginException {
 				impl.authenticateUser(userName, credentials, applicationName, domains);
 				return impl;

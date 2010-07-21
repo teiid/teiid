@@ -24,10 +24,12 @@ package org.teiid.services;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.security.acl.Group;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
@@ -56,6 +58,11 @@ public class TeiidLoginContext {
 	private String userName;
 	private String securitydomain;
 	private Object credentials;
+	private SecurityHelper securityHelper;
+	
+	public TeiidLoginContext(SecurityHelper helper) {
+		this.securityHelper = helper;
+	}
 	
 	public void authenticateUser(String username, final Credentials credential, String applicationName, List<String> domains) throws LoginException {
         
@@ -66,6 +73,14 @@ public class TeiidLoginContext {
         // If username specifies a domain (user@domain) only that domain is authenticated against.
         // If username specifies no domain, then all domains are tried in order.
         for (String domain:getDomainsForUser(domains, username)) {
+        	
+        	Subject existing = this.securityHelper.getSubjectInContext(domain);
+        	if (existing != null) {
+				this.userName = getUserName(existing)+AT+domain;
+				this.securitydomain = domain;     
+				this.loginContext = new LoginContext(domain, existing);
+				return;
+        	}
         	
             try {
         		CallbackHandler handler = new CallbackHandler() {
@@ -104,7 +119,18 @@ public class TeiidLoginContext {
         throw new LoginException(RuntimePlugin.Util.getString("SessionServiceImpl.The_username_0_and/or_password_are_incorrect", username )); //$NON-NLS-1$       
     }
     
-    protected LoginContext createLoginContext(String domain, CallbackHandler handler) throws LoginException {
+	private String getUserName(Subject subject) {
+		Set<Principal> principals = subject.getPrincipals();
+		for (Principal p:principals) {
+			if (p instanceof Group) {
+				continue;
+			}
+			return p.getName();
+		}
+		return null;
+	}
+
+	protected LoginContext createLoginContext(String domain, CallbackHandler handler) throws LoginException {
     	return new LoginContext(domain, handler);
     }
     
@@ -120,10 +146,10 @@ public class TeiidLoginContext {
     	return this.securitydomain;
     }
     
-    public Object getSecurityContext(SecurityHelper helper) {
+    public Object getSecurityContext() {
     	Object sc = null;
         if (this.loginContext != null) {
-        	sc = helper.getSecurityContext(this.securitydomain);
+        	sc = this.securityHelper.getSecurityContext(this.securitydomain);
         	if ( sc == null){
 	        	Subject subject = this.loginContext.getSubject();
 	        	Principal principal = null;
@@ -133,7 +159,7 @@ public class TeiidLoginContext {
 	        			break;
 	        		}
 	        	}
-	        	return helper.createSecurityContext(this.securitydomain, principal, credentials, subject);
+	        	return this.securityHelper.createSecurityContext(this.securitydomain, principal, credentials, subject);
         	}
         }
     	return sc;
