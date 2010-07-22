@@ -78,7 +78,7 @@ public class TeiidLoginContext {
         	if (existing != null) {
 				this.userName = getUserName(existing)+AT+domain;
 				this.securitydomain = domain;     
-				this.loginContext = new LoginContext(domain, existing);
+				this.loginContext = createLoginContext(domain, existing);
 				return;
         	}
         	
@@ -132,6 +132,10 @@ public class TeiidLoginContext {
 
 	protected LoginContext createLoginContext(String domain, CallbackHandler handler) throws LoginException {
     	return new LoginContext(domain, handler);
+    }
+	
+	protected LoginContext createLoginContext(String domain, Subject subject) throws LoginException {
+    	return new LoginContext(domain, subject);
     }
     
     public LoginContext getLoginContext() {

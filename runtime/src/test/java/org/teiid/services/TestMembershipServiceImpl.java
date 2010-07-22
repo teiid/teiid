@@ -22,9 +22,12 @@
 
 package org.teiid.services;
 
+import java.security.Principal;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
+import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
@@ -51,11 +54,24 @@ public class TestMembershipServiceImpl extends TestCase {
     }
 
     private TeiidLoginContext createMembershipService() throws Exception {
-        TeiidLoginContext membershipService = new TeiidLoginContext(Mockito.mock(SecurityHelper.class)) {
+    	Principal p = Mockito.mock(Principal.class);
+    	Mockito.stub(p.getName()).toReturn("alreadylogged"); //$NON-NLS-1$
+    	HashSet<Principal> principals = new HashSet<Principal>();
+    	principals.add(p);
+    	
+    	Subject subject = new Subject(false, principals, new HashSet(), new HashSet());
+    	SecurityHelper sh = Mockito.mock(SecurityHelper.class);
+    	Mockito.stub(sh.getSubjectInContext("passthrough")).toReturn(subject); //$NON-NLS-1$
+    	
+        TeiidLoginContext membershipService = new TeiidLoginContext(sh) {
 			public LoginContext createLoginContext(String domain, CallbackHandler handler) throws LoginException {
         		LoginContext context =  Mockito.mock(LoginContext.class);
         		return context;
         	}
+			protected LoginContext createLoginContext(String domain, Subject subject) throws LoginException {
+        		LoginContext context =  Mockito.mock(LoginContext.class);
+        		return context;
+		    }			
         };
         return membershipService;
     }
@@ -64,7 +80,7 @@ public class TestMembershipServiceImpl extends TestCase {
     public void testAuthenticate() throws Exception {
         TeiidLoginContext ms = createMembershipService();
         List<String> domains = new ArrayList<String>();
-        domains.add("testFile");
+        domains.add("testFile"); //$NON-NLS-1$
         ms.authenticateUser("user1", new Credentials("pass1".toCharArray()), null, domains); //$NON-NLS-1$ //$NON-NLS-2$
         
         Mockito.verify(ms.getLoginContext()).login();
@@ -73,4 +89,12 @@ public class TestMembershipServiceImpl extends TestCase {
     }
     
 
+    public void testPassThrough() throws Exception {
+        TeiidLoginContext ms = createMembershipService();
+        List<String> domains = new ArrayList<String>();
+        domains.add("passthrough"); //$NON-NLS-1$
+        ms.authenticateUser("user1", new Credentials("pass1".toCharArray()), null, domains); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        assertEquals("alreadylogged@passthrough", ms.getUserName()); //$NON-NLS-1$
+    }
 }
