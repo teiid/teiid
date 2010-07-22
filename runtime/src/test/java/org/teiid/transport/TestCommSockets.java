@@ -33,7 +33,6 @@ import java.util.Properties;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.security.LogonException;
@@ -198,22 +197,16 @@ public class TestCommSockets {
 		config.setAuthenticationMode(SSLConfiguration.ANONYMOUS);
 		Properties p = new Properties();
 		p.setProperty(SocketUtil.TRUSTSTORE_FILENAME, SocketUtil.NONE);
-		try {
-			helpEstablishConnection(true, config, p);
-		} catch (CommunicationException e) {
-			
-		}
+		helpEstablishConnection(true, config, p);
 		SocketServerConnection conn = helpEstablishConnection(true, config, p);
 		conn.close();
 	}
 	
-	@Ignore("should be enabled with Netty 3.2")
 	@Test(expected=CommunicationException.class) public void testNonSSLConnectWithSSLServer() throws Exception {
 		SSLConfiguration config = new SSLConfiguration();
 		config.setSslEnabled(true);
 		config.setAuthenticationMode(SSLConfiguration.ANONYMOUS);
 		Properties p = new Properties();
-		p.setProperty(SocketUtil.TRUSTSTORE_FILENAME, SocketUtil.NONE);
 		helpEstablishConnection(true, config, p);
 	}
 	
