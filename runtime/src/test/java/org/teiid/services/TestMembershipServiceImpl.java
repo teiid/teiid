@@ -33,7 +33,7 @@ import junit.framework.TestCase;
 
 import org.mockito.Mockito;
 import org.teiid.security.Credentials;
-import org.teiid.services.TeiidLoginContext;
+import org.teiid.security.SecurityHelper;
 
 
 public class TestMembershipServiceImpl extends TestCase {
@@ -51,7 +51,7 @@ public class TestMembershipServiceImpl extends TestCase {
     }
 
     private TeiidLoginContext createMembershipService() throws Exception {
-        TeiidLoginContext membershipService = new TeiidLoginContext(null) {
+        TeiidLoginContext membershipService = new TeiidLoginContext(Mockito.mock(SecurityHelper.class)) {
 			public LoginContext createLoginContext(String domain, CallbackHandler handler) throws LoginException {
         		LoginContext context =  Mockito.mock(LoginContext.class);
         		return context;
