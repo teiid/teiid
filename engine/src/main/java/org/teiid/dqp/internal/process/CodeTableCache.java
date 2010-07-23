@@ -138,7 +138,7 @@ class CodeTableCache {
      * @param results QueryResults of <List<List<keyValue, returnValue>>
      * @throws TeiidProcessingException 
      */
-    public synchronized void loadTable(CacheKey cacheKey, List[] records) throws TeiidProcessingException {
+    public synchronized void loadTable(CacheKey cacheKey, List<List> records) throws TeiidProcessingException {
 		// Lookup the existing data  
 		// Map of data: keyValue --> returnValue;
 		CodeTable table = codeTableCache.get(cacheKey);
@@ -148,7 +148,7 @@ class CodeTableCache {
 		
 		// Determine whether the results should be added to code table cache
     	// Depends on size of results and available memory and system parameters
-		int potentialSize = table.codeMap.size() + records.length;
+		int potentialSize = table.codeMap.size() + records.size();
     	if (potentialSize > maxCodeTableRecords) {
     		throw new TeiidProcessingException("ERR.018.005.0100", DQPPlugin.Util.getString("ERR.018.005.0100", "maxCodeTables")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$                  
     	}
@@ -158,9 +158,8 @@ class CodeTableCache {
     	}
 		
         // Add data: <List<List<keyValue, returnValue>> from results to the code table cache
-      	for ( int i = 0; i < records.length; i++ ) {
+    	for (List<Object> record : records) {
       		// each record or row
-      		List<Object> record = records[i];
       		Object keyValue = record.get(0);
       		Object returnValue = record.get(1);
       		Object existing = table.codeMap.put(keyValue, returnValue);

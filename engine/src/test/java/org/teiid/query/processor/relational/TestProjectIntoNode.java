@@ -42,7 +42,7 @@ import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.tempdata.TempTableStoreImpl;
+import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.util.CommandContext;
 
 import junit.framework.TestCase;
@@ -140,7 +140,7 @@ public class TestProjectIntoNode extends TestCase {
             if (command instanceof Insert) {
             	Insert insert = (Insert)command;
             	if (insert.isBulk()) {
-                    List batch = TempTableStoreImpl.getBulkRows(insert, insert.getVariables());
+                    List batch = TempTableStore.getBulkRows(insert, insert.getVariables());
                     batchSize = batch.size();
                     assertEquals("Unexpected batch on call " + callCount, expectedBatchSize, batchSize); //$NON-NLS-1$
                     

@@ -500,6 +500,7 @@ Command createTempTable(ParseInfo info) :
 	Create create = new Create();
 	String table = null;
 	List columns = null;
+	String pkId = null;
 }
 {
 	<CREATE> <LOCAL> <TEMPORARY> <TABLE> 
@@ -512,6 +513,18 @@ Command createTempTable(ParseInfo info) :
 	{
 		create.setColumns(columns);
 	}
+	[<COMMA> <PRIMARY> nonReserved("KEY") <LPAREN>
+	  pkId = id()
+	  {
+	    create.getPrimaryKey().add(new ElementSymbol(validateElementName(pkId)));
+	  }
+	  (<COMMA> pkId = id()
+	   {
+	     create.getPrimaryKey().add(new ElementSymbol(validateElementName(pkId)));
+	   }
+	  )*
+	 <RPAREN>	
+	]
 	<RPAREN>
 	{
 		return create;
@@ -1087,7 +1100,7 @@ List createElementsWithTypes(ParseInfo info) :
 	    symbol.setType(DataTypeManager.getDataTypeClass(type.getValue().toString()));
 		elements.add(symbol);
 	 }
-	 (<COMMA>
+	 (LOOKAHEAD(2) <COMMA>
 		element = id()
 		type = dataType()
 		{

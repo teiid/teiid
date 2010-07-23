@@ -141,7 +141,11 @@ public class NewCalculateCostUtil {
                 break;
 
             case NodeConstants.Types.GROUP:
-                estimateNodeCost(node, (List)node.getProperty(NodeConstants.Info.GROUP_COLS), metadata);
+            	if (!node.hasCollectionProperty(NodeConstants.Info.GROUP_COLS)) {
+            		setCardinalityEstimate(node, 1f);
+            	} else {
+            		estimateNodeCost(node, (List)node.getProperty(NodeConstants.Info.GROUP_COLS), metadata);
+            	}
                 break;
             case NodeConstants.Types.ACCESS:
             case NodeConstants.Types.SORT:
@@ -153,7 +157,7 @@ public class NewCalculateCostUtil {
                 break;
             }
             case NodeConstants.Types.NULL:
-                setCardinalityEstimate(node, new Float(0));
+                setCardinalityEstimate(node, 0f);
                 break;
 
             case NodeConstants.Types.PROJECT:
@@ -164,7 +168,7 @@ public class NewCalculateCostUtil {
                     PlanNode child = node.getFirstChild();
                     childCost = (Float)child.getProperty(NodeConstants.Info.EST_CARDINALITY);
                 } else {
-                    childCost = new Float(1);
+                    childCost = 1f;
                 }
                 setCardinalityEstimate(node, childCost);
                 break;

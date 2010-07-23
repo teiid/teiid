@@ -297,8 +297,8 @@ public class TestProcessor {
 		props.setProperty("soap_host", "my.host.com"); //$NON-NLS-1$ //$NON-NLS-2$
 		props.setProperty("soap_port", "12345"); //$NON-NLS-1$ //$NON-NLS-2$
 		CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", 1, props, DEBUG, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        context.setProcessorBatchSize(2000);
-        context.setConnectorBatchSize(2000);
+        context.setProcessorBatchSize(BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE);
+        context.setConnectorBatchSize(BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE);
         context.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
         context.setProcessDebug(DEBUG);
 		return context;

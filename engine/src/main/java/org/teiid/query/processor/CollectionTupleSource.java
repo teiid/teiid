@@ -35,7 +35,7 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
 public class CollectionTupleSource implements TupleSource {
 	
 	private Iterator<? extends List<?>> tuples;
-	private List<SingleElementSymbol> schema;
+	private List<? extends SingleElementSymbol> schema;
 
 	public static CollectionTupleSource createUpdateCountTupleSource(int count) {
 		return new CollectionTupleSource(Arrays.asList(Arrays.asList(count)).iterator(), Command.getUpdateCommandSymbol());
@@ -46,7 +46,7 @@ public class CollectionTupleSource implements TupleSource {
 	}
 	
 	public CollectionTupleSource(Iterator<? extends List<?>> tuples,
-			List<SingleElementSymbol> schema) {
+			List<? extends SingleElementSymbol> schema) {
 		this.tuples = tuples;
 		this.schema = schema;
 	}
@@ -60,7 +60,7 @@ public class CollectionTupleSource implements TupleSource {
 	}
 	
 	@Override
-	public List<SingleElementSymbol> getSchema() {
+	public List<? extends SingleElementSymbol> getSchema() {
 		return schema;
 	}
 	

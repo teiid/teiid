@@ -116,7 +116,9 @@ public class ProjectIntoNode extends RelationalNode {
                 currentBatch = getChildren()[0].nextBatch(); // can throw BlockedException
                 this.batchRow = currentBatch.getBeginRow();
                 
-                if(currentBatch.getRowCount() == 0 && !this.intoGroup.isImplicitTempGroupSymbol()) {
+                //normally we would want to skip a 0 sized batch, but it typically represents the terminal batch
+                //and for implicit temp tables we need to issue an empty insert
+                if(currentBatch.getRowCount() == 0 && (!this.intoGroup.isImplicitTempGroupSymbol() || !currentBatch.getTerminationFlag())) {
                     continue;
                 }
             } else if (currentBatch.getTerminationFlag() && this.batchRow > currentBatch.getEndRow()) {
@@ -131,10 +133,10 @@ public class ProjectIntoNode extends RelationalNode {
                 List<Constant> parameters = new ArrayList<Constant>(intoElements.size());
                 for (int i = 0; i < intoElements.size(); i++) {
 					Constant value = new Constant(null, ((ElementSymbol)intoElements.get(i)).getType());
-					value.setMultiValued(new ArrayList<Object>(currentBatch.getAllTuples().length));
+					value.setMultiValued(new ArrayList<Object>(currentBatch.getTuples().size()));
                 	parameters.add(value);
 				}
-                for (List row : currentBatch.getAllTuples()) {
+                for (List row : currentBatch.getTuples()) {
                 	for (int i = 0; i < row.size(); i++) {
                 		((List<Object>)parameters.get(i).getValue()).add(row.get(i));
                 	}

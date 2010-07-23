@@ -72,7 +72,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.query.processor.ProcessorDataManager;
-import org.teiid.query.tempdata.TempTableStoreImpl;
+import org.teiid.query.tempdata.TempTableStore;
 
 
 /**
@@ -144,9 +144,9 @@ public class DQPCore implements DQP {
 	
 	static class ClientState {
 		List<RequestID> requests;
-		TempTableStoreImpl tempTableStoreImpl;
+		TempTableStore tempTableStoreImpl;
 		
-		public ClientState(TempTableStoreImpl tableStoreImpl) {
+		public ClientState(TempTableStore tableStoreImpl) {
 			this.tempTableStoreImpl = tableStoreImpl;
 		}
 		
@@ -236,7 +236,7 @@ public class DQPCore implements DQP {
     	synchronized (clientState) {
     		ClientState state = clientState.get(key);
     		if (state == null && create) {
-    			state = new ClientState(new TempTableStoreImpl(bufferManager, key, null));
+    			state = new ClientState(new TempTableStore(bufferManager, key, null));
         		clientState.put(key, state);
     		}
     		return state;

@@ -96,6 +96,8 @@ public class SQLConstants {
 		public static final String NULLS = "NULLS"; //$NON-NLS-1$
 		public static final String FIRST = "FIRST"; //$NON-NLS-1$
 		public static final String LAST = "LAST"; //$NON-NLS-1$
+		
+		public static final String KEY = "KEY"; //$NON-NLS-1$
 	}
 	
 	public interface Reserved {

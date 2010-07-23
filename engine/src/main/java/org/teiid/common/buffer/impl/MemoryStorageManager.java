@@ -43,6 +43,7 @@ public class MemoryStorageManager implements StorageManager {
 			public void writeDirect(byte[] bytes, int offset, int length) throws TeiidComponentException {
 				if (getLength() + length > buffer.capacity()) {
 					ByteBuffer newBuffer = ByteBuffer.allocate(buffer.capacity() * 2 + length);
+					buffer.position(0);
 					newBuffer.put(buffer);
 					buffer = newBuffer;
 				}

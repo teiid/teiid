@@ -113,7 +113,7 @@ public class PlanExecutionNode extends RelationalNode {
         
 		TupleBatch batch = plan.nextBatch();
        
-        for (List tuple : batch.getAllTuples()) {
+        for (List tuple : batch.getTuples()) {
             addBatchRow(tuple);
 		}
         

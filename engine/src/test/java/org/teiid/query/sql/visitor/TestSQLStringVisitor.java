@@ -1127,7 +1127,7 @@ public class TestSQLStringVisitor extends TestCase {
     public void testElementSymbol5() {
     	ElementSymbol es = new ElementSymbol("m.g.select", false); //$NON-NLS-1$
     	es.setGroupSymbol(new GroupSymbol("m.g")); //$NON-NLS-1$
-    	helpTest(es, "m.g.\"select\"");     //$NON-NLS-1$
+    	helpTest(es, "\"select\"");     //$NON-NLS-1$
     }
 
     public void testExpressionSymbol1() {

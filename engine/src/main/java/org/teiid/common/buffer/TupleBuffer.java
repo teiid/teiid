@@ -106,7 +106,7 @@ public class TupleBuffer {
 	
 	public void addTuple(List<?> tuple) throws TeiidComponentException {
 		if (lobs) {
-			correctLobReferences(new List[] {tuple});
+			correctLobReferences(schema.size(), tuple);
 		}
 		this.rowCount++;
 		if (batchBuffer == null) {
@@ -126,12 +126,12 @@ public class TupleBuffer {
 	public void addTupleBatch(TupleBatch batch, boolean save) throws TeiidComponentException {
 		setRowCount(batch.getBeginRow() - 1); 
 		if (save) {
-			for (List<?> tuple : batch.getAllTuples()) {
+			for (List<?> tuple : batch.getTuples()) {
 				addTuple(tuple);
 			}
 		} else {
 			//add the lob references only, since they may still be referenced later
-			correctLobReferences(batch.getAllTuples()); 
+			correctLobReferences(batch.getTuples()); 
 		}
 	}
 
@@ -210,7 +210,7 @@ public class TupleBuffer {
 			BatchManager.ManagedBatch batch = entry.getValue();
 	    	result = batch.getBatch(!forwardOnly, types);
 	    	if (lobs && result.getDataTypes() == null) {
-		        correctLobReferences(result.getAllTuples());
+		        correctLobReferences(result.getTuples());
 	    	}
 	    	result.setDataTypes(types);
 	    	if (forwardOnly) {
@@ -277,42 +277,51 @@ public class TupleBuffer {
      * @throws TeiidComponentException 
      */
     @SuppressWarnings("unchecked")
-	private void correctLobReferences(List[] rows) throws TeiidComponentException {
+	private void correctLobReferences(List<List> rows) throws TeiidComponentException {
         int columns = schema.size();
         // walk through the results and find all the lobs
-        for (int row = 0; row < rows.length; row++) {
-            for (int col = 0; col < columns; col++) {                                                
-                Object anObj = rows[row].get(col);
-                
-                if (!(anObj instanceof Streamable<?>)) {
-                	continue;
-                }
-                Streamable lob = (Streamable)anObj;                  
-                String id = lob.getReferenceStreamId();
-            	if (id == null) {
-            		id = String.valueOf(LOB_ID.getAndIncrement());
-            		lob.setReferenceStreamId(id);
-            	}
-            	if (this.lobReferences == null) {
-            		this.lobReferences = new ConcurrentHashMap<String, Streamable<?>>();
-            	}
-            	this.lobReferences.put(id, lob);
-                if (lob.getReference() == null) {
-                	lob.setReference(getLobReference(lob.getReferenceStreamId()).getReference());
-                }
-            }
+        for (List list : rows) {
+            correctLobReferences(columns, list);
         }
     }
+
+	private void correctLobReferences(int columns, List list)
+			throws TeiidComponentException {
+		for (int col = 0; col < columns; col++) {                                                
+		    Object anObj = list.get(col);
+		    
+		    if (!(anObj instanceof Streamable<?>)) {
+		    	continue;
+		    }
+		    Streamable lob = (Streamable)anObj;                  
+		    String id = lob.getReferenceStreamId();
+			if (id == null) {
+				id = String.valueOf(LOB_ID.getAndIncrement());
+				lob.setReferenceStreamId(id);
+			}
+			if (this.lobReferences == null) {
+				this.lobReferences = new ConcurrentHashMap<String, Streamable<?>>();
+			}
+			this.lobReferences.put(id, lob);
+		    if (lob.getReference() == null) {
+		    	lob.setReference(getLobReference(lob.getReferenceStreamId()).getReference());
+		    }
+		}
+	}
     
     public void setForwardOnly(boolean forwardOnly) {
 		this.forwardOnly = forwardOnly;
+	}
+    
+	public IndexedTupleSource createIndexedTupleSource() {
+		return createIndexedTupleSource(false);
 	}
     
 	/**
 	 * Create a new iterator for this buffer
 	 * @return
 	 */
-	public IndexedTupleSource createIndexedTupleSource() {
+	public IndexedTupleSource createIndexedTupleSource(final boolean singleUse) {
 		return new AbstractTupleSource() {
 			
 			@Override
@@ -336,6 +345,14 @@ public class TupleBuffer {
 			@Override
 			protected TupleBatch getBatch(int row) throws TeiidComponentException {
 				return TupleBuffer.this.getBatch(row);
+			}
+			
+			@Override
+			public void closeSource() {
+				super.closeSource();
+				if (singleUse) {
+					remove();
+				}
 			}
 		};
 	}

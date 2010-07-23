@@ -306,6 +306,7 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
         preVisitVisitor(obj);
         visitNode(obj.getTable());
         visitNodes(obj.getColumns());
+        visitNodes(obj.getPrimaryKey());
         postVisitVisitor(obj);
     }
     public void visit(Drop obj) {

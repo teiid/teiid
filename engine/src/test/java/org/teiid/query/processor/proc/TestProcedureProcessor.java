@@ -64,7 +64,7 @@ import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
 
-
+@SuppressWarnings("unchecked")
 public class TestProcedureProcessor {
 	
     public static ProcessorPlan getProcedurePlan(String userQuery, FakeMetadataFacade metadata) throws Exception {
@@ -111,25 +111,25 @@ public class TestProcedureProcessor {
     	}
     }
 
-    private void helpTestProcessFailure(boolean optimistic, ProcessorPlan procPlan, 
-                                 FakeDataManager dataMgr, String failMessage) throws Exception {
+    private void helpTestProcessFailure(ProcessorPlan procPlan, FakeDataManager dataMgr, 
+                                 String failMessage) throws Exception {
         try {
-            helpTestProcess(optimistic, procPlan, new List[] {}, dataMgr, true);
+            helpTestProcess(procPlan, new List[] {}, dataMgr, true);
         } catch(TeiidException ex) {
             assertEquals(failMessage, ex.getMessage());
         }
     }
     
     public static void helpTestProcess(ProcessorPlan procPlan, List[] expectedResults, ProcessorDataManager dataMgr) throws Exception {
-        helpTestProcess(false, procPlan, expectedResults, dataMgr, false);
+        helpTestProcess(procPlan, expectedResults, dataMgr, false);
     }
     
     private void helpTestProcess(ProcessorPlan procPlan, int expectedRows, FakeDataManager dataMgr) throws Exception {
         helpTestProcess(procPlan, expectedRows, null, false, dataMgr, null);
     }
     
-    static void helpTestProcess(boolean optimistic, ProcessorPlan procPlan, List[] expectedResults, 
-    		ProcessorDataManager dataMgr, boolean shouldFail) throws Exception {
+    static void helpTestProcess(ProcessorPlan procPlan, List[] expectedResults, ProcessorDataManager dataMgr, 
+    		boolean shouldFail) throws Exception {
         helpTestProcess(procPlan, 0, expectedResults, shouldFail, dataMgr, null);
     }
 
@@ -451,7 +451,7 @@ public class TestProcedureProcessor {
 
 		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 									 
-        helpTestProcessFailure(false, plan, dataMgr, "Error Code:ERR.015.006.0058 Message:Unable to evaluate (SELECT pm1.g1.e2 FROM pm1.g1): Error Code:ERR.015.006.0058 Message:The command of this scalar subquery returned more than one value: SELECT pm1.g1.e2 FROM pm1.g1"); //$NON-NLS-1$ 
+        helpTestProcessFailure(plan, dataMgr, "Error Code:ERR.015.006.0058 Message:Unable to evaluate (SELECT pm1.g1.e2 FROM pm1.g1): Error Code:ERR.015.006.0058 Message:The command of this scalar subquery returned more than one value: SELECT pm1.g1.e2 FROM pm1.g1"); //$NON-NLS-1$ 
     }
 
     // error statement
@@ -488,7 +488,7 @@ public class TestProcedureProcessor {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
                                      
-        helpTestProcessFailure(false, plan, dataMgr, ErrorInstruction.ERROR_PREFIX + "5MY ERROR"); //$NON-NLS-1$ 
+        helpTestProcessFailure(plan, dataMgr, ErrorInstruction.ERROR_PREFIX + "5MY ERROR"); //$NON-NLS-1$ 
     }
 
     private void helpTestErrorStatment(String errorValue, String expected) throws Exception {
@@ -508,7 +508,7 @@ public class TestProcedureProcessor {
 
 		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 									 
-        helpTestProcessFailure(false, plan, dataMgr, ErrorInstruction.ERROR_PREFIX + expected); 
+        helpTestProcessFailure(plan, dataMgr, ErrorInstruction.ERROR_PREFIX + expected); 
     }
     
 	/** test if statement's if block with lookup in if condition */
@@ -1502,8 +1502,7 @@ public class TestProcedureProcessor {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 
-        helpTestProcessFailure(false,
-                               plan,
+        helpTestProcessFailure(plan,
                                dataMgr,
                                "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'EXEC pm1.sq2(''First'')' AS e1 string, e2 integer\" with the SQL statement \"'EXEC pm1.sq2(''First'')'\" due to: There is a recursive invocation of group 'PM1.SQ2'. Please correct the SQL."); //$NON-NLS-1$
     }
@@ -1535,7 +1534,7 @@ public class TestProcedureProcessor {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
     	
-        helpTestProcessFailure(false, plan, dataMgr, "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'EXEC pm1.sq1(''First'')' AS e1 string, e2 integer\" with the SQL statement \"'EXEC pm1.sq1(''First'')'\" due to: The dynamic sql string contains an incorrect number of elements."); //$NON-NLS-1$
+        helpTestProcessFailure(plan, dataMgr, "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'EXEC pm1.sq1(''First'')' AS e1 string, e2 integer\" with the SQL statement \"'EXEC pm1.sq1(''First'')'\" due to: The dynamic sql string contains an incorrect number of elements."); //$NON-NLS-1$
      }
     
     @Test public void testDynamicCommandPositional() throws Exception {
@@ -1587,7 +1586,7 @@ public class TestProcedureProcessor {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
     	
-        helpTestProcessFailure(false, plan, dataMgr, "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'select e1 from pm1.g1'\" with the SQL statement \"'select e1 from pm1.g1'\" due to: The datatype 'string' for element 'E1' in the dynamic SQL cannot be implicitly converted to 'integer'."); //$NON-NLS-1$
+        helpTestProcessFailure(plan, dataMgr, "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'select e1 from pm1.g1'\" with the SQL statement \"'select e1 from pm1.g1'\" due to: The datatype 'string' for element 'E1' in the dynamic SQL cannot be implicitly converted to 'integer'."); //$NON-NLS-1$
      }
      
     @Test public void testDynamicCommandWithTwoDynamicStatements() throws Exception {
@@ -1877,7 +1876,7 @@ public class TestProcedureProcessor {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
         
-        helpTestProcessFailure(false, plan, dataMgr, "Temporary table \"T1\" already exists."); //$NON-NLS-1$
+        helpTestProcessFailure(plan, dataMgr, "Temporary table \"T1\" already exists."); //$NON-NLS-1$
     }
     
     /**

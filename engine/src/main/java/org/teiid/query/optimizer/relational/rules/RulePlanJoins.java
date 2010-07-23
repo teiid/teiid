@@ -268,7 +268,7 @@ public class RulePlanJoins implements OptimizerRule {
                      * If we failed to find direct criteria, but still have non-pushable or criteria to
                      * other groups we'll use additional checks
                      */
-                    if ((!hasJoinCriteria || (hasJoinCriteria && joinCriteriaNodes.isEmpty())) && !canPushCrossJoin(metadata, context, accessNode1, accessNode2)) {
+                    if ((!hasJoinCriteria || joinCriteriaNodes.isEmpty()) && !canPushCrossJoin(metadata, context, accessNode1, accessNode2)) {
                     	continue;
                     }                    
                     

@@ -304,7 +304,7 @@ public class TestOptionalJoins {
             0,      // Null
             0,      // PlanExecution
             3,      // Project
-            0,      // Select
+            1,      // Select
             0,      // Sort
             0       // UnionAll
         });    

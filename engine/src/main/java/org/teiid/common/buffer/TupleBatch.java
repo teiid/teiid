@@ -26,6 +26,8 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.client.BatchSerializer;
@@ -45,7 +47,7 @@ public class TupleBatch implements Externalizable {
 	private static final long serialVersionUID = 6304443387337336957L;
 	
 	private int rowOffset;    
-    private List[] tuples;
+    private List<List> tuples;
     
     // Optional state
     private boolean terminationFlag = false;
@@ -61,6 +63,13 @@ public class TupleBatch implements Externalizable {
     public TupleBatch() {
     }
     
+    public static TupleBatch directBatch(int rowOffset, List<List> tuples) {
+    	TupleBatch result = new TupleBatch();
+    	result.rowOffset = rowOffset;
+    	result.tuples = tuples;
+    	return result;
+    }
+    
     /**
      * Constructor
      * @param beginRow indicates the row of the tuple source which is the
@@ -70,7 +79,7 @@ public class TupleBatch implements Externalizable {
      */
     public TupleBatch(int beginRow, List[] tuples) {
         this.rowOffset = beginRow;
-        this.tuples = tuples;
+        this.tuples = Arrays.asList(tuples);
     }
 
     /**
@@ -82,7 +91,7 @@ public class TupleBatch implements Externalizable {
      */
     public TupleBatch(int beginRow, List listOfTupleLists) {
         this.rowOffset = beginRow;
-        this.tuples = (List[]) listOfTupleLists.toArray(new List[listOfTupleLists.size()]);
+        this.tuples = new ArrayList(listOfTupleLists);
     }
 
     /**
@@ -100,7 +109,7 @@ public class TupleBatch implements Externalizable {
      * @return the last row contained in this tuple batch
      */
     public int getEndRow() {
-        return rowOffset + tuples.length - 1;
+        return rowOffset + tuples.size() - 1;
     }
     
     /**
@@ -108,7 +117,7 @@ public class TupleBatch implements Externalizable {
      * @return the number of rows contained in this tuple batch
      */
     public int getRowCount() {
-        return tuples.length;
+        return tuples.size();
     }
         
     /**
@@ -116,15 +125,19 @@ public class TupleBatch implements Externalizable {
      * @return the tuple at the given index
      */
     public List getTuple(int rowIndex) {
-        return tuples[rowIndex-rowOffset];
+        return tuples.get(rowIndex-rowOffset);
     }
+    
+    public List<List> getTuples() {
+		return tuples;
+	}
     
     /**
      * Get all tuples 
      * @return All tuples
      */
     public List[] getAllTuples() { 
-        return tuples;    
+    	return tuples.toArray(new List[tuples.size()]);    
     }
 
     /**
@@ -164,21 +177,22 @@ public class TupleBatch implements Externalizable {
         s.append("TupleBatch; beginning row="); //$NON-NLS-1$
         s.append(rowOffset);
         s.append(", number of rows="); //$NON-NLS-1$
-        s.append(tuples.length);
+        s.append(tuples.size());
         s.append(", lastBatch="); //$NON-NLS-1$
         s.append(this.terminationFlag);
         return s.toString();
     }
 
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        //rowOffset = in.readInt();
         terminationFlag = in.readBoolean();
-        tuples = BatchSerializer.readBatch(in, types);
+        tuples = new ArrayList<List>();
+        for (List tuple : BatchSerializer.readBatch(in, types)) {
+        	tuples.add(tuple);
+        }
     }
     public void writeExternal(ObjectOutput out) throws IOException {
-        //out.writeInt(rowOffset);
         out.writeBoolean(terminationFlag);
-        BatchSerializer.writeBatch(out, types, tuples);
+        BatchSerializer.writeBatch(out, types, getAllTuples());
     }
     
     public void setRowOffset(int rowOffset) {

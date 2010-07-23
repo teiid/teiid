@@ -183,7 +183,7 @@ public class TestElementSymbolOptimizer extends TestCase {
         
         helpTestOptimize("EXEC pm1.sq2(pm1.sq3.in)",  //$NON-NLS-1$
                             FakeMetadataFactory.example1Cached(),  
-                            "EXEC pm1.sq2(pm1.sq3.\"in\")", //$NON-NLS-1$
+                            "EXEC pm1.sq2(\"in\")", //$NON-NLS-1$
                             externalMetadata);         
     }
 

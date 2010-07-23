@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
@@ -94,8 +95,9 @@ import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.FakeMetadataObject;
 import org.teiid.query.unittest.FakeMetadataStore;
 import org.teiid.query.unittest.TimestampUtil;
+import org.teiid.query.util.ErrorMessageKeys;
 
-
+@SuppressWarnings("nls")
 public class TestResolver {
 
 	private FakeMetadataFacade metadata;
@@ -2400,6 +2402,16 @@ public class TestResolver {
         helpResolveException(sql, "Cannot create temporary table \"pm1.g1\". Local temporary tables must be created with unqualified names."); //$NON-NLS-1$
     }
 
+    @Test public void testCreatePk() {
+        String sql = "CREATE LOCAL TEMPORARY TABLE foo (column1 string, column2 integer, primary key (column1, column2))"; //$NON-NLS-1$
+        helpResolve(sql);
+    }
+    
+    @Test public void testCreateUnknownPk() {
+        String sql = "CREATE LOCAL TEMPORARY TABLE foo (column1 string, primary key (column2))"; //$NON-NLS-1$
+        helpResolveException(sql, "Element \"column2\" is not defined by any relevant group."); //$NON-NLS-1$
+    }
+
     @Test public void testCreateAlreadyExists() {
         String sql = "CREATE LOCAL TEMPORARY TABLE g1 (column1 string)"; //$NON-NLS-1$
         helpResolveException(sql, "Cannot create temporary table \"g1\". A table with the same name already exists."); //$NON-NLS-1$
@@ -2862,6 +2874,21 @@ public class TestResolver {
     
     @Test public void testSecondPassFunctionResolving() {
     	helpResolve("SELECT pm1.g1.e1 FROM pm1.g1 where lower(?) = e1 "); //$NON-NLS-1$
+    }
+    
+    @Test public void testSecondPassFunctionResolving1() {
+    	try {
+    		helpResolve("SELECT pm1.g1.e1 FROM pm1.g1 where 1/(e1 - 2) <> 4 "); //$NON-NLS-1$
+    		fail("expected exception");
+    	} catch (RuntimeException e) {
+    		QueryResolverException qre = (QueryResolverException)e.getCause();
+    		assertEquals(ErrorMessageKeys.RESOLVER_0040, qre.getCode());
+    	}
+    }
+    
+    @Ignore("currently not supported - we get type hints from the criteria not from the possible signatures")
+    @Test public void testSecondPassFunctionResolving2() {
+    	helpResolve("SELECT pm1.g1.e1 FROM pm1.g1 where (lower(?) || 1) = e1 "); //$NON-NLS-1$
     }
 
     /**

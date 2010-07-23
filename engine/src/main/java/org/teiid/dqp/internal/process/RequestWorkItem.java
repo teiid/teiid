@@ -431,11 +431,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     			} else if (fromBuffer && isForwardOnly()) {
         			savedBatch = batch;
     			}
-        		int firstOffset = beginRow - batch.getBeginRow();
-                List[] memoryRows = batch.getAllTuples();
-                List[] rows = new List[count];
-                System.arraycopy(memoryRows, firstOffset, rows, 0, endRow - beginRow + 1);
-                batch = new TupleBatch(beginRow, rows);
+                List<List> memoryRows = batch.getTuples();
+                batch = new TupleBatch(beginRow, memoryRows.subList(beginRow - batch.getBeginRow(), endRow - batch.getBeginRow() + 1));
                 batch.setTerminationFlag(last);
     		} else if (!fromBuffer){
     			result = !isForwardOnly();

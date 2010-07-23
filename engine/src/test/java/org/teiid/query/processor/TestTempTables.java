@@ -28,10 +28,9 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.common.buffer.BufferManagerFactory;
-import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.metadata.TempMetadataAdapter;
-import org.teiid.query.processor.TempTableDataManager;
-import org.teiid.query.tempdata.TempTableStoreImpl;
+import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
 
@@ -44,8 +43,8 @@ public class TestTempTables {
 		TestProcessor.doProcess(TestProcessor.helpGetPlan(sql, metadata), dataManager, expectedResults, TestProcessor.createCommandContext());
 	}
 
-	@Before public void setUp() throws TeiidComponentException {
-		TempTableStoreImpl tempStore = new TempTableStoreImpl(BufferManagerFactory.getStandaloneBufferManager(), "1", null); //$NON-NLS-1$
+	@Before public void setUp() {
+		TempTableStore tempStore = new TempTableStore(BufferManagerFactory.getStandaloneBufferManager(), "1", null); //$NON-NLS-1$
 		metadata = new TempMetadataAdapter(FakeMetadataFactory.example1Cached(), tempStore.getMetadataStore());
 		FakeDataManager fdm = new FakeDataManager();
 	    TestProcessor.sampleData1(fdm);
@@ -90,5 +89,37 @@ public class TestTempTables {
 		execute("delete from x", new List[] {Arrays.asList(6)}); //$NON-NLS-1$
 		execute("select e1 from x order by e1", new List[] {}); //$NON-NLS-1$
 	}
-
+	
+	@Test(expected=TeiidProcessingException.class) public void testDuplicatePrimaryKey() throws Exception {
+		execute("create local temporary table x (e1 string, e2 integer, primary key (e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		execute("insert into x (e2, e1) values (1, 'one')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		execute("insert into x (e2, e1) values (1, 'one')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+	}
+	
+	@Test public void testAtomicUpdate() throws Exception {
+		execute("create local temporary table x (e1 string, e2 integer, primary key (e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		execute("insert into x (e2, e1) values (1, 'one')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		execute("insert into x (e2, e1) values (2, 'one')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		try {
+			execute("update x set e2 = 3", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		} catch (TeiidProcessingException e) {
+			//should be a duplicate key
+		}
+		//should revert back to original
+		execute("select count(*) from x", new List[] {Arrays.asList(2)}); //$NON-NLS-1$
+	}
+	
+	@Test public void testAtomicDelete() throws Exception {
+		execute("create local temporary table x (e1 string, e2 integer, primary key (e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		execute("insert into x (e2, e1) values (1, 'one')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		execute("insert into x (e2, e1) values (2, 'one')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		try {
+			execute("delete from x where 1/(e2 - 2) <> 4", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		} catch (TeiidProcessingException e) {
+			//should be a duplicate key
+		}
+		//should revert back to original
+		execute("select count(*) from x", new List[] {Arrays.asList(2)}); //$NON-NLS-1$
+	}
+	
 }

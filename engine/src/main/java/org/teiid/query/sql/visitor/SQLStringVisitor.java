@@ -442,13 +442,27 @@ public class SQLStringVisitor extends LanguageVisitor {
         Iterator<ElementSymbol> iter = columns.iterator();
         while(iter.hasNext()) {
             ElementSymbol element = iter.next();
-            element.setDisplayMode(ElementSymbol.DisplayMode.SHORT_OUTPUT_NAME);
-            parts.add(registerNode(element));
+            outputShortName(element);
             parts.add(SPACE);
             parts.add(DataTypeManager.getDataTypeName(element.getType()));
             if(iter.hasNext()) {
                 parts.add(", "); //$NON-NLS-1$
             }
+        }
+        if (!obj.getPrimaryKey().isEmpty()) {
+        	parts.add(", "); //$NON-NLS-1$
+        	parts.add(PRIMARY);
+        	parts.add(" "); //$NON-NLS-1$
+        	parts.add(NonReserved.KEY);
+        	parts.add(Tokens.LPAREN);
+        	iter = obj.getPrimaryKey().iterator();
+            while(iter.hasNext()) {
+            	outputShortName(iter.next());
+            	if (iter.hasNext()) {
+            		parts.add(", "); //$NON-NLS-1$
+            	}
+            }
+        	parts.add(Tokens.RPAREN);
         }
         parts.add(")"); //$NON-NLS-1$
     }
@@ -746,8 +760,7 @@ public class SQLStringVisitor extends LanguageVisitor {
             parts.add(SPACE);
             for (int i = 0; i < obj.getAsColumns().size(); i++) {
                 ElementSymbol symbol = (ElementSymbol)obj.getAsColumns().get(i);
-                symbol.setDisplayMode(ElementSymbol.DisplayMode.SHORT_OUTPUT_NAME);
-                parts.add(registerNode(symbol));
+                outputShortName(symbol);
                 parts.add(SPACE);
                 parts.add(DataTypeManager.getDataTypeName(symbol.getType()));
                 if (i < obj.getAsColumns().size() - 1) {
@@ -794,8 +807,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     
     public void visit(SetClause obj) {
         ElementSymbol symbol = obj.getSymbol();
-        symbol.setDisplayMode(ElementSymbol.DisplayMode.SHORT_OUTPUT_NAME);
-        parts.add(registerNode(symbol));
+        outputShortName(symbol);
         parts.add(" = "); //$NON-NLS-1$
         parts.add(registerNode(obj.getValue()));
     }
@@ -1187,18 +1199,19 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit(ElementSymbol obj) {
+        if (obj.getDisplayMode().equals(ElementSymbol.DisplayMode.SHORT_OUTPUT_NAME)) {
+            outputShortName(obj);
+            return;
+        }
         String name = obj.getOutputName();
         if (obj.getDisplayMode().equals(ElementSymbol.DisplayMode.FULLY_QUALIFIED)) {
             name = obj.getName();
-        } else if (obj.getDisplayMode().equals(ElementSymbol.DisplayMode.SHORT_OUTPUT_NAME)) {
-            String shortName = SingleElementSymbol.getShortName(name);
-            //TODO: this is a hack - since we default to not supporting double quoted identifiers, we need to fully qualify reserved
-            if (!isReservedWord(shortName)) {
-                name = shortName;
-            }
         }
-        
         outputDisplayName(name);
+    }
+    
+    private void outputShortName(ElementSymbol obj) {
+    	outputDisplayName(SingleElementSymbol.getShortName(obj.getOutputName()));
     }
 
     private void outputDisplayName(String name) {

@@ -80,7 +80,7 @@ public class TempTableResolver implements CommandResolver {
             ResolverUtil.addTempTable(metadata, group, create.getColumns());
             
             ResolverUtil.resolveGroup(((Create)command).getTable(), metadata);
-            Set groups = new HashSet();
+            Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
             groups.add(((Create)command).getTable());
             ResolverVisitor.resolveLanguageObject(command, groups, metadata);
         } else if(command.getType() == Command.TYPE_DROP) {

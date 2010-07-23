@@ -117,7 +117,7 @@ public class UnionAllNode extends RelationalNode {
         TupleBatch outputBatch = null;
         if(batch != null) {
             // Rebuild the batch to reset the output row
-            outputBatch = new TupleBatch(outputRow, batch.getAllTuples());
+            outputBatch = new TupleBatch(outputRow, batch.getTuples());
                         
             // This is the last unioned batch if:
             // 1) This batch is a termination batch from the child

@@ -299,10 +299,14 @@ public class ResolverVisitor extends LanguageVisitor {
         try {
             resolveFunction(obj, this.metadata.getFunctionLibrary());
         } catch(QueryResolverException e) {
-        	if (unresolvedFunctions == null) {
-        		unresolvedFunctions = new LinkedHashMap<Function, QueryResolverException>();
+        	if (ErrorMessageKeys.RESOLVER_0036.equals(e.getCode()) || ErrorMessageKeys.RESOLVER_0035.equals(e.getCode())) {
+	        	if (unresolvedFunctions == null) {
+	        		unresolvedFunctions = new LinkedHashMap<Function, QueryResolverException>();
+	        	}
+	        	unresolvedFunctions.put(obj, e);
+        	} else {
+        		handleException(e);
         	}
-        	unresolvedFunctions.put(obj, e);
         } catch(TeiidComponentException e) {
             handleException(e);
         }

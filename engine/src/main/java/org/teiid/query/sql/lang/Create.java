@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -42,6 +43,8 @@ public class Create extends Command {
     
     private List<ElementSymbol> columns = new ArrayList<ElementSymbol>();
     
+    private List<ElementSymbol> primaryKey = new ArrayList<ElementSymbol>();
+    
     public GroupSymbol getTable() {
         return table;
     }
@@ -53,6 +56,10 @@ public class Create extends Command {
     public List<ElementSymbol> getColumns() {
         return columns;
     }
+    
+    public List<ElementSymbol> getPrimaryKey() {
+		return primaryKey;
+	}
     
     /** 
      * @see org.teiid.query.sql.lang.Command#getType()
@@ -70,7 +77,8 @@ public class Create extends Command {
         Create copy = new Create();      
         GroupSymbol copyTable = (GroupSymbol) table.clone();    
         copy.setTable(copyTable);
-        copy.setColumns(columns);
+        copy.setColumns(LanguageObject.Util.deepClone(columns, ElementSymbol.class));
+        copy.primaryKey = LanguageObject.Util.deepClone(primaryKey, ElementSymbol.class);
         copyMetadataState(copy);
         return copy;
     }
@@ -128,6 +136,7 @@ public class Create extends Command {
         Create other = (Create) obj;
         
         return EquivalenceUtil.areEqual(getTable(), other.getTable()) &&
-               EquivalenceUtil.areEqual(getColumns(), other.getColumns());
+               EquivalenceUtil.areEqual(getColumns(), other.getColumns()) &&
+               EquivalenceUtil.areEqual(getPrimaryKey(), other.getPrimaryKey());
     }
 }

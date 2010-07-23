@@ -6569,6 +6569,21 @@ public class TestParser {
         helpException("Create local TEMPORARY table tempTable (c1.x boolean, c2 byte)" ,"Parsing error: Invalid simple identifier format: [c1.x]"); //$NON-NLS-1$ //$NON-NLS-2$ 
     }
     
+    @Test public void testCreateTempTableWithPrimaryKey() {
+        Create create = new Create();
+        create.setTable(new GroupSymbol("tempTable")); //$NON-NLS-1$
+        List columns = new ArrayList();
+        ElementSymbol column = new ElementSymbol("c1");//$NON-NLS-1$
+        column.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
+        columns.add(column);
+        column = new ElementSymbol("c2");//$NON-NLS-1$
+        column.setType(DataTypeManager.DefaultDataClasses.BYTE);
+        columns.add(column);
+        create.setColumns(columns);
+        create.getPrimaryKey().add(column);
+        helpTest("Create local TEMPORARY table tempTable(c1 boolean, c2 byte, primary key (c2))", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean, c2 byte, PRIMARY KEY(c2))", create); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
     @Test public void testDropTable() {
         Drop drop = new Drop();
         drop.setTable(new GroupSymbol("tempTable")); //$NON-NLS-1$

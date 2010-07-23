@@ -65,7 +65,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.tempdata.TempTableStore;
-import org.teiid.query.tempdata.TempTableStoreImpl;
+import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.ErrorMessageKeys;
 
@@ -205,7 +205,7 @@ public class ProcedurePlan extends ProcessorPlan {
 		            context.setValue(entry.getKey(), value);
 				}
     		}
-    		tempTableStore = new TempTableStoreImpl(bufferMgr, getContext().getConnectionID(), null);
+    		tempTableStore = new TempTableStore(bufferMgr, getContext().getConnectionID(), null);
             this.dataMgr = new TempTableDataManager(dataMgr, tempTableStore);
     	}
     	this.evaluatedParams = true;

@@ -406,7 +406,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	processor.setNonBlocking(true); //process lookup as fully blocking
             while (true) {
             	TupleBatch batch = processor.nextBatch();
-            	codeTableCache.loadTable(codeRequestId, batch.getAllTuples());	
+            	codeTableCache.loadTable(codeRequestId, batch.getTuples());	
             	if (batch.getTerminationFlag()) {
             		break;
             	}

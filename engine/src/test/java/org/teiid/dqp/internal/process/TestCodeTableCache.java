@@ -69,7 +69,7 @@ public class TestCodeTableCache extends TestCase {
 		//   r2--> 'Germany', 'GM'
 		
 		try {
-			ctc.loadTable(nodeId, results);
+			ctc.loadTable(nodeId, Arrays.asList(results));
 		} catch (TeiidProcessingException e) {
 			throw new RuntimeException(e);
 		}
@@ -90,7 +90,7 @@ public class TestCodeTableCache extends TestCase {
 		//   r2--> 'Germany', 'GM'
 		
 		try {
-			ctc.loadTable(nodeId, results);
+			ctc.loadTable(nodeId, Arrays.asList(results));
 		} catch (TeiidProcessingException e) {
 			throw new RuntimeException(e);
 		}
@@ -203,7 +203,7 @@ public class TestCodeTableCache extends TestCase {
         }; 
 		
 		try {
-			ctc.loadTable(nodeId, results);
+			ctc.loadTable(nodeId, Arrays.asList(results));
 			fail("expected exception"); //$NON-NLS-1$
 		} catch (TeiidProcessingException e) {
 			assertEquals("Duplicate code table 'table' key 'value' value '1'", e.getMessage()); //$NON-NLS-1$
@@ -221,7 +221,7 @@ public class TestCodeTableCache extends TestCase {
         }; 
 		
 		try {
-			ctc.loadTable(nodeId, results);
+			ctc.loadTable(nodeId, Arrays.asList(results));
 			fail("expected exception"); //$NON-NLS-1$
 		} catch (TeiidProcessingException e) {
 			assertEquals("Error Code:ERR.018.005.0100 Message:Unable to load code table for because result sizes exceeds the allowed parameter - maxCodeTableRecords.", e.getMessage()); //$NON-NLS-1$
@@ -239,7 +239,7 @@ public class TestCodeTableCache extends TestCase {
         }; 
 		
 		try {
-			ctc.loadTable(nodeId, results);
+			ctc.loadTable(nodeId, Arrays.asList(results));
 			fail("expected exception"); //$NON-NLS-1$
 		} catch (TeiidProcessingException e) {
 			assertEquals("Error Code:ERR.018.005.0100 Message:Unable to load code table for because result sizes exceeds the allowed parameter - maxCodeTables.", e.getMessage()); //$NON-NLS-1$
