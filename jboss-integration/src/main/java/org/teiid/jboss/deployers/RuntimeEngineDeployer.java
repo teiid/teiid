@@ -84,7 +84,7 @@ import org.teiid.transport.SocketConfiguration;
 import org.teiid.transport.SocketListener;
 
 
-@ManagementObject(isRuntime=true, componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
+@ManagementObject(name="RuntimeEngineDeployer", isRuntime=true, componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManagement, Serializable , ClientServiceRegistry  {
 	private static final long serialVersionUID = -4676205340262775388L;
 
