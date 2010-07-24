@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.dqp.internal.process.validator;
+package org.teiid.dqp.internal.process;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -39,6 +39,7 @@ import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.dqp.internal.process.AuthorizationValidationVisitor;
 import org.teiid.dqp.internal.process.Request;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.QueryParser;

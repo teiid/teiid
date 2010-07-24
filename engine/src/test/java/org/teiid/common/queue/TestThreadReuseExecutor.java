@@ -154,7 +154,7 @@ public class TestThreadReuseExecutor {
     	}, 0, 30, TimeUnit.MILLISECONDS);
     	Thread.sleep(120);
     	future.cancel(true);
-    	assertEquals(2, result.size());
+    	assertTrue(result.size() < 3);
     }
     
     @Test public void testFailingWork() throws Exception {

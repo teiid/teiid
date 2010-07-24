@@ -58,7 +58,6 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
  * A Teiid Temp Table
  * TODO: an update will not happen unless the tuplesource is accessed
  * TODO: better handling for blocked exceptions (should be rare)
- * TODO: non-pk updates/deletes through the browser 
  */
 class TempTable {
 	
@@ -166,21 +165,21 @@ class TempTable {
 	}
 
 	public TupleSource createTupleSource(List<Criteria> conditions, OrderBy orderBy) throws TeiidComponentException {
-		return createTupleSource(conditions, orderBy, true);
-	}
-	
-	private TupleSource createTupleSource(List<Criteria> conditions, OrderBy orderBy, boolean filterRowId) throws TeiidComponentException {
+		TupleBrowser browser = createTupleBrower(conditions, orderBy);
 		TupleBuffer tb = bm.createTupleBuffer(columns, sessionID, TupleSourceType.PROCESSOR);
-		TupleBrowser browser = tree.browse(null, null, OrderBy.ASC);
 		List next = null;
 		while ((next = browser.next()) != null) {
-			if (rowId != null && filterRowId) {
+			if (rowId != null) {
 				next = next.subList(1, next.size());
 			}
 			tb.addTuple(next);
 		}
 		tb.close();
 		return tb.createIndexedTupleSource(true);
+	}
+	
+	private TupleBrowser createTupleBrower(List<Criteria> conditions, OrderBy orderBy) throws TeiidComponentException {
+		return tree.browse(null, null, OrderBy.ASC);
 	}
 	
 	public int getRowCount() {
@@ -221,11 +220,37 @@ class TempTable {
         };
         return uts;
     }
+	
+	private TupleSource asTupleSource(final TupleBrowser browser) {
+		return new TupleSource() {
+			
+			@Override
+			public List<?> nextTuple() throws TeiidComponentException,
+					TeiidProcessingException {
+				return browser.next();
+			}
+			
+			@Override
+			public List<? extends Expression> getSchema() {
+				return columns;
+			}
+			
+			@Override
+			public void closeSource() {
+				
+			}
+			
+			@Override
+			public int available() {
+				return 0;
+			}
+		};
+	}
 		
 	public TupleSource update(Criteria crit, final SetClauseList update) throws TeiidComponentException {
 		final boolean primaryKeyChangePossible = canChangePrimaryKey(update);
-		
-		UpdateTupleSource uts = new UpdateTupleSource(crit, createTupleSource(null, null, false)) {
+		final TupleBrowser browser = createTupleBrower(null, null);
+		UpdateTupleSource uts = new UpdateTupleSource(crit, asTupleSource(browser)) {
 			
 			protected TupleBuffer changeSet;
 			protected TupleSource changeSetProcessor;
@@ -239,13 +264,14 @@ class TempTable {
     				newTuple.set((Integer)lookup.get(entry.getKey()), eval.evaluate(entry.getValue(), tuple));
     			}
     			if (primaryKeyChangePossible) {
+    				browser.removed();
     				deleteTuple(tuple);
     				if (changeSet == null) {
     					changeSet = bm.createTupleBuffer(columns, sessionID, TupleSourceType.PROCESSOR);
     				}
     				changeSet.addTuple(newTuple);
     			} else {
-    				updateTuple(newTuple);
+    				browser.update(newTuple);
     			}
 			}
 			
@@ -312,11 +338,13 @@ class TempTable {
 	}
 	
 	public TupleSource delete(Criteria crit) throws TeiidComponentException {
-		UpdateTupleSource uts = new UpdateTupleSource(crit, createTupleSource(null, null, false)) {
+		final TupleBrowser browser = createTupleBrower(null, null);
+		UpdateTupleSource uts = new UpdateTupleSource(crit, asTupleSource(browser)) {
 			@Override
 			protected void tuplePassed(List tuple)
 					throws ExpressionEvaluationException,
 					BlockedException, TeiidComponentException {
+				browser.removed();
 				deleteTuple(tuple);
 			}
 			

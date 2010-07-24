@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.dqp.internal.transaction;
+package org.teiid.dqp.internal.process;
 
 import static org.junit.Assert.*;
 
@@ -35,6 +35,7 @@ import org.teiid.adminapi.Transaction;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
 import org.teiid.common.queue.FakeWorkManager;
+import org.teiid.dqp.internal.process.TransactionServerImpl;
 import org.teiid.dqp.service.TransactionContext;
 
 public class TestTransactionServer {

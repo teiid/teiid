@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.dqp.internal.transaction;
+package org.teiid.dqp.internal.process;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -49,7 +49,6 @@ import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.multisource.MultiSourceCapabilitiesFinder;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.dqp.internal.process.multisource.MultiSourcePlanToProcessConverter;
-import org.teiid.dqp.internal.process.validator.AuthorizationValidationVisitor;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionService;

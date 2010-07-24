@@ -27,7 +27,7 @@ import javax.transaction.TransactionManager;
 
 import org.teiid.common.queue.FakeWorkManager;
 import org.teiid.core.util.SimpleMock;
-import org.teiid.dqp.internal.transaction.TransactionServerImpl;
+import org.teiid.dqp.internal.process.TransactionServerImpl;
 
 
 public class FakeTransactionService extends TransactionServerImpl {

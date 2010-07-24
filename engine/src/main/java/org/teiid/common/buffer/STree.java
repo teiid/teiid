@@ -334,6 +334,24 @@ public class STree {
 				}
 			}
 		}
+		
+		/**
+		 * Perform an in-place update of the tuple just returned by the next method
+		 * WARNING - this must not change the key value
+		 * @param tuple
+		 * @throws TeiidComponentException
+		 */
+		public void update(List tuple) throws TeiidComponentException {
+			values.set(index - 1, tuple);
+			page.setValues(values);
+		}
+		
+		/**
+		 * Notify the browser that the last value was deleted.
+		 */
+		public void removed() {
+			index--;
+		}
 	}
 	
 	public int getKeyLength() {
