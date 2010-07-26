@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.metadata;
+package org.teiid.query.metadata;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -39,6 +39,8 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.query.metadata.CompositeMetadataStore;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
 

@@ -22,7 +22,10 @@
 
 package org.teiid.query.processor;
 
+import static org.junit.Assert.*;
+
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.junit.Before;
@@ -33,14 +36,18 @@ import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
-
+@SuppressWarnings("nls")
 public class TestTempTables {
 	
 	private TempMetadataAdapter metadata;
 	private TempTableDataManager dataManager;
 
 	private void execute(String sql, List[] expectedResults) throws Exception {
-		TestProcessor.doProcess(TestProcessor.helpGetPlan(sql, metadata), dataManager, expectedResults, TestProcessor.createCommandContext());
+		execute(expectedResults, TestProcessor.helpGetPlan(sql, metadata));
+	}
+	
+	private void execute(List[] expectedResults, ProcessorPlan processorPlan) throws Exception {
+		TestProcessor.doProcess(processorPlan, dataManager, expectedResults, TestProcessor.createCommandContext());
 	}
 
 	@Before public void setUp() {
@@ -120,6 +127,13 @@ public class TestTempTables {
 		}
 		//should revert back to original
 		execute("select count(*) from x", new List[] {Arrays.asList(2)}); //$NON-NLS-1$
+	}
+	
+	@Test public void testPrimaryKeyMetadata() throws Exception {
+		execute("create local temporary table x (e1 string, e2 integer, primary key (e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		Collection c = metadata.getUniqueKeysInGroup(metadata.getGroupID("x"));
+		assertEquals(1, c.size());
+		assertEquals(1, (metadata.getElementIDsInKey(c.iterator().next()).size()));
 	}
 	
 }

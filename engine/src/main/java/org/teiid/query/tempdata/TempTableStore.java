@@ -38,8 +38,10 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.processor.CollectionTupleSource;
+import org.teiid.query.resolver.command.TempTableResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Create;
 import org.teiid.query.sql.lang.Criteria;
@@ -91,7 +93,8 @@ public class TempTableStore {
     		columns.addAll(0, primaryKey);
     	} 
         //add metadata
-        tempMetadataStore.addTempGroup(tempTableName, columns, false, true);
+        TempMetadataID id = tempMetadataStore.addTempGroup(tempTableName, columns, false, true);
+        TempTableResolver.addPrimaryKey(create, id);
         TempTable tempTable = new TempTable(buffer, columns, create.getPrimaryKey().size(), sessionID);
         groupToTupleSourceID.put(tempTableName, tempTable);
     }

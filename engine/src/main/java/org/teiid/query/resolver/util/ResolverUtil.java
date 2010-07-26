@@ -631,10 +631,10 @@ public class ResolverUtil {
         return store.addTempGroup(symbol.getName(), symbols, !tempTable, tempTable);
     }
     
-    public static void addTempTable(TempMetadataAdapter metadata,
+    public static TempMetadataID addTempTable(TempMetadataAdapter metadata,
                                      GroupSymbol symbol,
                                      List symbols) throws QueryResolverException {
-        addTempGroup(metadata, symbol, symbols, true);
+        return addTempGroup(metadata, symbol, symbols, true);
     }
 
     /** 

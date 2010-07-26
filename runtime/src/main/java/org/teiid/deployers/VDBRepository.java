@@ -45,7 +45,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.TransformationMetadata.Resource;
+import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.translator.TranslatorException;
 import org.teiid.vdb.runtime.VDBKey;

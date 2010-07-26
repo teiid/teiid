@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.metadata;
+package org.teiid.query.metadata;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -73,16 +73,12 @@ import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.mapping.xml.MappingLoader;
 import org.teiid.query.mapping.xml.MappingNode;
-import org.teiid.query.metadata.BasicQueryMetadata;
-import org.teiid.query.metadata.GroupInfo;
-import org.teiid.query.metadata.StoredProcedureInfo;
-import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.sql.lang.SPParameter;
 
 
 /**
- * Modelers implementation of QueryMetadataInterface that reads columns, groups, models etc.
- * index files for various metadata properties.
+ * Teiid's implementation of the QueryMetadataInterface that reads columns, groups, models etc.
+ * from the metadata object model.
  */
 public class TransformationMetadata extends BasicQueryMetadata implements Serializable {
 	

@@ -23,6 +23,7 @@
 package org.teiid.query.metadata;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -371,7 +372,11 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         throws TeiidComponentException, QueryMetadataException {
         
         if(groupID instanceof TempMetadataID) {
-            return Collections.EMPTY_LIST;
+        	TempMetadataID id = (TempMetadataID)groupID;
+        	if (id.getPrimaryKey() == null) {
+        		return Collections.emptyList();
+        	}
+            return Arrays.asList(groupID);
         }
         return this.actualMetadata.getUniqueKeysInGroup(groupID);   
     }
@@ -396,6 +401,10 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     public List getElementIDsInKey(Object keyID) 
         throws TeiidComponentException, QueryMetadataException {
         
+    	if (keyID instanceof TempMetadataID) {
+    		return ((TempMetadataID)keyID).getPrimaryKey();
+    	}
+    	
         return this.actualMetadata.getElementIDsInKey(keyID);   
     }    
 

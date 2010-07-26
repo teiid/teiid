@@ -62,9 +62,9 @@ import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.TransformationMetadata;
 import org.teiid.metadata.VdbConstants;
-import org.teiid.metadata.TransformationMetadata.Resource;
+import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.metadata.TransformationMetadata.Resource;
 
 
 /**

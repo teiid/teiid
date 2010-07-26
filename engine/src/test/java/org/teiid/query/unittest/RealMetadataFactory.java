@@ -32,17 +32,17 @@ import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnSet;
-import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.TransformationMetadata;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.query.mapping.relational.QueryNode;
+import org.teiid.query.metadata.CompositeMetadataStore;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.SPParameter;
 
 

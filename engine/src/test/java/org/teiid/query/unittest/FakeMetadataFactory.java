@@ -39,16 +39,16 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.TransformationMetadata;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingAttribute;
 import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.mapping.xml.MappingElement;
 import org.teiid.query.mapping.xml.MappingSequenceNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.symbol.ElementSymbol;
 
-
+@SuppressWarnings("nls")
 public class FakeMetadataFactory {
 
     private static FakeMetadataFacade CACHED_EXAMPLE1 = example1();

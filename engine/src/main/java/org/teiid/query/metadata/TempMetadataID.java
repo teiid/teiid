@@ -51,6 +51,7 @@ public class TempMetadataID implements Serializable {
     private int cardinality = QueryMetadataInterface.UNKNOWN_CARDINALITY;
     private LRUCache localCache;
     private boolean scalarGroup;
+    private List<TempMetadataID> primaryKey;
     
     /**
      * Constructor for group form of metadata ID.
@@ -58,8 +59,7 @@ public class TempMetadataID implements Serializable {
      * @param elements List of TempMetadataID representing elements
      */
     public TempMetadataID(String ID, List<TempMetadataID> elements) {
-        this.ID = ID;
-        this.elements = elements;
+        this(ID, elements, true, false);
     }
     
     /**
@@ -245,6 +245,14 @@ public class TempMetadataID implements Serializable {
 
 	public void setScalarGroup(boolean scalarGroup) {
 		this.scalarGroup = scalarGroup;
+	}
+
+	public List<TempMetadataID> getPrimaryKey() {
+		return primaryKey;
+	}
+	
+	public void setPrimaryKey(List<TempMetadataID> primaryKey) {
+		this.primaryKey = primaryKey;
 	}
 		
 }

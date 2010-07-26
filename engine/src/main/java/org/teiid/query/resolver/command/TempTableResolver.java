@@ -22,6 +22,7 @@
 
 package org.teiid.query.resolver.command;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -77,15 +78,25 @@ public class TempTableResolver implements CommandResolver {
             //if we get here then either the group does not exist or has already been defined as a temp table
             //if it has been defined as a temp table, that's ok we'll use this as the new definition and throw an
             //exception at runtime if the user has not dropped the previous table yet
-            ResolverUtil.addTempTable(metadata, group, create.getColumns());
-            
-            ResolverUtil.resolveGroup(((Create)command).getTable(), metadata);
+            TempMetadataID tempTable = ResolverUtil.addTempTable(metadata, group, create.getColumns());
+            ResolverUtil.resolveGroup(create.getTable(), metadata);
             Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
-            groups.add(((Create)command).getTable());
+            groups.add(create.getTable());
             ResolverVisitor.resolveLanguageObject(command, groups, metadata);
+            addPrimaryKey(create, tempTable);
         } else if(command.getType() == Command.TYPE_DROP) {
             ResolverUtil.resolveGroup(((Drop)command).getTable(), metadata);
         }
     }
+
+	public static void addPrimaryKey(Create create, TempMetadataID tempTable) {
+		if (!create.getPrimaryKey().isEmpty()) {
+			ArrayList<TempMetadataID> primaryKey = new ArrayList<TempMetadataID>(create.getPrimaryKey().size());
+			for (ElementSymbol symbol : create.getPrimaryKey()) {
+				primaryKey.add((TempMetadataID) symbol.getMetadataID());
+			}
+			tempTable.setPrimaryKey(primaryKey);
+		}
+	}
 
 }

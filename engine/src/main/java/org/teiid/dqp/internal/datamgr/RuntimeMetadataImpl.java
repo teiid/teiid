@@ -27,9 +27,12 @@ package org.teiid.dqp.internal.datamgr;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.ArgCheck;
-import org.teiid.metadata.*;
-import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.metadata.StoredProcedureInfo;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Table;
+import org.teiid.query.metadata.*;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.translator.TranslatorException;
 

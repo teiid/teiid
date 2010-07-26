@@ -36,6 +36,7 @@ import org.teiid.core.id.IDGenerator;
 import org.teiid.core.id.IntegerID;
 import org.teiid.core.id.IntegerIDFactory;
 import org.teiid.core.util.Assertion;
+import org.teiid.language.TableReference;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -83,6 +84,7 @@ import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.lang.TableFunctionReference;
 import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.SetQuery.Operation;
@@ -90,6 +92,7 @@ import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
@@ -377,6 +380,7 @@ public class PlanToProcessConverter {
 					XMLTableNode xtn = new XMLTableNode(getID());
 					//we handle the projection filtering once here rather than repeating the
 					//path analysis on a per plan basis
+					updateGroupName(node, xt);
 					Map elementMap = RelationalNode.createLookupMap(xt.getProjectedSymbols());
 			        List cols = (List) node.getProperty(NodeConstants.Info.OUTPUT_COLS);
 					int[] projectionIndexes = RelationalNode.getProjectionIndexes(elementMap, cols);
@@ -392,7 +396,9 @@ public class PlanToProcessConverter {
 				}
 				if (source instanceof TextTable) {
 					TextTableNode ttn = new TextTableNode(getID());
-					ttn.setTable((TextTable)source);
+					TextTable tt = (TextTable)source;
+					updateGroupName(node, tt);
+					ttn.setTable(tt);
 					processNode = ttn;
 					break;
 				}
@@ -445,6 +451,14 @@ public class PlanToProcessConverter {
 		}
 
 		return processNode;
+	}
+
+	private void updateGroupName(PlanNode node, TableFunctionReference tt) {
+		String groupName = node.getGroups().iterator().next().getName();
+		tt.getGroupSymbol().setName(groupName);
+		for (ElementSymbol symbol : tt.getProjectedSymbols()) {
+			symbol.setName(groupName + SingleElementSymbol.SEPARATOR + symbol.getShortName());
+		}
 	}
 
     private RelationalNode correctProjectionInternalTables(PlanNode node,

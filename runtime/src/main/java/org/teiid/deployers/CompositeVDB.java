@@ -29,12 +29,12 @@ import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.TransformationMetadata;
-import org.teiid.metadata.TransformationMetadata.Resource;
 import org.teiid.query.function.metadata.FunctionMethod;
+import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.vdb.runtime.VDBKey;
 
 

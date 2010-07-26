@@ -26,10 +26,10 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import org.teiid.dqp.message.RequestID;
-import org.teiid.metadata.TransformationMetadata;
 import org.teiid.metadata.index.VDBMetadataFactory;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;

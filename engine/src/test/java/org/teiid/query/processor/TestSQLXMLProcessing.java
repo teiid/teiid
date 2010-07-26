@@ -358,6 +358,16 @@ public class TestSQLXMLProcessing {
     
         process(sql, expected);
     }
+    
+	@Test public void testXmlTableSubquery() throws Exception {
+		String sql = "select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">c</b></a>', xml) columns x string path '@x', val string path '/.') as x where val = (select max(e1) from pm1.g1 as x)";
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("attr", "c"),
+        };    
+
+        process(sql, expected);
+    }
 
     private static FakeDataManager dataManager = new FakeDataManager();
     

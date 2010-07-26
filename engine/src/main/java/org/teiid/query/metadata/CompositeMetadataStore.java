@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.metadata;
+package org.teiid.query.metadata;
 
 import java.util.ArrayList;
 import java.util.Collection;

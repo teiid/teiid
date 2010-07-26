@@ -38,11 +38,11 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.FileUtils;
 import org.teiid.core.util.LRUCache;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.TransformationMetadata;
 import org.teiid.query.function.metadata.FunctionMetadataReader;
 import org.teiid.query.function.metadata.FunctionMethod;
+import org.teiid.query.metadata.CompositeMetadataStore;
+import org.teiid.query.metadata.TransformationMetadata;
 
 
 @SuppressWarnings("nls")

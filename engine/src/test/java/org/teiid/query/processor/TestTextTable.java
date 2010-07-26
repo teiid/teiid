@@ -185,6 +185,18 @@ public class TestTextTable {
 
         process(sql, expected);
     }
+	
+	@Test public void testTextTableSubquery() throws Exception {
+		String sql = "select x.* from pm1.g1, texttable(e1 || ',' || e2 COLUMNS x string, y integer) x where y < (select avg(e2) from pm1.g1 as x)";
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("a", 0),
+        		Arrays.asList("c", 1),
+        		Arrays.asList("a", 0),
+        };    
+
+        process(sql, expected);
+    }
 
     public static void process(String sql, List[] expectedResults) throws Exception {    
     	FakeDataManager dataManager = new FakeDataManager();

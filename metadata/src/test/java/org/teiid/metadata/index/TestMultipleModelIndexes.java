@@ -29,7 +29,7 @@ import java.util.Collection;
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.TransformationMetadata;
+import org.teiid.query.metadata.TransformationMetadata;
 
 @SuppressWarnings("nls")
 public class TestMultipleModelIndexes {
