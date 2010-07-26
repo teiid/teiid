@@ -31,9 +31,9 @@ public class TestSessionServiceImpl {
 
 		SessionServiceImpl ssi = new SessionServiceImpl() {
 			@Override
-			protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains, SecurityHelper helper)
+			protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains, SecurityHelper helper, boolean passthough)
 				throws LoginException {
-				impl.authenticateUser(userName, credentials, applicationName, domains);
+				impl.authenticateUser(userName, credentials, applicationName, domains, passthough);
 				return impl;
 			}
 		};
@@ -49,7 +49,7 @@ public class TestSessionServiceImpl {
 		
 		SessionMetadata info = ssi.createSession("steve", null, "foo", new Properties(), false); //$NON-NLS-1$ //$NON-NLS-2$
 		if (securityEnabled) {
-			Mockito.verify(impl).authenticateUser("steve", null, "foo", domains); 
+			Mockito.verify(impl).authenticateUser("steve", null, "foo", domains, false); 
 		}
 		
 		String id1 = info.getSessionId();

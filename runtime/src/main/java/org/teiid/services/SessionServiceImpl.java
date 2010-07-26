@@ -150,7 +150,8 @@ public class SessionServiceImpl implements SessionService {
         if (!domains.isEmpty()) {
 	        // Authenticate user...
 	        // if not authenticated, this method throws exception
-	        TeiidLoginContext membership = authenticate(userName, credentials, applicationName, domains, this.securityHelper);
+        	boolean onlyAllowPassthrough = Boolean.valueOf(properties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$
+	        TeiidLoginContext membership = authenticate(userName, credentials, applicationName, domains, this.securityHelper, onlyAllowPassthrough);
 	        loginContext = membership.getLoginContext();
 	        userName = membership.getUserName();
 	        securityDomain = membership.getSecurityDomain();
@@ -204,10 +205,10 @@ public class SessionServiceImpl implements SessionService {
         return newSession;
 	}
 
-	protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains, SecurityHelper helper)
+	protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains, SecurityHelper helper, boolean onlyallowPassthrough)
 			throws LoginException {
 		TeiidLoginContext membership = new TeiidLoginContext(helper);
-        membership.authenticateUser(userName, credentials, applicationName, domains);                        
+        membership.authenticateUser(userName, credentials, applicationName, domains, onlyallowPassthrough);                        
 		return membership;
 	}
 	

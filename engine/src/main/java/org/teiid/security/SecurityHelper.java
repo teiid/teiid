@@ -37,4 +37,6 @@ public interface SecurityHelper {
 	Object createSecurityContext(String securityDomain, Principal p, Object credentials, Subject subject);
 
 	Subject getSubjectInContext(String securityDomain);
+	
+	boolean sameSubject(String securityDomain, Object context, Subject subject);
 }

@@ -77,6 +77,8 @@ public class TeiidURL {
 		public static final String PASSWORD = "password"; //$NON-NLS-1$
 		
 		public static final String ADMIN = "admin"; //$NON-NLS-1$
+		
+		public static final String PASSTHROUGH_AUTHENTICATION = "PassthroughAuthentication"; //$NON-NLS-1$
 	}
 
 	public static final String DOT_DELIMITER = "."; //$NON-NLS-1$

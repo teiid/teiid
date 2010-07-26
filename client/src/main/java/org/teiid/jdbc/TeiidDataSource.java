@@ -93,9 +93,12 @@ public class TeiidDataSource extends BaseDataSource {
     private String discoveryStrategy;
     
     /**
-     * Constructor for MMDataSource.
+     * when "true", in the "embedded" scenario, authentication is information is read in pass though manner.
      */
-    public TeiidDataSource() {
+    private boolean passthroughAuthentication = false;
+    
+
+	public TeiidDataSource() {
     }
 
     // --------------------------------------------------------------------------------------------
@@ -227,6 +230,7 @@ public class TeiidDataSource extends BaseDataSource {
     
 	private Properties buildEmbeddedProperties(final String userName, final String password) {
 		Properties props = buildProperties(userName, password);
+		props.setProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, Boolean.toString(this.passthroughAuthentication));
 		return props;
 	}    
 	
@@ -265,6 +269,13 @@ public class TeiidDataSource extends BaseDataSource {
     public boolean isSecure() {
         return this.secure;
     }
+    /**
+     * Same as "isSecure". Required by the reflection login in connection pools to identify the type
+     * @return
+     */
+    public boolean getSecure() {
+        return this.secure;
+    }    
 
     /**
      * Returns a string containing a comma delimited list of alternate 
@@ -476,5 +487,30 @@ public class TeiidDataSource extends BaseDataSource {
 	public void setDiscoveryStrategy(String discoveryStrategy) {
 		this.discoveryStrategy = discoveryStrategy;
 	}
+	
+	/**
+	 * When true, this connection uses the passed in security domain to do the authentication. 
+	 * @return
+	 */
+    public boolean isPassthroughAuthentication() {
+		return passthroughAuthentication;
+	}
+    
+    /**
+     * Same as "isPassthroughAuthentication". Required by the reflection login in connection pools to identify the type
+     * @return
+     */
+    public boolean getPassthroughAuthentication() {
+		return passthroughAuthentication;
+	}
+    
+	/**
+	 * When set to true, the connection uses the passed in security domain to do the authentication.
+	 * @since 7.1 
+	 * @return
+	 */
+	public void setPassthroughAuthentication(final boolean passthroughAuthentication) {
+		this.passthroughAuthentication = passthroughAuthentication;
+	}	
 }
 

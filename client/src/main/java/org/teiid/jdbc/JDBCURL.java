@@ -71,7 +71,8 @@ public class JDBCURL {
     	        BaseDataSource.USER_NAME,
     	        BaseDataSource.PASSWORD,
     	        TeiidURL.CONNECTION.AUTO_FAILOVER,
-    	        TeiidURL.CONNECTION.DISCOVERY_STRATEGY));
+    	        TeiidURL.CONNECTION.DISCOVERY_STRATEGY,
+    	        TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION));
     	props.addAll(EXECUTION_PROPERTIES);
     	return Collections.unmodifiableSet(props);
     }

@@ -29,6 +29,7 @@ import javax.security.auth.Subject;
 
 import org.jboss.security.SecurityContext;
 import org.jboss.security.SubjectInfo;
+import org.teiid.core.util.Assertion;
 import org.teiid.security.SecurityHelper;
 
 public class JBossSecurityHelper implements SecurityHelper, Serializable {
@@ -76,6 +77,22 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
 			return subject;
 		}		
 		return null;
+	}
+
+	@Override
+	public boolean sameSubject(String securityDomain, Object context, Subject subject) {
+		Assertion.isNotNull(context);
+		SecurityContext previousContext = (SecurityContext)context;
+		Subject previousUser = previousContext.getSubjectInfo().getAuthenticatedSubject();
+		
+		SecurityContext currentContext = SecurityActions.getSecurityContext();
+		if (currentContext != null && currentContext.getSecurityDomain().equals(securityDomain)) {
+			Subject currentUser = currentContext.getSubjectInfo().getAuthenticatedSubject();
+			if (previousUser.equals(currentUser)) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 }

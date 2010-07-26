@@ -46,20 +46,25 @@ import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.NetPlugin;
 import org.teiid.net.ServerConnection;
+import org.teiid.net.TeiidURL;
 
 
 public class LocalServerConnection implements ServerConnection {
 	private static final String TEIID_RUNTIME = "teiid/engine-deployer"; //$NON-NLS-1$
 	
-	private final LogonResult result;
+	private LogonResult result;
 	private boolean shutdown;
 	private ClientServiceRegistry csr;
     private DQPWorkContext workContext = new DQPWorkContext();
+    private Properties connectionProperties;
+    private boolean passthrough;
 
 	public LocalServerConnection(Properties connectionProperties) throws CommunicationException, ConnectionException{
+		this.connectionProperties = connectionProperties;
 		this.csr = getClientServiceRegistry();
 		workContext.setSecurityHelper(csr.getSecurityHelper());
-		this.result = authenticate(connectionProperties);
+		authenticate(connectionProperties);
+		passthrough = Boolean.valueOf(connectionProperties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$
 	}
 
 	protected ClientServiceRegistry getClientServiceRegistry() {
@@ -71,10 +76,9 @@ public class LocalServerConnection implements ServerConnection {
 		}
 	}
 	
-	public synchronized LogonResult authenticate(Properties connProps) throws ConnectionException, CommunicationException {
+	public synchronized void authenticate(Properties connProps) throws ConnectionException, CommunicationException {
         try {
-        	LogonResult logonResult = this.getService(ILogon.class).logon(connProps);
-        	return logonResult;
+        	this.result = this.getService(ILogon.class).logon(connProps);
         } catch (LogonException e) {
             // Propagate the original message as it contains the message we want
             // to give to the user
@@ -95,6 +99,14 @@ public class LocalServerConnection implements ServerConnection {
 					throw ExceptionUtil.convertException(arg1, new TeiidComponentException(NetPlugin.Util.getString("LocalTransportHandler.Transport_shutdown"))); //$NON-NLS-1$
 				}
 				try {
+					if (passthrough && !arg1.getDeclaringClass().equals(ILogon.class)) {
+						// check to make sure the current security context same as logged one
+						if (!csr.getSecurityHelper().sameSubject(workContext.getSession().getSecurityDomain(), workContext.getSession().getSecurityContext(), workContext.getSubject())) {
+							logoff();
+							authenticate(connectionProperties);
+						}
+					}
+					
 					final T service = csr.getClientService(iface);
 					return workContext.runInContext(new Callable<Object>() {
 						public Object call() throws Exception {
@@ -128,17 +140,21 @@ public class LocalServerConnection implements ServerConnection {
 		}
 		
 		if (logoff) {
-			try {
-				//make a best effort to send the logoff
-				Future<?> writeFuture = this.getService(ILogon.class).logoff();
-				if (writeFuture != null) {
-					writeFuture.get(5000, TimeUnit.MILLISECONDS);
-				}
-			} catch (Exception e) {
-				//ignore
-			}
+			logoff();
 		}
 		this.shutdown = true;
+	}
+
+	private void logoff() {
+		try {
+			//make a best effort to send the logoff
+			Future<?> writeFuture = this.getService(ILogon.class).logoff();
+			if (writeFuture != null) {
+				writeFuture.get(5000, TimeUnit.MILLISECONDS);
+			}
+		} catch (Exception e) {
+			//ignore
+		}
 	}
 
 	public LogonResult getLogonResult() {

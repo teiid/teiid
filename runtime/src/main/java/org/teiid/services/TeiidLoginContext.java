@@ -64,24 +64,32 @@ public class TeiidLoginContext {
 		this.securityHelper = helper;
 	}
 	
-	public void authenticateUser(String username, final Credentials credential, String applicationName, List<String> domains) throws LoginException {
+	public void authenticateUser(String username, final Credentials credential, 
+			String applicationName, List<String> domains, boolean onlyallowPassthrough) 
+		throws LoginException {
         
         LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"authenticateUser", username, applicationName}); //$NON-NLS-1$
                 
         final String baseUsername = getBaseUsername(username);
-           
+
+    	if (onlyallowPassthrough) {
+            for (String domain:getDomainsForUser(domains, username)) {
+	        	Subject existing = this.securityHelper.getSubjectInContext(domain);
+	        	if (existing != null) {
+					this.userName = getUserName(existing)+AT+domain;
+					this.securitydomain = domain;     
+					this.loginContext = createLoginContext(domain, existing);
+					return;
+	        	}
+            }
+            throw new LoginException(RuntimePlugin.Util.getString("no_passthrough_identity_found")); //$NON-NLS-1$
+    	}
+
+        
         // If username specifies a domain (user@domain) only that domain is authenticated against.
         // If username specifies no domain, then all domains are tried in order.
         for (String domain:getDomainsForUser(domains, username)) {
-        	
-        	Subject existing = this.securityHelper.getSubjectInContext(domain);
-        	if (existing != null) {
-				this.userName = getUserName(existing)+AT+domain;
-				this.securitydomain = domain;     
-				this.loginContext = createLoginContext(domain, existing);
-				return;
-        	}
-        	
+        	        	
             try {
         		CallbackHandler handler = new CallbackHandler() {
 					@Override

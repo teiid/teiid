@@ -81,7 +81,7 @@ public class TestMembershipServiceImpl extends TestCase {
         TeiidLoginContext ms = createMembershipService();
         List<String> domains = new ArrayList<String>();
         domains.add("testFile"); //$NON-NLS-1$
-        ms.authenticateUser("user1", new Credentials("pass1".toCharArray()), null, domains); //$NON-NLS-1$ //$NON-NLS-2$
+        ms.authenticateUser("user1", new Credentials("pass1".toCharArray()), null, domains, false); //$NON-NLS-1$ //$NON-NLS-2$
         
         Mockito.verify(ms.getLoginContext()).login();
         
@@ -93,7 +93,7 @@ public class TestMembershipServiceImpl extends TestCase {
         TeiidLoginContext ms = createMembershipService();
         List<String> domains = new ArrayList<String>();
         domains.add("passthrough"); //$NON-NLS-1$
-        ms.authenticateUser("user1", new Credentials("pass1".toCharArray()), null, domains); //$NON-NLS-1$ //$NON-NLS-2$
+        ms.authenticateUser("user1", new Credentials("pass1".toCharArray()), null, domains, true); //$NON-NLS-1$ //$NON-NLS-2$
         
         assertEquals("alreadylogged@passthrough", ms.getUserName()); //$NON-NLS-1$
     }
