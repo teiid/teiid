@@ -95,14 +95,14 @@
                 Build and install the driver by running the commands below.</para>
             <note><para>You should use super user account or use "sudo" command for running the "make install" command. </para></note>
             <programlisting><![CDATA[
-                perl Makefile.PL
-                make 
-                make test
-                make install
+                % tar -zxvf psqlodbc-xx.xx.xxxx.tar.gz
+                % cd psqlodbc-xx.xx.xxxx
+                % ./configure
+                % make
+                % make install
             ]]></programlisting>
             
-            <para>Make sure that there are no errors during the "make test" phase. The the next step in the process is to create a
-            DSN for accessing the Teiid VDB.</para>
+            <para>The the next step in the process is to create a DSN for accessing the Teiid VDB.</para>
         </sect2>
     </sect1>
     
