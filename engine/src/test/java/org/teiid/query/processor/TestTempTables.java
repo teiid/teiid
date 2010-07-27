@@ -43,10 +43,10 @@ public class TestTempTables {
 	private TempTableDataManager dataManager;
 
 	private void execute(String sql, List[] expectedResults) throws Exception {
-		execute(expectedResults, TestProcessor.helpGetPlan(sql, metadata));
+		execute(TestProcessor.helpGetPlan(sql, metadata), expectedResults);
 	}
 	
-	private void execute(List[] expectedResults, ProcessorPlan processorPlan) throws Exception {
+	private void execute(ProcessorPlan processorPlan, List[] expectedResults) throws Exception {
 		TestProcessor.doProcess(processorPlan, dataManager, expectedResults, TestProcessor.createCommandContext());
 	}
 
@@ -134,6 +134,13 @@ public class TestTempTables {
 		Collection c = metadata.getUniqueKeysInGroup(metadata.getGroupID("x"));
 		assertEquals(1, c.size());
 		assertEquals(1, (metadata.getElementIDsInKey(c.iterator().next()).size()));
+	}
+	
+	@Test public void testProjection() throws Exception {
+		execute("create local temporary table x (e1 string, e2 integer, primary key (e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		execute("insert into x (e2, e1) values (1, 'one')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		execute("select * from x where e2 = 1", new List[] {Arrays.asList("one", 1)}); //$NON-NLS-1$
+		execute("select e2, e1 from x where e2 = 1", new List[] {Arrays.asList(1, "one")}); //$NON-NLS-1$
 	}
 	
 }

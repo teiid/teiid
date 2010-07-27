@@ -36,7 +36,6 @@ import org.teiid.core.id.IDGenerator;
 import org.teiid.core.id.IntegerID;
 import org.teiid.core.id.IntegerIDFactory;
 import org.teiid.core.util.Assertion;
-import org.teiid.language.TableReference;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -468,7 +467,7 @@ public class PlanToProcessConverter {
             return aNode;
         }
         GroupSymbol group = node.getGroups().iterator().next();
-        if (!group.isTempTable() && !CoreConstants.SYSTEM_MODEL.equals(metadata.getFullName(metadata.getModelID(group.getMetadataID())))) {
+        if (!CoreConstants.SYSTEM_MODEL.equals(metadata.getFullName(metadata.getModelID(group.getMetadataID())))) {
             return aNode;
         }
         List projectSymbols = (List) node.getProperty(NodeConstants.Info.OUTPUT_COLS);

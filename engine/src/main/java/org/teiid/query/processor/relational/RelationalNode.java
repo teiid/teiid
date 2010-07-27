@@ -357,7 +357,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 		return result;
 	}
 	
-	protected List<?> projectTuple(int[] indexes, List<?> tupleValues) {
+	public static List<?> projectTuple(int[] indexes, List<?> tupleValues) {
 	
 		List<Object> projectedTuple = new ArrayList<Object>(indexes.length);
 	

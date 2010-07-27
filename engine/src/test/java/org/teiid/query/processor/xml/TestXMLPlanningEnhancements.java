@@ -22,10 +22,13 @@
 
 package org.teiid.query.processor.xml;
 
+import static org.junit.Assert.*;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Test;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.types.DataTypeManager;
@@ -38,23 +41,14 @@ import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.relational.rules.RuleChooseDependent;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.processor.xml.ExecSqlInstruction;
-import org.teiid.query.processor.xml.ExecStagingTableInstruction;
-import org.teiid.query.processor.xml.XMLPlan;
 import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.FakeMetadataObject;
 import org.teiid.query.unittest.FakeMetadataStore;
 
-import junit.framework.TestCase;
 
+public class TestXMLPlanningEnhancements {
 
-public class TestXMLPlanningEnhancements extends TestCase {
-
-    public TestXMLPlanningEnhancements(String name) {
-        super(name);
-    }
-    
     private FakeMetadataFacade getMetadata(String query) {
         FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadata();
         
@@ -172,7 +166,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
         return doc;  
     } 
     
-    public void testBaseballPlayersDocDefect19541() throws Exception {
+    @Test public void testBaseballPlayersDocDefect19541() throws Exception {
         
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleCase3225();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerCase3225(metadata);
@@ -221,7 +215,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
         
     }   
     
-    public void testNested2WithContextCriteria5c() throws Exception {
+    @Test public void testNested2WithContextCriteria5c() throws Exception {
         FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String resultFile = "TestXMLProcessor-testNested2WithContextCriteria5c.xml"; //$NON-NLS-1$
@@ -230,7 +224,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
         TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc9 WHERE NOT(SupplierID='52') AND (OrderID='5' OR OrderID='2')", expectedDoc, metadata, dataMgr); //$NON-NLS-1$        
     }
     
-    public void testNested2WithContextCriteria5d() throws Exception {
+    @Test public void testNested2WithContextCriteria5d() throws Exception {
         FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String resultFile = "TestXMLProcessor-testNested2WithContextCriteria5d.xml"; //$NON-NLS-1$
@@ -239,7 +233,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
         TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc9 WHERE OrderID='5' OR context(SupplierID, OrderID)='2'", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testNested2WithContextCriteria5d1() throws Exception {
+    @Test public void testNested2WithContextCriteria5d1() throws Exception {
         FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String resultFile = "TestXMLProcessor-testNested2WithContextCriteria5d.xml"; //$NON-NLS-1$
@@ -248,7 +242,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
         TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc9 WHERE context(SupplierID, OrderID)='5' OR OrderID='2'", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
 
-    public void testNested2WithContextCriteria5e() throws Exception {
+    @Test public void testNested2WithContextCriteria5e() throws Exception {
         FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String resultFile = "TestXMLProcessor-testNested2WithContextCriteria5e.xml"; //$NON-NLS-1$
@@ -257,7 +251,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
         TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc9 WHERE OrderID='5' OR SupplierID='52'", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
     
-    public void testXQTChoice_6796() throws Exception {
+    @Test public void testXQTChoice_6796() throws Exception {
         FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadata2();
         FakeDataManager dataMgr = TestXMLProcessor.exampleXQTDataManager(metadata);
         String resultFile = "TestXMLProcessor-testXQTChoice_6796.xml"; //$NON-NLS-1$
@@ -266,7 +260,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
         TestXMLProcessor.helpTestProcess("SELECT * FROM xqttest.doc4 WHERE root.key.keys.nestedkey = 4", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
     }
     
-    public void testOrderByWithChoiceCriteriaElement() throws Exception {
+    @Test public void testOrderByWithChoiceCriteriaElement() throws Exception {
         FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadata2();
         FakeDataManager dataMgr = TestXMLProcessor.exampleXQTDataManager(metadata);
         String expectedDoc = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root>\n   <wrapper/>\n   <wrapper/>\n   <wrapper/>\n   <wrapper/>\n   <wrapper/>\n   <wrapper/>\n   <wrapper/>\n   <wrapper/>\n   <wrapper/>\n</root>"; //$NON-NLS-1$
@@ -274,7 +268,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
         TestXMLProcessor.helpTestProcess("SELECT * FROM xqttest.doc5 order by root.wrapper.key", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
     }
     
-    public void testXQTChoice_withContextCriteria() throws Exception {
+    @Test public void testXQTChoice_withContextCriteria() throws Exception {
         FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadata2();
         FakeDataManager dataMgr = TestXMLProcessor.exampleXQTDataManager(metadata);
         String resultFile = "TestXMLProcessor-testXQTChoice_withContextCriteria.xml"; //$NON-NLS-1$
@@ -283,7 +277,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
         TestXMLProcessor.helpTestProcess("SELECT * FROM xqttest.doc4 WHERE context(root.key.keys.nestedkey, root.key.keys.nestedkey) = 4", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
     }
     
-    public void testXQTChoice_withContextCriteria1() throws Exception {
+    @Test public void testXQTChoice_withContextCriteria1() throws Exception {
         FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadata2();
         FakeDataManager dataMgr = TestXMLProcessor.exampleXQTDataManager(metadata);
         String resultFile = "TestXMLProcessor-testXQTChoice_withContextCriteria1.xml"; //$NON-NLS-1$
@@ -292,7 +286,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
         TestXMLProcessor.helpTestProcess("SELECT * FROM xqttest.doc4 WHERE context(root.key.keys.nestedkey, root.key.keys.nestedkey) = 4 and context(root.wrapper.key.keys.nestedkey, root.wrapper.key.keys.nestedkey) = 3", expectedDoc, metadata, dataMgr); //$NON-NLS-1$
     }
     
-    public void testMappingClassWithInlineViewAndCriteria() throws Exception {
+    @Test public void testMappingClassWithInlineViewAndCriteria() throws Exception {
         FakeMetadataFacade metadata = getMetadata("SELECT upper(x.supplierNum) as supplierNum, x.supplierName, x.supplierZipCode from (select stock.suppliers.supplierNum, supplierName, supplierZipCode, itemNum FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum) x where x.itemNum = ?"); //$NON-NLS-1$
 
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
@@ -301,7 +295,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
         TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc18a where supplierID<56", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
     
-    public void testMappingClassWithUnionAndCriteria() throws Exception {
+    @Test public void testMappingClassWithUnionAndCriteria() throws Exception {
         FakeMetadataFacade metadata = getMetadata("SELECT concat(stock.suppliers.supplierNum, '') as supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = ? union all SELECT concat(stock.suppliers.supplierNum, '1'), supplierName, convert(12345, string) FROM stock.suppliers WHERE stock.suppliers.supplierNum = ?"); //$NON-NLS-1$
 
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
@@ -310,7 +304,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
         TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc18a where supplierID<56", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
     
-    public void testMappingClassWithInputSetElementNameConflict() throws Exception {
+    @Test public void testMappingClassWithInputSetElementNameConflict() throws Exception {
         FakeMetadataFacade metadata = getMetadata("SELECT concat(stock.suppliers.supplierNum, '') as supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.supplierNum = ?"); //$NON-NLS-1$
 
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
@@ -318,7 +312,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
         TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.doc18a where supplierID<56", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
     
-    public void testAutoStagingFailsForMappingClassWithProcRelational() throws Exception {
+    @Test public void testAutoStagingFailsForMappingClassWithProcRelational() throws Exception {
         FakeMetadataFacade metadata = getMetadata("SELECT supplierNum, supplierName, supplierZipCode FROM v1.supplierProc where itemnum = ?"); //$NON-NLS-1$
 
         FakeMetadataObject v1 = FakeMetadataFactory.createVirtualModel("v1"); //$NON-NLS-1$
@@ -341,7 +335,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
         assertNull(stats.get(ExecStagingTableInstruction.class));
     }
     
-    public void testMappingClassWitSelectDistinctAndCriteria() throws Exception {
+    @Test public void testMappingClassWitSelectDistinctAndCriteria() throws Exception {
         FakeMetadataFacade metadata = getMetadata("SELECT distinct '1' as supplierNum, '2' as supplierName, '3' as supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum like substring(?,1,1) || '%'"); //$NON-NLS-1$
 
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
@@ -357,7 +351,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
      * Ensures that correlated references to outer scoped groups can
      * be used as inputs
      */
-    public void testMappingClassWithStoredProcedureAndCriteria() throws Exception {
+    @Test public void testMappingClassWithStoredProcedureAndCriteria() throws Exception {
         FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String expectedDoc = TestXMLProcessor.readFile("TestXMLPlanningEnhancements-testMappingClassWithStoredProcedureAndCriteria.xml"); //$NON-NLS-1$ 
@@ -376,7 +370,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
     /**
      * @see #testNested2WithCriteria2
      */
-    public void testAutoStagingByCosting() throws Exception {
+    @Test public void testAutoStagingByCosting() throws Exception {
         FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadata();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         FakeMetadataObject suppliers = metadata.getStore().findObject("stock.suppliers", FakeMetadataObject.GROUP); //$NON-NLS-1$
@@ -397,7 +391,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
     /**
      * @see #testNested2WithCriteria2
      */
-    public void testAutoStagingFailsByCosting() throws Exception {
+    @Test public void testAutoStagingFailsByCosting() throws Exception {
         FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadata();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         FakeMetadataObject suppliers = metadata.getStore().findObject("stock.suppliers", FakeMetadataObject.GROUP); //$NON-NLS-1$
@@ -415,7 +409,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
         assertNull(stats.get(ExecStagingTableInstruction.class));
     }
 
-    public void testAutoStagingFailsByNoCache() throws Exception {
+    @Test public void testAutoStagingFailsByNoCache() throws Exception {
         FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
 
@@ -428,7 +422,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
         assertNull(stats.get(ExecStagingTableInstruction.class));
     }    
     
-    public void testAutoStagingFailsByNoCacheByGroup() throws Exception {
+    @Test public void testAutoStagingFailsByNoCacheByGroup() throws Exception {
         FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
 
@@ -448,7 +442,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
     }     
     
     // see the next test with costing information too.
-    public void testUseOfStagingCardinalityOnDependentJoinsNoCost() throws Exception {
+    @Test public void testUseOfStagingCardinalityOnDependentJoinsNoCost() throws Exception {
         FakeMetadataFacade metadata = getTempTableMetadata(false);
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
 
@@ -473,7 +467,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
             1,      // MergeJoin (**We are merge join with out any costing info**)
             0,      // Null
             0,      // PlanExecution
-            2,      // Project
+            1,      // Project
             1,      // Select
             0,      // Sort
             0       // UnionAll
@@ -482,7 +476,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
         TestOptimizer.checkDependentJoinCount(plan, 0);
     }    
     
-    public void testUseOfStagingCardinalityOnDependentJoinsWithCost() throws Exception {
+    @Test public void testUseOfStagingCardinalityOnDependentJoinsWithCost() throws Exception {
         FakeMetadataFacade metadata = getTempTableMetadata(false);
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         FakeMetadataObject orders = metadata.getStore().findObject("stock.orders", FakeMetadataObject.GROUP); //$NON-NLS-1$
@@ -512,7 +506,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
             1,      // MergeJoin (**We are merge join with out any costing info**)
             0,      // Null
             0,      // PlanExecution
-            2,      // Project
+            1,      // Project
             1,      // Select
             0,      // Sort
             0       // UnionAll
@@ -521,7 +515,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
         TestOptimizer.checkDependentJoinCount(plan, 1);
     } 
     
-    public void testNoRedundentStagingTables() throws Exception {
+    @Test public void testNoRedundentStagingTables() throws Exception {
         FakeMetadataFacade metadata = getTempTableMetadata(true);
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         FakeMetadataObject suppliers = metadata.getStore().findObject("stock.suppliers", FakeMetadataObject.GROUP); //$NON-NLS-1$
@@ -538,7 +532,7 @@ public class TestXMLPlanningEnhancements extends TestCase {
         assertEquals(4, ((List)stats.get(ExecStagingTableInstruction.class)).size());
     }
     
-    public void testEmptyMappingClass() throws Exception {
+    @Test public void testEmptyMappingClass() throws Exception {
         FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadata();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         FakeMetadataObject suppliers = metadata.getStore().findObject("xmltest.suppliers", FakeMetadataObject.GROUP); //$NON-NLS-1$

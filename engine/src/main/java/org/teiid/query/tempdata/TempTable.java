@@ -164,17 +164,34 @@ class TempTable {
 		this.sessionID = sessionID;
 	}
 
-	public TupleSource createTupleSource(List<Criteria> conditions, OrderBy orderBy) throws TeiidComponentException {
+	public TupleSource createTupleSource(List<SingleElementSymbol> projectedCols, List<Criteria> conditions, OrderBy orderBy) throws TeiidComponentException {
 		TupleBrowser browser = createTupleBrower(conditions, orderBy);
-		TupleBuffer tb = bm.createTupleBuffer(columns, sessionID, TupleSourceType.PROCESSOR);
+		TupleBuffer tb = bm.createTupleBuffer(getColumns(), sessionID, TupleSourceType.PROCESSOR);
+		Map map = RelationalNode.createLookupMap(getColumns());
+		int[] indexes = RelationalNode.getProjectionIndexes(map, projectedCols);
+		boolean project = false;
+		if (indexes.length == getColumns().size()) {
+			for (int i = 0; i < indexes.length; i++) {
+				if (indexes[i] != i) {
+					project = true;
+					break;
+				}
+			}
+		} else {
+			project = true;
+		}
 		List next = null;
 		while ((next = browser.next()) != null) {
 			if (rowId != null) {
 				next = next.subList(1, next.size());
 			}
+			if (project) {
+				next = RelationalNode.projectTuple(indexes, next);
+			}
 			tb.addTuple(next);
 		}
 		tb.close();
+		tb.setForwardOnly(true);
 		return tb.createIndexedTupleSource(true);
 	}
 	

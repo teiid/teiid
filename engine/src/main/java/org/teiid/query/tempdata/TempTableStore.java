@@ -51,10 +51,12 @@ import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 
 /** 
  * @since 5.5
@@ -83,18 +85,16 @@ public class TempTableStore {
         }
     	List<ElementSymbol> columns = create.getColumns();
     	
-    	boolean hasKey = !create.getPrimaryKey().isEmpty();
+        //add metadata
+        TempMetadataID id = tempMetadataStore.addTempGroup(tempTableName, columns, false, true);
+        TempTableResolver.addPrimaryKey(create, id);
     	columns = new ArrayList<ElementSymbol>(create.getColumns());
-    	
-    	if (hasKey) {
+        if (!create.getPrimaryKey().isEmpty()) {
     		//reorder the columns to put the key in front
     		List<ElementSymbol> primaryKey = create.getPrimaryKey();
     		columns.removeAll(primaryKey);
     		columns.addAll(0, primaryKey);
-    	} 
-        //add metadata
-        TempMetadataID id = tempMetadataStore.addTempGroup(tempTableName, columns, false, true);
-        TempTableResolver.addPrimaryKey(create, id);
+    	}
         TempTable tempTable = new TempTable(buffer, columns, create.getPrimaryKey().size(), sessionID);
         groupToTupleSourceID.put(tempTableName, tempTable);
     }
@@ -119,7 +119,18 @@ public class TempTableStore {
             	return null;
             }
             TempTable table = getTempTable(group.getNonCorrelationName().toUpperCase(), command);
-            return table.createTupleSource(Criteria.separateCriteriaByAnd(query.getCriteria()), query.getOrderBy());
+            //convert to the actual table symbols (this is typically handled by the languagebridgefactory
+            ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
+            	@Override
+            	public Expression replaceExpression(Expression element) {
+            		if (element instanceof ElementSymbol) {
+            			((ElementSymbol) element).setName(((ElementSymbol) element).getOutputName());
+            		}
+            		return element;
+            	}
+            };
+            PostOrderNavigator.doVisit(query.getSelect(), emv);
+            return table.createTupleSource(command.getProjectedSymbols(), Criteria.separateCriteriaByAnd(query.getCriteria()), query.getOrderBy());
         }
         if (command instanceof ProcedureContainer) {
         	GroupSymbol group = ((ProcedureContainer)command).getGroup();
