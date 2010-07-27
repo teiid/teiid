@@ -20,25 +20,22 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.common.buffer.impl;
+package org.teiid.common.buffer;
 
 import static org.junit.Assert.*;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
-import org.teiid.common.buffer.BufferManager;
-import org.teiid.common.buffer.BufferManagerFactory;
-import org.teiid.common.buffer.STree;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.sql.symbol.ElementSymbol;
 
+@SuppressWarnings("nls")
 public class TestSTree {
 	
-	@Test public void testRemoveAll() throws TeiidComponentException, IOException {
+	@Test public void testRemoveAll() throws TeiidComponentException {
 		BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
 		ElementSymbol e1 = new ElementSymbol("x");
 		e1.setType(Integer.class);
@@ -48,15 +45,16 @@ public class TestSTree {
 		STree map = bm.createSTree(elements, "1", TupleSourceType.PROCESSOR, 1);
 		
 		for (int i = 20000; i > 0; i--) {
-			map.insert(Arrays.asList(i, String.valueOf(i)), true);
+			assertNull(map.insert(Arrays.asList(i, String.valueOf(i)), true));
+			assertEquals(20000 - i + 1, map.getRowCount());
 		}
 		
 		for (int i = 20000; i > 0; i--) {
-			map.remove(Arrays.asList(i));
+			assertNotNull(String.valueOf(i), map.remove(Arrays.asList(i)));
 		}
 		
 		assertEquals(0, map.getRowCount());
 		assertNull(map.insert(Arrays.asList(1, String.valueOf(1)), true));
 	}
-
+	
 }

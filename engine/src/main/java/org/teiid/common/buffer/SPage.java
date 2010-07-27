@@ -24,6 +24,8 @@ package org.teiid.common.buffer;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -32,6 +34,9 @@ import org.teiid.core.TeiidComponentException;
 
 /**
  * A linked list Page entry in the tree
+ * 
+ * TODO: return the tuplebatch from getvalues, since that is what we're tracking
+ * 
  */
 @SuppressWarnings("unchecked")
 class SPage {
@@ -41,8 +46,8 @@ class SPage {
 	static class SearchResult {
 		int index;
 		SPage page;
-		List values;
-		public SearchResult(int index, SPage page, List values) {
+		TupleBatch values;
+		public SearchResult(int index, SPage page, TupleBatch values) {
 			this.index = index;
 			this.page = page;
 			this.values = values;
@@ -53,73 +58,78 @@ class SPage {
 
 	STree stree;
 	
-	protected SPage next; 
+	protected SPage next;
+	protected SPage prev;
 	protected ManagedBatch managedBatch;
-	protected List values;
+	protected TupleBatch values;
 	protected ArrayList<SPage> children;
 	
 	SPage(STree stree, boolean leaf) {
 		this.stree = stree;
-		this.values = new ArrayList<SPage>(stree.pageSize);
+		this.values = new TupleBatch(counter.getAndIncrement(), new ArrayList(stree.pageSize/4));
 		if (!leaf) {
 			children = new ArrayList<SPage>(stree.pageSize/4);
 		}
 	}
 	
-	static SearchResult search(SPage page, List k, SearchResult parent, List parentKey) throws TeiidComponentException {
-		SPage previous = null;
-		List previousValues = null;
+	static int unnecessaryReads;
+	
+	static SearchResult search(SPage page, List k, LinkedList<SearchResult> parent) throws TeiidComponentException {
+		TupleBatch previousValues = null;
 		for (;;) {
-			List values = page.getValues();
-			int index = Collections.binarySearch(values, k, page.stree.comparator);
-			int actual = - index - 1;
-			if (previous != null) {
-				if (actual == 0) {
-					if (values.isEmpty()) {
-						page.remove();
-						previous.next = page.next;
-					}
-					return new SearchResult(-previousValues.size() - 1, previous, previousValues);
+			TupleBatch values = page.getValues();
+			int index = Collections.binarySearch(values.getTuples(), k, page.stree.comparator);
+			int flippedIndex = - index - 1;
+			if (previousValues != null) {
+				unnecessaryReads++;
+				if (flippedIndex == 0) {
+					//systemic weakness of the algorithm
+					return new SearchResult(-previousValues.getTuples().size() - 1, page.prev, previousValues);
 				}
-				if (parentKey != null) {
-					if (page.stree.comparator.compare(parentKey, values.get(0)) >= 0) {
-						//TODO: the entries after this point may also need moved forward
-						//TODO: this should be done as part of insert
-						parent.page.children.set(Math.max(0, -parent.index - 2), page);
-					} else {
-						//parentKey < page.keys.get(0)
-						//TODO: this circumvents the normal probabilistic process, but
-						//ensures there is an index entry.
-						page.stree.insert(page.stree.extractKey((List) values.get(0)), parent, page);
-						parent.index--;
+				if (parent != null && index != 0) {
+					//for non-matches move the previous pointer over to this page
+					SPage childPage = page;
+					List oldKey = null;
+					List newKey = page.stree.extractKey(values.getTuples().get(0));
+					for (Iterator<SearchResult> desc = parent.descendingIterator(); desc.hasNext();) {
+						SearchResult sr = desc.next();
+						int parentIndex = Math.max(0, -sr.index - 2);
+						if (oldKey == null) {
+							oldKey = sr.values.getTuples().set(parentIndex, newKey); 
+						} else if (page.stree.comparator.compare(oldKey, sr.values.getTuples().get(parentIndex)) == 0 ) {
+							sr.values.getTuples().set(parentIndex, newKey);
+						} else {
+							break;
+						}
+						sr.page.children.set(parentIndex, childPage);
+						sr.page.setValues(sr.values);
+						childPage = sr.page;
 					}
 				}
 			}
-			if (actual != values.size() || page.next == null) {
+			if (flippedIndex != values.getTuples().size() || page.next == null) {
 				return new SearchResult(index, page, values);
 			}
-			previous = page;
 			previousValues = values; 
 			page = page.next;
 		}
 	}
 	
-	protected void setValues(List values) throws TeiidComponentException {
+	protected void setValues(TupleBatch values) throws TeiidComponentException {
 		if (managedBatch != null) {
 			managedBatch.remove();
 		}
-		if (values.size() < MIN_PERSISTENT_SIZE) {
+		if (values.getTuples().size() < MIN_PERSISTENT_SIZE) {
 			this.values = values;
 			return;
 		} 
 		this.values = null;
-		TupleBatch batch = TupleBatch.directBatch(counter.getAndIncrement(), values);
 		if (children != null) {
-			batch.setDataTypes(stree.keytypes);
+			values.setDataTypes(stree.keytypes);
 		} else {
-			batch.setDataTypes(stree.types);
+			values.setDataTypes(stree.types);
 		}
-		managedBatch = stree.manager.createManagedBatch(batch);
+		managedBatch = stree.manager.createManagedBatch(values);
 	}
 	
 	protected void remove() {
@@ -127,17 +137,95 @@ class SPage {
 			managedBatch.remove();
 			managedBatch = null;
 		}
+		values = null;
+		children = null;
 	}
 
-	protected List getValues() throws TeiidComponentException {
+	protected TupleBatch getValues() throws TeiidComponentException {
 		if (values != null) {
 			return values;
 		}
 		if (managedBatch == null) {
-			return Collections.emptyList();
+			throw new AssertionError("Batch removed"); //$NON-NLS-1$
 		}
-		TupleBatch batch = managedBatch.getBatch(true, stree.types);
-		return batch.getTuples();
+		return managedBatch.getBatch(true, stree.types);
+	}
+	
+	static void merge(LinkedList<SearchResult> places, TupleBatch nextValues, SPage current, TupleBatch currentValues)
+	throws TeiidComponentException {
+		SearchResult parent = places.peekLast();
+		if (parent != null) {
+			correctParents(parent.page, nextValues.getTuples().get(0), current.next, current);
+		}
+		currentValues.getTuples().addAll(nextValues.getTuples());
+		if (current.children != null) {
+			current.children.addAll(current.next.children);
+		}
+		current.next.remove();
+		current.next = current.next.next;
+		if (current.next != null) {
+			current.next.prev = current;
+		}
+		current.setValues(currentValues);
+	}
+
+	/**
+	 * Remove the usage of page in favor of nextPage
+	 * @param parent
+	 * @param page
+	 * @param nextPage
+	 * @throws TeiidComponentException
+	 */
+	static void correctParents(SPage parent, List key, SPage page, SPage nextPage) throws TeiidComponentException {
+		SearchResult location = SPage.search(parent, key, null);
+		while (location.index == -1 && location.page.prev != null ) {
+			parent = location.page.prev;
+			location = SPage.search(parent, key, null);
+		}
+		parent = location.page;
+		int index = location.index;
+		if (index < 0) {
+			index = -index - 1;
+		}
+		while (parent != null) {
+			while (index < parent.children.size()) {
+				if (parent.children.get(index) != page) {
+					return;
+				}
+				parent.children.set(index++, nextPage);
+			}
+			index = 0;
+			parent = parent.next;
+		}
+	}
+	
+	@Override
+	public String toString() {
+		StringBuilder result = new StringBuilder();
+		try {
+			TupleBatch tb = getValues();
+			result.append(tb.getBeginRow());
+			if (children == null) {
+				if (tb.getTuples().size() <= 1) {
+					result.append(values);
+				} else {
+					result.append("[").append(tb.getTuples().get(0)).append(" . ").append(tb.getTuples().size()). //$NON-NLS-1$ //$NON-NLS-2$
+					append(" . ").append(tb.getTuples().get(tb.getTuples().size() - 1)).append("]"); //$NON-NLS-1$ //$NON-NLS-2$ 
+				}
+			} else {
+				result.append("["); //$NON-NLS-1$
+				for (int i = 0; i < children.size(); i++) {
+					result.append(tb.getTuples().get(i)).append("->").append(children.get(i).getValues().getBeginRow()); //$NON-NLS-1$
+					if (i < children.size() - 1) {
+						result.append(", "); //$NON-NLS-1$
+					}
+				}
+				result.append("]");//$NON-NLS-1$
+			}
+		} catch (Throwable e) {
+			result.append("Removed"); //$NON-NLS-1$
+		}
+		return result.toString();
 	}
 
 }

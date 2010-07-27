@@ -23,7 +23,6 @@
 package org.teiid.common.buffer;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -34,8 +33,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.teiid.common.buffer.SPage.SearchResult;
 import org.teiid.core.TeiidComponentException;
 
-@SuppressWarnings("unchecked")
-
 /**
  * Self balancing search tree using skip list like logic
  * This has similar performance similar to a B+/-Tree 
@@ -43,11 +40,15 @@ import org.teiid.core.TeiidComponentException;
  * TODO: reserve additional memory for delete/update operations
  * TODO: double link to support desc key access
  */
+@SuppressWarnings("unchecked")
 public class STree {
 
 	private static final Random seedGenerator = new Random();
 
-	private int randomSeed;
+	protected int randomSeed;
+	private int mask = 1;
+	private int shift = 1;
+	
 	private SPage[] header = new SPage[] {new SPage(this, true)};
     protected BatchManager manager;
     protected Comparator comparator;
@@ -64,9 +65,17 @@ public class STree {
             int keyLength,
             String[] types) {
 		randomSeed = seedGenerator.nextInt() | 0x00000100; // ensure nonzero
+		//randomSeed=-1031212234;
 		this.manager = recman;
 		this.comparator = comparator;
 		this.pageSize = Math.max(pageSize, SPage.MIN_PERSISTENT_SIZE);
+		pageSize >>>= 4;
+		while (pageSize > 0) {
+			pageSize >>>= 1;
+			shift++;
+			mask <<= 1;
+			mask++;
+		}
 		this.keyLength = keyLength;
 		this.types = types;
 		this.keytypes = Arrays.copyOf(types, keyLength);
@@ -89,8 +98,7 @@ public class STree {
         x ^= x >>> 17;
         randomSeed = x ^= x << 5;
         int level = 0;
-        int shift = 8;
-        while ((x & 0xff) == 0xff) { 
+        while ((x & mask) == mask) { 
         	++level;
         	x >>>= shift;
         }
@@ -105,19 +113,19 @@ public class STree {
 	 * @throws IOException
 	 * @throws TeiidComponentException 
 	 */
-	private List find(List n, List<SearchResult> places) throws TeiidComponentException {
+	private List find(List n, LinkedList<SearchResult> places) throws TeiidComponentException {
 		SPage x = null;
-		List parentKey = null;
 		SearchResult parent = null;
 		for (int i = header.length - 1; i >= 0; i--) {
 			if (x == null) {
 				x = header[i];
 			}
-			SearchResult s = SPage.search(x, n, parent, parentKey);
+			SearchResult s = SPage.search(x, n, places);
+			parent = s;
 			if (places != null) {
 				places.add(s);
 			}
-			if ((s.index == -1 && s.page == header[i]) || s.values.isEmpty()) {
+			if ((s.index == -1 && s.page == header[i]) || s.values.getTuples().isEmpty()) {
 				x = null;
 				continue; //start at the beginning of the next level
 			}
@@ -132,17 +140,15 @@ public class STree {
 				if (!matched) {
 					return null;
 				}
-				return (List) s.values.get(index);
+				return s.values.getTuples().get(index);
 			}
-			parentKey = (List) s.values.get(index);
-			parent = s;
 			x = x.children.get(index);
 		}
 		return null;
 	}
 	
 	public List find(List k) throws TeiidComponentException {
-		return find(k, null);
+		return find(k, new LinkedList<SearchResult>());
 	}
 	
 	public List insert(List tuple, boolean replace) throws TeiidComponentException {
@@ -154,7 +160,7 @@ public class STree {
 			}
 			SearchResult last = places.getLast();
 			SPage page = last.page;
-			last.values.set(last.index, tuple);
+			last.values.getTuples().set(last.index, tuple);
 			page.setValues(last.values);
 			return match;
 		}
@@ -169,16 +175,16 @@ public class STree {
 		for (int i = 0; i <= level; i++) {
 			if (places.isEmpty()) {
 				SPage newHead = new SPage(this, false);
-				ArrayList newValues = new ArrayList();
-				newValues.add(key);
-				newHead.setValues(newValues);
+				TupleBatch batch = newHead.getValues();
+				batch.getTuples().add(key);
+				newHead.setValues(batch);
 				newHead.children.add(page);
 				header[i] = newHead;
 				page = newHead;
 			} else {
 				SearchResult result = places.removeLast();
 				Object value = (i == 0 ? tuple : page);
-				page = insert(key, result, value);
+				page = insert(key, result, places.peekLast(), value);
 			}
 		}
 		return null;
@@ -188,19 +194,21 @@ public class STree {
 		return tuple.subList(0, keyLength);
 	}
 
-	SPage insert(List k, SearchResult result, Object value) throws TeiidComponentException {
+	SPage insert(List k, SearchResult result, SearchResult parent, Object value) throws TeiidComponentException {
 		SPage page = result.page;
 		int index = -result.index - 1;
-		if (result.values.size() == pageSize) {
+		if (result.values.getTuples().size() == pageSize) {
 			boolean leaf = !(value instanceof SPage);
 			SPage nextPage = new SPage(this, leaf);
-			ArrayList nextValues = new ArrayList(result.values.subList(pageSize/2, pageSize));
-			result.values.subList(pageSize/2, pageSize).clear();
+			TupleBatch nextValues = nextPage.getValues();
+			nextValues.getTuples().addAll(result.values.getTuples().subList(pageSize/2, pageSize));
+			result.values.getTuples().subList(pageSize/2, pageSize).clear();
 			if (!leaf) {
 				nextPage.children.addAll(page.children.subList(pageSize/2, pageSize));
 				page.children.subList(pageSize/2, pageSize).clear();
 			}
 			nextPage.next = page.next;
+			nextPage.prev = page;
 			page.next = nextPage;
 			boolean inNext = false;
 			if (index <= pageSize/2) {
@@ -211,6 +219,10 @@ public class STree {
 			}
 			nextPage.setValues(nextValues);
 			page.setValues(result.values);
+			if (parent != null) {
+				List min = nextPage.getValues().getTuples().get(0);
+				SPage.correctParents(parent.page, min, page, nextPage);
+			}
 			if (inNext) {
 				page = nextPage;
 			}
@@ -221,12 +233,12 @@ public class STree {
 		return page;
 	}
 	
-	static void setValue(int index, List key, Object value, List values, SPage page) {
+	static void setValue(int index, List key, Object value, TupleBatch values, SPage page) {
 		if (value instanceof SPage) {
-			values.add(index, key);
+			values.getTuples().add(index, key);
 			page.children.add(index, (SPage) value);
 		} else {
-			values.add(index, value);
+			values.getTuples().add(index, (List)value);
 		}
 	}
 	
@@ -237,43 +249,57 @@ public class STree {
 			return null;
 		}
 		rowCount.addAndGet(-1);
-		for (int i = header.length -1; i >=0; i--) {
-			SearchResult searchResult = places.remove();
+		for (int i = 0; i < header.length; i++) {
+			SearchResult searchResult = places.removeLast();
 			if (searchResult.index < 0) {
 				continue;
 			}
-			boolean cleanup = false;
-			searchResult.values.remove(searchResult.index);
-			int size = searchResult.values.size();
+			searchResult.values.getTuples().remove(searchResult.index);
+			if (searchResult.page.children != null) {
+				searchResult.page.children.remove(searchResult.index);
+			}
+			int size = searchResult.values.getTuples().size();
 			if (size == 0) {
-				if (header[i] == searchResult.page && (i != 0 || header[i].next != null)) {
-					header[i].remove();
-					header[i] = header[i].next;
-					if (header[i] == null) {
-						//remove the layer
-						header = Arrays.copyOf(header, header.length - 1);
+				if (header[i] != searchResult.page) {
+					searchResult.page.remove();
+					if (searchResult.page.next != null) {
+						searchResult.page.next.prev = searchResult.page.prev;
 					}
-				} else if (i == 0 && header.length > 1) {
-					cleanup = true;
+					searchResult.page.prev.next = searchResult.page.next;
+					searchResult.page.next = header[i];
+					searchResult.page.prev = null;
+					continue;
 				}
-			} else if (searchResult.page.next != null && size < pageSize/4) {
-				List nextValues = searchResult.page.next.getValues();
-				SPage next = searchResult.page.next;
-				if (nextValues.size() + size < pageSize/2) {
-					searchResult.page.next = next.next;
-					searchResult.values.addAll(nextValues);
-					nextValues.clear();
-					next.remove();
-					//any references to toMerge are now invalid
-					//setting back to the header will self heal
-					//TODO: this can take advantage of a previous link
-					next.next = header[i];
+				header[i].remove();
+				if (header[i].next != null) {
+					header[i] = header[i].next;
+					header[i].prev = null;
+				} else {
+					if (i != 0) {
+						header = Arrays.copyOf(header, i);
+						break;
+					}
+					header[0] = new SPage(this, true);
+				}
+				continue;
+			} else if (size < pageSize/2) {
+				//check for merge
+				if (searchResult.page.next != null) {
+					TupleBatch nextValues = searchResult.page.next.getValues();
+					if (nextValues.getTuples().size() < pageSize/4) {
+						SPage.merge(places, nextValues, searchResult.page, searchResult.values);
+						continue;
+					}
+				}
+				if (searchResult.page.prev != null) {
+					TupleBatch prevValues = searchResult.page.prev.getValues();
+					if (prevValues.getTuples().size() < pageSize/4) {
+						SPage.merge(places, searchResult.values, searchResult.page.prev, prevValues);
+						continue;
+					}
 				}
 			}
 			searchResult.page.setValues(searchResult.values);
-			if (cleanup) {
-				find(key, null); //trigger cleanup
-			}
 		}
 		return tuple;
 	}
@@ -309,7 +335,8 @@ public class STree {
 		
 		SPage page = header[0];
 		int index;
-		List values;
+		TupleBatch values;
+		boolean updated;
 		
 		public boolean matchedLower() {
 			return false;
@@ -324,11 +351,16 @@ public class STree {
 				if (values == null) {
 					values = page.getValues();
 				}
-				if (index < values.size()) {
-					return (List) values.get(index++);
+				if (index < values.getTuples().size()) {
+					return values.getTuples().get(index++);
 				}
+				if (updated) {
+					page.setValues(values);
+				}
+				values = null;
 				index = 0;
 				page = page.next;
+				updated = false;
 				if (page == null) {
 					return null;
 				}
@@ -342,8 +374,8 @@ public class STree {
 		 * @throws TeiidComponentException
 		 */
 		public void update(List tuple) throws TeiidComponentException {
-			values.set(index - 1, tuple);
-			page.setValues(values);
+			values.getTuples().set(index - 1, tuple);
+			updated = true;
 		}
 		
 		/**
@@ -352,6 +384,22 @@ public class STree {
 		public void removed() {
 			index--;
 		}
+	}
+	
+	@Override
+	public String toString() {
+		StringBuffer result = new StringBuffer();
+		for (int i = header.length -1; i >= 0; i--) {
+			SPage page = header[i];
+			result.append("Level ").append(i).append(" "); //$NON-NLS-1$ //$NON-NLS-2$
+			while (page != null) {
+				result.append(page);
+				result.append(", "); //$NON-NLS-1$
+				page = page.next;
+			}
+			result.append("\n"); //$NON-NLS-1$
+		}
+		return result.toString();
 	}
 	
 	public int getKeyLength() {
