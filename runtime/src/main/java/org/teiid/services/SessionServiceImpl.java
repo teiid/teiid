@@ -62,7 +62,7 @@ import org.teiid.security.SecurityHelper;
 /**
  * This class serves as the primary implementation of the Session Service.
  */
-@ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
+@ManagementObject(name="SessionService", componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class SessionServiceImpl implements SessionService {
 	public static final String SECURITY_DOMAINS = "securitydomains"; //$NON-NLS-1$
 	

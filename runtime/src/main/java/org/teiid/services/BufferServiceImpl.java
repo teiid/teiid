@@ -30,7 +30,6 @@ import org.jboss.managed.api.annotation.ManagementComponent;
 import org.jboss.managed.api.annotation.ManagementObject;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
-import org.teiid.cache.CacheFactory;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.common.buffer.impl.FileStorageManager;
@@ -48,7 +47,7 @@ import org.teiid.runtime.RuntimePlugin;
  * a mixed disk/memory model which requires use of a directory on the disk 
  * for file service access.
  */
-@ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
+@ManagementObject(name="BufferService", componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class BufferServiceImpl implements BufferService, Serializable {
 	private static final long serialVersionUID = -6217808623863643531L;
 	private static final long MB = 1<<20;
@@ -59,7 +58,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
 	private boolean useDisk = true;
 	private int processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
 	private int connectorBatchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
-	private CacheFactory cacheFactory;
     private int maxOpenFiles = FileStorageManager.DEFAULT_MAX_OPEN_FILES;
     private long maxFileSize = FileStorageManager.DEFAULT_MAX_FILESIZE; // 2GB
     private int maxProcessingBatchesColumns = BufferManager.DEFAULT_MAX_PROCESSING_BATCHES;
@@ -163,10 +161,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
 		return this.connectorBatchSize;
 	}
 
-	public void setCacheFactory(CacheFactory cf) {
-		this.cacheFactory = cf;
-	}
-	
     public void setMaxFileSize(long maxFileSize) {
     	this.maxFileSize = maxFileSize;
 	}
