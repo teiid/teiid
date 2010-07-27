@@ -309,7 +309,7 @@ public class PlanToProcessConverter {
                         //-- special handling for temp tables. currently they cannot perform projection
                         try {
                             if (command instanceof Query) {
-                                processNode = correctProjectionInternalTables(node, aNode, (Query)command);
+                                processNode = correctProjectionInternalTables(node, aNode);
                             }
                         } catch (QueryMetadataException err) {
                             throw new TeiidComponentException(err);
@@ -319,7 +319,9 @@ public class PlanToProcessConverter {
                     
                     try {
                         command = (Command)command.clone();
-                        command.acceptVisitor(new AliasGenerator(modelID != null && CapabilitiesUtil.supportsGroupAliases(modelID, metadata, capFinder)));
+                        boolean aliasGroups = modelID != null && CapabilitiesUtil.supportsGroupAliases(modelID, metadata, capFinder);
+                        boolean aliasColumns = modelID != null && CapabilitiesUtil.supports(Capability.QUERY_SELECT_EXPRESSION, modelID, metadata, capFinder);
+                        command.acceptVisitor(new AliasGenerator(aliasGroups, !aliasColumns));
                     } catch (QueryMetadataException err) {
                         throw new TeiidComponentException(err);
                     }
@@ -461,7 +463,7 @@ public class PlanToProcessConverter {
 	}
 
     private RelationalNode correctProjectionInternalTables(PlanNode node,
-                                                                AccessNode aNode, Query query) throws QueryMetadataException,
+                                                                AccessNode aNode) throws QueryMetadataException,
                                                                                                        TeiidComponentException {
         if (node.getGroups().size() != 1) {
             return aNode;

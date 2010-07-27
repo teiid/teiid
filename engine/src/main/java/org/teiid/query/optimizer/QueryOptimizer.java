@@ -33,6 +33,7 @@ import org.teiid.core.id.IDGenerator;
 import org.teiid.core.id.IntegerIDFactory;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempCapabilitiesFinder;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.batch.BatchedUpdatePlanner;
@@ -74,6 +75,10 @@ public class QueryOptimizer {
 		
 		if (context == null) {
 			context = new CommandContext();
+		}
+		
+		if (!(capFinder instanceof TempCapabilitiesFinder)) {
+			capFinder = new TempCapabilitiesFinder(capFinder);
 		}
 		
         boolean debug = analysisRecord.recordDebug();

@@ -118,19 +118,24 @@ public class TempTableStore {
             if (!group.isTempGroupSymbol()) {
             	return null;
             }
-            TempTable table = getTempTable(group.getNonCorrelationName().toUpperCase(), command);
+            final String tableName = group.getNonCorrelationName().toUpperCase();
+            TempTable table = getTempTable(tableName, command);
             //convert to the actual table symbols (this is typically handled by the languagebridgefactory
             ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
             	@Override
             	public Expression replaceExpression(Expression element) {
             		if (element instanceof ElementSymbol) {
-            			((ElementSymbol) element).setName(((ElementSymbol) element).getOutputName());
+            			ElementSymbol es = (ElementSymbol)element;
+            			((ElementSymbol) element).setName(tableName + ElementSymbol.SEPARATOR + es.getShortName());
             		}
             		return element;
             	}
             };
             PostOrderNavigator.doVisit(query.getSelect(), emv);
-            return table.createTupleSource(command.getProjectedSymbols(), Criteria.separateCriteriaByAnd(query.getCriteria()), query.getOrderBy());
+            if (query.getOrderBy() != null) {
+            	PostOrderNavigator.doVisit(query.getOrderBy(), emv);
+            }
+            return table.createTupleSource(command.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
         }
         if (command instanceof ProcedureContainer) {
         	GroupSymbol group = ((ProcedureContainer)command).getGroup();

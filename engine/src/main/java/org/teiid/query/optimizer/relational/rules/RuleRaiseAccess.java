@@ -121,6 +121,16 @@ public final class RuleRaiseAccess implements OptimizerRule {
                         return null;
                     } 
                 }
+                
+                /*
+                 * TODO: this creates an extraneous project node in many circumstances.
+                 * However we don't actually support project in this case, so allowing it to be pushed
+                 * causes problems with stored procedures and the assumptions made for proc/relational
+                 * planning. 
+                 */
+                if (FrameUtil.isProcedure(parentNode)) {
+                	return null;
+                }
                                 
                 return performRaise(rootNode, accessNode, parentNode);                
             }

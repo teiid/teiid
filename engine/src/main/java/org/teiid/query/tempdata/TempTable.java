@@ -46,10 +46,14 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.processor.relational.RelationalNode;
+import org.teiid.query.processor.relational.SortUtility;
+import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.SetClauseList;
+import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
@@ -61,6 +65,35 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
  */
 class TempTable {
 	
+	private class TupleBrowserTupleSource implements TupleSource {
+		private final TupleBrowser browser;
+
+		private TupleBrowserTupleSource(TupleBrowser browser) {
+			this.browser = browser;
+		}
+
+		@Override
+		public List<?> nextTuple() throws TeiidComponentException,
+				TeiidProcessingException {
+			return browser.next();
+		}
+
+		@Override
+		public List<? extends Expression> getSchema() {
+			return columns;
+		}
+
+		@Override
+		public void closeSource() {
+			
+		}
+
+		@Override
+		public int available() {
+			return 0;
+		}
+	}
+
 	private abstract class UpdateTupleSource implements TupleSource {
 		private TupleSource ts;
 		protected final Map lookup;
@@ -154,8 +187,7 @@ class TempTable {
             ElementSymbol id = new ElementSymbol("rowId"); //$NON-NLS-1$
     		id.setType(DataTypeManager.DefaultDataClasses.INTEGER);
     		columns.add(0, id);
-    		//we start at max, since the default sort order is ascending
-    		rowId = new AtomicInteger(Integer.MAX_VALUE);
+    		rowId = new AtomicInteger();
         	tree = bm.createSTree(columns, sessionID, TupleSourceType.PROCESSOR, 1);
         } else {
         	tree = bm.createSTree(columns, sessionID, TupleSourceType.PROCESSOR, primaryKeyLength);
@@ -164,39 +196,113 @@ class TempTable {
 		this.sessionID = sessionID;
 	}
 
-	public TupleSource createTupleSource(List<SingleElementSymbol> projectedCols, List<Criteria> conditions, OrderBy orderBy) throws TeiidComponentException {
-		TupleBrowser browser = createTupleBrower(conditions, orderBy);
-		TupleBuffer tb = bm.createTupleBuffer(getColumns(), sessionID, TupleSourceType.PROCESSOR);
+	public TupleSource createTupleSource(List<SingleElementSymbol> cols, Criteria condition, OrderBy orderBy) throws TeiidComponentException, TeiidProcessingException {
 		Map map = RelationalNode.createLookupMap(getColumns());
-		int[] indexes = RelationalNode.getProjectionIndexes(map, projectedCols);
-		boolean project = false;
-		if (indexes.length == getColumns().size()) {
-			for (int i = 0; i < indexes.length; i++) {
-				if (indexes[i] != i) {
-					project = true;
-					break;
+		Boolean direction = null;
+		boolean orderByUsingIndex = false;
+		if (orderBy != null && rowId == null) {
+			int[] orderByIndexes = RelationalNode.getProjectionIndexes(map, orderBy.getSortKeys());
+			if (orderByIndexes.length < tree.getKeyLength()) {
+				orderByUsingIndex = false;
+			} else {
+				orderByUsingIndex = true;
+				for (int i = 0; i < tree.getKeyLength(); i++) {
+					if (orderByIndexes[i] != i) {
+						orderByUsingIndex = false;
+						break;
+					}
+				}
+				if (orderByUsingIndex) {
+					for (int i = 0; i < tree.getKeyLength(); i++) {
+						OrderByItem item = orderBy.getOrderByItems().get(i);
+						if (item.getNullOrdering() != null) {
+							orderByUsingIndex = false;
+							break;
+						}
+						if (item.isAscending()) {
+							if (direction == null) {
+								direction = OrderBy.ASC;
+							} else if (direction != OrderBy.ASC) {
+								orderByUsingIndex = false;
+								break;
+							}
+						} else if (direction == null) {
+							direction = OrderBy.DESC;
+						} else if (direction != OrderBy.DESC) {
+							orderByUsingIndex = false;
+							break;
+						}
+					}
 				}
 			}
-		} else {
-			project = true;
 		}
-		List next = null;
-		while ((next = browser.next()) != null) {
-			if (rowId != null) {
-				next = next.subList(1, next.size());
+		if (!orderByUsingIndex) {
+			direction = OrderBy.ASC;
+		}
+		TupleBrowser browser = createTupleBrower(null, direction);
+		
+		final int[] indexes = RelationalNode.getProjectionIndexes(map, cols);
+		final ArrayList<SingleElementSymbol> projectedCols = new ArrayList<SingleElementSymbol>(cols);
+		for (SingleElementSymbol singleElementSymbol : projectedCols) {
+			if (singleElementSymbol instanceof AliasSymbol) {
+				
 			}
-			if (project) {
-				next = RelationalNode.projectTuple(indexes, next);
+		}
+		final boolean project = shouldProject(indexes);
+		TupleSource ts = new TupleBrowserTupleSource(browser) {
+			
+			@Override
+			public List<?> nextTuple() throws TeiidComponentException,
+					TeiidProcessingException {
+				List<?> next = super.nextTuple();
+				if (next == null) {
+					return null;
+				}
+				if (rowId != null) {
+					next = next.subList(1, next.size());
+				}
+				if (project) {
+					next = RelationalNode.projectTuple(indexes, next);
+				}
+				return next;
 			}
-			tb.addTuple(next);
+			
+			@Override
+			public List<? extends Expression> getSchema() {
+				return projectedCols;
+			}
+		};
+
+		TupleBuffer tb = null;
+		if (!orderByUsingIndex && orderBy != null) {
+			SortUtility sort = new SortUtility(ts, orderBy.getOrderByItems(), Mode.SORT, bm, sessionID);
+			tb = sort.sort();
+		} else {
+			tb = bm.createTupleBuffer(getColumns(), sessionID, TupleSourceType.PROCESSOR);
+			List next = null;
+			while ((next = ts.nextTuple()) != null) {
+				tb.addTuple(next);
+			}
 		}
 		tb.close();
 		tb.setForwardOnly(true);
 		return tb.createIndexedTupleSource(true);
 	}
+
+	private boolean shouldProject(final int[] indexes) {
+		if (indexes.length == getColumns().size()) {
+			for (int i = 0; i < indexes.length; i++) {
+				if (indexes[i] != i) {
+					return true;
+				}
+			}
+			return false;
+		} 
+		return true;
+	}
 	
-	private TupleBrowser createTupleBrower(List<Criteria> conditions, OrderBy orderBy) throws TeiidComponentException {
-		return tree.browse(null, null, OrderBy.ASC);
+	private TupleBrowser createTupleBrower(List<Criteria> conditions, boolean direction) {
+		return tree.browse(null, null, direction);
 	}
 	
 	public int getRowCount() {
@@ -224,7 +330,7 @@ class TempTable {
         	protected void tuplePassed(List tuple) 
         	throws BlockedException, TeiidComponentException, TeiidProcessingException {
         		if (rowId != null) {
-        			tuple.add(0, rowId.getAndAdd(-1));
+        			tuple.add(0, rowId.getAndAdd(1));
         		}
         		insertTuple(tuple);
         	}
@@ -238,36 +344,10 @@ class TempTable {
         return uts;
     }
 	
-	private TupleSource asTupleSource(final TupleBrowser browser) {
-		return new TupleSource() {
-			
-			@Override
-			public List<?> nextTuple() throws TeiidComponentException,
-					TeiidProcessingException {
-				return browser.next();
-			}
-			
-			@Override
-			public List<? extends Expression> getSchema() {
-				return columns;
-			}
-			
-			@Override
-			public void closeSource() {
-				
-			}
-			
-			@Override
-			public int available() {
-				return 0;
-			}
-		};
-	}
-		
 	public TupleSource update(Criteria crit, final SetClauseList update) throws TeiidComponentException {
 		final boolean primaryKeyChangePossible = canChangePrimaryKey(update);
-		final TupleBrowser browser = createTupleBrower(null, null);
-		UpdateTupleSource uts = new UpdateTupleSource(crit, asTupleSource(browser)) {
+		final TupleBrowser browser = createTupleBrower(null, OrderBy.ASC);
+		UpdateTupleSource uts = new UpdateTupleSource(crit, new TupleBrowserTupleSource(browser)) {
 			
 			protected TupleBuffer changeSet;
 			protected TupleSource changeSetProcessor;
@@ -355,8 +435,8 @@ class TempTable {
 	}
 	
 	public TupleSource delete(Criteria crit) throws TeiidComponentException {
-		final TupleBrowser browser = createTupleBrower(null, null);
-		UpdateTupleSource uts = new UpdateTupleSource(crit, asTupleSource(browser)) {
+		final TupleBrowser browser = createTupleBrower(null, OrderBy.ASC);
+		UpdateTupleSource uts = new UpdateTupleSource(crit, new TupleBrowserTupleSource(browser)) {
 			@Override
 			protected void tuplePassed(List tuple)
 					throws ExpressionEvaluationException,

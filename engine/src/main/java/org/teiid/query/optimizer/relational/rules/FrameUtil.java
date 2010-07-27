@@ -435,15 +435,17 @@ public class FrameUtil {
      * @return
      */
     static ProcessorPlan getNestedPlan(PlanNode accessNode) {
-        ProcessorPlan plan = null;
         PlanNode sourceNode = accessNode.getFirstChild(); 
+        if (sourceNode == null) {
+        	return null;
+        }
         if(sourceNode.getType() != NodeConstants.Types.SOURCE) {
             sourceNode = sourceNode.getFirstChild();
         }
-        if(sourceNode.getType() == NodeConstants.Types.SOURCE) {
-            plan = (ProcessorPlan) sourceNode.getProperty(NodeConstants.Info.PROCESSOR_PLAN);
+        if(sourceNode != null && sourceNode.getType() == NodeConstants.Types.SOURCE) {
+            return (ProcessorPlan) sourceNode.getProperty(NodeConstants.Info.PROCESSOR_PLAN);
         }
-        return plan;            
+        return null;            
     }
 
     /**
@@ -454,23 +456,19 @@ public class FrameUtil {
      * @return The actual stored procedure
      */
     static Command getNonQueryCommand(PlanNode node) {
-        if (node.getChildCount() == 0) {
-            return null;
-        }
         PlanNode sourceNode = node.getFirstChild();
+        if (sourceNode == null) {
+        	return null;
+        }
         if(sourceNode.getType() != NodeConstants.Types.SOURCE) {
-            if (sourceNode.getChildCount() == 0) {
-                return null;
-            }
             sourceNode = sourceNode.getFirstChild();
         } 
-        if(sourceNode.getType() == NodeConstants.Types.SOURCE) {
+        if(sourceNode != null && sourceNode.getType() == NodeConstants.Types.SOURCE) {
             Command command = (Command) sourceNode.getProperty(NodeConstants.Info.VIRTUAL_COMMAND);
             if(! (command instanceof QueryCommand)) {
                 return command;
             }                
         }
-        
         return null;
     }
     

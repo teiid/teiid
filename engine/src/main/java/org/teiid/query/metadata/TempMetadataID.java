@@ -168,7 +168,7 @@ public class TempMetadataID implements Serializable {
             return true;
         }
         
-        if(obj == null || !(obj instanceof TempMetadataID)) { 
+        if(!(obj instanceof TempMetadataID)) { 
             return false;
         }
         return this.getID().equals( ((TempMetadataID) obj).getID());

@@ -92,7 +92,7 @@ import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.translator.SourceSystemFunctions;
 
-@SuppressWarnings("nls")
+@SuppressWarnings({"nls", "unchecked"})
 public class TestOptimizer {
 
     public interface DependentJoin {}
@@ -268,7 +268,8 @@ public class TestOptimizer {
                 final GroupSymbol symbol = (GroupSymbol)groups.iterator().next();
                 Object modelId = md.getModelID(symbol.getMetadataID());
                 boolean supportsGroupAliases = CapabilitiesUtil.supportsGroupAliases(modelId, md, capFinder);
-                command.acceptVisitor(new AliasGenerator(supportsGroupAliases));
+                boolean supportsProjection = CapabilitiesUtil.supports(Capability.QUERY_SELECT_EXPRESSION, modelId, md, capFinder);
+                command.acceptVisitor(new AliasGenerator(supportsGroupAliases, !supportsProjection));
                 expectedQueries.add(command.toString());
             } catch (Exception err) {
                 throw new RuntimeException(err);
@@ -5504,7 +5505,7 @@ public class TestOptimizer {
     }
 
     /**
-     * Since can now guarantee unique select column names, it's ok to have repeated entries in the order by clause.
+     * A final rewrite will ensure the correct order by
      */
     @Test public void testOrderByDuplicates() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -5527,7 +5528,7 @@ public class TestOptimizer {
         ProcessorPlan plan = helpPlan(sql,  
                                       metadata,
                                       null, capFinder,
-                                      new String[] {"SELECT g_0.intkey AS c_0, g_0.intkey AS c_1 FROM bqt1.smalla AS g_0 ORDER BY c_1, c_0"},  //$NON-NLS-1$
+                                      new String[] {"SELECT g_0.intkey, g_0.intkey FROM bqt1.smalla AS g_0 ORDER BY g_0.intkey"},  //$NON-NLS-1$
                                       ComparisonMode.EXACT_COMMAND_STRING );
 
         checkNodeTypes(plan, FULL_PUSHDOWN);
@@ -5743,8 +5744,8 @@ public class TestOptimizer {
                  null, 
                  capFinder, 
                  new String[] { 
-                     "SELECT bqt2.smallb.intkey AS c_0, bqt2.smalla.intkey AS c_1 FROM bqt2.smalla, bqt2.smallb WHERE bqt2.smalla.stringkey = bqt2.smallb.stringkey ORDER BY c_0, c_1", //$NON-NLS-1$ 
-                     "SELECT bqt1.smalla.intkey AS c_0 FROM bqt1.smalla ORDER BY c_0"}, //$NON-NLS-1$ 
+                     "SELECT bqt2.smallb.intkey, bqt2.smalla.intkey FROM bqt2.smalla, bqt2.smallb WHERE bqt2.smalla.stringkey = bqt2.smallb.stringkey ORDER BY bqt2.smallb.intkey, bqt2.smalla.intkey", //$NON-NLS-1$ 
+                     "SELECT bqt1.smalla.intkey FROM bqt1.smalla ORDER BY bqt1.smalla.intkey"}, //$NON-NLS-1$ 
                  ComparisonMode.EXACT_COMMAND_STRING); 
              
     } 

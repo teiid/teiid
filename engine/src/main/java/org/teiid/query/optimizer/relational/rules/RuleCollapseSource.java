@@ -24,6 +24,7 @@ package org.teiid.query.optimizer.relational.rules;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -56,6 +57,7 @@ import org.teiid.query.sql.lang.JoinPredicate;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.Limit;
 import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.Select;
@@ -417,7 +419,15 @@ public final class RuleCollapseSource implements OptimizerRule {
     }
     
 	private void processOrderBy(PlanNode node, QueryCommand query) {
-		query.setOrderBy((OrderBy)node.getProperty(NodeConstants.Info.SORT_ORDER));
+		OrderBy orderBy = (OrderBy)node.getProperty(NodeConstants.Info.SORT_ORDER);
+		query.setOrderBy(orderBy);
+		if (query instanceof Query) {
+			List<SingleElementSymbol> cols = query.getProjectedSymbols();
+			for (OrderByItem item : orderBy.getOrderByItems()) {
+				item.setExpressionPosition(cols.indexOf(item.getSymbol()));
+			}
+			QueryRewriter.rewriteOrderBy(query, orderBy, query.getProjectedSymbols(), new LinkedList<OrderByItem>());
+		}
 	}
 
    /**

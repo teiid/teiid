@@ -790,34 +790,13 @@ public class QueryRewriter {
         }
         Select select = queryCommand.getProjectedQuery().getSelect();
         final List projectedSymbols = select.getProjectedSymbols();
-        HashSet<Expression> previousExpressions = new HashSet<Expression>();
-        
-        boolean hasUnrelatedExpression = false;
         
         LinkedList<OrderByItem> unrelatedItems = new LinkedList<OrderByItem>();
-        for (int i = 0; i < orderBy.getVariableCount(); i++) {
-        	SingleElementSymbol querySymbol = orderBy.getVariable(i);
-        	int index = orderBy.getExpressionPosition(i);
-        	if (index == -1) {
-    			unrelatedItems.add(orderBy.getOrderByItems().get(i));
-        		hasUnrelatedExpression |= (querySymbol instanceof ExpressionSymbol);
-        	  	continue; // must be unrelated
-        	}
-        	querySymbol = (SingleElementSymbol)projectedSymbols.get(index);
-        	Expression expr = SymbolMap.getExpression(querySymbol);
-        	if (!previousExpressions.add(expr) || (queryCommand instanceof Query && EvaluatableVisitor.isFullyEvaluatable(expr, true))) {
-                orderBy.removeOrderByItem(i--);
-        	} else {
-        		orderBy.getOrderByItems().get(i).setSymbol((SingleElementSymbol)querySymbol.clone());
-        	}
-        }
         
-        if (orderBy.getVariableCount() == 0) {
-        	queryCommand.setOrderBy(null);
-            return queryCommand;
-        } 
+        boolean hasUnrelatedExpression = rewriteOrderBy(queryCommand, orderBy,
+				projectedSymbols, unrelatedItems);
         
-        if (!hasUnrelatedExpression) {
+        if (orderBy.getVariableCount() == 0 || !hasUnrelatedExpression) {
         	return queryCommand;
         } 
         
@@ -860,6 +839,33 @@ public class QueryRewriter {
 		top.setOrderBy(orderBy);
 		return top;
     }
+
+	public static boolean rewriteOrderBy(QueryCommand queryCommand,
+			final OrderBy orderBy, final List projectedSymbols,
+			LinkedList<OrderByItem> unrelatedItems) {
+		boolean hasUnrelatedExpression = false;
+		HashSet<Expression> previousExpressions = new HashSet<Expression>();
+        for (int i = 0; i < orderBy.getVariableCount(); i++) {
+        	SingleElementSymbol querySymbol = orderBy.getVariable(i);
+        	int index = orderBy.getExpressionPosition(i);
+        	if (index == -1) {
+    			unrelatedItems.add(orderBy.getOrderByItems().get(i));
+        		hasUnrelatedExpression |= (querySymbol instanceof ExpressionSymbol);
+        	  	continue; // must be unrelated
+        	}
+        	querySymbol = (SingleElementSymbol)projectedSymbols.get(index);
+        	Expression expr = SymbolMap.getExpression(querySymbol);
+        	if (!previousExpressions.add(expr) || (queryCommand instanceof Query && EvaluatableVisitor.isFullyEvaluatable(expr, true))) {
+                orderBy.removeOrderByItem(i--);
+        	} else {
+        		orderBy.getOrderByItems().get(i).setSymbol((SingleElementSymbol)querySymbol.clone());
+        	}
+        }
+        if (orderBy.getVariableCount() == 0) {
+        	queryCommand.setOrderBy(null);
+        } 
+		return hasUnrelatedExpression;
+	}
     
     /**
      * This method will alias each of the select into elements to the corresponding column name in the 

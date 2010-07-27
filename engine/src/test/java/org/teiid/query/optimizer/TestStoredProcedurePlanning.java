@@ -348,7 +348,22 @@ public class TestStoredProcedurePlanning {
         ProcessorPlan plan = TestOptimizer.helpPlan("EXEC pm1.sp3()", new TempMetadataAdapter(FakeMetadataFactory.example1Cached(), new TempMetadataStore()), //$NON-NLS-1$
             new String[] { "EXEC pm1.sp3()" }); //$NON-NLS-1$
 
-        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);               
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                1,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                0,      // Select
+                0,      // Sort
+                0       // UnionAll
+            });               
     }
 
     // test implicit type conversion of argument

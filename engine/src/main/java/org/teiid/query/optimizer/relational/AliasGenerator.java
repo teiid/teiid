@@ -186,12 +186,18 @@ public class AliasGenerator extends PreOrderNavigator {
     }
     
     private NamingVisitor visitor;
-    private int groupIndex = 0;
-    private int viewIndex = 0;
+    private int groupIndex;
+    private int viewIndex;
+    private boolean stripColumnAliases;
 
     public AliasGenerator(boolean aliasGroups) {
+    	this(aliasGroups, false);
+    }
+    
+    public AliasGenerator(boolean aliasGroups, boolean stripColumnAliases) {
         super(new NamingVisitor(aliasGroups));
         this.visitor = (NamingVisitor)this.getVisitor();
+        this.stripColumnAliases = stripColumnAliases;
     }
 
     /**
@@ -209,14 +215,15 @@ public class AliasGenerator extends PreOrderNavigator {
     }
     
     public void visit(Select obj) {
+        super.visit(obj);
         List selectSymbols = obj.getSymbols();
         HashMap<SingleElementSymbol, String> symbols = new HashMap<SingleElementSymbol, String>(selectSymbols.size());                
         for (int i = 0; i < selectSymbols.size(); i++) {
             SingleElementSymbol symbol = (SingleElementSymbol)selectSymbols.get(i);
+
+            boolean needsAlias = visitor.namingContext.aliasColumns;
             
             String newAlias = "c_" + i; //$NON-NLS-1$
-            
-            boolean needsAlias = true;
             
             Expression expr = SymbolMap.getExpression(symbol);
             
@@ -225,11 +232,12 @@ public class AliasGenerator extends PreOrderNavigator {
             if (!(expr instanceof SingleElementSymbol)) {
                 newSymbol = new ExpressionSymbol(newSymbol.getShortName(), expr);
             } else if (expr instanceof ElementSymbol) {
-                if (!needsAlias(newAlias, (ElementSymbol)expr)) {
-                    needsAlias = false;
-                    ((ElementSymbol)expr).setOutputName(newAlias);
-                }
                 newSymbol = (ElementSymbol)expr;
+            	if (!needsAlias) {
+            		newAlias = newSymbol.getOutputName();
+            	} else {
+                    needsAlias &= needsAlias(newAlias, (ElementSymbol)expr);
+                }
             } else {
                 newSymbol = (SingleElementSymbol)expr; 
             }
@@ -242,7 +250,6 @@ public class AliasGenerator extends PreOrderNavigator {
             selectSymbols.set(i, newSymbol);
         }
         
-        super.visit(obj);
         visitor.namingContext.currentSymbols = symbols; 
     }
 
@@ -256,7 +263,7 @@ public class AliasGenerator extends PreOrderNavigator {
      */
     public void visit(Query obj) {
         if (obj.getOrderBy() != null || obj.getLimit() != null) {
-            visitor.namingContext.aliasColumns = true;
+            visitor.namingContext.aliasColumns = true && !stripColumnAliases;
         }        
         visitNode(obj.getFrom());
         visitNode(obj.getCriteria());
@@ -337,15 +344,15 @@ public class AliasGenerator extends PreOrderNavigator {
             	continue;
             }
             String name = visitor.namingContext.getElementName(element, false);
+            boolean needsAlias = visitor.namingContext.aliasColumns;
             if (name != null) {
-	            boolean needsAlias = true;
 	            
 	            Expression expr = SymbolMap.getExpression(element);
 	                        
 	            if (!(expr instanceof SingleElementSymbol)) {
 	                expr = new ExpressionSymbol(element.getShortName(), expr);
 	            } else if (expr instanceof ElementSymbol) {
-	                needsAlias = needsAlias(name, (ElementSymbol)expr);
+	            	needsAlias &= needsAlias(name, (ElementSymbol)expr);
 	            } 
 	                        
 	            if (needsAlias) {
@@ -355,11 +362,9 @@ public class AliasGenerator extends PreOrderNavigator {
 	            element.setOutputName(name);
             }
             
-            visitNode(element);
-            
-            if (name != null && element instanceof ElementSymbol) {
-        		element.setOutputName(SingleElementSymbol.getShortName(element.getOutputName()));
-        	}
+            if (!(element instanceof ElementSymbol)) {
+            	visitNode(element);
+            }            
         }
     }
     

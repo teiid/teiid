@@ -84,7 +84,7 @@ public class ListNestedSortComparator<T extends Comparable<? super T>> implement
      * order.
      */
     public ListNestedSortComparator( int[] sortParameters ) {
-        this( sortParameters, false );
+        this( sortParameters, true );
     }
 
     /**

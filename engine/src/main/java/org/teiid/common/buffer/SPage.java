@@ -72,8 +72,6 @@ class SPage {
 		}
 	}
 	
-	static int unnecessaryReads;
-	
 	static SearchResult search(SPage page, List k, LinkedList<SearchResult> parent) throws TeiidComponentException {
 		TupleBatch previousValues = null;
 		for (;;) {
@@ -81,7 +79,6 @@ class SPage {
 			int index = Collections.binarySearch(values.getTuples(), k, page.stree.comparator);
 			int flippedIndex = - index - 1;
 			if (previousValues != null) {
-				unnecessaryReads++;
 				if (flippedIndex == 0) {
 					//systemic weakness of the algorithm
 					return new SearchResult(-previousValues.getTuples().size() - 1, page.prev, previousValues);
@@ -207,7 +204,7 @@ class SPage {
 			result.append(tb.getBeginRow());
 			if (children == null) {
 				if (tb.getTuples().size() <= 1) {
-					result.append(values);
+					result.append(tb.getTuples());
 				} else {
 					result.append("[").append(tb.getTuples().get(0)).append(" . ").append(tb.getTuples().size()). //$NON-NLS-1$ //$NON-NLS-2$
 					append(" . ").append(tb.getTuples().get(tb.getTuples().size() - 1)).append("]"); //$NON-NLS-1$ //$NON-NLS-2$ 

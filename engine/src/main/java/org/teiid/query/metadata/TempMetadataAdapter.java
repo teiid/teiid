@@ -53,7 +53,7 @@ import org.teiid.query.mapping.xml.MappingNode;
 public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
 
     private static final String SEPARATOR = "."; //$NON-NLS-1$
-    private static final TempMetadataID TEMP_MODEL = new TempMetadataID("__TEMP__", Collections.EMPTY_LIST); //$NON-NLS-1$
+    public static final TempMetadataID TEMP_MODEL = new TempMetadataID("__TEMP__", Collections.EMPTY_LIST); //$NON-NLS-1$
 
     private TempMetadataStore tempStore;
     private Map materializationTables;
@@ -322,7 +322,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         throws TeiidComponentException, QueryMetadataException {
 
         if(modelID.equals(TEMP_MODEL)) {                         
-            return true;
+            return false;
         }    
         return this.actualMetadata.isVirtualModel(modelID);
     }

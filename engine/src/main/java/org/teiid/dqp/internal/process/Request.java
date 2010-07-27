@@ -59,6 +59,7 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.SecurityFunctionEvaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempCapabilitiesFinder;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.QueryOptimizer;
@@ -172,7 +173,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         }
     	// Prepare dependencies for running the optimizer        
         this.capabilitiesFinder = new CachedFinder(this.connectorManagerRepo, workContext.getVDB());        
-        
+        this.capabilitiesFinder = new TempCapabilitiesFinder(this.capabilitiesFinder);
 
         metadata = workContext.getVDB().getAttachment(QueryMetadataInterface.class);
 

@@ -65,7 +65,6 @@ public class STree {
             int keyLength,
             String[] types) {
 		randomSeed = seedGenerator.nextInt() | 0x00000100; // ensure nonzero
-		//randomSeed=-1031212234;
 		this.manager = recman;
 		this.comparator = comparator;
 		this.pageSize = Math.max(pageSize, SPage.MIN_PERSISTENT_SIZE);
@@ -115,13 +114,11 @@ public class STree {
 	 */
 	private List find(List n, LinkedList<SearchResult> places) throws TeiidComponentException {
 		SPage x = null;
-		SearchResult parent = null;
 		for (int i = header.length - 1; i >= 0; i--) {
 			if (x == null) {
 				x = header[i];
 			}
 			SearchResult s = SPage.search(x, n, places);
-			parent = s;
 			if (places != null) {
 				places.add(s);
 			}
@@ -209,6 +206,9 @@ public class STree {
 			}
 			nextPage.next = page.next;
 			nextPage.prev = page;
+			if (nextPage.next != null) {
+				nextPage.next.prev = nextPage;
+			}
 			page.next = nextPage;
 			boolean inNext = false;
 			if (index <= pageSize/2) {
@@ -314,7 +314,7 @@ public class STree {
 	}
 	
 	public TupleBrowser browse(List lowerBound, List upperBound, boolean direction) {
-		return new TupleBrowser();
+		return new TupleBrowser(direction);
 	}
 
 	public int truncate() {
@@ -337,6 +337,16 @@ public class STree {
 		int index;
 		TupleBatch values;
 		boolean updated;
+		boolean direction;
+		
+		public TupleBrowser(boolean direction) {
+			this.direction = direction;
+			if (!direction) {
+				while (page.prev != null) {
+					page = page.prev;
+				}
+			}
+		}
 		
 		public boolean matchedLower() {
 			return false;
@@ -350,21 +360,35 @@ public class STree {
 			for (;;) {
 				if (values == null) {
 					values = page.getValues();
+					if (direction) {
+						index = 0;
+					} else {
+						index = values.getTuples().size() - 1;
+					}
 				}
-				if (index < values.getTuples().size()) {
-					return values.getTuples().get(index++);
+				if (index >= 0 && index < values.getTuples().size()) {
+					List result = values.getTuples().get(index);
+					index+=getOffset();
+					return result;
 				}
 				if (updated) {
 					page.setValues(values);
 				}
-				values = null;
-				index = 0;
-				page = page.next;
 				updated = false;
+				values = null;
+				if (direction) {
+					page = page.next;
+				} else {
+					page = page.prev;
+				}
 				if (page == null) {
 					return null;
 				}
 			}
+		}
+		
+		private int getOffset() {
+			return direction?1:-1;
 		}
 		
 		/**
@@ -374,7 +398,7 @@ public class STree {
 		 * @throws TeiidComponentException
 		 */
 		public void update(List tuple) throws TeiidComponentException {
-			values.getTuples().set(index - 1, tuple);
+			values.getTuples().set(index - getOffset(), tuple);
 			updated = true;
 		}
 		
@@ -382,7 +406,7 @@ public class STree {
 		 * Notify the browser that the last value was deleted.
 		 */
 		public void removed() {
-			index--;
+			index-=getOffset();
 		}
 	}
 	

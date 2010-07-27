@@ -648,6 +648,7 @@ public class TestDependentJoins extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(1000));
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
@@ -690,6 +691,7 @@ public class TestDependentJoins extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(1000));
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
