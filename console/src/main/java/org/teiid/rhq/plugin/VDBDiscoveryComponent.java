@@ -34,6 +34,7 @@ import org.rhq.core.pluginapi.inventory.DiscoveredResourceDetails;
 import org.rhq.core.pluginapi.inventory.InvalidPluginConfigurationException;
 import org.rhq.core.pluginapi.inventory.ResourceDiscoveryComponent;
 import org.rhq.core.pluginapi.inventory.ResourceDiscoveryContext;
+import org.rhq.plugins.jbossas5.connection.ProfileServiceConnection;
 import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 
@@ -43,15 +44,18 @@ import org.teiid.rhq.plugin.util.ProfileServiceUtil;
  */
 public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 
-	private final Log log = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
+	private final Log log = LogFactory
+			.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 
 	public Set<DiscoveredResourceDetails> discoverResources(
 			ResourceDiscoveryContext discoveryContext)
 			throws InvalidPluginConfigurationException, Exception {
 		Set<DiscoveredResourceDetails> discoveredResources = new HashSet<DiscoveredResourceDetails>();
+		ProfileServiceConnection connection = ((PlatformComponent) discoveryContext
+				.getParentResourceComponent()).getConnection();
 
 		Set<ManagedComponent> vdbs = ProfileServiceUtil
-				.getManagedComponents(new ComponentType(
+				.getManagedComponents(connection, new ComponentType(
 						PluginConstants.ComponentType.VDB.TYPE,
 						PluginConstants.ComponentType.VDB.SUBTYPE));
 
@@ -104,6 +108,5 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 
 		return discoveredResources;
 	}
-	
 
 }

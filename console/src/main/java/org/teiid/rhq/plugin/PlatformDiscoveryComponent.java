@@ -34,6 +34,8 @@ import org.rhq.core.pluginapi.inventory.DiscoveredResourceDetails;
 import org.rhq.core.pluginapi.inventory.InvalidPluginConfigurationException;
 import org.rhq.core.pluginapi.inventory.ResourceDiscoveryComponent;
 import org.rhq.core.pluginapi.inventory.ResourceDiscoveryContext;
+import org.rhq.plugins.jbossas5.ApplicationServerComponent;
+import org.rhq.plugins.jbossas5.connection.ProfileServiceConnection;
 import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 
@@ -42,7 +44,8 @@ import org.teiid.rhq.plugin.util.ProfileServiceUtil;
  */
 public class PlatformDiscoveryComponent implements ResourceDiscoveryComponent {
 
-	private final Log log = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
+	private final Log log = LogFactory
+			.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 
 	/**
 	 * Review the javadoc for both {@link ResourceDiscoveryComponent} and
@@ -57,14 +60,13 @@ public class PlatformDiscoveryComponent implements ResourceDiscoveryComponent {
 
 		Set<DiscoveredResourceDetails> discoveredResources = new HashSet<DiscoveredResourceDetails>();
 
-		ManagedComponent mc = ProfileServiceUtil.getManagedComponent(
-				new ComponentType(
-						PluginConstants.ComponentType.Platform.TEIID_TYPE,
-						PluginConstants.ComponentType.Platform.TEIID_SUB_TYPE),
-				PluginConstants.ComponentType.Platform.TEIID_RUNTIME_ENGINE);
-		
-		String version = ProfileServiceUtil.getSimpleValue(mc, "runtimeVersion", String.class);
-			
+		ManagedComponent mc = ProfileServiceUtil
+				.getTeiidEngineManagedComponent(((ApplicationServerComponent) discoveryContext
+						.getParentResourceComponent()).getConnection());
+
+		String version = ProfileServiceUtil.getSimpleValue(mc,
+				"runtimeVersion", String.class); //$NON-NLS-1$
+
 		/**
 		 * 
 		 * A discovered resource must have a unique key, that must stay the same
@@ -73,7 +75,8 @@ public class PlatformDiscoveryComponent implements ResourceDiscoveryComponent {
 		DiscoveredResourceDetails detail = new DiscoveredResourceDetails(
 				discoveryContext.getResourceType(), // ResourceType
 				mc.getName(), // Resource Key
-				PluginConstants.ComponentType.Platform.TEIID_ENGINE_RESOURCE_NAME, // Resource name
+				PluginConstants.ComponentType.Platform.TEIID_ENGINE_RESOURCE_NAME, // Resource
+																					// name
 				version,
 				PluginConstants.ComponentType.Platform.TEIID_ENGINE_RESOURCE_DESCRIPTION, // Description
 				discoveryContext.getDefaultPluginConfiguration(), // Plugin
@@ -88,7 +91,7 @@ public class PlatformDiscoveryComponent implements ResourceDiscoveryComponent {
 
 		// Add to return values
 		discoveredResources.add(detail);
-		log.info("Discovered Teiid instance: " + mc.getName());
+		log.info("Discovered Teiid instance: " + mc.getName()); //$NON-NLS-1$
 		return discoveredResources;
 
 	}

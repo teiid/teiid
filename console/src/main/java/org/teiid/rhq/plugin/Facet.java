@@ -71,6 +71,8 @@ import org.rhq.core.pluginapi.inventory.ResourceContext;
 import org.rhq.core.pluginapi.measurement.MeasurementFacet;
 import org.rhq.core.pluginapi.operation.OperationFacet;
 import org.rhq.core.pluginapi.operation.OperationResult;
+import org.rhq.plugins.jbossas5.ProfileServiceComponent;
+import org.rhq.plugins.jbossas5.connection.ProfileServiceConnection;
 import org.teiid.rhq.admin.DQPManagementView;
 import org.teiid.rhq.plugin.objects.ExecutedOperationResultImpl;
 import org.teiid.rhq.plugin.objects.ExecutedResult;
@@ -82,7 +84,7 @@ import org.teiid.rhq.plugin.util.ProfileServiceUtil;
  * This class implements required RHQ interfaces and provides common logic used
  * by all MetaMatrix components.
  */
-public abstract class Facet implements ResourceComponent, MeasurementFacet,
+public abstract class Facet implements ProfileServiceComponent<ResourceComponent>, MeasurementFacet,
 		OperationFacet, ConfigurationFacet, ContentFacet, DeleteResourceFacet,
 		CreateChildResourceFacet {
 
@@ -146,6 +148,8 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 		deploymentName = context.getResourceKey();
 	}
 
+	
+	
 	/**
 	 * This is called when the component is being stopped, usually due to the
 	 * plugin container shutting down. You can perform some cleanup here; though
@@ -206,10 +210,10 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 
 	}
 
-	protected void execute(final ExecutedResult result, final Map valueMap) {
+	protected void execute(final ProfileServiceConnection connection, final ExecutedResult result, final Map valueMap) {
 		DQPManagementView dqp = new DQPManagementView();
 
-		dqp.executeOperation(result, valueMap);
+		dqp.executeOperation(connection, result, valueMap);
 
 	}
 
@@ -267,7 +271,7 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 
 		setOperationArguments(name, configuration, valueMap);
 
-		execute(result, valueMap);
+		execute(getConnection(), result, valueMap);
 
 		return ((ExecutedOperationResultImpl) result).getOperationResult();
 
@@ -328,8 +332,7 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 		report.setStatus(ConfigurationUpdateStatus.SUCCESS);
 		try {
 			
-			managementView = ProfileServiceUtil.getManagementView(
-				ProfileServiceUtil.getProfileService(), true);
+			managementView = getConnection().getManagementView();
 			managedComponent = managementView.getComponent(this.name, componentType);
 			Map<String, ManagedProperty> managedProperties = managedComponent
 					.getProperties();
@@ -371,8 +374,7 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 			throws Exception {
 		log.trace("Updating " + this.name + " with component "
 				+ managedComponent.toString() + "...");
-		ManagementView managementView = ProfileServiceUtil.getManagementView(
-				ProfileServiceUtil.getProfileService(), false);
+		ManagementView managementView = getConnection().getManagementView();
 		managementView.updateComponent(managedComponent);
 		
 	}
@@ -380,7 +382,7 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 	@Override
 	public void deleteResource() throws Exception {
 
-		DeploymentManager deploymentManager = ProfileServiceUtil
+		DeploymentManager deploymentManager = getConnection()
 				.getDeploymentManager();
 
 		log.debug("Stopping deployment [" + this.deploymentName + "]...");
@@ -512,14 +514,9 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 				.getComponentType(resourceType);
 		ManagementView managementView = null;
 		;
-		try {
-			managementView = ProfileServiceUtil.getManagementView(
-					ProfileServiceUtil.getProfileService(), true);
-		} catch (NamingException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		if (ProfileServiceUtil.isManagedComponent(managementView, resourceName,
+		managementView = getConnection().getManagementView();
+		
+		if (ProfileServiceUtil.isManagedComponent(getConnection(), resourceName,
 				componentType)) {
 			createResourceReport.setStatus(CreateResourceStatus.FAILURE);
 			createResourceReport.setErrorMessage("A " + resourceType.getName()
@@ -593,7 +590,7 @@ public abstract class Facet implements ResourceComponent, MeasurementFacet,
 
 			}
 
-			DeploymentManager deploymentManager = ProfileServiceUtil
+			DeploymentManager deploymentManager = getConnection()
 					.getDeploymentManager();
 			DeploymentUtils
 					.deployArchive(deploymentManager, archiveFile, false);

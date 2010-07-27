@@ -36,7 +36,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 import org.apache.commons.logging.Log;
@@ -70,6 +69,7 @@ import org.rhq.core.domain.configuration.definition.PropertyDefinitionMap;
 import org.rhq.core.domain.configuration.definition.PropertyDefinitionSimple;
 import org.rhq.core.domain.configuration.definition.PropertySimpleType;
 import org.rhq.core.domain.resource.ResourceType;
+import org.rhq.plugins.jbossas5.connection.ProfileServiceConnection;
 import org.teiid.rhq.plugin.TranslatorComponent;
 import org.teiid.rhq.plugin.adapter.api.PropertyAdapter;
 import org.teiid.rhq.plugin.adapter.api.PropertyAdapterFactory;
@@ -80,13 +80,11 @@ public class ProfileServiceUtil {
 
 	protected final static Log LOG = LogFactory
 			.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
-	private static ComponentType DQPTYPE = new ComponentType("teiid", "dqp");
-	private static String DQPNAME = "org.teiid.jboss.deployers.RuntimeEngineDeployer";
+	private static ComponentType DQPTYPE = new ComponentType("teiid", "dqp"); //$NON-NLS-1$ //$NON-NLS-2$
+	private static String DQPNAME = "RuntimeEngineDeployer"; //$NON-NLS-1$
 	private static final Map<String, ComponentType> COMPONENT_TYPE_CACHE = new HashMap<String, ComponentType>();
-	private static final Map<String, KnownDeploymentTypes> DEPLOYMENT_TYPE_CACHE = new HashMap<String, KnownDeploymentTypes>();
-	private static final Map<String, Configuration> DEFAULT_PLUGIN_CONFIG_CACHE = new HashMap<String, Configuration>();
 
-	protected static final String PLUGIN = "ProfileService";
+	protected static final String PLUGIN = "ProfileService"; //$NON-NLS-1$
 
 	public static ComponentType getComponentType(
 			@NotNull ResourceType resourceType) {
@@ -96,18 +94,18 @@ public class ProfileServiceUtil {
 		Configuration defaultPluginConfig = getDefaultPluginConfiguration(resourceType);
 		String type = defaultPluginConfig.getSimpleValue(
 				TranslatorComponent.Config.COMPONENT_TYPE, null);
-		if (type == null || type.equals(""))
+		if (type == null || type.equals("")) //$NON-NLS-1$
 			throw new IllegalStateException(
-					"Required plugin configuration property '"
+					"Required plugin configuration property '" //$NON-NLS-1$
 							+ TranslatorComponent.Config.COMPONENT_TYPE
-							+ "' is not defined in default template.");
+							+ "' is not defined in default template."); //$NON-NLS-1$
 		String subtype = defaultPluginConfig.getSimpleValue(
 				TranslatorComponent.Config.COMPONENT_SUBTYPE, null);
-		if (subtype == null || subtype.equals(""))
+		if (subtype == null || subtype.equals("")) //$NON-NLS-1$
 			throw new IllegalStateException(
-					"Required plugin configuration property '"
+					"Required plugin configuration property '" //$NON-NLS-1$
 							+ TranslatorComponent.Config.COMPONENT_SUBTYPE
-							+ "' is not defined in default template.");
+							+ "' is not defined in default template."); //$NON-NLS-1$
 		ComponentType componentType = new ComponentType(type, subtype);
 		COMPONENT_TYPE_CACHE.put(resourceTypeName, componentType);
 		return componentType;
@@ -127,13 +125,14 @@ public class ProfileServiceUtil {
 	 * @param componentType
 	 * @return
 	 */
-	public static boolean isManagedComponent(ManagementView managementView,
-			String name, ComponentType componentType) {
+	public static boolean isManagedComponent(
+			ProfileServiceConnection connection, String name,
+			ComponentType componentType) {
 		boolean isDeployed = false;
 		if (name != null) {
 			try {
-				ManagedComponent component = getManagedComponent(componentType,
-						name);
+				ManagedComponent component = getManagedComponent(connection,
+						componentType, name);
 				if (component != null)
 					isDeployed = true;
 			} catch (Exception e) {
@@ -154,12 +153,10 @@ public class ProfileServiceUtil {
 	 * @throws Exception
 	 */
 	public static ManagedComponent getManagedComponent(
-			ComponentType componentType, String componentName)
-			throws NamingException, Exception {
-		ProfileService ps = getProfileService();
-		ManagementView mv = getManagementView(ps, true);
-
-		ManagedComponent mc = mv.getComponent(componentName, componentType);
+			ProfileServiceConnection connection, ComponentType componentType,
+			String componentName) throws NamingException, Exception {
+		ManagedComponent mc = connection.getManagementView().getComponent(
+				componentName, componentType);
 
 		return mc;
 	}
@@ -174,13 +171,49 @@ public class ProfileServiceUtil {
 	 * @throws Exception
 	 */
 	public static Set<ManagedComponent> getManagedComponents(
-			ComponentType componentType) throws NamingException, Exception {
-		ProfileService ps = getProfileService();
-		ManagementView mv = getManagementView(ps, true);
+			ProfileServiceConnection connection, ComponentType componentType)
+			throws NamingException, Exception {
 
-		Set<ManagedComponent> mcSet = mv.getComponentsForType(componentType);
+		Set<ManagedComponent> mcSet = connection.getManagementView()
+				.getComponentsForType(componentType);
 
 		return mcSet;
+	}
+
+	/**
+	 * Get the {@link ManagedComponent} for the {@link ComponentType} and sub
+	 * type.
+	 * 
+	 * @return Set of {@link ManagedComponent}s
+	 * @throws NamingException
+	 * @throws Exception
+	 */
+	public static ManagedComponent getTeiidEngineManagedComponent(
+			ProfileServiceConnection connection) throws NamingException,
+			Exception {
+
+		ManagedComponent mc = null;
+		
+		try {
+		Set<ManagedComponent> mcSet = ProfileServiceUtil.getManagedComponents(
+				connection, new ComponentType(
+						PluginConstants.ComponentType.Platform.TEIID_TYPE,
+						PluginConstants.ComponentType.Platform.TEIID_SUB_TYPE));
+		
+		for (ManagedComponent mcInstance : mcSet) {
+			String compName = (String) mcInstance.getComponentName();
+			if (compName != null
+					&& compName
+							.equals(PluginConstants.ComponentType.Platform.TEIID_RUNTIME_ENGINE)) {
+				mc = mcInstance;
+				break;
+			}
+		}
+		}catch(RuntimeException e){
+			throw new Exception("Exception getting Teiid Runtime Engine: "+ e.getMessage()); //$NON-NLS-1$
+		}
+
+		return mc;
 	}
 
 	/**
@@ -203,24 +236,11 @@ public class ProfileServiceUtil {
 	 * @throws NamingException
 	 * @throws Exception
 	 */
-	public static DeploymentManager getDeploymentManager()
-			throws NamingException, Exception {
-		ProfileService ps = getProfileService();
-		DeploymentManager deploymentManager = ps.getDeploymentManager();
+	public static DeploymentManager getDeploymentManager(
+			ProfileServiceConnection connection) throws NamingException,
+			Exception {
 
-		return deploymentManager;
-	}
-
-	/**
-	 * @return {@link ProfileService}
-	 * @throws NamingException
-	 *             , Exception
-	 */
-	public static ProfileService getProfileService() throws NamingException {
-		InitialContext ic = new InitialContext();
-		ProfileService ps = (ProfileService) ic
-				.lookup(PluginConstants.PROFILE_SERVICE);
-		return ps;
+		return connection.getDeploymentManager();
 	}
 
 	/**
@@ -228,14 +248,14 @@ public class ProfileServiceUtil {
 	 * @throws NamingException
 	 *             , Exception
 	 */
-	public static File getDeployDirectory() throws NamingException, Exception {
-		ProfileService ps = getProfileService();
-		ManagementView mv = getManagementView(ps, false);
+	public static File getDeployDirectory(ProfileServiceConnection connection)
+			throws NamingException, Exception {
 		Set<ManagedDeployment> warDeployments;
 		try {
-			warDeployments = mv
-					.getDeploymentsForType(KnownDeploymentTypes.JavaEEWebApplication
-							.getType());
+			warDeployments = connection
+					.getManagementView()
+					.getDeploymentsForType(
+							KnownDeploymentTypes.JavaEEWebApplication.getType());
 		} catch (Exception e) {
 			throw new IllegalStateException(e);
 		}
@@ -261,12 +281,6 @@ public class ProfileServiceUtil {
 		return deployDir;
 	}
 
-	public static ManagedComponent getDQPManagementView()
-			throws NamingException, Exception {
-
-		return getManagedComponent(DQPTYPE, DQPNAME);
-	}
-
 	public static String stringValue(MetaValue v1) throws Exception {
 		if (v1 != null) {
 			MetaType type = v1.getMetaType();
@@ -274,7 +288,7 @@ public class ProfileServiceUtil {
 				SimpleValue simple = (SimpleValue) v1;
 				return simple.getValue().toString();
 			}
-			throw new Exception("Failed to convert value to string value");
+			throw new Exception("Failed to convert value to string value"); //$NON-NLS-1$
 		}
 		return null;
 	}
@@ -286,7 +300,7 @@ public class ProfileServiceUtil {
 				SimpleValue simple = (SimpleValue) v1;
 				return Boolean.valueOf(simple.getValue().toString());
 			}
-			throw new Exception("Failed to convert value to boolean value");
+			throw new Exception("Failed to convert value to boolean value"); //$NON-NLS-1$
 		}
 		return null;
 	}
@@ -305,41 +319,43 @@ public class ProfileServiceUtil {
 				return expectedType.cast((enumValue != null) ? enumValue
 						.getValue() : null);
 			}
-			throw new IllegalStateException(prop + " is not a simple type");
+			throw new IllegalStateException(prop + " is not a simple type"); //$NON-NLS-1$
 		}
 		return null;
 	}
-	
-	public static <T> T getSimpleValue(ManagedCommon mc, String prop, Class<T> expectedType) {
-		 ManagedProperty mp = mc.getProperty(prop);
-		 if (mp != null) {
-			 MetaType metaType = mp.getMetaType();
-			 if (metaType.isSimple()) {
-		            SimpleValue simpleValue = (SimpleValue)mp.getValue();
-		            return expectedType.cast((simpleValue != null) ? simpleValue.getValue() : null);
-			 }
-			 else if (metaType.isEnum()) {
-				 EnumValue enumValue = (EnumValue)mp.getValue();
-				 return expectedType.cast((enumValue != null) ? enumValue.getValue() : null);
-			 }
-			 throw new IllegalArgumentException(prop+ " is not a simple type"); //$NON-NLS-1$
-		 }
-		 return null;
-	}	
+
+	public static <T> T getSimpleValue(ManagedCommon mc, String prop,
+			Class<T> expectedType) {
+		ManagedProperty mp = mc.getProperty(prop);
+		if (mp != null) {
+			MetaType metaType = mp.getMetaType();
+			if (metaType.isSimple()) {
+				SimpleValue simpleValue = (SimpleValue) mp.getValue();
+				return expectedType.cast((simpleValue != null) ? simpleValue
+						.getValue() : null);
+			} else if (metaType.isEnum()) {
+				EnumValue enumValue = (EnumValue) mp.getValue();
+				return expectedType.cast((enumValue != null) ? enumValue
+						.getValue() : null);
+			}
+			throw new IllegalArgumentException(prop + " is not a simple type"); //$NON-NLS-1$
+		}
+		return null;
+	}
 
 	public static Map<String, PropertySimple> getCustomProperties(
 			Configuration pluginConfig) {
 		Map<String, PropertySimple> customProperties = new LinkedHashMap<String, PropertySimple>();
 		if (pluginConfig == null)
 			return customProperties;
-		PropertyMap customPropsMap = pluginConfig.getMap("custom-properties");
+		PropertyMap customPropsMap = pluginConfig.getMap("custom-properties"); //$NON-NLS-1$
 		if (customPropsMap != null) {
 			Collection<Property> customProps = customPropsMap.getMap().values();
 			for (Property customProp : customProps) {
 				if (!(customProp instanceof PropertySimple)) {
 					LOG
-							.error("Custom property definitions in plugin configuration must be simple properties - property "
-									+ customProp + " is not - ignoring...");
+							.error("Custom property definitions in plugin configuration must be simple properties - property " //$NON-NLS-1$
+									+ customProp + " is not - ignoring..."); //$NON-NLS-1$
 					continue;
 				}
 				customProperties.put(customProp.getName(),
@@ -365,14 +381,14 @@ public class ProfileServiceUtil {
 				if (!managedProperty.hasViewUse(ViewUse.STATISTIC))
 					LOG
 							.debug(resourceType
-									+ " does not define a property corresponding to ManagedProperty '"
-									+ propName + "'.");
+									+ " does not define a property corresponding to ManagedProperty '" //$NON-NLS-1$
+									+ propName + "'."); //$NON-NLS-1$
 				continue;
 			}
 			if (managedProperty == null) {
 				// This should never happen, but don't let it blow us up.
-				LOG.error("ManagedProperty '" + propName
-						+ "' has a null value in the ManagedProperties Map.");
+				LOG.error("ManagedProperty '" + propName //$NON-NLS-1$
+						+ "' has a null value in the ManagedProperties Map."); //$NON-NLS-1$
 				continue;
 			}
 			MetaValue metaValue = managedProperty.getValue();
@@ -390,12 +406,12 @@ public class ProfileServiceUtil {
 						.getPropertyAdapter(metaValue);
 			if (propertyAdapter == null) {
 				LOG
-						.error("Unable to find a PropertyAdapter for ManagedProperty '"
+						.error("Unable to find a PropertyAdapter for ManagedProperty '" //$NON-NLS-1$
 								+ propName
-								+ "' with MetaType ["
+								+ "' with MetaType [" //$NON-NLS-1$
 								+ metaValue.getMetaType()
-								+ "] for ResourceType '"
-								+ resourceType.getName() + "'.");
+								+ "] for ResourceType '" //$NON-NLS-1$
+								+ resourceType.getName() + "'."); //$NON-NLS-1$
 				continue;
 			}
 			Property property = propertyAdapter.convertToProperty(metaValue,
@@ -414,19 +430,20 @@ public class ProfileServiceUtil {
 			String propertyName = managedProperty.getName();
 			PropertyDefinition propertyDefinition = configDefinition
 					.get(propertyName);
-			if (propertyDefinition==null){
-				//The managed property is not defined in the configuration
+			if (propertyDefinition == null) {
+				// The managed property is not defined in the configuration
 				continue;
 			}
 			populateManagedPropertyFromProperty(managedProperty,
-						propertyDefinition, configuration);
-			}
+					propertyDefinition, configuration);
+		}
 		return;
 	}
 
-	public static void populateManagedPropertyFromProperty(ManagedProperty managedProperty,
+	public static void populateManagedPropertyFromProperty(
+			ManagedProperty managedProperty,
 			PropertyDefinition propertyDefinition, Configuration configuration) {
-    	// If the ManagedProperty defines a default value, assume it's more
+		// If the ManagedProperty defines a default value, assume it's more
 		// definitive than any default value that may
 		// have been defined in the plugin descriptor, and update the
 		// PropertyDefinition to use that as its default
@@ -438,29 +455,31 @@ public class ProfileServiceUtil {
 		MetaValue metaValue = managedProperty.getValue();
 		PropertyAdapter propertyAdapter = null;
 		if (metaValue != null) {
-			LOG.trace("Populating existing MetaValue of type "
-					+ metaValue.getMetaType() + " from Teiid property "
-					+ propertyDefinition.getName() + " with definition " + propertyDefinition
-					+ "...");
+			LOG.trace("Populating existing MetaValue of type " //$NON-NLS-1$
+					+ metaValue.getMetaType() + " from Teiid property " //$NON-NLS-1$
+					+ propertyDefinition.getName() + " with definition " //$NON-NLS-1$
+					+ propertyDefinition + "..."); //$NON-NLS-1$
 			propertyAdapter = PropertyAdapterFactory
-						.getPropertyAdapter(metaValue);
-			
-			propertyAdapter.populateMetaValueFromProperty(configuration.getSimple(propertyDefinition.getName()), metaValue,
-						propertyDefinition);
+					.getPropertyAdapter(metaValue);
+
+			propertyAdapter.populateMetaValueFromProperty(configuration
+					.getSimple(propertyDefinition.getName()), metaValue,
+					propertyDefinition);
 			managedProperty.setValue(metaValue);
 		} else {
-			MetaType metaType = managedProperty.getMetaType(); 
+			MetaType metaType = managedProperty.getMetaType();
 			if (propertyAdapter == null)
 				propertyAdapter = PropertyAdapterFactory
 						.getPropertyAdapter(metaType);
-			LOG.trace("Converting property " + propertyDefinition.getName() + " with definition "
-					+ propertyDefinition + " to MetaValue of type " + metaType
-					+ "...");
-			metaValue = propertyAdapter.convertToMetaValue(configuration.getSimple(propertyDefinition.getName()),
-					propertyDefinition, metaType);		
+			LOG.trace("Converting property " + propertyDefinition.getName() //$NON-NLS-1$
+					+ " with definition " + propertyDefinition //$NON-NLS-1$
+					+ " to MetaValue of type " + metaType + "..."); //$NON-NLS-1$ //$NON-NLS-2$
+			metaValue = propertyAdapter.convertToMetaValue(configuration
+					.getSimple(propertyDefinition.getName()),
+					propertyDefinition, metaType);
 			managedProperty.setValue(metaValue);
 		}
-		
+
 	}
 
 	private static void updateDefaultValueOnPropertyDefinition(
@@ -468,17 +487,16 @@ public class ProfileServiceUtil {
 			@NotNull MetaValue defaultValue) {
 		if (!(propertyDefinition instanceof PropertyDefinitionSimple)) {
 			LOG
-					.debug("Cannot update default value on non-simple property definition "
-							+ propertyDefinition
-							+ "(default value is "
-							+ defaultValue + ").");
+					.debug("Cannot update default value on non-simple property definition " //$NON-NLS-1$
+							+ propertyDefinition + "(default value is " //$NON-NLS-1$
+							+ defaultValue + ")."); //$NON-NLS-1$
 			return;
 		}
 		MetaType metaType = defaultValue.getMetaType();
 		if (!metaType.isSimple() && !metaType.isEnum()) {
-			LOG.debug("Cannot update default value on " + propertyDefinition
-					+ ", because default value's type (" + metaType
-					+ ") is not simple or enum.");
+			LOG.debug("Cannot update default value on " + propertyDefinition //$NON-NLS-1$
+					+ ", because default value's type (" + metaType //$NON-NLS-1$
+					+ ") is not simple or enum."); //$NON-NLS-1$
 			return;
 		}
 		PropertyDefinitionSimple propertyDefinitionSimple = (PropertyDefinitionSimple) propertyDefinition;
@@ -525,88 +543,91 @@ public class ProfileServiceUtil {
 		}
 		return memberMetaType;
 	}
-	
-	 private static MetaType convertPropertySimpleTypeToSimpleMetaType(PropertySimpleType memberSimpleType)
-	    {
-	        MetaType memberMetaType;
-	        Class memberClass;
-	        switch (memberSimpleType)
-	        {
-	            case BOOLEAN:
-	                memberClass = Boolean.class;
-	                break;
-	            case INTEGER:
-	                memberClass = Integer.class;
-	                break;
-	            case LONG:
-	                memberClass = Long.class;
-	                break;
-	            case FLOAT:
-	                memberClass = Float.class;
-	                break;
-	            case DOUBLE:
-	                memberClass = Double.class;
-	                break;
-	            default:
-	                memberClass = String.class;
-	                break;
-	        }
-	        memberMetaType = SimpleMetaType.resolve(memberClass.getName());
-	        return memberMetaType;
-	    }
-	 
-	 public static SimpleValue wrap(MetaType type, String value) throws Exception {
-			if (type instanceof SimpleMetaType) {
-				SimpleMetaType st = (SimpleMetaType)type;
-				
-				if (SimpleMetaType.BIGDECIMAL.equals(st)) {
-					return new SimpleValueSupport(st, new BigDecimal(value));
-				} else if (SimpleMetaType.BIGINTEGER.equals(st)) {
-					return new SimpleValueSupport(st, new BigInteger(value));
-				} else if (SimpleMetaType.BOOLEAN.equals(st)) {
-					return new SimpleValueSupport(st, Boolean.valueOf(value));
-				} else if (SimpleMetaType.BOOLEAN_PRIMITIVE.equals(st)) {
-					return new SimpleValueSupport(st, Boolean.valueOf(value).booleanValue());
-				} else if (SimpleMetaType.BYTE.equals(st)) {
-					return new SimpleValueSupport(st, new Byte(value.getBytes()[0]));
-				} else if (SimpleMetaType.BYTE_PRIMITIVE.equals(st)) {
-					return new SimpleValueSupport(st, value.getBytes()[0]);
-				} else if (SimpleMetaType.CHARACTER.equals(st)) {
-					return new SimpleValueSupport(st, new Character(value.charAt(0)));
-				} else if (SimpleMetaType.CHARACTER_PRIMITIVE.equals(st)) {
-					return new SimpleValueSupport(st,value.charAt(0));
-				} else if (SimpleMetaType.DATE.equals(st)) {
-					try {
-						return new SimpleValueSupport(st, SimpleDateFormat.getInstance().parse(value));
-					} catch (ParseException e) {
-						throw new Exception("Failed to convert value to SimpleValue", e); //$NON-NLS-1$
-					}
-				} else if (SimpleMetaType.DOUBLE.equals(st)) {
-					return new SimpleValueSupport(st, Double.valueOf(value));
-				} else if (SimpleMetaType.DOUBLE_PRIMITIVE.equals(st)) {
-					return new SimpleValueSupport(st, Double.parseDouble(value));
-				} else if (SimpleMetaType.FLOAT.equals(st)) {
-					return new SimpleValueSupport(st, Float.parseFloat(value));
-				} else if (SimpleMetaType.FLOAT_PRIMITIVE.equals(st)) {
-					return new SimpleValueSupport(st, Float.valueOf(value));
-				} else if (SimpleMetaType.INTEGER.equals(st)) {
-					return new SimpleValueSupport(st, Integer.valueOf(value));
-				} else if (SimpleMetaType.INTEGER_PRIMITIVE.equals(st)) {
-					return new SimpleValueSupport(st, Integer.parseInt(value));
-				} else if (SimpleMetaType.LONG.equals(st)) {
-					return new SimpleValueSupport(st, Long.valueOf(value));
-				} else if (SimpleMetaType.LONG_PRIMITIVE.equals(st)) {
-					return new SimpleValueSupport(st, Long.parseLong(value));
-				} else if (SimpleMetaType.SHORT.equals(st)) {
-					return new SimpleValueSupport(st, Short.valueOf(value));
-				} else if (SimpleMetaType.SHORT_PRIMITIVE.equals(st)) {
-					return new SimpleValueSupport(st, Short.parseShort(value));
-				} else if (SimpleMetaType.STRING.equals(st)) {
-					return new SimpleValueSupport(st,value);
-				}
-			}
-			throw new Exception("Failed to convert value to SimpleValue"); //$NON-NLS-1$
-		} 
 
+	private static MetaType convertPropertySimpleTypeToSimpleMetaType(
+			PropertySimpleType memberSimpleType) {
+		MetaType memberMetaType;
+		Class memberClass;
+		switch (memberSimpleType) {
+		case BOOLEAN:
+			memberClass = Boolean.class;
+			break;
+		case INTEGER:
+			memberClass = Integer.class;
+			break;
+		case LONG:
+			memberClass = Long.class;
+			break;
+		case FLOAT:
+			memberClass = Float.class;
+			break;
+		case DOUBLE:
+			memberClass = Double.class;
+			break;
+		default:
+			memberClass = String.class;
+			break;
+		}
+		memberMetaType = SimpleMetaType.resolve(memberClass.getName());
+		return memberMetaType;
+	}
+
+	public static SimpleValue wrap(MetaType type, String value)
+			throws Exception {
+		if (type instanceof SimpleMetaType) {
+			SimpleMetaType st = (SimpleMetaType) type;
+
+			if (SimpleMetaType.BIGDECIMAL.equals(st)) {
+				return new SimpleValueSupport(st, new BigDecimal(value));
+			} else if (SimpleMetaType.BIGINTEGER.equals(st)) {
+				return new SimpleValueSupport(st, new BigInteger(value));
+			} else if (SimpleMetaType.BOOLEAN.equals(st)) {
+				return new SimpleValueSupport(st, Boolean.valueOf(value));
+			} else if (SimpleMetaType.BOOLEAN_PRIMITIVE.equals(st)) {
+				return new SimpleValueSupport(st, Boolean.valueOf(value)
+						.booleanValue());
+			} else if (SimpleMetaType.BYTE.equals(st)) {
+				return new SimpleValueSupport(st, new Byte(value.getBytes()[0]));
+			} else if (SimpleMetaType.BYTE_PRIMITIVE.equals(st)) {
+				return new SimpleValueSupport(st, value.getBytes()[0]);
+			} else if (SimpleMetaType.CHARACTER.equals(st)) {
+				return new SimpleValueSupport(st,
+						new Character(value.charAt(0)));
+			} else if (SimpleMetaType.CHARACTER_PRIMITIVE.equals(st)) {
+				return new SimpleValueSupport(st, value.charAt(0));
+			} else if (SimpleMetaType.DATE.equals(st)) {
+				try {
+					return new SimpleValueSupport(st, SimpleDateFormat
+							.getInstance().parse(value));
+				} catch (ParseException e) {
+					throw new Exception(
+							"Failed to convert value to SimpleValue", e); //$NON-NLS-1$
+				}
+			} else if (SimpleMetaType.DOUBLE.equals(st)) {
+				return new SimpleValueSupport(st, Double.valueOf(value));
+			} else if (SimpleMetaType.DOUBLE_PRIMITIVE.equals(st)) {
+				return new SimpleValueSupport(st, Double.parseDouble(value));
+			} else if (SimpleMetaType.FLOAT.equals(st)) {
+				return new SimpleValueSupport(st, Float.parseFloat(value));
+			} else if (SimpleMetaType.FLOAT_PRIMITIVE.equals(st)) {
+				return new SimpleValueSupport(st, Float.valueOf(value));
+			} else if (SimpleMetaType.INTEGER.equals(st)) {
+				return new SimpleValueSupport(st, Integer.valueOf(value));
+			} else if (SimpleMetaType.INTEGER_PRIMITIVE.equals(st)) {
+				return new SimpleValueSupport(st, Integer.parseInt(value));
+			} else if (SimpleMetaType.LONG.equals(st)) {
+				return new SimpleValueSupport(st, Long.valueOf(value));
+			} else if (SimpleMetaType.LONG_PRIMITIVE.equals(st)) {
+				return new SimpleValueSupport(st, Long.parseLong(value));
+			} else if (SimpleMetaType.SHORT.equals(st)) {
+				return new SimpleValueSupport(st, Short.valueOf(value));
+			} else if (SimpleMetaType.SHORT_PRIMITIVE.equals(st)) {
+				return new SimpleValueSupport(st, Short.parseShort(value));
+			} else if (SimpleMetaType.STRING.equals(st)) {
+				return new SimpleValueSupport(st, value);
+			}
+		}
+		throw new Exception("Failed to convert value to SimpleValue"); //$NON-NLS-1$
+	}
 
 }

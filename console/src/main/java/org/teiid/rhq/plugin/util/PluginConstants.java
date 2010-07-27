@@ -33,10 +33,6 @@ public interface PluginConstants {
 	 * getting a handle to a specific component related to Teiid.
 	 */
 
-	// The system key is the value used to obtain a connection.
-	// In embedded, its a predefined value
-	// In enterprise, its the installation directory
-	//        public final static String INSTALL_DIR = "install.dir"; //$NON-NLS-1$
 	/**
 	 * These are global properties used by all components
 	 */
@@ -63,7 +59,8 @@ public interface PluginConstants {
 			public final static String TEIID_SUB_TYPE = "dqp"; //$NON-NLS-1$
 			public final static String TYPE = "ConnectionFactory"; //$NON-NLS-1$
 			public final static String SUBTYPE = "NoTx"; //$NON-NLS-1$
-			public final static String TEIID_RUNTIME_ENGINE = "org.teiid.jboss.deployers.RuntimeEngineDeployer"; //$NON-NLS-1$
+			public final static String COMPNAME = "compName"; //$NON-NLS-1$
+			public final static String TEIID_RUNTIME_ENGINE = "RuntimeEngineDeployer"; //$NON-NLS-1$
 			public final static String TEIID_ENGINE_RESOURCE_NAME = "Data Services"; //$NON-NLS-1$
 			public final static String TEIID_ENGINE_RESOURCE_DESCRIPTION = "Teiid Data Service Runtime Engine"; //$NON-NLS-1$
 
