@@ -61,7 +61,7 @@ public class SessionAwareCache<T> {
 	
 	SessionAwareCache (int maxSize, final CacheFactory cacheFactory, final Cache.Type type){
 		if(maxSize < 0){
-			this.maxSize = DEFAULT_MAX_SIZE_TOTAL;
+			maxSize = DEFAULT_MAX_SIZE_TOTAL;
 		}
 		this.maxSize = maxSize;
 		this.localCache = new DefaultCache<CacheID, T>("local", maxSize); //$NON-NLS-1$
@@ -133,7 +133,7 @@ public class SessionAwareCache<T> {
 		private String sessionId;
 		private String originalSessionId;
 		private List<Serializable> parameters;
-		private String userName;
+		//private String userName;
 		boolean cachable = true;
 				
 		CacheID(DQPWorkContext context, ParseInfo pi, String sql){
@@ -141,7 +141,7 @@ public class SessionAwareCache<T> {
 			this.vdbInfo = new VDBKey(context.getVdbName(), context.getVdbVersion());
 			this.pi = pi;
 			this.originalSessionId = context.getSessionId();
-			this.userName = context.getUserName();
+			//this.userName = context.getUserName();
 		}
 		
 		private void setSessionId(String sessionId) {
@@ -163,7 +163,7 @@ public class SessionAwareCache<T> {
 		}
 		
 		public void setUserName(String name) {
-			this.userName = name;
+			//this.userName = name;
 		}
 						
 		public boolean equals(Object obj){
@@ -175,13 +175,13 @@ public class SessionAwareCache<T> {
 	        } 
         	CacheID that = (CacheID)obj;
             return this.pi.equals(that.pi) && this.vdbInfo.equals(that.vdbInfo) && this.sql.equals(that.sql) 
-            	&& EquivalenceUtil.areEqual(this.userName, that.userName)            	
+            	//&& EquivalenceUtil.areEqual(this.userName, that.userName)            	
             	&& EquivalenceUtil.areEqual(this.sessionId, that.sessionId)
             	&& EquivalenceUtil.areEqual(this.parameters, that.parameters);
 		}
 		
 	    public int hashCode() {
-	        return HashCodeUtil.hashCode(0, vdbInfo, sql, pi, sessionId, parameters);
+	        return HashCodeUtil.hashCode(0, vdbInfo, sql, pi,  sessionId, parameters);
 	    }
 	    
 	    @Override

@@ -159,7 +159,8 @@ public class TestPreparedStatement {
     
     @Test public void testSessionSpecificFunction() throws Exception { 
         // Create query 
-        String preparedSql = "SELECT user(), e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1 WHERE e2=?"; //$NON-NLS-1$
+    	System.setProperty("foo", "foo"); //$NON-NLS-1$ //$NON-NLS-2$
+        String preparedSql = "SELECT env('foo'), e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1 WHERE e2=?"; //$NON-NLS-1$
         
         // Create expected results
         List[] expected = new List[] { 
