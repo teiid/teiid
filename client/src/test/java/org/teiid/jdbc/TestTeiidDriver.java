@@ -46,6 +46,8 @@ public class TestTeiidDriver {
     	assertTrue(drv.acceptsURL("jdbc:teiid:vdb@mm://localhost:12345;user=foo;password=bar")); //$NON-NLS-1$
     	assertTrue(drv.acceptsURL("jdbc:teiid:vdb")); //$NON-NLS-1$
     	assertFalse(drv.acceptsURL("jdbc:teiid:vdb@/foo/blah/deploy.properties")); //$NON-NLS-1$
+    	assertTrue(drv.acceptsURL("jdbc:teiid:8294601c-9fe9-4244-9499-4a012c5e1476_vdb")); //$NON-NLS-1$
+    	assertTrue(drv.acceptsURL("jdbc:teiid:8294601c-9fe9-4244-9499-4a012c5e1476_vdb@mm://localhost:12345")); //$NON-NLS-1$
     	
     }
     
