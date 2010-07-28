@@ -120,6 +120,11 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 			store = dynamicStore;		
 		}
 		
+		// allow empty vdbs for enabling the preview functionality
+		if (preview && store == null) {
+			store = new MetadataStoreGroup();
+		}
+		
 		if (store == null) {
 			LogManager.logError(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("failed_matadata_load", deployment.getName(), deployment.getVersion())); //$NON-NLS-1$
 		}
