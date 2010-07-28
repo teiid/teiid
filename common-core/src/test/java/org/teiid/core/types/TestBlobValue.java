@@ -51,9 +51,8 @@ public class TestBlobValue extends TestCase {
         String testString = "this is test clob"; //$NON-NLS-1$
         SerialBlob blob = new SerialBlob(testString.getBytes());
         
-        String key = "keytodata"; //$NON-NLS-1$
         BlobType bv = new BlobType(blob);
-        bv.setReferenceStreamId(key); 
+        String key = bv.getReferenceStreamId();
         
         // now force to serialize
         File saved = new File(UnitTestUtil.getTestScratchPath()+"/blobassaved.bin"); //$NON-NLS-1$

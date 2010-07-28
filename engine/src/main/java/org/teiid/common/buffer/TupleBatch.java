@@ -63,13 +63,6 @@ public class TupleBatch implements Externalizable {
     public TupleBatch() {
     }
     
-    public static TupleBatch directBatch(int rowOffset, List<List> tuples) {
-    	TupleBatch result = new TupleBatch();
-    	result.rowOffset = rowOffset;
-    	result.tuples = tuples;
-    	return result;
-    }
-    
     /**
      * Constructor
      * @param beginRow indicates the row of the tuple source which is the
@@ -155,10 +148,6 @@ public class TupleBatch implements Externalizable {
     public void setTerminationFlag(boolean terminationFlag) {
         this.terminationFlag = terminationFlag;    
     }
-    
-    public String[] getDataTypes() {
-		return types;
-	}
     
     public void setDataTypes(String[] types) {
         this.types = types;

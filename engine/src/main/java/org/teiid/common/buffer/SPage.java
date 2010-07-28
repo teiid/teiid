@@ -126,7 +126,11 @@ class SPage {
 		} else {
 			values.setDataTypes(stree.types);
 		}
-		managedBatch = stree.manager.createManagedBatch(values);
+		if (children != null) {
+			managedBatch = stree.keyManager.createManagedBatch(values);
+		} else {
+			managedBatch = stree.leafManager.createManagedBatch(values);
+		}
 	}
 	
 	protected void remove() {
@@ -144,6 +148,9 @@ class SPage {
 		}
 		if (managedBatch == null) {
 			throw new AssertionError("Batch removed"); //$NON-NLS-1$
+		}
+		if (children != null) {
+			return managedBatch.getBatch(true, stree.keytypes);
 		}
 		return managedBatch.getBatch(true, stree.types);
 	}

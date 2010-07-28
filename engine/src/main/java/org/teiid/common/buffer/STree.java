@@ -50,7 +50,8 @@ public class STree {
 	private int shift = 1;
 	
 	protected SPage[] header = new SPage[] {new SPage(this, true)};
-    protected BatchManager manager;
+    protected BatchManager keyManager;
+    protected BatchManager leafManager;
     protected Comparator comparator;
     protected int pageSize;
     protected int keyLength;
@@ -59,13 +60,16 @@ public class STree {
     
     private AtomicInteger rowCount = new AtomicInteger();
 	
-	public STree(BatchManager recman,
+	public STree(BatchManager manager,
+			BatchManager leafManager,
             final Comparator comparator,
             int pageSize,
             int keyLength,
             String[] types) {
 		randomSeed = seedGenerator.nextInt() | 0x00000100; // ensure nonzero
-		this.manager = recman;
+		randomSeed = 1;
+		this.keyManager = manager;
+		this.leafManager = leafManager;
 		this.comparator = comparator;
 		this.pageSize = Math.max(pageSize, SPage.MIN_PERSISTENT_SIZE);
 		pageSize >>>= 4;
@@ -142,10 +146,6 @@ public class STree {
 			x = x.children.get(index);
 		}
 		return null;
-	}
-	
-	public List find(List k) throws TeiidComponentException {
-		return find(k, new LinkedList<SearchResult>());
 	}
 	
 	public List insert(List tuple, boolean replace) throws TeiidComponentException {
@@ -306,7 +306,8 @@ public class STree {
 	
 	public void remove() {
 		truncate();
-		this.manager.remove();
+		this.keyManager.remove();
+		this.leafManager.remove();
 	}
 
 	public int getRowCount() {

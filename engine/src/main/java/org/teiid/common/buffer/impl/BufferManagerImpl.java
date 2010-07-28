@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
@@ -52,6 +51,7 @@ import javax.xml.transform.Source;
 import org.teiid.common.buffer.BatchManager;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.FileStore;
+import org.teiid.common.buffer.LobManager;
 import org.teiid.common.buffer.STree;
 import org.teiid.common.buffer.StorageManager;
 import org.teiid.common.buffer.TupleBatch;
@@ -100,15 +100,16 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		private final int columnCount;
 		private volatile FileStore store;
 		private Map<Long, long[]> physicalMapping = new ConcurrentHashMap<Long, long[]>();
-		private Map<Long, String[]> types = new ConcurrentSkipListMap<Long, String[]>();
 		private ReadWriteLock compactionLock = new ReentrantReadWriteLock();
 		private AtomicLong unusedSpace = new AtomicLong();
+		private int[] lobIndexes;
 
-		private BatchManagerImpl(String newID, int columnCount) {
+		private BatchManagerImpl(String newID, int columnCount, int[] lobIndexes) {
 			this.id = newID;
 			this.columnCount = columnCount;
 			this.store = createFileStore(id);
 			this.store.setCleanupReference(this);
+			this.lobIndexes = lobIndexes;
 		}
 
 		@Override
@@ -197,6 +198,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		private int beginRow;
 		private BatchManagerImpl batchManager;
 		private long id;
+		private LobManager lobManager;
 		
 		public ManagedBatchImpl(TupleBatch batch, BatchManagerImpl manager) {
 			id = batchAdded.incrementAndGet();
@@ -204,6 +206,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			this.activeBatch = batch;
 			this.beginRow = batch.getBeginRow();
 			this.batchManager = manager;
+			if (this.batchManager.lobIndexes != null) {
+				this.lobManager = new LobManager();
+			}
 		}
 
 		private void addToCache(boolean update) {
@@ -280,6 +285,11 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		            batch.readExternal(ois);
 		            batch.setRowOffset(this.beginRow);
 			        batch.setDataTypes(null);
+					if (lobManager != null) {
+						for (List<?> tuple : batch.getTuples()) {
+							lobManager.updateReferences(batchManager.lobIndexes, tuple);
+						}
+					}
 			        if (cache) {
 			        	this.activeBatch = batch;
 			        	addToCache(true);
@@ -297,13 +307,18 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 
 		public synchronized void persist() throws TeiidComponentException {
 			boolean lockheld = false;
-			try {
+            try {
 				TupleBatch batch = activeBatch;
 				if (batch != null) {
 					if (!persistent) {
 						long count = writeCount.incrementAndGet();
 						LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, batchManager.id, id, "writing batch to disk, total writes: ", count); //$NON-NLS-1$
 						long offset = 0;
+						if (lobManager != null) {
+							for (List<?> tuple : batch.getTuples()) {
+								lobManager.updateReferences(batchManager.lobIndexes, tuple);
+							}
+						}
 						synchronized (batchManager.store) {
 							offset = batchManager.getOffset();
 							OutputStream fsos = new BufferedOutputStream(batchManager.store.createOutputStream(), IO_BUFFER_SIZE);
@@ -313,13 +328,16 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				            long size = batchManager.store.getLength() - offset;
 				            long[] info = new long[] {offset, size};
 				            batchManager.physicalMapping.put(this.id, info);
-				            batchManager.types.put(this.id, batch.getDataTypes());
 						}
 						LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, batchManager.id, id, "batch written starting at:", offset); //$NON-NLS-1$
 					}
 					this.batchReference = new WeakReference<TupleBatch>(batch);
+				} else {
+					assert persistent;
 				}
 			} catch (IOException e) {
+				throw new TeiidComponentException(e);
+			} catch (Throwable e) {
 				throw new TeiidComponentException(e);
 			} finally {
 				persistent = true;
@@ -342,6 +360,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			long[] info = batchManager.physicalMapping.remove(id);
 			if (info != null) {
 				batchManager.unusedSpace.addAndGet(info[1]); 
+			}
+			if (lobManager != null) {
+				lobManager.clear();
 			}
 			activeBatch = null;
 			batchReference = null;
@@ -444,23 +465,24 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     public TupleBuffer createTupleBuffer(final List elements, String groupName,
     		TupleSourceType tupleSourceType) {
     	final String newID = String.valueOf(this.tsId.getAndIncrement());
-    	
-    	BatchManager batchManager = new BatchManagerImpl(newID, elements.size());
-        TupleBuffer tupleBuffer = new TupleBuffer(batchManager, newID, elements, getProcessorBatchSize());
+    	int[] lobIndexes = LobManager.getLobIndexes(elements);
+    	BatchManager batchManager = new BatchManagerImpl(newID, elements.size(), lobIndexes);
+        TupleBuffer tupleBuffer = new TupleBuffer(batchManager, newID, elements, lobIndexes, getProcessorBatchSize());
         LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating TupleBuffer:", newID, "of type ", tupleSourceType); //$NON-NLS-1$ //$NON-NLS-2$
         return tupleBuffer;
     }
     
     public STree createSTree(final List elements, String groupName, TupleSourceType tupleSourceType, int keyLength) {
-    	final String newID = String.valueOf(this.tsId.getAndIncrement());
-    	
-    	BatchManager bm = new BatchManagerImpl(newID, elements.size());
+    	String newID = String.valueOf(this.tsId.getAndIncrement());
+    	int[] lobIndexes = LobManager.getLobIndexes(elements);
+    	BatchManager bm = new BatchManagerImpl(newID, elements.size(), lobIndexes);
+    	BatchManager keyManager = new BatchManagerImpl(String.valueOf(this.tsId.getAndIncrement()), keyLength, null);
     	int[] compareIndexes = new int[keyLength];
     	for (int i = 1; i < compareIndexes.length; i++) {
 			compareIndexes[i] = i;
 		}
         LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating STree:", newID, "of type ", tupleSourceType); //$NON-NLS-1$ //$NON-NLS-2$
-    	return new STree(bm, new ListNestedSortComparator(compareIndexes), getProcessorBatchSize(), keyLength, TupleBuffer.getTypeNames(elements));
+    	return new STree(keyManager, bm, new ListNestedSortComparator(compareIndexes), getProcessorBatchSize(), keyLength, TupleBuffer.getTypeNames(elements));
     }
 
     @Override

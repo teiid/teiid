@@ -52,9 +52,8 @@ public class TestClobValue {
         String testString = "this is test clob"; //$NON-NLS-1$
         SerialClob clob = new SerialClob(testString.toCharArray());
         
-        String key = "keytodata"; //$NON-NLS-1$
         ClobType cv = new ClobType(clob);
-        cv.setReferenceStreamId(key); 
+        String key = cv.getReferenceStreamId();
         
         // now force to serialize
         File saved = new File(UnitTestUtil.getTestScratchPath()+"/clobassaved.bin"); //$NON-NLS-1$

@@ -51,10 +51,8 @@ public class TestXMLValue extends TestCase {
         String testString = "<foo>this is an xml value test</foo>"; //$NON-NLS-1$
         SQLXMLImpl xml = new SQLXMLImpl(testString); 
         
-        String key = "keytodata"; //$NON-NLS-1$
-        String pkey = "peresistkeytodata"; //$NON-NLS-1$
         XMLType xv = new XMLType(xml);
-        xv.setReferenceStreamId(key); 
+        String key = xv.getReferenceStreamId();
         
         // now force to serialize
         File saved = new File(UnitTestUtil.getTestScratchPath()+"/xmlsaved.bin"); //$NON-NLS-1$

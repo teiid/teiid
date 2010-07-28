@@ -712,9 +712,9 @@ public class TestResultSet {
     	StatementImpl statement = createMockStatement(ResultSet.TYPE_FORWARD_ONLY);
     	ResultsFuture<LobChunk> future = new ResultsFuture<LobChunk>();
     	future.getResultsReceiver().receiveResults(new LobChunk("<a/>".getBytes(Charset.forName("UTF-8")), true));
-    	Mockito.stub(statement.getDQP().requestNextLobChunk(0, 0, null)).toReturn(future);
+    	XMLType result = new XMLType();
+    	Mockito.stub(statement.getDQP().requestNextLobChunk(0, 0, result.getReferenceStreamId())).toReturn(future);
         ResultsMessage resultsMsg = new ResultsMessage();
-        XMLType result = new XMLType();
         result.setEncoding("UTF-8");
         resultsMsg.setResults(new List<?>[] {Arrays.asList(result)});
         resultsMsg.setLastRow(1);

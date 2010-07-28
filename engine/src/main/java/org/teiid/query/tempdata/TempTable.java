@@ -288,7 +288,7 @@ class TempTable {
 			SortUtility sort = new SortUtility(ts, orderBy.getOrderByItems(), Mode.SORT, bm, sessionID);
 			tb = sort.sort();
 		} else {
-			tb = bm.createTupleBuffer(getColumns(), sessionID, TupleSourceType.PROCESSOR);
+			tb = bm.createTupleBuffer(projectedCols, sessionID, TupleSourceType.PROCESSOR);
 			List next = null;
 			while ((next = ts.nextTuple()) != null) {
 				tb.addTuple(next);
@@ -359,7 +359,7 @@ class TempTable {
         	protected void tuplePassed(List tuple) 
         	throws BlockedException, TeiidComponentException, TeiidProcessingException {
         		if (rowId != null) {
-        			tuple.add(0, rowId.getAndAdd(1));
+        			tuple.add(0, rowId.getAndIncrement());
         		}
         		insertTuple(tuple);
         	}

@@ -6,37 +6,36 @@
 <chapter id="ODBC">
     <title>ODBC Support</title>
     
-    <para>Short for Open DataBase Connectivity, a standard database access method developed by the SQL Access group in 1992. 
-    The goal of ODBC is to make it possible to access any data from any application, regardless of which database management 
-    system (DBMS) is handling the data. ODBC manages this by inserting a middle layer, called a database driver , 
-    between an application and the DBMS. The purpose of this layer is to translate the application's data queries 
+    <para>Open DataBase Connectivity (ODBC) is a standard database access method developed by the SQL Access group in 1992. 
+    ODBC, just like JDBC in Java, allows consistent client access regardless of which database management 
+    system (DBMS) is handling the data.  ODBC uses a driver to translate the application's data queries 
     into commands that the DBMS understands. For this to work, both the application and the DBMS must be ODBC-compliant 
     -- that is, the application must be capable of issuing ODBC commands and the 
-    DBMS must be capable of responding to them</para>
+    DBMS must be capable of responding to them.</para>
 
-    <para>Teiid provides the ODBC access to deployed VDBs in the Teiid runtime through 
-     <ulink url="http://www.postgresql.org/">PostgreSQL</ulink>'s ODBC driver. This is possible by redirecting the ODBC commands 
-     from a client application to a different port than default PostgreSQL port.</para>
+    <para>Teiid can provide ODBC access to deployed VDBs in the Teiid runtime through 
+     <ulink url="http://www.postgresql.org/">PostgreSQL</ulink>'s ODBC driver. 
+     This is possible because Teiid has specialized handling that allows it emulate a PostgreSQL server and respond appropriate to expected
+     metadata queries.</para>
      
      <note><para>By default, ODBC on the Teiid is enabled and running on on port <emphasis>35432</emphasis>.</para></note>
      
-     <para>Before your application can use the ODBC, you must first install ODBC driver on same machine that 
-     your application is running and then create Data Source Name (DSN) for that represents a connection profile for your Teiid VDB.
+     <para>Before an application can use ODBC, you must first install the ODBC driver on same machine that 
+     the application is running on and then create Data Source Name (DSN) that represents a connection profile for your Teiid VDB.
      </para>
 
     <sect1 id="install">
         <title>Installing the ODBC Driver Client</title>
-        <para>The PostgreSQL ODBC driver that is needed to make the ODBC connection to Teiid is <emphasis>not</emphasis> 
-        bundled with Teiid distribution. The driver needs be <ulink url="http://www.postgresql.org/ftp/odbc/versions/">downloaded</ulink> 
-        directly from PostgreSQL web site. We have tested with <emphasis>8.04.200</emphasis> version of the ODBC driver for 
-        this release.</para>
+        <para>A PostgreSQL ODBC driver needed to make the ODBC connection to Teiid is <emphasis>not</emphasis> 
+        bundled with the Teiid distribution. The appropriate driver needs be <ulink url="http://www.postgresql.org/ftp/odbc/versions/">downloaded</ulink> 
+        directly from the PostgreSQL web site. We have tested with <emphasis>8.04.200</emphasis> version of the ODBC driver.</para>
         
         <sect2>
             <title>Microsoft Windows</title>
             <orderedlist>
                 <listitem><para>Download the ODBC driver from <ulink url="http://wwwmaster.postgresql.org/download/mirrors-ftp/odbc/versions/msi/psqlodbc_08_04_0200.zip">
                 PostgreSQL download site</ulink>. If you are looking for 64-bit Windows driver download the driver from <ulink url="http://code.google.com/p/visionmap/wiki/psqlODBC">here</ulink>. </para></listitem>
-                <listitem><para>Extract the contents of the ZIP file into a temporary location on you system. For example: "c:\temp\pgodbc"</para></listitem>
+                <listitem><para>Extract the contents of the ZIP file into a temporary location on your system. For example: "c:\temp\pgodbc"</para></listitem>
                 <listitem><para>Double click on "psqlodbc.msi" file or (.exe file in the case of 64 bit) to start installation of the driver.</para></listitem>
                  <listitem>
                     <para>The Wizard appears as</para>
@@ -62,7 +61,7 @@
                         <graphic align="center" scale="100" fileref="../images/winsetup3.png" />
                     </figure>
                     <para>If you want to install in a different directory than the default that is already selected, 
-                    click the "Browse" button and select a directory if you want install. 
+                    click the "Browse" button and select a directory. 
                     Click "Next" to start installing in the selected directory.</para>
                 </listitem>
                  <listitem>
@@ -88,10 +87,10 @@
         </sect2>
         <sect2>
             <title>Other *nix Platform Installations</title>
-            <para>For all other platforms other than Microsoft Windows, the ODBC driver needs compiled and built from the 
+            <para>For all other platforms other than Microsoft Windows, the ODBC driver needs built from the 
             source files provided. Download the ODBC driver source files from 
             <ulink url="http://wwwmaster.postgresql.org/download/mirrors-ftp/odbc/versions/src/psqlodbc-08.04.0200.tar.gz">
-                PostgreSQL download site</ulink>. Untar the files to a temporary location. For example: "~/tmp/pgodbc". 
+                the PostgreSQL download site</ulink>. Untar the files to a temporary location. For example: "~/tmp/pgodbc". 
                 Build and install the driver by running the commands below.</para>
             <note><para>You should use super user account or use "sudo" command for running the "make install" command. </para></note>
             <programlisting><![CDATA[
@@ -101,8 +100,8 @@
                 % make
                 % make install
             ]]></programlisting>
-            
-            <para>The the next step in the process is to create a DSN for accessing the Teiid VDB.</para>
+            <para>Some *nix distributions may already provide binary forms of the appropriate driver, which can be used as an alternative to
+            building from source.</para>
         </sect2>
     </sect1>
     

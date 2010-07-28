@@ -639,7 +639,7 @@
     </para>
     <para>
       Temp tables can be defined implicitly by referencing them in a
-      SELECT INTO or in an INSERT statement or explicitly with a CREATE TABLE
+      INSERT statement or explicitly with a CREATE TABLE
       statement. Implicitly created temp tables must have a name that
       starts with '#'.
     </para>
@@ -647,15 +647,11 @@
       <para>Creation syntax:
       </para>
       <listitem>
-        <para>CREATE LOCAL TEMPORARY TABLE&lt;temporary table name&gt; (&lt;column name> &lt;data type>,...)
+        <para>CREATE LOCAL TEMPORARY TABLE x (column type, ... [PRIMARY KEY (column, ...)])
         </para>
       </listitem>
       <listitem>
-        <para>SELECT &lt;column name>,...INTO &lt;temporary table name&gt; FROM &lt;table name&gt;
-        </para>
-      </listitem>
-      <listitem>
-        <para>INSERT INTO &lt;temporary table name> ((&lt;column name&gt;,...)VALUES (&lt;value&gt;,...)
+        <para>INSERT INTO #x (column, ...) VALUES (value, ...)
         </para>
       </listitem>
     </itemizedlist>
@@ -663,15 +659,27 @@
       <para>Drop syntax:
       </para>
       <listitem>
-        <para>DROP TABLE &lt;temporary table name&gt;
+        <para>DROP TABLE x
         </para>
       </listitem>
+    </itemizedlist>
+    <itemizedlist>
+    	<para>Primary Key Support</para>
+    	<listitem>
+        	<para>All key columns must be comparable.</para>
+      	</listitem>
+      	<listitem>
+        	<para>Use of a primary key creates a clustered index that supports search improvements for comparison, in, like, and order by.</para>
+      	</listitem>
+      	<listitem>
+        	<para>Null is an allowable primary key value, but there must be only 1 row that has an all null key.</para>
+      	</listitem>
     </itemizedlist>
     <itemizedlist>
       <para>Limitations:
       </para>
       <listitem> 
-        <para>With the CREATE TABLE syntax only basic table definition (column name and type information) is supported.
+        <para>With the CREATE TABLE syntax only basic table definition (column name and type information) and an optional primary key are supported.
         </para>
       </listitem>
       <listitem> 
@@ -691,7 +699,12 @@
         </para>    
       </listitem>    
       <listitem>
-        <para>temp tables are non-transactional.
+        <para>Temp tables are non-transactional.
+        </para>    
+      </listitem>  
+      <listitem>
+        <para>Lob values (xml, clob, blob) are tracked by reference rather than by value in a temporary table.  
+        Lob values from external sources that are inserted in a temporary table may become unreadable when the associated statement or connection is closed.
         </para>    
       </listitem>    
     </itemizedlist>

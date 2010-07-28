@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.nio.charset.Charset;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.core.CorePlugin;
 
@@ -43,12 +44,14 @@ public abstract class Streamable<T> implements Externalizable {
 
 	private static final long serialVersionUID = -8252488562134729374L;
 	
+	private static AtomicInteger counter = new AtomicInteger();
+	
 	public static final String ENCODING = "UTF-8"; //$NON-NLS-1$
 	public static final Charset CHARSET = Charset.forName(ENCODING);
     public static final String FORCE_STREAMING = "FORCE_STREAMING"; //$NON-NLS-1$
     public static final int STREAMING_BATCH_SIZE_IN_BYTES = 102400; // 100K
 
-    private String referenceStreamId;
+    private String referenceStreamId = String.valueOf(counter.getAndIncrement());
     protected transient T reference;
 	protected long length = -1;
     
@@ -80,9 +83,9 @@ public abstract class Streamable<T> implements Externalizable {
         return this.referenceStreamId;
     }
     
-    public void setReferenceStreamId(String id) {
+    /*public void setReferenceStreamId(String id) {
         this.referenceStreamId = id;
-    }
+    }*/
     
     @Override
     public String toString() {

@@ -10,7 +10,7 @@
 <P><A HREF="http://www.teiid.org/"><IMG SRC="https://www.jboss.org/dms/teiid/images/teiid_banner.png" NAME="graphics1" ALT="Teiid" ALIGN=BOTTOM WIDTH=800></A>
 
 <H1>Teiid ${project.version} Release Notes</H1>
-<P>Teiid ${project.version} adds ODBC and caching features. 
+<P>Teiid ${project.version} adds ODBC, SQL, and caching features. 
 
 <H2>Overview</H2>
 <UL>
@@ -26,6 +26,8 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <UL>
+    <LI><B>ODBC Support</B> - Support for ODBC access is now available through PostgreSQL ODBC driver clients.  See the Client Developer's Guide for more on how
+    to use Teiid's ODBC access. 
     <LI><B>SQL Support</B>
         <ul> 
            <li>Added NULLS FIST/LAST handling - including pushdown support.  
@@ -33,6 +35,7 @@
            <li>Added support for the boolean aggregate functions ANY, SOME, EVERY.
            <li>Added support for using boolean value expression as both criteria and expressions, e.g. "... where boolean_value" or "select x = 1 as boolean_value ...".
            <li>Changed named procedure syntax to accept param=>value, rather than param=value.
+           <li>Added PRIMARY KEY and the associated index support to temp tables.
         </ul>
     <LI><B>Parallel Source Queries</B> - reestablished parallel execution of source queries within a query plan along with a prioritized work system to help prevent resource contention.
     <LI><B>SHOW Statement</B> - added client handling for the SHOW statement to retrieve query plan information and see parameter values.

@@ -193,7 +193,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         	LogManager.logDetail(LogConstants.CTX_DQP, e, "Request Thread", requestID, "- error occurred"); //$NON-NLS-1$ //$NON-NLS-2$
             
             if (!isCanceled()) {
-            	dqpCore.logMMCommand(this, Event.CANCEL, null);
+            	dqpCore.logMMCommand(this, Event.ERROR, null);
                 //Case 5558: Differentiate between system level errors and
                 //processing errors.  Only log system level errors as errors, 
                 //log the processing errors as warnings only

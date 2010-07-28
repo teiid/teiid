@@ -164,7 +164,7 @@
         <property name="inputBufferSize">0</property>
         <!-- SO_SNDBUF size, 0 indicates that system default should be used (default 0) -->
         <property name="outputBufferSize">0</property>
-        <property name="SSLConfiguration"><inject bean="JdbcSslConfiguration"/></property>
+        <property name="SSLConfiguration"><inject bean="OdbcSslConfiguration"/></property>
     </bean>
     
     <bean name="OdbcSslConfiguration" class="org.teiid.transport.SSLConfiguration">

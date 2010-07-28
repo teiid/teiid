@@ -67,7 +67,7 @@ public class TestTupleBuffer {
 		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
 		x.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 		List<ElementSymbol> schema = Arrays.asList(x);
-		TupleBuffer tb = new TupleBuffer(new FakeBatchManager(), "x", schema, 32); //$NON-NLS-1$ 
+		TupleBuffer tb = new TupleBuffer(new FakeBatchManager(), "x", schema, null, 32); //$NON-NLS-1$ 
 		tb.setForwardOnly(true);
 		tb.addTuple(Arrays.asList(1));
 		TupleBatch batch = tb.getBatch(1);
@@ -90,11 +90,11 @@ public class TestTupleBuffer {
 		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
 		x.setType(DataTypeManager.DefaultDataClasses.CLOB);
 		List<ElementSymbol> schema = Arrays.asList(x);
-		TupleBuffer tb = new TupleBuffer(new FakeBatchManager(), "x", schema, 32); //$NON-NLS-1$
+		TupleBuffer tb = new TupleBuffer(new FakeBatchManager(), "x", schema, LobManager.getLobIndexes(schema), 32); //$NON-NLS-1$
 		ClobType c = new ClobType(new SerialClob(new char[0]));
 		TupleBatch batch = new TupleBatch(1, new List[] {Arrays.asList(c)});
 		tb.addTupleBatch(batch, false);
-		assertNotNull(c.getReferenceStreamId());
+		assertNotNull(tb.getLobReference(c.getReferenceStreamId()));
 	}
 	
 }

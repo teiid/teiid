@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
@@ -61,8 +59,6 @@ public class TupleBuffer {
         return types;
     }
 
-	private static final AtomicLong LOB_ID = new AtomicLong();
-	
 	//construction state
 	private BatchManager manager;
 	private String tupleSourceID;
@@ -77,36 +73,28 @@ public class TupleBuffer {
 	private boolean removed;
 	private boolean forwardOnly;
 
-    //lob management
-    private Map<String, Streamable<?>> lobReferences; //references to contained lobs
-    private boolean lobs = true;
+	private LobManager lobManager;
+	private int[] lobIndexes;
 	
-	public TupleBuffer(BatchManager manager, String id, List<?> schema, int batchSize) {
+	public TupleBuffer(BatchManager manager, String id, List<?> schema, int[] lobIndexes, int batchSize) {
 		this.manager = manager;
 		this.tupleSourceID = id;
 		this.schema = schema;
 		this.types = getTypeNames(schema);
+		this.lobIndexes = lobIndexes;
+		if (this.lobIndexes != null) {
+			this.lobManager = new LobManager();
+		}
 		this.batchSize = batchSize;
-		if (types != null) {
-			int i = 0;
-		    for (i = 0; i < types.length; i++) {
-		        if (DataTypeManager.isLOB(types[i]) || types[i] == DataTypeManager.DefaultDataTypes.OBJECT) {
-		        	break;
-		        }
-		    }
-		    if (i == types.length) {
-		    	lobs = false;
-		    }
-        }
 	}
 	
 	public boolean isLobs() {
-		return lobs;
+		return lobIndexes != null;
 	}
 	
 	public void addTuple(List<?> tuple) throws TeiidComponentException {
-		if (lobs) {
-			correctLobReferences(schema.size(), tuple);
+		if (isLobs()) {
+			lobManager.updateReferences(lobIndexes, tuple);
 		}
 		this.rowCount++;
 		if (batchBuffer == null) {
@@ -131,7 +119,11 @@ public class TupleBuffer {
 			}
 		} else {
 			//add the lob references only, since they may still be referenced later
-			correctLobReferences(batch.getTuples()); 
+			if (isLobs()) {
+				for (List<?> tuple : batch.getTuples()) {
+					lobManager.updateReferences(lobIndexes, tuple);
+				}
+			}
 		}
 	}
 
@@ -209,9 +201,6 @@ public class TupleBuffer {
 			Assertion.isNotNull(entry);
 			BatchManager.ManagedBatch batch = entry.getValue();
 	    	result = batch.getBatch(!forwardOnly, types);
-	    	if (lobs && result.getDataTypes() == null) {
-		        correctLobReferences(result.getTuples());
-	    	}
 	    	result.setDataTypes(types);
 	    	if (forwardOnly) {
 				batches.remove(entry.getKey());
@@ -260,54 +249,11 @@ public class TupleBuffer {
 	}
 	    
     public Streamable<?> getLobReference(String id) throws TeiidComponentException {
-    	Streamable<?> lob = null;
-    	if (this.lobReferences != null) {
-    		lob = this.lobReferences.get(id);
-    	}
-    	if (lob == null) {
+    	if (lobManager == null) {
     		throw new TeiidComponentException(DQPPlugin.Util.getString("ProcessWorker.wrongdata")); //$NON-NLS-1$
     	}
-    	return lob;
+    	return lobManager.getLobReference(id);
     }
-    
-    /**
-     * If a tuple batch is being added with Lobs, then references to
-     * the lobs will be held on the {@link TupleSourceInfo} 
-     * @param batch
-     * @throws TeiidComponentException 
-     */
-    @SuppressWarnings("unchecked")
-	private void correctLobReferences(List<List> rows) throws TeiidComponentException {
-        int columns = schema.size();
-        // walk through the results and find all the lobs
-        for (List list : rows) {
-            correctLobReferences(columns, list);
-        }
-    }
-
-	private void correctLobReferences(int columns, List list)
-			throws TeiidComponentException {
-		for (int col = 0; col < columns; col++) {                                                
-		    Object anObj = list.get(col);
-		    
-		    if (!(anObj instanceof Streamable<?>)) {
-		    	continue;
-		    }
-		    Streamable lob = (Streamable)anObj;                  
-		    String id = lob.getReferenceStreamId();
-			if (id == null) {
-				id = String.valueOf(LOB_ID.getAndIncrement());
-				lob.setReferenceStreamId(id);
-			}
-			if (this.lobReferences == null) {
-				this.lobReferences = new ConcurrentHashMap<String, Streamable<?>>();
-			}
-			this.lobReferences.put(id, lob);
-		    if (lob.getReference() == null) {
-		    	lob.setReference(getLobReference(lob.getReferenceStreamId()).getReference());
-		    }
-		}
-	}
     
     public void setForwardOnly(boolean forwardOnly) {
 		this.forwardOnly = forwardOnly;
