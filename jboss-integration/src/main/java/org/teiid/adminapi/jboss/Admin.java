@@ -70,7 +70,6 @@ import org.teiid.adminapi.impl.TranslatorMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.jboss.IntegrationPlugin;
-import org.teiid.jboss.deployers.RuntimeEngineDeployer;
 
 public class Admin extends TeiidAdmin {	
 	private static final String CONNECTOR_PREFIX = "connector-"; //$NON-NLS-1$
@@ -78,7 +77,7 @@ public class Admin extends TeiidAdmin {
 	private static final long serialVersionUID = 7081309086056911304L;
 	private static ComponentType VDBTYPE = new ComponentType("teiid", "vdb");//$NON-NLS-1$ //$NON-NLS-2$
 	private static ComponentType DQPTYPE = new ComponentType("teiid", "dqp");//$NON-NLS-1$ //$NON-NLS-2$	
-	private static String DQPNAME = RuntimeEngineDeployer.class.getName();
+	private static String DQPNAME = "RuntimeEngineDeployer"; //$NON-NLS-1$
 	private static ComponentType TRANSLATOR_TYPE = new ComponentType("teiid", "translator");//$NON-NLS-1$ //$NON-NLS-2$
 	
 	private static final String[] DS_TYPES = {"XA", "NoTx", "LocalTx"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
