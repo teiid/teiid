@@ -363,11 +363,12 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				}
 				if (doneProducingBatches && cid != null) {
 			    	boolean sessionScope = processor.getContext().isSessionFunctionEvaluated();
+			    	boolean userScope = processor.getContext().isUserFunctionEvaluated();
 	            	CachedResults cr = new CachedResults();
 	            	cr.setCommand(originalCommand);
 	                cr.setAnalysisRecord(analysisRecord);
 	                cr.setResults(resultsBuffer);
-	                dqpCore.getRsCache().put(cid, sessionScope, cr);
+	                dqpCore.getRsCache().put(cid, sessionScope, userScope, cr);
 			    }
 				add = sendResultsIfNeeded(batch);
 				if (!added) {

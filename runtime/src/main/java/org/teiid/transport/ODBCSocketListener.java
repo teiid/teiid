@@ -33,8 +33,8 @@ import org.teiid.odbc.ODBCServerRemote;
 public class ODBCSocketListener extends SocketListener {
 	private ODBCServerRemote.AuthenticationType authType = ODBCServerRemote.AuthenticationType.CLEARTEXT;
 	
-	public ODBCSocketListener(SocketConfiguration config, ClientServiceRegistryImpl csr, StorageManager storageManager) {
-		super(config, csr, storageManager);
+	public ODBCSocketListener(SocketConfiguration config, ClientServiceRegistryImpl csr, StorageManager storageManager, int portOffset) {
+		super(config, csr, storageManager, portOffset);
 	}
 
 	@Override

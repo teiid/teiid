@@ -146,7 +146,7 @@ public class PreparedStatementRequest extends Request {
 		        // Defect 13751: Clone the plan in its current state (i.e. before processing) so that it can be used for later queries
 		        prepPlan.setPlan(processPlan.clone());
 		        prepPlan.setAnalysisRecord(analysisRecord);
-		        this.prepPlanCache.put(id, this.context.isSessionFunctionEvaluated(), prepPlan);
+		        this.prepPlanCache.put(id, this.context.isSessionFunctionEvaluated(), this.context.isUserFunctionEvaluated(), prepPlan);
         	}
         } else {
         	LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Query exist in cache: ", sqlQuery }); //$NON-NLS-1$

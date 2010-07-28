@@ -24,12 +24,7 @@ package org.teiid.cache.jboss;
 
 import java.io.Serializable;
 
-import javax.management.MBeanServer;
-import javax.management.MBeanServerFactory;
-import javax.management.MBeanServerInvocationHandler;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-
+import org.jboss.cache.CacheManager;
 import org.jboss.cache.Fqn;
 import org.jboss.cache.Node;
 import org.jboss.cache.Region;
@@ -38,7 +33,6 @@ import org.jboss.cache.config.EvictionRegionConfig;
 import org.jboss.cache.eviction.FIFOAlgorithmConfig;
 import org.jboss.cache.eviction.LFUAlgorithmConfig;
 import org.jboss.cache.eviction.LRUAlgorithmConfig;
-import org.jboss.cache.jmx.CacheJmxWrapperMBean;
 import org.teiid.cache.Cache;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
@@ -48,19 +42,14 @@ import org.teiid.core.TeiidRuntimeException;
 
 
 public class JBossCacheFactory implements CacheFactory, Serializable{
+	private static final long serialVersionUID = -2767452034178675653L;
 	private transient org.jboss.cache.Cache cacheStore;
 	private volatile boolean destroyed = false;
 	
 
-	public void setCacheName(String jmxName) {
-		try {
-			MBeanServer server = MBeanServerFactory.findMBeanServer(null).get(0);
-			ObjectName on = new ObjectName(jmxName);
-			CacheJmxWrapperMBean cacheWrapper = MBeanServerInvocationHandler.newProxyInstance(server, on, CacheJmxWrapperMBean.class, false);
-			this.cacheStore = cacheWrapper.getCache();
-		} catch (MalformedObjectNameException e) {
-			throw new TeiidRuntimeException(e);
-		} 
+	public JBossCacheFactory(String name, Object cm) throws Exception {
+		CacheManager cachemanager = (CacheManager)cm;
+		this.cacheStore = cachemanager.getCache(name, true);
 	}
 	
 	/**
@@ -68,6 +57,11 @@ public class JBossCacheFactory implements CacheFactory, Serializable{
 	 */
 	public Cache get(Type type, CacheConfiguration config) {
 		if (!destroyed) {
+			
+			if (!this.cacheStore.getCacheStatus().allowInvocations()) {
+				this.cacheStore.start();
+			}
+			
 			Node cacheRoot = this.cacheStore.getRoot().addChild(Fqn.fromString("Teiid")); //$NON-NLS-1$
 			Node node = cacheRoot.addChild(Fqn.fromString(type.location()));
 			

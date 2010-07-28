@@ -192,12 +192,12 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
                                         new FunctionParameter[] { 
                                             new FunctionParameter("roleType", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.hasRole_param1")), //$NON-NLS-1$ //$NON-NLS-2$
                                             new FunctionParameter("roleName", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.hasRole_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
-                                        new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, QueryPlugin.Util.getString("SystemSource.hasRole_result")), false, FunctionMethod.SESSION_DETERMINISTIC ) );       //$NON-NLS-1$ //$NON-NLS-2$
+                                        new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, QueryPlugin.Util.getString("SystemSource.hasRole_result")), false, FunctionMethod.USER_DETERMINISTIC ) );       //$NON-NLS-1$ //$NON-NLS-2$
         
         functions.add(new FunctionMethod("hasRole", QueryPlugin.Util.getString("SystemSource.hasRole_description"), SECURITY, FunctionMethod.CANNOT_PUSHDOWN, SECURITY_FUNCTION_CLASS, "hasRole", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] { 
                     new FunctionParameter("roleName", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.hasRole_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, QueryPlugin.Util.getString("SystemSource.hasRole_result")), false, FunctionMethod.SESSION_DETERMINISTIC ) );       //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, QueryPlugin.Util.getString("SystemSource.hasRole_result")), false, FunctionMethod.USER_DETERMINISTIC ) );       //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     private void addFormatNumberFunctions() {
@@ -769,13 +769,15 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     private void addUserFunction() {
         functions.add(
             new FunctionMethod("user", QueryPlugin.Util.getString("SystemSource.User_desc"), MISCELLANEOUS, FunctionMethod.CANNOT_PUSHDOWN, FUNCTION_CLASS, "user", null, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.User_result")), false, FunctionMethod.SESSION_DETERMINISTIC) );                     //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.User_result")), false, FunctionMethod.USER_DETERMINISTIC) );                     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     private void addCurrentDatabaseFunction() {
+    	// this function is actually session_deterministic, however for caching purposes it has been set deterministic 
+    	// as caching is already scoped to the VDB.
         functions.add(
             new FunctionMethod("current_database", QueryPlugin.Util.getString("SystemSource.current_database_desc"), MISCELLANEOUS, FunctionMethod.CANNOT_PUSHDOWN, FUNCTION_CLASS, "current_database", null, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("current_database_result")), false, FunctionMethod.SESSION_DETERMINISTIC) );                     //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("current_database_result")), false, FunctionMethod.DETERMINISTIC) );                     //$NON-NLS-1$ //$NON-NLS-2$
     }    
     
     private void addEnvFunction() {

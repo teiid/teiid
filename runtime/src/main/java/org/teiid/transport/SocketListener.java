@@ -51,8 +51,8 @@ public class SocketListener implements ChannelListenerFactory {
     private ExecutorService nettyPool;
     private ClientServiceRegistryImpl csr;
     
-    public SocketListener(SocketConfiguration config, ClientServiceRegistryImpl csr, StorageManager storageManager) {
-		this(config.getPortNumber(), config.getHostAddress().getHostAddress(), config.getInputBufferSize(), config.getOutputBufferSize(), config.getMaxSocketThreads(), config.getSSLConfiguration(), csr, storageManager);
+    public SocketListener(SocketConfiguration config, ClientServiceRegistryImpl csr, StorageManager storageManager, int portOffset) {
+		this(config.getPortNumber()+portOffset, config.getHostAddress().getHostAddress(), config.getInputBufferSize(), config.getOutputBufferSize(), config.getMaxSocketThreads(), config.getSSLConfiguration(), csr, storageManager);
         
 		LogManager.logDetail(LogConstants.CTX_TRANSPORT, RuntimePlugin.Util.getString("SocketTransport.1", new Object[] {config.getHostAddress().getHostAddress(), String.valueOf(config.getPortNumber())})); //$NON-NLS-1$
     }

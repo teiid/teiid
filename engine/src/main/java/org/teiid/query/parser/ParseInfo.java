@@ -22,11 +22,14 @@
 
 package org.teiid.query.parser;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
 
-public class ParseInfo {
+public class ParseInfo implements Serializable{
+
+	private static final long serialVersionUID = -7323683731955992888L;
 
 	public Map<String, Integer> nameCounts = new HashMap<String, Integer>();
 	

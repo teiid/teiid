@@ -56,7 +56,8 @@ import org.teiid.core.util.HashCodeUtil;
  * @see FunctionCategoryConstants
  */
 public class FunctionMethod implements Serializable {
-	
+	private static final long serialVersionUID = -8039086494296455152L;
+
 	private static final String NOT_ALLOWED = "NOT_ALLOWED"; //$NON-NLS-1$
 	private static final String ALLOWED = "ALLOWED"; //$NON-NLS-1$
 	private static final String REQUIRED = "REQUIRED"; //$NON-NLS-1$
@@ -83,9 +84,10 @@ public class FunctionMethod implements Serializable {
      */
     public static final int DETERMINISTIC = 0;
     public static final int SERVER_DETERMINISTIC = 1;
-    public static final int SESSION_DETERMINISTIC = 2;
-    public static final int COMMAND_DETERMINISTIC = 3;
-    public static final int NONDETERMINISTIC = 4;
+    public static final int USER_DETERMINISTIC = 2;
+    public static final int SESSION_DETERMINISTIC = 3;
+    public static final int COMMAND_DETERMINISTIC = 4;
+    public static final int NONDETERMINISTIC = 5;
     
 
     private String name;

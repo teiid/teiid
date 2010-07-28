@@ -44,6 +44,8 @@ import org.teiid.adminapi.Request.ProcessingState;
 import org.teiid.adminapi.Request.ThreadState;
 import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
+import org.teiid.cache.Cache;
+import org.teiid.cache.CacheFactory;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
@@ -207,6 +209,7 @@ public class DQPCore implements DQP {
     private int maxActivePlans = DQPConfiguration.DEFAULT_MAX_ACTIVE_PLANS;
     private int currentlyActivePlans;
     private LinkedList<RequestWorkItem> waitingPlans = new LinkedList<RequestWorkItem>();
+    private CacheFactory cacheFactory;
     
     /**
      * perform a full shutdown and wait for 10 seconds for all threads to finish
@@ -653,11 +656,11 @@ public class DQPCore implements DQP {
         
         //result set cache
         if (config.isResultSetCacheEnabled()) {
-			this.rsCache = new SessionAwareCache<CachedResults>(config.getResultSetCacheMaxEntries());
+			this.rsCache = new SessionAwareCache<CachedResults>(config.getResultSetCacheMaxEntries(), this.cacheFactory, Cache.Type.RESULTSET);
         }
 
         //prepared plan cache
-        prepPlanCache = new SessionAwareCache<PreparedPlan>(config.getPreparedPlanCacheMaxCount());
+        prepPlanCache = new SessionAwareCache<PreparedPlan>(config.getPreparedPlanCacheMaxCount(), this.cacheFactory, Cache.Type.PREPAREDPLAN);
 		
         // Processor debug flag
         LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPCore.Processor_debug_allowed_{0}", this.processorDebugAllowed)); //$NON-NLS-1$
@@ -830,5 +833,9 @@ public class DQPCore implements DQP {
 	public int getMaxSourceRows() {
 		return maxSourceRows;
 	}
+	
+	public void setCacheFactory(CacheFactory factory) {
+		this.cacheFactory = factory;
+	}	
 	
 }

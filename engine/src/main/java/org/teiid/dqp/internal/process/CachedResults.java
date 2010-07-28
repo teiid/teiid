@@ -22,12 +22,15 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.io.Serializable;
+
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.sql.lang.Command;
 
 
-public class CachedResults {
+public class CachedResults implements Serializable {
+	private static final long serialVersionUID = -5603182134635082207L;
 	private Command command;
 	private AnalysisRecord analysisRecord;
 	private TupleBuffer results;

@@ -90,6 +90,8 @@ public class CommandContext implements Cloneable {
 	        
 	    private boolean sessionFunctionEvaluated;
 	    
+	    private boolean userFunctionEvaluated;
+	    
 	    private Set<String> groups;
 	    
 	    private long timeSliceEnd = Long.MAX_VALUE;
@@ -146,6 +148,14 @@ public class CommandContext implements Cloneable {
     public void setSessionFunctionEvaluated(boolean sessionFunctionEvaluated) {
     	globalState.sessionFunctionEvaluated = sessionFunctionEvaluated;
 	}
+    
+    public boolean isUserFunctionEvaluated() {
+		return globalState.userFunctionEvaluated;
+	}
+    
+    public void setUserFunctionEvaluated(boolean userFunctionEvaluated) {
+    	globalState.userFunctionEvaluated = userFunctionEvaluated;
+	}    
     
     /**
      * @return

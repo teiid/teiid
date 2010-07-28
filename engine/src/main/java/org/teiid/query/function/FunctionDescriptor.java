@@ -46,7 +46,8 @@ import org.teiid.query.util.ErrorMessageKeys;
  * descriptor.
  */
 public class FunctionDescriptor implements Serializable, Cloneable {
-	
+	private static final long serialVersionUID = 5374103983118037242L;
+
 	private static final boolean ALLOW_NAN_INFINITY = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.allowNanInfinity", false); //$NON-NLS-1$
 	
 	private String name;
@@ -236,6 +237,11 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         Method method = getInvocationMethod();
         if(method == null) {
         	throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0002, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0002, getName()));
+        }
+        
+        if (getDeterministic() == FunctionMethod.USER_DETERMINISTIC && values.length > 0 && values[0] instanceof CommandContext) {
+        	CommandContext cc = (CommandContext)values[0];
+        	cc.setUserFunctionEvaluated(true);        	
         }
         
         if (getDeterministic() >= FunctionMethod.SESSION_DETERMINISTIC && values.length > 0 && values[0] instanceof CommandContext) {

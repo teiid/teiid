@@ -24,6 +24,7 @@
 		<dependency>
 			<groupId>org.jboss.cache</groupId>
 			<artifactId>jbosscache-core</artifactId>
+            <scope>provided</scope>
 		</dependency>
 	</dependencies>
 </project>

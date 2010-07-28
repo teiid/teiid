@@ -22,12 +22,6 @@
 package org.teiid.cache;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.teiid.cache.Cache.Type;
 import org.teiid.core.TeiidRuntimeException;
@@ -36,8 +30,12 @@ import org.teiid.core.TeiidRuntimeException;
 public class DefaultCacheFactory implements CacheFactory, Serializable {
 	private static final long serialVersionUID = -5541424157695857527L;
 	
-	DefaultCache cacheRoot = new DefaultCache("Teiid");
+	DefaultCache cacheRoot;
 	private volatile boolean destroyed = false;
+	
+	public DefaultCacheFactory() {
+		this.cacheRoot = new DefaultCache("Teiid"); //$NON-NLS-1$
+	}
 	
 	@Override
 	public void destroy() {
@@ -52,81 +50,4 @@ public class DefaultCacheFactory implements CacheFactory, Serializable {
 		}
 		throw new TeiidRuntimeException("Cache system has been shutdown"); //$NON-NLS-1$
 	}
-	
-	class DefaultCache<K, V> implements Cache<K, V>, Serializable {
-		Map<K, V> map = new HashMap();
-		Map<String, Cache> children = new HashMap();
-		String name;
-		
-		public DefaultCache(String name) {
-			this.name = name;
-		}
-		public void addListener(CacheListener listener) {
-		}
-
-		public void clear() {
-			map.clear();
-		}
-
-		public V get(K key) {
-			return map.get(key);
-		}
-
-		public Set<K> keySet() {
-			return map.keySet();
-		}
-
-		public V put(K key, V value) {
-			return map.put(key, value);
-		}
-
-		public V remove(K key) {
-			return map.remove(key);
-		}
-
-		public int size() {
-			return map.size();
-		}
-		
-		public Collection<V> values() {
-			return map.values();
-		}
-
-		@Override
-		public void removeListener() {
-		}
-
-		@Override
-		public Cache addChild(String name) {
-			if (children.get(name) != null) {
-				return children.get(name);
-			}
-			
-			Cache c = new DefaultCache(name);
-			children.put(name, c);
-			return c;
-		}
-
-		@Override
-		public Cache getChild(String name) {
-			return children.get(name);
-		}
-
-		@Override
-		public List<Cache> getChildren() {
-			return new ArrayList<Cache>(children.values());
-		}
-
-		@Override
-		public boolean removeChild(String name) {
-			Object obj = children.remove(name);
-			return obj != null;
-		}
-
-		@Override
-		public String getName() {
-			return name;
-		}		
-	}
-	
 }

@@ -44,6 +44,10 @@
         <property name="maxOpenFiles">64</property> 
     </bean>
     
+    <bean name="CacheFactory" class="org.teiid.cache.jboss.ClusterableCacheFactory">
+        <property name="clusteredCacheName">mvcc-shared</property>
+    </bean>
+    
     <bean name="RuntimeEngineDeployer" class="org.teiid.jboss.deployers.RuntimeEngineDeployer">
         <property name="jndiName">teiid/engine-deployer</property>
         <property name="profileService"><inject bean="ProfileService"/></property>
@@ -58,6 +62,8 @@
         <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>
         <property name="securityHelper"><inject bean="SecurityHelper"/></property>
         <property name="VDBRepository"><inject bean="VDBRepository"/></property>
+        <property name="cacheFactory"><inject bean="CacheFactory"/></property>
+        
         
         <!-- Process pool maximum thread count. (default 64) -->
         <property name="maxThreads">64</property>

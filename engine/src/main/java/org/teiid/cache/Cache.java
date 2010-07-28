@@ -32,15 +32,9 @@ import java.util.Set;
  */
 public interface Cache<K, V>  {
 	
-	public enum Type {  REGISTRY("Registry"), //$NON-NLS-1$ 
-						SESSION("Session"), //$NON-NLS-1$ 
-						SESSION_MONITOR("Session-Monitor"), //$NON-NLS-1$ 
-						AUTHORIZATION_POLICY("Authorization-Policy"), //$NON-NLS-1$ 
-						AUTHORIZATION_PRINCIPAL("Auhtorization-Principal"), //$NON-NLS-1$ 
+	public enum Type {SESSION("Session"), //$NON-NLS-1$ 
 						RESULTSET("ResultSet"), //$NON-NLS-1$
-						VDBMETADATA("VdbMetadata"), //$NON-NLS-1$
-						VDBMODELS("VdbModels"), //$NON-NLS-1$
-						SCOPED_CACHE("Scoped-Cache"); //$NON-NLS-1$
+						PREPAREDPLAN("PreparaedPlan"); //$NON-NLS-1$
 		
 		private String location;
 		
