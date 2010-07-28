@@ -454,7 +454,7 @@ public class TestXMLPlanningEnhancements {
         
         ExecSqlInstruction instr = (ExecSqlInstruction)list.get(2);
         
-        ProcessorPlan plan = (ProcessorPlan)instr.info.getPlan();  
+        ProcessorPlan plan = instr.info.getPlan();  
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -468,7 +468,7 @@ public class TestXMLPlanningEnhancements {
             0,      // Null
             0,      // PlanExecution
             1,      // Project
-            1,      // Select
+            0,      // Select
             0,      // Sort
             0       // UnionAll
         });        
@@ -494,7 +494,7 @@ public class TestXMLPlanningEnhancements {
         
         ExecSqlInstruction instr = (ExecSqlInstruction)list.get(2);
         
-        ProcessorPlan plan = (ProcessorPlan)instr.info.getPlan();        
+        ProcessorPlan plan = instr.info.getPlan();        
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
             0,      // DependentAccess
@@ -507,7 +507,7 @@ public class TestXMLPlanningEnhancements {
             0,      // Null
             0,      // PlanExecution
             1,      // Project
-            1,      // Select
+            0,      // Select
             0,      // Sort
             0       // UnionAll
         });   

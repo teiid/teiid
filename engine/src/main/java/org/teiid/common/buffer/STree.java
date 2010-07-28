@@ -49,7 +49,7 @@ public class STree {
 	private int mask = 1;
 	private int shift = 1;
 	
-	private SPage[] header = new SPage[] {new SPage(this, true)};
+	protected SPage[] header = new SPage[] {new SPage(this, true)};
     protected BatchManager manager;
     protected Comparator comparator;
     protected int pageSize;
@@ -112,7 +112,7 @@ public class STree {
 	 * @throws IOException
 	 * @throws TeiidComponentException 
 	 */
-	private List find(List n, LinkedList<SearchResult> places) throws TeiidComponentException {
+	List find(List n, LinkedList<SearchResult> places) throws TeiidComponentException {
 		SPage x = null;
 		for (int i = header.length - 1; i >= 0; i--) {
 			if (x == null) {
@@ -313,10 +313,6 @@ public class STree {
 		return this.rowCount.get();
 	}
 	
-	public TupleBrowser browse(List lowerBound, List upperBound, boolean direction) {
-		return new TupleBrowser(direction);
-	}
-
 	public int truncate() {
 		int oldSize = rowCount.getAndSet(0);
 		for (int i = 0; i < header.length; i++) {
@@ -328,86 +324,6 @@ public class STree {
 		}
 		header = new SPage[] {new SPage(this, true)};
 		return oldSize;
-	}
-	
-	//TODO: support update/delete from the browser
-	public class TupleBrowser {
-		
-		SPage page = header[0];
-		int index;
-		TupleBatch values;
-		boolean updated;
-		boolean direction;
-		
-		public TupleBrowser(boolean direction) {
-			this.direction = direction;
-			if (!direction) {
-				while (page.prev != null) {
-					page = page.prev;
-				}
-			}
-		}
-		
-		public boolean matchedLower() {
-			return false;
-		}
-		
-		public boolean matchedUpper() {
-			return false;
-		}
-		
-		public List next() throws TeiidComponentException {
-			for (;;) {
-				if (values == null) {
-					values = page.getValues();
-					if (direction) {
-						index = 0;
-					} else {
-						index = values.getTuples().size() - 1;
-					}
-				}
-				if (index >= 0 && index < values.getTuples().size()) {
-					List result = values.getTuples().get(index);
-					index+=getOffset();
-					return result;
-				}
-				if (updated) {
-					page.setValues(values);
-				}
-				updated = false;
-				values = null;
-				if (direction) {
-					page = page.next;
-				} else {
-					page = page.prev;
-				}
-				if (page == null) {
-					return null;
-				}
-			}
-		}
-		
-		private int getOffset() {
-			return direction?1:-1;
-		}
-		
-		/**
-		 * Perform an in-place update of the tuple just returned by the next method
-		 * WARNING - this must not change the key value
-		 * @param tuple
-		 * @throws TeiidComponentException
-		 */
-		public void update(List tuple) throws TeiidComponentException {
-			values.getTuples().set(index - getOffset(), tuple);
-			updated = true;
-		}
-		
-		/**
-		 * Notify the browser that the last value was deleted.
-		 */
-		public void removed() {
-			index-=getOffset();
-		}
 	}
 	
 	@Override

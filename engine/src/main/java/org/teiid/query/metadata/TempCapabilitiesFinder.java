@@ -45,6 +45,13 @@ public class TempCapabilitiesFinder implements CapabilitiesFinder {
 	    		tempCaps = new BasicSourceCapabilities();
 	    		tempCaps.setCapabilitySupport(Capability.BULK_UPDATE, true);
 	    		tempCaps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_NOT, true);
+	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
+	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_ISNULL, true);
+	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_LIKE, true);
+	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_LIKE_ESCAPE, true);
     		}
     		return tempCaps;
     	}

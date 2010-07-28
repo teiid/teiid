@@ -57,6 +57,7 @@ import org.teiid.query.sql.lang.BetweenCriteria;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.CompoundCriteria;
+import org.teiid.query.sql.lang.Create;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Delete;
 import org.teiid.query.sql.lang.DependentSetCriteria;
@@ -1059,6 +1060,13 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         if (obj.getUsing() != null) {
         	validateSetClauseList(obj.getUsing());
         }
+    }
+    
+    @Override
+    public void visit(Create obj) {
+    	if (!obj.getPrimaryKey().isEmpty()) {
+    		validateSortable(obj.getPrimaryKey());
+    	}
     }
     
     /** 

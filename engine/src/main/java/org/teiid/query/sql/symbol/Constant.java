@@ -37,7 +37,7 @@ import org.teiid.query.util.ErrorMessageKeys;
  * value, but that is not true if the value is null.  In that case, the type is unknown
  * and is set to the null type until the type is resolved at a later point.
  */
-public class Constant implements Expression {
+public class Constant implements Expression, Comparable<Constant> {
 
 	private Object value;
 	private Class type;
@@ -180,6 +180,20 @@ public class Constant implements Expression {
 	 */
 	public String toString() {
 		return SQLStringVisitor.getSQLString(this);
+	}
+
+	@Override
+	public int compareTo(Constant o) {
+		if (isNull()) {
+			if (o.isNull()) {
+				return 0;
+			}
+			return -1;
+		}
+		if (o.isNull()) {
+			return 1;
+		}
+		return ((Comparable)this.value).compareTo(o.getValue());
 	}
 	
 }

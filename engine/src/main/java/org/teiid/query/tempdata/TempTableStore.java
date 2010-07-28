@@ -95,7 +95,7 @@ public class TempTableStore {
     		columns.removeAll(primaryKey);
     		columns.addAll(0, primaryKey);
     	}
-        TempTable tempTable = new TempTable(buffer, columns, create.getPrimaryKey().size(), sessionID);
+        TempTable tempTable = new TempTable(id, buffer, columns, create.getPrimaryKey().size(), sessionID);
         groupToTupleSourceID.put(tempTableName, tempTable);
     }
 
@@ -131,10 +131,7 @@ public class TempTableStore {
             		return element;
             	}
             };
-            PostOrderNavigator.doVisit(query.getSelect(), emv);
-            if (query.getOrderBy() != null) {
-            	PostOrderNavigator.doVisit(query.getOrderBy(), emv);
-            }
+            PostOrderNavigator.doVisit(query, emv);
             return table.createTupleSource(command.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
         }
         if (command instanceof ProcedureContainer) {

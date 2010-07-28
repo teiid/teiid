@@ -1879,6 +1879,12 @@ public class TestValidator {
     @Test public void testSelectIntoWithNull() {
         helpValidate("SELECT null, null, null, null INTO pm1.g1 FROM pm1.g2", new String[] {}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
+    
+    @Test public void testCreateWithNonSortablePrimaryKey() {
+        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        Command command = helpResolve("create local temporary table x (column1 string, column2 clob, primary key (column2))", metadata); //$NON-NLS-1$
+        helpRunValidator(command, new String[] {"column2"}, FakeMetadataFactory.example1Cached()); 
+    }
         
     @Test public void testDropNonTemporary() {
         QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
