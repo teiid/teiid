@@ -300,18 +300,18 @@ class TempTable {
 	}
 
 	private TupleBrowser createTupleBrower(Criteria condition, boolean direction) throws TeiidComponentException {
-		List lower = null;
-		List upper = null;
-		List<List<?>> otherValues = null;
-		boolean range = true;
+		List<Object> lower = null;
+		List<Object> upper = null;
+		List<List<Object>> values = null;
 		if (condition != null && rowId == null) {
 			IndexCondition[] indexConditions = IndexCondition.getIndexConditions(condition, columns.subList(0, tree.getKeyLength()));
 			if (indexConditions.length > 1 && indexConditions[indexConditions.length - 1] != null) {
-				lower = new ArrayList(indexConditions.length);
+				List<Object> value = new ArrayList<Object>(indexConditions.length);
 				for (IndexCondition indexCondition : indexConditions) {
-					lower.add(indexCondition.lower.getValue());
+					value.add(indexCondition.valueSet.iterator().next().getValue());
 				}
-				range = false;
+				values = new ArrayList<List<Object>>(1);
+				values.add(value);
 				//TODO: support other composite key lookups
 			} else {
 				if (indexConditions[0].lower != null) {
@@ -320,14 +320,18 @@ class TempTable {
 				if (indexConditions[0].upper != null) {
 					upper = Arrays.asList(indexConditions[0].upper.getValue());
 				}
-				otherValues = new ArrayList<List<?>>();
-				for (Constant constant : indexConditions[0].otherValues) {
-					otherValues.add(Arrays.asList(constant.getValue()));
+				if (!indexConditions[0].valueSet.isEmpty()) {
+					values = new ArrayList<List<Object>>();
+					for (Constant constant : indexConditions[0].valueSet) {
+						values.add(Arrays.asList(constant.getValue()));
+					}
 				}
-				range = indexConditions[0].range;
 			}
 		}
-		return new TupleBrowser(this.tree, lower, upper, otherValues, range, direction);
+		if (values != null) {
+			return new TupleBrowser(this.tree, values, direction);
+		}
+		return new TupleBrowser(this.tree, lower, upper, direction);
 	}
 	
 	public int getRowCount() {

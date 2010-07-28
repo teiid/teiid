@@ -127,6 +127,11 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 		} catch (OptionalDataException e) {
 			this.encoding = Streamable.ENCODING;
 		}
+		try {
+			this.type = (Type)in.readObject();
+		} catch (OptionalDataException e) {
+			this.type = Type.UNKNOWN;
+		}
 	}
 	
 	@Override
@@ -136,6 +141,7 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 			this.encoding = getEncoding(this);
 		}
 		out.writeObject(this.encoding);
+		out.writeObject(this.type);
 	}
 
 	/**

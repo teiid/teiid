@@ -31,15 +31,12 @@ import org.teiid.core.TeiidComponentException;
 
 /**
  * Implements intelligent browsing over a {@link STree}
- * 
- * TODO: when using other values we can be more efficient 
- * with paging.
  */
 public class TupleBrowser {
 	
 	private final STree tree;
 	
-	private List<List<?>> otherValues;
+	private List<List<Object>> valueSet;
 	
 	private SPage page;
 	private int index;
@@ -50,13 +47,30 @@ public class TupleBrowser {
 	private TupleBatch values;
 	private boolean updated;
 	private boolean direction;
-	private boolean range;
-	
-	public TupleBrowser(STree sTree, List<?> lowerBound, List<?> upperBound, List<List<?>> otherValues, boolean range, boolean direction) throws TeiidComponentException {
+
+	/**
+	 * Construct a value based browser
+	 * @param sTree
+	 * @param valueSet
+	 * @param direction
+	 */
+	public TupleBrowser(STree sTree, List<List<Object>> valueSet, boolean direction) {
 		this.tree = sTree;
 		this.direction = direction;
-		this.otherValues = otherValues;
-		this.range = range;
+		this.valueSet = valueSet;
+	}
+	
+	/**
+	 * Construct a range based browser
+	 * @param sTree
+	 * @param lowerBound
+	 * @param upperBound
+	 * @param direction
+	 * @throws TeiidComponentException
+	 */
+	public TupleBrowser(STree sTree, List<Object> lowerBound, List<Object> upperBound, boolean direction) throws TeiidComponentException {
+		this.tree = sTree;
+		this.direction = direction;
 		
 		if (lowerBound != null) {
 			setPage(lowerBound);
@@ -81,16 +95,11 @@ public class TupleBrowser {
 			if (!direction) {
 				values = upper.values;
 			}
-		} else if (range) {
-			//this is a range query
-			//TODO: this could also be signaled with an all null key
+		} else {
 			bound = tree.header[0];
 			while (bound.next != null) {
 				bound = bound.next;
 			}
-		} else {
-			bound = page;
-			boundIndex = index;
 		}
 				
 		if (!direction) {
@@ -107,32 +116,65 @@ public class TupleBrowser {
 		}
 	}
 
-	private void setPage(List<?> lowerBound) throws TeiidComponentException {
-		if (values != null) {
-			int possibleIndex = Collections.binarySearch(values.getTuples(), lowerBound, tree.comparator);
-			if (possibleIndex != -1 && possibleIndex != -values.getTuples().size() -1) {
-				index = possibleIndex;
-				if (possibleIndex < 0) {
-					index = -index -1;
-				}
-				return;
-			}
-		}
-		resetState();
+	private boolean setPage(List<?> lowerBound) throws TeiidComponentException {
 		LinkedList<SearchResult> places = new LinkedList<SearchResult>();
 		this.tree.find(lowerBound, places);
 		
 		SearchResult sr = places.getLast();
 		page = sr.page;
 		index = sr.index;
+		boolean result = true;
 		if (index < 0) {
+			result = false;
 			index = -index - 1;
 		}
 		values = sr.values;
+		return result;
 	}
 	
+	/**
+	 * Returns the next tuple or null if there are no more results.
+	 * @return
+	 * @throws TeiidComponentException
+	 */
 	public List<?> next() throws TeiidComponentException {
 		for (;;) {
+			//first check for value iteration
+			if (valueSet != null) {
+				if (valueSet.isEmpty()) {
+					resetState();
+					return null;
+				}
+				List<?> newValue = direction?valueSet.remove(0):valueSet.remove(valueSet.size() -1);
+				if (values != null) {
+					int possibleIndex = Collections.binarySearch(values.getTuples(), newValue, tree.comparator);
+					if (possibleIndex >= 0) {
+						//value exists in the current page
+						index = possibleIndex;
+						return values.getTuples().get(possibleIndex);
+					}
+					//check for end/terminal conditions
+					if (direction && possibleIndex == -values.getTuples().size() -1) {
+						if (page.next == null) {
+							resetState();
+							return null;
+						}
+					} else if (!direction && possibleIndex == -1) {
+						if (page.prev == null) {
+							resetState();
+							return null;
+						}
+					} else {
+						//the value simply doesn't exist
+						continue;
+					}
+				}
+				resetState();
+				if (!setPage(newValue)) {
+					continue;
+				}
+				return values.getTuples().get(index);
+			}
 			if (page == null) {
 				return null;
 			}
@@ -149,19 +191,6 @@ public class TupleBrowser {
 				if (page == bound && index == boundIndex) {
 					resetState();
 					page = null; //terminate
-				} else if (otherValues != null && !range) {
-					if (!otherValues.isEmpty()) {
-						List newBound = direction?otherValues.remove(0):otherValues.remove(otherValues.size() -1);
-						setPage(newBound);
-					} else {
-						otherValues = null;
-						if (page != bound) {
-							resetState();
-						}
-						page = bound;
-						index = boundIndex;
-						values = bound.values;
-					}
 				} else {
 					index+=getOffset();
 				}
@@ -185,6 +214,9 @@ public class TupleBrowser {
 	}
 	
 	private int getOffset() {
+		if (valueSet != null) {
+			return 0;
+		}
 		return direction?1:-1;
 	}
 	

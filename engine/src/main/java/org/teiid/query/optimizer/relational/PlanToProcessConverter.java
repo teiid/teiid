@@ -191,13 +191,9 @@ public class PlanToProcessConverter {
 	                        pinode.setIntoElements(allIntoElements);
 	                        pinode.setModelName(modelName);
 	                        processNode = pinode;
-	                        if (!metadata.isTemporaryTable(groupID)) {
-	                            SourceCapabilities caps = capFinder.findCapabilities(modelName);
-	                            pinode.setDoBatching(caps.supportsCapability(Capability.BATCHED_UPDATES));
-	                            pinode.setDoBulkInsert(caps.supportsCapability(Capability.BULK_UPDATE));
-	                        } else {
-	                            pinode.setDoBulkInsert(true);
-	                        } 
+                            SourceCapabilities caps = capFinder.findCapabilities(modelName);
+                            pinode.setDoBatching(caps.supportsCapability(Capability.BATCHED_UPDATES));
+                            pinode.setDoBulkInsert(caps.supportsCapability(Capability.BULK_UPDATE));
                         }
                     } catch(QueryMetadataException e) {
                         throw new TeiidComponentException(e);

@@ -35,13 +35,16 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 
+/**
+ * Accumulates information from criteria about a specific index column.
+ */
 class IndexCondition {
 	
 	static IndexCondition[] getIndexConditions(Criteria condition, List<ElementSymbol> keyColumns) {
 		List<Criteria> crits = Criteria.separateCriteriaByAnd(condition);
 		IndexCondition[] conditions = new IndexCondition[keyColumns.size()];
 		for (int i = 0; i < conditions.length; i++) {
-			if (i > 0 && (conditions[i - 1].range || conditions[i -1].upper != null)) {
+			if (i > 0 && conditions[i - 1].valueSet.size() != 1) {
 				break; //don't yet support any other types of composite key lookups
 			}
 			conditions[i] = new IndexCondition();
@@ -122,27 +125,25 @@ class IndexCondition {
 	
 	Constant lower = null;
 	Constant upper = null;
-	boolean range = true;
-	TreeSet<Constant> otherValues = new TreeSet<Constant>();
+	TreeSet<Constant> valueSet = new TreeSet<Constant>();
 	
 	void addCondition(Constant value, int comparisionMode) {
 		switch (comparisionMode) {
 		case CompareCriteria.EQ:
-			otherValues.clear();
-			lower = value;
+			valueSet.clear();
+			valueSet.add(value);
+			lower = null;
 			upper = null;
-			range = false;
 			break;
 		case CompareCriteria.GE:
 		case CompareCriteria.GT:
-			if (lower == null) {
-				range = true;
+			if (valueSet.isEmpty()) {
 				lower = value;
 			} 
 			break;
 		case CompareCriteria.LE:
 		case CompareCriteria.LT:
-			if (upper == null && range) {
+			if (valueSet.isEmpty()) {
 				upper = value;
 			}
 			break;
@@ -150,21 +151,12 @@ class IndexCondition {
 	}
 	
 	void addSet(TreeSet<Constant> values) {
-		if (!range && lower != null) {
+		if (!valueSet.isEmpty()) {
 			return;
 		}
-		Iterator<Constant> iter = values.iterator();
-		Constant lowest = iter.next();
-		iter.remove();
-		lower = lowest;
-		range = false;
-		iter = values.descendingIterator();
-		if (iter.hasNext()) {
-			Constant highest = iter.next();
-			upper = highest;
-			iter.remove();
-		}
-		otherValues.addAll(values);
+		lower = null;
+		upper = null;
+		valueSet.addAll(values);
 	}
 	
 }
