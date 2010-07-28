@@ -63,8 +63,8 @@ public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
 		return waitTime;
 	}
 	
-	public void setWaitTime(Integer waitTime) {
-		this.waitTime = waitTime.intValue();
+	public void setWaitTime(int waitTime) {
+		this.waitTime = waitTime;
 	}
 	
 	@TranslatorProperty(display="Rows Per Query", advanced=true)
@@ -72,7 +72,7 @@ public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
 		return rowCount;
 	}
 	
-	public void setRowCount(Integer rowCount) {
+	public void setRowCount(int rowCount) {
 		this.rowCount = rowCount;
 	}
 	
@@ -81,8 +81,8 @@ public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
 		return this.throwError;
 	}
 	
-	public void setThrowError(Boolean error) {
-		this.throwError = error.booleanValue();
+	public void setThrowError(boolean error) {
+		this.throwError = error;
 	}
 	
 	@TranslatorProperty(display="Poll interval if using a Asynchronous Connector")
@@ -90,8 +90,8 @@ public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
 		return this.pollIntervalInMilli;
 	}
 	
-	public void setPollIntervalInMilli(Long intervel) {
-		this.pollIntervalInMilli = intervel.longValue();
+	public void setPollIntervalInMilli(long intervel) {
+		this.pollIntervalInMilli = intervel;
 	}
 	
 	@Override
