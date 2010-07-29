@@ -44,6 +44,7 @@ import org.teiid.language.GroupBy;
 import org.teiid.language.In;
 import org.teiid.language.Insert;
 import org.teiid.language.IsNull;
+import org.teiid.language.IteratorValueSource;
 import org.teiid.language.Join;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Like;
@@ -224,6 +225,11 @@ public class CollectorVisitor<T> implements LanguageObjectVisitor {
     
     @Override
     public void visit(SearchedWhenClause obj) {
+    	checkInstance(obj);    	
+    }
+    
+    @Override
+    public void visit(IteratorValueSource obj) {
     	checkInstance(obj);    	
     }
 

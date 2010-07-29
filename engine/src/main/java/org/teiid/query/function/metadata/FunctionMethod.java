@@ -69,7 +69,7 @@ public class FunctionMethod implements Serializable {
     
     /*
      * always -> normal deterministic functions
-     * server lifetime -> lookup (however lookup values can be flushed at any time)
+     * vdb -> lookup (however lookup values can be flushed at any time), current_database
      * session -> env, user
      * command -> command payload
      * never -> rand, etc.
@@ -83,7 +83,7 @@ public class FunctionMethod implements Serializable {
      * processing time.
      */
     public static final int DETERMINISTIC = 0;
-    public static final int SERVER_DETERMINISTIC = 1;
+    public static final int VDB_DETERMINISTIC = 1;
     public static final int USER_DETERMINISTIC = 2;
     public static final int SESSION_DETERMINISTIC = 3;
     public static final int COMMAND_DETERMINISTIC = 4;

@@ -34,6 +34,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.relational.ProjectIntoNode.Mode;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.util.CommandContext;
 
@@ -157,7 +158,12 @@ public class RelationalPlan extends ProcessorPlan {
 			}
 			return false;
 		}
-    	if (node instanceof AccessNode) {
+    	if (node instanceof ProjectIntoNode) {
+    		if (((ProjectIntoNode)node).getMode() == Mode.ITERATOR) {
+    			return false;
+    		}
+    		return true;
+    	} else if (node instanceof AccessNode) {
 			return false;
 		}
 		if (transactionalReads) {

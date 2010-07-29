@@ -61,4 +61,5 @@ public interface LanguageObjectVisitor {
     public void visit(SetQuery obj);
     public void visit(SetClause obj);
     public void visit(SearchedWhenClause obj);
+	public void visit(IteratorValueSource obj);
 }

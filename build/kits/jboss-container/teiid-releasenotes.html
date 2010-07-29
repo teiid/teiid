@@ -10,7 +10,7 @@
 <P><A HREF="http://www.teiid.org/"><IMG SRC="https://www.jboss.org/dms/teiid/images/teiid_banner.png" NAME="graphics1" ALT="Teiid" ALIGN=BOTTOM WIDTH=800></A>
 
 <H1>Teiid ${project.version} Release Notes</H1>
-<P>Teiid ${project.version} adds ODBC, SQL, and caching features. 
+<P>Teiid ${project.version} adds ODBC, SQL, performance, and caching features. 
 
 <H2>Overview</H2>
 <UL>
@@ -38,7 +38,11 @@
            <li>Added PRIMARY KEY and the associated index support to temp tables.
         </ul>
     <LI><B>Parallel Source Queries</B> - reestablished parallel execution of source queries within a query plan along with a prioritized work system to help prevent resource contention.
+    <LI><B>Improved Insert Support</B> - Cross source inserts using a query expression can defer to the source to perform the entire insert atomically with source controlled batching.  
+    See maxPreparedInsertBatchSize on any JDBC translator supporting the InsertWithIterator capability.
     <LI><B>SHOW Statement</B> - added client handling for the SHOW statement to retrieve query plan information and see parameter values.
+    <LI><B>User Identity</B> - Teiid DataSources in JBossAS connecting to a local Teiid instance can preserve the thread's user identity, rather than requiring
+    a new authentication.  See TeiidDataSource.setPassthroughAuthentication.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

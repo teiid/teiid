@@ -30,7 +30,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.language.ColumnReference;
-import org.teiid.language.Command;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
@@ -39,7 +38,6 @@ import org.teiid.language.NamedTable;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
@@ -52,8 +50,10 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 @Translator(name="modeshape")
 public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 	
-    private String version = "2.0";	 //$NON-NLS-1$
-
+	public ModeShapeExecutionFactory() {
+		setDatabaseVersion("2.0"); //$NON-NLS-1$
+	}
+	
     @Override
     public void start() throws TranslatorException {
         super.start();
@@ -160,15 +160,6 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
         return "FALSE"; //$NON-NLS-1$
     }
     
-    
-
-    @Override
-    public List<?> translateCommand(Command command, ExecutionContext context) {
-	return super.translateCommand(command, context);
-    }
-
-
-
     @Override
     public String translateLiteralDate(Date dateValue) {
         return "DATE '" + formatDateValue(dateValue) + "'"; //$NON-NLS-1$//$NON-NLS-2$
@@ -201,15 +192,6 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 
     }
         
-    @TranslatorProperty(description= "ModeShape Repository Version")
-    public String getDatabaseVersion() {
-    	return this.version;
-    }
-    
-    public void setDatabaseVersion(String version) {
-    	this.version = version;
-    }    
-    
     @Override
     public boolean useBindVariables() {
 		return false;

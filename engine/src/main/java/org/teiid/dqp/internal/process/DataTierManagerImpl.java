@@ -307,7 +307,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				break;
 			}
 		}
-		return new CollectionTupleSource(rows.iterator(), command.getProjectedSymbols());
+		return new CollectionTupleSource(rows.iterator());
 	}
 	
 	private List<Schema> getVisibleSchemas(VDBMetaData vdb, CompositeMetadataStore metadata) {

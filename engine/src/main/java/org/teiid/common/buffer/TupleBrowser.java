@@ -28,11 +28,12 @@ import java.util.List;
 
 import org.teiid.common.buffer.SPage.SearchResult;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 
 /**
  * Implements intelligent browsing over a {@link STree}
  */
-public class TupleBrowser {
+public class TupleBrowser implements TupleSource {
 	
 	private final STree tree;
 	
@@ -132,12 +133,9 @@ public class TupleBrowser {
 		return result;
 	}
 	
-	/**
-	 * Returns the next tuple or null if there are no more results.
-	 * @return
-	 * @throws TeiidComponentException
-	 */
-	public List<?> next() throws TeiidComponentException {
+	@Override
+	public List<?> nextTuple() throws TeiidComponentException,
+			TeiidProcessingException {
 		for (;;) {
 			//first check for value iteration
 			if (valueSet != null) {
@@ -237,4 +235,10 @@ public class TupleBrowser {
 	public void removed() {
 		index-=getOffset();
 	}
+	
+	@Override
+	public void closeSource() {
+		
+	}
+	
 }

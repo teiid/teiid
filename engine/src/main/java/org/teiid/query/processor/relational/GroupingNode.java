@@ -306,22 +306,10 @@ public class GroupingNode extends RelationalNode {
 			}
 			
 			@Override
-			public List<Expression> getSchema() {
-				return collectedExpressions;
-			}
-			
-			@Override
 			public void closeSource() {
 				
 			}
 			
-			@Override
-			public int available() {
-				if (sourceBatch != null) {
-		    		return sourceBatch.getEndRow() - sourceRow + 1;
-		    	}
-				return 0;
-			}
 		};
 		
 	}
@@ -334,7 +322,7 @@ public class GroupingNode extends RelationalNode {
         } else {
             this.sortUtility = new SortUtility(getCollectionTupleSource(), sortElements,
                                                 sortTypes, removeDuplicates?Mode.DUP_REMOVE_SORT:Mode.SORT, getBufferManager(),
-                                                getConnectionID());
+                                                getConnectionID(), collectedExpressions);
             this.phase = SORT;
         }
     }

@@ -762,7 +762,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
                             new FunctionParameter("keyelement", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Lookup_arg3")), //$NON-NLS-1$ //$NON-NLS-2$
                             new FunctionParameter("keyvalue", keyValueType, QueryPlugin.Util.getString("SystemSource.Lookup_arg4")), //$NON-NLS-1$ //$NON-NLS-2$
                              },
-                        new FunctionParameter("result", DataTypeManager.DefaultDataTypes.OBJECT, QueryPlugin.Util.getString("SystemSource.Lookup_result")), true, FunctionMethod.SERVER_DETERMINISTIC ) );                     //$NON-NLS-1$ //$NON-NLS-2$
+                        new FunctionParameter("result", DataTypeManager.DefaultDataTypes.OBJECT, QueryPlugin.Util.getString("SystemSource.Lookup_result")), true, FunctionMethod.VDB_DETERMINISTIC ) );                     //$NON-NLS-1$ //$NON-NLS-2$
     	}
     }
 
@@ -773,11 +773,9 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     }
     
     private void addCurrentDatabaseFunction() {
-    	// this function is actually session_deterministic, however for caching purposes it has been set deterministic 
-    	// as caching is already scoped to the VDB.
         functions.add(
             new FunctionMethod("current_database", QueryPlugin.Util.getString("SystemSource.current_database_desc"), MISCELLANEOUS, FunctionMethod.CANNOT_PUSHDOWN, FUNCTION_CLASS, "current_database", null, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("current_database_result")), false, FunctionMethod.DETERMINISTIC) );                     //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("current_database_result")), false, FunctionMethod.VDB_DETERMINISTIC) );                     //$NON-NLS-1$ //$NON-NLS-2$
     }    
     
     private void addEnvFunction() {

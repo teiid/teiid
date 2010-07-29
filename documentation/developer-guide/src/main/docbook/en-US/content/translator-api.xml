@@ -466,8 +466,8 @@ public void setFoo(String value) {
 		<para>Each <code>Insert</code> will have a single <code>NamedTable</code> specifying the table being
 			inserted into.  It will also has a list of <code>ColumnReference</code> specifying the columns 
             of the <code>NamedTable</code> that are being inserted into. It also has
-            <code>InsertValueSource</code>, which will either be a list of 
-            <code>Expression(ExpressionValueSource)</code>  or <code>QueryExpression</code></para>
+            <code>InsertValueSource</code>, which will be a list of 
+            Expressions (<code>ExpressionValueSource</code>),  or a <code>QueryExpression</code>, or an Iterator (<code>IteratorValueSource</code>)</para>
     </sect3>
 
     <sect3>
@@ -1245,13 +1245,24 @@ int count = visitor.getCount();
               </row>   
               <row>
                 <entry>
-                  <para>supportsBulkUpdate</para>
+                  <para>BulkUpdate</para>
                 </entry>
                 <entry>
                   <para/>
                 </entry>
                 <entry>
                   <para>Translator supports updates with multiple value sets</para>
+                </entry>
+              </row>         
+              <row>
+                <entry>
+                  <para>InsertWithIterator</para>
+                </entry>
+                <entry>
+                  <para/>
+                </entry>
+                <entry>
+                  <para>Translator supports inserts with an iterator of values.  The values would typically be from an evaluated QueryExpression.</para>
                 </entry>
               </row>         
             </tbody>

@@ -28,27 +28,22 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.common.buffer.TupleSource;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 
 
 public class CollectionTupleSource implements TupleSource {
 	
 	private Iterator<? extends List<?>> tuples;
-	private List<? extends SingleElementSymbol> schema;
 
 	public static CollectionTupleSource createUpdateCountTupleSource(int count) {
-		return new CollectionTupleSource(Arrays.asList(Arrays.asList(count)).iterator(), Command.getUpdateCommandSymbol());
+		return new CollectionTupleSource(Arrays.asList(Arrays.asList(count)).iterator());
 	}
 	
-	public static CollectionTupleSource createNullTupleSource(List<SingleElementSymbol> schema) {
-		return new CollectionTupleSource(new ArrayList<List<Object>>(0).iterator(), schema);
+	public static CollectionTupleSource createNullTupleSource() {
+		return new CollectionTupleSource(new ArrayList<List<Object>>(0).iterator());
 	}
 	
-	public CollectionTupleSource(Iterator<? extends List<?>> tuples,
-			List<? extends SingleElementSymbol> schema) {
+	public CollectionTupleSource(Iterator<? extends List<?>> tuples) {
 		this.tuples = tuples;
-		this.schema = schema;
 	}
 
 	@Override
@@ -60,20 +55,8 @@ public class CollectionTupleSource implements TupleSource {
 	}
 	
 	@Override
-	public List<? extends SingleElementSymbol> getSchema() {
-		return schema;
-	}
-	
-	@Override
 	public void closeSource() {
 		
 	}
 	
-	@Override
-	public int available() {
-		if (tuples.hasNext()) {
-			return 1;
-		}
-		return 0;
-	}
 }

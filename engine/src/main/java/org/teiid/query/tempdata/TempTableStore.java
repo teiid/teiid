@@ -23,15 +23,14 @@
 package org.teiid.query.tempdata;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryProcessingException;
-import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
@@ -52,7 +51,6 @@ import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
-import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -142,11 +140,16 @@ public class TempTableStore {
         	final String groupKey = group.getNonCorrelationName().toUpperCase();
             final TempTable table = getTempTable(groupKey, command);
         	if (command instanceof Insert) {
-        		List<List<Object>> tuples = getBulkRows((Insert)command, table.getColumns());
-        		if (tuples.isEmpty()) {
-        			return CollectionTupleSource.createUpdateCountTupleSource(0);
+        		Insert insert = (Insert)command;
+        		TupleSource ts = insert.getTupleSource();
+        		if (ts == null) {
+        			List<Object> values = new ArrayList<Object>(insert.getValues().size());
+        			for (Expression expr : (List<Expression>)insert.getValues()) {
+        				values.add(Evaluator.evaluate(expr));
+					}
+        			ts = new CollectionTupleSource(Arrays.asList(values).iterator());
         		}
-        		return table.insert(tuples);
+        		return table.insert(ts, insert.getVariables());
         	}
         	if (command instanceof Update) {
         		final Update update = (Update)command;
@@ -213,36 +216,6 @@ public class TempTableStore {
         return groupToTupleSourceID.get(tempTableID);
     }
 
-	public static List<List<Object>> getBulkRows(Insert insert, List<ElementSymbol> elements) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
-		int bulkRowCount = 1;
-		if (insert.isBulk()) {
-			Constant c = (Constant)insert.getValues().get(0);
-			bulkRowCount = ((List<?>)c.getValue()).size();
-		}
-		
-		List<List<Object>> tuples = new ArrayList<List<Object>>(bulkRowCount);
-		
-		for (int row = 0; row < bulkRowCount; row++) {
-			List<Object> currentRow = new ArrayList<Object>(insert.getValues().size());
-			for (ElementSymbol symbol : elements) {
-                int index = insert.getVariables().indexOf(symbol);
-                Object value = null;
-                if (index != -1) {
-                	if (insert.isBulk()) {
-	                	Constant multiValue = (Constant)insert.getValues().get(index);
-	    		    	value = ((List<?>)multiValue.getValue()).get(row);
-                	} else {
-                		Expression expr = (Expression)insert.getValues().get(index);
-                        value = Evaluator.evaluate(expr);
-                	}
-                }
-                currentRow.add(value);
-            }
-		    tuples.add(currentRow);
-		}
-		return tuples;
-	}
-    
     public boolean hasTempTable(Command command){
         switch (command.getType()) {
             case Command.TYPE_INSERT:

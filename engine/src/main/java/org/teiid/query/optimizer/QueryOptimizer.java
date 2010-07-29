@@ -36,7 +36,6 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempCapabilitiesFinder;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
-import org.teiid.query.optimizer.batch.BatchedUpdatePlanner;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.proc.ProcedurePlanner;
 import org.teiid.query.optimizer.relational.RelationalPlanner;

@@ -434,7 +434,7 @@ public class Query extends QueryCommand {
 	static boolean areResultsCachable(List projectedSymbols) {
 		for(int i=0; i<projectedSymbols.size(); i++){
 			SingleElementSymbol projectedSymbol = (SingleElementSymbol)projectedSymbols.get(i);
-			if(DataTypeManager.isLOB(projectedSymbol.getType())) {
+			if(DataTypeManager.isLOB(projectedSymbol.getType()) || projectedSymbol.getType() == DataTypeManager.DefaultDataClasses.OBJECT) {
 				return false;
 			}
 		}

@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.cache.Cache;
-import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
 import org.teiid.cache.DefaultCache;
 import org.teiid.cache.DefaultCacheFactory;

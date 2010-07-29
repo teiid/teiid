@@ -317,7 +317,8 @@ public interface SourceCapabilities {
          * @since 6.0.0 indicates support for where all
          */
         REQUIRES_CRITERIA,
-        INSERT_WITH_QUERYEXPRESSION
+        INSERT_WITH_QUERYEXPRESSION,
+        INSERT_WITH_ITERATOR
     }
 
     public enum Scope {

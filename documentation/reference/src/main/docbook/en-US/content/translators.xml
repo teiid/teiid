@@ -196,6 +196,11 @@ You can use a sequence as the default value for insert columns by setting the co
 <entry>This will embed a /*comment*/ leading comment with session/request id in source SQL query for informational purposes</entry>
 <entry>false</entry>
 </row>
+<row>
+<entry>MaxPreparedInsertBatchSize</entry>
+<entry>The max size of a prepared insert batch.</entry>
+<entry>2048</entry>
+</row>
 </tbody>
 </tgroup>
 </table>

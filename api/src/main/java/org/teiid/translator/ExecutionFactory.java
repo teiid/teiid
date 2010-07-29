@@ -23,6 +23,7 @@
 package org.teiid.translator;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.resource.ResourceException;
@@ -36,6 +37,7 @@ import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.LanguageFactory;
 import org.teiid.language.QueryExpression;
+import org.teiid.language.Select;
 import org.teiid.language.SetQuery;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -730,10 +732,20 @@ public class ExecutionFactory<F, C> {
     
     /**
      * Support indicates that the connector can accept INSERTs with
-     * values specified by an {@link SetQuery}.
+     * values specified by a {@link SetQuery} or {@link Select}
      * @since 6.1
      */
     public boolean supportsInsertWithQueryExpression() {
+    	return false;
+    }
+    
+    /**
+     * Support indicates that the connector can accept INSERTs
+     * with values specified by an {@link Iterator}
+     * @since 7.1
+     * @return
+     */
+    public boolean supportsInsertWithIterator() {
     	return false;
     }
 	

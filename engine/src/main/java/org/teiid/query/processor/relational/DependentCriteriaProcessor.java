@@ -89,7 +89,7 @@ public class DependentCriteriaProcessor {
 	                    sortSymbols.add(dependentSetStates.get(i).valueExpression);
 	                }
 	                DependentValueSource originalVs = (DependentValueSource)dependentNode.getContext().getVariableContext().getGlobalValue(valueSource);
-	                this.sortUtility = new SortUtility(originalVs.getTupleBuffer().createIndexedTupleSource(), sortSymbols, sortDirection, Mode.DUP_REMOVE, dependentNode.getBufferManager(), dependentNode.getConnectionID());
+	                this.sortUtility = new SortUtility(originalVs.getTupleBuffer().createIndexedTupleSource(), sortSymbols, sortDirection, Mode.DUP_REMOVE, dependentNode.getBufferManager(), dependentNode.getConnectionID(), originalVs.getTupleBuffer().getSchema());
             	}
             	dvs = new DependentValueSource(sortUtility.sort());
             	for (SetState setState : dependentSetStates) {

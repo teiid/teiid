@@ -25,10 +25,13 @@ package org.teiid.dqp.internal.datamgr;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.client.metadata.ParameterInfo;
+import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.language.AggregateFunction;
 import org.teiid.language.AndOr;
@@ -44,6 +47,7 @@ import org.teiid.language.ExpressionValueSource;
 import org.teiid.language.In;
 import org.teiid.language.InsertValueSource;
 import org.teiid.language.IsNull;
+import org.teiid.language.IteratorValueSource;
 import org.teiid.language.Join;
 import org.teiid.language.Like;
 import org.teiid.language.Literal;
@@ -540,6 +544,40 @@ public class LanguageBridgeFactory {
         InsertValueSource valueSource = null;
         if (insert.getQueryExpression() != null) {
         	valueSource = translate(insert.getQueryExpression());
+        } else if (insert.getTupleSource() != null) {
+        	final TupleSource ts = insert.getTupleSource();
+        	valueSource = new IteratorValueSource<List<?>>(new Iterator<List<?>>() {
+        		
+        		List<?> next;
+				
+				@Override
+				public void remove() {
+					throw new UnsupportedOperationException();
+				}
+				
+				@Override
+				public List<?> next() {
+					if (hasNext()) {
+						List<?> result = next;
+						next = null;
+						return result;
+					}
+					throw new NoSuchElementException();
+				}
+				
+				@Override
+				public boolean hasNext() {
+					if (next != null) {
+						return true;
+					}
+					try {
+						next = ts.nextTuple();
+					} catch (TeiidException e) {
+						throw new TeiidRuntimeException(e);
+					}
+					return next != null;
+				}
+			}, elements.size());
         } else {
             // This is for the simple one row insert.
             List values = insert.getValues();

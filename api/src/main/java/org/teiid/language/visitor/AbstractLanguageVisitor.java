@@ -41,6 +41,7 @@ import org.teiid.language.GroupBy;
 import org.teiid.language.In;
 import org.teiid.language.Insert;
 import org.teiid.language.IsNull;
+import org.teiid.language.IteratorValueSource;
 import org.teiid.language.Join;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Like;
@@ -146,4 +147,5 @@ public abstract class AbstractLanguageVisitor implements LanguageObjectVisitor {
     public void visit(SetQuery obj) {}
     public void visit(SetClause obj) {}
     public void visit(SearchedWhenClause obj) {}
+    public void visit(IteratorValueSource obj) {}
 }

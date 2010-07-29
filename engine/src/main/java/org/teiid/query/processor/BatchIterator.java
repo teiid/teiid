@@ -31,7 +31,6 @@ import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
-import org.teiid.query.sql.symbol.Expression;
 
 
 /**
@@ -87,7 +86,6 @@ public class BatchIterator extends AbstractTupleSource {
 		return tuple;
 	}
 	
-	@Override
 	public int available() {
 		if (batch != null && batch.containsRow(getCurrentIndex())) {
 			return batch.getEndRow() - getCurrentIndex() + 1;
@@ -95,11 +93,6 @@ public class BatchIterator extends AbstractTupleSource {
 		return 0;
 	}
 
-	@Override
-	public List<? extends Expression> getSchema() {
-		return source.getOutputElements();
-	}
-	
     public void setBuffer(TupleBuffer buffer, boolean saveOnMark) {
 		this.buffer = buffer;
 		this.saveOnMark = saveOnMark;

@@ -268,12 +268,10 @@ public class TupleBuffer {
 	 * @return
 	 */
 	public IndexedTupleSource createIndexedTupleSource(final boolean singleUse) {
+		if (singleUse) {
+			setForwardOnly(true);
+		}
 		return new AbstractTupleSource() {
-			
-			@Override
-			public List<? extends Expression> getSchema() {
-				return (List<? extends Expression>) schema;
-			}
 			
 			@Override
 			protected List<?> finalRow() throws BlockedException {

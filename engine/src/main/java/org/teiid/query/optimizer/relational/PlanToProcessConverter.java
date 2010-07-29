@@ -192,8 +192,15 @@ public class PlanToProcessConverter {
 	                        pinode.setModelName(modelName);
 	                        processNode = pinode;
                             SourceCapabilities caps = capFinder.findCapabilities(modelName);
-                            pinode.setDoBatching(caps.supportsCapability(Capability.BATCHED_UPDATES));
-                            pinode.setDoBulkInsert(caps.supportsCapability(Capability.BULK_UPDATE));
+                            if (caps.supportsCapability(Capability.INSERT_WITH_ITERATOR)) {
+                            	pinode.setMode(org.teiid.query.processor.relational.ProjectIntoNode.Mode.ITERATOR);
+                            } else if (caps.supportsCapability(Capability.BULK_UPDATE)) {
+                            	pinode.setMode(org.teiid.query.processor.relational.ProjectIntoNode.Mode.BULK);
+                            } else if (caps.supportsCapability(Capability.BATCHED_UPDATES)) {
+                            	pinode.setMode(org.teiid.query.processor.relational.ProjectIntoNode.Mode.BATCH);
+                            } else {
+                            	pinode.setMode(org.teiid.query.processor.relational.ProjectIntoNode.Mode.SINGLE);
+                            }
                         }
                     } catch(QueryMetadataException e) {
                         throw new TeiidComponentException(e);

@@ -50,6 +50,7 @@ import org.teiid.language.GroupBy;
 import org.teiid.language.In;
 import org.teiid.language.Insert;
 import org.teiid.language.IsNull;
+import org.teiid.language.IteratorValueSource;
 import org.teiid.language.Join;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Like;
@@ -494,6 +495,18 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
 		append(obj.getValues());
 		buffer.append(Tokens.RPAREN);
 	}
+    
+    @Override
+    public void visit(IteratorValueSource obj) {
+    	buffer.append(VALUES).append(Tokens.SPACE).append(Tokens.LPAREN);
+    	for (int i = 0; i < obj.getColumnCount(); i++) {
+    		if (i > 0) {
+    			buffer.append(", "); //$NON-NLS-1$
+    		}
+    		buffer.append("?"); //$NON-NLS-1$
+		}
+		buffer.append(Tokens.RPAREN);
+    }
         
     public void visit(IsNull obj) {
         append(obj.getExpression());

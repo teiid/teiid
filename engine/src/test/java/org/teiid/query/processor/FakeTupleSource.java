@@ -45,8 +45,6 @@ public class FakeTupleSource implements TupleSource {
     //the first time nextTuple is called, it will throws BlockedExceptiom
     private boolean blockOnce;
     
-    private boolean exceptionOnClose;
-	
 	public FakeTupleSource(List elements, List[] tuples) {
 		this.elements = elements;
 		this.tuples = tuples; 
@@ -113,13 +111,4 @@ public class FakeTupleSource implements TupleSource {
         this.blockOnce = true;
     }
 
-    public void setExceptionOnClose(boolean exceptionOnClose) {
-        this.exceptionOnClose = exceptionOnClose;
-    }
-    
-    @Override
-    public int available() {
-    	return 0;
-    }
-    
 }

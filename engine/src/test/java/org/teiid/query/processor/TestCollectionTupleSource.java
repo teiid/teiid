@@ -29,8 +29,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
-import org.teiid.query.processor.CollectionTupleSource;
-import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 
@@ -42,10 +40,7 @@ public class TestCollectionTupleSource {
         List<SingleElementSymbol> elements = new ArrayList<SingleElementSymbol>();
         elements.add(new ElementSymbol("x")); //$NON-NLS-1$
         elements.add(new ElementSymbol("y")); //$NON-NLS-1$
-        CollectionTupleSource nts = CollectionTupleSource.createNullTupleSource(elements);   
-        
-        // Check schema
-        assertEquals("Didn't get expected schema", elements, nts.getSchema()); //$NON-NLS-1$
+        CollectionTupleSource nts = CollectionTupleSource.createNullTupleSource();   
         
         // Walk it and get no data
         List tuple = nts.nextTuple();
@@ -56,9 +51,6 @@ public class TestCollectionTupleSource {
     
     @Test public void testUpdateCountSource() {
         CollectionTupleSource nts = CollectionTupleSource.createUpdateCountTupleSource(5);   
-        
-        // Check schema
-        assertEquals("Didn't get expected schema", Command.getUpdateCommandSymbol(), nts.getSchema()); //$NON-NLS-1$
         
         // Walk it and get no data
         List tuple = nts.nextTuple();

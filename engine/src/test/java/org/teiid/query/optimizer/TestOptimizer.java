@@ -6413,8 +6413,22 @@ public class TestOptimizer {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
         ProcessorPlan plan = helpPlan(sql, metadata, new String[] {"SELECT DISTINCT g_0.e1 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        //no txn required, since an interated insert is used
+        assertFalse(plan.requiresTransaction(false));
         
         checkNodeTypes(plan, FULL_PUSHDOWN); 
+        
+        checkNodeTypes(plan, new int[] {1}, new Class[] {ProjectIntoNode.class});
+    }
+    
+    @Test public void testInsertQueryExpression() throws Exception {
+        String sql = "insert into pm1.g1 (e1) select e1 from pm1.g2"; //$NON-NLS-1$
+        
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        
+        ProcessorPlan plan = helpPlan(sql, metadata, new String[] {"SELECT g_0.e1 FROM pm1.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        //requires a txn, since an non pushdown/iterated insert is used
+        assertTrue(plan.requiresTransaction(false));
         
         checkNodeTypes(plan, new int[] {1}, new Class[] {ProjectIntoNode.class});
     }

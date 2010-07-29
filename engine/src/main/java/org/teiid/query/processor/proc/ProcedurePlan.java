@@ -65,7 +65,6 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.tempdata.TempTableStore;
-import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.ErrorMessageKeys;
 
@@ -300,7 +299,7 @@ public class ProcedurePlan extends ProcessorPlan {
         }
 
         if(lastTupleSource == null){
-            return CollectionTupleSource.createNullTupleSource(null);
+            return CollectionTupleSource.createNullTupleSource();
         }
         return lastTupleSource;
     }
@@ -558,7 +557,7 @@ public class ProcedurePlan extends ProcessorPlan {
         
         CursorState cursorState = getCursorState(rsKey);
         // get the schema from the tuple source
-        List schema = cursorState.ts.getSchema();
+        List schema = cursorState.processor.getOutputElements();
         return schema;
     }
 

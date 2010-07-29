@@ -35,10 +35,8 @@ import org.teiid.core.TeiidComponentException;
 
 /**
  * Self balancing search tree using skip list like logic
- * This has similar performance similar to a B+/-Tree 
- * 
- * TODO: reserve additional memory for delete/update operations
- * TODO: double link to support desc key access
+ * This has similar performance similar to a B+/-Tree,
+ * but with fewer updates. 
  */
 @SuppressWarnings("unchecked")
 public class STree {
@@ -67,7 +65,6 @@ public class STree {
             int keyLength,
             String[] types) {
 		randomSeed = seedGenerator.nextInt() | 0x00000100; // ensure nonzero
-		randomSeed = 1;
 		this.keyManager = manager;
 		this.leafManager = leafManager;
 		this.comparator = comparator;
@@ -325,6 +322,10 @@ public class STree {
 		}
 		header = new SPage[] {new SPage(this, true)};
 		return oldSize;
+	}
+	
+	public int getHeight() {
+		return header.length;
 	}
 	
 	@Override

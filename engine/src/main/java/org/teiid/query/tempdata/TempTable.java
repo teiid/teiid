@@ -37,6 +37,7 @@ import org.teiid.common.buffer.STree;
 import org.teiid.common.buffer.TupleBrowser;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
+import org.teiid.common.buffer.BufferManager.BufferReserveMode;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
@@ -65,29 +66,75 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
  */
 class TempTable {
 	
-	private final class QueryTupleSource extends TupleBrowserTupleSource {
+	private final class InsertUpdateProcessor extends UpdateProcessor {
+		
+		private boolean addRowId;
+		private int[] indexes;
+		
+		private InsertUpdateProcessor(TupleSource ts, boolean addRowId, int[] indexes)
+				throws TeiidComponentException {
+			super(null, ts);
+			this.addRowId = addRowId;
+			this.indexes = indexes;
+		}
+
+		@Override
+		protected void tuplePassed(List tuple) throws BlockedException,
+				TeiidComponentException, TeiidProcessingException {
+			if (indexes != null) {
+				List<Object> newTuple = new ArrayList<Object>(columns.size());
+				if (addRowId) {
+					newTuple.add(rowId.getAndIncrement());
+				}
+				for (int i = 0; i < indexes.length; i++) {
+					if (indexes[i] == -1) {
+						newTuple.add(null);
+					} else {
+						newTuple.add(tuple.get(indexes[i]));
+					}
+				}
+				tuple = newTuple;
+			} else if (addRowId) {
+				tuple = new ArrayList<Object>(tuple);
+				tuple.add(0, rowId.getAndIncrement());
+			}
+			currentTuple = tuple;
+			insertTuple(tuple);
+		}
+
+		@Override
+		protected void undo(List tuple) throws TeiidComponentException,
+				TeiidProcessingException {
+			deleteTuple(tuple);
+		}
+	}
+
+	private final class QueryTupleSource implements TupleSource {
 		private final Evaluator eval;
-		private final List<SingleElementSymbol> projectedCols;
 		private final Criteria condition;
 		private final boolean project;
 		private final int[] indexes;
+		private int reserved;
+		private TupleBrowser browser;
 
 		private QueryTupleSource(TupleBrowser browser, Map map,
 				List<SingleElementSymbol> projectedCols, Criteria condition) {
-			super(browser);
+			this.browser = browser;
 			this.indexes = RelationalNode.getProjectionIndexes(map, projectedCols);
 			this.eval = new Evaluator(map, null, null);
-			this.projectedCols = projectedCols;
 			this.condition = condition;
 			this.project = shouldProject();
+			reserved = reserveBuffers();
 		}
 
 		@Override
 		public List<?> nextTuple() throws TeiidComponentException,
 				TeiidProcessingException {
 			for (;;) {
-				List<?> next = super.nextTuple();
+				List<?> next = browser.nextTuple();
 				if (next == null) {
+					bm.releaseBuffers(reserved);
+					reserved = 0;
 					return null;
 				}
 				if (rowId != null) {
@@ -103,6 +150,13 @@ class TempTable {
 			}
 		}
 		
+		@Override
+		public void closeSource() {
+			bm.releaseBuffers(reserved);
+			reserved = 0;
+			browser.closeSource();
+		}
+		
 		private boolean shouldProject() {
 			if (indexes.length == getColumns().size()) {
 				for (int i = 0; i < indexes.length; i++) {
@@ -115,39 +169,6 @@ class TempTable {
 			return true;
 		}
 
-		@Override
-		public List<? extends Expression> getSchema() {
-			return projectedCols;
-		}
-	}
-
-	private class TupleBrowserTupleSource implements TupleSource {
-		private final TupleBrowser browser;
-
-		private TupleBrowserTupleSource(TupleBrowser browser) {
-			this.browser = browser;
-		}
-
-		@Override
-		public List<?> nextTuple() throws TeiidComponentException,
-				TeiidProcessingException {
-			return browser.next();
-		}
-
-		@Override
-		public List<? extends Expression> getSchema() {
-			return columns;
-		}
-
-		@Override
-		public void closeSource() {
-			
-		}
-
-		@Override
-		public int available() {
-			return 0;
-		}
 	}
 
 	private abstract class UpdateProcessor {
@@ -156,7 +177,7 @@ class TempTable {
 		protected final Evaluator eval;
 		private final Criteria crit;
 		protected int updateCount = 0;
-		private List currentTuple;
+		protected List currentTuple;
 		
 		protected TupleBuffer undoLog;
 
@@ -169,6 +190,7 @@ class TempTable {
 		}
 		
 		int process() throws ExpressionEvaluationException, TeiidComponentException, TeiidProcessingException {
+			int reserved = reserveBuffers();
 			boolean success = false;
 			try {
 				while (currentTuple != null || (currentTuple = ts.nextTuple()) != null) {
@@ -179,9 +201,12 @@ class TempTable {
 					}
 					currentTuple = null;
 				}
+				bm.releaseBuffers(reserved);
+				reserved = 0;
 				success();
 				success = true;
 			} finally {
+				bm.releaseBuffers(reserved);
 				if (!success) {
 					TupleSource undoTs = undoLog.createIndexedTupleSource();
 					List<?> tuple = null;
@@ -197,7 +222,7 @@ class TempTable {
 			}
 			return updateCount;
 		}
-		
+
 		@SuppressWarnings("unused")
 		void success() throws TeiidComponentException, ExpressionEvaluationException, TeiidProcessingException {}
 
@@ -218,6 +243,9 @@ class TempTable {
 	private BufferManager bm;
 	private String sessionID;
 	private TempMetadataID tid;
+	
+	private int keyBatchSize;
+	private int leafBatchSize;
 
 	TempTable(TempMetadataID tid, BufferManager bm, List<ElementSymbol> columns, int primaryKeyLength, String sessionID) {
 		this.tid = tid;
@@ -233,6 +261,12 @@ class TempTable {
         }
 		this.columns = columns;
 		this.sessionID = sessionID;
+		this.keyBatchSize = bm.getSchemaSize(columns);
+		this.leafBatchSize = bm.getSchemaSize(columns.subList(0, primaryKeyLength));
+	}
+	
+	private int reserveBuffers() {
+		return bm.reserveBuffers(leafBatchSize + (tree.getHeight() - 1)*keyBatchSize, BufferReserveMode.WAIT);
 	}
 
 	public TupleSource createTupleSource(final List<SingleElementSymbol> projectedCols, final Criteria condition, OrderBy orderBy) throws TeiidComponentException, TeiidProcessingException {
@@ -282,21 +316,24 @@ class TempTable {
 		
 		TupleBrowser browser = createTupleBrower(condition, direction);
 		TupleSource ts = new QueryTupleSource(browser, map, projectedCols, condition);
-
-		TupleBuffer tb = null;
-		if (!orderByUsingIndex && orderBy != null) {
-			SortUtility sort = new SortUtility(ts, orderBy.getOrderByItems(), Mode.SORT, bm, sessionID);
-			tb = sort.sort();
-		} else {
-			tb = bm.createTupleBuffer(projectedCols, sessionID, TupleSourceType.PROCESSOR);
-			List next = null;
-			while ((next = ts.nextTuple()) != null) {
-				tb.addTuple(next);
+		try {
+			TupleBuffer tb = null;
+			if (!orderByUsingIndex && orderBy != null) {
+				SortUtility sort = new SortUtility(ts, orderBy.getOrderByItems(), Mode.SORT, bm, sessionID, projectedCols);
+				tb = sort.sort();
+			} else {
+				tb = bm.createTupleBuffer(projectedCols, sessionID, TupleSourceType.PROCESSOR);
+				List next = null;
+				while ((next = ts.nextTuple()) != null) {
+					tb.addTuple(next);
+				}
 			}
+			tb.close();
+			return tb.createIndexedTupleSource(true);
+		} finally {
+			//ensure the buffers get released
+			ts.closeSource();
 		}
-		tb.close();
-		tb.setForwardOnly(true);
-		return tb.createIndexedTupleSource(true);
 	}
 
 	private TupleBrowser createTupleBrower(Criteria condition, boolean direction) throws TeiidComponentException {
@@ -353,23 +390,15 @@ class TempTable {
 		return columns;
 	}
 	
-	public TupleSource insert(List<List<Object>> tuples) throws TeiidComponentException, ExpressionEvaluationException, TeiidProcessingException {
-        UpdateProcessor up = new UpdateProcessor(null, new CollectionTupleSource(tuples.iterator(), getColumns())) {
-        	
-        	protected void tuplePassed(List tuple) 
-        	throws BlockedException, TeiidComponentException, TeiidProcessingException {
-        		if (rowId != null) {
-        			tuple.add(0, rowId.getAndIncrement());
-        		}
-        		insertTuple(tuple);
-        	}
-        	
-        	@Override
-        	protected void undo(List tuple) throws TeiidComponentException {
-        		deleteTuple(tuple);
-        	}
-        	
-        };
+	public TupleSource insert(TupleSource tuples, final List<ElementSymbol> variables) throws TeiidComponentException, ExpressionEvaluationException, TeiidProcessingException {
+		List<ElementSymbol> cols = getColumns();
+		final int[] indexes = new int[cols.size()];
+		boolean shouldProject = false;
+		for (int i = 0; i < cols.size(); i++) {
+			indexes[i] = variables.indexOf(cols.get(i));
+			shouldProject |= (indexes[i] != i);
+		}
+        UpdateProcessor up = new InsertUpdateProcessor(tuples, rowId != null, shouldProject?indexes:null);
         int updateCount = up.process();
         tid.setCardinality(tree.getRowCount());
         return CollectionTupleSource.createUpdateCountTupleSource(updateCount);
@@ -378,7 +407,7 @@ class TempTable {
 	public TupleSource update(Criteria crit, final SetClauseList update) throws TeiidComponentException, ExpressionEvaluationException, TeiidProcessingException {
 		final boolean primaryKeyChangePossible = canChangePrimaryKey(update);
 		final TupleBrowser browser = createTupleBrower(crit, OrderBy.ASC);
-		UpdateProcessor up = new UpdateProcessor(crit, new TupleBrowserTupleSource(browser)) {
+		UpdateProcessor up = new UpdateProcessor(crit, browser) {
 			
 			protected TupleBuffer changeSet;
 			protected UpdateProcessor changeSetProcessor;
@@ -418,20 +447,7 @@ class TempTable {
 				//changeSet contains possible updates
 				if (primaryKeyChangePossible) {
 					if (changeSetProcessor == null) {
-						changeSetProcessor = new UpdateProcessor(null, changeSet.createIndexedTupleSource(true)) {
-							@Override
-							protected void tuplePassed(List tuple) throws BlockedException,
-									TeiidComponentException, TeiidProcessingException {
-								insertTuple(tuple);
-							}
-							
-							@Override
-							protected void undo(List tuple) throws TeiidComponentException,
-									TeiidProcessingException {
-								deleteTuple(tuple);
-							}
-							
-						};
+						changeSetProcessor = new InsertUpdateProcessor(changeSet.createIndexedTupleSource(true), false, null);
 					}
 					changeSetProcessor.process(); //when this returns, we're up to date
 				}
@@ -466,7 +482,7 @@ class TempTable {
 	
 	public TupleSource delete(Criteria crit) throws TeiidComponentException, ExpressionEvaluationException, TeiidProcessingException {
 		final TupleBrowser browser = createTupleBrower(crit, OrderBy.ASC);
-		UpdateProcessor up = new UpdateProcessor(crit, new TupleBrowserTupleSource(browser)) {
+		UpdateProcessor up = new UpdateProcessor(crit, browser) {
 			@Override
 			protected void tuplePassed(List tuple)
 					throws ExpressionEvaluationException,
@@ -502,5 +518,5 @@ class TempTable {
 			throw new AssertionError("Update failed"); //$NON-NLS-1$
 		}
 	}
-		
+
 }

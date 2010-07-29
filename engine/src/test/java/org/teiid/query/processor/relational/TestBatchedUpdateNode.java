@@ -39,7 +39,6 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.batch.TestBatchedUpdatePlanner;
 import org.teiid.query.processor.ProcessorDataManager;
-import org.teiid.query.processor.relational.BatchedUpdateNode;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
@@ -233,7 +232,6 @@ public class TestBatchedUpdateNode {
             this.numCommands = numCommands;
         }
         public void closeSource() {}
-        public List getSchema() {return null;}
         public List nextTuple() throws TeiidComponentException {
             if (first) {
             	first = false;
@@ -245,10 +243,6 @@ public class TestBatchedUpdateNode {
             return null;
         }
         
-        @Override
-        public int available() {
-        	return 0;
-        }
     }
     
 }

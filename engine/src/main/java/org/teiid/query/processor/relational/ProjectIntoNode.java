@@ -32,7 +32,9 @@ import java.util.List;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleBatch;
+import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
@@ -45,6 +47,10 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 
 public class ProjectIntoNode extends RelationalNode {
 
+	public enum Mode {
+		BATCH, BULK, ITERATOR, SINGLE
+	}
+	
     private static int REQUEST_CREATION = 1;
     private static int RESPONSE_PROCESSING = 2;
     
@@ -52,8 +58,7 @@ public class ProjectIntoNode extends RelationalNode {
     private GroupSymbol intoGroup;
     private List intoElements;
     private String modelName;
-    private boolean doBatching = false;
-    private boolean doBulkInsert = false;
+    private Mode mode;
     
     // Processing state
     private int batchRow = 1;
@@ -61,7 +66,9 @@ public class ProjectIntoNode extends RelationalNode {
     private int phase = REQUEST_CREATION;    
     private int requestsRegistered = 0;
     private int tupleSourcesProcessed = 0;
+    private boolean sourceDone;
     
+    private TupleBuffer buffer;
     private TupleBatch currentBatch;
         	
     private TupleSource tupleSource;
@@ -78,6 +85,7 @@ public class ProjectIntoNode extends RelationalNode {
         this.tupleSourcesProcessed = 0;
         this.requestsRegistered = 0;
         this.currentBatch=null;
+        this.sourceDone=false;
     }
 
     public void setIntoGroup(GroupSymbol group) { 
@@ -107,28 +115,45 @@ public class ProjectIntoNode extends RelationalNode {
             
             checkExitConditions();
             
-            /* If we don't have a batch to work with yet, or
-             * if this is not the last batch and we've reached the end of this one,
-             * then get the next batch.
+            /* If we don't have a batch to work, get the next
              */
-            
-            if (currentBatch == null || (!currentBatch.getTerminationFlag() && this.batchRow > currentBatch.getEndRow())) {           
+            if (currentBatch == null) {
+            	if (sourceDone) {
+	                phase = RESPONSE_PROCESSING;
+	                break;
+            	}
                 currentBatch = getChildren()[0].nextBatch(); // can throw BlockedException
+                sourceDone = currentBatch.getTerminationFlag();
                 this.batchRow = currentBatch.getBeginRow();
                 
                 //normally we would want to skip a 0 sized batch, but it typically represents the terminal batch
                 //and for implicit temp tables we need to issue an empty insert
-                if(currentBatch.getRowCount() == 0 && (!this.intoGroup.isImplicitTempGroupSymbol() || !currentBatch.getTerminationFlag())) {
-                    continue;
+                if(currentBatch.getRowCount() == 0
+                		&& (!currentBatch.getTerminationFlag() || mode != Mode.ITERATOR)) {
+            		currentBatch = null;
+            		continue;
                 }
-            } else if (currentBatch.getTerminationFlag() && this.batchRow > currentBatch.getEndRow()) {
-                phase = RESPONSE_PROCESSING;
-                break;
-            }
+            } 
             
             int batchSize = currentBatch.getRowCount();
-            
-            if (doBulkInsert) {
+            int requests = 1;
+            switch (mode) {
+            case ITERATOR:
+            	if (buffer == null) {
+            		buffer = getBufferManager().createTupleBuffer(intoElements, getConnectionID(), TupleSourceType.PROCESSOR);
+            	}
+            	buffer.addTupleBatch(currentBatch, true);
+            	if (currentBatch.getTerminationFlag() && (buffer.getRowCount() != 0 || intoGroup.isImplicitTempGroupSymbol())) {
+            		Insert insert = new Insert(intoGroup, intoElements, null);
+            		buffer.close();
+            		insert.setTupleSource(buffer.createIndexedTupleSource(true));
+                    // Register insert command against source 
+                    registerRequest(insert);
+            	} else {
+            		requests = 0;
+            	}
+            	break;
+            case BULK:
             	//convert to multivalued parameter
                 List<Constant> parameters = new ArrayList<Constant>(intoElements.size());
                 for (int i = 0; i < intoElements.size(); i++) {
@@ -145,26 +170,32 @@ public class ProjectIntoNode extends RelationalNode {
                 Insert insert = new Insert(intoGroup, intoElements, parameters);
                 // Register insert command against source 
                 registerRequest(insert);
-            } else if (doBatching) { 
+                break;
+            case BATCH:
                 // Register batched update command against source
                 int endRow = currentBatch.getEndRow();
                 List rows = new ArrayList(endRow-batchRow);
                 for(int rowNum = batchRow; rowNum <= endRow; rowNum++) {
 
-                    Insert insert = new Insert( intoGroup, 
+                    insert = new Insert( intoGroup, 
                                                  intoElements, 
                                                  convertValuesToConstants(currentBatch.getTuple(rowNum), intoElements));
                     rows.add( insert );
                 }
                 registerRequest(new BatchedUpdateCommand( rows ));
-            } else {
+                break;
+            case SINGLE:
                 batchSize = 1;
                 // Register insert command against source 
                 // Defect 16036 - submit a new INSERT command to the DataManager.
                 registerRequest(new Insert(intoGroup, intoElements, convertValuesToConstants(currentBatch.getTuple(batchRow), intoElements)));
             }
+            
             this.batchRow += batchSize;
-            this.requestsRegistered++;
+            if (batchRow > currentBatch.getEndRow()) {
+            	currentBatch = null;
+            }
+            this.requestsRegistered+=requests;
         }
         
         checkExitConditions();
@@ -197,7 +228,10 @@ public class ProjectIntoNode extends RelationalNode {
     }
     
     private void closeRequest() {
-
+    	if (this.buffer != null) {
+    		this.buffer.remove();
+    		this.buffer = null;
+    	}
         if (this.tupleSource != null) {
             tupleSource.closeSource();
             this.tupleSource = null;
@@ -216,8 +250,7 @@ public class ProjectIntoNode extends RelationalNode {
         clonedNode.intoGroup = intoGroup;
         clonedNode.intoElements = intoElements;
         clonedNode.modelName = this.modelName;
-        clonedNode.doBatching = this.doBatching;
-        clonedNode.doBulkInsert = this.doBulkInsert;
+        clonedNode.mode = this.mode;
         
         return clonedNode;
     }
@@ -242,15 +275,15 @@ public class ProjectIntoNode extends RelationalNode {
             constants.add(new Constant(values.get(i),type));
         }
         return constants;
-    }    
-            
-    public void setDoBatching(boolean doBatching) {
-        this.doBatching = doBatching;
-    }
+    }  
     
-    public void setDoBulkInsert(boolean doBulkInsert) {
-        this.doBulkInsert = doBulkInsert;
-    }
+    public Mode getMode() {
+		return mode;
+	}
+            
+    public void setMode(Mode mode) {
+		this.mode = mode;
+	}
 
     public boolean isTempGroupInsert() {
 		return intoGroup.isTempGroupSymbol();

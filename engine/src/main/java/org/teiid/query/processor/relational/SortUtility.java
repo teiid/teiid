@@ -108,12 +108,12 @@ public class SortUtility {
 	private Collection<List<?>> workingTuples;
     
     public SortUtility(TupleSource sourceID, List<OrderByItem> items, Mode mode, BufferManager bufferMgr,
-                        String groupName) {
+                        String groupName, List schema) {
         this.source = sourceID;
         this.mode = mode;
         this.bufferManager = bufferMgr;
         this.groupName = groupName;
-        this.schema = this.source.getSchema();
+        this.schema = schema;
         this.schemaSize = bufferManager.getSchemaSize(this.schema);
         int distinctIndex = items != null? items.size() - 1:0;
         List<Expression> sortElements = null;
@@ -153,8 +153,8 @@ public class SortUtility {
     }
     
     public SortUtility(TupleSource ts, List expressions, List<Boolean> types,
-			Mode mode, BufferManager bufferManager, String connectionID) {
-		this(ts, new OrderBy(expressions, types).getOrderByItems(), mode, bufferManager, connectionID);
+			Mode mode, BufferManager bufferManager, String connectionID, List schema) {
+		this(ts, new OrderBy(expressions, types).getOrderByItems(), mode, bufferManager, connectionID, schema);
 	}
 
 	public boolean isDone() {

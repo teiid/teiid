@@ -27,6 +27,8 @@ package org.teiid.translator.jdbc;
 import java.util.List;
 
 import org.teiid.language.Command;
+import org.teiid.language.Insert;
+import org.teiid.language.IteratorValueSource;
 import org.teiid.language.Literal;
 import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.translator.TranslatorException;
@@ -89,6 +91,10 @@ public class TranslatedCommand {
                 return true;
             }
         }
+    	if (command instanceof Insert) {
+        	Insert insert = (Insert)command;
+        	return insert.getValueSource() instanceof IteratorValueSource<?>;
+    	}
         return false;
     }
 

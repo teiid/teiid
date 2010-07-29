@@ -305,7 +305,7 @@ public class TestSortNode {
         BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
         TupleBuffer tsid = bm.createTupleBuffer(Arrays.asList(es1), "test", TupleSourceType.PROCESSOR); //$NON-NLS-1$
         tsid.addTuple(Arrays.asList(1));
-    	SortUtility su = new SortUtility(tsid.createIndexedTupleSource(), Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.DUP_REMOVE, bm, "test"); //$NON-NLS-1$
+    	SortUtility su = new SortUtility(tsid.createIndexedTupleSource(), Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.DUP_REMOVE, bm, "test", tsid.getSchema()); //$NON-NLS-1$
     	TupleBuffer out = su.sort();
     	TupleSource ts = out.createIndexedTupleSource();
     	assertEquals(Arrays.asList(1), ts.nextTuple());

@@ -20,35 +20,39 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.common.buffer;
+package org.teiid.language;
 
+import java.util.Iterator;
 import java.util.List;
 
-import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidProcessingException;
+import org.teiid.language.visitor.LanguageObjectVisitor;
 
+public class IteratorValueSource<T extends List<?>> extends BaseLanguageObject implements InsertValueSource {
 
-/**
- * <p>A cursored source of tuples.  The implementation will likely be closely
- * bound to a {@link BufferManager} implementation - it will work with it
- * to use {@link TupleBatch TupleBatches} behind the scenes.</p>
- */
-public interface TupleSource {
-
-    /**
-     * Returns the next tuple
-     * @return the next tuple (a List object), or <code>null</code> if
-     * there are no more tuples.
-     * @throws TeiidComponentException indicating a non-business
-     * exception such as a communication exception, or other such
-     * nondeterministic exception
-     */
-	List<?> nextTuple()
-		throws TeiidComponentException, TeiidProcessingException;
+	private Iterator<T> iter;
+	private int columnCount;
 	
-    /**
-     * Closes the Tuple Source.  
-     */    
-	void closeSource();
+	public IteratorValueSource(Iterator<T> iter, int columnCount) {
+		this.iter = iter;
+		this.columnCount = columnCount;
+	}
 	
+	/**
+	 * A memory safe iterator of the insert values.  Only 1 iterator is associated
+	 * with the value source.  Once it is consumed there are no more values.
+	 * @return
+	 */
+	public Iterator<T> getIterator() {
+		return iter;
+	}
+	
+	public int getColumnCount() {
+		return columnCount;
+	}
+	
+	@Override
+	public void acceptVisitor(LanguageObjectVisitor visitor) {
+		visitor.visit(this);
+	}
+
 }

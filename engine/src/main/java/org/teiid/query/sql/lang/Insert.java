@@ -29,6 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageVisitor;
@@ -38,6 +39,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.util.ValueIterator;
 
 
 /**
@@ -52,10 +54,12 @@ public class Insert extends ProcedureContainer {
     /** list of column variables, null = all columns */
     private List variables = new LinkedList();
 
-    /** List of Expressions, required */
+    /** List of Expressions */
     private List values = new LinkedList();
     
     private QueryCommand queryExpression;
+    
+    private TupleSource tupleSource;
 
     // =========================================================================
     //                         C O N S T R U C T O R S
@@ -297,6 +301,14 @@ public class Insert extends ProcedureContainer {
 	 */
 	public boolean areResultsCachable() {
 		return false;
+	}
+	
+	public void setTupleSource(TupleSource tupleSource) {
+		this.tupleSource = tupleSource;
+	}
+	
+	public TupleSource getTupleSource() {
+		return tupleSource;
 	}
     
 }

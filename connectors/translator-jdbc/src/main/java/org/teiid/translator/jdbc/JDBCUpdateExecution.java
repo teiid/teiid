@@ -26,14 +26,17 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.language.BatchedUpdates;
 import org.teiid.language.Command;
+import org.teiid.language.Insert;
+import org.teiid.language.IteratorValueSource;
 import org.teiid.language.Literal;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 
 
@@ -163,8 +166,46 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
         	int updateCount = 0;
             if (!translatedComm.isPrepared()) {
                 updateCount = getStatement().executeUpdate(sql);
+                addStatementWarnings();
             } else {
             	PreparedStatement pstatement = getPreparedStatement(sql);
+            	
+            	if (command instanceof Insert) {
+                	Insert insert = (Insert)command;
+                	if (insert.getValueSource() instanceof IteratorValueSource) {
+                        commitType = getAutoCommit(translatedComm);
+                        if (commitType) {
+                            connection.setAutoCommit(false);
+                        }
+                		
+                		IteratorValueSource<List<Object>> ivs = (IteratorValueSource)insert.getValueSource();
+                		List<Object>[] values = new List[ivs.getColumnCount()];
+                		for (int i = 0; i < ivs.getColumnCount(); i++) {
+                			values[i] = new ArrayList<Object>();
+                			Literal literal = new Literal(values[i], insert.getColumns().get(i).getType());
+                			literal.setMultiValued(true);
+                			translatedComm.getPreparedValues().add(literal);
+                		}
+                		Iterator<List<Object>> i = ivs.getIterator();
+                		int maxBatchSize = this.executionFactory.getMaxPreparedInsertBatchSize();
+                		while (i.hasNext()) {
+                			int batchSize = 0;
+	                		while (i.hasNext() && batchSize++ < maxBatchSize) {
+	                			List<Object> next = i.next();
+	                			for (int j = 0; j < ivs.getColumnCount(); j++) {
+	                				values[j].add(next.get(j));
+	                    		}
+	                		}
+	                		updateCount += executePreparedBatch(translatedComm, pstatement, batchSize);
+                			for (int j = 0; j < ivs.getColumnCount(); j++) {
+                				values[j].clear();
+                    		}
+                		}
+                		succeeded = true;
+                		return new int[updateCount];
+                	}
+                }
+            	
                 int rowCount = 1;
                 for (int i = 0; i< translatedComm.getPreparedValues().size(); i++) {
                     Literal paramValue = (Literal)translatedComm.getPreparedValues().get(i);
@@ -179,19 +220,9 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
                         connection.setAutoCommit(false);
                     }
                 }
-                bindPreparedStatementValues(pstatement, translatedComm, rowCount);
-            	if (rowCount > 1) {
-                    int[] results = pstatement.executeBatch();
-                    
-                    for (int i=0; i<results.length; i++) {
-                        updateCount += results[i];
-                    }
-                    succeeded = true;
-            	} else {
-            		updateCount = pstatement.executeUpdate();
-            	}
+                updateCount = executePreparedBatch(translatedComm, pstatement, rowCount);
+                succeeded = true;
             } 
-            addStatementWarnings();
             return new int[] {updateCount};
         } catch (SQLException err) {
         	throw new JDBCExecutionException(err, translatedComm);
@@ -201,6 +232,23 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
             }
         }
     }
+
+	private int executePreparedBatch(TranslatedCommand translatedComm, PreparedStatement pstatement, int rowCount)
+			throws SQLException {
+		bindPreparedStatementValues(pstatement, translatedComm, rowCount);
+		int updateCount = 0;
+		if (rowCount > 1) {
+		    int[] results = pstatement.executeBatch();
+		    
+		    for (int i=0; i<results.length; i++) {
+		        updateCount += results[i];
+		    }
+		} else {
+			updateCount = pstatement.executeUpdate();
+		}
+		addStatementWarnings();
+		return updateCount;
+	}
 
     /**
      * @param command

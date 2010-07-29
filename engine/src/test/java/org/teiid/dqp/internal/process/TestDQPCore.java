@@ -36,7 +36,6 @@ import org.mockito.Mockito;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
-import org.teiid.common.queue.FakeWorkManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
 import org.teiid.dqp.service.AutoGenDataService;

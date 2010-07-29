@@ -139,6 +139,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	private boolean trimStrings;
 	private boolean useCommentsInSourceQuery;
 	private String version;
+	private int maxInsertBatchSize = 2048;
 
 	private AtomicBoolean initialConnection = new AtomicBoolean(true);
 	
@@ -440,6 +441,11 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     }
     
     @Override
+    public boolean supportsInsertWithIterator() {
+    	return super.supportsBulkUpdate();
+    }
+    
+    @Override
     public boolean supportsBatchedUpdates() {
     	return true;
     }
@@ -462,7 +468,23 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     @Override
     public boolean supportsInsertWithQueryExpression() {
     	return true;
-    }	
+    }
+    
+    /**
+     * Get the max number of inserts to perform in one batch.
+     * @return
+     */
+    @TranslatorProperty(display="Max Prepared Insert Batch Size", description="The max size of a prepared insert batch.  Default 2048.", advanced=true)
+    public int getMaxPreparedInsertBatchSize() {
+    	return maxInsertBatchSize;
+    }
+    
+    public void setMaxPreparedInsertBatchSize(int maxInsertBatchSize) {
+    	if (maxInsertBatchSize < 1) {
+    		throw new AssertionError("Max prepared batch insert size must be greater than 0"); //$NON-NLS-1$
+    	}
+		this.maxInsertBatchSize = maxInsertBatchSize;
+	}
     
     /**
      * Gets the database calendar.  This will be set to the time zone

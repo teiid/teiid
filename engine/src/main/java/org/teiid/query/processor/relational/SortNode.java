@@ -91,7 +91,7 @@ public class SortNode extends RelationalNode {
     private void sortPhase() throws BlockedException, TeiidComponentException, TeiidProcessingException {
     	if (this.sortUtility == null) {
 	        this.sortUtility = new SortUtility(new BatchIterator(getChildren()[0]), items, this.mode, getBufferManager(),
-	                                            getConnectionID());
+	                                            getConnectionID(), getChildren()[0].getElements());
 		}
 		this.output = this.sortUtility.sort();
 		if (this.outputTs == null) {

@@ -299,12 +299,4 @@ public class DataTierTupleSource implements TupleSource {
 		return this.aqr.isTransactional();
 	}
 	
-	@Override
-	public int available() {
-		if (this.arm == null) {
-			return 0;
-		}
-		return this.arm.getResults().length - index;
-	}
-	
 }

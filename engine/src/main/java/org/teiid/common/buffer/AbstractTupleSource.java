@@ -73,6 +73,8 @@ public abstract class AbstractTupleSource implements IndexedTupleSource {
 	
 	protected abstract TupleBatch getBatch(int row) throws TeiidComponentException, TeiidProcessingException;
 	
+	protected abstract int available();
+	
     @Override
     public void closeSource() {
     	batch = null;

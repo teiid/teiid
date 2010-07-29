@@ -43,7 +43,7 @@ public class TempCapabilitiesFinder implements CapabilitiesFinder {
 		if (TempMetadataAdapter.TEMP_MODEL.getID().equals(modelName)) {
     		if (tempCaps == null) {
 	    		tempCaps = new BasicSourceCapabilities();
-	    		tempCaps.setCapabilitySupport(Capability.BULK_UPDATE, true);
+	    		tempCaps.setCapabilitySupport(Capability.INSERT_WITH_ITERATOR, true);
 	    		tempCaps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
 	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_NOT, true);
 	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_IN, true);

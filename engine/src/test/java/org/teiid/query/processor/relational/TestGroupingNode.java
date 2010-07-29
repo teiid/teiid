@@ -57,7 +57,7 @@ import org.teiid.query.util.CommandContext;
 
 public class TestGroupingNode {
 
-	public static TupleSource createTupleSource1() { 
+	public static FakeTupleSource createTupleSource1() { 
 		List<ElementSymbol> symbols = new ArrayList<ElementSymbol>();
 		symbols.add(new ElementSymbol("col1")); //$NON-NLS-1$
 		symbols.get(0).setType(DataTypeManager.DefaultDataClasses.INTEGER);
@@ -90,7 +90,7 @@ public class TestGroupingNode {
                              List[] expected, ProcessorDataManager dataMgr) throws TeiidComponentException,
                                              BlockedException,
                                              TeiidProcessingException {
-        TupleSource dataSource = createTupleSource1();
+		FakeTupleSource dataSource = createTupleSource1();
         helpProcess(mgr, node, context, expected, dataSource, dataMgr);
     }
     
@@ -98,7 +98,7 @@ public class TestGroupingNode {
                              GroupingNode node,
                              CommandContext context,
                              List[] expected,
-                             TupleSource dataSource, ProcessorDataManager dataMgr) throws TeiidComponentException,
+                             FakeTupleSource dataSource, ProcessorDataManager dataMgr) throws TeiidComponentException,
                                                     BlockedException,
                                                     TeiidProcessingException {
         RelationalNode dataNode = new FakeRelationalNode(0, dataSource, mgr.getProcessorBatchSize());
@@ -250,7 +250,7 @@ public class TestGroupingNode {
                 
         List symbols = new ArrayList();
         symbols.add(bigDecimal);
-        TupleSource dataSource = new FakeTupleSource(symbols, data);            
+        FakeTupleSource dataSource = new FakeTupleSource(symbols, data);            
         helpProcess(mgr, node, context, expected, dataSource, null);
     }
 
@@ -292,7 +292,7 @@ public class TestGroupingNode {
         List symbols = new ArrayList();
         symbols.add(col1);
         symbols.add(bigDecimal);
-        TupleSource dataSource = new FakeTupleSource(symbols, data);            
+        FakeTupleSource dataSource = new FakeTupleSource(symbols, data);            
         helpProcess(mgr, node, context, expected, dataSource, null);
     }
 
@@ -385,7 +385,7 @@ public class TestGroupingNode {
         List symbols = new ArrayList();
         symbols.add(col1);
         symbols.add(bigDecimal);
-        TupleSource dataSource = new FakeTupleSource(symbols, data);            
+        FakeTupleSource dataSource = new FakeTupleSource(symbols, data);            
         helpProcess(mgr, node, context, expected, dataSource, null);
     }
     

@@ -403,6 +403,9 @@ public class SQLStringVisitor extends LanguageVisitor {
         
         if ( obj.getQueryExpression() != null ) {
             parts.add(registerNode(obj.getQueryExpression()));
+        } else if (obj.getTupleSource() != null) {
+        	parts.add(VALUES);
+            parts.add(" (...)"); //$NON-NLS-1$
         } else {
             parts.add(VALUES);
             parts.add(" ("); //$NON-NLS-1$

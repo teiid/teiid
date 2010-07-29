@@ -41,7 +41,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.optimizer.batch.BatchedUpdatePlanner;
+import org.teiid.query.optimizer.BatchedUpdatePlanner;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.AccessNode;

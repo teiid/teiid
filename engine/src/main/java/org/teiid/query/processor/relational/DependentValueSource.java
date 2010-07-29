@@ -65,7 +65,7 @@ public class DependentValueSource implements
     	IndexedTupleSource its = buffer.createIndexedTupleSource();
     	int index = 0;
     	if (valueExpression != null) {
-    		index = its.getSchema().indexOf(valueExpression);
+    		index = buffer.getSchema().indexOf(valueExpression);
     		Assertion.assertTrue(index != -1);
     	}
         return new TupleSourceValueIterator(its, index);
@@ -83,10 +83,10 @@ public class DependentValueSource implements
 			IndexedTupleSource its = buffer.createIndexedTupleSource();
         	int index = 0;
         	if (valueExpression != null) {
-        		index = its.getSchema().indexOf(valueExpression);
+        		index = buffer.getSchema().indexOf(valueExpression);
         	}
         	Assertion.assertTrue(index != -1);
-        	if (((SingleElementSymbol)its.getSchema().get(index)).getType() == DataTypeManager.DefaultDataClasses.BIG_DECIMAL) {
+        	if (((SingleElementSymbol)buffer.getSchema().get(index)).getType() == DataTypeManager.DefaultDataClasses.BIG_DECIMAL) {
         		result = new TreeSet<Object>();
     		} else {
     			result = new HashSet<Object>();
