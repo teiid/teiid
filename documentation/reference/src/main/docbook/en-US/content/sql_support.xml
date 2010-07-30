@@ -647,11 +647,19 @@
       <para>Creation syntax:
       </para>
       <listitem>
-        <para>CREATE LOCAL TEMPORARY TABLE x (column type, ... [PRIMARY KEY (column, ...)])
+        <para>Explicit: CREATE LOCAL TEMPORARY TABLE x (column type, ... [PRIMARY KEY (column, ...)])
         </para>
       </listitem>
       <listitem>
-        <para>INSERT INTO #x (column, ...) VALUES (value, ...)
+        <para>Implicit: INSERT INTO #x (column, ...) VALUES (value, ...) 
+        </para>
+        <para>If #x doen't exist, it will be defined using the given column names and types from the value expressions.
+        </para>
+      </listitem>
+      <listitem>
+        <para>Implicit: INSERT INTO #x [(column, ...)] select c1, c2 from t
+        </para>
+        <para>If #x doesn't exist, it will be defined using the target column names (in not supplied, the column names will match the derived column names from the query), and the types from the query derived columns. 
         </para>
       </listitem>
     </itemizedlist>

@@ -56,6 +56,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.util.ErrorMessageKeys;
 
 
@@ -88,6 +89,14 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
         groups.add(insert.getGroup());
         
+     // resolve any functions in the values
+        List values = insert.getValues();
+        boolean usingQuery = insert.getQueryExpression() != null;
+        
+        if (usingQuery) {
+            values = insert.getQueryExpression().getProjectedSymbols();
+        }
+        
         if (insert.getVariables().isEmpty()) {
             if (insert.getGroup().isResolved()) {
                 List variables = ResolverUtil.resolveElementsInGroup(insert.getGroup(), metadata);
@@ -95,15 +104,22 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
                     insert.addVariable((ElementSymbol)((ElementSymbol)i.next()).clone());
                 }
             } else {
-                for (int i = 0; i < insert.getValues().size(); i++) {
-                    insert.addVariable(new ElementSymbol("expr" + i)); //$NON-NLS-1$
+                for (int i = 0; i < values.size(); i++) {
+                	if (usingQuery) {
+                		SingleElementSymbol ses = (SingleElementSymbol)values.get(i);
+                    	ElementSymbol es = new ElementSymbol(ses.getShortName()); 
+                    	es.setType(ses.getType());
+                    	insert.addVariable(es);
+                    } else {
+                    	insert.addVariable(new ElementSymbol("expr" + i)); //$NON-NLS-1$
+                    }
                 }
             }
         } else if (insert.getGroup().isResolved()) {
             resolveVariables(metadata, insert, groups);
         }
 
-        resolveTypes(insert, metadata);
+        resolveTypes(insert, metadata, values, usingQuery);
         
         if (!insert.getGroup().isResolved()) { //define the implicit temp group
             if(insert.getQueryExpression() != null) {
@@ -114,7 +130,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             resolveVariables(metadata, insert, groups);
             
             //ensure that the types match
-            resolveTypes(insert, metadata);
+            resolveTypes(insert, metadata, values, usingQuery);
         }
         
         if (insert.getQueryExpression() != null && metadata.isVirtualGroup(insert.getGroup().getMetadataID())) {
@@ -150,24 +166,17 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
     
     /** 
      * @param insert
+     * @param values 
+     * @param usingQuery 
      * @throws QueryResolverException
      */
-    public void resolveTypes(Insert insert, TempMetadataAdapter metadata) throws QueryResolverException {
-        
-        boolean usingQuery = insert.getQueryExpression() != null;
-        
-        // resolve any functions in the values
-        List values = insert.getValues();
-        
-        if (usingQuery) {
-            values = insert.getQueryExpression().getProjectedSymbols();
-        }
+    public void resolveTypes(Insert insert, TempMetadataAdapter metadata, List values, boolean usingQuery) throws QueryResolverException {
         
         List newValues = new ArrayList(values.size());
         
         // check that # of variables == # of values
         if(values.size() != insert.getVariables().size()) {
-            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0010, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0010, new Object[] {new Integer(insert.getVariables().size()), new Integer(insert.getValues().size())}));
+            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0010, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0010, insert.getVariables().size(), values.size()));
         }
         
         Iterator valueIter = values.iterator();
