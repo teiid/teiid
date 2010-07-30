@@ -27,9 +27,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 
 import org.teiid.connector.DataPlugin;
-import org.teiid.core.id.UUIDFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 
@@ -43,7 +43,6 @@ import org.teiid.translator.TypeFacility;
 public class MetadataFactory {
 	
 	private Schema schema;
-	private UUIDFactory factory = new UUIDFactory();
 	private Map<String, Datatype> dataTypes;
 	private Properties importProperties;
 	private MetadataStore store = new MetadataStore();
@@ -66,7 +65,7 @@ public class MetadataFactory {
 	}
 	
 	private void setUUID(AbstractMetadataRecord record) {
-		record.setUUID(factory.create().toString());
+		record.setUUID("mmuuid:" +UUID.randomUUID()); //$NON-NLS-1$
 	}
 
 	/**
