@@ -23,6 +23,7 @@ package org.teiid.rhq.plugin;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -418,43 +419,8 @@ public abstract class Facet implements ProfileServiceComponent<ResourceComponent
 
 	@Override
 	public Set<ResourcePackageDetails> discoverDeployedPackages(PackageType arg0) {
-
-		File deploymentFile = null;
-
-		if (this.deploymentName != null) {
-			deploymentFile = new File(deploymentName.substring(7));
-		}
-
-		if (!deploymentFile.exists())
-			throw new IllegalStateException("Deployment file '"
-					+ deploymentFile + "' for " + this.getComponentType()
-					+ " does not exist.");
-
-		String fileName = deploymentFile.getName();
-		org.rhq.core.pluginapi.content.version.PackageVersions packageVersions = loadPackageVersions();
-		String version = packageVersions.getVersion(fileName);
-		if (version == null) {
-			// This is either the first time we've discovered this VDB, or
-			// someone purged the PC's data dir.
-			version = "1.0";
-			packageVersions.putVersion(fileName, version);
-			packageVersions.saveToDisk();
-		}
-
-		// Package name is the deployment's file name (e.g. foo.ear).
-		PackageDetailsKey key = new PackageDetailsKey(fileName, version,
-				PKG_TYPE_VDB, ARCHITECTURE);
-		ResourcePackageDetails packageDetails = new ResourcePackageDetails(key);
-		packageDetails.setFileName(fileName);
-		packageDetails.setLocation(deploymentFile.getPath());
-		if (!deploymentFile.isDirectory())
-			packageDetails.setFileSize(deploymentFile.length());
-		packageDetails.setFileCreatedDate(null); // TODO: get created date via
-		// SIGAR
-		Set<ResourcePackageDetails> packages = new HashSet<ResourcePackageDetails>();
-		packages.add(packageDetails);
-
-		return packages;
+		// Teiid does not support the versions yet.
+		return Collections.EMPTY_SET;
 	}
 
 	@Override
