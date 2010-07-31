@@ -35,6 +35,7 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.plan.Annotation;
 import org.teiid.client.plan.Annotation.Priority;
 import org.teiid.core.TeiidComponentException;
@@ -50,7 +51,7 @@ import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
-import org.teiid.query.optimizer.CommandPlanner;
+import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
@@ -112,7 +113,7 @@ import org.teiid.query.validator.ValidationVisitor;
  * to  produce a
  * {@link org.teiid.query.processor.relational.RelationalPlan RelationalPlan}.
  */
-public class RelationalPlanner implements CommandPlanner {
+public class RelationalPlanner {
 	
 	private AnalysisRecord analysisRecord;
 	private Command parentCommand;
@@ -122,18 +123,13 @@ public class RelationalPlanner implements CommandPlanner {
 	private QueryMetadataInterface metadata;
 	private PlanHints hints = new PlanHints();
 	private Option option;
-
+	
     public ProcessorPlan optimize(
-        Command command,
-        IDGenerator idGenerator,
-        QueryMetadataInterface metadata,
-        CapabilitiesFinder capFinder,
-        AnalysisRecord analysisRecord, CommandContext context)
+        Command command)
         throws
             QueryPlannerException,
             QueryMetadataException,
             TeiidComponentException {
-    	initialize(command, idGenerator, metadata, capFinder, analysisRecord, context);
 
         boolean debug = analysisRecord.recordDebug();
 		if(debug) {
@@ -900,11 +896,12 @@ public class RelationalPlanner implements CommandPlanner {
         QueryNode qnode = null;
         
         Object metadataID = virtualGroup.getMetadataID();
-        boolean noCache = false;
+        boolean noCache = isNoCacheGroup(metadata, metadataID, option);
         boolean isMaterializedGroup = metadata.hasMaterialization(metadataID);
         String cacheString = "select"; //$NON-NLS-1$
+        String groupName = metadata.getFullName(metadataID);
+        
         if( isMaterializedGroup) {
-            noCache = isNoCacheGroup(metadata, metadataID, option);
         	if(noCache){
         		//not use cache
         		qnode = metadata.getVirtualPlan(metadataID);
@@ -912,7 +909,6 @@ public class RelationalPlanner implements CommandPlanner {
         		recordMaterializationTableAnnotation(virtualGroup, analysisRecord, matTableName, "SimpleQueryResolver.materialized_table_not_used"); //$NON-NLS-1$
         	}else{
                 // Default query for a materialized group - go to cached table
-                String groupName = metadata.getFullName(metadataID);
                 String matTableName = metadata.getFullName(metadata.getMaterialization(metadataID));
                 qnode = new QueryNode(groupName, "SELECT * FROM " + matTableName); //$NON-NLS-1$
                 cacheString = "matview"; //$NON-NLS-1$
@@ -923,18 +919,73 @@ public class RelationalPlanner implements CommandPlanner {
             qnode = metadata.getVirtualPlan(metadataID);            
         }
 
-        Command result = (Command)metadata.getFromMetadataCache(virtualGroup.getMetadataID(), "transformation/" + cacheString); //$NON-NLS-1$
+        Command result = getCommand(virtualGroup, qnode, cacheString, metadata);   
+        if (!isMaterializedGroup && result.isCache()) {
+        	result = handleCacheHint(virtualGroup, groupName, noCache, result);
+        }
+        return QueryRewriter.rewrite(result, metadata, context);
+    }
+
+	private Command getCommand(GroupSymbol virtualGroup, QueryNode qnode,
+			String cacheString, QueryMetadataInterface qmi) throws TeiidComponentException,
+			QueryMetadataException, QueryResolverException,
+			QueryValidatorException {
+		Command result = (Command)qmi.getFromMetadataCache(virtualGroup.getMetadataID(), "transformation/" + cacheString); //$NON-NLS-1$
         if (result != null) {
         	result = (Command)result.clone();
         } else {
         	//parse, resolve, validate
-        	result = convertToSubquery(qnode, metadata);
-	        QueryResolver.resolveCommand(result, Collections.EMPTY_MAP, metadata, analysisRecord);
-	        Request.validateWithVisitor(new ValidationVisitor(), metadata, result);
-	        metadata.addToMetadataCache(virtualGroup.getMetadataID(), "transformation/" + cacheString, result.clone()); //$NON-NLS-1$
-        }        
-        return QueryRewriter.rewrite(result, metadata, context);
-    }
+        	result = convertToSubquery(qnode, qmi);
+	        QueryResolver.resolveCommand(result, Collections.EMPTY_MAP, qmi, analysisRecord);
+	        Request.validateWithVisitor(new ValidationVisitor(), qmi, result);
+	        qmi.addToMetadataCache(virtualGroup.getMetadataID(), "transformation/" + cacheString, result.clone()); //$NON-NLS-1$
+        }
+		return result;
+	}
+
+	private Command handleCacheHint(GroupSymbol virtualGroup, String name, boolean noCache, Command result)
+			throws TeiidComponentException, QueryMetadataException, QueryResolverException, QueryValidatorException {
+		TempMetadataStore store = context.getGlobalTableStore().getMetadataStore();
+		String matTableName = "#MAT_" + name; //$NON-NLS-1$
+		TempMetadataID id = store.getTempGroupID(matTableName);
+		//define the table preserving the primary key
+		if (id == null) {
+			synchronized (store) {
+				id = store.getTempGroupID(matTableName);
+				if (id == null) {
+					//TODO: this could be done with a generated create
+					id = store.addTempGroup(matTableName, result.getProjectedSymbols(), false, true);
+					
+					//primary key
+					Collection keys = metadata.getUniqueKeysInGroup(virtualGroup.getMetadataID());
+					for (Object object : keys) {
+						if (metadata.isPrimaryKey(object)) {
+							List cols = metadata.getElementIDsInKey(object);
+							ArrayList<TempMetadataID> primaryKey = new ArrayList<TempMetadataID>(cols.size());
+							for (Object coldId : cols) {
+								int pos = metadata.getPosition(coldId) - 1;
+								primaryKey.add(id.getElements().get(pos));
+							}
+							break;
+						}
+					}
+					//version column?
+					
+					//add timestamp?
+				}
+			}
+		}
+		if (noCache) {
+			//TODO: update the table
+			return result;
+		} 
+/*		QueryMetadataInterface qmi = new TempMetadataAdapter(metadata, context.getGlobalTableStore().getMetadataStore());
+		QueryNode qn = new QueryNode(virtualGroup.getName(), "select * from " + matTableName); //$NON-NLS-1$
+		Query query = (Query)getCommand(virtualGroup, qn, "matview", qmi); //$NON-NLS-1$
+		query.getFrom().getGroups().get(0).setGlobalTable(true);
+		return query;*/
+		return result;
+	}
 
     public static boolean isNoCacheGroup(QueryMetadataInterface metadata,
                                           Object metadataID,

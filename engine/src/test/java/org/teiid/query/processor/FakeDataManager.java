@@ -108,10 +108,10 @@ public class FakeDataManager implements ProcessorDataManager {
 		// does nothing?
     } 
 	
-	public TupleSource registerRequest(Object processorID, Command command, String modelName, String connectorBindingId, int nodeID)
+	public TupleSource registerRequest(CommandContext context, Command command, String modelName, String connectorBindingId, int nodeID)
 		throws TeiidComponentException {
         
-        LogManager.logTrace(LOG_CONTEXT, new Object[]{"Register Request:", command, ",processorID:", processorID, ",model name:", modelName,",TupleSourceID nodeID:",new Integer(nodeID)}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        LogManager.logTrace(LOG_CONTEXT, new Object[]{"Register Request:", command, ",processorID:", context.getProcessorID(), ",model name:", modelName,",TupleSourceID nodeID:",new Integer(nodeID)}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
         if (this.recordingCommands) {
             if (! (command instanceof BatchedUpdateCommand) ) {

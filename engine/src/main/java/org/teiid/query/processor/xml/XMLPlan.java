@@ -47,8 +47,8 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.XMLType;
 import org.teiid.logging.LogConstants;
@@ -60,7 +60,6 @@ import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.TempTableDataManager;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.ErrorMessageKeys;
@@ -94,6 +93,10 @@ public class XMLPlan extends ProcessorPlan {
         
     // Post-processing
 	private Collection<SQLXML> xmlSchemas;
+	/**  XML results format:  XML results displayed as a tree*/
+	public static final String XML_TREE_FORMAT = "Tree"; //$NON-NLS-1$
+	/**  XML results format:  XML results displayed in compact form*/
+	public static final String XML_COMPACT_FORMAT = "Compact"; //$NON-NLS-1$
 
     /**
      * Constructor for XMLPlan.
@@ -108,8 +111,8 @@ public class XMLPlan extends ProcessorPlan {
      */
     public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
         setContext(context);
-        TempTableStore tempTableStore = new TempTableStore(bufferMgr, context.getConnectionID(), (TempTableStore)context.getTempTableStore());
-        //this.dataMgr = new StagingTableDataManager(new TempTableDataManager(dataMgr, tempTableStore), env);
+        TempTableStore tempTableStore = new TempTableStore(bufferMgr, context.getConnectionID());
+        tempTableStore.setParentTempTableStore(context.getTempTableStore());
         this.dataMgr = new TempTableDataManager(dataMgr, tempTableStore);
         this.bufferMgr = bufferMgr;
         this.env.initialize(context, this.dataMgr, this.bufferMgr);

@@ -678,4 +678,6 @@ public interface QueryMetadataInterface {
     	throws TeiidComponentException, QueryMetadataException;
 
     FunctionLibrary getFunctionLibrary();
+    
+    boolean isPrimaryKey(Object metadataID);
 }

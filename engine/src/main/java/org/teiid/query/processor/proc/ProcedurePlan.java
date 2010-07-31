@@ -55,8 +55,6 @@ import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.processor.TempTableDataManager;
-import org.teiid.query.processor.program.Program;
-import org.teiid.query.processor.program.ProgramInstruction;
 import org.teiid.query.processor.relational.SubqueryAwareEvaluator;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Criteria;
@@ -204,7 +202,7 @@ public class ProcedurePlan extends ProcessorPlan {
 		            context.setValue(entry.getKey(), value);
 				}
     		}
-    		tempTableStore = new TempTableStore(bufferMgr, getContext().getConnectionID(), null);
+    		tempTableStore = new TempTableStore(bufferMgr, getContext().getConnectionID());
             this.dataMgr = new TempTableDataManager(dataMgr, tempTableStore);
     	}
     	this.evaluatedParams = true;
@@ -422,7 +420,7 @@ public class ProcedurePlan extends ProcessorPlan {
 		        //this may not be the first time the plan is being run
 		        command.reset();
 		
-		        CommandContext subContext = (CommandContext) getContext().clone();
+		        CommandContext subContext = getContext().clone();
 		        subContext.setVariableContext(this.currentVarContext);
 		        subContext.setTempTableStore(getTempTableStore());
 		        state = new CursorState();

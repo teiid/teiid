@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -130,6 +131,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
     protected Command userCommand;
     protected boolean returnsUpdateCount;
     protected boolean useEntitlements;
+	private TempTableStore globalTables;
 
     void initialize(RequestMessage requestMsg,
                               BufferManager bufferManager,
@@ -175,7 +177,18 @@ public class Request implements QueryProcessor.ProcessorFactory {
         this.capabilitiesFinder = new CachedFinder(this.connectorManagerRepo, workContext.getVDB());        
         this.capabilitiesFinder = new TempCapabilitiesFinder(this.capabilitiesFinder);
 
-        metadata = workContext.getVDB().getAttachment(QueryMetadataInterface.class);
+        VDBMetaData vdbMetadata = workContext.getVDB();
+        metadata = vdbMetadata.getAttachment(QueryMetadataInterface.class);
+        globalTables = vdbMetadata.getAttachment(TempTableStore.class);
+        if (globalTables == null) {
+        	synchronized (vdbMetadata) {
+        		globalTables = vdbMetadata.getAttachment(TempTableStore.class);
+        		if (globalTables == null) {
+        			globalTables = new TempTableStore(bufferManager, "SYSTEM"); //$NON-NLS-1$
+        			vdbMetadata.addAttchment(TempTableStore.class, globalTables); 
+        		}
+			}
+        }
 
         if (metadata == null) {
             throw new TeiidComponentException(DQPPlugin.Util.getString("DQPCore.Unable_to_load_metadata_for_VDB_name__{0},_version__{1}", this.vdbName, this.vdbVersion)); //$NON-NLS-1$
@@ -234,7 +247,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
                 this.requestMsg.getShowPlan() != ShowPlan.OFF);
         this.context.setProcessorBatchSize(bufferManager.getProcessorBatchSize());
         this.context.setConnectorBatchSize(bufferManager.getConnectorBatchSize());
-        
+        this.context.setGlobalTableStore(this.globalTables);
         if (multiSourceModels != null) {
             MultiSourcePlanToProcessConverter modifier = new MultiSourcePlanToProcessConverter(
 					metadata, idGenerator, analysisRecord, capabilitiesFinder,
@@ -470,7 +483,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         
         validateQuery(newCommand);
         
-        CommandContext copy = (CommandContext) commandContext.clone();
+        CommandContext copy = commandContext.clone();
         if (recursionGroup != null) {
         	copy.pushCall(recursionGroup);
         }

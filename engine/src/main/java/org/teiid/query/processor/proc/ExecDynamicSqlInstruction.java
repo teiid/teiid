@@ -49,8 +49,6 @@ import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.processor.program.Program;
-import org.teiid.query.processor.program.ProgramInstruction;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolveVirtualGroupCriteriaVisitor;
 import org.teiid.query.rewriter.QueryRewriter;

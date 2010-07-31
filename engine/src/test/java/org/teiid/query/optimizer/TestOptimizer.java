@@ -228,7 +228,7 @@ public class TestOptimizer {
         }
         
         // Collect atomic queries
-        ProcessorPlan plan = getPlan(command, md, capFinder, analysisRecord, mode != ComparisonMode.FAILED_PLANNING);
+        ProcessorPlan plan = getPlan(command, md, capFinder, analysisRecord, mode != ComparisonMode.FAILED_PLANNING, new CommandContext());
                
         if (mode == ComparisonMode.CORRECTED_COMMAND_STRING) {
             checkAtomicQueries(expectedAtomic, plan, md, capFinder);
@@ -279,49 +279,35 @@ public class TestOptimizer {
         assertEquals("Did not get expected atomic queries: ", expectedQueries, actualQueries); //$NON-NLS-1$
     }
     
-    static ProcessorPlan getPlan(Command command, QueryMetadataInterface md, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, boolean shouldSucceed) {
-		// plan
+    public static ProcessorPlan getPlan(Command command, QueryMetadataInterface md, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, boolean shouldSucceed, CommandContext cc) {
 		ProcessorPlan plan = null;
 		if (analysisRecord == null) {
         	analysisRecord = new AnalysisRecord(false, DEBUG);
 		}
-		if (shouldSucceed) {
-			try {
-				//do planning
-				plan = QueryOptimizer.optimizePlan(command, md, null, capFinder, analysisRecord, new CommandContext());
-
-			} catch (Throwable e) {
-				throw new TeiidRuntimeException(e);
-			} finally {
-                if(DEBUG) {
-                    System.out.println(analysisRecord.getDebugLog());
-                }
-			}
-		} else {
-			Exception exception = null;
-			try {
-				//do planning
-				QueryOptimizer.optimizePlan(command, md, null, capFinder, analysisRecord, null);
-
-			} catch (QueryPlannerException e) {
-				exception = e;
-			} catch (TeiidComponentException e) {
-				exception = e;
-			} catch (Throwable e) {
-                throw new TeiidRuntimeException(e);
-            } finally {
-                if(DEBUG) {
-                    System.out.println(analysisRecord.getDebugLog());
-                }
-			}
+		Exception exception = null;
+		try {
+			//do planning
+			plan = QueryOptimizer.optimizePlan(command, md, null, capFinder, analysisRecord, cc);
+		} catch (QueryPlannerException e) {
+			exception = e;
+		} catch (TeiidComponentException e) {
+			exception = e;
+		} catch (Throwable e) {
+			throw new TeiidRuntimeException(e);
+		} finally {
+            if(DEBUG) {
+                System.out.println(analysisRecord.getDebugLog());
+            }
+		}
+		if (!shouldSucceed) {
 			assertNotNull("Expected exception but did not get one.", exception); //$NON-NLS-1$
 			return null;
+		} 
+		if (plan == null) {
+			throw new TeiidRuntimeException(exception);
 		}
-        
-        assertNotNull("Output elements are null", plan.getOutputElements()); //$NON-NLS-1$
-        		
+		assertNotNull("Output elements are null", plan.getOutputElements()); //$NON-NLS-1$
 		if(DEBUG) System.out.println("\n" + plan);	 //$NON-NLS-1$
-		        
 		return plan;
 	}
     

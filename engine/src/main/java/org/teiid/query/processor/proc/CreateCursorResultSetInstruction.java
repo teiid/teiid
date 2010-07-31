@@ -31,7 +31,6 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.processor.program.ProgramInstruction;
 
 
 /**

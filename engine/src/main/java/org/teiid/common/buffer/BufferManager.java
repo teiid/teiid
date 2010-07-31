@@ -114,6 +114,6 @@ public interface BufferManager extends StorageManager {
      */
     int getSchemaSize(List elements);
     
-    STree createSTree(final List elements, String groupName, TupleSourceType tupleSourceType, int keyLength);
+    STree createSTree(final List elements, String groupName, int keyLength);
     
 }

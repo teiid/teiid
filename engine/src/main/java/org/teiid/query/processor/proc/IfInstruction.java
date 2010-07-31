@@ -29,8 +29,6 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.logging.LogManager;
-import org.teiid.query.processor.program.Program;
-import org.teiid.query.processor.program.ProgramInstruction;
 import org.teiid.query.sql.lang.Criteria;
 
 

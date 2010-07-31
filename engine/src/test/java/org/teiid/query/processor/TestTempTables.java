@@ -51,7 +51,7 @@ public class TestTempTables {
 	}
 
 	@Before public void setUp() {
-		TempTableStore tempStore = new TempTableStore(BufferManagerFactory.getStandaloneBufferManager(), "1", null); //$NON-NLS-1$
+		TempTableStore tempStore = new TempTableStore(BufferManagerFactory.getStandaloneBufferManager(), "1"); //$NON-NLS-1$
 		metadata = new TempMetadataAdapter(FakeMetadataFactory.example1Cached(), tempStore.getMetadataStore());
 		FakeDataManager fdm = new FakeDataManager();
 	    TestProcessor.sampleData1(fdm);

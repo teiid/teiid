@@ -29,8 +29,6 @@ import static org.teiid.query.analysis.AnalysisRecord.*;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.query.processor.program.Program;
-import org.teiid.query.processor.program.ProgramInstruction;
 import org.teiid.query.sql.lang.Criteria;
 
 

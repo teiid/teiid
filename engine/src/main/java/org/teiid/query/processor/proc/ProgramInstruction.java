@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.query.processor.program;
+package org.teiid.query.processor.proc;
 
 import java.util.List;
 
@@ -28,7 +28,6 @@ import org.teiid.client.plan.PlanNode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.processor.proc.ProcedurePlan;
 
 
 /**

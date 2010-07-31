@@ -503,5 +503,10 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 	public FunctionLibrary getFunctionLibrary() {
 		return null;
 	}
+	
+	@Override
+	public boolean isPrimaryKey(Object metadataID) {
+		return false;
+	}
     
 }

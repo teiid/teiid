@@ -26,7 +26,6 @@ package org.teiid.query.processor.proc;
 
 import org.teiid.client.plan.PlanNode;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.query.processor.program.ProgramInstruction;
 
 
 /**

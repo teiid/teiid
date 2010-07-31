@@ -85,7 +85,7 @@ public class WSProcedureExecution implements ProcedureExecution {
         XMLType docObject = (XMLType)arguments.get(2).getArgumentValue().getValue();
         Source source = null;
     	try {
-	        source = converToSource(docObject);
+	        source = convertToSource(docObject);
 	        String endpoint = (String)arguments.get(3).getArgumentValue().getValue();
 	        
 	        if (style == null) {
@@ -149,7 +149,7 @@ public class WSProcedureExecution implements ProcedureExecution {
 		}
     }
 
-	private StreamSource converToSource(SQLXML xml) throws SQLException {
+	private StreamSource convertToSource(SQLXML xml) throws SQLException {
 		if (xml == null) {
 			return null;
 		}

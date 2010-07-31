@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.query.optimizer.batch;
+package org.teiid.query.optimizer;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,8 +38,8 @@ import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.processor.BatchedUpdatePlan;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.processor.batch.BatchedUpdatePlan;
 import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.BatchedUpdateNode;
 import org.teiid.query.processor.relational.ProjectNode;

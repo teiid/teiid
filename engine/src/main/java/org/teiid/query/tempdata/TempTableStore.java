@@ -24,11 +24,11 @@ package org.teiid.query.tempdata;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.common.buffer.BufferManager;
@@ -55,6 +55,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
+import org.teiid.query.util.CommandContext;
 
 /** 
  * @since 5.5
@@ -62,25 +63,21 @@ import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 public class TempTableStore {
 
 	private BufferManager buffer;
-    private TempMetadataStore tempMetadataStore = new TempMetadataStore();
-    private Map<String, TempTable> groupToTupleSourceID = new HashMap<String, TempTable>();
+    private TempMetadataStore tempMetadataStore = new TempMetadataStore(new ConcurrentHashMap<String, TempMetadataID>());
+    private Map<String, TempTable> groupToTupleSourceID = new ConcurrentHashMap<String, TempTable>();
     private String sessionID;
     private TempTableStore parentTempTableStore;
     
-    public TempTableStore(BufferManager buffer, String sessionID, TempTableStore parentTempTableStore) {
+    public TempTableStore(BufferManager buffer, String sessionID) {
         this.buffer = buffer;
         this.sessionID = sessionID;
-        this.parentTempTableStore = parentTempTableStore;
     }
+    
+    public void setParentTempTableStore(TempTableStore parentTempTableStore) {
+		this.parentTempTableStore = parentTempTableStore;
+	}
 
-    void addTempTable(Create create, boolean removeExistingTable) throws QueryProcessingException{
-    	String tempTableName = create.getTable().getName().toUpperCase();
-        if(tempMetadataStore.getTempGroupID(tempTableName) != null) {
-            if(!removeExistingTable) {
-                throw new QueryProcessingException(QueryExecPlugin.Util.getString("TempTableStore.table_exist_error", tempTableName));//$NON-NLS-1$
-            }
-            removeTempTableByName(tempTableName);
-        }
+    void addTempTable(String tempTableName, Create create) {
     	List<ElementSymbol> columns = create.getColumns();
     	
         //add metadata
@@ -109,15 +106,15 @@ public class TempTableStore {
         return tempMetadataStore;
     }
         
-    public TupleSource registerRequest(Command command) throws TeiidComponentException, TeiidProcessingException{
+    public TupleSource registerRequest(CommandContext context, Command command) throws TeiidComponentException, TeiidProcessingException{
         if (command instanceof Query) {
             Query query = (Query)command;
-            GroupSymbol group = (GroupSymbol)query.getFrom().getGroups().get(0);
+            GroupSymbol group = query.getFrom().getGroups().get(0);
             if (!group.isTempGroupSymbol()) {
             	return null;
             }
             final String tableName = group.getNonCorrelationName().toUpperCase();
-            TempTable table = getTempTable(tableName, command);
+            TempTable table = getOrCreateTempTable(tableName, command, true);
             //convert to the actual table symbols (this is typically handled by the languagebridgefactory
             ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
             	@Override
@@ -138,7 +135,7 @@ public class TempTableStore {
         		return null;
         	}
         	final String groupKey = group.getNonCorrelationName().toUpperCase();
-            final TempTable table = getTempTable(groupKey, command);
+            final TempTable table = getOrCreateTempTable(groupKey, command, false);
         	if (command instanceof Insert) {
         		Insert insert = (Insert)command;
         		TupleSource ts = insert.getTupleSource();
@@ -169,11 +166,15 @@ public class TempTableStore {
         }
     	if (command instanceof Create) {
     		Create create = (Create)command;
-    		addTempTable(create, false);
+    		String tempTableName = create.getTable().getCanonicalName();
+    		if(tempMetadataStore.getTempGroupID(tempTableName) != null) {
+                throw new QueryProcessingException(QueryExecPlugin.Util.getString("TempTableStore.table_exist_error", tempTableName));//$NON-NLS-1$
+            }
+    		addTempTable(tempTableName, create);
             return CollectionTupleSource.createUpdateCountTupleSource(0);	
     	}
     	if (command instanceof Drop) {
-    		String tempTableName = ((Drop)command).getTable().getName().toUpperCase();
+    		String tempTableName = ((Drop)command).getTable().getCanonicalName();
             removeTempTableByName(tempTableName);
             return CollectionTupleSource.createUpdateCountTupleSource(0);
     	}
@@ -181,17 +182,17 @@ public class TempTableStore {
     }
     
     public void removeTempTables() {
-        for (String name : new ArrayList<String>( groupToTupleSourceID.keySet() )) {
+        for (String name : groupToTupleSourceID.keySet()) {
             removeTempTableByName(name);
         }
     }
     
-    private TempTable getTempTable(String tempTableID, Command command) throws QueryProcessingException{
+    private TempTable getOrCreateTempTable(String tempTableID, Command command, boolean delegate) throws QueryProcessingException{
     	TempTable tsID = groupToTupleSourceID.get(tempTableID);
         if(tsID != null) {
             return tsID;
         }
-        if(this.parentTempTableStore != null){
+        if(delegate && this.parentTempTableStore != null){
     		tsID = this.parentTempTableStore.groupToTupleSourceID.get(tempTableID);
     	    if(tsID != null) {
     	        return tsID;
@@ -212,33 +213,8 @@ public class TempTableStore {
         Create create = new Create();
         create.setTable(new GroupSymbol(tempTableID));
         create.setColumns(columns);
-        addTempTable(create, true);       
+        addTempTable(tempTableID, create);       
         return groupToTupleSourceID.get(tempTableID);
-    }
-
-    public boolean hasTempTable(Command command){
-        switch (command.getType()) {
-            case Command.TYPE_INSERT:
-            {
-                Insert insert = (Insert)command;
-                GroupSymbol group = insert.getGroup();
-                return group.isTempGroupSymbol();
-            }
-            case Command.TYPE_QUERY:
-            {
-                if(command instanceof Query) {
-                    Query query = (Query)command;
-                    GroupSymbol group = (GroupSymbol)query.getFrom().getGroups().get(0);
-                    return group.isTempGroupSymbol(); 
-                }
-                break;
-            }
-            case Command.TYPE_CREATE:
-                return true;
-            case Command.TYPE_DROP:
-                return true;
-        }
-        return false;
     }
     
     public Set<String> getAllTempTables() {

@@ -30,7 +30,6 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.logging.LogManager;
 import org.teiid.query.mapping.xml.MappingNodeConstants;
-import org.teiid.query.util.XMLFormatConstants;
 
 
 /**
@@ -93,9 +92,9 @@ public class InitializeDocumentInstruction extends ProcessorInstruction {
             boolean formatted = this.isFormatted;
             String xmlFormat = env.getXMLFormat();
             if(xmlFormat != null) {
-                if(xmlFormat.equalsIgnoreCase(XMLFormatConstants.XML_TREE_FORMAT)) {
+                if(xmlFormat.equalsIgnoreCase(XMLPlan.XML_TREE_FORMAT)) {
                     formatted = true;
-                } else if (xmlFormat.equalsIgnoreCase(XMLFormatConstants.XML_COMPACT_FORMAT)) {
+                } else if (xmlFormat.equalsIgnoreCase(XMLPlan.XML_COMPACT_FORMAT)) {
                     formatted = false;
                 }
             }

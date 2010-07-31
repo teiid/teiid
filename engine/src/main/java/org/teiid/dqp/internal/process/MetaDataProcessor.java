@@ -43,7 +43,6 @@ import org.teiid.dqp.internal.process.DQPCore.ClientState;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.dqp.message.RequestID;
-import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
@@ -121,7 +120,7 @@ public class MetaDataProcessor {
             if (workItem != null) {
                 ClientState state = requestManager.getClientState(workContext.getSessionId(), false);
                 if (state != null) {
-                	tempTableStore = state.tempTableStoreImpl;
+                	tempTableStore = state.sessionTables;
                 }
             }
         }
@@ -389,7 +388,7 @@ public class MetaDataProcessor {
     }
 
     public Map<Integer, Object> getDefaultColumn(String tableName, String columnName, 
-        Class javaType) {
+        Class<?> javaType) {
             
         Map<Integer, Object> column = new HashMap<Integer, Object>();
         

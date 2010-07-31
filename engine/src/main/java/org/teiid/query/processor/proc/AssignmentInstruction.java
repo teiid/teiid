@@ -33,7 +33,6 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.processor.program.ProgramInstruction;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.util.VariableContext;
@@ -120,7 +119,7 @@ public class AssignmentInstruction extends ProgramInstruction {
     }
     
     /** 
-     * @see org.teiid.query.processor.program.ProgramInstruction#clone()
+     * @see org.teiid.query.processor.proc.ProgramInstruction#clone()
      */
     public AssignmentInstruction clone() {
         AssignmentInstruction clone = new AssignmentInstruction();

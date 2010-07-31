@@ -1067,4 +1067,11 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	public FunctionLibrary getFunctionLibrary() {
 		return this.functionLibrary;
 	}
+	
+	@Override
+	public boolean isPrimaryKey(Object metadataID) {
+		ArgCheck.isInstanceOf(KeyRecord.class, metadataID);
+		KeyRecord key = (KeyRecord)metadataID;
+		return key.getType() == org.teiid.metadata.KeyRecord.Type.Primary;
+	}
 }

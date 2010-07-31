@@ -79,7 +79,7 @@ public class DependentProcedureAccessNode extends AccessNode {
     @Override
     public void open() throws TeiidComponentException,
     		TeiidProcessingException {
-    	CommandContext context  = (CommandContext)getContext().clone();
+    	CommandContext context  = getContext().clone();
     	context.pushVariableContext(new VariableContext());
     	this.setContext(context);
     	DependentProcedureExecutionNode.shareVariableContext(this, context);

@@ -24,7 +24,6 @@ package org.teiid.query.processor.proc;
 
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.query.processor.program.Program;
 
 
 public interface RepeatedInstruction {

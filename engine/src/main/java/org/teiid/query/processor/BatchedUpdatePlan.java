@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.query.processor.batch;
+package org.teiid.query.processor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,8 +32,6 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.query.processor.ProcessorDataManager;
-import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.util.CommandContext;
@@ -84,10 +82,10 @@ public class BatchedUpdatePlan extends ProcessorPlan {
     public BatchedUpdatePlan clone() {
         List<ProcessorPlan> clonedPlans = new ArrayList<ProcessorPlan>(updatePlans.length);
         
-        clonedPlans.add((ProcessorPlan)updatePlans[0].clone());
+        clonedPlans.add(updatePlans[0].clone());
         for (int i = 1; i <updatePlans.length; i++) {
         	if (contexts == null) {
-                clonedPlans.add((ProcessorPlan)updatePlans[1].clone());        		
+                clonedPlans.add(updatePlans[1].clone());        		
         	} else {
         		clonedPlans.add(clonedPlans.get(0));
         	}
@@ -100,7 +98,7 @@ public class BatchedUpdatePlan extends ProcessorPlan {
      * @since 4.2
      */
     public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
-    	context = (CommandContext)context.clone();
+    	context = context.clone();
     	context.setVariableContext(new VariableContext()); //start a new root variable context
     	this.setContext(context);
         // Initialize all the child plans

@@ -72,7 +72,7 @@ class RelationalPlanExecutor implements PlanExecutor {
         this.bufferMgr = bufferMgr;
         
         ProcessorPlan plan = resultInfo.getPlan();
-        CommandContext subContext = (CommandContext)context.clone();
+        CommandContext subContext = context.clone();
         subContext.pushVariableContext(new VariableContext());
         this.internalProcessor = new QueryProcessor(plan, subContext, bufferMgr, dataMgr);
     }

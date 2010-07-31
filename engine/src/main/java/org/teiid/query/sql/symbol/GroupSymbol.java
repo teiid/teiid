@@ -38,8 +38,8 @@ import org.teiid.query.util.ErrorMessageKeys;
  * first would have name=G, definition=Group1 and the second would have
  * name=Group2, definition=null.</p>
  */
-public class GroupSymbol extends Symbol implements Comparable {
-    
+public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
+	
     public static final String TEMP_GROUP_PREFIX = "#"; //$NON-NLS-1$
 
 	/** Definition of the symbol, may be null */
@@ -49,7 +49,7 @@ public class GroupSymbol extends Symbol implements Comparable {
 	private Object metadataID;
     
     private boolean isTempTable;
-    
+    private boolean isGlobalTable;
     private boolean isProcedure;
     
     private String outputDefinition;
@@ -152,6 +152,8 @@ public class GroupSymbol extends Symbol implements Comparable {
     
     /**
      * Returns true if this is a symbol for a temporary (implicit or explicit) group
+     * May return false for explicit temp tables prior to resolving.
+     * see {@link #isTempTable()}
      * @return
      * @since 5.5
      */
@@ -160,24 +162,16 @@ public class GroupSymbol extends Symbol implements Comparable {
     }
     
     public boolean isImplicitTempGroupSymbol() {
-        return isTempGroupName(getName()) || isTempGroupName(getDefinition());
+        return isTempGroupName(getNonCorrelationName());
     }
 
 	/**
-	 * Compare two groups and give an ordering.  This is done with the hashcode of the
-	 * lowercased group name.  The order is stable.
+	 * Compare two groups and give an ordering.
 	 * @param other Other group
 	 * @return -1, 0, or 1 depending on how this compares to group
 	 */
-	public int compareTo(Object other) {
-		int diff = other.hashCode() - this.hashCode();
-		if(diff == 0) {
-			return 0;
-		} else if(diff <0) {
-			return -1;
-		} else {
-			return 1;
-		}
+    public int compareTo(GroupSymbol o) {
+    	return getCanonicalName().compareTo(o.getCanonicalName());
 	}
 
 	/**
@@ -193,6 +187,7 @@ public class GroupSymbol extends Symbol implements Comparable {
         copy.setProcedure(isProcedure);
         copy.setOutputDefinition(this.getOutputDefinition());
         copy.setOutputName(this.getOutputName());
+        copy.isGlobalTable = isGlobalTable;
 		return copy;
 	}
 
@@ -206,7 +201,7 @@ public class GroupSymbol extends Symbol implements Comparable {
 			return true;
 		}
 
-		if(obj == null || ! (obj instanceof GroupSymbol)) {
+		if(!(obj instanceof GroupSymbol)) {
 			return false;
 		}
 		GroupSymbol other = (GroupSymbol) obj;
@@ -237,6 +232,11 @@ public class GroupSymbol extends Symbol implements Comparable {
         return name.startsWith(TEMP_GROUP_PREFIX);
     }
 
+    /**
+     * Returns if this is a Temp Table 
+     * Set after resolving.
+     * @return
+     */
     public boolean isTempTable() {
         return this.isTempTable;
     }
@@ -256,4 +256,12 @@ public class GroupSymbol extends Symbol implements Comparable {
     public void setOutputDefinition(String outputDefinition) {
         this.outputDefinition = outputDefinition;
     }
+    
+    public boolean isGlobalTable() {
+		return isGlobalTable;
+	}
+    
+    public void setGlobalTable(boolean isGlobalTable) {
+		this.isGlobalTable = isGlobalTable;
+	}
 }

@@ -92,7 +92,7 @@ public class BatchedUpdateNode extends RelationalNode {
             Command updateCommand = (Command)updateCommands.get(i).clone();
             CommandContext context = this.getContext();
             if (this.contexts != null && !this.contexts.isEmpty()) {
-            	context = (CommandContext)context.clone();
+            	context = context.clone();
             	context.setVariableContext(this.contexts.get(i));
             }
             boolean needProcessing = false;
@@ -110,7 +110,7 @@ public class BatchedUpdateNode extends RelationalNode {
         }
         if (!commandsToExecute.isEmpty()) {
             BatchedUpdateCommand command = new BatchedUpdateCommand(commandsToExecute);
-            tupleSource = getDataManager().registerRequest(this.getContext().getProcessorID(), command, modelName, null, getID());
+            tupleSource = getDataManager().registerRequest(getContext(), command, modelName, null, getID());
         }
     }
     

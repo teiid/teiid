@@ -224,7 +224,7 @@ public class ProjectIntoNode extends RelationalNode {
     }
 
     private void registerRequest(Command command) throws TeiidComponentException, TeiidProcessingException {
-    	tupleSource = getDataManager().registerRequest(this.getContext().getProcessorID(), command, this.modelName, null, getID());        
+    	tupleSource = getDataManager().registerRequest(getContext(), command, this.modelName, null, getID());        
     }
     
     private void closeRequest() {

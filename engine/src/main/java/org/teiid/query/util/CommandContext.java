@@ -42,6 +42,7 @@ import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.util.VariableContext;
+import org.teiid.query.tempdata.TempTableStore;
 
 /** 
  * Defines the context that a command is processing in.  For example, this defines
@@ -103,12 +104,14 @@ public class CommandContext implements Cloneable {
 	    private boolean validateXML;
 	    
 	    private BufferManager bufferManager;
+	    
+	    private TempTableStore globalTables;
 	}
 	
 	private GlobalState globalState = new GlobalState();
 
     private VariableContext variableContext = new VariableContext();
-    private Object tempTableStore;
+    private TempTableStore tempTableStore;
     private LinkedList<String> recursionStack;
 
     /**
@@ -180,10 +183,11 @@ public class CommandContext implements Cloneable {
         globalState.processorID = object;
     }
 
-    public Object clone() {
+    public CommandContext clone() {
     	CommandContext clone = new CommandContext();
     	clone.globalState = this.globalState;
     	clone.variableContext = this.variableContext;
+    	clone.tempTableStore = this.tempTableStore;
     	if (this.recursionStack != null) {
             clone.recursionStack = new LinkedList<String>(this.recursionStack);
         }
@@ -355,11 +359,11 @@ public class CommandContext implements Cloneable {
         this.globalState.securityFunctionEvaluator = securityFunctionEvaluator;
     }
 
-	public Object getTempTableStore() {
+	public TempTableStore getTempTableStore() {
 		return tempTableStore;
 	}
 
-	public void setTempTableStore(Object tempTableStore) {
+	public void setTempTableStore(TempTableStore tempTableStore) {
 		this.tempTableStore = tempTableStore;
 	}
 	
@@ -453,6 +457,14 @@ public class CommandContext implements Cloneable {
     
     public void setBufferManager(BufferManager bm) {
     	globalState.bufferManager = bm;
+    }
+    
+    public TempTableStore getGlobalTableStore() {
+    	return globalState.globalTables;
+    }
+    
+    public void setGlobalTableStore(TempTableStore tempTableStore) {
+    	globalState.globalTables = tempTableStore;
     }
 	
 }

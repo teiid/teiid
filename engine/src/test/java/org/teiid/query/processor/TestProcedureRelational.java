@@ -50,6 +50,7 @@ import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.FakeMetadataObject;
 import org.teiid.query.unittest.FakeMetadataStore;
+import org.teiid.query.util.CommandContext;
 
 
 public class TestProcedureRelational {
@@ -723,7 +724,7 @@ public class TestProcedureRelational {
         // Run query 
         HardcodedDataManager dataManager = new HardcodedDataManager() {
         	@Override
-        	public TupleSource registerRequest(Object processorID,
+        	public TupleSource registerRequest(CommandContext context,
         			Command command, String modelName,
         			String connectorBindingId, int nodeID)
         			throws TeiidComponentException {
@@ -736,7 +737,7 @@ public class TestProcedureRelational {
         				Arrays.asList(value+2), Arrays.asList(value+5)
         			});
         		}
-        		return super.registerRequest(processorID, command, modelName,
+        		return super.registerRequest(context, command, modelName,
         				connectorBindingId, nodeID);
         	}
         };

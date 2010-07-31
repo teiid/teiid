@@ -84,23 +84,31 @@ class SPage {
 					return new SearchResult(-previousValues.getTuples().size() - 1, page.prev, previousValues);
 				}
 				if (parent != null && index != 0) {
-					//for non-matches move the previous pointer over to this page
-					SPage childPage = page;
-					List oldKey = null;
-					List newKey = page.stree.extractKey(values.getTuples().get(0));
-					for (Iterator<SearchResult> desc = parent.descendingIterator(); desc.hasNext();) {
-						SearchResult sr = desc.next();
-						int parentIndex = Math.max(0, -sr.index - 2);
-						if (oldKey == null) {
-							oldKey = sr.values.getTuples().set(parentIndex, newKey); 
-						} else if (page.stree.comparator.compare(oldKey, sr.values.getTuples().get(parentIndex)) == 0 ) {
-							sr.values.getTuples().set(parentIndex, newKey);
-						} else {
-							break;
+					page.stree.updateLock.lock();
+					try {
+						index = Collections.binarySearch(values.getTuples(), k, page.stree.comparator);
+						if (index != 0) {
+							//for non-matches move the previous pointer over to this page
+							SPage childPage = page;
+							List oldKey = null;
+							List newKey = page.stree.extractKey(values.getTuples().get(0));
+							for (Iterator<SearchResult> desc = parent.descendingIterator(); desc.hasNext();) {
+								SearchResult sr = desc.next();
+								int parentIndex = Math.max(0, -sr.index - 2);
+								if (oldKey == null) {
+									oldKey = sr.values.getTuples().set(parentIndex, newKey); 
+								} else if (page.stree.comparator.compare(oldKey, sr.values.getTuples().get(parentIndex)) == 0 ) {
+									sr.values.getTuples().set(parentIndex, newKey);
+								} else {
+									break;
+								}
+								sr.page.children.set(parentIndex, childPage);
+								sr.page.setValues(sr.values);
+								childPage = sr.page;
+							}
 						}
-						sr.page.children.set(parentIndex, childPage);
-						sr.page.setValues(sr.values);
-						childPage = sr.page;
+					} finally {
+						page.stree.updateLock.unlock();
 					}
 				}
 			}

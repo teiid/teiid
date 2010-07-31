@@ -37,7 +37,6 @@ import org.teiid.query.metadata.TempCapabilitiesFinder;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
-import org.teiid.query.optimizer.proc.ProcedurePlanner;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.xml.XMLPlanner;
 import org.teiid.query.processor.ProcessorPlan;
@@ -107,7 +106,9 @@ public class QueryOptimizer {
 				if (command.getType() == Command.TYPE_QUERY && command instanceof Query && QueryResolver.isXMLQuery((Query)command, metadata)) {
 					result = XML_PLANNER.optimize(command, idGenerator, metadata, capFinder, analysisRecord, context);
 				} else {
-					result = new RelationalPlanner().optimize(command, idGenerator, metadata, capFinder, analysisRecord, context);
+					RelationalPlanner planner = new RelationalPlanner();
+					planner.initialize(command, idGenerator, metadata, capFinder, analysisRecord, context);
+					result = planner.optimize(command);
 				}
 			} catch (QueryResolverException e) {
 				throw new TeiidRuntimeException(e);

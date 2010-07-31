@@ -29,6 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.teiid.common.buffer.SPage.SearchResult;
 import org.teiid.core.TeiidComponentException;
@@ -47,7 +48,7 @@ public class STree {
 	private int mask = 1;
 	private int shift = 1;
 	
-	protected SPage[] header = new SPage[] {new SPage(this, true)};
+	protected volatile SPage[] header = new SPage[] {new SPage(this, true)};
     protected BatchManager keyManager;
     protected BatchManager leafManager;
     protected Comparator comparator;
@@ -55,6 +56,8 @@ public class STree {
     protected int keyLength;
     protected String[] types;
     protected String[] keytypes;
+    
+    protected ReentrantLock updateLock = new ReentrantLock();
     
     private AtomicInteger rowCount = new AtomicInteger();
 	

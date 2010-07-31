@@ -263,8 +263,8 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         .append(".ProcedureParams as p") //$NON-NLS-1$
         .append(" WHERE UCASE(VDBName)").append(LIKE_ESCAPE)//$NON-NLS-1$
         .append(" AND UCASE(SchemaName)").append(LIKE_ESCAPE)//$NON-NLS-1$
-        .append(" AND UCASE(ProcedureName)") .append(LIKE_ESCAPE) //$NON-NLS-1$
-        .append(" AND UCASE(p.Name) LIKE ?") //$NON-NLS-1$
+        .append(" AND UCASE(ProcedureName)").append(LIKE_ESCAPE) //$NON-NLS-1$
+        .append(" AND UCASE(p.Name)").append(LIKE_ESCAPE) //$NON-NLS-1$
         .append(" ORDER BY PROCEDURE_SCHEM, PROCEDURE_NAME, COLUMN_TYPE, POSITION").toString(); //$NON-NLS-1$
 
     private static final String QUERY_SCHEMAS =

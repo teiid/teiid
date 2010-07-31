@@ -69,7 +69,7 @@ public class PlanExecutionNode extends RelationalNode {
 		throws TeiidComponentException, TeiidProcessingException {
 		super.open();
         // Initialize plan for execution
-        CommandContext subContext = (CommandContext) getContext().clone();
+        CommandContext subContext = getContext().clone();
         subContext.pushVariableContext(new VariableContext());
         plan.initialize(subContext, getDataManager(), this.getBufferManager());        
         

@@ -33,7 +33,6 @@ import org.teiid.client.plan.PlanNode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.processor.program.Program;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.VariableContext;

@@ -112,7 +112,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		}
 		if (!state.done) {
 			if (state.processor == null) {
-				CommandContext subContext = (CommandContext) context.clone();
+				CommandContext subContext = context.clone();
 				state.plan.reset();
 		        state.processor = new QueryProcessor(state.plan, subContext, manager, this.dataMgr);
 		        if (container.getCommand().getCorrelatedReferences() != null) { 

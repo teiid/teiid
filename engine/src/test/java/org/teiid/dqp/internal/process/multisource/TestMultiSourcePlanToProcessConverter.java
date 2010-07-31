@@ -73,7 +73,7 @@ public class TestMultiSourcePlanToProcessConverter {
             setMustRegisterCommands(false);
         }
 
-        public TupleSource registerRequest(Object processorID, Command command, String modelName, String connectorBindingId, int nodeID) throws org.teiid.core.TeiidComponentException {
+        public TupleSource registerRequest(CommandContext context, Command command, String modelName, String connectorBindingId, int nodeID) throws org.teiid.core.TeiidComponentException {
         	assertNotNull(connectorBindingId);
         	
         	Collection elements = ElementCollectorVisitor.getElements(command, true, true);
@@ -84,7 +84,7 @@ public class TestMultiSourcePlanToProcessConverter {
                     fail("Query Contains a MultiSourceElement -- MultiSource expansion did not happen"); //$NON-NLS-1$
                 }
             }
-            return super.registerRequest(processorID, command, modelName, connectorBindingId, nodeID);
+            return super.registerRequest(context, command, modelName, connectorBindingId, nodeID);
         }
     }
 

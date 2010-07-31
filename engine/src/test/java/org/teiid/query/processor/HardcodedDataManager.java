@@ -110,10 +110,10 @@ public class HardcodedDataManager implements
     }
     
     /** 
-     * @see org.teiid.query.processor.ProcessorDataManager#registerRequest(java.lang.Object, org.teiid.query.sql.lang.Command, java.lang.String, String, int)
+     * @see org.teiid.query.processor.ProcessorDataManager#registerRequest(CommandContext, org.teiid.query.sql.lang.Command, java.lang.String, String, int)
      * @since 4.2
      */
-    public TupleSource registerRequest(Object processorID,
+    public TupleSource registerRequest(CommandContext context,
                                 Command command,
                                 String modelName,
                                 String connectorBindingId, int nodeID) throws TeiidComponentException {

@@ -107,11 +107,10 @@ public class From implements LanguageObject {
      * Adds a new collection of groups to the list
      * @param groups Collection of {@link GroupSymbol}
      */
-    public void addGroups( Collection groups ) {
+    public void addGroups( Collection<GroupSymbol> groups ) {
     	if(groups != null) {
-			Iterator iter = groups.iterator();
-			while(iter.hasNext()) {
-				clauses.add(new UnaryFromClause((GroupSymbol) iter.next()));
+    		for (GroupSymbol groupSymbol : groups) {
+				clauses.add(new UnaryFromClause(groupSymbol));
 			}
         }
     }
@@ -120,8 +119,8 @@ public class From implements LanguageObject {
      * Returns an ordered list of the groups in all sub-clauses.
      * @return List of {@link GroupSymbol}
      */
-    public List getGroups() {
-        List groups = new ArrayList();
+    public List<GroupSymbol> getGroups() {
+        List<GroupSymbol> groups = new ArrayList<GroupSymbol>();
         if(clauses != null) {
             for(int i=0; i<clauses.size(); i++) {
                 FromClause clause = (FromClause) clauses.get(i);

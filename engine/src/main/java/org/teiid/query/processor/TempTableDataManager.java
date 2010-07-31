@@ -32,10 +32,7 @@ import org.teiid.query.util.CommandContext;
 
 
 /**
- * This proxy ProcessorDataManager is used during XML query processing to handle temporary groups
- * in the document model.  Temp groups are materialized during processing, and their tuple sources
- * are cached, so this proxy shortcuts the need to go to the DataTierManager and immediately
- * returns the tuple source (synchronously) if a temp group's source is what's being requested.
+ * This proxy ProcessorDataManager is used to handle temporary tables.
  */
 public class TempTableDataManager implements ProcessorDataManager {
 
@@ -45,38 +42,28 @@ public class TempTableDataManager implements ProcessorDataManager {
     /**
      * Constructor takes the "real" ProcessorDataManager that this object will be a proxy to,
      * and will pass most calls through to transparently.  Only when a request is registered for
-     * a temp group will this proxy do it's thing.  A ProcessorEnvironment is needed to to 
-     * access cached information about temp groups
+     * a temp group will this proxy do it's thing.
      * @param processorDataManager the real ProcessorDataManager that this object is a proxy to
-     * @param env a ProcessorEnvironment implementation
      */
     public TempTableDataManager(ProcessorDataManager processorDataManager, TempTableStore tempTableStore){
         this.processorDataManager = processorDataManager;
         this.tempTableStore = tempTableStore;
     }
 
-	/**
-     * This is the magic method.  If the command is selecting from a temporary group, that 
-     * temporary groups tuple source (which is cached in the ProcessorEnvironment) will
-     * be retrieved and immediately (synchronously) delivered to the QueryProcessor.
-     * If a temp group is <i>not</i> being selected from, then this request will be
-     * passed through to the underlying ProcessorDataManager.
-	 * @throws TeiidProcessingException 
-	 */
 	public TupleSource registerRequest(
-		Object processorID,
+		CommandContext context,
 		Command command,
 		String modelName,
 		String connectorBindingId, int nodeID)
 		throws TeiidComponentException, TeiidProcessingException {          
 
         if(tempTableStore != null) {
-            TupleSource result = tempTableStore.registerRequest(command);
+            TupleSource result = tempTableStore.registerRequest(context, command);
             if (result != null) {
             	return result;
             }
         }
-        return this.processorDataManager.registerRequest(processorID, command, modelName, connectorBindingId, nodeID);
+        return this.processorDataManager.registerRequest(context, command, modelName, connectorBindingId, nodeID);
 	}
 
     public Object lookupCodeValue(

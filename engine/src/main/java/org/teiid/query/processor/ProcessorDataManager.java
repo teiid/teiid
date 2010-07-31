@@ -32,7 +32,7 @@ import org.teiid.query.util.CommandContext;
 
 public interface ProcessorDataManager {
 
-	TupleSource registerRequest(Object processorId, Command command, String modelName, String connectorBindingId, int nodeID)
+	TupleSource registerRequest(CommandContext context, Command command, String modelName, String connectorBindingId, int nodeID)
 		throws TeiidComponentException, TeiidProcessingException;
 	
     /**

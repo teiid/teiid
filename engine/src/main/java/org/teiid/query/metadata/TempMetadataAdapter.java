@@ -692,5 +692,17 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     	
     	return this.actualMetadata.isScalarGroup(groupID);
     }
+    
+    @Override
+    public boolean isPrimaryKey(Object metadataID) {
+    	if (metadataID instanceof TempMetadataID) {
+    		TempMetadataID tid = (TempMetadataID)metadataID;
+    		if (tid.getPrimaryKey() != null) {
+    			return true;
+    		}
+    		return false;
+    	}
+    	return this.actualMetadata.isPrimaryKey(metadataID);
+    }
 
 }

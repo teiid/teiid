@@ -368,5 +368,10 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 	public FunctionLibrary getFunctionLibrary() {
 		return actualMetadata.getFunctionLibrary();
 	}
+	
+	@Override
+	public boolean isPrimaryKey(Object metadataID) {
+		return actualMetadata.isPrimaryKey(metadataID);
+	}
 
 }

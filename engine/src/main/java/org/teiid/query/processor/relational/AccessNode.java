@@ -173,7 +173,7 @@ public class AccessNode extends RelationalNode {
 
 	private void registerRequest(Command atomicCommand)
 			throws TeiidComponentException, TeiidProcessingException {
-		tupleSource = getDataManager().registerRequest(this.getContext().getProcessorID(), atomicCommand, modelName, connectorBindingId, getID());
+		tupleSource = getDataManager().registerRequest(getContext(), atomicCommand, modelName, connectorBindingId, getID());
 	}
 	
 	protected boolean processCommandsIndividually() {

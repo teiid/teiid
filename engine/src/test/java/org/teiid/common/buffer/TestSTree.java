@@ -28,7 +28,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.sql.symbol.ElementSymbol;
 
@@ -42,7 +41,7 @@ public class TestSTree {
 		ElementSymbol e2 = new ElementSymbol("y");
 		e2.setType(String.class);
 		List elements = Arrays.asList(e1, e2);
-		STree map = bm.createSTree(elements, "1", TupleSourceType.PROCESSOR, 1);
+		STree map = bm.createSTree(elements, "1", 1);
 		
 		for (int i = 20000; i > 0; i--) {
 			assertNull(map.insert(Arrays.asList(i, String.valueOf(i)), true));

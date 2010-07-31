@@ -29,7 +29,6 @@ import org.teiid.client.plan.PlanNode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.logging.LogManager;
-import org.teiid.query.processor.program.ProgramInstruction;
 import org.teiid.query.sql.symbol.Expression;
 
 
@@ -54,7 +53,7 @@ public class ErrorInstruction extends ProgramInstruction {
 	}
     
     /** 
-     * @see org.teiid.query.processor.program.ProgramInstruction#clone()
+     * @see org.teiid.query.processor.proc.ProgramInstruction#clone()
      */
     public ErrorInstruction clone() {
         ErrorInstruction clone = new ErrorInstruction();

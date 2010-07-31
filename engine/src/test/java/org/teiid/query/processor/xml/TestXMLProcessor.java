@@ -548,7 +548,7 @@ public class TestXMLProcessor {
         List normDocE3 = FakeMetadataFactory.createElements(normDoc3, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.DiscontinuedItem", "Catalogs.Catalog.items.DiscontinuedItem.@ItemID", "Catalogs.Catalog.items.DiscontinuedItem.Name", "Catalogs.Catalog.items.DiscontinuedItem.Quantity", "Catalogs.Catalog.items.StatusUnknown", "Catalogs.Catalog.items.StatusUnknown.@ItemID", "Catalogs.Catalog.items.StatusUnknown.Name", "Catalogs.Catalog.items.StatusUnknown.Quantity", "Catalogs.Catalog.items.Shouldn't see", "Catalogs.Catalog.items.Shouldn't see 2" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$
                                                             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
         
-        QueryNode vspqn1 = new QueryNode("vsp1", "CREATE VIRTUAL PROCEDURE BEGIN SELECT * FROM xmltest.doc1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn1 = new QueryNode("vsp1", "CREATE VIRTUAL PROCEDURE BEGIN insert into #temp select * from stock.items; SELECT * FROM xmltest.doc1 where Item.Quantity < (select avg(itemquantity) from #temp); END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsprs1 = FakeMetadataFactory.createResultSet("pm1.vsprs1", xmltest, new String[] { "xml" }, new String[] { DataTypeManager.DefaultDataTypes.XML }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vspp1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.XML, vsprs1); //$NON-NLS-1$
         FakeMetadataObject vsp1 = FakeMetadataFactory.createVirtualProcedure("xmltest.vsp1", xmltest, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn1); //$NON-NLS-1$
@@ -11847,7 +11847,7 @@ public class TestXMLProcessor {
     }    
     
     /**
-     * Also tests the logic of the {@link XMLPostProcessor}
+     * Ensures that temp tables are still visible when processing criteria
      */
     @Test public void testProcedureAndXML() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
@@ -11861,10 +11861,6 @@ public class TestXMLProcessor {
             "                <Name>Lamp</Name>\r\n" +  //$NON-NLS-1$
             "                <Quantity>5</Quantity>\r\n" +  //$NON-NLS-1$
             "            </Item>\r\n" +  //$NON-NLS-1$
-            "            <Item ItemID=\"002\">\r\n" +  //$NON-NLS-1$
-            "                <Name>Screwdriver</Name>\r\n" +  //$NON-NLS-1$
-            "                <Quantity>100</Quantity>\r\n" +  //$NON-NLS-1$
-            "            </Item>\r\n" +  //$NON-NLS-1$
             "            <Item ItemID=\"003\">\r\n" +  //$NON-NLS-1$
             "                <Name>Goat</Name>\r\n" +  //$NON-NLS-1$
             "                <Quantity>4</Quantity>\r\n" +  //$NON-NLS-1$
@@ -11872,6 +11868,7 @@ public class TestXMLProcessor {
             "        </Items>\r\n" +  //$NON-NLS-1$
             "    </Catalog>\r\n" +  //$NON-NLS-1$
             "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
+        helpTestProcess("call xmltest.vsp1()", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
     }
     
     /**

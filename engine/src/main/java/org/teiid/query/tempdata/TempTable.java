@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
@@ -43,6 +44,8 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.metadata.TempMetadataID;
@@ -124,7 +127,8 @@ class TempTable {
 			this.eval = new Evaluator(map, null, null);
 			this.condition = condition;
 			this.project = shouldProject();
-			reserved = reserveBuffers();
+			this.reserved = reserveBuffers();
+			lock.readLock().lock();
 		}
 
 		@Override
@@ -152,6 +156,7 @@ class TempTable {
 		
 		@Override
 		public void closeSource() {
+			lock.readLock().unlock();
 			bm.releaseBuffers(reserved);
 			reserved = 0;
 			browser.closeSource();
@@ -191,6 +196,8 @@ class TempTable {
 		
 		int process() throws ExpressionEvaluationException, TeiidComponentException, TeiidProcessingException {
 			int reserved = reserveBuffers();
+			boolean held = lock.writeLock().isHeldByCurrentThread();
+			lock.writeLock().lock();
 			boolean success = false;
 			try {
 				while (currentTuple != null || (currentTuple = ts.nextTuple()) != null) {
@@ -207,18 +214,22 @@ class TempTable {
 				success = true;
 			} finally {
 				bm.releaseBuffers(reserved);
-				if (!success) {
-					TupleSource undoTs = undoLog.createIndexedTupleSource();
-					List<?> tuple = null;
-					try {
+				try {
+					if (!success) {
+						TupleSource undoTs = undoLog.createIndexedTupleSource();
+						List<?> tuple = null;
 						while ((tuple = undoTs.nextTuple()) != null) {
 							undo(tuple);
 						}
-					} catch (TeiidException e) {
-						
 					}
+				} catch (TeiidException e) {
+					LogManager.logError(LogConstants.CTX_DQP, e, e.getMessage());
+				} finally {
+					if (!held) {
+						lock.writeLock().unlock();
+					}
+					close();
 				}
-				close();
 			}
 			return updateCount;
 		}
@@ -243,6 +254,7 @@ class TempTable {
 	private BufferManager bm;
 	private String sessionID;
 	private TempMetadataID tid;
+	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	
 	private int keyBatchSize;
 	private int leafBatchSize;
@@ -255,9 +267,9 @@ class TempTable {
     		id.setType(DataTypeManager.DefaultDataClasses.INTEGER);
     		columns.add(0, id);
     		rowId = new AtomicInteger();
-        	tree = bm.createSTree(columns, sessionID, TupleSourceType.PROCESSOR, 1);
+        	tree = bm.createSTree(columns, sessionID, 1);
         } else {
-        	tree = bm.createSTree(columns, sessionID, TupleSourceType.PROCESSOR, primaryKeyLength);
+        	tree = bm.createSTree(columns, sessionID, primaryKeyLength);
         }
 		this.columns = columns;
 		this.sessionID = sessionID;

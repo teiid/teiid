@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.query.optimizer.proc;
+package org.teiid.query.optimizer;
 
 import java.util.Map;
 
@@ -32,8 +32,6 @@ import org.teiid.core.util.Assertion;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.optimizer.CommandPlanner;
-import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.proc.AssignmentInstruction;
@@ -45,9 +43,9 @@ import org.teiid.query.processor.proc.ExecDynamicSqlInstruction;
 import org.teiid.query.processor.proc.IfInstruction;
 import org.teiid.query.processor.proc.LoopInstruction;
 import org.teiid.query.processor.proc.ProcedurePlan;
+import org.teiid.query.processor.proc.Program;
+import org.teiid.query.processor.proc.ProgramInstruction;
 import org.teiid.query.processor.proc.WhileInstruction;
-import org.teiid.query.processor.program.Program;
-import org.teiid.query.processor.program.ProgramInstruction;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.DynamicCommand;
 import org.teiid.query.sql.lang.ProcedureContainer;

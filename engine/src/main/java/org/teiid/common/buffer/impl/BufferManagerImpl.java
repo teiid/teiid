@@ -472,7 +472,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
         return tupleBuffer;
     }
     
-    public STree createSTree(final List elements, String groupName, TupleSourceType tupleSourceType, int keyLength) {
+    public STree createSTree(final List elements, String groupName, int keyLength) {
     	String newID = String.valueOf(this.tsId.getAndIncrement());
     	int[] lobIndexes = LobManager.getLobIndexes(elements);
     	BatchManager bm = new BatchManagerImpl(newID, elements.size(), lobIndexes);
@@ -481,7 +481,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     	for (int i = 1; i < compareIndexes.length; i++) {
 			compareIndexes[i] = i;
 		}
-        LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating STree:", newID, "of type ", tupleSourceType); //$NON-NLS-1$ //$NON-NLS-2$
+        LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating STree:", newID); //$NON-NLS-1$ 
     	return new STree(keyManager, bm, new ListNestedSortComparator(compareIndexes), getProcessorBatchSize(), keyLength, TupleBuffer.getTypeNames(elements));
     }
 

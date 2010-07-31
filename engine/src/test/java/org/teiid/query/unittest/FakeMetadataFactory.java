@@ -2127,6 +2127,14 @@ public class FakeMetadataFactory {
         virtGroup1.putProperty(FakeMetadataObject.Props.MAT_GROUP, physGroup1);
         virtGroup1.putProperty(FakeMetadataObject.Props.MAT_STAGE, physGroupStage1);
 
+        //add one virtual group that uses the materialized group in transformation with NOCACHE option
+        QueryNode vTrans2 = new QueryNode("MatView.VGroup2", "/* cache */ SELECT x FROM matsrc");         //$NON-NLS-1$ //$NON-NLS-2$
+        FakeMetadataObject vGroup2 = createVirtualGroup("MatView.VGroup2", virtModel, vTrans2); //$NON-NLS-1$
+        List vElements2 = createElements(vGroup2,
+                                      new String[] { "x" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING});
+
+        
         FakeMetadataStore store = new FakeMetadataStore();
         store.addObject(virtModel);
         store.addObject(physModel);
@@ -2147,6 +2155,8 @@ public class FakeMetadataFactory {
         store.addObjects(vElements);
         store.addObject(virtGroup1);
         store.addObjects(virtElements1);
+        store.addObject(vGroup2);
+        store.addObjects(vElements2);
         return new FakeMetadataFacade(store);
     }
     

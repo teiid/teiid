@@ -20,15 +20,14 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.query.processor.batch;
+package org.teiid.query.processor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.common.buffer.TupleBatch;
-import org.teiid.query.processor.FakeProcessorPlan;
-import org.teiid.query.processor.batch.BatchedUpdatePlan;
+import org.teiid.query.processor.BatchedUpdatePlan;
 
 import junit.framework.TestCase;
 

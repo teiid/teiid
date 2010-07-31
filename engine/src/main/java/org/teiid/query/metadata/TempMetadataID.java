@@ -49,7 +49,7 @@ public class TempMetadataID implements Serializable {
     private boolean isTempTable;
     private Collection<TempMetadataID> accessPatterns;
     private int cardinality = QueryMetadataInterface.UNKNOWN_CARDINALITY;
-    private LRUCache localCache;
+    private LRUCache<Object, Object> localCache;
     private boolean scalarGroup;
     private List<TempMetadataID> primaryKey;
     
@@ -234,7 +234,7 @@ public class TempMetadataID implements Serializable {
     
     Object setProperty(Object key, Object value) {
 		if (this.localCache == null) {
-			this.localCache = new LRUCache(LOCAL_CACHE_SIZE);
+			this.localCache = new LRUCache<Object, Object>(LOCAL_CACHE_SIZE);
     	}
 		return this.localCache.put(key, value);
     }

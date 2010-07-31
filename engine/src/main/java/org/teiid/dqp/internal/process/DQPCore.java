@@ -25,7 +25,6 @@ package org.teiid.dqp.internal.process;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -146,10 +145,10 @@ public class DQPCore implements DQP {
 	
 	static class ClientState {
 		List<RequestID> requests;
-		TempTableStore tempTableStoreImpl;
+		TempTableStore sessionTables;
 		
 		public ClientState(TempTableStore tableStoreImpl) {
-			this.tempTableStoreImpl = tableStoreImpl;
+			this.sessionTables = tableStoreImpl;
 		}
 		
 		public synchronized void addRequest(RequestID requestID) {
@@ -203,7 +202,7 @@ public class DQPCore implements DQP {
     private int chunkSize = Streamable.STREAMING_BATCH_SIZE_IN_BYTES;
     
 	private Map<RequestID, RequestWorkItem> requests = new ConcurrentHashMap<RequestID, RequestWorkItem>();			
-	private Map<String, ClientState> clientState = Collections.synchronizedMap(new HashMap<String, ClientState>());
+	private Map<String, ClientState> clientState = new ConcurrentHashMap<String, ClientState>();
     private boolean useEntitlements = false;
     
     private int maxActivePlans = DQPConfiguration.DEFAULT_MAX_ACTIVE_PLANS;
@@ -236,14 +235,12 @@ public class DQPCore implements DQP {
     }
     
     public ClientState getClientState(String key, boolean create) {
-    	synchronized (clientState) {
-    		ClientState state = clientState.get(key);
-    		if (state == null && create) {
-    			state = new ClientState(new TempTableStore(bufferManager, key, null));
-        		clientState.put(key, state);
-    		}
-    		return state;
+		ClientState state = clientState.get(key);
+		if (state == null && create) {
+			state = new ClientState(new TempTableStore(bufferManager, key));
+    		clientState.put(key, state);
 		}
+		return state;
     }
 
     /**
@@ -337,7 +334,7 @@ public class DQPCore implements DQP {
 	    ClientState state = this.getClientState(workContext.getSessionId(), true);
 	    request.initialize(requestMsg, bufferManager,
 				dataTierMgr, transactionService, processorDebugAllowed,
-				state.tempTableStoreImpl, workContext,
+				state.sessionTables, workContext,
 				connectorManagerRepository, this.useEntitlements);
 		
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
@@ -675,8 +672,7 @@ public class DQPCore implements DQP {
                                             this.bufferService,
                                             this.maxCodeTables,
                                             this.maxCodeRecords,
-                                            this.maxCodeTableRecords);    
-
+                                            this.maxCodeTableRecords); 
 	}
 	
 	public void setBufferService(BufferService service) {

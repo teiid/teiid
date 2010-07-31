@@ -69,7 +69,7 @@ public class SimpleQueryProcessorFactory implements QueryProcessor.ProcessorFact
 				idGenerator, finder, AnalysisRecord.createNonRecordingRecord(),
 				commandContext);
 
-		CommandContext copy = (CommandContext) commandContext.clone();
+		CommandContext copy = commandContext.clone();
 		return new QueryProcessor(plan, copy, bufferMgr, dataMgr);
 	}
 }
