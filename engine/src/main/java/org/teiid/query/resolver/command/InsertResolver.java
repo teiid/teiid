@@ -258,11 +258,9 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             
             String varName = varSymbol.getShortCanonicalName();
             String changingKey = ProcedureReservedWords.CHANGING + ElementSymbol.SEPARATOR + varName;
-            String inputKey = ProcedureReservedWords.INPUT + ElementSymbol.SEPARATOR + varName;
             String inputsKey = ProcedureReservedWords.INPUTS + ElementSymbol.SEPARATOR + varName;
             result.put(changingKey, new Constant(Boolean.TRUE));
             Object value = valIter.next();
-            result.put(inputKey, value);
             result.put(inputsKey, value);
         }
         
@@ -278,10 +276,8 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             
             String varName = varSymbol.getShortCanonicalName();
             String changingKey = ProcedureReservedWords.CHANGING + ElementSymbol.SEPARATOR + varName;
-            String inputKey = ProcedureReservedWords.INPUT + ElementSymbol.SEPARATOR + varName;
             String inputsKey = ProcedureReservedWords.INPUTS + ElementSymbol.SEPARATOR + varName;
             result.put(changingKey, new Constant(Boolean.FALSE));
-            result.put(inputKey, value);
             result.put(inputsKey, value);
         }
         

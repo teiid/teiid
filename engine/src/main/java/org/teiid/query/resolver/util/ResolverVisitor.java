@@ -35,6 +35,7 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.UnresolvedSymbolDescription;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.query.QueryPlugin;
@@ -208,18 +209,25 @@ public class ResolverVisitor extends LanguageVisitor {
         
         //copy the match information
         ElementSymbol resolvedSymbol = match.element;
+        GroupSymbol resolvedGroup = match.group;
+        String oldName = elementSymbol.getOutputName();
         if (isExternal //convert input to inputs
         		&& metadata.isScalarGroup(resolvedSymbol.getGroupSymbol().getMetadataID())
         		&& ProcedureReservedWords.INPUT.equals(groupContext)) {
         	resolvedSymbol = new ElementSymbol(ProcedureReservedWords.INPUTS + ElementSymbol.SEPARATOR + elementShortName);
         	resolveElementSymbol(resolvedSymbol);
-        	elementSymbol.setOutputName(resolvedSymbol.getOutputName());
+        	oldName = resolvedSymbol.getOutputName();
+        	resolvedGroup = new GroupSymbol(ProcedureReservedWords.INPUTS);
+        	try {
+				ResolverUtil.resolveGroup(resolvedGroup, metadata);
+			} catch (QueryResolverException e) {
+				throw new TeiidRuntimeException(e);
+			}
         } 
         elementSymbol.setIsExternalReference(isExternal);
         elementSymbol.setType(resolvedSymbol.getType());
         elementSymbol.setMetadataID(resolvedSymbol.getMetadataID());
-        elementSymbol.setGroupSymbol(match.group);
-        String oldName = elementSymbol.getOutputName();
+        elementSymbol.setGroupSymbol(resolvedGroup);
         elementSymbol.setName(resolvedSymbol.getName());
         elementSymbol.setOutputName(oldName);
    }

@@ -1895,7 +1895,7 @@ public class QueryRewriter {
                 Expression value = (Expression)variables.get(es.getCanonicalName());
 
                 if (value == null) {
-	                if ((grpName.equals(ProcedureReservedWords.INPUT) || grpName.equals(ProcedureReservedWords.INPUTS))) {
+	                if (grpName.equals(ProcedureReservedWords.INPUTS)) {
 	                	return new Constant(null, es.getType());
 	                } 
 	                if (grpName.equals(ProcedureReservedWords.CHANGING)) {
@@ -2460,7 +2460,7 @@ public class QueryRewriter {
         Boolean result = null;
         for (ElementSymbol var : ElementCollectorVisitor.getElements(expr, false)) {
             String grpName = var.getGroupSymbol().getName();
-            if (var.isExternalReference() && (grpName.equalsIgnoreCase(ProcedureReservedWords.INPUT) || grpName.equalsIgnoreCase(ProcedureReservedWords.INPUTS))) {
+            if (var.isExternalReference() && grpName.equalsIgnoreCase(ProcedureReservedWords.INPUTS)) {
                 
                 String changingKey = ProcedureReservedWords.CHANGING + ElementSymbol.SEPARATOR + var.getShortCanonicalName();
                 

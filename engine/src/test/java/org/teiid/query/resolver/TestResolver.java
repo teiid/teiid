@@ -66,6 +66,7 @@ import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.From;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.Select;
@@ -2220,6 +2221,24 @@ public class TestResolver {
         assertNotNull("Input parameter does not have group", inElement.getGroupSymbol()); //$NON-NLS-1$
     }
     
+    @Test public void testInputToInputsConversion() throws Exception {
+        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
+        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
+        procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e2 from pm1.g1 where e2=INPUTS.e2;\n"; //$NON-NLS-1$
+        procedure = procedure + "END\n"; //$NON-NLS-1$
+
+        String userUpdateStr = "UPDATE vm1.g1 SET e2=40"; //$NON-NLS-1$
+        
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+
+        ProcedureContainer userCommand = (ProcedureContainer)QueryParser.getQueryParser().parseCommand(userUpdateStr);
+        QueryResolver.resolveCommand(userCommand, metadata);
+        
+        Command command = QueryResolver.expandCommand(userCommand, metadata, AnalysisRecord.createNonRecordingRecord());
+        assertEquals("CREATE PROCEDURE\nBEGIN\nDECLARE integer var1;\nROWS_UPDATED = SELECT pm1.g1.e2 FROM pm1.g1 WHERE e2 = INPUTS.e2;\nEND", command.toString());
+    }
+    
     @Test public void testDefect16894_resolverException_1() {
         helpResolve("SELECT * FROM (SELECT * FROM Pm1.g1 AS Y) AS X"); //$NON-NLS-1$
     }
@@ -2232,27 +2251,10 @@ public class TestResolver {
 		String sql = "select e1 as x ORDER BY x"; //$NON-NLS-1$      
 		helpResolveException(sql);
 	}
-
-// Not support XML query as subquery
-//    @Test public void testDefect17743() {
-//        CompareCriteria expected = new CompareCriteria();
-//        ElementSymbol es = new ElementSymbol("node1"); //$NON-NLS-1$
-//        GroupSymbol gs = new GroupSymbol("doc1"); //$NON-NLS-1$
-//        es.setGroupSymbol(gs);
-//        expected.setLeftExpression(es);
-//        expected.setOperator(CompareCriteria.EQ);
-//        ScalarSubquery subquery = new ScalarSubquery(helpResolve("select node1 from xmltest.doc1")); //$NON-NLS-1$
-//        expected.setRightExpression(subquery); //$NON-NLS-1$
-//        Query query = (Query) helpResolve("select * from xmltest.doc1 where node1 = (select node1 from xmltest.doc1)"); //$NON-NLS-1$
-//        Criteria actual = query.getCriteria();
-//        assertEquals("Did not match expected criteria", expected, actual);     //$NON-NLS-1$
-//    }
-    
     
     @Test public void testValidFullElementNotInQueryGroups() {
         helpResolveException("select pm1.g1.e1 FROM pm1.g1 g"); //$NON-NLS-1$
     }
-    
     
     @Test public void testUnionInSubquery() throws Exception {
         String sql = "SELECT StringKey FROM (SELECT BQT2.SmallB.StringKey FROM BQT2.SmallB union SELECT convert(BQT2.SmallB.FloatNum, string) FROM BQT2.SmallB) x";  //$NON-NLS-1$

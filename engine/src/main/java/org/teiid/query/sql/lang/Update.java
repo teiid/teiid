@@ -266,8 +266,6 @@ public class Update extends TranslatableProcedureContainer {
         for (Iterator iter = getChangeList().getClauses().iterator(); iter.hasNext();) {
         	SetClause setClause = (SetClause)iter.next();
             ElementSymbol symbol = (ElementSymbol)(setClause.getSymbol()).clone();
-            symbol.setName(ProcedureReservedWords.INPUT + SingleElementSymbol.SEPARATOR + symbol.getShortCanonicalName());
-            map.put( symbol, setClause.getValue() );
             symbol = (ElementSymbol)(setClause.getSymbol()).clone();
             symbol.setName(ProcedureReservedWords.INPUTS + SingleElementSymbol.SEPARATOR + symbol.getShortCanonicalName());
             map.put( symbol, setClause.getValue() );

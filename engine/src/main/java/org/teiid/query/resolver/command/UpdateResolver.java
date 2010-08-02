@@ -102,10 +102,8 @@ public class UpdateResolver extends ProcedureContainerResolver implements Variab
             
             String varName = leftSymbol.getShortCanonicalName();
             String changingKey = ProcedureReservedWords.CHANGING + ElementSymbol.SEPARATOR + varName;
-            String inputKey = ProcedureReservedWords.INPUT + ElementSymbol.SEPARATOR + varName;
             String inputsKey = ProcedureReservedWords.INPUTS + ElementSymbol.SEPARATOR + varName;
             result.put(changingKey, new Constant(Boolean.TRUE));
-            result.put(inputKey, entry.getValue());
             result.put(inputsKey, entry.getValue());
             updateVars.add(leftSymbol);
         }

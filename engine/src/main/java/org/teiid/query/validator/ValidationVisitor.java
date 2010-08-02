@@ -365,9 +365,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 
     	String groupName = variable.getGroupSymbol().getCanonicalName();
 
-    	if(groupName.equals(ProcedureReservedWords.INPUT) ||
-			groupName.equals(ProcedureReservedWords.CHANGING) || groupName.equals(ProcedureReservedWords.INPUTS)) {
-			handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0012, new Object[] {ProcedureReservedWords.INPUT, ProcedureReservedWords.INPUTS, ProcedureReservedWords.CHANGING}), obj);
+    	if(groupName.equals(ProcedureReservedWords.CHANGING) || groupName.equals(ProcedureReservedWords.INPUTS)) {
+			handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0012, ProcedureReservedWords.INPUTS, ProcedureReservedWords.CHANGING), obj);
 		}
 
 		if(obj.hasCommand()) {

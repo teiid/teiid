@@ -39,7 +39,6 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.query.sql.util.ValueIterator;
 
 
 /**
@@ -242,8 +241,6 @@ public class Insert extends ProcedureContainer {
         
         for (int j = 0; j < iSize; j++) {
             ElementSymbol symbol = (ElementSymbol)((ElementSymbol)variables.get( j )).clone();
-            symbol.setName(ProcedureReservedWords.INPUT + SingleElementSymbol.SEPARATOR + symbol.getShortCanonicalName());
-            map.put(symbol, values.get( j ) );
             symbol = (ElementSymbol)((ElementSymbol)variables.get( j )).clone();
             symbol.setName(ProcedureReservedWords.INPUTS + SingleElementSymbol.SEPARATOR + symbol.getShortCanonicalName());
             map.put(symbol, values.get( j ) );
