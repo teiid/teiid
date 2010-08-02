@@ -35,27 +35,31 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.util.CommandContext;
 
 @SuppressWarnings("nls")
 public class TestTempTables {
 	
 	private TempMetadataAdapter metadata;
 	private TempTableDataManager dataManager;
-
+	private TempTableStore tempStore;
+	
 	private void execute(String sql, List[] expectedResults) throws Exception {
 		execute(TestProcessor.helpGetPlan(sql, metadata), expectedResults);
 	}
 	
 	private void execute(ProcessorPlan processorPlan, List[] expectedResults) throws Exception {
-		TestProcessor.doProcess(processorPlan, dataManager, expectedResults, TestProcessor.createCommandContext());
+		CommandContext cc = TestProcessor.createCommandContext();
+		cc.setTempTableStore(tempStore);
+		TestProcessor.doProcess(processorPlan, dataManager, expectedResults, cc);
 	}
 
 	@Before public void setUp() {
-		TempTableStore tempStore = new TempTableStore(BufferManagerFactory.getStandaloneBufferManager(), "1"); //$NON-NLS-1$
+		tempStore = new TempTableStore(BufferManagerFactory.getStandaloneBufferManager(), "1"); //$NON-NLS-1$
 		metadata = new TempMetadataAdapter(FakeMetadataFactory.example1Cached(), tempStore.getMetadataStore());
 		FakeDataManager fdm = new FakeDataManager();
 	    TestProcessor.sampleData1(fdm);
-		dataManager = new TempTableDataManager(fdm, tempStore);
+		dataManager = new TempTableDataManager(fdm);
 	}
 
 	@Test public void testInsertWithQueryExpression() throws Exception {

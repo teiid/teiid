@@ -30,13 +30,19 @@ import java.util.Collection;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.client.plan.Annotation;
+import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestOptimizer;
+import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
+import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.util.CommandContext;
 
-
+@SuppressWarnings("nls")
 public class TestMaterialization {
 	
     @Test public void testMaterializedTransformation() throws Exception {
@@ -136,6 +142,41 @@ public class TestMaterialization {
         Command command = helpGetCommand(userSql, metadata, null);
         
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.x FROM MatSrc.MatSrc AS g_0 WHERE g_0.x = '1'"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    }
+    
+    @Test public void testCacheHint() throws Exception {
+        String userSql = "SELECT * from vgroup2"; //$NON-NLS-1$
+        
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
+        AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
+        
+        Command command = helpGetCommand(userSql, metadata, null);
+        CommandContext cc = new CommandContext();
+        cc.setGlobalTableStore(new TempTableStore(BufferManagerFactory.getStandaloneBufferManager(), "SYSTEM"));
+        ProcessorPlan plan = TestOptimizer.getPlan(command, metadata, getGenericFinder(), analysis, true, cc);
+        TestOptimizer.checkAtomicQueries(new String[] {"SELECT #MAT_MatView.VGroup2.X FROM #MAT_MatView.VGroup2"}, plan);
+        Collection<Annotation> annotations = analysis.getAnnotations();
+        assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
+        assertTrue("Expected one annotation", annotations.size() == 1); //$NON-NLS-1$
+        assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
+    }
+    
+    @Test public void testCacheHintWithPk() throws Exception {
+        String userSql = "SELECT * from vgroup3 where x = 'foo'"; //$NON-NLS-1$
+        
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
+        AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
+        
+        Command command = helpGetCommand(userSql, metadata, null);
+        CommandContext cc = new CommandContext();
+        cc.setGlobalTableStore(new TempTableStore(BufferManagerFactory.getStandaloneBufferManager(), "SYSTEM"));
+        RelationalPlan plan = (RelationalPlan)TestOptimizer.getPlan(command, metadata, getGenericFinder(), analysis, true, cc);
+        assertEquals(1f, plan.getRootNode().getEstimateNodeCardinality());
+        TestOptimizer.checkAtomicQueries(new String[] {"SELECT #MAT_MatView.VGroup3.X, #MAT_MatView.VGroup3.y FROM #MAT_MatView.VGroup3 WHERE #MAT_MatView.VGroup3.X = 'foo'"}, plan);
+        Collection<Annotation> annotations = analysis.getAnnotations();
+        assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
+        assertTrue("Expected one annotation", annotations.size() == 1); //$NON-NLS-1$
+        assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
     }
 
 }

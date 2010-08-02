@@ -108,7 +108,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
     private TransactionService transactionService;
     private TempTableStore tempTableStore;
     protected IDGenerator idGenerator = new IDGenerator();
-    private boolean procDebugAllowed = false;
     DQPWorkContext workContext;
     RequestID requestId;
 
@@ -137,7 +136,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
                               BufferManager bufferManager,
                               ProcessorDataManager processorDataManager,
                               TransactionService transactionService,
-                              boolean procDebugAllowed,
                               TempTableStore tempTableStore,
                               DQPWorkContext workContext,
                               ConnectorManagerRepository repo,
@@ -149,7 +147,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
         this.bufferManager = bufferManager;
         this.processorDataManager = processorDataManager;
         this.transactionService = transactionService;
-        this.procDebugAllowed = procDebugAllowed;
         this.tempTableStore = tempTableStore;
         idGenerator.setDefaultFactory(new IntegerIDFactory());
         this.workContext = workContext;
@@ -243,7 +240,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
                 workContext.getVdbName(), 
                 workContext.getVdbVersion(),
                 props,
-                useProcDebug(), 
                 this.requestMsg.getShowPlan() != ShowPlan.OFF);
         this.context.setProcessorBatchSize(bufferManager.getProcessorBatchSize());
         this.context.setConnectorBatchSize(bufferManager.getConnectorBatchSize());
@@ -366,16 +362,9 @@ public class Request implements QueryProcessor.ProcessorFactory {
         } 
         
         this.transactionContext = tc;
-        this.processor = new QueryProcessor(processPlan, context, bufferManager, new TempTableDataManager(processorDataManager, tempTableStore));
+        this.processor = new QueryProcessor(processPlan, context, bufferManager, new TempTableDataManager(processorDataManager));
     }
 
-    private boolean useProcDebug() {
-        if(this.procDebugAllowed) {
-            return requestMsg.getShowPlan() == ShowPlan.DEBUG;
-        }
-        return false;
-    }
-    
     /**
      * state side effects:
      *      creates the analysis record

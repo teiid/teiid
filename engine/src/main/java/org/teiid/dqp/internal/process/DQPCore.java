@@ -194,7 +194,6 @@ public class DQPCore implements DQP {
     
     // Query worker pool for processing plans
     private int processorTimeslice = DQPConfiguration.DEFAULT_PROCESSOR_TIMESLICE;
-    private boolean processorDebugAllowed;
     
     private int maxSourceRows = DQPConfiguration.DEFAULT_MAX_SOURCE_ROWS;
     private boolean exceptionOnMaxSourceRows = true;
@@ -333,9 +332,9 @@ public class DQPCore implements DQP {
 	    }
 	    ClientState state = this.getClientState(workContext.getSessionId(), true);
 	    request.initialize(requestMsg, bufferManager,
-				dataTierMgr, transactionService, processorDebugAllowed,
-				state.sessionTables, workContext,
-				connectorManagerRepository, this.useEntitlements);
+				dataTierMgr, transactionService, state.sessionTables,
+				workContext, connectorManagerRepository,
+				this.useEntitlements);
 		
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
         RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
@@ -640,7 +639,6 @@ public class DQPCore implements DQP {
 	public void start(DQPConfiguration config) {
 		this.processorTimeslice = config.getTimeSliceInMilli();
         this.maxFetchSize = config.getMaxRowsFetchSize();
-        this.processorDebugAllowed = config.isProcessDebugAllowed();
         this.maxCodeTableRecords = config.getCodeTablesMaxRowsPerTable();
         this.maxCodeTables = config.getCodeTablesMaxCount();
         this.maxCodeRecords = config.getCodeTablesMaxRows();
@@ -659,9 +657,6 @@ public class DQPCore implements DQP {
         //prepared plan cache
         prepPlanCache = new SessionAwareCache<PreparedPlan>(config.getPreparedPlanCacheMaxCount(), this.cacheFactory, Cache.Type.PREPAREDPLAN);
 		
-        // Processor debug flag
-        LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPCore.Processor_debug_allowed_{0}", this.processorDebugAllowed)); //$NON-NLS-1$
-                        
         //get buffer manager
         this.bufferManager = bufferService.getBufferManager();
 

@@ -43,7 +43,6 @@ public class DQPConfiguration{
     
 	private int maxThreads = DEFAULT_MAX_PROCESS_WORKERS;
 	private int timeSliceInMilli = DEFAULT_PROCESSOR_TIMESLICE;
-	private boolean processDebugAllowed;
 	private int maxRowsFetchSize = DEFAULT_FETCH_SIZE;
 	private int lobChunkSizeInKB = 100;
 	private int preparedPlanCacheMaxCount = SessionAwareCache.DEFAULT_MAX_SIZE_TOTAL;
@@ -85,15 +84,6 @@ public class DQPConfiguration{
 		this.timeSliceInMilli = timeSliceInMilli;
 	}
 	
-	@ManagementProperty(description="Process debug allowed")
-	public boolean isProcessDebugAllowed() {
-		return processDebugAllowed;
-	}
-
-	public void setProcessDebugAllowed(boolean processDebugAllowed) {
-		this.processDebugAllowed = processDebugAllowed;
-	}
-
 	@ManagementProperty(description="Maximum allowed fetch size, set via JDBC. User requested value ignored above this value. (default 20480)")
 	public int getMaxRowsFetchSize() {
 		return maxRowsFetchSize;

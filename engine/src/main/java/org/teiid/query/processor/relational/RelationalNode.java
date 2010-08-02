@@ -251,7 +251,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
      * @since 4.2
      */
     public final TupleBatch nextBatch() throws BlockedException,  TeiidComponentException, TeiidProcessingException {
-        boolean recordStats = this.context != null && (this.context.getCollectNodeStatistics() || this.context.getProcessDebug());
+        boolean recordStats = this.context != null && this.context.getCollectNodeStatistics();
         
         try {
             while (true) {
@@ -392,7 +392,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
      * @param batch Batch being sent
      */
     private void recordBatch(TupleBatch batch) {
-        if (!this.context.getProcessDebug() || !LogManager.isMessageToBeRecorded(org.teiid.logging.LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+        if (!LogManager.isMessageToBeRecorded(org.teiid.logging.LogConstants.CTX_DQP, MessageLevel.TRACE)) {
         	return;
         }
     	// Print summary

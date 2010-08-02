@@ -231,7 +231,7 @@ public class RelationalPlanner {
      * @param groups List of groups (Strings) to be made dependent
      * @param plan The canonical plan
      */
-    private void distributeDependentHints(Collection<String> groups, PlanNode plan, QueryMetadataInterface metadata, NodeConstants.Info hintProperty)
+    private void distributeDependentHints(Collection<String> groups, PlanNode plan, NodeConstants.Info hintProperty)
         throws QueryMetadataException, TeiidComponentException {
     
         if(groups == null || groups.isEmpty()) {
@@ -406,10 +406,10 @@ public class RelationalPlanner {
         // Distribute make dependent hints as necessary
         if (cmd.getOption() != null) {
 	        if(cmd.getOption().getDependentGroups() != null) {
-	            distributeDependentHints(cmd.getOption().getDependentGroups(), result, metadata, NodeConstants.Info.MAKE_DEP);
+	            distributeDependentHints(cmd.getOption().getDependentGroups(), result, NodeConstants.Info.MAKE_DEP);
 	        }
 	        if (cmd.getOption().getNotDependentGroups() != null) {
-	            distributeDependentHints(cmd.getOption().getNotDependentGroups(), result, metadata, NodeConstants.Info.MAKE_NOT_DEP);
+	            distributeDependentHints(cmd.getOption().getNotDependentGroups(), result, NodeConstants.Info.MAKE_NOT_DEP);
 	        }
         }
         this.option = savedOption;
@@ -966,6 +966,7 @@ public class RelationalPlanner {
 								int pos = metadata.getPosition(coldId) - 1;
 								primaryKey.add(id.getElements().get(pos));
 							}
+							id.setPrimaryKey(primaryKey);
 							break;
 						}
 					}
@@ -976,15 +977,16 @@ public class RelationalPlanner {
 			}
 		}
 		if (noCache) {
+    		recordMaterializationTableAnnotation(virtualGroup, analysisRecord, matTableName, "SimpleQueryResolver.materialized_table_not_used"); //$NON-NLS-1$
 			//TODO: update the table
 			return result;
 		} 
-/*		QueryMetadataInterface qmi = new TempMetadataAdapter(metadata, context.getGlobalTableStore().getMetadataStore());
+		QueryMetadataInterface qmi = new TempMetadataAdapter(metadata, context.getGlobalTableStore().getMetadataStore());
 		QueryNode qn = new QueryNode(virtualGroup.getName(), "select * from " + matTableName); //$NON-NLS-1$
 		Query query = (Query)getCommand(virtualGroup, qn, "matview", qmi); //$NON-NLS-1$
 		query.getFrom().getGroups().get(0).setGlobalTable(true);
-		return query;*/
-		return result;
+        recordMaterializationTableAnnotation(virtualGroup, analysisRecord, matTableName, "SimpleQueryResolver.Query_was_redirected_to_Mat_table"); //$NON-NLS-1$                
+		return query;
 	}
 
     public static boolean isNoCacheGroup(QueryMetadataInterface metadata,

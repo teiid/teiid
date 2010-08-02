@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.junit.Test;
 import org.teiid.client.metadata.ParameterInfo;
@@ -84,6 +85,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
+import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.FakeMetadataObject;
@@ -225,6 +227,12 @@ public class TestProcessor {
         bufferMgr.setProcessorBatchSize(context.getProcessorBatchSize());
         bufferMgr.setConnectorBatchSize(context.getProcessorBatchSize());
         context.getNextRand(0);
+        if (context.getTempTableStore() == null) {
+        	context.setTempTableStore(new TempTableStore(bufferMgr, context.getConnectionID()));
+        }
+        if (!(dataManager instanceof TempTableDataManager)) {
+        	dataManager = new TempTableDataManager(dataManager);
+        }
         TupleBuffer id = null;
         try {
             QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
@@ -278,12 +286,10 @@ public class TestProcessor {
             	if(cellValue instanceof XMLType){
                     XMLType id =  (XMLType)cellValue; 
                     String actualDoc = id.getString(); 
-                    record = new ArrayList(record);
-                    record.set(0, actualDoc);
-            	}
-            	if (expectedResults[i].size() == 1) {
-                    assertEquals("Row " + i + " does not match expected: ", expectedResults[i].get(0), record.get(0));                 //$NON-NLS-1$ //$NON-NLS-2$
-                    continue;
+                	if (expectedResults[i].size() == 1) {
+                		compareDocuments((String)expectedResults[i].get(0), actualDoc);
+                        continue;
+                	}
             	}
             }
             
@@ -291,16 +297,31 @@ public class TestProcessor {
         }
         ts.closeSource();
     }
+    
+	public static void compareDocuments(String expectedDoc, String actualDoc) {
+		StringTokenizer tokens1 = new StringTokenizer(expectedDoc, "\r\n"); //$NON-NLS-1$
+		StringTokenizer tokens2 = new StringTokenizer(actualDoc, "\r\n");//$NON-NLS-1$
+		while(tokens1.hasMoreTokens()){
+			String token1 = tokens1.nextToken().trim();
+			if(!tokens2.hasMoreTokens()){
+				fail("XML doc mismatch: expected=" + token1 + "\nactual=none");//$NON-NLS-1$ //$NON-NLS-2$
+			}
+			String token2 = tokens2.nextToken().trim();
+			assertEquals("XML doc mismatch: ", token1, token2); //$NON-NLS-1$
+		}
+		if(tokens2.hasMoreTokens()){
+			fail("XML doc mismatch: expected=none\nactual=" + tokens2.nextToken().trim());//$NON-NLS-1$
+		}
+	}
 
 	public static CommandContext createCommandContext() {
 		Properties props = new Properties();
 		props.setProperty("soap_host", "my.host.com"); //$NON-NLS-1$ //$NON-NLS-2$
 		props.setProperty("soap_port", "12345"); //$NON-NLS-1$ //$NON-NLS-2$
-		CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", 1, props, DEBUG, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", 1, props, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         context.setProcessorBatchSize(BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE);
         context.setConnectorBatchSize(BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE);
         context.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
-        context.setProcessDebug(DEBUG);
 		return context;
 	}   
     	

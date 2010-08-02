@@ -20,36 +20,33 @@
  * 02110-1301 USA.
  */
 
-/*
- */
-package org.teiid.query.processor.proc;
+package org.teiid;
 
-import org.teiid.client.plan.PlanNode;
-import org.teiid.core.TeiidComponentException;
+import java.util.Properties;
+import java.util.TimeZone;
 
 /**
- * <p>This {@link ProgramInstruction} continue with the next loop when processed</p>.
+ * Context information for the currently executing command.
+ * Can be used as an argument to UDFs.
  */
-public class ContinueInstruction extends ProgramInstruction {
-    public String toString() {
-        return "CONTINUE INSTRUCTION"; //$NON-NLS-1$
-    }
+public interface CommandContext {
+	
+	String getUserName();
+	
+	String getVdbName();
+	
+	int getVdbVersion();
+	
+	String getConnectionID();
+	
+	Properties getEnvironmentProperties();
+	
+	double getNextRand();
+	
+	double getNextRand(long seed);
+	
+	int getProcessorBatchSize();
+	
+	TimeZone getServerTimeZone();
 
-    public void process(ProcedurePlan env) throws TeiidComponentException {
-        Program parentProgram = env.peek();
-        
-        //find the parent program that contains the loop/while instruction
-        while(true){            
-            if(parentProgram.getCurrentInstruction() instanceof RepeatedInstruction){
-                break;
-            }
-            env.pop(); 
-            parentProgram = env.peek();
-        } 
-    }
-    
-    public PlanNode getDescriptionProperties() {
-        return new PlanNode("CONTINUE"); //$NON-NLS-1$
-    }
-    
 }

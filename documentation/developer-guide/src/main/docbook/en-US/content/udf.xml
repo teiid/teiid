@@ -46,8 +46,7 @@
 				<para>
 					<emphasis>Input Parameters</emphasis>
 					- defines a type specific signature list. All arguments are
-					considered
-					required.
+					considered required.
 				</para>
 			</listitem>
 			<listitem>
@@ -163,7 +162,7 @@
 				</listitem>
 				<listitem>
 					<para>
-						Number of input arguments must match the function metadata defined
+						Number of input arguments and types must match the function metadata defined
 						in section
 						<link linkend="define_udf">Install user-defined functions</link>
 					</para>
@@ -177,6 +176,9 @@
 					</para>
 				</listitem>
 			</itemizedlist>
+			<para>You may optionally add an additional <code>org.teiid.CommandContext</code> argument as the first parameter.  
+			The <code>CommandContext</code> interface provides access to information about the current command, such as the executing user, the vdb, the session id, etc.  
+			This <code>CommandContext</code> parameter does not need to be delared in the function metadata.</para>
 			<example>
 				<title>Sample code</title>
 				<programlisting><![CDATA[package org.something;

@@ -50,7 +50,7 @@ import org.teiid.query.tempdata.TempTableStore;
  * a means to pass context-specific information between users of the query processor
  * framework.
  */
-public class CommandContext implements Cloneable {
+public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	private static class GlobalState {
 	    /** Uniquely identify the command being processed */
@@ -73,9 +73,6 @@ public class CommandContext implements Cloneable {
 	    
 	    private Properties environmentProperties;
 	    
-	    /** Indicate whether data should be dumped for debugging purposes while processing the query */
-	    private boolean processDebug;  
-	        
 	    /** Indicate whether statistics should be collected for relational node processing*/
 	    private boolean collectNodeStatistics;
 	    
@@ -118,7 +115,7 @@ public class CommandContext implements Cloneable {
      * Construct a new context.
      */
     public CommandContext(Object processorID, String connectionID, String userName, 
-        Serializable commandPayload, String vdbName, int vdbVersion, Properties envProperties, boolean processDebug, boolean collectNodeStatistics) {
+        Serializable commandPayload, String vdbName, int vdbVersion, Properties envProperties, boolean collectNodeStatistics) {
         setProcessorID(processorID);
         setConnectionID(connectionID);
         setUserName(userName);
@@ -126,7 +123,6 @@ public class CommandContext implements Cloneable {
         setVdbName(vdbName);
         setVdbVersion(vdbVersion);  
         setEnvironmentProperties(envProperties);        
-        setProcessDebug(processDebug);
         setCollectNodeStatistics(collectNodeStatistics);
     }
 
@@ -137,7 +133,7 @@ public class CommandContext implements Cloneable {
         String vdbName, int vdbVersion) {
 
         this(processorID, connectionID, userName, null, vdbName, 
-            vdbVersion, null, false, false);            
+            vdbVersion, null, false);            
              
     }
 
@@ -165,14 +161,6 @@ public class CommandContext implements Cloneable {
      */
     public Object getProcessorID() {
         return globalState.processorID;
-    }
-
-    public boolean getProcessDebug() {
-        return globalState.processDebug;
-    }
-    
-    public void setProcessDebug(boolean processDebug) {
-    	globalState.processDebug = processDebug;
     }
 
     /**

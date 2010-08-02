@@ -98,7 +98,6 @@ public class TestProcedureProcessor {
     static void helpTestProcess(ProcessorPlan procPlan, int rowsUpdated, List[] expectedResults, boolean shouldFail, ProcessorDataManager dataMgr, QueryMetadataInterface metadata) throws Exception {
         CommandContext context = new CommandContext("pID", null, null, null, 1); //$NON-NLS-1$
         context.getNextRand(0);
-        context.setProcessDebug(DEBUG);
         context.setMetadata(metadata);        	
         
         if (expectedResults == null) {

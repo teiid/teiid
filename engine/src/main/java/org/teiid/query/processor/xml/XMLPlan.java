@@ -110,10 +110,12 @@ public class XMLPlan extends ProcessorPlan {
      * @see ProcessorPlan#initialize(ProcessorDataManager, Object)
      */
     public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
-        setContext(context);
+    	context = context.clone();
+    	setContext(context);
         TempTableStore tempTableStore = new TempTableStore(bufferMgr, context.getConnectionID());
         tempTableStore.setParentTempTableStore(context.getTempTableStore());
-        this.dataMgr = new TempTableDataManager(dataMgr, tempTableStore);
+        context.setTempTableStore(tempTableStore);
+        this.dataMgr = dataMgr;
         this.bufferMgr = bufferMgr;
         this.env.initialize(context, this.dataMgr, this.bufferMgr);
     }

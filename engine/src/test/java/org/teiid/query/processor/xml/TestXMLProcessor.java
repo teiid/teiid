@@ -26,25 +26,20 @@ import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.StringTokenizer;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
-import org.teiid.common.buffer.TupleBuffer;
-import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.XMLType;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.mapping.relational.QueryNode;
@@ -71,8 +66,7 @@ import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.QueryProcessor;
-import org.teiid.query.processor.xml.ExecStagingTableInstruction;
-import org.teiid.query.processor.xml.XMLPlan;
+import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
@@ -90,6 +84,7 @@ import org.teiid.query.util.CommandContext;
  * metadata, and then that XMLPlan being processed with metadata, a 
  * ProcessorDataManager and a QueryProcessor.
  */
+@SuppressWarnings("nls")
 public class TestXMLProcessor {
     private static final boolean DEBUG = false;
     
@@ -2934,20 +2929,19 @@ public class TestXMLProcessor {
     }
 
     static ProcessorPlan helpTestProcess(String sql, String expectedDoc, FakeMetadataFacade metadata, FakeDataManager dataMgr) throws Exception{
-        return helpTestProcess(sql, expectedDoc, metadata, dataMgr, true, TeiidComponentException.class, null);
+        return helpTestProcess(sql, expectedDoc, metadata, dataMgr, null);
     }
 
-    static ProcessorPlan helpTestProcess(String sql, String expectedDoc, FakeMetadataFacade metadata, FakeDataManager dataMgr, final boolean shouldSucceed, Class expectedException, final String shouldFailMsg) throws Exception{
+    static ProcessorPlan helpTestProcess(String sql, String expectedDoc, FakeMetadataFacade metadata, FakeDataManager dataMgr, Class expectedException) throws Exception{
 
-        return helpTestProcess(sql, expectedDoc, metadata, dataMgr, shouldSucceed, expectedException, shouldFailMsg, new DefaultCapabilitiesFinder());
+        return helpTestProcess(sql, metadata, dataMgr, expectedException, new DefaultCapabilitiesFinder(), expectedDoc);
     }
 
-    static ProcessorPlan helpTestProcess(String sql, String expectedDoc, FakeMetadataFacade metadata, FakeDataManager dataMgr, final boolean shouldSucceed, Class expectedException, final String shouldFailMsg, CapabilitiesFinder capFinder) throws Exception{
+    static ProcessorPlan helpTestProcess(String sql, FakeMetadataFacade metadata, FakeDataManager dataMgr, Class expectedException, CapabilitiesFinder capFinder, String... expectedDoc) throws Exception{
         Command command = helpGetCommand(sql, metadata);
+        AnalysisRecord analysisRecord = new AnalysisRecord(false, DEBUG);
 
-        if (shouldSucceed){
-            
-            AnalysisRecord analysisRecord = new AnalysisRecord(false, DEBUG);
+        try {
             CommandContext planningContext = new CommandContext(); //this should be the same as the processing context, but that's not easy to do
             
             ProcessorPlan plan = QueryOptimizer.optimizePlan(command, metadata, null, capFinder, analysisRecord, planningContext);
@@ -2955,123 +2949,25 @@ public class TestXMLProcessor {
             if(DEBUG) {
                 System.out.println(analysisRecord.getDebugLog());
             }
-            
-            // Process twice, to test reset and clone methods
-            for (int i=1; i<=2; i++) {
-                BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();                
-                CommandContext context = new CommandContext("pID", "TestConn", "testUser", null, 1); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                context.setProcessDebug(DEBUG);
-                QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataMgr);
-                processor.setNonBlocking(true);
-                BatchCollector collector = processor.createBatchCollector();
-                TupleBuffer id = collector.collectTuples();
-            
-                TupleSource ts = id.createIndexedTupleSource();
-                List row = ts.nextTuple();
-                assertEquals("Incorrect number of columns: ", 1, row.size()); //$NON-NLS-1$
-               
-
-                XMLType result = (XMLType)row.get(0);
-                String actualDoc = result.getString();
-                
-                id.remove();
-                
-                if(DEBUG) {
-                    System.out.println("expectedDoc = \n" + expectedDoc); //$NON-NLS-1$
-                    System.out.println("actualDoc = \n" + actualDoc); //$NON-NLS-1$
-                }
-                //assertEquals("XML doc mismatch: ", expectedDoc, actualDoc); //$NON-NLS-1$
-                compareDocuments(expectedDoc, actualDoc);
-                //Test reset, clone methods
-                if (i==1) {
-                    plan.reset();
-                    plan = plan.clone();
-                }
-            }
+            List[] expected = new List[expectedDoc.length];
+            for (int i = 0; i < expectedDoc.length; i++) {
+				expected[i] = Arrays.asList(expectedDoc[i]);
+			}
+            TestProcessor.helpProcess(plan, planningContext, dataMgr, expected);
+            assertNull("Expected failure", expectedException);
             return plan;
-        } 
-        Exception expected = null;
-        AnalysisRecord analysisRecord = new AnalysisRecord(false, DEBUG);                                              
-        try{
-            ProcessorPlan plan = QueryOptimizer.optimizePlan(command, metadata, null, new DefaultCapabilitiesFinder(), analysisRecord, null);
-    
-            BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-            CommandContext context = new CommandContext("pID", null, null, null, 1);                                                                 //$NON-NLS-1$
-            QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataMgr);
-            processor.setNonBlocking(true);
-            BatchCollector collector = processor.createBatchCollector();
-            collector.collectTuples();
-        } catch (Exception e){
-            if (expectedException.isInstance(e)){
-                expected = e;
-            } else {
-                throw e;
-            }
+        } catch (Exception e) {
+        	if (expectedException == null) {
+        		throw e;
+        	}
+        	assertTrue(expectedException.isInstance(e));
         } finally {
             if(DEBUG) {
                 System.out.println(analysisRecord.getDebugLog());
             }                
         }
-        
-        assertNotNull(shouldFailMsg, expected);
         return null;
     }
-
-	public static void compareDocuments(String expectedDoc, String actualDoc) {
-		StringTokenizer tokens1 = new StringTokenizer(expectedDoc, "\r\n"); //$NON-NLS-1$
-		StringTokenizer tokens2 = new StringTokenizer(actualDoc, "\n");//$NON-NLS-1$
-		while(tokens1.hasMoreTokens()){
-			String token1 = tokens1.nextToken().trim();
-			if(!tokens2.hasMoreTokens()){
-				fail("XML doc mismatch: expected=" + token1 + "\nactual=none");//$NON-NLS-1$ //$NON-NLS-2$
-			}
-			String token2 = tokens2.nextToken().trim();
-			assertEquals("XML doc mismatch: ", token1, token2); //$NON-NLS-1$
-		}
-		if(tokens2.hasMoreTokens()){
-			fail("XML doc mismatch: expected=none\nactual=" + tokens2.nextToken().trim());//$NON-NLS-1$
-		}
-	}
-
-	private void helpTestProcess(String sql, String[] expectedDocs, FakeMetadataFacade metadata, FakeDataManager dataMgr) throws Exception{
-        Command command = helpGetCommand(sql, metadata);
-        AnalysisRecord analysisRecord = new AnalysisRecord(false, DEBUG);                                              
-        XMLPlan plan = (XMLPlan)QueryOptimizer.optimizePlan(command, metadata, null, new DefaultCapabilitiesFinder(), analysisRecord, null);
-        if(DEBUG) {
-            System.out.println(analysisRecord.getDebugLog());
-        }
-        
-        helpTestProcess(expectedDocs, dataMgr, plan);
-    }
-
-	private void helpTestProcess(String[] expectedDocs, FakeDataManager dataMgr,
-			ProcessorPlan plan) throws TeiidComponentException,
-			TeiidProcessingException, SQLException {
-		BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-        CommandContext context = new CommandContext("pID", null, null, null, 1);                                 //$NON-NLS-1$
-        context.setProcessDebug(DEBUG);
-        QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataMgr);
-        processor.setNonBlocking(true);
-        BatchCollector collector = processor.createBatchCollector();
-        TupleBuffer tupleBuffer = collector.collectTuples();
-        int count = tupleBuffer.getRowCount();
-        assertEquals("Incorrect number of records: ", expectedDocs.length, count); //$NON-NLS-1$
-        
-        TupleSource ts = tupleBuffer.createIndexedTupleSource();
-        for (int i=0; i<expectedDocs.length; i++){        
-            List row = ts.nextTuple();
-            if(row.isEmpty()){
-            	continue;
-            }
-            assertEquals("Incorrect number of columns: ", 1, row.size()); //$NON-NLS-1$
-            XMLType result = (XMLType)row.get(0);
-            String actualDoc = result.getString();
-                 
-            //assertEquals("XML doc result # " + i +" mismatch: ", expectedDocs[i], actualDoc); //$NON-NLS-1$ //$NON-NLS-2$
-            compareDocuments(expectedDocs[i], actualDoc);
-        }
-        tupleBuffer.remove();
-	}    
 
     // =============================================================================================
     // T E S T S 
@@ -3946,7 +3842,7 @@ public class TestXMLProcessor {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         
-        helpTestProcess("SELECT * FROM xmltest.doc1 WHERE Catalog = 'something'", null, metadata, dataMgr, false, QueryPlannerException.class, null);         //$NON-NLS-1$
+        helpTestProcess("SELECT * FROM xmltest.doc1 WHERE Catalog = 'something'", null, metadata, dataMgr, QueryPlannerException.class);         //$NON-NLS-1$
     }    
 
     //defect 8130
@@ -3954,7 +3850,7 @@ public class TestXMLProcessor {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
         
-        helpTestProcess("SELECT * FROM xmltest.doc1 WHERE Item = 'something'", null, metadata, dataMgr, false, QueryPlannerException.class, null);         //$NON-NLS-1$
+        helpTestProcess("SELECT * FROM xmltest.doc1 WHERE Item = 'something'", null, metadata, dataMgr, QueryPlannerException.class);         //$NON-NLS-1$
     }  
     
     @Test public void testNested() throws Exception {
@@ -5141,7 +5037,7 @@ public class TestXMLProcessor {
         Class expectedException = QueryPlannerException.class;
         String shouldFailMsg = "expected failure since two different contexts were specified in conjunct"; //$NON-NLS-1$
 
-        helpTestProcess("SELECT * FROM xmltest.doc9 WHERE context(Item, OrderID)='5' OR context(SupplierID, OrderID)='2'", expectedDoc, metadata, dataMgr, shouldSucceed, expectedException, shouldFailMsg);         //$NON-NLS-1$
+        helpTestProcess("SELECT * FROM xmltest.doc9 WHERE context(Item, OrderID)='5' OR context(SupplierID, OrderID)='2'", expectedDoc, metadata, dataMgr, expectedException);         //$NON-NLS-1$
     }
 
     @Test public void testNested2WithContextCriteria6() throws Exception {
@@ -5843,7 +5739,7 @@ public class TestXMLProcessor {
     @Test public void test2b() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManager(metadata);
-        helpTestProcess("SELECT * FROM xmltest.doc2b", null, metadata, dataMgr, false, TeiidComponentException.class, "Should have failed on default");         //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestProcess("SELECT * FROM xmltest.doc2b", null, metadata, dataMgr, TeiidComponentException.class);         //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void test2c() throws Exception {
@@ -6159,9 +6055,7 @@ public class TestXMLProcessor {
             "</Item>\r\n\r\n"; //$NON-NLS-1$
 
 
-        String[] expectedDocs = new String[]{expectedDoc1, expectedDoc2, expectedDoc3};
-
-        helpTestProcess("SELECT * FROM xmltest.doc11", expectedDocs, metadata, dataMgr);         //$NON-NLS-1$
+        helpTestProcess("SELECT * FROM xmltest.doc11", metadata, dataMgr, null, new DefaultCapabilitiesFinder(), expectedDoc1, expectedDoc2, expectedDoc3);         //$NON-NLS-1$
     }
 
     @Test public void testRecursive() throws Exception {
@@ -6474,7 +6368,7 @@ public class TestXMLProcessor {
     @Test public void testRecursive4Exception() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
-        helpTestProcess("SELECT * FROM xmltest.doc15", null, metadata, dataMgr, false, TeiidComponentException.class, "Query processing should have failed on recursion limit."); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestProcess("SELECT * FROM xmltest.doc15", null, metadata, dataMgr, TeiidComponentException.class); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
@@ -9896,7 +9790,7 @@ public class TestXMLProcessor {
         
         final boolean SHOULD_SUCCEED = true;
         helpTestProcess("SELECT Item FROM xmltest.doc9c", //$NON-NLS-1$
-            expectedDoc, metadata, dataMgr, SHOULD_SUCCEED, null, null);       
+            expectedDoc, metadata, dataMgr, null);       
     }
 
     @Test public void testNestedWithStoredQueryInMappingClass() throws Exception {
@@ -10061,7 +9955,7 @@ public class TestXMLProcessor {
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         CapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps); 
         
-        helpTestProcess("SELECT * FROM xmltest.doc12260", expectedDoc, metadata, dataMgr, true, TeiidComponentException.class, null, capFinder); //$NON-NLS-1$
+        helpTestProcess("SELECT * FROM xmltest.doc12260", metadata, dataMgr, null, capFinder, expectedDoc); //$NON-NLS-1$
     }
     
     @Test public void testDefect8373() throws Exception{
@@ -10617,7 +10511,7 @@ public class TestXMLProcessor {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
-        helpTestProcess("SELECT * FROM xmltest.doc8 WHERE rowlimitexception(supplier) = 2", null, metadata, dataMgr, false, TeiidProcessingException.class, "");         //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestProcess("SELECT * FROM xmltest.doc8 WHERE rowlimitexception(supplier) = 2", null, metadata, dataMgr, TeiidProcessingException.class);         //$NON-NLS-1$ //$NON-NLS-2$
     }      
     
     /** Two row limits on the same mapping class should be harmless as long as the row limits are identical. */
@@ -10681,7 +10575,7 @@ public class TestXMLProcessor {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
-        helpTestProcess("SELECT * FROM xmltest.doc8 WHERE rowlimitexception(supplier) = 2 AND rowlimitexception(supplierid) = 2", null, metadata, dataMgr, false, TeiidProcessingException.class, "");         //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestProcess("SELECT * FROM xmltest.doc8 WHERE rowlimitexception(supplier) = 2 AND rowlimitexception(supplierid) = 2", null, metadata, dataMgr, TeiidProcessingException.class);         //$NON-NLS-1$ //$NON-NLS-2$
     }      
     
     /** compound criteria */
@@ -10721,7 +10615,7 @@ public class TestXMLProcessor {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
-        helpTestProcess("SELECT * FROM xmltest.doc8 WHERE ItemID='002' AND rowlimitexception(supplier) = 2", null, metadata, dataMgr, false, TeiidProcessingException.class, "");         //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestProcess("SELECT * FROM xmltest.doc8 WHERE ItemID='002' AND rowlimitexception(supplier) = 2", null, metadata, dataMgr, TeiidProcessingException.class);         //$NON-NLS-1$ //$NON-NLS-2$
     }     
     
     @Test public void testCase2951MaxRows4() throws Exception {
@@ -10828,7 +10722,7 @@ public class TestXMLProcessor {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
-        helpTestProcess("SELECT * FROM xmltest.doc8 WHERE rowlimit(catalogs) = 2", null, metadata, dataMgr, false, QueryPlannerException.class, "");         //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestProcess("SELECT * FROM xmltest.doc8 WHERE rowlimit(catalogs) = 2", null, metadata, dataMgr, QueryPlannerException.class);         //$NON-NLS-1$ //$NON-NLS-2$
     }     
 
     /** two conflicting row limits on the same mapping class */
@@ -10837,7 +10731,7 @@ public class TestXMLProcessor {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
-        helpTestProcess("SELECT * FROM xmltest.doc8 WHERE rowlimit(supplier) = 2 AND rowlimit(supplierID) = 3", null, metadata, dataMgr, false, QueryPlannerException.class, "");         //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestProcess("SELECT * FROM xmltest.doc8 WHERE rowlimit(supplier) = 2 AND rowlimit(supplierID) = 3", null, metadata, dataMgr, QueryPlannerException.class);         //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     /** arg to rowlimitexception function isn't in the scope of any mapping class */
@@ -10846,7 +10740,7 @@ public class TestXMLProcessor {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
-        helpTestProcess("SELECT * FROM xmltest.doc8 WHERE rowlimitexception(catalogs) = 2", null, metadata, dataMgr, false, QueryPlannerException.class, "");         //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestProcess("SELECT * FROM xmltest.doc8 WHERE rowlimitexception(catalogs) = 2", null, metadata, dataMgr, QueryPlannerException.class);         //$NON-NLS-1$ //$NON-NLS-2$
     }     
 
     /** two conflicting rowlimitexceptions on the same mapping class */
@@ -10855,7 +10749,7 @@ public class TestXMLProcessor {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
-        helpTestProcess("SELECT * FROM xmltest.doc8 WHERE rowlimitexception(supplier) = 2 AND rowlimitexception(supplierID) = 3", null, metadata, dataMgr, false, QueryPlannerException.class, "");         //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestProcess("SELECT * FROM xmltest.doc8 WHERE rowlimitexception(supplier) = 2 AND rowlimitexception(supplierID) = 3", null, metadata, dataMgr, QueryPlannerException.class);         //$NON-NLS-1$ //$NON-NLS-2$
     }    
     
     /** two conflicting rowlimit and rowlimitexceptions on the same mapping class fails planning */
@@ -10864,7 +10758,7 @@ public class TestXMLProcessor {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
         
-        helpTestProcess("SELECT * FROM xmltest.doc8 WHERE rowlimit(supplier) = 2 AND rowlimitexception(supplierID) = 3", null, metadata, dataMgr, false, QueryPlannerException.class, "");         //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestProcess("SELECT * FROM xmltest.doc8 WHERE rowlimit(supplier) = 2 AND rowlimitexception(supplierID) = 3", null, metadata, dataMgr, QueryPlannerException.class);         //$NON-NLS-1$ //$NON-NLS-2$
     }    
 
     /** try rowlimit criteria written the reverse way */

@@ -285,9 +285,6 @@
 					displayName="Time Slice In Milliseconds"
 					description="Query processor time slice, in milliseconds. (default 2000)"
 					required="false" readOnly="false" />
-				<c:simple-property name="processDebugAllowed"
-					displayName="Process Debug Allowed" description="True if process debug allowed"
-					required="false" readOnly="false" />
 				<c:simple-property name="lobChunkSizeInKB"
 					displayName="Lob Chunk Size In KB"
 					description="The max lob chunk size in KB transferred each time when processing blobs, clobs(100KB default)"

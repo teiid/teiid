@@ -54,7 +54,6 @@ import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.QueryProcessor;
-import org.teiid.query.processor.TempTableDataManager;
 import org.teiid.query.processor.relational.SubqueryAwareEvaluator;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Criteria;
@@ -140,7 +139,7 @@ public class ProcedurePlan extends ProcessorPlan {
     public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {       
         this.bufferMgr = bufferMgr;
         this.batchSize = bufferMgr.getProcessorBatchSize();
-        setContext(context);
+        setContext(context.clone());
         this.dataMgr = dataMgr;
         this.parentDataMrg = dataMgr;
         if (evaluator == null) {
@@ -203,7 +202,7 @@ public class ProcedurePlan extends ProcessorPlan {
 				}
     		}
     		tempTableStore = new TempTableStore(bufferMgr, getContext().getConnectionID());
-            this.dataMgr = new TempTableDataManager(dataMgr, tempTableStore);
+    		getContext().setTempTableStore(tempTableStore);
     	}
     	this.evaluatedParams = true;
     }

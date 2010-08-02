@@ -782,26 +782,25 @@ public class NewCalculateCostUtil {
         }    
      
         // Sort elements into groups
-        Map groupMap = new HashMap();
+        Map<GroupSymbol, List<Object>> groupMap = new HashMap<GroupSymbol, List<Object>>();
         for (SingleElementSymbol ses : allElements) {
         	if (!(ses instanceof ElementSymbol)) {
         		continue;
         	}
         	ElementSymbol element = (ElementSymbol)ses;
             GroupSymbol group = element.getGroupSymbol();
-            List elements = (List) groupMap.get(group);
+            List<Object> elements = groupMap.get(group);
             if(elements == null) { 
-                elements = new ArrayList();
+                elements = new ArrayList<Object>();
                 groupMap.put(group, elements);
             }
             elements.add(element.getMetadataID());
         }    
              
         // Walk through each group
-        Iterator groupIter = groupMap.keySet().iterator();
-        while(groupIter.hasNext()) { 
-            GroupSymbol group = (GroupSymbol) groupIter.next();
-            List elements = (List) groupMap.get(group);
+        for (Map.Entry<GroupSymbol, List<Object>> entry : groupMap.entrySet()) {
+            GroupSymbol group = entry.getKey();
+            List<Object> elements = entry.getValue();
             
             // Look up keys
             Collection keys = metadata.getUniqueKeysInGroup(group.getMetadataID());

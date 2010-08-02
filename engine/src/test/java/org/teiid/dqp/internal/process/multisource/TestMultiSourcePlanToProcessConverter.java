@@ -121,7 +121,7 @@ public class TestMultiSourcePlanToProcessConverter {
         idGenerator.setDefaultFactory(new IntegerIDFactory());            
         
         Properties props = new Properties();
-        CommandContext context = new CommandContext("0", "test", "user", null, vdb.getName(), vdb.getVersion(), props, false, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        CommandContext context = new CommandContext("0", "test", "user", null, vdb.getName(), vdb.getVersion(), props, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         context.setPlanToProcessConverter(new MultiSourcePlanToProcessConverter(metadata, idGenerator, analysis, finder, multiSourceModels, dqpContext, context));
 
         ProcessorPlan plan = QueryOptimizer.optimizePlan(command, wrapper, idGenerator, finder, analysis, context);

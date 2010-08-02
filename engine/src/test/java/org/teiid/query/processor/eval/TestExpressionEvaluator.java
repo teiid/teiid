@@ -332,7 +332,7 @@ public class TestExpressionEvaluator {
         Properties props = new Properties();
         props.setProperty("http_host", "testHostName"); //$NON-NLS-1$ //$NON-NLS-2$
         props.setProperty("http_port", "8000"); //$NON-NLS-1$ //$NON-NLS-2$
-        CommandContext context = new CommandContext(new Long(1), null, null, null, null, 0, props, false, false);
+        CommandContext context = new CommandContext(new Long(1), null, null, null, null, 0, props, false);
         
         func.setArgs(new Expression[] {new Constant("http_host")}); //$NON-NLS-1$
         assertEquals("testHostName", new Evaluator(Collections.emptyMap(), dataMgr, context).evaluate(func, Collections.emptyList())); //$NON-NLS-1$
@@ -354,7 +354,7 @@ public class TestExpressionEvaluator {
         func.setFunctionDescriptor(desc);
         
         FakeDataManager dataMgr = new FakeDataManager();       
-        CommandContext context = new CommandContext(new Long(-1), null, "user", payload, "vdb", 1, null, false, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+        CommandContext context = new CommandContext(new Long(-1), null, "user", payload, "vdb", 1, null, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 
         if(property != null) {
             func.setArgs(new Expression[] {new Constant(property)}); 

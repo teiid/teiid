@@ -37,7 +37,6 @@ import org.teiid.query.util.CommandContext;
 public class TempTableDataManager implements ProcessorDataManager {
 
     private ProcessorDataManager processorDataManager;
-    private TempTableStore tempTableStore;
 
     /**
      * Constructor takes the "real" ProcessorDataManager that this object will be a proxy to,
@@ -45,9 +44,8 @@ public class TempTableDataManager implements ProcessorDataManager {
      * a temp group will this proxy do it's thing.
      * @param processorDataManager the real ProcessorDataManager that this object is a proxy to
      */
-    public TempTableDataManager(ProcessorDataManager processorDataManager, TempTableStore tempTableStore){
+    public TempTableDataManager(ProcessorDataManager processorDataManager){
         this.processorDataManager = processorDataManager;
-        this.tempTableStore = tempTableStore;
     }
 
 	public TupleSource registerRequest(
@@ -57,6 +55,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 		String connectorBindingId, int nodeID)
 		throws TeiidComponentException, TeiidProcessingException {          
 
+		TempTableStore tempTableStore = context.getTempTableStore();
         if(tempTableStore != null) {
             TupleSource result = tempTableStore.registerRequest(context, command);
             if (result != null) {
