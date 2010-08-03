@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
+import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
@@ -50,6 +51,7 @@ import org.teiid.query.function.aggregate.Min;
 import org.teiid.query.function.aggregate.StatsFunction;
 import org.teiid.query.function.aggregate.Sum;
 import org.teiid.query.function.aggregate.XMLAgg;
+import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.sql.lang.OrderBy;
@@ -267,49 +269,22 @@ public class GroupingNode extends RelationalNode {
 		
 		final RelationalNode sourceNode = this.getChildren()[0];
 		
-		return new TupleSource() {
-		    private TupleBatch sourceBatch;           // Current batch loaded from the source, if blocked
-		    private int sourceRow = 1;                   
-
-			@Override
-			public List<?> nextTuple() throws TeiidComponentException,
-					TeiidProcessingException {
-				while (true) {
-					if(sourceBatch == null) {
-			            // Read next batch
-			            sourceBatch = sourceNode.nextBatch();
-			        }
-			        
-			        if(sourceBatch.getRowCount() > 0 && sourceRow <= sourceBatch.getEndRow()) {
-			            // Evaluate expressions needed for grouping
-		                List tuple = sourceBatch.getTuple(sourceRow);
-		                
-		                int columns = collectedExpressions.size();
-		                List exprTuple = new ArrayList(columns);
-		                for(int col = 0; col<columns; col++) { 
-		                    // The following call may throw BlockedException, but all state to this point
-		                    // is saved in class variables so we can start over on building this tuple
-		                    Object value = new Evaluator(elementMap, getDataManager(), getContext()).evaluate((Expression)collectedExpressions.get(col), tuple);
-		                    exprTuple.add(value);
-		                }
-		                sourceRow++;
-			            return exprTuple;
-			        }
-			        
-			        // Check for termination condition
-			        if(sourceBatch.getTerminationFlag()) {
-			        	sourceBatch = null;			            
-			            return null;
-			        } 
-			        sourceBatch = null;
-				}
-			}
+		return new BatchCollector.BatchProducerTupleSource(sourceNode) {
+			
+			Evaluator eval = new Evaluator(elementMap, getDataManager(), getContext());
 			
 			@Override
-			public void closeSource() {
-				
+			protected List updateTuple(List tuple) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
+				int columns = collectedExpressions.size();
+	            List exprTuple = new ArrayList(columns);
+	            for(int col = 0; col<columns; col++) { 
+	                // The following call may throw BlockedException, but all state to this point
+	                // is saved in class variables so we can start over on building this tuple
+	                Object value = eval.evaluate(collectedExpressions.get(col), tuple);
+	                exprTuple.add(value);
+	            }
+	            return exprTuple;
 			}
-			
 		};
 		
 	}

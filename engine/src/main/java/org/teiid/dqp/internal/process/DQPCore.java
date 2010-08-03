@@ -73,6 +73,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
 
 
@@ -236,7 +237,7 @@ public class DQPCore implements DQP {
     public ClientState getClientState(String key, boolean create) {
 		ClientState state = clientState.get(key);
 		if (state == null && create) {
-			state = new ClientState(new TempTableStore(bufferManager, key));
+			state = new ClientState(new TempTableStore(key));
     		clientState.put(key, state);
 		}
 		return state;
@@ -612,10 +613,6 @@ public class DQPCore implements DQP {
     	return this.dataTierMgr;
     }
     
-    public void setDataTierManager(ProcessorDataManager dataTierMgr) {
-    	this.dataTierMgr = dataTierMgr;
-    }
-
 	public BufferManager getBufferManager() {
 		return bufferManager;
 	}
@@ -662,12 +659,12 @@ public class DQPCore implements DQP {
 
         this.processWorkerPool = new ThreadReuseExecutor(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, config.getMaxThreads());
         
-        dataTierMgr = new DataTierManagerImpl(this,
+        dataTierMgr = new TempTableDataManager(new DataTierManagerImpl(this,
                                             this.connectorManagerRepository,
                                             this.bufferService,
                                             this.maxCodeTables,
                                             this.maxCodeRecords,
-                                            this.maxCodeTableRecords); 
+                                            this.maxCodeTableRecords), this.bufferManager); 
 	}
 	
 	public void setBufferService(BufferService service) {

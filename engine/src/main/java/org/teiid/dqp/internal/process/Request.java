@@ -70,7 +70,6 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.QueryProcessor;
-import org.teiid.query.processor.TempTableDataManager;
 import org.teiid.query.processor.xml.XMLPlan;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
@@ -177,15 +176,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
         VDBMetaData vdbMetadata = workContext.getVDB();
         metadata = vdbMetadata.getAttachment(QueryMetadataInterface.class);
         globalTables = vdbMetadata.getAttachment(TempTableStore.class);
-        if (globalTables == null) {
-        	synchronized (vdbMetadata) {
-        		globalTables = vdbMetadata.getAttachment(TempTableStore.class);
-        		if (globalTables == null) {
-        			globalTables = new TempTableStore(bufferManager, "SYSTEM"); //$NON-NLS-1$
-        			vdbMetadata.addAttchment(TempTableStore.class, globalTables); 
-        		}
-			}
-        }
 
         if (metadata == null) {
             throw new TeiidComponentException(DQPPlugin.Util.getString("DQPCore.Unable_to_load_metadata_for_VDB_name__{0},_version__{1}", this.vdbName, this.vdbVersion)); //$NON-NLS-1$
@@ -362,7 +352,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         } 
         
         this.transactionContext = tc;
-        this.processor = new QueryProcessor(processPlan, context, bufferManager, new TempTableDataManager(processorDataManager));
+        this.processor = new QueryProcessor(processPlan, context, bufferManager, processorDataManager);
     }
 
     /**

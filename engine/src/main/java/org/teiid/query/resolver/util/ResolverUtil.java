@@ -427,7 +427,7 @@ public class ResolverUtil {
 			if (matchedSymbol != null) {
 			    TempMetadataID tempMetadataID = new TempMetadataID(symbol.getName(), matchedSymbol.getType());
 			    int position = knownElements.indexOf(matchedSymbol);
-			    tempMetadataID.setPosition(position);
+			    tempMetadataID.setSelectPosition(position);
 			    symbol.setMetadataID(tempMetadataID);
 			    symbol.setType(matchedSymbol.getType());
 			    return position;

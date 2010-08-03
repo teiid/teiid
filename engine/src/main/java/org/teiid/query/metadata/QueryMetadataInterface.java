@@ -679,5 +679,5 @@ public interface QueryMetadataInterface {
 
     FunctionLibrary getFunctionLibrary();
     
-    boolean isPrimaryKey(Object metadataID);
+    Object getPrimaryKey(Object metadataID);
 }

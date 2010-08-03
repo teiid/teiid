@@ -85,6 +85,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
+import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
@@ -228,10 +229,10 @@ public class TestProcessor {
         bufferMgr.setConnectorBatchSize(context.getProcessorBatchSize());
         context.getNextRand(0);
         if (context.getTempTableStore() == null) {
-        	context.setTempTableStore(new TempTableStore(bufferMgr, context.getConnectionID()));
+        	context.setTempTableStore(new TempTableStore(context.getConnectionID()));
         }
         if (!(dataManager instanceof TempTableDataManager)) {
-        	dataManager = new TempTableDataManager(dataManager);
+        	dataManager = new TempTableDataManager(dataManager, bufferMgr);
         }
         TupleBuffer id = null;
         try {

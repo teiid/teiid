@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.util.CommandContext;
@@ -55,11 +56,11 @@ public class TestTempTables {
 	}
 
 	@Before public void setUp() {
-		tempStore = new TempTableStore(BufferManagerFactory.getStandaloneBufferManager(), "1"); //$NON-NLS-1$
+		tempStore = new TempTableStore("1"); //$NON-NLS-1$
 		metadata = new TempMetadataAdapter(FakeMetadataFactory.example1Cached(), tempStore.getMetadataStore());
 		FakeDataManager fdm = new FakeDataManager();
 	    TestProcessor.sampleData1(fdm);
-		dataManager = new TempTableDataManager(fdm);
+		dataManager = new TempTableDataManager(fdm, BufferManagerFactory.getStandaloneBufferManager());
 	}
 
 	@Test public void testInsertWithQueryExpression() throws Exception {

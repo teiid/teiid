@@ -370,8 +370,8 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 	}
 	
 	@Override
-	public boolean isPrimaryKey(Object metadataID) {
-		return actualMetadata.isPrimaryKey(metadataID);
+	public Object getPrimaryKey(Object metadataID) {
+		return actualMetadata.getPrimaryKey(metadataID);
 	}
 
 }

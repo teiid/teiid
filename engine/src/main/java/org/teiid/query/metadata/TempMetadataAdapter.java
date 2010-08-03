@@ -526,11 +526,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     
     public int getPosition(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if (elementID instanceof TempMetadataID) {
-            String elementName = ((TempMetadataID)elementID).getID();
-            String groupName = elementName.substring(0, elementName.lastIndexOf(SEPARATOR));
-            TempMetadataID groupID = this.tempStore.getTempGroupID(groupName);
-            List elements = groupID.getElements();
-            return elements.indexOf(elementID);
+        	return ((TempMetadataID)elementID).getPosition();
         }
         return actualMetadata.getPosition(elementID);
     }
@@ -694,15 +690,11 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     }
     
     @Override
-    public boolean isPrimaryKey(Object metadataID) {
+    public Object getPrimaryKey(Object metadataID) {
     	if (metadataID instanceof TempMetadataID) {
-    		TempMetadataID tid = (TempMetadataID)metadataID;
-    		if (tid.getPrimaryKey() != null) {
-    			return true;
-    		}
-    		return false;
+    		return metadataID;
     	}
-    	return this.actualMetadata.isPrimaryKey(metadataID);
+    	return this.actualMetadata.getPrimaryKey(metadataID);
     }
 
 }

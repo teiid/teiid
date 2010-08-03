@@ -24,7 +24,6 @@ package org.teiid.query.unittest;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -32,6 +31,7 @@ import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnSet;
+import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
@@ -42,10 +42,11 @@ import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.CompositeMetadataStore;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.SPParameter;
 
-
+@SuppressWarnings("nls")
 public class RealMetadataFactory {
 
     private static TransformationMetadata CACHED_BQT = exampleBQT();
@@ -157,111 +158,213 @@ public class RealMetadataFactory {
         
         List<Column> bqt1SmallAe = createElements(bqt1SmallA, elemNames, elemTypes);
         bqt1SmallAe.get(1).setNativeType("char"); //$NON-NLS-1$
-        List bqt1SmallBe = createElements(bqt1SmallB, elemNames, elemTypes);
-        List bqt1MediumAe = createElements(bqt1MediumA, elemNames, elemTypes);
-        List bqt1MediumBe = createElements(bqt1MediumB, elemNames, elemTypes);
-        List bqt2SmallAe = createElements(bqt2SmallA, elemNames, elemTypes);
-        List bqt2SmallBe = createElements(bqt2SmallB, elemNames, elemTypes);
-        List bqt2MediumAe = createElements(bqt2MediumA, elemNames, elemTypes);
-        List bqt2MediumBe = createElements(bqt2MediumB, elemNames, elemTypes);                
-        List bqt3SmallAe = createElements(bqt3SmallA, elemNames, elemTypes);
-        List bqt3SmallBe = createElements(bqt3SmallB, elemNames, elemTypes);
-        List bqt3MediumAe = createElements(bqt3MediumA, elemNames, elemTypes);
-        List bqt3MediumBe = createElements(bqt3MediumB, elemNames, elemTypes);
-        List lobTable_elem = createElements(lobTable, new String[] {"ClobValue"}, new String[] {DataTypeManager.DefaultDataTypes.CLOB}); //$NON-NLS-1$
+        createElements(bqt1SmallB, elemNames, elemTypes);
+        createElements(bqt1MediumA, elemNames, elemTypes);
+        createElements(bqt1MediumB, elemNames, elemTypes);
+        createElements(bqt2SmallA, elemNames, elemTypes);
+        createElements(bqt2SmallB, elemNames, elemTypes);
+        createElements(bqt2MediumA, elemNames, elemTypes);
+        createElements(bqt2MediumB, elemNames, elemTypes);                
+        createElements(bqt3SmallA, elemNames, elemTypes);
+        createElements(bqt3SmallB, elemNames, elemTypes);
+        createElements(bqt3MediumA, elemNames, elemTypes);
+        createElements(bqt3MediumB, elemNames, elemTypes);
+        createElements(lobTable, new String[] {"ClobValue"}, new String[] {DataTypeManager.DefaultDataTypes.CLOB}); //$NON-NLS-1$
         
         // Create virtual elements
-        List vqtg1e = createElements(vqtg1, elemNames, elemTypes);        
-        List vqtg2e = createElements(vqtg2, new String[] {"a12345"}, new String[] {DataTypeManager.DefaultDataTypes.STRING});  //$NON-NLS-1$
-        List vqtg15355e = createElements(vqtg15355, new String[] {"StringKey", "BigIntegerValue"}, new String[] {DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.BIG_INTEGER});         //$NON-NLS-1$ //$NON-NLS-2$
-        List vqtg15355ae = createElements(vqtg15355a, new String[] {"StringKey", "StringNum", "BigIntegerValue"}, new String[] {DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.BIG_INTEGER});         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        List vqtg15355be = createElements(vqtg15355b, new String[] {"IntKey", "BigIntegerValue"}, new String[] {DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.BIG_INTEGER});         //$NON-NLS-1$ //$NON-NLS-2$
-        List vqtg2589e = createElements(vqtg2589, elemNames, elemTypes);        
-        List vqtg2589ae = createElements(vqtg2589a, elemNames, elemTypes);        
-        List vqtg2589be = createElements(vqtg2589b, elemNames, elemTypes);        
-        List vqtg2589ce = createElements(vqtg2589c, elemNames, elemTypes);        
-        List vqtg2589de = createElements(vqtg2589d, elemNames, elemTypes);        
-        List vqtg2589fe = createElements(vqtg2589f, elemNames, elemTypes);        
-        List vqtg2589ge = createElements(vqtg2589g, elemNames, elemTypes);        
-        List vqtg2589he = createElements(vqtg2589h, elemNames, elemTypes);        
-        List vqtg2589ie = createElements(vqtg2589i, elemNames, elemTypes);
-        List bvqtg1e = createElements(bvqtg1, elemNames, elemTypes);        
-        List bvqt2g1e = createElements(bvqt2g1, elemNames, elemTypes);        
+        createElements(vqtg1, elemNames, elemTypes);        
+        createElements(vqtg2, new String[] {"a12345"}, new String[] {DataTypeManager.DefaultDataTypes.STRING});  //$NON-NLS-1$
+        createElements(vqtg15355, new String[] {"StringKey", "BigIntegerValue"}, new String[] {DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.BIG_INTEGER});         //$NON-NLS-1$ //$NON-NLS-2$
+        createElements(vqtg15355a, new String[] {"StringKey", "StringNum", "BigIntegerValue"}, new String[] {DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.BIG_INTEGER});         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        createElements(vqtg15355b, new String[] {"IntKey", "BigIntegerValue"}, new String[] {DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.BIG_INTEGER});         //$NON-NLS-1$ //$NON-NLS-2$
+        createElements(vqtg2589, elemNames, elemTypes);        
+        createElements(vqtg2589a, elemNames, elemTypes);        
+        createElements(vqtg2589b, elemNames, elemTypes);        
+        createElements(vqtg2589c, elemNames, elemTypes);        
+        createElements(vqtg2589d, elemNames, elemTypes);        
+        createElements(vqtg2589f, elemNames, elemTypes);        
+        createElements(vqtg2589g, elemNames, elemTypes);        
+        createElements(vqtg2589h, elemNames, elemTypes);        
+        createElements(vqtg2589i, elemNames, elemTypes);
+        createElements(bvqtg1, elemNames, elemTypes);        
+        createElements(bvqt2g1, elemNames, elemTypes);        
 
      // Add stored procedure
         Schema pm1 = createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
-        ProcedureParameter rs1p1 = createParameter("intkey", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null);         //$NON-NLS-1$
-        ColumnSet<Procedure> rs1 = createResultSet("rs1", pm1, new String[] { "IntKey", "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ProcedureParameter rs1p1 = createParameter("intkey", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER);         //$NON-NLS-1$
+        ColumnSet<Procedure> rs1 = createResultSet("rs1", new String[] { "IntKey", "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         Procedure spTest5 = createStoredProcedure("spTest5", pm1, Arrays.asList(rs1p1), "spTest5"); //$NON-NLS-1$ //$NON-NLS-2$
         spTest5.setResultSet(rs1);
 
         Schema pm2 = createPhysicalModel("pm2", metadataStore); //$NON-NLS-1$
-        ProcedureParameter rs2p1 = createParameter("inkey", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
-        ProcedureParameter rs2p2 = createParameter("outkey", 3, ParameterInfo.OUT, DataTypeManager.DefaultDataTypes.INTEGER, null);                 //$NON-NLS-1$
-        ColumnSet<Procedure> rs2 = createResultSet("rs2", pm2, new String[] { "IntKey", "StringKey"}, new String[] { DataTypeManager.DefaultDataTypes.INTEGER , DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ProcedureParameter rs2p1 = createParameter("inkey", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        ProcedureParameter rs2p2 = createParameter("outkey", ParameterInfo.OUT, DataTypeManager.DefaultDataTypes.INTEGER);                 //$NON-NLS-1$
+        ColumnSet<Procedure> rs2 = createResultSet("rs2", new String[] { "IntKey", "StringKey"}, new String[] { DataTypeManager.DefaultDataTypes.INTEGER , DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         Procedure spTest8 = createStoredProcedure("spTest8", pm2, Arrays.asList(rs2p1, rs2p2), "spTest8"); //$NON-NLS-1$ //$NON-NLS-2$
         spTest8.setResultSet(rs2);
         
-        ProcedureParameter rs2p2a = createParameter("outkey", 3, ParameterInfo.OUT, DataTypeManager.DefaultDataTypes.INTEGER, null);                 //$NON-NLS-1$
-        ColumnSet<Procedure> rs2a = createResultSet("rs2", pm2, new String[] { "IntKey", "StringKey"}, new String[] { DataTypeManager.DefaultDataTypes.INTEGER , DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ProcedureParameter rs2p2a = createParameter("outkey", ParameterInfo.OUT, DataTypeManager.DefaultDataTypes.INTEGER);                 //$NON-NLS-1$
+        ColumnSet<Procedure> rs2a = createResultSet("rs2", new String[] { "IntKey", "StringKey"}, new String[] { DataTypeManager.DefaultDataTypes.INTEGER , DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         Procedure spTest8a = createStoredProcedure("spTest8a", pm2, Arrays.asList(rs2p2a), "spTest8a"); //$NON-NLS-1$ //$NON-NLS-2$
         spTest8a.setResultSet(rs2a);
         
         Schema pm4 = createPhysicalModel("pm4", metadataStore); //$NON-NLS-1$
-        ProcedureParameter rs4p1 = createParameter("inkey", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
-        ProcedureParameter rs4p2 = createParameter("ret", 1, ParameterInfo.RETURN_VALUE, DataTypeManager.DefaultDataTypes.INTEGER, null);  //$NON-NLS-1$
-        Procedure spTest9 = createStoredProcedure("spTest9", pm4, Arrays.asList(rs4p1, rs4p2), "spTest9"); //$NON-NLS-1$ //$NON-NLS-2$
+        ProcedureParameter rs4p1 = createParameter("inkey", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        ProcedureParameter rs4p2 = createParameter("ret", ParameterInfo.RETURN_VALUE, DataTypeManager.DefaultDataTypes.INTEGER);  //$NON-NLS-1$
+        createStoredProcedure("spTest9", pm4, Arrays.asList(rs4p1, rs4p2), "spTest9"); //$NON-NLS-1$ //$NON-NLS-2$
         
         Schema pm3 = createPhysicalModel("pm3", metadataStore); //$NON-NLS-1$
-        ProcedureParameter rs3p1 = createParameter("inkey", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
-        ProcedureParameter rs3p2 = createParameter("outkey", 3, ParameterInfo.INOUT, DataTypeManager.DefaultDataTypes.INTEGER, null);                 //$NON-NLS-1$
-        ColumnSet<Procedure> rs3 = createResultSet("rs3", pm3, new String[] { "IntKey", "StringKey"}, new String[] { DataTypeManager.DefaultDataTypes.INTEGER , DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ProcedureParameter rs3p1 = createParameter("inkey", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        ProcedureParameter rs3p2 = createParameter("outkey", ParameterInfo.INOUT, DataTypeManager.DefaultDataTypes.INTEGER);                 //$NON-NLS-1$
+        ColumnSet<Procedure> rs3 = createResultSet("rs3", new String[] { "IntKey", "StringKey"}, new String[] { DataTypeManager.DefaultDataTypes.INTEGER , DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         Procedure spTest11 = createStoredProcedure("spTest11", pm3, Arrays.asList(rs3p1, rs3p2), "spTest11"); //$NON-NLS-1$ //$NON-NLS-2$
         spTest11.setResultSet(rs3);
         
         //add virtual stored procedures 
         Schema mmspTest1 = createVirtualModel("mmspTest1", metadataStore); //$NON-NLS-1$
-        ColumnSet<Procedure> vsprs1 = createResultSet("mmspTest1.vsprs1", mmspTest1, new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
+        ColumnSet<Procedure> vsprs1 = createResultSet("mmspTest1.vsprs1", new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         QueryNode vspqn1 = new QueryNode("vsp1", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT intkey FROM bqt1.smallA) AS intKeyCursor BEGIN x= intKeyCursor.intkey - 1; END SELECT stringkey FROM bqt1.smalla where intkey=x; END"); //$NON-NLS-1$ //$NON-NLS-2$
         Procedure vsp1 = createVirtualProcedure("MMSP1", mmspTest1, null, vspqn1); //$NON-NLS-1$
         vsp1.setResultSet(vsprs1);
 
-        ColumnSet<Procedure> vsprs2 = createResultSet("mmspTest1.vsprs1", mmspTest1, new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
+        ColumnSet<Procedure> vsprs2 = createResultSet("mmspTest1.vsprs1", new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         QueryNode vspqn2 = new QueryNode("vsp2", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT intkey FROM bqt1.smallA) AS intKeyCursor1 BEGIN LOOP ON (SELECT intkey FROM bqt1.smallB) AS intKeyCursor2 BEGIN x= intKeyCursor1.intkey - intKeyCursor2.intkey; END END SELECT stringkey FROM bqt1.smalla where intkey=x; END"); //$NON-NLS-1$ //$NON-NLS-2$
         Procedure vsp2 = createVirtualProcedure("MMSP2", mmspTest1, null, vspqn2); //$NON-NLS-1$
         vsp2.setResultSet(vsprs2);
 
-        ColumnSet<Procedure> vsprs3 = createResultSet("mmspTest1.vsprs1", mmspTest1, new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
+        ColumnSet<Procedure> vsprs3 = createResultSet("mmspTest1.vsprs1", new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         QueryNode vspqn3 = new QueryNode("vsp3", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT intkey FROM bqt1.smallA) AS intKeyCursor BEGIN x= intKeyCursor.intkey - 1; if(x = 25) BEGIN BREAK; END ELSE BEGIN CONTINUE; END END SELECT stringkey FROM bqt1.smalla where intkey=x; END"); //$NON-NLS-1$ //$NON-NLS-2$
         Procedure vsp3 = createVirtualProcedure("MMSP3", mmspTest1, null, vspqn3); //$NON-NLS-1$
         vsp3.setResultSet(vsprs3);
 
-        ColumnSet<Procedure> vsprs4 = createResultSet("mmspTest1.vsprs1", mmspTest1, new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
+        ColumnSet<Procedure> vsprs4 = createResultSet("mmspTest1.vsprs1", new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         QueryNode vspqn4 = new QueryNode("vsp4", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; x=0; WHILE(x < 50) BEGIN x= x + 1; if(x = 25) BEGIN BREAK; END ELSE BEGIN CONTINUE; END END SELECT stringkey FROM bqt1.smalla where intkey=x; END"); //$NON-NLS-1$ //$NON-NLS-2$
         Procedure vsp4 = createVirtualProcedure("MMSP4", mmspTest1, null, vspqn4); //$NON-NLS-1$
         vsp4.setResultSet(vsprs4);
         
-        ColumnSet<Procedure> vsprs5 = createResultSet("mmspTest1.vsprs1", mmspTest1, new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
-        ProcedureParameter vsp5p1 = createParameter("param1", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null); //$NON-NLS-1$
+        ColumnSet<Procedure> vsprs5 = createResultSet("mmspTest1.vsprs1", new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
+        ProcedureParameter vsp5p1 = createParameter("param1", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
         QueryNode vspqn5 = new QueryNode("vsp5", "CREATE VIRTUAL PROCEDURE BEGIN SELECT 0; END"); //$NON-NLS-1$ //$NON-NLS-2$
         Procedure vsp5 = createVirtualProcedure("MMSP5", mmspTest1, Arrays.asList(vsp5p1), vspqn5); //$NON-NLS-1$
         vsp5.setResultSet(vsprs5);
 
-        ColumnSet<Procedure> vsprs6 = createResultSet("mmspTest1.vsprs1", mmspTest1, new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
-        ProcedureParameter vsp6p1 = createParameter("p1", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null); //$NON-NLS-1$
+        ColumnSet<Procedure> vsprs6 = createResultSet("mmspTest1.vsprs1", new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
+        ProcedureParameter vsp6p1 = createParameter("p1", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
         QueryNode vspqn6 = new QueryNode("vsp6", "CREATE VIRTUAL PROCEDURE BEGIN SELECT 1; END"); //$NON-NLS-1$ //$NON-NLS-2$
         Procedure vsp6 = createVirtualProcedure("MMSP6", mmspTest1, Arrays.asList(vsp6p1), vspqn6); //$NON-NLS-1$
         vsp6.setResultSet(vsprs6);
     	
-    	CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
+    	return createTransformationMetadata(metadataStore, "bqt"); 
+    }
+
+	private static TransformationMetadata createTransformationMetadata(
+			MetadataStore metadataStore, String vdbName) {
+		CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
     	VDBMetaData vdbMetaData = new VDBMetaData();
-    	vdbMetaData.setName("bqt"); //$NON-NLS-1$
+    	vdbMetaData.setName(vdbName); //$NON-NLS-1$
     	vdbMetaData.setVersion(1);
     	for (Schema schema : metadataStore.getSchemas().values()) {
 			vdbMetaData.addModel(FakeMetadataFactory.createModel(schema.getName(), schema.isPhysical()));
 		}
-    	return new TransformationMetadata(vdbMetaData, store, null, null); 
+    	return new TransformationMetadata(vdbMetaData, store, null, null);
+	}
+    
+    /** 
+     * Metadata for Materialized Views
+     * @return
+     * @since 4.2
+     */
+    public static QueryMetadataInterface exampleMaterializedView() {
+    	MetadataStore metadataStore = new MetadataStore();
+        Schema virtModel = createVirtualModel("MatView", metadataStore); //$NON-NLS-1$
+        Schema physModel = createPhysicalModel("MatTable", metadataStore); //$NON-NLS-1$
+        Schema physModel_virtSrc = createPhysicalModel("MatSrc", metadataStore); //$NON-NLS-1$
+        
+        Table physGroup = createPhysicalGroup("MatTable", physModel); //$NON-NLS-1$
+        createElements(physGroup,
+                                      new String[] { "e1" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING});
+        
+        Table physGroupStage = createPhysicalGroup("MatStage", physModel); //$NON-NLS-1$
+        createElements(physGroupStage,
+                                      new String[] { "e1" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING});
+        
+        Table physGroup1 = createPhysicalGroup("MatTable1", physModel); //$NON-NLS-1$
+        createElements(physGroup1,
+                                      new String[] { "e1" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING});
+        
+        Table physGroupStage1 = createPhysicalGroup("MatStage1", physModel); //$NON-NLS-1$
+        createElements(physGroupStage,
+                                      new String[] { "e1" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING});
+        
+        Table physGroup_virtSrc = createPhysicalGroup("MatSrc", physModel_virtSrc); //$NON-NLS-1$
+        createElements(physGroup_virtSrc,
+                                      new String[] { "X" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING});
+        
+        QueryNode virtTrans = new QueryNode("MatView", "SELECT x as e1 FROM MatSrc.MatSrc");         //$NON-NLS-1$ //$NON-NLS-2$
+        Table virtGroup = createVirtualGroup("MatView", virtModel, virtTrans); //$NON-NLS-1$
+        createElements(virtGroup,
+                                      new String[] { "e1" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING});
+       
+        virtGroup.setMaterialized(true);
+        virtGroup.setMaterializedTable(physGroup);
+        virtGroup.setMaterializedStageTable(physGroupStage);
+        
+        //add one virtual group that uses the materialized group in transformation with NOCACHE option
+        QueryNode vTrans = new QueryNode("VGroup", "SELECT e1 FROM MatView.MatView option NOCACHE");         //$NON-NLS-1$ //$NON-NLS-2$
+        Table vGroup = createVirtualGroup("VGroup", virtModel, vTrans); //$NON-NLS-1$
+        createElements(vGroup,
+                                      new String[] { "e1" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING});
+        
+        QueryNode virtTrans1 = new QueryNode("MatView1", "SELECT e1 FROM MatView.MatView where e1 = 1");         //$NON-NLS-1$ //$NON-NLS-2$
+        Table virtGroup1 = createVirtualGroup("MatView1", virtModel, virtTrans1); //$NON-NLS-1$
+        createElements(virtGroup1,
+                                      new String[] { "e1" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING});
+        
+        virtGroup1.setMaterializedTable(physGroup1);
+        virtGroup1.setMaterializedStageTable(physGroupStage1);
+
+        QueryNode vTrans2 = new QueryNode("VGroup2", "/* cache */ SELECT x FROM matsrc");         //$NON-NLS-1$ //$NON-NLS-2$
+        Table vGroup2 = createVirtualGroup("VGroup2", virtModel, vTrans2); //$NON-NLS-1$
+        createElements(vGroup2,
+                                      new String[] { "x" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING});
+        
+        QueryNode vTrans3 = new QueryNode("VGroup3", "/* cache */ SELECT x, 'z' || substring(x, 2) as y FROM matsrc");         //$NON-NLS-1$ //$NON-NLS-2$
+        Table vGroup3 = createVirtualGroup("VGroup3", virtModel, vTrans3); //$NON-NLS-1$
+        List<Column> vElements3 = createElements(vGroup3,
+                                      new String[] { "x", "y" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
+        
+        createKey("pk", vGroup3, vElements3.subList(0, 1));
+
+        return createTransformationMetadata(metadataStore, "");
     }
+    
+	/**
+	 * Create primary key.  The name will be used as the Object metadataID.
+	 * @param name String name of key
+	 * @param group the group for the key
+	 * @param elements the elements of the key (will be used as if they were
+	 * metadata IDs)
+	 * @return key metadata object
+	 */
+	public static KeyRecord createKey(String name, Table group, List<Column> elements) {
+		KeyRecord key = new KeyRecord(org.teiid.metadata.KeyRecord.Type.Primary);
+		key.setName(name);
+		for (Column column : elements) {
+			key.addColumn(column);
+		}
+		group.setPrimaryKey(key);
+		return key;
+	}
 
     /**
      * Create a physical model with default settings.
@@ -315,23 +418,6 @@ public class RealMetadataFactory {
 		return table;
 	}
 
-    /**
-     * Create a temp group with default settings.
-     * @param name Name of virtual group, must match model name
-     * @param model Associated model
-     * @param plan Appropriate query plan definition object for the temp group
-     * @return FakeMetadataObject Metadata object for group
-     */
-    public static FakeMetadataObject createTempGroup(String name, FakeMetadataObject model, Object plan) {
-        FakeMetadataObject obj = new FakeMetadataObject(name, FakeMetadataObject.GROUP);
-        obj.putProperty(FakeMetadataObject.Props.MODEL, model);
-        obj.putProperty(FakeMetadataObject.Props.IS_VIRTUAL, Boolean.FALSE);
-        obj.putProperty(FakeMetadataObject.Props.PLAN, plan);
-        obj.putProperty(FakeMetadataObject.Props.UPDATE, Boolean.FALSE); 
-        obj.putProperty(FakeMetadataObject.Props.TEMP, Boolean.TRUE);  
-        return obj; 
-    }
-	
     /**
      * Create a virtual group that allows updates with default settings.
      */
@@ -389,96 +475,9 @@ public class RealMetadataFactory {
 	}	
 
     /**
-     * Create index.  The name will be used as the Object metadataID.
-     * @param name String name of index
-     * @param group the group for the index
-     * @param elements the elements of the index (will be used as if they were
-     * metadata IDs)
-     * @return key metadata object
-     */
-    public static FakeMetadataObject createIndex(String name, FakeMetadataObject group, List elements) { 
-        FakeMetadataObject obj = new FakeMetadataObject(name, FakeMetadataObject.KEY);
-        obj.putProperty(FakeMetadataObject.Props.KEY_TYPE, FakeMetadataObject.TYPE_INDEX);
-        obj.putProperty(FakeMetadataObject.Props.KEY_ELEMENTS, elements);
-        Collection keys = (Collection)group.getProperty(FakeMetadataObject.Props.KEYS);
-        if (keys == null){
-            keys = new ArrayList();
-            group.putProperty(FakeMetadataObject.Props.KEYS, keys);
-        }
-        keys.add(obj);
-        return obj; 
-    }
-
-	/**
-	 * Create primary key.  The name will be used as the Object metadataID.
-	 * @param name String name of key
-	 * @param group the group for the key
-	 * @param elements the elements of the key (will be used as if they were
-	 * metadata IDs)
-	 * @return key metadata object
-	 */
-	public static FakeMetadataObject createKey(String name, FakeMetadataObject group, List elements) { 
-		FakeMetadataObject obj = new FakeMetadataObject(name, FakeMetadataObject.KEY);
-        obj.putProperty(FakeMetadataObject.Props.KEY_TYPE, FakeMetadataObject.TYPE_PRIMARY_KEY);
-		obj.putProperty(FakeMetadataObject.Props.KEY_ELEMENTS, elements);
-		Collection keys = (Collection)group.getProperty(FakeMetadataObject.Props.KEYS);
-		if (keys == null){
-			keys = new ArrayList();
-			group.putProperty(FakeMetadataObject.Props.KEYS, keys);
-		}
-		keys.add(obj);
-		return obj; 
-	}
-
-    /**
-     * Create foreign key.  The name will be used as the Object metadataID.
-     * @param name String name of key
-     * @param group the group for the key
-     * @param elements the elements of the key (will be used as if they were
-     * @param primaryKey referenced by this foreign key
-     * metadata IDs)
-     * @return key metadata object
-     */
-    public static FakeMetadataObject createForeignKey(String name, FakeMetadataObject group, List elements, FakeMetadataObject primaryKey) { 
-        FakeMetadataObject obj = new FakeMetadataObject(name, FakeMetadataObject.KEY);
-        obj.putProperty(FakeMetadataObject.Props.KEY_TYPE, FakeMetadataObject.TYPE_FOREIGN_KEY);
-        obj.putProperty(FakeMetadataObject.Props.KEY_ELEMENTS, elements);
-        obj.putProperty(FakeMetadataObject.Props.REFERENCED_KEY, primaryKey);
-        Collection keys = (Collection)group.getProperty(FakeMetadataObject.Props.KEYS);
-        if (keys == null){
-            keys = new ArrayList();
-            group.putProperty(FakeMetadataObject.Props.KEYS, keys);
-        }
-        keys.add(obj);
-        return obj; 
-    }
-
-    /**
-     * Create access pattern (currently an access pattern is implemented as a type of key).  The name will
-     * be used as the Object metadataID.
-     * @param name String name of key
-     * @param group the group for the access pattern
-     * @param elements the elements of the access pattern (will be used as if they were
-     * metadata IDs)
-     * @return Access pattern metadata object
-     */
-    public static FakeMetadataObject createAccessPattern(String name, FakeMetadataObject group, List elements) { 
-        FakeMetadataObject obj = new FakeMetadataObject(name, FakeMetadataObject.KEY);
-        obj.putProperty(FakeMetadataObject.Props.KEY_TYPE, FakeMetadataObject.TYPE_ACCESS_PATTERN);
-        obj.putProperty(FakeMetadataObject.Props.KEY_ELEMENTS, elements);
-        Collection keys = (Collection)group.getProperty(FakeMetadataObject.Props.KEYS);
-        if (keys == null){
-            keys = new ArrayList();
-            group.putProperty(FakeMetadataObject.Props.KEYS, keys);
-        }
-        keys.add(obj);
-        return obj; 
-    }
-    
-    /**
      * Create stored procedure parameter.
      */
-    public static ProcedureParameter createParameter(String name, int index, int direction, String type, Object rs) {
+    public static ProcedureParameter createParameter(String name, int direction, String type) {
         ProcedureParameter param = new ProcedureParameter();
         param.setName(name);
         switch (direction) {
@@ -542,7 +541,7 @@ public class RealMetadataFactory {
     /**
      * Create a result set.
      */
-    public static ColumnSet<Procedure> createResultSet(String name, Object model, String[] colNames, String[] colTypes) {
+    public static ColumnSet<Procedure> createResultSet(String name, String[] colNames, String[] colTypes) {
     	ColumnSet<Procedure> rs = new ColumnSet<Procedure>();
     	rs.setName(name);
         for(Column column : createElements(rs, colNames, colTypes)) {

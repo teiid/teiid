@@ -55,7 +55,7 @@ public class HardcodedDataManager implements
     private boolean blockOnce;
     
     // Collect all commands run against this class
-    private Collection commandHistory = new ArrayList(); // Commands
+    private List commandHistory = new ArrayList(); // Commands
     
     public HardcodedDataManager() {
     	this(true);
@@ -92,7 +92,7 @@ public class HardcodedDataManager implements
      * @return
      * @since 4.2
      */
-    public Collection getCommandHistory() {
+    public List getCommandHistory() {
         return this.commandHistory;
     }
     

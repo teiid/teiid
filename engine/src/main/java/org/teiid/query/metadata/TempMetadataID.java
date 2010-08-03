@@ -41,7 +41,8 @@ public class TempMetadataID implements Serializable {
 	private static final int LOCAL_CACHE_SIZE = 8;
 	
     private String ID;      // never null, upper cased fully-qualified string
-    private int position = -1; //used for order by symbol resolving.  refers to the position in the select clause
+    private int selectPosition = -1; //used for order by symbol resolving.  refers to the position in the select clause
+    private int position;
     private Class<?> type;     // type of this element, only for element
     private List<TempMetadataID> elements;  // of TempMetadataID, only for group
     private Object originalMetadataID;
@@ -71,6 +72,10 @@ public class TempMetadataID implements Serializable {
     public TempMetadataID(String ID, List<TempMetadataID> elements, boolean isVirtual, boolean isTempTable) {
         this.ID = ID;
         this.elements = elements;
+        int pos = 1;
+        for (TempMetadataID tempMetadataID : elements) {
+			tempMetadataID.setPosition(pos++);
+		}
         this.isVirtual = isVirtual;
         this.isTempTable = isTempTable;
     }
@@ -128,6 +133,7 @@ public class TempMetadataID implements Serializable {
     protected void addElement(TempMetadataID elem) {
         if (this.elements != null) {
             this.elements.add(elem);
+            elem.setPosition(this.elements.size());
         }
         if (this.localCache != null) {
         	this.localCache.clear();
@@ -217,12 +223,12 @@ public class TempMetadataID implements Serializable {
         this.isTempTable = isTempTable;
     }
 
-    public int getPosition() {
-        return this.position;
+    public int getSelectPosition() {
+        return this.selectPosition;
     }
 
-    public void setPosition(int position) {
-        this.position = position;
+    public void setSelectPosition(int position) {
+        this.selectPosition = position;
     }  
     
     Object getProperty(Object key) {
@@ -253,6 +259,14 @@ public class TempMetadataID implements Serializable {
 	
 	public void setPrimaryKey(List<TempMetadataID> primaryKey) {
 		this.primaryKey = primaryKey;
+	}
+	
+	public int getPosition() {
+		return position;
+	}
+	
+	public void setPosition(int position) {
+		this.position = position;
 	}
 		
 }

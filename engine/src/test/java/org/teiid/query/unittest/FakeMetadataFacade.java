@@ -776,9 +776,11 @@ public class FakeMetadataFacade extends BasicQueryMetadata {
     }
     
     @Override
-    public boolean isPrimaryKey(Object metadataID) {
-    	ArgCheck.isInstanceOf(FakeMetadataObject.class, metadataID);
-    	FakeMetadataObject object =  (FakeMetadataObject) metadataID;
-    	return object.getProperty(FakeMetadataObject.Props.KEY_TYPE) == FakeMetadataObject.TYPE_PRIMARY_KEY;
+    public Object getPrimaryKey(Object metadataID) {
+    	Collection keys = getTypeOfKeysInGroup(metadataID, FakeMetadataObject.TYPE_PRIMARY_KEY);
+    	if (!keys.isEmpty()) {
+    		return keys.iterator().next();
+    	}
+    	return null;
     }
 }

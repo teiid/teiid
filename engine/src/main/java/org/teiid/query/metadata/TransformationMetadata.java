@@ -1069,9 +1069,9 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	}
 	
 	@Override
-	public boolean isPrimaryKey(Object metadataID) {
-		ArgCheck.isInstanceOf(KeyRecord.class, metadataID);
-		KeyRecord key = (KeyRecord)metadataID;
-		return key.getType() == org.teiid.metadata.KeyRecord.Type.Primary;
+	public Object getPrimaryKey(Object metadataID) {
+		ArgCheck.isInstanceOf(Table.class, metadataID);
+		Table table = (Table)metadataID;
+		return table.getPrimaryKey();
 	}
 }

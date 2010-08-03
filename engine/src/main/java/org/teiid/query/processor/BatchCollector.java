@@ -24,9 +24,11 @@ package org.teiid.query.processor;
 
 import java.util.List;
 
+import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
+import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 
@@ -49,6 +51,52 @@ public class BatchCollector {
 	     * @return List of SingleElementSymbol
 	     */
 	    List getOutputElements();
+	}
+	
+	public static class BatchProducerTupleSource implements TupleSource {
+		private final BatchProducer sourceNode;
+		private TupleBatch sourceBatch;           // Current batch loaded from the source, if blocked
+		private int sourceRow = 1;
+
+		public BatchProducerTupleSource(BatchProducer sourceNode) {
+			this.sourceNode = sourceNode;
+		}
+
+		@Override
+		public List<?> nextTuple() throws TeiidComponentException,
+				TeiidProcessingException {
+			while (true) {
+				if(sourceBatch == null) {
+		            // Read next batch
+		            sourceBatch = sourceNode.nextBatch();
+		        }
+		        
+		        if(sourceBatch.getRowCount() > 0 && sourceRow <= sourceBatch.getEndRow()) {
+		            // Evaluate expressions needed for grouping
+		            List tuple = sourceBatch.getTuple(sourceRow);
+		            tuple = updateTuple(tuple);
+		            sourceRow++;
+		            return tuple;
+		        }
+		        
+		        // Check for termination condition
+		        if(sourceBatch.getTerminationFlag()) {
+		        	sourceBatch = null;			            
+		            return null;
+		        } 
+		        sourceBatch = null;
+			}
+		}
+		
+		@SuppressWarnings("unused")
+		protected List updateTuple(List tuple) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
+			return tuple;
+		}
+
+		@Override
+		public void closeSource() {
+			
+		}
 	}
 	
     private BatchProducer sourceNode;

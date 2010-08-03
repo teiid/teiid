@@ -201,7 +201,7 @@ public class ProcedurePlan extends ProcessorPlan {
 		            context.setValue(entry.getKey(), value);
 				}
     		}
-    		tempTableStore = new TempTableStore(bufferMgr, getContext().getConnectionID());
+    		tempTableStore = new TempTableStore(getContext().getConnectionID());
     		getContext().setTempTableStore(tempTableStore);
     	}
     	this.evaluatedParams = true;

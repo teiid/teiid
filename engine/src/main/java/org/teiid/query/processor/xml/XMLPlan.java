@@ -57,7 +57,6 @@ import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.processor.TempTableDataManager;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.tempdata.TempTableStore;
@@ -112,7 +111,7 @@ public class XMLPlan extends ProcessorPlan {
     public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
     	context = context.clone();
     	setContext(context);
-        TempTableStore tempTableStore = new TempTableStore(bufferMgr, context.getConnectionID());
+        TempTableStore tempTableStore = new TempTableStore(context.getConnectionID());
         tempTableStore.setParentTempTableStore(context.getTempTableStore());
         context.setTempTableStore(tempTableStore);
         this.dataMgr = dataMgr;

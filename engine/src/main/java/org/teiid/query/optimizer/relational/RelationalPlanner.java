@@ -115,6 +115,8 @@ import org.teiid.query.validator.ValidationVisitor;
  */
 public class RelationalPlanner {
 	
+	public static final String MAT_PREFIX = "#MAT_"; //$NON-NLS-1$
+	
 	private AnalysisRecord analysisRecord;
 	private Command parentCommand;
 	private IDGenerator idGenerator;
@@ -946,7 +948,7 @@ public class RelationalPlanner {
 	private Command handleCacheHint(GroupSymbol virtualGroup, String name, boolean noCache, Command result)
 			throws TeiidComponentException, QueryMetadataException, QueryResolverException, QueryValidatorException {
 		TempMetadataStore store = context.getGlobalTableStore().getMetadataStore();
-		String matTableName = "#MAT_" + name; //$NON-NLS-1$
+		String matTableName = MAT_PREFIX + name; 
 		TempMetadataID id = store.getTempGroupID(matTableName);
 		//define the table preserving the primary key
 		if (id == null) {
@@ -956,19 +958,16 @@ public class RelationalPlanner {
 					//TODO: this could be done with a generated create
 					id = store.addTempGroup(matTableName, result.getProjectedSymbols(), false, true);
 					
+					Object pk = metadata.getPrimaryKey(virtualGroup.getMetadataID());
 					//primary key
-					Collection keys = metadata.getUniqueKeysInGroup(virtualGroup.getMetadataID());
-					for (Object object : keys) {
-						if (metadata.isPrimaryKey(object)) {
-							List cols = metadata.getElementIDsInKey(object);
-							ArrayList<TempMetadataID> primaryKey = new ArrayList<TempMetadataID>(cols.size());
-							for (Object coldId : cols) {
-								int pos = metadata.getPosition(coldId) - 1;
-								primaryKey.add(id.getElements().get(pos));
-							}
-							id.setPrimaryKey(primaryKey);
-							break;
+					if (pk != null) {
+						List cols = metadata.getElementIDsInKey(pk);
+						ArrayList<TempMetadataID> primaryKey = new ArrayList<TempMetadataID>(cols.size());
+						for (Object coldId : cols) {
+							int pos = metadata.getPosition(coldId) - 1;
+							primaryKey.add(id.getElements().get(pos));
 						}
+						id.setPrimaryKey(primaryKey);
 					}
 					//version column?
 					

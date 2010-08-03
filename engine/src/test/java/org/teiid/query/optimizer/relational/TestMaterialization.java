@@ -30,7 +30,6 @@ import java.util.Collection;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.client.plan.Annotation;
-import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestOptimizer;
@@ -39,7 +38,7 @@ import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.tempdata.TempTableStore;
-import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
 @SuppressWarnings("nls")
@@ -48,7 +47,7 @@ public class TestMaterialization {
     @Test public void testMaterializedTransformation() throws Exception {
         String userSql = "SELECT MATVIEW.E1 FROM MATVIEW"; //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
         Command command = helpGetCommand(userSql, metadata, null);
@@ -65,7 +64,7 @@ public class TestMaterialization {
     @Test public void testMaterializedTransformationLoading() throws Exception {
         String userSql = "SELECT MATVIEW.E1 INTO MatTable.MatStage FROM MATVIEW"; //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
 
         Command command = helpGetCommand(userSql, metadata, null);
@@ -81,7 +80,7 @@ public class TestMaterialization {
     @Test public void testMaterializedTransformationNoCache() throws Exception {
         String userSql = "SELECT MATVIEW.E1 FROM MATVIEW OPTION NOCACHE MatView.MatView"; //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
         Command command = helpGetCommand(userSql, metadata, null);
@@ -98,7 +97,7 @@ public class TestMaterialization {
     @Test public void testMaterializedTransformationNoCache2() throws Exception {
         String userSql = "SELECT MATVIEW.E1 FROM MATVIEW OPTION NOCACHE"; //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
         Command command = helpGetCommand(userSql, metadata, null);
@@ -114,7 +113,7 @@ public class TestMaterialization {
     @Test public void testNoCacheInTransformation() throws Exception {
         String userSql = "SELECT VGROUP.E1 FROM VGROUP"; //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
         Command command = helpGetCommand(userSql, metadata, null);
@@ -125,7 +124,7 @@ public class TestMaterialization {
     @Test public void testTableNoCacheDoesntCascade() throws Exception {
         String userSql = "SELECT MATVIEW1.E1 FROM MATVIEW1 option nocache matview.matview1"; //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
         Command command = helpGetCommand(userSql, metadata, null);
@@ -136,7 +135,7 @@ public class TestMaterialization {
     @Test public void testNoCacheCascade() throws Exception {
         String userSql = "SELECT MATVIEW1.E1 FROM MATVIEW1 option nocache"; //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
         Command command = helpGetCommand(userSql, metadata, null);
@@ -147,12 +146,12 @@ public class TestMaterialization {
     @Test public void testCacheHint() throws Exception {
         String userSql = "SELECT * from vgroup2"; //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
         Command command = helpGetCommand(userSql, metadata, null);
         CommandContext cc = new CommandContext();
-        cc.setGlobalTableStore(new TempTableStore(BufferManagerFactory.getStandaloneBufferManager(), "SYSTEM"));
+        cc.setGlobalTableStore(new TempTableStore("SYSTEM"));
         ProcessorPlan plan = TestOptimizer.getPlan(command, metadata, getGenericFinder(), analysis, true, cc);
         TestOptimizer.checkAtomicQueries(new String[] {"SELECT #MAT_MatView.VGroup2.X FROM #MAT_MatView.VGroup2"}, plan);
         Collection<Annotation> annotations = analysis.getAnnotations();
@@ -164,12 +163,12 @@ public class TestMaterialization {
     @Test public void testCacheHintWithPk() throws Exception {
         String userSql = "SELECT * from vgroup3 where x = 'foo'"; //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = FakeMetadataFactory.exampleMaterializedView();
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
         Command command = helpGetCommand(userSql, metadata, null);
         CommandContext cc = new CommandContext();
-        cc.setGlobalTableStore(new TempTableStore(BufferManagerFactory.getStandaloneBufferManager(), "SYSTEM"));
+        cc.setGlobalTableStore(new TempTableStore("SYSTEM"));
         RelationalPlan plan = (RelationalPlan)TestOptimizer.getPlan(command, metadata, getGenericFinder(), analysis, true, cc);
         assertEquals(1f, plan.getRootNode().getEstimateNodeCardinality());
         TestOptimizer.checkAtomicQueries(new String[] {"SELECT #MAT_MatView.VGroup3.X, #MAT_MatView.VGroup3.y FROM #MAT_MatView.VGroup3 WHERE #MAT_MatView.VGroup3.X = 'foo'"}, plan);

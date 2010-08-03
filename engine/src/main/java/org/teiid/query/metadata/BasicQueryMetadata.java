@@ -505,8 +505,8 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 	}
 	
 	@Override
-	public boolean isPrimaryKey(Object metadataID) {
-		return false;
+	public Object getPrimaryKey(Object metadataID) {
+		return null;
 	}
     
 }
