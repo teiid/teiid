@@ -226,7 +226,7 @@
 				<configuration>
 					<aggregate>true</aggregate>
 					<maxmemory>512m</maxmemory>
-					<excludePackageNames>*.internal:com.arjuna.*:*.connector.object:*.connector.sysadmin:*.connector.yahoo:*.connector.exec</excludePackageNames>
+					<excludePackageNames>*.internal</excludePackageNames>
 				</configuration>
 			</plugin>
 		</plugins>

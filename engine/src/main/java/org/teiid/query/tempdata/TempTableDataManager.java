@@ -189,6 +189,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 				try {
 					String actualViewName = tableName.substring(RelationalPlanner.MAT_PREFIX.length());
 					Object id = metadata.getGroupID(actualViewName);
+					//TODO: order by primary key nulls first - then have an insert ordered optimization
 					String transformation = metadata.getVirtualPlan(id).getQuery();
 		    		QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(transformation, actualViewName, context);
 		    		qp.setNonBlocking(true);

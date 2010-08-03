@@ -153,7 +153,7 @@ public class TestMaterialization {
         CommandContext cc = new CommandContext();
         cc.setGlobalTableStore(new TempTableStore("SYSTEM"));
         ProcessorPlan plan = TestOptimizer.getPlan(command, metadata, getGenericFinder(), analysis, true, cc);
-        TestOptimizer.checkAtomicQueries(new String[] {"SELECT #MAT_MatView.VGroup2.X FROM #MAT_MatView.VGroup2"}, plan);
+        TestOptimizer.checkAtomicQueries(new String[] {"SELECT #MAT_MatView.VGroup2.x FROM #MAT_MatView.VGroup2"}, plan);
         Collection<Annotation> annotations = analysis.getAnnotations();
         assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
         assertTrue("Expected one annotation", annotations.size() == 1); //$NON-NLS-1$
@@ -171,7 +171,7 @@ public class TestMaterialization {
         cc.setGlobalTableStore(new TempTableStore("SYSTEM"));
         RelationalPlan plan = (RelationalPlan)TestOptimizer.getPlan(command, metadata, getGenericFinder(), analysis, true, cc);
         assertEquals(1f, plan.getRootNode().getEstimateNodeCardinality());
-        TestOptimizer.checkAtomicQueries(new String[] {"SELECT #MAT_MatView.VGroup3.X, #MAT_MatView.VGroup3.y FROM #MAT_MatView.VGroup3 WHERE #MAT_MatView.VGroup3.X = 'foo'"}, plan);
+        TestOptimizer.checkAtomicQueries(new String[] {"SELECT #MAT_MatView.VGroup3.x, #MAT_MatView.VGroup3.y FROM #MAT_MatView.VGroup3 WHERE #MAT_MatView.VGroup3.x = 'foo'"}, plan);
         Collection<Annotation> annotations = analysis.getAnnotations();
         assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
         assertTrue("Expected one annotation", annotations.size() == 1); //$NON-NLS-1$

@@ -331,14 +331,16 @@ public class RealMetadataFactory {
         virtGroup1.setMaterializedTable(physGroup1);
         virtGroup1.setMaterializedStageTable(physGroupStage1);
 
-        QueryNode vTrans2 = new QueryNode("VGroup2", "/* cache */ SELECT x FROM matsrc");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vTrans2 = new QueryNode("VGroup2", "SELECT x FROM matsrc");         //$NON-NLS-1$ //$NON-NLS-2$
         Table vGroup2 = createVirtualGroup("VGroup2", virtModel, vTrans2); //$NON-NLS-1$
+        vGroup2.setMaterialized(true);
         createElements(vGroup2,
                                       new String[] { "x" }, //$NON-NLS-1$
                                       new String[] { DataTypeManager.DefaultDataTypes.STRING});
         
-        QueryNode vTrans3 = new QueryNode("VGroup3", "/* cache */ SELECT x, 'z' || substring(x, 2) as y FROM matsrc");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vTrans3 = new QueryNode("VGroup3", "SELECT x, 'z' || substring(x, 2) as y FROM matsrc");         //$NON-NLS-1$ //$NON-NLS-2$
         Table vGroup3 = createVirtualGroup("VGroup3", virtModel, vTrans3); //$NON-NLS-1$
+        vGroup3.setMaterialized(true);
         List<Column> vElements3 = createElements(vGroup3,
                                       new String[] { "x", "y" }, //$NON-NLS-1$
                                       new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
