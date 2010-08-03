@@ -1,20 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.jboss.teiid</groupId>
 	<artifactId>teiid</artifactId>
 	<packaging>pom</packaging>
 	<name>Teiid</name>
-	<version>7.1.0-SNAPSHOT</version>
+	<version>7.1.0.CR1</version>
 	<description>Federated SQL and XML query engine.</description>
 	<properties>
 		<ant.version>1.7.0</ant.version>
 		<site.url>http://www.jboss.org/teiid</site.url>
 	</properties>
 	<scm>
-        <connection>scm:svn:https://anonsvn.jboss.org/repos/teiid/trunk</connection>
-		<developerConnection>scm:svn:https://svn.jboss.org/repos/teiid/trunk</developerConnection>
+        <connection>scm:svn:https://anonsvn.jboss.org/repos/teiid/tags/teiid-7.1.0.CR1</connection>
+		<developerConnection>scm:svn:https://svn.jboss.org/repos/teiid/tags/teiid-7.1.0.CR1</developerConnection>
 	</scm>
 	<licenses>
 		<license>
