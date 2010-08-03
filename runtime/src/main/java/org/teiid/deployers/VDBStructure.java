@@ -22,6 +22,8 @@
 package org.teiid.deployers;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.jboss.deployers.spi.DeploymentException;
 import org.jboss.deployers.vfs.plugins.structure.AbstractVFSStructureDeployer;
@@ -36,7 +38,7 @@ public class VDBStructure  extends AbstractVFSStructureDeployer{
 	
    public VDBStructure(){
       setRelativeOrder(1000);
-      JarUtils.addJarSuffix(".vdb");
+      JarUtils.addJarSuffix(".vdb"); //$NON-NLS-1$
    }	
    
 	@Override
@@ -44,9 +46,9 @@ public class VDBStructure  extends AbstractVFSStructureDeployer{
 		VirtualFile file = structureContext.getFile();
 		try {
 			if (isLeaf(file) == false) {
-				if (file.getName().endsWith(".vdb")) {
+				if (file.getName().endsWith(".vdb")) { //$NON-NLS-1$
 					
-					VirtualFile metainf = file.getChild("META-INF");
+					VirtualFile metainf = file.getChild("META-INF"); //$NON-NLS-1$
 					if (metainf == null) {
 						return false;
 					}
@@ -54,12 +56,22 @@ public class VDBStructure  extends AbstractVFSStructureDeployer{
 					if (metainf.getChild(VdbConstants.DEPLOYMENT_FILE) == null) {
 						return false;
 					}
-					createContext(structureContext, new String[] {"/", "META-INF", "runtime-inf"});	
+					
+					List<String> scanDirs = new ArrayList<String>();
+					scanDirs.add("/"); //$NON-NLS-1$
+					
+					List<VirtualFile> children = file.getChildren();
+					for (VirtualFile child:children) {
+						if (!child.isLeaf()) {
+							scanDirs.add(child.getName());
+						}
+					}
+					createContext(structureContext, scanDirs.toArray(new String[scanDirs.size()]));	
 					return true;
 				}
 			}
 		} catch (IOException e) {
-			throw DeploymentException.rethrowAsDeploymentException("Error determining structure: " + file.getName(), e);
+			throw DeploymentException.rethrowAsDeploymentException("Error determining structure: " + file.getName(), e); //$NON-NLS-1$
 		}
 		return false;
 	}

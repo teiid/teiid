@@ -69,7 +69,15 @@ public abstract class BaseMultipleVFSParsingDeployer<T> extends	MultipleVFSParsi
 				metadata.put(clazz, instances);
 			}
 			Object instance = parse(unit, clazz, file, root);
-			instances.add(instance);
+			boolean found = false;
+			for (Object obj:instances) {
+				if (obj == instance) {
+					found = true;
+				}
+			}
+			if (!found) {
+				instances.add(instance);
+			}
 		}
 		return mergeMetaData(unit, root, metadata, missingFiles);
 	}

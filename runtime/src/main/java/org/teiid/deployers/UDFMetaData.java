@@ -47,7 +47,13 @@ public class UDFMetaData {
 	
 	
 	void buildFunctionModelFile(String name) throws IOException, JAXBException {
-		VirtualFile file = this.files.get(name);
+		for (String f:files.keySet()) {
+			if (f.endsWith(name)) {
+				name = f;
+				break;
+			}
+		}
+		VirtualFile file =this.files.get(name);
 		if (file != null) {
 			this.methods.addAll(FunctionMetadataReader.loadFunctionMethods(file.openStream()));
 		}

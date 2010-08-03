@@ -90,10 +90,12 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 				root = unit.getAttachment(UDFMetaData.class);
 				if (root == null) {
 					root = new UDFMetaData();
+					unit.addAttachment(UDFMetaData.class, UDFMetaData.class.cast(root));
 				}
 			}
 			UDFMetaData udf = UDFMetaData.class.cast(root);		
 			udf.addModelFile(file);
+			
 			return expectedType.cast(udf);
 		}		
 		else if (expectedType.equals(IndexMetadataFactory.class)) {
@@ -126,6 +128,7 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 	protected VDBMetaData mergeMetaData(VFSDeploymentUnit unit, Map<Class<?>, List<Object>> metadata) throws Exception {
 		VDBMetaData vdb = getInstance(metadata, VDBMetaData.class);
 		UDFMetaData udf = getInstance(metadata, UDFMetaData.class);
+		IndexMetadataFactory imf = getInstance(metadata, IndexMetadataFactory.class);
 		
 		if (vdb == null) {
 			LogManager.logError(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("invlaid_vdb_file",unit.getRoot().getName())); //$NON-NLS-1$
@@ -135,22 +138,18 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 		vdb.setUrl(unit.getRoot().toURL().toExternalForm());		
 		
 		// build the metadata store
-		List<Object> indexFiles = metadata.get(IndexMetadataFactory.class);
-		if (indexFiles != null && !indexFiles.isEmpty()) {
-			IndexMetadataFactory imf = (IndexMetadataFactory)indexFiles.get(0);
-			if (imf != null) {
-				imf.addEntriesPlusVisibilities(unit.getRoot(), vdb);
-				unit.addAttachment(IndexMetadataFactory.class, imf);
-								
-				// add the cached store.
-				File cacheFile = this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion()); //$NON-NLS-1$
-				MetadataStoreGroup stores = this.serializer.loadSafe(cacheFile, MetadataStoreGroup.class);
-				if (stores == null) {
-					stores = new MetadataStoreGroup();
-					stores.addStore(imf.getMetadataStore(vdbRepository.getSystemStore().getDatatypes()));
-				}
-				unit.addAttachment(MetadataStoreGroup.class, stores);				
+		if (imf != null) {
+			imf.addEntriesPlusVisibilities(unit.getRoot(), vdb);
+			unit.addAttachment(IndexMetadataFactory.class, imf);
+							
+			// add the cached store.
+			File cacheFile = this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion()); //$NON-NLS-1$
+			MetadataStoreGroup stores = this.serializer.loadSafe(cacheFile, MetadataStoreGroup.class);
+			if (stores == null) {
+				stores = new MetadataStoreGroup();
+				stores.addStore(imf.getMetadataStore(vdbRepository.getSystemStore().getDatatypes()));
 			}
+			unit.addAttachment(MetadataStoreGroup.class, stores);				
 		}
 		
 		if (udf != null) {
