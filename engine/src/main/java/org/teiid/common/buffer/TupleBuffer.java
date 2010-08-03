@@ -201,11 +201,11 @@ public class TupleBuffer {
 			Assertion.isNotNull(entry);
 			BatchManager.ManagedBatch batch = entry.getValue();
 	    	result = batch.getBatch(!forwardOnly, types);
-	    	result.setDataTypes(types);
 	    	if (forwardOnly) {
 				batches.remove(entry.getKey());
 			}
 		}
+		result.setDataTypes(types);
 		if (isFinal && result.getEndRow() == rowCount) {
 			result.setTerminationFlag(true);
 		}

@@ -27,10 +27,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.teiid.cache.Cachable;
 import org.teiid.cache.Cache;
+import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
 import org.teiid.cache.DefaultCache;
 import org.teiid.cache.DefaultCacheFactory;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.parser.ParseInfo;
@@ -50,6 +53,8 @@ public class SessionAwareCache<T> {
 	
 	private AtomicInteger cacheHit = new AtomicInteger();
 	
+	private BufferManager bufferManager;
+	
 	SessionAwareCache(){
 		this(DEFAULT_MAX_SIZE_TOTAL, new DefaultCacheFactory(), Cache.Type.RESULTSET);
 	}
@@ -65,27 +70,38 @@ public class SessionAwareCache<T> {
 		this.maxSize = maxSize;
 		this.localCache = new DefaultCache<CacheID, T>("local", maxSize); //$NON-NLS-1$
 		
-		this.distributedCache = localCache;
-		
-//		if (type == Cache.Type.PREPAREDPLAN) {
-//			this.distributedCache = localCache;
-//		}
-//		else {
-//			this.distributedCache = cacheFactory.get(type, new CacheConfiguration(CacheConfiguration.Policy.LRU, -1, SessionAwareCache.this.maxSize));
-//		}
+		if (type == Cache.Type.PREPAREDPLAN) {
+			this.distributedCache = localCache;
+		}
+		else {
+			this.distributedCache = cacheFactory.get(type, new CacheConfiguration(CacheConfiguration.Policy.LRU, -1, SessionAwareCache.this.maxSize));
+		}
 	}	
 	
 	public T get(CacheID id){
+		
 		id.setSessionId(id.originalSessionId);
 		T result = localCache.get(id);
+		
 		if (result == null) {
 			id.setSessionId(null);
+			
+			id.setUserName(id.originalUserName);
 			result = distributedCache.get(id);
+			
 			if (result == null) {
 				id.setUserName(null);
 				result = distributedCache.get(id);
 			}
+			
+			if (result != null && result instanceof Cachable) {
+				Cachable c = (Cachable)result;
+				if (!c.restore(this.distributedCache, this.bufferManager)) {
+					result = null;
+				}
+			}
 		}
+		
 		if (result != null) {
 			cacheHit.getAndIncrement();
 		}
@@ -103,15 +119,32 @@ public class SessionAwareCache<T> {
 		if (!id.cachable) {
 			return;
 		}
+		
 		if (sessionSpecific) {
 			id.setSessionId(id.originalSessionId);
 			this.localCache.put(id, t);
-		} else {
+		} 
+		else {
+			
+			boolean insert = true;
+			
 			id.setSessionId(null);
-			if (!userSpecific) {
+			
+			if (userSpecific) {
+				id.setUserName(id.originalUserName);
+			}
+			else {
 				id.setUserName(null);
 			}
-			this.distributedCache.put(id, t);
+			
+			if (t instanceof Cachable) {
+				Cachable c = (Cachable)t;
+				insert = c.prepare(this.distributedCache, this.bufferManager);
+			}
+			
+			if (insert) {
+				this.distributedCache.put(id, t);
+			}
 		}
 	}
 	
@@ -132,15 +165,16 @@ public class SessionAwareCache<T> {
 		private String sessionId;
 		private String originalSessionId;
 		private List<Serializable> parameters;
-		//private String userName;
-		boolean cachable = true;
+		private String userName;
+		private String originalUserName;
+		private boolean cachable = true;
 				
 		CacheID(DQPWorkContext context, ParseInfo pi, String sql){
 			this.sql = sql;
 			this.vdbInfo = new VDBKey(context.getVdbName(), context.getVdbVersion());
 			this.pi = pi;
 			this.originalSessionId = context.getSessionId();
-			//this.userName = context.getUserName();
+			this.originalUserName = context.getUserName();
 		}
 		
 		private void setSessionId(String sessionId) {
@@ -162,7 +196,7 @@ public class SessionAwareCache<T> {
 		}
 		
 		public void setUserName(String name) {
-			//this.userName = name;
+			this.userName = name;
 		}
 						
 		public boolean equals(Object obj){
@@ -174,19 +208,18 @@ public class SessionAwareCache<T> {
 	        } 
         	CacheID that = (CacheID)obj;
             return this.pi.equals(that.pi) && this.vdbInfo.equals(that.vdbInfo) && this.sql.equals(that.sql) 
-            	//&& EquivalenceUtil.areEqual(this.userName, that.userName)            	
+            	&& EquivalenceUtil.areEqual(this.userName, that.userName)            	
             	&& EquivalenceUtil.areEqual(this.sessionId, that.sessionId)
             	&& EquivalenceUtil.areEqual(this.parameters, that.parameters);
 		}
 		
 	    public int hashCode() {
-	        return HashCodeUtil.hashCode(0, vdbInfo, sql, pi,  sessionId, parameters);
+	        return HashCodeUtil.hashCode(0, vdbInfo, sql, pi, this.userName, sessionId, parameters);
 	    }
 	    
 	    @Override
 	    public String toString() {
-	    	return "Cache Entry<" + originalSessionId + "> params:" + parameters + " sql:" + sql; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	    			
+	    	return "Cache Entry<" + originalSessionId + "="+ originalUserName + "> params:" + parameters + " sql:" + sql; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	    }
 	}
 	
@@ -198,4 +231,7 @@ public class SessionAwareCache<T> {
         return maxSize;
     }
     
+    public void setBufferManager(BufferManager bufferManager) {
+    	this.bufferManager = bufferManager;
+    }
 }

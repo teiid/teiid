@@ -49,6 +49,7 @@
         <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>  
         <property name="translatorRepository"><inject bean="translatorRepository"/></property>      
         <property name="containerLifeCycleListener"><inject bean="JBossLifeCycleListener"/></property>
+        <property name="threadPool"><inject bean="jboss.system:service=ThreadPool"/></property>
         <depends>SystemVDBDeployer</depends>
     </bean>       
     

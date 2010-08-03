@@ -38,6 +38,7 @@ public class ClusterableCacheFactory implements CacheFactory, Serializable {
 	private static final long serialVersionUID = -1992994494154581234L;
 	private CacheFactory delegate;
 	private String cacheName;
+	private boolean enabled = false;
 	
 	@Override
 	public <K, V> Cache<K, V> get(Type type, CacheConfiguration config) {
@@ -67,11 +68,18 @@ public class ClusterableCacheFactory implements CacheFactory, Serializable {
 	}
 	
 	private Object getClusteredCache() {
-		try {
-			Context ctx = new InitialContext();
-			return ctx.lookup("java:CacheManager"); //$NON-NLS-1$
-		} catch (NamingException e) {
-			return null;
-		}	
+		if (this.enabled) {
+			try {
+				Context ctx = new InitialContext();
+				return ctx.lookup("java:CacheManager"); //$NON-NLS-1$
+			} catch (NamingException e) {
+				return null;
+			}
+		}
+		return null;
+	}
+	
+	public void setEnabled(boolean value) {
+		this.enabled = value;
 	}
 }

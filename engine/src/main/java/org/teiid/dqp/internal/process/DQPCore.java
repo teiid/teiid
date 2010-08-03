@@ -649,10 +649,12 @@ public class DQPCore implements DQP {
         //result set cache
         if (config.isResultSetCacheEnabled()) {
 			this.rsCache = new SessionAwareCache<CachedResults>(config.getResultSetCacheMaxEntries(), this.cacheFactory, Cache.Type.RESULTSET);
+			this.rsCache.setBufferManager(this.bufferManager);
         }
 
         //prepared plan cache
         prepPlanCache = new SessionAwareCache<PreparedPlan>(config.getPreparedPlanCacheMaxCount(), this.cacheFactory, Cache.Type.PREPAREDPLAN);
+        prepPlanCache.setBufferManager(this.bufferManager);
 		
         //get buffer manager
         this.bufferManager = bufferService.getBufferManager();

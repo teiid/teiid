@@ -1,0 +1,125 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+package org.teiid.dqp.internal.process;
+
+import org.junit.Test;
+import org.mockito.Mockito;
+import org.teiid.adminapi.impl.SessionMetadata;
+import org.teiid.cache.Cachable;
+import org.teiid.cache.Cache;
+import org.teiid.common.buffer.BufferManager;
+import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
+import org.teiid.query.parser.ParseInfo;
+import static org.mockito.Mockito.*;
+import static org.junit.Assert.*;
+
+
+@SuppressWarnings("nls")
+public class TestSessionAwareCache {
+	
+	@Test
+	public void testSessionSpecfic() {
+		
+		SessionAwareCache<Cachable> cache = new SessionAwareCache<Cachable>();
+		
+		CacheID id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
+		
+		Cachable result = Mockito.mock(Cachable.class);
+		
+		id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
+		cache.put(id, true, false, result);
+		
+		// make sure that in the case of session specific; we do not call prepare
+		// as session is local only call for distributed
+		Mockito.verify(result, times(0)).prepare((Cache)anyObject(), (BufferManager)anyObject());
+		
+		Object c = cache.get(id);
+		
+		Mockito.verify(result, times(0)).restore((Cache)anyObject(), (BufferManager)anyObject());
+		
+		assertTrue(result==c);
+	}
+	
+	@Test
+	public void testUserSpecfic() {
+		
+		SessionAwareCache<Cachable> cache = new SessionAwareCache<Cachable>();
+		
+		CacheID id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
+		
+		Cachable result = Mockito.mock(Cachable.class);
+		Mockito.stub(result.prepare((Cache)anyObject(), (BufferManager)anyObject())).toReturn(true);
+		Mockito.stub(result.restore((Cache)anyObject(), (BufferManager)anyObject())).toReturn(true);
+				
+		cache.put(id, false, true, result);
+		
+		// make sure that in the case of session specific; we do not call prepare
+		// as session is local only call for distributed
+		Mockito.verify(result, times(1)).prepare((Cache)anyObject(), (BufferManager)anyObject());
+		
+		id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
+		
+		Object c = cache.get(id);
+		
+		Mockito.verify(result, times(1)).restore((Cache)anyObject(), (BufferManager)anyObject());		
+		
+		assertTrue(result==c);
+	}
+	
+	@Test
+	public void testNoScope() {
+		
+		SessionAwareCache<Cachable> cache = new SessionAwareCache<Cachable>();
+		
+		CacheID id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
+		
+		Cachable result = Mockito.mock(Cachable.class);
+		Mockito.stub(result.prepare((Cache)anyObject(), (BufferManager)anyObject())).toReturn(true);
+		Mockito.stub(result.restore((Cache)anyObject(), (BufferManager)anyObject())).toReturn(true);		
+		
+		cache.put(id, false, false, result);
+		
+		// make sure that in the case of session specific; we do not call prepare
+		// as session is local only call for distributed
+		Mockito.verify(result, times(1)).prepare((Cache)anyObject(), (BufferManager)anyObject());
+		
+		id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
+		
+		Object c = cache.get(id);
+		
+		Mockito.verify(result, times(1)).restore((Cache)anyObject(), (BufferManager)anyObject());		
+		
+		assertTrue(result==c);
+	}
+
+	
+	public static DQPWorkContext buildWorkContext() {
+		DQPWorkContext workContext = new DQPWorkContext();
+		SessionMetadata session = new SessionMetadata();
+		workContext.setSession(session);
+		session.setVDBName("vdb-name"); //$NON-NLS-1$
+		session.setVDBVersion(1); 
+		session.setSessionId(String.valueOf(1));
+		session.setUserName("foo"); //$NON-NLS-1$
+		return workContext;
+	}
+}

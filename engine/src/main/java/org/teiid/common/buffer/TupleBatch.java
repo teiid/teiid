@@ -52,6 +52,9 @@ public class TupleBatch implements Externalizable {
     // Optional state
     private boolean terminationFlag = false;
     
+    // for distributed cache purposes
+    private String[] preservedTypes;
+    
     /**
      * Contains ordered data types of each of the columns in the batch. Although it is not serialized,
      * this array is a serialization aid and must be set before serialization and deserialization using
@@ -174,6 +177,10 @@ public class TupleBatch implements Externalizable {
 
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         terminationFlag = in.readBoolean();
+        preservedTypes = (String[])in.readObject();
+        if (types == null) {
+        	types = preservedTypes;
+        }
         tuples = new ArrayList<List>();
         for (List tuple : BatchSerializer.readBatch(in, types)) {
         	tuples.add(tuple);
@@ -181,11 +188,16 @@ public class TupleBatch implements Externalizable {
     }
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeBoolean(terminationFlag);
+        out.writeObject(this.preservedTypes);
         BatchSerializer.writeBatch(out, types, getAllTuples());
     }
     
     public void setRowOffset(int rowOffset) {
 		this.rowOffset = rowOffset;
 	}
+    
+    public void preserveTypes() {
+    	this.preservedTypes = types;
+    }
 }
 

@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.RequestMessage;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidException;
@@ -73,6 +74,7 @@ public class TestDataTierManager {
         rm = new DQPCore();
         rm.setTransactionService(new FakeTransactionService());
         rm.setBufferService(new FakeBufferService());
+        rm.setCacheFactory(new DefaultCacheFactory());
         rm.start(new DQPConfiguration());
         FakeBufferService bs = new FakeBufferService();
 

@@ -34,6 +34,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
@@ -56,6 +57,7 @@ public class TestDQPCore {
         
         core = new DQPCore();
         core.setBufferService(new FakeBufferService());
+        core.setCacheFactory(new DefaultCacheFactory());
         core.setConnectorManagerRepository(repo);
         core.setTransactionService(new FakeTransactionService());
         

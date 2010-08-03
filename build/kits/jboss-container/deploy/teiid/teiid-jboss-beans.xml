@@ -45,6 +45,7 @@
     </bean>
     
     <bean name="CacheFactory" class="org.teiid.cache.jboss.ClusterableCacheFactory">
+        <property name="enabled">true</property>
         <property name="clusteredCacheName">mvcc-shared</property>
     </bean>
     
