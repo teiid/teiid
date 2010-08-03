@@ -86,6 +86,7 @@ public class ConvertModifier extends FunctionModifier {
     private Map<List<Integer>, FunctionModifier> specificConverts = new HashMap<List<Integer>, FunctionModifier>();
     private boolean booleanNumeric;
     private boolean wideningNumericImplicit;
+    private boolean booleanNullable = true;
     
     public void addTypeConversion(FunctionModifier convert, int ... targetType) {
     	for (int i : targetType) {
@@ -188,6 +189,9 @@ public class ConvertModifier extends FunctionModifier {
 						booleanValue = nested.getParameters().get(0);
 					}
 				}
+				if (!booleanNullable) {
+					return Arrays.asList("CASE WHEN ", booleanValue, " = 0 THEN 'false' ELSE 'true' END"); //$NON-NLS-1$ //$NON-NLS-2$					
+				}
 				return Arrays.asList("CASE WHEN ", booleanValue, " = 0 THEN 'false' WHEN ", booleanValue, " IS NOT NULL THEN 'true' END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 		});
@@ -198,6 +202,10 @@ public class ConvertModifier extends FunctionModifier {
 				return Arrays.asList("CASE WHEN ", stringValue, " IN ('false', '0') THEN 0 WHEN ", stringValue, " IS NOT NULL THEN 1 END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 		});
+	}
+	
+	public void setBooleanNullable(boolean booleanNullable) {
+		this.booleanNullable = booleanNullable;
 	}
 
 }

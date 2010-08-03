@@ -94,6 +94,7 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
         
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
+        convertModifier.setBooleanNullable(booleanNullable());
         //boolean isn't treated as bit, since it doesn't support null
         //byte is treated as smallint, since tinyint is unsigned
     	convertModifier.addTypeMapping("smallint", FunctionModifier.BYTE, FunctionModifier.SHORT); //$NON-NLS-1$
@@ -325,6 +326,10 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
     }
     
     public boolean nullPlusNonNullIsNull() {
+    	return false;
+    }
+    
+    public boolean booleanNullable() {
     	return false;
     }
 }

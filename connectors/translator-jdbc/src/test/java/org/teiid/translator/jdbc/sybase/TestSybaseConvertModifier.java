@@ -174,7 +174,7 @@ public class TestSybaseConvertModifier {
                 LANG_FACTORY.createLiteral("string", String.class)}, //$NON-NLS-1$
             String.class);
 
-        helpGetString1(func,  "CASE WHEN 1 = 0 THEN 'false' WHEN 1 IS NOT NULL THEN 'true' END");  //$NON-NLS-1$
+        helpGetString1(func,  "CASE WHEN 1 = 0 THEN 'false' ELSE 'true' END");  //$NON-NLS-1$
     }
     
     @Test public void testTimestampToString() throws Exception {
@@ -749,7 +749,7 @@ public class TestSybaseConvertModifier {
     // Source = BOOLEAN
     
     @Test public void testBooleanToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "string", "CASE WHEN 1 = 0 THEN 'false' WHEN 1 IS NOT NULL THEN 'true' END"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "string", "CASE WHEN 1 = 0 THEN 'false' ELSE 'true' END"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testBooleanToByte() throws Exception {
