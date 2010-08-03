@@ -80,7 +80,9 @@ public class RaXmlPropertyConverter {
 			ObjectName on = new ObjectName("jboss.jca:service=RARDeployment,name='"+rarName+"'");//$NON-NLS-1$	//$NON-NLS-2$	
 			ConnectorMetaData obj = (ConnectorMetaData)server.getAttribute(on, "MetaData");//$NON-NLS-1$	
 			ConnectionDefinitionMetaData metadata = obj.getConnectionDefinition(ConnectionFactory.class.getName());
-			return metadata.getProperties();
+			if (metadata != null) {
+				return metadata.getProperties();
+			}
 		} catch (MalformedObjectNameException e) {
 			//ignore
 		} catch (AttributeNotFoundException e) {
