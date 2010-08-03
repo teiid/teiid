@@ -33,6 +33,7 @@ import javax.management.MBeanServerFactory;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.ReflectionException;
+import javax.resource.cci.ConnectionFactory;
 
 import org.jboss.managed.api.Fields;
 import org.jboss.managed.api.ManagedProperty;
@@ -46,7 +47,6 @@ import org.jboss.resource.metadata.DescriptionMetaData;
 import org.teiid.adminapi.jboss.ManagedUtil;
 import org.teiid.deployers.ExtendedPropertyMetadata;
 import org.teiid.deployers.ManagedPropertyUtil;
-import org.teiid.translator.ExecutionFactory;
 
 public class RaXmlPropertyConverter {
 
@@ -79,7 +79,7 @@ public class RaXmlPropertyConverter {
 			MBeanServer server = MBeanServerFactory.findMBeanServer(null).get(0);
 			ObjectName on = new ObjectName("jboss.jca:service=RARDeployment,name='"+rarName+"'");//$NON-NLS-1$	//$NON-NLS-2$	
 			ConnectorMetaData obj = (ConnectorMetaData)server.getAttribute(on, "MetaData");//$NON-NLS-1$	
-			ConnectionDefinitionMetaData metadata = obj.getConnectionDefinition(ExecutionFactory.class.getName());
+			ConnectionDefinitionMetaData metadata = obj.getConnectionDefinition(ConnectionFactory.class.getName());
 			return metadata.getProperties();
 		} catch (MalformedObjectNameException e) {
 			//ignore
