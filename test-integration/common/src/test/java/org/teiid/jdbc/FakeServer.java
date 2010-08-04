@@ -30,6 +30,7 @@ import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.deployers.MetadataStoreGroup;
@@ -69,6 +70,7 @@ public class FakeServer extends ClientServiceRegistryImpl {
 		
         this.sessionService.setVDBRepository(repo);
         this.dqp.setBufferService(new FakeBufferService());
+        this.dqp.setCacheFactory(new DefaultCacheFactory());
         this.dqp.setTransactionService(new FakeTransactionService());
         
         ConnectorManagerRepository cmr = Mockito.mock(ConnectorManagerRepository.class);
@@ -136,12 +138,13 @@ public class FakeServer extends ClientServiceRegistryImpl {
 		final Properties p = new Properties();
 		EmbeddedProfile.parseURL(embeddedURL, p);
 
-		return new ConnectionImpl(new LocalServerConnection(p) {
+		LocalServerConnection conn = new LocalServerConnection(p) {
 			@Override
 			protected ClientServiceRegistry getClientServiceRegistry() {
 				return FakeServer.this;
 			}
-		}, p, embeddedURL);
+		};
+		return new ConnectionImpl(conn, p, embeddedURL);
 	}
 	
 	
