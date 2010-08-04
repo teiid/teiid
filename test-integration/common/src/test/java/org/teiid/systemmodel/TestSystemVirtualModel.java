@@ -24,6 +24,7 @@ package org.teiid.systemmodel;
 
 import org.junit.Before;
 import org.junit.Test;
+import static org.junit.Assert.*;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.FakeServer;
@@ -147,5 +148,19 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		executeAndAssertResults(
 				"select lookup('SYS.KeyColumns', 'RefKeyUID', 'KeyName', 'PK_PARTS')", expected); //$NON-NLS-1$
 		
+	}
+	
+	@Test public void test_UID_OID_are_Equal()  throws Exception {
+		execute("select distinct(UID) FROM SYS.Schemas"); //$NON-NLS-1$
+		int uidCount = getRowCount();
+		execute("select distinct(OID) FROM SYS.Schemas"); //$NON-NLS-1$
+		int oidCount = getRowCount();
+		assertEquals(uidCount, oidCount);
+		
+		execute("select distinct(UID) FROM SYS.DataTypes"); //$NON-NLS-1$
+		uidCount = getRowCount();
+		execute("select distinct(OID) FROM SYS.DataTypes"); //$NON-NLS-1$
+		oidCount = getRowCount();
+		assertEquals(uidCount, oidCount);		
 	}
 }

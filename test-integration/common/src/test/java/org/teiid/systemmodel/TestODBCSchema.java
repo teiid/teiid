@@ -1,7 +1,5 @@
 package org.teiid.systemmodel;
 
-import java.sql.SQLException;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
@@ -78,6 +76,5 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
 	@Test public void test_PG_USER()  throws Exception {
 		execute("select * FROM pg_user"); //$NON-NLS-1$
 		TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
-	}
-
+	}	
 }
