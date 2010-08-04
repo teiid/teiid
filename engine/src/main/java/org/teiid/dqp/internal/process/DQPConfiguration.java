@@ -29,9 +29,6 @@ import org.teiid.core.util.ApplicationInfo;
 public class DQPConfiguration{
 	
     //Constants
-    static final int DEFAULT_MAX_CODE_TABLE_RECORDS = 10000;
-    static final int DEFAULT_MAX_CODE_TABLES = 200;
-    static final int DEFAULT_MAX_CODE_RECORDS = 200000;
     static final int DEFAULT_FETCH_SIZE = RequestMessage.DEFAULT_FETCH_SIZE * 10;
     static final int DEFAULT_PROCESSOR_TIMESLICE = 2000;
     static final int DEFAULT_MAX_RESULTSET_CACHE_ENTRIES = 1024;
@@ -46,9 +43,6 @@ public class DQPConfiguration{
 	private int maxRowsFetchSize = DEFAULT_FETCH_SIZE;
 	private int lobChunkSizeInKB = 100;
 	private int preparedPlanCacheMaxCount = SessionAwareCache.DEFAULT_MAX_SIZE_TOTAL;
-	private int codeTablesMaxCount = DEFAULT_MAX_CODE_TABLES;
-	private int codeTablesMaxRowsPerTable = DEFAULT_MAX_CODE_TABLE_RECORDS;
-	private int codeTablesMaxRows = DEFAULT_MAX_CODE_RECORDS;
 	private boolean resultSetCacheEnabled = true;
 	private int maxResultSetCacheEntries = DQPConfiguration.DEFAULT_MAX_RESULTSET_CACHE_ENTRIES;
 	private boolean useEntitlements = false;
@@ -109,33 +103,6 @@ public class DQPConfiguration{
 
 	public void setPreparedPlanCacheMaxCount(int preparedPlanCacheMaxCount) {
 		this.preparedPlanCacheMaxCount = preparedPlanCacheMaxCount;
-	}
-
-	@ManagementProperty(description="Maximum number of cached lookup tables. Note: this is a memory based cache. (default 200)")
-	public int getCodeTablesMaxCount() {
-		return this.codeTablesMaxCount;
-	}
-
-	public void setCodeTablesMaxCount(int codeTablesMaxCount) {
-		this.codeTablesMaxCount = codeTablesMaxCount;
-	}
-
-	@ManagementProperty(description="Maximum number of records in a single lookup table (default 10000)")
-	public int getCodeTablesMaxRowsPerTable() {
-		return codeTablesMaxRowsPerTable;
-	}
-
-	public void setCodeTablesMaxRowsPerTable(int codeTablesMaxRowsPerTable) {
-		this.codeTablesMaxRowsPerTable = codeTablesMaxRowsPerTable;
-	}
-
-	@ManagementProperty(description="Maximum number of records in all lookup tables (default 200000)")
-	public int getCodeTablesMaxRows() {
-		return this.codeTablesMaxRows;
-	}
-
-	public void setCodeTablesMaxRows(int codeTablesMaxRows) {
-		this.codeTablesMaxRows = codeTablesMaxRows;
 	}
 
 	@ManagementProperty(description="The maximum number of result set cache entries. 0 indicates no limit. (default 1024)")

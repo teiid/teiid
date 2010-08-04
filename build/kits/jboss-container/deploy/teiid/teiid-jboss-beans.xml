@@ -78,12 +78,6 @@
         <property name="lobChunkSizeInKB">100</property>
         <!-- The maximum number of query plans that are cached. Note: this is a memory based cache. (default 250)  -->
         <property name="preparedPlanCacheMaxCount">250</property>
-        <!-- Maximum number of cached lookup tables. Note: this is a memory based cache and should be set to a value of at least 10 to accomidate system usage. (default 200) -->
-        <property name="codeTablesMaxCount">200</property>
-        <!-- Maximum number of records in a single lookup table (default 10000) -->
-        <property name="codeTablesMaxRowsPerTable">10000</property>
-        <!-- Maximum number of records in all lookup tables (default 200000) -->
-        <property name="codeTablesMaxRows">200000</property>
         <!-- Max Entries allowed for ResultSet Cache -->
         <property name="resultSetCacheMaxEntries">1024</property>
         <!-- Enable Resultset Caching -->

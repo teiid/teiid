@@ -280,6 +280,11 @@ public class RealMetadataFactory {
         Schema physModel = createPhysicalModel("MatTable", metadataStore); //$NON-NLS-1$
         Schema physModel_virtSrc = createPhysicalModel("MatSrc", metadataStore); //$NON-NLS-1$
         
+        Table physTable = createPhysicalGroup("info", physModel); //$NON-NLS-1$
+        createElements(physTable,
+                                      new String[] { "e1", "e2", "e3"}, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING});
+        
         Table physGroup = createPhysicalGroup("MatTable", physModel); //$NON-NLS-1$
         createElements(physGroup,
                                       new String[] { "e1" }, //$NON-NLS-1$

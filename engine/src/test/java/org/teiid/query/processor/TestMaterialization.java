@@ -31,6 +31,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.dqp.internal.process.SimpleQueryProcessorFactory;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -56,10 +57,12 @@ public class TestMaterialization {
 		metadata = new TempMetadataAdapter(RealMetadataFactory.exampleMaterializedView(), tempStore.getMetadataStore());
 		hdm = new HardcodedDataManager();
 		hdm.addData("SELECT matsrc.x FROM matsrc", new List[] {Arrays.asList((String)null), Arrays.asList("one"), Arrays.asList("two"), Arrays.asList("three")});
+		hdm.addData("SELECT mattable.info.e1, mattable.info.e2 FROM mattable.info", new List[] {Arrays.asList("a", 1), Arrays.asList("a", 2)});
+		hdm.addData("SELECT mattable.info.e2, mattable.info.e1 FROM mattable.info", new List[] {Arrays.asList(1, "a"), Arrays.asList(2, "a")});
 		dataManager = new TempTableDataManager(hdm, BufferManagerFactory.getStandaloneBufferManager());
 	}
 	
-	private void execute(String sql, List[] expectedResults) throws Exception {
+	private void execute(String sql, List... expectedResults) throws Exception {
 		CommandContext cc = TestProcessor.createCommandContext();
 		cc.setTempTableStore(tempStore);
 		cc.setGlobalTableStore(globalStore);
@@ -71,10 +74,22 @@ public class TestMaterialization {
 	}
 
 	@Test public void testPopulate() throws Exception {
-		execute("SELECT * from vgroup3 where x = 'one'", new List[] {Arrays.asList("one", "zne")});
+		execute("SELECT * from vgroup3 where x = 'one'", Arrays.asList("one", "zne"));
 		assertEquals(1, hdm.getCommandHistory().size());
-		execute("SELECT * from vgroup3 where x is null", new List[] {Arrays.asList(null, null)});
+		execute("SELECT * from vgroup3 where x is null", Arrays.asList(null, null));
 		assertEquals(1, hdm.getCommandHistory().size());
 	}
 	
+    @Test(expected=TeiidProcessingException.class) public void testCodeTableResponseException() throws Exception {
+    	//duplicate key
+    	execute("select lookup('mattable.info', 'e2', 'e1', 'a')");
+    }
+    
+    @Test public void testCodeTable() throws Exception {
+    	execute("select lookup('mattable.info', 'e1', 'e2', 5)", Arrays.asList((String)null));
+    	assertEquals(1, hdm.getCommandHistory().size());
+    	execute("select lookup('mattable.info', 'e1', 'e2', 1)", Arrays.asList("a"));
+    	assertEquals(1, hdm.getCommandHistory().size());
+    }
+    
 }

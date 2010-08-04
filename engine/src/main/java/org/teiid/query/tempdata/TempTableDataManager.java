@@ -34,9 +34,13 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.CollectionTupleSource;
@@ -44,6 +48,7 @@ import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Create;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Delete;
@@ -53,6 +58,7 @@ import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
+import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -61,15 +67,13 @@ import org.teiid.query.tempdata.TempTableStore.MatState;
 import org.teiid.query.tempdata.TempTableStore.MatTableInfo;
 import org.teiid.query.util.CommandContext;
 
-
 /**
  * This proxy ProcessorDataManager is used to handle temporary tables.
  */
 public class TempTableDataManager implements ProcessorDataManager {
 	
-
-
-    private ProcessorDataManager processorDataManager;
+    private static final String CODE_PREFIX = "#CODE_"; //$NON-NLS-1$
+	private ProcessorDataManager processorDataManager;
     private BufferManager bufferManager;
 
     /**
@@ -104,7 +108,7 @@ public class TempTableDataManager implements ProcessorDataManager {
     	TempTableStore contextStore = context.getTempTableStore();
         if (command instanceof Query) {
             Query query = (Query)command;
-            return registerQuery(context, command, contextStore, query);
+            return registerQuery(context, contextStore, query);
         }
         if (command instanceof ProcedureContainer) {
         	GroupSymbol group = ((ProcedureContainer)command).getGroup();
@@ -158,7 +162,7 @@ public class TempTableDataManager implements ProcessorDataManager {
         return null;
     }
 
-	private TupleSource registerQuery(CommandContext context, Command command,
+	private TupleSource registerQuery(CommandContext context,
 			TempTableStore contextStore, Query query)
 			throws TeiidComponentException, QueryMetadataException,
 			TeiidProcessingException, ExpressionEvaluationException,
@@ -185,13 +189,13 @@ public class TempTableDataManager implements ProcessorDataManager {
 					}
 				}
 				table = tts.addTempTable(tableName, create, bufferManager);
+				table.setPreferMemory(tableName.startsWith(CODE_PREFIX));
 				boolean success = false;
 				try {
-					String actualViewName = tableName.substring(RelationalPlanner.MAT_PREFIX.length());
-					Object id = metadata.getGroupID(actualViewName);
 					//TODO: order by primary key nulls first - then have an insert ordered optimization
-					String transformation = metadata.getVirtualPlan(id).getQuery();
-		    		QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(transformation, actualViewName, context);
+					//TODO: use the getCommand logic in RelationalPlanner to reuse commands for this.
+					String transformation = metadata.getVirtualPlan(group.getMetadataID()).getQuery();
+		    		QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(transformation, group.getCanonicalName(), context);
 		    		qp.setNonBlocking(true);
 		    		TupleSource ts = new BatchCollector.BatchProducerTupleSource(qp);
 		    		//TODO: if this insert fails, it's unnecessary to do the undo processing
@@ -199,16 +203,15 @@ public class TempTableDataManager implements ProcessorDataManager {
 		    		success = true;
 				} finally {
 					if (!success) {
-						table.remove();
 						tts.removeTempTableByName(tableName);
 					}
 					info.setState(success?MatState.LOADED:MatState.FAILED_LOAD);
 				}
 			} else {
-				table = tts.getOrCreateTempTable(tableName, command, bufferManager, false);
+				table = tts.getOrCreateTempTable(tableName, query, bufferManager, false);
 			}
 		} else {
-			table = contextStore.getOrCreateTempTable(tableName, command, bufferManager, true);
+			table = contextStore.getOrCreateTempTable(tableName, query, bufferManager, true);
 		}
 		//convert to the actual table symbols (this is typically handled by the languagebridgefactory
 		ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
@@ -222,23 +225,38 @@ public class TempTableDataManager implements ProcessorDataManager {
 			}
 		};
 		PostOrderNavigator.doVisit(query, emv);
-		return table.createTupleSource(command.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
+		return table.createTupleSource(query.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
 	}
 
-    public Object lookupCodeValue(
-        CommandContext context,
-        String codeTableName,
-        String returnElementName,
-        String keyElementName,
-        Object keyValue)
-        throws BlockedException, TeiidComponentException, TeiidProcessingException {
-            
-        return this.processorDataManager.lookupCodeValue(context, codeTableName, returnElementName, keyElementName, keyValue);
+	public Object lookupCodeValue(CommandContext context, String codeTableName,
+			String returnElementName, String keyElementName, Object keyValue)
+			throws BlockedException, TeiidComponentException,
+			TeiidProcessingException {
+    	ElementSymbol keyElement = new ElementSymbol(keyElementName);
+    	ElementSymbol returnElement = new ElementSymbol(returnElementName);
+    	
+    	QueryMetadataInterface metadata = context.getMetadata();
+    	
+    	keyElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementType(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + keyElementName))));
+    	returnElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementType(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + returnElementName))));
+    	
+    	String matTableName = CODE_PREFIX + (codeTableName + ElementSymbol.SEPARATOR + keyElementName + ElementSymbol.SEPARATOR + returnElementName).toUpperCase(); 
+    	TempMetadataID id = context.getGlobalTableStore().getMetadataStore().addTempGroup(matTableName, Arrays.asList(keyElement, returnElement), false, true);
+    	String queryString = Reserved.SELECT + ' ' + keyElementName + " ," + returnElementName + ' ' + Reserved.FROM + ' ' + codeTableName; //$NON-NLS-1$ 
+    	id.setQueryNode(new QueryNode(matTableName, queryString));
+    	id.setPrimaryKey(id.getElements().subList(0, 1));
+    	
+    	Query query = RelationalPlanner.createMatViewQuery(id, matTableName, Arrays.asList(returnElement), true);
+    	query.setCriteria(new CompareCriteria(keyElement, CompareCriteria.EQ, new Constant(keyValue)));
+    	
+    	TupleSource ts = registerQuery(context, context.getTempTableStore(), query);
+    	List<?> row = ts.nextTuple();
+    	Object result = null;
+    	if (row != null) {
+    		result = row.get(0);
+    	}
+    	ts.closeSource();
+    	return result;
     }
-    
-    @Override
-    public void clearCodeTables() {
-    	this.processorDataManager.clearCodeTables();
-    }
-    
+
 }

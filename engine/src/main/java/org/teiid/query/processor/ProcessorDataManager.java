@@ -47,6 +47,5 @@ public interface ProcessorDataManager {
                                            String keyElementName,
                                            Object keyValue) throws BlockedException,
                                                            TeiidComponentException, TeiidProcessingException;
-    
-    void clearCodeTables();
+
 }

@@ -39,18 +39,36 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Table;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.translator.TranslatorException;
 
-
+@SuppressWarnings("nls")
 public class TestTransformationMetadata {
 
 	@Test public void testAmbiguousProc() throws Exception {
+		TransformationMetadata tm = exampleTransformationMetadata();
+
+		try {
+			tm.getStoredProcedureInfoForProcedure("y"); //$NON-NLS-1$
+			fail("expected exception"); //$NON-NLS-1$
+		} catch (QueryMetadataException e) {
+			assertEquals("Procedure 'y' is ambiguous, use the fully qualified name instead", e.getMessage()); //$NON-NLS-1$
+		}
+	}
+
+	private TransformationMetadata exampleTransformationMetadata()
+			throws TranslatorException {
 		Map<String, Datatype> datatypes = new HashMap<String, Datatype>();
         datatypes.put(DataTypeManager.DefaultDataTypes.STRING, new Datatype());
 		MetadataFactory mf = new MetadataFactory("x", datatypes, new Properties()); //$NON-NLS-1$
 		mf.addProcedure("y"); //$NON-NLS-1$
+		
+		Table t = mf.addTable("foo");
+		mf.addColumn("col", DataTypeManager.DefaultDataTypes.STRING, t);
+		
 		MetadataFactory mf1 = new MetadataFactory("x1", datatypes, new Properties()); //$NON-NLS-1$
 		mf1.addProcedure("y"); //$NON-NLS-1$
 		CompositeMetadataStore cms = new CompositeMetadataStore(Arrays.asList(mf.getMetadataStore(), mf1.getMetadataStore()));
@@ -62,14 +80,7 @@ public class TestTransformationMetadata {
 		vdb.addModel(buildModel("x"));
 		vdb.addModel(buildModel("x1"));
 		
-		TransformationMetadata tm = new TransformationMetadata(vdb, cms, null, null);
-
-		try {
-			tm.getStoredProcedureInfoForProcedure("y"); //$NON-NLS-1$
-			fail("expected exception"); //$NON-NLS-1$
-		} catch (QueryMetadataException e) {
-			assertEquals("Procedure 'y' is ambiguous, use the fully qualified name instead", e.getMessage()); //$NON-NLS-1$
-		}
+		return new TransformationMetadata(vdb, cms, null, null);
 	}
 	
 	ModelMetaData buildModel(String name) {
@@ -113,6 +124,11 @@ public class TestTransformationMetadata {
 		tm = new TransformationMetadata(vdb, cms, null, null);
 		result = tm.getGroupsForPartialName("y"); //$NON-NLS-1$
 		assertEquals(1, result.size());
+	}
+	
+	@Test public void testElementId() throws Exception {
+		TransformationMetadata tm = exampleTransformationMetadata();
+		tm.getElementID("x.FoO.coL");
 	}
 	
 }

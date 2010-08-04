@@ -29,7 +29,6 @@ import org.mockito.Mockito;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.RequestMessage;
 import org.teiid.common.buffer.BlockedException;
-import org.teiid.core.TeiidException;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
 import org.teiid.dqp.message.AtomicRequestMessage;
@@ -84,10 +83,7 @@ public class TestDataTierManager {
         
         dtm = new DataTierManagerImpl(rm,
                                   repo,
-                                  bs,
-                                  20,
-                                  1000,
-                                  1000);
+                                  bs);
         command = helpGetCommand(sql, metadata);
         
         RequestMessage original = new RequestMessage();
@@ -130,18 +126,6 @@ public class TestDataTierManager {
     	assertNull(info.nextTuple());
     }
     
-    @Test public void testCodeTableResponseException() throws Exception {
-    	helpSetup(3);
-    	this.connectorManager.throwExceptionOnExecute = true;
-        
-        try {
-            dtm.lookupCodeValue(context, "BQT1.SmallA", "IntKey", "StringKey", "49");  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-            fail("processor should have failed"); //$NON-NLS-1$
-        } catch (TeiidException e) {
-            assertEquals("Connector Exception", e.getMessage()); //$NON-NLS-1$
-        }
-    }
-    
     @Test public void testNoRowsException() throws Exception {
     	helpSetup(3);
     	this.connectorManager.setRows(0);
@@ -153,13 +137,6 @@ public class TestDataTierManager {
 	    		Thread.sleep(50);
 	    	}
     	}
-    }
-    
-    @Test public void testCodeTableResponseDataNotAvailable() throws Exception {
-    	helpSetup(3);
-    	this.connectorManager.dataNotAvailable = 5;
-        
-        assertNull(dtm.lookupCodeValue(context, "BQT1.SmallA", "IntKey", "StringKey", "49"));  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
     
 }

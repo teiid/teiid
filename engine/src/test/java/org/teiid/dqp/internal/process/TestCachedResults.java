@@ -51,7 +51,7 @@ public class TestCachedResults {
 		}
 
 		@Override
-		public ManagedBatch createManagedBatch(final TupleBatch batch)
+		public ManagedBatch createManagedBatch(final TupleBatch batch, boolean softCache)
 				throws TeiidComponentException {
 			return new ManagedBatch() {
 				

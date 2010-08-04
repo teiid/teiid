@@ -56,6 +56,7 @@ public class STree {
     protected int keyLength;
     protected String[] types;
     protected String[] keytypes;
+    protected boolean preferMemory;
     
     protected ReentrantLock updateLock = new ReentrantLock();
     
@@ -349,6 +350,10 @@ public class STree {
 	
 	public int getKeyLength() {
 		return keyLength;
+	}
+	
+	public void setPreferMemory(boolean preferMemory) {
+		this.preferMemory = preferMemory;
 	}
 	
 }

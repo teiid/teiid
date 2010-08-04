@@ -544,7 +544,7 @@ public class TestProcedureRelational {
         // Plan query 
         ProcessorPlan plan = TestProcedureProcessor.getProcedurePlan(sql, metadata);        
         // Run query 
-        TestProcedureProcessor.helpTestProcess(plan, expected, new FakeDataManager());  
+        TestProcedureProcessor.helpTestProcess(plan, expected, new FakeDataManager(), metadata);  
                
     }
 
@@ -742,7 +742,7 @@ public class TestProcedureRelational {
         	}
         };
         
-        TestProcedureProcessor.helpTestProcess(plan, expected, dataManager);  
+        TestProcedureProcessor.helpTestProcess(plan, expected, dataManager, metadata);  
                
     }
     

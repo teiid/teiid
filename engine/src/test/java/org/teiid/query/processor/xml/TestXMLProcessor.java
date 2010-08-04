@@ -55,6 +55,8 @@ import org.teiid.query.mapping.xml.MappingRecursiveElement;
 import org.teiid.query.mapping.xml.MappingSequenceNode;
 import org.teiid.query.mapping.xml.Namespace;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -2943,7 +2945,7 @@ public class TestXMLProcessor {
 
         try {
             CommandContext planningContext = new CommandContext(); //this should be the same as the processing context, but that's not easy to do
-            
+            planningContext.setMetadata(new TempMetadataAdapter(metadata, new TempMetadataStore()));
             ProcessorPlan plan = QueryOptimizer.optimizePlan(command, metadata, null, capFinder, analysisRecord, planningContext);
             
             if(DEBUG) {
@@ -5491,11 +5493,6 @@ public class TestXMLProcessor {
     @Test public void testNestedWithLookupChoice() throws Exception {
         FakeMetadataFacade metadata = exampleMetadataCached();
         FakeDataManager dataMgr = exampleDataManagerNested(metadata);
-        
-        dataMgr.setThrowBlocked(true);
-        Map values = new HashMap();
-        values.put("x", "y"); //$NON-NLS-1$ //$NON-NLS-2$
-        dataMgr.defineCodeTable("stock.items", "itemName", "itemNum", values); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         
         String expectedDoc = 
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$

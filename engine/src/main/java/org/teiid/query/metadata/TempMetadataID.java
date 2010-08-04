@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.teiid.core.util.LRUCache;
+import org.teiid.query.mapping.relational.QueryNode;
 
 
 /**
@@ -53,6 +54,7 @@ public class TempMetadataID implements Serializable {
     private LRUCache<Object, Object> localCache;
     private boolean scalarGroup;
     private List<TempMetadataID> primaryKey;
+    private QueryNode queryNode;
     
     /**
      * Constructor for group form of metadata ID.
@@ -267,6 +269,14 @@ public class TempMetadataID implements Serializable {
 	
 	public void setPosition(int position) {
 		this.position = position;
+	}
+	
+	public QueryNode getQueryNode() {
+		return queryNode;
+	}
+	
+	public void setQueryNode(QueryNode queryNode) {
+		this.queryNode = queryNode;
 	}
 		
 }

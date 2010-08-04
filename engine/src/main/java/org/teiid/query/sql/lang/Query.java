@@ -24,15 +24,14 @@ package org.teiid.query.sql.lang;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.SelectSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 
 /**
@@ -75,7 +74,7 @@ public class Query extends QueryCommand {
     private Into into;
     
     /** xml projected symbols */
-    private List selectList;
+    private List<SingleElementSymbol> selectList;
 	
     // =========================================================================
     //                         C O N S T R U C T O R S
@@ -291,7 +290,7 @@ public class Query extends QueryCommand {
 	 * single column.
 	 * @return Ordered list of SingleElementSymbol
 	 */
-	public List getProjectedSymbols() {
+	public List<SingleElementSymbol> getProjectedSymbols() {
 		if (!getIsXML()) {
 			if(getSelect() != null) { 
                 if(getInto() != null){
@@ -300,10 +299,10 @@ public class Query extends QueryCommand {
                 }
 				return getSelect().getProjectedSymbols();
 			}
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 		}
 		if(selectList == null){
-			selectList = new ArrayList(1);
+			selectList = new ArrayList<SingleElementSymbol>(1);
 			ElementSymbol xmlElement = new ElementSymbol("xml"); //$NON-NLS-1$
 	        xmlElement.setType(DataTypeManager.DefaultDataClasses.XML);
 			selectList.add(xmlElement);
@@ -343,7 +342,7 @@ public class Query extends QueryCommand {
 		}	
 
         if(getOrderBy() != null) {
-            copy.setOrderBy( (OrderBy) getOrderBy().clone());
+            copy.setOrderBy(getOrderBy().clone());
         }
 
         if(getLimit() != null) {
@@ -354,11 +353,7 @@ public class Query extends QueryCommand {
         copy.setIsXML(getIsXML());
         
         if(selectList != null){
-        	copy.selectList = new ArrayList();
-            Iterator iter = selectList.iterator();
-            while(iter.hasNext()) {
-            	copy.selectList.add(((SelectSymbol)iter.next()).clone());
-            }
+        	copy.selectList = LanguageObject.Util.deepClone(selectList, SingleElementSymbol.class);
         }
         
         if (into != null) {

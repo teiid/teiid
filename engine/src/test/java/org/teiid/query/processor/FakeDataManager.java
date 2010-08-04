@@ -364,9 +364,6 @@ public class FakeDataManager implements ProcessorDataManager {
         blockOnce = true;
     }
     
-    @Override
-    public void clearCodeTables() {/* does nothing */}
-
     /**
      * Are commands/queries that are registered with the data manager being 
      * recorded?

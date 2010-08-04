@@ -26,9 +26,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -40,12 +38,15 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.FakeDataManager;
+import org.teiid.query.processor.FakeDataStore;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.TestProcessor;
@@ -64,7 +65,7 @@ import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "nls"})
 public class TestProcedureProcessor {
 	
     public static ProcessorPlan getProcedurePlan(String userQuery, FakeMetadataFacade metadata) throws Exception {
@@ -95,43 +96,30 @@ public class TestProcedureProcessor {
         }
     }
     
-    static void helpTestProcess(ProcessorPlan procPlan, int rowsUpdated, List[] expectedResults, boolean shouldFail, ProcessorDataManager dataMgr, QueryMetadataInterface metadata) throws Exception {
+    public static void helpTestProcess(ProcessorPlan procPlan, List[] expectedResults, ProcessorDataManager dataMgr, QueryMetadataInterface metadata) throws Exception {
         CommandContext context = new CommandContext("pID", null, null, null, 1); //$NON-NLS-1$
-        context.getNextRand(0);
+        if (!(metadata instanceof TempMetadataAdapter)) {
+        	metadata = new TempMetadataAdapter(metadata, new TempMetadataStore());
+        }
         context.setMetadata(metadata);        	
         
-        if (expectedResults == null) {
-        	expectedResults = new List[] {Arrays.asList(rowsUpdated)};
-        }
-
     	TestProcessor.helpProcess(procPlan, context, dataMgr, expectedResults);
-    	if (shouldFail) {
-    		fail("Expected processing to fail"); //$NON-NLS-1$
-    	}
+    	assertNotNull("Expected processing to fail", expectedResults);
     }
 
     private void helpTestProcessFailure(ProcessorPlan procPlan, FakeDataManager dataMgr, 
-                                 String failMessage) throws Exception {
+                                 String failMessage, QueryMetadataInterface metadata) throws Exception {
         try {
-            helpTestProcess(procPlan, new List[] {}, dataMgr, true);
+            helpTestProcess(procPlan, null, dataMgr, metadata);
         } catch(TeiidException ex) {
             assertEquals(failMessage, ex.getMessage());
         }
     }
     
-    public static void helpTestProcess(ProcessorPlan procPlan, List[] expectedResults, ProcessorDataManager dataMgr) throws Exception {
-        helpTestProcess(procPlan, expectedResults, dataMgr, false);
+    private void helpTestProcess(ProcessorPlan procPlan, int expectedRows, FakeDataManager dataMgr, QueryMetadataInterface metadata) throws Exception {
+    	helpTestProcess(procPlan, new List[] {Arrays.asList(expectedRows)}, dataMgr, metadata);
     }
     
-    private void helpTestProcess(ProcessorPlan procPlan, int expectedRows, FakeDataManager dataMgr) throws Exception {
-        helpTestProcess(procPlan, expectedRows, null, false, dataMgr, null);
-    }
-    
-    static void helpTestProcess(ProcessorPlan procPlan, List[] expectedResults, ProcessorDataManager dataMgr, 
-    		boolean shouldFail) throws Exception {
-        helpTestProcess(procPlan, 0, expectedResults, shouldFail, dataMgr, null);
-    }
-
     // Helper to create a list of elements - used in creating sample data
     private static List createElements(List elementIDs) { 
         List elements = new ArrayList();
@@ -277,7 +265,7 @@ public class TestProcedureProcessor {
 
 		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 									 
-		helpTestProcess(plan, 0, dataMgr);									 
+		helpTestProcess(plan, 0, dataMgr, metadata);									 
     }
 
 	// testing if statement    
@@ -300,7 +288,7 @@ public class TestProcedureProcessor {
 
 		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 									 
-		helpTestProcess(plan, 5, dataMgr);
+		helpTestProcess(plan, 5, dataMgr, metadata);
     }
     
     // testing if statement    
@@ -324,7 +312,7 @@ public class TestProcedureProcessor {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
                                      
-        helpTestProcess(plan, 5, dataMgr);
+        helpTestProcess(plan, 5, dataMgr, metadata);
     }
 
 	// testing rows updated incremented, Input and assignment statements
@@ -345,7 +333,7 @@ public class TestProcedureProcessor {
 
 		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 									 
-		helpTestProcess(plan, 45, dataMgr);									 
+		helpTestProcess(plan, 45, dataMgr, metadata);									 
     }
     
     // if/else test
@@ -375,7 +363,7 @@ public class TestProcedureProcessor {
 
 		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 									 
-		helpTestProcess(plan, 5, dataMgr);									 
+		helpTestProcess(plan, 5, dataMgr, metadata);									 
     }
     
     @Test public void testProcedureProcessor4WithBlockedException() throws Exception {
@@ -405,7 +393,7 @@ public class TestProcedureProcessor {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
                                      
-        helpTestProcess(plan, 5, dataMgr);                                     
+        helpTestProcess(plan, 5, dataMgr, metadata);                                     
     }
 
     // if/else test    
@@ -432,7 +420,7 @@ public class TestProcedureProcessor {
 
 		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 									 
-		helpTestProcess(plan, 50, dataMgr);									 
+		helpTestProcess(plan, 50, dataMgr, metadata);									 
     }
     
     // more rows than expected
@@ -450,7 +438,7 @@ public class TestProcedureProcessor {
 
 		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 									 
-        helpTestProcessFailure(plan, dataMgr, "Error Code:ERR.015.006.0058 Message:Unable to evaluate (SELECT pm1.g1.e2 FROM pm1.g1): Error Code:ERR.015.006.0058 Message:The command of this scalar subquery returned more than one value: SELECT pm1.g1.e2 FROM pm1.g1"); //$NON-NLS-1$ 
+        helpTestProcessFailure(plan, dataMgr, "Error Code:ERR.015.006.0058 Message:Unable to evaluate (SELECT pm1.g1.e2 FROM pm1.g1): Error Code:ERR.015.006.0058 Message:The command of this scalar subquery returned more than one value: SELECT pm1.g1.e2 FROM pm1.g1", metadata); //$NON-NLS-1$ 
     }
 
     // error statement
@@ -487,7 +475,7 @@ public class TestProcedureProcessor {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
                                      
-        helpTestProcessFailure(plan, dataMgr, ErrorInstruction.ERROR_PREFIX + "5MY ERROR"); //$NON-NLS-1$ 
+        helpTestProcessFailure(plan, dataMgr, ErrorInstruction.ERROR_PREFIX + "5MY ERROR", metadata); //$NON-NLS-1$ 
     }
 
     private void helpTestErrorStatment(String errorValue, String expected) throws Exception {
@@ -507,7 +495,7 @@ public class TestProcedureProcessor {
 
 		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 									 
-        helpTestProcessFailure(plan, dataMgr, ErrorInstruction.ERROR_PREFIX + expected); 
+        helpTestProcessFailure(plan, dataMgr, ErrorInstruction.ERROR_PREFIX + expected, metadata); 
     }
     
 	/** test if statement's if block with lookup in if condition */
@@ -515,7 +503,7 @@ public class TestProcedureProcessor {
 		String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
 		procedure = procedure + "DECLARE integer var2;\n"; //$NON-NLS-1$
-		procedure = procedure + "if('xyz' = lookup('pm1.g1','e1', 'e2', 5))\n"; //$NON-NLS-1$
+		procedure = procedure + "if('a' = lookup('pm1.g1','e1', 'e2', 0))\n"; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
 		procedure = procedure + "var2 = INPUT.e2;\n"; //$NON-NLS-1$
 		procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED +1;\n"; //$NON-NLS-1$
@@ -531,13 +519,10 @@ public class TestProcedureProcessor {
 		 
 		FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
 		FakeDataManager dataMgr = new FakeDataManager();
-		
-		Map valueMap = new HashMap();
-		valueMap.put( new Integer(5), "xyz"); //$NON-NLS-1$
-		dataMgr.defineCodeTable("pm1.g1", "e2", "e1", valueMap); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		FakeDataStore.sampleData2(dataMgr);
 
 		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);                         
-		helpTestProcess(plan, 1, dataMgr);        
+		helpTestProcess(plan, 1, dataMgr, metadata);        
 
 	}
 	
@@ -546,7 +531,7 @@ public class TestProcedureProcessor {
 		String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
 		procedure = procedure + "DECLARE integer var2;\n"; //$NON-NLS-1$
-		procedure = procedure + "if('xy' = lookup('pm1.g1','e1', 'e2', 5))\n"; //$NON-NLS-1$
+		procedure = procedure + "if('a' = lookup('pm1.g1','e1', 'e2', 5))\n"; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
 		procedure = procedure + "var2 = INPUT.e2;\n"; //$NON-NLS-1$
 		procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED +1;\n"; //$NON-NLS-1$
@@ -562,13 +547,10 @@ public class TestProcedureProcessor {
 		 
 		FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
 		FakeDataManager dataMgr = new FakeDataManager();
-		
-		Map valueMap = new HashMap();
-		valueMap.put( new Integer(5), "xyz"); //$NON-NLS-1$
-		dataMgr.defineCodeTable("pm1.g1", "e2", "e1", valueMap); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		FakeDataStore.sampleData2(dataMgr);
 		
 		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);                         
-		helpTestProcess(plan, 12, dataMgr);        
+		helpTestProcess(plan, 12, dataMgr, metadata);        
 	}
 
     @Test public void testVirtualProcedure() throws Exception {
@@ -585,7 +567,7 @@ public class TestProcedureProcessor {
             Arrays.asList(new Object[] { "First"}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Second"}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Third"})};         //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testVirtualProcedureWithBlockedException() throws Exception {
@@ -603,7 +585,7 @@ public class TestProcedureProcessor {
             Arrays.asList(new Object[] { "First"}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Second"}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Third"})};         //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testVirtualProcedure2() throws Exception {
@@ -618,7 +600,7 @@ public class TestProcedureProcessor {
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "Third"})};         //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testVirtualProcedure3() throws Exception {
@@ -633,7 +615,7 @@ public class TestProcedureProcessor {
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "First"})};         //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
         
     @Test public void testVirtualProcedure4() throws Exception {
@@ -648,7 +630,7 @@ public class TestProcedureProcessor {
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "First"})};         //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testVirtualProcedure5() throws Exception {
@@ -663,7 +645,7 @@ public class TestProcedureProcessor {
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "Second"})};         //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
        
     @Test public void testVirtualProcedure6() throws Exception {
@@ -678,7 +660,7 @@ public class TestProcedureProcessor {
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "Second"})};         //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
           
     @Test public void testVirtualProcedure7() throws Exception {
@@ -693,7 +675,7 @@ public class TestProcedureProcessor {
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "Third"})};         //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
               
     @Test public void testVirtualProcedure8() throws Exception {
@@ -708,7 +690,7 @@ public class TestProcedureProcessor {
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "Third"})};         //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
              
     @Test public void testVirtualProcedure9() throws Exception {
@@ -722,7 +704,7 @@ public class TestProcedureProcessor {
                 
         // Create expected results
         List[] expected = new List[] {};        
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
 
               
@@ -738,7 +720,7 @@ public class TestProcedureProcessor {
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "Third", new Integer(5)})};         //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testVirtualProcedure11() throws Exception {
@@ -754,7 +736,7 @@ public class TestProcedureProcessor {
             Arrays.asList(new Object[] { "First"}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Second"}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Third"})};           //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testVirtualProcedure12() throws Exception {
@@ -782,7 +764,7 @@ public class TestProcedureProcessor {
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "First"}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Third"})};           //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     //Defect17447_testVirtualProcedure13
@@ -812,7 +794,7 @@ public class TestProcedureProcessor {
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "First"}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Third"})};           //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     		
     @Test public void testVirtualProcedure14() throws Exception {
@@ -826,7 +808,7 @@ public class TestProcedureProcessor {
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "Third"})};           //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
 
     @Test public void testVirtualProcedure15() throws Exception {
@@ -846,7 +828,7 @@ public class TestProcedureProcessor {
             Arrays.asList(new Object[] { "First"}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Second"}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Third"})};           //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testVirtualProcedure16() throws Exception {
@@ -883,7 +865,7 @@ public class TestProcedureProcessor {
             Arrays.asList(new Object[] { "Second", new Integer(15)}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Third", new Integer(51)}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Fourth", new Integer(7)})};           //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testVirtualProcedure18() throws Exception {
@@ -898,7 +880,7 @@ public class TestProcedureProcessor {
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "Second", new Integer(15)}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Third", new Integer(51)}) }; //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testVirtualProcedure19() throws Exception {
@@ -912,7 +894,7 @@ public class TestProcedureProcessor {
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "Second", new Integer(15)})}; //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testVirtualProcedure19WithBlockedException() throws Exception {
@@ -925,7 +907,7 @@ public class TestProcedureProcessor {
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "Second", new Integer(15)})}; //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
 
     @Test public void testVirtualProcedureNoDataInTempTable() throws Exception {
@@ -939,7 +921,7 @@ public class TestProcedureProcessor {
         
         // Create expected results
         List[] expected = new List[] {};           
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     //procedure with Has Criteria and Translate Criteria 
@@ -965,7 +947,7 @@ public class TestProcedureProcessor {
 
 		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 									 
-		helpTestProcess(plan, 5, dataMgr);
+		helpTestProcess(plan, 5, dataMgr, metadata);
     }
     
     @Test public void testVirtualProcedure30() throws Exception {
@@ -982,7 +964,7 @@ public class TestProcedureProcessor {
             Arrays.asList(new Object[] { "First" }),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Second"}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Third"}) }; //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
 
     @Test public void testVirtualProcedure31() throws Exception {
@@ -996,7 +978,7 @@ public class TestProcedureProcessor {
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "Third"}) }; //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
 
     @Test public void testVirtualProcedureDefect14282() throws Exception {
@@ -1011,7 +993,7 @@ public class TestProcedureProcessor {
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "Second"})};         //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }    
     
     @Test public void testDefect16193() throws Exception {
@@ -1025,7 +1007,7 @@ public class TestProcedureProcessor {
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "Third"}) }; //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testVirtualProcedure16602() throws Exception {
@@ -1051,7 +1033,7 @@ public class TestProcedureProcessor {
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { new Integer(1)})};           
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testDefect16649_1() throws Exception {
@@ -1065,7 +1047,7 @@ public class TestProcedureProcessor {
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "Second"}) }; //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testDefect16649_2() throws Exception {
@@ -1079,7 +1061,7 @@ public class TestProcedureProcessor {
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "Second"}) }; //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testDefect16694() throws Exception {
@@ -1093,7 +1075,7 @@ public class TestProcedureProcessor {
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "Second"}) }; //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testDefect16707() throws Exception {
@@ -1109,7 +1091,7 @@ public class TestProcedureProcessor {
                 Arrays.asList(new Object[] { "First"}),  //$NON-NLS-1$
 	            Arrays.asList(new Object[] { "Second"}),  //$NON-NLS-1$
 	            Arrays.asList(new Object[] { "Third"})}; //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testDefect16707_1() throws Exception {
@@ -1125,7 +1107,7 @@ public class TestProcedureProcessor {
                 Arrays.asList(new Object[] { "First"}),  //$NON-NLS-1$
 	            Arrays.asList(new Object[] { "Second"}),  //$NON-NLS-1$
 	            Arrays.asList(new Object[] { "Third"})}; //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testDefect17451() throws Exception {
@@ -1154,7 +1136,7 @@ public class TestProcedureProcessor {
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "First"}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Third"})};           //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     //Defect 17447
@@ -1172,7 +1154,7 @@ public class TestProcedureProcessor {
             Arrays.asList(new Object[] { "First"}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Second"}), //$NON-NLS-1$
             Arrays.asList(new Object[] { "Third"})};           //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testDefect17650() throws Exception {
@@ -1200,7 +1182,7 @@ public class TestProcedureProcessor {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
                                      
-        helpTestProcess(plan, 5, dataMgr);
+        helpTestProcess(plan, 5, dataMgr, metadata);
     }
     
     @Test public void testDefect19982() throws Exception {
@@ -1216,7 +1198,7 @@ public class TestProcedureProcessor {
             Arrays.asList(new Object[] { "First", new Integer(5)}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Second", new Integer(5)}), //$NON-NLS-1$
             Arrays.asList(new Object[] { "Third", new Integer(5)})};           //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     } 
     
     @Test public void testCase3521() throws Exception {
@@ -1234,7 +1216,7 @@ public class TestProcedureProcessor {
             Arrays.asList(new Object[] { "Second"}),  //$NON-NLS-1$
 //            Arrays.asList(new Object[] { "Third"}),   //$NON-NLS-1$
         };        
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
 
     //procedure with Has Criteria and Translate Criteria and changing
@@ -1261,7 +1243,7 @@ public class TestProcedureProcessor {
 
 		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 									 
-		helpTestProcess(plan, 5, dataMgr);
+		helpTestProcess(plan, 5, dataMgr, metadata);
     }
     
     @Test public void testDynamicCommandWithIntoExpression() throws Exception {
@@ -1290,7 +1272,7 @@ public class TestProcedureProcessor {
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "First" }),  //$NON-NLS-1$
             };           
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
       }
     
     @Test public void testDynamicCommandWithIntoAndLoop() throws Exception {
@@ -1332,7 +1314,7 @@ public class TestProcedureProcessor {
         List[] expected = new List[] {
             Arrays.asList(new Object[] { new Integer(66)}),  
             };           
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
       }
     
     @Test public void testDynamicCommandWithParameter() throws Exception {
@@ -1360,7 +1342,7 @@ public class TestProcedureProcessor {
         List[] expected = new List[] {
                 Arrays.asList(new Object[] { "First", new Integer(5) }),  //$NON-NLS-1$
         };        
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testDynamicCommandWithUsing() throws Exception {
@@ -1388,7 +1370,7 @@ public class TestProcedureProcessor {
         List[] expected = new List[] {
                 Arrays.asList(new Object[] { "First", new Integer(5) }),  //$NON-NLS-1$
         };        
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testDynamicCommandWithVariable() throws Exception {
@@ -1416,7 +1398,7 @@ public class TestProcedureProcessor {
         List[] expected = new List[] {
                 Arrays.asList(new Object[] { "First", new Integer(5) }),  //$NON-NLS-1$
         };        
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
 
     @Test public void testDynamicCommandWithSingleSelect() throws Exception {
@@ -1443,7 +1425,7 @@ public class TestProcedureProcessor {
         List[] expected = new List[] {
                 Arrays.asList(new Object[] { "26" }),  //$NON-NLS-1$
         };        
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
 
     
@@ -1473,7 +1455,7 @@ public class TestProcedureProcessor {
          List[] expected = new List[] {
                  Arrays.asList(new Object[] { "5" }),  //$NON-NLS-1$
          };        
-         helpTestProcess(plan, expected, dataMgr);
+         helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testDynamicCommandRecursion() throws Exception {
@@ -1503,7 +1485,7 @@ public class TestProcedureProcessor {
 
         helpTestProcessFailure(plan,
                                dataMgr,
-                               "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'EXEC pm1.sq2(''First'')' AS e1 string, e2 integer\" with the SQL statement \"'EXEC pm1.sq2(''First'')'\" due to: There is a recursive invocation of group 'PM1.SQ2'. Please correct the SQL."); //$NON-NLS-1$
+                               "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'EXEC pm1.sq2(''First'')' AS e1 string, e2 integer\" with the SQL statement \"'EXEC pm1.sq2(''First'')'\" due to: There is a recursive invocation of group 'PM1.SQ2'. Please correct the SQL.", metadata); //$NON-NLS-1$
     }
     
     @Test public void testDynamicCommandIncorrectProjectSymbolCount() throws Exception {
@@ -1533,7 +1515,7 @@ public class TestProcedureProcessor {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
     	
-        helpTestProcessFailure(plan, dataMgr, "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'EXEC pm1.sq1(''First'')' AS e1 string, e2 integer\" with the SQL statement \"'EXEC pm1.sq1(''First'')'\" due to: The dynamic sql string contains an incorrect number of elements."); //$NON-NLS-1$
+        helpTestProcessFailure(plan, dataMgr, "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'EXEC pm1.sq1(''First'')' AS e1 string, e2 integer\" with the SQL statement \"'EXEC pm1.sq1(''First'')'\" due to: The dynamic sql string contains an incorrect number of elements.", metadata); //$NON-NLS-1$
      }
     
     @Test public void testDynamicCommandPositional() throws Exception {
@@ -1560,7 +1542,7 @@ public class TestProcedureProcessor {
     	
         helpTestProcess(plan, new List[] {Arrays.asList("First", "5"), //$NON-NLS-1$ //$NON-NLS-2$
         		Arrays.asList("Second", "15"), //$NON-NLS-1$ //$NON-NLS-2$
-        		Arrays.asList("Third", "51")}, dataMgr); //$NON-NLS-1$ //$NON-NLS-2$
+        		Arrays.asList("Third", "51")}, dataMgr, metadata); //$NON-NLS-1$ //$NON-NLS-2$
      }
     
     @Test public void testDynamicCommandIncorrectProjectSymbolDatatypes() throws Exception {
@@ -1585,7 +1567,7 @@ public class TestProcedureProcessor {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
     	
-        helpTestProcessFailure(plan, dataMgr, "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'select e1 from pm1.g1'\" with the SQL statement \"'select e1 from pm1.g1'\" due to: The datatype 'string' for element 'E1' in the dynamic SQL cannot be implicitly converted to 'integer'."); //$NON-NLS-1$
+        helpTestProcessFailure(plan, dataMgr, "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'select e1 from pm1.g1'\" with the SQL statement \"'select e1 from pm1.g1'\" due to: The datatype 'string' for element 'E1' in the dynamic SQL cannot be implicitly converted to 'integer'.", metadata); //$NON-NLS-1$
      }
      
     @Test public void testDynamicCommandWithTwoDynamicStatements() throws Exception {
@@ -1615,7 +1597,7 @@ public class TestProcedureProcessor {
             Arrays.asList(new Object[] { "Second", new Integer(15)}), //$NON-NLS-1$
             Arrays.asList(new Object[] { "Third", new Integer(51)})};           //$NON-NLS-1$      
        
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
      }
     
     @Test public void testAssignmentWithCase() throws Exception {
@@ -1652,7 +1634,7 @@ public class TestProcedureProcessor {
         List[] expected = new List[] {
                 Arrays.asList(new Object[] { new Integer(3) }),  
         };        
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testDynamicCommandInsertIntoTempTableWithDifferentDatatypeFromSource() throws Exception {
@@ -1682,7 +1664,7 @@ public class TestProcedureProcessor {
             Arrays.asList(new Object[] { "Second", new Integer(15)}), //$NON-NLS-1$
             Arrays.asList(new Object[] { "Third", new Integer(51)})};           //$NON-NLS-1$      
        
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
      }
     
     @Test public void testDynamicCommandWithVariableOnly() throws Exception {
@@ -1709,7 +1691,7 @@ public class TestProcedureProcessor {
         // Create expected results
         List[] expected = new List[] { Arrays.asList(new Object[] { "First", new Short((short)5)})};           //$NON-NLS-1$      
         
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
      }
     
     @Test public void testVirtualProcedureWithCreate() throws Exception{
@@ -1726,7 +1708,7 @@ public class TestProcedureProcessor {
             Arrays.asList(new Object[] { "First"}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Second"}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Third"})};         //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testVirtualProcedureWithCreateAndDrop() throws Exception{
@@ -1743,7 +1725,7 @@ public class TestProcedureProcessor {
             Arrays.asList(new Object[] { "First"}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Second"}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Third"})};         //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testVirtualProcedureWithCreateAndSelectInto() throws Exception{
@@ -1760,7 +1742,7 @@ public class TestProcedureProcessor {
             Arrays.asList(new Object[] { "First"}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Second"}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Third"})};         //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testDifferentlyScopedTempTables() throws Exception {
@@ -1803,7 +1785,7 @@ public class TestProcedureProcessor {
         List[] expected = new List[] {
             Arrays.asList(new Object[] { new Integer(3)}),  
             };           
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testLoopsWithBreak() throws Exception {
@@ -1845,7 +1827,7 @@ public class TestProcedureProcessor {
         List[] expected = new List[] {
             Arrays.asList(new Object[] { new Integer(76)}),  
             };           
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testCreateWithoutDrop() throws Exception {
@@ -1875,7 +1857,7 @@ public class TestProcedureProcessor {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
         
-        helpTestProcessFailure(plan, dataMgr, "Temporary table \"T1\" already exists."); //$NON-NLS-1$
+        helpTestProcessFailure(plan, dataMgr, "Temporary table \"T1\" already exists.", metadata); //$NON-NLS-1$
     }
     
     /**
@@ -1910,7 +1892,7 @@ public class TestProcedureProcessor {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
         
-        helpTestProcess(plan, new List[] {Arrays.asList(1)}, dataMgr); 
+        helpTestProcess(plan, new List[] {Arrays.asList(1)}, dataMgr, metadata); 
     }
     
     /**
@@ -1949,7 +1931,7 @@ public class TestProcedureProcessor {
         // Plan query 
         ProcessorPlan plan = getProcedurePlan(sql, metadata);        
         // Run query 
-        helpTestProcess(plan, expected, new FakeDataManager());
+        helpTestProcess(plan, expected, new FakeDataManager(), metadata);
     }
     
     /**
@@ -1979,7 +1961,7 @@ public class TestProcedureProcessor {
         
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
                                      
-        helpTestProcess(plan, 4, new FakeDataManager());
+        helpTestProcess(plan, 4, new FakeDataManager(), metadata);
     }
     
     /**
@@ -2017,7 +1999,7 @@ public class TestProcedureProcessor {
         ProcessorPlan plan = getProcedurePlan(sql, metadata);
 
         // Run query
-        helpTestProcess(plan, expected, dataManager);
+        helpTestProcess(plan, expected, dataManager, metadata);
     }
     
     @Test public void testInsertAfterCreate() throws Exception {
@@ -2049,7 +2031,7 @@ public class TestProcedureProcessor {
         
         helpTestProcess(plan, new List[] {
             Arrays.asList(new Object[] {null}),  
-            Arrays.asList(new Object[] {"b"})}, dataMgr); //$NON-NLS-1$
+            Arrays.asList(new Object[] {"b"})}, dataMgr, metadata); //$NON-NLS-1$
         
     }
     
@@ -2071,7 +2053,7 @@ public class TestProcedureProcessor {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
                                      
-        helpTestProcess(plan, 1, dataMgr);
+        helpTestProcess(plan, 1, dataMgr, metadata);
         
         assertTrue(plan.requiresTransaction(false));
     }
@@ -2100,7 +2082,7 @@ public class TestProcedureProcessor {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
                                      
-        helpTestProcess(plan, 1, dataMgr);
+        helpTestProcess(plan, 1, dataMgr, metadata);
     }
     
     @Test public void testEvaluatableSelectWithOrderBy() throws Exception {
@@ -2129,7 +2111,7 @@ public class TestProcedureProcessor {
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
         
         helpTestProcess(plan, new List[] {
-            Arrays.asList(new Object[] {"1"})}, dataMgr); //$NON-NLS-1$
+            Arrays.asList(new Object[] {"1"})}, dataMgr, metadata); //$NON-NLS-1$
         
     }
     
@@ -2161,7 +2143,7 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, new List[] {
             Arrays.asList(new Object[] {"1"}), //$NON-NLS-1$
             Arrays.asList(new Object[] {"First"}), //$NON-NLS-1$
-            }, dataMgr); 
+            }, dataMgr, metadata); 
         
     }
     
@@ -2195,9 +2177,9 @@ public class TestProcedureProcessor {
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
         
         
-        helpTestProcess(plan, 0, new List[] {
+        helpTestProcess(plan, new List[] {
             Arrays.asList(new Object[] {new Integer(240)}),
-            Arrays.asList(new Object[] {new Integer(637)})}, false, dataMgr, metadata);
+            Arrays.asList(new Object[] {new Integer(637)})}, dataMgr, metadata);
     }
 
     private FakeMetadataFacade createProcedureMetadata(String procedure) {
@@ -2236,7 +2218,7 @@ public class TestProcedureProcessor {
         
         helpTestProcess(plan, new List[] {
             Arrays.asList(new Object[] {"5"}), //$NON-NLS-1$
-            }, dataMgr);
+            }, dataMgr, metadata);
     }
     
     /**
@@ -2268,7 +2250,7 @@ public class TestProcedureProcessor {
         List[] expected = new List[] {
                 Arrays.asList(new Object[] { expectedDoc }),
         };        
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testXMLWithExternalCriteria_InXMLVar() throws Exception {
@@ -2297,7 +2279,7 @@ public class TestProcedureProcessor {
         List[] expected = new List[] {
                 Arrays.asList(new Object[] { expectedDoc }),
         };        
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     /**
@@ -2364,7 +2346,7 @@ public class TestProcedureProcessor {
         List[] expected = new List[] {
                 Arrays.asList(new Object[] { expectedDoc }),
         };        
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testCase174806() throws Exception{
@@ -2379,7 +2361,7 @@ public class TestProcedureProcessor {
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "c"})};         //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testJoinProcAndPhysicalModel() throws Exception {
@@ -2396,7 +2378,7 @@ public class TestProcedureProcessor {
             Arrays.asList(new Object[] { "First"}),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "Second"}), //$NON-NLS-1$
             Arrays.asList(new Object[] { "Third"})};           //$NON-NLS-1$
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
 
     /**
@@ -2443,7 +2425,7 @@ public class TestProcedureProcessor {
         ProcessorPlan plan = getProcedurePlan(userQuery, metadata);
 
         List[] expected = new List[] {Arrays.asList(new Object[] {new Integer(3)})};
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testDefect8693() throws Exception {
@@ -2462,7 +2444,7 @@ public class TestProcedureProcessor {
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
         FakeDataManager dataMgr = exampleDataManager(metadata);
 		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
-		helpTestProcess(plan, 5, dataMgr);									 
+		helpTestProcess(plan, 5, dataMgr, metadata);									 
     }
     
     @Test public void testWhileWithSubquery() throws Exception {
@@ -2480,7 +2462,7 @@ public class TestProcedureProcessor {
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
         FakeDataManager dataMgr = exampleDataManager(metadata);
 		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
-		helpTestProcess(plan, 0, dataMgr);									 
+		helpTestProcess(plan, 0, dataMgr, metadata);									 
     }
     
     @Test public void testDefect18404() throws Exception {
@@ -2495,7 +2477,7 @@ public class TestProcedureProcessor {
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
         FakeDataManager dataMgr = exampleDataManager(metadata);
 		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
-		helpTestProcess(plan, 8, dataMgr);									 
+		helpTestProcess(plan, 8, dataMgr, metadata);									 
     }
 
     /**
@@ -2538,7 +2520,7 @@ public class TestProcedureProcessor {
                 Arrays.asList( new Object[] { "Second", null, new Integer(15), null} ), //$NON-NLS-1$
                 Arrays.asList( new Object[] { "Third", null, new Integer(51), null} ) //$NON-NLS-1$
         };
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
         
         assertTrue(!plan.requiresTransaction(false));
     }
@@ -2584,7 +2566,7 @@ public class TestProcedureProcessor {
                 Arrays.asList( new Object[] { "Second", null, new Integer(15), null} ), //$NON-NLS-1$
                 Arrays.asList( new Object[] { "Third", null, new Integer(51), null} ) //$NON-NLS-1$
         };
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testUpdateDeleteTemp() throws Exception {
@@ -2604,7 +2586,7 @@ public class TestProcedureProcessor {
         List[] expected = new List[] {
                 Arrays.asList( new Object[] { String.valueOf(1) } ), 
         };
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testTempSubqueryInput() throws Exception {
@@ -2623,7 +2605,7 @@ public class TestProcedureProcessor {
         List[] expected = new List[] {
                 Arrays.asList( 51 ),
         };
-        helpTestProcess(plan, expected, dataMgr);
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     private static final boolean DEBUG = false;

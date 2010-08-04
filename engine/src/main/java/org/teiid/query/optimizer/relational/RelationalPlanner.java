@@ -96,6 +96,7 @@ import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.sql.symbol.SelectSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
@@ -912,36 +913,7 @@ public class RelationalPlanner {
         	boolean isGlobal = matMetadataId == null;
             if (isGlobal) {
         		matTableName = MAT_PREFIX + groupName;
-        		TempMetadataStore store = context.getGlobalTableStore().getMetadataStore();
-        		TempMetadataID id = store.getTempGroupID(matTableName);
-        		//define the table preserving the primary key
-        		if (id == null) {
-        			synchronized (store) {
-        				id = store.getTempGroupID(matTableName);
-        				if (id == null) {
-		        			//this is really just temporary and will be replaced by the real table
-							id = store.addTempGroup(matTableName, ResolverUtil.resolveElementsInGroup(virtualGroup, metadata), false, true);
-							
-							id.setCardinality(metadata.getCardinality(metadataID));
-							
-							Object pk = metadata.getPrimaryKey(virtualGroup.getMetadataID());
-							//primary key
-							if (pk != null) {
-								List cols = metadata.getElementIDsInKey(pk);
-								ArrayList<TempMetadataID> primaryKey = new ArrayList<TempMetadataID>(cols.size());
-								for (Object coldId : cols) {
-									int pos = metadata.getPosition(coldId) - 1;
-									primaryKey.add(id.getElements().get(pos));
-								}
-								id.setPrimaryKey(primaryKey);
-							}
-							//version column?
-							
-							//add timestamp?
-        				}
-        			}
-        		}
-				matMetadataId = id;
+        		matMetadataId = getGlobalTempTableMetadataId(virtualGroup, matTableName);
             } else {
             	matTableName = metadata.getFullName(matMetadataId);
             }
@@ -953,12 +925,7 @@ public class RelationalPlanner {
         		recordMaterializationTableAnnotation(virtualGroup, analysisRecord, matTableName, "SimpleQueryResolver.materialized_table_not_used"); //$NON-NLS-1$
         	}else{
         		qnode = new QueryNode(groupName, null);
-        		Query query = new Query();
-        		query.setSelect(new Select(Arrays.asList(new AllSymbol())));
-        		GroupSymbol gs = new GroupSymbol(matTableName);
-        		gs.setGlobalTable(isGlobal);
-        		gs.setMetadataID(matMetadataId);
-        		query.setFrom(new From(Arrays.asList(new UnaryFromClause(gs))));
+        		Query query = createMatViewQuery(matMetadataId, matTableName, Arrays.asList(new AllSymbol()), isGlobal);
         		qnode.setCommand(query);
                 cacheString = "matview"; //$NON-NLS-1$
                 recordMaterializationTableAnnotation(virtualGroup, analysisRecord, matTableName, "SimpleQueryResolver.Query_was_redirected_to_Mat_table"); //$NON-NLS-1$                
@@ -971,6 +938,50 @@ public class RelationalPlanner {
         Command result = getCommand(virtualGroup, qnode, cacheString, metadata);   
         return QueryRewriter.rewrite(result, metadata, context);
     }
+    
+	public static Query createMatViewQuery(Object matMetadataId, String matTableName, List<? extends SelectSymbol> select, boolean isGlobal) {
+		Query query = new Query();
+		query.setSelect(new Select(select));
+		GroupSymbol gs = new GroupSymbol(matTableName);
+		gs.setGlobalTable(isGlobal);
+		gs.setMetadataID(matMetadataId);
+		query.setFrom(new From(Arrays.asList(new UnaryFromClause(gs))));
+		return query;
+	}
+
+	private Object getGlobalTempTableMetadataId(GroupSymbol table, String matTableName)
+			throws QueryMetadataException, TeiidComponentException {
+		TempMetadataStore store = context.getGlobalTableStore().getMetadataStore();
+		TempMetadataID id = store.getTempGroupID(matTableName);
+		//define the table preserving the primary key
+		if (id == null) {
+			synchronized (store) {
+				id = store.getTempGroupID(matTableName);
+				if (id == null) {
+					//this is really just temporary and will be replaced by the real table
+					id = store.addTempGroup(matTableName, ResolverUtil.resolveElementsInGroup(table, metadata), false, true);
+					id.setQueryNode(metadata.getVirtualPlan(table.getMetadataID()));
+					id.setCardinality(metadata.getCardinality(table.getMetadataID()));
+					
+					Object pk = metadata.getPrimaryKey(table.getMetadataID());
+					//primary key
+					if (pk != null) {
+						List cols = metadata.getElementIDsInKey(pk);
+						ArrayList<TempMetadataID> primaryKey = new ArrayList<TempMetadataID>(cols.size());
+						for (Object coldId : cols) {
+							int pos = metadata.getPosition(coldId) - 1;
+							primaryKey.add(id.getElements().get(pos));
+						}
+						id.setPrimaryKey(primaryKey);
+					}
+					//version column?
+					
+					//add timestamp?
+				}
+			}
+		}
+		return id;
+	}
 
 	private Command getCommand(GroupSymbol virtualGroup, QueryNode qnode,
 			String cacheString, QueryMetadataInterface qmi) throws TeiidComponentException,

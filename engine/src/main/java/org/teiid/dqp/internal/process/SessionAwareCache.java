@@ -36,6 +36,7 @@ import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.parser.ParseInfo;
 import org.teiid.vdb.runtime.VDBKey;
 
@@ -115,12 +116,12 @@ public class SessionAwareCache<T> {
 	/**
 	 * Create PreparedPlan for the given clientConn and SQl query
 	 */
-	public void put(CacheID id, boolean sessionSpecific, boolean userSpecific, T t){
+	public void put(CacheID id, int determinismLevel, T t){
 		if (!id.cachable) {
 			return;
 		}
 		
-		if (sessionSpecific) {
+		if (determinismLevel >= FunctionMethod.SESSION_DETERMINISTIC) {
 			id.setSessionId(id.originalSessionId);
 			this.localCache.put(id, t);
 		} 
@@ -130,7 +131,7 @@ public class SessionAwareCache<T> {
 			
 			id.setSessionId(null);
 			
-			if (userSpecific) {
+			if (determinismLevel == FunctionMethod.USER_DETERMINISTIC) {
 				id.setUserName(id.originalUserName);
 			}
 			else {

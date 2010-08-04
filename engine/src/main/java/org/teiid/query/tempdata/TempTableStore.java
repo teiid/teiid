@@ -86,6 +86,10 @@ public class TempTableStore {
 			return updateTime;
 		}
 		
+		public MatState getState() {
+			return state;
+		}
+		
 	}
 	
 	private ConcurrentHashMap<String, MatTableInfo> matTables = new ConcurrentHashMap<String, MatTableInfo>();

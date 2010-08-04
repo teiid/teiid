@@ -219,10 +219,6 @@ public class TestBatchedUpdateNode {
             actualCommands.add(command);
             return new FakeTupleSource(numExecutedCommands);
         }
-        @Override
-        public void clearCodeTables() {
-        	
-        }
     }
     private static final class FakeTupleSource implements TupleSource {
         private int currentTuple = 0;

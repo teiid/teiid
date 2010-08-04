@@ -29,7 +29,7 @@ import java.util.Set;
 
 public interface Admin {
 
-	public enum Cache {CODE_TABLE_CACHE,PREPARED_PLAN_CACHE, QUERY_SERVICE_RESULT_SET_CACHE};
+	public enum Cache {PREPARED_PLAN_CACHE, QUERY_SERVICE_RESULT_SET_CACHE};
     
     /**
      * Assign a {@link Translator} and Data source to a {@link VDB}'s Model

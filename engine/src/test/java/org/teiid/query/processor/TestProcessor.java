@@ -32,11 +32,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -54,6 +52,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.XMLType;
+import org.teiid.dqp.internal.process.SimpleQueryProcessorFactory;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionTree;
@@ -61,6 +60,8 @@ import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.function.UDFSource;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.FakeFunctionMetadataSource;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.TestOptimizer;
@@ -149,7 +150,11 @@ public class TestProcessor {
     static ProcessorPlan helpGetPlan(Command command, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, CommandContext context) throws TeiidException {
 		if(DEBUG) System.out.println("\n####################################\n" + command); //$NON-NLS-1$
 		AnalysisRecord analysisRecord = new AnalysisRecord(false, DEBUG);
-		try {
+		if (!(metadata instanceof TempMetadataAdapter)) {
+			metadata = new TempMetadataAdapter(metadata, new TempMetadataStore());
+		}
+		context.setMetadata(metadata);
+        try {
 			QueryResolver.resolveCommand(command, metadata);
         
 			ValidatorReport repo  = Validator.validate(command, metadata);
@@ -158,7 +163,7 @@ public class TestProcessor {
 	        if (failures.size() > 0){
 	            fail("Exception during validation (" + repo); //$NON-NLS-1$
 	        }        
-			command = QueryRewriter.rewrite(command, metadata, createCommandContext());
+			command = QueryRewriter.rewrite(command, metadata, context);
 	        ProcessorPlan process = QueryOptimizer.optimizePlan(command, metadata, null, capFinder, analysisRecord, context);
 			if(DEBUG) System.out.println("\n" + process); //$NON-NLS-1$
 	        //per defect 10022, clone this plan before processing, just to make sure
@@ -231,8 +236,14 @@ public class TestProcessor {
         if (context.getTempTableStore() == null) {
         	context.setTempTableStore(new TempTableStore(context.getConnectionID()));
         }
+        if (context.getGlobalTableStore() == null) {
+        	context.setGlobalTableStore(new TempTableStore("SYSTEM"));
+        }
         if (!(dataManager instanceof TempTableDataManager)) {
         	dataManager = new TempTableDataManager(dataManager, bufferMgr);
+        }        
+        if (context.getQueryProcessorFactory() == null) {
+        	context.setQueryProcessorFactory(new SimpleQueryProcessorFactory(bufferMgr, dataManager, new DefaultCapabilitiesFinder(), null, context.getMetadata()));
         }
         TupleBuffer id = null;
         try {
@@ -335,74 +346,11 @@ public class TestProcessor {
     }                    
     
     private void sampleData2(FakeDataManager dataMgr) {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-    
-        try { 
-            // Group pm1.g1
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("pm1.g1"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = FakeDataStore.createElements(elementIDs);
-        
-            dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList(new Object[] { "a",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "b",   new Integer(1),     Boolean.TRUE,   null }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "c",   new Integer(2),     Boolean.FALSE,  new Double(0.0) }), //$NON-NLS-1$
-                    } );       
-
-            // Group pm1.g2
-            groupID = (FakeMetadataObject) metadata.getGroupID("pm1.g2"); //$NON-NLS-1$
-            elementIDs = metadata.getElementIDsInGroupID(groupID);
-            elementSymbols = FakeDataStore.createElements(elementIDs);
-        
-            dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList(new Object[] { "a",   new Integer(1),     Boolean.TRUE,   new Double(2.0) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "b",   new Integer(0),     Boolean.FALSE,  new Double(0.0) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "b",   new Integer(5),     Boolean.TRUE,   new Double(2.0) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "b",   new Integer(2),     Boolean.FALSE,  null }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "d",   new Integer(2),     Boolean.FALSE,  new Double(1.0) }), //$NON-NLS-1$
-                    } ); 
-                
-            // Group pm2.g1
-            groupID = (FakeMetadataObject) metadata.getGroupID("pm2.g1"); //$NON-NLS-1$
-            elementIDs = metadata.getElementIDsInGroupID(groupID);
-            elementSymbols = FakeDataStore.createElements(elementIDs);
-        
-            dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList(new Object[] { "b",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "d",   new Integer(3),     Boolean.TRUE,   new Double(7.0) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "e",   new Integer(1),     Boolean.TRUE,   null }), //$NON-NLS-1$
-                    } );      
-                                     
-            // Group pm1.table1
-            groupID = (FakeMetadataObject) metadata.getGroupID("pm1.table1"); //$NON-NLS-1$
-            elementIDs = metadata.getElementIDsInGroupID(groupID);
-            elementSymbols = FakeDataStore.createElements(elementIDs);
-        
-            dataMgr.registerTuples(
-                groupID,
-                elementSymbols,
-                
-                new List[] { 
-                    Arrays.asList(new Object[] { "a",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "b",   new Integer(1),     Boolean.TRUE,   null }), //$NON-NLS-1$
-                    Arrays.asList(new Object[] { "c",   new Integer(2),     Boolean.FALSE,  new Double(0.0) }), //$NON-NLS-1$
-                    } );                                     
-                                     
-        } catch(TeiidException e) { 
-        	throw new RuntimeException(e);
-        }
+		try {
+			FakeDataStore.sampleData2(dataMgr);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
     }                  
 
     private void sampleData2a(FakeDataManager dataMgr) {
@@ -6756,24 +6704,19 @@ public class TestProcessor {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Plan query
-        String sql = "SELECT e1 FROM pm1.g2 WHERE LOOKUP('pm1.g1','e1', 'e2', 1) = e1";//$NON-NLS-1$
+        String sql = "SELECT e1 FROM pm1.g2 WHERE LOOKUP('pm1.g1','e1', 'e2', 0) = e1";//$NON-NLS-1$
         QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
         Command command = TestProcessor.helpParse(sql);   
         CommandContext context = createCommandContext();
-        context.setMetadata(metadata);
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder, context);
         
         // Run query
         List[] expected = new List[] {
-            Arrays.asList(new Object[] { "b"}), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a"}), //$NON-NLS-1$
         };
         
         FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        Map valueMap = new HashMap();
-        valueMap.put(1, "b"); //$NON-NLS-1$ //$NON-NLS-2$
-        dataManager.defineCodeTable("pm1.g1", "e2", "e1", valueMap); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        dataManager.setThrowBlocked(true);
+        FakeDataStore.sampleData2(dataManager);
         
         helpProcess(plan, context, dataManager, expected);
     } 

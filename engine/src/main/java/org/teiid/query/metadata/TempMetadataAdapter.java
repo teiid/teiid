@@ -250,7 +250,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         }
         
         if(groupID instanceof TempMetadataID && !(actualMetadata instanceof TempMetadataAdapter)) {
-            return null;
+        	return ((TempMetadataID)groupID).getQueryNode();
         }            
    		return this.actualMetadata.getVirtualPlan(groupID);
 	}

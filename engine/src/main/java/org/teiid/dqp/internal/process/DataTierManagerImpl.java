@@ -26,7 +26,6 @@ import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +36,6 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BlockedException;
-import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
@@ -53,11 +51,9 @@ import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorWork;
-import org.teiid.dqp.internal.process.CodeTableCache.CacheKey;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.BufferService;
-import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
@@ -71,7 +67,6 @@ import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.processor.ProcessorDataManager;
-import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.StoredProcedure;
@@ -112,14 +107,10 @@ public class DataTierManagerImpl implements ProcessorDataManager {
     private BufferService bufferService;
     private ConnectorManagerRepository connectorManagerRepository;
 
-	// Processor state
-    private CodeTableCache codeTableCache;
-    
-    public DataTierManagerImpl(DQPCore requestMgr, ConnectorManagerRepository connectorRepo, BufferService bufferService, int maxCodeTables, int maxCodeRecords, int maxCodeTableRecords) {
+    public DataTierManagerImpl(DQPCore requestMgr, ConnectorManagerRepository connectorRepo, BufferService bufferService) {
 		this.requestMgr = requestMgr;
         this.connectorManagerRepository = connectorRepo;
         this.bufferService = bufferService;
-        this.codeTableCache = new CodeTableCache(maxCodeTables, maxCodeRecords, maxCodeTableRecords);
 	}
     
     private ConnectorManager getCM(String connectorName) {
@@ -353,22 +344,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		return aqr;
 	}
 	
-    /** 
-     * Notify each waiting request that the code table data is now available.
-     * @param requests
-     * @since 4.2
-     */
-    private void notifyWaitingCodeTableRequests(Collection requests) {
-        if (requests != null) {
-            for (Iterator reqIter = requests.iterator(); reqIter.hasNext();) {
-                RequestWorkItem workItem = requestMgr.safeGetWorkItem(reqIter.next());
-                if (workItem != null) {
-                	workItem.moreWork();
-                }
-            }
-        }
-    }        
-    
     public Object lookupCodeValue(
         CommandContext context,
         String codeTableName,
@@ -376,52 +351,9 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         String keyElementName,
         Object keyValue)
         throws BlockedException, TeiidComponentException, TeiidProcessingException {
-
-        switch (this.codeTableCache.cacheExists(codeTableName, returnElementName, keyElementName, context)) {
-        	case CACHE_NOT_EXIST:
-	        	registerCodeTableRequest(context, codeTableName, returnElementName, keyElementName);
-        	case CACHE_EXISTS:
-	        	return this.codeTableCache.lookupValue(codeTableName, returnElementName, keyElementName, keyValue, context);
-	        case CACHE_OVERLOAD:
-	        	throw new TeiidProcessingException("ERR.018.005.0100", DQPPlugin.Util.getString("ERR.018.005.0100", "maxCodeTables")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	        default:
-	            throw BlockedException.INSTANCE;
-        }
+    	throw new UnsupportedOperationException();
     }
 
-    void registerCodeTableRequest(
-        final CommandContext context,
-        final String codeTableName,
-        String returnElementName,
-        String keyElementName)
-        throws TeiidComponentException, TeiidProcessingException {
-
-        String query = Reserved.SELECT + ' ' + keyElementName + " ," + returnElementName + ' ' + Reserved.FROM + ' ' + codeTableName; //$NON-NLS-1$ 
-        
-        final CacheKey codeRequestId = this.codeTableCache.createCacheRequest(codeTableName, returnElementName, keyElementName, context);
-
-        boolean success = false;
-        try {
-        	QueryProcessor processor = context.getQueryProcessorFactory().createQueryProcessor(query, codeTableName.toUpperCase(), context);
-        	processor.setNonBlocking(true); //process lookup as fully blocking
-            while (true) {
-            	TupleBatch batch = processor.nextBatch();
-            	codeTableCache.loadTable(codeRequestId, batch.getTuples());	
-            	if (batch.getTerminationFlag()) {
-            		break;
-            	}
-            }
-        	success = true;
-        } finally {
-        	Collection requests = codeTableCache.markCacheDone(codeRequestId, success);
-        	notifyWaitingCodeTableRequests(requests);
-        }
-    }
-
-    public void clearCodeTables() {
-        this.codeTableCache.clearAll();
-    }
-    
     <T> ResultsFuture<T> addWork(Callable<T> callable, int priority) {
     	return requestMgr.addWork(callable, priority);
     }

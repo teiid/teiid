@@ -46,7 +46,7 @@
             <format>
               <formatName>pdf</formatName>
               <stylesheetResource>classpath:/xslt/org/jboss/pdf.xsl</stylesheetResource>
-              <finalName>caching_guide.pdf</finalName>
+              <finalName>teiid_caching_guide.pdf</finalName>
             </format>
             <!-- <format>
               <formatName>html_single</formatName>

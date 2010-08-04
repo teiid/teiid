@@ -216,6 +216,7 @@ class TempTable {
 				bm.releaseBuffers(reserved);
 				try {
 					if (!success) {
+						undoLog.setFinal(true);
 						TupleSource undoTs = undoLog.createIndexedTupleSource();
 						List<?> tuple = null;
 						while ((tuple = undoTs.nextTuple()) != null) {
@@ -529,6 +530,10 @@ class TempTable {
 		if (tree.insert(tuple, true) == null) {
 			throw new AssertionError("Update failed"); //$NON-NLS-1$
 		}
+	}
+	
+	void setPreferMemory(boolean preferMemory) {
+		this.tree.setPreferMemory(preferMemory);
 	}
 
 }

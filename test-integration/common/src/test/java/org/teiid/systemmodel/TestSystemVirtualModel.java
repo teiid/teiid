@@ -143,12 +143,6 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		checkResult("testReferenceKeyColumns", "select* FROM SYS.ReferenceKeyColumns order by PKTABLE_NAME"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
-	@Test public void testVirtualLookup() {
-		String[] expected = { "expr[string]", "null"}; //$NON-NLS-1$ //$NON-NLS-2$
-		executeAndAssertResults(
-				"select lookup('SYS.KeyColumns', 'RefKeyUID', 'KeyName', 'PK_PARTS')", expected); //$NON-NLS-1$
-		
-	}
 	
 	@Test public void test_UID_OID_are_Equal()  throws Exception {
 		execute("select distinct(UID) FROM SYS.Schemas"); //$NON-NLS-1$

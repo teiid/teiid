@@ -170,7 +170,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		if (columnIndex == -1) {
 			throw new QueryMetadataException(elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 		}
-		Table table = this.store.findGroup(elementName.substring(0, columnIndex));
+		Table table = this.store.findGroup(elementName.substring(0, columnIndex).toLowerCase());
 		String shortElementName = elementName.substring(columnIndex + 1);
 		for (Column column : (List<Column>)getElementIDsInGroupID(table)) {
 			if (column.getName().equalsIgnoreCase(shortElementName)) {

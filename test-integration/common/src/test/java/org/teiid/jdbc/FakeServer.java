@@ -82,6 +82,7 @@ public class FakeServer extends ClientServiceRegistryImpl {
         });
         
         this.dqp.setConnectorManagerRepository(cmr);
+        this.dqp.setCacheFactory(new DefaultCacheFactory());
         this.dqp.start(new DQPConfiguration());
         this.sessionService.setDqp(this.dqp);
         

@@ -176,11 +176,6 @@ public class DQPCore implements DQP {
 	
 	private ThreadReuseExecutor processWorkerPool;
     
-    // System properties for Code Table
-    private int maxCodeTableRecords = DQPConfiguration.DEFAULT_MAX_CODE_TABLE_RECORDS;
-    private int maxCodeTables = DQPConfiguration.DEFAULT_MAX_CODE_TABLES;
-    private int maxCodeRecords = DQPConfiguration.DEFAULT_MAX_CODE_RECORDS;
-    
     private int maxFetchSize = DQPConfiguration.DEFAULT_FETCH_SIZE;
     private int queryThreshold = DQPConfiguration.DEFAULT_QUERY_THRESHOLD;
     
@@ -541,11 +536,6 @@ public class DQPCore implements DQP {
         this.prepPlanCache.clearAll();
     }
 
-    private void clearCodeTableCache(){
-        LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPCore.Clearing_code_table_cache")); //$NON-NLS-1$
-        this.dataTierMgr.clearCodeTables();
-    }
-    
 	private void clearResultSetCache() {
 		//clear cache in server
 		if(rsCache != null){
@@ -556,7 +546,6 @@ public class DQPCore implements DQP {
 	
     public Collection<String> getCacheTypes(){
     	ArrayList<String> caches = new ArrayList<String>();
-    	caches.add(Admin.Cache.CODE_TABLE_CACHE.toString());
     	caches.add(Admin.Cache.PREPARED_PLAN_CACHE.toString());
     	caches.add(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.toString());
     	return caches;
@@ -565,9 +554,6 @@ public class DQPCore implements DQP {
 	public void clearCache(String cacheType) {
 		Admin.Cache cache = Admin.Cache.valueOf(cacheType);
 		switch (cache) {
-		case CODE_TABLE_CACHE:
-			clearCodeTableCache();
-			break;
 		case PREPARED_PLAN_CACHE:
 			clearPlanCache();
 			break;
@@ -636,9 +622,6 @@ public class DQPCore implements DQP {
 	public void start(DQPConfiguration config) {
 		this.processorTimeslice = config.getTimeSliceInMilli();
         this.maxFetchSize = config.getMaxRowsFetchSize();
-        this.maxCodeTableRecords = config.getCodeTablesMaxRowsPerTable();
-        this.maxCodeTables = config.getCodeTablesMaxCount();
-        this.maxCodeRecords = config.getCodeTablesMaxRows();
         this.useEntitlements = config.useEntitlements();
         this.queryThreshold = config.getQueryThresholdInSecs();
         this.maxSourceRows = config.getMaxSourceRows();
@@ -663,10 +646,7 @@ public class DQPCore implements DQP {
         
         dataTierMgr = new TempTableDataManager(new DataTierManagerImpl(this,
                                             this.connectorManagerRepository,
-                                            this.bufferService,
-                                            this.maxCodeTables,
-                                            this.maxCodeRecords,
-                                            this.maxCodeTableRecords), this.bufferManager); 
+                                            this.bufferService), this.bufferManager); 
 	}
 	
 	public void setBufferService(BufferService service) {
