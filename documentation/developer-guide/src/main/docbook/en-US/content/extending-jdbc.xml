@@ -37,7 +37,7 @@
         </tgroup>
       </table>
       
-      <sect1>
+      <section>
         <title>Capabilities Extension</title>
         <para>This extension must override the methods that begin with "supports" that describe translator capabilities.
         For all the available translator capabilities please see <link linkend="translator_capabilities">this</link>.</para>
@@ -47,9 +47,9 @@
         to execute the function and often modifying the SQL Translator to translate the function appropriately for the source.</para>
         <para>Another common example is turning off unsupported SQL capabilities (such as outer joins or subqueries) 
         for less sophisticated JDBC sources. </para>        
-      </sect1>
+      </section>
 
-      <sect1>
+      <section>
         <title>SQL Translation Extension</title>
         <para>The JDBCExcecutionFactory provides several methods to modify the command and the string form of the resulting syntax before it is sent to the 
          JDBC driver, including:</para>
@@ -68,9 +68,9 @@
             <para>Change the way SQL strings are formed for a LanguageObject. - - see the translate, translateXXX, and <link linkend="function_modifiers">FunctionModifiers</link>.translate methods.  Return a list of parts, which can contain strings and LanguageObjects, that will be appended in order to the SQL string.  If the in coming LanguageObject appears in the returned list it will not be translated again.</para>
           </listitem>
       </itemizedlist>
-      </sect1>
+      </section>
       
-      <sect1>
+      <section>
         <title>Results Translation Extension</title>
         <para>The JDBCExecutionFactory provides several methods to modify the java.sql.Statement and java.sql.ResultSet interactions, including:</para>
         <orderedlist>
@@ -82,9 +82,9 @@
           </listitem>
       </orderedlist>       
       
-      </sect1>
+      </section>
     
-      <sect1>
+      <section>
     <title>Adding Function Support</title>
       <para>See <link linkend="udfs">User Defined Functions</link> for adding new functions to Teiid.  This example will show you how to declare support for the function 
       and modify how the function is passed to the data source.</para>
@@ -118,7 +118,7 @@ public class ExtendedJDBCExecutionFactory extends JDBCExecutionFactory {
           support provided by the translator you are extending.</para>
           <para>This may be all that is needed to support a Teiid function if the JDBC data source supports the 
           same syntax as Teiid.  The built-in SQL translation will translate most functions as: “function(arg1, arg2, …)”.</para>       
-    <sect2 id="function_modifiers">
+    <section id="function_modifiers">
       <title>Using FunctionModifiers</title>
       <para>In some cases you may need to translate the function differently or even insert 
       additional function calls above or below the function being translated.  The JDBC translator provides 
@@ -186,10 +186,10 @@ public class ExtendedJDBCExecutionFactory extends JDBCExecutionFactory {
       <para>Support for the two functions being registered (“abs” and “concat”) must be declared 
       in the capabilities as well.  Functions that do not have modifiers registered will be translated as usual.  
       </para>
-    </sect2>
-  </sect1>
+    </section>
+  </section>
     
-  <sect1>
+  <section>
     <title>Installing Extensions</title>
     <para>Once you have developed an extension to the JDBC translator, you must install it into the Teiid Server. 
     The process of <link linkend="translator_package">packaging</link> or <link linkend="translator_deploy">deploying</link> the 
@@ -197,5 +197,5 @@ public class ExtendedJDBCExecutionFactory extends JDBCExecutionFactory {
     driver, there is no need to develop a resource adapter for this source as JBoss AS provides a wrapper JCA connector (DataSource)
     for any JDBC driver. 
      </para>
-     </sect1>
+     </section>
 </chapter>

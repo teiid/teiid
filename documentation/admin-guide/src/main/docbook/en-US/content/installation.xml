@@ -12,7 +12,7 @@
    </note>
    </para>
 
-   <sect1>
+   <section>
      <title>Installation</title>
      <orderedlist numeration="arabic">
      	<para>Steps to install Teiid</para>
@@ -45,8 +45,8 @@
         </para> 
         </listitem>        
      </orderedlist>
-   </sect1>
-   <sect1>
+   </section>
+   <section>
      <title>Directory Structure Explained</title>
      <example>
      <title>Directory Structure</title>
@@ -69,18 +69,18 @@
 	/lib
 	/teiid-examples]]></programlisting>     
 	</example>
-    <sect2>
+    <section>
         <title>/deploy/teiid/teiid-jboss-beans.xml</title>
         <para>Master configuration file for Teiid system. This file contains its own documentation, 
         so refer to the file for all the available properties to configure.</para>
-    </sect2>
+    </section>
     
-    <sect2>
+    <section>
         <title>/deploy/teiid/connectors</title>
         <para>This directory contains all the translator JAR and connector RAR files that are supplied as part of the Teiid installation.</para>
-    </sect2>
+    </section>
     
-    <sect2>
+    <section>
         <title>/conf/props</title>
         <itemizedlist>
         	<para>Relevant Files</para>
@@ -93,46 +93,46 @@
         </itemizedlist>
         <para>These files define the allowed users and their defined roles in Teiid using the default security domain. Edit these 
         files to add uses. If you want to use a different security domain look for details in main configuration file.</para>
-    </sect2>  
+    </section>  
     
-    <sect2>
+    <section>
         <title>/conf/jboss-teiid-log4j.xml</title>
         <para>This file contains the Teiid specific logging contexts to be included in the "jboss-log4j.xml" file. 
          If you need to turn ON or OFF specific logging in Teiid, 
          then copy the contents of this file into "jboss-log4j.xml" in the 
          installation directory.  See the Developers Guide for more on customizing logging.</para>
-    </sect2>
+    </section>
      
-    <sect2>
+    <section>
         <title>admin-console.war</title>
         <para>This file has the required files for Teiid JOPR plugin. To see the 
         Teiid's "admin-console", go to http://&lt;host&gt;:&lt;port&gt;/admin-console</para>
-    </sect2>
+    </section>
 
-	<sect2>
+	<section>
     	<title>/deployers/teiid.deployer</title>
         <para>This directory contains Teiid runtime specific configuration files and its libraries. 
         These configuration files define VDB deployers, connector binding deployers etc. 
         Typically user never need to edit any files in this directory.</para>
-    </sect2>
+    </section>
     
-    <sect2>
+    <section>
         <title>lib</title>
         <para>This directory contains Teiid client libraries. It has the Teiid JDBC driver jar, "teiid-&versionNumber;-client.jar", 
         and also contains "teiid-hibernate-dialect-&versionNumber;.jar" that contains Teiid's Hibernate dialect.</para>
-    </sect2>
+    </section>
     
-    <sect2>
+    <section>
         <title>teiid-examples</title>
         <para>This directory contains some examples of how Teiid can be used. Contains artifacts 
         need by the Getting Started Guide. Also contains some sample XML files to define the connectors.</para>
-    </sect2>
+    </section>
 
-    <sect2>
+    <section>
         <title>teiid-docs</title>
         <para>This directory contains the PDF documents related Teiid and Teiid development. </para>
-    </sect2>
+    </section>
          
-   </sect1>   
+   </section>   
    
 </chapter>

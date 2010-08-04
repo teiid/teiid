@@ -10,7 +10,7 @@
     by the Teiid Server as XA transactions.  
     See the <ulink url="http://java.sun.com/javaee/technologies/jta/index.jsp">JTA specification</ulink> for more on XA Transactions.</para>
     
-    <sect1>
+    <section>
         <title>Local Transactions</title>
         <para>The Connection class uses the "autoCommit" flag to explicitly control local transactions.  By default, autoCommit 
         is set to "true", which indicates request level or implicit transaction control.  example of 
@@ -49,7 +49,7 @@ try {
         <listitem> <para>Connection.rollback()</para> </listitem>
         <listitem> <para>A transaction will be rolled back automatically if it times out.</para> </listitem>
        </orderedlist>
-       <sect2>
+       <section>
             <title>Turning Off Local Transactions</title>
             <para>In some cases, tools or frameworks above Teiid will call setAutoCommit(false), commit() and rollback() 
             even when all access is read-only and no transactions are necessary.  
@@ -66,10 +66,10 @@ try {
             results (if reading data) or inconsistent data in data stores (if writing data).  
             For safety, this mode should be used only if you are certain that 
             the calling application does not need local transactions.</para></warning>
-       </sect2>
-    </sect1>
+       </section>
+    </section>
     
-    <sect1>
+    <section>
         <title>Request Level Transactions</title>
         <para>Request level transactions are used when the request is not in the 
         scope of a global or local transaction, which implies "autoCommit" is "true".  In a request 
@@ -108,15 +108,15 @@ try {
         per-query basis using the execution properties.  For more information on execution 
         properties, see the section <link linkend="execution_properties">“Execution Properties”</link></para>
         
-        <sect2>
+        <section>
         <title>Multiple Insert Batches</title>
         <para>When issuing an INSERT with a query expression (or the deprecated SELECT INTO), multiple insert batches handled by separate source INSERTS may be processed by the Teiid server.
          Care should be taken to ensure that targeted sources support XA or that compensating actions are taken in the event of a failure.</para>    
-        </sect2>
+        </section>
         
-    </sect1>
+    </section>
     
-    <sect1>
+    <section>
         <title>Using Global Transactions</title>
         <para>Global or client XA transactions allow the Teiid JDBC API to participate in transactions that 
         are beyond the scope of a single client resource.  For this use the Teiid DataSource Class for establishing connections.</para>
@@ -163,18 +163,18 @@ finally {
         may arise from the same physical source accessed through different cluster members.  
         If the client transaction manager uses a different branch identifier for each connection, issues may arise 
         with sources that lock or isolate changes based upon branch identifiers.</para>      
-    </sect1>
+    </section>
     
-    <sect1>
+    <section>
         <title>Restrictions</title>
-        <sect2>
+        <section>
             <title>Application Restrictions</title>
             <para>The use of global, local, and request level transactions are all mutually exclusive.  
             Request level transactions only apply when not in a global or local transaction.  Any attempt to 
             mix global and local transactions concurrently will result in an exception.</para>
-        </sect2>
+        </section>
         
-        <sect2>
+        <section>
             <title>Enterprise Information System Support</title>
             <para>The underlying resource adaptors that represent the EIS system and the EIS system itself must support XA transactions
              if they want to participate in distributed XA transaction thru Teiid. If
@@ -185,6 +185,6 @@ finally {
             transaction is automatically determined based on the resource adaptors XA capability. It is user's repsonsiblity to make sure
             that they configure a XA resource when they require them to participate in distributed transaction.
             </para>
-        </sect2>
-    </sect1>
+        </section>
+    </section>
 </chapter>

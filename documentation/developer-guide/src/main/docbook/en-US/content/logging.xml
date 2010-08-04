@@ -5,7 +5,7 @@
 ]>
 <chapter id="logging">
 	<title>Logging</title>
-	<sect1 id="custom_logging">
+	<section id="custom_logging">
 		<title>Customized Logging</title>
 		<para>
 			The Teiid system provides a wealth of information via logging. To
@@ -29,7 +29,7 @@
 			Teiid is installed in.
     	</para>
         
-        <sect2>
+        <section>
             <title>Command Logging API</title>
             <para>
                 If you want to build a custom appender for command logging that will have access to 
@@ -37,15 +37,15 @@
                 <code>org.teiid.logging.CommandLogMessage</code> defined in the <code>teiid-api-&versionNumber;.jar</code> 
                 use these class in your development. The CommmdLogMessage include information about vdb, session, command-sql etc.
             </para>
-        </sect2>
+        </section>
         
-        <sect2 id="audit_logging">
+        <section id="audit_logging">
             <title>Audit Logging API</title>
             <para>If you want to build a custom appender for command logging that will have access to 
                 log4j "LoggingEvents" to the "AUDIT_LOG" context, it will have a message that is an instance of
                 <code>org.teiid.logging.AuditMessage</code> defined in the <code>teiid-api-&versionNumber;.jar</code> 
                 use this class in your development. AuditMessage include  information about user, the action, and the
                 target(s) of the action.</para>                            
-        </sect2>
-	</sect1>
+        </section>
+	</section>
 </chapter>

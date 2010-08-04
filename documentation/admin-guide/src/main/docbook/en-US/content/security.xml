@@ -4,7 +4,7 @@
 	<title>Teiid Security</title>
 	<para>The Teiid system provides a range of built-in and extensible security features to enable the
 		secure access of data.</para>
-	<sect1>
+	<section>
 		<title>Authentication</title>
 		<para>JDBC clients may use simple passwords to authenticate a user.</para>
 		<para>Typically a user name is required, however user names may be considered optional if the
@@ -18,15 +18,15 @@
 	        The same is true for making connections to the Admin Console application. 
 	        We DO NOT recommend leaving the default security profile as defined when you 
 	        are exposing sensitive data.</para></note>
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>Authorization</title>
 		<para>Authorization covers both administrative activities and data
 			roles.  A data role is a collection of permissions (also referred to as entitlements) and a
 			collection of entitled principals or groups. With the deployment of a VDB
 			the deployer can choose which principals and groups have which data roles.</para>
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>Encryption</title>
 		<para>At a transport level Teiid provides built-in support for JDBC
 			over SSL or just sensitive message encryption when SSL is not in use.
@@ -38,8 +38,8 @@
 				url="http://community.jboss.org/wiki/maskingpasswordsinjbossasxmlconfiguration">encrypting passwords</ulink>
 			for instructions on encryption facilities provided by the container.
 		</para>
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>LoginModules</title>
 		<para>
 			LoginModules are an essential part of the JAAS security
@@ -74,7 +74,7 @@
             shared between the "admin-console" application.</para>
     </note>    
 			
-		<sect2>
+		<section>
 			<title>Built-in LoginModules</title>
 			<para>JBossAS provides several LoginModules for common authentication needs, such as authenticating from text files or LDAP.</para>
 			<para>The UsersRolesLoginModule, which utilizes simple text files
@@ -85,11 +85,11 @@
 	        <para>See <ulink url="http://community.jboss.org/docs/DOC-11253">LDAP LoginModule configuration</ulink> for utilizing LDAP based authentication.
             If you want use a your own Custom Login module, check out the Developer's Guide for instructions.
 	        </para>
-		</sect2>
+		</section>
 		
-	</sect1>
+	</section>
 	
-	<sect1 id="connfigure_server">
+	<section id="connfigure_server">
         <title>Configuring SSL</title>
         <para>The Teiid's configuration file 
         <code>&lt;jboss-install&gt;/server/&lt;profile&gt;/deploy/teiid/teiid-jboss-beans.xml</code>, 
@@ -133,5 +133,5 @@
             <listitem><para>truststorePassword - password for the truststore. </para></listitem>
            </orderedlist>  
            
-    </sect1>
+    </section>
 </chapter>

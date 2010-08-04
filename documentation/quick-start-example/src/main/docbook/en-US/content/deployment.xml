@@ -8,7 +8,7 @@
   <para>This example deploys Teiid within a JBoss AS. The sample deployment is shown below.
   You can find more details about deploying to application servers on the Teiid web-site</para>
   <para />
-  <sect1 id="teiid-runtime">
+  <section id="teiid-runtime">
     <title>JBoss AS Application Deployment</title>
     
     <orderedlist>
@@ -38,5 +38,5 @@ ${teiid-examples}/portfolio/marketdata-file-ds.xml]]> </programlisting>
         </para>
       </listitem>
     </orderedlist>
-  </sect1>
+  </section>
 </chapter>

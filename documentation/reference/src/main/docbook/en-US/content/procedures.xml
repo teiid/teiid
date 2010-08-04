@@ -2,7 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="procedures">
   <title>Procedures</title>
-  <sect1 id="procedure_language">
+  <section id="procedure_language">
     <title>Procedure Language</title>
     <para>
       Teiid supports a procedural language for defining
@@ -14,7 +14,7 @@
       <link linkend="update_procedures">update procedures</link>
       .
     </para>
-    <sect2>
+    <section>
       <title>Command Statement</title>
       <para>
         A command statement executes a
@@ -27,8 +27,8 @@
         <programlisting>SELECT * FROM MySchema.MyTable WHERE ColA &gt; 100;
 INSERT INTO MySchema.MyTable (ColA,ColB) VALUES (50, 'hi');</programlisting>
         </example>
-    </sect2>
-    <sect2 id="dynamic_sql">
+    </section>
+    <section id="dynamic_sql">
       <title>Dynamic SQL Command</title>
       <para>Dynamic SQL allows for the execution of an arbitrary SQL command in a virtual procedure. Dynamic SQL is useful in situations where the exact command form is not known prior to execution.
       </para>
@@ -147,8 +147,8 @@ EXECUTE STRING &lt;expression&gt; AS x integer INTO #temp;</programlisting>
           </para>
         </listitem>
       </itemizedlist>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>Declaration Statement</title>
       <para>A declaration statement declares a variable and its type. After you declare a variable, you can use it in that block within the procedure and any sub-blocks. A variable is initialized to null by default, but can also be assigned the value of an expression as part of the declaration statement. 
       </para>
@@ -179,8 +179,8 @@ EXECUTE STRING &lt;expression&gt; AS x integer INTO #temp;</programlisting>
           </para>
         </listitem>
       </itemizedlist>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>Assignment Statement</title>
       <para>An assignment statement assigns a value to a variable by either evaluating an expression or executing a SELECT command that returns a column value from a single row.</para>
       <para>
@@ -198,8 +198,8 @@ EXECUTE STRING &lt;expression&gt; AS x integer INTO #temp;</programlisting>
           </para>
         </listitem>
       </itemizedlist>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>If Statement</title>
       <para>An IF statement evaluates a condition and executes either
         one of two blocks depending on the result. You can nest IF
@@ -221,8 +221,8 @@ END</programlisting>
           NULL values should be considered in the criteria of an IF statement.  IS NULL criteria can be used to detect the presense of a NULL value.  
         </para>
       </note>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>Loop Statement</title>
       <para>A LOOP statement is an iterative control construct that is used to cursor through a result set.</para>
       <para>
@@ -232,8 +232,8 @@ BEGIN
   ...
 END</synopsis>
       </para>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>While Statement</title>
       <para>A WHILE statement is an iterative control construct that is used to execute a set of statements repeatedly whenever a specified condition is met.</para>
       <para>
@@ -243,25 +243,25 @@ BEGIN
   ...
 END</synopsis>
       </para>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>Continue Statement</title>
       <para>A CONTINUE statement is used inside a LOOP or WHILE construct to continue with the next loop by skipping over the rest of the statements in the loop. It must be used inside a LOOP or WHILE statement.</para>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>Break Statement</title>
       <para>A BREAK statement is used inside a LOOP or WHILE construct to break from the loop. It must be used inside a LOOP or WHILE statement.</para>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>Error Statement</title>
       <para>An ERROR statement declares that the procedure has entered an error state and should abort. This statement will also roll back the current transaction, if one exists. Any valid expression can be specified after the ERROR keyword.</para>
       <example>
         <title>Example Error Statement</title>
         <programlisting>ERROR 'Invalid input value: ' || nvl(Acct.GetBalance.AcctID, 'null');</programlisting>
       </example>
-    </sect2>
-  </sect1>
-  <sect1 id="virtual_procedures">
+    </section>
+  </section>
+  <section id="virtual_procedures">
     <title>Virtual Procedures</title>
     <para>Virtual procedures are defined using the Teiid
       procedural language. A virtual procedure has zero or more input
@@ -269,7 +269,7 @@ END</synopsis>
       support the ability to execute queries and other SQL commands,
       define temporary tables, add data to temporary tables, walk
       through result sets, use loops, and use conditional logic.</para>
-    <sect2>
+    <section>
       <title>Virtual Procedure Definition</title>
       <para>
         Usage:
@@ -285,8 +285,8 @@ END</synopsis>
       <para>The last command statement executed in the procedure will be
         return as the result. The output of that statement must match the
         expected result set and parameters of the procedure.</para>      
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>Procedure Input Parameters</title>
       <para>Virtual procedures can take zero or more input parameters. Each input has the following information that is used during runtime processing: </para>
       <itemizedlist>
@@ -313,8 +313,8 @@ BEGIN
   SELECT Balance FROM MySchema.Accts WHERE MySchema.Accts.AccountID = MySchema.GetBalance.AcctID; 
 END</programlisting>
       </example>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>Example Virtual Procedures</title>
       <para>This example is a LOOP that walks through a cursored table and uses CONTINUE and BREAK.</para>
       <example>
@@ -363,8 +363,8 @@ BEGIN
 END 
         </programlisting>
       </example>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>Executing Virtual Procedures</title>
       <para>You execute procedures using the SQL <link linkend="execute_command">EXECUTE</link> command. If
         the procedure has defined inputs, you specify those in a
@@ -397,9 +397,9 @@ END
           </para>
         </listitem>
       </itemizedlist>  
-    </sect2>
-  </sect1>  
-  <sect1 id="update_procedures">
+    </section>
+  </section>  
+  <section id="update_procedures">
     <title>Update Procedures</title>
     <para>
       Views are abstractions above physical sources. They typically
@@ -418,7 +418,7 @@ END
       commands, define temporary tables, add data to temporary tables, walk
       through result sets, use loops, and use conditional logic.
     </para>
-    <sect2>
+    <section>
       <title>Update Procedure Definition</title>
       <para>
         Usage:
@@ -431,11 +431,11 @@ END</synopsis>
         the procedure. The BEGIN and END keywords are used to denote block
         boundaries. Within the body of the procedure, any valid <link linkend="procedure_language">statement</link> may be used.
       </para>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>Special Variables</title>
       <para>You can use a number of special variables when defining your update procedure.</para>
-      <sect3 id="input_variables">
+      <section id="input_variables">
         <title>INPUT Variables</title>
         <para>Every attribute in the view whose UPDATE and INSERT transformations you are defining has an equivalent variable named INPUTS.&lt;column_name&gt;</para>
         <para>When an INSERT or an UPDATE command is executed against the view, these variables are initialized to the values in the INSERT VALUES clause or the UPDATE SET clause respectively.</para>
@@ -443,8 +443,8 @@ END</synopsis>
       	<warning>
       		<para>In prior release of Teiid INPUT was also accepted as the quailifer for an input variable.  As of Teidd 7, INPUT is a reserved word, so INPUTS is the preferred qualifier.</para>
       	</warning>
-      </sect3>
-      <sect3 id="changing_variables">
+      </section>
+      <section id="changing_variables">
         <title>CHANGING Variables</title>
         <para>Similar to INPUT Variables, every attribute in the view whose UPDATE and INSERT transformations you are defining has an equivalent variable named CHANGING.&lt;column_name&gt;</para>
         <para>When an INSERT or an UPDATE command is executed against the view, these variables are initialized to <literal>true</literal> or <literal>false</literal> depending on whether the INPUT variable was set by the command.</para>
@@ -469,8 +469,8 @@ END</synopsis>
             </tbody>
           </tgroup>
         </informaltable>
-      </sect3>
-      <sect3 id="rowsupdated_variable">
+      </section>
+      <section id="rowsupdated_variable">
         <title>ROWS_UPDATED Variable</title>
         <para> Teiid returns the value of the VARIABLES.ROWS_UPDATED variable as a response to an update command executed against
           the view. Your procedure must set the value that returns
@@ -479,15 +479,15 @@ END</synopsis>
           example, if an UPDATE command is issued that affects 5 records, the
           ROWS_UPDATED should be set appropriately so that the user will
           receive '5' for the count of records affected.</para>
-      </sect3>
-    </sect2>  
-    <sect2>
+      </section>
+    </section>  
+    <section>
       <title>Update Procedure Command Criteria</title>
       <para> You can use a number of special SQL clauses when defining
         UPDATE or DELETE procedures. These make it easier to do variable
         substitutions in WHERE clauses or to check on the change state of
         variables without using a lot of conditional logic.</para>
-        <sect3>
+        <section>
           <title>HAS CRITERIA</title>
           <para>You can use the HAS CRITERIA clause to check whether the user’s command has a particular kind of criteria on a particular set of attributes. This clause evaluates to either true or false. You can use it anywhere you can use a criteria within a procedure.</para>
           <para>
@@ -541,8 +541,8 @@ END</synopsis>
           <para>The HAS CRITERIA predicate is most commonly used in
             an IF clause, to determine if the user issued a particular form of
             command and to respond appropriately.</para>
-        </sect3>
-        <sect3>
+        </section>
+        <section>
           <title>TRANSLATE CRITERIA</title>
           <para>You can use the TRANSLATE CRITERIA clause to convert the criteria from the user application’s SQL command into the form required to interact with the target source or view tables. The TRANSLATE CRITERIA statement uses the SELECT transformation to infer the column mapping. This clause evaluates to a translated criteria that is evaluated in the context of a command.</para>
           <para>
@@ -604,9 +604,9 @@ END</synopsis>
           gets mapped to expression in SELECT clause at same
           position). 
           </para>
-        </sect3>      
-    </sect2>
-    <sect2>
+        </section>      
+    </section>
+    <section>
       <title>Update Procedure Processing</title>
       <orderedlist>
         <listitem>
@@ -634,6 +634,6 @@ END</synopsis>
           </para>
         </listitem>
       </orderedlist>
-    </sect2>  
-  </sect1>
+    </section>  
+  </section>
 </chapter>

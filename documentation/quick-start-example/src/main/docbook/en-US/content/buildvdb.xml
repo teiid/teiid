@@ -9,7 +9,7 @@
   you must use Designer based approach to building the VDB. A sample Designer based VDB is 
   available in the "teiid-examples/portfolio/PortfolioModel" directory.</para>
   
-  <sect1 id="dynamic_vdb">
+  <section id="dynamic_vdb">
       <title>Building Dynamic VDB</title>
       <para>This XML file is defines a set of sources that need to treated as single source by the client application.
       Dynamic VDB does not yet allow for the creation of view layers. Below XML file defines "dynamicvdb-portfolio" example
@@ -83,5 +83,5 @@
         files for the data sources (Connection Factories) too.</para></listitem>
     </orderedlist>
     
-  </sect1>
+  </section>
 </chapter>

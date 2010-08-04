@@ -6,7 +6,7 @@
 		then Teiid provides a means to define custom scalar functions or
 		User Defined Functions(UDF). The following steps need to be taken in
 		creating a UDF.</para>
-	<sect1 id="define_udf">
+	<section id="define_udf">
 		<title>UDF Definition</title>
 		<para>The FunctionDefinition.xmi file provides metadata to the
 			query engine on User Defined Functions. See the Designer Documentation for more on creating a Function Definition Model.</para>
@@ -82,8 +82,8 @@
 		    <para>Even pushdown required functions need to be added as a UDF to allow  
     Teiid to properly parse and resolve the function. Pushdown scalar functions differ from normal user-defined functions in that no code is provided for evaluation in the engine. 
      An exception will be raised if a pushdown required function cannot be evaluated by the appropriate source.</para>
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>Source Supported UDF</title>
 		<para>While Teiid provides an extensive scalar function
 			library, it contains only those functions that can be evaluated
@@ -139,8 +139,8 @@
 					ExecutionFactory. See <link linkend="translator_package">packaging</link> and <link linkend="translator_deploy">deployment</link> instructions for using the jar.</para>
 			</listitem>
 		</itemizedlist>
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>Non-pushdown Support for User-Defined Functions</title>
 		<para>Non-pushdown support requires a Java function
 			that matches the metadata supplied in the FunctionDefinitions.xmi
@@ -148,7 +148,7 @@
 			logic. This Java method should accept the necessary arguments, which
 			the Teiid System will pass to it at runtime, and function should
 			return the calculated or altered value.</para>
-		<sect2>
+		<section>
 			<title>Java Code</title>
 			<itemizedlist>
 				<para>Code Requirements</para>
@@ -199,8 +199,8 @@ public class TempConv {
     }
 }]]></programlisting>
 			</example>
-		</sect2>
-		<sect2>
+		</section>
+		<section>
 			<title>Post Code Activities</title>
 			<orderedlist>
 				<listitem>
@@ -213,13 +213,13 @@ public class TempConv {
 						directory depending upon your preference.</para>
 				</listitem>
 			</orderedlist>
-		</sect2>
-	</sect1>
-	<sect1>
+		</section>
+	</section>
+	<section>
 		<title>Installing user-defined functions</title>
 		<para>
 			Once a user-defined function model (FunctionDefinitions.xmi) has been
 			created in in the Designer Tool, it can be added to the VDB for use
 			by Teiid.</para>
-	</sect1>
+	</section>
 </chapter>

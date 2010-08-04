@@ -2,7 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="architecture">
   <title>Architecture</title>
-  <sect1>
+  <section>
     <title>Terminology</title>
     <itemizedlist>
       <listitem>
@@ -43,10 +43,10 @@
           manages global, local, and request scoped transactions.  See also the documentation on <link linkend="transaction_support">transaction support</link>.</para>
       </listitem>
     </itemizedlist>
-  </sect1>
-  <sect1>
+  </section>
+  <section>
     <title>Data Management</title>
-    <sect2>
+    <section>
       <title>Cursoring and Batching</title>
       <para> Teiid cursors all results, regardless of whether they
         are from one source or many sources, and regardless of what type
@@ -63,8 +63,8 @@
         returned to synchronous clients. Subsequent batches are returned
         based on client demand for the data. Pre-fetching is utilized at
         both the client and connector levels.</para>
-    </sect2>
-    <sect2 id="buffer_management">
+    </section>
+    <section id="buffer_management">
       <title>Buffer Management</title>
       <para> The buffer manager manages memory for all result sets used
         in the query engine. That includes result sets read from a
@@ -74,14 +74,14 @@
       <para>When retrieving batches from the buffer manager, the
         size of a batch in bytes is estimated and then allocated against
         the max limit.</para>
-      <sect3>
+      <section>
         <title>Memory Management</title>
         <para>The buffer manager has two storage managers - a memory
           manager and a disk manager. The buffer manager maintains the
           state of all the batches, and determines when batches must be
           moved from memory to disk.</para>
-      </sect3>
-      <sect3>
+      </section>
+      <section>
         <title>Disk Management</title>
         <para>Each tuple source has a dedicated file (named by the
           ID) on disk. This file will be created only if at least one
@@ -96,9 +96,9 @@
           In cases with heavy buffering, this can cause wait times while
           waiting for a file handle to become available (the default max
           open files is 64).</para>
-      </sect3>
-    </sect2>
-    <sect2>
+      </section>
+    </section>
+    <section>
       <title>Cleanup</title>
       <para>When a tuple source is no longer needed, it is removed
         from the buffer manager. The buffer manager will remove it from
@@ -116,11 +116,11 @@
         to delete any files in the buffer directory as they are not used
         across query engine restarts and must be due to a system crash
         where buffer files were not cleaned up.</para>
-    </sect2>
-  </sect1>
-  <sect1>
+    </section>
+  </section>
+  <section>
     <title>Query Termination</title>
-    <sect2>
+    <section>
       <title>Canceling Queries</title>
       <para>When a query is canceled, processing will be stopped in
         the query engine and in all connectors involved in the query.
@@ -129,8 +129,8 @@
         implementation. For example, JDBC connectors will asynchronously
         call cancel on the underlying JDBC driver, which may or may not
         actually support this method.</para>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>Timeouts</title>
       <para>Timeouts in Teiid are managed on the client-side,
         in the JDBC API (which underlies both SOAP and ODBC access).
@@ -140,11 +140,11 @@
         server for the request and no results are returned to the
         client. The cancel command is issued by the JDBC API without the
         client’s intervention.</para>
-    </sect2>
-  </sect1>
-  <sect1>
+    </section>
+  </section>
+  <section>
     <title>Processing</title>
-    <sect2>
+    <section>
       <title>Join Algorithms</title>
       <para>Nested loop does the most obvious processing – for
         every row in the outer source, it compares with every row in the
@@ -161,8 +161,8 @@
         decision to implement a dependent join is considered after the
         join algorithm is chosen, and does not currently influence the
         algorithm selection.</para>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>Sort Based Algorithms</title>
       <para>Sorting is used as the basis of the Sort (ORDER BY),
         Grouping (GROUP BY), and DupRemoval (SELECT DISTINCT)
@@ -184,6 +184,6 @@
         streams are dropped.  In this way, each pass reduces the number
         of sorted streams.  When only one stream remains, it is the
         final output.</para>
-    </sect2>
-  </sect1>
+    </section>
+  </section>
 </chapter>

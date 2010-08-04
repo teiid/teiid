@@ -2,11 +2,11 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="system_schema">
     <title>System Schema</title>
-	<sect1 id="system_tables">
+	<section id="system_tables">
 		<title>System Tables</title>
-		<sect2>
+		<section>
 			<title>VDB, Schema, and Properties</title>
-			<sect3>
+			<section>
 				<title>SYS.VirtualDatabases</title>
 				<para>This table supplies information about the currently
 					connected
@@ -54,8 +54,8 @@
 						</tbody>
 					</tgroup>
 				</informaltable>
-			</sect3>
-			<sect3>
+			</section>
+			<section>
 				<title>SYS.Schemas</title>
 				<para>This table supplies information about all the schemas in
 					the
@@ -159,8 +159,8 @@
 						</tbody>
 					</tgroup>
 				</informaltable>
-			</sect3>
-			<sect3>
+			</section>
+			<section>
 				<title>SYS.Properties</title>
 				<para>This table supplies user-defined properties on all objects
 					based on metamodel extensions. Normally, this table is empty if
@@ -229,11 +229,11 @@
 						</tbody>
 					</tgroup>
 				</informaltable>
-			</sect3>
-		</sect2>
-		<sect2>
+			</section>
+		</section>
+		<section>
 			<title>Table Metadata</title>
-			<sect3>
+			<section>
 				<title>SYS.Tables</title>
 				<para>This table supplies information about all the groups
 					(tables,
@@ -391,8 +391,8 @@
 						</tbody>
 					</tgroup>
 				</informaltable>
-			</sect3>
-			<sect3>
+			</section>
+			<section>
 				<title>SYS.Columns</title>
 				<para>This table supplies information about all the elements
 					(columns, tags, attributes, etc) in the virtual database.</para>
@@ -764,8 +764,8 @@
 						</tbody>
 					</tgroup>
 				</informaltable>
-			</sect3>
-			<sect3>
+			</section>
+			<section>
 				<title>SYS.Keys</title>
 				<para>This table supplies information about primary, foreign,
 					and
@@ -912,8 +912,8 @@
 						</tbody>
 					</tgroup>
 				</informaltable>
-			</sect3>
-			<sect3>
+			</section>
+			<section>
 				<title>SYS.KeyColumns</title>
 				<para>This table supplies information about the columns
 					referenced by
@@ -1048,13 +1048,13 @@
 						</tbody>
 					</tgroup>
 				</informaltable>
-			</sect3>
-		</sect2>
-		<sect2>
+			</section>
+		</section>
+		<section>
 			<title>
 				Procedure Metadata
     </title>
-			<sect3>
+			<section>
 				<title>SYS.Procedures</title>
 				<para>This table supplies information about the procedures in
 					the
@@ -1166,8 +1166,8 @@
 						</tbody>
 					</tgroup>
 				</informaltable>
-			</sect3>
-			<sect3>
+			</section>
+			<section>
 				<title>SYS.ProcedureParams</title>
 				<para>This supplies information on procedure parameters.
       </para>
@@ -1336,13 +1336,13 @@
 						</tbody>
 					</tgroup>
 				</informaltable>
-			</sect3>
-		</sect2>
-		<sect2>
+			</section>
+		</section>
+		<section>
 			<title>
 				Datatype Metadata
     </title>
-			<sect3>
+			<section>
 				<title>SYS.DataTypes</title>
 				<para>
 					This table supplies information on
@@ -1581,10 +1581,10 @@
 						</tbody>
 					</tgroup>
 				</informaltable>
-			</sect3>
-		</sect2>
-	</sect1>
-	<sect1 id="system_procedures">
+			</section>
+		</section>
+	</section>
+	<section id="system_procedures">
 		<title>System Procedures</title>
 		<informaltable frame="all">
 			<tgroup cols="3">
@@ -1649,5 +1649,5 @@
 				</tbody>
 			</tgroup>
 		</informaltable>
-	</sect1>
+	</section>
 </chapter>

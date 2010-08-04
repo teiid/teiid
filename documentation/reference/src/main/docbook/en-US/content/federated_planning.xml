@@ -11,7 +11,7 @@
     query. This allows you to focus on building your application, not on
     hand-coding joins, and other relational operations, between data
     sources.</para>
-  <sect1>
+  <section>
     <title>Overview</title>
     <para>When the query engine receives an incoming SQL query it
       performs the following operations:</para>
@@ -121,10 +121,10 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
       storage access because it is typically pushing that burden to the
       data source. The most important consideration for a federated query
       planner is minimizing data transfer.</para>
-  </sect1>
-  <sect1>
+  </section>
+  <section>
     <title>Federated Optimizations</title>
-    <sect2 id="access_patterns">
+    <section id="access_patterns">
       <title>Access Patterns</title>
       <para>
 		Access patterns are used on both physical tables and views to
@@ -134,8 +134,8 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
 		patterns is required to be satisfied.</para>
       <para>Currently any form of criteria referencing an affected column may satisfy an access
 		pattern.</para>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>Pushdown</title>
       <para>In federated database systems pushdown refers to
         decomposing the user level query into source queries that
@@ -160,8 +160,8 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
         on how to read a plan to ensure that source queries are as
         efficient as possible.
       </para>
-    </sect2>
-    <sect2 id="dependent_joins">
+    </section>
+    <section id="dependent_joins">
       <title>Dependent Joins</title>
       <para>A special optimization called a dependent join is used to
         reduce the rows returned from one of the two relations involved
@@ -192,8 +192,8 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
           inefficient join structure and may result in many source
           queries.</para>
       </tip>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>Copy Criteria</title>
       <para> Copy criteria is an optimization that creates additional
         predicates based upon combining join and where clause criteria.
@@ -203,22 +203,22 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
         vice versa. In a cross source scenario, this allows for where
         criteria applied to a single side of the join to be applied to
         both source queries</para>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>Projection Minimization</title>
       <para> Teiid ensures that each pushdown query only projects the
         symbols required for processing the user query. This is
         especially helpful when querying through large intermediate view
         layers.</para>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>Partial Aggregate Pushdown</title>
       <para> Partial aggregate pushdown allows for grouping operations
         above multi-source joins and unions to be decomposed so that some of the
         grouping and aggregate functions may be pushed down to the
         sources.</para>
-    </sect2>
-    <sect2 id="optional_join">
+    </section>
+    <section id="optional_join">
       <title>Optional Join</title>
       <para>The optional join hint indicates to the 
         optimizer that a join clause should be omitted if none of its
@@ -247,8 +247,8 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
 		  and whose rows under go a distinct operation will automatically be
 		  treated as an optional join and does not require a hint.</para>
       </tip>
-    </sect2>
-    <sect2 id="standard_relational_techniques">
+    </section>
+    <section id="standard_relational_techniques">
       <title>Standard Relational Techniques</title>
       <para>
         Teiid also incorporates many standard relational techniques
@@ -277,11 +277,11 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
           </listitem>
         </itemizedlist>
       </para>
-    </sect2>
-  </sect1>
-  <sect1>
+    </section>
+  </section>
+  <section>
     <title>Federated Failure Modes</title>
-    <sect2>
+    <section>
       <title>Partial Results</title>
       <para>Teiid provides the capability to obtain "partial
         results" in the event of data source unavailability. This is
@@ -294,7 +294,7 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
         available sources will be returned. In the case of joins, an
         unavailable data source essentially contributes zero tuples to
         the result set.</para>
-      <sect3>
+      <section>
         <title>Setting Partial Results Mode</title>
         <para>
           Partial results mode is off by default but can be turned on by
@@ -308,8 +308,8 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
           <programlisting>Statement statement = ...obtain statement from Connection... 
 statement.execute("set partialResultsMode true");</programlisting>
         </example>
-      </sect3>
-      <sect3>
+      </section>
+      <section>
         <title>Source Unavailability</title>
         <para>A source is considered to be 'unavailable' if the
           connection factory associated with the source issues an
@@ -357,10 +357,10 @@ if(warning instanceof PartialResultsWarning) {
   }
 }</programlisting>
         </example>
-      </sect3>
-    </sect2>
-  </sect1>
-  <sect1 id="query_plan">
+      </section>
+    </section>
+  </section>
+  <section id="query_plan">
     <title>Query Plans</title>
     <para>When integrating information using a federated query
       planner, it is useful to be able to view the query plans that are
@@ -370,7 +370,7 @@ if(warning instanceof PartialResultsWarning) {
       engine for executing a command submitted by a user or application.
       The purpose of the query plan is to execute the user's query in as
       efficient a way as possible.</para>
-    <sect2>
+    <section>
       <title>Getting a Query Plan</title>
       <para> You can get a query plan any time you execute a command.
         The SQL options available are as follows:</para>
@@ -397,8 +397,8 @@ System.out.println(queryPlan);</programlisting>
       </example>
       <para>The query plan is made available automatically in several
         of Teiid's tools.</para>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>Analyzing a Query Plan</title>
       <para>
         Once a query plan has been obtained you will most commonly be
@@ -436,8 +436,8 @@ System.out.println(queryPlan);</programlisting>
         be executed in any order even in parallel. Only in specific
         optimizations, such as dependent join, will the children of a
         join execute serially.</para>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>Relational Plans</title>
       <para>Relational plans represent the actually processing
         plan that is composed of nodes that are the basic building
@@ -513,7 +513,7 @@ System.out.println(queryPlan);</programlisting>
           <para />
         </listitem>
       </itemizedlist>
-      <sect3>
+      <section>
         <title>Node Statistics</title>
         <para>Every node has a set of statistics that are output.
           These can be used to determine the amount of data flowing
@@ -643,10 +643,10 @@ System.out.println(queryPlan);</programlisting>
           </tgroup>
         </informaltable>
         <para />
-      </sect3>
-    </sect2>
-  </sect1>
-  <sect1 id="query_planner">
+      </section>
+    </section>
+  </section>
+  <section id="query_planner">
     <title>Query Planner</title>
     <para>For each sub-command in the user command an appropriate kind
       of sub-planner is used (relational, XML, procedure,
@@ -663,7 +663,7 @@ System.out.println(queryPlan);</programlisting>
         <para>Plan to process converter - converts  plan data structure into a processing form</para>
       </listitem>
     </orderedlist>
-    <sect2>
+    <section>
       <title>Relational Planner</title>
           <para>The GenerateCanonical class generates the initial (or
             “canonical” plan).  This plan is based on the typical logical order
@@ -999,14 +999,14 @@ System.out.println(queryPlan);</programlisting>
           patterns have been satisfied.</para>
         </listitem>
         </itemizedlist>
-       </sect2>
-       <sect2>
+       </section>
+       <section>
         <title>Procedure Planner</title>
         <para>The procedure planner is fairly simple.  It converts the
           statements in the procedure into instructions in a program that will
           be run during processing.  This is mostly a 1-to-1 mapping and very little optimization is performed.</para>
-       </sect2>
-       <sect2>
+       </section>
+       <section>
           <title>XML Planner</title>
           <para>The XML Planner creates an XML plan that is relatively close 
             to the end result of the Procedure Planner – a program with instructions.  Many of the
@@ -1039,6 +1039,6 @@ System.out.println(queryPlan);</programlisting>
             the same document fragment for both the initial fragment and a set
             of repeated fragments (each a new query) until some termination
             criteria or limit is met.</para>
-    </sect2>
-  </sect1>
+    </section>
+  </section>
 </chapter>

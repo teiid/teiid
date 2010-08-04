@@ -16,7 +16,7 @@
     <link linkend="grammar">grammar</link>
     for the exact form of SQL accepted by Teiid.
   </para>
-  <sect1 id="identifiers">
+  <section id="identifiers">
     <title>Identifiers</title>
     <para> SQL commands contain references to tables and columns. These
       references are in the form of identifiers, which uniquely identify
@@ -108,8 +108,8 @@
       resulting names are unambiguous in the context of the command.
       Different forms of qualification can be mixed in the same query.
     </para>
-  </sect1>
-  <sect1>
+  </section>
+  <section>
     <title>Expressions</title>
     <para> Identifiers, literals, and functions can be combined into
       expressions. Expressions can be used almost anywhere in a query --
@@ -139,7 +139,7 @@
         <para><link linkend="parameter_references">Parameter references</link></para>
       </listitem>
     </itemizedlist>
-    <sect2 id="columnidentifiers">
+    <section id="columnidentifiers">
       <title>Column Identifiers</title>
       <para>
         Column identifiers are used to specify the output columns in SELECT
@@ -150,8 +150,8 @@
         <link linkend="identifiers">Identifiers</link>
         section above.
       </para>
-    </sect2>
-    <sect2 id="literals">
+    </section>
+    <section id="literals">
       <title>Literals</title>
       <para>
       Literal values represent fixed values. These can any of the 'standard' <link linkend="datatypes">data types</link>. 
@@ -195,8 +195,8 @@
           <para><literal>'\u0027'</literal> - unicode character</para>
         </listitem>
       </itemizedlist>
-    </sect2>
-    <sect2 id="aggregate_functions">
+    </section>
+    <section id="aggregate_functions">
       <title>Aggregate Functions</title>
       <para>Aggregate functions take sets of values from a group produced by an explicit or implicit GROUP BY and return a single scalar value computed from the group.</para>
       <itemizedlist>
@@ -260,8 +260,8 @@
       <para>
       For more information on aggregates, see the sections on GROUP BY or HAVING.
       </para>
-    </sect2>
-    <sect2 id="case">
+    </section>
+    <section id="case">
       <title>Case and searched case</title>
       <para>
       Teiid supports two forms of the CASE expression which allows conditional logic in a scalar expression.
@@ -288,8 +288,8 @@
         specify an arbitrary criteria to evaluate. If any criteria evaluates
         to true, the THEN expression is evaluated and output. If no WHEN is
         true, the ELSE is evaluated or NULL is output if none exists.</para>
-    </sect2>
-    <sect2 id="scalar_subqueries">
+    </section>
+    <section id="scalar_subqueries">
       <title>Scalar subqueries</title>
       <para>
         Subqueries can be used to produce a single scalar value in the SELECT,
@@ -299,16 +299,16 @@
         For other types of subqueries, see the
         <link linkend="subqueires">Subqueries</link>
         section below.</para>
-    </sect2>
-    <sect2 id="parameter_references">
+    </section>
+    <section id="parameter_references">
       <title>Parameter references</title>
       <para> Parameters are specified using a '?' symbol. Parameters may
         only be used with PreparedStatement or CallableStatements in JDBC.
         Each parameter is linked to a value specified by 1-based index in
         the JDBC API.</para>
-    </sect2>
-  </sect1>
-  <sect1 id="criteria">
+    </section>
+  </section>
+  <section id="criteria">
     <title>Criteria</title>
     <itemizedlist>
       <para>Criteria may be:
@@ -390,11 +390,11 @@
       <title>Comparing null Values</title>
       <para>Null values represent an unknown value. Comparison with a null value will evaluate to 'unknown', which can never be true even if 'not' is used.</para>
     </note>
-  </sect1>
-  <sect1 id="sql_commands">
+  </section>
+  <section id="sql_commands">
     <title>SQL Commands</title>
     <para>There are 4 basic commands for manipulating data in SQL, corresponding to the CRUD create, read, update, and delete operations: INSERT, SELECT, UPDATE, and DELETE. In addition, procedures can be executed using the EXECUTE command or through a <link linkend="procedural_relational">procedural relational command</link>.</para>
-    <sect2 id="select_command">
+    <section id="select_command">
       <title>SELECT Command</title>
       <para>The SELECT command is used to retrieve records any number of relations.</para> 
       <itemizedlist>
@@ -482,8 +482,8 @@
         named. Because the WHERE clause is processed before the SELECT, the
         columns have not yet been named and the aliases are not yet known.
       </para>
-    </sect2>
-    <sect2 id="insert_command">
+    </section>
+    <section id="insert_command">
       <title>INSERT Command</title>
       <para>The INSERT command is used to add a record to a table.</para>
       <itemizedlist>
@@ -497,8 +497,8 @@
           </para>
         </listitem>
       </itemizedlist>
-    </sect2>
-    <sect2 id="update_command">
+    </section>
+    <section id="update_command">
       <title>UPDATE Command</title>
       <para>The UPDATE command is used to modify records in a table. The operation may result in 1 or more records being updated, or in no records being updated if none match the criteria.</para>
       <itemizedlist>
@@ -508,8 +508,8 @@
           </para>
         </listitem>
       </itemizedlist>
-    </sect2>
-    <sect2 id="delete_command">
+    </section>
+    <section id="delete_command">
       <title>DELETE Command</title>
       <para>The DELETE command is used to remove records from a table. The operation may result in 1 or more records being deleted, or in no records being deleted if none match the criteria. </para>
       <itemizedlist>
@@ -519,8 +519,8 @@
           </para>
         </listitem>
       </itemizedlist>
-    </sect2>
-    <sect2 id="exec_command">
+    </section>
+    <section id="exec_command">
       <title>EXECUTE Command</title>
       <para>The EXECUTE command is used to execute a procedure, such as a virtual procedure or a stored procedure. Procedures may have zero or more scalar input parameters. The return value from a procedure is a result set, the same as is returned from a SELECT. Note that EXEC or CALL can be used as a short form of this command. 
       </para>
@@ -559,13 +559,13 @@
           </para>
         </listitem>
       </itemizedlist>
-    </sect2>
-    <sect2 id="cache_hint">
+    </section>
+    <section id="cache_hint">
     	<title>Cache Hint</title>
     	<para>Non-update user commands may be preceded with a cache hint, e.g. /* cache */ select ..., to inform the engine that the results of command should be cached.  The scope of the result, either session or global, will be deteremined automatically from the determinism level of the source queries and functions executed.</para>
     	<para>ResultSet caching must be enabled for this hint to have an effect.</para>
-    </sect2>
-    <sect2 id="procedural_relational">
+    </section>
+    <section id="procedural_relational">
 	  <title>Procedural Relational Command</title>
       <para> Procedural relational commands use the syntax of a SELECT to
 		emulate an EXEC. In a procedural relational command a procedure group
@@ -631,9 +631,9 @@
 	  		None of issues listed in the syntax rules above exist if a <link linkend="nested_table">nested table reference</link> is used. 
 	  	</para>
 	  </note>
-    </sect2>
-  </sect1>
-  <sect1 id="temp_tables">
+    </section>
+  </section>
+  <section id="temp_tables">
     <title>Temp Tables</title>
     <para>Teiid supports creating temporary,or "temp", tables. Temp tables are dynamically created, but are treated as any other physical table.
     </para>
@@ -726,11 +726,11 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
     <para>
       See <link linkend="virtual_procedures">virtual procedures</link> for more on temp table usage.
     </para>
-  </sect1>
-  <sect1>
+  </section>
+  <section>
     <title>SQL Clauses</title>
     <para>This section describes the clauses that are used in the various <link linkend="sql_commands">SQL commands</link> described in the previous section. Nearly all these features follow standard SQL syntax and functionality, so any SQL reference can be used for more information.</para>
-    <sect2 id="select_clause">
+    <section id="select_clause">
       <title>SELECT Clause</title>
       <para>
       SQL queries start with the SELECT keyword and are often referred to as "SELECT statements". Teiid supports most of the standard SQL query constructs.
@@ -744,8 +744,8 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
         <listitem><para>Aliased expressions are only used as the output column names and in the ORDER BY clause. They cannot be used in other clauses of the query.</para></listitem>
         <listitem><para>DISTINCT may only be specified if the SELECT symbols are comparable.</para></listitem>
       </itemizedlist> 
-    </sect2>
-    <sect2 id="from_clause">
+    </section>
+    <section id="from_clause">
       <title>FROM Clause</title>
       <para>
       The FROM clause specifies the target table(s) for SELECT, UPDATE, and DELETE statements. 
@@ -773,7 +773,7 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
           metadata, and costing information.
         </para>
       </note>
-      <sect3 id="nested_table">
+      <section id="nested_table">
 		<title>Nested Table Reference</title>
 		<para>Nested tables may appear in the FROM clause with the TABLE
 			keyword. They are an alternative to using a view with normal join
@@ -796,8 +796,8 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
 				executions of the table expression - once for each correlated row.
 			</para>
 		</note>
-	  </sect3>
-	  <sect3 id="texttable">
+	  </section>
+	  <section id="texttable">
 		<title>TEXTTABLE</title>
 		<para>The TEXTTABLE funciton processes character input to produce tabular ouptut.  It supports both fixed and delimited file format parsing.  
 			The function itself defines what columns it projects.  
@@ -874,8 +874,8 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
 				</para>		
         	</listitem>
 		</itemizedlist>		
-	  </sect3>
-	  <sect3 id="xmltable">
+	  </section>
+	  <section id="xmltable">
 		<title>XMLTABLE</title>
 		<para>The XMLTABLE funciton uses XQuery to produce tabular ouptut.  
 		    The XMLTABLE function is implicitly a nested table and may be correlated to preceeding FROM clause entries.  XMLTABLE is part of the SQL/XML 2006 specification. 
@@ -927,9 +927,9 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
 				</para>		
         	</listitem>
 		</itemizedlist>		
-	  </sect3>
-    </sect2>
-    <sect2 id="where_clause">
+	  </section>
+    </section>
+    <section id="where_clause">
       <title>WHERE Clause</title>
       <para>
       The WHERE clause defines the criteria to limit the records affected by SELECT, UPDATE, and DELETE statements.  
@@ -942,8 +942,8 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
           </para>
         </listitem>
       </itemizedlist>
-    </sect2>
-    <sect2 id="groupby_clause">
+    </section>
+    <section id="groupby_clause">
       <title>GROUP BY Clause</title>
       <para>
       The GROUP BY clause denotes that rows should be grouped according to the specified expression values. One row will be returned for each group, after optionally filtering those aggregate rows based on a HAVING clause.   
@@ -983,8 +983,8 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
           <para>The group by columns must be of a comparable type.</para>
         </listitem>
       </itemizedlist>
-    </sect2>
-    <sect2 id="having_clause">
+    </section>
+    <section id="having_clause">
       <title>HAVING Clause</title>
       <para>
       The HAVING clause operates exactly as a WHERE clause although it operates on the output of a GROUP BY. It supports the same syntax as the WHERE clause.
@@ -998,8 +998,8 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
             of the grouping expressions.</para>
         </listitem>
       </itemizedlist>
-    </sect2>
-    <sect2 id="orderby_clause">
+    </section>
+    <section id="orderby_clause">
       <title>ORDER BY Clause</title>
       <para>
       The ORDER BY clause specifies how records should be sorted. The options are ASC (ascending) and DESC (descending).
@@ -1049,8 +1049,8 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
 				ANSI SQL standard and is a deprecated feature in Teiid. It is
 				preferable to use alias names in the order by clause.</para>
 	  </warning>
-    </sect2>
-    <sect2 id="limit_clause">
+    </section>
+    <section id="limit_clause">
       <title>LIMIT Clause</title>
       <para>
       The LIMIT clause specifies a limit on the number of records returned from the SELECT command. An optional offset (the number of rows to skip) can be specified. 
@@ -1069,8 +1069,8 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
           <para>LIMIT 500, 100 - skips 500 records and returns the next 100 records (rows 501-600)</para>
         </listitem>
       </itemizedlist>
-    </sect2>
-    <sect2 id="into_clause">
+    </section>
+    <section id="into_clause">
       <title>INTO Clause</title>
       <warning>
       	<para>Usage of the INTO Clause for inserting into a table has been been deprecated.  An <link linkend="insert_command">INSERT</link> with a query command should be used instead.</para>
@@ -1095,8 +1095,8 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
             INTO should not be used UNION query.</para>
         </listitem>
       </itemizedlist>
-    </sect2>    
-    <sect2 id="option_clause">
+    </section>    
+    <section id="option_clause">
       <title>OPTION Clause</title>
       <para>
       The OPTION keyword denotes options the user can pass in with the command. These options are Teiid-specific and not covered by any SQL specification.  
@@ -1134,9 +1134,9 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
       <para>Previous versions of Teiid accepted the PLANONLY, DEBUG, and SHOWPLAN option arguments.  These are no longer accepted in the OPTION clause.
       Please see the <link linkend="other_commands">other commands</link> chapter for using these options.
       </para>
-    </sect2>
-  </sect1>
-  <sect1 id="set_operations">
+    </section>
+  </section>
+  <section id="set_operations">
     <title>Set Operations</title>
     <para>Teiid supports the UNION, UNION ALL, INTERSECT, EXCEPT set operation as a way of combining the results of commands.</para>
     <para>
@@ -1162,8 +1162,8 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
         <para>INTERSECT ALL, and EXCEPT ALL are currently not supported.</para>
       </listitem>
     </itemizedlist>
-  </sect1>
-  <sect1 id="subqueries">
+  </section>
+  <section id="subqueries">
     <title>Subqueries</title>
     <para>A subquery is a SQL query embedded within another SQL query. The query containing the subquery is the outer query.</para>
     <itemizedlist>
@@ -1195,7 +1195,7 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
         <para>Subqueries may be used in any expression or CASE CRITERIA in the SELECT clasue.</para>
       </listitem>
     </itemizedlist>
-    <sect2 id="from_subquery">
+    <section id="from_subquery">
       <title>Inline views</title>
       <para> Subqueries in the FROM clause of the outer query (also known as
         "inline views") can return any number of rows and columns. This type
@@ -1204,8 +1204,8 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
         <title>Example Subquery in FROM Clause (Inline View)</title>
         <programlisting>SELECT a FROM (SELECT Y.b, Y.c FROM Y WHERE Y.d = ‘3’) AS X WHERE a = X.c AND b = X.b</programlisting>
       </example>
-    </sect2>
-    <sect2 id="where_subquery">
+    </section>
+    <section id="where_subquery">
       <title>Subqueries in the WHERE and HAVING clauses</title>
       <para>Subqueries supported in the criteria of the outer query include subqueries in an IN clause, subqueries using the ANY/SOME or ALL predicate quantifier, and subqueries using the EXISTS predicate. </para>
       <example>
@@ -1222,6 +1222,6 @@ SELECT a FROM X WHERE a &gt;= ANY (SELECT b FROM Y WHERE c=3)
 SELECT a FROM X WHERE a &lt; SOME (SELECT b FROM Y WHERE c=4) 
 SELECT a FROM X WHERE a = ALL (SELECT b FROM Y WHERE c=2)</programlisting>
       </example>
-    </sect2>
-  </sect1>
+    </section>
+  </section>
 </chapter>

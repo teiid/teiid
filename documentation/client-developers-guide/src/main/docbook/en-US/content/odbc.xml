@@ -24,13 +24,13 @@
      the application is running on and then create Data Source Name (DSN) that represents a connection profile for your Teiid VDB.
      </para>
 
-    <sect1 id="install">
+    <section id="install">
         <title>Installing the ODBC Driver Client</title>
         <para>A PostgreSQL ODBC driver needed to make the ODBC connection to Teiid is <emphasis>not</emphasis> 
         bundled with the Teiid distribution. The appropriate driver needs be <ulink url="http://www.postgresql.org/ftp/odbc/versions/">downloaded</ulink> 
         directly from the PostgreSQL web site. We have tested with <emphasis>8.04.200</emphasis> version of the ODBC driver.</para>
         
-        <sect2>
+        <section>
             <title>Microsoft Windows</title>
             <orderedlist>
                 <listitem><para>Download the ODBC driver from <ulink url="http://wwwmaster.postgresql.org/download/mirrors-ftp/odbc/versions/msi/psqlodbc_08_04_0200.zip">
@@ -84,8 +84,8 @@
                     <para>Click "Finish" to complete.</para>
                 </listitem>                
             </orderedlist>
-        </sect2>
-        <sect2>
+        </section>
+        <section>
             <title>Other *nix Platform Installations</title>
             <para>For all other platforms other than Microsoft Windows, the ODBC driver needs built from the 
             source files provided. Download the ODBC driver source files from 
@@ -102,12 +102,12 @@
             ]]></programlisting>
             <para>Some *nix distributions may already provide binary forms of the appropriate driver, which can be used as an alternative to
             building from source.</para>
-        </sect2>
-    </sect1>
+        </section>
+    </section>
     
-    <sect1>
+    <section>
         <title>Configuring the Data Source Name (DSN)</title>
-        <sect2>
+        <section>
             <title>Windows Installation</title>
             <para>Once you have installed the ODBC Driver Client software on your workstation, you have to 
             configure it to connect to a Teiid Runtime.  Note that the following instructions are specific 
@@ -168,9 +168,9 @@
             </orderedlist>
             <para>You have configured a Teiid's  virtual database as a data source for your ODBC applications. Now you can 
             use applications such as Excel, Access to query the data in the VDB</para>            
-        </sect2>
+        </section>
         
-        <sect2>
+        <section>
             <title>Other *nix Platform Installations</title>
             <para>Before you can access Teiid using ODBC on any *nix platforms, you need to either install a ODBC driver manager or verify 
             that one already exists. As the ODBC Driver manager Teiid recommends <ulink url="http://www.unixodbc.org/">unixODBC</ulink>. 
@@ -227,11 +227,11 @@
             ]]></programlisting>                             
             
             <para>where "commands.sql" file contains the SQL commands you would like to execute.</para>
-        </sect2>
+        </section>
         
-    </sect1>
+    </section>
     
-    <sect1>
+    <section>
         <title>DSN Less Connection</title>
         <para>You can also connect to Teiid VDB using ODBC with out explicitly creating a DSN. However, in these scenarios your 
         application needs, what is called as "DSN less connection string". The below is a sample connection string </para>
@@ -246,5 +246,5 @@
            ODBC;DRIVER={PostgreSQL};DATABASE=<vdb-name>;SERVER=<host-name>;PORT=<port>;Uid=<username>;Pwd=<password>            
         ]]></programlisting>  
                   
-    </sect1>
+    </section>
 </chapter>

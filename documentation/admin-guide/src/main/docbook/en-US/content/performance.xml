@@ -7,7 +7,7 @@ w.r.t. the use of document projection.
         <para>Your application can use a statement object to execute queries that return XML documents.  
         The query must specify a valid document in VDB, or should have used SQL XML functions 
         to create a XMl document.</para>
-        <sect3>
+        <section>
             <title>XML Streaming</title>
             <para>XML documents are streamed from Teiid Server to the Teiid JDBC API.   
             Normally, the document never materializes in the server memory, avoiding potential 
@@ -23,6 +23,6 @@ w.r.t. the use of document projection.
             XML query against the system.  In heavily loaded or memory-constrained scenarios, 
             this value can decrease the amount of memory used.  As a side effect, streaming will occur in smaller pieces, reducing initial document response time while 
             increasing full response time (as this is less efficient).</para>
-        </sect3>
+        </section>
         
  -->

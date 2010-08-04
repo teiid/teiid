@@ -8,7 +8,7 @@
   <para>At this point you have deployed Teiid and your VDB. Now it's time to connect the sample application
    to this VDB, issue SQL queries, and view the returned, integrated data. Note that
     this process is no different than connecting to any other JDBC source like Oracle.</para>
-  <sect1>
+  <section>
     <title>Stand-alone Java Application Deployment</title>
     
     <para>Before you can make a JDBC connection to the Teiid VDB, add the Teiid's driver jar file to your application's classpath</para>
@@ -77,8 +77,8 @@ Connection connection = ds.getConnection();
 ...]]></programlisting>
       <para>TeiidDataSource source also provides an option to set optional parameters using the "set" methods on the 
        data source look. For all the allowable data source properties check out Client Developer's Guide.</para>       
-  </sect1>
-  <sect1>
+  </section>
+  <section>
   <title>Testing Your Teiid Deployment</title>
   <para>The Teiid installation includes a simple Java class which demonstrates JDBC access of the deployed VDB.
   To execute this demonstration, follow these steps:</para> 
@@ -97,5 +97,5 @@ Connection connection = ds.getConnection();
   Refer to Client Developer's Guide deployment for more information on creating a DataSource. 
   </para>
   <note><para>"embedded" mode is only available in versions of Teiid up to 6.2</para></note>
-  </sect1>   
+  </section>   
 </chapter>

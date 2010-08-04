@@ -4,7 +4,7 @@
 ]>
 <chapter id="translator_api">
 	<title>Translator Development</title>
-	<sect1>
+	<section>
 		<title>Extending the ExecutionFactory Class</title>
 		<para>A component called the Connector Manager is controlling access to your translator. This chapter reviews
 			the basics of how the Connector Manager interacts with your translator while leaving reference details and
@@ -15,19 +15,19 @@
             that can be constructed using Java reflection libraries. This Execution Factory need define/override following elements.  
         </para>
         
-        <sect2>
+        <section>
             <title>ConnectionFactory</title>
             <para>Defines the "ConnectionFactory" interface that is expected from resource adapter. This defined as part of 
             class definition using generics while extending the "ExecutionFactory" class</para>
-        </sect2>
+        </section>
         
-        <sect2>
+        <section>
             <title>Connection</title>
             <para>Defines the "Connection" interface that is expected from resource adapter. This defined as part of 
             class definition using generics while extending the "ExecutionFactory" class</para>
-        </sect2>        
+        </section>        
         
-        <sect2>
+        <section>
             <title>Configuration Properties</title>
             <para>Every software program requires some external configuration, that defines ways user can alter the behavior of a program.
              If this translator needs configurable properties define a variable for every property  as an attribute in the extended
@@ -71,23 +71,23 @@ public void setFoo(String value) {
                       <para>masked: The tools need to mask the property; Do not show in plain text; used for passwords</para>
                     </listitem>                 
                 </itemizedlist>                
-        </sect2> 
+        </section> 
             
-        <sect2>
+        <section>
             <title>Initializing the Translator</title>
             <para>Override and implement the <code>start</code> method (be sure to call
                     "super.start()") if your translator needs to do any initializing before it is used by the Teiid engine. This method 
                     will be called by Teiid, once after all the configuration properties set above are injected into the class. </para>
-        </sect2>  
+        </section>  
         
-        <sect2>
+        <section>
             <title>TranslatorCapabilities</title>
             <para>These are various methods that typically begin with method 
                     signature "supports" on the "ExecutionFactory" class. These methods need to be overridden to describe the execution 
                     capabilities of the Translator.  See <link linkend="translator_capabilities">Translator Capabilities</link> for more on these methods.</para>
-        </sect2>     
+        </section>     
         
-        <sect2>
+        <section>
             <title>Execution (and sub-interfaces)</title>
             <para>Based on types of executions you are supporting, the following methods need to be overridden 
             and need to provide implementations for these methods by extending respective interfaces.</para>
@@ -105,30 +105,30 @@ public void setFoo(String value) {
                 </listitem>
             </itemizedlist>       
             <para>You can choose to implement all the execution modes or just what you need. See more details on this below.</para>     
-        </sect2>    
+        </section>    
         
-        <sect2>
+        <section>
             <title>Metadata</title>
             <para>Override and implement the method <code>getMetadata()</code>, if you want to expose the 
                 metadata about the source for use in Dynamic VDBs. This defines the tables, column names, procedures, parameters, etc. for use in the query engine. 
                 This method is not yet used by Designer tooling. </para>
-        </sect2>         
+        </section>         
         
-        <sect2>
+        <section>
             <title>Logging</title>
             <para>Teiid provides <code>org.teiid.logging.LogManager</code> class for logging purposes. 
                 Create a logging context and use the LogManager to log your messages. These will be automatically 
                 sent to the main Teiid logs. You can edit the "jboss-log4j.xml" inside "conf" directory of the JBoss AS's profile 
                 to add the custom context. Teiid uses Log4J as its underlying logging system.</para>
-        </sect2>     
+        </section>     
         
-        <sect2>
+        <section>
             <title>Exceptions</title>
             <para>If you need to bubble up any exception use <code>org.teiid.translator.TranslatorException</code>
                 class.</para>
-        </sect2>    
+        </section>    
         
-        <sect2>
+        <section>
             <title>Default Name</title>
             <para>Finally, you can define a default instance of your Translator by defining the 
                 annotation <code>@Translator</code> on the "ExecutionFactory". When you define this, and after deployment 
@@ -136,19 +136,19 @@ public void setFoo(String value) {
                 Translator is available any VDB that would like to use by just mentioning its name in its "vdb.xml" configuration file.
                 VDB can also override the default properties and define another instance of this Translator too. The name you give here is the short 
                 name used every where else in the Teiid configuration to refer to this translator.</para>
-        </sect2>                        
+        </section>                        
                         
-	</sect1>
+	</section>
     
 
-	<sect1>
+	<section>
 		<title>Connections to Source</title>
-		<sect2>
+		<section>
 			<title>Obtaining connections</title>
 			<para>The extended "ExecutionFactory" must implement the <code>getConnection()</code> method to
 				allow the Connector Manager to obtain a connection. </para>
-		</sect2>
-		<sect2>
+		</section>
+		<section>
 			<title>Releasing Connections</title>
 			<para>Once the Connector Manager has obtained a connection, it will	use that connection only for the
             	lifetime of the request.  When the request has completed, the closeConnection() method called on the "ExecutionFactory".
@@ -159,11 +159,11 @@ public void setFoo(String value) {
                 provided by the JBoss AS container. If your resource adapter does not implement the JEE JCA, then connection pooling 
                 semantics are left to the user to define on their own.
 			</para>
-		</sect2>
-	</sect1>
-	<sect1>
+		</section>
+	</section>
+	<section>
 		<title>Executing Commands</title>
-		<sect2>
+		<section>
 			<title>Execution Modes</title>
 			<para>
 				The Teiid query engine uses the "ExecutionFactory" class to obtain the "Execution" interface for the command it is
@@ -219,8 +219,8 @@ public void setFoo(String value) {
 			<para>All of the execution interfaces extend the base <code>Execution</code>
 				interface that defines how executions are
 				cancelled and closed.  ProcedureExecution also extends ResultSetExecution, since procedures may also return resultsets.</para>
-		</sect2>
-		<sect2>
+		</section>
+		<section>
 			<title>ResultSetExecution</title>
 			<para>
 				Typically most commands executed against translators are QueryExpression.
@@ -229,14 +229,14 @@ public void setFoo(String value) {
 				of results. Note: the expected batch size can be obtained from the
 				ExecutionContext and used as a hint in fetching results from the EIS.
 			</para>
-		</sect2>
-		<sect2>
+		</section>
+		<section>
 			<title>Update Execution</title>
 			<para>Each execution returns the update count(s) expected by the update command. 
 		          If possible BatchedUpdates should be executed atomically.  
 		          The ExecutionContext can be used to determine if the execution is already under a transaction.</para>
-		</sect2>
-		<sect2>
+		</section>
+		<section>
 			<title>Procedure Execution</title>
 			<para>Procedure commands correspond to the execution of a stored	procedure or some other functional
 				construct. A procedure takes zero or more input values and can return a result
@@ -246,9 +246,9 @@ public void setFoo(String value) {
 				ResultSetExecution interface first. Then, if any output values are expected, they will
 				be retrieved via the getOutputParameterValues() method.
 			</para>
-		</sect2>
+		</section>
          
-		<sect2>
+		<section>
 			<title>Asynchronous Executions</title>
 			<para>In some scenarios, a translator needs to execute
 				asynchronously and allow the executing thread to perform other work.  To allow this, you should Throw a DataNotAvailableExecption during a retrival method, rather than explicitly waiting or sleeping for the results. The
@@ -257,9 +257,9 @@ public void setFoo(String value) {
 						for results.  Any non-negative value is allowed. 
 			</para>
 			<para>Since the exection and the associated connection are not closed until the work has completed, care should be taken if using asynchronous executions that hold a lot of state.</para>
-		</sect2>
+		</section>
         
-		<sect2>
+		<section>
 			<title>Bulk Execution</title>
 			<para>	Non batched <code>Insert, Update, Delete</code>
 				commands may have <code>Literal</code> values marked as multiValued if the
@@ -267,13 +267,13 @@ public void setFoo(String value) {
 				multiValued <code>Literal</code>s represent multiple executions of the same
 				command with different values.  As with BatchedUpdates, bulk operations should be executed atomically if possible.
 			</para>
-		</sect2>
-		<sect2>
+		</section>
+		<section>
 			<title>Command Completion</title>
 			<para>All normal command executions end with the calling of <code>close()</code> on the Execution object.  Your
 				implementation of this method should do the appropriate clean-up work for all state created in the Execution object.</para>
-		</sect2>
-		<sect2>
+		</section>
+		<section>
 			<title>Command Cancellation</title>
 			<para>Commands submitted to Teiid may be aborted in several scenarios:</para>
 			<itemizedlist>
@@ -298,13 +298,13 @@ public void setFoo(String value) {
 				current processing has completed. Implementing the cancel() method allows for faster
 				termination of queries being processed and may allow the underlying data source to terminate its operations
 				faster as well.</para>
-		</sect2>
-	</sect1>
+		</section>
+	</section>
 	
-	<sect1 id="command_language">
+	<section id="command_language">
   <title>Command Language</title>
   
-  <sect2>
+  <section>
     <title>Language </title>
 	<para>
 		Teiid sends commands to your Translator in object form. These classes are all defined in the "org.teiid.language"
@@ -336,7 +336,7 @@ public void setFoo(String value) {
 		in closer detail below. Also see the <ulink url="&javaDocUrl;">Teiid JavaDocs</ulink>
 		for more on the classes and interfaces described here.
 	</para>
-    <sect3>
+    <section>
       <title>Expressions</title>
 		<para>An expression represents a single value in context, although in
 			some cases that value may change as the query is evaluated.  For
@@ -391,8 +391,8 @@ public void setFoo(String value) {
 		</para>
 	</listitem>
       </itemizedlist>
-    </sect3>
-    <sect3>
+    </section>
+    <section>
       <title>Condition</title>
 		<para>A criteria is a combination of expressions and operators that
 			evaluates to true, false, or unknown.  Criteria are most commonly used in the
@@ -411,9 +411,9 @@ public void setFoo(String value) {
         <listitem><para><code>Exists</code> – represents an EXISTS criteria that determines whether a subquery will return any values</para></listitem>
         <listitem><para><code>Like</code> – represents a LIKE criteria that compares string values</para></listitem>
       </itemizedlist>                  
-    </sect3>
+    </section>
     
-    <sect3>
+    <section>
       <title>The FROM Clause</title>
 		<para>The FROM clause contains a list of <code>TableReference</code>'s.  </para>
       
@@ -434,14 +434,14 @@ public void setFoo(String value) {
         <link linkend="command_form_capabilities">Command Form Capabilities</link>
         for more information.
     </para>
-    </sect3>
-	<sect3>
+    </section>
+	<section>
 		<title>QueryExpression Structure</title>
 		<para><code>QueryExpression</code> is the base for both SELECT queries and set queries.  It may optionally take an
          <code>OrderBy</code> (representing a SQL ORDER BY clause) and a <code>Limit</code> (represent a SQL LIMIT clause)</para>
-    </sect3>      
+    </section>      
 
-    <sect3>
+    <section>
       <title>Select Structure</title>
 
 		<para>Each <code>QueryExpression</code> can be a <code>Select</code> describing the expressions
@@ -450,17 +450,17 @@ public void setFoo(String value) {
 			<code>Select</code> may optionally also supply an <code>Condition</code> (representing a SQL
 			WHERE clause), a <code>GroupBy</code> (representing a SQL GROUP BY clause), an
 			an <code>Condition</code> (representing a SQL HAVING clause).</para>
-    </sect3>
+    </section>
     
-    <sect3>
+    <section>
       <title>SetQuery Structure</title>
 
 		<para>A <code>QueryExpression</code> can also be a <code>SetQuery</code> that represents on of the SQL set operations (UNION,
 			INTERSECT, EXCEPT) on two <code>QueryExpression</code>. The all flag may be set to
 			indicate UNION ALL (currently INTERSECT and EXCEPT ALL are not allowed in Teiid)</para>
-    </sect3>
+    </section>
         
-    <sect3>    
+    <section>    
       <title>Insert Structure</title>
 
 		<para>Each <code>Insert</code> will have a single <code>NamedTable</code> specifying the table being
@@ -468,44 +468,44 @@ public void setFoo(String value) {
             of the <code>NamedTable</code> that are being inserted into. It also has
             <code>InsertValueSource</code>, which will be a list of 
             Expressions (<code>ExpressionValueSource</code>),  or a <code>QueryExpression</code>, or an Iterator (<code>IteratorValueSource</code>)</para>
-    </sect3>
+    </section>
 
-    <sect3>
+    <section>
       <title>Update Structure</title>
 
 		<para>Each <code>Update</code> will have a single <code>NamedTable</code> specifying the table being
 			updated and list of <code>SetClause</code> entries that specify <code>ColumnReference</code> 
             and <code>Expression</code> pairs for the update.	The Update may optionally provide a criteria 
 			<code>Condition</code> specifying which rows should be updated.</para>
-    </sect3>
+    </section>
 
-    <sect3>
+    <section>
       <title>Delete Structure</title>
 
 		<para>Each <code>Delete</code> will have a single <code>NamedTable</code> specifying the table being
 			deleted from. It may also optionally have a criteria specifying which rows should be deleted.  </para>
-    </sect3>
+    </section>
 
-    <sect3>
+    <section>
       <title>Call Structure</title>
 
 		<para>Each <code>Call</code> has zero or more <code>Argument</code> objects. The
 			<code>Argument</code> objects describe the input parameters, the output result
 			set, and the output parameters.  </para>
-    </sect3>
+    </section>
     
-    <sect3>
+    <section>
       <title>BatchedUpdates Structure </title>
 		<para>Each <code>BatchedUpdates</code> has a list of <code>Command</code> objects (which must be either
 			<code>Insert</code>, <code>Update</code> or <code>Delete</code>) that compose the batch. </para>    
-    </sect3>
-  </sect2>
+    </section>
+  </section>
 
-  <sect2>
+  <section>
     <title>Language Utilities</title>
     <para>This section covers utilities available when using, creating, and manipulating the language interfaces.</para>
     
-    <sect3>
+    <section>
       <title>Data Types</title>
       <para>The Translator API contains an interface <code>TypeFacility</code> that defines 
       data types and provides value translation facilities. This interface can be obtained from calling "getTypeFacility()" 
@@ -518,9 +518,9 @@ public void setFoo(String value) {
 		interfaces defines constants for all Teiid runtime data types.  All
 		<code>Expression</code> instances define a data type based on this set of types.
 		 These constants are often needed in understanding or creating language interfaces.</para>
-    </sect3>
+    </section>
 
-    <sect3>
+    <section>
       <title>Language Manipulation</title>
 		<para>In Translators that support a fuller set of capabilities (those
 			that generally are translating to a language of comparable to SQL),
@@ -537,10 +537,10 @@ public void setFoo(String value) {
 			<code>Condition</code> with AND or to break an <code>Condition</code> apart based on AND
 			operators.  These utilities are helpful for breaking apart a criteria
 			into individual filters that your translator can implement.</para>
-    </sect3>      
-  </sect2>  
+    </section>      
+  </section>  
     
-  <sect2>
+  <section>
     <title>Runtime Metadata</title>
 		<para>Teiid uses a library of metadata, known as "runtime metadata” for
 			each virtual database that is deployed in Teiid. The runtime metadata
@@ -555,7 +555,7 @@ public void setFoo(String value) {
 			defined in <code>org.teiid.metadata</code> package.  This package defines
 			API representing a Schema, Table, Columns and Procedures, and ways to navigate these objects.</para>
 
-    <sect3>
+    <section>
       <title>Metadata Objects</title>
       <para>All the language objects extend <code>AbstractMetadataRecord</code> class</para>
       <itemizedlist>
@@ -566,8 +566,8 @@ public void setFoo(String value) {
       </itemizedlist>
 
       <para>Once a metadata record has been obtained, it is possible to use its metadata about that object or to find other related metadata.</para>
-    </sect3>
-    <sect3>
+    </section>
+    <section>
       <title>Access to Runtime Metadata</title>
 
 		<para>The RuntimeMetadata interface is passed in for the creation of an "Execution". See "createExecution" 
@@ -588,13 +588,13 @@ Map<String, String> props = table.getProperties();
       ]]></programlisting>
 			</example>
       
-    </sect3>
-  </sect2>
+    </section>
+  </section>
   
-  <sect2>
+  <section>
     <title>Language Visitors</title>
     
-    <sect3>
+    <section>
       <title>Framework</title>
 		<para>The API provides a language visitor framework in the
 			<code>org.teiid.language.visitor</code> package.  The framework
@@ -632,8 +632,8 @@ Map<String, String> props = table.getProperties();
 			the HierarchyVisitor.  Two helper methods are provided on
 			<code>DelegatingHierarchyVisitor</code> to aid in executing pre- and post-order
 			visitors.   </para>
-    </sect3>
-    <sect3>
+    </section>
+    <section>
       <title>Provided Visitors</title>
 		<para>The <code>SQLStringVisitor</code> is a special visitor that can traverse a
 			tree of language interfaces and output the equivalent Teiid SQL.  This
@@ -645,8 +645,8 @@ Map<String, String> props = table.getProperties();
 			objects of a certain type in a tree. Some additional helper methods
 			exist to do common tasks such as retrieving all elements in a tree,
 			retrieving all groups in a tree, and so on.  </para>
-    </sect3>
-    <sect3>
+    </section>
+    <section>
       <title>Writing a Visitor</title>
 		<para>Writing your own visitor can be quite easy if you use the
 			provided facilities.  If the normal method of iterating the language
@@ -674,9 +674,9 @@ DelegatingHierarchyVisitor.preOrderVisit(visitor, objectTree);
 // Retrieve state collected while visiting
 int count = visitor.getCount();       
       ]]></programlisting>      
-    </sect3>
-  </sect2>
-  <sect2 id="translator_capabilities">
+    </section>
+  </section>
+  <section id="translator_capabilities">
     <title>Translator Capabilities</title>
 	<para>The <code>ExecutionFactory</code> class defines all the methods that describe the capabilities of a Translator. 
        These are used by the Connector Manager to determine what kinds of commands the translator is
@@ -684,15 +684,15 @@ int count = visitor.getCount();
         your translator does not support any cpabilities. Your extended 
         <code>ExecutionFactory</code> class must override the the necessary methods to specify which
 		capabilities your translator supports.  </para>
-    <sect3>
+    <section>
       <title>Capability Scope</title>
 		<para>
 			Note that if your capabilities will remain unchanged for the lifetime
 			of the translator, since the engine will cache them for reuse by all instances of that
 			translator.  Capabilities based on connection/user are not supported.
 		</para>
-    </sect3>
-    <sect3>
+    </section>
+    <section>
       <title>Capabilities</title>
         <para>The following table lists the capabilities that can be specified in the <code>ExecutionFactory</code> class.</para>
         <table frame='all'>
@@ -1269,9 +1269,9 @@ int count = visitor.getCount();
           </tgroup>
         </table>
 		<para>Note that any pushdown subquery must itself be compliant with the	Translator capabilities.</para>
-      </sect3>
+      </section>
       
-      <sect3 id="command_form_capabilities">
+      <section id="command_form_capabilities">
         <title>Command Form</title>
 		<para>The method <code>ExecutionFactory.useAnsiJoin()</code> should return true
 			if the Translator prefers the use of ANSI style join structure for
@@ -1280,9 +1280,9 @@ int count = visitor.getCount();
 			true if the Translator requires criteria for any Query, Update, or
 			Delete. This is a replacement for the model support property "Where
 			All".</para>
-      </sect3>
+      </section>
       
-      <sect3>
+      <section>
         <title>Scalar Functions</title>
 		<para>The method <code>ExecutionFactory.getSupportedFunctions()</code> can be
 			used to specify which scalar functions the Translator supports.  The
@@ -1298,9 +1298,9 @@ int count = visitor.getCount();
 			system functions appear in this list. This is because some system
 			functions will always be evaluted in Teiid, are simple aliases to
 			other functions, or are rewriten to a more standard expression.</para>
-      </sect3>
+      </section>
 
-      <sect3>
+      <section>
         <title>Physical Limits</title>
 		<para>The method <code>ExecutionFactory.getMaxInCriteriaSize()</code> can be
 			used to specify the maximum number of values that can be passed in an
@@ -1310,9 +1310,9 @@ int count = visitor.getCount();
 		<para>The method <code>ExecutionFactory.getMaxFromGroups()</code> can be used
 			to specify the maximum number of FROM Clause groups that can used in a
 			join. -1 indicates there is no limit.</para>
-      </sect3>
+      </section>
       
-      <sect3>
+      <section>
         <title>Update Execution Modes</title>
 		<para>The method <code>ExecutionFactory.supportsBatchedUpdates()</code> can be
 			used to indicate that the Translator supports executing the <code>BatchedUpdates</code> command.
@@ -1321,30 +1321,30 @@ int count = visitor.getCount();
 			to indicate that the Translator accepts update commands containg multi valued Literals.</para>
 		<para>Note that if the translator does not support either of these
 			update modes, the query engine will compensate by issuing the updates 	individually.</para>
-      </sect3>
+      </section>
       
-      <sect3>
+      <section>
       	<title>Default Behavior</title>
       	<para>The method <code>ExecutionFactory.getDefaultNullOrder()</code> specifies the default null order.  Can be one of UNKNOWN, LOW, HIGH, FIRST, LAST.  This is only used if ORDER BY is supported, but null ordering is not.</para>
-      </sect3>
+      </section>
       
-   </sect2>
+   </section>
 
-</sect1>
-    	<sect1>
+</section>
+    	<section>
 		<title>Large Objects</title>
 		<para>This section examines how to use facilities provided by the Teiid
 		API to use large objects such as blobs, clobs, and xml in
 		your Translator.</para>
-		<sect2>
+		<section>
 			<title>Data Types</title>
 			<para>Teiid supports three large object runtime data types:  blob,
 				clob, and xml.	 A blob is a “binary large object”, a clob is a
 				“character large object”, and “xml” is a “xml
 				document”.  Columns modeled as a blob, clob, or xml are treated similarly by
 				the	translator framework to support memory-safe streaming.  </para>
-		</sect2>
-		<sect2>
+		</section>
+		<section>
 			<title>Why Use Large Object Support?</title>
 			<para>Teiid allows a Translator to return a large object through the
 				Teiid translator API by just returning a reference to the actual
@@ -1368,9 +1368,9 @@ int count = visitor.getCount();
 			<para>However, these benefits can only truly be gained if the Translator itself does not
 				materialize an entire large object all at once.  For example, the Java JDBC API
 				supports a	streaming interface for blob and clob data.</para>
-		</sect2>
+		</section>
 		
-			<sect2>
+			<section>
 		<title>Handling Large Objects</title>
 		<para>The Translator API automatically handles large objects	(Blob/Clob/SQLXML) through
 			the creation of special purpose wrapper	objects when it retrieves results.
@@ -1391,19 +1391,19 @@ int count = visitor.getCount();
 
 		<programlisting><![CDATA[executionContext.keepExecutionAlive(true);]]></programlisting>
 
-	</sect2>
+	</section>
 
-	<sect2>
+	<section>
 		<title>Inserting or Updating Large Objects</title>
 		<para>LOBs will be passed to the Translator in the
 			language objects as Literal containing a java.sql.Blob, java.sql.Clob, or
 			java.sql.SQLXML.  You can use these interfaces to retrieve the data in
 			the large object and use it for insert or update.</para>
-	</sect2>
+	</section>
 		
-	</sect1>
+	</section>
     
-    <sect1 id="translator_package">
+    <section id="translator_package">
         <title>Packaging</title>
         <para>Once the "ExecutionFactory" class is implemented, package it in a JAR file. The only 
          additional requirement is provide a file called "jboss-beans.xml" in the "META-INF" directory of the JAR file, with
@@ -1430,9 +1430,9 @@ int count = visitor.getCount();
                 
                 replace ${name} with name of your translator, and replace ${execution-factory-class} with your 
                 overridden ExecutionFactory class name. This will register the Translator for use with tooling and Admin API.</para>
-    </sect1>
+    </section>
     
-    <sect1 id="translator_deploy">
+    <section id="translator_deploy">
         <title>Deployment</title>
         <para>Copy the JAR file that defines the Translator into "deploy" directory of the JBoss AS's chosen profile, and 
         the Translator will be deployed automatically. There is no restriction that, JBoss AS need to be restarted. However, if your Translator
@@ -1440,5 +1440,5 @@ int count = visitor.getCount();
         This will require a restart of the JBoss Server. Another option to avoid the restart is to bundle all the required JAR files into 
         the same JAR file as the Translator. It is user's responsibility to make sure they are not running into any conflicts with their
         dependent libraries with those already exist in the JBoss environment.</para>
-    </sect1>    
+    </section>    
 </chapter>

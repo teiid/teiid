@@ -20,7 +20,7 @@
 		of the incoming SQL string. It only applies to SELECT and EXEC
 		statements; it does not apply to SELECT INTO statements, or INSERT,
 		UPDATE, and DELETE statements.</para>
-	<sect1>
+	<section>
 		<title>Support Summary</title>
 		<orderedlist>
 			<listitem>
@@ -45,8 +45,8 @@
 				<para>Administrative clearing of caches</para>
 			</listitem>
 		</orderedlist>
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>User Interaction</title>
 		<para>End users or client applications explicitly state whether to use
 			result set caching for each query.  This can be done by setting the
@@ -59,8 +59,8 @@
 		<para>Each query is re-checked for authorization for the user’s
 			permissions, regardless of whether or not the query results have been
 			cached.</para>
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>Cache Configuration</title>
 		<para>Result set caching in the MetaMatrix Server is configured in the
 			MetaMatrix Console.  By default, result set caching is disabled.
@@ -179,8 +179,8 @@
 			Properties tab.  Note that these are all optional properties.  Check
 			the Include Optional Properties setting to see these properties.  
 		</para>
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>Cache Characteristics</title>
 		<para>Cache Persistence Mechanism</para>
 		<para>Result sets are persisted in object caches local to individual
@@ -194,8 +194,8 @@
 			(as defined by the ResultSet Cache Maximum Size property), query
 			result sets are removed to bring the cache back down to the 80%
 			threshold.</para>
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>Cache Administration</title>
 		<para>Result set caching is administered using the servershell script
 			under the &lt;server install&gt;/util directory.  This script is
@@ -219,8 +219,8 @@
 		</orderedlist>
 		<para>These can be listed in help by executing the script with the
 			command-line argument expertmode on.  </para>
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>Limitations</title>
 		<orderedlist>
 			<listitem>
@@ -245,10 +245,10 @@
 					allowed).   [defect 14444]</para>
 			</listitem>
 		</orderedlist>
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>Outstanding Issues</title>
 		<para>Specification of result set caching for ODBC and SOAP is through
 			extra URL properties, on a per-connection basis.</para>
-	</sect1>
+	</section>
 </chapter>

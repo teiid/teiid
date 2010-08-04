@@ -6,7 +6,7 @@
    Teiid's Admin Console is built using the <ulink url="http://www.jboss.org/embjopr">Embedded JOPR</ulink> library and adds a additional plugin into the Embeeded JOPR program already available in the 
    <ulink url="http://www.jboss.org/jbossas">JBoss AS</ulink>.</para>
 
-   <sect1>
+   <section>
      <title>What can be monitored and/or configured?</title>
      <para>Here are the steps to follow to install Teiid</para>
 
@@ -37,7 +37,7 @@
       </imageobject>
     </mediaobject>
     
-    <sect2>
+    <section>
         <title>Configuration</title>
         <orderedlist>
             <listitem> <para>Runtime Engine properties</para> </listitem>
@@ -45,18 +45,18 @@
             <listitem> <para>Jdbc Socket configuration</para> </listitem>
             <listitem> <para>Session Service</para> </listitem>
         </orderedlist>
-    </sect2>
+    </section>
     
-    <sect2>
+    <section>
         <title>Metrics</title>
         <orderedlist>
             <listitem> <para>Long Running Query count</para> </listitem>
             <listitem> <para>Active Query count</para> </listitem>
             <listitem> <para>Active Session count</para> </listitem>
         </orderedlist>
-    </sect2>    
+    </section>    
    
-    <sect2>
+    <section>
         <title>Control (Operations)</title>
         <orderedlist>
             <listitem> <para>View Long Running Queries</para> </listitem>
@@ -67,9 +67,9 @@
             <listitem> <para>View Current Transactions</para> </listitem>
             <listitem> <para>Terminate Transaction</para> </listitem>
         </orderedlist>
-    </sect2>
+    </section>
     
-    <sect2 id="vdb_deploy">
+    <section id="vdb_deploy">
         <title>Deploying the VDB</title>
         <para>VDB archive files created it the Designer Tool or Dynamic VDBs can be deployed into Teiid server using
         the Admin Console.</para>
@@ -85,8 +85,8 @@
         
         <para>Only Model's "connection-jndi-name" can be modified using this tool by clicking on the "configuration" 
         tab, all other proeprties are read-only.</para> 
-    </sect2>    
+    </section>    
         
-   </sect1>   
+   </section>   
    
 </chapter>

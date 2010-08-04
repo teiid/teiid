@@ -6,7 +6,7 @@
 <chapter id="jdbc_extensions">
     <title>Teiid extensions to the JDBC API</title>
     
-    <sect1 id="statement_extensions">
+    <section id="statement_extensions">
         <title>Statement Extensions</title>
         <para>The Teiid statement extension interface, 
         <code>org.teiid.jdbc.TeiidStatement</code>, provides functionality beyond the JDBC standard. To use the extension interface, simply 
@@ -93,9 +93,9 @@
                 </tbody>
             </tgroup>
        	 </table>
-       </sect1>
+       </section>
        
-       <sect1 id="execution_properties">
+       <section id="execution_properties">
         <title>Execution Properties</title>
         <para>Execution properties may be set on a per statement basis through the <link linkend="statement_extensions"><code>TeiidStatement</code></link> interface or on the connection via the <link linkend="set_statement">SET statement</link>.
         For convenience, the property keys are defined by constants on the <code>org.teiid.jdbc.ExecutionProperties</code> interface.</para>
@@ -172,9 +172,9 @@
                  </tbody>
              </tgroup>
         </table>        
-       </sect1>    
+       </section>    
        
-       <sect1 id="set_statement">
+       <section id="set_statement">
         <title>SET Statement</title>
         
         <para>Execution properties may also be set on the connection by using the SET statement.  
@@ -221,9 +221,9 @@ planRs.next();
 String debugLog = planRs.getString("DEBUG_LOG"); 
         	</programlisting>
         </example>
-       </sect1>
+       </section>
 
-       <sect1 id="show_statement">
+       <section id="show_statement">
         <title>SHOW Statement</title>
         
         <para>The SHOW statement can be used to see a varitey of information.  
@@ -252,9 +252,9 @@ String debugLog = planRs.getString("DEBUG_LOG");
             </listitem>
         </itemizedlist>
         <para>The SHOW statement is most commonly used to retrieve the query plan, see the plan <link linkend="plan_debug">debug example</link>.</para>        
-       </sect1>
+       </section>
                             
-       <sect1 id="partial_results">
+       <section id="partial_results">
         <title>Partial Results Mode</title>
         <para>The Teiid Server supports a "partial results" query mode.  This mode changes the behavior of the 
         query processor so the server returns results even when some data sources are unavailable.</para>
@@ -299,12 +299,12 @@ if(warning instanceof PartialResultsWarning) {
  		System.out.println(connectorName + “: “ +ConnectorException.getMessage();
     }
 }]]></programlisting>         
-       </sect1>
+       </section>
        
-       <sect1>
+       <section>
         <title>XML extensions</title>
         <para>The XML extensions apply on to XML resutls from queries to XML document models, and not to XML produced by SQL/XML or read from some other source.</para>
-        <sect2 id="document_formatting">
+        <section id="document_formatting">
             <title>Document formatting</title>
             <para>The PROP_XML_FORMAT execution property can be set to modify the way that 
             XML documents are formatted from XML document models.  Valid values for the constant 
@@ -320,15 +320,15 @@ if(warning instanceof PartialResultsWarning) {
                 XML document in the original model is honored.  This may produce either the “tree” or “compact” 
             form of the document depending on the document setting.</para></listitem>
             </orderedlist>
-        </sect2>
+        </section>
         
-        <sect2 id="schema_validation">
+        <section id="schema_validation">
             <title>Schema validation</title>
             <para>The <code>PROP_XML_VALIDATION</code> execution property can be set to indicate that 
             the server should validate XML document model documents against their schema before returning them 
             to the client.  If schema validation is on, then the server send a SQLWarning if the document does not conform to the schema it is associated with.  
             Using schema validation will reduce the performance of your XML queries. </para>
-        </sect2>
-       </sect1>
+        </section>
+       </section>
        
 </chapter>

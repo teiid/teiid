@@ -9,20 +9,20 @@
      create a "Dynamic VDB" without Teiid Designer. 
    </para>
 
-   <sect1>
+   <section>
      <title>Deploying a VDB</title>
         <para>Once you have a "VDB" built it can be deployed in Teiid runtime in different ways.</para>
         
-        <sect2>
+        <section>
             <title>Direct File Deployment</title>
             <para>Copy the VDB file into the "&lt;jboss-install&gt;/server/&lt;profile&gt;/deploy" directory. 
             Make sure that there are no other VDB files with the same name. If a VDB already exists with 
             the same name, then this VDB will be replaced with the new VDB. This is the simplest way to deploy a VDB. This is mostly
             designed for quick deployment during development, when the Teiid server is available 
             locally on the developer machine.</para>
-        </sect2>
+        </section>
         
-        <sect2>
+        <section>
             <title>Admin Console Deployment (Web)</title>
             <para>Use the JOPR-based web console configuration system. Check out the JOPR plugin at:</para>
 
@@ -30,27 +30,27 @@
             
             <para>More details for this can be found in the <link linkend="vdb_deploy">Admin Console VDB deployment section.</link>This is the easiest way
             to deploy a VDB to a remote server.</para>          
-        </sect2>
+        </section>
                   
-        <sect2>
+        <section>
             <title>AdminShell Deployment</title>
             <para>Teiid provides a groovy based AdminShell scripting tool, which can be used to deploy
             a VDB. Check out the "deployVDB" method.  Consult the  
             <link linkend="adminshell">AdminShell documentation</link> for more information. Note that using the AdminShell scripting, you can automate
             the deployment of artifacts in your environment.</para>
-        </sect2>         
+        </section>         
 
-        <sect2>
+        <section>
             <title>Admin API Deployment</title>
             <para>The Admin API (look in org.teiid.adminpi.*) provides Java API methods that 
             lets a user connect to a Teiid runtime and deploy a VDB. If you need to programmatically 
             deploy a VDB use this method. This method is preferable for OEM users, who are trying to extend the
             Teiid's capabilities through their applications.</para>
-        </sect2>
+        </section>
                  
-   </sect1>
+   </section>
 
-   <sect1>
+   <section>
      <title>Deploying VDB Dependencies</title>
         <para>Apart from deploying the VDB, the user is also responsible for providing all the necessary 
         dependent libraries, configuration for creating the data sources that are needed by the Schemas (models) 
@@ -62,7 +62,7 @@
         <para>Once the VDB and its dependencies are deployed, then client applications can connect using the JDBC API.  If there are any errors in the deployment, a connection attempt will not be successful and a message will be logged. You can use the
    		<link linkend="admin-console">admin-console</link> tool or check the log files for errors and correct them before proceeding.</para>    
         
-        <sect2>
+        <section>
             <title>Creating An Oracle Data Source</title>
             <orderedlist>
                 <listitem> <para>Copy the Oracle JDBC JAR file into "&lt;jboss-install&gt;/server/&lt;profile&gt;/lib" directory </para> </listitem>
@@ -101,8 +101,8 @@
             </orderedlist>
             <para>There are templates for all the data sources in the "&lt;jboss-install&gt;/docs/examples/jca" directory.</para>                           
             
-        </sect2>        
-        <sect2>
+        </section>        
+        <section>
             <title>Creating A File Data Source</title>
             <para>File data source uses Teiid specific JCA connector. You  need to create "-ds.xml" file and copy it to the 
             "&lt;jboss-install&gt;/server/%lt;profile&gt;/deploy" directory.</para>
@@ -118,15 +118,15 @@
       <max-pool-size>1</max-pool-size>
     </no-tx-connection-factory>
 </connection-factories>]]></programlisting></example>             
-        </sect2>
-   </sect1>
+        </section>
+   </section>
    
-   <sect1>
+   <section>
     <title>Migrating VDBs from 6.x</title>
     <para>VDBs from prior release contain an older configuration file version that is no longer supported.  
     You can use the migration utility (bin/migrate.sh or bin/migrate.bat) supplied with the 
     <link linkend="adminshell">AdminShell</link> download 
     to update these VDBs for use with Teiid 7.  Note - XML and File based sources from previous releases have changed, and require manual changes to the VDB.</para>
-   </sect1>
+   </section>
    
 </chapter>

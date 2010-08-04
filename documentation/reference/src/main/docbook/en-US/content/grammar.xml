@@ -2,7 +2,7 @@
 <!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <appendix id="grammar">
   <title>BNF for SQL Grammar</title>
-<sect1>
+<section>
 <title>TOKENS</title>
 <informaltable frame="none">
 <tgroup cols="1">
@@ -384,8 +384,8 @@
 </tbody>
 </tgroup>
 </informaltable>
-</sect1>
-<sect1>
+</section>
+<section>
 <title>NON-TERMINALS</title>
 <informaltable frame="none">
 <tgroup cols="2">
@@ -839,5 +839,5 @@
 </tbody>
 </tgroup>
 </informaltable>
-</sect1>
+</section>
 </appendix>

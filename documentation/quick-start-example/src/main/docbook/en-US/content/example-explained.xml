@@ -2,7 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="example-explained">
   <title>Example Explained</title>
-  <sect1>
+  <section>
     <title>Portfolio Application Explained</title>
     <para>
       The investor's portfolio information is stored in a Derby database and
@@ -41,7 +41,7 @@
         </para>
       </listitem>
     </itemizedlist>
-  </sect1>
+  </section>
   <note>
     <para>
       <ulink url="http://db.apache.org/derby/">Derby</ulink>
@@ -50,7 +50,7 @@
       specific to Derby, but can be easily converted for use with other databases.
     </para>
   </note>
-  <sect1 id="step-1">
+  <section id="step-1">
     <title>Create the Relational Database's schema and load the sample data</title>
     <para>
       This example is written using
@@ -98,8 +98,8 @@ CREATE TABLE HOLDINGS
       <ulink url="http://www.eclipse.org/datatools/">Eclipse's Data Tools</ulink>
       plugin to connect to the Derby instance to check the schema and sample data.
     </para>
-  </sect1>
-  <sect1 id="step-2">
+  </section>
+  <section id="step-2">
     <title>Describe the CSV file and its contents</title>
     <para>In order to use a Text file as the source, we need a data file defines data inside a table</para>
     <orderedlist>
@@ -119,5 +119,5 @@ CREATE TABLE HOLDINGS
       </listitem>
     </orderedlist>
     <para>Just locate the sample data files provided or create your own data files. Now, both our sources are ready.</para>
-  </sect1>
+  </section>
 </chapter>

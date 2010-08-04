@@ -45,7 +45,7 @@
 		</tgroup>
 	</table>
 	<para>The default transaction isolation level for Teiid is READ_COMMITTED.</para> 
-	<sect1 id="autowrap">
+	<section id="autowrap">
 		<title>AutoCommitTxn Execution Property</title>
 		<para>Since user level commands may execute multiple source
 			commands, users can specify the AutoCommitTxn execution property to
@@ -105,8 +105,8 @@
 	    </para>
 		<para>The update count may be set on all procedures as part of 
 			the procedure metadata in the model.</para>
-	</sect1>
-	<sect1 id="updating_model_count">
+	</section>
+	<section id="updating_model_count">
 		<title>Updating Model Count</title>
 		<para>The term "updating model count" refers to the number of times
 			any model is updated during the execution of a command. It is used to
@@ -147,10 +147,10 @@
 				</tbody>
 			</tgroup>
 		</table>
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>JDBC and Transactions</title>
-		<sect2>
+		<section>
 			<title>JDBC API Functionality</title>
 			<itemizedlist>
 				<para>The transaction scopes above map to these JDBC modes:
@@ -182,8 +182,8 @@
 					</para>
 				</listitem>
 			</itemizedlist>
-		</sect2>
-		<sect2>
+		</section>
+		<section>
 			<title>J2EE Usage Models</title>
 			<itemizedlist>
 				<para>J2EE provides three ways to manage transactions for beans:
@@ -209,9 +209,9 @@
 				this with the caution that this is not portable or predictable.
 				Generally speaking, to support most typical EJB activities in a
 				portable fashion requires some kind of transaction support.</para>
-		</sect2>
-	</sect1>
-	<sect1>
+		</section>
+	</section>
+	<section>
 		<title>Limitations and Workarounds</title>
 		<itemizedlist>
 			<listitem>
@@ -232,5 +232,5 @@
 					transaction capabilities.</para>
 			</listitem>-->
 		</itemizedlist>
-	</sect1>
+	</section>
 </chapter>

@@ -13,16 +13,16 @@
    If no arguments are specified, then all related (overridden) methods are not supported.  If an argument is listed 
    then only those forms of the method specified are not supported.</para>
    
-   <sect1>
+   <section>
    	<title>ResultSet Limitations</title>
         <itemizedlist>
             <listitem><para>TYPE_SCROLL_SENSITIVE is not supported.</para></listitem>
             <listitem><para><code>UPDATABLE</code> ResultSets are not supported.</para></listitem>
             <listitem><para>Returning multiple ResultSets from Procedure execution is not supported.</para></listitem>
         </itemizedlist>
-   </sect1>    
+   </section>    
    
-   <sect1>
+   <section>
     <title>Unsupported Classes and Methods in "java.sql"</title>
         <table frame='all'>
             <title>Connection Properties</title>
@@ -305,9 +305,9 @@ setCursorName(String)
                 </tbody>
             </tgroup>
        </table>    
-   </sect1>
+   </section>
    
-   <sect1>
+   <section>
     <title>Unsupported Classes and Methods in "javax.sql"</title>
         <table frame='all'>
             <title>Connection Properties</title>
@@ -340,5 +340,5 @@ setCursorName(String)
                  </tbody>
              </tgroup>
         </table>
-   </sect1>   
+   </section>   
 </appendix>

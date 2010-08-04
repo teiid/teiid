@@ -5,7 +5,7 @@
 <chapter id="introduction">
   <title>Developing For Teiid</title>
   
-  <sect1>
+  <section>
   <title>Introduction to the Teiid Connector Architecture</title>
   
   <itemizedlist>
@@ -47,9 +47,9 @@
   </itemizedlist>
       
   <para>Given a combination of a Translator + Resource Adapter, one can connect any EIS system to Teiid for their data integration needs.</para>
-  </sect1>
+  </section>
   
-  <sect1>
+  <section>
     <title>Do You Need a New Translator?</title>
     <para>Teiid provides several translators for common enterprise information system types. If
       you can use one of these enterprise information systems, you do not need to develop a custom one.
@@ -87,7 +87,7 @@
         </para>
       </listitem>
     </itemizedlist>
-    <sect2>
+    <section>
     <title>Custom Translators</title>
     <orderedlist numeration="arabic">
       <para>High-level Translator development procedure:</para>
@@ -125,9 +125,9 @@
       advanced topics, such as streaming large objects. For sample
       Translator code, please check the <ulink url="http://anonsvn.jboss.org/repos/teiid/trunk/connectors/">Teiid source code</ulink>
     </para>
-  </sect2>
-  </sect1>
-  <sect1>
+  </section>
+  </section>
+  <section>
     <title>Do You Need a New Resource Adapter?</title>
     <para>As mentioned above, for every Translator that needs to gather data from external source systems, it requires a resource adapter.
     </para>
@@ -155,7 +155,7 @@
       </listitem>
     </itemizedlist>
     
-    <sect2 id="custom_ra_intro">
+    <section id="custom_ra_intro">
     <title>Custom Resource Adapters</title>
     <orderedlist numeration="arabic">
     	<para>High-level Resource Adapter development procedure:</para>
@@ -209,10 +209,10 @@
       advanced topics, such as transactions. For a sample
       resource adapter code, please check the <ulink url="http://anonsvn.jboss.org/repos/teiid/trunk/connectors/">Teiid Source code</ulink>
     </para>
-  </sect2>    
-  </sect1>
+  </section>    
+  </section>
   
-  <sect1>
+  <section>
   	<title>Other Teiid Development</title>
   	<para>Teiid is highly extensible in other ways:</para>
   	<itemizedlist>
@@ -226,6 +226,6 @@
   			<para>You may change the <link linkend="custom_security">security</link> subsystem for custom authentication and authorization.</para>
   		</listitem>
   	</itemizedlist>
-  </sect1>
+  </section>
   
 </chapter>

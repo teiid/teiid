@@ -16,7 +16,7 @@
     
     <para>Check out the following links <ulink url="http://docs.jboss.org/jbossas/jboss4guide/r4/html/ch7.chapt.html">Connectors on JBoss</ulink> </para>
 	
-    <sect1>
+    <section>
 		<title>Using the Teiid Framework</title>
         <para>If you are going to use the Teiid framework for developing a JCA connector, follow these steps. The required classes are in
         <code>org.teiid.resource.api</code> package. Please note that Teiid framework does not make use JCA's CCI framework, only the JCA's SPI interfaces. </para>
@@ -36,7 +36,7 @@
             </listitem>    
         </itemizedlist>
 
-        <sect2 id="managed_connection_factory">
+        <section id="managed_connection_factory">
             <title>Define Managed Connection Factory</title>
             <para>Extend the <code>BasicManagedConnectionFactory</code>, and provide a implementation for the 
             "createConnectionFactory()" method. This method defines a factory method that can create connections.</para>
@@ -69,8 +69,8 @@
         this.count = value;
     }               
 }]]></programlisting>
-        </sect2>
-		<sect2>
+        </section>
+		<section>
 			<title>Define the Connection Factory class</title>
 			<para>Extend the <code>BasicConnectionFactory</code> class, and provide a implementation for the "getConnection()" method.</para>
           <programlisting><![CDATA[public class MyConnectionFactory extends BasicConnectionFactory {
@@ -90,9 +90,9 @@
           <para>Note that you can define "security-domain" for this resource adapter, that is separate from 
           the Teiid defined "security-domain" for validating the JDBC end user. However, it is users responsibility to make the necessary
           logins before the Container's thread accesses this resource adapter, and this can get overly complex.</para>
-		</sect2>
+		</section>
         
-        <sect2 id="connection">
+        <section id="connection">
             <title>Define the Connection class</title>
             <para>Extend the <code>BasicConnection</code> class, and provide a implementation based on your access 
             of the Connection object in the Translator. If your
@@ -115,9 +115,9 @@
          
      }
 }]]></programlisting> 
-        </sect2>
+        </section>
         
-        <sect2>
+        <section>
             <title>XA Transactions</title>
             <para>If you EIS source can participate in XA transactions, then on your <link linkend="connection">Connection</link> object, 
             override the "getXAResource()" method and provide the "XAResource" object for the EIS system. 
@@ -127,9 +127,9 @@
             <para>Note that, only when the resource adapters are XA capable, then Teiid can make them participate in a distributed
             transactions. If they are not XA capable, then source can participate in distributed query but will not participate 
             in the transaction. Transaction semantics at that time defined by how you defined "-ds.xml" file. i.e. with local-tx or no-tx</para>
-        </sect2>        
+        </section>        
         
-        <sect2>
+        <section>
             <title>Define the configuration properties in a "ra.xml" file</title>
             <para>Define a "ra.xml" file (sample shown in the <link linkend="appendix_a">appendix-a</link>) in "META-INF" directory of your RAR file.
             For every configuration property defined inside the <link linkend="managed_connection_factory">ManagedConnectionFactory</link>
@@ -173,10 +173,10 @@
            Note that all these are optional properties; however in the absence of this metadata, Teiid tooling may not work as expected.
            
            </para>
-        </sect2>        
-	</sect1>
+        </section>        
+	</section>
 
-   <sect1 id="ra_package">
+   <section id="ra_package">
         <title>Packaging the Adapter</title>
         <para>Once all the required code is developed, it is time to package them into a RAR artifact, that can be deployed
         into a Conainer. A RAR artifact is lot more similar to a WAR. To put together a RAR file it really depends upon 
@@ -225,9 +225,9 @@
         <para>Make sure that the RAR file, under its "META-INF" directory has the "ra.xml" file.  If you are using maven 
         see <ulink url="http://maven.apache.org/plugins/maven-rar-plugin/"></ulink>In the root of the RAR file, 
         you can embed the JAR file containing your connector code and any dependent library JAR files. </para>
-    </sect1>
+    </section>
     
-   <sect1 id="ra_deploy">
+   <section id="ra_deploy">
         <title>Deploying the Adapter</title>
         <para>Once the RAR file is built, deploy it by copying the RAR file into "deploy" directory of JBoss AS's choosen profile. 
         Typically the server does not need to be restarted when a new RAR file is being added. Alternatively, you can also use 
@@ -267,5 +267,5 @@
             </listitem>
 
          </itemizedlist>        
-    </sect1>    
+    </section>    
 </chapter>

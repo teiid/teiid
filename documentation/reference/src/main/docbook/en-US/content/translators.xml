@@ -2,7 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="translators">
 <title>Translators</title>
-<sect1>
+<section>
 <title>Introduction to the Teiid Connector Architecture</title>
 <para>The TCA (Teiid Connector Architecture) provides Teiid with a robust mechanism for integrating with external systems.  The TCA defines a common client interface between Teiid and an external system that includes metadata as to what SQL constructs are supported for pushdown and the ability to import metadata from the external system.</para>
 <para>>A Translator is the heart of the TCA and acts as the bridge logic between Teiid and an external system, which is most commonly accessed through a JCA resource adapter.  See the Teiid Developers Guide for details on developing custom Translators and JCA resource adapters for use with Teiid.</para>
@@ -12,8 +12,8 @@
 <note>
 <para>The import capabilities of Teiid Translators is currently only used in <link linkend="dynamic_vdbs">dynamic VDBs</link> and not by the Teiid Designer.</para>
 </note>
-</sect1>
-<sect1>
+</section>
+<section>
 <title>Translators</title>
 <para>A Translator is typically paired with a particular JCA resource adapter.  In instances where pooling, environment dependent configuration management, advanced security handling, etc. are not needed, then a JCA resource adapter is not needed.  The configuration of JCA ConnectionFactories for needed resource adapters is not part of this guide, please see the Teiid Admin Guide and the kit examples for configuring resource adapters for use in JBossAS.</para>
 <para>Translators can have a number of configurable properties.  These are broken down into execution properties, which determine aspects of how data is retrieved, and import settings, which determine what metadata is read for import.</para>
@@ -74,7 +74,7 @@
 <para>Only a subset of the metadata as to what SQL constructs the source supports can be set through execution properties.  If more control is needed, please consult the Teiid Developers Guide.</para>
 </note>
 <para>There are no base importer settings.</para>
-<sect2>
+<section>
 <title>File Translator</title>
 <para>The file translator, known by the type name <emphasis>file</emphasis>, exposes stored procedures to leverage file system resources exposed by the file resource adapter.  
 It will commonly be used with the <link linkend="texttable">TEXTTABLE</link> or <link linkend="xmltable">XMLTABLE</link> table functions to use CSV or XML formated data.</para>
@@ -98,16 +98,16 @@ It will commonly be used with the <link linkend="texttable">TEXTTABLE</link> or 
 </tgroup>
 </table>
 <para>There are file importer settings, but it does provide metadata for dynamic vdbs.</para>
-<sect3><title>Usage</title>
+<section><title>Usage</title>
 <para>Retrieve all files as BLOBs with the given extension at the given path. <programlisting>call getFiles('path/*.ext')</programlisting>
 If the extension pattern is not specified and the path is a directory, then all files in the directory will be returned.  If the path or filename doesn't exist, then no results will be returned.
 </para>
 <para>Retrieve all files as CLOBs with the given extension at the given path. <programlisting>call getTextFiles('path/*.ext')</programlisting></para>
 <para>Save the CLOB, BLOB, or XML file to given path <programlisting>call saveFile('path', value)</programlisting></para>
 <para>See the database metadata for full descriptions of the getFiles, getTextFiles, and saveFile procedures.</para>
-</sect3>
-</sect2>
-<sect2>
+</section>
+</section>
+<section>
 <title>JDBC Translator</title>
 <para>The JDBC translator bridges between SQL semantic and data type difference between Teiid and a target RDBMS.  Teiid has a range of specific translators that target the most popular open source and proprietary databases.</para>
 <itemizedlist>
@@ -287,12 +287,12 @@ You can use a sequence as the default value for insert columns by setting the co
 <property name="importer.tableTypes" value="TABLE,VIEW"/>
 <property name="importer.schemaPattern" value="my-schema"/>
 ...]]></programlisting></para>
-<sect3><title>Usage</title>
+<section><title>Usage</title>
 <para>Usage of a JDBC source is straight-forward.  Using Teiid SQL, the source ma be queried as if the tables and procedures were local to the Teiid system.
 </para>
-</sect3>
-</sect2>
-<sect2>
+</section>
+</section>
+<section>
 <title>LDAP Translator</title>
 <para>The LDAP translator, known by the type name <emphasis>ldap</emphasis>, exposes an LDAP directory tree relationally with pusdown support for filtering via criteria.  This is typically coupled with the LDAP resource adapter.</para>
 <table>
@@ -324,8 +324,8 @@ You can use a sequence as the default value for insert columns by setting the co
 </tbody>
 </tgroup>
 </table>
-</sect2>
-<sect2>
+</section>
+<section>
 <title>Loopback Translator</title>
 <para>The Loopback translator, known by the type name <emphasis>loopback</emphasis>, provides a quick testing solution.  It supports all SQL constructs and returns default results, with configurable behavior.</para>
 <table>
@@ -366,8 +366,8 @@ You can use a sequence as the default value for insert columns by setting the co
 </tgroup>
 </table>
 <para>There are no import settings for the Loopback translator; it also does not provide metadata - it should be used as a testing stub.</para>
-</sect2>
-<sect2>
+</section>
+<section>
 <title>Salesforce Translator</title>
 <para>The Salesforce translator, known by the type name <emphasis>salesforce</emphasis> supports the SELECT, DELETE, INSERT and UPDATE operations against a Salesforce.com account.  It is designed for use with the Teiid Salesforce resource adapter.</para>
 <table>
@@ -393,9 +393,9 @@ You can use a sequence as the default value for insert columns by setting the co
 </tgroup>
 </table>
 <para>The Salesforce translator can import metadata, but does not currently have import settings.</para>
-<sect3>
+<section>
 <title>Usage</title>
-<sect4>
+<section>
 <title>SQL Processing</title>
 <para>Salesforce does not provide the same set of
 			functionality as a relational database. For example, Salesforce does
@@ -452,8 +452,8 @@ DELETE From Case where ID IN (<result of query>);*]]></programlisting>
 			to avoid fetching large data sets from Salesforce and making you
 			queries as performant as possible. See all <link linkend="sf_supported">Supported Capabilities</link>.
         </para>
-        </sect4>
-		<sect4>
+        </section>
+		<section>
         <title>Selecting from Multi-Select Picklists</title>
         <para>
 			A multi-select picklist is a field type in Salesforce that can
@@ -503,8 +503,8 @@ SELECT * FROM Issue WHERE true = includes (Status, 'current;working, critical' )
         <programlisting><![CDATA[SELECT * FROM Issue WHERE Status = 'current';
 SELECT * FROM Issue WHERE Status = 'current;critical';
 SELECT * FROM Issue WHERE Status != 'current;working';]]></programlisting>
-	</sect4>
-    <sect4>
+	</section>
+    <section>
         <title>Selecting All Objects</title>
         <para>
 			The Salesforce connector supports the calling the queryAll operation
@@ -535,8 +535,8 @@ SELECT * FROM Issue WHERE Status != 'current;working';]]></programlisting>
 			select * from Contact where isDeleted = false;           
          ]]>
         </programlisting>
-    </sect4>
-    <sect4>
+    </section>
+    <section>
         <title>Selecting Updated Objects</title>
         <para>If the option is selected when importing metadata from
 			Salesforce, a GetUpdated procedure is generated in the model with
@@ -555,8 +555,8 @@ returns
             </ulink>
 			operation in the Salesforce documentation for usage details.
         </para>
-    </sect4>
-    <sect4>
+    </section>
+    <section>
         <title>Selecting Deleted Objects</title>
         <para>If the option is selected when importing metadata from
 			Salesforce, a GetDeleted procedure is generated in the model with
@@ -577,8 +577,8 @@ returns
             </ulink>
 			operation in the Salesforce documentation for usage details.
         </para>
-    </sect4>
-    <sect4>
+    </section>
+    <section>
         <title>Relationship Queries</title>
         <para>Salesforce does not support joins like a relational database, 
         but it does have support for queries that include parent-to-child
@@ -609,8 +609,8 @@ Account.Contacts) FROM Account]]></programlisting>
             </ulink>
 			operation in the SalesForce documentation for limitations.
         </para>
-	    </sect4>
-		<sect4 id="sf_supported">
+	    </section>
+		<section id="sf_supported">
 		<title>Supported Capabilities</title>
 		<para>The following are the the connector capabilities supported by
 			the Salesforce Connector. These SQL constructs will be pushed down to
@@ -656,10 +656,10 @@ Account.Contacts) FROM Account]]></programlisting>
 				OuterJoins with join criteria KEY
 			</para></listitem>
 		</itemizedlist>
-	</sect4>
-</sect3>
-</sect2>
-<sect2>
+	</section>
+</section>
+</section>
+<section>
 <title>Web Services Translator</title>
 <para>The Web Services translator, known by the type name <emphasis>ws</emphasis>, exposes stored procedures for calling web services backed by a Teiid WS resource adapter.  
 It will commonly be used with the <link linkend="texttable">TEXTTABLE</link> or <link linkend="xmltable">XMLTABLE</link> table functions to use CSV or XML formated data.</para>
@@ -696,7 +696,7 @@ It will commonly be used with the <link linkend="texttable">TEXTTABLE</link> or 
 <note>
 <para>Setting the org.teiid.CONNECTOR.WS logging context to detail will show the request/response documents as part of the log.</para>
 </note>
-<sect3><title>Usage</title>
+<section><title>Usage</title>
 <para>The main procedure, invoke, allows for multiple binding, or protocol modes, including HTTP, SOAP11, and SOAP12. 
 <programlisting>Procedure invoke(binding in STRING, action in STRING, request in XML, endpoint in STRING) returns XML</programlisting>
 </para>
@@ -705,10 +705,10 @@ It will commonly be used with the <link linkend="texttable">TEXTTABLE</link> or 
 <para>Since multiple parameters are not required to have values, it is often more clear to call the invoke procedure with named parameter syntax. e.g. <programlisting>call invoke(binding='HTTP', action='GET')</programlisting></para>
 <para>The request XML should be a valid XML document or root element.</para>
 <para>See the ws-weather example in the kit and database metadata for a full description of invoke.</para>
-</sect3>
-</sect2>
-</sect1>
-<sect1 id="dynamic_vdbs">
+</section>
+</section>
+</section>
+<section id="dynamic_vdbs">
 <title>Dynamic VDBs</title>
 <para>
 Teiid integration is available via a "Dynamic VDB" without the need for Teiid Designer tooling.  While this mode of operation does not yet allow for the creation of view layers, the underlying sources can still be queried as if they are a single source.  See the kit's "teiid-example/dynamicvdb-*" for working examples.
@@ -749,7 +749,7 @@ my-vdb.xml: (The vdb-deployer.xml schema for this file is available in the schem
     </translator> 
 </vdb>
 ]]></programlisting>
-<sect2>
+<section>
 <title>VDB Element</title>
 <itemizedlist>
 	<title>Attributes</title>
@@ -763,8 +763,8 @@ my-vdb.xml: (The vdb-deployer.xml schema for this file is available in the schem
 	<listitem><para><emphasis>UseConnectorMetadata</emphasis> - Setting to use connector supplied metadata. Can be "true" or "cached".  "true" will obtain metadata once for every launch of Teiid.   "cached" will save a file containing the metadata into the &lt;jboss-install&gt;/server/&lt;profile&gt;/data/teiid directory</para>
 	</listitem>
 </itemizedlist>
-</sect2>
-<sect2>
+</section>
+<section>
 <title>Model Element</title>
 <itemizedlist>
 	<title>Attributes</title>
@@ -787,8 +787,8 @@ my-vdb.xml: (The vdb-deployer.xml schema for this file is available in the schem
 	<listitem><para><emphasis>importer.&lt;propertyname&gt;</emphasis> - Property to be used by the connector importer for the model for purposes importing metadata.  See possible property name/values in the Translator specific section. Note that using these properties you can narrow or widen the data elements available for integration.
 	</para></listitem>
 </itemizedlist>
-</sect2>
-<sect2>
+</section>
+<section>
 <title>Translator Element</title>
 <itemizedlist>
 	<title>Attributes</title>
@@ -803,6 +803,6 @@ my-vdb.xml: (The vdb-deployer.xml schema for this file is available in the schem
 	<listitem><para>Set a value that overrides a translator default property.  See possible property name/values in the Translator specific section.
 	</para></listitem>
 </itemizedlist>
-</sect2>
-</sect1>
+</section>
+</section>
 </chapter>

@@ -19,7 +19,7 @@
 		query load on operational sources.  MetaMatrix provides a utility to
 		refresh materialized tables.  This utility uses the MetaMatrix batched
 		update functionality.</para>
-	<sect1>
+	<section>
 		<title>Support Summary</title>
 		<orderedlist>
 			<listitem>
@@ -38,8 +38,8 @@
 					data</para>
 			</listitem>
 		</orderedlist>
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>User Interaction</title>
 		<para>When client applications issue queries against a Relational
 			table or view that has been defined as a materialized view, the
@@ -66,8 +66,8 @@
 			specify to always use real-time data obtained directly from a source.
 			 The use of caching and non-caching can be mixed in transformation
 			definitions, just as with user queries.</para>
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>Cache Configuration</title>
 		<para>Materialized View Definition</para>
 		<para>Materialized views are defined in the MetaBase Modeler by
@@ -503,8 +503,8 @@
 			loadscript.cmd (.sh on UNIX) command script, located in the server
 			materializedviews directory.  This script can be used to schedule
 			database loading activities.  </para>
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>Limitations</title>
 		<orderedlist>
 			<listitem>
@@ -518,12 +518,12 @@
 					currently support this.</para>
 			</listitem>
 		</orderedlist>
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>Outstanding Issues</title>
 		<para>Specifying OPTION NOCACHE within a transformation query is the
 			same as specifying it a user query – the identified virtual groups
 			will always be re-computed in the context of the virtual group
 			containing the transformation query with the override option.</para>
-	</sect1>
+	</section>
 </chapter>

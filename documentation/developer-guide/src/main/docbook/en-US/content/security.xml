@@ -13,7 +13,7 @@
                 url="http://docs.jboss.org/jbossas/admindevel326/html/ch8.chapter.html">JBossAS Security</ulink>
             for general information on configuring security in JBossAS.</para>
     
-		<sect1>
+		<section>
 			<title>Built-in LoginModules</title>
 			<para>JBossAS provides several LoginModules for common authentication needs, such as authenticating from text files or LDAP. 
             The below are are some of the available in JBoss AS </para>
@@ -29,8 +29,8 @@
 
             <para>See <ulink url="http://community.jboss.org/docs/DOC-9160">Cert LoginModule configuration</ulink> for
              utilizing X509 certificate based authentication. </para>
-		</sect1>
-		<sect1>
+		</section>
+		<section>
 			<title>Custom LoginModules</title>
 			<para>
 				If your authentication needs go beyond the provided LoginModules, please consult the
@@ -40,5 +40,5 @@
             
             <para>If you are extending one of the built-in LoginModules, please see 
             <ulink url="http://community.jboss.org/docs/DOC-9466">this</ulink>.</para>
-		</sect1>
+		</section>
 </chapter>

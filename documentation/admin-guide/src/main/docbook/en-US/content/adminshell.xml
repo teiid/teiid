@@ -5,7 +5,7 @@
 ]>
 <chapter>
 	<title>AdminShell</title>
-<sect1 id="adminshell_introduction">
+<section id="adminshell_introduction">
    <title>Introduction</title>
    <para>
      The AdminShell tooling provides scripting based programming environments that enable user to access, monitor and control a Teiid
@@ -42,17 +42,17 @@
        </para>
      </listitem>
    </orderedlist>
-   <sect2>
+   <section>
      <title>Download</title>
      <para>AdminShell is distributed along with other Teiid downloads under "teiid-&versionNumber;-adminshell-dist.zip" name. Download and unzip this
        file to any directory. Once you have unzipped the file, in root directory
        you will find "adminshell" and "adminshell-console" executable scripts to launch the command line and graphical tools respectively.</para>
      <para>Windows: Double click or execute "adminshell.cmd"</para>
      <para>*nix: Execute the "adminshell.sh" script</para>
-   </sect2>
-</sect1>
+   </section>
+</section>
 
-<sect1 id="getting_started">
+<section id="getting_started">
 	<title>Getting Started</title>
 	<para>
 		To learn the basics of
@@ -77,7 +77,7 @@
 	<para>In the script run mode, the user can execute/play back previously
 		developed scripts. This mode especially useful to automate any testing or to perform any repeated
 		configurations/migrations changes to a Teiid system.</para>
-	<sect2>
+	<section>
 		<title>Essential Rules</title>
 		<para>To use AdminShell successfully, there are some basic syntactical rules to keep in mind.</para>
 		<orderedlist>
@@ -121,8 +121,8 @@ myObject.doSomething();]]></programlisting>
 		<para>Note: If SSL is turned on the Teiid server, you would need to
 			adjust the connection URL and the client SSL settings as necessary (typically this will only be needed for 2-way SSL).
 		</para>
-	</sect2>
-		<sect2>
+	</section>
+		<section>
 		<title>Help</title>
 		<para>The adminHelp() methods lists all the available administrative API
 			methods in the AdminShell. Please note
@@ -147,8 +147,8 @@ void deployVDB(
 		<para>To get a specific definition about a method and it's required
 			input parameters, use sqlHelp("method")</para>
 		<para />
-	</sect2>
-	<sect2>
+	</section>
+	<section>
 		<title>Basic Commands</title>
 		<para>The list below contains some common commands used in AdminShell.</para>
 		<programlisting><![CDATA[   
@@ -168,9 +168,9 @@ useConnection(<connection name>); // switches to using the given connection sett
 
 disconnect();   // disconnects the current connection in the context
         ]]></programlisting>
-	</sect2>
-</sect1>
-  <sect1>
+	</section>
+</section>
+  <section>
     <title>Executing a script file</title>
     <para>To execute a script file "foo.groovy" in a directory "some/directory" in the interactive comamnd line tool, execute as
       following</para>
@@ -185,9 +185,9 @@ disconnect();   // disconnects the current connection in the context
     <programlisting><![CDATA[./adminshell.sh -Dparam=value . some/directory/foo.groovy]]></programlisting>
     <para>Inside the script file, you can access these properties using System.getProperty</para>
     <programlisting><![CDATA[value = System.getProperty(“param”); // will return "value"]]></programlisting>
-  </sect1>
+  </section>
     
-  <sect1>
+  <section>
     <title>Log File and Recorded Script file</title>
     <para>During the interactive mode, input is recorded in a history file. This file can be accessed via the up arrow in the interactive shell.
     </para>
@@ -200,8 +200,8 @@ record stop]]></programlisting>
     <para>All input and output between the start and stop are captured in the “directory/filename.txt” file. 
       This gives the user an option to capture only certain portions of the interactive session and to later refine a script out of recorded file.</para>
     <para />
-  </sect1>
-    <sect1>
+  </section>
+    <section>
     <title>Default Connection Properties</title>
     <para>The file "connection.properties" in the installation directory of the AdminShell defines the default
       connection properties with which user can connect to Teiid system. The following properties can be
@@ -226,8 +226,8 @@ jdbc.password = <password>
       connection to same system.  To manage the connections correctly each connection is created given a unique
       connection name. To learn more about this look at <link linkend="mutiple_connections">Handling Multiple Connections</link>.</para>
     <para />
-  </sect1>
-  <sect1 id="mutiple_connections">
+  </section>
+  <section id="mutiple_connections">
     <title>Handling Multiple Connections</title>
     <para>Using AdminShell, a user can actively manage more than one connection to a single or multiple Teiid
       systems. For example, two separate connections can be maintained, one to the development server and one to
@@ -273,6 +273,6 @@ useConnection(conn1);
 
 // close the connection in the "conn1"
 disconnectAll();]]></programlisting>
-  </sect1>
+  </section>
   
 </chapter>

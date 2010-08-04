@@ -10,7 +10,7 @@
     that can be used with Teiid in securing your data access. Note that data level
     security (<link linkend="entitlements">data roles</link>) are explained in separate chapter.</para>
     
-    <sect1 id="default_security">
+    <section id="default_security">
         <title>Default Security</title>
         
         <para>If you are always using a 
@@ -22,9 +22,9 @@
         encryption is controlled by <code>clientEncryptionEnabled</code> property in <code>JdbcSslConfiguration</code> and 
         <code>AdminSslConfiguration</code> sections  
         in <code>&lt;jboss-install&gt;/server/&lt;profile&gt;/deploy/teiid/teiid-jboss-beans.xml</code> file.</para>
-    </sect1>
+    </section>
     
-    <sect1 id="ssl_modes">
+    <section id="ssl_modes">
         <title>SSL Modes</title>
         <para>Teiid supports SSL based channel between the client JDBC application and Teiid Server. Teiid supports the following
         SSL modes.</para>
@@ -56,9 +56,9 @@
             <listitem><para>client.keystore - client's private key</para></listitem>
             <listitem><para>client.truststore - has client's public key</para></listitem>
         </orderedlist>
-    </sect1>
+    </section>
     
-    <sect1 id="configure_client">
+    <section id="configure_client">
         <title>Client SSL Settings</title>
         <para>The  
         following sections define the properties required for each SSL mode. Note that when 
@@ -69,7 +69,7 @@
         
         <para>There are two different sets of properties that a client can configure to enable 1-way or 2-way SSL.</para>
         
-        <sect2>
+        <section>
             <title>Option 1: Java SSL properties</title>
             <para>These are standard Java defined system properties to configure the SSL under any JVM, Teiid is not 
             unique in its use of SSL. Provide the following system properties to the client VM process.</para>
@@ -89,9 +89,9 @@
 -Djavax.net.ssl.trustStorePassword=<password> (optioanl)
 -Djavax.net.ssl.keyStroreType=<keystore type> (optional)]]></programlisting>             
            </example>    
-        </sect2>
+        </section>
         
-        <sect2>
+        <section>
             <title>Option 2: Teiid Specific Properties</title>
             <para>Use this option for <emphasis>anonymous</emphasis> mode or when the above "javax" based properties 
             are already in use by the host process. For example if your client application is a Tomcat 
@@ -182,6 +182,6 @@ org.teiid.ssl.trustStore=<dir>/server.truststore (required)]]></programlisting>
            <title>Anonymous</title>
            <programlisting><![CDATA[org.teiid.ssl.trustStore=NONE]]></programlisting>                
                      </example>      
-        </sect2>
-    </sect1>
+        </section>
+    </section>
 </chapter>

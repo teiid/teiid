@@ -6,14 +6,14 @@
 	<title>AdminAPI</title>
 	<para>In most circumstances the admin operations will be performed through the admin console or AdminShell tooling, but it is also possible to invoke admin functionality directly in Java through the AdminAPI.</para>
 	<para>All classes for the AdminAPI are in the client jar under the <code>org.teiid.adminapi</code> package.</para>
-	<sect1 id="connecting">
+	<section id="connecting">
 		<title>Connecting</title>
 		<para>An AdminAPI connection, which is represented by the <code>org.teiid.adminapi.Admin</code> interface, is obtained through the <code>org.teiid.adminapi.AdminFactory.createAdmin</code> methods.  
 		<code>AdminFactory</code> is a singleton, see <code>AdminFactory.getInstance()</code>.  The <code>Admin</code> instance automatically tests its connection and reconnects to a server in the event of a failure.  The <code>close</code> method should be called to terminate the connection.</para>
 		<para>See your Teiid installation for the appropriate admin port - the default is 31443.</para>
-	</sect1>
-	<sect1 id="admin_methods">
+	</section>
+	<section id="admin_methods">
 		<title>Admin Methods</title>
 		<para>Admin methods exist for monitoring, server administration, and configuration purposes.  Note that the objects returned by the monitoring methods, such as getRequests, are read-only and cannot be used to change server state.  See the JavaDocs for all of the details.</para>
-	</sect1>
+	</section>
 </chapter>

@@ -10,7 +10,7 @@
     of both the key store and the trust store files for a 1-way SSL configuration with 
     the security keys.</para>
     
-    <sect1>
+    <section>
         <title>Creating private/public key pair:</title>
         <programlisting><![CDATA[
 keytool -genkey -alias teiid -keyalg RSA -validity 365 –keystore
@@ -37,9 +37,9 @@ server.keystore –storetype JKS
  (Return if same as keystore password)
         ]]></programlisting>
         <para>The "server.keystore" can be used as keystore based upon the newly created private key.</para>
-    </sect1>
+    </section>
     
-    <sect1>
+    <section>
         <title>Extracting the public key</title>
         <para>From the "server.keystore" created above we can extract a public key for creating a trust store</para>
         <programlisting><![CDATA[
@@ -48,9 +48,9 @@ keytool -export -alias teiid –keystore server.keystore -rfc -file public.cert
         ]]></programlisting>
         <para>This creates the "public.cert" file that contains the public key based on the 
         private key in the "server.keystore"</para>                
-    </sect1>
+    </section>
     
-    <sect1>
+    <section>
         <title>Creating the Truststore</title>
         
     <programlisting><![CDATA[
@@ -68,6 +68,6 @@ Trust this certificate? [no]:  yes
     <para>Now this has created "server.truststore". There are many other ways to create self signed certificates, 
     the above procedure is just one way. If you would like create them 
     using "openssl", see <ulink url="http://www.akadia.com/services/ssh_test_certificate.html">this tutorial</ulink>.</para>      
-    </sect1>    
+    </section>    
     
 </appendix>

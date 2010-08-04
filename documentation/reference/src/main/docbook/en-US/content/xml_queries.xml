@@ -2,7 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="xml_queries">
 	<title>XML SELECT Command</title>
-	<sect1>
+	<section>
 		<title>Overview</title>
 		<para>Complex XML documents can be dynamically constructed by Teiid using XML Document Models. A document model is
 			generally created from a schema. The document model is bound to
@@ -13,8 +13,8 @@
 		<para>Querying XML documents is similar to querying relational
 			tables. An idiomatic SQL variant with special scalar functions gives
 			control over which parts of a given document to return.</para>
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>Query Structure</title>
 		<para>
 			A valid XML SELECT Command against a document model is of the form
@@ -37,7 +37,7 @@
 		</para>
 		<para> Partially qualified names for elements and attributes can be
 			used as long as the partial name is unique.</para>
-		<sect2 id="xml_from_clause">
+		<section id="xml_from_clause">
 			<title>FROM Clause</title>
 			<para>Specifies the document to generate. Document names
 				resemble other virtual groups - "model"."document name".</para>
@@ -48,8 +48,8 @@
 						desired document.</para>
 				</listitem>
 			</itemizedlist>
-		</sect2>
-		<sect2 id="xml_select_clause">
+		</section>
+		<section id="xml_select_clause">
 			<title>SELECT Clause</title>
 			<para>The select clause determines which parts of the XML document
 				are generated for output.</para>
@@ -90,8 +90,8 @@
 						attribute, and all child content should be output.</para>
 				</listitem>
 			</itemizedlist>
-		</sect2>
-		<sect2 id="xml_where_clause">
+		</section>
+		<section id="xml_where_clause">
 			<title>WHERE Clause</title>
 			<para>The where clause specifies how to filter content from the
 				generated document based upon values contained in the underlying
@@ -153,12 +153,12 @@
 					only a single root mapping class. This behavior is the same as
 					prior releases but may be fixed in a future release.</para>
 			</note>
-			<sect3>
+			<section>
 				<title>XML SELECT Command Specific Functions</title>
 				<para>XML SELECT Command functions are resemble scalar functions,
 					but act as hints in the WHERE clause. These functions are only
 					valid in an XML SELECT Command.</para>
-				<sect4 id="context_function">
+				<section id="context_function">
 					<title>Context Function</title>
 					<para>
 						<code>CONTEXT(arg1, arg2)</code>
@@ -180,8 +180,8 @@
 							</para>
 						</listitem>
 					</itemizedlist>
-				</sect4>
-				<sect4 id="rowlimit_function">
+				</section>
+				<section id="rowlimit_function">
 					<title>Rowlimit Function</title>
 					<para>
 						<code>ROWLIMIT(arg)</code>
@@ -204,8 +204,8 @@
 								a given context.</para>
 						</listitem>
 					</itemizedlist>
-				</sect4>
-				<sect4 id="rowlimitexception_function">
+				</section>
+				<section id="rowlimitexception_function">
 					<title>Rowlimitexception Function</title>
 					<para>Limits the rows processed for the given context and
 						throws an exception if the given number of rows is exceeded.
@@ -230,10 +230,10 @@
 								a given context.</para>
 						</listitem>
 					</itemizedlist>
-				</sect4>
-			</sect3>
-		</sect2>
-		<sect2 id="xml_order_by_clause">
+				</section>
+			</section>
+		</section>
+		<section id="xml_order_by_clause">
 			<title>ORDER BY Clause</title>
 			<para>The XML SELECT Command ORDER BY Clause specifies ordering
 				for the referenced mapping class queries.</para>
@@ -248,9 +248,9 @@
 						will be applied to their respective mapping classes.</para>
 				</listitem>
 			</itemizedlist>
-		</sect2>
-	</sect1>
-	<sect1>
+		</section>
+	</section>
+	<section>
 		<title>Document Generation</title>
 		<para>Document generation starts with the root mapping class
 			and proceeds iteratively and hierarchically over all of the child
@@ -276,13 +276,13 @@
 			treated as independent mapping classes during planning and execution.
 			This allows for a more document centric approach to applying criteria
 			and order bys to mapping classes.</para>
-		<sect2 id="document_validation">
+		<section id="document_validation">
 			<title>Document Validation</title>
 			<para>The execution property XMLValidation should be set to 'true'
 				to indicate that generated documents should be checked for
 				correctness. Correctness checking will not prevent invalid documents
 				from being generated, since correctness is checked after generation
 				and not during.</para>
-		</sect2>
-	</sect1>
+		</section>
+	</section>
 </chapter>

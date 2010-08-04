@@ -21,7 +21,7 @@
 		frequently in most enterprise applications.  Examples are ISO country
 		codes, state codes, and different types of financial instrument
 		identifiers.  </para>
-	<sect1>
+	<section>
 		<title>Support Summary</title>
 		<orderedlist>
 			<listitem>
@@ -32,8 +32,8 @@
 					utility</para>
 			</listitem>
 		</orderedlist>
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>User Interaction</title>
 		<para>This caching mechanism is automatically invoked when the lookup
 			scalar function is used.  Each time this function is called with a
@@ -96,8 +96,8 @@
 		<para>lookup(‘StatePostalCodes, ‘StateDisplayName’, ‘PostalCode’,
 			‘63131’) </para>
 		<para>lookup(‘EmpIDs’, ‘Name’, ‘ID’, ‘m204815’) </para>
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>Cache Configuration</title>
 		<para>Cached lookup groups might consume significant memory.  You can
 			limit the number and maximum size of these code groups by setting
@@ -106,8 +106,8 @@
 		<para>The following are the properties that can be set at the query
 			service level to control reference data caching.</para>
 		<para />
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>Cache Characteristics</title>
 		<para>Cache Persistence Mechanism</para>
 		<para>Reference tables are persisted in object caches local to
@@ -124,14 +124,14 @@
 		<para>Cache Operational Policy</para>
 		<para>Cached tables are never proactively cleared.  They can only be
 			cleared through using the svcmgr utility script.</para>
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>Cache Administration</title>
 		<para>The lookup cache can be cleared using the svcmgr utility script.
 			 To clear cached code tables, set expertmode on, and then pass in the
 			clearCodeTableCaches argument.</para>
-	</sect1>
-	<sect1>
+	</section>
+	<section>
 		<title>Limitations</title>
 		<orderedlist>
 			<listitem>
@@ -152,5 +152,5 @@
 		<para>Cached code tables are never proactively cleared by the Server.
 			 If a lot of code tables are loaded, or large code tables are loaded,
 			the Server’s available memory could be exceeded.</para>
-	</sect1>
+	</section>
 </chapter>

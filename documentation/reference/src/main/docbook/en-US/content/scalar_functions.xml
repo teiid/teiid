@@ -9,7 +9,7 @@
 		<link linkend="datatypes">Datatypes</link>
 		. In addition, Teiid provides the capability for user defined functions or UDFs.  See the Developers Guide for adding UDFs.  Once added UDFs may be called just like any other function.
 	</para>
-	<sect1 id="numeric_functions">
+	<section id="numeric_functions">
 		<title>Numeric Functions</title>
 		<para>Numeric functions return numeric values (integer, long,
 			float, double, biginteger, bigdecimal). They generally take numeric
@@ -492,7 +492,7 @@
         </tbody>
       </tgroup>
     </informaltable>
-    <sect2>
+    <section>
       <title>Parsing Numeric Datatypes from Strings</title>
       <para>
         Teiid offers a set of functions you can use to parse numbers from
@@ -603,8 +603,8 @@
           </tbody>
         </tgroup>
       </informaltable>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>Formatting Numeric Datatypes as Strings</title>
       <para>
         Teiid offers a set of functions you can use to convert numeric
@@ -715,9 +715,9 @@
           </tbody>
         </tgroup>
       </informaltable>
-    </sect2>
-  </sect1>
-  <sect1 id="string_functions">
+    </section>
+  </section>
+  <section id="string_functions">
     <title>String Functions</title>
     <para>String functions generally take strings as inputs and return strings as outputs. </para>
     <para>Unless specified, all of the arguments and return types in the following table are strings and all indexes are 1-based. The 0 index is considered to be before the start of the string.</para>
@@ -1072,8 +1072,8 @@
         </tbody>
       </tgroup>
     </informaltable>
-  </sect1>
-  <sect1 id="date_time_functions">
+  </section>
+  <section id="date_time_functions">
     <title>Date/Time Functions</title>
     <para>Date and time functions return or operate on dates, times, or timestamps. </para>
     <para>Parse and format Date/Time functions use the convention established within
@@ -1455,7 +1455,7 @@
         </tbody>
       </tgroup>
     </informaltable>
-    <sect2>
+    <section>
       <title>Parsing Date Datatypes from Strings</title>
       <para>
         Teiid does not implicitly convert strings that
@@ -1524,8 +1524,8 @@
           </tbody>
         </tgroup>
       </informaltable>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>Specifying Time Zones</title>
       <para>Time zones can be specified in several formats. Common
         abbreviations such as EST for "Eastern Standard Time" are allowed
@@ -1535,9 +1535,9 @@
         Additionally, you can specify a custom time zone by GMT offset:
         GMT[+/-]HH:MM.</para>
       <para>For example: GMT-05:00</para>
-    </sect2>
-  </sect1>
-  <sect1>
+    </section>
+  </section>
+  <section>
     <title>Type Conversion Functions</title>
     <para>
     Within your queries, you can convert between datatypes using the
@@ -1579,8 +1579,8 @@
       </tgroup>
     </informaltable>
     <para>These functions are identical other than syntax; CAST is the standard SQL syntax, CONVERT is the standard JDBC/ODBC syntax. </para>
-  </sect1>
-  <sect1 id="choice_functions">
+  </section>
+  <section id="choice_functions">
     <title>Choice Functions</title>
     <para>Choice functions provide a way to select from two values based on some characteristic of one of the values. </para>
     <informaltable frame="all">
@@ -1647,8 +1647,8 @@
       </tgroup>
     </informaltable>
     <para>IFNULL and NVL are aliases of each other. They are the same function. </para>
-  </sect1>
-  <sect1>
+  </section>
+  <section>
     <title>Decode Functions</title>
     <para>Decode functions allow you to have the Teiid Server
       examine the contents of a column in a result set and alter, or
@@ -1771,8 +1771,8 @@
       in the column and you have not specified a default value, the DECODE
       function will return the original value the Teiid Server found
       in that column.</para>
-  </sect1>
-  <sect1>
+  </section>
+  <section>
     <title>Lookup Function</title>
     <para>The Lookup function allows you to cache a table’s
     data in memory and access it through a scalar function. This caching
@@ -1851,8 +1851,8 @@
         </tbody>
       </tgroup>
     </informaltable>
-  </sect1>
-  <sect1>
+  </section>
+  <section>
     <title>System Functions</title>
     <para>System functions provide access to information in the Teiid system from within a query. </para>
     <informaltable frame="all">
@@ -1937,24 +1937,24 @@
         </tbody>
       </tgroup>
     </informaltable>
-  </sect1>
-  <sect1 id="xml_functions">
+  </section>
+  <section id="xml_functions">
     <title>XML Functions</title>
     <para>XML functions provide functionality for working with XML data. </para>
-    <sect2>
+    <section>
     	<title>XMLCOMMENT</title>
     	<para>Returns an xml comment.</para>
     	<para><synopsis>XMLCOMMENT(comment)</synopsis></para>
     	<para>Comment is a string.  Return value is xml.</para>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
     	<title>XMLCONCAT</title>
     	<para>Returns an XML with the concatination of the given xml types.</para>
     	<para><synopsis>XMLCONCAT(content [, content]*)</synopsis></para>
     	<para>Content is xml. Return value is xml.</para>
     	<para>If a value is null, it will be ignored.  If all values are null, null is returned.</para>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
     	<title>XMLELEMENT</title>
     	<para>Returns an XML element with the given name and content.</para>
     	<para><synopsis>XMLELEMENT([NAME] name [, &lt;NSP&gt;] [, &lt;ATTR&gt;][, content]*)</synopsis></para>
@@ -1969,16 +1969,16 @@
            <para><emphasis>Example</emphasis>: with an xml_value of &lt;doc/&gt;, <programlisting>xmlelement('elem', 1, '&lt;2/&gt;', xml_value)</programlisting>
            		Returns: <code>&lt;elem&gt;1&amp;lt;2/&amp;gt;&lt;doc/&gt;&lt;elem/&gt;</code>
            </para>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
     	<title>XMLFOREST</title>
     	<para>Returns an concatination of XML elements for each content item.</para>
     	<para><synopsis>XMLFOREST(content [AS name] [, &lt;NSP&gt;] [, content [AS name]]*)</synopsis></para>
         <para>See XMLELEMENT for the definition of NSP - <link linkend="xmlnamespaces">XMLNAMESPACES</link>.</para>
    		<para>Name is an identifier. Content can be any type. Return value is xml.</para>
 		<para>If a name is not supplied for a content item, the expression must be a column reference, in which case the element name will be a partially escaped version of the column name.</para>
-    </sect2>
-    <sect2 id="xmlparse">
+    </section>
+    <section id="xmlparse">
     	<title>XMLPARSE</title>
     	<para>Returns an XML type representation of the string value expression.</para>
         <para><synopsis>XMLPARSE((DOCUMENT|CONTENT) expr [WELLFORMED])</synopsis></para>
@@ -1988,14 +1988,14 @@
         <para>
               If WELLFORMED is specified then validation is skipped; this is especially useful for CLOB and BLOB known to already be valid.  
         </para>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
     	<title>XMLPI</title>
     	<para>Returns an xml processing instruction.</para>
         <para><synopsis>XMLPI([NAME] name [, content])</synopsis></para>
         <para>Name is an identifier. Content is a string. Return value is xml.</para>
-    </sect2>
-    <sect2 id="xmlquery">
+    </section>
+    <section id="xmlquery">
     	<title>XMLQUERY</title>
     	<para>Returns the XML result from evaluating the given xquery.</para>
     	<para><synopsis>XMLQUERY([&lt;NSP&gt;] xquery [&lt;PASSING&gt;] [(NULL|EMPTY) ON EMPTY]]</synopsis></para>
@@ -2011,8 +2011,8 @@
              <para>See also <link linkend="xmltable">XMLTABLE</link></para>
              <note><para>A technique known as document projection is used to reduce the memory footprint of the context item document.  Only the parts of the document needed by the xquery will be loaded into memory.</para></note>
              
-    </sect2>
-    <sect2 id="xmlserialize">
+    </section>
+    <section id="xmlserialize">
     	<title>XMLSERIALIZE</title>
     	<para>Returns a character type representation of the xml expression.</para>
         <para><synopsis>XMLSERIALIZE([(DOCUMENT|CONTENT)] xml [AS datatype])</synopsis></para>
@@ -2020,36 +2020,36 @@
 		<para>Only a character type (string, varchar, clob) may be specified as the datatype.  CONTENT is the default.  
               If DOCUMENT is specified and the xml is not a valid document or fragment, then an exception is raised. 
               </para>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
     	<title>XSLTRANSFORM</title>
     	<para>Applies an XSL stylesheet to the given document.</para>
     	<para><synopsis>XSLTRANSFORM(doc, xsl)</synopsis></para>
     	<para>Doc, xsl in {string, clob, xml}. Return value is a clob.</para>
     	<para>If either argument is null, the result is null.</para>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
     	<title>XPATHVALUE</title>
     	<para>Applies the XPATH expression to the document and returns a
                string value for the first matching result.</para>
     	<para><synopsis>XPATHVALUE(doc, xpath)</synopsis></para>
     	<para>Doc and xpath in {string, clob, xml}. Return value is a string.</para>
     	<para>An attempt is made to provide a meaningful result for non-text nodes.</para>
-    </sect2>
-  </sect1>
-  <sect1>
+    </section>
+  </section>
+  <section>
     <title>Security Functions</title>
     <para>Security functions provide the ability to interact
     with the security system.</para>
-    <sect2>
+    <section>
     	<title>HASROLE</title>
     	<para>Whether the current caller has the role roleName.</para>
     	<para><synopsis>hasRole([roleType,] roleName)</synopsis></para>
         <para>roleName must be a string, the return type is boolean.</para>
         <para>The two argument form is provided for backwards compatibility. roleType is a string and must be 'data'</para>
-    </sect2>
-  </sect1>
-  <sect1 id="nondeterministic_functions">
+    </section>
+  </section>
+  <section id="nondeterministic_functions">
   	<title>Nondeterministic Function Handling</title>
 	<para>Teiid categorizes functions by varying degrees of determinism.
 		When a function is evaluated and to what extent the result can be
@@ -2093,5 +2093,5 @@
 				select clause).</para>
 		</listitem>
   	</orderedlist>
-  </sect1>
+  </section>
 </chapter>

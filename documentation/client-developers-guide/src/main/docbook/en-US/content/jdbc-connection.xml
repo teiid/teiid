@@ -40,7 +40,7 @@
     <para>Once you have established a connection with the Teiid Server, you can use standard JDBC API classes, like 
         DatabaseMetadata and ResultSetMetadata, to interrogate metadata and Statement classes to execute queries.</para>
     
-    <sect1 id="driver_connection">
+    <section id="driver_connection">
 		<title>Driver Connection</title>
         <para>Use <code>org.teiid.jdbc.TeiidDriver</code> as the driver class.</para>
         
@@ -56,7 +56,7 @@
             [;]. All supported URL properties are defined in the <link linkend="connection_properties">connection properties section</link>.  Property values should be URL encoded if they contain reserved characters, e.g. ('?', '=', ';', etc.)</para></listitem>
         </orderedlist>
         
-	    <sect2 id="connection_properties">
+	    <section id="connection_properties">
         <title>URL Connection Properties</title>
         <para>The following table shows all the supported connection properties that can used with Teiid 
         JDBC Driver URL connection string, or on the Teiid JDBC Data Source class.</para>
@@ -225,11 +225,11 @@
                 </tbody>
             </tgroup>
         </table> 
-        </sect2>
+        </section>
  
-	</sect1>
+	</section>
 
-	<sect1 id="datasource_connection">
+	<section id="datasource_connection">
         <title>Datasource Connection</title>
         <para>To use a data source based connection, use <code>org.teiid.jdbc.TeiidDataSource</code> as the data source class. 
         The <code>TeiidDataSource</code> is also an XADatasource. Teiid DataSource class is also Serializable, so it possible for it to be used with
@@ -343,13 +343,13 @@
                 </tbody>
             </tgroup>
         </table>  
-    </sect1>
+    </section>
     
-    <sect1>
+    <section>
     	<title>Standalone Application</title>
 		<para>To use either Driver or DataSource based connections, add the client JAR to your Java client application's classpath.  See the simple client example in the kit for a full Java sample of the following.</para>    	
 		
-		<sect2 id="sa_driver_connection">
+		<section id="sa_driver_connection">
 	        <title>Driver Connection</title>
 	       
 	       <para>Sample Code:</para>
@@ -360,9 +360,9 @@
     }
 }]]></programlisting>       
  
-	    </sect2>
+	    </section>
 	    
-	    <sect2 id="sa_datasource_connection">
+	    <section id="sa_datasource_connection">
 	        <title>Datasource Connection</title>
 	        
 	       <para>Sample Code:</para>
@@ -378,11 +378,11 @@
     }
 }]]></programlisting>        
 	       
-	    </sect2>
+	    </section>
 		
-    </sect1>
+    </section>
     
-    <sect1 id="ds_in_jbossas">
+    <section id="ds_in_jbossas">
         <title>JBoss AS Data Source</title>
         <para>Teiid can be configured as a JDBC data source in the JBoss Application Server to be accessed 
         from JNDI or injected into your JEE applications.  Deploying Teiid as data source in JBoss AS is exactly same as  
@@ -403,7 +403,7 @@
         
         <para>Tje data source will then be accessable through the JNDI name specified in the -ds.xml file.</para>
         
-        <sect2 id="as_xa_connection">
+        <section id="as_xa_connection">
            <title>DataSource Connection</title>
            <para>Make sure you know the correct DatabaseName, ServerName, Port number and credentials that are specific 
            to your deployment environment. </para>        
@@ -431,8 +431,8 @@
     <max-pool-size>10</max-pool-size>                
   </xa-datasource>        
 </datasources>]]></programlisting> </example>         
-       </sect2>
-       <sect2 id="as_driver_connection">
+       </section>
+       <section id="as_driver_connection">
            <title>Driver based connection</title>
            <para>You can also use Teiid's JDBC driver class <code>org.teiid.jdbc.TeiidDriver</code> to create a data source</para>
            <programlisting><![CDATA[<datasources> 
@@ -449,8 +449,8 @@
     <max-pool-size>10</max-pool-size>
   </local-tx-datasource> 
 </datasources>]]></programlisting>   
-        </sect2>
-        <sect2 id="local_connection">
+        </section>
+        <section id="local_connection">
             <title>Local JDBC Connection</title>
             <para>If you are deploying your client application on the same JBoss AS instance as the Teiid runtime is installed, then
            there is no reason for your client application to open socket based JDBC connection.
@@ -476,11 +476,11 @@
 </datasources>]]></programlisting>
 </example>
            <para>This is essentially the same as the XA configuration, but "ServerName" and "PortNumber" are not specified.</para>            
-        </sect2>
+        </section>
               
-    </sect1>
+    </section>
     
-    <!-- <sect1 id="multiple_hosts">
+    <!-- <section id="multiple_hosts">
         <title>Using Multiple Hosts</title>
         <para>When Teiid Server is deployed on multiple servers for scalbility, then your application that using
         Teiid JDBC API can automatically use all Teiid Servers in that group. To enable this feature the client needs 
@@ -501,6 +501,6 @@
         
         <para>If you are using DataSource to connect to Teiid Server, use "AlternateServers" property/method to define the failover servers.
         Check out the Javadoc on the format of the string.</para>
-    </sect1> -->
+    </section> -->
     
 </chapter>

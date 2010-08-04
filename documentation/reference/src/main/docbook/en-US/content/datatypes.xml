@@ -2,7 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="datatypes">
   <title>Datatypes</title>
-  <sect1>
+  <section>
     <title>Supported Types</title>
     <para>Teiid supports a core set of runtime types. Runtime
       types can be different than semantic types defined in type fields
@@ -187,8 +187,8 @@
         </tbody>
       </tgroup>
     </table>
-  </sect1>
-  <sect1 id="type_conversions">
+  </section>
+  <section id="type_conversions">
     <title>Type Conversions</title>
     <para>
       Data types may be converted from one form to another either
@@ -356,10 +356,10 @@
         </tbody>
       </tgroup>
     </table>
-  </sect1>
-  <sect1>
+  </section>
+  <section>
     <title>Special Conversion Cases</title>
-    <sect2>
+    <section>
       <title>Conversion of String Literals</title>
       <para> Teiid automatically converts string literals within a
         SQL statement to their implied types. This typically occurs in a
@@ -369,8 +369,8 @@
       <para> Here if the created_by column has the datatype of date,
         Teiid automatically converts the string literal to a date
         datatype as well.</para>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>Converting to Boolean</title>
       <para> Teiid can automatically convert literal strings and
         numeric type values to Boolean values as follows:</para>
@@ -409,8 +409,8 @@
           </tbody>
         </tgroup>
       </informaltable>
-    </sect2>
-    <sect2>
+    </section>
+    <section>
       <title>Date/Time/Timestamp Type Conversions
       </title>
       <para>Teiid can implicitly convert properly formatted
@@ -452,9 +452,9 @@
         <code>PARSETIMESTAMP</code>
         .
       </para>
-    </sect2>
-  </sect1>
-  <sect1>
+    </section>
+  </section>
+  <section>
     <title>Escaped Literal Syntax</title>
     <para>Rather than relying on implicit conversion, datatype
       values may be expressed directly in SQL using escape syntax to
@@ -487,5 +487,5 @@
         </tbody>
       </tgroup>
     </table>
-  </sect1>
+  </section>
 </chapter>

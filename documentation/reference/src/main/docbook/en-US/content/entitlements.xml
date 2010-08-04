@@ -12,7 +12,7 @@
     
     <para>Once data roles are enabled, the access permissions defined in a VDB will be enforced by the Teiid Server.</para>
     
-    <sect1>
+    <section>
     	<title>Permissions</title>
    	    <orderedlist>
 	        <para>To process a <code>SELECT</code> statement or a stored procedure execution, the user account requires the following access rights:</para>
@@ -38,9 +38,9 @@
 	        <listitem> <para><code>DELETE</code> - on the Table being deleted.</para></listitem>
 	        <listitem> <para><code>READ</code> - on every column referenced in the criteria.</para></listitem>
 	    </orderedlist>    
-    </sect1>
+    </section>
 
-	<sect1>
+	<section>
 		<title>XML Definition</title>
 	    <para>Data roles are defined inside the <code>vdb.xml</code> file (inside the .vdb Zip archive under META-INF/vdb.xml) if you used Designer. 
     This example will show a sample "vdb.xml" file with few simple data rules.</para>
@@ -117,6 +117,6 @@
    
    <note><para>Currently there is no GUI tooling support in the Designer or any other management tool to create this data roles 
    permissions xml, however this is in our roadmap for future releases to provide.</para></note>
-	</sect1>
+	</section>
 
 </chapter>

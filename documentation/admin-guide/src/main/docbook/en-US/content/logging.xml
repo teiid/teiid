@@ -5,7 +5,7 @@
 ]>
 <chapter id="logging">
 	<title>Logging</title>
-	<sect1 id="general_logging">
+	<section id="general_logging">
 		<title>General Logging</title>
 		<para>
 			The Teiid system provides a wealth of information via logging. To
@@ -21,7 +21,7 @@
 			easy to control of of Teiid logging from a single context. Note however that changes to the log configuration file
 			require a restart to take affect			
 		</para>
-		<sect2>
+		<section>
 			<title>Logging Contexts</title>
 			<para>While all of Teiid's logs are prefixed with "org.teiid", there
 				are more specific contexts depending on the functional area of the
@@ -162,9 +162,9 @@
 					</tbody>
 				</tgroup>
 			</informaltable>
-		</sect2>
-	</sect1>
-	<sect1 id="command_logging">
+		</section>
+	</section>
+	<section id="command_logging">
 		<title>Command Logging</title>
 		<para>Command logging captures executing commands in the	Teiid System.
 			Both user commands (that have been submitted to Teiid) and data source
@@ -194,8 +194,8 @@
             
             See the Developer's Guide to develop a custom logging solution if file based, or any other built-in Log4j, logging is not sufficient.
 		</para>
-	</sect1>
-	<sect1 id="audit_logging">
+	</section>
+	<section id="audit_logging">
 		<title>Audit Logging</title>
 		<para>Audit logging captures important security events. This includes
 			the enforcement of permissions, authentication success/failures, etc.
@@ -207,5 +207,5 @@
 			configure a separate file appender for the DETAIL logging of the
 			org.teiid.AUDIT_LOG context. An example of this is already in
 			the	log4j.xml distributed with Teiid. See the Developer's Guide to develop a custom logging solution if file based, or any other built-in Log4j, logging is not sufficient.</para>
-	</sect1>
+	</section>
 </chapter>
