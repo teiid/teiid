@@ -370,6 +370,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	    	}
 	    	else {
 	    		if (vdb.isValid()) {
+	    			this.vdbRepository.updateVDB(vdb.getName(), vdb.getVersion());
 					vdb.setStatus(VDB.Status.ACTIVE);
 					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_activated",vdb.getName(), vdb.getVersion())); //$NON-NLS-1$    			
 	    		}

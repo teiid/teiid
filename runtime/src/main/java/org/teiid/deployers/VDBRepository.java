@@ -223,4 +223,11 @@ public class VDBRepository implements Serializable{
 			this.odbcStore = getODBCMetadataStore();
 		}
 	}
+	
+	public void updateVDB(String name, int version) {
+		CompositeVDB v = this.vdbRepo.get(new VDBKey(name, version));
+		if (v!= null) {
+			v.update(v.getVDB());
+		}
+	}
 }

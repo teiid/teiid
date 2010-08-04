@@ -76,7 +76,7 @@ public class CompositeVDB {
 		this.mergedVDB = null;
 	}	
 	
-	private void update(VDBMetaData vdbMetadata) {
+	void update(VDBMetaData vdbMetadata) {
 		TransformationMetadata metadata = buildTransformationMetaData(vdbMetadata, getVisibilityMap(), getMetadataStores(), getUDF());
 		vdbMetadata.addAttchment(QueryMetadataInterface.class, metadata);
 		vdbMetadata.addAttchment(TransformationMetadata.class, metadata);	
