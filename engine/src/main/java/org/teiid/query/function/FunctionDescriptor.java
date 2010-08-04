@@ -239,14 +239,9 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         	throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0002, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0002, getName()));
         }
         
-        if (getDeterministic() == FunctionMethod.USER_DETERMINISTIC && values.length > 0 && values[0] instanceof CommandContext) {
+        if (getDeterministic() >= FunctionMethod.USER_DETERMINISTIC && values.length > 0 && values[0] instanceof CommandContext) {
         	CommandContext cc = (CommandContext)values[0];
-        	cc.setUserFunctionEvaluated(true);        	
-        }
-        
-        if (getDeterministic() >= FunctionMethod.SESSION_DETERMINISTIC && values.length > 0 && values[0] instanceof CommandContext) {
-        	CommandContext cc = (CommandContext)values[0];
-        	cc.setSessionFunctionEvaluated(true);
+        	cc.setDeterminismLevel(getDeterministic());
         }
         
         // Invoke the method and return the result

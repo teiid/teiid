@@ -29,6 +29,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.lang.ref.Reference;
+import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -113,9 +114,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		}
 
 		@Override
-		public ManagedBatch createManagedBatch(TupleBatch batch)
+		public ManagedBatch createManagedBatch(TupleBatch batch, boolean softCache)
 				throws TeiidComponentException {
-			ManagedBatchImpl mbi = new ManagedBatchImpl(batch, this);
+			ManagedBatchImpl mbi = new ManagedBatchImpl(batch, this, softCache);
 			mbi.addToCache(false);
 			persistBatchReferences();
 			return mbi;
@@ -193,6 +194,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	
 	private final class ManagedBatchImpl implements ManagedBatch {
 		private boolean persistent;
+		private boolean softCache;
 		private volatile TupleBatch activeBatch;
 		private volatile Reference<TupleBatch> batchReference;
 		private int beginRow;
@@ -200,7 +202,8 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		private long id;
 		private LobManager lobManager;
 		
-		public ManagedBatchImpl(TupleBatch batch, BatchManagerImpl manager) {
+		public ManagedBatchImpl(TupleBatch batch, BatchManagerImpl manager, boolean softCache) {
+			this.softCache = softCache;
 			id = batchAdded.incrementAndGet();
             LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Add batch to BufferManager", id); //$NON-NLS-1$
 			this.activeBatch = batch;
@@ -331,9 +334,11 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 						}
 						LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, batchManager.id, id, "batch written starting at:", offset); //$NON-NLS-1$
 					}
-					this.batchReference = new WeakReference<TupleBatch>(batch);
-				} else {
-					assert persistent;
+					if (softCache) {
+						this.batchReference = new SoftReference<TupleBatch>(batch);
+					} else {
+						this.batchReference = new WeakReference<TupleBatch>(batch);
+					}
 				}
 			} catch (IOException e) {
 				throw new TeiidComponentException(e);

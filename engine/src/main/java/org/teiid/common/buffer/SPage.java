@@ -135,9 +135,9 @@ class SPage {
 			values.setDataTypes(stree.types);
 		}
 		if (children != null) {
-			managedBatch = stree.keyManager.createManagedBatch(values);
+			managedBatch = stree.keyManager.createManagedBatch(values, true);
 		} else {
-			managedBatch = stree.leafManager.createManagedBatch(values);
+			managedBatch = stree.leafManager.createManagedBatch(values, stree.preferMemory);
 		}
 	}
 	

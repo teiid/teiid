@@ -59,6 +59,7 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.sql.lang.Command;
@@ -362,13 +363,15 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					doneProducingBatches();
 				}
 				if (doneProducingBatches && cid != null) {
-			    	boolean sessionScope = processor.getContext().isSessionFunctionEvaluated();
-			    	boolean userScope = processor.getContext().isUserFunctionEvaluated();
+			    	int determinismLevel = processor.getContext().getDeterminismLevel();
 	            	CachedResults cr = new CachedResults();
 	            	cr.setCommand(originalCommand);
 	                cr.setAnalysisRecord(analysisRecord);
 	                cr.setResults(resultsBuffer);
-	                dqpCore.getRsCache().put(cid, sessionScope, userScope, cr);
+	                if (determinismLevel > FunctionMethod.SESSION_DETERMINISTIC) {
+	    				LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("RequestWorkItem.cache_nondeterministic", originalCommand)); //$NON-NLS-1$
+	    			}
+	                dqpCore.getRsCache().put(cid, determinismLevel, cr);
 			    }
 				add = sendResultsIfNeeded(batch);
 				if (!added) {

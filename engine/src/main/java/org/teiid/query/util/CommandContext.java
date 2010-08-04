@@ -86,9 +86,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    
 	    private QueryProcessor.ProcessorFactory queryProcessorFactory;
 	        
-	    private boolean sessionFunctionEvaluated;
-	    
-	    private boolean userFunctionEvaluated;
+	    private int determinismLevel;
 	    
 	    private Set<String> groups;
 	    
@@ -140,21 +138,13 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     public CommandContext() {        
     }
     
-    public boolean isSessionFunctionEvaluated() {
-		return globalState.sessionFunctionEvaluated;
+    public int getDeterminismLevel() {
+		return globalState.determinismLevel;
 	}
     
-    public void setSessionFunctionEvaluated(boolean sessionFunctionEvaluated) {
-    	globalState.sessionFunctionEvaluated = sessionFunctionEvaluated;
-	}
-    
-    public boolean isUserFunctionEvaluated() {
-		return globalState.userFunctionEvaluated;
-	}
-    
-    public void setUserFunctionEvaluated(boolean userFunctionEvaluated) {
-    	globalState.userFunctionEvaluated = userFunctionEvaluated;
-	}    
+    public void setDeterminismLevel(int level) {
+    	globalState.determinismLevel = Math.max(globalState.determinismLevel, level);
+    }
     
     /**
      * @return

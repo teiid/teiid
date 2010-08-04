@@ -164,7 +164,7 @@ public class TupleBuffer {
         	writeBatch.setTerminationFlag(true);
         }
         writeBatch.setDataTypes(types);
-		BatchManager.ManagedBatch mbatch = manager.createManagedBatch(writeBatch);
+		BatchManager.ManagedBatch mbatch = manager.createManagedBatch(writeBatch, false);
 		this.batches.put(writeBatch.getBeginRow(), mbatch);
         batchBuffer = null;
 	}

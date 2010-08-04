@@ -34,7 +34,7 @@ public interface BatchManager {
 		
 	}
 	
-	ManagedBatch createManagedBatch(TupleBatch batch) throws TeiidComponentException;
+	ManagedBatch createManagedBatch(TupleBatch batch, boolean softCache) throws TeiidComponentException;
 	
 	void remove();
 	
