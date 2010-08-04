@@ -230,6 +230,9 @@ public class DQPCore implements DQP {
     }
     
     public ClientState getClientState(String key, boolean create) {
+    	if (key == null) {
+    		return null;
+    	}
 		ClientState state = clientState.get(key);
 		if (state == null && create) {
 			state = new ClientState(new TempTableStore(key));

@@ -1774,8 +1774,7 @@
   </section>
   <section>
     <title>Lookup Function</title>
-    <para>The Lookup function allows you to cache a table’s
-    data in memory and access it through a scalar function. This caching
+    <para>The Lookup function allows you to cache a key value pair table and access it through a scalar function. This caching
     accelerates response time to queries that use the lookup tables, known
     in business terminology as lookup tables or code tables.</para>
     <para>A StatePostalCodes table used to translate postal codes to
@@ -1788,15 +1787,12 @@
     </para>
     <para>When you call this function for any combination of codeTable, returnColumn, and
       keyColumn for the first time, the Teiid System caches the result. 
-      The Teiid System uses this cached map for all
+      The Teiid System uses this cache for all
       queries, in all sessions, that later access this lookup table. The
       codeTable requires use of the fully-qualified name, and the
       returnColumn and keyColumn parameters should use shortened column
       names.</para>
-    <para>Because the Teiid System caches and indexes this
-      information in memory, this function provides quick access after the
-      Teiid System initially caches the lookup table. The Teiid
-      System unloads these cached lookup tables when you stop and restart
+    <para>The Teiid System unloads these cached lookup tables when you stop and restart
       the Teiid System. Thus, you should not use this function for
       data that is subject to updates. Instead, you can use it against
       static data that does not change over time.</para>
@@ -1805,11 +1801,6 @@
         <listitem>
           <para>The keyColumn is expected to contain unique key
             values. If the column contains duplicate values, an exception will be thrown.</para>
-        </listitem>
-        <listitem>
-          <para>Cached lookup tables might consume significant memory. You
-            can limit the number and maximum size of these code tables by
-            setting configuration properties.</para>
         </listitem>
       </itemizedlist>
     </note>
@@ -2064,9 +2055,18 @@
 				functions not categorized below are considered deterministic.</para>
 		</listitem>
 		<listitem>
+			<para>User Deterministic - the function will return the same
+				result for the given inputs for the same user. This includes the hasRole
+				and user functions. User deterministic functions are evaluated
+				by the engine as soon as all input values are known, which may occur as soon
+				as the rewrite phase. If a user deterministic function is evaluated
+				during the creation of a prepared processing plan, then the resulting
+				plan will be cached only for the user.</para>
+		</listitem>
+		<listitem>
 			<para>Session Deterministic - the function will return the same
-				result for the given inputs under the same user session. This category includes the hasRole,
-				env, and user functions. Session deterministic functions are evaluated
+				result for the given inputs under the same user session. This category includes the env
+				function. Session deterministic functions are evaluated
 				by the engine as soon as all input values are known, which may occur as soon
 				as the rewrite phase. If a session deterministic function is evaluated
 				during the creation of a prepared processing plan, then the resulting
