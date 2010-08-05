@@ -366,7 +366,7 @@ END
     </section>
     <section>
       <title>Executing Virtual Procedures</title>
-      <para>You execute procedures using the SQL <link linkend="execute_command">EXECUTE</link> command. If
+      <para>You execute procedures using the SQL <link linkend="exec_command">EXECUTE</link> command. If
         the procedure has defined inputs, you specify those in a
         sequential list, or using "name=value" syntax. You must use the
         name of the input parameter, scoped by the full procedure name if

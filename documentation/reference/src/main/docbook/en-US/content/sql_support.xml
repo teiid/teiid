@@ -1132,7 +1132,7 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
         </listitem>
       </itemizedlist>
       <para>Previous versions of Teiid accepted the PLANONLY, DEBUG, and SHOWPLAN option arguments.  These are no longer accepted in the OPTION clause.
-      Please see the <link linkend="other_commands">other commands</link> chapter for using these options.
+      Please see the Client Developers Guide for replacements to those options.
       </para>
     </section>
   </section>
