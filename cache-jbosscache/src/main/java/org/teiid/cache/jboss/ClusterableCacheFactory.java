@@ -64,7 +64,9 @@ public class ClusterableCacheFactory implements CacheFactory, Serializable {
 	
 	@Override
 	public void destroy() {
-		this.delegate.destroy();
+		if (this.delegate != null) {
+			this.delegate.destroy();
+		}
 	}
 	
 	private Object getClusteredCache() {
