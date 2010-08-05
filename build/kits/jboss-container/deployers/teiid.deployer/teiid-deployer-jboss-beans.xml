@@ -5,7 +5,6 @@
     <!-- Deployer specific Stuff -->
     <bean name="VDBStructure" class="org.teiid.deployers.VDBStructure" />
     <bean name="VDBRepository" class="org.teiid.deployers.VDBRepository"/>
-    <bean name="ConnectorManagerRepository" class="org.teiid.dqp.internal.datamgr.ConnectorManagerRepository"/>
     <bean name="SecurityHelper" class="org.teiid.jboss.JBossSecurityHelper"/>    
         
    <bean name="JBossLifeCycleListener" class="org.teiid.jboss.JBossLifeCycleListener"/>
@@ -46,7 +45,6 @@
         </uninstall>
         <property name="VDBRepository"><inject bean="VDBRepository"/></property>
         <property name="objectSerializer"><inject bean="ObjectSerializer"/></property>
-        <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>  
         <property name="translatorRepository"><inject bean="translatorRepository"/></property>      
         <property name="containerLifeCycleListener"><inject bean="JBossLifeCycleListener"/></property>
         <property name="threadPool"><inject bean="jboss.system:service=ThreadPool"/></property>
@@ -77,7 +75,6 @@
             
     <bean name="VDBStatusChecker" class="org.teiid.deployers.VDBStatusChecker">
         <property name="VDBRepository"><inject bean="VDBRepository"/></property>
-        <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>
     </bean>
      
     <!-- Persistence class for the VDB deployment file -->

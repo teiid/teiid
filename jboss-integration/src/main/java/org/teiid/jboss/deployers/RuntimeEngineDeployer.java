@@ -62,7 +62,6 @@ import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.deployers.VDBRepository;
-import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DQPWorkContext;
@@ -286,10 +285,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	
 	public void setBufferService(BufferService service) {
 		this.dqpCore.setBufferService(service);
-	}
-	
-	public void setConnectorManagerRepository(ConnectorManagerRepository repo) {
-		this.dqpCore.setConnectorManagerRepository(repo);
 	}
 	
 	public void setSecurityHelper(SecurityHelper helper) {

@@ -60,7 +60,6 @@
         <property name="transactionManager"><inject bean="TransactionManager" property="transactionManager"/></property>
         <property name="sessionService"><inject bean="SessionService"/></property>
         <property name="bufferService"><inject bean="BufferService"/></property>
-        <property name="connectorManagerRepository"><inject bean="ConnectorManagerRepository"/></property>
         <property name="securityHelper"><inject bean="SecurityHelper"/></property>
         <property name="VDBRepository"><inject bean="VDBRepository"/></property>
         <property name="cacheFactory"><inject bean="CacheFactory"/></property>

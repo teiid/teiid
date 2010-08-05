@@ -59,7 +59,6 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.Streamable;
 import org.teiid.dqp.DQPPlugin;
-import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor.PrioritizedRunnable;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
@@ -186,7 +185,6 @@ public class DQPCore implements DQP {
     private SessionAwareCache<CachedResults> rsCache;
     private TransactionService transactionService;
     private BufferService bufferService;
-    private ConnectorManagerRepository connectorManagerRepository;
     
     // Query worker pool for processing plans
     private int processorTimeslice = DQPConfiguration.DEFAULT_PROCESSOR_TIMESLICE;
@@ -332,8 +330,7 @@ public class DQPCore implements DQP {
 	    ClientState state = this.getClientState(workContext.getSessionId(), true);
 	    request.initialize(requestMsg, bufferManager,
 				dataTierMgr, transactionService, state.sessionTables,
-				workContext, connectorManagerRepository,
-				this.useEntitlements);
+				workContext, this.useEntitlements);
 		
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
         RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
@@ -648,7 +645,6 @@ public class DQPCore implements DQP {
         this.processWorkerPool = new ThreadReuseExecutor(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, config.getMaxThreads());
         
         dataTierMgr = new TempTableDataManager(new DataTierManagerImpl(this,
-                                            this.connectorManagerRepository,
                                             this.bufferService), this.bufferManager); 
 	}
 	
@@ -789,14 +785,6 @@ public class DQPCore implements DQP {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		MetaDataProcessor processor = new MetaDataProcessor(this, this.prepPlanCache, workContext.getVdbName(), workContext.getVdbVersion());
 		return processor.processMessage(workContext.getRequestID(requestID), workContext, preparedSql, allowDoubleQuotedVariable);
-	}
-	
-	public void setConnectorManagerRepository(ConnectorManagerRepository repo) {
-		this.connectorManagerRepository = repo;
-	}
-	
-	public ConnectorManagerRepository getConnectorManagerRepository() {
-		return this.connectorManagerRepository;
 	}
 	
 	public boolean isExceptionOnMaxSourceRows() {

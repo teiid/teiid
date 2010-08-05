@@ -21,6 +21,7 @@
  */
 package org.teiid.adminapi.impl;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -43,6 +44,8 @@ import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
+import org.teiid.core.util.FileUtils;
+import org.teiid.core.util.StringUtil;
 
 
 @ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="vdb"), properties=ManagementProperties.EXPLICIT)
@@ -102,7 +105,8 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	private String fileUrl = null;
 	private boolean dynamic = false;
 	private VDB.Status status = VDB.Status.INACTIVE;
-	
+	private ConnectionType connectionType = VDB.ConnectionType.BY_VERSION;
+	private boolean removed;
 
 	@ManagementProperty(description="Name of the VDB")
 	@ManagementObjectID(type="vdb")
@@ -115,6 +119,24 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	public void setName(String name) {
 		super.setName(name);
 	} 
+	
+	public boolean isRemoved() {
+		return removed;
+	}
+	
+	public void setRemoved(boolean removed) {
+		this.removed = removed;
+	}
+	
+	@Override
+	@ManagementProperty(description="Collections Allowed")
+	public ConnectionType getConnectionType() {
+		return this.connectionType;
+	}
+	
+	public void setConnectionType(ConnectionType allowConnections) {
+		this.connectionType = allowConnections;
+	}
 	
 	@Override
 	@ManagementProperty(description="VDB Status")
@@ -144,6 +166,20 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	
 	public void setUrl(String url) {
 		this.fileUrl = url;
+	}
+	
+	public void setUrl(URL url) {
+		this.setUrl(url.toExternalForm());
+		String fileName = FileUtils.getBaseFileNameWithoutExtension(url.getPath());
+		String prefix = getName() + "_"; //$NON-NLS-1$
+		if (StringUtil.startsWithIgnoreCase(fileName, prefix)) {
+			try {
+				int fileVersion = Integer.parseInt(fileName.substring(prefix.length()));
+				this.setVersion(fileVersion);
+			} catch (NumberFormatException e) {
+				
+			}
+		}
 	}
 
 	@Override
@@ -292,6 +328,10 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	
 	public DataPolicyMetadata getDataPolicy(String policyName) {
 		return this.dataPolicies.getMap().get(policyName);
+	}
+	
+	public VDBTranslatorMetaData getTranslator(String name) {
+		return this.translators.getMap().get(name);
 	}
 	
 	public boolean isPreview() {

@@ -137,7 +137,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
                               TransactionService transactionService,
                               TempTableStore tempTableStore,
                               DQPWorkContext workContext,
-                              ConnectorManagerRepository repo,
                               boolean useEntitlements) {
 
         this.requestMsg = requestMsg;
@@ -150,7 +149,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         idGenerator.setDefaultFactory(new IntegerIDFactory());
         this.workContext = workContext;
         this.requestId = workContext.getRequestID(this.requestMsg.getExecutionId());
-        this.connectorManagerRepo = repo;
+        this.connectorManagerRepo = workContext.getVDB().getAttachment(ConnectorManagerRepository.class);
         this.useEntitlements = useEntitlements;
     }
     

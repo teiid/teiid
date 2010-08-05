@@ -43,7 +43,7 @@ public class DynamicVDBDeployer extends AbstractVFSParsingDeployer<VDBMetaData> 
 		Unmarshaller un = VDBParserDeployer.getUnMarsheller();
 		VDBMetaData vdb = (VDBMetaData)un.unmarshal(file.openStream());
 		
-		vdb.setUrl(unit.getRoot().toURL().toExternalForm());
+		vdb.setUrl(unit.getRoot().toURL());
 		vdb.setDynamic(true);
 		
 		LogManager.logDetail(LogConstants.CTX_RUNTIME,"VDB "+unit.getRoot().getName()+" has been parsed.");  //$NON-NLS-1$ //$NON-NLS-2$

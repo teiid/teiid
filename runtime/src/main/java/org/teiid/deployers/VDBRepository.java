@@ -28,18 +28,21 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import org.jboss.deployers.spi.DeploymentException;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.Model;
-import org.teiid.adminapi.VDB;
+import org.teiid.adminapi.VDB.ConnectionType;
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Datatype;
@@ -57,12 +60,12 @@ import org.teiid.vdb.runtime.VDBKey;
 public class VDBRepository implements Serializable{
 	private static final long serialVersionUID = 312177538191772674L;
 	
-	private Map<VDBKey, CompositeVDB> vdbRepo = new ConcurrentHashMap<VDBKey, CompositeVDB>();
+	private NavigableMap<VDBKey, CompositeVDB> vdbRepo = new ConcurrentSkipListMap<VDBKey, CompositeVDB>();
 	private MetadataStore systemStore;
 	private MetadataStore odbcStore;
 	private boolean odbcEnabled = false;
 	
-	public void addVDB(VDBMetaData vdb, MetadataStoreGroup stores, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf) throws DeploymentException {
+	public void addVDB(VDBMetaData vdb, MetadataStoreGroup stores, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr) throws DeploymentException {
 		if (getVDB(vdb.getName(), vdb.getVersion()) != null) {
 			throw new DeploymentException(RuntimePlugin.Util.getString("duplicate_vdb", vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
 		}
@@ -78,12 +81,12 @@ public class VDBRepository implements Serializable{
 		
 		if (this.odbcStore == null) {
 			addSystemModel(vdb);
-			this.vdbRepo.put(vdbId(vdb), new CompositeVDB(vdb, stores, visibilityMap, udf, this.systemStore));
+			this.vdbRepo.put(vdbId(vdb), new CompositeVDB(vdb, stores, visibilityMap, udf, cmr, this.systemStore));
 		}
 		else {
 			addSystemModel(vdb);
 			addODBCModel(vdb);
-			this.vdbRepo.put(vdbId(vdb), new CompositeVDB(vdb, stores, visibilityMap, udf, this.systemStore, odbcStore));
+			this.vdbRepo.put(vdbId(vdb), new CompositeVDB(vdb, stores, visibilityMap, udf, cmr, this.systemStore, odbcStore));
 		}
 	}
 
@@ -129,26 +132,24 @@ public class VDBRepository implements Serializable{
 		
 	public VDBMetaData getActiveVDB(String vdbName) throws VirtualDatabaseException {
     	int latestVersion = 0;
-        for (VDBKey key:this.vdbRepo.keySet()) {
-            if(key.getName().equalsIgnoreCase(vdbName)) {
-            	VDBMetaData vdb = this.vdbRepo.get(key).getVDB();
-                if (vdb.getStatus() == VDB.Status.ACTIVE_DEFAULT) {
-                	latestVersion = vdb.getVersion();
-                	break;
-                }            	
-                // Make sure the VDB Name and version number are the only parts of this vdb key
-                latestVersion = Math.max(latestVersion, Integer.parseInt(key.getVersion()));
+        for (VDBKey key:this.vdbRepo.tailMap(new VDBKey(vdbName, 0)).keySet()) {
+            if(!key.getName().equalsIgnoreCase(vdbName)) {
+            	break;
             }
+        	VDBMetaData vdb = this.vdbRepo.get(key).getVDB();
+            if (vdb.getStatus() == Status.ACTIVE) {
+            	if (vdb.getConnectionType() == ConnectionType.ANY) {
+            		latestVersion = Math.max(vdb.getVersion(), latestVersion);
+            	} else if (latestVersion == 0 && vdb.getConnectionType() == ConnectionType.BY_VERSION) {
+            		latestVersion = vdb.getVersion();
+            	}
+            }            	
         }
         if(latestVersion == 0) {
             throw new VirtualDatabaseException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, "latest")); //$NON-NLS-1$ //$NON-NLS-2$ 
         }
 
-        VDBMetaData vdb = getVDB(vdbName, latestVersion);
-        if (vdb.getStatus() == VDB.Status.ACTIVE || vdb.getStatus() == VDB.Status.ACTIVE_DEFAULT) {
-        	return vdb;            
-        }
-        throw new VirtualDatabaseException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, latestVersion)); //$NON-NLS-1$
+        return getVDB(vdbName, latestVersion);
 	}
 	
 	public MetadataStore getSystemStore() {
@@ -178,14 +179,17 @@ public class VDBRepository implements Serializable{
 		this.odbcEnabled = true;
 	}
 	
-	public synchronized void removeVDB(String vdbName, int vdbVersion) {
+	public synchronized boolean removeVDB(String vdbName, int vdbVersion) {
 		VDBKey key = new VDBKey(vdbName, vdbVersion);
-		this.vdbRepo.remove(key);
-		
-		// if this VDB was part of another VDB; then remove them.
-		for (CompositeVDB other:this.vdbRepo.values()) {
-			other.removeChild(key);
+		CompositeVDB removed = this.vdbRepo.remove(key);
+		if (removed != null) {
+			// if this VDB was part of another VDB; then remove them.
+			for (CompositeVDB other:this.vdbRepo.values()) {
+				other.removeChild(key);
+			}
+			return true;
 		}
+		return false;
 	}	
 	
 	public Map<String, Datatype> getBuiltinDatatypes() {

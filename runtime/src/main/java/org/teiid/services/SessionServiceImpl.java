@@ -40,6 +40,8 @@ import org.jboss.managed.api.annotation.ManagementComponent;
 import org.jboss.managed.api.annotation.ManagementObject;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
+import org.teiid.adminapi.VDB;
+import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.security.InvalidSessionException;
@@ -163,16 +165,19 @@ public class SessionServiceImpl implements SessionService {
         String vdbName = properties.getProperty(TeiidURL.JDBC.VDB_NAME);
         if (vdbName != null) {
         	String vdbVersion = properties.getProperty(TeiidURL.JDBC.VDB_VERSION);
-            try {
-                if (vdbVersion == null) {
-                	vdb = this.vdbRepository.getActiveVDB(vdbName);
+            if (vdbVersion == null) {
+				try {
+					vdb = this.vdbRepository.getActiveVDB(vdbName);
+				} catch (VirtualDatabaseException e) {
+					throw new SessionServiceException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, "latest")); //$NON-NLS-1$ //$NON-NLS-2$ 
+				}
+            }
+            else {
+            	vdb = this.vdbRepository.getVDB(vdbName, Integer.parseInt(vdbVersion));
+                if (vdb.getStatus() != VDB.Status.ACTIVE || vdb.getConnectionType() == ConnectionType.NONE) {
+                	throw new SessionServiceException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, vdbVersion)); //$NON-NLS-1$
                 }
-                else {
-                	vdb = this.vdbRepository.getVDB(vdbName, Integer.parseInt(vdbVersion));
-                }            
-            } catch (VirtualDatabaseException e) {
-            	throw new SessionServiceException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, vdbVersion==null?"latest":vdbVersion)); //$NON-NLS-1$ //$NON-NLS-2$ 
-			}            
+            }            
         }
 
         if (sessionMaxLimit > 0 && getActiveSessionsCount() >= sessionMaxLimit) {

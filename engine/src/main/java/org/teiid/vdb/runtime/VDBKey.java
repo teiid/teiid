@@ -27,29 +27,29 @@ import java.io.Serializable;
 import org.teiid.core.util.HashCodeUtil;
 
 
-public class VDBKey implements Serializable{
+public class VDBKey implements Serializable, Comparable<VDBKey>{
 	private static final long serialVersionUID = -7249750823144856081L;
 	
 	private String name;
-    private String version;
+    private int version;
     
     public VDBKey(String name, String version) {
         this.name = name.toUpperCase();
         if (version != null) {
-            this.version = version.toUpperCase();
+            this.version = Integer.parseInt(version);
         }
     }
     
     public VDBKey(String name, int version) {
         this.name = name.toUpperCase();
-        this.version = String.valueOf(version);
+        this.version = version;
     }    
     
     public String getName() {
 		return name;
 	}
     
-    public String getVersion() {
+    public int getVersion() {
 		return version;
 	}
     
@@ -74,19 +74,8 @@ public class VDBKey implements Serializable{
         
         VDBKey other = (VDBKey)obj;
         
-        if (!other.name.equals(this.name)) {
-            return false;
-        }
-        
-        if (this.version != null) {
-            if (!this.version.equals(other.version)) {
-                return false;
-            }
-        } else if (other.version != null){
-            return false;
-        }
-        
-        return true;
+        return other.name.equals(this.name) 
+        	&& version == other.version;
     }
     
     /** 
@@ -95,5 +84,14 @@ public class VDBKey implements Serializable{
     public String toString() {
         return name + " " + version; //$NON-NLS-1$
     }
+
+	@Override
+	public int compareTo(VDBKey o) {
+		int compare = name.compareTo(o.name);
+		if (compare == 0) {
+			return version - o.version;
+		}
+		return compare;
+	}
     
 }

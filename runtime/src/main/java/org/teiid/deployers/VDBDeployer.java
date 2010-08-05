@@ -55,12 +55,10 @@ import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
-import org.teiid.vdb.runtime.VDBKey;
 
 
 public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	private VDBRepository vdbRepository;
-	private ConnectorManagerRepository connectorManagerRepository;
 	private TranslatorRepository translatorRepository;
 	private ObjectSerializer serializer;
 	private ContainerLifeCycleListener shutdownListener;
@@ -75,10 +73,12 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 
 	@Override
 	public void deploy(DeploymentUnit unit, VDBMetaData deployment) throws DeploymentException {
-		if (this.vdbRepository.getVDB(deployment.getName(), deployment.getVersion()) != null) {
-			this.vdbRepository.removeVDB(deployment.getName(), deployment.getVersion());
+		if (this.vdbRepository.removeVDB(deployment.getName(), deployment.getVersion())) {
 			LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("redeploying_vdb", deployment)); //$NON-NLS-1$ 
 		}
+		
+		TranslatorRepository repo = new TranslatorRepository();
+		ConnectorManagerRepository cmr = new ConnectorManagerRepository();
 		
 		boolean preview = deployment.isPreview();
 		
@@ -97,7 +97,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 			VDBTranslatorMetaData data = (VDBTranslatorMetaData)t;
 			
 			String type = data.getType();
-			Translator parent = this.translatorRepository.getTranslatorMetaData(null, type);
+			Translator parent = this.translatorRepository.getTranslatorMetaData(type);
 			if ( parent == null) {
 				throw new DeploymentException(RuntimePlugin.Util.getString("translator_type_not_found", unit.getName())); //$NON-NLS-1$
 			}
@@ -107,15 +107,15 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 				if (data.getPropertyValue(key) == null && parent.getPropertyValue(key) != null) {
 					data.addProperty(key, parent.getPropertyValue(key));
 				}
-			}			
-			this.translatorRepository.addTranslatorMetadata(new VDBKey(deployment.getName(), deployment.getVersion()), data.getName(), data);
+			}
+			repo.addTranslatorMetadata(data.getName(), data);
 		}
-		createConnectorManagers(deployment);
+		createConnectorManagers(cmr, repo, deployment);
 		
 		// if store is null and vdb dynamic vdb then try to get the metadata
 		if (store == null && deployment.isDynamic()) {
 			store = new MetadataStoreGroup();
-			buildDynamicMetadataStore((VFSDeploymentUnit)unit, deployment, store);
+			buildDynamicMetadataStore((VFSDeploymentUnit)unit, deployment, store, cmr);
 		}
 		
 		// allow empty vdbs for enabling the preview functionality
@@ -142,7 +142,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		deployment.removeAttachment(MetadataStoreGroup.class);
 		
 		// add transformation metadata to the repository.
-		this.vdbRepository.addVDB(deployment, store, visibilityMap, udf);
+		this.vdbRepository.addVDB(deployment, store, visibilityMap, udf, cmr);
 		
 		try {
 			saveMetadataStore((VFSDeploymentUnit)unit, deployment, store);
@@ -152,7 +152,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 				
 		boolean valid = true;
 		if (!preview) {
-			valid = validateSources(deployment);
+			valid = validateSources(cmr, deployment);
 			
 			// Check if the VDB is fully configured.
 			if (valid) {
@@ -167,7 +167,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_deployed",deployment, valid?"active":"inactive")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
-	private void createConnectorManagers(final VDBMetaData deployment) throws DeploymentException {
+	private void createConnectorManagers(ConnectorManagerRepository cmr, TranslatorRepository repo, final VDBMetaData deployment) throws DeploymentException {
 		IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map = new IdentityHashMap<Translator, ExecutionFactory<Object, Object>>();
 		
 		for (Model model:deployment.getModels()) {
@@ -175,12 +175,15 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 				continue;
 			}			
 			for (String source:model.getSourceNames()) {
-				if (this.connectorManagerRepository.getConnectorManager(source) != null) {
+				if (cmr.getConnectorManager(source) != null) {
 					continue;
 				}
 
 				String name = model.getSourceTranslatorName(source);
-				Translator translator = VDBDeployer.this.translatorRepository.getTranslatorMetaData(new VDBKey(deployment.getName(), deployment.getVersion()), name);
+				Translator translator = repo.getTranslatorMetaData(name);
+				if (translator == null) {
+					translator = this.translatorRepository.getTranslatorMetaData(name);
+				}
 				if (translator == null) {
 					throw new DeploymentException(RuntimePlugin.Util.getString("translator_not_found", deployment.getName(), deployment.getVersion(), name)); //$NON-NLS-1$
 				}
@@ -193,12 +196,12 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 
 				ConnectorManager cm = new ConnectorManager(name, model.getSourceConnectionJndiName(source));
 				cm.setExecutionFactory(ef);
-				this.connectorManagerRepository.addConnectorManager(source, cm);
+				cmr.addConnectorManager(source, cm);
 			}
 		}
 	}
 
-	private boolean validateSources(VDBMetaData deployment) {
+	private boolean validateSources(ConnectorManagerRepository cmr, VDBMetaData deployment) {
 		boolean valid = true;
 		for(Model m:deployment.getModels()) {
 			ModelMetaData model = (ModelMetaData)m;
@@ -207,7 +210,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 				if (mapping.getName().equals(CoreConstants.SYSTEM_MODEL) || model.getName().equals(CoreConstants.ODBC_MODEL)) {
 					continue;
 				}
-				ConnectorManager cm = this.connectorManagerRepository.getConnectorManager(mapping.getName());
+				ConnectorManager cm = cmr.getConnectorManager(mapping.getName());
 				String msg = cm.getStausMessage();
 				if (msg != null && msg.length() > 0) {
 					valid = false;
@@ -232,24 +235,11 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	public void undeploy(DeploymentUnit unit, VDBMetaData deployment) {
 		super.undeploy(unit, deployment);
 		
-		// there is chance that two different VDBs using the same source name, and their
-		// connector manager is removed. should we prefix vdb name??
-		for (Model model:deployment.getModels()) {
-			if (model.getName().equals(CoreConstants.SYSTEM_MODEL) || model.getName().equals(CoreConstants.ODBC_MODEL)){
-				continue;
-			}
-			for (String source:model.getSourceNames()) {
-				if (this.connectorManagerRepository.getConnectorManager(source) != null) {
-					this.connectorManagerRepository.removeConnectorManager(source);
-				}
-			}
-		}
-		
-		this.translatorRepository.removeVDBTranslators(new VDBKey(deployment.getName(), deployment.getVersion()));
-		
 		if (this.vdbRepository != null) {
 			this.vdbRepository.removeVDB(deployment.getName(), deployment.getVersion());
 		}
+		
+		deployment.setRemoved(true);
 		
 		try {
 			deleteMetadataStore((VFSDeploymentUnit)unit, deployment);
@@ -263,10 +253,6 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	public void setObjectSerializer(ObjectSerializer serializer) {
 		this.serializer = serializer;
 	}		
-	
-	public void setConnectorManagerRepository(ConnectorManagerRepository repo) {
-		this.connectorManagerRepository = repo;
-	}  
 	
 	private void saveMetadataStore(VFSDeploymentUnit unit, VDBMetaData vdb, MetadataStoreGroup store) throws IOException {
 		File cacheFileName = this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion()); //$NON-NLS-1$
@@ -284,7 +270,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		}
 	}
 	
-    private void buildDynamicMetadataStore(final VFSDeploymentUnit unit, final VDBMetaData vdb, final MetadataStoreGroup vdbStore) throws DeploymentException {
+    private void buildDynamicMetadataStore(final VFSDeploymentUnit unit, final VDBMetaData vdb, final MetadataStoreGroup vdbStore, final ConnectorManagerRepository cmr) throws DeploymentException {
     	
     	// make sure we are configured correctly first
 		for (Model model:vdb.getModels()) {
@@ -322,19 +308,19 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	    		threadPool.run(new Runnable() {
 					@Override
 					public void run() {
-						loadMetadata(vdb, model, cache, cacheFile, vdbStore);
+						loadMetadata(vdb, model, cache, cacheFile, vdbStore, cmr);
 					}
 	    		});
 	    	}
 		}
 	}	
     
-    private void loadMetadata(VDBMetaData vdb, ModelMetaData model, boolean cache, File cacheFile, MetadataStoreGroup vdbStore) {
+    private void loadMetadata(VDBMetaData vdb, ModelMetaData model, boolean cache, File cacheFile, MetadataStoreGroup vdbStore, ConnectorManagerRepository cmr) {
     	Exception exception = null;
     	
     	boolean loaded = false;;
     	for (String sourceName: model.getSourceNames()) {
-    		ConnectorManager cm = this.connectorManagerRepository.getConnectorManager(sourceName);
+    		ConnectorManager cm = cmr.getConnectorManager(sourceName);
     		if (cm == null) {
     			continue;
     		}
@@ -360,7 +346,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
     	
     	synchronized (this) {
 	    	if (!loaded) {
-	    		vdb.setStatus(VDB.Status.INCOMPLETE);
+	    		vdb.setStatus(VDB.Status.INACTIVE);
 	    		String msg = RuntimePlugin.Util.getString("failed_to_retrive_metadata", vdb.getName()+"-"+vdb.getVersion(), model.getName()); //$NON-NLS-1$ //$NON-NLS-2$
 		    	model.addError(ModelMetaData.ValidationError.Severity.ERROR.toString(), msg); 
 		    	if (exception != null) {

@@ -29,6 +29,7 @@ import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.metadata.CompositeMetadataStore;
@@ -47,16 +48,19 @@ public class CompositeVDB {
 	private UDFMetaData udf;
 	private LinkedHashMap<VDBKey, CompositeVDB> children;
 	private MetadataStore[] additionalStores;
+	private ConnectorManagerRepository cmr;
 	
 	// used as cached item to avoid rebuilding
 	private VDBMetaData mergedVDB;
 	
-	public CompositeVDB(VDBMetaData vdb, MetadataStoreGroup stores, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, MetadataStore... additionalStores) {
+	public CompositeVDB(VDBMetaData vdb, MetadataStoreGroup stores, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr, MetadataStore... additionalStores) {
 		this.vdb = vdb;
 		this.stores = stores;
 		this.visibilityMap = visibilityMap;
 		this.udf = udf;
+		this.cmr = cmr;
 		this.additionalStores = additionalStores;
+		this.vdb.addAttchment(ConnectorManagerRepository.class, cmr);
 		update(this.vdb);
 	}
 	
@@ -121,7 +125,9 @@ public class CompositeVDB {
 		mergedVDB.setDescription(this.vdb.getDescription());
 		mergedVDB.setStatus(this.vdb.getStatus());
 		mergedVDB.setJAXBProperties(this.vdb.getJAXBProperties());
-		
+		mergedVDB.setConnectionType(this.vdb.getConnectionType());
+		ConnectorManagerRepository mergedRepo = new ConnectorManagerRepository();
+		mergedRepo.getConnectorManagers().putAll(this.cmr.getConnectorManagers());
 		for (CompositeVDB child:this.children.values()) {
 			
 			// add models
@@ -132,7 +138,9 @@ public class CompositeVDB {
 			for (DataPolicy p:child.getVDB().getDataPolicies()) {
 				mergedVDB.addDataPolicy((DataPolicyMetadata)p);
 			}
+			mergedRepo.getConnectorManagers().putAll(child.cmr.getConnectorManagers());
 		}
+		mergedVDB.addAttchment(ConnectorManagerRepository.class, mergedRepo);
 		return mergedVDB;
 	}
 	

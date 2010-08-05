@@ -27,52 +27,25 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.teiid.adminapi.Translator;
-import org.teiid.adminapi.impl.TranslatorMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.vdb.runtime.VDBKey;
 
 
 public class TranslatorRepository implements Serializable{
 	
 	private static final long serialVersionUID = -1212280886010974273L;
-	private Map<String, TranslatorMetaData> translatorRepo = new ConcurrentHashMap<String, TranslatorMetaData>();
-	private Map<VDBKey, Map<String, VDBTranslatorMetaData>> vdbScopedTranslatorRepo = new ConcurrentHashMap<VDBKey, Map<String, VDBTranslatorMetaData>>();
+	private Map<String, VDBTranslatorMetaData> translatorRepo = new ConcurrentHashMap<String, VDBTranslatorMetaData>();
 
-	public void addTranslatorMetadata(String name, TranslatorMetaData factory) {
+	public void addTranslatorMetadata(String name, VDBTranslatorMetaData factory) {
 		this.translatorRepo.put(name, factory);
-	}
-	
-	public void addTranslatorMetadata(VDBKey key, String name, VDBTranslatorMetaData factory) {
-		Map<String, VDBTranslatorMetaData> repo = vdbScopedTranslatorRepo.get(key);
-		if (repo == null) {
-			repo = new ConcurrentHashMap<String, VDBTranslatorMetaData>();
-			this.vdbScopedTranslatorRepo.put(key, repo);
-		}
-		repo.put(name, factory);
 	}	
 	
-	public Translator getTranslatorMetaData(VDBKey key, String name) {
-		Translator factory = null;
-
-		if (key != null) {
-			Map<String, VDBTranslatorMetaData> repo = vdbScopedTranslatorRepo.get(key);
-			if (repo != null && !repo.isEmpty()) {
-				factory = repo.get(name); 	
-			}
-		}
-		
-		if (factory == null) {
-			factory = this.translatorRepo.get(name);
-		}
-		
+	public Translator getTranslatorMetaData(String name) {
+		Translator factory = this.translatorRepo.get(name);
 		return factory;
 	}
 	
-	public TranslatorMetaData removeTranslatorMetadata(String name) {
+	public VDBTranslatorMetaData removeTranslatorMetadata(String name) {
 		return this.translatorRepo.remove(name);
 	}	
 	
-	public void removeVDBTranslators(VDBKey name) {
-		this.vdbScopedTranslatorRepo.remove(name);
-	}
 }

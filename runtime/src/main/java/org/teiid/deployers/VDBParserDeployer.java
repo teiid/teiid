@@ -135,7 +135,7 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 			return null;
 		}
 		
-		vdb.setUrl(unit.getRoot().toURL().toExternalForm());		
+		vdb.setUrl(unit.getRoot().toURL());		
 		
 		// build the metadata store
 		if (imf != null) {

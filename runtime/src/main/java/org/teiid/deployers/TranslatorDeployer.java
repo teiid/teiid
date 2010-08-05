@@ -56,7 +56,7 @@ public class TranslatorDeployer extends AbstractSimpleRealDeployer<TranslatorMet
 			}
 			
 			String type = data.getType();
-			Translator parent = this.translatorRepository.getTranslatorMetaData(null, type);
+			Translator parent = this.translatorRepository.getTranslatorMetaData(type);
 			if ( parent == null) {
 				throw new DeploymentException(RuntimePlugin.Util.getString("translator_type_not_found", unit.getName())); //$NON-NLS-1$
 			}

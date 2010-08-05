@@ -39,7 +39,6 @@ import org.teiid.core.util.Assertion;
 import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
-import org.teiid.dqp.service.BufferService;
 import org.teiid.logging.CommandLogMessage;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -68,9 +67,6 @@ public class ConnectorManager  {
 	private String translatorName;
 	private String connectionName;
 	
-    //services acquired in start
-    private BufferService bufferService;
-    
     // known requests
     private ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem> requestStates = new ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem>();
 	
@@ -153,10 +149,6 @@ public class ConnectorManager  {
 
     int size() {
         return requestStates.size();
-    }
-    
-    public void setBufferService(BufferService service) {
-    	this.bufferService = service;
     }
     
     /**

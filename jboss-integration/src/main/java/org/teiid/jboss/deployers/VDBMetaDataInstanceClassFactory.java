@@ -32,7 +32,9 @@ import org.jboss.metatype.api.values.MetaValue;
 import org.jboss.metatype.api.values.MetaValueFactory;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.PropertyMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.adminapi.jboss.ManagedUtil;
 
 public class VDBMetaDataInstanceClassFactory extends AbstractInstanceClassFactory<VDBMetaData> {
@@ -89,6 +91,17 @@ public class VDBMetaDataInstanceClassFactory extends AbstractInstanceClassFactor
 		        }				
 			}
 		}		
+		else if (property.getName().equals("overrideTranslators")) { //$NON-NLS-1$
+			List<ManagedObject> translators = (List<ManagedObject>)MetaValueFactory.getInstance().unwrap(property.getValue());
+			for (ManagedObject translator:translators) {
+				VDBTranslatorMetaData translatorInstance = vdb.getTranslator(translator.getName()); 
+				ManagedProperty mp = translator.getProperty("property"); //$NON-NLS-1$
+				List<PropertyMetadata> properties = (List<PropertyMetadata>)MetaValueFactory.getInstance().unwrap(mp.getValue());
+				for (PropertyMetadata managedProperty:properties) {
+					translatorInstance.addProperty(managedProperty.getName(), managedProperty.getValue());
+				}
+			}
+		}
 		else {
 			super.setValue(beanInfo, property, vdb, value);
 		}

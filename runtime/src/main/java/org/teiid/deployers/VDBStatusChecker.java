@@ -35,7 +35,6 @@ import org.teiid.runtime.RuntimePlugin;
 public class VDBStatusChecker {
 	private static final String JAVA_CONTEXT = "java:"; //$NON-NLS-1$
 	private VDBRepository vdbRepository;
-	private ConnectorManagerRepository connectorManagerRepository;
 	
 	public void translatorAdded(String translatorName) {
 		resourceAdded(translatorName, true);
@@ -63,15 +62,12 @@ public class VDBStatusChecker {
 		this.vdbRepository = repo;
 	}	
 	
-	public void setConnectorManagerRepository(ConnectorManagerRepository repo) {
-		this.connectorManagerRepository = repo;
-	}	
-	
 	public void resourceAdded(String resourceName, boolean translator) {
 		for (VDBMetaData vdb:this.vdbRepository.getVDBs()) {
 			if (vdb.getStatus() == VDB.Status.ACTIVE || vdb.isPreview()) {
 				continue;
 			}
+			ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
 			
 			for (Model m:vdb.getModels()) {
 				ModelMetaData model = (ModelMetaData)m;
@@ -81,7 +77,7 @@ public class VDBStatusChecker {
 
 				String sourceName = getSourceName(resourceName, model, translator);
 				if (sourceName != null) {
-					ConnectorManager cm = this.connectorManagerRepository.getConnectorManager(sourceName);
+					ConnectorManager cm = cmr.getConnectorManager(sourceName);
 					model.clearErrors();
 					String status = cm.getStausMessage();
 					if (status != null && status.length() > 0) {

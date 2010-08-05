@@ -60,6 +60,7 @@ public class FakeServer extends ClientServiceRegistryImpl {
 	LogonImpl logon;
 	DQPCore dqp = new DQPCore();
 	VDBRepository repo = new VDBRepository();
+	private ConnectorManagerRepository cmr;
 	
 	public FakeServer() {
 		this.logon = new LogonImpl(sessionService, null);
@@ -73,7 +74,7 @@ public class FakeServer extends ClientServiceRegistryImpl {
         this.dqp.setCacheFactory(new DefaultCacheFactory());
         this.dqp.setTransactionService(new FakeTransactionService());
         
-        ConnectorManagerRepository cmr = Mockito.mock(ConnectorManagerRepository.class);
+        cmr = Mockito.mock(ConnectorManagerRepository.class);
         Mockito.stub(cmr.getConnectorManager("source")).toReturn(new ConnectorManager("x", "x") {
         	@Override
         	public SourceCapabilities getCapabilities() {
@@ -81,7 +82,6 @@ public class FakeServer extends ClientServiceRegistryImpl {
         	}
         });
         
-        this.dqp.setConnectorManagerRepository(cmr);
         this.dqp.setCacheFactory(new DefaultCacheFactory());
         this.dqp.start(new DQPConfiguration());
         this.sessionService.setDqp(this.dqp);
@@ -114,7 +114,7 @@ public class FakeServer extends ClientServiceRegistryImpl {
         try {
         	MetadataStoreGroup stores = new MetadataStoreGroup();
         	stores.addStore(metadata);
-			this.repo.addVDB(vdbMetaData, stores, imf.getEntriesPlusVisibilities(), null);
+			this.repo.addVDB(vdbMetaData, stores, imf.getEntriesPlusVisibilities(), null, cmr);
 		} catch (DeploymentException e) {
 			throw new RuntimeException(e);
 		}		

@@ -44,7 +44,13 @@ import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
 @Translator(name="sqlserver")
 public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 	
+	public static final String V_2005 = "2005"; //$NON-NLS-1$
+	public static final String V_2008 = "2008"; //$NON-NLS-1$
+	
 	//TEIID-31 remove mod modifier for SQL Server 2008
+	public SQLServerExecutionFactory() {
+		setDatabaseVersion(V_2005);
+	}
 	
 	@Override
 	protected List<Object> convertDateToString(Function function) {

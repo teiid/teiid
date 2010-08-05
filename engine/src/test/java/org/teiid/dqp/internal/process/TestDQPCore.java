@@ -53,12 +53,12 @@ public class TestDQPCore {
         context.getVDB().getModel("BQT3").setVisible(false); //$NON-NLS-1$
 
         ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
+        context.getVDB().addAttchment(ConnectorManagerRepository.class, repo);
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(new AutoGenDataService());
         
         core = new DQPCore();
         core.setBufferService(new FakeBufferService());
         core.setCacheFactory(new DefaultCacheFactory());
-        core.setConnectorManagerRepository(repo);
         core.setTransactionService(new FakeTransactionService());
         
         core.start(new DQPConfiguration());

@@ -367,6 +367,8 @@ public class VDBComponent extends Facet {
 				"description", String.class);
 		String vdbStatus = ProfileServiceUtil.getSimpleValue(mcVdb, "status",
 				String.class);
+		String connectionType = ProfileServiceUtil.getSimpleValue(mcVdb, "connectionType",
+				String.class);
 		String vdbURL = ProfileServiceUtil.getSimpleValue(mcVdb, "url",
 				String.class);
 
@@ -378,6 +380,7 @@ public class VDBComponent extends Facet {
 		configuration.put(new PropertySimple("description", vdbDescription));
 		configuration.put(new PropertySimple("status", vdbStatus));
 		configuration.put(new PropertySimple("url", vdbURL));
+		configuration.put(new PropertySimple("connectionType", connectionType));
 
 		getTranslators(mcVdb, configuration);
 

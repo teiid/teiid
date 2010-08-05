@@ -82,7 +82,6 @@ public class TestDataTierManager {
         
         
         dtm = new DataTierManagerImpl(rm,
-                                  repo,
                                   bs);
         command = helpGetCommand(sql, metadata);
         

@@ -40,9 +40,10 @@ import java.util.List;
  */
 public interface VDB extends AdminObject {
 
-    public static enum Status{INCOMPLETE, INACTIVE, ACTIVE, DELETED, ACTIVE_DEFAULT};
+    public static enum Status{INACTIVE, ACTIVE};
 
-
+    public enum ConnectionType {NONE, BY_VERSION, ANY}
+    
     /**
      * @return Collection of  Teiid Models
      */
@@ -52,6 +53,11 @@ public interface VDB extends AdminObject {
      * @return the status
      */
     public Status getStatus();
+    
+    /**
+     * @return the connection status
+     */
+    public ConnectionType getConnectionType();
 
     /**
      * @return the VDB version
