@@ -60,6 +60,8 @@ import org.teiid.core.util.StringUtil;
 @XmlRootElement(name = "vdb")
 public class VDBMetaData extends AdminObjectImpl implements VDB {
 
+	private static final String VERSION_DELIM = "."; //$NON-NLS-1$
+
 	private static final long serialVersionUID = -4723595252013356436L;
 	
 	/**
@@ -109,10 +111,15 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	private boolean removed;
 
 	@ManagementProperty(description="Name of the VDB")
-	@ManagementObjectID(type="vdb")
 	@XmlAttribute(name = "name", required = true)
 	public String getName() {
 		return super.getName();
+	}
+	
+	@ManagementProperty(description="Full Name of the VDB")
+	@ManagementObjectID(type="vdb")
+	public String getFullName() {
+		return getName() + VERSION_DELIM + getVersion();
 	}
 	
 	// This needed by JAXB marshaling
@@ -170,8 +177,12 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	
 	public void setUrl(URL url) {
 		this.setUrl(url.toExternalForm());
-		String fileName = FileUtils.getBaseFileNameWithoutExtension(url.getPath());
-		String prefix = getName() + "_"; //$NON-NLS-1$
+		String path = url.getPath();
+		if (path.endsWith("/")) { //$NON-NLS-1$
+			path = path.substring(0, path.length() - 1);
+		}
+		String fileName = FileUtils.getBaseFileNameWithoutExtension(path);
+		String prefix = getName() + VERSION_DELIM;
 		if (StringUtil.startsWithIgnoreCase(fileName, prefix)) {
 			try {
 				int fileVersion = Integer.parseInt(fileName.substring(prefix.length()));
@@ -270,7 +281,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
     } 	
     
 	public String toString() {
-		return getName()+"."+getVersion()+ models.getMap().values(); //$NON-NLS-1$
+		return getName()+VERSION_DELIM+getVersion()+ models.getMap().values(); //$NON-NLS-1$
 	}
 
 	public ModelMetaData getModel(String modelName) {

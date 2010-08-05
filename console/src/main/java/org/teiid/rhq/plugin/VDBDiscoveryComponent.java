@@ -64,6 +64,8 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 			String vdbKey = mcVdb.getDeployment().getName();
 			String vdbName = ProfileServiceUtil.getSimpleValue(mcVdb, "name",
 					String.class);
+			String fullName = ProfileServiceUtil.getSimpleValue(mcVdb, "fullName",
+					String.class);
 			Integer vdbVersion = ProfileServiceUtil.getSimpleValue(mcVdb,
 					"version", Integer.class);
 			String vdbDescription = ProfileServiceUtil.getSimpleValue(mcVdb,
@@ -93,6 +95,7 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 			Configuration configuration = detail.getPluginConfiguration();
 
 			configuration.put(new PropertySimple("name", vdbName));
+			configuration.put(new PropertySimple("fullName", fullName));
 			configuration.put(new PropertySimple("version", vdbVersion));
 			configuration
 					.put(new PropertySimple("description", vdbDescription));

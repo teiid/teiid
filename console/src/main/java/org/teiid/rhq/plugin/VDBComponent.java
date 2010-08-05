@@ -93,7 +93,7 @@ public class VDBComponent extends Facet {
 	@Override
 	public void start(ResourceContext context) {
 		this.setComponentName(context.getPluginConfiguration().getSimpleValue(
-				"name", null));
+				"fullName", null));
 		this.resourceConfiguration = context.getPluginConfiguration();
 		this.componentType = PluginConstants.ComponentType.VDB.NAME;
 		super.start(context);
@@ -136,7 +136,7 @@ public class VDBComponent extends Facet {
 		// TODO Remove vdb version after no longer viable in Teiid
 		String version = this.resourceConfiguration.getSimpleValue(
 				"version", null);
-		String status = DQPManagementView.getVDBStatus(getConnection(), this.name, Integer.parseInt(version));
+		String status = DQPManagementView.getVDBStatus(getConnection(), this.name);
 		if (status.equals("ACTIVE")) {
 			return AvailabilityType.UP;
 		}
@@ -149,8 +149,7 @@ public class VDBComponent extends Facet {
 			Map<String, Object> valueMap) {
 		// Parameter logic for VDB Metrics
 		String key = VDB.NAME;
-		valueMap.put(key, this.resourceConfiguration.getSimpleValue("name",
-				null));
+		valueMap.put(key, this.name);
 	}
 
 	@Override

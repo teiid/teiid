@@ -47,6 +47,7 @@ import org.rhq.plugins.jbossas5.connection.ProfileServiceConnection;
 import org.teiid.adminapi.Request;
 import org.teiid.adminapi.Session;
 import org.teiid.adminapi.Transaction;
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.RequestMetadataMapper;
 import org.teiid.rhq.plugin.objects.ExecutedResult;
@@ -137,7 +138,7 @@ public class DQPManagementView implements PluginConstants {
 				.equals(PluginConstants.ComponentType.VDB.Metrics.STATUS)) {
 			// TODO remove version parameter after AdminAPI is changed
 			resultObject = getVDBStatus(connection, (String) valueMap
-					.get(VDB.NAME), 1);
+					.get(VDB.NAME));
 		} else if (metric
 				.equals(PluginConstants.ComponentType.VDB.Metrics.QUERY_COUNT)) {
 			resultObject = new Double(getQueryCount(connection).doubleValue());
@@ -375,7 +376,7 @@ public class DQPManagementView implements PluginConstants {
 	}
 
 	public static String getVDBStatus(ProfileServiceConnection connection,
-			String vdbName, int version) {
+			String vdbName) {
 
 		ManagedComponent mcVdb = null;
 		try {
@@ -391,6 +392,10 @@ public class DQPManagementView implements PluginConstants {
 		} catch (Exception e) {
 			final String msg = "Exception in getVDBStatus(): " + e.getMessage(); //$NON-NLS-1$
 			LOG.error(msg, e);
+		}
+		
+		if (mcVdb == null) {
+			return Status.INACTIVE.toString();
 		}
 
 		return ProfileServiceUtil.getSimpleValue(mcVdb, "status", String.class); //$NON-NLS-1$
