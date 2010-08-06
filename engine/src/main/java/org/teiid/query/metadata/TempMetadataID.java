@@ -41,20 +41,27 @@ public class TempMetadataID implements Serializable {
     
 	private static final int LOCAL_CACHE_SIZE = 8;
 	
+	public enum Type {
+		VIRTUAL,
+		TEMP,
+		SCALAR
+	}
+	
     private String ID;      // never null, upper cased fully-qualified string
-    private int selectPosition = -1; //used for order by symbol resolving.  refers to the position in the select clause
-    private int position;
-    private Class<?> type;     // type of this element, only for element
-    private List<TempMetadataID> elements;  // of TempMetadataID, only for group
-    private Object originalMetadataID;
-    private boolean isVirtual = true;   // virtual by default
-    private boolean isTempTable;
+    private Type metadataType = Type.VIRTUAL;
+    
+    //Table metadata
     private Collection<TempMetadataID> accessPatterns;
+    private List<TempMetadataID> elements;  // of TempMetadataID, only for group
     private int cardinality = QueryMetadataInterface.UNKNOWN_CARDINALITY;
-    private LRUCache<Object, Object> localCache;
-    private boolean scalarGroup;
     private List<TempMetadataID> primaryKey;
     private QueryNode queryNode;
+    private transient LRUCache<Object, Object> localCache;
+    
+    //Column metadata
+    private Object originalMetadataID;
+    private int position;
+    private Class<?> type;     // type of this element, only for element
     
     /**
      * Constructor for group form of metadata ID.
@@ -62,7 +69,7 @@ public class TempMetadataID implements Serializable {
      * @param elements List of TempMetadataID representing elements
      */
     public TempMetadataID(String ID, List<TempMetadataID> elements) {
-        this(ID, elements, true, false);
+        this(ID, elements, Type.VIRTUAL);
     }
     
     /**
@@ -71,15 +78,14 @@ public class TempMetadataID implements Serializable {
      * @param elements List of TempMetadataID representing elements
      * @param isVirtual whether or not the group is a virtual group
      */
-    public TempMetadataID(String ID, List<TempMetadataID> elements, boolean isVirtual, boolean isTempTable) {
+    public TempMetadataID(String ID, List<TempMetadataID> elements, Type type) {
         this.ID = ID;
         this.elements = elements;
         int pos = 1;
         for (TempMetadataID tempMetadataID : elements) {
 			tempMetadataID.setPosition(pos++);
 		}
-        this.isVirtual = isVirtual;
-        this.isTempTable = isTempTable;
+        this.metadataType = type;
     }
     
     /**
@@ -147,7 +153,7 @@ public class TempMetadataID implements Serializable {
      * @return True if virtual
      */
     public boolean isVirtual() {
-        return this.isVirtual;    
+        return metadataType == Type.VIRTUAL;    
     }
     
     /**
@@ -156,7 +162,7 @@ public class TempMetadataID implements Serializable {
      * @since 5.5
      */
     public boolean isTempTable() {
-        return this.isTempTable;
+        return this.metadataType == Type.TEMP;
     }
     
     /**
@@ -222,17 +228,13 @@ public class TempMetadataID implements Serializable {
     }
 
     public void setTempTable(boolean isTempTable) {
-        this.isTempTable = isTempTable;
+        if (isTempTable) {
+        	this.metadataType = Type.TEMP;
+        } else {
+        	this.metadataType = Type.VIRTUAL;
+        }
     }
 
-    public int getSelectPosition() {
-        return this.selectPosition;
-    }
-
-    public void setSelectPosition(int position) {
-        this.selectPosition = position;
-    }  
-    
     Object getProperty(Object key) {
     	if (this.localCache != null) {
     		return this.localCache.get(key);
@@ -248,11 +250,11 @@ public class TempMetadataID implements Serializable {
     }
 
 	public boolean isScalarGroup() {
-		return scalarGroup;
+		return this.metadataType == Type.SCALAR;
 	}
 
-	public void setScalarGroup(boolean scalarGroup) {
-		this.scalarGroup = scalarGroup;
+	public void setScalarGroup() {
+		this.metadataType = Type.SCALAR;
 	}
 
 	public List<TempMetadataID> getPrimaryKey() {

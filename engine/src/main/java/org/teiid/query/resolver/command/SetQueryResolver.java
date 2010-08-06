@@ -36,15 +36,14 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
-import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.resolver.CommandResolver;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SetQuery;
-import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.util.ErrorMessageKeys;
 
@@ -139,12 +138,11 @@ public class SetQueryResolver implements CommandResolver {
      * @return True if the ORDER BY contains the element
      */
     public static boolean orderByContainsVariable(OrderBy orderBy, SingleElementSymbol ses, int position) {
-        for (final Iterator iterator = orderBy.getSortKeys().iterator(); iterator.hasNext();) {
-            final ElementSymbol element = (ElementSymbol)iterator.next();
-            if (position == ((TempMetadataID)element.getMetadataID()).getSelectPosition()) {
-                return true;
-            }
-        } 
+    	for (OrderByItem item : orderBy.getOrderByItems()) {
+			if (item.getExpressionPosition() == position) {
+				return true;
+			}
+		}
         return false;
     }
     

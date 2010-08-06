@@ -23,6 +23,7 @@
 package org.teiid.query.processor;
 
 import static org.junit.Assert.*;
+import static org.teiid.query.optimizer.TestOptimizer.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -7482,6 +7483,32 @@ public class TestProcessor {
         ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
         
         helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testUncorrelatedScalarSubqueryPushdown() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        FakeMetadataFacade metadata = example1();
+        
+        BasicSourceCapabilities caps = getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, false);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpPlan("select pm1.g1.e1 from pm1.g1 where e1 < (select max(vm1.g1.e1) from vm1.g1)", metadata,  //$NON-NLS-1$
+                                      null, capFinder,
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 < (SELECT MAX(g_1.e1) FROM pm1.g1 AS g_1)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        checkNodeTypes(plan, FULL_PUSHDOWN);
+        
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT MAX(g_0.e1) FROM pm1.g1 AS g_0", new List[] {Arrays.asList("c")});
+        hdm.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 < 'c'", new List[] {Arrays.asList("a")});
+        
+        List[] expected = new List[] {
+        		Arrays.asList("a"),
+        };    
+
+        helpProcess(plan, hdm, expected);
     }
        
     private static final boolean DEBUG = false;

@@ -217,7 +217,7 @@ public class TestSubqueryPushdown {
     /**
      * Check that scalar subquery in select is pushed 
      */
-    public void DEFER_testPushSubqueryInSelectClause1() {
+    public void testPushSubqueryInSelectClause1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -710,6 +710,41 @@ public class TestSubqueryPushdown {
             new String[] { "SELECT g_0.e1, (convert((SELECT MAX(g_1.e1) FROM pm1.g1 AS g_1), integer) + 1) FROM pm1.g1 AS g_0" }, SHOULD_SUCCEED); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
-
-
+    
+    @Test public void testScalarSubquery2() {
+        ProcessorPlan plan = helpPlan("Select e1, (select e1 FROM pm2.g1 where pm1.g1.e1 = 'x') as X from pm1.g1", example1(),  //$NON-NLS-1$
+            new String[] { "SELECT e1 FROM pm1.g1" }); //$NON-NLS-1$
+        checkNodeTypes(plan, new int[] {
+            1,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            1,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            0,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        }); 
+    } 
+    
+    /**
+     * Technically this is not a full push-down, but the subquery will be evaluated prior to pushdown
+     */
+    @Test public void testCompareSubquery4() {
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 > (select e1 FROM pm2.g1 where e2 = 13)", example1(),  //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 > (SELECT g_1.e1 FROM pm2.g1 AS g_1 WHERE g_1.e2 = 13)" }); //$NON-NLS-1$
+        checkNodeTypes(plan, FULL_PUSHDOWN); 
+    }
+    
+    @Test public void testScalarSubquery1() {
+        ProcessorPlan plan = helpPlan("Select e1, (select e1 FROM pm2.g1 where e1 = 'x') from pm1.g1", example1(),  //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1, (SELECT g_1.e1 FROM pm2.g1 AS g_1 WHERE g_1.e1 = 'x') FROM pm1.g1 AS g_0" }); //$NON-NLS-1$
+        checkNodeTypes(plan, FULL_PUSHDOWN); 
+    }   
+    
 }

@@ -131,7 +131,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
         Criteria tgtCrit = (Criteria) crit.clone();
         
         try {
-            tgtCrit = FrameUtil.convertCriteria(tgtCrit, tgtMap, metadata);
+            tgtCrit = FrameUtil.convertCriteria(tgtCrit, tgtMap, metadata, true);
         } catch (QueryPlannerException err) {
             LogManager.logDetail(LogConstants.CTX_QUERY_PLANNER, err, "Could not remap target criteria in RuleCopyCriteria"); //$NON-NLS-1$
             return false;

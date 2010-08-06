@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.query.metadata.TempMetadataID.Type;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -115,7 +116,7 @@ public class TempMetadataStore implements Serializable {
         }
 
         // Create group ID
-        TempMetadataID groupID = new TempMetadataID(tempName, elementIDs, isVirtual, isTempTable);
+        TempMetadataID groupID = new TempMetadataID(tempName, elementIDs, isVirtual?Type.VIRTUAL:Type.TEMP);
         this.tempGroups.put(tempName, groupID);
         return groupID;
     }

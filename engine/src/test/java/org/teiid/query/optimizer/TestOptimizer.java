@@ -1349,27 +1349,6 @@ public class TestOptimizer {
         }); 
     }
 
-    @Test public void testCompareSubquery4() {
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 > (select e1 FROM pm2.g1 where e2 = 13)", example1(),  //$NON-NLS-1$
-            new String[] { "SELECT e1 FROM pm1.g1" }); //$NON-NLS-1$
-        checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            1,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        }); 
-    }
-
     @Test public void testExistsSubquery1() {
         ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where exists (select e1 FROM pm2.g1)", example1(),  //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g1" }); //$NON-NLS-1$
@@ -1390,48 +1369,6 @@ public class TestOptimizer {
             0       // UnionAll
         }); 
     }
-    
-    @Test public void testScalarSubquery1() {
-        ProcessorPlan plan = helpPlan("Select e1, (select e1 FROM pm2.g1 where e1 = 'x') from pm1.g1", example1(),  //$NON-NLS-1$
-            new String[] { "SELECT e1 FROM pm1.g1" }); //$NON-NLS-1$
-        checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            1,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            0,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        }); 
-    }    
-
-    @Test public void testScalarSubquery2() {
-        ProcessorPlan plan = helpPlan("Select e1, (select e1 FROM pm2.g1 where e1 = 'x') as X from pm1.g1", example1(),  //$NON-NLS-1$
-            new String[] { "SELECT e1 FROM pm1.g1" }); //$NON-NLS-1$
-        checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            1,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            0,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        }); 
-    } 
     
     @Test public void testTempGroup() {
         ProcessorPlan plan = helpPlan("select e1 from tm1.g1 where e1 = 'x'", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
@@ -5747,14 +5684,14 @@ public class TestOptimizer {
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$ 
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$ 
          
-        String sql = "select e1 from pm1.g1 where e1 = convert((exec pm1.sq11(1, 2)), integer)"; //$NON-NLS-1$ 
+        String sql = "select pm1.g1.e1, pm1.g1.e2 from pm1.g1 where e1 = convert((exec pm1.sq11(e2, 2)), integer)"; //$NON-NLS-1$ 
          
         helpPlan(sql, 
                  FakeMetadataFactory.example1Cached(), 
                  null, 
                  capFinder, 
                  new String[] { 
-                     "SELECT e1 FROM pm1.g1"}, //$NON-NLS-1$ 
+                     "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}, //$NON-NLS-1$ 
                  SHOULD_SUCCEED); 
              
     }

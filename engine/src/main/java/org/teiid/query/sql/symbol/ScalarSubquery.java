@@ -43,9 +43,10 @@ public class ScalarSubquery implements Expression, SubqueryContainer, ContextRef
 	private static AtomicInteger ID = new AtomicInteger();
 	
     private Command command;
-    private Class type;
+    private Class<?> type;
     private int hashCode;
     private String id = "$sc/id" + ID.getAndIncrement(); //$NON-NLS-1$
+    private boolean shouldEvaluate;
 
     /**
      * Default constructor
@@ -57,6 +58,14 @@ public class ScalarSubquery implements Expression, SubqueryContainer, ContextRef
     public ScalarSubquery(Command subqueryCommand){
         this.setCommand(subqueryCommand);
     }
+    
+    public boolean shouldEvaluate() {
+    	return shouldEvaluate;
+    }
+    
+    public void setShouldEvaluate(boolean shouldEvaluate) {
+		this.shouldEvaluate = shouldEvaluate;
+	}
     
     @Override
     public String getContextSymbol() {
@@ -150,6 +159,7 @@ public class ScalarSubquery implements Expression, SubqueryContainer, ContextRef
         ScalarSubquery clone = new ScalarSubquery(copyCommand);
         //Don't invoke the lazy-loading getType()
         clone.setType(this.type);
+        clone.shouldEvaluate = this.shouldEvaluate;
         return clone;
     }
 

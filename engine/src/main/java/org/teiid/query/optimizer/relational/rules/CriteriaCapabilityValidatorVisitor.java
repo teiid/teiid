@@ -367,13 +367,13 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     @Override
     public void visit(ScalarSubquery obj) {
     	try {    
-            // Check if compares are allowed
-            if(! this.caps.supportsCapability(Capability.QUERY_SUBQUERIES_SCALAR)) {
-                markInvalid();
-                return;
-            }
-            if (validateSubqueryPushdown(obj, modelID, metadata, capFinder) == null) {
-            	markInvalid();
+            if(!this.caps.supportsCapability(Capability.QUERY_SUBQUERIES_SCALAR) 
+            		|| validateSubqueryPushdown(obj, modelID, metadata, capFinder) == null) {
+            	if (obj.getCommand().getCorrelatedReferences() == null) {
+            		obj.setShouldEvaluate(true);
+            	} else {
+            		markInvalid();
+            	}
             }
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e));

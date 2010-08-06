@@ -371,6 +371,7 @@ public final class RuleCollapseSource implements OptimizerRule {
 		    	};
 		    	DeepPostOrderNavigator.doVisit(command, visitor);
 		    }
+		    command.setProcessorPlan(container.getCommand().getProcessorPlan());
 		    container.setCommand(command);
 		}
 	}

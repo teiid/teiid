@@ -62,7 +62,6 @@ import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
-import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.relational.DependentValueSource;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
@@ -180,7 +179,8 @@ public class QueryRewriter {
     private CreateUpdateProcedureCommand procCommand;
     
     private boolean rewriteSubcommands;
-    private ProcessorDataManager dataMgr;
+    private boolean processing;
+    private Evaluator evaluator;
     private Map variables; //constant propagation
     private int commandType;
     
@@ -189,12 +189,14 @@ public class QueryRewriter {
 		this.metadata = metadata;
 		this.context = context;
 		this.procCommand = procCommand;
+		this.evaluator = new Evaluator(Collections.emptyMap(), null, context);
 	}
     
-    public static Command evaluateAndRewrite(Command command, ProcessorDataManager dataMgr, CommandContext context, QueryMetadataInterface metadata) throws TeiidProcessingException, TeiidComponentException {
+    public static Command evaluateAndRewrite(Command command, Evaluator eval, CommandContext context, QueryMetadataInterface metadata) throws TeiidProcessingException, TeiidComponentException {
     	QueryRewriter queryRewriter = new QueryRewriter(metadata, context, null);
-    	queryRewriter.dataMgr = dataMgr;
+    	queryRewriter.evaluator = eval;
     	queryRewriter.rewriteSubcommands = true;
+    	queryRewriter.processing = true;
 		return queryRewriter.rewriteCommand(command, false);
     }
 
@@ -1049,7 +1051,7 @@ public class QueryRewriter {
 
 	private Criteria rewriteDependentSetCriteria(DependentSetCriteria dsc)
 			throws TeiidComponentException, TeiidProcessingException{
-		if (dataMgr == null) {
+		if (!processing) {
 			return rewriteCriteria(dsc);
 		}
 		SetCriteria setCrit = new SetCriteria();
@@ -1147,9 +1149,9 @@ public class QueryRewriter {
 	}
     
     private Criteria evaluateCriteria(Criteria crit) throws TeiidComponentException, TeiidProcessingException{
-        if(EvaluatableVisitor.isFullyEvaluatable(crit, true)) {
+        if(EvaluatableVisitor.isFullyEvaluatable(crit, !processing)) {
             try {
-            	Boolean eval = new Evaluator(Collections.emptyMap(), this.dataMgr, context).evaluateTVL(crit, Collections.emptyList());
+            	Boolean eval = evaluator.evaluateTVL(crit, Collections.emptyList());
                 
                 if (eval == null) {
                     return UNKNOWN_CRITERIA;
@@ -1807,7 +1809,7 @@ public class QueryRewriter {
 	private Criteria getSimpliedCriteria(Criteria crit, Expression a, boolean outcome, boolean nullPossible) {
 		if (nullPossible) {
 			if (outcome) {
-				if (this.dataMgr != null) {
+				if (processing) {
 					return crit;
 				}
 				IsNullCriteria inc = new IsNullCriteria(a);
@@ -1885,7 +1887,7 @@ public class QueryRewriter {
     	if (expression instanceof ElementSymbol) {
     		ElementSymbol es = (ElementSymbol)expression;
     		Class<?> type  = es.getType();
-            if (dataMgr == null && es.isExternalReference()) {
+            if (!processing && es.isExternalReference()) {
                 String grpName = es.getGroupSymbol().getCanonicalName();
                 
                 if (variables == null) {
@@ -1922,7 +1924,11 @@ public class QueryRewriter {
         } else if (expression instanceof SearchedCaseExpression) {
         	expression = rewriteCaseExpression((SearchedCaseExpression)expression);
         } else if (expression instanceof ScalarSubquery) {
-            rewriteSubqueryContainer((ScalarSubquery)expression, true);
+        	ScalarSubquery subquery = (ScalarSubquery)expression;
+        	if (subquery.shouldEvaluate() && processing) {
+        		return new Constant(evaluator.evaluate(subquery, null), subquery.getType());
+        	}
+            rewriteSubqueryContainer(subquery, true);
             return expression;
         } else if (expression instanceof ExpressionSymbol) {
         	if (expression instanceof AggregateSymbol) {
@@ -1936,7 +1942,7 @@ public class QueryRewriter {
         	rewriteExpressions(expression);
         } 
     	
-        if(dataMgr == null) {
+        if(!processing) {
         	if (!EvaluatableVisitor.isFullyEvaluatable(expression, true)) {
         		return expression;
         	}
@@ -1944,7 +1950,7 @@ public class QueryRewriter {
 			return expression;
 		}
     	
-		Object value = new Evaluator(Collections.emptyMap(), dataMgr, context).evaluate(expression, Collections.emptyList());
+		Object value = evaluator.evaluate(expression, Collections.emptyList());
         if (value instanceof Constant) {
         	return (Constant)value; //multi valued substitution
         }

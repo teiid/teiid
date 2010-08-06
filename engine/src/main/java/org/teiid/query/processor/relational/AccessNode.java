@@ -25,6 +25,7 @@ package org.teiid.query.processor.relational;
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
@@ -35,6 +36,7 @@ import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.eval.Evaluator;
 import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.rewriter.QueryRewriter;
@@ -42,7 +44,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.util.CommandContext;
 
 
-public class AccessNode extends RelationalNode {
+public class AccessNode extends SubqueryAwareRelationalNode {
 
     // Initialization state
     private Command command;
@@ -110,15 +112,15 @@ public class AccessNode extends RelationalNode {
 	}
 
     protected boolean prepareNextCommand(Command atomicCommand) throws TeiidComponentException, TeiidProcessingException {
-    	return prepareCommand(atomicCommand, this, this.getContext(), this.getContext().getMetadata());
+    	return prepareCommand(atomicCommand, getEvaluator(Collections.emptyMap()), this.getContext(), this.getContext().getMetadata());
     }
 
-	static boolean prepareCommand(Command atomicCommand, RelationalNode node, CommandContext context, QueryMetadataInterface metadata)
+	static boolean prepareCommand(Command atomicCommand, Evaluator eval, CommandContext context, QueryMetadataInterface metadata)
 			throws ExpressionEvaluationException, TeiidComponentException,
 			TeiidProcessingException {
         try {
             // Defect 16059 - Rewrite the command once the references have been replaced with values.
-            QueryRewriter.evaluateAndRewrite(atomicCommand, node.getDataManager(), context, metadata);
+            QueryRewriter.evaluateAndRewrite(atomicCommand, eval, context, metadata);
         } catch (QueryValidatorException e) {
             throw new TeiidProcessingException(e, QueryExecPlugin.Util.getString("AccessNode.rewrite_failed", atomicCommand)); //$NON-NLS-1$
         }
@@ -185,6 +187,7 @@ public class AccessNode extends RelationalNode {
     }
     
 	public void closeDirect() {
+		super.closeDirect();
         closeSources();            
 	}
 

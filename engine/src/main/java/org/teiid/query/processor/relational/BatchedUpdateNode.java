@@ -24,6 +24,7 @@ package org.teiid.query.processor.relational;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,6 +34,7 @@ import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.eval.Evaluator;
 import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
@@ -45,7 +47,7 @@ import org.teiid.query.util.CommandContext;
  * Node that batches commands sent to the DataManager.
  * @since 4.2
  */
-public class BatchedUpdateNode extends RelationalNode {
+public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
     
     private static final List<Integer> ZERO_COUNT_TUPLE = Arrays.asList(Integer.valueOf(0));
 
@@ -98,7 +100,9 @@ public class BatchedUpdateNode extends RelationalNode {
             boolean needProcessing = false;
             if(shouldEvaluate != null && shouldEvaluate.get(i)) {
                 updateCommand = (Command) updateCommand.clone();
-                needProcessing = AccessNode.prepareCommand(updateCommand, this, context, context.getMetadata());
+                Evaluator eval = getEvaluator(Collections.emptyMap());
+                eval.initialize(context, getDataManager());
+                needProcessing = AccessNode.prepareCommand(updateCommand, eval, context, context.getMetadata());
             } else {
                 needProcessing = RelationalNodeUtil.shouldExecute(updateCommand, true);
             }
@@ -146,6 +150,7 @@ public class BatchedUpdateNode extends RelationalNode {
      * @since 4.2
      */
     public void closeDirect() {
+    	super.closeDirect();
         if (tupleSource != null) {
         	tupleSource.closeSource();
         	tupleSource = null;

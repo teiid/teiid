@@ -756,7 +756,7 @@ public class RulePushAggregates implements
     throws QueryPlannerException {
         
         while (node != null) {
-            FrameUtil.convertNode(node, null, null, exprMap, metadata);
+            FrameUtil.convertNode(node, null, null, exprMap, metadata, true);
             
             switch (node.getType()) {
                 case NodeConstants.Types.SOURCE:

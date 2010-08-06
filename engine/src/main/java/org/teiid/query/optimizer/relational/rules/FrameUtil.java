@@ -23,6 +23,7 @@
 package org.teiid.query.optimizer.relational.rules;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -78,10 +79,22 @@ public class FrameUtil {
         
         PlanNode endNode = NodeEditor.findParent(startNode.getType()==NodeConstants.Types.SOURCE?startNode.getParent():startNode, NodeConstants.Types.SOURCE);
         
+        boolean rewrite = false;
+        if (newGroups != null && newGroups.size() == 1) {
+        	for (Expression expression : (Collection<Expression>)symbolMap.values()) {
+				if (!(expression instanceof ElementSymbol)) {
+					rewrite = true;
+					break;
+				}
+			}
+        } else {
+        	rewrite = true;
+        }
+        
         while(current != endNode) { 
             
             // Make translations as defined in node in each current node
-            convertNode(current, oldGroup, newGroups, symbolMap, metadata);
+            convertNode(current, oldGroup, newGroups, symbolMap, metadata, rewrite);
             
             PlanNode parent = current.getParent(); 
             
@@ -162,7 +175,7 @@ public class FrameUtil {
     // symbols.  In that case, some additional work can be done because we can assume 
     // that an oldElement isn't being replaced by an expression using elements from 
     // multiple new groups.  
-    static void convertNode(PlanNode node, GroupSymbol oldGroup, Set<GroupSymbol> newGroups, Map symbolMap, QueryMetadataInterface metadata)
+    static void convertNode(PlanNode node, GroupSymbol oldGroup, Set<GroupSymbol> newGroups, Map symbolMap, QueryMetadataInterface metadata, boolean rewrite)
         throws QueryPlannerException {
 
         // Convert expressions from correlated subquery references;
@@ -203,7 +216,7 @@ public class FrameUtil {
         
         if(type == NodeConstants.Types.SELECT) { 
             Criteria crit = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-            crit = convertCriteria(crit, symbolMap, metadata);
+            crit = convertCriteria(crit, symbolMap, metadata, rewrite);
             node.setProperty(NodeConstants.Info.SELECT_CRITERIA, crit);
             
             if (!singleMapping) {
@@ -223,7 +236,7 @@ public class FrameUtil {
             List<Criteria> joinCrits = (List<Criteria>) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
             if(joinCrits != null && !joinCrits.isEmpty()) {
             	Criteria crit = new CompoundCriteria(joinCrits);
-            	crit = convertCriteria(crit, symbolMap, metadata);
+            	crit = convertCriteria(crit, symbolMap, metadata, rewrite);
             	if (crit instanceof CompoundCriteria) {
             		node.setProperty(NodeConstants.Info.JOIN_CRITERIA, ((CompoundCriteria)crit).getCriteria());
             	} else {
@@ -275,11 +288,14 @@ public class FrameUtil {
         return expression;
     }   
         
-    static Criteria convertCriteria(Criteria criteria, final Map symbolMap, QueryMetadataInterface metadata)
+    static Criteria convertCriteria(Criteria criteria, final Map symbolMap, QueryMetadataInterface metadata, boolean rewrite)
         throws QueryPlannerException {
 
         ExpressionMappingVisitor.mapExpressions(criteria, symbolMap);
         
+        if (!rewrite) {
+        	return criteria;
+        }
         // Simplify criteria if possible
         try {
             return QueryRewriter.rewriteCriteria(criteria, null, null, metadata);
