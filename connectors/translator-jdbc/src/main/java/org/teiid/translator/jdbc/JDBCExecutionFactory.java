@@ -930,7 +930,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @return the value
      * @throws SQLException
      */
-    public Object retrieveValue(CallableStatement results, int parameterIndex, Class expectedType) throws SQLException{
+    public Object retrieveValue(CallableStatement results, int parameterIndex, Class<?> expectedType) throws SQLException{
         Integer code = TYPE_CODE_MAP.get(expectedType);
         if(code != null) {
             switch(code.intValue()) {

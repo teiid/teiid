@@ -24,6 +24,10 @@
  */
 package org.teiid.translator.jdbc.sybase;
 
+import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -37,6 +41,7 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.EscapeSyntaxModifier;
@@ -331,5 +336,33 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
     
     public boolean booleanNullable() {
     	return false;
+    }
+    
+    @Override
+    public Object retrieveValue(ResultSet results, int columnIndex,
+    		Class<?> expectedType) throws SQLException {
+    	if (expectedType == TypeFacility.RUNTIME_TYPES.BYTE) {
+    		expectedType = TypeFacility.RUNTIME_TYPES.SHORT;
+    	}
+    	return super.retrieveValue(results, columnIndex, expectedType);
+    }
+    
+    @Override
+    public Object retrieveValue(CallableStatement results, int parameterIndex,
+    		Class<?> expectedType) throws SQLException {
+    	if (expectedType == TypeFacility.RUNTIME_TYPES.BYTE) {
+    		expectedType = TypeFacility.RUNTIME_TYPES.SHORT;
+    	}
+    	return super.retrieveValue(results, parameterIndex, expectedType);
+    }
+    
+    @Override
+    public void bindValue(PreparedStatement stmt, Object param,
+    		Class<?> paramType, int i) throws SQLException {
+    	if (paramType == TypeFacility.RUNTIME_TYPES.BYTE) {
+    		paramType = TypeFacility.RUNTIME_TYPES.SHORT;
+    		param = ((Byte)param).shortValue();
+    	}
+    	super.bindValue(stmt, param, paramType, i);
     }
 }
