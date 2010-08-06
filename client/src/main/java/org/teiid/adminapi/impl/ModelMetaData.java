@@ -39,6 +39,7 @@ import org.jboss.managed.api.annotation.ManagementObjectID;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.adminapi.Model;
+import org.teiid.adminapi.impl.ModelMetaData.ValidationError.Severity;
 
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -206,11 +207,21 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	
 	@ManagementProperty(description = "Model Validity Errors", readOnly=true, managed=true)
 	public List<ValidationError> getErrors(){
+		return getValidationErrors(Severity.ERROR);
+	}
+	
+	public List<ValidationError> getValidationErrors(ValidationError.Severity severity){
 		if (this.errors == null) {
 			return Collections.emptyList();
 		}
-		return this.errors;
-	}
+		List<ValidationError> list = new ArrayList<ValidationError>();
+		for (ValidationError ve: this.errors) {
+			if (Severity.valueOf(ve.severity) == severity) {
+				list.add(ve);
+			}
+		}
+		return list;
+	}	
 	
     public void addError(String severity, String message) {
         if (this.errors == null) {

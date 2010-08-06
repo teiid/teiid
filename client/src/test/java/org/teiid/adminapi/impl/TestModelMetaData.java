@@ -27,6 +27,7 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 import org.teiid.adminapi.Model;
 
+@SuppressWarnings("nls")
 public class TestModelMetaData {
 
 	@Test
@@ -55,5 +56,14 @@ public class TestModelMetaData {
 		assertTrue(model.isSupportsMultiSourceBindings());
 		
 		assertTrue(!model.getProperties().isEmpty());
+	}
+	
+	public void testErrors() {
+		ModelMetaData m = new ModelMetaData();
+		m.addError("ERROR", "I am Error");
+		m.addError("WARNING", "I am warning");
+		
+		assertFalse(m.getErrors().isEmpty());
+		assertEquals(1, m.getErrors().size());
 	}
 }
