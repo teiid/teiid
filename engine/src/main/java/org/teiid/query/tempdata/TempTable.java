@@ -40,6 +40,7 @@ import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.common.buffer.BufferManager.BufferReserveMode;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
+import org.teiid.common.buffer.STree.InsertMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
@@ -102,7 +103,7 @@ class TempTable {
 				tuple.add(0, rowId.getAndIncrement());
 			}
 			currentTuple = tuple;
-			insertTuple(tuple);
+			insertTuple(tuple, addRowId);
 		}
 
 		@Override
@@ -256,6 +257,7 @@ class TempTable {
 	private String sessionID;
 	private TempMetadataID tid;
 	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+	private boolean updatable = true;
 	
 	private int keyBatchSize;
 	private int leafBatchSize;
@@ -329,23 +331,30 @@ class TempTable {
 		
 		TupleBrowser browser = createTupleBrower(condition, direction);
 		TupleSource ts = new QueryTupleSource(browser, map, projectedCols, condition);
+		
+		boolean usingQueryTupleSource = false;
 		try {
 			TupleBuffer tb = null;
 			if (!orderByUsingIndex && orderBy != null) {
 				SortUtility sort = new SortUtility(ts, orderBy.getOrderByItems(), Mode.SORT, bm, sessionID, projectedCols);
 				tb = sort.sort();
-			} else {
+			} else if (!updatable) {
 				tb = bm.createTupleBuffer(projectedCols, sessionID, TupleSourceType.PROCESSOR);
-				List next = null;
+				List<?> next = null;
 				while ((next = ts.nextTuple()) != null) {
 					tb.addTuple(next);
 				}
+			} else {
+				usingQueryTupleSource = true;
+				return ts;
 			}
 			tb.close();
 			return tb.createIndexedTupleSource(true);
 		} finally {
-			//ensure the buffers get released
-			ts.closeSource();
+			if (!usingQueryTupleSource) {
+				//ensure the buffers get released
+				ts.closeSource();
+			}
 		}
 	}
 
@@ -448,7 +457,7 @@ class TempTable {
 			@Override
 			protected void undo(List tuple) throws TeiidComponentException, TeiidProcessingException {
 				if (primaryKeyChangePossible) {
-					insertTuple(tuple);
+					insertTuple(tuple, false);
 				} else {
 					updateTuple(tuple);
 				}
@@ -506,7 +515,7 @@ class TempTable {
 			
 			@Override
 			protected void undo(List tuple) throws TeiidComponentException, TeiidProcessingException {
-				insertTuple(tuple);
+				insertTuple(tuple, false);
 			}
 		};
 		int updateCount = up.process();
@@ -514,8 +523,8 @@ class TempTable {
 		return CollectionTupleSource.createUpdateCountTupleSource(updateCount);
 	}
 	
-	private void insertTuple(List<Object> list) throws TeiidComponentException, TeiidProcessingException {
-		if (tree.insert(list, false) != null) {
+	private void insertTuple(List<Object> list, boolean ordered) throws TeiidComponentException, TeiidProcessingException {
+		if (tree.insert(list, ordered?InsertMode.ORDERED:InsertMode.NEW) != null) {
 			throw new TeiidProcessingException(QueryPlugin.Util.getString("TempTable.duplicate_key")); //$NON-NLS-1$
 		}
 	}
@@ -527,13 +536,17 @@ class TempTable {
 	}
 	
 	private void updateTuple(List<?> tuple) throws TeiidComponentException {
-		if (tree.insert(tuple, true) == null) {
+		if (tree.insert(tuple, InsertMode.UPDATE) == null) {
 			throw new AssertionError("Update failed"); //$NON-NLS-1$
 		}
 	}
 	
 	void setPreferMemory(boolean preferMemory) {
 		this.tree.setPreferMemory(preferMemory);
+	}
+	
+	void setUpdatable(boolean updatable) {
+		this.updatable = updatable;
 	}
 
 }

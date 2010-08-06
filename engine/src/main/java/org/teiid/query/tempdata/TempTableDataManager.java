@@ -189,6 +189,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 					}
 				}
 				table = tts.addTempTable(tableName, create, bufferManager);
+				table.setUpdatable(false);
 				table.setPreferMemory(tableName.startsWith(CODE_PREFIX));
 				boolean success = false;
 				try {

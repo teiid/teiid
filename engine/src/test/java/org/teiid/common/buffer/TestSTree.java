@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.common.buffer.STree.InsertMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.sql.symbol.ElementSymbol;
 
@@ -44,7 +45,7 @@ public class TestSTree {
 		STree map = bm.createSTree(elements, "1", 1);
 		
 		for (int i = 20000; i > 0; i--) {
-			assertNull(map.insert(Arrays.asList(i, String.valueOf(i)), true));
+			assertNull(map.insert(Arrays.asList(i, String.valueOf(i)), InsertMode.NEW));
 			assertEquals(20000 - i + 1, map.getRowCount());
 		}
 		
@@ -53,7 +54,7 @@ public class TestSTree {
 		}
 		
 		assertEquals(0, map.getRowCount());
-		assertNull(map.insert(Arrays.asList(1, String.valueOf(1)), true));
+		assertNull(map.insert(Arrays.asList(1, String.valueOf(1)), InsertMode.NEW));
 	}
 	
 }

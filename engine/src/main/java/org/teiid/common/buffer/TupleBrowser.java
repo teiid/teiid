@@ -97,9 +97,8 @@ public class TupleBrowser implements TupleSource {
 				values = upper.values;
 			}
 		} else {
-			bound = tree.header[0];
-			while (bound.next != null) {
-				bound = bound.next;
+			while (bound == null || bound.children != null) {
+				bound = tree.findChildTail(bound);
 			}
 		}
 				

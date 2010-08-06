@@ -41,6 +41,8 @@ import org.teiid.core.TeiidComponentException;
  */
 @SuppressWarnings("unchecked")
 public class STree {
+	
+	public enum InsertMode {ORDERED, NEW, UPDATE}
 
 	private static final Random seedGenerator = new Random();
 
@@ -73,7 +75,7 @@ public class STree {
 		this.leafManager = leafManager;
 		this.comparator = comparator;
 		this.pageSize = Math.max(pageSize, SPage.MIN_PERSISTENT_SIZE);
-		pageSize >>>= 4;
+		pageSize >>>= 3;
 		while (pageSize > 0) {
 			pageSize >>>= 1;
 			shift++;
@@ -83,6 +85,23 @@ public class STree {
 		this.keyLength = keyLength;
 		this.types = types;
 		this.keytypes = Arrays.copyOf(types, keyLength);
+	}
+	
+	protected SPage findChildTail(SPage page) {
+		if (page == null) {
+			page = header[header.length - 1];
+			while (page.next != null) {
+				page = page.next;
+			}
+			return page;
+		}
+		if (page.children != null) {
+			page = page.children.get(page.children.size() - 1);
+			while (page.next != null) {
+				page = page.next;
+			}
+		}
+		return page;
 	}
 
 	/**
@@ -149,18 +168,29 @@ public class STree {
 		return null;
 	}
 	
-	public List insert(List tuple, boolean replace) throws TeiidComponentException {
+	public List insert(List tuple, InsertMode mode) throws TeiidComponentException {
 		LinkedList<SearchResult> places = new LinkedList<SearchResult>();
-		List match = find(tuple, places);
-		if (match != null) {
-			if (!replace) {
+		List match = null;
+		if (mode == InsertMode.ORDERED) {
+			SPage last = null;
+			while (last == null || last.children != null) {
+				last = findChildTail(last);
+				//TODO: do this lazily
+				TupleBatch batch = last.getValues();
+				places.add(new SearchResult(-batch.getTuples().size() -1, last, batch));
+			}
+		} else {
+			match = find(tuple, places);
+			if (match != null) {
+				if (mode != InsertMode.UPDATE) {
+					return match;
+				}
+				SearchResult last = places.getLast();
+				SPage page = last.page;
+				last.values.getTuples().set(last.index, tuple);
+				page.setValues(last.values);
 				return match;
 			}
-			SearchResult last = places.getLast();
-			SPage page = last.page;
-			last.values.getTuples().set(last.index, tuple);
-			page.setValues(last.values);
-			return match;
 		}
 		List key = extractKey(tuple);
 		int level = randomLevel(); 
