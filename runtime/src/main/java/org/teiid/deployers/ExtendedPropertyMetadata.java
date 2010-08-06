@@ -105,7 +105,9 @@ public class ExtendedPropertyMetadata {
 			index++;
 		}
 		// add last property
-		addProperty(propertyName, values);
+		if (propertyName != null) {
+			addProperty(propertyName, values);
+		}
 	}
 	
 	private void addProperty(String name, ArrayList<String> values) {
