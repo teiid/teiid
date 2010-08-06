@@ -166,18 +166,19 @@ public class SessionServiceImpl implements SessionService {
         if (vdbName != null) {
         	String vdbVersion = properties.getProperty(TeiidURL.JDBC.VDB_VERSION);
             if (vdbVersion == null) {
+            	vdbVersion = "latest"; //$NON-NLS-1$
 				try {
-					vdb = this.vdbRepository.getActiveVDB(vdbName);
+					vdb = this.vdbRepository.getVDB(vdbName);
 				} catch (VirtualDatabaseException e) {
-					throw new SessionServiceException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, "latest")); //$NON-NLS-1$ //$NON-NLS-2$ 
+					throw new SessionServiceException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, vdbVersion)); //$NON-NLS-1$ 
 				}
             }
             else {
             	vdb = this.vdbRepository.getVDB(vdbName, Integer.parseInt(vdbVersion));
-                if (vdb.getStatus() != VDB.Status.ACTIVE || vdb.getConnectionType() == ConnectionType.NONE) {
-                	throw new SessionServiceException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, vdbVersion)); //$NON-NLS-1$
-                }
             }            
+            if (vdb.getStatus() != VDB.Status.ACTIVE || vdb.getConnectionType() == ConnectionType.NONE) {
+            	throw new SessionServiceException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, vdbVersion)); //$NON-NLS-1$
+            }
         }
 
         if (sessionMaxLimit > 0 && getActiveSessionsCount() >= sessionMaxLimit) {

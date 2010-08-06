@@ -36,8 +36,6 @@ import org.jboss.deployers.spi.DeploymentException;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.Model;
-import org.teiid.adminapi.VDB.ConnectionType;
-import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.CoreConstants;
@@ -130,20 +128,23 @@ public class VDBRepository implements Serializable{
         return new VDBKey(vdb.getName(), vdb.getVersion());
     } 	
 		
-	public VDBMetaData getActiveVDB(String vdbName) throws VirtualDatabaseException {
+	public VDBMetaData getVDB(String vdbName) throws VirtualDatabaseException {
     	int latestVersion = 0;
         for (VDBKey key:this.vdbRepo.tailMap(new VDBKey(vdbName, 0)).keySet()) {
             if(!key.getName().equalsIgnoreCase(vdbName)) {
             	break;
             }
         	VDBMetaData vdb = this.vdbRepo.get(key).getVDB();
-            if (vdb.getStatus() == Status.ACTIVE) {
-            	if (vdb.getConnectionType() == ConnectionType.ANY) {
-            		latestVersion = Math.max(vdb.getVersion(), latestVersion);
-            	} else if (latestVersion == 0 && vdb.getConnectionType() == ConnectionType.BY_VERSION) {
+        	switch (vdb.getConnectionType()) {
+        	case ANY:
+        		latestVersion = Math.max(vdb.getVersion(), latestVersion);
+        		break;
+        	case BY_VERSION:
+                if (latestVersion == 0) {
             		latestVersion = vdb.getVersion();
-            	}
-            }            	
+                }            	
+                break;
+        	}
         }
         if(latestVersion == 0) {
             throw new VirtualDatabaseException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, "latest")); //$NON-NLS-1$ //$NON-NLS-2$ 
