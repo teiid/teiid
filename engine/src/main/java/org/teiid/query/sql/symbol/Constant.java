@@ -39,8 +39,10 @@ import org.teiid.query.util.ErrorMessageKeys;
  */
 public class Constant implements Expression, Comparable<Constant> {
 
+	public static final Constant NULL_CONSTANT = new Constant(null);
+	
 	private Object value;
-	private Class type;
+	private Class<?> type;
 	private boolean multiValued;
 
 	/**
@@ -79,7 +81,7 @@ public class Constant implements Expression, Comparable<Constant> {
 	 * Get type of constant, if known
 	 * @return Java class name of type
 	 */
-	public Class getType() {
+	public Class<?> getType() {
 		return this.type;
 	}
 
@@ -137,8 +139,15 @@ public class Constant implements Expression, Comparable<Constant> {
 		Constant other = (Constant) obj;
 
 		// Check null values first
-		if(other.isNull() && this.isNull()) {
-			return true;
+		if(other.isNull()) {
+			if (this.isNull()) {
+				return true;
+			}
+			return false;
+		}
+		
+		if (this.isNull()) {
+			return false;
 		}
 
 		// Check type - types are never null
@@ -146,10 +155,6 @@ public class Constant implements Expression, Comparable<Constant> {
 			return false;
 		}
 
-        if(other.isNull() || this.isNull()) {
-			return false;
-		}
-        
         return multiValued == other.multiValued && other.getValue().equals(this.getValue());
 	}
 

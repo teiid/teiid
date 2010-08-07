@@ -43,6 +43,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.dqp.internal.process.Request;
+import org.teiid.language.SQLConstants;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
@@ -71,6 +72,7 @@ import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageObject.Util;
+import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.From;
@@ -904,16 +906,18 @@ public class RelationalPlanner {
         Object metadataID = virtualGroup.getMetadataID();
         boolean noCache = isNoCacheGroup(metadata, metadataID, option);
         boolean isMaterializedGroup = metadata.hasMaterialization(metadataID);
-        String cacheString = "select"; //$NON-NLS-1$
+        String cacheString = SQLConstants.Reserved.SELECT; 
         String groupName = metadata.getFullName(metadataID);
         
         if( isMaterializedGroup) {
         	Object matMetadataId = metadata.getMaterialization(metadataID);
         	String matTableName = null;
-        	boolean isGlobal = matMetadataId == null;
-            if (isGlobal) {
+        	CacheHint hint = null;
+        	boolean isImplicitGlobal = matMetadataId == null;
+            if (isImplicitGlobal) {
         		matTableName = MAT_PREFIX + groupName;
         		matMetadataId = getGlobalTempTableMetadataId(virtualGroup, matTableName);
+        		hint = ((TempMetadataID)matMetadataId).getCacheHint();
             } else {
             	matTableName = metadata.getFullName(matMetadataId);
             }
@@ -922,13 +926,16 @@ public class RelationalPlanner {
         		//not use cache
         		qnode = metadata.getVirtualPlan(metadataID);
         		//TODO: update the table for defaultMat
-        		recordMaterializationTableAnnotation(virtualGroup, analysisRecord, matTableName, "SimpleQueryResolver.materialized_table_not_used"); //$NON-NLS-1$
+        		recordMaterializationTableAnnotation(virtualGroup, analysisRecord, matTableName, 
+        				QueryPlugin.Util.getString("SimpleQueryResolver.materialized_table_not_used", virtualGroup, matTableName)); //$NON-NLS-1$
         	}else{
         		qnode = new QueryNode(groupName, null);
-        		Query query = createMatViewQuery(matMetadataId, matTableName, Arrays.asList(new AllSymbol()), isGlobal);
+        		Query query = createMatViewQuery(matMetadataId, matTableName, Arrays.asList(new AllSymbol()), isImplicitGlobal);
+        		query.setCacheHint(hint);
         		qnode.setCommand(query);
                 cacheString = "matview"; //$NON-NLS-1$
-                recordMaterializationTableAnnotation(virtualGroup, analysisRecord, matTableName, "SimpleQueryResolver.Query_was_redirected_to_Mat_table"); //$NON-NLS-1$                
+                recordMaterializationTableAnnotation(virtualGroup, analysisRecord, matTableName, 
+        				QueryPlugin.Util.getString("SimpleQueryResolver.Query_was_redirected_to_Mat_table", virtualGroup, matTableName)); //$NON-NLS-1$
         	}
         } else {
             // Not a materialized view - query the primary transformation
@@ -950,12 +957,12 @@ public class RelationalPlanner {
 	}
 
 	private Object getGlobalTempTableMetadataId(GroupSymbol table, String matTableName)
-			throws QueryMetadataException, TeiidComponentException {
+			throws QueryMetadataException, TeiidComponentException, QueryResolverException, QueryValidatorException {
 		TempMetadataStore store = context.getGlobalTableStore().getMetadataStore();
 		TempMetadataID id = store.getTempGroupID(matTableName);
 		//define the table preserving the primary key
 		if (id == null) {
-			synchronized (store) {
+			synchronized (table.getMetadataID()) {
 				id = store.getTempGroupID(matTableName);
 				if (id == null) {
 					//this is really just temporary and will be replaced by the real table
@@ -977,6 +984,15 @@ public class RelationalPlanner {
 					//version column?
 					
 					//add timestamp?
+					Command c = getCommand(table, metadata.getVirtualPlan(table.getMetadataID()), SQLConstants.Reserved.SELECT, metadata);
+					CacheHint hint = c.getCacheHint();
+					if (hint == null) {
+						hint = new CacheHint();
+					} else {
+						recordMaterializationTableAnnotation(table, analysisRecord, matTableName, 
+		        				QueryPlugin.Util.getString("SimpleQueryResolver.cache_hint_used", table, matTableName, hint)); //$NON-NLS-1$
+					}
+					id.setCacheHint(hint);
 				}
 			}
 		}
@@ -1042,9 +1058,8 @@ public class RelationalPlanner {
                                                       AnalysisRecord analysis,
                                                       String matTableName, String msg) {
         if ( analysis.recordAnnotations() ) {
-            Object[] params = new Object[] {virtualGroup, matTableName};
             Annotation annotation = new Annotation(Annotation.MATERIALIZED_VIEW, 
-                                                         QueryPlugin.Util.getString(msg, params), 
+                                                         msg, 
                                                          null, 
                                                          Priority.LOW);
             analysis.addAnnotation(annotation);

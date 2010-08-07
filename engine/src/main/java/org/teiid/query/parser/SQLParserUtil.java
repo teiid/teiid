@@ -25,12 +25,14 @@ package org.teiid.query.parser;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.FromClause;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.Option;
@@ -166,7 +168,7 @@ public class SQLParserUtil {
     }
     
     void setFromClauseOptions(Token groupID, FromClause fromClause){
-        String[] parts = getComment(groupID);
+        String[] parts = getComment(groupID).split("\\s"); //$NON-NLS-1$
 
         for (int i = 0; i < parts.length; i++) {
             if (parts[i].equalsIgnoreCase(Option.OPTIONAL)) {
@@ -175,24 +177,34 @@ public class SQLParserUtil {
         }
     }
 
-	private String[] getComment(Token t) {
+	private String getComment(Token t) {
 		Token optToken = t.specialToken;
         if (optToken == null) { 
-            return new String[0];
+            return ""; //$NON-NLS-1$
         }
         String hint = optToken.image.substring(2, optToken.image.length() - 2);
-        String[] parts = hint.split("\\s"); //$NON-NLS-1$
-		return parts;
+        if (hint.startsWith("+")) { //$NON-NLS-1$
+        	hint = hint.substring(1);
+        }
+        return hint;
 	}
+	
+	private static Pattern CACHE_HINT = Pattern.compile("\\s*cache(\\(\\s*(pref_mem)?\\s*(ttl:\\d{1,19})?[^)]*\\))?.*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     
     void setQueryCacheOption(Token t, ParseInfo p) {
-    	String[] parts = getComment(t);
+    	String hint = getComment(t);
 
-        for (int i = 0; i < parts.length; i++) {
-            if (parts[i].equalsIgnoreCase(Command.CACHE)) {
-                p.cache = true;
-            }        
-        }
+    	Matcher match = CACHE_HINT.matcher(hint);
+    	if (match.matches()) {
+    		p.cacheHint = new CacheHint();
+    		if (match.group(2) !=null) {
+    			p.cacheHint.setPrefersMemory(true);
+    		}
+    		String ttl = match.group(3);
+    		if (ttl != null) {
+    			p.cacheHint.setTtl(Long.valueOf(ttl.substring(4)));
+    		}
+    	}
     }
 
     /**

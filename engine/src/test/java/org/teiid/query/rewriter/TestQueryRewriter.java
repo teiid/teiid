@@ -53,6 +53,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.CompoundCriteria;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.IsNullCriteria;
 import org.teiid.query.sql.lang.MatchCriteria;
 import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.Query;
@@ -231,11 +232,15 @@ public class TestQueryRewriter {
     }
     
     @Test public void testRewriteInCriteriaWithNoValues() throws Exception {
-        Criteria crit = new SetCriteria(new ElementSymbol("e1"), Collections.EMPTY_LIST); //$NON-NLS-1$
+    	ElementSymbol e1 = new ElementSymbol("e1");
+    	e1.setGroupSymbol(new GroupSymbol("g1"));
+        Criteria crit = new SetCriteria(e1, Collections.EMPTY_LIST); //$NON-NLS-1$
         
         Criteria actual = QueryRewriter.rewriteCriteria(crit, null, null, null);
         
-        assertEquals(QueryRewriter.FALSE_CRITERIA, actual);
+        IsNullCriteria inc = new IsNullCriteria(e1);
+        inc.setNegated(true);
+        assertEquals(inc, actual);
     }
         
     @Test public void testRewriteBetweenCriteria1() {

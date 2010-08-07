@@ -33,7 +33,6 @@ import org.teiid.query.sql.lang.MatchCriteria;
 import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
 
 /**
  * Accumulates information from criteria about a specific index column.
@@ -105,16 +104,10 @@ class IndexCondition {
 						}
 					} else if (criteria instanceof SetCriteria) {
 						SetCriteria setCriteria = (SetCriteria)criteria;
-						if (!setCriteria.getExpression().equals(keyColumn)) {
+						if (!setCriteria.getExpression().equals(keyColumn) || !setCriteria.isAllConstants()) {
 							continue;
 						}
-						TreeSet<Constant> values = new TreeSet<Constant>();
-						for (Expression expr : (List<? extends Expression>)setCriteria.getValues()) {
-							if (!(expr instanceof Constant)) {
-								continue;
-							}
-							values.add((Constant)expr);
-						}
+						TreeSet<Constant> values = (TreeSet<Constant>) setCriteria.getValues();
 						conditions[i].addSet(values);
 					}
 				}

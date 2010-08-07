@@ -430,15 +430,6 @@ public class TestCriteriaEvaluator {
         helpTestCompareSubqueryCriteria(crit, false, Collections.emptyList()); 
     }
 
-    /**
-     * Special case: if no predicate quantifier is specified and the subquery returns no rows,
-     * the result is false.
-     */
-    @Test public void testCompareSubqueryCriteriaNoRows3() throws Exception {
-        SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.NO_QUANTIFIER);
-        helpTestCompareSubqueryCriteria(crit, false, Collections.emptyList()); 
-    }
-
     @Test public void testCompareSubqueryCriteria2() throws Exception {
         SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.ALL);
         ArrayList values = new ArrayList();
@@ -472,46 +463,6 @@ public class TestCriteriaEvaluator {
         values.add("b"); //$NON-NLS-1$
         values.add("c"); //$NON-NLS-1$
         helpTestCompareSubqueryCriteria(crit, true, values); 
-    }
-
-    @Test public void testCompareSubqueryCriteria6() throws Exception {
-        SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.NO_QUANTIFIER);
-        ArrayList values = new ArrayList();
-        values.add("a"); //$NON-NLS-1$
-        helpTestCompareSubqueryCriteria(crit, true, values); 
-    }
-
-    @Test public void testCompareSubqueryCriteria7() throws Exception {
-        SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.NO_QUANTIFIER);
-        ArrayList values = new ArrayList();
-        values.add("b"); //$NON-NLS-1$
-        helpTestCompareSubqueryCriteria(crit, false, values); 
-    }
-
-
-    /**
-     * Should fail because the subquery needs to be scalar since it doesn't
-     * have a predicate quantifier, but there is more than one value in the
-     * ValueIterator
-     */
-    @Test public void testCompareSubqueryCriteriaFails1() throws Exception {
-        SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.NO_QUANTIFIER);
-        ArrayList values = new ArrayList();
-        values.add("a"); //$NON-NLS-1$
-        values.add("b"); //$NON-NLS-1$
-        values.add("c"); //$NON-NLS-1$
-        try {
-        	helpTestCompareSubqueryCriteria(crit, false, values);
-        } catch (ExpressionEvaluationException e) {
-        	assertEquals("Error Code:ERR.015.006.0056 Message:The subquery of this compare criteria has to be scalar, but returned more than one value: e1 = (<undefined>)", e.getMessage()); //$NON-NLS-1$
-        }
-    }
-
-    @Test public void testCompareSubqueryCriteriaNulls2() throws Exception {
-        SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.NO_QUANTIFIER);
-        ArrayList values = new ArrayList();
-        values.add(null);
-        helpTestCompareSubqueryCriteria(crit, false, values); 
     }
 
     @Test public void testCompareSubqueryCriteriaNulls3() throws Exception {

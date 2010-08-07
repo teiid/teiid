@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.teiid.core.util.LRUCache;
 import org.teiid.query.mapping.relational.QueryNode;
+import org.teiid.query.sql.lang.CacheHint;
 
 
 /**
@@ -57,6 +58,7 @@ public class TempMetadataID implements Serializable {
     private List<TempMetadataID> primaryKey;
     private QueryNode queryNode;
     private transient LRUCache<Object, Object> localCache;
+    private CacheHint cacheHint;
     
     //Column metadata
     private Object originalMetadataID;
@@ -279,6 +281,14 @@ public class TempMetadataID implements Serializable {
 	
 	public void setQueryNode(QueryNode queryNode) {
 		this.queryNode = queryNode;
+	}
+	
+	public CacheHint getCacheHint() {
+		return cacheHint;
+	}
+	
+	public void setCacheHint(CacheHint cacheHint) {
+		this.cacheHint = cacheHint;
 	}
 		
 }

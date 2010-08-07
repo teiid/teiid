@@ -127,10 +127,16 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
         }
 
         DependentSetCriteria criteriaCopy = new DependentSetCriteria(copy, id);
-        criteriaCopy.setNegated(isNegated());
         criteriaCopy.setValueExpression((Expression) getValueExpression().clone());
         criteriaCopy.id = this.id;
         return criteriaCopy;
+    }
+    
+    @Override
+    public void setNegated(boolean negationFlag) {
+    	if (!negationFlag) {
+    		throw new UnsupportedOperationException();
+    	}
     }
     
 }

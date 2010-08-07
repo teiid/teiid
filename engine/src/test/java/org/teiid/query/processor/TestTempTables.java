@@ -194,13 +194,14 @@ public class TestTempTables {
 	}
 	
 	@Test public void testInWithIndexUpdate() throws Exception {
-		execute("create local temporary table x (e1 string, e2 integer, primary key (e1))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		execute("create local temporary table x (e1 string, e2 integer, e3 string, primary key (e1))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
 		execute("insert into x (e2, e1) values (3, 'a')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 		execute("insert into x (e2, e1) values (2, 'b')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 		execute("insert into x (e2, e1) values (1, 'c')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 		execute("insert into x (e2, e1) values (0, 'd')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
-		execute("insert into x (e2, e1) values (-1, 'e')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		execute("insert into x (e2, e1, e3) values (-1, 'e', 'e')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 		execute("update x set e2 = 5 where e1 in ('a', 'c')", new List[] {Arrays.asList(2)}); //$NON-NLS-1$
+		execute("select * from x where e1 in ('b', e3)", new List[] {Arrays.asList("b", 2, null), Arrays.asList("e", -1, "e")}); //$NON-NLS-1$
 	}
 	
 	@Test public void testCompositeKeyCompareEquals() throws Exception {

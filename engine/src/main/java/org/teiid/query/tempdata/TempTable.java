@@ -54,6 +54,7 @@ import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.SortUtility;
 import org.teiid.query.processor.relational.SortUtility.Mode;
+import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
@@ -547,6 +548,10 @@ class TempTable {
 	
 	void setUpdatable(boolean updatable) {
 		this.updatable = updatable;
+	}
+	
+	CacheHint getCacheHint() {
+		return this.tid.getCacheHint();
 	}
 
 }

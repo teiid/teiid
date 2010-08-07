@@ -692,7 +692,10 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     @Override
     public Object getPrimaryKey(Object metadataID) {
     	if (metadataID instanceof TempMetadataID) {
-    		return metadataID;
+    		if (((TempMetadataID)metadataID).getPrimaryKey() != null) {
+    			return metadataID;
+    		}
+    		return null;
     	}
     	return this.actualMetadata.getPrimaryKey(metadataID);
     }

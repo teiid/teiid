@@ -50,8 +50,6 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  */
 public abstract class Command implements LanguageObject {
 	
-	public static final String CACHE = "cache"; //$NON-NLS-1$
-
 	/** 
 	 * Represents an unknown type of command 
 	 */
@@ -123,7 +121,7 @@ public abstract class Command implements LanguageObject {
 	
 	private SymbolMap correlatedReferences;
 	
-	private boolean cache;
+	private CacheHint cacheHint;
     
 	/**
 	 * Return type of command to make it easier to build switch statements by command type.
@@ -233,7 +231,7 @@ public abstract class Command implements LanguageObject {
         if(this.getOption() != null) { 
             copy.setOption( (Option) this.getOption().clone() );
         }
-        copy.cache = this.cache;
+        copy.cacheHint = this.cacheHint;
     }
     
     /**
@@ -322,11 +320,15 @@ public abstract class Command implements LanguageObject {
     }
     
     public boolean isCache() {
-		return cache;
+		return cacheHint != null;
 	}
     
-    public void setCache(boolean cache) {
-		this.cache = cache;
+    public CacheHint getCacheHint() {
+		return cacheHint;
+	}
+    
+    public void setCacheHint(CacheHint cacheHint) {
+		this.cacheHint = cacheHint;
 	}
     
     /**

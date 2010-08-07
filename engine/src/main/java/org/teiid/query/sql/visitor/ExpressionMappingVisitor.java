@@ -253,6 +253,10 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     public void visit(SetCriteria obj) {
         obj.setExpression( replaceExpression(obj.getExpression()) );
         
+        if (obj.isAllConstants()) {
+        	return;
+        }
+        
         Collection newValues = new ArrayList(obj.getValues().size());        
         Iterator valueIter = obj.getValues().iterator();
         while(valueIter.hasNext()) {

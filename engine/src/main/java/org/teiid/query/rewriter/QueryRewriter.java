@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.TreeSet;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
@@ -1833,6 +1834,10 @@ public class QueryRewriter {
     }
 
 	private Criteria rewriteCriteria(SetCriteria criteria) throws TeiidComponentException, TeiidProcessingException{
+		if (criteria.isAllConstants() && criteria.getValues().size() > 1) {
+			return criteria;
+		}
+		
 		criteria.setExpression(rewriteExpressionDirect(criteria.getExpression()));
         
         if (isNull(criteria.getExpression())) {
@@ -1843,25 +1848,38 @@ public class QueryRewriter {
 
         LinkedHashSet newVals = new LinkedHashSet(vals.size());
         Iterator valIter = vals.iterator();
+        boolean allConstants = true;
+        boolean hasNull = false;
         while(valIter.hasNext()) {
             Expression value = rewriteExpressionDirect( (Expression) valIter.next());
             if (isNull(value)) {
-                continue;
+            	hasNull = true;
+            	continue;
             }
+            allConstants &= value instanceof Constant;
             newVals.add(value);
         }
         
-        criteria.setValues(newVals);
-        
-        if (newVals.size() == 1) {
+        int size = newVals.size();
+        if (size == 1) {
             Expression value = (Expression)newVals.iterator().next();
             return rewriteCriteria(new CompareCriteria(criteria.getExpression(), criteria.isNegated()?CompareCriteria.NE:CompareCriteria.EQ, value));
-        } else if (newVals.size() == 0) {
-            return FALSE_CRITERIA;
+        } 
+        
+        criteria.setValues(newVals);
+        if (allConstants) {
+        	criteria.setAllConstants(true);
+        	criteria.setValues(new TreeSet(newVals));
+        }        
+        
+        if (size == 0) {
+        	if (hasNull) {
+        		return UNKNOWN_CRITERIA;
+        	}
+        	return getSimpliedCriteria(criteria, criteria.getExpression(), !criteria.isNegated(), true);
         }
         
         if(criteria.getExpression() instanceof Function ) {
-            
             Function leftFunction = (Function)criteria.getExpression();
             if(FunctionLibrary.isConvert(leftFunction)) {
                 return simplifyConvertFunction(criteria);        

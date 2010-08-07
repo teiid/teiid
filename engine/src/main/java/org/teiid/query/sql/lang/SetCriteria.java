@@ -24,13 +24,13 @@ package org.teiid.query.sql.lang;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.TreeSet;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.Expression;
 
@@ -43,6 +43,7 @@ public class SetCriteria extends AbstractSetCriteria {
 
 	/** The set of value expressions */
     private Collection values;
+    private boolean allConstants;
 
     /**
      * Constructs a default instance of this class.
@@ -71,8 +72,8 @@ public class SetCriteria extends AbstractSetCriteria {
      * currently no values.
      * @return The collection of Expression values
      */
-    public List getValues() {
-        return (this.values != null) ? new ArrayList(this.values) : Collections.EMPTY_LIST;
+    public Collection getValues() {
+        return this.values;
     }
 
     /**
@@ -136,10 +137,7 @@ public class SetCriteria extends AbstractSetCriteria {
             return false;
         }
         
-        HashSet thisValues = new HashSet(getValues());
-        HashSet otherValues = new HashSet(sc.getValues());
-        
-        return thisValues.equals(otherValues) &&
+        return getValues().equals(sc.getValues()) &&
                EquivalenceUtil.areEqual(getExpression(), sc.getExpression());
 	}
 	
@@ -153,18 +151,25 @@ public class SetCriteria extends AbstractSetCriteria {
 	        copy = (Expression) getExpression().clone();
 	    }	
 	    
-	    Collection copyValues = new ArrayList();
-	    if(getValues() != null) { 
-	        Iterator iter = getValues().iterator();
-	        while(iter.hasNext()) { 
-	            Expression e = (Expression) iter.next();
-	            copyValues.add( e.clone() );
-	        }
+	    Collection copyValues = null;
+	    if (isAllConstants()) {
+	    	copyValues = new TreeSet(values);
+	    } else {
+	    	copyValues = LanguageObject.Util.deepClone(new ArrayList(values), Expression.class);
 	    }
-
+	    
         SetCriteria criteriaCopy = new SetCriteria(copy, copyValues);
         criteriaCopy.setNegated(isNegated());
+        criteriaCopy.allConstants = allConstants;
         return criteriaCopy;
+	}
+	
+	public boolean isAllConstants() {
+		return allConstants;
+	}
+	
+	public void setAllConstants(boolean allConstants) {
+		this.allConstants = allConstants;
 	}
 
 }  // END CLASS

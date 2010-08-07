@@ -92,4 +92,14 @@ public class TestMaterialization {
     	assertEquals(1, hdm.getCommandHistory().size());
     }
     
+	@Test public void testTtl() throws Exception {
+		execute("SELECT * from vgroup4 where x = 'one'", Arrays.asList("one"));
+		assertEquals(1, hdm.getCommandHistory().size());
+		execute("SELECT * from vgroup4 where x is null", Arrays.asList((String)null));
+		assertEquals(1, hdm.getCommandHistory().size());
+		Thread.sleep(150);
+		execute("SELECT * from vgroup4 where x is null", Arrays.asList((String)null));
+		assertEquals(2, hdm.getCommandHistory().size());
+	}
+    
 }

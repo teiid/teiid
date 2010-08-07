@@ -108,7 +108,9 @@ public class QueryParser {
         
         try {
 	        Command result = parseCommandWithParser(sql, parseInfo);
-	        result.setCache(parseInfo.cache);
+	        if (parseInfo.cacheHint != null) {
+		        result.setCacheHint(parseInfo.cacheHint);
+	        }
 			return result;
         } catch (QueryParserException e) {
             if(sql.startsWith(XML_OPEN_BRACKET) || sql.startsWith(XQUERY_DECLARE)) {

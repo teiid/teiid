@@ -60,9 +60,6 @@ implements SubqueryContainer, ContextReference {
 
 	private static AtomicInteger ID = new AtomicInteger();
 
-    /** "All" predicate quantifier */
-    public static final int NO_QUANTIFIER = 1;
-
     /** "Some" predicate quantifier (equivalent to "Any") */
     public static final int SOME = 2;
 
@@ -72,7 +69,7 @@ implements SubqueryContainer, ContextReference {
     /** "All" predicate quantifier */
     public static final int ALL = 4;
 
-    private int predicateQuantifier = NO_QUANTIFIER;
+    private int predicateQuantifier = ALL;
 
     private Command command;
     private String id = "$scc/id" + ID.getAndIncrement(); //$NON-NLS-1$
@@ -140,7 +137,6 @@ implements SubqueryContainer, ContextReference {
      */
     public String getPredicateQuantifierAsString() {
         switch ( this.predicateQuantifier ) {
-            case NO_QUANTIFIER: return ""; //$NON-NLS-1$
             case ANY: return "ANY "; //$NON-NLS-1$
             case SOME: return "SOME "; //$NON-NLS-1$
             case ALL: return "ALL "; //$NON-NLS-1$

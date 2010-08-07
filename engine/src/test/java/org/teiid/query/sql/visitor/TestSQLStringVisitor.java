@@ -398,7 +398,7 @@ public class TestSQLStringVisitor extends TestCase {
             new UnaryFromClause(new GroupSymbol("m.g3")),  //$NON-NLS-1$
             JoinType.JOIN_CROSS);
         jp.setOptional(true);
-        helpTest(jp, "/* optional */ (m.g2 CROSS JOIN m.g3)"); //$NON-NLS-1$
+        helpTest(jp, "/*+ optional */ (m.g2 CROSS JOIN m.g3)"); //$NON-NLS-1$
     }
 
 	public void testJoinPredicate2() {
@@ -921,7 +921,7 @@ public class TestSQLStringVisitor extends TestCase {
 
         SubqueryFromClause sfc = new SubqueryFromClause("temp", q1); //$NON-NLS-1$
         sfc.setOptional(true);
-        helpTest(sfc, "/* optional */ (SELECT e1 FROM m.g1) AS temp");             //$NON-NLS-1$
+        helpTest(sfc, "/*+ optional */ (SELECT e1 FROM m.g1) AS temp");             //$NON-NLS-1$
     }
 
     public void testSubquerySetCriteria1() {
@@ -962,7 +962,7 @@ public class TestSQLStringVisitor extends TestCase {
     public void testOptionalUnaryFromClause() {
         UnaryFromClause unaryFromClause = new UnaryFromClause(new GroupSymbol("m.g1"));//$NON-NLS-1$
         unaryFromClause.setOptional(true);
-        helpTest(unaryFromClause, "/* optional */ m.g1");     //$NON-NLS-1$ 
+        helpTest(unaryFromClause, "/*+ optional */ m.g1");     //$NON-NLS-1$ 
     }
 	
 	public void testUpdate1() {
@@ -1690,23 +1690,6 @@ public class TestSQLStringVisitor extends TestCase {
         SubqueryCompareCriteria scc = new SubqueryCompareCriteria(expr, q1, SubqueryCompareCriteria.LE, SubqueryCompareCriteria.SOME);
 
         helpTest(scc, "e2 <= SOME (SELECT e1 FROM m.g1)");             //$NON-NLS-1$
-    }
-
-    public void testSubqueryCompareCriteria3() {
-        
-        Select s1 = new Select();
-        s1.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
-        From f1 = new From();
-        f1.addGroup(new GroupSymbol("m.g1"));        //$NON-NLS-1$
-        Query q1 = new Query();
-        q1.setSelect(s1);
-        q1.setFrom(f1);
-
-        ElementSymbol expr = new ElementSymbol("e2"); //$NON-NLS-1$
-
-        SubqueryCompareCriteria scc = new SubqueryCompareCriteria(expr, q1, SubqueryCompareCriteria.GE, SubqueryCompareCriteria.NO_QUANTIFIER);
-
-        helpTest(scc, "e2 >= (SELECT e1 FROM m.g1)");             //$NON-NLS-1$
     }
 
     public void testExistsCriteria1() {

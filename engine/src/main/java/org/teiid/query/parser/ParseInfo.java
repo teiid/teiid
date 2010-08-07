@@ -26,6 +26,8 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.teiid.query.sql.lang.CacheHint;
+
 
 public class ParseInfo implements Serializable{
 
@@ -41,7 +43,7 @@ public class ParseInfo implements Serializable{
     // treat a double quoted variable as variable instead of string 
     public boolean ansiQuotedIdentifiers=Boolean.valueOf(System.getProperty("org.teiid.ansiQuotedIdentifiers", Boolean.TRUE.toString())).booleanValue(); //$NON-NLS-1$
     
-    public boolean cache;
+    public CacheHint cacheHint;
     
 	public ParseInfo() { }
 	

@@ -40,6 +40,7 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.AtomicCriteria;
 import org.teiid.query.sql.lang.BetweenCriteria;
+import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.CompoundCriteria;
@@ -135,8 +136,8 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     public static final String UNDEFINED = "<undefined>"; //$NON-NLS-1$
     private static final String SPACE = " "; //$NON-NLS-1$
-    private static final String BEGIN_COMMENT = "/*"; //$NON-NLS-1$
-    private static final String END_COMMENT = "*/"; //$NON-NLS-1$
+    private static final String BEGIN_HINT = "/*+"; //$NON-NLS-1$
+    private static final String END_HINT = "*/"; //$NON-NLS-1$
     private static final char ID_ESCAPE_CHAR = '\"';
     
     private LinkedList<Object> parts = new LinkedList<Object>();
@@ -595,11 +596,11 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     private void addOptionComment(FromClause obj) {
     	if (obj.isOptional()) {
-	    	parts.add(BEGIN_COMMENT);
+	    	parts.add(BEGIN_HINT);
 	        parts.add(SPACE);
 	        parts.add(Option.OPTIONAL);
 	        parts.add(SPACE);
-	        parts.add(END_COMMENT);
+	        parts.add(END_HINT);
 	        parts.add(SPACE);
     	}
     }
@@ -816,7 +817,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit(Query obj) {
-    	addCacheHint(obj);
+    	addCacheHint(obj.getCacheHint());
         parts.add(registerNode(obj.getSelect()));
 
         if(obj.getInto() != null){
@@ -926,7 +927,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 		parts.add(" ("); //$NON-NLS-1$
 
 		// value list
-		List vals = obj.getValues();
+		Collection vals = obj.getValues();
 		int size = vals.size();
 		if(size == 1) {
 			Iterator iter = vals.iterator();
@@ -946,7 +947,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit(SetQuery obj) {
-    	addCacheHint(obj);
+    	addCacheHint(obj.getCacheHint());
         QueryCommand query = obj.getLeftQuery();
         if(query instanceof Query) {
             parts.add(registerNode(query));
@@ -991,7 +992,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit(StoredProcedure obj) {
-    	addCacheHint(obj);
+    	addCacheHint(obj.getCacheHint());
         //exec clause
         parts.add(EXEC);
 		parts.add(SPACE);
@@ -1040,15 +1041,35 @@ public class SQLStringVisitor extends LanguageVisitor {
 		}
     }
 
-	private void addCacheHint(Command obj) {
-		if (obj.isCache()) {
-    		parts.add(BEGIN_COMMENT);
-	        parts.add(SPACE);
-	        parts.add(Command.CACHE);
-	        parts.add(SPACE);
-	        parts.add(END_COMMENT);
-	        parts.add(SPACE);
-    	}
+	public void addCacheHint(CacheHint obj) {
+		if (obj == null) {
+			return;
+		}
+		parts.add(BEGIN_HINT);
+        parts.add(SPACE);
+        parts.add(CacheHint.CACHE);
+        boolean addParens = false;
+        if (obj.getPrefersMemory()) {
+        	parts.add(Tokens.LPAREN);
+        	addParens = true;
+        	parts.add(CacheHint.PREF_MEM);
+        }
+        if (obj.getTtl() != null) {
+        	if (!addParens) {
+        		parts.add(Tokens.LPAREN);
+        		addParens = true;
+        	} else {
+		        parts.add(SPACE);
+        	}
+        	parts.add(CacheHint.TTL);
+        	parts.add(obj.getTtl());
+        }
+        if (addParens) {
+	        parts.add(Tokens.RPAREN);
+        }
+        parts.add(SPACE);
+        parts.add(END_HINT);
+        parts.add(SPACE);
 	}
 
     public void visit(SubqueryFromClause obj) {

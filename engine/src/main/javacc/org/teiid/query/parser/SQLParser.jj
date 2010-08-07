@@ -2489,9 +2489,7 @@ SubqueryCompareCriteria subqueryCompareCriteria(ParseInfo info, Expression expre
 		subqueryCrit.setOperator(getOperator(operator.image));
 
 		// Set predicate quantifier
-		if(quantifier == null) {
-			subqueryCrit.setPredicateQuantifier(SubqueryCompareCriteria.NO_QUANTIFIER);
-		} else if(quantifier.image.equalsIgnoreCase("any")) { //$NON-NLS-1$
+		if(quantifier.image.equalsIgnoreCase("any")) { //$NON-NLS-1$
 			subqueryCrit.setPredicateQuantifier(SubqueryCompareCriteria.ANY);
 		} else if(quantifier.image.equalsIgnoreCase("some")) { //$NON-NLS-1$
 			subqueryCrit.setPredicateQuantifier(SubqueryCompareCriteria.SOME);

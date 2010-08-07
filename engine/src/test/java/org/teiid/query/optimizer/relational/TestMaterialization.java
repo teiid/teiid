@@ -143,7 +143,7 @@ public class TestMaterialization {
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.x FROM MatSrc.MatSrc AS g_0 WHERE g_0.x = '1'"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
     
-    @Test public void testCacheHint() throws Exception {
+    @Test public void testDefaultMaterialization() throws Exception {
         String userSql = "SELECT * from vgroup2"; //$NON-NLS-1$
         
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
@@ -156,11 +156,11 @@ public class TestMaterialization {
         TestOptimizer.checkAtomicQueries(new String[] {"SELECT #MAT_MatView.VGroup2.x FROM #MAT_MatView.VGroup2"}, plan);
         Collection<Annotation> annotations = analysis.getAnnotations();
         assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
-        assertTrue("Expected one annotation", annotations.size() == 1); //$NON-NLS-1$
+        assertEquals("Expected one annotation", 1, annotations.size()); //$NON-NLS-1$
         assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
     }
     
-    @Test public void testCacheHintWithPk() throws Exception {
+    @Test public void testDefaultMaterializationWithPK() throws Exception {
         String userSql = "SELECT * from vgroup3 where x = 'foo'"; //$NON-NLS-1$
         
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
@@ -174,7 +174,24 @@ public class TestMaterialization {
         TestOptimizer.checkAtomicQueries(new String[] {"SELECT #MAT_MatView.VGroup3.x, #MAT_MatView.VGroup3.y FROM #MAT_MatView.VGroup3 WHERE #MAT_MatView.VGroup3.x = 'foo'"}, plan);
         Collection<Annotation> annotations = analysis.getAnnotations();
         assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
-        assertTrue("Expected one annotation", annotations.size() == 1); //$NON-NLS-1$
+        assertEquals("Expected one annotation", 1, annotations.size()); //$NON-NLS-1$
+        assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
+    }
+    
+    @Test public void testDefaultMaterializationWithCacheHint() throws Exception {
+        String userSql = "SELECT * from vgroup4"; //$NON-NLS-1$
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
+        AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
+        
+        Command command = helpGetCommand(userSql, metadata, null);
+        CommandContext cc = new CommandContext();
+        cc.setGlobalTableStore(new TempTableStore("SYSTEM"));
+        ProcessorPlan plan = TestOptimizer.getPlan(command, metadata, getGenericFinder(), analysis, true, cc);
+        TestOptimizer.checkAtomicQueries(new String[] {"SELECT #MAT_MatView.VGroup4.x FROM #MAT_MatView.VGroup4"}, plan);
+        Collection<Annotation> annotations = analysis.getAnnotations();
+        assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
+        assertEquals("Expected one annotation", 2, annotations.size()); //$NON-NLS-1$
         assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
     }
 

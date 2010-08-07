@@ -22,6 +22,7 @@
 
 package org.teiid.core.util;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.RandomAccess;
@@ -108,23 +109,24 @@ public final class HashCodeUtil {
 	 * 1, 2, 4, 8, ...  This has been shown to give a good hash
 	 * for good time complexity. 	 
 	 */
-	public static final int expHashCode(int previous, List x) {
+	public static final int expHashCode(int previous, Collection<?> x) {
 		if(x == null || x.size() == 0) {
 			return PRIME*previous;
 		}
 		int size = x.size();				// size of collection
 		int hc = (PRIME*previous) + size;	// hash code so far
-		if (x instanceof RandomAccess) {
+		if (x instanceof RandomAccess && x instanceof List<?>) {
+			List<?> l = List.class.cast(x);
 			int index = 1;
 			int xlen = x.size()+1;	// switch to 1-based
 			while(index < xlen) {
-				hc = hashCode(hc, x.get(index-1));
+				hc = hashCode(hc, l.get(index-1));
 				index = index << 1;		// left shift by 1 to double
 			}
 		} else {
 			int skip = 0;						// skip between samples
 			int total = 0;						// collection examined already
-			Iterator iter = x.iterator();		// collection iterator
+			Iterator<?> iter = x.iterator();		// collection iterator
 			Object obj = iter.next();			// last iterated object, primed at first
 			while(total < size) {
 				for(int i=0; i<skip; i++) {		// skip to next sample

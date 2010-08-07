@@ -54,6 +54,7 @@ public class TempTableStore {
 	public static class MatTableInfo {
 		private long updateTime = -1;
 		private MatState state = MatState.NOT_LOADED;
+		private long ttl = -1;
 		
 		synchronized boolean shouldLoad() throws TeiidComponentException {
     		for (;;) {
@@ -71,6 +72,10 @@ public class TempTableStore {
 				}
 				continue;
 			case LOADED:
+				if (ttl >= 0 && System.currentTimeMillis() - updateTime - ttl > 0) {
+					state = MatState.LOADING;
+					return true;
+				}
 				return false;
 			}
     		}
@@ -80,6 +85,10 @@ public class TempTableStore {
 			this.state = state;
 			this.updateTime = System.currentTimeMillis();
 			notifyAll();
+		}
+		
+		public synchronized void setTtl(long ttl) {
+			this.ttl = ttl;
 		}
 		
 		public long getUpdateTime() {
@@ -122,9 +131,12 @@ public class TempTableStore {
 
     TempTable addTempTable(String tempTableName, Create create, BufferManager buffer) {
     	List<ElementSymbol> columns = create.getColumns();
-    	
+    	TempMetadataID existingId = tempMetadataStore.getTempGroupID(tempTableName);
         //add metadata
-        TempMetadataID id = tempMetadataStore.addTempGroup(tempTableName, columns, false, true);
+    	TempMetadataID id = tempMetadataStore.addTempGroup(tempTableName, columns, false, true);
+    	if (existingId != null) {
+    		id.setCacheHint(existingId.getCacheHint());
+    	}
         TempTableResolver.addPrimaryKey(create, id);
     	columns = new ArrayList<ElementSymbol>(create.getColumns());
         if (!create.getPrimaryKey().isEmpty()) {

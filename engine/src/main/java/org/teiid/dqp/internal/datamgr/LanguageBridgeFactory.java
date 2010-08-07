@@ -23,6 +23,7 @@
 package org.teiid.dqp.internal.datamgr;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -342,7 +343,7 @@ public class LanguageBridgeFactory {
     }
 
     In translate(SetCriteria criteria) {
-        List expressions = criteria.getValues();
+        Collection expressions = criteria.getValues();
         List translatedExpressions = new ArrayList();
         for (Iterator i = expressions.iterator(); i.hasNext();) {
             translatedExpressions.add(translate((Expression)i.next()));

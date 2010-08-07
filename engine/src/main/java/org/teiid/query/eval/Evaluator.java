@@ -407,6 +407,17 @@ public class Evaluator {
 
         ValueIterator valueIter = null;
         if (criteria instanceof SetCriteria) {
+        	SetCriteria set = (SetCriteria)criteria;
+        	if (set.isAllConstants()) {
+        		boolean exists = set.getValues().contains(new Constant(leftValue, criteria.getExpression().getType()));
+        		if (!exists) {
+        			if (set.getValues().contains(Constant.NULL_CONSTANT)) {
+        				return null;
+        			}
+        			return criteria.isNegated();
+        		}
+        		return !criteria.isNegated();
+        	}
         	valueIter = new CollectionValueIterator(((SetCriteria)criteria).getValues());
         } else if (criteria instanceof DependentSetCriteria){
         	ContextReference ref = (ContextReference)criteria;
@@ -446,7 +457,7 @@ public class Evaluator {
             }
 
 			if(value != null) {
-				if(leftValue.equals(value)) {
+				if(compareValues(leftValue, value) == 0) {
 					return Boolean.valueOf(!criteria.isNegated());
 				} // else try next value
 			} else {
@@ -511,26 +522,26 @@ public class Evaluator {
             Object value = valueIter.next();
 
             if(value != null) {
-
+            	int compare = compareValues(leftValue, value);
                 // Compare two non-null values using specified operator
                 switch(criteria.getOperator()) {
                     case SubqueryCompareCriteria.EQ:
-                        result = Boolean.valueOf(leftValue.equals(value));
+                        result = Boolean.valueOf(compare == 0);
                         break;
                     case SubqueryCompareCriteria.NE:
-                        result = Boolean.valueOf(!leftValue.equals(value));
+                        result = Boolean.valueOf(compare != 0);
                         break;
                     case SubqueryCompareCriteria.LT:
-                        result = Boolean.valueOf((compareValues(leftValue, value) < 0));
+                        result = Boolean.valueOf(compare < 0);
                         break;
                     case SubqueryCompareCriteria.LE:
-                        result = Boolean.valueOf((compareValues(leftValue, value) <= 0));
+                        result = Boolean.valueOf(compare <= 0);
                         break;
                     case SubqueryCompareCriteria.GT:
-                        result = Boolean.valueOf((compareValues(leftValue, value) > 0));
+                        result = Boolean.valueOf(compare > 0);
                         break;
                     case SubqueryCompareCriteria.GE:
-                        result = Boolean.valueOf((compareValues(leftValue, value) >= 0));
+                        result = Boolean.valueOf(compare >= 0);
                         break;
                     default:
                         throw new ExpressionEvaluationException(ErrorMessageKeys.PROCESSOR_0012, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0012, criteria.getOperator()));
@@ -547,13 +558,6 @@ public class Evaluator {
                             return Boolean.TRUE;
                         }
                         break;
-                    case SubqueryCompareCriteria.NO_QUANTIFIER:
-                        if (valueIter.hasNext()){
-                            // The subquery should be scalar, but has produced
-                            // more than one result value - this is an exception case
-                            throw new ExpressionEvaluationException(ErrorMessageKeys.PROCESSOR_0056, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0056, criteria));
-                        }
-                        return result;
                     default:
                         throw new ExpressionEvaluationException(ErrorMessageKeys.PROCESSOR_0057, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0057, criteria.getPredicateQuantifier()));
                 }
@@ -567,14 +571,6 @@ public class Evaluator {
                     case SubqueryCompareCriteria.SOME:
                         result = null;
                         break;
-                    case SubqueryCompareCriteria.NO_QUANTIFIER:
-                        if (valueIter.hasNext()){
-                            // The subquery should be scalar, but has produced
-                            // more than one result value - this is an exception case
-                            throw new ExpressionEvaluationException(ErrorMessageKeys.PROCESSOR_0056, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0056, criteria));
-                        }
-                        // null value means unknown for the single-value comparison
-                        return null;
                     default:
                         throw new ExpressionEvaluationException(ErrorMessageKeys.PROCESSOR_0057, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0057, criteria.getPredicateQuantifier()));
                 }

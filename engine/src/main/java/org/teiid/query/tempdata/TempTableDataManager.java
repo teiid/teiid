@@ -47,6 +47,7 @@ import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.resolver.util.ResolverUtil;
+import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Create;
@@ -174,8 +175,8 @@ public class TempTableDataManager implements ProcessorDataManager {
 		final String tableName = group.getNonCorrelationName().toUpperCase();
 		TempTable table = null;
 		if (group.isGlobalTable()) {
-			TempTableStore tts = context.getGlobalTableStore();
-			MatTableInfo info = tts.getMatTableInfo(tableName);
+			TempTableStore globalStore = context.getGlobalTableStore();
+			MatTableInfo info = globalStore.getMatTableInfo(tableName);
 			boolean load = info.shouldLoad();
 			if (load) {
 				QueryMetadataInterface metadata = context.getMetadata();
@@ -188,9 +189,10 @@ public class TempTableDataManager implements ProcessorDataManager {
 						create.getPrimaryKey().add(create.getColumns().get(metadata.getPosition(col)-1));
 					}
 				}
-				table = tts.addTempTable(tableName, create, bufferManager);
+				table = globalStore.addTempTable(tableName, create, bufferManager);
+				CacheHint hint = table.getCacheHint();
 				table.setUpdatable(false);
-				table.setPreferMemory(tableName.startsWith(CODE_PREFIX));
+				table.setPreferMemory(hint.getPrefersMemory());
 				boolean success = false;
 				try {
 					//TODO: order by primary key nulls first - then have an insert ordered optimization
@@ -204,12 +206,15 @@ public class TempTableDataManager implements ProcessorDataManager {
 		    		success = true;
 				} finally {
 					if (!success) {
-						tts.removeTempTableByName(tableName);
+						globalStore.removeTempTableByName(tableName);
 					}
 					info.setState(success?MatState.LOADED:MatState.FAILED_LOAD);
+					if (table.getCacheHint().getTtl() != null) {
+						info.setTtl(table.getCacheHint().getTtl());
+					}
 				}
 			} else {
-				table = tts.getOrCreateTempTable(tableName, query, bufferManager, false);
+				table = globalStore.getOrCreateTempTable(tableName, query, bufferManager, false);
 			}
 		} else {
 			table = contextStore.getOrCreateTempTable(tableName, query, bufferManager, true);
@@ -246,7 +251,8 @@ public class TempTableDataManager implements ProcessorDataManager {
     	String queryString = Reserved.SELECT + ' ' + keyElementName + " ," + returnElementName + ' ' + Reserved.FROM + ' ' + codeTableName; //$NON-NLS-1$ 
     	id.setQueryNode(new QueryNode(matTableName, queryString));
     	id.setPrimaryKey(id.getElements().subList(0, 1));
-    	
+    	CacheHint hint = new CacheHint(true, null);
+    	id.setCacheHint(hint);
     	Query query = RelationalPlanner.createMatViewQuery(id, matTableName, Arrays.asList(returnElement), true);
     	query.setCriteria(new CompareCriteria(keyElement, CompareCriteria.EQ, new Constant(keyValue)));
     	
