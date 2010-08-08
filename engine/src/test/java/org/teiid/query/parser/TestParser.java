@@ -3599,7 +3599,7 @@ public class TestParser {
     @Test public void testDeclareStatementWithAssignment1() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
         String type = new String("string"); //$NON-NLS-1$
-        DeclareStatement stmt = new DeclareStatement(a, type, sampleQuery());
+        DeclareStatement stmt = new DeclareStatement(a, type, new ScalarSubquery(sampleQuery()));
     
         helpStmtTest("DECLARE string a = SELECT a1 FROM g WHERE a2 = 5;","DECLARE string a = SELECT a1 FROM g WHERE a2 = 5;", stmt); //$NON-NLS-1$ //$NON-NLS-2$
     }

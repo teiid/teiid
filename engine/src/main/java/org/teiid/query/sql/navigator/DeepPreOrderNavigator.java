@@ -28,6 +28,8 @@ import org.teiid.query.sql.lang.ExistsCriteria;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
+import org.teiid.query.sql.proc.CommandStatement;
+import org.teiid.query.sql.proc.LoopStatement;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 
 
@@ -67,6 +69,21 @@ public class DeepPreOrderNavigator extends PreOrderNavigator {
         visitVisitor(obj);
         visitNode(obj.getCommand());
         visitNode(obj.getExpression());
+    }
+    
+    @Override
+    public void visit(CommandStatement obj) {
+    	visitVisitor(obj);
+    	visitNode(obj.getCommand());
+        visitVisitor(obj);
+    }
+    
+    @Override
+    public void visit(LoopStatement obj) {
+    	visitVisitor(obj);
+    	visitNode(obj.getCommand());
+        visitNode(obj.getBlock());
+        visitVisitor(obj);
     }
     
     public static void doVisit(LanguageObject object, LanguageVisitor visitor) {

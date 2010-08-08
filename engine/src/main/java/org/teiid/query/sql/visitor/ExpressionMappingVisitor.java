@@ -384,9 +384,7 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
      * @since 5.0
      */
     public void visit(AssignmentStatement obj) {
-        if (obj.hasExpression()) {
-            obj.setExpression(replaceExpression(obj.getExpression()));
-        }
+        obj.setExpression(replaceExpression(obj.getExpression()));
     }
     
     /** 

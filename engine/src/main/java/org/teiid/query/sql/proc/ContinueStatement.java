@@ -81,11 +81,4 @@ public class ContinueStatement extends Statement {
         return 0;
     }
       
-    /**
-     * Returns a string representation of an instance of this class.
-     * @return String representation of object
-     */
-    public String toString() {
-        return SQLStringVisitor.getSQLString(this);
-    }   
 }

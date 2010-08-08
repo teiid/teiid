@@ -95,23 +95,6 @@ public class TestSetCriteria extends TestCase {
 		assertTrue("Equivalent set criteria don't compare as equal: " + c1 + ", " + c2, c1.equals(c2));				 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	public void testEquals3() {   
-	    SetCriteria c1 = new SetCriteria();
-	    c1.setExpression(new ElementSymbol("e1")); //$NON-NLS-1$
-		List vals1 = new ArrayList();
-		vals1.add(new Constant("a")); //$NON-NLS-1$
-		vals1.add(new Constant("a")); //$NON-NLS-1$
-		c1.setValues(vals1);
-		
-	    SetCriteria c2 = new SetCriteria();
-	    c2.setExpression(new ElementSymbol("e1")); //$NON-NLS-1$
-		List vals2 = new ArrayList();
-		vals2.add(new Constant("a")); //$NON-NLS-1$
-		c2.setValues(vals2);
-		
-		assertTrue("Equivalent set criteria don't compare as equal: " + c1 + ", " + c2, c1.equals(c2));				 //$NON-NLS-1$ //$NON-NLS-2$
-	}
-
 	public void testSelfEquivalence(){
 		Object s1 = sample1();
 		int equals = 0;

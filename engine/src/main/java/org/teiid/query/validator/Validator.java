@@ -45,17 +45,11 @@ public class Validator {
     public static final ValidatorReport validate(LanguageObject object, QueryMetadataInterface metadata, AbstractValidationVisitor visitor)
         throws TeiidComponentException {
 
+        // Execute on this command
+        executeValidation(object, metadata, visitor);
+
         // Construct combined runtime / query metadata if necessary
         if(object instanceof Command) {                        
-            Command command = (Command) object;
-            // do not validate subcommands seperatly if it is an update procedure
-            int cmdType = command.getType();
-            if(cmdType == Command.TYPE_UPDATE_PROCEDURE) {
-            	// Execute on this command
-		        executeValidation(command, metadata, visitor);
-            	return visitor.getReport();           	
-            }
-            
             // Recursively validate subcommands
             Iterator iter = CommandCollectorVisitor.getCommands((Command)object).iterator();
             while(iter.hasNext()) {
@@ -63,9 +57,6 @@ public class Validator {
                 validate(subCommand, metadata, visitor);
             }
         }
-
-        // Execute on this command
-        executeValidation(object, metadata, visitor);
         
         // Otherwise, return a report
         return visitor.getReport();

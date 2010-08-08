@@ -38,7 +38,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.language.SQLConstants;
+import org.teiid.dqp.internal.process.Request;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.logging.LogManager;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -65,6 +65,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.util.CommandContext;
+import org.teiid.query.validator.ValidationVisitor;
 
 
 /**
@@ -168,7 +169,9 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 			// create a new set of variables including vars
 			Map nameValueMap = createVariableValuesMap(localContext);
             nameValueMap.putAll(QueryResolver.getVariableValues(parentProcCommand.getUserCommand(), metadata));
-            // validation visitor?
+            ValidationVisitor visitor = new ValidationVisitor();
+            visitor.setUpdateProc(parentProcCommand);
+            Request.validateWithVisitor(visitor, metadata, command);
 
             if (dynamicCommand.getAsColumns() != null
 					&& !dynamicCommand.getAsColumns().isEmpty()) {

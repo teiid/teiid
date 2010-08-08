@@ -24,13 +24,11 @@ package org.teiid.query.sql.proc;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
-import org.teiid.query.sql.*;
+import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ScalarSubquery;
-import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
 /**
@@ -39,12 +37,12 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  * statement holds references to the variable and it's value which could be an 
  * <code>Expression</code> or a <code>Command</code>.</p>
  */
-public class AssignmentStatement extends Statement implements SubqueryContainer{
+public class AssignmentStatement extends Statement implements ExpressionStatement {
 
 	// the variable to which a value is assigned
 	private ElementSymbol variable;
 	    
-    private LanguageObject value;
+    private Expression value;
 
 	/**
 	 * Constructor for AssignmentStatement.
@@ -53,53 +51,40 @@ public class AssignmentStatement extends Statement implements SubqueryContainer{
 		super();
 	}
 	
-    public AssignmentStatement(ElementSymbol variable, LanguageObject value) {
+	public AssignmentStatement(ElementSymbol variable, Command value) {
         this.variable = variable;
-        if (value instanceof ScalarSubquery) {
-			ScalarSubquery scalarSubquery = (ScalarSubquery) value;
-			value = scalarSubquery.getCommand();			
-		}
+        this.value = new ScalarSubquery(value);        
+    }
+	
+    public AssignmentStatement(ElementSymbol variable, Expression value) {
+        this.variable = variable;
         this.value = value;        
     }
+ 
+    /**
+     * @see #getExpression()
+     */
+    @Deprecated
+    public Expression getValue() {
+		return value;
+	}
 
-    public boolean hasCommand() {
-        return value instanceof Command;
-    }
-
-    public Command getCommand() {
-        if (hasCommand()) {
-            return (Command)value;
-        }
-        return null;
-    }
-    
-    public void setCommand(Command command) {
-        this.value = command;
-    }
-    
-    public boolean hasExpression() {
-        return value instanceof Expression;
-    }
+    /**
+     * @see #setExpression(Expression)
+     */
+    @Deprecated
+    public void setValue(Expression value) {
+		this.value = value;
+	}
 
     public Expression getExpression() {
-        if (hasExpression()) {
-            return (Expression)value;
-        }
-        return null;
+    	return this.value;
     }
     
     public void setExpression(Expression expression) {
         this.value = expression;
     }
     
-    public LanguageObject getValue() {
-        return value;
-    }	
-    
-    public void setValue(LanguageObject value) {
-        this.value = value;
-    }   
-	
 	/**
 	 * Get the expression giving the value that is assigned to the variable.
 	 * @return An <code>Expression</code> with the value
@@ -138,7 +123,7 @@ public class AssignmentStatement extends Statement implements SubqueryContainer{
 	 * @return Deep clone 
 	 */
 	public Object clone() {
-		AssignmentStatement clone = new AssignmentStatement((ElementSymbol) this.variable.clone(), (LanguageObject) this.value.clone());
+		AssignmentStatement clone = new AssignmentStatement((ElementSymbol) this.variable.clone(), (Expression) this.value.clone());
 		return clone;
 	}
 
@@ -166,7 +151,7 @@ public class AssignmentStatement extends Statement implements SubqueryContainer{
     		// Compare the variables
     		EquivalenceUtil.areEqual(this.getVariable(), other.getVariable()) &&
             // Compare the values
-    		EquivalenceUtil.areEqual(this.getValue(), other.getValue());
+    		EquivalenceUtil.areEqual(this.getExpression(), other.getExpression());
             // Compare the values
     }
 
@@ -180,16 +165,14 @@ public class AssignmentStatement extends Statement implements SubqueryContainer{
     	// and criteria clauses, not on the from, order by, or option clauses
     	int myHash = 0;
     	myHash = HashCodeUtil.hashCode(myHash, this.getVariable());
-    	myHash = HashCodeUtil.hashCode(myHash, this.getValue());
+    	myHash = HashCodeUtil.hashCode(myHash, this.getExpression());
 		return myHash;
 	}
+    
+    @Override
+    public Class<?> getExpectedType() {
+    	return getVariable().getType();
+    }
+    
       
-    /**
-     * Returns a string representation of an instance of this class.
-     * @return String representation of object
-     */
-    public String toString() {
-    	return SQLStringVisitor.getSQLString(this);
-    }	
-
 } // END CLASS

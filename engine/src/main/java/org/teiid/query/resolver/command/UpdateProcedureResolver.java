@@ -62,6 +62,7 @@ import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.proc.DeclareStatement;
+import org.teiid.query.sql.proc.ExpressionStatement;
 import org.teiid.query.sql.proc.IfStatement;
 import org.teiid.query.sql.proc.LoopStatement;
 import org.teiid.query.sql.proc.Statement;
@@ -241,25 +242,21 @@ public class UpdateProcedureResolver implements CommandResolver {
             case Statement.TYPE_ERROR:
             case Statement.TYPE_ASSIGNMENT:
             case Statement.TYPE_DECLARE:
-				AssignmentStatement assStmt = (AssignmentStatement) statement;
+				ExpressionStatement exprStmt = (ExpressionStatement) statement;
                 //first resolve the value.  this ensures the value cannot use the variable being defined
-            	if (assStmt.getValue() != null) {
-					if (assStmt.hasCommand()) {
-						Command cmd = assStmt.getCommand();
-						resolveEmbeddedCommand(metadata, externalGroups, cmd, analysis);
-					} else if (assStmt.hasExpression()) {
-                        Expression expr = assStmt.getExpression();
-                        for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr)) {
-                        	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand(), analysis);
-                        }
-                        ResolverVisitor.resolveLanguageObject(expr, null, externalGroups, metadata);
+            	if (exprStmt.getExpression() != null) {
+                    Expression expr = exprStmt.getExpression();
+                    for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr)) {
+                    	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand(), analysis);
                     }
+                    ResolverVisitor.resolveLanguageObject(expr, null, externalGroups, metadata);
             	}
                 
                 //second resolve the variable
                 if(statement.getType() == Statement.TYPE_DECLARE) {
                     collectDeclareVariable((DeclareStatement)statement, variables, metadata, externalGroups);
-                } else {
+                } else if (statement.getType() == Statement.TYPE_ASSIGNMENT) {
+                	AssignmentStatement assStmt = (AssignmentStatement)statement;
                     ResolverVisitor.resolveLanguageObject(assStmt.getVariable(), null, externalGroups, metadata);
                     if (statement.getType() == Statement.TYPE_ASSIGNMENT && !assStmt.getVariable().getGroupSymbol().getCanonicalName().equals(ProcedureReservedWords.VARIABLES)) {
                         throw new QueryResolverException(QueryPlugin.Util.getString("UpdateProcedureResolver.only_variables", assStmt.getVariable())); //$NON-NLS-1$
@@ -269,18 +266,15 @@ public class UpdateProcedureResolver implements CommandResolver {
                 }
                 
                 //third ensure the type matches
-                if (assStmt.hasExpression()) {
-                    Expression expr = assStmt.getExpression();
-                    Class varType = assStmt.getVariable().getType();
-                    Class exprType = expr.getType();
-                    
-                    if (exprType == null) {
-                        throw new QueryResolverException(QueryPlugin.Util.getString("ResolveVariablesVisitor.datatype_for_the_expression_not_resolvable")); //$NON-NLS-1$
-                    }
-                    String varTypeName = DataTypeManager.getDataTypeName(varType);
-                    assStmt.setExpression(ResolverUtil.convertExpression(expr, varTypeName, metadata));                    
+                if (exprStmt.getExpression() != null) {
+	                Class<?> varType = exprStmt.getExpectedType();
+	        		Class<?> exprType = exprStmt.getExpression().getType();
+	        		if (exprType == null) {
+	        		    throw new QueryResolverException(QueryPlugin.Util.getString("ResolveVariablesVisitor.datatype_for_the_expression_not_resolvable")); //$NON-NLS-1$
+	        		}
+	        		String varTypeName = DataTypeManager.getDataTypeName(varType);
+	        		exprStmt.setExpression(ResolverUtil.convertExpression(exprStmt.getExpression(), varTypeName, metadata));          
                 }
-                
                 break;
             case Statement.TYPE_WHILE:
                 WhileStatement whileStmt = (WhileStatement) statement;

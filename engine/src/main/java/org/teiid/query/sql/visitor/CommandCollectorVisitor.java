@@ -36,7 +36,6 @@ import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
-import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.LoopStatement;
 import org.teiid.query.sql.symbol.ScalarSubquery;
@@ -105,17 +104,6 @@ public class CommandCollectorVisitor extends LanguageVisitor {
         this.commands.add(obj.getCommand());
     }    
 
-    /**
-     * Visit a language object and collect symbols.  This method should <b>NOT</b> be 
-     * called directly.
-     * @param obj Language object
-     */
-    public void visit(AssignmentStatement obj) {
-    	if(obj.hasCommand()) {
-	        this.commands.add(obj.getCommand());
-    	}
-    }
-    
     /**
      * Visit a language object and collect symbols.  This method should <b>NOT</b> be 
      * called directly.

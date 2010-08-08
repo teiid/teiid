@@ -24,8 +24,6 @@ package org.teiid.query.sql.lang;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.TreeSet;
 
 import org.teiid.core.util.EquivalenceUtil;
@@ -136,9 +134,10 @@ public class SetCriteria extends AbstractSetCriteria {
         if (isNegated() ^ sc.isNegated()) {
             return false;
         }
-        
-        return getValues().equals(sc.getValues()) &&
-               EquivalenceUtil.areEqual(getExpression(), sc.getExpression());
+                
+        return getValues().size() == sc.getValues().size() && 
+        	getValues().containsAll(sc.getValues()) &&
+            EquivalenceUtil.areEqual(getExpression(), sc.getExpression());
 	}
 	
 	/**

@@ -34,6 +34,7 @@ import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.ScalarSubquery;
 
 import junit.framework.TestCase;
 
@@ -79,7 +80,7 @@ public class TestAssignmentStatement  extends TestCase {
 	public void testGetCommand() throws Exception {
 		AssignmentStatement s2 = sample2();
 		Query query = (Query) QueryParser.getQueryParser().parseCommand("Select x from y"); //$NON-NLS-1$
-		assertEquals("Didn't get the same parts ", s2.getCommand(), query); //$NON-NLS-1$
+		assertEquals("Didn't get the same parts ", ((ScalarSubquery)s2.getExpression()).getCommand(), query); //$NON-NLS-1$
 	}
 	
 	public void testSelfEquivalence(){

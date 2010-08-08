@@ -22,11 +22,9 @@
 
 package org.teiid.query.sql.proc;
 
-import org.teiid.language.SQLConstants.Reserved;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.GroupSymbol;
 
 
 /**
@@ -34,7 +32,9 @@ import org.teiid.query.sql.symbol.GroupSymbol;
  * It extends the <code>Statement</code> that could part of a <code>Block</code>.  This
  * this object holds and error message.</p>
  */
-public class RaiseErrorStatement extends AssignmentStatement {
+public class RaiseErrorStatement extends Statement implements ExpressionStatement {
+	
+	private Expression expression;
 
 	/**
 	 * Constructor for RaiseErrorStatement.
@@ -48,27 +48,20 @@ public class RaiseErrorStatement extends AssignmentStatement {
 	 * @param message The error message
 	 */
 	public RaiseErrorStatement(Expression message) {
-        super(createElementSymbol(), message);
+		expression = message;
 	}
         
-    private static ElementSymbol createElementSymbol() {
-        /*
-         * The element symbol created here is just a placeholder for reusing
-         * the logic in AssignmentStatement/AssignmentInstruction.  It should not
-         * matter that it has an invalid ID or GroupSymbol.  Setting the type to
-         * String allows for the expression to be converted to String as necessary.
-         */
-        ElementSymbol result = new ElementSymbol(Reserved.ERROR);
-        result.setMetadataID(Reserved.ERROR);
-        result.setType(String.class);
-        result.setGroupSymbol(new GroupSymbol(Reserved.ERROR));
-        return result;
-    }
-    
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
     
+    public Expression getExpression() {
+		return expression;
+	}
+    
+    public void setExpression(Expression expression) {
+		this.expression = expression;
+	}
     
     /** 
      * @see org.teiid.query.sql.proc.AssignmentStatement#getType()
@@ -76,5 +69,34 @@ public class RaiseErrorStatement extends AssignmentStatement {
     public int getType() {
         return TYPE_ERROR;
     }
+
+	@Override
+	public RaiseErrorStatement clone() {
+		return new RaiseErrorStatement((Expression) this.expression.clone());
+	}
+	
+	@Override
+	public int hashCode() {
+		return expression.hashCode();
+	}
+	
+	public boolean equals(Object obj) {
+		if (obj == this) {
+			return true;
+		}
+		
+		if (!(obj instanceof RaiseErrorStatement)) {
+			return false;
+		}
+		
+		RaiseErrorStatement other = (RaiseErrorStatement)obj;
+		
+		return other.expression.equals(this.expression);
+	}
+	
+	@Override
+	public Class<?> getExpectedType() {
+		return DataTypeManager.DefaultDataClasses.STRING;
+	}
     
 } // END CLASS

@@ -41,7 +41,6 @@ import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.AtomicCriteria;
 import org.teiid.query.sql.lang.BetweenCriteria;
 import org.teiid.query.sql.lang.CacheHint;
-import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.CompoundCriteria;
 import org.teiid.query.sql.lang.Create;
@@ -1420,10 +1419,18 @@ public class SQLStringVisitor extends LanguageVisitor {
         parts.add(registerNode(obj.getVariable()));
         if (obj.getValue() != null) {
             parts.add(" = "); //$NON-NLS-1$
-            parts.add(registerNode(obj.getValue()));
+            addStatementArgument(obj.getExpression());
         }
 		parts.add(";"); //$NON-NLS-1$
     }
+
+	private void addStatementArgument(Expression expr) {
+		if (expr instanceof ScalarSubquery) {
+			parts.add(registerNode(((ScalarSubquery)expr).getCommand()));
+		} else {
+			parts.add(registerNode(expr));
+		}
+	}
 
     public void visit(IfStatement obj) {
         parts.add(IF);
@@ -1534,13 +1541,10 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit(RaiseErrorStatement obj) {
-        Object parts[] = new Object[4];
-
-        parts[0] = ERROR;
-        parts[1] = SPACE;
-        parts[2] = registerNode(obj.getExpression());
-        parts[3] = ";"; //$NON-NLS-1$
-        replaceStringParts(parts);
+        parts.add(ERROR);
+        parts.add(SPACE);
+        addStatementArgument(obj.getExpression());
+        parts.add(";"); //$NON-NLS-1$
     }
 
     public void visit(BreakStatement obj) {

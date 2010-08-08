@@ -352,7 +352,12 @@ public class RealMetadataFactory {
         
         createKey("pk", vGroup3, vElements3.subList(0, 1));
 
-
+        QueryNode vTrans4 = new QueryNode("VGroup4", "/*+ cache(ttl:100) */ SELECT x FROM matsrc");         //$NON-NLS-1$ //$NON-NLS-2$
+        Table vGroup4 = createVirtualGroup("VGroup4", virtModel, vTrans4); //$NON-NLS-1$
+        vGroup4.setMaterialized(true);
+        createElements(vGroup4,
+                                      new String[] { "x" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING});
 
         return createTransformationMetadata(metadataStore, "");
     }

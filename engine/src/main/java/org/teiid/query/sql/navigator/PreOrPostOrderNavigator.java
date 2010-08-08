@@ -156,7 +156,7 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     public void visit(AssignmentStatement obj) {
         preVisitVisitor(obj);
         visitNode(obj.getVariable());
-        visitNode(obj.getValue());
+        visitNode(obj.getExpression());
         postVisitVisitor(obj);
     }
     public void visit(BatchedUpdateCommand obj) {
@@ -192,7 +192,6 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     }
     public void visit(CommandStatement obj) {
         preVisitVisitor(obj);
-        visitNode(obj.getCommand());
         postVisitVisitor(obj);
     }
     public void visit(CompareCriteria obj) {
@@ -227,7 +226,7 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     public void visit(DeclareStatement obj) {
         preVisitVisitor(obj);
         visitNode(obj.getVariable());
-        visitNode(obj.getValue());
+        visitNode(obj.getExpression());
         postVisitVisitor(obj);
     }
     public void visit(Delete obj) {
@@ -344,7 +343,6 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     }
     public void visit(LoopStatement obj) {
         preVisitVisitor(obj);
-        visitNode(obj.getCommand());
         visitNode(obj.getBlock());
         postVisitVisitor(obj);
     }

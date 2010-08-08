@@ -115,11 +115,11 @@ import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.PredicateCriteria.Negatable;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
-import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.proc.CriteriaSelector;
+import org.teiid.query.sql.proc.ExpressionStatement;
 import org.teiid.query.sql.proc.HasCriteria;
 import org.teiid.query.sql.proc.IfStatement;
 import org.teiid.query.sql.proc.LoopStatement;
@@ -344,27 +344,27 @@ public class QueryRewriter {
 					}
 				}
 				return ifStmt;
-            case Statement.TYPE_ERROR: //treat error the same as expressions
+            case Statement.TYPE_ERROR: 
             case Statement.TYPE_DECLARE:
             case Statement.TYPE_ASSIGNMENT:
-				AssignmentStatement assStmt = (AssignmentStatement) statement;
-				// replave variables to references, these references are later
+				ExpressionStatement exprStmt = (ExpressionStatement) statement;
+				// replace variables to references, these references are later
 				// replaced in the processor with variable values
-                if (assStmt.hasExpression()) {
-    				Expression expr = assStmt.getExpression();
-    				expr = rewriteExpressionDirect(expr);
-                    assStmt.setExpression(expr);
-                } else if (assStmt.hasCommand()) {
-                    rewriteSubqueryContainer(assStmt, false);
-                    
-                    if(assStmt.getCommand().getType() == Command.TYPE_UPDATE) {
-                        Update update = (Update)assStmt.getCommand();
-                        if (update.getChangeList().isEmpty()) {
-                            assStmt.setExpression(new Constant(INTEGER_ZERO));
-                        }
-                    }
-                }
-				return assStmt;
+				Expression expr = exprStmt.getExpression();
+				if (expr != null) {
+					expr = rewriteExpressionDirect(expr);
+	                exprStmt.setExpression(expr);
+	                if (expr instanceof ScalarSubquery) {
+	                	ScalarSubquery ss = (ScalarSubquery)expr;
+	                    if(ss.getCommand().getType() == Command.TYPE_UPDATE) {
+	                        Update update = (Update)ss.getCommand();
+	                        if (update.getChangeList().isEmpty()) {
+	                            exprStmt.setExpression(new Constant(INTEGER_ZERO));
+	                        }
+	                    }
+	                }
+				}
+				return exprStmt;
 			case Statement.TYPE_COMMAND:
 				CommandStatement cmdStmt = (CommandStatement) statement;
                 rewriteSubqueryContainer(cmdStmt, false);

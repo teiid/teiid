@@ -30,6 +30,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidComponentException;
@@ -1296,8 +1297,6 @@ public class TestProcedureProcessor {
         procedure.append("SELECT VARIABLES.e2_total;\n"); //$NON-NLS-1$
         procedure.append("END"); //$NON-NLS-1$
         
-        
-        
         QueryNode sq2n1 = new QueryNode("pm1.sq1", procedure.toString()); //$NON-NLS-1$ 
         FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1 }), sq2n1);  //$NON-NLS-1$
 
@@ -1399,6 +1398,35 @@ public class TestProcedureProcessor {
                 Arrays.asList(new Object[] { "First", new Integer(5) }),  //$NON-NLS-1$
         };        
         helpTestProcess(plan, expected, dataMgr, metadata);
+    }
+    
+    @Test public void testDynamicCommandValidationFails() throws Exception {
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1();
+        
+        FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
+        
+        FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("pm1.rs2", pm1, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
+        FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
+        QueryNode sq2n1 = new QueryNode("pm1.sq2", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
+                                        + "declare object VARIABLES.x; execute string 'SELECT xmlelement(name elem, x)'; select 1; END"); //$NON-NLS-1$ 
+        FakeMetadataObject sq2 = FakeMetadataFactory.createVirtualProcedure("pm1.sq2", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
+
+        metadata.getStore().addObject(rs2);
+        metadata.getStore().addObject(sq2);
+        
+        String userUpdateStr = "EXEC pm1.sq2('First')"; //$NON-NLS-1$
+        
+        FakeDataManager dataMgr = exampleDataManager(metadata);
+
+        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
+         
+        try {
+        	helpTestProcess(plan, null, dataMgr, metadata);
+        	fail("exception expected");
+        } catch (QueryProcessingException e) {
+        	assertTrue(e.getCause() instanceof QueryValidatorException);
+        }
     }
 
     @Test public void testDynamicCommandWithSingleSelect() throws Exception {

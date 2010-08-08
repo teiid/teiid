@@ -41,6 +41,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidComponentException;
@@ -2230,12 +2231,7 @@ public class TestResolver {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e2=40"; //$NON-NLS-1$
         
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
-
-        ProcedureContainer userCommand = (ProcedureContainer)QueryParser.getQueryParser().parseCommand(userUpdateStr);
-        QueryResolver.resolveCommand(userCommand, metadata);
-        
-        Command command = QueryResolver.expandCommand(userCommand, metadata, AnalysisRecord.createNonRecordingRecord());
+        Command command = helpResolveUpdateProcedure(procedure, userUpdateStr);
         assertEquals("CREATE PROCEDURE\nBEGIN\nDECLARE integer var1;\nROWS_UPDATED = SELECT pm1.g1.e2 FROM pm1.g1 WHERE e2 = INPUTS.e2;\nEND", command.toString());
     }
     
@@ -2644,10 +2640,6 @@ public class TestResolver {
         helpResolveException(sql, "Cannot create group \'temp_table\' with multiple columns named \'column1\'"); //$NON-NLS-1$
     }
     
-    @Test public void testValidateScalarSubqueryTooManyColumns() {        
-        helpResolveException("SELECT e2, (SELECT e1, e2 FROM pm1.g1 WHERE e2 = '3') FROM pm1.g2", "There must be exactly one projected symbol of the subquery: (SELECT e1, e2 FROM pm1.g1 WHERE e2 = '3')"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
     @Test public void testXMLQuery4() {
         helpResolveException("SELECT * FROM xmltest.doc1 group by a2", "Queries against XML documents can not have a GROUP By clause"); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -2988,6 +2980,47 @@ public class TestResolver {
     
     @Test public void testQueryString() throws Exception {
     	helpResolveException("select querystring(xmlparse(document '<a/>'))");
+    }
+    
+	// validating AssignmentStatement, ROWS_UPDATED element assigned
+    @Test(expected=QueryResolverException.class) public void testCreateUpdateProcedure9() throws Exception {
+        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
+        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
+        procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e1 from pm1.g1;\n"; //$NON-NLS-1$
+        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
+        procedure = procedure + "END\n"; //$NON-NLS-1$
+
+        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
+        
+        helpResolveUpdateProcedure(procedure, userUpdateStr);
+    }
+
+	CreateUpdateProcedureCommand helpResolveUpdateProcedure(String procedure,
+			String userUpdateStr) throws QueryParserException,
+			QueryResolverException, TeiidComponentException,
+			QueryMetadataException {
+		FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+
+        ProcedureContainer userCommand = (ProcedureContainer)QueryParser.getQueryParser().parseCommand(userUpdateStr);
+        QueryResolver.resolveCommand(userCommand, metadata);
+        
+        return (CreateUpdateProcedureCommand)QueryResolver.expandCommand(userCommand, metadata, AnalysisRecord.createNonRecordingRecord());
+	}
+    
+	// validating AssignmentStatement, variable type and assigned type 
+	// do not match
+    @Test(expected=QueryResolverException.class) public void testCreateUpdateProcedure10() throws Exception {
+        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
+        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
+        procedure = procedure + "var1 = Select pm1.g1.e1 from pm1.g1;\n"; //$NON-NLS-1$
+        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
+        procedure = procedure + "END\n"; //$NON-NLS-1$
+
+        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
+        
+		helpResolveUpdateProcedure(procedure, userUpdateStr);
     }
     
 }

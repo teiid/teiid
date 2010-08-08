@@ -25,7 +25,6 @@
 package org.teiid.query.sql.proc;
 
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 /**
  * <p> This class represents a break statement in the storedprocedure language.
@@ -76,11 +75,4 @@ public class BreakStatement extends Statement {
         return 0;
     }
       
-    /**
-     * Returns a string representation of an instance of this class.
-     * @return String representation of object
-     */
-    public String toString() {
-        return SQLStringVisitor.getSQLString(this);
-    }   
 }

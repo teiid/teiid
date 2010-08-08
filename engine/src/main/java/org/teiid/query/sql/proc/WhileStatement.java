@@ -28,7 +28,6 @@ import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
 /**
@@ -152,14 +151,6 @@ public class WhileStatement extends Statement {
         myHash = HashCodeUtil.hashCode(myHash, this.getBlock());
 
         return myHash;
-    }
-
-    /**
-     * Returns a string representation of an instance of this class.
-     * @return String representation of object
-     */
-    public String toString() {
-        return SQLStringVisitor.getSQLString(this);
     }
 
 }

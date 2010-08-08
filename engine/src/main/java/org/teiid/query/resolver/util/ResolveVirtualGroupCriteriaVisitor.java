@@ -33,6 +33,7 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.proc.CriteriaSelector;
 import org.teiid.query.sql.proc.TranslateCriteria;
@@ -101,7 +102,7 @@ public class ResolveVirtualGroupCriteriaVisitor extends LanguageVisitor {
         ResolveVirtualGroupCriteriaVisitor resolveVisitor = new ResolveVirtualGroupCriteriaVisitor(virtualGroup, metadata);
         
         try {
-            PreOrderNavigator.doVisit(obj, resolveVisitor);
+            DeepPreOrderNavigator.doVisit(obj, resolveVisitor);
         } catch (TeiidRuntimeException e) {
             if (e.getChild() instanceof QueryResolverException) {
                 throw (QueryResolverException)e.getChild();

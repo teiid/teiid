@@ -106,6 +106,7 @@ import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.QueryString;
 import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
@@ -152,10 +153,13 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     // update procedure being validated
     private CreateUpdateProcedureCommand updateProc;
     
+    public void setUpdateProc(CreateUpdateProcedureCommand updateProc) {
+		this.updateProc = updateProc;
+	}
+    
     public void reset() {
         super.reset();
         this.isXML = false;
-        this.updateProc = null;
     }
 
     // ############### Visitor methods for language objects ##################
@@ -369,22 +373,17 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 			handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0012, ProcedureReservedWords.INPUTS, ProcedureReservedWords.CHANGING), obj);
 		}
 
-		if(obj.hasCommand()) {
-	        Collection projSymbols = obj.getCommand().getProjectedSymbols();
+    }
+    
+    @Override
+    public void visit(ScalarSubquery obj) {
+        Collection<SingleElementSymbol> projSymbols = obj.getCommand().getProjectedSymbols();
 
-			//The command execution should result is a value that is assigned to the variable
-			// there cannot be more than one column in its results
-			if(projSymbols.size() != 1) {
-				handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0013), obj);
-			} else {
-				SingleElementSymbol value = (SingleElementSymbol) projSymbols.iterator().next();
-                Class valueType = value.getType();
-				Class varType = variable.getType();
-				if(!varType.equals(valueType)) {
-					handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0014), obj);
-				}
-			}
-		} 
+        //Scalar subquery should have one projected symbol (query with one expression
+        //in SELECT or stored procedure execution that returns a single value).
+        if(projSymbols.size() != 1) {
+        	handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0032, obj.getCommand()), obj.getCommand());
+        }
     }
 
     public void visit(CreateUpdateProcedureCommand obj) {

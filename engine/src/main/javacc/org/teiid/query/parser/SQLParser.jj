@@ -819,7 +819,7 @@ DeclareStatement declareStatement(ParseInfo info) :
     String var = null;    
     Constant type = null;  
     ElementSymbol variableID = null;
-    LanguageObject value = null;
+    Expression value = null;
 }
 {
     <DECLARE>
@@ -844,7 +844,7 @@ DeclareStatement declareStatement(ParseInfo info) :
  */
 AssignmentStatement assignStatement(ParseInfo info) :
 {
-    LanguageObject value = null;
+    Expression value = null;
     String var = null;
     ElementSymbol elementID = null;
 }
@@ -868,7 +868,7 @@ AssignmentStatement assignStatement(ParseInfo info) :
  * arbitrarily deeply in parentheses.
  * @throws ParseException if parsing failed
  */
-LanguageObject assignStatementOperand(ParseInfo info) :
+Expression assignStatementOperand(ParseInfo info) :
 {
     LanguageObject value = null;
 }
@@ -884,7 +884,10 @@ LanguageObject assignStatementOperand(ParseInfo info) :
     ) 
         
     {   
-        return value;
+    	if (value instanceof Expression) {
+    		return (Expression)value;
+    	}
+        return new ScalarSubquery((Command)value);
     }    
 }
 

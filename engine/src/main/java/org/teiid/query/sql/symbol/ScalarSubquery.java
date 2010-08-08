@@ -87,9 +87,9 @@ public class ScalarSubquery implements Expression, SubqueryContainer, ContextRef
     /**
      * @see org.teiid.query.sql.symbol.Expression#getType()
      */
-    public Class getType() {
+    public Class<?> getType() {
         if (this.type == null){
-            Expression symbol = (Expression)this.command.getProjectedSymbols().iterator().next();
+            Expression symbol = this.command.getProjectedSymbols().iterator().next();
             this.type = symbol.getType();
         }
         //may still be null if this.command wasn't resolved
@@ -100,7 +100,7 @@ public class ScalarSubquery implements Expression, SubqueryContainer, ContextRef
      * Set type of ScalarSubquery
      * @param type New type
      */
-    public void setType(Class type) {
+    public void setType(Class<?> type) {
         this.type = type;
     }
 

@@ -112,9 +112,7 @@ public abstract class LanguageVisitor {
     }    
     public void visit(HasCriteria obj) {}
     public void visit(IfStatement obj) {}
-    public void visit(RaiseErrorStatement obj) {
-        visit((AssignmentStatement)obj);
-    }
+    public void visit(RaiseErrorStatement obj) {}
     public void visit(TranslateCriteria obj) {}
     public void visit(BreakStatement obj) {}
     public void visit(ContinueStatement obj) {}

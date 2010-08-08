@@ -61,7 +61,6 @@ import org.teiid.query.sql.proc.RaiseErrorStatement;
 import org.teiid.query.sql.proc.Statement;
 import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.visitor.CommandCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 
@@ -216,12 +215,8 @@ public final class ProcedurePlanner implements CommandPlanner {
                 
                 assignInstr.setVariable(assignStmt.getVariable());
                 
-				if(assignStmt.hasCommand()) {
-					assignInstr.setExpression(new ScalarSubquery(assignStmt.getCommand()));
-				} else if (assignStmt.hasExpression()) {
-					Expression asigExpr = assignStmt.getExpression();
-                    assignInstr.setExpression(asigExpr);
-				}
+				Expression asigExpr = assignStmt.getExpression();
+                assignInstr.setExpression(asigExpr);
                 if(debug) {
                 	analysisRecord.println("\tASSIGNMENT\n" + statement); //$NON-NLS-1$
                 }
@@ -233,12 +228,8 @@ public final class ProcedurePlanner implements CommandPlanner {
             	instruction = error;
             	RaiseErrorStatement res = (RaiseErrorStatement)statement;
                 
-				if(res.hasCommand()) {
-					error.setExpression(new ScalarSubquery(res.getCommand()));
-				} else if (res.hasExpression()) {
-					Expression asigExpr = res.getExpression();
-					error.setExpression(asigExpr);
-				}
+				Expression asigExpr = res.getExpression();
+				error.setExpression(asigExpr);
                 if(debug) {
                 	analysisRecord.println("\tERROR STATEMENT:\n" + statement); //$NON-NLS-1$ 
                 }

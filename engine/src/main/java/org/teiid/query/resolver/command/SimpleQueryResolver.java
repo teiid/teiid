@@ -255,15 +255,6 @@ public class SimpleQueryResolver implements CommandResolver {
         
         public void visit(ScalarSubquery obj) {
             resolveSubQuery(obj, this.currentGroups);
-            
-            Collection<SingleElementSymbol> projSymbols = obj.getCommand().getProjectedSymbols();
-
-            //Scalar subquery should have one projected symbol (query with one expression
-            //in SELECT or stored procedure execution that returns a single value).
-            if(projSymbols.size() != 1) {
-                QueryResolverException qre = new QueryResolverException(QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0032, obj));
-                throw new TeiidRuntimeException(qre);
-            }
         }
         
         public void visit(ExistsCriteria obj) {

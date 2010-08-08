@@ -23,6 +23,7 @@
 package org.teiid.query.sql.proc;
 
 import org.teiid.query.sql.*;
+import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 /**
  * <p> This class represents the a statement in the stored procedure language.
@@ -96,4 +97,9 @@ public abstract class Statement implements LanguageObject {
 	 * @return Deep clone 
 	 */
 	public abstract Object clone();
+	
+	@Override
+	public String toString() {
+		return SQLStringVisitor.getSQLString(this);
+	}
 }
