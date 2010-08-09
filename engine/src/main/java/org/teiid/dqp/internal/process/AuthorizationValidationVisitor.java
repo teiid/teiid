@@ -23,6 +23,7 @@
 package org.teiid.dqp.internal.process;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -181,9 +182,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         }
 
         // Check that all elements of group being deleted have delete permission
-        HashSet deleteVars = new HashSet();
-        deleteVars.add(obj.getGroup());
-        validateEntitlements(deleteVars, DataPolicy.PermissionType.DELETE, Context.DELETE);
+        validateEntitlements(Arrays.asList(obj.getGroup()), DataPolicy.PermissionType.DELETE, Context.DELETE);
     }
 
     /**
@@ -194,7 +193,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         Into intoObj = obj.getInto();
         if ( intoObj != null ) {
             GroupSymbol intoGroup = intoObj.getGroup();
-            List intoElements = null;
+            List<ElementSymbol> intoElements = null;
             try {
                 intoElements = ResolverUtil.resolveElementsInGroup(intoGroup, getMetadata());
             } catch (QueryMetadataException err) {
@@ -224,9 +223,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
      * Validate query entitlements
      */
     protected void validateEntitlements(StoredProcedure obj) {
-        List symbols = new ArrayList(1);
-        symbols.add(obj.getGroup());
-        validateEntitlements(symbols, DataPolicy.PermissionType.READ, Context.STORED_PROCEDURE);
+        validateEntitlements(Arrays.asList(obj.getGroup()), DataPolicy.PermissionType.READ, Context.STORED_PROCEDURE);
     }
 
     private String getActionLabel(DataPolicy.PermissionType actionCode) {
@@ -246,11 +243,9 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
      * @param actionCode The actions to validate for
      * @param auditContext The {@link AuthorizationService} to use when resource auditing is done.
      */
-    protected void validateEntitlements(Collection symbols, DataPolicy.PermissionType actionCode, Context auditContext) {
-        Map nameToSymbolMap = new HashMap();
-        Iterator symbolIter = symbols.iterator();
-        while(symbolIter.hasNext()) {
-            Object symbol = symbolIter.next();
+    protected void validateEntitlements(Collection<? extends Symbol> symbols, DataPolicy.PermissionType actionCode, Context auditContext) {
+        Map<String, Symbol> nameToSymbolMap = new HashMap<String, Symbol>();
+        for (Symbol symbol : symbols) {
             try {
                 String fullName = null;
                 Object metadataID = null;
@@ -276,12 +271,10 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         }
 
         if (!nameToSymbolMap.isEmpty()) {
-            Collection inaccessibleResources = getInaccessibleResources(actionCode, nameToSymbolMap.keySet(), auditContext);
+            Collection<String> inaccessibleResources = getInaccessibleResources(actionCode, nameToSymbolMap.keySet(), auditContext);
             if(inaccessibleResources.size() > 0) {                              
-                List inaccessibleSymbols = new ArrayList(inaccessibleResources.size());
-                Iterator nameIter = inaccessibleResources.iterator();
-                while(nameIter.hasNext()) {
-                    String name = (String) nameIter.next();
+            	List<Symbol> inaccessibleSymbols = new ArrayList<Symbol>(inaccessibleResources.size());
+            	for (String name : inaccessibleResources) {
                     inaccessibleSymbols.add(nameToSymbolMap.get(name));
                 }
                 

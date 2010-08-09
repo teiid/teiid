@@ -58,7 +58,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 		private static final long serialVersionUID = -6992984146431492449L;
 		@Override
 		public String getKey(PermissionMetaData entry) {
-			return entry.getResourceName();
+			return entry.getResourceName().toLowerCase();
 		}
 	});
     
@@ -121,16 +121,16 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 	}  	
 	
 	public boolean allows(String resourceName, DataPolicy.PermissionType type) {
-		for(PermissionMetaData permission:this.permissions.getMap().values()) {
-			if (permission.getResourceName().equalsIgnoreCase(resourceName)  ) {
-				return permission.allows(type);
+		resourceName = resourceName.toLowerCase();
+		while (resourceName.length() > 0) {
+			PermissionMetaData p = this.permissions.getMap().get(resourceName);
+			if (p != null) {
+				Boolean allowed = p.allows(type);
+				if (allowed != null) {
+					return allowed;
+				}
 			}
-		}
-		
-		for(PermissionMetaData permission:this.permissions.getMap().values()) {
-			if (permission.allows(resourceName, type)) {
-				return true;
-			}
+			resourceName = resourceName.substring(0, Math.max(0, resourceName.lastIndexOf('.')));
 		}
 		return false;
 	}
@@ -147,14 +147,6 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
     @ManagementObject(properties=ManagementProperties.EXPLICIT)
 	public static class PermissionMetaData implements DataPermission, Serializable {
 		private static final long serialVersionUID = 7034744531663164277L;
-		private static final String SEPARATOR = "."; //$NON-NLS-1$
-        public static final String RECURSIVE = "*"; //$NON-NLS-1$
-        private static final String ALL_NODES = RECURSIVE;
-        public static final String SEPARATOR_WITH_RECURSIVE  = SEPARATOR + RECURSIVE;
-        
-        // derived state
-        private String canonicalName; // The resource's canonical name
-        private boolean isRecursive = false;  // Is this a recursive resource?
         
         // XML based fields
         private String resourceName;
@@ -177,15 +169,11 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 
         public void setResourceName(String value) {
             this.resourceName = value;
-            init(this.resourceName);
         }
 
         @Override
         @ManagementProperty(description="Allows Create")
-        public boolean isAllowCreate() {
-        	if (allowCreate == null) {
-        		return false;
-        	}
+        public Boolean isAllowCreate() {
             return allowCreate;
         }
 
@@ -195,10 +183,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 
         @Override
         @ManagementProperty(description="Allows Read")
-        public boolean isAllowRead() {
-        	if (allowRead == null) {
-        		return false;
-        	}
+        public Boolean isAllowRead() {
             return allowRead;
         }
 
@@ -208,10 +193,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 
         @Override
         @ManagementProperty(description="Allows Update")
-        public boolean isAllowUpdate() {
-        	if (allowUpdate == null) {
-        		return false;
-        	}
+        public Boolean isAllowUpdate() {
             return allowUpdate;
         }
 
@@ -221,10 +203,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 
         @Override
         @ManagementProperty(description="Allows Delete")
-        public boolean isAllowDelete() {
-        	if (allowDelete == null) {
-        		return false;
-        	}
+        public Boolean isAllowDelete() {
             return allowDelete;
         }
 
@@ -234,90 +213,34 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         
         public String getType() {
         	StringBuilder sb = new StringBuilder();
-        	if (isAllowCreate()) {
+        	if (Boolean.TRUE.equals(isAllowCreate())) {
         		sb.append("C");//$NON-NLS-1$
         	}
-        	if (isAllowRead()) {
+        	if (Boolean.TRUE.equals(isAllowRead())) {
         		sb.append("R");//$NON-NLS-1$
         	}
-        	if (isAllowUpdate()) {
+        	if (Boolean.TRUE.equals(isAllowUpdate())) {
         		sb.append("U");//$NON-NLS-1$
         	}
-        	if (isAllowDelete()) {
+        	if (Boolean.TRUE.equals(isAllowDelete())) {
         		sb.append("D");//$NON-NLS-1$
         	}     
         	return sb.toString();
         }
         
-        public boolean allows(PermissionType type) {
-        	boolean allowedType = false;
+        public Boolean allows(PermissionType type) {
             switch (type) {
             case CREATE:
-            	allowedType = isAllowCreate();
-            	break;
+            	return isAllowCreate();
             case READ:
-            	allowedType = isAllowRead();
-            	break;
+            	return isAllowRead();
             case UPDATE:
-            	allowedType = isAllowUpdate();
-            	break;
+            	return isAllowUpdate();
             case DELETE:
-            	allowedType = isAllowDelete();
-            	break;
+            	return isAllowDelete();
             }        	
-            return allowedType;
+            throw new AssertionError();
         }
-        
-        public boolean allows(String checkResource, PermissionType type) {
-        	boolean allowedType = allows(type);
-        	boolean allowed = false;
-        	
-            if (allowedType) {
-            	checkResource = checkResource.toLowerCase();
-	        	if ( isRecursive ) {
-	                 if ( checkResource.startsWith(this.canonicalName) ) {
-	                    allowed = true;
-	                 }
-	            } else {
-	            	allowed = this.canonicalName.equals(checkResource);
-	            	
-	            	if (!allowed) {
-	            		// if this resource is a group level permission, then grant permission to any children
-	            		// for ex: 'foo.x.y' has permission if 'foo.x' is defined
-	                    int lastSepIndex = checkResource.lastIndexOf(SEPARATOR);
-	                    if ( lastSepIndex > 0 && checkResource.substring(0, lastSepIndex).equals(this.canonicalName) ) {
-	                        allowed = true;
-	                    }
-	            	}
-	            }
-            }
-            return allowed;
-        }
-
-        /**
-         * This method is invoked by the constructors that take a string resource name, and is
-         * to strip out any recursive or wildcard characters and return simple the name of the
-         * node.
-         */
-        private void init( String resourceName ) {
-            // If the resource name is the ALL_NODES resource ...
-            if ( resourceName.equals(ALL_NODES) ) {
-                this.isRecursive = true;
-                this.canonicalName = "";      // resource name should be nothing //$NON-NLS-1$
-            }
-
-            // If the resource name includes the recursive parameter ...
-            if ( resourceName.endsWith(SEPARATOR_WITH_RECURSIVE) ) {
-                isRecursive = true;
-                this.canonicalName = resourceName.substring(0, resourceName.length()-2);
-            } else if (resourceName.endsWith(RECURSIVE) ) {
-                this.isRecursive = true;
-                this.canonicalName = resourceName.substring(0, resourceName.length()-1);
-            } else {
-                this.canonicalName = resourceName;
-            }
-            this.canonicalName = this.canonicalName.toLowerCase();
-        }        
         
         public String toString() {
         	StringBuilder sb = new StringBuilder();

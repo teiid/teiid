@@ -226,7 +226,7 @@ public class DQPWorkContext implements Serializable {
 		Set<String> roles = new HashSet<String>();
 		
 		if (getSubject() == null) {
-			return Collections.EMPTY_SET;
+			return Collections.emptySet();
 		}
 		
 		Set<Principal> principals = getSubject().getPrincipals();
@@ -234,9 +234,9 @@ public class DQPWorkContext implements Serializable {
 			// this JBoss specific, but no code level dependencies
 			if ((p instanceof Group) && p.getName().equals("Roles")){ //$NON-NLS-1$
 				Group g = (Group)p;
-				Enumeration rolesPrinciples = g.members();
+				Enumeration<? extends Principal> rolesPrinciples = g.members();
 				while(rolesPrinciples.hasMoreElements()) {
-					roles.add(((Principal)rolesPrinciples.nextElement()).getName());	
+					roles.add(rolesPrinciples.nextElement().getName());	
 				}
 			}
 		}

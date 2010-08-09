@@ -10,34 +10,62 @@
     <code>&lt;jboss-install&gt;/server/&lt;profile&gt;/deploy/teiid/teiid-jboss-beans.xml</code> file
     in bean configuration section of <code>RuntimeEngineDeployer</code> with property <code>useEntitlements</code>.</para>
     
-    <para>Once data roles are enabled, the access permissions defined in a VDB will be enforced by the Teiid Server.</para>
+    <para>Once data roles are enabled, the access permissions defined in a VDB will be enforced by the Teiid Server.  
+    </para>
     
+    <warning><para>Teiid uses a deny by default permission system, so all VDBs deployed to the server will need roles granting access with this feature enabled.</para></warning>
+
     <section>
     	<title>Permissions</title>
+
+		<para>CREATE, READ, UPDATE, DELETE (CRUD) permissions can be set for any resource path in a VDB.  
+		A resource path can be as specific as the fully qualified name of a column or as general a top level model (schema) name.
+		Permissions granted to a particular path apply to it and any resource paths that share the same partial name.  
+		For example, granting read to "model" will also grant read to "model.table", "model.table.column", etc.
+		Allowing or denying a particular action is determined by searching for permissions from the most to least specific resource paths.
+		The first permission found with a specific allow or deny will be used.  
+		Thus it is possible to set very general permissions at high-level resource path names and to override only as necessary at more specific resource paths. 
+		</para>
+
+		<para>Permission grants are only needed for resources that are visible.
+			All non-visible, typically physical, models in a VDB are automatically
+			inaccessible by user level requests. Permissions are also only applied
+			to the columns and tables in the user query - not to every resource
+			accessed transitively through views and procedures.
+			It is important therefore to ensure that permission grants are applied
+			consistently across visible models that access the same resources.
+		</para>
+		    	
    	    <orderedlist>
-	        <para>To process a <code>SELECT</code> statement or a stored procedure execution, the user account requires the following access rights:</para>
-	        <listitem> <para><code>READ</code> - on the Table(s) being accessed or the procedure being called.</para></listitem>
-	        <listitem> <para><code>READ</code> - on every column referenced.</para></listitem>
+	        <para>To process a <emphasis>SELECT</emphasis> statement or a stored procedure execution, the user account requires the following access rights:</para>
+	        <listitem> <para><emphasis>READ</emphasis> - on the Table(s) being accessed or the procedure being called.</para></listitem>
+	        <listitem> <para><emphasis>READ</emphasis> - on every column referenced.</para></listitem>
 	    </orderedlist>   
 	    
 	    <orderedlist>
-	        <para>To process an <code>INSERT</code> statement, the user account requires the following access rights:</para>
-	        <listitem> <para><code>CREATE</code> - on the Table being inserted into.</para></listitem>
-	        <listitem> <para><code>CREATE</code> - on every column being inserted on that Table.</para></listitem>
+	        <para>To process an <emphasis>INSERT</emphasis> statement, the user account requires the following access rights:</para>
+	        <listitem> <para><emphasis>CREATE</emphasis> - on the Table being inserted into.</para></listitem>
+	        <listitem> <para><emphasis>CREATE</emphasis> - on every column being inserted on that Table.</para></listitem>
 	    </orderedlist>   
 	    
 	    <orderedlist>
-	        <para>To process an <code>UPDATE</code> statement, the user account requires the following access rights:</para>
-	        <listitem> <para><code>UPDATE</code> - on the Table being updated.</para></listitem>
-	        <listitem> <para><code>UPDATE</code> - on every column being updated on that Table.</para></listitem>
-	        <listitem> <para><code>READ</code> - on every column referenced in the criteria.</para></listitem>
+	        <para>To process an <emphasis>UPDATE</emphasis> statement, the user account requires the following access rights:</para>
+	        <listitem> <para><emphasis>UPDATE</emphasis> - on the Table being updated.</para></listitem>
+	        <listitem> <para><emphasis>UPDATE</emphasis> - on every column being updated on that Table.</para></listitem>
+	        <listitem> <para><emphasis>READ</emphasis> - on every column referenced in the criteria.</para></listitem>
 	    </orderedlist>    
 	    
 	    <orderedlist>
-	    	<para>To process a <code>DELETE</code> statement, the user account requires the following access rights:</para>
-	        <listitem> <para><code>DELETE</code> - on the Table being deleted.</para></listitem>
-	        <listitem> <para><code>READ</code> - on every column referenced in the criteria.</para></listitem>
-	    </orderedlist>    
+	    	<para>To process a <emphasis>DELETE</emphasis> statement, the user account requires the following access rights:</para>
+	        <listitem> <para><emphasis>DELETE</emphasis> - on the Table being deleted.</para></listitem>
+	        <listitem> <para><emphasis>READ</emphasis> - on every column referenced in the criteria.</para></listitem>
+	    </orderedlist> 
+	    
+	    <orderedlist>
+	    	<para>To process a <emphasis>EXEC</emphasis> statement, the user account requires the following access rights:</para>
+	        <listitem> <para><emphasis>READ</emphasis> - on the Procedure being executed.</para></listitem>
+	    </orderedlist>
+	       
     </section>
 
 	<section>
@@ -106,8 +134,7 @@
 </vdb>]]></programlisting>    
 </example>   
    <para>The above XML defined two data roles, "RoleA" which allows everything except delete on the table, "RoleC" that 
-   allows only read operation on the table. Since Teiid uses deny by default, there is no explict data-policy entry needed for "RoleB".  The "mapped-role-name" defines the "role" to whom these policies are applicable. Each data-policy 
-   must define a "role" to be enforced by the Teiid Server.</para>
+   allows only read operation on the table. Since Teiid uses deny by default, there is no explicit data-policy entry needed for "RoleB".  The "mapped-role-name" defines the "role" to whom these policies are applicable.</para>
    
    <para>For assigning the roles to your users, in the JBoss AS, 
    check out the instructions for the selected Login Module. Check "Admin Guide" for configuring Login Modules.</para> 
@@ -115,8 +142,6 @@
    <para>"vdb.xml" file is checked against the schema file <code>vdb-deployer.xsd</code>, check the documents sections of the Teiid kit
    to find a copy of the schema file.</para>
    
-   <note><para>Currently there is no GUI tooling support in the Designer or any other management tool to create this data roles 
-   permissions xml, however this is in our roadmap for future releases to provide.</para></note>
 	</section>
 
 </chapter>
