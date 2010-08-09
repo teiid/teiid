@@ -48,7 +48,8 @@ public class TestTeiidDriver {
     	assertFalse(drv.acceptsURL("jdbc:teiid:vdb@/foo/blah/deploy.properties")); //$NON-NLS-1$
     	assertTrue(drv.acceptsURL("jdbc:teiid:8294601c-9fe9-4244-9499-4a012c5e1476_vdb")); //$NON-NLS-1$
     	assertTrue(drv.acceptsURL("jdbc:teiid:8294601c-9fe9-4244-9499-4a012c5e1476_vdb@mm://localhost:12345")); //$NON-NLS-1$
-    	
+    	assertTrue(drv.acceptsURL("jdbc:teiid:test_vdb@mm://local-host:12345")); //$NON-NLS-1$
+    	assertTrue(drv.acceptsURL("jdbc:teiid:test_vdb@mm://local_host:12345")); //$NON-NLS-1$
     }
     
     /** Valid format of urls*/
@@ -88,7 +89,7 @@ public class TestTeiidDriver {
         assertTrue(!drv.acceptsURL("jdbc:metamatrix:@localhost:1234;logLevel=2;logFile=D:\\metamatrix\\work\\DQP\\log\\jdbcLogFile.log")); //$NON-NLS-1$
         assertTrue(!drv.acceptsURL("jdbc:metamatrix:@localhost:1234;logLevel=2;logFile=D:\\metamatrix\\work\\DQP\\log\\jdbcLogFile.log;autoCommitTxn=OFF;paritalResultsMode=true")); //$NON-NLS-1$
         assertTrue(!drv.acceptsURL("jdbc:metamatrix:@localhost:1234;stickyConnections=false;socketsPerVM=4")); //$NON-NLS-1$
-        assertTrue(!drv.acceptsURL("jdbc:metamatrix:vdb@mm://my_host.mydomain.com:53535,127.0.0.1:1234")); //$NON-NLS-1$        
+        assertTrue(drv.acceptsURL("jdbc:metamatrix:vdb@mm://my_host.mydomain.com:53535,127.0.0.1:1234")); //$NON-NLS-1$        
     }
 
     /** Invalid format of urls*/
