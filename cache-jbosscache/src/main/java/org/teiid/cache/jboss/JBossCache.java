@@ -31,6 +31,7 @@ import java.util.Set;
 import org.jboss.cache.Fqn;
 import org.jboss.cache.Node;
 import org.teiid.cache.Cache;
+import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheListener;
 
 
@@ -39,9 +40,10 @@ import org.teiid.cache.CacheListener;
  */
 public class JBossCache<K, V> implements Cache<K, V> {
 
-	private org.jboss.cache.Cache<K, V> cacheStore;
-	private Fqn rootFqn;
-	private JBossCacheListener cacheListener;
+	protected org.jboss.cache.Cache<K, V> cacheStore;
+	protected Fqn rootFqn;
+	protected JBossCacheListener cacheListener;
+	protected CacheConfiguration config;
 	
 	public JBossCache(org.jboss.cache.Cache<K, V> cacheStore, Fqn fqn) {
 		this.cacheStore = cacheStore;
@@ -149,7 +151,7 @@ public class JBossCache<K, V> implements Cache<K, V> {
 		return null;
 	}
 
-	private Node<K, V> getRootNode() {
+	protected Node<K, V> getRootNode() {
 		Node<K, V> node = this.cacheStore.getNode(this.rootFqn);
 		if (node == null) {
 			throw new IllegalStateException("Cache Node "+ this.rootFqn +" not found."); //$NON-NLS-1$ //$NON-NLS-2$
@@ -186,5 +188,9 @@ public class JBossCache<K, V> implements Cache<K, V> {
 	@Override
 	public String getName() {
 		return this.rootFqn.toString();
-	} 	
+	}
+
+	void setCacheConfiguration(CacheConfiguration config) {
+		this.config = config;
+	}
 }

@@ -30,7 +30,9 @@ import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.DefaultCacheFactory;
+import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.deployers.MetadataStoreGroup;
@@ -82,8 +84,10 @@ public class FakeServer extends ClientServiceRegistryImpl {
         	}
         });
         
+        DQPConfiguration config = new DQPConfiguration();
+        config.setResultsetCacheConfig(new CacheConfiguration(Policy.LRU, 60, 250));
         this.dqp.setCacheFactory(new DefaultCacheFactory());
-        this.dqp.start(new DQPConfiguration());
+        this.dqp.start(config);
         this.sessionService.setDqp(this.dqp);
         
         registerClientService(ILogon.class, logon, null);

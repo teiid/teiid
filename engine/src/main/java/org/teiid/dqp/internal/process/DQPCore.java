@@ -44,7 +44,9 @@ import org.teiid.adminapi.Request.ThreadState;
 import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.cache.Cache;
+import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
+import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
@@ -630,13 +632,14 @@ public class DQPCore implements DQP {
         this.chunkSize = config.getLobChunkSizeInKB() * 1024;
         
         //result set cache
-        if (config.isResultSetCacheEnabled()) {
-			this.rsCache = new SessionAwareCache<CachedResults>(config.getResultSetCacheMaxEntries(), this.cacheFactory, Cache.Type.RESULTSET);
+        CacheConfiguration rsCacheConfig = config.getResultsetCacheConfig();
+        if (rsCacheConfig != null && rsCacheConfig.isEnabled()) {
+			this.rsCache = new SessionAwareCache<CachedResults>(this.cacheFactory, Cache.Type.RESULTSET, rsCacheConfig);
 			this.rsCache.setBufferManager(this.bufferManager);
         }
 
         //prepared plan cache
-        prepPlanCache = new SessionAwareCache<PreparedPlan>(config.getPreparedPlanCacheMaxCount(), this.cacheFactory, Cache.Type.PREPAREDPLAN);
+        prepPlanCache = new SessionAwareCache<PreparedPlan>(this.cacheFactory, Cache.Type.PREPAREDPLAN,  new CacheConfiguration(Policy.LRU, 60, config.getPreparedPlanCacheMaxCount()));
         prepPlanCache.setBufferManager(this.bufferManager);
 		
         //get buffer manager

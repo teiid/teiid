@@ -29,17 +29,22 @@ public class CacheConfiguration {
 	public enum Policy {
 		LRU,  // Least Recently Used
 		FIFO, // First in First Out
-		LFU;  // Least frequently Used
+		LFU,  // Least frequently Used
+		EXPIRATION; // expires after certain time.
 	}
 	
 	private Policy policy;
 	private int maxage;
-	private int maxnodes;
+	private int maxEntries;
+	private boolean enabled = true;
+	
+	public CacheConfiguration() {
+	}
 	
 	public CacheConfiguration(Policy policy, int maxAgeInSeconds, int maxNodes) {
 		this.policy = policy;
 		this.maxage = maxAgeInSeconds;
-		this.maxnodes = maxNodes;
+		this.maxEntries = maxNodes;
 	}
 	
 	public Policy getPolicy() {
@@ -49,8 +54,59 @@ public class CacheConfiguration {
 	public int getMaxAgeInSeconds(){
 		return maxage;
 	}
+
+	public void setMaxAgeInSeconds(int maxage){
+		this.maxage = maxage;
+	}
 	
-	public int getMaxNodes() {
-		return this.maxnodes;
+	public int getMaxEntries() {
+		return this.maxEntries;
+	}
+
+	public void setMaxEntries(int entries) {
+		this.maxEntries = entries;
+	}
+
+	public void setType (String type) {
+		this.policy = Policy.valueOf(type);
+	}
+	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + maxage;
+		result = prime * result + maxEntries;
+		result = prime * result + ((policy == null) ? 0 : policy.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		CacheConfiguration other = (CacheConfiguration) obj;
+		if (maxage != other.maxage)
+			return false;
+		if (maxEntries != other.maxEntries)
+			return false;
+		if (policy == null) {
+			if (other.policy != null)
+				return false;
+		} else if (!policy.equals(other.policy))
+			return false;
+		return true;
+	}
+
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
 	}
 }

@@ -22,6 +22,7 @@
 package org.teiid.dqp.internal.process;
 
 import org.jboss.managed.api.annotation.ManagementProperty;
+import org.teiid.cache.CacheConfiguration;
 import org.teiid.client.RequestMessage;
 import org.teiid.core.util.ApplicationInfo;
 
@@ -43,13 +44,12 @@ public class DQPConfiguration{
 	private int maxRowsFetchSize = DEFAULT_FETCH_SIZE;
 	private int lobChunkSizeInKB = 100;
 	private int preparedPlanCacheMaxCount = SessionAwareCache.DEFAULT_MAX_SIZE_TOTAL;
-	private boolean resultSetCacheEnabled = true;
-	private int maxResultSetCacheEntries = DQPConfiguration.DEFAULT_MAX_RESULTSET_CACHE_ENTRIES;
 	private boolean useEntitlements = false;
 	private int queryThresholdInSecs = DEFAULT_QUERY_THRESHOLD;
 	private boolean exceptionOnMaxSourceRows = true;
 	private int maxSourceRows = -1;
 	private int maxActivePlans = DEFAULT_MAX_ACTIVE_PLANS;
+	private CacheConfiguration resultsetCacheConfig;
 
 	@ManagementProperty(description="Max active plans (default 20).  Increase this value, and max threads, on highly concurrent systems - but ensure that the underlying pools can handle the increased load without timeouts.")
 	public int getMaxActivePlans() {
@@ -107,22 +107,22 @@ public class DQPConfiguration{
 
 	@ManagementProperty(description="The maximum number of result set cache entries. 0 indicates no limit. (default 1024)")
 	public int getResultSetCacheMaxEntries() {
-		return this.maxResultSetCacheEntries;
+		return this.resultsetCacheConfig.getMaxEntries();
 	}
 	
-	public void setResultSetCacheMaxEntries(int value) {
-		this.maxResultSetCacheEntries = value;
+	public CacheConfiguration getResultsetCacheConfig() {
+		return this.resultsetCacheConfig;
+	}	
+	
+	public void setResultsetCacheConfig(CacheConfiguration config) {
+		this.resultsetCacheConfig = config;
 	}
-
+	
 	@ManagementProperty(description="Denotes whether or not result set caching is enabled. (default true)")
 	public boolean isResultSetCacheEnabled() {
-		return this.resultSetCacheEnabled;
+		return this.resultsetCacheConfig.isEnabled();
 	}
-	
-	public void setResultSetCacheEnabled(boolean value) {
-		this.resultSetCacheEnabled = value;
-	}		
-	
+		
     /**
      * Determine whether entitlements checking is enabled on the server.
      * @return <code>true</code> if server-side entitlements checking is enabled.

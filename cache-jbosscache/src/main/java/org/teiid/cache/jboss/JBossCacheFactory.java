@@ -30,9 +30,11 @@ import org.jboss.cache.Node;
 import org.jboss.cache.Region;
 import org.jboss.cache.config.EvictionAlgorithmConfig;
 import org.jboss.cache.config.EvictionRegionConfig;
+import org.jboss.cache.eviction.ExpirationAlgorithmConfig;
 import org.jboss.cache.eviction.FIFOAlgorithmConfig;
 import org.jboss.cache.eviction.LFUAlgorithmConfig;
 import org.jboss.cache.eviction.LRUAlgorithmConfig;
+import org.jboss.cache.eviction.RemoveOnEvictActionPolicy;
 import org.teiid.cache.Cache;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
@@ -64,38 +66,60 @@ public class JBossCacheFactory implements CacheFactory, Serializable{
 			
 			Node cacheRoot = this.cacheStore.getRoot().addChild(Fqn.fromString("Teiid")); //$NON-NLS-1$
 			Node node = cacheRoot.addChild(Fqn.fromString(type.location()));
+			node.put(ExpirationAlgorithmConfig.EXPIRATION_KEY, Long.MAX_VALUE);
+			node.setResident(true);
 			
 			Region cacheRegion = this.cacheStore.getRegion(node.getFqn(), true);
-			EvictionRegionConfig erc = new EvictionRegionConfig(node.getFqn(), buildEvictionAlgorithmConfig(config));
-			cacheRegion.setEvictionRegionConfig(erc);
+			cacheRegion.setEvictionRegionConfig(buildEvictionConfig(node.getFqn(), config));
+						
+			JBossCache jc = null;
+			if (config != null && config.getPolicy().equals(Policy.EXPIRATION)) {
+				jc = new ExpirationAwareCache(this.cacheStore, node.getFqn());
+			}
+			else {
+				jc = new JBossCache(this.cacheStore, node.getFqn());	
+			}
 			
-			return new JBossCache(this.cacheStore, node.getFqn());
+			jc.setCacheConfiguration(config);
+			return jc;
 		}
 		throw new TeiidRuntimeException("Cache system has been shutdown"); //$NON-NLS-1$
 	}
-
-	private EvictionAlgorithmConfig  buildEvictionAlgorithmConfig(CacheConfiguration config) {
+	
+	private EvictionRegionConfig  buildEvictionConfig(Fqn rootFqn, CacheConfiguration config) {
 		EvictionAlgorithmConfig  evictionConfig = null;
 		
 		if (config.getPolicy() == Policy.LRU) {
 			LRUAlgorithmConfig lru = new LRUAlgorithmConfig();
-			lru.setMaxNodes(config.getMaxNodes());
+			lru.setMaxNodes(config.getMaxEntries());
 			lru.setMaxAge(config.getMaxAgeInSeconds()*1000);
 			lru.setTimeToLive(-1); // -1 no limit
 			evictionConfig = lru;
 		}
 		else if (config.getPolicy() == Policy.FIFO) {
 			FIFOAlgorithmConfig fifo = new FIFOAlgorithmConfig();
-			fifo.setMaxNodes(config.getMaxNodes());
+			fifo.setMaxNodes(config.getMaxEntries());
 			evictionConfig = fifo;
 		}
 		else if (config.getPolicy() == Policy.LFU) {
 			LFUAlgorithmConfig lfu  = new LFUAlgorithmConfig();
-			lfu.setMaxNodes(config.getMaxNodes());
+			lfu.setMaxNodes(config.getMaxEntries());
 			evictionConfig = lfu;
 		}
-		return evictionConfig;
-	}    
+		else if (config.getPolicy() == Policy.EXPIRATION) {
+			ExpirationAlgorithmConfig lfu  = new ExpirationAlgorithmConfig();
+			lfu.setMaxNodes(config.getMaxEntries());
+			evictionConfig = lfu;
+		}
+		
+		EvictionRegionConfig erc = new EvictionRegionConfig(rootFqn, evictionConfig);
+		
+		if (config.getPolicy() == Policy.EXPIRATION) {
+			erc.setEvictionActionPolicyClassName(RemoveOnEvictActionPolicy.class.getName());
+		}
+		return erc;
+	}	
+	
 	
 	public void destroy() {
 		this.destroyed = true;		

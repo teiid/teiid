@@ -33,6 +33,7 @@ import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
 import org.teiid.cache.DefaultCache;
 import org.teiid.cache.DefaultCacheFactory;
+import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
@@ -50,32 +51,32 @@ public class SessionAwareCache<T> {
 	private Cache<CacheID, T> localCache;
 	private Cache<CacheID, T> distributedCache;
 	
-	private int maxSize;
+	private int maxSize = DEFAULT_MAX_SIZE_TOTAL;
 	
 	private AtomicInteger cacheHit = new AtomicInteger();
 	
 	private BufferManager bufferManager;
 	
 	SessionAwareCache(){
-		this(DEFAULT_MAX_SIZE_TOTAL, new DefaultCacheFactory(), Cache.Type.RESULTSET);
+		this(new DefaultCacheFactory(), Cache.Type.RESULTSET, new CacheConfiguration(Policy.LRU, 60, DEFAULT_MAX_SIZE_TOTAL));
 	}
 	
 	SessionAwareCache(int maxSize){
-		this(maxSize, new DefaultCacheFactory(), Cache.Type.RESULTSET);
+		this(new DefaultCacheFactory(), Cache.Type.RESULTSET, new CacheConfiguration(Policy.LRU, 60, maxSize));
 	}
 	
-	SessionAwareCache (int maxSize, final CacheFactory cacheFactory, final Cache.Type type){
-		if(maxSize < 0){
-			maxSize = DEFAULT_MAX_SIZE_TOTAL;
-		}
-		this.maxSize = maxSize;
+	SessionAwareCache (final CacheFactory cacheFactory, final Cache.Type type, final CacheConfiguration config){
+		this.maxSize = config.getMaxEntries();
+		if(this.maxSize < 0){
+			this.maxSize = DEFAULT_MAX_SIZE_TOTAL;
+		}		
 		this.localCache = new DefaultCache<CacheID, T>("local", maxSize); //$NON-NLS-1$
 		
 		if (type == Cache.Type.PREPAREDPLAN) {
 			this.distributedCache = localCache;
 		}
 		else {
-			this.distributedCache = cacheFactory.get(type, new CacheConfiguration(CacheConfiguration.Policy.LRU, -1, SessionAwareCache.this.maxSize));
+			this.distributedCache = cacheFactory.get(type, config);
 		}
 	}	
 	
@@ -238,5 +239,6 @@ public class SessionAwareCache<T> {
     
     public void setBufferManager(BufferManager bufferManager) {
     	this.bufferManager = bufferManager;
-    }
+    }    
+    
 }

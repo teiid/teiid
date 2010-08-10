@@ -7,7 +7,12 @@
    <!-- Teiid root category snippet.  Use this to control all of Teiid logging from a single category -->
    <logger name="org.teiid">
      <level value="INFO" />
-   </logger>   
+   </logger>
+   
+   <!--  this is to avoid the "Unable to remove nodes to reduce region size below 1024.  Set expiration for nodes in this region" error -->
+   <logger name="org.jboss.cache">
+     <level value="ERROR" />
+   </logger>  
    
  <!-- Other categories:
 	org.teiid.PROCESSOR - Query processing logs. See also org.teiid.PLANNER for query planning logs.
