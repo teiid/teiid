@@ -39,45 +39,45 @@ public class TestDataPolicyMetaData {
 		
 		
 		PermissionMetaData perm1 = new PermissionMetaData();
-		perm1.setResourceName("schema.catalog.Table1"); //$NON-NLS-1$
+		perm1.setResourceName("catalog.schema.Table1"); //$NON-NLS-1$
 		perm1.setAllowRead(true);
 		
 		PermissionMetaData perm2 = new PermissionMetaData();
-		perm2.setResourceName("schema.catalog.Table2"); //$NON-NLS-1$
+		perm2.setResourceName("catalog.schema.Table2"); //$NON-NLS-1$
 		perm2.setAllowRead(false);
 		
 		PermissionMetaData perm3 = new PermissionMetaData();
-		perm3.setResourceName("schema.catalog.Table3.*"); //$NON-NLS-1$
+		perm3.setResourceName("catalog.schema.Table3"); //$NON-NLS-1$
 		perm3.setAllowRead(true);
 		
 		PermissionMetaData perm4 = new PermissionMetaData();
-		perm4.setResourceName("schema.catalog.Table4*"); //$NON-NLS-1$
+		perm4.setResourceName("catalog.schema.Table4"); //$NON-NLS-1$
 		perm4.setAllowRead(true);
 		
 		PermissionMetaData perm5 = new PermissionMetaData();
-		perm5.setResourceName("schema.catalog.Table5.column1"); //$NON-NLS-1$
+		perm5.setResourceName("catalog.schema.Table5.column1"); //$NON-NLS-1$
 		perm5.setAllowRead(true);	
 		
 		policy.addPermission(perm1, perm2, perm3, perm4, perm5);
 		
 		
-		assertTrue(policy.allows("schema.catalog.Table1", PermissionType.READ)); //$NON-NLS-1$
-		assertFalse(policy.allows("schema.catalog.Table1", PermissionType.CREATE)); //$NON-NLS-1$
+		assertTrue(policy.allows("catalog.schema.Table1", PermissionType.READ)); //$NON-NLS-1$
+		assertFalse(policy.allows("catalog.schema.Table1", PermissionType.CREATE)); //$NON-NLS-1$
 		
-		assertFalse(policy.allows("schema.catalog", PermissionType.READ)); //$NON-NLS-1$
+		assertFalse(policy.allows("catalog.schema", PermissionType.READ)); //$NON-NLS-1$
 		
-		assertFalse(policy.allows("schema.catalog.Table2.column", PermissionType.READ)); //$NON-NLS-1$
-		assertFalse(policy.allows("schema.catalog.Table2", PermissionType.READ)); //$NON-NLS-1$
+		assertFalse(policy.allows("catalog.schema.Table2.column", PermissionType.READ)); //$NON-NLS-1$
+		assertFalse(policy.allows("catalog.schema.Table2", PermissionType.READ)); //$NON-NLS-1$
 		
-		assertTrue(policy.allows("schema.catalog.Table3.column", PermissionType.READ)); //$NON-NLS-1$
-		assertTrue(policy.allows("schema.catalog.Table3", PermissionType.READ)); //$NON-NLS-1$
+		assertTrue(policy.allows("catalog.schema.Table3.column", PermissionType.READ)); //$NON-NLS-1$
+		assertTrue(policy.allows("catalog.schema.Table3", PermissionType.READ)); //$NON-NLS-1$
 		
-		assertTrue(policy.allows("schema.catalog.Table4.column", PermissionType.READ)); //$NON-NLS-1$
-		assertTrue(policy.allows("schema.catalog.Table4", PermissionType.READ)); //$NON-NLS-1$
-		assertFalse(policy.allows("schema.catalog.Table4", PermissionType.DELETE)); //$NON-NLS-1$
+		assertTrue(policy.allows("catalog.schema.Table4.column", PermissionType.READ)); //$NON-NLS-1$
+		assertTrue(policy.allows("catalog.schema.Table4", PermissionType.READ)); //$NON-NLS-1$
+		assertFalse(policy.allows("catalog.schema.Table4", PermissionType.DELETE)); //$NON-NLS-1$
 		
-		assertTrue(policy.allows("schema.catalog.Table5.column1", PermissionType.READ)); //$NON-NLS-1$
-		assertFalse(policy.allows("schema.catalog.Table5.column2", PermissionType.READ)); //$NON-NLS-1$
-		assertFalse(policy.allows("schema.catalog.Table5", PermissionType.READ)); //$NON-NLS-1$
+		assertTrue(policy.allows("catalog.schema.Table5.column1", PermissionType.READ)); //$NON-NLS-1$
+		assertFalse(policy.allows("catalog.schema.Table5.column2", PermissionType.READ)); //$NON-NLS-1$
+		assertFalse(policy.allows("catalog.schema.Table5", PermissionType.READ)); //$NON-NLS-1$
 	}
 }

@@ -174,7 +174,7 @@ public class TestVDBMetaData {
 		for (DataPolicy.DataPermission p: permissions) {
 			if (p.getResourceName().equalsIgnoreCase("myTable.T1")) { //$NON-NLS-1$
 				assertTrue(p.isAllowRead());
-				assertFalse(p.isAllowDelete());
+				assertNull(p.isAllowDelete());
 			}
 			else {
 				assertFalse(p.isAllowRead());
