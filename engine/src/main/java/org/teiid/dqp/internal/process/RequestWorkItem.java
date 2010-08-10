@@ -60,6 +60,7 @@ import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.function.metadata.FunctionMethod;
+import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.sql.lang.Command;
@@ -333,25 +334,30 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 
 	protected void processNew() throws TeiidProcessingException, TeiidComponentException {
 		SessionAwareCache<CachedResults> rsCache = dqpCore.getRsCache();
-		CacheID cacheId = new CacheID(this.dqpWorkContext, Request.createParseInfo(requestMsg), requestMsg.getCommandString());
+		ParseInfo pi = Request.createParseInfo(requestMsg);
+		CacheID cacheId = new CacheID(this.dqpWorkContext, pi, requestMsg.getCommandString());
     	cacheId.setParameters(requestMsg.getParameterValues());
 		if (rsCache != null) {
 			CachedResults cr = rsCache.get(cacheId);
-			if (cr != null && (requestMsg.useResultSetCache() || cr.getCommand().isCache())) {
+			if (cr != null && (requestMsg.useResultSetCache() || cr.getHint() != null)) {
 				this.resultsBuffer = cr.getResults();
 				this.analysisRecord = cr.getAnalysisRecord();
-				this.originalCommand = cr.getCommand();
+				request.initMetadata();
+				this.originalCommand = cr.getCommand(requestMsg.getCommandString(), request.metadata, pi);
 				this.doneProducingBatches();
 				return;
 			}
 		}
 		request.processRequest();
 		originalCommand = request.userCommand;
-        if ((requestMsg.useResultSetCache() || originalCommand.isCache()) && rsCache != null && originalCommand.areResultsCachable()) {
+        if ((requestMsg.useResultSetCache() || originalCommand.getCacheHint() != null) && rsCache != null && originalCommand.areResultsCachable()) {
         	this.cid = cacheId;
         }
 		processor = request.processor;
 		resultsBuffer = processor.createTupleBuffer();
+		if (this.cid != null) {
+			resultsBuffer.setPrefersMemory(originalCommand.getCacheHint().getPrefersMemory());
+		}
 		collector = new BatchCollector(processor, resultsBuffer) {
 			protected void flushBatchDirect(TupleBatch batch, boolean add) throws TeiidComponentException,TeiidProcessingException {
 				boolean added = false;

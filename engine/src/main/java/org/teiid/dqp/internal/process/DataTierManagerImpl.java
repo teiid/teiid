@@ -23,6 +23,7 @@
 package org.teiid.dqp.internal.process;
 
 import java.sql.DatabaseMetaData;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -64,7 +65,9 @@ import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.query.metadata.CompositeMetadataStore;
+import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.sql.lang.Command;
@@ -73,6 +76,8 @@ import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.tempdata.TempTableStore;
+import org.teiid.query.tempdata.TempTableStore.MatTableInfo;
 import org.teiid.query.util.CommandContext;
 
 /**
@@ -92,7 +97,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		KEYCOLUMNS,
 		PROCEDUREPARAMS,
 		REFERENCEKEYCOLUMNS,
-		PROPERTIES
+		PROPERTIES,
+		MATVIEWS
 	}
 	
 	private enum SystemProcs {
@@ -115,7 +121,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		RequestWorkItem workItem = requestMgr.getRequestWorkItem((RequestID)context.getProcessorID());
 		
 		if(CoreConstants.SYSTEM_MODEL.equals(modelName)) {
-			return processSystemQuery(command, workItem.getDqpWorkContext());
+			return processSystemQuery(context, command, workItem.getDqpWorkContext());
 		}
 		
 		AtomicRequestMessage aqr = createRequest(context.getProcessorID(), command, modelName, connectorBindingId, nodeID);
@@ -132,7 +138,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	 * @throws TeiidComponentException
 	 */
 	@SuppressWarnings("unchecked")
-	private TupleSource processSystemQuery(Command command,
+	private TupleSource processSystemQuery(CommandContext context, Command command,
 			DQPWorkContext workContext) throws TeiidComponentException {
 		String vdbName = workContext.getVdbName();
 		int vdbVersion = workContext.getVdbVersion();
@@ -252,6 +258,33 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 									rows.add(Arrays.asList(vdbName, pkTable.getParent().getName(), pkTable.getName(), key.getPrimaryKey().getColumns().get(postition).getName(), vdbName, schema.getName(), table.getName(), column.getName(),
 											++postition, DatabaseMetaData.importedKeyNoAction, DatabaseMetaData.importedKeyNoAction, key.getName(), key.getPrimaryKey().getName(), DatabaseMetaData.importedKeyInitiallyDeferred));
 								}
+							}
+							break;
+						case MATVIEWS:
+							if (table.isMaterialized()) {
+								String targetSchema = null;
+								String matTableName = null;
+								String state = null;
+								Timestamp updated = null;
+								Integer cardinaltity = null;
+								
+								if (table.getMaterializedTable() == null) {
+									TempTableStore globalStore = context.getGlobalTableStore();
+									matTableName = RelationalPlanner.MAT_PREFIX+table.getFullName().toUpperCase();
+									MatTableInfo info = globalStore.getMatTableInfo(matTableName);
+									state = info.getState().name();
+									updated = info.getUpdateTime()==-1?null:new Timestamp(info.getUpdateTime());
+									TempMetadataID id = globalStore.getMetadataStore().getTempGroupID(matTableName);
+									if (id != null) {
+										cardinaltity = id.getCardinality();
+									}
+									//ttl, pref_mem
+								} else {
+									Table t = table.getMaterializedTable();
+									matTableName = t.getName();
+									targetSchema = t.getParent().getName();
+								}
+								rows.add(Arrays.asList(vdbName, schema.getName(), table.getName(), targetSchema, matTableName, state, updated, cardinaltity));
 							}
 							break;
 						}

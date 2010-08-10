@@ -56,10 +56,8 @@ import org.teiid.jdbc.util.ResultSetUtil;
  */
 @SuppressWarnings("nls")
 public class TestMMDatabaseMetaData {
-	
- 
     
-    private static final boolean REPLACE_EXPECTED = true;
+    private static final boolean REPLACE_EXPECTED = false;
     private static final boolean WRITE_ACTUAL_RESULTS_TO_FILE = false;
     private static final boolean PRINT_RESULTSETS_TO_CONSOLE = false;
     
@@ -476,14 +474,13 @@ public class TestMMDatabaseMetaData {
         try {
             java.sql.Statement stmt = conn.createStatement();
             
-            // Returns 0 rows (but should be identical and return 24 rows):
             rs = stmt.executeQuery("SELECT Name FROM SYS.Tables WHERE UCASE(SchemaName) = 'SYS'"); //$NON-NLS-1$
 
             int count = 0;
             while(rs.next()) {
                 count++;
             }
-            assertEquals(11, count);
+            assertEquals(12, count);
         } finally {
             if(rs != null) {
                 rs.close();

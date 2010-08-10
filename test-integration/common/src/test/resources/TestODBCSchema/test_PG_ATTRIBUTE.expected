@@ -86,6 +86,14 @@ oid          attrelid     attname                                               
 1957953763   -1056482755  RefKeyUID                                                          1043         50      9       50           false       false         false    
 -1864727535  -1056482755  UID                                                                1043         50      10      50           false       false         false    
 120374768    -1056482755  OID                                                                <null>       10      11      10           false       false         false    
+1518497335   -2028080981  VDBName                                                            1043         255     1       255          false       false         false    
+-1436081057  -2028080981  SchemaName                                                         1043         255     2       255          false       false         false    
+829635174    -2028080981  Name                                                               1043         255     3       255          false       false         false    
+-1827861927  -2028080981  TargetSchemaName                                                   1043         255     4       255          false       false         false    
+-767393364   -2028080981  TargetName                                                         1043         4000    5       4000         false       false         false    
+-1140134170  -2028080981  State                                                              1043         255     6       255          false       false         false    
+107574265    -2028080981  Updated                                                            1114         0       7       0            false       false         false    
+-1942479773  -2028080981  Cardinality                                                        <null>       10      8       10           false       false         false    
 1975537358   1809992480   VDBName                                                            1043         255     1       255          false       false         false    
 -944775923   1809992480   SchemaName                                                         1043         255     2       255          false       false         false    
 2030457340   1809992480   ProcedureName                                                      1043         255     3       255          false       false         false    
@@ -225,7 +233,7 @@ oid          attrelid     attname                                               
 717511814    -164161188   usename                                                            1043         0       2       0            false       false         false    
 1288630002   -164161188   usecreatedb                                                        16           0       3       0            false       false         false    
 1033115127   -164161188   usesuper                                                           16           0       4       0            false       false         false    
-Row Count : 225
+Row Count : 233
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
 oid            4              PartsSupplier   java.lang.Integer   oid             integer            pg_catalog     pg_attribute  11                    10            0         false            false            false       false                 2           true        true          false     false       
 attrelid       4              PartsSupplier   java.lang.Integer   attrelid        integer            pg_catalog     pg_attribute  11                    10            0         false            false            false       false                 2           true        true          false     false       

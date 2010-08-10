@@ -926,16 +926,14 @@ public class RelationalPlanner {
         		//not use cache
         		qnode = metadata.getVirtualPlan(metadataID);
         		//TODO: update the table for defaultMat
-        		recordMaterializationTableAnnotation(virtualGroup, analysisRecord, matTableName, 
-        				QueryPlugin.Util.getString("SimpleQueryResolver.materialized_table_not_used", virtualGroup, matTableName)); //$NON-NLS-1$
+        		recordMaterializationTableAnnotation(analysisRecord, QueryPlugin.Util.getString("SimpleQueryResolver.materialized_table_not_used", virtualGroup, matTableName)); //$NON-NLS-1$
         	}else{
         		qnode = new QueryNode(groupName, null);
         		Query query = createMatViewQuery(matMetadataId, matTableName, Arrays.asList(new AllSymbol()), isImplicitGlobal);
         		query.setCacheHint(hint);
         		qnode.setCommand(query);
                 cacheString = "matview"; //$NON-NLS-1$
-                recordMaterializationTableAnnotation(virtualGroup, analysisRecord, matTableName, 
-        				QueryPlugin.Util.getString("SimpleQueryResolver.Query_was_redirected_to_Mat_table", virtualGroup, matTableName)); //$NON-NLS-1$
+                recordMaterializationTableAnnotation(analysisRecord, QueryPlugin.Util.getString("SimpleQueryResolver.Query_was_redirected_to_Mat_table", virtualGroup, matTableName)); //$NON-NLS-1$
         	}
         } else {
             // Not a materialized view - query the primary transformation
@@ -986,15 +984,14 @@ public class RelationalPlanner {
 					//add timestamp?
 					Command c = getCommand(table, metadata.getVirtualPlan(table.getMetadataID()), SQLConstants.Reserved.SELECT, metadata);
 					CacheHint hint = c.getCacheHint();
-					if (hint == null) {
-						hint = new CacheHint();
-					} else {
-						recordMaterializationTableAnnotation(table, analysisRecord, matTableName, 
-		        				QueryPlugin.Util.getString("SimpleQueryResolver.cache_hint_used", table, matTableName, hint)); //$NON-NLS-1$
+					if (hint != null) {
+						recordMaterializationTableAnnotation(analysisRecord, QueryPlugin.Util.getString("SimpleQueryResolver.cache_hint_used", table, matTableName, hint)); //$NON-NLS-1$
 					}
 					id.setCacheHint(hint);
 				}
 			}
+		} else if (id.getCacheHint() != null) {
+			recordMaterializationTableAnnotation(analysisRecord, QueryPlugin.Util.getString("SimpleQueryResolver.cache_hint_used", table, matTableName, id.getCacheHint())); //$NON-NLS-1$
 		}
 		return id;
 	}
@@ -1054,9 +1051,8 @@ public class RelationalPlanner {
         return false;
     }
     
-    private static void recordMaterializationTableAnnotation(GroupSymbol virtualGroup,
-                                                      AnalysisRecord analysis,
-                                                      String matTableName, String msg) {
+    private static void recordMaterializationTableAnnotation(AnalysisRecord analysis,
+                                                      String msg) {
         if ( analysis.recordAnnotations() ) {
             Annotation annotation = new Annotation(Annotation.MATERIALIZED_VIEW, 
                                                          msg, 

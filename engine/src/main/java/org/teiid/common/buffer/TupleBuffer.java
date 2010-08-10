@@ -72,6 +72,7 @@ public class TupleBuffer {
 	private ArrayList<List<?>> batchBuffer;
 	private boolean removed;
 	private boolean forwardOnly;
+	private boolean prefersMemory;
 
 	private LobManager lobManager;
 	private int[] lobIndexes;
@@ -164,7 +165,7 @@ public class TupleBuffer {
         	writeBatch.setTerminationFlag(true);
         }
         writeBatch.setDataTypes(types);
-		BatchManager.ManagedBatch mbatch = manager.createManagedBatch(writeBatch, false);
+		BatchManager.ManagedBatch mbatch = manager.createManagedBatch(writeBatch, prefersMemory);
 		this.batches.put(writeBatch.getBeginRow(), mbatch);
         batchBuffer = null;
 	}
@@ -312,6 +313,14 @@ public class TupleBuffer {
 	
 	public boolean isForwardOnly() {
 		return forwardOnly;
+	}
+	
+	public void setPrefersMemory(boolean prefersMemory) {
+		this.prefersMemory = prefersMemory;
+	}
+	
+	public boolean isPrefersMemory() {
+		return prefersMemory;
 	}
 	
 }

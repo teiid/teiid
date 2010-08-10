@@ -39,6 +39,7 @@ import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.service.FakeBufferService;
+import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.symbol.ElementSymbol;
 
 
@@ -94,7 +95,7 @@ public class TestCachedResults {
 		
 		CachedResults results = new CachedResults();
 		results.setResults(tb);
-		
+		results.setCommand(new Query());
 		Cache cache = new DefaultCache("dummy", 250); //$NON-NLS-1$
 		results.prepare(cache, fbs.getBufferManager());
 		

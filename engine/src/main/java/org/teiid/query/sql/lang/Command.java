@@ -319,10 +319,6 @@ public abstract class Command implements LanguageObject {
     	this.plan = plan;
     }
     
-    public boolean isCache() {
-		return cacheHint != null;
-	}
-    
     public CacheHint getCacheHint() {
 		return cacheHint;
 	}

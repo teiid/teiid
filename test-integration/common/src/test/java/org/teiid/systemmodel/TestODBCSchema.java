@@ -1,5 +1,7 @@
 package org.teiid.systemmodel;
 
+import static org.junit.Assert.*;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
@@ -76,5 +78,13 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
 	@Test public void test_PG_USER()  throws Exception {
 		execute("select * FROM pg_user"); //$NON-NLS-1$
 		TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
-	}	
+	}
+	
+	@Test public void testOIDUniquness() throws Exception {
+		for (String table : new String[] {"Tables", "Columns", "Schemas", "DataTypes", "Keys", "Procedures", "ProcedureParams", "Properties"}) {
+			execute("select count(distinct oid), count(*) from SYS."+table);
+			internalResultSet.next();
+			assertEquals(internalResultSet.getInt(2), internalResultSet.getInt(1));
+		}
+	}
 }

@@ -22,7 +22,6 @@
 
 package org.teiid.query.sql;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,7 +30,7 @@ import java.util.List;
  * key interfaces and adds some additional methods to allow the {@link LanguageVisitor}
  * to work.
  */
-public interface LanguageObject extends Serializable, Cloneable {
+public interface LanguageObject extends Cloneable {
 
     /**
      * Method for accepting a visitor.  It is the responsibility of the 

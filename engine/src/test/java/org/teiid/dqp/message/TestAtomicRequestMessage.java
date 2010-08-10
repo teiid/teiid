@@ -22,25 +22,17 @@
 
 package org.teiid.dqp.message;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
 
+import org.junit.Ignore;
+import org.junit.Test;
 import org.teiid.client.RequestMessage;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.TestQueryImpl;
 import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.dqp.message.AtomicRequestMessage;
-import org.teiid.dqp.message.RequestID;
 
-
-public class TestAtomicRequestMessage extends TestCase {
-
-    /**
-     * Constructor for TestAtomicRequestMessage.
-     * @param name
-     */
-    public TestAtomicRequestMessage(String name) {
-        super(name);
-    }
+@Ignore(value="Serialization of language objects has been turned off")
+public class TestAtomicRequestMessage {
 
     public static AtomicRequestMessage example() {
         RequestMessage rm = new RequestMessage();
@@ -57,7 +49,7 @@ public class TestAtomicRequestMessage extends TestCase {
         return message;
     }
 
-    public void testSerialize() throws Exception {
+    @Test public void testSerialize() throws Exception {
     	AtomicRequestMessage example = example();
     	AtomicRequestMessage copy = UnitTestUtil.helpSerialize(example);
 

@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.teiid.api.exception.query.QueryParserException;
+import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.cache.Cachable;
 import org.teiid.cache.Cache;
 import org.teiid.common.buffer.BufferManager;
@@ -34,22 +36,32 @@ import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.dqp.DQPPlugin;
+import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.parser.ParseInfo;
+import org.teiid.query.parser.QueryParser;
+import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.symbol.ElementSymbol;
 
 
 public class CachedResults implements Serializable, Cachable {
 	private static final long serialVersionUID = -5603182134635082207L;
 	
-	private Command command;
-	private AnalysisRecord analysisRecord;
+	private transient Command command;
 	private transient TupleBuffer results;
-	
-	private List<?> schema;
+
+	private AnalysisRecord analysisRecord;
+
+	private String[] types;
+	private CacheHint hint;
 	private int batchSize;
 	
 	protected ArrayList<UUID> cachedBatches = new ArrayList<UUID>();
@@ -68,15 +80,24 @@ public class CachedResults implements Serializable, Cachable {
 	
 	public void setResults(TupleBuffer results) {
 		this.results = results;
-		this.schema = results.getSchema();
 		this.batchSize = results.getBatchSize();
+		this.types = TupleBuffer.getTypeNames(results.getSchema());
 	}
 	
 	public void setCommand(Command command) {
 		this.command = command;
+		this.hint = command.getCacheHint();
 	}
 	
-	public Command getCommand() {
+	public CacheHint getHint() {
+		return hint;
+	}
+	
+	public synchronized Command getCommand(String sql, QueryMetadataInterface metadata, ParseInfo info) throws QueryParserException, QueryResolverException, TeiidComponentException {
+		if (command == null) {
+			command = QueryParser.getQueryParser().parseCommand(sql, info);
+		}
+		QueryResolver.resolveCommand(command, metadata);
 		return command;
 	}
 
@@ -102,9 +123,17 @@ public class CachedResults implements Serializable, Cachable {
 	public synchronized boolean restore(Cache cache, BufferManager bufferManager) {
 		try {
 			if (this.results == null) {
-				TupleBuffer buffer = bufferManager.createTupleBuffer(this.schema, "cached", TupleSourceType.FINAL); //$NON-NLS-1$
+				List<ElementSymbol> schema = new ArrayList<ElementSymbol>(types.length);
+				for (String type : types) {
+					ElementSymbol es = new ElementSymbol("x"); //$NON-NLS-1$
+					es.setType(DataTypeManager.getDataTypeClass(type));
+					schema.add(es);
+				}
+				TupleBuffer buffer = bufferManager.createTupleBuffer(schema, "cached", TupleSourceType.FINAL); //$NON-NLS-1$
 				buffer.setBatchSize(this.batchSize);
-	
+				if (this.hint != null) {
+					buffer.setPrefersMemory(this.hint.getPrefersMemory());
+				}
 				for (UUID uuid : this.cachedBatches) {
 					TupleBatch batch =  (TupleBatch)cache.get(uuid);
 					if (batch != null) {					

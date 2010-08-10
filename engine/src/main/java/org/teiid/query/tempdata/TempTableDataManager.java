@@ -173,86 +173,105 @@ public class TempTableDataManager implements ProcessorDataManager {
 			return null;
 		}
 		final String tableName = group.getNonCorrelationName().toUpperCase();
+		boolean remapColumns = !tableName.equalsIgnoreCase(group.getName());
 		TempTable table = null;
 		if (group.isGlobalTable()) {
 			TempTableStore globalStore = context.getGlobalTableStore();
 			MatTableInfo info = globalStore.getMatTableInfo(tableName);
 			boolean load = info.shouldLoad();
 			if (load) {
-				QueryMetadataInterface metadata = context.getMetadata();
-				Create create = new Create();
-				create.setTable(group);
-				create.setColumns(ResolverUtil.resolveElementsInGroup(group, metadata));
-				Object pk = metadata.getPrimaryKey(group.getMetadataID());
-				if (pk != null) {
-					for (Object col : metadata.getElementIDsInKey(pk)) {
-						create.getPrimaryKey().add(create.getColumns().get(metadata.getPosition(col)-1));
-					}
-				}
-				table = globalStore.addTempTable(tableName, create, bufferManager);
-				CacheHint hint = table.getCacheHint();
-				table.setUpdatable(false);
-				table.setPreferMemory(hint.getPrefersMemory());
-				boolean success = false;
-				try {
-					//TODO: order by primary key nulls first - then have an insert ordered optimization
-					//TODO: use the getCommand logic in RelationalPlanner to reuse commands for this.
-					String transformation = metadata.getVirtualPlan(group.getMetadataID()).getQuery();
-		    		QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(transformation, group.getCanonicalName(), context);
-		    		qp.setNonBlocking(true);
-		    		TupleSource ts = new BatchCollector.BatchProducerTupleSource(qp);
-		    		//TODO: if this insert fails, it's unnecessary to do the undo processing
-		    		table.insert(ts, table.getColumns());
-		    		success = true;
-				} finally {
-					if (!success) {
-						globalStore.removeTempTableByName(tableName);
-					}
-					info.setState(success?MatState.LOADED:MatState.FAILED_LOAD);
-					if (table.getCacheHint().getTtl() != null) {
-						info.setTtl(table.getCacheHint().getTtl());
-					}
-				}
+				table = loadGlobalTable(context, group, tableName, globalStore, info);
 			} else {
 				table = globalStore.getOrCreateTempTable(tableName, query, bufferManager, false);
 			}
 		} else {
 			table = contextStore.getOrCreateTempTable(tableName, query, bufferManager, true);
 		}
-		//convert to the actual table symbols (this is typically handled by the languagebridgefactory
-		ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
-			@Override
-			public Expression replaceExpression(Expression element) {
-				if (element instanceof ElementSymbol) {
-					ElementSymbol es = (ElementSymbol)element;
-					((ElementSymbol) element).setName(tableName + ElementSymbol.SEPARATOR + es.getShortName());
+		if (remapColumns) {
+			//convert to the actual table symbols (this is typically handled by the languagebridgefactory
+			ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
+				@Override
+				public Expression replaceExpression(Expression element) {
+					if (element instanceof ElementSymbol) {
+						ElementSymbol es = (ElementSymbol)element;
+						((ElementSymbol) element).setName(tableName + ElementSymbol.SEPARATOR + es.getShortName());
+					}
+					return element;
 				}
-				return element;
-			}
-		};
-		PostOrderNavigator.doVisit(query, emv);
+			};
+			PostOrderNavigator.doVisit(query, emv);
+		}
 		return table.createTupleSource(query.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
+	}
+
+	private TempTable loadGlobalTable(CommandContext context,
+			GroupSymbol group, final String tableName,
+			TempTableStore globalStore, MatTableInfo info)
+			throws QueryMetadataException, TeiidComponentException,
+			TeiidProcessingException, ExpressionEvaluationException {
+		TempTable table;
+		QueryMetadataInterface metadata = context.getMetadata();
+		Create create = new Create();
+		create.setTable(group);
+		create.setColumns(ResolverUtil.resolveElementsInGroup(group, metadata));
+		Object pk = metadata.getPrimaryKey(group.getMetadataID());
+		if (pk != null) {
+			for (Object col : metadata.getElementIDsInKey(pk)) {
+				create.getPrimaryKey().add(create.getColumns().get(metadata.getPosition(col)-1));
+			}
+		}
+		table = globalStore.addTempTable(tableName, create, bufferManager);
+		table.setUpdatable(false);
+		CacheHint hint = table.getCacheHint();
+		if (hint != null) {
+			table.setPreferMemory(hint.getPrefersMemory());
+			if (hint.getTtl() != null) {
+				info.setTtl(table.getCacheHint().getTtl());
+			}
+		}
+		boolean success = false;
+		try {
+			//TODO: order by primary key nulls first - then have an insert ordered optimization
+			//TODO: use the getCommand logic in RelationalPlanner to reuse commands for this.
+			String transformation = metadata.getVirtualPlan(group.getMetadataID()).getQuery();
+			QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(transformation, group.getCanonicalName(), context);
+			qp.setNonBlocking(true);
+			TupleSource ts = new BatchCollector.BatchProducerTupleSource(qp);
+			//TODO: if this insert fails, it's unnecessary to do the undo processing
+			table.insert(ts, table.getColumns());
+			success = true;
+		} finally {
+			if (!success) {
+				globalStore.removeTempTableByName(tableName);
+			}
+			info.setState(success?MatState.LOADED:MatState.FAILED_LOAD);
+		}
+		return table;
 	}
 
 	public Object lookupCodeValue(CommandContext context, String codeTableName,
 			String returnElementName, String keyElementName, Object keyValue)
 			throws BlockedException, TeiidComponentException,
 			TeiidProcessingException {
-    	ElementSymbol keyElement = new ElementSymbol(keyElementName);
-    	ElementSymbol returnElement = new ElementSymbol(returnElementName);
+    	String matTableName = CODE_PREFIX + (codeTableName + ElementSymbol.SEPARATOR + keyElementName + ElementSymbol.SEPARATOR + returnElementName).toUpperCase(); 
+
+    	ElementSymbol keyElement = new ElementSymbol(matTableName + ElementSymbol.SEPARATOR + keyElementName);
+    	ElementSymbol returnElement = new ElementSymbol(matTableName + ElementSymbol.SEPARATOR + returnElementName);
     	
     	QueryMetadataInterface metadata = context.getMetadata();
     	
     	keyElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementType(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + keyElementName))));
     	returnElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementType(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + returnElementName))));
     	
-    	String matTableName = CODE_PREFIX + (codeTableName + ElementSymbol.SEPARATOR + keyElementName + ElementSymbol.SEPARATOR + returnElementName).toUpperCase(); 
-    	TempMetadataID id = context.getGlobalTableStore().getMetadataStore().addTempGroup(matTableName, Arrays.asList(keyElement, returnElement), false, true);
-    	String queryString = Reserved.SELECT + ' ' + keyElementName + " ," + returnElementName + ' ' + Reserved.FROM + ' ' + codeTableName; //$NON-NLS-1$ 
-    	id.setQueryNode(new QueryNode(matTableName, queryString));
-    	id.setPrimaryKey(id.getElements().subList(0, 1));
-    	CacheHint hint = new CacheHint(true, null);
-    	id.setCacheHint(hint);
+    	TempMetadataID id = context.getGlobalTableStore().getMetadataStore().getTempGroupID(matTableName);
+    	if (id == null) {
+	    	id = context.getGlobalTableStore().getMetadataStore().addTempGroup(matTableName, Arrays.asList(keyElement, returnElement), false, true);
+	    	String queryString = Reserved.SELECT + ' ' + keyElementName + " ," + returnElementName + ' ' + Reserved.FROM + ' ' + codeTableName; //$NON-NLS-1$ 
+	    	id.setQueryNode(new QueryNode(matTableName, queryString));
+	    	id.setPrimaryKey(id.getElements().subList(0, 1));
+	    	CacheHint hint = new CacheHint(true, null);
+	    	id.setCacheHint(hint);
+    	}
     	Query query = RelationalPlanner.createMatViewQuery(id, matTableName, Arrays.asList(returnElement), true);
     	query.setCriteria(new CompareCriteria(keyElement, CompareCriteria.EQ, new Constant(keyValue)));
     	
