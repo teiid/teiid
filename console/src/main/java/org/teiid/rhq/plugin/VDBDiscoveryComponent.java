@@ -61,9 +61,8 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 
 		for (ManagedComponent mcVdb : vdbs) {
 
-			String vdbKey = mcVdb.getDeployment().getName();
-			String vdbName = ProfileServiceUtil.getSimpleValue(mcVdb, "name",
-					String.class);
+			String vdbKey = (String)mcVdb.getName();
+			String vdbName = vdbKey;
 			String fullName = ProfileServiceUtil.getSimpleValue(mcVdb, "fullName",
 					String.class);
 			Integer vdbVersion = ProfileServiceUtil.getSimpleValue(mcVdb,

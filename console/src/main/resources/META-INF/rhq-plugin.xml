@@ -443,6 +443,8 @@
 					hiddenByDefault="false">
 					<c:simple-property name="name" type="string"
 						description="The Virtual Database Name" required="false" readOnly="true" />
+					<c:simple-property name="fullName" type="string"
+						description="The fully qualified Virtual Database Name" required="false" readOnly="true" />
 					<c:simple-property name="version" type="string"
 						description="The Virtual Database Version" required="false"
 						readOnly="true" />
@@ -458,7 +460,8 @@
 						</c:property-options>
 					</c:simple-property>
 					<c:simple-property name="connectionType" type="string"
-						description="Connections to allow to this Virtual Database" required="false">
+						description="Connections to allow to this Virtual Database"
+						required="false">
 						<c:property-options>
 							<c:option value="NONE" name="NONE" />
 							<c:option value="BY_VERSION" name="BY VERSION" default="true" />
@@ -484,7 +487,7 @@
 								required="false" readOnly="true" />
 							<c:simple-property name="propertyValue"
 								displayName="Property Value" description="Property Value"
-								required="false" readOnly="true"/>
+								required="false" readOnly="true" />
 						</c:map-property>
 					</c:list-property>
 				</c:group>
