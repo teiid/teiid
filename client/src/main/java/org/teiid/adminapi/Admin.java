@@ -27,6 +27,8 @@ import java.util.Collection;
 import java.util.Properties;
 import java.util.Set;
 
+import org.teiid.adminapi.VDB.ConnectionType;
+
 public interface Admin {
 
 	public enum Cache {PREPARED_PLAN_CACHE, QUERY_SERVICE_RESULT_SET_CACHE};
@@ -43,6 +45,15 @@ public interface Admin {
      * @throws AdminException
      */
     void assignToModel(String vdbName, int vdbVersion, String modelName, String sourceName, String translatorName, String dsName) throws AdminException;
+    
+    /**
+     * Change the {@link ConnectionType} of the {@link VDB}.
+     * @param vdbName Name of the VDB
+     * @param vdbVersion Version of the VDB
+     * @param type
+     * @throws AdminException 
+     */
+    void changeVDBConnectionType(String vdbName, int vdbVersion, ConnectionType type) throws AdminException;
     
     /**
      * Deploy a {@link VDB} file.
@@ -210,24 +221,24 @@ public interface Admin {
     void close();
     
     /**
-     * Assign a Role name to the Data Policy in a given VDB
+     * Assign a Role name to the Data Role in a given VDB
      *  
      * @param vdbName
      * @param vdbVersion
      * @param policyName
      * @param role
      */
-    void addRoleToDataPolicy(String vdbName, int vdbVersion, String policyName, String role) throws AdminException;
+    void addDataRoleMapping(String vdbName, int vdbVersion, String policyName, String role) throws AdminException;
     
     /**
-     * Assign a Role name to the Data Policy in a given VDB
+     * Assign a Role name to the Data Role in a given VDB
      *  
      * @param vdbName
      * @param vdbVersion
      * @param policyName
      * @param role
      */
-    void removeRoleFromDataPolicy(String vdbName, int vdbVersion, String policyName, String role) throws AdminException;
+    void removeDataRoleMapping(String vdbName, int vdbVersion, String policyName, String role) throws AdminException;
     
     
     /**

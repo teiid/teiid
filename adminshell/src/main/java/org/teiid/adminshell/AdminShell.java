@@ -44,6 +44,7 @@ import org.teiid.adminapi.Transaction;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.WorkerPoolStatistics;
+import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminshell.Help.Doc;
 
 
@@ -105,16 +106,14 @@ public class AdminShell {
 	    }	    
 	    p = props;
 	}
-	
-
 
 	@Doc(text = "Adds a role to the specified policy")
-	public static void addRoleToDataPolicy(
+	public static void addDataRoleMapping(
 			@Doc(text = "vdb name") String vdbName, 
 			@Doc(text = "vdb version") int vdbVersion,
 			@Doc(text = "policy name") String policyName, 
 			@Doc(text = "role") String role) throws AdminException {
-		getAdmin().addRoleToDataPolicy(vdbName, vdbVersion, policyName, role);
+		getAdmin().addDataRoleMapping(vdbName, vdbVersion, policyName, role);
 	}
 
 	@Doc(text = "Assign a translator and data source to a source Model")
@@ -153,6 +152,15 @@ public class AdminShell {
 	@Doc(text = "Get all cache type Strings")
 	public static Collection<String> getCacheTypes() throws AdminException {
 		return getAdmin().getCacheTypes();
+	}
+	
+	@Doc(text = "Cancel a request")
+	public static void changeVDBConnectionType(
+			@Doc(text = "vdb name") String vdbName, 
+			@Doc(text = "vdb version") int vdbVersion,
+			@Doc(text = "Connection Type") String type)
+			throws AdminException {
+		getAdmin().changeVDBConnectionType(vdbName, vdbVersion, ConnectionType.valueOf(type));
 	}
 
 	@Doc(text = "Get all translator instances")
@@ -223,13 +231,13 @@ public class AdminShell {
 	}
 
 	@Doc(text = "Remove a role for the data policy")
-	public static void removeRoleFromDataPolicy(
+	public static void removeDataRoleMapping(
 			@Doc(text = "vdb name") String vdbName, 
 			@Doc(text = "vdb version") int vdbVersion,
 			@Doc(text = "policy name") String policyName, 
 			@Doc(text = "role name") String role) throws AdminException {
 		getAdmin()
-				.removeRoleFromDataPolicy(vdbName, vdbVersion, policyName, role);
+				.removeDataRoleMapping(vdbName, vdbVersion, policyName, role);
 	}
 
 	@Doc(text = "Set a runtime property")

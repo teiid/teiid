@@ -309,7 +309,7 @@ public class TestConnectorBindings extends BaseConnection {
 	
 	@Test public void testAddRoleNames() throws Exception {
 		installVDB();
-		admin.addRoleToDataPolicy("TransactionsRevisited", 1, "policy1", "managers"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		admin.addDataRoleMapping("TransactionsRevisited", 1, "policy1", "managers"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		
 		VDB vdb = admin.getVDB("TransactionsRevisited", 1); //$NON-NLS-1$
 		List<DataPolicy> policies = vdb.getDataPolicies();
@@ -322,7 +322,7 @@ public class TestConnectorBindings extends BaseConnection {
 		}
 		
 		// remove the role
-		admin.removeRoleFromDataPolicy("TransactionsRevisited", 1, "policy1", "managers");
+		admin.removeDataRoleMapping("TransactionsRevisited", 1, "policy1", "managers");
 		
 		vdb = admin.getVDB("TransactionsRevisited", 1); //$NON-NLS-1$
 		policies = vdb.getDataPolicies();
@@ -336,7 +336,7 @@ public class TestConnectorBindings extends BaseConnection {
 		}		
 		
 		// remove non-existent role name
-		admin.removeRoleFromDataPolicy("TransactionsRevisited", 1, "policy1", "FOO");
+		admin.removeDataRoleMapping("TransactionsRevisited", 1, "policy1", "FOO");
 	}	
 	
 	@Test

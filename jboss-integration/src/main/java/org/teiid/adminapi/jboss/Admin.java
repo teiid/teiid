@@ -41,6 +41,7 @@ import org.jboss.managed.api.ManagedProperty;
 import org.jboss.managed.plugins.DefaultFieldsImpl;
 import org.jboss.managed.plugins.WritethroughManagedPropertyImpl;
 import org.jboss.metatype.api.types.CollectionMetaType;
+import org.jboss.metatype.api.types.EnumMetaType;
 import org.jboss.metatype.api.types.SimpleMetaType;
 import org.jboss.metatype.api.values.CollectionValueSupport;
 import org.jboss.metatype.api.values.MetaValue;
@@ -62,6 +63,7 @@ import org.teiid.adminapi.Transaction;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.WorkerPoolStatistics;
+import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.impl.PropertyDefinitionMetadata;
 import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.SessionMetadata;
@@ -441,6 +443,26 @@ public class Admin extends TeiidAdmin {
 		}
 		return false;
 	}
+    
+    @Override
+    public void changeVDBConnectionType(String vdbName, int vdbVersion,
+    		ConnectionType type) throws AdminException {
+    	ManagedComponent mc = getVDBManagedComponent(vdbName, vdbVersion);
+		if (mc == null) {
+			throw new AdminProcessingException(IntegrationPlugin.Util.getString("vdb_not_found", vdbName, vdbVersion)); //$NON-NLS-1$
+		}
+		
+    	ManagedProperty connectionTypeProperty = mc.getProperty("connectionType"); //$NON-NLS-1$
+    	if (connectionTypeProperty != null) {
+    		connectionTypeProperty.setValue(ManagedUtil.wrap(new EnumMetaType(ConnectionType.values()), type != null ?type.name():ConnectionType.BY_VERSION.name()));
+    	}
+		
+		try {
+			getView().updateComponent(mc);
+		} catch (Exception e) {
+			throw new AdminComponentException(e.getMessage(), e);
+		}
+    }
 
 	@Override
 	public void assignToModel(String vdbName, int vdbVersion, String modelName, String sourceName, String translatorName, String dsName) throws AdminException {
@@ -552,12 +574,12 @@ public class Admin extends TeiidAdmin {
 
 	
 	@Override
-	public void addRoleToDataPolicy(String vdbName, int vdbVersion, String policyName, String role)  throws AdminException {
+	public void addDataRoleMapping(String vdbName, int vdbVersion, String policyName, String role)  throws AdminException {
 		manageRoleToDataPolicy(vdbName, vdbVersion, policyName, role, true);
 	}
 	
 	@Override
-	public void removeRoleFromDataPolicy(String vdbName, int vdbVersion, String policyName, String role)  throws AdminException{
+	public void removeDataRoleMapping(String vdbName, int vdbVersion, String policyName, String role)  throws AdminException{
 		manageRoleToDataPolicy(vdbName, vdbVersion, policyName, role, false);
 	}	
 
