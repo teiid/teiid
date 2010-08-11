@@ -89,7 +89,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		}
 	});	
 	
-	@XmlElement(name = "data-policy", required = true, type = DataPolicyMetadata.class)
+	@XmlElement(name = "data-role", required = true, type = DataPolicyMetadata.class)
 	protected ListOverMap<DataPolicyMetadata> dataPolicies = new ListOverMap<DataPolicyMetadata>(new KeyBuilder<DataPolicyMetadata>() {
 		private static final long serialVersionUID = 4954591545242715254L;
 
