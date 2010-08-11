@@ -562,7 +562,7 @@
     </section>
     <section id="cache_hint">
     	<title>Cache Hint</title>
-    	<para>Non-update user commands may be preceded with a cache hint, e.g. /* cache */ select ..., to inform the engine that the results of command should be cached.  The scope of the result, either session or global, will be deteremined automatically from the determinism level of the source queries and functions executed.</para>
+    	<para>Non-update user commands may be preceded with a cache hint, e.g. /*+ cache */ select ..., to inform the engine that the results of command should be cached.  The scope of the result, either session or global, will be deteremined automatically from the determinism level of the source queries and functions executed.</para>
     	<para>ResultSet caching must be enabled for this hint to have an effect.</para>
     </section>
     <section id="procedural_relational">
@@ -759,7 +759,7 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
         <listitem><para>FROM <link linkend="nested_table">TABLE(subquery)</link> [AS] alias</para></listitem>
         <listitem><para>FROM table1 JOIN table2 MAKEDEP ON join-criteria</para></listitem>
         <listitem><para>FROM table1 JOIN table2 MAKENOTDEP ON join-criteria</para></listitem>
-        <listitem><para>FROM table1 left outer join <link linkend="optional_join">/* optional */</link> table2 ON join-criteria</para></listitem>
+        <listitem><para>FROM table1 left outer join <link linkend="optional_join">/*+ optional */</link> table2 ON join-criteria</para></listitem>
         <listitem><para>FROM <link linkend="texttable">TEXTTABLE...</link></para></listitem>
         <listitem><para>FROM <link linkend="xmltable">XMLTABLE...</link></para></listitem>
       </itemizedlist> 
