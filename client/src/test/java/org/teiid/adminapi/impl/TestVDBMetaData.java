@@ -117,7 +117,7 @@ public class TestVDBMetaData {
 		StringWriter sw = new StringWriter();
 		marshell.marshal(vdb, sw);
 				
-		System.out.println(sw.toString());
+		//System.out.println(sw.toString());
 
 		// UnMarshell
 		Unmarshaller un = jc.createUnmarshaller();

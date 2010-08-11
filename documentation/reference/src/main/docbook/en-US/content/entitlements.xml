@@ -93,23 +93,23 @@
 
         <permission>
             <resource-name>modelName.TableA</resource-name>
-            <allow-create />
-            <allow-read />
-            <allow-update />
+            <allow-create>true</allow-create>
+            <allow-read>true</allow-read>
+            <allow-update>true</allow-update>
         </permission>
 
         <permission>
             <resource-name>modelName.TableA.colum1</resource-name>
-            <allow-create />
-            <allow-read />
-            <allow-update />
+            <allow-create>true</allow-create>
+            <allow-read>true</allow-read>
+            <allow-update>true</allow-update>
         </permission>
 
         <permission>
             <resource-name>modelName.TableA.column2</resource-name>
-            <allow-create />
-            <allow-read />
-            <allow-update />
+            <allow-create>true</allow-create>
+            <allow-read>true</allow-read>
+            <allow-update>true</allow-update>
         </permission>
 
         <mapped-role-name>role1</mapped-role-name>
@@ -121,12 +121,12 @@
 
         <permission>
             <resource-name>modelName.TableA</resource-name>
-            <allow-read />
+            <allow-read>true</allow-read>
         </permission>
 
         <permission>
             <resource-name>modelName.TableA.colum1</resource-name>
-            <allow-read />
+            <allow-read>true</allow-read>
         </permission>
 
         <mapped-role-name>role2</mapped-role-name>
