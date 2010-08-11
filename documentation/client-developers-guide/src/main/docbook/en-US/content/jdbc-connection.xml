@@ -48,7 +48,11 @@
 
         <para>URL Components</para>
         <orderedlist>
-            <listitem><para>&lt;vdb-name&gt; - Name of the VDB you are connecting to</para></listitem>
+            <listitem><para>&lt;vdb-name&gt; - Name of the VDB you are connecting to. Optionally VDB 
+            name can also contain version information inside it. For example: "myvdb.2", this is equivalent to supplying the 
+            "version=2" connection property defined below. However, use of vdb name in this format and 
+            the "version" property at the same time is not allowed.
+             </para></listitem>
             <listitem><para>mm - defines Teiid JDBC protocol, mms defines a secure channel (see the <link linkend="ssl">SSL chapter</link> for more)</para></listitem>
             <listitem><para>&lt;host&gt; - defines the server where the Teiid Server is installed</para></listitem>
             <listitem><para>&lt;port&gt; - defines the port on which the Teiid Server is listening for incoming JDBC connections.</para></listitem>
@@ -261,7 +265,10 @@
                         <entry>
                             <code>String</code>
                         </entry>
-                        <entry>The name of a virtual database (VDB) deployed to Teiid</entry>
+                        <entry>The name of a virtual database (VDB) deployed to Teiid. Optionally Database 
+            name can also contain "DatabaseVersion" information inside it. For example: "myvdb.2", this is equivalent to supplying the 
+            "DatabaseVersion" property set to value of 2. However, use of Database name in this format and use of 
+            DatabaseVersion property at the same time is not allowed.</entry>
                     </row>
                     <row>
                         <entry>

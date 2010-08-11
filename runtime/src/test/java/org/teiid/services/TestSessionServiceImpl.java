@@ -12,8 +12,12 @@ import javax.security.auth.login.LoginException;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.SessionMetadata;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.security.InvalidSessionException;
+import org.teiid.deployers.VDBRepository;
+import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.security.Credentials;
 import org.teiid.security.SecurityHelper;
 import org.teiid.services.TeiidLoginContext;
@@ -83,4 +87,109 @@ public class TestSessionServiceImpl {
 		validateSession(false);
 	}
 	
+	@Test
+	public void testActiveVDBWithNoVersion() throws Exception {
+		VDBRepository repo = Mockito.mock(VDBRepository.class);
+		VDBMetaData vdb = new VDBMetaData();
+		vdb.setName("name");
+		vdb.setVersion(1);
+		vdb.setStatus(Status.ACTIVE);
+		
+		
+		Mockito.stub(repo.getVDB("name")).toReturn(vdb);
+		
+		SessionServiceImpl ssi = new SessionServiceImpl();
+		ssi.setVDBRepository(repo);
+		
+		ssi.getActiveVDB("name", null);
+		
+		Mockito.verify(repo, Mockito.times(1)).getVDB("name");
+	}
+	
+	@Test
+	public void testActiveVDBWithVersion() throws Exception {
+		VDBRepository repo = Mockito.mock(VDBRepository.class);
+		VDBMetaData vdb = new VDBMetaData();
+		vdb.setName("name");
+		vdb.setVersion(1);
+		vdb.setStatus(Status.ACTIVE);
+		
+		
+		Mockito.stub(repo.getVDB("name", 1)).toReturn(vdb);
+		
+		SessionServiceImpl ssi = new SessionServiceImpl();
+		ssi.setVDBRepository(repo);
+		
+		ssi.getActiveVDB("name", "1");
+		
+		Mockito.verify(repo, Mockito.times(1)).getVDB("name", 1);
+	}
+	
+	
+	@Test
+	public void testActiveVDBNameWithVersion() throws Exception {
+		VDBRepository repo = Mockito.mock(VDBRepository.class);
+		VDBMetaData vdb = new VDBMetaData();
+		vdb.setName("name");
+		vdb.setVersion(1);
+		vdb.setStatus(Status.ACTIVE);
+		
+		
+		Mockito.stub(repo.getVDB("name", 1)).toReturn(vdb);
+		
+		SessionServiceImpl ssi = new SessionServiceImpl();
+		ssi.setVDBRepository(repo);
+		
+		ssi.getActiveVDB("name.1", null);
+		
+		Mockito.verify(repo, Mockito.times(1)).getVDB("name", 1);
+	}
+	
+	@Test
+	public void testActiveVDBNameWithVersionNonInteger() throws Exception {
+		VDBRepository repo = Mockito.mock(VDBRepository.class);
+		VDBMetaData vdb = new VDBMetaData();
+		vdb.setName("name");
+		vdb.setVersion(1);
+		vdb.setStatus(Status.ACTIVE);
+		
+		
+		Mockito.stub(repo.getVDB("name", 1)).toReturn(vdb);
+		
+		SessionServiceImpl ssi = new SessionServiceImpl();
+		ssi.setVDBRepository(repo);
+		
+		try {
+			ssi.getActiveVDB("name.x", null);
+			fail("must have failed with non integer version");
+		} catch (SessionServiceException e) {
+		}
+	}
+	
+	@Test
+	public void testActiveVDBNameWithVersionAndVersion() throws Exception {
+		VDBRepository repo = Mockito.mock(VDBRepository.class);
+		VDBMetaData vdb = new VDBMetaData();
+		vdb.setName("name");
+		vdb.setVersion(1);
+		vdb.setStatus(Status.ACTIVE);
+		
+		
+		Mockito.stub(repo.getVDB("name", 1)).toReturn(vdb);
+		
+		SessionServiceImpl ssi = new SessionServiceImpl();
+		ssi.setVDBRepository(repo);
+		
+		try {
+			ssi.getActiveVDB("name.1", "1");
+			fail("must have failed with ambigious version info");
+		} catch (SessionServiceException e) {
+		}
+		
+		try {
+			ssi.getActiveVDB("name..1", null);
+			fail("must have failed with ambigious version info");
+		} catch (SessionServiceException e) {
+		}
+	}	
 }

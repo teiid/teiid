@@ -50,6 +50,8 @@ public class TestTeiidDriver {
     	assertTrue(drv.acceptsURL("jdbc:teiid:8294601c-9fe9-4244-9499-4a012c5e1476_vdb@mm://localhost:12345")); //$NON-NLS-1$
     	assertTrue(drv.acceptsURL("jdbc:teiid:test_vdb@mm://local-host:12345")); //$NON-NLS-1$
     	assertTrue(drv.acceptsURL("jdbc:teiid:test_vdb@mm://local_host:12345")); //$NON-NLS-1$
+    	assertTrue(drv.acceptsURL("jdbc:teiid:test_vdb.1@mm://local_host:12345")); //$NON-NLS-1$
+    	assertTrue(drv.acceptsURL("jdbc:teiid:test_vdb.10@mm://local_host:12345")); //$NON-NLS-1$
     }
     
     /** Valid format of urls*/

@@ -149,6 +149,18 @@ public class SessionServiceImpl implements SessionService {
         	domains = this.adminSecurityDomains;
         }
         
+        // Validate VDB and version if logging on to server product...
+        VDBMetaData vdb = null;
+        String vdbName = properties.getProperty(TeiidURL.JDBC.VDB_NAME);
+        if (vdbName != null) {
+        	String vdbVersion = properties.getProperty(TeiidURL.JDBC.VDB_VERSION);
+        	vdb = getActiveVDB(vdbName, vdbVersion);
+        }
+
+        if (sessionMaxLimit > 0 && getActiveSessionsCount() >= sessionMaxLimit) {
+            throw new SessionServiceException(RuntimePlugin.Util.getString("SessionServiceImpl.reached_max_sessions", new Object[] {new Long(sessionMaxLimit)})); //$NON-NLS-1$
+        }
+        
         if (!domains.isEmpty()) {
 	        // Authenticate user...
 	        // if not authenticated, this method throws exception
@@ -158,32 +170,7 @@ public class SessionServiceImpl implements SessionService {
 	        userName = membership.getUserName();
 	        securityDomain = membership.getSecurityDomain();
 	        securityContext = membership.getSecurityContext();
-        }
-
-        // Validate VDB and version if logging on to server product...
-        VDBMetaData vdb = null;
-        String vdbName = properties.getProperty(TeiidURL.JDBC.VDB_NAME);
-        if (vdbName != null) {
-        	String vdbVersion = properties.getProperty(TeiidURL.JDBC.VDB_VERSION);
-            if (vdbVersion == null) {
-            	vdbVersion = "latest"; //$NON-NLS-1$
-				try {
-					vdb = this.vdbRepository.getVDB(vdbName);
-				} catch (VirtualDatabaseException e) {
-					throw new SessionServiceException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, vdbVersion)); //$NON-NLS-1$ 
-				}
-            }
-            else {
-            	vdb = this.vdbRepository.getVDB(vdbName, Integer.parseInt(vdbVersion));
-            }            
-            if (vdb.getStatus() != VDB.Status.ACTIVE || vdb.getConnectionType() == ConnectionType.NONE) {
-            	throw new SessionServiceException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, vdbVersion)); //$NON-NLS-1$
-            }
-        }
-
-        if (sessionMaxLimit > 0 && getActiveSessionsCount() >= sessionMaxLimit) {
-            throw new SessionServiceException(RuntimePlugin.Util.getString("SessionServiceImpl.reached_max_sessions", new Object[] {new Long(sessionMaxLimit)})); //$NON-NLS-1$
-        }
+        }        
         
         long creationTime = System.currentTimeMillis();
 
@@ -209,6 +196,45 @@ public class SessionServiceImpl implements SessionService {
         LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", userName, "\" - created SessionID \"", "" + newSession.getSessionToken().getSessionID(), "\"" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         this.sessionCache.put(newSession.getSessionId(), newSession);
         return newSession;
+	}
+
+	VDBMetaData getActiveVDB(String vdbName, String vdbVersion) throws SessionServiceException {
+		VDBMetaData vdb = null;
+		
+		// handle the situation when the version is part of the vdb name.
+		
+		int firstIndex = vdbName.indexOf('.');
+		int lastIndex = vdbName.lastIndexOf('.');
+		if (firstIndex != -1) {
+			if (firstIndex != lastIndex || vdbVersion != null) {
+				throw new SessionServiceException(RuntimePlugin.Util.getString("ambigious_name", vdbName, vdbVersion)); //$NON-NLS-1$
+			}
+			vdbVersion = vdbName.substring(firstIndex+1);
+			vdbName = vdbName.substring(0, firstIndex);
+		}
+		
+		try {
+			if (vdbVersion == null) {
+				vdbVersion = "latest"; //$NON-NLS-1$
+				vdb = this.vdbRepository.getVDB(vdbName);
+			}
+			else {
+				vdb = this.vdbRepository.getVDB(vdbName, Integer.parseInt(vdbVersion));
+			}         
+		} catch (VirtualDatabaseException e) {
+			throw new SessionServiceException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, vdbVersion)); //$NON-NLS-1$ 
+		} catch (NumberFormatException e) {
+			throw new SessionServiceException(e, RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, vdbVersion)); //$NON-NLS-1$
+		}
+		
+		if (vdb == null) {
+			throw new SessionServiceException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._1", vdbName, vdbVersion)); //$NON-NLS-1$
+		}
+		
+		if (vdb.getStatus() != VDB.Status.ACTIVE || vdb.getConnectionType() == ConnectionType.NONE) {
+			throw new SessionServiceException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, vdbVersion)); //$NON-NLS-1$
+		}
+		return vdb;
 	}
 
 	protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains, SecurityHelper helper, boolean onlyallowPassthrough)

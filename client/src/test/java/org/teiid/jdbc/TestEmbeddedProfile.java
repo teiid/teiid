@@ -48,6 +48,7 @@ public class TestEmbeddedProfile {
         assertFalse(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:teiid:BQT!/path/foo.properties")); //$NON-NLS-1$
         assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:teiid:BQT;")); //$NON-NLS-1$
         assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:teiid:BQT;version=1;logFile=foo.txt")); //$NON-NLS-1$
+        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:teiid:BQT.1;version=1;logFile=foo.txt")); //$NON-NLS-1$
     }
 
     @Test public void testParseURL() throws SQLException{

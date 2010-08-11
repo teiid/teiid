@@ -47,7 +47,7 @@ final class EmbeddedProfile {
      * - jdbc:teiid:BQT
      * - jdbc:teiid:BQT;verson=1  
      */
-    static final String BASE_PATTERN = "jdbc:teiid:([\\w|-]+)(;.*)?"; //$NON-NLS-1$
+    static final String BASE_PATTERN = "jdbc:teiid:([\\w-\\.]+)(;.*)?"; //$NON-NLS-1$
 
     private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
     
