@@ -29,12 +29,6 @@
         </para>
       </listitem>
       <listitem>
-        <para>Authorization – the Authorization service
-          manages user entitlements.  Entitlements use is
-          optional (as specified in the configuration) and off by
-          default.</para>
-      </listitem>
-      <listitem>
         <para>Buffer Manager – the <link linkend="buffer_management">Buffer Manager</link> service
           provides access to data management for intermediate results.</para>
       </listitem>

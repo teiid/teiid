@@ -73,12 +73,12 @@
                         <xs:attribute name="type" type="xs:string" use="required"/>
                     </xs:complexType>
                 </xs:element>                
-				<xs:element name="data-policy" minOccurs="0" maxOccurs="unbounded">
+				<xs:element name="data-role" minOccurs="0" maxOccurs="unbounded">
                     <xs:annotation>
-                        <xs:documentation>This defines a security policy on the Schema. The "resource-name" element defines fully qualified 
-                        name for a Table, procedure etc. The "allows-*" elements define the security access. The "mapped-role-name" defines
-                        the "role" name that user must have before they have access to this data. The "role" name matches to the
-                        JAAS based role that user has.</xs:documentation>
+                        <xs:documentation>This defines a data role. The "resource-name" element defines fully qualified 
+                        name for a Schema, Table, Procedure, etc.  The "allows-*" elements define the security access, which are applied to the resource
+                        and all child resources.  The "mapped-role-name" defines the "role" name that user must have before they have access to this data. 
+                        The "role" name matches to the JAAS based role that user has.</xs:documentation>
                     </xs:annotation>                 
                 
 					<xs:complexType>
