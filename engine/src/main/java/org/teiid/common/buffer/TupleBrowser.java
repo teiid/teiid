@@ -82,7 +82,7 @@ public class TupleBrowser implements TupleSource {
 		boolean valid = true;
 		
 		if (upperBound != null) {
-			if (this.tree.comparator.compare(upperBound, lowerBound) < 0) {
+			if (lowerBound != null && this.tree.comparator.compare(upperBound, lowerBound) < 0) {
 				valid = false;
 			}
 			LinkedList<SearchResult> places = new LinkedList<SearchResult>();

@@ -23,7 +23,7 @@
 package org.teiid.query.tempdata;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -365,26 +365,48 @@ class TempTable {
 		List<List<Object>> values = null;
 		if (condition != null && rowId == null) {
 			IndexCondition[] indexConditions = IndexCondition.getIndexConditions(condition, columns.subList(0, tree.getKeyLength()));
-			if (indexConditions.length > 1 && indexConditions[indexConditions.length - 1] != null) {
-				List<Object> value = new ArrayList<Object>(indexConditions.length);
-				for (IndexCondition indexCondition : indexConditions) {
-					value.add(indexCondition.valueSet.iterator().next().getValue());
-				}
-				values = new ArrayList<List<Object>>(1);
-				values.add(value);
-				//TODO: support other composite key lookups
-			} else {
-				if (indexConditions[0].lower != null) {
-					lower = Arrays.asList(indexConditions[0].lower.getValue());
-				}
-				if (indexConditions[0].upper != null) {
-					upper = Arrays.asList(indexConditions[0].upper.getValue());
-				}
-				if (!indexConditions[0].valueSet.isEmpty()) {
-					values = new ArrayList<List<Object>>();
-					for (Constant constant : indexConditions[0].valueSet) {
-						values.add(Arrays.asList(constant.getValue()));
+			for (int i = 0; i < indexConditions.length; i++) {
+				IndexCondition indexCondition = indexConditions[i];
+				if (indexCondition.lower != null) {
+					if (i == 0) {
+						lower = new ArrayList<Object>(tree.getKeyLength());
+						lower.add(indexCondition.lower.getValue());
+					} if (lower != null && lower.size() == i) {
+						lower.add(indexCondition.lower.getValue());
 					}
+				} 
+				if (indexCondition.upper != null) {
+					if (i == 0) {
+						upper = new ArrayList<Object>(tree.getKeyLength());
+						upper.add(indexCondition.upper.getValue());
+					} else if (upper != null && upper.size() == i) {
+						upper.add(indexCondition.upper.getValue());
+					}
+				} 
+				if (!indexCondition.valueSet.isEmpty()) {
+					if (i == 0) {
+						values = new ArrayList<List<Object>>();
+						for (Constant constant : indexCondition.valueSet) {
+							List<Object> value = new ArrayList<Object>(tree.getKeyLength());
+							value.add(constant.getValue());
+							values.add(value);
+						}
+					} else if (values != null && values.size() == 1 && indexCondition.valueSet.size() == 1) {
+						values.iterator().next().add(indexCondition.valueSet.first().getValue());
+					}
+				}
+			}
+			if (indexConditions.length > 0) {
+				if (values != null) {
+					List<Object> value = values.iterator().next();
+					if (value.size() != tree.getKeyLength()) {
+						values = null;
+						lower = new ArrayList<Object>(value);
+						lower.addAll(Collections.nCopies(tree.getKeyLength() - value.size(), null));
+						upper = new ArrayList<Object>(value);
+					}
+				} else if (lower != null) {
+					lower.addAll(Collections.nCopies(tree.getKeyLength() - lower.size(), null));
 				}
 			}
 		}
@@ -552,6 +574,13 @@ class TempTable {
 	
 	CacheHint getCacheHint() {
 		return this.tid.getCacheHint();
+	}
+	
+	int getPkLength() {
+		if (rowId != null) {
+			return 0;
+		}
+		return this.tree.getKeyLength();
 	}
 
 }

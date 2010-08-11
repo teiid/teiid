@@ -48,7 +48,7 @@ import org.teiid.query.util.CommandContext;
 public class QueryProcessor implements BatchProducer {
 	
 	public static class ExpiredTimeSliceException extends TeiidRuntimeException {
-		
+		private static final long serialVersionUID = 4585044674826578060L;
 	}
 	
 	private static ExpiredTimeSliceException EXPIRED_TIME_SLICE = new ExpiredTimeSliceException();

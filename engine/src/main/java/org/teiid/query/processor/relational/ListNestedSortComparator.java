@@ -138,7 +138,13 @@ public class ListNestedSortComparator<T extends Comparable<? super T>> implement
     public int compare(java.util.List<T> list1, java.util.List<T> list2) {
         int compare = 0;
         for (int k = 0; k < sortParameters.length; k++) {
+        	if (list1.size() <= sortParameters[k]) {
+            	return 1;
+            }
             T param1 = list1.get(sortParameters[k]);
+            if (list2.size() <= sortParameters[k]) {
+            	return -1;
+            }
             T param2 = list2.get(sortParameters[k]);
 
             if( param1 == null ) {

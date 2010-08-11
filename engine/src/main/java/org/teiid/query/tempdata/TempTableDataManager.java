@@ -36,6 +36,8 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SQLConstants.Reserved;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.mapping.relational.QueryNode;
@@ -209,7 +211,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			TempTableStore globalStore, MatTableInfo info)
 			throws QueryMetadataException, TeiidComponentException,
 			TeiidProcessingException, ExpressionEvaluationException {
-		TempTable table;
+		LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryExecPlugin.Util.getString("TempTableDataManager.loading", tableName)); //$NON-NLS-1$
 		QueryMetadataInterface metadata = context.getMetadata();
 		Create create = new Create();
 		create.setTable(group);
@@ -220,7 +222,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 				create.getPrimaryKey().add(create.getColumns().get(metadata.getPosition(col)-1));
 			}
 		}
-		table = globalStore.addTempTable(tableName, create, bufferManager);
+		TempTable table = globalStore.addTempTable(tableName, create, bufferManager);
 		table.setUpdatable(false);
 		CacheHint hint = table.getCacheHint();
 		if (hint != null) {
@@ -229,7 +231,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 				info.setTtl(table.getCacheHint().getTtl());
 			}
 		}
-		boolean success = false;
+		int rowCount = -1;
 		try {
 			//TODO: order by primary key nulls first - then have an insert ordered optimization
 			//TODO: use the getCommand logic in RelationalPlanner to reuse commands for this.
@@ -239,12 +241,16 @@ public class TempTableDataManager implements ProcessorDataManager {
 			TupleSource ts = new BatchCollector.BatchProducerTupleSource(qp);
 			//TODO: if this insert fails, it's unnecessary to do the undo processing
 			table.insert(ts, table.getColumns());
-			success = true;
+			rowCount = table.getRowCount();
 		} finally {
-			if (!success) {
+			if (rowCount == -1) {
 				globalStore.removeTempTableByName(tableName);
+				info.setState(MatState.FAILED_LOAD);
+				LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryExecPlugin.Util.getString("TempTableDataManager.failed_load", tableName)); //$NON-NLS-1$
+			} else {
+				info.setState(MatState.LOADED);
+				LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryExecPlugin.Util.getString("TempTableDataManager.loaded", tableName, rowCount)); //$NON-NLS-1$
 			}
-			info.setState(success?MatState.LOADED:MatState.FAILED_LOAD);
 		}
 		return table;
 	}

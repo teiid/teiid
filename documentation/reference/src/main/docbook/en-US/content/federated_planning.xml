@@ -229,7 +229,7 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
         The optional join hint is applied as a comment on a join clause.
         <example>
           <title>Example Optional Join Hint</title>
-          <programlisting>select a.column1, b.column2 from a inner join /* optional */ b on a.key = b.key</programlisting>
+          <programlisting>select a.column1, b.column2 from a inner join /*+ optional */ b on a.key = b.key</programlisting>
         </example>
       </para>
       <para> Suppose that the preceding example defined a view layer X.

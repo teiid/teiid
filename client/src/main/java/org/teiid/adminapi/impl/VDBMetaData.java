@@ -25,6 +25,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -197,6 +198,10 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	@ManagementProperty(description="Models in a VDB", managed=true)
 	public List<Model> getModels(){
 		return new ArrayList<Model>(this.models.getMap().values());
+	}
+	
+	public Map<String, ModelMetaData> getModelMetaDatas() {
+		return this.models.getMap();
 	}
 	
 	/**

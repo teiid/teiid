@@ -55,6 +55,7 @@ public class TempTableStore {
 		private long updateTime = -1;
 		private MatState state = MatState.NOT_LOADED;
 		private long ttl = -1;
+		private boolean valid;
 		
 		synchronized boolean shouldLoad() throws TeiidComponentException {
     		for (;;) {
@@ -65,6 +66,9 @@ public class TempTableStore {
 				state = MatState.LOADING;
 				return true;
 			case LOADING:
+				if (valid) {
+					return false;
+				}
 				try {
 					wait();
 				} catch (InterruptedException e) {
@@ -81,10 +85,15 @@ public class TempTableStore {
     		}
 		}
 		
-		public synchronized void setState(MatState state) {
+		public synchronized MatState setState(MatState state) {
+			MatState oldState = this.state;
+			if (state == MatState.LOADED) {
+				valid = true;
+			}
 			this.state = state;
 			this.updateTime = System.currentTimeMillis();
 			notifyAll();
+			return oldState;
 		}
 		
 		public synchronized void setTtl(long ttl) {
@@ -97,6 +106,14 @@ public class TempTableStore {
 		
 		public MatState getState() {
 			return state;
+		}
+		
+		public boolean isValid() {
+			return valid;
+		}
+		
+		public void setValid(boolean valid) {
+			this.valid = valid;
 		}
 		
 	}

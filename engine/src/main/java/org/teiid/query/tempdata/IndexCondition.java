@@ -43,9 +43,6 @@ class IndexCondition {
 		List<Criteria> crits = Criteria.separateCriteriaByAnd(condition);
 		IndexCondition[] conditions = new IndexCondition[keyColumns.size()];
 		for (int i = 0; i < conditions.length; i++) {
-			if (i > 0 && conditions[i - 1].valueSet.size() != 1) {
-				break; //don't yet support any other types of composite key lookups
-			}
 			conditions[i] = new IndexCondition();
 			ElementSymbol keyColumn = keyColumns.get(i);
 			for (Iterator<Criteria> critIter = crits.iterator(); critIter.hasNext();) {
