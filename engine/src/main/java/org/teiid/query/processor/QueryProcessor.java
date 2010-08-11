@@ -146,7 +146,7 @@ public class QueryProcessor implements BatchProducer {
 			
 			//TODO: see if there is pending work before preempting
 			
-	        while(currentTime < context.getTimeSliceEnd()) {
+	        while(currentTime < context.getTimeSliceEnd() || nonBlocking) {
 	        	if (requestCanceled) {
 	                throw new TeiidProcessingException(QueryExecPlugin.Util.getString("QueryProcessor.request_cancelled", getProcessID())); //$NON-NLS-1$
 	            }

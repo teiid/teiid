@@ -472,7 +472,9 @@ public class IndexMetadataFactory {
 				c.setName(RecordFactory.getShortName(c.getName()));
 			}
 			indexRecord.getColumns().set(i, c);
-			c.setParent(indexRecord);
+			if (columns == null) {
+				c.setParent(indexRecord);
+			}
 		}
 	}
     

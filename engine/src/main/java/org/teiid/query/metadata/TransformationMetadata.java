@@ -180,11 +180,11 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         throw new QueryMetadataException(elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
     }
 
-    public Object getGroupID(final String groupName) throws TeiidComponentException, QueryMetadataException {
+    public Table getGroupID(final String groupName) throws TeiidComponentException, QueryMetadataException {
         return getMetadataStore().findGroup(groupName.toLowerCase());
     }
     
-    public Collection getGroupsForPartialName(final String partialGroupName)
+    public Collection<String> getGroupsForPartialName(final String partialGroupName)
         throws TeiidComponentException, QueryMetadataException {
 		ArgCheck.isNotEmpty(partialGroupName);
 
@@ -792,7 +792,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         	}
         	
         	if (schema == null) {
-        		throw new TeiidComponentException(DQPPlugin.Util.getString("TransformationMetadata.Error_trying_to_read_schemas_for_the_document/table____1")+groupName);             //$NON-NLS-1$		
+        		throw new QueryMetadataException(DQPPlugin.Util.getString("TransformationMetadata.Error_trying_to_read_schemas_for_the_document/table____1")+groupName);             //$NON-NLS-1$		
         	}
         	schemas.add(schema);
         }

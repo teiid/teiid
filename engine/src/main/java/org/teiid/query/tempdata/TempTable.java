@@ -558,6 +558,18 @@ class TempTable {
 		}
 	}
 	
+	List<?> updateTuple(List<?> tuple, boolean remove) throws TeiidComponentException {
+		try {
+			lock.writeLock().lock();
+			if (remove) {
+				return tree.remove(tuple);
+			} 
+			return tree.insert(tuple, InsertMode.UPDATE);
+		} finally {
+			lock.writeLock().unlock();
+		}
+	}
+	
 	private void updateTuple(List<?> tuple) throws TeiidComponentException {
 		if (tree.insert(tuple, InsertMode.UPDATE) == null) {
 			throw new AssertionError("Update failed"); //$NON-NLS-1$
@@ -581,6 +593,10 @@ class TempTable {
 			return 0;
 		}
 		return this.tree.getKeyLength();
+	}
+	
+	public boolean isUpdatable() {
+		return updatable;
 	}
 
 }

@@ -100,6 +100,12 @@ public class TupleBrowser implements TupleSource {
 			while (bound == null || bound.children != null) {
 				bound = tree.findChildTail(bound);
 			}
+			if (!direction) {
+				if (page != bound || values == null) {
+					values = bound.getValues();
+				}
+				boundIndex = values.getTuples().size() - 1;
+			}
 		}
 				
 		if (!direction) {

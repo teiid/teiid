@@ -34,6 +34,7 @@ import java.util.concurrent.Callable;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BlockedException;
@@ -136,10 +137,11 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	 * @param workItem
 	 * @return
 	 * @throws TeiidComponentException
+	 * @throws TeiidProcessingException 
 	 */
 	@SuppressWarnings("unchecked")
 	private TupleSource processSystemQuery(CommandContext context, Command command,
-			DQPWorkContext workContext) throws TeiidComponentException {
+			DQPWorkContext workContext) throws TeiidComponentException, TeiidProcessingException {
 		String vdbName = workContext.getVdbName();
 		int vdbVersion = workContext.getVdbVersion();
 		VDBMetaData vdb = workContext.getVDB();
@@ -261,31 +263,33 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 							}
 							break;
 						case MATVIEWS:
-							if (table.isMaterialized()) {
-								String targetSchema = null;
-								String matTableName = null;
-								String state = null;
-								Timestamp updated = null;
-								Integer cardinaltity = null;
-								
-								if (table.getMaterializedTable() == null) {
-									TempTableStore globalStore = context.getGlobalTableStore();
-									matTableName = RelationalPlanner.MAT_PREFIX+table.getFullName().toUpperCase();
-									MatTableInfo info = globalStore.getMatTableInfo(matTableName);
-									state = info.getState().name();
-									updated = info.getUpdateTime()==-1?null:new Timestamp(info.getUpdateTime());
-									TempMetadataID id = globalStore.getMetadataStore().getTempGroupID(matTableName);
-									if (id != null) {
-										cardinaltity = id.getCardinality();
-									}
-									//ttl, pref_mem
-								} else {
-									Table t = table.getMaterializedTable();
-									matTableName = t.getName();
-									targetSchema = t.getParent().getName();
-								}
-								rows.add(Arrays.asList(vdbName, schema.getName(), table.getName(), targetSchema, matTableName, state, updated, cardinaltity));
+							if (!table.isMaterialized()) {
+								continue;
 							}
+							String targetSchema = null;
+							String matTableName = null;
+							String state = null;
+							Timestamp updated = null;
+							Integer cardinaltity = null;
+							Boolean valid = null;
+							if (table.getMaterializedTable() == null) {
+								TempTableStore globalStore = context.getGlobalTableStore();
+								matTableName = RelationalPlanner.MAT_PREFIX+table.getFullName().toUpperCase();
+								MatTableInfo info = globalStore.getMatTableInfo(matTableName);
+								valid = info.isValid();
+								state = info.getState().name();
+								updated = info.getUpdateTime()==-1?null:new Timestamp(info.getUpdateTime());
+								TempMetadataID id = globalStore.getMetadataStore().getTempGroupID(matTableName);
+								if (id != null) {
+									cardinaltity = id.getCardinality();
+								}
+								//ttl, pref_mem - not part of proper metadata
+							} else {
+								Table t = table.getMaterializedTable();
+								matTableName = t.getName();
+								targetSchema = t.getParent().getName();
+							}
+							rows.add(Arrays.asList(vdbName, schema.getName(), table.getName(), targetSchema, matTableName, state, updated, cardinaltity, valid));
 							break;
 						}
 					}
@@ -318,10 +322,14 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				}
 				break;
 			case GETXMLSCHEMAS:
-				Object groupID = indexMetadata.getGroupID((String)((Constant)proc.getParameter(1).getExpression()).getValue());
-				List<SQLXMLImpl> schemas = indexMetadata.getXMLSchemas(groupID);
-				for (SQLXMLImpl schema : schemas) {
-					rows.add(Arrays.asList(new XMLType(schema)));
+				try {
+					Object groupID = indexMetadata.getGroupID((String)((Constant)proc.getParameter(1).getExpression()).getValue());
+					List<SQLXMLImpl> schemas = indexMetadata.getXMLSchemas(groupID);
+					for (SQLXMLImpl schema : schemas) {
+						rows.add(Arrays.asList(new XMLType(schema)));
+					}
+				} catch (QueryMetadataException e) {
+					throw new TeiidProcessingException(e);
 				}
 				break;
 			}

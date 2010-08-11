@@ -916,7 +916,7 @@ public class RelationalPlanner {
         	boolean isImplicitGlobal = matMetadataId == null;
             if (isImplicitGlobal) {
         		matTableName = MAT_PREFIX + groupName;
-        		matMetadataId = getGlobalTempTableMetadataId(virtualGroup, matTableName);
+        		matMetadataId = getGlobalTempTableMetadataId(virtualGroup, matTableName, context, metadata, analysisRecord);
         		hint = ((TempMetadataID)matMetadataId).getCacheHint();
             } else {
             	matTableName = metadata.getFullName(matMetadataId);
@@ -940,7 +940,7 @@ public class RelationalPlanner {
             qnode = metadata.getVirtualPlan(metadataID);            
         }
 
-        Command result = getCommand(virtualGroup, qnode, cacheString, metadata);   
+        Command result = getCommand(virtualGroup, qnode, cacheString, metadata, analysisRecord);   
         return QueryRewriter.rewrite(result, metadata, context);
     }
     
@@ -954,7 +954,7 @@ public class RelationalPlanner {
 		return query;
 	}
 
-	private Object getGlobalTempTableMetadataId(GroupSymbol table, String matTableName)
+	public static Object getGlobalTempTableMetadataId(GroupSymbol table, String matTableName, CommandContext context, QueryMetadataInterface metadata, AnalysisRecord analysisRecord)
 			throws QueryMetadataException, TeiidComponentException, QueryResolverException, QueryValidatorException {
 		TempMetadataStore store = context.getGlobalTableStore().getMetadataStore();
 		TempMetadataID id = store.getTempGroupID(matTableName);
@@ -979,10 +979,7 @@ public class RelationalPlanner {
 						}
 						id.setPrimaryKey(primaryKey);
 					}
-					//version column?
-					
-					//add timestamp?
-					Command c = getCommand(table, metadata.getVirtualPlan(table.getMetadataID()), SQLConstants.Reserved.SELECT, metadata);
+					Command c = getCommand(table, metadata.getVirtualPlan(table.getMetadataID()), SQLConstants.Reserved.SELECT, metadata, analysisRecord);
 					CacheHint hint = c.getCacheHint();
 					if (hint != null) {
 						recordMaterializationTableAnnotation(analysisRecord, QueryPlugin.Util.getString("SimpleQueryResolver.cache_hint_used", table, matTableName, hint)); //$NON-NLS-1$
@@ -996,8 +993,8 @@ public class RelationalPlanner {
 		return id;
 	}
 
-	private Command getCommand(GroupSymbol virtualGroup, QueryNode qnode,
-			String cacheString, QueryMetadataInterface qmi) throws TeiidComponentException,
+	private static Command getCommand(GroupSymbol virtualGroup, QueryNode qnode,
+			String cacheString, QueryMetadataInterface qmi, AnalysisRecord analysisRecord) throws TeiidComponentException,
 			QueryMetadataException, QueryResolverException,
 			QueryValidatorException {
 		Command result = (Command)qmi.getFromMetadataCache(virtualGroup.getMetadataID(), "transformation/" + cacheString); //$NON-NLS-1$
@@ -1016,7 +1013,7 @@ public class RelationalPlanner {
                 //Handle bindings and references
                 List bindings = qnode.getBindings();
                 if (bindings != null){
-                    BindVariableVisitor.bindReferences(result, bindings, metadata);
+                    BindVariableVisitor.bindReferences(result, bindings, qmi);
                 }
             }
 	        QueryResolver.resolveCommand(result, Collections.EMPTY_MAP, qmi, analysisRecord);

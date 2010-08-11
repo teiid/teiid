@@ -30,9 +30,11 @@ public class CacheHint implements Serializable {
 
 	public static final String PREF_MEM = "pref_mem"; //$NON-NLS-1$
 	public static final String TTL = "ttl:"; //$NON-NLS-1$
+	public static final String UPDATABLE = "updatable"; //$NON-NLS-1$
 	public static final String CACHE = "cache"; //$NON-NLS-1$
 	
 	private boolean prefersMemory;
+	private boolean updatable;
 	private Long ttl;
 	
 	public CacheHint() {
@@ -64,6 +66,14 @@ public class CacheHint implements Serializable {
 		SQLStringVisitor ssv = new SQLStringVisitor();
 		ssv.addCacheHint(this);
 		return ssv.getSQLString();
+	}
+	
+	public boolean isUpdatable() {
+		return updatable;
+	}
+	
+	public void setUpdatable(boolean updatable) {
+		this.updatable = updatable;
 	}
 
 }

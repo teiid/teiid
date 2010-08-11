@@ -131,6 +131,10 @@ public class FakeServer extends ClientServiceRegistryImpl {
 		model.addSourceMapping("source", "translator", "jndi:source");
 	}
 	
+	public VDBMetaData getVDB(String vdbName) {
+		return this.repo.getVDB(vdbName, 1);
+	}
+	
 	public void undeployVDB(String vdbName) {
 		this.repo.removeVDB(vdbName, 1);
 	}

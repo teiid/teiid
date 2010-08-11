@@ -38,7 +38,7 @@ import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
-@SuppressWarnings("nls")
+@SuppressWarnings({"nls", "unchecked"})
 public class TestTempTables {
 	
 	private TempMetadataAdapter metadata;
@@ -213,15 +213,36 @@ public class TestTempTables {
 	}
 	
 	@Test public void testCompositeKeyPartial() throws Exception {
+		sampleTable();
+		execute("select * from x where e1 = 'b'", new List[] {Arrays.asList("b", 2), Arrays.asList("b", 3)}); //$NON-NLS-1$
+	}
+	
+	@Test public void testCompositeKeyPartial1() throws Exception {
+		sampleTable();
+		execute("select * from x where e1 < 'c'", new List[] {Arrays.asList("a", 1), Arrays.asList("b", 2), Arrays.asList("b", 3)}); //$NON-NLS-1$
+	}
+	
+	@Test public void testCompositeKeyPartial2() throws Exception {
+		sampleTable();
+		execute("select * from x where e2 = 1", new List[] {Arrays.asList("a", 1), Arrays.asList("c", 1)}); //$NON-NLS-1$
+	}
+	
+	@Test public void testCompositeKeyPartial3() throws Exception {
+		sampleTable();
+		execute("select * from x where e1 >= 'b'", new List[] {Arrays.asList("b", 2), Arrays.asList("b", 3), Arrays.asList("c", 1)}); //$NON-NLS-1$
+	}
+	
+	@Test public void testCompositeKeyPartial4() throws Exception {
+		sampleTable();
+		execute("select * from x where e1 >= 'b' order by e1 desc, e2 desc", new List[] {Arrays.asList("c", 1), Arrays.asList("b", 3), Arrays.asList("b", 2)}); //$NON-NLS-1$
+	}
+
+	private void sampleTable() throws Exception {
 		execute("create local temporary table x (e1 string, e2 integer, primary key (e1, e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
 		execute("insert into x (e2, e1) values (3, 'b')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 		execute("insert into x (e2, e1) values (2, 'b')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 		execute("insert into x (e2, e1) values (1, 'c')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 		execute("insert into x (e2, e1) values (1, 'a')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
-		execute("select * from x where e1 = 'b'", new List[] {Arrays.asList("b", 2), Arrays.asList("b", 3)}); //$NON-NLS-1$
-		execute("select * from x where e1 < 'c'", new List[] {Arrays.asList("a", 1), Arrays.asList("b", 2), Arrays.asList("b", 3)}); //$NON-NLS-1$
-		execute("select * from x where e2 = 1", new List[] {Arrays.asList("a", 1), Arrays.asList("c", 1)}); //$NON-NLS-1$
-		execute("select * from x where e1 >= 'b'", new List[] {Arrays.asList("b", 2), Arrays.asList("b", 3), Arrays.asList("c", 1)}); //$NON-NLS-1$
 	}
 	
 }

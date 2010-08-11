@@ -1063,6 +1063,15 @@ public class SQLStringVisitor extends LanguageVisitor {
         	parts.add(CacheHint.TTL);
         	parts.add(obj.getTtl());
         }
+        if (obj.isUpdatable()) {
+        	if (!addParens) {
+        		parts.add(Tokens.LPAREN);
+        		addParens = true;
+        	} else {
+		        parts.add(SPACE);
+        	}
+        	parts.add(CacheHint.UPDATABLE);
+        }
         if (addParens) {
 	        parts.add(Tokens.RPAREN);
         }

@@ -189,7 +189,7 @@ public class SQLParserUtil {
         return hint;
 	}
 	
-	private static Pattern CACHE_HINT = Pattern.compile("\\s*cache(\\(\\s*(pref_mem)?\\s*(ttl:\\d{1,19})?[^)]*\\))?.*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern CACHE_HINT = Pattern.compile("\\s*cache(\\(\\s*(pref_mem)?\\s*(ttl:\\d{1,19})?\\s*(updatable)?[^)]*\\))?.*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     
     void setQueryCacheOption(Token t, ParseInfo p) {
     	String hint = getComment(t);
@@ -203,6 +203,9 @@ public class SQLParserUtil {
     		String ttl = match.group(3);
     		if (ttl != null) {
     			p.cacheHint.setTtl(Long.valueOf(ttl.substring(4)));
+    		}
+    		if (match.group(4) != null) {
+    			p.cacheHint.setUpdatable(true);
     		}
     	}
     }

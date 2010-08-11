@@ -45,7 +45,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 public class TempTableStore {
 	
 	public enum MatState {
-		NOT_LOADED,
+		NEEDS_LOADING,
 		LOADING,
 		FAILED_LOAD,
 		LOADED
@@ -53,14 +53,14 @@ public class TempTableStore {
 	
 	public static class MatTableInfo {
 		private long updateTime = -1;
-		private MatState state = MatState.NOT_LOADED;
+		private MatState state = MatState.NEEDS_LOADING;
 		private long ttl = -1;
 		private boolean valid;
 		
 		synchronized boolean shouldLoad() throws TeiidComponentException {
     		for (;;) {
 			switch (state) {
-			case NOT_LOADED:
+			case NEEDS_LOADING:
 				updateTime = System.currentTimeMillis();
 			case FAILED_LOAD:
 				state = MatState.LOADING;
@@ -85,10 +85,10 @@ public class TempTableStore {
     		}
 		}
 		
-		public synchronized MatState setState(MatState state) {
+		public synchronized MatState setState(MatState state, Boolean valid) {
 			MatState oldState = this.state;
-			if (state == MatState.LOADED) {
-				valid = true;
+			if (valid != null) {
+				this.valid = valid;
 			}
 			this.state = state;
 			this.updateTime = System.currentTimeMillis();
@@ -100,20 +100,16 @@ public class TempTableStore {
 			this.ttl = ttl;
 		}
 		
-		public long getUpdateTime() {
+		public synchronized long getUpdateTime() {
 			return updateTime;
 		}
 		
-		public MatState getState() {
+		public synchronized MatState getState() {
 			return state;
 		}
 		
-		public boolean isValid() {
+		public synchronized boolean isValid() {
 			return valid;
-		}
-		
-		public void setValid(boolean valid) {
-			this.valid = valid;
 		}
 		
 	}
@@ -146,15 +142,14 @@ public class TempTableStore {
     	return groupToTupleSourceID.containsKey(tempTableName);
     }
 
-    TempTable addTempTable(String tempTableName, Create create, BufferManager buffer) {
+    TempTable addTempTable(String tempTableName, Create create, BufferManager buffer, boolean add) {
     	List<ElementSymbol> columns = create.getColumns();
-    	TempMetadataID existingId = tempMetadataStore.getTempGroupID(tempTableName);
-        //add metadata
-    	TempMetadataID id = tempMetadataStore.addTempGroup(tempTableName, columns, false, true);
-    	if (existingId != null) {
-    		id.setCacheHint(existingId.getCacheHint());
+    	TempMetadataID id = tempMetadataStore.getTempGroupID(tempTableName);
+    	if (id == null) {
+	        //add metadata
+	    	id = tempMetadataStore.addTempGroup(tempTableName, columns, false, true);
+	        TempTableResolver.addPrimaryKey(create, id);
     	}
-        TempTableResolver.addPrimaryKey(create, id);
     	columns = new ArrayList<ElementSymbol>(create.getColumns());
         if (!create.getPrimaryKey().isEmpty()) {
     		//reorder the columns to put the key in front
@@ -163,8 +158,14 @@ public class TempTableStore {
     		columns.addAll(0, primaryKey);
     	}
         TempTable tempTable = new TempTable(id, buffer, columns, create.getPrimaryKey().size(), sessionID);
-        groupToTupleSourceID.put(tempTableName, tempTable);
+        if (add) {
+        	groupToTupleSourceID.put(tempTableName, tempTable);
+        }
         return tempTable;
+    }
+    
+    void swapTempTable(String tempTableName, TempTable tempTable) {
+    	groupToTupleSourceID.put(tempTableName, tempTable);
     }
 
     public void removeTempTableByName(String tempTableName) {
@@ -211,7 +212,7 @@ public class TempTableStore {
         Create create = new Create();
         create.setTable(new GroupSymbol(tempTableID));
         create.setColumns(columns);
-        return addTempTable(tempTableID, create, buffer);       
+        return addTempTable(tempTableID, create, buffer, true);       
     }
     
     public Set<String> getAllTempTables() {
