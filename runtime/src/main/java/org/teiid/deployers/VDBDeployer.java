@@ -273,7 +273,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
     private void buildDynamicMetadataStore(final VFSDeploymentUnit unit, final VDBMetaData vdb, final MetadataStoreGroup vdbStore, final ConnectorManagerRepository cmr) throws DeploymentException {
     	
     	// make sure we are configured correctly first
-		for (Model model:vdb.getModels()) {
+		for (final ModelMetaData model:vdb.getModelMetaDatas().values()) {
 			if (model.getName().equals(CoreConstants.SYSTEM_MODEL) || model.getName().equals(CoreConstants.ODBC_MODEL)){
 				continue;
 			}
@@ -281,14 +281,6 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	    	if (model.getSourceNames().isEmpty()) {
 	    		throw new DeploymentException(RuntimePlugin.Util.getString("fail_to_deploy", vdb.getName()+"-"+vdb.getVersion(), model.getName())); //$NON-NLS-1$ //$NON-NLS-2$
 	    	}
-		}
-
-    	// check the cache files first; if not found load the metadata
-    	for (Model m:vdb.getModels()) {
-    		final ModelMetaData model = (ModelMetaData)m;
-			if (model.getName().equals(CoreConstants.SYSTEM_MODEL) || model.getName().equals(CoreConstants.ODBC_MODEL)){
-				continue;
-			}
 			    	
 	    	final boolean cache = "cached".equalsIgnoreCase(vdb.getPropertyValue("UseConnectorMetadata")); //$NON-NLS-1$ //$NON-NLS-2$
 	    	final File cacheFile = buildCachedFileName(unit, vdb, model.getName());
