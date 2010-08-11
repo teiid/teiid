@@ -443,8 +443,6 @@
 					hiddenByDefault="false">
 					<c:simple-property name="name" type="string"
 						description="The Virtual Database Name" required="false" readOnly="true" />
-					<c:simple-property name="fullName" type="string"
-						description="The fully qualified Virtual Database Name" required="false" readOnly="true" />
 					<c:simple-property name="version" type="string"
 						description="The Virtual Database Version" required="false"
 						readOnly="true" />
