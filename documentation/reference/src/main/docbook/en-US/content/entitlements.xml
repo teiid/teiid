@@ -88,7 +88,7 @@
         <source name="source-name" translator-name="oracle" connection-jndi-name="java:myDS" />
     </model>
 
-    <data-policy name="RoleA">
+    <data-role name="RoleA">
         <description>Allow all, except Delete</description>
 
         <permission>
@@ -114,9 +114,9 @@
 
         <mapped-role-name>role1</mapped-role-name>
 
-    </data-policy>
+    </data-role>
 
-    <data-policy name="RoleC">
+    <data-role name="RoleC">
         <description>Allow read only</description>
 
         <permission>
@@ -130,11 +130,11 @@
         </permission>
 
         <mapped-role-name>role2</mapped-role-name>
-    </data-policy>
+    </data-role>
 </vdb>]]></programlisting>    
 </example>   
    <para>The above XML defined two data roles, "RoleA" which allows everything except delete on the table, "RoleC" that 
-   allows only read operation on the table. Since Teiid uses deny by default, there is no explicit data-policy entry needed for "RoleB".  The "mapped-role-name" defines the "role" to whom these policies are applicable.</para>
+   allows only read operation on the table. Since Teiid uses deny by default, there is no explicit data-role entry needed for "RoleB".  The "mapped-role-name" defines the JAAS "role" to whom these policies are applicable.</para>
    
    <para>For assigning the roles to your users, in the JBoss AS, 
    check out the instructions for the selected Login Module. Check "Admin Guide" for configuring Login Modules.</para> 
