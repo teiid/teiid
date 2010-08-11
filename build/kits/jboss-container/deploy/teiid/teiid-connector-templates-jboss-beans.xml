@@ -75,7 +75,7 @@
    </bean>    
    
    <bean name="connector-ws-${project.version}" class="org.teiid.templates.connector.ConnectorDeploymentTemplate">
-      <property name="info"><inject bean="connector-ldap-templateinfo"/></property>
+      <property name="info"><inject bean="connector-ws-templateinfo"/></property>
       <property name="targetTemplate"><inject bean="NoTxConnectionFactoryTemplate"/></property>
    </bean>
    <bean name="connector-ws-templateinfo" class="org.teiid.templates.connector.ConnectorTemplateInfo">
