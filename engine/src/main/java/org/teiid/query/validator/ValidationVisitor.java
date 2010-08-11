@@ -525,11 +525,11 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     		return;
     	}
     	Map symbolMap = this.updateProc.getSymbolMap();
+		Command userCommand = this.updateProc.getUserCommand();
     	// modeler validation
-    	if(symbolMap == null) {
+    	if(userCommand == null) {
     		return;
     	}
-		Command userCommand = this.updateProc.getUserCommand();
 		Criteria userCrit = null;
 		int userCmdType = userCommand.getType();
 		switch(userCmdType) {
