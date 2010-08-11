@@ -45,6 +45,7 @@ import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
+import org.teiid.core.util.PropertiesUtils;
 
 @SuppressWarnings("nls")
 public class TestVDBMetaData {
@@ -181,5 +182,14 @@ public class TestVDBMetaData {
 				assertTrue(p.isAllowDelete());
 			}
 		}
+	}
+	
+	@Test
+	public void testAdminMOCreation() {
+		VDBMetaData vdb = new VDBMetaData();
+		
+		PropertiesUtils.setBeanProperty(vdb, "url", "http://teiid.org/myvdb.vdb");
+		
+		assertEquals("http://teiid.org/myvdb.vdb", vdb.getUrl());
 	}
 }

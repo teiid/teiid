@@ -22,11 +22,10 @@
 
 package org.teiid.core.util;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import org.teiid.core.util.StringUtil;
 
 import junit.framework.TestCase;
 
@@ -394,7 +393,7 @@ public class TestStringUtil extends TestCase {
     	WORLD
     }
     
-    public void testValueOf() {
+    public void testValueOf() throws Exception {
     	assertEquals(Integer.valueOf(21), StringUtil.valueOf("21", Integer.class)); //$NON-NLS-1$
     	assertEquals(Boolean.valueOf(true), StringUtil.valueOf("true", Boolean.class)); //$NON-NLS-1$    	
     	assertEquals("Foo", StringUtil.valueOf("Foo", String.class)); //$NON-NLS-1$ //$NON-NLS-2$
@@ -417,5 +416,7 @@ public class TestStringUtil extends TestCase {
     	assertEquals(m.get("foo"), "bar"); //$NON-NLS-1$ //$NON-NLS-2$
     	assertEquals(m.get("x"), ""); //$NON-NLS-1$ //$NON-NLS-2$
     	assertEquals(Test.HELLO, StringUtil.valueOf("HELLO", Test.class)); //$NON-NLS-1$ 
+    	
+    	assertEquals(new URL("http://teiid.org"), StringUtil.valueOf("http://teiid.org", URL.class)); //$NON-NLS-1$ //$NON-NLS-2$
     }
 }

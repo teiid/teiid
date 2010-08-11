@@ -18,6 +18,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.lang.reflect.Array;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -990,7 +992,13 @@ public final class StringUtil {
     	else if (type.isEnum()) {
     		return (T)Enum.valueOf(type, value);
     	}
-    	
+    	else if (type == URL.class) {
+    		try {
+				return (T)new URL(value);
+			} catch (MalformedURLException e) {
+				// fall through and end up in error
+			}
+    	}
     	else if (type.isAssignableFrom(Map.class)) {
     		List<String> l = Arrays.asList(value.split(",")); //$NON-NLS-1$
     		Map m = new HashMap<String, String>();
