@@ -121,6 +121,52 @@
         </section>
    </section>
    
+   <section id="vdb-versioning">
+   		<title>VDB Versioning</title>
+   		
+   		<para>VDB Versioning is a feature that allows multiple versions of a VDB to be deployed at the same time with 
+   		additional support to determine which version will be used.  When a user connects to Teiid the desired VDB version 
+   		can be set as a connection property (See the Client Developers Guide).  If a specific version is set, then only that VDB may be connected to.  
+   		If no version is set, then the deployed VDBs are searched for the appropriate version.  This feature helps support more fluid migration scenarios.
+   		</para>
+   		
+   		<para>
+   		Setting the version can either be done in the vdb.xml, which is useful for dynamic vdbs, or through a naming convention of the deployment file - vdbname.version.vdb, e.g. marketdata.2.vdb. 
+   		The deployer is responsible for choosing an appropriate version number.  If the version number is same as an existing VDB existing connections to the 
+   		previous VDB will remain valid and any new connections will be made to the new VDB - note that the new VDB may be able to use cache entries of the previous VDB.
+   		</para>  
+   		
+   		<para>
+		Once deployed a VDB has an updatable property called connection type, which is used to determine what connections can be made to the VDB.  The connection type can be one of:
+		<itemizedlist>
+			<listitem>
+			<para><emphasis>NONE</emphasis> - disallow new connections.</para>
+			</listitem>
+			<listitem>
+			<para><emphasis>BY_VERSION</emphasis> - the default setting.  Allow connections only if the version is specified or if this is the earliest BY_VERSION vdb and there are no vdbs marked as ANY.</para>
+			</listitem>
+			<listitem>
+			<para><emphasis>ANY</emphasis> - allow connections with or without a version specified.</para>
+			</listitem>
+		</itemizedlist>
+		The connection type may be changed either through the AdminConsole or the AdminAPI.
+		</para>
+		
+		<section>
+			<title>Deployment Scenarios</title>
+			<para>
+			If only a select few applications are to migrate to the new VDB version, then a freshly deployed VDB would be left as BY_VERSION.  
+			This ensures that only applications that know the new version may use it.
+			</para>
+			<para>
+			If only a select few applications are to remain on the current VDB version, then their connection settings would need to be updated to reference the current VDB by its version.  
+			Then the newly deployed vdb would have its connection type set to ANY, which allows all new connections to be made against the newer version.
+			
+			If a rollback is needed in this scenario, then the newly deployed vdb would have its connection type set to NONE or BY_VERSION accordingly. 		
+			</para>
+		</section>
+   </section>
+   
    <section>
     <title>Migrating VDBs from 6.x</title>
     <para>VDBs from prior release contain an older configuration file version that is no longer supported.  
