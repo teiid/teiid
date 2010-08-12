@@ -46,6 +46,7 @@
     <toc/>
         
     <xi:include href="content/jdbc-connection.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/prepared-statements.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/jdbc-extensions.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/jdbc-transactions.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/ssl.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />

@@ -23,9 +23,9 @@
         <listitem> <para>Start the Teiid Server (JBoss AS), if it is not already running.</para> </listitem>
     </orderedlist>
     
-    <para>Now that you have the VDB deployed in Teiid Server, client applications 
-    can connect to Teiid Server and issue SQL queries against deployed VDB using Teiid's JDBC API. If you are new to JDBC, learn about 
-    <ulink url="http://java.sun.com/docs/books/tutorial/jdbc/index.html">JDBC</ulink> here. Teiid ships with
+    <para>Now that you have the VDB deployed in the Teiid Server, client applications 
+    can connect to the Teiid Server and issue SQL queries against deployed VDB using Teiid's JDBC API. If you are new to JDBC, see Java's documentation about 
+    <ulink url="http://java.sun.com/docs/books/tutorial/jdbc/index.html">JDBC</ulink>. Teiid ships with
     <code>teiid-&versionNumber;-client.jar</code> in the <code>"jboss-install/server/&lt;profile&gt;/lib"</code> directory. 
     
     <itemizedlist>
@@ -37,8 +37,7 @@
     </itemizedlist>
     </para>
     
-    <para>Once you have established a connection with the Teiid Server, you can use standard JDBC API classes, like 
-        DatabaseMetadata and ResultSetMetadata, to interrogate metadata and Statement classes to execute queries.</para>
+    <para>Once you have established a connection with the Teiid Server, you can use standard JDBC API classes to interrogate metadata and execute queries.</para>
     
     <section id="driver_connection">
 		<title>Driver Connection</title>
