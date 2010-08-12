@@ -108,6 +108,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     private VariableContext variableContext = new VariableContext();
     private TempTableStore tempTableStore;
     private LinkedList<String> recursionStack;
+    private boolean nonBlocking;
 
     /**
      * Construct a new context.
@@ -169,6 +170,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     	if (this.recursionStack != null) {
             clone.recursionStack = new LinkedList<String>(this.recursionStack);
         }
+    	clone.setNonBlocking(this.nonBlocking);
     	return clone;
     }
     
@@ -444,5 +446,13 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     public void setGlobalTableStore(TempTableStore tempTableStore) {
     	globalState.globalTables = tempTableStore;
     }
+    
+    public boolean isNonBlocking() {
+		return nonBlocking;
+	}
+    
+    public void setNonBlocking(boolean nonBlocking) {
+		this.nonBlocking = nonBlocking;
+	}
 	
 }

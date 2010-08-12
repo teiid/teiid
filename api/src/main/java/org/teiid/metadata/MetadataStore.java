@@ -23,9 +23,9 @@
 package org.teiid.metadata;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
 /**
@@ -35,7 +35,7 @@ public class MetadataStore implements Serializable {
 
 	private static final long serialVersionUID = -3130247626435324312L;
 	protected Map<String, Schema> schemas = new LinkedHashMap<String, Schema>();
-	protected Collection<Datatype> datatypes = new ArrayList<Datatype>();
+	protected Collection<Datatype> datatypes = new LinkedHashSet<Datatype>();
 	
 	public Map<String, Schema> getSchemas() {
 		return schemas;

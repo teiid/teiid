@@ -90,6 +90,7 @@ public class DQPCore implements DQP {
 		private ResultsReceiver<T> receiver = result.getResultsReceiver();
 		private int priority;
 		private long creationTime = System.currentTimeMillis();
+		private DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 
 		public FutureWork(Callable<T> processor, int priority) {
 			this.toCall = processor;
@@ -142,6 +143,11 @@ public class DQPCore implements DQP {
 		@Override
 		public long getCreationTime() {
 			return creationTime;
+		}
+		
+		@Override
+		public DQPWorkContext getDqpWorkContext() {
+			return workContext;
 		}
 	}	
 	
@@ -342,6 +348,9 @@ public class DQPCore implements DQP {
 			if (currentlyActivePlans < maxActivePlans) {
 				startActivePlan(workItem);
 			} else {
+				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+		            LogManager.logDetail(LogConstants.CTX_DQP, "Queuing plan, since max plans has been reached.");  //$NON-NLS-1$
+		        }  
 				waitingPlans.add(workItem);
 			}
 		}

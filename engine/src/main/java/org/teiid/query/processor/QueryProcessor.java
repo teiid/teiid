@@ -61,14 +61,13 @@ public class QueryProcessor implements BatchProducer {
 	private ProcessorDataManager dataMgr;
 	private BufferManager bufferMgr;
 	private ProcessorPlan processPlan;
-    private boolean initialized = false;
+    private boolean initialized;
+    private boolean open;
     private int reserved;
     /** Flag that marks whether the request has been canceled. */
-    private volatile boolean requestCanceled = false;
+    private volatile boolean requestCanceled;
     private static final int DEFAULT_WAIT = 50;       
-    private boolean processorClosed = false;
-    
-    private boolean nonBlocking = false;
+    private boolean processorClosed;
          
     /**
      * Construct a processor with all necessary information to process.
@@ -83,8 +82,6 @@ public class QueryProcessor implements BatchProducer {
 		this.dataMgr = dataMgr;
 		this.processPlan = plan;
 		this.bufferMgr = bufferMgr;
-		// Add data manager to all nodes in tree
-		this.processPlan.initialize(context, this.dataMgr, bufferMgr);
     }
     
     public CommandContext getContext() {
@@ -106,13 +103,8 @@ public class QueryProcessor implements BatchProducer {
 	    	long wait = DEFAULT_WAIT;
 	    	try {
 	    		return nextBatchDirect();
-	    	} catch (ExpiredTimeSliceException e) {
-	    		if (!nonBlocking) {
-	    			throw e;
-	    		}
-	    		continue;
 	    	} catch (BlockedException e) {
-	    		if (!nonBlocking) {
+	    		if (!this.context.isNonBlocking()) {
 	    			throw e;
 	    		}
 	    	}
@@ -132,13 +124,15 @@ public class QueryProcessor implements BatchProducer {
 		
 	    try {
 	    	// initialize if necessary
-			if(! initialized) {
-				if (reserved == 0) {
-					reserved = this.bufferMgr.reserveBuffers(this.bufferMgr.getSchemaSize(this.getOutputElements()), BufferReserveMode.FORCE);
-				}
+			if(!initialized) {
+				reserved = this.bufferMgr.reserveBuffers(this.bufferMgr.getSchemaSize(this.getOutputElements()), BufferReserveMode.FORCE);
+				this.processPlan.initialize(context, this.dataMgr, bufferMgr);
+				initialized = true;
+			} 
+			if (!open) {
 				// Open the top node for reading
 				processPlan.open();
-				initialized = true;
+				open = true;
 			}
 	
 			long currentTime = System.currentTimeMillis();
@@ -146,7 +140,7 @@ public class QueryProcessor implements BatchProducer {
 			
 			//TODO: see if there is pending work before preempting
 			
-	        while(currentTime < context.getTimeSliceEnd() || nonBlocking) {
+	        while(currentTime < context.getTimeSliceEnd() || context.isNonBlocking()) {
 	        	if (requestCanceled) {
 	                throw new TeiidProcessingException(QueryExecPlugin.Util.getString("QueryProcessor.request_cancelled", getProcessID())); //$NON-NLS-1$
 	            }
@@ -232,6 +226,6 @@ public class QueryProcessor implements BatchProducer {
 	}
 	
 	public void setNonBlocking(boolean nonBlocking) {
-		this.nonBlocking = nonBlocking;
+		this.context.setNonBlocking(nonBlocking);
 	}
 }

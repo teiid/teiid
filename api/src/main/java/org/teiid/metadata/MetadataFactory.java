@@ -64,7 +64,7 @@ public class MetadataFactory {
 		return importProperties;
 	}
 	
-	private void setUUID(AbstractMetadataRecord record) {
+	protected void setUUID(AbstractMetadataRecord record) {
 		record.setUUID("mmuuid:" +UUID.randomUUID()); //$NON-NLS-1$
 	}
 

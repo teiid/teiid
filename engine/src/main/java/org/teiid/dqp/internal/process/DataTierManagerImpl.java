@@ -147,6 +147,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		VDBMetaData vdb = workContext.getVDB();
 		CompositeMetadataStore metadata = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
 		Collection rows = new ArrayList();
+		int oid = 0;
 		if (command instanceof Query) {
 			Query query = (Query)command;
 			UnaryFromClause ufc = (UnaryFromClause)query.getFrom().getClauses().get(0);
@@ -154,11 +155,10 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 			final SystemTables sysTable = SystemTables.valueOf(group.getNonCorrelationName().substring(CoreConstants.SYSTEM_MODEL.length() + 1).toUpperCase());
 			switch (sysTable) {
 			case DATATYPES:
-				rows = new LinkedHashSet(); //System types are duplicated in each indexed vdb... 
 				for (Datatype datatype : metadata.getDatatypes()) {
 					rows.add(Arrays.asList(datatype.getName(), datatype.isBuiltin(), datatype.isBuiltin(), datatype.getName(), datatype.getJavaClassName(), datatype.getScale(), 
 							datatype.getLength(), datatype.getNullType().toString(), datatype.isSigned(), datatype.isAutoIncrement(), datatype.isCaseSensitive(), datatype.getPrecisionLength(), 
-							datatype.getRadix(), datatype.getSearchType().toString(), datatype.getUUID(), datatype.getRuntimeTypeName(), datatype.getBasetypeName(), datatype.getAnnotation(), datatype.getUUID().hashCode()));
+							datatype.getRadix(), datatype.getSearchType().toString(), datatype.getUUID(), datatype.getRuntimeTypeName(), datatype.getBasetypeName(), datatype.getAnnotation(), oid++));
 				}
 				break;
 			case VIRTUALDATABASES:
@@ -166,13 +166,13 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				break;
 			case SCHEMAS:
 				for (Schema model : getVisibleSchemas(vdb, metadata)) {
-					rows.add(Arrays.asList(vdbName, model.getName(), model.isPhysical(), model.getUUID(), model.getAnnotation(), model.getPrimaryMetamodelUri(), model.getUUID().hashCode()));
+					rows.add(Arrays.asList(vdbName, model.getName(), model.isPhysical(), model.getUUID(), model.getAnnotation(), model.getPrimaryMetamodelUri(), oid++));
 				}
 				break;
 			case PROCEDURES:
 				for (Schema schema : getVisibleSchemas(vdb, metadata)) {
 					for (Procedure proc : schema.getProcedures().values()) {
-						rows.add(Arrays.asList(vdbName, proc.getParent().getName(), proc.getName(), proc.getNameInSource(), proc.getResultSet() != null, proc.getUUID(), proc.getAnnotation(),proc.getUUID().hashCode()));
+						rows.add(Arrays.asList(vdbName, proc.getParent().getName(), proc.getName(), proc.getNameInSource(), proc.getResultSet() != null, proc.getUUID(), proc.getAnnotation(), oid++));
 					}
 				}
 				break;
@@ -182,13 +182,13 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 						for (ProcedureParameter param : proc.getParameters()) {
 							Datatype dt = param.getDatatype();
 							rows.add(Arrays.asList(vdbName, proc.getParent().getName(), proc.getName(), param.getName(), dt!=null?dt.getRuntimeTypeName():null, param.getPosition(), param.getType().toString(), param.isOptional(), 
-									param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID(), param.getAnnotation(), param.getUUID().hashCode()));
+									param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID(), param.getAnnotation(), oid++));
 						}
 						if (proc.getResultSet() != null) {
 							for (Column param : proc.getResultSet().getColumns()) {
 								Datatype dt = param.getDatatype();
 								rows.add(Arrays.asList(vdbName, proc.getParent().getName(), proc.getName(), param.getName(), dt!=null?dt.getRuntimeTypeName():null, param.getPosition(), "ResultSet", false, //$NON-NLS-1$ 
-										param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID(), param.getAnnotation(), param.getUUID().hashCode()));
+										param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID(), param.getAnnotation(), oid++));
 							}
 						}
 					}
@@ -215,7 +215,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				}
 				for (AbstractMetadataRecord record : records) {
 					for (Map.Entry<String, String> entry : record.getProperties().entrySet()) {
-						rows.add(Arrays.asList(entry.getKey(), entry.getValue(), record.getUUID(), record.getUUID().hashCode()));
+						rows.add(Arrays.asList(entry.getKey(), entry.getValue(), record.getUUID(), oid++));
 					}
 				}
 				break;
@@ -225,7 +225,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 						switch (sysTable) {
 						case TABLES:
 							rows.add(Arrays.asList(vdbName, schema.getName(), table.getName(), table.getTableType().toString(), table.getNameInSource(), 
-									table.isPhysical(), table.supportsUpdate(), table.getUUID(), table.getCardinality(), table.getAnnotation(), table.isSystem(), table.isMaterialized(), table.getUUID().hashCode()));
+									table.isPhysical(), table.supportsUpdate(), table.getUUID(), table.getCardinality(), table.getAnnotation(), table.isSystem(), table.isMaterialized(), oid++));
 							break;
 						case COLUMNS:
 							for (Column column : table.getColumns()) {
@@ -234,13 +234,13 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 										dt!=null?dt.getRuntimeTypeName():null, column.getScale(), column.getLength(), column.isFixedLength(), column.isSelectable(), column.isUpdatable(),
 										column.isCaseSensitive(), column.isSigned(), column.isCurrency(), column.isAutoIncremented(), column.getNullType().toString(), column.getMinimumValue(), 
 										column.getMaximumValue(), column.getSearchType().toString(), column.getFormat(), column.getDefaultValue(), dt!=null?dt.getJavaClassName():null, column.getPrecision(), 
-										column.getCharOctetLength(), column.getRadix(), column.getUUID(), column.getAnnotation(), column.getUUID().hashCode()));
+										column.getCharOctetLength(), column.getRadix(), column.getUUID(), column.getAnnotation(), oid++));
 							}
 							break;
 						case KEYS:
 							for (KeyRecord key : table.getAllKeys()) {
 								rows.add(Arrays.asList(vdbName, table.getParent().getName(), table.getName(), key.getName(), key.getAnnotation(), key.getNameInSource(), key.getType().toString(), 
-										false, (key instanceof ForeignKey)?((ForeignKey)key).getUniqueKeyID():null, key.getUUID(), key.getUUID().hashCode()));
+										false, (key instanceof ForeignKey)?((ForeignKey)key).getUniqueKeyID():null, key.getUUID(), oid++));
 							}
 							break;
 						case KEYCOLUMNS:
@@ -248,7 +248,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 								int postition = 1;
 								for (Column column : key.getColumns()) {
 									rows.add(Arrays.asList(vdbName, schema.getName(), table.getName(), column.getName(), key.getName(), key.getType().toString(), 
-											(key instanceof ForeignKey)?((ForeignKey)key).getUniqueKeyID():null, key.getUUID(), postition++, key.getUUID().hashCode()));
+											(key instanceof ForeignKey)?((ForeignKey)key).getUniqueKeyID():null, key.getUUID(), postition++, oid++));
 								}
 							}
 							break;
@@ -289,7 +289,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 								matTableName = t.getName();
 								targetSchema = t.getParent().getName();
 							}
-							rows.add(Arrays.asList(vdbName, schema.getName(), table.getName(), targetSchema, matTableName, state, updated, cardinaltity, valid));
+							rows.add(Arrays.asList(vdbName, schema.getName(), table.getName(), targetSchema, matTableName, valid, state, updated, cardinaltity));
 							break;
 						}
 					}

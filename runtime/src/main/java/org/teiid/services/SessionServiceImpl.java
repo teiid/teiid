@@ -302,6 +302,9 @@ public class SessionServiceImpl implements SessionService {
 
 	private SessionMetadata getSessionInfo(String sessionID)
 			throws InvalidSessionException {
+		if (sessionID == null) {
+			throw new InvalidSessionException(RuntimePlugin.Util.getString("SessionServiceImpl.invalid_session", sessionID)); //$NON-NLS-1$
+		}
 		SessionMetadata info = this.sessionCache.get(sessionID);
 		if (info == null) {
 			throw new InvalidSessionException(RuntimePlugin.Util.getString("SessionServiceImpl.invalid_session", sessionID)); //$NON-NLS-1$

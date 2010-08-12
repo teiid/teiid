@@ -78,6 +78,8 @@ public class ThreadReuseExecutor implements Executor {
 		
 		long getCreationTime();
 		
+		DQPWorkContext getDqpWorkContext();
+		
 	}
 	
 	static class RunnableWrapper implements PrioritizedRunnable {
@@ -91,6 +93,7 @@ public class ThreadReuseExecutor implements Executor {
 				PrioritizedRunnable pr = (PrioritizedRunnable)r;
 				creationTime = pr.getCreationTime();
 				priority = pr.getPriority();
+				workContext = pr.getDqpWorkContext();
 			} else {
 				creationTime = System.currentTimeMillis();
 				priority = Integer.MAX_VALUE;
@@ -111,6 +114,10 @@ public class ThreadReuseExecutor implements Executor {
 		@Override
 		public void run() {
 			workContext.runInContext(r);
+		}
+		
+		public DQPWorkContext getDqpWorkContext() {
+			return workContext;
 		}
 		
 	}
@@ -188,6 +195,11 @@ public class ThreadReuseExecutor implements Executor {
 		@Override
 		public int getPriority() {
 			return runnable.getPriority();
+		}
+		
+		@Override
+		public DQPWorkContext getDqpWorkContext() {
+			return runnable.getDqpWorkContext();
 		}
 	}
 	
