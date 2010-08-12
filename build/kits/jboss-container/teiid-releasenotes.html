@@ -28,7 +28,11 @@
 <UL>
     <LI><B>ODBC Support</B> - Support for ODBC access is now available through PostgreSQL ODBC driver clients.  See the Client Developer's Guide for more on how
     to use Teiid's ODBC access.
-    <LI><B>Native Materialized Tables</B> - views marked as materialized without a target table will be materialized internally by Teiid. 
+    <LI><B>Native Materialized Tables</B> - views marked as materialized without a target table will be materialized internally by Teiid.  Materialized view tables will 
+    be indexed by the primary key of the view if present and can be controlled through the expanded cache hint.  
+    There are also new system procedures refreshMatView and refreshMatViewRow to refresh materialized view contents.
+    <LI><B>Expanded Cache Hint</B> - The cache hint can now specify pref_mem to indicate that data should prefer to be held in memory, ttl to indicate the time-to-live, 
+    and updatable to indicate that a materialized view with a primary key can be updated by row with the refreshMatViewRow system procedure.
     <LI><B>SQL Support</B>
         <ul> 
            <li>Added NULLS FIST/LAST handling - including pushdown support.  
@@ -38,17 +42,24 @@
            <li>Changed named procedure syntax to accept param=>value, rather than param=value.
            <li>Added PRIMARY KEY and the associated index support to temp tables.
         </ul>
+    <LI><B>
     <LI><B>Parallel Source Queries</B> - reestablished parallel execution of source queries within a query plan along with a prioritized work system to help prevent resource contention.
     <LI><B>Improved Insert Support</B> - Cross source inserts using a query expression can defer to the source to perform the entire insert atomically with source controlled batching.  
     See maxPreparedInsertBatchSize on any JDBC translator supporting the InsertWithIterator capability.
     <LI><B>SHOW Statement</B> - added client handling for the SHOW statement to retrieve query plan information and see parameter values.
     <LI><B>User Identity</B> - Teiid DataSources in JBossAS connecting to a local Teiid instance can preserve the thread's user identity, rather than requiring
     a new authentication.  See TeiidDataSource.setPassthroughAuthentication.
+    <LI><B>VDB Versioning</B> - The VDB version may be determined by the deployed file name.  The expected pattern is &lt;VDB Name&gt;.&lt;Version&gt;.vdb.  See the Admin Guide 
+    for more on how to use VDB versioning.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
 <ul>
   <li>Support for named parameter syntax using param=value has been deprecated, since it is ambiguous with a comparison predicate boolean value expression.  param<b>=></b>value should be used instead.  
+</ul>
+<h4>from 7.0</h4>
+<ul>
+  <li>The term data policy was replaced with data role.  The AdminAPI methods for adding role mappings have changed from addRoleToDataPolicy and removeRoleFromDataPolicy to addDataRoleMapping and removeDataRoleMapping respectively.
 </ul>
 <h4>from 6.2</h4>
 <ul>
@@ -63,7 +74,7 @@
   <li>The system information schema has changed from System to SYS.  The tables and table structures have also changed.  See <a href="https://jira.jboss.org/browse/TEIID-871">TEIID-871</a> and the <a href="teiid-docs/teiid_reference.pdf">Reference</a> guide for more information.
   <li>Client control over query plans has changed.  OPTION PLANONLY, DEBUG, and SHOWPLAN are no longer allowed.  This behavior should not be controlled by the SET statement, SET SHOWPLAN (ON|OFF|DEBUG) and SET NOEXEC (ON|OFF).  Usage of the client PlanNode class will also need to be updated.   
   <li>Teiid specific JDBC client interfaces and methods have changed.  In general these custom features have mostly been moved to other more standard locations or been removed. See <a href="https://jira.jboss.org/browse/TEIID-1020">TEIID-1020</a> and the <a href="teiid-docs/teiid_client_developers_guide.pdf">Client Developers</a> guide for more information.  
-  <li>Teiid's reserved words have changed.  Many of the Teiid specific reseverd words have become non-reserved words.  All of SQL Foundation and SQL/MED 2003, and SQL/XML from SQL 2006 reserved words have been added as reserved words.  It is generally required to double quote all reserved words.  It is advisable to double quote all non-reserved words as well.  The use of the INPUT qualifier for procedure inputs has been deprecated in favor of INPUTS.  The use of the USING qualifier for dynamic SQL inputs has been deprecated in favor of DVARS.
+  <li>Teiid's reserved words have changed.  Many of the Teiid specific reserved words have become non-reserved words.  All of SQL Foundation and SQL/MED 2003, and SQL/XML from SQL 2006 reserved words have been added as reserved words.  It is generally required to double quote all reserved words.  It is advisable to double quote all non-reserved words as well.  The use of the INPUT qualifier for procedure inputs has been deprecated in favor of INPUTS.  The use of the USING qualifier for dynamic SQL inputs has been deprecated in favor of DVARS.
   <li>The AdminApi has been redesigned for use with the new Translator/JCA split and for deployment in JBoss AS.
   <li>The AdminShell is based on Groovy.  Most BeanShell syntax is also valid in Groovy, but there are extensive changes in the AdminAPI that may necessitate rewriting scripts.
   <li>OPTION NO CACHE &lt;table list&gt; will now only by-pass cache for the given tables at their immediate view layer.  Previously all caches would have transitively been skipped.  See <a href="https://jira.jboss.org/browse/TEIID-900">TEIID-900</a> for more information.
@@ -77,7 +88,9 @@
 See the See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
 <h4>from 7.0</h4>
 <ul>
+    <li>The property to enable data roles in teiid-jboss-beans.xml has changed from useEntitlements to useDataRoles.
 	<li>Rar file names no longer contain version numbers.  -ds.xml files should be updated from connector-XXX-version.rar to teiid-connector-XXX.rar
+	<li>Code table relate configuration properties have been removed.  Code tables are now implemented as materialized views.
 </ul>
 
 <h4>from 6.2</h4>
