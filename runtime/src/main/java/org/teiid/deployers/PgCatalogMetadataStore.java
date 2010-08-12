@@ -142,17 +142,18 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addPrimaryKey("pk_pg_attr", Arrays.asList("oid"), t); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		String transformation = "SELECT t1.OID as oid, " + //$NON-NLS-1$
-				"(SELECT OID FROM SYS.Tables WHERE Name = t1.TableName AND SchemaName = t1.SchemaName) as attrelid, " + //$NON-NLS-1$
+				"st.oid as attrelid, " + //$NON-NLS-1$
 				"t1.Name as attname, " + //$NON-NLS-1$
-				"(SELECT pt.oid FROM pg_catalog.pg_type pt, SYS.DataTypes dt WHERE (dt.Name = t1.DataType AND dt.Name = pt.typname) " + //$NON-NLS-1$
-				"OR ((t1.DataType = 'clob' OR t1.DataType = 'blob') AND pt.typname = 'lo')) as atttypid, " + //$NON-NLS-1$
+				"pt.oid as atttypid," + //$NON-NLS-1$
 				"convert(t1.Length, short) as attlen, " + //$NON-NLS-1$
 				"convert(t1.Position, short) as attnum, " + //$NON-NLS-1$
 				"t1.Length as atttypmod, " + //$NON-NLS-1$
 				"false as attnotnull, " + //$NON-NLS-1$
 				"false as attisdropped, " + //$NON-NLS-1$
 				"false as atthasdef " + //$NON-NLS-1$
-				"FROM SYS.Columns as t1"; //$NON-NLS-1$
+				"FROM SYS.Columns as t1 LEFT OUTER JOIN " + //$NON-NLS-1$
+				"SYS.Tables st ON (st.Name = t1.TableName AND st.SchemaName = t1.SchemaName) LEFT OUTER JOIN " + //$NON-NLS-1$
+				"pg_catalog.pg_type pt ON (CASE WHEN (t1.DataType = 'clob' OR t1.DataType = 'blob') THEN 'lo' ELSE t1.DataType END = pt.typname)"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		t.setMaterialized(true);
 		return t;		
