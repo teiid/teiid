@@ -68,6 +68,11 @@ public class YahooExecutionFactory extends ExecutionFactory<Object, Object> {
         return YAHOO_MAX_SET_SIZE;
     }
     
+    @Override
+    public boolean isSourceRequired() {
+    	return false;
+    }
+    
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, Object connection) throws TranslatorException {
 		Table t = metadataFactory.addTable("Stock"); //$NON-NLS-1$
