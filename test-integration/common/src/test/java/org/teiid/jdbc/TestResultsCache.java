@@ -44,7 +44,7 @@ public class TestResultsCache {
     	conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$ //$NON-NLS-2$		
     }
 	
-	@Test public void testCache() throws Exception {
+	@Test public void testCacheHint() throws Exception {
 		Statement s = conn.createStatement();
 		s.execute("set showplan on");
 		ResultSet rs = s.executeQuery("/* cache */ select 1");
@@ -52,6 +52,20 @@ public class TestResultsCache {
 		s.execute("set noexec on");
 		rs = s.executeQuery("/* cache */ select 1");
 		assertTrue(rs.next());
+		rs = s.executeQuery("select 1");
+		assertFalse(rs.next());
+	}
+	
+	@Test public void testExecutionProperty() throws Exception {
+		Statement s = conn.createStatement();
+		s.execute("set showplan on");
+		s.execute("set resultSetCacheMode true");
+		ResultSet rs = s.executeQuery("select 1");
+		assertTrue(rs.next());
+		s.execute("set noexec on");
+		rs = s.executeQuery("select 1");
+		assertTrue(rs.next());
+		s.execute("set resultSetCacheMode false");
 		rs = s.executeQuery("select 1");
 		assertFalse(rs.next());
 	}

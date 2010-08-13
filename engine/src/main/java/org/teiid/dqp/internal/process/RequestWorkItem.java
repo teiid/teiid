@@ -355,7 +355,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         }
 		processor = request.processor;
 		resultsBuffer = processor.createTupleBuffer();
-		if (this.cid != null) {
+		if (this.cid != null && originalCommand.getCacheHint() != null) {
 			resultsBuffer.setPrefersMemory(originalCommand.getCacheHint().getPrefersMemory());
 		}
 		collector = new BatchCollector(processor, resultsBuffer) {
