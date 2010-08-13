@@ -268,7 +268,7 @@ public class YahooExecution implements ResultSetExecution {
         List output = new ArrayList(neededColumns.length);
         
         for(int i=0; i<neededColumns.length; i++) {
-            output.add(row.get(neededColumns[i]));
+            output.add(row.get(neededColumns[i]-1));
         }
         
         return output;    
