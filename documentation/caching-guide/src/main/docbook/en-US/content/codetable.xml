@@ -4,153 +4,77 @@
 ]>
 <chapter id="codetable">
 	<title>Code Table Caching</title>
-	<para>MetaMatrix provides a means of caching small, frequently used
-		tables of data.  This is referred to as “code table caching” or
-		“reference data caching”.</para>
-	<para>Code table caching is done by using the lookup scalar function,
-		provided as a standard function with MetaMatrix. The lookup function
-		provides a way to get a value out of a table when a key value is
+	<para>Teiid provides a short cut to creating an internal materialized view table via the lookup function.</para>
+	<para>The lookup function provides a way to get a value out of a table when a key value is
 		provided.  The function automatically caches all the values in the
 		referenced table for the specified key/value pairs.  The cache is
-		created the first time it is used in a particular MetaMatrix process.
+		created the first time it is used in a particular Teiid process.
 		 Subsequent lookups against the same table using the same key and
 		value columns will use the cached information.</para>
 	<para>This caching solution is appropriate for integration of
-		“reference data” with transactional or operational data.  Reference
+		"reference data" with transactional or operational data.  Reference
 		data are static data sets – typically small – which are used very
 		frequently in most enterprise applications.  Examples are ISO country
 		codes, state codes, and different types of financial instrument
-		identifiers.  </para>
-	<section>
-		<title>Support Summary</title>
-		<orderedlist>
-			<listitem>
-				<para>Caching of small, frequently accessed tables</para>
-			</listitem>
-			<listitem>
-				<para>Administrative clearing of cached tables through command line
-					utility</para>
-			</listitem>
-		</orderedlist>
-	</section>
+		identifiers.</para>
 	<section>
 		<title>User Interaction</title>
 		<para>This caching mechanism is automatically invoked when the lookup
-			scalar function is used.  Each time this function is called with a
+			scalar function is used.  The lookup function returns a scalar value, so it may be used anywhere an expression is expected.  Each time this function is called with a
 			unique combination of referenced table, key element, and returned
-			element (the first 3 arguments to the function), the MetaMatrix
+			element (the first 3 arguments to the function), the Teiid
 			System caches the entire contents of the table being accessed.
 			 Subsequent lookup function uses with the same combination of
 			parameters uses the cached table data.</para>
-		<para>Note that the use of the lookup function automatically performs
-			caching; there is no option to use the lookup function and not
-			perform caching.  Once the values for a particular lookup are cached,
-			they will be used until the cache is cleared through the Console.
-		</para>
-		<para>Specification:</para>
-		<para>The following provides information on the use of the lookup
-			function.</para>
-		<informaltable frame="all">
-			<tgroup cols="3">
-				<thead>
-					<row>
-						<entry>
-							<para>Function</para>
-						</entry>
-						<entry>
-							<para>Definition</para>
-						</entry>
-						<entry>
-							<para>Datatype Constraint</para>
-						</entry>
-					</row>
-				</thead>
-				<tbody>
-					<row>
-						<entry>
-							<para>LOOKUP(codeGroup, returnElement, keyElement, keyValue)
-							</para>
-						</entry>
-						<entry>
-							<para>In the lookup group codeGroup, find the row where
-								keyElement has the value keyValue and return the associated
-								returnElement.</para>
-						</entry>
-						<entry>
-							<para>codeGroup, returnElement, and keyElement must be string
-								literals containing metadata identifiers, keyValue datatype must
-								match datatype of the keyElement, return datatype matches that
-								of returnElement</para>
-						</entry>
-					</row>
-				</tbody>
-			</tgroup>
-		</informaltable>
-		<para />
-		<para>See the MetaMatrix Query Support Booklet for more information on
-			use of the lookup function.</para>
-		<para>Examples (can be used wherever scalar literal can be in query):
-		</para>
-		<para>lookup(‘ISOCountryCodes, ‘CountryName’, ‘CountryCode’, ‘US’)
-		</para>
-		<para>lookup(‘StatePostalCodes, ‘StateDisplayName’, ‘PostalCode’,
-			‘63131’) </para>
-		<para>lookup(‘EmpIDs’, ‘Name’, ‘ID’, ‘m204815’) </para>
-	</section>
-	<section>
-		<title>Cache Configuration</title>
-		<para>Cached lookup groups might consume significant memory.  You can
-			limit the number and maximum size of these code groups by setting
-			properties of the Query Service through the MetaMatrix Console.  
-		</para>
-		<para>The following are the properties that can be set at the query
-			service level to control reference data caching.</para>
-		<para />
-	</section>
-	<section>
-		<title>Cache Characteristics</title>
-		<para>Cache Persistence Mechanism</para>
-		<para>Reference tables are persisted in object caches local to
-			individual Java processes (virtual machines or VMs).   They are
-			cached in the VM of the individual query services running on host
-			machines.  </para>
-		<para>Cache Loading Policy</para>
-		<para>When a user calls the lookup function for a unique combination
-			of table, key element, and returned element, the MetaMatrix System
-			caches all key-value pairs of that table for the specified elements.
-			   </para>
-		<para>The MetaMatrix System uses this cached map for all queries, in
-			all sessions, that later access this lookup group.</para>
-		<para>Cache Operational Policy</para>
-		<para>Cached tables are never proactively cleared.  They can only be
-			cleared through using the svcmgr utility script.</para>
-	</section>
-	<section>
-		<title>Cache Administration</title>
-		<para>The lookup cache can be cleared using the svcmgr utility script.
-			 To clear cached code tables, set expertmode on, and then pass in the
-			clearCodeTableCaches argument.</para>
+		<para>See the Reference for more information on use of the lookup function.</para>
+		<example>
+			<title>Country Code Lookup</title>
+			<programlisting>lookup(‘ISOCountryCodes, ‘CountryName’, ‘CountryCode’, ‘US’)</programlisting>
+		</example>
 	</section>
 	<section>
 		<title>Limitations</title>
 		<orderedlist>
 			<listitem>
-				<para>Cached code tables are not tied to specific virtual databases.
-					 This may result in an error when the same model is used in
-					multiple virtual databases while it has bindings to different
-					sources of data.  This may pose a security issue if a cached code
-					table is loaded in the context of one user but then accessed by
-					another user who should not have access to that data. [defect
-					11629]</para>
-			</listitem>
-			<listitem>
 				<para>The use of the lookup function automatically performs caching;
 					there is no option to use the lookup function and not perform
-					caching.  [defect 14445]</para>
+					caching.</para>
+			</listitem>
+			<listitem>
+				<para>No mechanism is provided to refresh code tables.</para>
 			</listitem>
 		</orderedlist>
-		<para>Cached code tables are never proactively cleared by the Server.
-			 If a lot of code tables are loaded, or large code tables are loaded,
-			the Server’s available memory could be exceeded.</para>
+	</section>
+	<section>
+		<title>Materialized View Alternative</title>
+		<para>The lookup function is a shortcut to create an internal materialized view.  In many situations, it may be better to directly create the analogous materialized view rather than to use a code table.</para>
+		<itemizedlist>
+			<title>Reasons to use a materialized view:</title>
+			<listitem>
+				<para>More control of the possible return columns. Code tables will create a mat view for each key/value pair. If there are multiple return columns it would be better to have a single materialized view.</para>
+			</listitem>
+			<listitem>
+				<para>Proper materialized views have built-in system procedure/table support.</para>
+			</listitem>
+			<listitem>
+				<para>More control of the cache hint.</para>
+			</listitem>
+			<listitem>
+				<para>The ability to use option nocache.</para>
+			</listitem>
+			<listitem>
+				<para>Usage of a materialized view lookup as an uncorrelated subquery is no different than the use of the lookup function.</para>
+			</listitem>
+		</itemizedlist>
+		<orderedlist>
+			<title>Steps to create a materialized view:</title>
+			<listitem>
+				<para>Create a view selecting the appropriate columns from the desired table.  In general, this view may have an arbitrarily complicated transformation query.</para>
+				<para>Designate the appropriate column(s) as the primary key.</para>
+				<para>Set the materailized property to true.</para>
+				<para>Add a cache hint to the transformation query.  To mimic the behavior of the implicit internal materialized view created by the lookup function, use /*+ cache(pref_mem) */ to indicate that the table data pages should prefer to remain in memory.</para>
+			</listitem>
+		</orderedlist>
+		<para>Just as with the lookup function, the materialized view table will be created on first use and reused subsequently.  See the <link linkend="matviews">Materialized View Chapter</link> for more on materialized views.</para>
 	</section>
 </chapter>

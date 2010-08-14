@@ -23,9 +23,7 @@
     <itemizedlist>
       <listitem>
         <para>Session – the Session service manages active
-          session information.  Active sessions are stored in a
-          distributed cache and shared between Session services in each
-          VM.
+          session information.
         </para>
       </listitem>
       <listitem>

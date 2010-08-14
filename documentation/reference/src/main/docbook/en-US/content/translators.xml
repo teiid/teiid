@@ -137,7 +137,7 @@ If the extension pattern is not specified and the path is a directory, then all 
 <para><emphasis>metamatrix</emphasis> - for use with MetaMatrix 5.5.0 or later.</para>
 </listitem>
 <listitem>
-<para><emphasis>mysql</emphasis>/<emphasis>mysql5</emphasis> - for use with MySQL version 4.x and 5 or later respectively.  <note>The MySQL Translators expect the database or session to be using ANSI mode.  If the database is not using ANSI mode, an initialization query should be used on the pool to set ANSI mode:  <programlisting>set SESSION sql_mode = 'ANSI'</programlisting></note></para>
+<para><emphasis>mysql</emphasis>/<emphasis>mysql5</emphasis> - for use with MySQL version 4.x and 5 or later respectively.  <note><para>The MySQL Translators expect the database or session to be using ANSI mode.  If the database is not using ANSI mode, an initialization query should be used on the pool to set ANSI mode:  <programlisting>set SESSION sql_mode = 'ANSI'</programlisting></para></note></para>
 </listitem>
 <listitem>
 <para><emphasis>oracle</emphasis> - for use with Oracle 9i or later.  Sequences may be used with the Oracle translator.  

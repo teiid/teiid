@@ -1777,7 +1777,16 @@
     <para>The Lookup function allows you to cache a key value pair table and access it through a scalar function. This caching
     accelerates response time to queries that use the lookup tables, known
     in business terminology as lookup tables or code tables.</para>
-    <para>A StatePostalCodes table used to translate postal codes to
+    <para><synopsis>LOOKUP(codeTable, returnColumn, keyColumn, keyValue)</synopsis></para>
+    <para>In the lookup table codeTable, find the row where
+      keyColumn has the value keyValue and return the
+      associated returnColumn. codeTable must be a fully-qualified string
+      literal containing metadata identifiers, keyValue datatype
+      must match datatype of the keyColumn, return datatype
+      matches that of returnColumn. returnColumn and
+      keyColumn parameters should use their shortened names.
+    </para>
+    <para>For example, a StatePostalCodes table used to translate postal codes to
       complete state names might represent an example of this type of
       lookup table. One column, PostalCode, represents a key column.
       Other tables refer to this two-letter code. A
@@ -1788,10 +1797,7 @@
     <para>When you call this function for any combination of codeTable, returnColumn, and
       keyColumn for the first time, the Teiid System caches the result. 
       The Teiid System uses this cache for all
-      queries, in all sessions, that later access this lookup table. The
-      codeTable requires use of the fully-qualified name, and the
-      returnColumn and keyColumn parameters should use shortened column
-      names.</para>
+      queries, in all sessions, that later access this lookup table.</para>
     <para>The Teiid System unloads these cached lookup tables when you stop and restart
       the Teiid System. Thus, you should not use this function for
       data that is subject to updates. Instead, you can use it against
@@ -1799,49 +1805,11 @@
     <note>
       <itemizedlist>
         <listitem>
-          <para>The keyColumn is expected to contain unique key
+          <para>The keyColumn is expected to contain unique
             values. If the column contains duplicate values, an exception will be thrown.</para>
         </listitem>
       </itemizedlist>
     </note>
-    <informaltable frame="all">
-      <tgroup cols="3">
-        <thead>
-          <row>
-            <entry>
-              <para>Function</para>
-            </entry>
-            <entry>
-              <para>Definition</para>
-            </entry>
-            <entry>
-              <para>Datatype Constraint</para>
-            </entry>
-          </row>
-        </thead>
-        <tbody>
-          <row>
-            <entry>
-              <para>LOOKUP(codeTable, returnColumn,
-                keyColumn, keyValue)</para>
-            </entry>
-            <entry>
-              <para>In the lookup table codeTable, find the row where
-                keyColumn has the value keyValue and return the
-                associated returnColumn</para>
-            </entry>
-            <entry>
-              <para>codeTable must be a fully-qualified string
-                literal containing metadata identifiers, keyValue datatype
-                must match datatype of the keyColumn, return datatype
-                matches that of returnColumn. returnColumn and
-                keyColumn parameters should use their shortened names.
-              </para>
-            </entry>
-          </row>
-        </tbody>
-      </tgroup>
-    </informaltable>
   </section>
   <section>
     <title>System Functions</title>

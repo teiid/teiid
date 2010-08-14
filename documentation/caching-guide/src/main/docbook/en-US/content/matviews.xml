@@ -4,11 +4,11 @@
 ]>
 <chapter id="matviews">
 	<title>Materialized Views</title>
-	<para>MetaMatrix supports Materialized Views.  These are Relational
+	<para>Teiid supports Materialized Views.  These are Relational
 		virtual tables and views (‘virtual groups’) for which the
 		transformations are pre-computed and the results are stored in an
 		external database. When queries are issued against these virtual
-		groups through the MetaMatrix Server, the cached results are used.
+		groups through the Teiid Server, the cached results are used.
 		 This saves the cost of accessing all the underlying data sources and
 		re-computing the virtual group transforms each time a query is
 		executed against the group.    </para>
@@ -16,8 +16,8 @@
 		change rapidly, or when it is acceptable to retrieve data that is
 		“stale” within some period of time, or when it is preferred for
 		end-user queries to access staged data rather than placing additional
-		query load on operational sources.  MetaMatrix provides a utility to
-		refresh materialized tables.  This utility uses the MetaMatrix batched
+		query load on operational sources.  Teiid provides a utility to
+		refresh materialized tables.  This utility uses the Teiid batched
 		update functionality.</para>
 	<section>
 		<title>Support Summary</title>
@@ -43,7 +43,7 @@
 		<title>User Interaction</title>
 		<para>When client applications issue queries against a Relational
 			table or view that has been defined as a materialized view, the
-			MetaMatrix query engine automatically routes that query to obtain the
+			Teiid query engine automatically routes that query to obtain the
 			results from the cache database.  </para>
 		<para>Individual queries may override the use of materialized views by
 			specifying OPTION NOCACHE on the query.  This parameter must specify
@@ -94,8 +94,8 @@
 			then the Materialization physical cache model will not be created or
 			included in the VDB.</para>
 		<para>Virtual Database Deployment        </para>
-		<para>When deploying a virtual database (VDB) in the MetaMatrix
-			Console, the MetaMatrix administrator must define connector bindings
+		<para>When deploying a virtual database (VDB) in the Teiid
+			Console, the Teiid administrator must define connector bindings
 			for all physical models in the VDB.  This is true for the well-known
 			materialization cache model also.  In the New VDB or New VDB Version
 			wizard, the materialization model will show up in the Connector
@@ -103,7 +103,7 @@
 			appropriate JDBC connector for the data source where the materialized
 			view cache will reside.  </para>
 		<para>When deploying a VDB containing materialized views, the
-			MetaMatrix administrator will be presented with the option to save
+			Teiid administrator will be presented with the option to save
 			administration scripts to the local file system.  This is in the New
 			VDB, New VDB Version, and Import VDB wizards.  The administrator
 			should save the scripts to a location where they can be accessed by a
@@ -155,7 +155,7 @@
 		</orderedlist>
 		<orderedlist>
 			<listitem>
-				<para>Define username and password for connecting to MetaMatrix, to
+				<para>Define username and password for connecting to Teiid, to
 					issue insert commands against the virtual groups during loading and
 					reloading.</para>
 			</listitem>
@@ -190,10 +190,10 @@
 		<para>Cache Persistence Mechanism</para>
 		<para>Materialized views cache their data in an external database
 			system.  This database may be the same as the database used as the
-			MetaMatrix repository, or it may be a different one.   In general it
-			is recommended that the MetaMatrix repository not be used for
+			Teiid repository, or it may be a different one.   In general it
+			is recommended that the Teiid repository not be used for
 			materialized view caching, as heavy use could impact the performance
-			of other core functionality of the MetaMatrix Server.  </para>
+			of other core functionality of the Teiid Server.  </para>
 		<para>The following DBMS systems are supported for this purpose:
 		</para>
 		<orderedlist>
@@ -209,18 +209,18 @@
 		</orderedlist>
 		<para>Cache Operational Policy</para>
 		<para>Since the actual physical cache for materialized views is
-			maintained external to the MetaMatrix system, there is no pre-defined
+			maintained external to the Teiid system, there is no pre-defined
 			policy for clearing and managing the cache.  These policies will be
-			defined and enforced by administrators of the MetaMatrix system.
+			defined and enforced by administrators of the Teiid system.
 		</para>
 		<para>Cache Administration</para>
 		<para>The cache used by materialized views is administered external to
-			MetaMatrix.  This provides a great deal of flexibility on how that
+			Teiid.  This provides a great deal of flexibility on how that
 			cache is managed, refreshed, backed up, and otherwise administered
 			along with other enterprise sources.</para>
 		<para>Administrator Responsibilities</para>
 		<para>These are the responsibilities of administrators with respect to
-			MetaMatrix’s materialized view data caching.</para>
+			Teiid’s materialized view data caching.</para>
 		<informaltable frame="all">
 			<tgroup cols="3">
 				<colspec colnum="1" colname="c1" />
@@ -238,7 +238,7 @@
 							<para>Required Rights for Cache Database</para>
 						</entry>
 						<entry>
-							<para>Required Rights for MetaMatrix</para>
+							<para>Required Rights for Teiid</para>
 						</entry>
 						<entry>
 							<para>Scripts Used</para>
@@ -272,7 +272,7 @@
 							<para>Initially populate cache </para>
 						</entry>
 						<entry>
-							<para>Cache database and MetaMatrix</para>
+							<para>Cache database and Teiid</para>
 						</entry>
 						<entry>
 							<para>Alter, Insert</para>
@@ -294,7 +294,7 @@
 							<para>Refresh cache </para>
 						</entry>
 						<entry>
-							<para>Cache database and MetaMatrix</para>
+							<para>Cache database and Teiid</para>
 						</entry>
 						<entry>
 							<para>Alter, Insert </para>
@@ -318,14 +318,14 @@
 		<para>The refresh cache operation is recurring, basically at whatever
 			frequency is appropriate for maintaining the desired data “freshness”
 			for the VDB version.  This operation can be scheduled to execute the
-			MetaMatrix scripts, using standard scheduling mechanisms such as cron
+			Teiid scripts, using standard scheduling mechanisms such as cron
 			on UNIX or the Windows scheduler.</para>
 		<para>The truncate and swap scripts are used in the initial load.  The
 			truncate is a no-op in this case, and the swap happens because data
 			is always loaded to the staging table, which must then be swapped
 			with the real cache table.  </para>
-		<para>MetaMatrix Administrative Scripts</para>
-		<para>To perform the administrative operations, MetaMatrix provides a
+		<para>Teiid Administrative Scripts</para>
+		<para>To perform the administrative operations, Teiid provides a
 			set of 4 scripts.  Here is a summary of the scripts.  All the scripts
 			use a similar template for their file names:
 			 VDBName_VDBVersion_Name.ddl).</para>
@@ -395,7 +395,7 @@
 								results into cache</para>
 						</entry>
 						<entry>
-							<para>MetaMatrix</para>
+							<para>Teiid</para>
 						</entry>
 						<entry>
 							<para>Access user</para>
@@ -422,108 +422,5 @@
 				</tbody>
 			</tgroup>
 		</informaltable>
-		<para />
-		<para>In addition to these scripts, MetaMatrix provides a connection
-			properties file with encrypted passwords.</para>
-		<para>Materialized Database Creation</para>
-		<para>The cache for materialized views is maintained in a separate
-			database system.  Therefore, tables must be defined in the database
-			to hold the cached information for the materialized views in a VDB.
-			 Materialized views are scoped to a specific VDB version.  Therefore,
-			the cache tables should in general be segregated in the cache
-			database by VDB and version.  It is the responsibility of the
-			MetaMatrix and database administrators to ensure that the database is
-			defined appropriately for the VDB version, and to ensure that two
-			users are created with the appropriate privileges:</para>
-		<orderedlist>
-			<listitem>
-				<para>Script user – Used when executing Create/Truncate/Swap scripts
-					[note used for Load scripts, since that executes directly against
-					MetaMatrix with MetaMatrix user info].  Requires create/load/alter
-					privileges against the materialized view tables in the database.
-				</para>
-			</listitem>
-			<listitem>
-				<para>Access user – Used in connector binding definition both when
-					reading the cache for user queries, and when refreshing the cache
-					using the Load script.  Requires read and insert privileges against
-					the materialized view tables in the database.  </para>
-			</listitem>
-		</orderedlist>
-		<para>MetaMatrix provides a DDL script to create all the materialized
-			tables for a VDB.  This script is DBMS-specific.  When deploying a
-			VDB, the type of the DBMS is determined from the connector binding
-			used for the materialization physical model, and the appropriate
-			script for that DBMS is extracted from the VDB and saved to the local
-			file system.  </para>
-		<para>Script name: &lt;VDBName&gt;_&lt;VDBVersion&gt;_Create.ddl
-		</para>
-		<para>Example for “CustomerInfo” VDB, version 7:
-			 CustomerInfo_7_Create.ddl </para>
-		<para>The create script is a standard DDL script that can be executed
-			against the DBMS system using whatever mechanisms it supports.  The
-			script must be executed against a database schema/catalog with the
-			appropriate privileges as specified in the MetaMatrix Console. </para>
-		<para>Materialized Database Loading</para>
-		<para>MetaMatrix provides a set of 3 scripts to initially populate and
-			subsequently reload (“refresh”) all the materialized tables for a
-			VDB.  These scripts are DBMS-specific.  They are extracted from the
-			VDB when deploying that VDB, and saved by an administrator to the
-			local file system.  These scripts all assume that the cache tables
-			have been created, using the “Create” script described above.</para>
-		<para>These three scripts do the following for each materialized view:
-		</para>
-		<orderedlist>
-			<listitem>
-				<para>Truncate records in a temporary table (executed directly
-					against DBMS)</para>
-			</listitem>
-			<listitem>
-				<para>Load – execute query against virtual group, and insert into
-					temporary table (executed against MetaMatrix)</para>
-			</listitem>
-			<listitem>
-				<para>Swap temporary table with cache table (executed directly
-					against DBMS)</para>
-			</listitem>
-		</orderedlist>
-		<para>The second script uses the MetaMatrix batched inserts
-			functionality.  Therefore, the MetaMatrix Server must be running, and
-			the VDB must be deployed and activated.  The queries that are
-			executed all use the “cache override” option, so that the
-			transformations are executed.  </para>
-		<para>The first and third scripts execute DBMS-specific operations, to
-			more efficiently update the cache records.  These scripts are
-			standard DDL scripts that can be executed against the DBMS system
-			using whatever mechanisms it supports.  The scripts must be executed
-			against a database schema/catalog with the appropriate privileges as
-			specified in the MetaMatrix Console. </para>
-		<para>The three scripts can be executed together to perform initial
-			loading and subsequent refresh.  This can be done using the
-			loadscript.cmd (.sh on UNIX) command script, located in the server
-			materializedviews directory.  This script can be used to schedule
-			database loading activities.  </para>
-	</section>
-	<section>
-		<title>Limitations</title>
-		<orderedlist>
-			<listitem>
-				<para>Materialization works only with Relational tables and views.
-					 It does not work with Data Access virtual groups or procedures.  
-				</para>
-			</listitem>
-			<listitem>
-				<para>A user cannot specify OPTION NOCACHE on virtual groups that
-					are not at the top level (in the user query).  The design does not
-					currently support this.</para>
-			</listitem>
-		</orderedlist>
-	</section>
-	<section>
-		<title>Outstanding Issues</title>
-		<para>Specifying OPTION NOCACHE within a transformation query is the
-			same as specifying it a user query – the identified virtual groups
-			will always be re-computed in the context of the virtual group
-			containing the transformation query with the override option.</para>
 	</section>
 </chapter>

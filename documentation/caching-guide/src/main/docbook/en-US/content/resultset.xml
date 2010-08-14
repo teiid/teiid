@@ -4,11 +4,11 @@
 ]>
 <chapter id="resultset">
 	<title>Result Set Caching</title>
-	<para>MetaMatrix provides the capability to store the results of
-		specific queries.  MetaMatrix can be configured to store the results
+	<para>Teiid provides the capability to store the results of
+		specific queries.  Teiid can be configured to store the results
 		for end-user queries, or to cache the results of atomic queries issued
 		to data sources in response to end-user queries, or both.  When the
-		exact same user query is submitted to the MetaMatrix Server, the
+		exact same user query is submitted to the Teiid Server, the
 		cached results will be returned.  Similarly, if the exact same atomic
 		query is encountered while processing an end-user query, the cached
 		results will be used in processing that query, even if the end-user
@@ -62,8 +62,8 @@
 	</section>
 	<section>
 		<title>Cache Configuration</title>
-		<para>Result set caching in the MetaMatrix Server is configured in the
-			MetaMatrix Console.  By default, result set caching is disabled.
+		<para>Result set caching in the Teiid Server is configured in the
+			Teiid Console.  By default, result set caching is disabled.
 			 When enabled, the default caching scope is restricted to a
 			particular VDB.</para>
 		<para>Result set caching can be enabled and configured in two places:
@@ -71,7 +71,7 @@
 		<orderedlist>
 			<listitem>
 				<para>End-user queries – In Configuration Deployment panel,
-					QueryEngine PSC, QueryService properties (per MetaMatrix process)
+					QueryEngine PSC, QueryService properties (per Teiid process)
 				</para>
 			</listitem>
 			<listitem>
@@ -229,7 +229,7 @@
 			</listitem>
 			<listitem>
 				<para>Caches are not distributed; they are bound to a particular
-					MetaMatrix process.  So, if the same query is routed to two
+					Teiid process.  So, if the same query is routed to two
 					different host machines, the query will be executed twice, and
 					cached independently on each machine. </para>
 			</listitem>

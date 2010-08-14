@@ -32,7 +32,7 @@
           </dependency>
         </dependencies>
         <configuration>
-          <sourceDocumentName>DataCaching.xml</sourceDocumentName>
+          <sourceDocumentName>main.xml</sourceDocumentName>
           <imageResource>
             <directory>${basedir}/src/main/docbook/en-US</directory>
             <excludes>
@@ -48,11 +48,11 @@
               <stylesheetResource>classpath:/xslt/org/jboss/pdf.xsl</stylesheetResource>
               <finalName>teiid_caching_guide.pdf</finalName>
             </format>
-            <!-- <format>
+            <format>
               <formatName>html_single</formatName>
               <stylesheetResource>classpath:/xslt/org/jboss/xhtml-single.xsl</stylesheetResource>
               <finalName>index.html</finalName>
-            </format> -->
+            </format>
             <format>
               <formatName>html</formatName>
               <stylesheetResource>classpath:/xslt/org/jboss/xhtml.xsl</stylesheetResource>

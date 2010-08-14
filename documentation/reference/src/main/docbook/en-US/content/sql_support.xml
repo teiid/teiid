@@ -560,11 +560,6 @@
         </listitem>
       </itemizedlist>
     </section>
-    <section id="cache_hint">
-    	<title>Cache Hint</title>
-    	<para>Non-update user commands may be preceded with a cache hint, e.g. /*+ cache */ select ..., to inform the engine that the results of command should be cached.  The scope of the result, either session or global, will be deteremined automatically from the determinism level of the source queries and functions executed.</para>
-    	<para>ResultSet caching must be enabled for this hint to have an effect.</para>
-    </section>
     <section id="procedural_relational">
 	  <title>Procedural Relational Command</title>
       <para> Procedural relational commands use the syntax of a SELECT to
