@@ -914,7 +914,7 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
       	<itemizedlist>
         	<para>Examples</para>
         	<listitem>
-		        <para>Use of passing, returns 1 row [1]: <programlisting>select * from xmltable('/a' PASSING {x '&lt;a id="1"/&gt;'} COLUMNS id integer PATH '@id') x</programlisting>
+		        <para>Use of passing, returns 1 row [1]: <programlisting>select * from xmltable('/a' PASSING xmlparse(document '&lt;a id="1"/&gt;') COLUMNS id integer PATH '@id') x</programlisting>
 				</para>		
         	</listitem>
         	<listitem>
