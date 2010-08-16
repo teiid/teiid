@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jboss.teiid</groupId>
     <artifactId>documentation</artifactId>
-    <version>7.1.0-SNAPSHOT</version>
+    <version>7.1.0.Final-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>caching-guide</artifactId>
@@ -19,6 +19,11 @@
         <version>2.1.2</version>
         <extensions>true</extensions>
         <dependencies>
+          <dependency>
+            <groupId>net.sf.docbook</groupId>
+            <artifactId>docbook</artifactId>
+            <version>1.74.0</version>
+          </dependency>           
           <dependency>
             <groupId>org.jboss</groupId>
             <artifactId>jbossorg-docbook-xslt</artifactId>
@@ -61,6 +66,8 @@
           </formats>
           <options>
             <xincludeSupported>true</xincludeSupported>
+            <xmlTransformerType>saxon</xmlTransformerType>  
+            <docbookVersion>1.72.0</docbookVersion>            
             <localeSeparator>-</localeSeparator>
             <useRelativeImageUris>false</useRelativeImageUris>
           </options>

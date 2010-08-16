@@ -259,10 +259,6 @@
 		<resource-configuration>
 			<c:group name="teiidProperties" displayName="Runtime Engine Properties"
 				hiddenByDefault="false">
-				<c:simple-property name="resultSetCacheMaxEntries"
-					displayName="Result Set Cache Max Entries"
-					description="The maximum number of result set cache entries. 0 indicates no limit. (default 1024)"
-					required="false" readOnly="false" />
 				<c:simple-property name="maxRowsFetchSize"
 					displayName="Max Rows Fetch Size"
 					description="The maximum number of result set cache entries. 0 indicates no limit. (default 1024)"
@@ -270,12 +266,8 @@
 				<c:simple-property name="processName" displayName="Process Name"
 					description="Name that uniquely identifies this process" required="false"
 					readOnly="false" />
-				<c:simple-property name="preparedPlanCacheMaxCount"
-					displayName="Prepared Plan Cache Max Count"
-					description="The maximum number of query plans that are cached. Note: this is a memory based cache. (default 250)"
-					required="false" readOnly="false" />
 				<c:simple-property name="maxThreads" displayName="Max Threads"
-					description="Process pool maximum thread count. (default 16) Increase this value if your load includes a large number of XQueries or if the system's available processors is larger than 8"
+					description="Process pool maximum thread count. (default 64)"
 					required="false" readOnly="false" />
 				<c:simple-property name="timeSliceInMilli"
 					displayName="Time Slice In Milliseconds"
@@ -283,12 +275,24 @@
 					required="false" readOnly="false" />
 				<c:simple-property name="lobChunkSizeInKB"
 					displayName="Lob Chunk Size In KB"
-					description="The max lob chunk size in KB transferred each time when processing blobs, clobs(100KB default)"
+					description="The max lob chunk size in KB transferred to the client for xml, blobs, clobs (default 100KB)"
 					required="false" readOnly="false" />
 				<c:simple-property name="resultSetCacheEnabled"
 					displayName="Result Set Cache Enabled"
 					description="Denotes whether or not result set caching is enabled. (default true)"
 					required="false" readOnly="false" type="boolean" />
+				<c:simple-property name="resultSetCacheMaxEntries"
+					displayName="Result Set Cache Max Entries"
+					description="The maximum number of result set cache entries. -1 indicates no limit. (default 1024)"
+					required="false" readOnly="false" />
+				<c:simple-property name="resultSetCacheMaxEntryAge"
+					displayName="Result Set Cache Max Entry Age"
+					description="The maximum age of a result set cache entry in seconds. -1 indicates no max. (default 7200)"
+					required="false" readOnly="false" />
+				<c:simple-property name="preparedPlanCacheMaxCount"
+					displayName="Prepared Plan Cache Max Count"
+					description="The maximum number of query plans that are cached. Note: this is a memory based cache. (default 250)"
+					required="false" readOnly="false" />
 				<c:simple-property name="activeSessionsCount"
 					displayName="Active Session Count" description="Count of active sessions"
 					required="false" readOnly="false" />

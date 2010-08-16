@@ -21,6 +21,7 @@
  */
 package org.teiid.cache.jboss;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.jboss.cache.Cache;
@@ -78,9 +79,10 @@ public class ExpirationAwareCache<K, V> extends JBossCache<K, V> {
 	public void clear() {
 		Node<K, V> node = getRootNode();
 		node.clearData();
-		Set<Node<K,V>> nodes = node.getChildren();
+		Set<Node<K,V>> nodes = new HashSet<Node<K, V>>(node.getChildren());
 		for (Node<K, V> child : nodes) {
 			child.clearData();
+			node.removeChild(child.getFqn());
 		}
 	}
 	

@@ -5,3 +5,4 @@
 <!ENTITY docUrl "&url;/docs.html">
 <!ENTITY javaDocUrl "http://docs.jboss.org/teiid/&versionNumber;/apidocs">
 <!ENTITY desDocUrl "http://www.jboss.org/teiiddesigner/docs.html">
+<!ENTITY jboss-beans "<code>&lt;jboss-install&gt;/server/&lt;profile&gt;/deploy/teiid/teiid-jboss-beans.xml</code>">

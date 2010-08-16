@@ -4,251 +4,90 @@
 ]>
 <chapter id="resultset">
 	<title>Result Set Caching</title>
-	<para>Teiid provides the capability to store the results of
-		specific queries.  Teiid can be configured to store the results
-		for end-user queries, or to cache the results of atomic queries issued
-		to data sources in response to end-user queries, or both.  When the
-		exact same user query is submitted to the Teiid Server, the
-		cached results will be returned.  Similarly, if the exact same atomic
-		query is encountered while processing an end-user query, the cached
-		results will be used in processing that query, even if the end-user
-		query is different than the original one.  These caching techniques
+	<para>Teiid provides the capability to cache the results of
+		specific user queries.  When the
+		exact same user query is submitted to Teiid, the
+		cached results will be returned.  This caching technique
 		can yield significant performance gains if users of the system submit
-		the same queries often, or if user queries result in the same queries
-		being issued to the underlying data sources.</para>
+		the same queries often.</para>
 	<para>Result set caching will cache result sets based on an exact match
-		of the incoming SQL string. It only applies to SELECT and EXEC
+		of the incoming SQL string. Caching only applies to SELECT, set query, and stored procedure execution
 		statements; it does not apply to SELECT INTO statements, or INSERT,
-		UPDATE, and DELETE statements.</para>
+		UPDATE, or DELETE statements.</para>
 	<section>
 		<title>Support Summary</title>
-		<orderedlist>
+		<itemizedlist>
 			<listitem>
-				<para>Caching of end-user queries (on a per-query service basis)
-				</para>
+				<para>Caching of user query results.</para>
 			</listitem>
 			<listitem>
-				<para>Caching of data source queries (on a per-connector binding
-					basis)</para>
+				<para>Scoping of results is automatically determined to be either VDB (replicated) or session level.</para>
 			</listitem>
 			<listitem>
-				<para>Scoping of caching to either VDB or session level</para>
+				<para>Caching of XML document model results.</para>
 			</listitem>
 			<listitem>
-				<para>Caching of XML result sets</para>
+				<para>Configurable number of cache entries and time to live.</para>
 			</listitem>
 			<listitem>
-				<para>Users explicitly state whether to use a result set cache or
-					not (if available)</para>
+				<para>Administrative clearing.</para>
 			</listitem>
-			<listitem>
-				<para>Administrative clearing of caches</para>
-			</listitem>
-		</orderedlist>
+		</itemizedlist>
 	</section>
 	<section>
 		<title>User Interaction</title>
 		<para>End users or client applications explicitly state whether to use
-			result set caching for each query.  This can be done by setting the
-			JDBC ResultSetCacheMode execution property to true to enable the use
-			of caching for that statement, or false to disable it.  The default
-			is true.  Note that if this property is set to true, it only has an
-			effect if caching has been enabled in the Server.  </para>
-		<para>Specification of result set caching for ODBC and SOAP is through
-			extra URL properties, on a per-connection basis. </para>
-		<para>Each query is re-checked for authorization for the user’s
-			permissions, regardless of whether or not the query results have been
-			cached.</para>
+			result set caching.  This can be done by setting the
+			JDBC ResultSetCacheMode execution property to true (default false) or by adding a <link linkend="cache-hint">cache hint</link> to the query.  
+			Note that if either of these mechanisms are used, Teiid must also have result set caching enabled (the default is enabled).</para>
+		<para>
+		To control the preference of individual results to remain in memory or the time to live see the <link linkend="cache-hint">cache hint</link>.
+		If a cache hint is not specified, then the default time to live of the result set caching configuration will be used.
+		</para>
+		<note><para>Each query is re-checked for authorization using the current user’s permissions, 
+		regardless of whether or not the results have been cached.</para></note>
 	</section>
 	<section>
 		<title>Cache Configuration</title>
-		<para>Result set caching in the Teiid Server is configured in the
-			Teiid Console.  By default, result set caching is disabled.
-			 When enabled, the default caching scope is restricted to a
-			particular VDB.</para>
-		<para>Result set caching can be enabled and configured in two places:
+		<para>By default result set caching is enabled with 1024 maximum entries with a maximum entry age of 2 hours.  
+		There are actually 2 caches configured with these settings.  One cache holds results that are specific to sessions and is local to each Teiid instance.
+    	The other cache holds VDB scoped results and can be replicated.  
+    	See the &jboss-beans; config file or the Console's "Runtime Engine Properties" for tuning the configuration.  
+    	The user may also override the default maximum entry age via the <link linkend="cache-hint">cache hint</link>.</para>
+		<para>Result set caching is not limited to memory.  There is no explicit limit on the size of the results that can be cached.  
+		Cached results are primarily stored in the BufferManager and are subject to it's configuration - including the restriction of maximum buffer space.
 		</para>
-		<orderedlist>
-			<listitem>
-				<para>End-user queries – In Configuration Deployment panel,
-					QueryEngine PSC, QueryService properties (per Teiid process)
-				</para>
-			</listitem>
-			<listitem>
-				<para>Data source queries – In Configuration Connector Binding
-					panel, properties</para>
-			</listitem>
-		</orderedlist>
-		<para>The following are the properties that can be set at the query
-			service and connector binding levels.</para>
-		<informaltable frame="all">
-			<tgroup cols="4">
-				<tbody>
-					<row>
-						<entry>
-							<para>Property</para>
-						</entry>
-						<entry>
-							<para>Description</para>
-						</entry>
-						<entry>
-							<para>Type</para>
-						</entry>
-						<entry>
-							<para>Default</para>
-						</entry>
-					</row>
-					<row>
-						<entry>
-							<para>ResultSet Cache Enabled</para>
-						</entry>
-						<entry>
-							<para>Enable result set caching for the source</para>
-						</entry>
-						<entry>
-							<para>Boolean</para>
-						</entry>
-						<entry>
-							<para>false</para>
-						</entry>
-					</row>
-					<row>
-						<entry>
-							<para>ResultSet Cache Maximum Age</para>
-						</entry>
-						<entry>
-							<para>Maximum time before the cache is automatically cleared
-							</para>
-						</entry>
-						<entry>
-							<para>Integer – millsec</para>
-						</entry>
-						<entry>
-							<para>0 (no limit)</para>
-						</entry>
-					</row>
-					<row>
-						<entry>
-							<para>ResultSet Cache Maximum Size</para>
-						</entry>
-						<entry>
-							<para>Maximum size the cache will be allowed to grow to before
-								objects are removed</para>
-						</entry>
-						<entry>
-							<para>Integer – MB </para>
-						</entry>
-						<entry>
-							<para>0 (no limit)</para>
-						</entry>
-					</row>
-					<row>
-						<entry>
-							<para>ResultSet Cache Scope</para>
-						</entry>
-						<entry>
-							<para>Whether caching is restricted to a specific session
-								(‘session’) or a specific VDB version (‘vdb’)</para>
-						</entry>
-						<entry>
-							<para>String</para>
-						</entry>
-						<entry>
-							<para>vdb</para>
-						</entry>
-					</row>
-				</tbody>
-			</tgroup>
-		</informaltable>
-		<para />
-		<para>End-User Cache Configuration</para>
-		<para>End-user query result caching is controlled in properties for
-			the individual Query Services in each PSC.  These properties can be
-			accessed in the Configuration Deployment panel, by selecting the
-			QueryEngine PSC, then selecting an individual QueryService.  The
-			properties are shown at the bottom.    </para>
-		<para>
-			<inlinegraphic fileref="embedded:graphics3" width="5.3866inch"
-				depth="3.5646inch" />
-		</para>
-		<para>Data Source Cache Configuration</para>
-		<para>Data source caching is controlled in properties for the
-			individual connector bindings for each source.  These properties can
-			be accessed on the Configuration Connector Bindings panel, by
-			selecting an individual connector binding and selecting the
-			Properties tab.  Note that these are all optional properties.  Check
-			the Include Optional Properties setting to see these properties.  
-		</para>
-	</section>
-	<section>
-		<title>Cache Characteristics</title>
-		<para>Cache Persistence Mechanism</para>
-		<para>Result sets are persisted in object caches local to individual
-			Java processes (virtual machines or VMs).   User query result sets
-			are cached in the VM of the individual query services running on host
-			machines.  Data source query results are cached in the VM of the
-			individual connector bindings running on host machines. </para>
-		<para>Cache Operational Policy</para>
-		<para>Objects are removed from the cache on a least frequently used
-			basis.  When the cache reaches approximately 90% of its maximum size
-			(as defined by the ResultSet Cache Maximum Size property), query
-			result sets are removed to bring the cache back down to the 80%
-			threshold.</para>
 	</section>
 	<section>
 		<title>Cache Administration</title>
-		<para>Result set caching is administered using the servershell script
-			under the &lt;server install&gt;/util directory.  This script is
-			called servershell.cmd on Windows systems, and servershell.sh on Unix
-			systems.  </para>
-		<para>The following administrative operations can be performed for all
-			caches of a given type, by specifying the appropriate parameters on
-			the script’s command-line:</para>
-		<orderedlist>
-			<listitem>
-				<para>Clear cache options</para>
-			</listitem>
-			<listitem>
-				<para>clearQueryServiceResultSetCaches – clears all the result set
-					caches in all the query services</para>
-			</listitem>
-			<listitem>
-				<para>clearConnectorServiceResultSetCaches – clears all the result
-					set caches in all the connector services</para>
-			</listitem>
-		</orderedlist>
-		<para>These can be listed in help by executing the script with the
-			command-line argument expertmode on.  </para>
+		<para>The result set cache can be cleared through the AdminAPI using the <code>clearCache</code> method.  
+		The expected cache key is "QUERY_SERVICE_RESULT_SET_CACHE".</para>
+		<example>
+			<title>Clearing the ResultSet Cache in AdminShell</title>
+			<programlisting>connectAsAdmin()
+clearCache("QUERY_SERVICE_RESULT_SET_CACHE")
+...</programlisting>
+		</example>
+		<para>See the Admin Guide for more on using the AdminAPI and AdminShell.</para>
 	</section>
 	<section>
 		<title>Limitations</title>
-		<orderedlist>
+		<itemizedlist>
 			<listitem>
-				<para>BLOBs and CLOBs cannot be cached.  Therefore, any query
-					retrieving BLOB or CLOB information will not be cached.  </para>
+				<para>Non-XML document model results, BLOBs, and CLOBs cannot be cached.</para>
 			</listitem>
 			<listitem>
-				<para>Caches are not distributed; they are bound to a particular
-					Teiid process.  So, if the same query is routed to two
-					different host machines, the query will be executed twice, and
-					cached independently on each machine. </para>
+				<para>The exact SQL string, including the cache hint if present, must match the cached entry for the results to be reused.  
+				This allows cache usage to skip parsing and resolving for faster responses.</para>
 			</listitem>
 			<listitem>
-				<para>Result set caching is not transactional and should not be used
-					in the scope of XA transactions.  Transactions depend on (and
-					enforce) consistency of data, and cached data cannot be guaranteed
+				<para>Result set caching is not transactional.  Transactions depend on (and
+					enforce) consistency of data, and cached data is not guaranteed
 					to be consistent with the data store’s data.</para>
 			</listitem>
 			<listitem>
-				<para>ResultSet Cache Scope property values are not constrained, so
-					users may type in the incorrect values (only vdb and session are
-					allowed).   [defect 14444]</para>
+				<para>Clearing the result set cache clears all cache entries for all VDBs.</para>
 			</listitem>
-		</orderedlist>
-	</section>
-	<section>
-		<title>Outstanding Issues</title>
-		<para>Specification of result set caching for ODBC and SOAP is through
-			extra URL properties, on a per-connection basis.</para>
+		</itemizedlist>
 	</section>
 </chapter>

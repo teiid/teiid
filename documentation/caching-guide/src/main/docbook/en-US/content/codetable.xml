@@ -70,9 +70,15 @@
 			<title>Steps to create a materialized view:</title>
 			<listitem>
 				<para>Create a view selecting the appropriate columns from the desired table.  In general, this view may have an arbitrarily complicated transformation query.</para>
+			</listitem>
+			<listitem>
 				<para>Designate the appropriate column(s) as the primary key.</para>
+				</listitem>
+			<listitem>
 				<para>Set the materailized property to true.</para>
-				<para>Add a cache hint to the transformation query.  To mimic the behavior of the implicit internal materialized view created by the lookup function, use /*+ cache(pref_mem) */ to indicate that the table data pages should prefer to remain in memory.</para>
+				</listitem>
+			<listitem>
+				<para>Add a cache hint to the transformation query.  To mimic the behavior of the implicit internal materialized view created by the lookup function, use the <link linkend="cache-hint">cache hint</link> <code>/*+ cache(pref_mem) */</code> to indicate that the table data pages should prefer to remain in memory.</para>
 			</listitem>
 		</orderedlist>
 		<para>Just as with the lookup function, the materialized view table will be created on first use and reused subsequently.  See the <link linkend="matviews">Materialized View Chapter</link> for more on materialized views.</para>

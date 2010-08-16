@@ -47,7 +47,7 @@
   </bookinfo>
   <toc />
   <xi:include href="content/overview.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <!-- <xi:include href="content/matviews.xml" xmlns:xi="http://www.w3.org/2001/XInclude" /> -->
+  <xi:include href="content/matviews.xml" xmlns:xi="http://www.w3.org/2001/XInclude" /> 
   <xi:include href="content/resultset.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="content/codetable.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 </book>

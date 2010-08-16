@@ -87,7 +87,7 @@ public class DQPConfiguration{
 		this.maxRowsFetchSize = maxRowsFetchSize;
 	}
 
-	@ManagementProperty(description="The max lob chunk size in KB transferred each time when processing blobs, clobs(100KB default)")
+	@ManagementProperty(description="The max lob chunk size in KB transferred to the client for xml, blobs, clobs (default 100KB)")
 	public int getLobChunkSizeInKB() {
 		return this.lobChunkSizeInKB;
 	}
@@ -105,7 +105,7 @@ public class DQPConfiguration{
 		this.preparedPlanCacheMaxCount = preparedPlanCacheMaxCount;
 	}
 
-	@ManagementProperty(description="The maximum number of result set cache entries. 0 indicates no limit. (default 1024)")
+	@ManagementProperty(description="The maximum number of result set cache entries. -1 indicates no limit. (default 1024)")
 	public int getResultSetCacheMaxEntries() {
 		return this.resultsetCacheConfig.getMaxEntries();
 	}
@@ -122,7 +122,16 @@ public class DQPConfiguration{
 	public boolean isResultSetCacheEnabled() {
 		return this.resultsetCacheConfig.isEnabled();
 	}
-		
+	
+	@ManagementProperty(description="The maximum age of a result set cache entry in seconds. -1 indicates no max. (default 7200)")
+	public int getResultSetCacheMaxEntryAge() {
+		return this.resultsetCacheConfig.getMaxAgeInSeconds();
+	}
+	
+	public void setResultSetCacheMaxEntryAge(int maxAge) {
+		this.resultsetCacheConfig.setMaxAgeInSeconds(maxAge);
+	}
+	
     /**
      * Determine whether role checking is enabled on the server.
      * @return <code>true</code> if server-side role checking is enabled.

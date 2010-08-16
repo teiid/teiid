@@ -344,6 +344,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				this.analysisRecord = cr.getAnalysisRecord();
 				request.initMetadata();
 				this.originalCommand = cr.getCommand(requestMsg.getCommandString(), request.metadata, pi);
+				request.validateAccess(this.originalCommand);
 				this.doneProducingBatches();
 				return;
 			}
