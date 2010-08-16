@@ -208,7 +208,7 @@ public class Admin extends TeiidAdmin {
 			for (ManagedComponent mc: vdbComponents) {
 				String name = ManagedUtil.getSimpleValue(mc, "name", String.class);//$NON-NLS-1$
 			    int version = ManagedUtil.getSimpleValue(mc, "version", Integer.class);//$NON-NLS-1$
-			    if (name.equals(vdbName) && version == vdbVersion) {
+			    if (name.equalsIgnoreCase(vdbName) && version == vdbVersion) {
 			    	return mc;
 			    }
 			}

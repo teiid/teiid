@@ -124,16 +124,16 @@ public class TestConnectorBindings extends BaseConnection {
 		
 		for(DataPolicy.DataPermission permission: permissions) {
 			if (permission.getResourceName().equals("myTable.T1")) {
-				assertTrue(permission.isAllowRead());
-				assertFalse(permission.isAllowCreate());
-				assertFalse(permission.isAllowDelete());
-				assertFalse(permission.isAllowUpdate());				
+				assertTrue(permission.getAllowRead());
+				assertFalse(permission.getAllowCreate());
+				assertFalse(permission.getAllowDelete());
+				assertFalse(permission.getAllowUpdate());				
 			}
 			else if (permission.getResourceName().equals("myTable.T2")) {
-				assertFalse(permission.isAllowRead());
-				assertFalse(permission.isAllowCreate());
-				assertTrue(permission.isAllowDelete());
-				assertFalse(permission.isAllowUpdate());
+				assertFalse(permission.getAllowRead());
+				assertFalse(permission.getAllowCreate());
+				assertTrue(permission.getAllowDelete());
+				assertFalse(permission.getAllowUpdate());
 			}
 			else {
 				fail("there are only two types of permissions");

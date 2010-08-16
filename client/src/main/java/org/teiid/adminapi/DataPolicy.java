@@ -63,24 +63,24 @@ public interface DataPolicy {
 		 * Is "CREATE" allowed?
 		 * @return
 		 */
-		Boolean isAllowCreate();
+		Boolean getAllowCreate();
 		
 		/**
 		 * Is "SELECT" allowed?
 		 * @return
 		 */
-		Boolean isAllowRead();
+		Boolean getAllowRead();
 		
 		/**
 		 * Is "INSERT/UPDATE" allowed?
 		 * @return
 		 */
-		Boolean isAllowUpdate();
+		Boolean getAllowUpdate();
 		
 		/**
 		 * Is "DELETE" allowed?
 		 * @return
 		 */
-		Boolean isAllowDelete();		
+		Boolean getAllowDelete();		
 	}
 }

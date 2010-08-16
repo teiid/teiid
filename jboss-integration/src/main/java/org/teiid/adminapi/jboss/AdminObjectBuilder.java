@@ -69,6 +69,12 @@ public class AdminObjectBuilder {
 					if (type.isSimple()) {
 						PropertiesUtils.setBeanProperty(t, mp.getMappedName(), ((SimpleValue)value).getValue());
 					}
+					else if (type.isPrimitive()) {
+						PropertiesUtils.setBeanProperty(t, mp.getMappedName(), ((SimpleValue)value).getValue());
+					}
+					else if (type.isEnum()) {
+						PropertiesUtils.setBeanProperty(t, mp.getMappedName(), ((org.jboss.metatype.api.values.EnumValue)value).getValue());
+					}
 					else if (type.isProperties()) {
 						
 					}
@@ -104,8 +110,16 @@ public class AdminObjectBuilder {
 						else if (elementType.isComposite()) {
 							list.addAll((List)MetaValueFactory.getInstance().unwrap(value));
 						}
-						
+						else {
+							throw new TeiidRuntimeException("unsupported type"); //$NON-NLS-1$
+						}
 						PropertiesUtils.setBeanProperty(t, mp.getMappedName(), list);
+					}
+					else if (type.isGeneric()) {
+						throw new TeiidRuntimeException("unsupported type"); //$NON-NLS-1$
+					}
+					else if (type.isTable()|| type.isArray()) {
+						throw new TeiidRuntimeException("unsupported type"); //$NON-NLS-1$
 					}
 				}
 			}

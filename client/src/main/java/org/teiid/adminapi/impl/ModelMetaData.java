@@ -210,6 +210,10 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 		return getValidationErrors(Severity.ERROR);
 	}
 	
+	public void setErrors(List<ValidationError> errors){
+		this.errors = errors;
+	}	
+	
 	public List<ValidationError> getValidationErrors(ValidationError.Severity severity){
 		if (this.errors == null) {
 			return Collections.emptyList();

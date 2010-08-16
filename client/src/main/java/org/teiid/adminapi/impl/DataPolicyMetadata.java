@@ -173,7 +173,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 
         @Override
         @ManagementProperty(description="Allows Create")
-        public Boolean isAllowCreate() {
+        public Boolean getAllowCreate() {
             return allowCreate;
         }
 
@@ -183,7 +183,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 
         @Override
         @ManagementProperty(description="Allows Read")
-        public Boolean isAllowRead() {
+        public Boolean getAllowRead() {
             return allowRead;
         }
 
@@ -193,7 +193,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 
         @Override
         @ManagementProperty(description="Allows Update")
-        public Boolean isAllowUpdate() {
+        public Boolean getAllowUpdate() {
             return allowUpdate;
         }
 
@@ -203,7 +203,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 
         @Override
         @ManagementProperty(description="Allows Delete")
-        public Boolean isAllowDelete() {
+        public Boolean getAllowDelete() {
             return allowDelete;
         }
 
@@ -213,16 +213,16 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         
         public String getType() {
         	StringBuilder sb = new StringBuilder();
-        	if (Boolean.TRUE.equals(isAllowCreate())) {
+        	if (Boolean.TRUE.equals(getAllowCreate())) {
         		sb.append("C");//$NON-NLS-1$
         	}
-        	if (Boolean.TRUE.equals(isAllowRead())) {
+        	if (Boolean.TRUE.equals(getAllowRead())) {
         		sb.append("R");//$NON-NLS-1$
         	}
-        	if (Boolean.TRUE.equals(isAllowUpdate())) {
+        	if (Boolean.TRUE.equals(getAllowUpdate())) {
         		sb.append("U");//$NON-NLS-1$
         	}
-        	if (Boolean.TRUE.equals(isAllowDelete())) {
+        	if (Boolean.TRUE.equals(getAllowDelete())) {
         		sb.append("D");//$NON-NLS-1$
         	}     
         	return sb.toString();
@@ -231,13 +231,13 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         public Boolean allows(PermissionType type) {
             switch (type) {
             case CREATE:
-            	return isAllowCreate();
+            	return getAllowCreate();
             case READ:
-            	return isAllowRead();
+            	return getAllowRead();
             case UPDATE:
-            	return isAllowUpdate();
+            	return getAllowUpdate();
             case DELETE:
-            	return isAllowDelete();
+            	return getAllowDelete();
             }        	
             throw new AssertionError();
         }
