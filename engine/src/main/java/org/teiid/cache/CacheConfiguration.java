@@ -28,9 +28,7 @@ public class CacheConfiguration {
 		
 	public enum Policy {
 		LRU,  // Least Recently Used
-		FIFO, // First in First Out
-		LFU,  // Least frequently Used
-		EXPIRATION; // expires after certain time.
+		EXPIRATION
 	}
 	
 	private Policy policy;

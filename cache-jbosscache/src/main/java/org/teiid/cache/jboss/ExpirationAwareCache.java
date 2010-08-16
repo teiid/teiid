@@ -21,10 +21,13 @@
  */
 package org.teiid.cache.jboss;
 
+import java.util.Set;
+
 import org.jboss.cache.Cache;
 import org.jboss.cache.Fqn;
 import org.jboss.cache.Node;
 import org.jboss.cache.eviction.ExpirationAlgorithmConfig;
+import org.teiid.cache.DefaultCache;
 
 public class ExpirationAwareCache<K, V> extends JBossCache<K, V> {
 
@@ -35,28 +38,56 @@ public class ExpirationAwareCache<K, V> extends JBossCache<K, V> {
 	@Override
 	public V get(K key) {
 		Node<K, V> node = getRootNode();
-		Node child = node.getChild(Fqn.fromString(String.valueOf(key.getClass().getSimpleName()+key.hashCode())));
+		Node child = node.getChild(getFqn(key));
 		if (child != null) {
 			return (V)child.get(key);
 		}
-		return super.get(key);
+		return null;
+	}
+
+	private Fqn<String> getFqn(K key) {
+		return Fqn.fromString(String.valueOf(key.getClass().getSimpleName()+key.hashCode()));
 	}
 
 	@Override
 	public V put(K key, V value) {
+		return this.put(key, value, null);
+	}
+	
+	@Override
+	public V put(K key, V value, Long ttl) {
 		Node<K, V> node = getRootNode();
-		Node child = node.addChild(Fqn.fromString(String.valueOf(key.getClass().getSimpleName()+key.hashCode())));
-		Long future = new Long(System.currentTimeMillis() + (config.getMaxAgeInSeconds()*1000));				
+		Node child = node.addChild(getFqn(key));
+		
+		long future = DefaultCache.getExpirationTime(config.getMaxAgeInSeconds()*1000, ttl);				
 		child.put(ExpirationAlgorithmConfig.EXPIRATION_KEY, future);
 		return (V)child.put(key, value);
 	}
-
+	
 	@Override
-	public org.teiid.cache.Cache<K, V> addChild(String name) {
+	public V remove(K key) {
 		Node<K, V> node = getRootNode();
-		Node child = node.addChild(Fqn.fromString(name));
-		child.put(ExpirationAlgorithmConfig.EXPIRATION_KEY, Long.MAX_VALUE);		
-		return new JBossCache<K, V>(this.cacheStore, child.getFqn());
+		Node child = node.getChild(getFqn(key));
+		if (child != null) {
+			return (V)child.remove(key);
+		}
+		return null;
+	}
+	
+	@Override
+	public void clear() {
+		Node<K, V> node = getRootNode();
+		node.clearData();
+		Set<Node<K,V>> nodes = node.getChildren();
+		for (Node<K, V> child : nodes) {
+			child.clearData();
+		}
+	}
+	
+	@Override
+	public int size() {
+		Node<K, V> node = getRootNode();
+		return node.getChildren().size();
 	}
 
 }

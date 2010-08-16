@@ -648,7 +648,7 @@ public class DQPCore implements DQP {
         }
 
         //prepared plan cache
-        prepPlanCache = new SessionAwareCache<PreparedPlan>(this.cacheFactory, Cache.Type.PREPAREDPLAN,  new CacheConfiguration(Policy.LRU, 60, config.getPreparedPlanCacheMaxCount()));
+        prepPlanCache = new SessionAwareCache<PreparedPlan>(this.cacheFactory, Cache.Type.PREPAREDPLAN,  new CacheConfiguration(Policy.LRU, 60*60*8, config.getPreparedPlanCacheMaxCount()));
         prepPlanCache.setBufferManager(this.bufferManager);
 		
         //get buffer manager
@@ -657,7 +657,7 @@ public class DQPCore implements DQP {
         this.processWorkerPool = new ThreadReuseExecutor(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, config.getMaxThreads());
         
         dataTierMgr = new TempTableDataManager(new DataTierManagerImpl(this,
-                                            this.bufferService), this.bufferManager); 
+                                            this.bufferService), this.bufferManager, this.processWorkerPool); 
 	}
 	
 	public void setBufferService(BufferService service) {

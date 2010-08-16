@@ -61,9 +61,8 @@ public class TempTableStore {
     		for (;;) {
 			switch (state) {
 			case NEEDS_LOADING:
-				updateTime = System.currentTimeMillis();
 			case FAILED_LOAD:
-				state = MatState.LOADING;
+				setState(MatState.LOADING);
 				return true;
 			case LOADING:
 				if (valid) {
@@ -77,7 +76,7 @@ public class TempTableStore {
 				continue;
 			case LOADED:
 				if (ttl >= 0 && System.currentTimeMillis() - updateTime - ttl > 0) {
-					state = MatState.LOADING;
+					setState(MatState.LOADING);
 					return true;
 				}
 				return false;
@@ -90,10 +89,14 @@ public class TempTableStore {
 			if (valid != null) {
 				this.valid = valid;
 			}
-			this.state = state;
-			this.updateTime = System.currentTimeMillis();
+			setState(state);
 			notifyAll();
 			return oldState;
+		}
+
+		private void setState(MatState state) {
+			this.state = state;
+			this.updateTime = System.currentTimeMillis();
 		}
 		
 		public synchronized void setTtl(long ttl) {

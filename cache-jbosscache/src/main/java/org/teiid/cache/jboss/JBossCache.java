@@ -50,30 +50,22 @@ public class JBossCache<K, V> implements Cache<K, V> {
 		this.rootFqn = fqn;
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	public V get(K key) {
 		return this.cacheStore.get(this.rootFqn, key);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public V put(K key, V value) {
 		return this.cacheStore.put(this.rootFqn, key, value);
 	}
+	
+	public V put(K key, V value, Long ttl) {
+		return this.put(key, value);
+	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public V remove(K key) {
 		return this.cacheStore.remove(this.rootFqn, key);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public Set<K> keySet() {
 		Node<K, V> node = this.cacheStore.getRoot().getChild(this.rootFqn);
 		if (node != null) {
@@ -82,9 +74,6 @@ public class JBossCache<K, V> implements Cache<K, V> {
 		return Collections.emptySet();
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	public int size() {
 		Node<K, V> node = this.cacheStore.getRoot().getChild(this.rootFqn);
 		if (node != null) {
@@ -93,9 +82,6 @@ public class JBossCache<K, V> implements Cache<K, V> {
 		return 0;
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	public void clear() {
 		Node<K, V> node = this.cacheStore.getRoot().getChild(this.rootFqn);
 		if (node != null) {
@@ -103,7 +89,6 @@ public class JBossCache<K, V> implements Cache<K, V> {
 		}
 	}
 	
-	@Override
 	public Collection<V> values() {
 		Node<K, V> node = this.cacheStore.getRoot().getChild(this.rootFqn);
 		if (node != null) {
@@ -120,28 +105,17 @@ public class JBossCache<K, V> implements Cache<K, V> {
 		this.cacheStore.addCacheListener(this.cacheListener);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public synchronized void removeListener() {
 		this.cacheStore.removeCacheListener(this.cacheListener);
 		this.cacheListener = null;	
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
 	public Cache<K, V> addChild(String name) {
 		Node<K, V> node = getRootNode();
 		Node<K, V> childNode = node.addChild(Fqn.fromString(name));
 		return new JBossCache<K, V>(this.cacheStore, childNode.getFqn());
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
 	public Cache<K, V> getChild(String name) {
 		Node<K, V> node = getRootNode();
 		Node<K, V> child = node.getChild(Fqn.fromString(name));
@@ -159,10 +133,6 @@ public class JBossCache<K, V> implements Cache<K, V> {
 		return node;
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
 	public List<Cache> getChildren() {
 		Node<K, V> node = getRootNode();
 		Set<Node<K,V>> nodes = node.getChildren();
@@ -176,10 +146,6 @@ public class JBossCache<K, V> implements Cache<K, V> {
 		return children;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
 	public boolean removeChild(String name) {
 		Node<K, V> node = getRootNode();
 		return node.removeChild(Fqn.fromString(name));

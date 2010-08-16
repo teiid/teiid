@@ -70,7 +70,7 @@ public class SessionAwareCache<T> {
 		if(this.maxSize < 0){
 			this.maxSize = DEFAULT_MAX_SIZE_TOTAL;
 		}		
-		this.localCache = new DefaultCache<CacheID, T>("local", maxSize); //$NON-NLS-1$
+		this.localCache = new DefaultCache<CacheID, T>("local", maxSize, config.getMaxAgeInSeconds()*1000); //$NON-NLS-1$
 		
 		if (type == Cache.Type.PREPAREDPLAN) {
 			this.distributedCache = localCache;
@@ -114,17 +114,18 @@ public class SessionAwareCache<T> {
 		return cacheHit.get();
 	}
 	
-	/**
-	 * Create PreparedPlan for the given clientConn and SQl query
-	 */
 	public void put(CacheID id, int determinismLevel, T t){
+		this.put(id, determinismLevel, t, null);
+	}
+	
+	public void put(CacheID id, int determinismLevel, T t, Long ttl){
 		if (!id.cachable) {
 			return;
 		}
 		
 		if (determinismLevel >= FunctionMethod.SESSION_DETERMINISTIC) {
 			id.setSessionId(id.originalSessionId);
-			this.localCache.put(id, t);
+			this.localCache.put(id, t, ttl);
 		} 
 		else {
 			
@@ -145,7 +146,7 @@ public class SessionAwareCache<T> {
 			}
 			
 			if (insert) {
-				this.distributedCache.put(id, t);
+				this.distributedCache.put(id, t, ttl);
 			}
 		}
 	}

@@ -50,7 +50,7 @@ class IndexCondition {
 				if (criteria instanceof CompareCriteria) {
 					CompareCriteria cc = (CompareCriteria)criteria;
 					if (cc.getOperator() == CompareCriteria.NE 
-							|| !(cc.getRightExpression() instanceof Constant) || (cc.getOperator() != CompareCriteria.EQ && i > 0)) {
+							|| !(cc.getRightExpression() instanceof Constant)) {
 						critIter.remove();
 						continue;
 					}

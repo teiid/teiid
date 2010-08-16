@@ -24,91 +24,186 @@ package org.teiid.cache;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.teiid.core.util.LRUCache;
 
 public class DefaultCache<K, V> implements Cache<K, V>, Serializable {
 	private static final long serialVersionUID = -511120208522577206L;
 	public static final int DEFAULT_MAX_SIZE_TOTAL = 250;
+	public static final int DEFAULT_MAX_AGE = 1000 * 60 * 60 * 2;
 	
-	Map<K, V> map;
-	Map<String, Cache> children = new HashMap();
-	String name;
-	
-	public DefaultCache(String name) {
-		this(name, DEFAULT_MAX_SIZE_TOTAL);
+	private static class ExpirationEntry<K, V> {
+		long expiration;
+		K key;
+		V value;
+		
+		public ExpirationEntry(long expiration, K key, V value) {
+			this.expiration = expiration;
+			this.key = key;
+			this.value = value;
+		}
+
+		@Override
+		public int hashCode() {
+			return key.hashCode();
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == this) {
+				return true;
+			}
+			if (!(obj instanceof ExpirationEntry<?, ?>)) {
+				return false;
+			}
+			ExpirationEntry<K, V> other = (ExpirationEntry<K, V>)obj;
+			return this.key.equals(other.key);
+		}
 	}
 	
-	public DefaultCache(String name, int maxSize) {
-		if(maxSize < 0){
-			maxSize = DEFAULT_MAX_SIZE_TOTAL;
-		}			
-		this.map = Collections.synchronizedMap(new LRUCache<K, V>(maxSize));
+	protected LRUCache<K, ExpirationEntry<K, V>> map;
+	protected Map<String, Cache> children = new ConcurrentHashMap<String, Cache>();
+	protected String name;
+	protected long ttl;
+	protected LinkedHashSet<ExpirationEntry<K, V>> expirationQueue = new LinkedHashSet<ExpirationEntry<K, V>>();
+	
+	public DefaultCache(String name) {
+		this(name, DEFAULT_MAX_SIZE_TOTAL, DEFAULT_MAX_SIZE_TOTAL);
+	}
+	
+	public DefaultCache(String name, int maxEntries, long ttl) {
+		this.map = new LRUCache<K, ExpirationEntry<K, V>>(maxEntries) {
+			@Override
+			protected boolean removeEldestEntry(java.util.Map.Entry<K, ExpirationEntry<K, V>> eldest) {
+				if (super.removeEldestEntry(eldest)) {
+					Iterator<ExpirationEntry<K, V>> iter = expirationQueue.iterator();
+					return validate(iter.next()) != null;
+				}
+				return false;
+			}
+		};
+		
 		this.name = name;
+		this.ttl = ttl;
 	}
 	
 	public void addListener(CacheListener listener) {
+		throw new UnsupportedOperationException();
 	}
 
 	public void clear() {
-		map.clear();
+		synchronized (map) {
+			map.clear();
+			expirationQueue.clear();
+		}
 	}
 
 	public V get(K key) {
-		return map.get(key);
+		synchronized (map) {
+			ExpirationEntry<K, V> result = map.get(key);
+			if (result != null) {
+				return validate(result);
+			}
+			return null;
+		}
+	}
+
+	private V validate(ExpirationEntry<K, V> result) {
+		if (result.expiration < System.currentTimeMillis()) {
+			remove(result.key);
+			return null;
+		}
+		return result.value;
 	}
 
 	public Set<K> keySet() {
-		return map.keySet();
+		synchronized (map) {
+			return new HashSet<K>(map.keySet());
+		}
 	}
 
 	public V put(K key, V value) {
-		return map.put(key, value);
+		return this.put(key, value, ttl);
+	}
+	
+	public static long getExpirationTime(long defaultTtl, Long ttl) {
+		if (ttl == null) {
+			ttl = defaultTtl;
+		}
+		if (ttl < 0) {
+			return Long.MAX_VALUE;
+		}
+		return System.currentTimeMillis() + ttl;
+	}
+	
+	public V put(K key, V value, Long timeToLive) {
+		synchronized (map) {
+			ExpirationEntry<K, V> entry = new ExpirationEntry<K, V>(getExpirationTime(ttl, timeToLive), key, value);
+			expirationQueue.add(entry);
+			ExpirationEntry<K, V> result = map.put(key, entry);
+			if (result != null) {
+				return result.value;
+			}
+			return null;
+		}
 	}
 
 	public V remove(K key) {
-		return map.remove(key);
+		synchronized (map) {
+			ExpirationEntry<K, V> entry = new ExpirationEntry<K, V>(-1, key, null);
+			ExpirationEntry<K, V> result = map.put(key, entry);
+			if (result != null) {
+				expirationQueue.remove(entry);
+				return result.value;
+			}
+			return null;
+		}
 	}
 
 	public int size() {
-		return map.size();
+		synchronized (map) {
+			return map.size();
+		}
 	}
 	
 	public Collection<V> values() {
-		return map.values();
+		synchronized (map) {
+			ArrayList<V> result = new ArrayList<V>(map.size());
+			for (ExpirationEntry<K, V> entry : new ArrayList<ExpirationEntry<K, V>>(map.values())) {
+				V value = validate(entry);
+				if (value != null) {
+					result.add(value);
+				}
+			}
+			return result;
+		}
 	}
 
-	@Override
-	public void removeListener() {
-	}
-
-	@Override
 	public Cache addChild(String name) {
-		if (children.get(name) != null) {
-			return children.get(name);
+		Cache c = children.get(name);
+		if (c != null) {
+			return c;
 		}
 		
-		Cache c = new DefaultCache(name);
+		c = new DefaultCache(name, map.getSpaceLimit(), ttl);
 		children.put(name, c);
 		return c;
 	}
 
-	@Override
 	public Cache getChild(String name) {
 		return children.get(name);
 	}
 
-	@Override
-	public List<Cache> getChildren() {
-		return new ArrayList<Cache>(children.values());
+	public Collection<Cache> getChildren() {
+		return children.values();
 	}
 
-	@Override
 	public boolean removeChild(String name) {
 		Object obj = children.remove(name);
 		return obj != null;
@@ -117,5 +212,6 @@ public class DefaultCache<K, V> implements Cache<K, V>, Serializable {
 	@Override
 	public String getName() {
 		return name;
-	}		
+	}
+	
 }

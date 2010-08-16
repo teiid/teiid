@@ -96,7 +96,7 @@ public class TestCachedResults {
 		CachedResults results = new CachedResults();
 		results.setResults(tb);
 		results.setCommand(new Query());
-		Cache cache = new DefaultCache("dummy", 250); //$NON-NLS-1$
+		Cache cache = new DefaultCache("dummy"); //$NON-NLS-1$
 		results.prepare(cache, fbs.getBufferManager());
 		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();

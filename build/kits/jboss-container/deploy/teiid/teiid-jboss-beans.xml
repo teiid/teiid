@@ -49,13 +49,21 @@
         <property name="clusteredCacheName">mvcc-shared</property>
     </bean>
     
+    <!-- Configuration for result set caching. 
+    	 There will be 2 caches with these settings.
+    	 One cache holds results that are specific to sessions.
+    	 The other cache holds vdb scoped results and can
+    	 be replicated.
+     -->
     <bean name="ResultsetCacheConfig" class="org.teiid.cache.CacheConfiguration">
         <property name="enabled">true</property>
-        <!-- Max Entries allowed for ResultSet Cache -->
+        <!-- Max Entries allowed for ResultSet Cache (default 1024) -->
         <property name="maxEntries">1024</property>
-        <!-- 2 hrs -->
+        <!-- Max age in seconds (default 7200 - 2 hours) -->
         <property name="maxAgeInSeconds">7200</property>
-        <!-- Allowed values are LRU, FIFO, LFU, EXPIRATION -->
+        <!-- Allowed values are LRU, EXPIRATION.  
+             Setting this value to LRU will cause cache hint TTL values
+             to be ignored. (default EXPIRATION) -->
         <property name="type">EXPIRATION</property>               
     </bean>    
     

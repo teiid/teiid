@@ -377,7 +377,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	                if (determinismLevel > FunctionMethod.SESSION_DETERMINISTIC) {
 	    				LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("RequestWorkItem.cache_nondeterministic", originalCommand)); //$NON-NLS-1$
 	    			}
-	                dqpCore.getRsCache().put(cid, determinismLevel, cr);
+	                dqpCore.getRsCache().put(cid, determinismLevel, cr, originalCommand.getCacheHint() != null?originalCommand.getCacheHint().getTtl():null);
 			    }
 				add = sendResultsIfNeeded(batch);
 				if (!added) {

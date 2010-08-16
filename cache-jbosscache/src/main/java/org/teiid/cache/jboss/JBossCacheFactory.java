@@ -31,8 +31,6 @@ import org.jboss.cache.Region;
 import org.jboss.cache.config.EvictionAlgorithmConfig;
 import org.jboss.cache.config.EvictionRegionConfig;
 import org.jboss.cache.eviction.ExpirationAlgorithmConfig;
-import org.jboss.cache.eviction.FIFOAlgorithmConfig;
-import org.jboss.cache.eviction.LFUAlgorithmConfig;
 import org.jboss.cache.eviction.LRUAlgorithmConfig;
 import org.jboss.cache.eviction.RemoveOnEvictActionPolicy;
 import org.teiid.cache.Cache;
@@ -96,16 +94,6 @@ public class JBossCacheFactory implements CacheFactory, Serializable{
 			lru.setTimeToLive(-1); // -1 no limit
 			evictionConfig = lru;
 		}
-		else if (config.getPolicy() == Policy.FIFO) {
-			FIFOAlgorithmConfig fifo = new FIFOAlgorithmConfig();
-			fifo.setMaxNodes(config.getMaxEntries());
-			evictionConfig = fifo;
-		}
-		else if (config.getPolicy() == Policy.LFU) {
-			LFUAlgorithmConfig lfu  = new LFUAlgorithmConfig();
-			lfu.setMaxNodes(config.getMaxEntries());
-			evictionConfig = lfu;
-		}
 		else if (config.getPolicy() == Policy.EXPIRATION) {
 			ExpirationAlgorithmConfig lfu  = new ExpirationAlgorithmConfig();
 			lfu.setMaxNodes(config.getMaxEntries());
@@ -113,13 +101,9 @@ public class JBossCacheFactory implements CacheFactory, Serializable{
 		}
 		
 		EvictionRegionConfig erc = new EvictionRegionConfig(rootFqn, evictionConfig);
-		
-		if (config.getPolicy() == Policy.EXPIRATION) {
-			erc.setEvictionActionPolicyClassName(RemoveOnEvictActionPolicy.class.getName());
-		}
+		erc.setEvictionActionPolicyClassName(RemoveOnEvictActionPolicy.class.getName());
 		return erc;
 	}	
-	
 	
 	public void destroy() {
 		this.destroyed = true;		

@@ -39,7 +39,6 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.dqp.DQPPlugin;
-import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -109,7 +108,7 @@ public class CachedResults implements Serializable, Cachable {
 				TupleBatch batch = results.getBatch(row);
 				UUID uuid = java.util.UUID.randomUUID();
 				batch.preserveTypes();
-				cache.put(uuid, batch);
+				cache.put(uuid, batch, this.hint != null?this.hint.getTtl():null);
 				this.cachedBatches.add(uuid);
 			}
 			return true;

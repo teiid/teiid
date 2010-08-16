@@ -22,11 +22,6 @@
 
 package org.teiid.cache;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-
-
 /**
  * Abstraction over cache providers
  */
@@ -61,11 +56,12 @@ public interface Cache<K, V>  {
     *
     * @param key   key with which the specified value is to be associated.
     * @param value value to be associated with the specified key.
+    * @param ttl the time for this entry to live
     * @return previous value associated with specified key, or <code>null</code> if there was no mapping for key.
     *    	A <code>null</code> return can also indicate that the key previously associated <code>null</code> with the specified key, 
     *    	if the implementation supports null values.
     */
-	V put(K key, V value);
+	V put(K key, V value, Long ttl);
 	
    /**
     * Removes the value for this key from a Cache.
@@ -83,69 +79,11 @@ public interface Cache<K, V>  {
 	 */
 	int size();
 	
-	
-   /**
-    * Returns a {@link Set} containing the data in this Cache
-    *
-    * @return a {@link Set} containing the data in this Cache.  If there is no data, 
-    * an empty {@link Set} is returned.  The {@link Set} returned is always immutable.
-    */
-	Set<K> keySet();
-	
 	/**
 	 * Removes all the keys and their values from the Cache
 	 */
 	void clear();
 	   
-	/**
-	 * Listener to get the updates on this Cache
-	 * @param listener
-	 */
-	void addListener(CacheListener listener);
-	
-	/**
-	 * Remove Listener to stop the updates on this Cache
-	 * @param listener
-	 */
-	void removeListener();
-	
-	/**
-     * Returns a {@link Collection} containing the data in this Cache
-     *
-     * @return a {@link Collection} containing the data in this Cache.  If there is no data, 
-     * an empty {@link Collection} is returned.
-     */
-	Collection<V> values();
-	
-	
-	/** 
-	 * Add a child node to the current cache node
-	 * @param name - name of the child
-	 * @return Cache instance.
-	 */
-	Cache addChild(String name);
-	
-	/**
-	 * Get the child cache node from the current node
-	 * @param name
-	 * @return null if not found
-	 */
-	Cache getChild(String name);
-	
-	/**
-	 * Destroys the child from the current node; no-op if node not found
-	 * @param name
-	 * @return true if removed; false otherwise
-	 */
-	boolean removeChild(String name);
-	
-	
-	/**
-	 * Get child nodes under this cache node. If none found empty set is returned
-	 * @return
-	 */
-	List<Cache> getChildren();
-	
 	/**
 	 * Name of the cache node
 	 * @return

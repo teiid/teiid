@@ -25,6 +25,9 @@ package org.teiid.query.tempdata;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
+import java.util.concurrent.FutureTask;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -90,16 +93,28 @@ public class TempTableDataManager implements ProcessorDataManager {
 	
 	private ProcessorDataManager processorDataManager;
     private BufferManager bufferManager;
+    
+    private Executor executor;
+
+    public TempTableDataManager(ProcessorDataManager processorDataManager, BufferManager bufferManager) {
+    	this(processorDataManager, bufferManager, new Executor() {
+			@Override
+			public void execute(Runnable command) {
+				command.run();
+			}
+	    });
+    }
 
     /**
      * Constructor takes the "real" ProcessorDataManager that this object will be a proxy to,
      * and will pass most calls through to transparently.  Only when a request is registered for
      * a temp group will this proxy do it's thing.
      * @param processorDataManager the real ProcessorDataManager that this object is a proxy to
-     */
-    public TempTableDataManager(ProcessorDataManager processorDataManager, BufferManager bufferManager){
+     */    
+    public TempTableDataManager(ProcessorDataManager processorDataManager, BufferManager bufferManager, Executor executor){
         this.processorDataManager = processorDataManager;
         this.bufferManager = bufferManager;
+        this.executor = executor;
     }
 
 	public TupleSource registerRequest(
@@ -265,12 +280,12 @@ public class TempTableDataManager implements ProcessorDataManager {
 		}
 	}
 
-	private TupleSource registerQuery(CommandContext context,
+	private TupleSource registerQuery(final CommandContext context,
 			TempTableStore contextStore, Query query)
 			throws TeiidComponentException, QueryMetadataException,
 			TeiidProcessingException, ExpressionEvaluationException,
 			QueryProcessingException {
-		GroupSymbol group = query.getFrom().getGroups().get(0);
+		final GroupSymbol group = query.getFrom().getGroups().get(0);
 		if (!group.isTempGroupSymbol()) {
 			return null;
 		}
@@ -278,11 +293,23 @@ public class TempTableDataManager implements ProcessorDataManager {
 		boolean remapColumns = !tableName.equalsIgnoreCase(group.getName());
 		TempTable table = null;
 		if (group.isGlobalTable()) {
-			TempTableStore globalStore = context.getGlobalTableStore();
-			MatTableInfo info = globalStore.getMatTableInfo(tableName);
+			final TempTableStore globalStore = context.getGlobalTableStore();
+			final MatTableInfo info = globalStore.getMatTableInfo(tableName);
 			boolean load = info.shouldLoad();
 			if (load) {
-				loadGlobalTable(context, group, tableName, globalStore, info);
+				if (!info.isValid()) {
+					//blocking load
+					loadGlobalTable(context, group, tableName, globalStore, info);
+				} else {
+					Callable<Integer> toCall = new Callable<Integer>() {
+						@Override
+						public Integer call() throws Exception {
+							return loadGlobalTable(context, group, tableName, globalStore, info);
+						}
+					};
+					FutureTask<Integer> task = new FutureTask<Integer>(toCall);
+					executor.execute(task);
+				}
 			} 
 			table = globalStore.getOrCreateTempTable(tableName, query, bufferManager, false);
 		} else {
@@ -308,8 +335,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 	private int loadGlobalTable(CommandContext context,
 			GroupSymbol group, final String tableName,
 			TempTableStore globalStore, MatTableInfo info)
-			throws QueryMetadataException, TeiidComponentException,
-			TeiidProcessingException, ExpressionEvaluationException {
+			throws TeiidComponentException, TeiidProcessingException {
 		LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryExecPlugin.Util.getString("TempTableDataManager.loading", tableName)); //$NON-NLS-1$
 		QueryMetadataInterface metadata = context.getMetadata();
 		Create create = new Create();
@@ -344,10 +370,15 @@ public class TempTableDataManager implements ProcessorDataManager {
 			//TODO: if this insert fails, it's unnecessary to do the undo processing
 			table.insert(ts, table.getColumns());
 			rowCount = table.getRowCount();
+		} catch (TeiidComponentException e) {
+			LogManager.logError(LogConstants.CTX_MATVIEWS, e, QueryExecPlugin.Util.getString("TempTableDataManager.failed_load", tableName)); //$NON-NLS-1$
+			throw e;
+		} catch (TeiidProcessingException e) {
+			LogManager.logError(LogConstants.CTX_MATVIEWS, e, QueryExecPlugin.Util.getString("TempTableDataManager.failed_load", tableName)); //$NON-NLS-1$
+			throw e;
 		} finally {
 			if (rowCount == -1) {
 				info.setState(MatState.FAILED_LOAD, null);
-				LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryExecPlugin.Util.getString("TempTableDataManager.failed_load", tableName)); //$NON-NLS-1$
 			} else {
 				globalStore.swapTempTable(tableName, table);
 				info.setState(MatState.LOADED, true);
