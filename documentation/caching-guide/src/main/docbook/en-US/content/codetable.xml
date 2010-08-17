@@ -34,7 +34,7 @@
 	</section>
 	<section>
 		<title>Limitations</title>
-		<orderedlist>
+		<itemizedlist>
 			<listitem>
 				<para>The use of the lookup function automatically performs caching;
 					there is no option to use the lookup function and not perform
@@ -43,7 +43,7 @@
 			<listitem>
 				<para>No mechanism is provided to refresh code tables.</para>
 			</listitem>
-		</orderedlist>
+		</itemizedlist>
 	</section>
 	<section>
 		<title>Materialized View Alternative</title>

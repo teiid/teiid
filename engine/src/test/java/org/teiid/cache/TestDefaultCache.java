@@ -26,18 +26,19 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+@SuppressWarnings("nls")
 public class TestDefaultCache {
 	
 	@Test public void testExpiration() throws InterruptedException {
-		DefaultCache<Integer, Integer> cache = new DefaultCache<Integer, Integer>("foo", 2, 50);
+		DefaultCache<Integer, Integer> cache = new DefaultCache<Integer, Integer>("foo", 2, 70);
 		cache.put(1, 1);
-		Thread.sleep(60);
+		Thread.sleep(100);
 		assertNull(cache.get(1));
 		cache.put(2, 2);
-		Thread.sleep(30);
+		Thread.sleep(50);
 		cache.put(3, 3);
 		assertNotNull(cache.get(2));
-		Thread.sleep(40);
+		Thread.sleep(50);
 		cache.put(4, 4);
 		//preferred to purge 2 instead of 3
 		assertNotNull(cache.get(3));

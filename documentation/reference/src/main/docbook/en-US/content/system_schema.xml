@@ -393,6 +393,128 @@
 				</informaltable>
 			</section>
 			<section>
+				<title>SYS.MatViews</title>
+				<para>This table supplies information about all the materailized views in the virtual database.</para>
+				<informaltable frame="all">
+					<tgroup cols="3">
+						<thead>
+							<row>
+								<entry>
+									<para>Column Name</para>
+								</entry>
+								<entry>
+									<para>Type</para>
+								</entry>
+								<entry>
+									<para>Description</para>
+								</entry>
+							</row>
+						</thead>
+						<tbody>
+							<row>
+								<entry>
+									<para>VDBName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>VDB name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>SchemaName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Schema Name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Name</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Short group name</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>TargetSchemaName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Name of the materialized table schema</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>TargetName</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>Name of the materialized table</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Valid</para>
+								</entry>
+								<entry>
+									<para>boolean</para>
+								</entry>
+								<entry>
+									<para>True if materialized table is currently valid.</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>LoadState</para>
+								</entry>
+								<entry>
+									<para>boolean</para>
+								</entry>
+								<entry>
+									<para>The load state, can be one of NEEDS_LOADING, LOADING, LOADED, FAILED_LOAD</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Updated</para>
+								</entry>
+								<entry>
+									<para>timestamp</para>
+								</entry>
+								<entry>
+									<para>The timestamp of the last full refresh.</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>Cardinality</para>
+								</entry>
+								<entry>
+									<para>integer</para>
+								</entry>
+								<entry>
+									<para>The number of rows in the materialized view table.</para>
+								</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</informaltable>
+			</section>
+			<section>
 				<title>SYS.Columns</title>
 				<para>This table supplies information about all the elements
 					(columns, tags, attributes, etc) in the virtual database.</para>
@@ -1644,6 +1766,28 @@
 						</entry>
 						<entry>
 							<para>A single column containing the schemas as clobs.</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>refreshMatView</para>
+						</entry>
+						<entry>
+							<para>(string ViewName, boolean Invalidate)</para>
+						</entry>
+						<entry>
+							<para>An return return value, RowsUpdated.  See the Caching Guide for more.</para>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<para>refreshMatViewRow</para>
+						</entry>
+						<entry>
+							<para>(string ViewName, object Key)</para>
+						</entry>
+						<entry>
+							<para>An return return value, RowsUpdated.  See the Caching Guide for more.</para>
 						</entry>
 					</row>
 				</tbody>

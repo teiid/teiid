@@ -4,63 +4,53 @@
 ]>
 <chapter id="matviews">
 	<title>Materialized Views</title>
-	<para>Teiid supports Materialized Views.  These are Relational
-		virtual tables and views (‘virtual groups’) for which the
-		transformations are pre-computed and the results are stored in an
-		external database. When queries are issued against these virtual
-		groups through the Teiid Server, the cached results are used.
+	<para>Teiid supports materialized views.  Materialized views are just like other views, but their 
+		transformations are pre-computed and stored just like a regular table.  
+		When queries are issued against the views through the Teiid Server, the cached results are used.
 		 This saves the cost of accessing all the underlying data sources and
-		re-computing the virtual group transforms each time a query is
-		executed against the group.    </para>
-	<para>This strategy is appropriate when the underlying data does not
+		re-computing the view transforms each time a query is
+		executed.</para>
+	<para>Materialized views are appropriate when the underlying data does not
 		change rapidly, or when it is acceptable to retrieve data that is
-		“stale” within some period of time, or when it is preferred for
+		"stale" within some period of time, or when it is preferred for
 		end-user queries to access staged data rather than placing additional
-		query load on operational sources.  Teiid provides a utility to
-		refresh materialized tables.  This utility uses the Teiid batched
-		update functionality.</para>
+		query load on operational sources.</para>
 	<section>
 		<title>Support Summary</title>
-		<orderedlist>
+		<itemizedlist>
 			<listitem>
 				<para>Caching of relational table or view records (pre-computing all
 					transformations)</para>
 			</listitem>
 			<listitem>
-				<para>Model-based definition of virtual groups to cache</para>
+				<para>Model-based definition of virtual groups to cache (requires Teiid Designer)</para>
 			</listitem>
 			<listitem>
 				<para>User ability to override use of materialized view cache for
-					specific queries</para>
+					specific queries through OPTION NO CACHE</para>
 			</listitem>
-			<listitem>
-				<para>Administrative utility to initially load and refresh cached
-					data</para>
-			</listitem>
-		</orderedlist>
+		</itemizedlist>
 	</section>
 	<section>
 		<title>User Interaction</title>
 		<para>When client applications issue queries against a Relational
 			table or view that has been defined as a materialized view, the
 			Teiid query engine automatically routes that query to obtain the
-			results from the cache database.  </para>
+			results from the cache database.</para>
 		<para>Individual queries may override the use of materialized views by
-			specifying OPTION NOCACHE on the query.  This parameter must specify
+			specifying OPTION NOCACHE on the query.  This parameter may specify
 			one or more virtual groups to override (separated by commas, spaces
-			optional).  If no virtual groups are specified, then it is the same
-			as if the override option is not specified. Note that only virtual
-			groups specified in the user or transformation query (in the FROM
-			clause) can be specified to be overridden.  If there are materialized
-			virtual groups below that level (referenced in transformations), then
-			the materialized view for those tables will be used.   </para>
-		<para>Examples:</para>
-		<para>SELECT * from vg1, vg2, vg3 WHERE … OPTION NOCACHE vg1, vg3
+			optional).  If no virtual groups are specified, materialized views tables will not be used transitively. 
 		</para>
-		<para>SELECT * from vg1, vg2, vg3 WHERE … OPTION NOCACHE</para>
-		<para>The second query is equivalent to:</para>
-		<para>SELECT * from vg1, vg2, vg3 WHERE OPTION NOCACHE vg1, vg2, vg3
-		</para>
+		<example>
+			<title>Full NOCACHE</title>
+			<programlisting>SELECT * from vg1, vg2, vg3 WHERE … OPTION NOCACHE</programlisting>
+		</example>
+		<example>
+			<title>Specific NOCACHE</title>
+			<programlisting>SELECT * from vg1, vg2, vg3 WHERE … OPTION NOCACHE vg1, vg3</programlisting>
+			<para>Only the vg1 and vg3 caches will be skipped vg2 or any materialized views nested under vg1 and vg3 will be used.</para>
+		</example>
 		<para>The materialization override option may be specified in virtual
 			group transformation definitions.  In that way, transformations can
 			specify to always use real-time data obtained directly from a source.
@@ -68,359 +58,36 @@
 			definitions, just as with user queries.</para>
 	</section>
 	<section>
-		<title>Cache Configuration</title>
-		<para>Materialized View Definition</para>
-		<para>Materialized views are defined in the MetaBase Modeler by
-			setting the materialized property on a table or view in a relational
+		<title>Materialized View Definition</title>
+		<para>Materialized views are defined in Teiid Designer by
+			setting the materialized property on a table or view in a virtual (view) relational
 			model.  Setting this property's value to true (the default is false)
 			allows the data generated for this virtual table to be treated as a
 			materialized view. </para>
-		<para>The Name In Source property for this table determines the name
-			of the physical Materialized Views tables. If left blank the default
-			naming scheme of MV10000001 is used, otherwise the name provided is
-			used.</para>
-		<para />
-		<para>Virtual Database Definition</para>
-		<para>Materialized views are relational tables (or views) in one or
-			more models that have their materialized property set to true.  When
-			a set of virtual relational models containing materialized views is
-			bundled into a virtual database (VDB) in the MetaBase Modeler, a
-			physical relational model is automatically created and put into that
-			VDB to represent the physical cache.  The physical model is given the
-			well-known name Materialization.  The physical cache model will
-			contain one physical table for each virtual group marked as a
-			materialized view.  </para>
-		<para>Note that if no virtual groups are marked as materialized views,
-			then the Materialization physical cache model will not be created or
-			included in the VDB.</para>
-		<para>Virtual Database Deployment        </para>
-		<para>When deploying a virtual database (VDB) in the Teiid
-			Console, the Teiid administrator must define connector bindings
-			for all physical models in the VDB.  This is true for the well-known
-			materialization cache model also.  In the New VDB or New VDB Version
-			wizard, the materialization model will show up in the Connector
-			Binding definition panel.  The administrator should select the
-			appropriate JDBC connector for the data source where the materialized
-			view cache will reside.  </para>
-		<para>When deploying a VDB containing materialized views, the
-			Teiid administrator will be presented with the option to save
-			administration scripts to the local file system.  This is in the New
-			VDB, New VDB Version, and Import VDB wizards.  The administrator
-			should save the scripts to a location where they can be accessed by a
-			database administrator responsible for creating, loading, and
-			refreshing the cache database.  See Cache Administration section.
+		<note><para>It is important to ensure that all key/index information is present as these will be used by the materialization process to enhance the performance of the materialized table.</para></note>
+		<para>The target materialized table may also be set in the properties.  If the value is left blank, the default, then internal materialization will be used.  
+		Otherwise for external materialization, the value should reference the fully qualified name of a table (or possibly view) with the same columns as the materialized view.
+		The choice between internal and external materialization should be made based upon:
+		<itemizedlist>
+			<listitem><para>Does the cached data need to be fully persistent?  If yes, then external materialization should be used.  
+			Internal materialization should not survive a cluster restart.</para>
+			</listitem>
+			<listitem><para>Is full control needed of loading and refresh?  If yes, then external materialzation should be used.  
+			Internal materialization does offer several system supported methods for refreshing, but does not give full access to the materialized table.</para>
+			</listitem>
+		</itemizedlist>
 		</para>
-		<para>This is a summary of what an administrator must do when
-			deploying a VDB containing materialized views:</para>
-		<orderedlist>
-			<listitem>
-				<para>Define connector binding from the materialization model to the
-					physical cache database.</para>
-			</listitem>
-		</orderedlist>
-		<orderedlist>
-			<listitem>
-				<para>This defines the DBMS type, subsequently used to save cache
-					creation and loading scripts appropriate for that database type
-				</para>
-			</listitem>
-			<listitem>
-				<para>The username and password used in the connector binding must
-					have privileges for the cache database </para>
-			</listitem>
-			<listitem>
-				<para>The cache database may not exist at this point, in which case
-					the connector binding cannot be started, and the VDB cannot be
-					activated.</para>
-			</listitem>
-		</orderedlist>
-		<orderedlist>
-			<listitem>
-				<para>Define username and password for creating and manipulating
-					(swapping and truncating) cache tables in the cache database.
-				</para>
-			</listitem>
-		</orderedlist>
-		<orderedlist>
-			<listitem>
-				<para>The username and password must directly connect to a schema or
-					catalog in the database that is appropriate for the VDB version.
-					 This cache may be used by multiple VDB versions, but this is in
-					general not recommended.</para>
-			</listitem>
-			<listitem>
-				<para>This username and password will be used for executing the
-					Create, Truncate, and Swap scripts.</para>
-			</listitem>
-		</orderedlist>
-		<orderedlist>
-			<listitem>
-				<para>Define username and password for connecting to Teiid, to
-					issue insert commands against the virtual groups during loading and
-					reloading.</para>
-			</listitem>
-		</orderedlist>
-		<orderedlist>
-			<listitem>
-				<para>This user information is not necessarily the same as the user
-					information used in the connector binding, although it can be.
-				</para>
-			</listitem>
-		</orderedlist>
-		<orderedlist>
-			<listitem>
-				<para>Save DDL scripts to the file system.  </para>
-			</listitem>
-		</orderedlist>
-		<orderedlist>
-			<listitem>
-				<para>The administrator specifies the location to save the files.
-				</para>
-			</listitem>
-			<listitem>
-				<para>The location should be accessible to the DBA or the scheduling
-					process that will execute the scripts against the database</para>
-			</listitem>
-			<listitem>
-				<para>Four scripts will be saved with names appropriate to the VDB
-					and version.</para>
-			</listitem>
-		</orderedlist>
-		<para>Cache Characteristics</para>
-		<para>Cache Persistence Mechanism</para>
-		<para>Materialized views cache their data in an external database
-			system.  This database may be the same as the database used as the
-			Teiid repository, or it may be a different one.   In general it
-			is recommended that the Teiid repository not be used for
-			materialized view caching, as heavy use could impact the performance
-			of other core functionality of the Teiid Server.  </para>
-		<para>The following DBMS systems are supported for this purpose:
-		</para>
-		<orderedlist>
-			<listitem>
-				<para>Oracle 8i or 9i or 10g</para>
-			</listitem>
-			<listitem>
-				<para>SQL Server 2000</para>
-			</listitem>
-			<listitem>
-				<para>DB2 8</para>
-			</listitem>
-		</orderedlist>
-		<para>Cache Operational Policy</para>
+		
+	</section>
+	<section>
+		<title>External Materialization</title>
+		<para>External materialized views cache their data in an external database
+			system.  External materialized views give the administrator full control over the loading and refresh strategies.</para>
 		<para>Since the actual physical cache for materialized views is
 			maintained external to the Teiid system, there is no pre-defined
 			policy for clearing and managing the cache.  These policies will be
 			defined and enforced by administrators of the Teiid system.
 		</para>
-		<para>Cache Administration</para>
-		<para>The cache used by materialized views is administered external to
-			Teiid.  This provides a great deal of flexibility on how that
-			cache is managed, refreshed, backed up, and otherwise administered
-			along with other enterprise sources.</para>
-		<para>Administrator Responsibilities</para>
-		<para>These are the responsibilities of administrators with respect to
-			Teiid’s materialized view data caching.</para>
-		<informaltable frame="all">
-			<tgroup cols="3">
-				<colspec colnum="1" colname="c1" />
-				<colspec colnum="2" colname="c2" />
-				<colspec colnum="3" colname="c3" />
-				<tbody>
-					<row>
-						<entry>
-							<para>Operation</para>
-						</entry>
-						<entry>
-							<para>Run Against</para>
-						</entry>
-						<entry>
-							<para>Required Rights for Cache Database</para>
-						</entry>
-						<entry>
-							<para>Required Rights for Teiid</para>
-						</entry>
-						<entry>
-							<para>Scripts Used</para>
-						</entry>
-						<entry>
-							<para>Frequency</para>
-						</entry>
-					</row>
-					<row>
-						<entry>
-							<para>Create cache database</para>
-						</entry>
-						<entry>
-							<para>Cache database</para>
-						</entry>
-						<entry>
-							<para>Create</para>
-						</entry>
-						<entry>
-							<para>None</para>
-						</entry>
-						<entry>
-							<para>Create</para>
-						</entry>
-						<entry>
-							<para>Once per VDB version</para>
-						</entry>
-					</row>
-					<row>
-						<entry>
-							<para>Initially populate cache </para>
-						</entry>
-						<entry>
-							<para>Cache database and Teiid</para>
-						</entry>
-						<entry>
-							<para>Alter, Insert</para>
-						</entry>
-						<entry>
-							<para>CRUD</para>
-						</entry>
-						<entry>
-							<para>Truncate</para>
-							<para>Load</para>
-							<para>Swap</para>
-						</entry>
-						<entry>
-							<para>Once per VDB version</para>
-						</entry>
-					</row>
-					<row>
-						<entry>
-							<para>Refresh cache </para>
-						</entry>
-						<entry>
-							<para>Cache database and Teiid</para>
-						</entry>
-						<entry>
-							<para>Alter, Insert </para>
-						</entry>
-						<entry>
-							<para>CRUD </para>
-						</entry>
-						<entry>
-							<para>Truncate</para>
-							<para>Load</para>
-							<para>Swap</para>
-						</entry>
-						<entry>
-							<para>Desired cache refresh rate</para>
-						</entry>
-					</row>
-				</tbody>
-			</tgroup>
-		</informaltable>
-		<para />
-		<para>The refresh cache operation is recurring, basically at whatever
-			frequency is appropriate for maintaining the desired data “freshness”
-			for the VDB version.  This operation can be scheduled to execute the
-			Teiid scripts, using standard scheduling mechanisms such as cron
-			on UNIX or the Windows scheduler.</para>
-		<para>The truncate and swap scripts are used in the initial load.  The
-			truncate is a no-op in this case, and the swap happens because data
-			is always loaded to the staging table, which must then be swapped
-			with the real cache table.  </para>
-		<para>Teiid Administrative Scripts</para>
-		<para>To perform the administrative operations, Teiid provides a
-			set of 4 scripts.  Here is a summary of the scripts.  All the scripts
-			use a similar template for their file names:
-			 VDBName_VDBVersion_Name.ddl).</para>
-		<informaltable frame="all">
-			<tgroup cols="5">
-				<tbody>
-					<row>
-						<entry>
-							<para>Script Base Name</para>
-						</entry>
-						<entry>
-							<para>Use</para>
-						</entry>
-						<entry>
-							<para>Description</para>
-						</entry>
-						<entry>
-							<para>Run Against</para>
-						</entry>
-						<entry>
-							<para>User Info</para>
-						</entry>
-					</row>
-					<row>
-						<entry>
-							<para>Create</para>
-						</entry>
-						<entry>
-							<para>Creation</para>
-						</entry>
-						<entry>
-							<para>Create tables for cache</para>
-						</entry>
-						<entry>
-							<para>Cache database</para>
-						</entry>
-						<entry>
-							<para>Script user</para>
-						</entry>
-					</row>
-					<row>
-						<entry>
-							<para>Truncate</para>
-						</entry>
-						<entry>
-							<para>Reload</para>
-						</entry>
-						<entry>
-							<para>Truncate temporary table when inserting new records</para>
-						</entry>
-						<entry>
-							<para>Cache database</para>
-						</entry>
-						<entry>
-							<para>Script user</para>
-						</entry>
-					</row>
-					<row>
-						<entry>
-							<para>Load</para>
-						</entry>
-						<entry>
-							<para>Load or reload </para>
-						</entry>
-						<entry>
-							<para>Execute queries against materialized virtual groups, insert
-								results into cache</para>
-						</entry>
-						<entry>
-							<para>Teiid</para>
-						</entry>
-						<entry>
-							<para>Access user</para>
-						</entry>
-					</row>
-					<row>
-						<entry>
-							<para>Swap</para>
-						</entry>
-						<entry>
-							<para>Reload</para>
-						</entry>
-						<entry>
-							<para>Swap temporary table with cache table after new records
-								inserted</para>
-						</entry>
-						<entry>
-							<para>Cache database</para>
-						</entry>
-						<entry>
-							<para>Script user</para>
-						</entry>
-					</row>
-				</tbody>
-			</tgroup>
-		</informaltable>
+		<para></para>
 	</section>
 </chapter>

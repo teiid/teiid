@@ -212,7 +212,7 @@ public class STree {
 			} else {
 				SearchResult result = places.removeLast();
 				Object value = (i == 0 ? tuple : page);
-				page = insert(key, result, places.peekLast(), value);
+				page = insert(key, result, places.peekLast(), value, mode == InsertMode.ORDERED);
 			}
 		}
 		return null;
@@ -222,19 +222,13 @@ public class STree {
 		return tuple.subList(0, keyLength);
 	}
 
-	SPage insert(List k, SearchResult result, SearchResult parent, Object value) throws TeiidComponentException {
+	SPage insert(List k, SearchResult result, SearchResult parent, Object value, boolean ordered) throws TeiidComponentException {
 		SPage page = result.page;
 		int index = -result.index - 1;
 		if (result.values.getTuples().size() == pageSize) {
 			boolean leaf = !(value instanceof SPage);
 			SPage nextPage = new SPage(this, leaf);
 			TupleBatch nextValues = nextPage.getValues();
-			nextValues.getTuples().addAll(result.values.getTuples().subList(pageSize/2, pageSize));
-			result.values.getTuples().subList(pageSize/2, pageSize).clear();
-			if (!leaf) {
-				nextPage.children.addAll(page.children.subList(pageSize/2, pageSize));
-				page.children.subList(pageSize/2, pageSize).clear();
-			}
 			nextPage.next = page.next;
 			nextPage.prev = page;
 			if (nextPage.next != null) {
@@ -242,18 +236,30 @@ public class STree {
 			}
 			page.next = nextPage;
 			boolean inNext = false;
-			if (index <= pageSize/2) {
-				setValue(index, k, value, result.values, page);
+			if (!ordered) {
+				//split the values
+				nextValues.getTuples().addAll(result.values.getTuples().subList(pageSize/2, pageSize));
+				result.values.getTuples().subList(pageSize/2, pageSize).clear();
+				if (!leaf) {
+					nextPage.children.addAll(page.children.subList(pageSize/2, pageSize));
+					page.children.subList(pageSize/2, pageSize).clear();
+				}
+				if (index <= pageSize/2) {
+					setValue(index, k, value, result.values, page);
+				} else {
+					inNext = true;
+					setValue(index - pageSize/2, k, value, nextValues, nextPage);
+				}
+				page.setValues(result.values);
+				if (parent != null) {
+					List min = nextPage.getValues().getTuples().get(0);
+					SPage.correctParents(parent.page, min, page, nextPage);
+				}
 			} else {
 				inNext = true;
-				setValue(index - pageSize/2, k, value, nextValues, nextPage);
+				setValue(0, k, value, nextValues, nextPage);
 			}
 			nextPage.setValues(nextValues);
-			page.setValues(result.values);
-			if (parent != null) {
-				List min = nextPage.getValues().getTuples().get(0);
-				SPage.correctParents(parent.page, min, page, nextPage);
-			}
 			if (inNext) {
 				page = nextPage;
 			}

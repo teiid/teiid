@@ -90,7 +90,12 @@
             <source>target/distribution/teiid-${version}-docs/client-developers-guide/en-US/pdf/teiid_client_developers_guide.pdf</source>
             <outputDirectory>teiid-docs</outputDirectory>
             <fileMode>0644</fileMode>
-        </file>       
+        </file>
+        <file>
+            <source>target/distribution/teiid-${version}-docs/caching-guide/en-US/pdf/teiid_caching_guide.pdf</source>
+            <outputDirectory>teiid-docs</outputDirectory>
+            <fileMode>0644</fileMode>
+        </file>        
     </files>
      
   

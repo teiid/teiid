@@ -11,7 +11,7 @@
 		can yield significant performance gains if users of the system submit
 		the same queries often.</para>
 	<para>Result set caching will cache result sets based on an exact match
-		of the incoming SQL string. Caching only applies to SELECT, set query, and stored procedure execution
+		of the incoming SQL string and PreparedStatement parameter values if present. Caching only applies to SELECT, set query, and stored procedure execution
 		statements; it does not apply to SELECT INTO statements, or INSERT,
 		UPDATE, or DELETE statements.</para>
 	<section>

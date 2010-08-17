@@ -19,6 +19,7 @@
                 <include>org.jboss.teiid.documentation:developer-guide</include>
                 <include>org.jboss.teiid.documentation:quick-start-example</include>
                 <include>org.jboss.teiid.documentation:client-developers-guide</include>
+                <include>org.jboss.teiid.documentation:caching-guide</include>
             </includes>
     
             <sources>
