@@ -17,7 +17,7 @@ Start the JBoss Container
 
 Use the simple client example run script, or another client, to execute a query, e.g. 
 
-$./run.sh localhost 31000 dynamicportfolio "select * from product, (call MarketData.getTextFiles('*.txt')) f, TEXTTABLE(f.file COLUMNS symbol string, price bigdecimal HEADER) stock where product.symbol=stock.symbol"
+$./run.sh localhost 31000 dynamicportfolio "select stock.* from product, (call MarketData.getTextFiles('*.txt')) f, TEXTTABLE(f.file COLUMNS symbol string, price bigdecimal HEADER) stock where product.symbol=stock.symbol"
 
 This example will execute the query against both Derby and the text files.  The 
 files returned from the getTextFiles procedure are passed to the TEXTTABLE table
