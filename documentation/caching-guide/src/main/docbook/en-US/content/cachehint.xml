@@ -54,7 +54,16 @@ ps.execute();
 	 		<para>When the ttl is specified in the cache hint, a full refresh of the materialized view will be triggered automatically after the specified time interval.  
 	 		The refresh is equivalent to <code>CALL SYS.refreshMatView('view name', false)</code>, but performed asynchronously so that user queries do not block on the load.
 	 		</para>
- 			<para>The automatic loading is not intended for complex loading scenarios, as nested materialized views will be used by the refresh query.</para>
+	 		<section>
+	 			<title>Limitations</title>
+	 			<itemizedlist>
+			   		<listitem><para>The automatic ttl refresh is not intended for complex loading scenarios, as nested materialized views will be used by the refresh query.
+			   		</para></listitem>
+			   		<listitem><para>The automatic ttl refresh is performed lazily, that is it is only trigger by using the table after the ttl has expired.  
+			   		For infrequently used tables with long load times, this means that data may be used well past the intended ttl. 
+			   		</para></listitem>
+			  	</itemizedlist>
+	 		</section>
  		</section>
  		<section>
  			<title>Updatable</title>

@@ -486,27 +486,29 @@
               
     </section>
     
-    <!-- <section id="multiple_hosts">
+    <section id="multiple_hosts">
         <title>Using Multiple Hosts</title>
-        <para>When Teiid Server is deployed on multiple servers for scalbility, then your application that using
-        Teiid JDBC API can automatically use all Teiid Servers in that group. To enable this feature the client needs 
-        to specify multiple host name and port number combinations on the URL connection string. The client will randomly pick any one the Teiid server from the list and will have session 
-        established with that server.  If the "autoFailover" connection property is set to "true", a failure with the connected server will cause the client to automatically failover 
-        to other available servers.  Even if autoFailover is not set, when using a managed DataSource based connection, the connection will randomly select a new server instance when it is returned to the pool.</para>
+        <para>A group of Teiid Servers in the same AS cluster may be connected using connection time failover and load-balancing.
+        To enable this feature the client needs to specify multiple host name and port number combinations on the URL connection string. 
+        The client will randomly pick any one the Teiid server from the list and will have session established with that server.  
+        If that server cannot be contacted, then a connection will be attempted to each of the remaining servers in random order.</para>   
         
+        <!-- If the "autoFailover" connection property is set to "true", a failure with the connected server will cause the client to automatically failover 
+        to other available servers.  Even if autoFailover is not set, when using a managed DataSource based connection, the connection will randomly select a new server instance when it is returned to the pool.</para>
+        -->
         <example><title>Example URL connection string</title><programlisting><![CDATA[jdbc:teiid:&lt;vdb-name&gt;@mm://host1:31000, host1:31001, host2:31000;version=2]]></programlisting></example>        
         
-        <para>Currently when the fail over happens, the user is re-authenticated with the new server. The clustering 
+        <!-- <para>Currently when the fail over happens, the user is re-authenticated with the new server. The clustering 
         feature coming up in the Teiid 7.1 release will define how the transparent session fail over will occur with out the 
         re-authentication.</para>
         
         <para>You can also use this feature to distribute the query load among various avaialble Teiid Servers available. 
         Load balancing happens automatically, when you are using a data source along with connection pooling. Each time a connection is 
         grabbed from the pool, it will randomly select a Teiid Server to distribute the load. Note, that load balacing feature 
-        is not avaialble if you are using Teiid Driver to make your connection.</para>
+        is not avaialble if you are using Teiid Driver to make your connection.</para>-->
         
         <para>If you are using DataSource to connect to Teiid Server, use "AlternateServers" property/method to define the failover servers.
         Check out the Javadoc on the format of the string.</para>
-    </section> -->
+    </section>
     
 </chapter>

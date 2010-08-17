@@ -73,7 +73,7 @@ public class TestThreadReuseExecutor {
         	pool.execute(new FakeWorkItem(SINGLE_WAIT));
             
             try {
-                Thread.sleep(SINGLE_WAIT*2);
+                Thread.sleep(SINGLE_WAIT*3);
             } catch(InterruptedException e) {                
             }
         }

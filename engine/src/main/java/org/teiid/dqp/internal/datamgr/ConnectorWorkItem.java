@@ -287,7 +287,9 @@ public class ConnectorWorkItem implements ConnectorWork {
             		this.lastBatch = true;
             		break;
             	}
-            	
+            	if (row.size() != this.schema.length) {
+            		throw new AssertionError("Inproper results returned.  Expected " + this.schema.length + " columns, but was " + row.size()); //$NON-NLS-1$ //$NON-NLS-2$
+        		}
             	this.rowCount += 1;
             	batchSize++;
             	if (this.procedureBatchHandler != null) {
@@ -358,6 +360,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 				}
 				if (value == result && !DataTypeManager.DefaultDataClasses.OBJECT.equals(this.schema[index])) {
 					convertToRuntimeType.remove(i);
+					continue;
 				}
 				row.set(index, result);
 			}
@@ -375,6 +378,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 					}
 					if (value == result) {
 						convertToDesiredRuntimeType[i] = false;
+						continue;
 					}
 					row.set(i, result);
 				}

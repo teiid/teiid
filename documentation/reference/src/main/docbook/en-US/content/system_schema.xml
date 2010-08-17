@@ -1776,7 +1776,7 @@
 							<para>(string ViewName, boolean Invalidate)</para>
 						</entry>
 						<entry>
-							<para>An return return value, RowsUpdated.  See the Caching Guide for more.</para>
+							<para>An return return value, RowsUpdated. -1 indicates a load is in progress, otherwise the cardinality of the table is returned.  See the Caching Guide for more.</para>
 						</entry>
 					</row>
 					<row>
@@ -1787,7 +1787,7 @@
 							<para>(string ViewName, object Key)</para>
 						</entry>
 						<entry>
-							<para>An return return value, RowsUpdated.  See the Caching Guide for more.</para>
+							<para>An return return value, RowsUpdated. -1 indicates the materialized table is currently invalid. 0 indicates that the specified row did not exist in the live data query or in the materialized table.  See the Caching Guide for more.</para>
 						</entry>
 					</row>
 				</tbody>

@@ -9,5 +9,6 @@
 		 These techniques can be used to significantly improve performance in many
 		situations.</para>
 	<para>With the exception of external materialized views, the cached data is accessed through the BufferManager.  
-	For better performance, the BufferManager setting should be adjusted to the memory constraints of your installation.</para>
+	For better performance the BufferManager setting should be adjusted to the memory constraints of your installation.  
+	See the Admin Guide for more on parameter tuning.</para>
 </chapter>

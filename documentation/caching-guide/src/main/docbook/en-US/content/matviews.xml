@@ -51,8 +51,8 @@
 			<programlisting>SELECT * from vg1, vg2, vg3 WHERE … OPTION NOCACHE vg1, vg3</programlisting>
 			<para>Only the vg1 and vg3 caches will be skipped vg2 or any materialized views nested under vg1 and vg3 will be used.</para>
 		</example>
-		<para>The materialization override option may be specified in virtual
-			group transformation definitions.  In that way, transformations can
+		<para>Option NOCACHE may be specified in virtual
+			group transformation queries.  In that way, transformations can
 			specify to always use real-time data obtained directly from a source.
 			 The use of caching and non-caching can be mixed in transformation
 			definitions, just as with user queries.</para>
@@ -67,9 +67,9 @@
 		<note><para>It is important to ensure that all key/index information is present as these will be used by the materialization process to enhance the performance of the materialized table.</para></note>
 		<para>The target materialized table may also be set in the properties.  If the value is left blank, the default, then internal materialization will be used.  
 		Otherwise for external materialization, the value should reference the fully qualified name of a table (or possibly view) with the same columns as the materialized view.
-		The choice between internal and external materialization should be made based upon:
+		For most basic scenarios the simplicity of internal materialization makes it the more appealing option. Other considerations for chosing between internal and external materialization are:
 		<itemizedlist>
-			<listitem><para>Does the cached data need to be fully persistent?  If yes, then external materialization should be used.  
+			<listitem><para>Does the cached data need to be fully durable?  If yes, then external materialization should be used.  
 			Internal materialization should not survive a cluster restart.</para>
 			</listitem>
 			<listitem><para>Is full control needed of loading and refresh?  If yes, then external materialzation should be used.  
@@ -77,7 +77,6 @@
 			</listitem>
 		</itemizedlist>
 		</para>
-		
 	</section>
 	<section>
 		<title>External Materialization</title>
@@ -88,6 +87,74 @@
 			policy for clearing and managing the cache.  These policies will be
 			defined and enforced by administrators of the Teiid system.
 		</para>
-		<para></para>
+		<orderedlist>
+			<title>Typical Usage Steps</title>
+			<listitem>
+				<para>Create materialized views and corresponding physical materialized target tables in Designer.  This can be done through setting the materialized and target table manually, 
+				or by selecting the desired views, right clicking, then selecting Modeling->"Create Materialized Views"</para>
+			</listitem>
+			<listitem>
+				<para>Generate the DDL for your physical model materialization target tables.  This can be done by selecting the model, right clicking, then choosing Export->"Metadata Modeling"->"Data Definition Language (DDL) File".
+				This script can be used to create the desired schema for your materialization target on whatever source you choose.
+				</para>
+			</listitem>
+			<listitem>
+				<para>Determine a load and refresh strategy.  With the schema created the most simplistic approach is to just load the data.  
+				The load can even be done through Teiid with <code>insert into target_table select * from matview option nocache</code>.
+				That however may be too simplistic because you index creation may be more performant if deferred until after the table has been created.  
+				Also full snapshot refreshes are best done to a staging table then swapping it for the existing physical table to ensure that the refresh
+				 does not impact user queries and to ensure that the table is valid prior to use.</para>
+			</listitem>
+		</orderedlist>
+	</section>
+	<section>
+		<title>Internal Materialization</title>
+		<para>Internal materialization creates Teiid temporary tables to hold the materialized table.  While these tables are not fully durable, they perform 
+		well in most circumstances and the data is present at each Teiid instance which removes the single point of failure and network overhead of an external database. 
+		Internal materialization also provides more built-in facilities for refreshing and monitoring.</para>
+		<section>
+			<title>Loading And Refreshing</title>
+			<para>An internal materialized view table is initially in an invalid state (there is no data).  The first user query will trigger an implicit loading of the data.  
+			All other queries against the materialized view will block until the load completes.
+			In some situations administrators may wish to better control when the cache is loaded with a call to <code>SYS.refreshMatView</code>.  The initial load may itself trigger the initial load
+			of dependent materialized views.  After the initial load user queries against the materialized view table will only block if it is in an invalid state.
+			The valid state may also be controled through the <code>SYS.refreshMatView</code> procedure.
+			<example>
+				<title>Invalidating Refresh</title>
+				<programlisting>CALL SYS.refreshMatView(viewname=>'schema.matview', invalidate=>true)</programlisting>
+				<para>matview will be refreshed and user queries will block until the refresh is complete (or fails).</para>
+			</example>
+			While the initial load may trigger a transitive loading of dependent materialized views, 
+			subsequent refreshes performed with <code>refreshMatView</code> will use dependent materialized view tables if they exist.  Only one load may occur at a time.  If a load is already in progress when
+			the <code>SYS.refreshMatView</code> procedure is called, it will return -1 immediately rather than preempting the current load.
+			</para>
+			<para>The <link linkend="cache-hint">cache hint</link> may be used to automatically trigger a full snapshot refresh after a specified time to live.
+			<example>
+				<title>Auto-refresh Transformation Query</title>
+				<programlisting>/*+ cache(ttl:3600000) */ select t.col, t1.col from t, t1 where t.id = t1.id</programlisting>
+			</example>
+			</para>
+			<para>In advanced use-cases the <link linkend="cache-hint">cache hint</link> may also be used to mark an internal materialized view as updatable.
+			An updatable internal materialized view may use the <code>SYS.refreshMatViewRow</code> procedure to update a single row in the materialized table.
+			To be updatable the materialized view must have a single column primary key.  Composite keys are not yet supported by <code>SYS.refreshMatViewRow</code>.
+			<example>
+				<title>Updatable Scenario</title>
+				<para>Transofrmation Query: <programlisting>/*+ cache(updatable) */ select t.col, t1.col from t, t1 where t.id = t1.id</programlisting></para>
+				<para>Update: <programlisting>CALL SYS.updateMatViewRow(viewname=>'schema.matview', key=>5)</programlisting></para>
+				<para>Given that the schema.matview defines interger column col as it's primary key, the update will check the live source(s) for the row values.  
+				If it exists, the materialized view table row will be updated.  If it does not exist the correpsonding row will be deleted.</para>
+			</example>
+			The update query will not use dependent materialized view tables, so care should be taken to ensure that getting a single 
+			row from this transformation query performs well.  This may require the use of depedent join hints.
+			When the updatable option is not specified, accessing the materialized view table is more efficient because modifications do not need to be considered.  
+ 			Therefore, only specify the updatable option if row based incremental updates are needed.  Even when performing row updates, full snapshot refreshes may be needed to ensure consistency.
+			</para>
+		</section>
+		<section>
+			<title>Limitations</title>
+			<itemizedlist>
+				<listitem><para>Secondary index information is currently not used.  An index is only created for the primary key.</para></listitem>
+			</itemizedlist>
+		</section>
 	</section>
 </chapter>
