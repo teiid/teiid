@@ -706,7 +706,7 @@ public class RelationalPlanner {
 	private SymbolMap getCorrelatedReferences(PlanNode parent, PlanNode node,
 			LanguageObject lo) {
 		PlanNode rootJoin = parent;
-		while (rootJoin.getParent() != null && rootJoin.getParent().getType() == NodeConstants.Types.JOIN) {
+		while (rootJoin.getParent() != null && rootJoin.getParent().getType() == NodeConstants.Types.JOIN && !rootJoin.getParent().getGroups().isEmpty()) {
 			rootJoin = rootJoin.getParent();
 		}
 		List<Reference> correlatedReferences = new ArrayList<Reference>();

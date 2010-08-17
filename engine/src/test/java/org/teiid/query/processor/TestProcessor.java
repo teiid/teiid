@@ -7485,6 +7485,21 @@ public class TestProcessor {
         helpProcess(plan, dataManager, expected);
     }
     
+    @Test public void testCorrelatedNestedTable5() {
+    	String sql = "select y.e1, y.e2, z.e2 from (exec pm1.sq1()) y, table (exec pm1.sq2(y.e1)) x, table (exec pm1.sq2(x.e1)) z where y.e2 = 2"; //$NON-NLS-1$
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("b", 2, 2),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
     @Test public void testUncorrelatedScalarSubqueryPushdown() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         FakeMetadataFacade metadata = example1();
