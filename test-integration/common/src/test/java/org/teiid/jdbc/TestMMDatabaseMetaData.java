@@ -895,7 +895,7 @@ public class TestMMDatabaseMetaData {
         expected.put("getCatalogSeparator", ""); //$NON-NLS-1$ //$NON-NLS-2$
         expected.put("getCatalogTerm", "VirtualDatabase"); //$NON-NLS-1$ //$NON-NLS-2$
         expected.put("getDatabaseProductName", "Teiid Embedded"); //$NON-NLS-1$ //$NON-NLS-2$
-        expected.put("getDatabaseProductVersion", "7.1"); //$NON-NLS-1$ //$NON-NLS-2$
+        expected.put("getDatabaseProductVersion", "7.2"); //$NON-NLS-1$ //$NON-NLS-2$
         expected.put("getDriverName", "Teiid JDBC Driver"); //$NON-NLS-1$ //$NON-NLS-2$
         expected.put("getDriverVersion", ApplicationInfo.getInstance().getMajorReleaseVersion()+"."+ApplicationInfo.getInstance().getMinorReleaseVersion()); //$NON-NLS-1$ //$NON-NLS-2$
         expected.put("getExtraNameCharacters", ".@"); //$NON-NLS-1$ //$NON-NLS-2$
