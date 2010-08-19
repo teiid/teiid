@@ -154,11 +154,11 @@ public class AdminShell {
 		return getAdmin().getCacheTypes();
 	}
 	
-	@Doc(text = "Cancel a request")
+	@Doc(text = "Change a VDB Connection Type")
 	public static void changeVDBConnectionType(
 			@Doc(text = "vdb name") String vdbName, 
 			@Doc(text = "vdb version") int vdbVersion,
-			@Doc(text = "Connection Type") String type)
+			@Doc(text = "Connection Type (NONE, BY_VERSION, or ANY") String type)
 			throws AdminException {
 		getAdmin().changeVDBConnectionType(vdbName, vdbVersion, ConnectionType.valueOf(type));
 	}
