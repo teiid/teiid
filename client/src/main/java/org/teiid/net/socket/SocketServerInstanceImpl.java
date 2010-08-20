@@ -30,7 +30,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
 import java.util.Iterator;
 import java.util.Map;
@@ -53,7 +52,6 @@ import org.teiid.core.crypto.CryptoException;
 import org.teiid.core.crypto.Cryptor;
 import org.teiid.core.crypto.DhKeyGenerator;
 import org.teiid.core.crypto.NullCryptor;
-import org.teiid.core.util.ApplicationInfo;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.HostInfo;
 import org.teiid.net.NetPlugin;
@@ -69,31 +67,28 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 	static final int HANDSHAKE_RETRIES = 10;
     private static Logger log = Logger.getLogger("org.teiid.client.sockets"); //$NON-NLS-1$
 
-	private AtomicInteger MESSAGE_ID = new AtomicInteger();
+	private static AtomicInteger MESSAGE_ID = new AtomicInteger();
     private Map<Serializable, ResultsReceiver<Object>> asynchronousListeners = new ConcurrentHashMap<Serializable, ResultsReceiver<Object>>();
 
-	private HostInfo hostInfo;
-	private boolean ssl;
     private long synchTimeout;
+    private HostInfo info;
 
     private ObjectChannel socketChannel;
     private Cryptor cryptor;
+    private String serverVersion;
     
     private boolean hasReader;
     
-    public SocketServerInstanceImpl() {
-    	
-    }
-
-    public SocketServerInstanceImpl(final HostInfo host, boolean ssl, long synchTimeout) {
-        this.hostInfo = host;
-        this.ssl = ssl;
+    public SocketServerInstanceImpl(HostInfo info, long synchTimeout) {
+    	if (!info.isResolved()) {
+    		throw new AssertionError("Expected HostInfo to be resolved"); //$NON-NLS-1$
+    	}
+        this.info = info;
         this.synchTimeout = synchTimeout;
     }
     
     public synchronized void connect(ObjectChannelFactory channelFactory) throws CommunicationException, IOException {
-        InetSocketAddress address = new InetSocketAddress(hostInfo.getInetAddress(), hostInfo.getPortNumber());
-        this.socketChannel = channelFactory.createObjectChannel(address, ssl);
+        this.socketChannel = channelFactory.createObjectChannel(new InetSocketAddress(info.getInetAddress(), info.getPortNumber()), info.isSsl());
         try {
         	doHandshake();
         } catch (CommunicationException e) {
@@ -105,18 +100,9 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
         }
     }
     
-	@Override
+    @Override
     public HostInfo getHostInfo() {
-    	return this.hostInfo;
-    }
-    
-	@Override
-    public SocketAddress getRemoteAddress() {
-    	return this.socketChannel.getRemoteAddress();
-    }
-    
-    static String getVersionInfo() {
-        return ApplicationInfo.getInstance().getMajorReleaseNumber();
+    	return info;
     }
     
     private void doHandshake() throws IOException, CommunicationException {
@@ -143,8 +129,8 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
             /*if (!getVersionInfo().equals(handshake.getVersion())) {
                 throw new CommunicationException(NetPlugin.Util.getString("SocketServerInstanceImpl.version_mismatch", getVersionInfo(), handshake.getVersion())); //$NON-NLS-1$
             }*/
-            
-            handshake.setVersion(getVersionInfo());
+            serverVersion = handshake.getVersion();
+            handshake.setVersion();
             
             byte[] serverPublicKey = handshake.getPublicKey();
             
@@ -162,12 +148,17 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
         	throw new CommunicationException(err);
         }
     }
+    
+    @Override
+    public String getServerVersion() {
+		return serverVersion;
+	}
 
     public boolean isOpen() {
         return socketChannel.isOpen();
     }
 
-    protected void send(Message message, ResultsReceiver<Object> listener, Serializable messageKey)
+    public void send(Message message, ResultsReceiver<Object> listener, Serializable messageKey)
         throws CommunicationException, InterruptedException {
 	    if (listener != null) {
 	        asynchronousListeners.put(messageKey, listener);
@@ -227,6 +218,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
                 listener.receiveResults(messagePacket.getContents());
             }
         } else {
+        	//TODO: could ping back
         	log.log(Level.FINE, "packet ignored:" + packet); //$NON-NLS-1$ 
         }
     }
@@ -242,7 +234,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
         return this.cryptor;
     }
     
-    void read(long timeout, TimeUnit unit, ResultsFuture<?> future) throws TimeoutException, InterruptedException {
+    public void read(long timeout, TimeUnit unit, ResultsFuture<?> future) throws TimeoutException, InterruptedException {
     	long timeoutMillis = (int)Math.min(unit.toMillis(timeout), Integer.MAX_VALUE);
 		long start = System.currentTimeMillis();
 		while (!future.isDone()) {
@@ -280,14 +272,23 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 			}
 		}
     }
-
+    
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T getService(Class<T> iface) {
-		return (T)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new RemoteInvocationHandler(iface));
+		return (T)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new RemoteInvocationHandler(iface) {
+			@Override
+			protected SocketServerInstanceImpl getInstance() {
+				return SocketServerInstanceImpl.this;
+			}
+		});
 	}
 	
-	public class RemoteInvocationHandler implements InvocationHandler {
+    public long getSynchTimeout() {
+		return synchTimeout;
+	}
+
+	public static abstract class RemoteInvocationHandler implements InvocationHandler {
 
 		private boolean secure;
 		private Class<?> targetClass;
@@ -302,17 +303,18 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 				throws Throwable {
 			Throwable t = null;
 			try {
+				final SocketServerInstance instance = getInstance();
 				Message message = new Message();
 				message.setContents(new ServiceInvocationStruct(args, method.getName(),
 						targetClass));
 				if (secure) {
-					message.setContents(getCryptor().sealObject(message.getContents()));
+					message.setContents(instance.getCryptor().sealObject(message.getContents()));
 				}
 				ResultsFuture<Object> results = new ResultsFuture<Object>() {
 					@Override
 					protected Object convertResult() throws ExecutionException {
 						try {
-							Object result = getCryptor().unsealObject((Serializable) super.convertResult());
+							Object result = instance.getCryptor().unsealObject(super.convertResult());
 							if (result instanceof ExceptionHolder) {
 								throw new ExecutionException(((ExceptionHolder)result).getException());
 							}
@@ -342,17 +344,17 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 					public Object get(long timeout, TimeUnit unit)
 							throws InterruptedException, ExecutionException,
 							TimeoutException {
-						read(timeout, unit, this);
+						instance.read(timeout, unit, this);
 						return super.get(timeout, unit);
 					}
 				};
 				final ResultsReceiver<Object> receiver = results.getResultsReceiver();
 	
-				send(message, receiver, Integer.valueOf(MESSAGE_ID.getAndIncrement()));
+				instance.send(message, receiver, Integer.valueOf(MESSAGE_ID.getAndIncrement()));
 				if (ResultsFuture.class.isAssignableFrom(method.getReturnType())) {
 					return results;
 				}
-				return results.get(synchTimeout, TimeUnit.MILLISECONDS);
+				return results.get(instance.getSynchTimeout(), TimeUnit.MILLISECONDS);
 			} catch (ExecutionException e) {
 				t = e.getCause();
 			} catch (TimeoutException e) {
@@ -362,6 +364,8 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 			}
 			throw ExceptionUtil.convertException(method, t);
 		}
+		
+		protected abstract SocketServerInstance getInstance() throws CommunicationException;
 
 	}
 

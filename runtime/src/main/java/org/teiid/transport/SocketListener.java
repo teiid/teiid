@@ -31,7 +31,6 @@ import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.teiid.common.buffer.StorageManager;
-import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.NamedThreadFactory;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -97,10 +96,6 @@ public class SocketListener implements ChannelListenerFactory {
     
     public int getPort() {
     	return ((InetSocketAddress)this.serverChanel.getLocalAddress()).getPort();
-    }
-    
-    static String getVersionInfo() {
-        return ApplicationInfo.getInstance().getMajorReleaseNumber();
     }
     
     public void stop() {

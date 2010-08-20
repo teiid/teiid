@@ -94,7 +94,6 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
 
 	public void onConnection() throws CommunicationException {
         Handshake handshake = new Handshake();
-        handshake.setVersion(SocketListener.getVersionInfo());
         
         if (usingEncryption) {
             keyGen = new DhKeyGenerator();

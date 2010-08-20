@@ -29,6 +29,10 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringReader;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
+import java.util.Collection;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -60,7 +64,7 @@ import org.teiid.net.socket.SocketServerInstanceFactory;
 import org.teiid.net.socket.SocketServerInstanceImpl;
 import org.teiid.net.socket.UrlServerDiscovery;
 
-
+@SuppressWarnings("nls")
 public class TestSocketRemoting {
 	
 	public interface FakeService {
@@ -104,15 +108,11 @@ public class TestSocketRemoting {
 		ClientServiceRegistryImpl server;
 		private ResultsReceiver<Object> listener;
 
-		public FakeClientServerInstance(ClientServiceRegistryImpl server) {
-			super();
+		public FakeClientServerInstance(ClientServiceRegistryImpl server) throws UnknownHostException {
+			super(new HostInfo("foo", new InetSocketAddress(InetAddress.getLocalHost(), 1)), 1000);
 			this.server = server;
 		}
-
-		public HostInfo getHostInfo() {
-			return new HostInfo("fake", 1); //$NON-NLS-1$
-		}
-
+		
 		public boolean isOpen() {
 			return true;
 		}
@@ -182,6 +182,12 @@ public class TestSocketRemoting {
 				}
 				
 				@Override
+				public ResultsFuture<?> ping(Collection<String> sessions)
+					throws TeiidComponentException, CommunicationException {
+					return null;
+				}
+				
+				@Override
 				public void assertIdentity(SessionToken sessionId)
 					throws InvalidSessionException,
 					TeiidComponentException {
@@ -226,12 +232,24 @@ public class TestSocketRemoting {
 		SocketServerConnection connection = new SocketServerConnection(new SocketServerInstanceFactory() {
 		
 			@Override
-			public SocketServerInstance getServerInstance(HostInfo info,
-					boolean ssl) throws CommunicationException, IOException {
+			public SocketServerInstance getServerInstance(HostInfo info)
+					throws CommunicationException, IOException {
 				return serverInstance;
 			}
 			
-		}, false, new UrlServerDiscovery(new TeiidURL("foo", 1, false)), new Properties(), null); //$NON-NLS-1$
+			@Override
+			public void connected(SocketServerInstance instance,
+					SessionToken session) {
+				
+			}
+			
+			@Override
+			public void disconnected(SocketServerInstance instance,
+					SessionToken session) {
+				
+			}
+			
+		}, false, new UrlServerDiscovery(new TeiidURL("0.0.0.0", 1, false)), new Properties()); //$NON-NLS-1$
 		return connection;
 	}
 	

@@ -123,11 +123,11 @@ public class LocalServerConnection implements ServerConnection {
 	}
 
 	@Override
-	public ResultsFuture<?> isOpen() {
+	public boolean isOpen(long msToTest) {
 		if (shutdown) {
-			return null;
+			return false;
 		}
-		return ResultsFuture.NULL_FUTURE;
+		return true;
 	}
 
 	public void close() {

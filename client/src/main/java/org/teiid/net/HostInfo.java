@@ -23,6 +23,7 @@
 package org.teiid.net;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 
 import org.teiid.core.util.ArgCheck;
@@ -38,12 +39,12 @@ public class HostInfo {
     private String hostName;
     private int portNumber = 0;
     private InetAddress inetAddress;
-
-    public InetAddress getInetAddress() throws UnknownHostException {
-    	if (inetAddress != null) {
-    		return inetAddress;
-    	}
-    	return InetAddress.getByName(this.hostName);
+    private boolean ssl;
+    
+    public HostInfo(String hostName, InetSocketAddress addr) {
+    	this.hostName = hostName;
+    	this.portNumber = addr.getPort();
+    	this.inetAddress = addr.getAddress();
     }
     
     public HostInfo (String host, int port) {
@@ -59,6 +60,13 @@ public class HostInfo {
 			}
 		} catch (UnknownHostException e) {
 		}
+    }
+    
+    public InetAddress getInetAddress() throws UnknownHostException {
+    	if (inetAddress != null) {
+    		return inetAddress;
+    	}
+    	return InetAddress.getByName(this.hostName);
     }
     
     public String getHostName() {
@@ -87,7 +95,13 @@ public class HostInfo {
     		return false;
     	}
         HostInfo hostInfo = (HostInfo) obj;
-        return hostName.equals(hostInfo.getHostName()) && portNumber == hostInfo.getPortNumber();
+        if (portNumber != hostInfo.getPortNumber()) {
+        	return false;
+        }
+        if (inetAddress != null && hostInfo.inetAddress != null) {
+        	return inetAddress.equals(hostInfo.inetAddress);
+        }
+        return hostName.equals(hostInfo.getHostName());
     }
 
     /** 
@@ -98,5 +112,17 @@ public class HostInfo {
         int hc = HashCodeUtil.hashCode(0, hostName);
         return HashCodeUtil.hashCode(hc, portNumber);
     }
+    
+    public boolean isResolved() {
+    	return this.inetAddress != null;
+    }
+    
+    public boolean isSsl() {
+		return ssl;
+	}
+    
+    public void setSsl(boolean ssl) {
+		this.ssl = ssl;
+	}
 
 }

@@ -30,11 +30,16 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -42,12 +47,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.teiid.client.security.ILogon;
+import org.teiid.client.security.InvalidSessionException;
+import org.teiid.client.security.SessionToken;
 import org.teiid.core.TeiidException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.HostInfo;
+import org.teiid.net.ServerConnection;
 import org.teiid.net.ServerConnectionFactory;
 import org.teiid.net.TeiidURL;
 
@@ -106,13 +114,11 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	private static class CachedInstance {
 		HostInfo info;
 		Integer instance;
-		boolean ssl;
 		SocketServerInstance actual;
 		SocketServerInstance proxy;
 		
-		public CachedInstance(HostInfo info, boolean ssl) {
+		public CachedInstance(HostInfo info) {
 			this.info = info;
-			this.ssl = ssl;
 		}
 
 		@Override
@@ -129,7 +135,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 				return false;
 			}
 			CachedInstance other = (CachedInstance) obj;
-			if (!info.equals(other.info) || ssl != other.ssl) {
+			if (!info.equals(other.info)) {
 				return false;
 			}
 			if (instance == null || other.instance == null) {
@@ -141,6 +147,8 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	
     private ObjectChannelFactory channelFactory;
 	private Timer pingTimer;
+	
+	private HashMap<HostInfo, Set<SessionToken>> sessions = new HashMap<HostInfo, Set<SessionToken>>();
 	
 	//instance pooling
 	private AtomicInteger instanceCount = new AtomicInteger();
@@ -180,15 +188,58 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	public void initialize(Properties info) {
 		PropertiesUtils.setBeanProperties(this, info, "org.teiid.sockets"); //$NON-NLS-1$
 		this.pingTimer = new Timer("SocketPing", true); //$NON-NLS-1$
+		this.pingTimer.schedule(new TimerTask() {
+			
+			@Override
+			public void run() {
+				Set<Map.Entry<HostInfo, Set<SessionToken>>> sessionEntries = null;
+				synchronized (sessions) {
+					sessionEntries = new HashSet<Map.Entry<HostInfo, Set<SessionToken>>>(sessions.entrySet());
+				}
+				for (Map.Entry<HostInfo, Set<SessionToken>> entry : sessionEntries) {
+					SocketServerInstance instance = null;
+					HashSet<SessionToken> entries = null;
+					synchronized (sessions) {
+						entries = new HashSet<SessionToken>(entry.getValue());
+					}
+					try {
+						instance = getServerInstance(entry.getKey());
+						ILogon logon = instance.getService(ILogon.class);
+						if ("7.1.1".compareTo(instance.getServerVersion()) > 0) { //$NON-NLS-1$
+							for (SessionToken session : entries) {
+								try {
+									logon.assertIdentity(session);
+									logon.ping();
+								} catch (InvalidSessionException e) {
+								}
+							}
+						} else {
+							ArrayList<String> sessionStrings = new ArrayList<String>(entry.getValue().size());
+							for (SessionToken session : entries) {
+								sessionStrings.add(session.getSessionID());
+							}
+							logon.ping(sessionStrings);
+						}
+					} catch (Exception e) {
+						log.log(Level.WARNING, "Error performing keep-alive ping", e); //$NON-NLS-1$
+					} finally {
+						if (instance != null) {
+							instance.shutdown();
+						}
+					}
+				}
+			}
+		}, ServerConnection.PING_INTERVAL, ServerConnection.PING_INTERVAL);
 		this.channelFactory = new OioOjbectChannelFactory(info);
 	}
-			
-	public SocketServerInstance getServerInstance(HostInfo info, boolean ssl) throws CommunicationException, IOException {
+	
+	@Override
+	public SocketServerInstance getServerInstance(HostInfo info) throws CommunicationException, IOException {
 		CachedInstance key = null;
-		CachedInstance instance = null;
 		boolean useCache = this.maxCachedInstances > 0; 
 		if (useCache) {
-			key = new CachedInstance(info, ssl);
+			CachedInstance instance = null;
+			key = new CachedInstance(info);
 			synchronized (instancePool) {
 				instance = instancePool.remove(key);
 			}
@@ -197,7 +248,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 				boolean valid = false;
 				try {
 					Future<?> success = logon.ping();
-					success.get(this.channelFactory.getSoTimeout(), TimeUnit.MICROSECONDS);
+					success.get(this.channelFactory.getSoTimeout(), TimeUnit.MILLISECONDS);
 					valid = true;
 				} catch (Exception e) {
 					log.log(Level.FINE, "Error performing ping, will select another instance", e); //$NON-NLS-1$
@@ -219,7 +270,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 				}
 			}
 		}
-		SocketServerInstanceImpl ssii = new SocketServerInstanceImpl(info, ssl, getSynchronousTtl());
+		SocketServerInstanceImpl ssii = new SocketServerInstanceImpl(info, getSynchronousTtl());
 		ssii.connect(this.channelFactory);
 		if (useCache) {
 			key.actual = ssii;
@@ -256,7 +307,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 		
 		discovery.init(url, connectionProperties);
 		
-		return new SocketServerConnection(this, url.isUsingSSL(), discovery, connectionProperties, pingTimer);
+		return new SocketServerConnection(this, url.isUsingSSL(), discovery, connectionProperties);
 	}
 
 	static void updateConnectionProperties(Properties connectionProperties) {
@@ -283,6 +334,31 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	
 	public void setMaxCachedInstances(int maxCachedInstances) {
 		this.maxCachedInstances = maxCachedInstances;
+	}
+	
+	@Override
+	public void connected(SocketServerInstance instance, SessionToken session) {
+		synchronized (sessions) {
+			Set<SessionToken> instanceSessions = sessions.get(instance.getHostInfo());
+			if (instanceSessions == null) {
+				instanceSessions = new HashSet<SessionToken>();
+				sessions.put(instance.getHostInfo(), instanceSessions);
+			}
+			instanceSessions.add(session);
+		}
+	}
+	
+	@Override
+	public void disconnected(SocketServerInstance instance, SessionToken session) {
+		synchronized (sessions) {
+			Set<SessionToken> instanceSessions = sessions.get(instance.getHostInfo());
+			if (instanceSessions != null) {
+				instanceSessions.remove(session);
+				if (instanceSessions.isEmpty()) {
+					sessions.remove(instance.getHostInfo());
+				}
+			}
+		}
 	}
 
 }

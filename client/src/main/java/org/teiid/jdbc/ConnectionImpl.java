@@ -45,9 +45,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -878,20 +875,7 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
     }
     
 	public boolean isValid(int timeout) throws SQLException {
-		ResultsFuture<?> future = this.getServerConnection().isOpen();
-		if (future == null) {
-			return false;
-		}
-		try {
-			future.get(timeout, TimeUnit.SECONDS);
-			return true;
-		} catch (InterruptedException e) {
-			return false;
-		} catch (ExecutionException e) {
-			return false;
-		} catch (TimeoutException e) {
-			return false;
-		}
+		return this.getServerConnection().isOpen(timeout * 1000);
 	}
 	
 	public void recycleConnection() {
@@ -918,7 +902,7 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
         
 		//perform load balancing
 		if (this.serverConn instanceof SocketServerConnection) {
-			((SocketServerConnection)this.serverConn).selectNewServerInstance(this.getDQP());
+			((SocketServerConnection)this.serverConn).selectNewServerInstance();
 		}
 	}
 	
