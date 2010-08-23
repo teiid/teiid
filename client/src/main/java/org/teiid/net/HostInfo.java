@@ -32,6 +32,10 @@ import org.teiid.core.util.HashCodeUtil;
 
 /**
  * Defines the hostname/port or {@link InetAddress} to connect to a host.
+ * 
+ * Similar to an {@link InetSocketAddress} except that it can be constructed
+ * fully resolved, with an {@link InetAddress} and a hostname.
+ * 
  * @since 4.2
  */
 public class HostInfo {
@@ -41,12 +45,23 @@ public class HostInfo {
     private InetAddress inetAddress;
     private boolean ssl;
     
+    /**
+     * Construct a fully resolved {@link HostInfo}.
+     * @param hostName
+     * @param addr
+     */
     public HostInfo(String hostName, InetSocketAddress addr) {
     	this.hostName = hostName;
     	this.portNumber = addr.getPort();
     	this.inetAddress = addr.getAddress();
     }
     
+    /**
+     * Construct a {@link HostInfo} that can resolve each
+     * time an {@link InetAddress} is asked for.
+     * @param host
+     * @param port
+     */
     public HostInfo (String host, int port) {
     	ArgCheck.isNotNull(host);
 		this.hostName = host.toLowerCase();
@@ -100,6 +115,9 @@ public class HostInfo {
         }
         if (inetAddress != null && hostInfo.inetAddress != null) {
         	return inetAddress.equals(hostInfo.inetAddress);
+        }
+        if (ssl != hostInfo.ssl) {
+        	return false;
         }
         return hostName.equals(hostInfo.getHostName());
     }

@@ -100,5 +100,7 @@ public interface ExecutionProperties {
      */
     public static final String NOEXEC = "NOEXEC"; //$NON-NLS-1$
     
+    public static final String NEWINSTANCE = "NEWINSTANCE"; //$NON-NLS-1$
+    
 }
     

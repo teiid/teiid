@@ -35,11 +35,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.client.security.ILogon;
+import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.security.LogonException;
 import org.teiid.client.security.LogonResult;
 import org.teiid.client.security.SessionToken;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.ComponentNotFoundException;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.crypto.NullCryptor;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.dqp.service.SessionService;
@@ -155,6 +158,18 @@ public class TestCommSockets {
 						throws LogonException, ComponentNotFoundException {
 					return new LogonResult(new SessionToken("dummy"), "x", 1, "z");
 				}
+				
+				@Override
+				public ResultsFuture<?> ping() throws InvalidSessionException,
+						TeiidComponentException {
+					return ResultsFuture.NULL_FUTURE;
+				}
+				
+				@Override
+				public void assertIdentity(SessionToken checkSession)
+						throws InvalidSessionException, TeiidComponentException {
+					return;
+				}
 
 			}, null); 
 			server.registerClientService(FakeService.class, new TestSocketRemoting.FakeServiceImpl(), null);
@@ -204,6 +219,21 @@ public class TestCommSockets {
 		config.setAuthenticationMode(SSLConfiguration.ANONYMOUS);
 		Properties p = new Properties();
 		helpEstablishConnection(true, config, p);
+	}
+	
+	@Test public void testSelectNewInstance() throws Exception {
+		SSLConfiguration config = new SSLConfiguration();
+		Properties p = new Properties();
+		SocketServerConnection conn = helpEstablishConnection(false, config, p);
+		SocketListenerStats stats = listener.getStats();
+		assertEquals(2, stats.objectsRead); // handshake response, logon,
+		assertEquals(1, stats.sockets);
+		conn.cleanUp();
+		assertTrue(conn.isOpen(1000));
+		stats = listener.getStats();
+		assertEquals(5, stats.objectsRead); // ping (pool test), assert identity, ping (isOpen)
+		assertEquals(1, stats.sockets);
+		conn.close();
 	}
 	
 }

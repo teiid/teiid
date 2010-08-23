@@ -3,7 +3,7 @@
 <!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/custom.dtd">
 %CustomDTD;
 ]>
-<chapter id="entitlements">
+<chapter id="dataroles">
     <title>Data Roles</title>
     <para>Data roles, also called entitlements, are sets of permissions that are defined 
     per VDB that dictate data access (create, read,  update, delete). The use of data roles is controlled system wide with the property in 

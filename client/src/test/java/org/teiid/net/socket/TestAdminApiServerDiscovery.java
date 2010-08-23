@@ -64,7 +64,7 @@ public class TestAdminApiServerDiscovery extends TestCase {
 		processes.add(p2);
 		Mockito.stub(serverAdmin.getProcesses("*")).toReturn(processes); //$NON-NLS-1$
 		Mockito.stub(instance.getService(Admin.class)).toReturn(serverAdmin);
-		Mockito.stub(instance.getHostInfo().getHostName()).toReturn("foo"); //$NON-NLS-1$
+		Mockito.stub(instance.getHostInfo()).toReturn(knownHost);
 		
 		discovery.connectionSuccessful(knownHost);
 		List<HostInfo> knownHosts = discovery.getKnownHosts(new LogonResult(), instance);

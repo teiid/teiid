@@ -38,4 +38,6 @@ public interface ServerConnection {
 	
 	boolean isSameInstance(ServerConnection conn) throws CommunicationException;
 	
+	void cleanUp();
+	
 }

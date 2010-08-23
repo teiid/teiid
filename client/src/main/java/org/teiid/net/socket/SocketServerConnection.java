@@ -28,7 +28,6 @@ package org.teiid.net.socket;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -114,7 +113,7 @@ public class SocketServerConnection implements ServerConnection {
 		List<HostInfo> hostCopy = new ArrayList<HostInfo>(hostKeys);
 		int knownHosts = hostKeys.size();
 		while (hostKeys.size() > 0) {
-			HostInfo hostInfo = hostKeys.remove((int) (Math.random() * hostKeys.size()));
+			HostInfo hostInfo = this.serverDiscovery.selectNextInstance(hostKeys);
 
 			Exception ex = null;
 			try {
@@ -165,9 +164,6 @@ public class SocketServerConnection implements ServerConnection {
 
 	private ILogon connect(HostInfo hostInfo) throws CommunicationException,
 			IOException {
-		if (!hostInfo.isResolved()) {
-			hostInfo = new HostInfo(hostInfo.getHostName(), new InetSocketAddress(hostInfo.getInetAddress(), hostInfo.getPortNumber()));
-		}
 		hostInfo.setSsl(secure);
 		this.serverInstance = connectionFactory.getServerInstance(hostInfo);
 		this.logonResult = logonResults.get(hostInfo);
@@ -305,7 +301,7 @@ public class SocketServerConnection implements ServerConnection {
 		}
 	}
 	
-	public void selectNewServerInstance() {
+	public void cleanUp() {
 		closeServerInstance();
 	}
 	

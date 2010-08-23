@@ -900,10 +900,7 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
         	logger.log(Level.WARNING, JDBCPlugin.Util.getString("MMXAConnection.rolling_back_error"), e); //$NON-NLS-1$
         }
         
-		//perform load balancing
-		if (this.serverConn instanceof SocketServerConnection) {
-			((SocketServerConnection)this.serverConn).selectNewServerInstance();
-		}
+		this.serverConn.cleanUp();
 	}
 	
 	public boolean isSameProcess(ConnectionImpl conn) throws CommunicationException {
