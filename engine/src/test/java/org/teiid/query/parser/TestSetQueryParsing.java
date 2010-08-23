@@ -197,7 +197,7 @@ public class TestSetQueryParsing extends TestCase {
         setQuery = new SetQuery(Operation.UNION, false, setQuery, query);
 
         TestParser.helpTest("select c1 from g1 union select c2 from g2 union select c3 from g3",  //$NON-NLS-1$
-                 "(SELECT c1 FROM g1 UNION SELECT c2 FROM g2) UNION SELECT c3 FROM g3",  //$NON-NLS-1$
+                 "SELECT c1 FROM g1 UNION SELECT c2 FROM g2 UNION SELECT c3 FROM g3",  //$NON-NLS-1$
                  setQuery);
     }
     
@@ -258,7 +258,7 @@ public class TestSetQueryParsing extends TestCase {
         setQuery = new SetQuery(SetQuery.Operation.UNION, false, setQuery, query);
 
         TestParser.helpTest("select c1 from g1 union select c2 from g2 union all select c3 from g3 union select c4 from g4",  //$NON-NLS-1$
-                 "((SELECT c1 FROM g1 UNION SELECT c2 FROM g2) UNION ALL SELECT c3 FROM g3) UNION SELECT c4 FROM g4",  //$NON-NLS-1$
+                 "SELECT c1 FROM g1 UNION SELECT c2 FROM g2 UNION ALL SELECT c3 FROM g3 UNION SELECT c4 FROM g4",  //$NON-NLS-1$
                  setQuery);
     }   
     

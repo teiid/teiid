@@ -4667,7 +4667,7 @@ public class TestOptimizer {
         ProcessorPlan plan = helpPlan(sql,  
                                       FakeMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
-                                      new String[] {"(SELECT g_2.intkey AS c_0, 'a' AS c_1 FROM BQT1.SmallA AS g_2 UNION ALL SELECT g_1.IntKey AS c_0, 'b' AS c_1 FROM BQT1.SmallA AS g_1) UNION ALL SELECT g_0.IntKey AS c_0, 'c' AS c_1 FROM BQT1.SmallA AS g_0"}, //$NON-NLS-1$ 
+                                      new String[] {"SELECT g_2.intkey AS c_0, 'a' AS c_1 FROM BQT1.SmallA AS g_2 UNION ALL SELECT g_1.IntKey AS c_0, 'b' AS c_1 FROM BQT1.SmallA AS g_1 UNION ALL SELECT g_0.IntKey AS c_0, 'c' AS c_1 FROM BQT1.SmallA AS g_0"}, //$NON-NLS-1$ 
                                       ComparisonMode.EXACT_COMMAND_STRING );
 
         checkNodeTypes(plan, FULL_PUSHDOWN);        
