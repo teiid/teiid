@@ -532,6 +532,8 @@
         	The default setting is to maintain 16 connections (see <code>org.teiid.sockets.maxCachedInstances</code> in the client jar's teiid-client-settings.properties file.  
         	If you're client is connecting to large numbers of Teiid instances and you're using post connection time load balancing, then consider increasing the number of cached instances.  
         	You may either set an analogous system property or create another version of teiid-client-settings.properties file and place it into the classpath ahead of the client jar.</para>
+        	<note><para>Session level temporary tables, currently running transactions, session level cache entries, and PreparedPlans for a given session will not be available on other cluster members.  
+        	Therefore, it is recommended that post connection time load balancing is only used when the logical connection could have been closed, but the actual connection is reused (the typical connection pool pattern).</para></note>
         </section>
         <section id="advancedconfig">
         	<title>Advanced Configuration</title>
