@@ -348,7 +348,7 @@ public final class RuleCollapseSource implements OptimizerRule {
 	private void replaceCorrelatedReferences(List<SubqueryContainer> containers) {
 		for (SubqueryContainer container : containers) {
 		    RelationalPlan subqueryPlan = (RelationalPlan)container.getCommand().getProcessorPlan();
-		    if (subqueryPlan == null) {
+		    if (subqueryPlan == null || !(subqueryPlan.getRootNode() instanceof AccessNode)) {
 		    	continue;
 		    }
 		    AccessNode child = (AccessNode)subqueryPlan.getRootNode();

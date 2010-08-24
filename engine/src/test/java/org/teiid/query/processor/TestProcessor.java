@@ -7512,7 +7512,7 @@ public class TestProcessor {
     
     @Test public void testUncorrelatedScalarSubqueryPushdown() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        FakeMetadataFacade metadata = example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, false);
@@ -7531,6 +7531,32 @@ public class TestProcessor {
         hdm.setBlockOnce(true);
         List[] expected = new List[] {
         		Arrays.asList("a"),
+        };    
+
+        helpProcess(plan, hdm, expected);
+    }
+    
+    @Test public void testUncorrelatedScalarSubqueryPushdown1() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        
+        BasicSourceCapabilities caps = getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, false);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpPlan("select pm1.g1.e1 from pm1.g1 where e1 < (select e1 from (EXEC pm1.sq1()) x order by e2 limit 1)", metadata,  //$NON-NLS-1$
+                                      null, capFinder,
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 < (SELECT e1 FROM (EXEC pm1.sq1()) AS x ORDER BY e2 LIMIT 1)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        checkNodeTypes(plan, FULL_PUSHDOWN);
+        
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 < 'z'", new List[] {Arrays.asList("c")});
+        hdm.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", new List[] {Arrays.asList("z", 1), Arrays.asList("b", 2)});
+        hdm.setBlockOnce(true);
+        List[] expected = new List[] {
+        		Arrays.asList("c"),
         };    
 
         helpProcess(plan, hdm, expected);
