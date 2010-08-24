@@ -25,14 +25,9 @@ package org.teiid.query.sql.lang;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
-import org.teiid.api.exception.query.QueryMetadataException;
-import org.teiid.core.TeiidComponentException;
-import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.util.VariableContext;
 
 

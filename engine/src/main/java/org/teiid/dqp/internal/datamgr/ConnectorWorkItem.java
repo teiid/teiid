@@ -219,15 +219,13 @@ public class ConnectorWorkItem implements ConnectorWork {
 	        // Create the execution based on mode
 	        final Execution exec = connector.createExecution(this.translatedCommand, this.securityContext, rmd, this.connection);
 	        if (this.translatedCommand instanceof Call) {
-	        	Assertion.isInstanceOf(this.execution, ProcedureExecution.class, "Call Executions are expected to be ProcedureExecutions"); //$NON-NLS-1$
-	        	this.execution = (ProcedureExecution)exec;
+	        	this.execution = Assertion.isInstanceOf(this.execution, ProcedureExecution.class, "Call Executions are expected to be ProcedureExecutions"); //$NON-NLS-1$
 	        	StoredProcedure proc = (StoredProcedure)command;
 	        	if (proc.returnParameters()) {
 	        		this.procedureBatchHandler = new ProcedureBatchHandler((Call)this.translatedCommand, (ProcedureExecution)this.execution);
 	        	}
 	        } else if (this.translatedCommand instanceof QueryExpression){
-	        	Assertion.isInstanceOf(this.execution, ResultSetExecution.class, "QueryExpression Executions are expected to be ResultSetExecutions"); //$NON-NLS-1$
-	        	this.execution = (ResultSetExecution)exec;
+	        	this.execution = Assertion.isInstanceOf(this.execution, ResultSetExecution.class, "QueryExpression Executions are expected to be ResultSetExecutions"); //$NON-NLS-1$
 	        } else {
 	        	Assertion.isInstanceOf(this.execution, UpdateExecution.class, "Update Executions are expected to be UpdateExecutions"); //$NON-NLS-1$
 	        	this.execution = new ResultSetExecution() {

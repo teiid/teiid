@@ -132,7 +132,7 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 
 		//can be one of string, xml, clob
 		param = metadataFactory.addProcedureParameter("request", TypeFacility.RUNTIME_NAMES.XML, Type.In, p); //$NON-NLS-1$
-		param.setAnnotation("The XML document or root element that represents the request.  If the ExecutionFactory is configured in with a DefaultServiceMode or MESSAGE then SOAP request must contain the entire SOAP message."); //$NON-NLS-1$
+		param.setAnnotation("The XML document or root element that represents the request.  If the ExecutionFactory is configured in with a DefaultServiceMode of MESSAGE, then the SOAP request must contain the entire SOAP message."); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
 		
 		param = metadataFactory.addProcedureParameter("endpoint", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$

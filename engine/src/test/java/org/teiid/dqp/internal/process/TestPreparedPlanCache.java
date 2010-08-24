@@ -62,7 +62,7 @@ public class TestPreparedPlanCache {
     	//No PreparedPlan at the begining
     	assertNull(cache.get(id));
     	//create one
-    	cache.put(id, FunctionMethod.SESSION_DETERMINISTIC, new PreparedPlan());
+    	cache.put(id, FunctionMethod.SESSION_DETERMINISTIC, new PreparedPlan(), null);
     	//should have one now
     	assertNotNull("Unable to get prepared plan from cache", cache.get(id)); //$NON-NLS-1$
     }
@@ -149,7 +149,7 @@ public class TestPreparedPlanCache {
 	    	CacheID id = new CacheID(session, pi, dummy.toString());
 
 	    	PreparedPlan pPlan = new PreparedPlan();
-    		cache.put(id, FunctionMethod.SESSION_DETERMINISTIC, pPlan);
+    		cache.put(id, FunctionMethod.SESSION_DETERMINISTIC, pPlan, null);
     		pPlan.setCommand(dummy); 
     		pPlan.setPlan(new RelationalPlan(new ProjectNode(i)));
             AnalysisRecord analysisRecord = new AnalysisRecord(true, false);
