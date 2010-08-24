@@ -42,6 +42,7 @@ import java.util.StringTokenizer;
 
 import org.junit.Test;
 import org.teiid.client.metadata.ParameterInfo;
+import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.TupleBuffer;
@@ -249,9 +250,18 @@ public class TestProcessor {
         TupleBuffer id = null;
         try {
             QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
-            processor.setNonBlocking(true);
+            //processor.setNonBlocking(true);
             BatchCollector collector = processor.createBatchCollector();
-            id = collector.collectTuples();
+            for (int i = 0; i < 100; i++) {
+            	try {
+            		id = collector.collectTuples();
+            	} catch (BlockedException e) {
+            		
+            	}
+            }
+            if (id == null) {
+            	fail("did not complete processing");
+            }
             if ( expectedResults != null ) {
             	examineResults(expectedResults, bufferMgr, id);
             }
@@ -7518,7 +7528,7 @@ public class TestProcessor {
         HardcodedDataManager hdm = new HardcodedDataManager();
         hdm.addData("SELECT MAX(g_0.e1) FROM pm1.g1 AS g_0", new List[] {Arrays.asList("c")});
         hdm.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 < 'c'", new List[] {Arrays.asList("a")});
-        
+        hdm.setBlockOnce(true);
         List[] expected = new List[] {
         		Arrays.asList("a"),
         };    
