@@ -37,6 +37,10 @@ public abstract class SubqueryAwareRelationalNode extends RelationalNode {
 
 	private SubqueryAwareEvaluator evaluator;
 
+	protected SubqueryAwareRelationalNode() {
+		super();
+	}
+	
 	public SubqueryAwareRelationalNode(int nodeID) {
 		super(nodeID);
 	}

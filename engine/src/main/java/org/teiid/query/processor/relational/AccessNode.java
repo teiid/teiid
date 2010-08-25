@@ -58,6 +58,10 @@ public class AccessNode extends SubqueryAwareRelationalNode {
     private boolean returnedRows = false;
     private Command nextCommand;
     
+    protected AccessNode() {
+		super();
+	}
+    
 	public AccessNode(int nodeID) {
 		super(nodeID);
 	}
@@ -218,7 +222,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	}
 
 	public Object clone(){
-		AccessNode clonedNode = new AccessNode(super.getID());
+		AccessNode clonedNode = new AccessNode();
 		this.copy(this, clonedNode);
 		return clonedNode;
 	}

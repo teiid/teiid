@@ -26,6 +26,7 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <UL>
+	<LI><B>Improved Plan Caching</B> - plans used by internal materialization and stored procedure plans will be automatically cached in the prepared plan cache.  Improvements were also made to reduce the memory footprint of the plans.
     <LI><B>Refined Load Balancing and Fail Over</B> - clients can use use the statement "SET NEWINSTANCE TRUE" to allow their connection to select a new server instance.  See the Client Developer's Guide for more information. 
 </UL>
 
@@ -62,6 +63,12 @@
 <h2><a name="Configuration">Configuration Issues</a></h2>
 
 See the See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
+
+<h4>from 7.1</h4>
+<ul>
+	<li>The default prepared plan cache size was increased to 512, since it is targeted by internal plans as well.
+</ul>
+
 <h4>from 7.0</h4>
 <ul>
     <li>The property to enable data roles in teiid-jboss-beans.xml has changed from useEntitlements to useDataRoles.
