@@ -29,10 +29,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.client.metadata.ParameterInfo;
-import org.teiid.core.TeiidException;
-import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.eval.Evaluator;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.util.ErrorMessageKeys;
@@ -303,7 +301,7 @@ public class SPParameter implements Serializable, Cloneable {
 			return true;
 		}
 
-		if(obj == null || !(obj instanceof SPParameter)){
+		if(!(obj instanceof SPParameter)){
 			return false;
 		}
 
@@ -314,11 +312,7 @@ public class SPParameter implements Serializable, Cloneable {
         }
         
         // If indexes match, check associated IDs if existent
-        if (this.getMetadataID() != null && other.getMetadataID() != null) {
-            return this.getMetadataID().equals(other.getMetadataID());
-        }
-        
-        return true;
+        return EquivalenceUtil.areEqual(this.expression, other.expression);
 	}
 
     /**

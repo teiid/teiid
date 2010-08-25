@@ -94,7 +94,7 @@ public class TestDataTierManager {
         context.setProcessorID(requestID);
         context.setVdbName("test"); //$NON-NLS-1$
         context.setVdbVersion(1);
-        context.setQueryProcessorFactory(new SimpleQueryProcessorFactory(bs.getBufferManager(), dtm, new DefaultCapabilitiesFinder(), null, metadata));
+        context.setQueryProcessorFactory(new QueryProcessorFactoryImpl(bs.getBufferManager(), dtm, new DefaultCapabilitiesFinder(), null, metadata));
         workItem = TestDQPCoreRequestHandling.addRequest(rm, original, requestID, null, workContext);
         
         request = new AtomicRequestMessage(original, workContext, nodeId);

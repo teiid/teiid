@@ -336,8 +336,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		SessionAwareCache<CachedResults> rsCache = dqpCore.getRsCache();
 		ParseInfo pi = Request.createParseInfo(requestMsg);
 		CacheID cacheId = new CacheID(this.dqpWorkContext, pi, requestMsg.getCommandString());
-    	cacheId.setParameters(requestMsg.getParameterValues());
-		if (rsCache != null) {
+    	boolean cachable = cacheId.setParameters(requestMsg.getParameterValues());
+		if (rsCache != null && cachable) {
 			CachedResults cr = rsCache.get(cacheId);
 			if (cr != null && (requestMsg.useResultSetCache() || cr.getHint() != null)) {
 				this.resultsBuffer = cr.getResults();
@@ -351,7 +351,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		}
 		request.processRequest();
 		originalCommand = request.userCommand;
-        if ((requestMsg.useResultSetCache() || originalCommand.getCacheHint() != null) && rsCache != null && originalCommand.areResultsCachable()) {
+        if (cachable && (requestMsg.useResultSetCache() || originalCommand.getCacheHint() != null) && rsCache != null && originalCommand.areResultsCachable()) {
         	this.cid = cacheId;
         }
 		processor = request.processor;

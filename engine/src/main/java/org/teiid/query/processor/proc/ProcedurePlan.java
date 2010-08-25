@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -69,10 +70,10 @@ import org.teiid.query.util.ErrorMessageKeys;
  */
 public class ProcedurePlan extends ProcessorPlan {
 
-	public static class CursorState {
-		private QueryProcessor processor;
-		private IndexedTupleSource ts;
-		private List<?> currentRow;
+	private static class CursorState {
+		QueryProcessor processor;
+		IndexedTupleSource ts;
+		List<?> currentRow;
 	}
 	
     private Program originalProgram;
@@ -91,7 +92,7 @@ public class ProcedurePlan extends ProcessorPlan {
     private int beginBatch = 1;
     private List batchRows;
     private boolean lastBatch = false;
-    private Map<ElementSymbol, Expression> params;
+    private LinkedHashMap<ElementSymbol, Expression> params;
     private Map<ElementSymbol, Reference> implicitParams;
     private QueryMetadataInterface metadata;
 
@@ -191,7 +192,7 @@ public class ProcedurePlan extends ProcessorPlan {
 		            if (value == null && !metadata.elementSupports(param.getMetadataID(), SupportConstants.Element.NULL)) {
 		                throw new QueryValidatorException(QueryExecPlugin.Util.getString("ProcedurePlan.nonNullableParam", expr)); //$NON-NLS-1$
 		            }
-		            context.setValue(param, value);
+		            setParameterValue(param, context, value);
 		        }
     		}
     		if (this.implicitParams != null) {
@@ -206,6 +207,11 @@ public class ProcedurePlan extends ProcessorPlan {
     	}
     	this.evaluatedParams = true;
     }
+
+	protected void setParameterValue(ElementSymbol param,
+			VariableContext context, Object value) {
+		context.setValue(param, value);
+	}
 
     /**
      * @see ProcessorPlan#nextBatch()
@@ -378,7 +384,7 @@ public class ProcedurePlan extends ProcessorPlan {
         this.metadata = metadata;
     }
 
-    public void setParams( Map<ElementSymbol, Expression> params ) {
+    public void setParams( LinkedHashMap<ElementSymbol, Expression> params ) {
         this.params = params;
     }
     
@@ -538,7 +544,6 @@ public class ProcedurePlan extends ProcessorPlan {
         	state.processor.closeProcessing();
         }
     }
-
 
     /**
      * Get the schema from the tuple source that

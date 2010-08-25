@@ -32,7 +32,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.dqp.internal.process.SimpleQueryProcessorFactory;
+import org.teiid.dqp.internal.process.QueryProcessorFactoryImpl;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
@@ -69,7 +69,7 @@ public class TestMaterialization {
 		cc.setMetadata(metadata);
 		CapabilitiesFinder finder = new DefaultCapabilitiesFinder();
 		previousPlan = TestProcessor.helpGetPlan(TestProcessor.helpParse(sql), metadata, finder, cc);
-		cc.setQueryProcessorFactory(new SimpleQueryProcessorFactory(BufferManagerFactory.getStandaloneBufferManager(), dataManager, finder, null, metadata));
+		cc.setQueryProcessorFactory(new QueryProcessorFactoryImpl(BufferManagerFactory.getStandaloneBufferManager(), dataManager, finder, null, metadata));
 		TestProcessor.doProcess(previousPlan, dataManager, expectedResults, cc);
 	}
 

@@ -54,7 +54,9 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.XMLType;
-import org.teiid.dqp.internal.process.SimpleQueryProcessorFactory;
+import org.teiid.dqp.internal.process.PreparedPlan;
+import org.teiid.dqp.internal.process.QueryProcessorFactoryImpl;
+import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionTree;
@@ -245,7 +247,7 @@ public class TestProcessor {
         	dataManager = new TempTableDataManager(dataManager, bufferMgr);
         }        
         if (context.getQueryProcessorFactory() == null) {
-        	context.setQueryProcessorFactory(new SimpleQueryProcessorFactory(bufferMgr, dataManager, new DefaultCapabilitiesFinder(), null, context.getMetadata()));
+        	context.setQueryProcessorFactory(new QueryProcessorFactoryImpl(bufferMgr, dataManager, new DefaultCapabilitiesFinder(), null, context.getMetadata()));
         }
         TupleBuffer id = null;
         try {
@@ -345,6 +347,7 @@ public class TestProcessor {
         context.setProcessorBatchSize(BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE);
         context.setConnectorBatchSize(BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE);
         context.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
+        context.setPreparedPlanCache(new SessionAwareCache<PreparedPlan>());
 		return context;
 	}   
     	

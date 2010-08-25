@@ -248,8 +248,8 @@ public class TempTableDataManager implements ProcessorDataManager {
 			Constant key = (Constant)proc.getParameter(2).getExpression();
 			LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryExecPlugin.Util.getString("TempTableDataManager.row_refresh", matViewName, key)); //$NON-NLS-1$
 			String queryString = Reserved.SELECT + " * " + Reserved.FROM + ' ' + matViewName + ' ' + Reserved.WHERE + ' ' + //$NON-NLS-1$
-				metadata.getFullName(ids.iterator().next()) + '=' + key.toString() + ' ' + Reserved.OPTION + ' ' + Reserved.NOCACHE; 
-			QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(queryString, matViewName.toUpperCase(), context);
+				metadata.getFullName(ids.iterator().next()) + " = ?" + ' ' + Reserved.OPTION + ' ' + Reserved.NOCACHE; //$NON-NLS-1$
+			QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(queryString, matViewName.toUpperCase(), context, key.getValue());
 			qp.setNonBlocking(true);
 			TupleSource ts = new BatchCollector.BatchProducerTupleSource(qp);
 			tempTable = globalStore.getOrCreateTempTable(matTableName, new Query(), bufferManager, false);

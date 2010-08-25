@@ -23,7 +23,6 @@
 package org.teiid.query.processor;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +31,6 @@ import java.util.Set;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.util.CommandContext;
 

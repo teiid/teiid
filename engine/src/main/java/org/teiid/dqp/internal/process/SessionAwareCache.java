@@ -57,7 +57,7 @@ public class SessionAwareCache<T> {
 	
 	private BufferManager bufferManager;
 	
-	SessionAwareCache(){
+	public SessionAwareCache(){
 		this(new DefaultCacheFactory(), Cache.Type.RESULTSET, new CacheConfiguration(Policy.LRU, 60, DEFAULT_MAX_SIZE_TOTAL));
 	}
 	
@@ -114,15 +114,7 @@ public class SessionAwareCache<T> {
 		return cacheHit.get();
 	}
 	
-	public void put(CacheID id, int determinismLevel, T t){
-		this.put(id, determinismLevel, t, null);
-	}
-	
 	public void put(CacheID id, int determinismLevel, T t, Long ttl){
-		if (!id.cachable) {
-			return;
-		}
-		
 		if (determinismLevel >= FunctionMethod.SESSION_DETERMINISTIC) {
 			id.setSessionId(id.originalSessionId);
 			this.localCache.put(id, t, ttl);
@@ -160,7 +152,7 @@ public class SessionAwareCache<T> {
 		this.distributedCache.clear();
 	}	
 	
-	static class CacheID implements Serializable {
+	public static class CacheID implements Serializable {
 		private static final long serialVersionUID = 8261905111156764744L;
 		private String sql;
 		private VDBKey vdbInfo;
@@ -170,39 +162,52 @@ public class SessionAwareCache<T> {
 		private List<Serializable> parameters;
 		private String userName;
 		private String originalUserName;
-		private boolean cachable = true;
-				
-		CacheID(DQPWorkContext context, ParseInfo pi, String sql){
+		
+		public CacheID(DQPWorkContext context, ParseInfo pi, String sql){
+			this(pi, sql, context.getVdbName(), context.getVdbVersion(), context.getSessionId(), context.getUserName());
+		}
+		
+		public CacheID(ParseInfo pi, String sql, String vdbName, int vdbVersion, String sessionId, String userName){
 			this.sql = sql;
-			this.vdbInfo = new VDBKey(context.getVdbName(), context.getVdbVersion());
+			this.vdbInfo = new VDBKey(vdbName, vdbVersion);
 			this.pi = pi;
-			this.originalSessionId = context.getSessionId();
-			this.originalUserName = context.getUserName();
+			this.originalSessionId = sessionId;
+			this.originalUserName = userName;
+		}
+
+		
+		public String getSessionId() {
+			return sessionId;
+		}
+		
+		public String getUserName() {
+			return userName;
 		}
 		
 		private void setSessionId(String sessionId) {
 			this.sessionId = sessionId;
 		}
 		
-		public void setParameters(List<?> parameters) {
+		public boolean setParameters(List<?> parameters) {
 			if (parameters !=  null && !parameters.isEmpty()) {
 				this.parameters = new ArrayList<Serializable>();
 				for (Object obj:parameters) {
-					if (obj instanceof Serializable) {
+					if (obj instanceof Serializable && obj instanceof Comparable<?>) {
 						this.parameters.add((Serializable)obj);
 					}
 					else{
-						this.cachable = false;
+						return false;
 					}
 				}
 			}
+			return true;
 		}
 		
 		public String getSql() {
 			return sql;
 		}
 		
-		public void setUserName(String name) {
+		void setUserName(String name) {
 			this.userName = name;
 		}
 						
@@ -214,7 +219,7 @@ public class SessionAwareCache<T> {
 	            return false;
 	        } 
         	CacheID that = (CacheID)obj;
-            return this.pi.equals(that.pi) && this.vdbInfo.equals(that.vdbInfo) && this.sql.equals(that.sql) 
+            return EquivalenceUtil.areEqual(this.pi, that.pi) && this.vdbInfo.equals(that.vdbInfo) && this.sql.equals(that.sql) 
             	&& EquivalenceUtil.areEqual(this.userName, that.userName)            	
             	&& EquivalenceUtil.areEqual(this.sessionId, that.sessionId)
             	&& EquivalenceUtil.areEqual(this.parameters, that.parameters);
@@ -228,6 +233,7 @@ public class SessionAwareCache<T> {
 	    public String toString() {
 	    	return "Cache Entry<" + originalSessionId + "="+ originalUserName + "> params:" + parameters + " sql:" + sql; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	    }
+	    
 	}
 	
 	//for testing purpose 

@@ -24,10 +24,13 @@ package org.teiid.query.sql.lang;
 
 import java.io.Serializable;
 
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class CacheHint implements Serializable {
 
+	private static final long serialVersionUID = -4119606289701982511L;
+	
 	public static final String PREF_MEM = "pref_mem"; //$NON-NLS-1$
 	public static final String TTL = "ttl:"; //$NON-NLS-1$
 	public static final String UPDATABLE = "updatable"; //$NON-NLS-1$
@@ -74,6 +77,20 @@ public class CacheHint implements Serializable {
 	
 	public void setUpdatable(boolean updatable) {
 		this.updatable = updatable;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == this) {
+			return true;
+		}
+		if (!(obj instanceof CacheHint)) {
+			return false;
+		}
+		CacheHint other = (CacheHint)obj;
+		return this.prefersMemory == other.prefersMemory 
+		&& EquivalenceUtil.areEqual(this.ttl, other.ttl) 
+		&& this.updatable == other.updatable;
 	}
 
 }

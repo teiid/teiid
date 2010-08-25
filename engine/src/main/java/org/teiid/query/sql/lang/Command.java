@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -333,5 +334,10 @@ public abstract class Command implements LanguageObject {
      */
     public String toString() {
         return SQLStringVisitor.getSQLString(this);
+    }
+    
+    protected boolean sameOptionAndHint(Command cmd) {
+    	return EquivalenceUtil.areEqual(this.cacheHint, cmd.cacheHint) && 
+    	EquivalenceUtil.areEqual(this.option, cmd.option);
     }
 }

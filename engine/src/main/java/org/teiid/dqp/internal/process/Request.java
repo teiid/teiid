@@ -96,7 +96,7 @@ import org.teiid.query.validator.ValidatorReport;
 /**
  * Server side representation of the RequestMessage.  Knows how to process itself.
  */
-public class Request implements QueryProcessor.ProcessorFactory {
+public class Request {
     
 	// init state
     protected RequestMessage requestMsg;
@@ -130,6 +130,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
     protected boolean returnsUpdateCount;
     protected boolean useEntitlements;
 	private TempTableStore globalTables;
+	private SessionAwareCache<PreparedPlan> planCache;
 
     void initialize(RequestMessage requestMsg,
                               BufferManager bufferManager,
@@ -137,7 +138,8 @@ public class Request implements QueryProcessor.ProcessorFactory {
                               TransactionService transactionService,
                               TempTableStore tempTableStore,
                               DQPWorkContext workContext,
-                              boolean useEntitlements) {
+                              boolean useEntitlements,
+                              SessionAwareCache<PreparedPlan> planCache) {
 
         this.requestMsg = requestMsg;
         this.vdbName = workContext.getVdbName();        
@@ -151,6 +153,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         this.requestId = workContext.getRequestID(this.requestMsg.getExecutionId());
         this.connectorManagerRepo = workContext.getVDB().getAttachment(ConnectorManagerRepository.class);
         this.useEntitlements = useEntitlements;
+        this.planCache = planCache;
     }
     
 	void setMetadata(CapabilitiesFinder capabilitiesFinder, QueryMetadataInterface metadata, Set multiSourceModels) {
@@ -253,9 +256,10 @@ public class Request implements QueryProcessor.ProcessorFactory {
 			}
         });
         context.setTempTableStore(tempTableStore);
-        context.setQueryProcessorFactory(this);
+        context.setQueryProcessorFactory(new QueryProcessorFactoryImpl(this.bufferManager, this.processorDataManager, this.capabilitiesFinder, idGenerator, metadata));
         context.setMetadata(this.metadata);
         context.setBufferManager(this.bufferManager);
+        context.setPreparedPlanCache(planCache);
     }
 
     protected void checkReferences(List<Reference> references) throws QueryValidatorException {
@@ -448,27 +452,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
         	((XMLPlan)processPlan).setXMLFormat(requestMsg.getXMLFormat());
         }
         this.context.setValidateXML(requestMsg.getValidationMode());
-	}
-    
-	public QueryProcessor createQueryProcessor(String query, String recursionGroup, CommandContext commandContext) throws TeiidProcessingException, TeiidComponentException {
-		ParseInfo parseInfo = new ParseInfo();
-		Command newCommand = QueryParser.getQueryParser().parseCommand(query, parseInfo);
-        QueryResolver.resolveCommand(newCommand, metadata);            
-        
-        List<Reference> references = ReferenceCollectorVisitor.getReferences(newCommand);
-        
-        referenceCheck(references);
-        
-        validateQuery(newCommand);
-        
-        CommandContext copy = commandContext.clone();
-        if (recursionGroup != null) {
-        	copy.pushCall(recursionGroup);
-        }
-        
-        newCommand = QueryRewriter.rewrite(newCommand, metadata, copy);
-        ProcessorPlan plan = QueryOptimizer.optimizePlan(newCommand, metadata, idGenerator, capabilitiesFinder, analysisRecord, copy);
-        return new QueryProcessor(plan, copy, bufferManager, processorDataManager);
 	}
 
 	protected void validateAccess(Command command) throws QueryValidatorException, TeiidComponentException {

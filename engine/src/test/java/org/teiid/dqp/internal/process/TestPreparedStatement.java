@@ -245,7 +245,7 @@ public class TestPreparedStatement {
         ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(new AutoGenDataService());
         
-        serverRequest.initialize(request, BufferManagerFactory.getStandaloneBufferManager(), null, new FakeTransactionService(), null, workContext, false);
+        serverRequest.initialize(request, BufferManagerFactory.getStandaloneBufferManager(), null, new FakeTransactionService(), null, workContext, false, prepPlanCache);
 
         serverRequest.setMetadata(capFinder, metadata, null);
         serverRequest.processRequest();

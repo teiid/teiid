@@ -45,7 +45,6 @@ import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.resolver.ProcedureContainerResolver;
 import org.teiid.query.resolver.QueryResolver;
-import org.teiid.query.resolver.VariableResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.lang.Command;
@@ -63,7 +62,7 @@ import org.teiid.query.util.ErrorMessageKeys;
 
 /**
  */
-public class ExecResolver extends ProcedureContainerResolver implements VariableResolver {
+public class ExecResolver extends ProcedureContainerResolver {
 	
     /**
      * @see org.teiid.query.resolver.CommandResolver#findCommandMetadata(org.teiid.query.sql.lang.Command,
@@ -217,7 +216,7 @@ public class ExecResolver extends ProcedureContainerResolver implements Variable
 
         // Create temporary metadata that defines a group based on either the stored proc
         // name or the stored query name - this will be used later during planning
-        String procName = storedProcedureCommand.getProcedureName();
+        String procName = metadata.getFullName(storedProcedureCommand.getProcedureID());
         
         GroupContext context = new GroupContext();
 
@@ -290,28 +289,6 @@ public class ExecResolver extends ProcedureContainerResolver implements Variable
                                 ProcedureContainer procCommand) throws TeiidComponentException,
                                                               QueryResolverException {
         //Do nothing
-    }
-    
-    /**
-     * Collect input expressions from a procedure and map them to the parameters they came from
-     * @param command Procedure to collect input expressions from
-     * @return Map of param name (full upper case) to Expression
-     */
-    public Map getVariableValues(Command command, QueryMetadataInterface metadata) {
-        StoredProcedure proc = (StoredProcedure)command;
-
-        List oldParams = proc.getInputParameters();
-        Map inputMap = new HashMap();
-
-        Iterator oldParamIter = oldParams.iterator();
-        while(oldParamIter.hasNext()) {
-            SPParameter param = (SPParameter) oldParamIter.next();
-            String paramName = proc.getParamFullName(param).toUpperCase();
-            Expression expr = param.getExpression();
-            inputMap.put(paramName, expr);
-        }
-
-        return inputMap;
     }
 
     /** 

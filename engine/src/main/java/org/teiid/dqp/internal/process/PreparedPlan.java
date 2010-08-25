@@ -30,7 +30,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.Reference;
 
 
-class PreparedPlan{
+public class PreparedPlan{
 	private ProcessorPlan plan;
 	private Command command;
 	private List<Reference> refs;

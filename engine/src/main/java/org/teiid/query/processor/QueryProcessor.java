@@ -54,7 +54,7 @@ public class QueryProcessor implements BatchProducer {
 	private static ExpiredTimeSliceException EXPIRED_TIME_SLICE = new ExpiredTimeSliceException();
 	
 	public interface ProcessorFactory {
-		QueryProcessor createQueryProcessor(String query, String recursionGroup, CommandContext commandContext) throws TeiidProcessingException, TeiidComponentException;
+		QueryProcessor createQueryProcessor(String query, String recursionGroup, CommandContext commandContext, Object... params) throws TeiidProcessingException, TeiidComponentException;
 	}
 	
     private CommandContext context;

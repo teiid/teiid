@@ -338,7 +338,7 @@ public class DQPCore implements DQP {
 	    ClientState state = this.getClientState(workContext.getSessionId(), true);
 	    request.initialize(requestMsg, bufferManager,
 				dataTierMgr, transactionService, state.sessionTables,
-				workContext, this.useEntitlements);
+				workContext, this.useEntitlements, this.prepPlanCache);
 		
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
         RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);

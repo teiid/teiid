@@ -250,7 +250,7 @@ public class RealMetadataFactory {
 
         ColumnSet<Procedure> vsprs6 = createResultSet("mmspTest1.vsprs1", new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         ProcedureParameter vsp6p1 = createParameter("p1", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
-        QueryNode vspqn6 = new QueryNode("vsp6", "CREATE VIRTUAL PROCEDURE BEGIN SELECT 1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn6 = new QueryNode("vsp6", "CREATE VIRTUAL PROCEDURE BEGIN SELECT p1 as StringKey; END"); //$NON-NLS-1$ //$NON-NLS-2$
         Procedure vsp6 = createVirtualProcedure("MMSP6", mmspTest1, Arrays.asList(vsp6p1), vspqn6); //$NON-NLS-1$
         vsp6.setResultSet(vsprs6);
     	

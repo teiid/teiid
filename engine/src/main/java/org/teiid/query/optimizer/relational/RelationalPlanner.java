@@ -44,8 +44,6 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.dqp.internal.process.Request;
 import org.teiid.language.SQLConstants;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.execution.QueryExecPlugin;
@@ -485,8 +483,9 @@ public class RelationalPlanner {
 			}
 		}
 		if (c != null) {
-		    c = QueryRewriter.rewrite(c, metadata, context);
-		    addNestedCommand(sourceNode, container.getGroup(), container, c, false);
+			//skip the rewrite here, we'll do that in the optimizer
+			//so that we know what the determinism level is.
+			addNestedCommand(sourceNode, container.getGroup(), container, c, false);
 		}
 	}
 
@@ -1034,15 +1033,10 @@ public class RelationalPlanner {
     		//only OPTION NOCACHE, no group specified
     		return true;
     	}       
+    	String fullName = metadata.getFullName(metadataID);
     	for (String groupName : option.getNoCacheGroups()) {
-            try {
-                Object noCacheGroupID = metadata.getGroupID(groupName);
-                if(metadataID.equals(noCacheGroupID)){
-                    return true;
-                }
-            } catch (QueryMetadataException e) {
-                //log that an unknown groups was used in the no cache
-                LogManager.logWarning(LogConstants.CTX_QUERY_RESOLVER, e, QueryPlugin.Util.getString("SimpleQueryResolver.unknown_group_in_nocache", groupName)); //$NON-NLS-1$
+            if(groupName.equalsIgnoreCase(fullName)){
+                return true;
             }
         }
         return false;

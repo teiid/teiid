@@ -189,25 +189,25 @@ public class SQLParserUtil {
         return hint;
 	}
 	
-	private static Pattern CACHE_HINT = Pattern.compile("\\s*cache(\\(\\s*(pref_mem)?\\s*(ttl:\\d{1,19})?\\s*(updatable)?[^)]*\\))?.*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern CACHE_HINT = Pattern.compile("/\\*\\+?\\s*cache(\\(\\s*(pref_mem)?\\s*(ttl:\\d{1,19})?\\s*(updatable)?[^\\)]*\\))?[^\\*]*\\*\\/.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
     
-    void setQueryCacheOption(Token t, ParseInfo p) {
-    	String hint = getComment(t);
-
-    	Matcher match = CACHE_HINT.matcher(hint);
+	static CacheHint getQueryCacheOption(String query) {
+    	Matcher match = CACHE_HINT.matcher(query);
     	if (match.matches()) {
-    		p.cacheHint = new CacheHint();
+    		CacheHint hint = new CacheHint();
     		if (match.group(2) !=null) {
-    			p.cacheHint.setPrefersMemory(true);
+    			hint.setPrefersMemory(true);
     		}
     		String ttl = match.group(3);
     		if (ttl != null) {
-    			p.cacheHint.setTtl(Long.valueOf(ttl.substring(4)));
+    			hint.setTtl(Long.valueOf(ttl.substring(4)));
     		}
     		if (match.group(4) != null) {
-    			p.cacheHint.setUpdatable(true);
+    			hint.setUpdatable(true);
     		}
+    		return hint;
     	}
+    	return null;
     }
 
     /**

@@ -22,15 +22,18 @@
 
 package org.teiid.query.optimizer;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.core.id.IntegerIDFactory;
+import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempCapabilitiesFinder;
@@ -40,20 +43,23 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.xml.XMLPlanner;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.proc.ProcedurePlan;
 import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.lang.TranslatableProcedureContainer;
+import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.util.CommandContext;
 
 
 /**
  * <p>This Class produces a ProcessorPlan object (a plan for query execution) from a 
  * user's command and a source of metadata.</p>
- * 
- * <p>The user's Command object may in fact be a tree of commands and subcommands.
- * This component is architected to defer to the proper 
- * {@link CommandPlanner CommandPlanner} implementation to plan each Command in the
- * tree.</p>
  */
 public class QueryOptimizer {
 	
@@ -65,7 +71,7 @@ public class QueryOptimizer {
 	private QueryOptimizer() {}
 
 	public static ProcessorPlan optimizePlan(Command command, QueryMetadataInterface metadata, IDGenerator idGenerator, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, CommandContext context)
-		throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
+		throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
 
 		if (analysisRecord == null) {
 			analysisRecord = new AnalysisRecord(false, false);
@@ -98,7 +104,37 @@ public class QueryOptimizer {
 		ProcessorPlan result = null;
 
 		if (command.getType() == Command.TYPE_UPDATE_PROCEDURE){
-			result = PROCEDURE_PLANNER.optimize(command, idGenerator, metadata, capFinder, analysisRecord, context);
+			CreateUpdateProcedureCommand cupc = (CreateUpdateProcedureCommand)command;
+			if (cupc.isUpdateProcedure()) {
+				result = planProcedure(command, metadata, idGenerator, capFinder, analysisRecord, context);
+			} else {
+				String fullName = metadata.getFullName(cupc.getVirtualGroup().getMetadataID());
+				PreparedPlan pp = context.getPlan(fullName);
+				if (pp == null) {
+					int determinismLevel = context.resetDeterminismLevel();
+					ProcessorPlan plan = planProcedure(command, metadata, idGenerator, capFinder, analysisRecord, context);
+					//note that this is not a full prepared plan.  It is not usable by user queries.
+					pp = new PreparedPlan();
+					pp.setPlan(plan);
+					context.putPlan(fullName, pp, context.getDeterminismLevel());
+					context.setDeterminismLevel(determinismLevel);
+				}
+				result = pp.getPlan().clone();
+			}
+	        // propagate procedure parameters to the plan to allow runtime type checking
+	        ProcedureContainer container = (ProcedureContainer)cupc.getUserCommand();
+	        ProcedurePlan plan = (ProcedurePlan)result;
+	        if (container != null) {
+	        	LinkedHashMap<ElementSymbol, Expression> params = container.getProcedureParameters();
+	        	if (container instanceof StoredProcedure) {
+	        		plan.setRequiresTransaction(container.getUpdateCount() > 0);
+	        	}
+	            plan.setParams(params);
+	            plan.setMetadata(metadata);
+	            if (container instanceof TranslatableProcedureContainer) {
+	            	plan.setImplicitParams(((TranslatableProcedureContainer)container).getImplicitParams());
+	            }
+	        }
         } else if (command.getType() == Command.TYPE_BATCHED_UPDATE){
             result = BATCHED_UPDATE_PLANNER.optimize(command, idGenerator, metadata, capFinder, analysisRecord, context);
         } else {
@@ -122,6 +158,21 @@ public class QueryOptimizer {
 			analysisRecord.println("============================================================================");		 //$NON-NLS-1$
 		}			
 
+		return result;
+	}
+
+	private static ProcessorPlan planProcedure(Command command,
+			QueryMetadataInterface metadata, IDGenerator idGenerator,
+			CapabilitiesFinder capFinder, AnalysisRecord analysisRecord,
+			CommandContext context) throws TeiidComponentException,
+			QueryPlannerException, QueryMetadataException {
+		ProcessorPlan result;
+		try {
+			command = QueryRewriter.rewrite(command, metadata, context);
+		} catch (TeiidProcessingException e) {
+			throw new QueryPlannerException(e, e.getMessage());
+		}
+		result = PROCEDURE_PLANNER.optimize(command, idGenerator, metadata, capFinder, analysisRecord, context);
 		return result;
 	}
 	
