@@ -25,6 +25,8 @@ package org.teiid.query.optimizer;
 import static org.teiid.query.optimizer.TestOptimizer.*;
 
 import org.junit.Test;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -735,15 +737,15 @@ public class TestSubqueryPushdown {
     /**
      * Technically this is not a full push-down, but the subquery will be evaluated prior to pushdown
      */
-    @Test public void testCompareSubquery4() {
+    @Test public void testCompareSubquery4() throws TeiidComponentException, TeiidProcessingException {
         ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 > (select e1 FROM pm2.g1 where e2 = 13)", example1(),  //$NON-NLS-1$
-            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 > (SELECT g_1.e1 FROM pm2.g1 AS g_1 WHERE g_1.e2 = 13)" }); //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 > (SELECT g_0.e1 FROM pm2.g1 AS g_0 WHERE g_0.e2 = 13)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
     
-    @Test public void testScalarSubquery1() {
+    @Test public void testScalarSubquery1() throws TeiidComponentException, TeiidProcessingException {
         ProcessorPlan plan = helpPlan("Select e1, (select e1 FROM pm2.g1 where e1 = 'x') from pm1.g1", example1(),  //$NON-NLS-1$
-            new String[] { "SELECT g_0.e1, (SELECT g_1.e1 FROM pm2.g1 AS g_1 WHERE g_1.e1 = 'x') FROM pm1.g1 AS g_0" }); //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1, (SELECT g_0.e1 FROM pm2.g1 AS g_0 WHERE g_0.e1 = 'x') FROM pm1.g1 AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }   
     

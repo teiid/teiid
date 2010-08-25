@@ -7522,7 +7522,7 @@ public class TestProcessor {
         
         ProcessorPlan plan = helpPlan("select pm1.g1.e1 from pm1.g1 where e1 < (select max(vm1.g1.e1) from vm1.g1)", metadata,  //$NON-NLS-1$
                                       null, capFinder,
-            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 < (SELECT MAX(g_1.e1) FROM pm1.g1 AS g_1)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 < (SELECT MAX(g_0.e1) FROM pm1.g1 AS g_0)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN);
         
         HardcodedDataManager hdm = new HardcodedDataManager();
