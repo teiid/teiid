@@ -22,6 +22,7 @@
 
 package org.teiid.common.buffer;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -48,6 +49,8 @@ public class TupleBrowser implements TupleSource {
 	private TupleBatch values;
 	private boolean updated;
 	private boolean direction;
+	
+	private boolean inPartial;
 
 	/**
 	 * Construct a value based browser
@@ -73,10 +76,17 @@ public class TupleBrowser implements TupleSource {
 		this.tree = sTree;
 		this.direction = direction;
 		
+		init(lowerBound, upperBound);
+	}
+
+	private void init(List<Object> lowerBound,
+			List<Object> upperBound)
+			throws TeiidComponentException {
 		if (lowerBound != null) {
+			lowerBound.addAll(Collections.nCopies(tree.getKeyLength() - lowerBound.size(), null));
 			setPage(lowerBound);
 		} else {
-			page = sTree.header[0];
+			page = tree.header[0];
 		}
 		
 		boolean valid = true;
@@ -91,7 +101,9 @@ public class TupleBrowser implements TupleSource {
 			bound = upper.page;
 			boundIndex = upper.index;
 			if (boundIndex < 0) {
-				boundIndex = Math.min(upper.values.getTuples().size() - 1, -boundIndex -1);
+				//we are guaranteed by find to not get back the -1 index, unless
+				//there are now tuples, in which case a bound of -1 is fine
+				boundIndex = Math.min(upper.values.getTuples().size(), -boundIndex -1) - 1;
 			}
 			if (!direction) {
 				values = upper.values;
@@ -143,12 +155,17 @@ public class TupleBrowser implements TupleSource {
 			TeiidProcessingException {
 		for (;;) {
 			//first check for value iteration
-			if (valueSet != null) {
+			if (!inPartial && valueSet != null) {
 				if (valueSet.isEmpty()) {
 					resetState();
 					return null;
 				}
-				List<?> newValue = direction?valueSet.remove(0):valueSet.remove(valueSet.size() -1);
+				List<Object> newValue = direction?valueSet.remove(0):valueSet.remove(valueSet.size() -1);
+				if (newValue.size() < tree.getKeyLength()) {
+					init(new ArrayList<Object>(newValue), newValue);
+					inPartial = true;
+					continue;
+				}
 				if (values != null) {
 					int possibleIndex = Collections.binarySearch(values.getTuples(), newValue, tree.comparator);
 					if (possibleIndex >= 0) {
@@ -179,6 +196,10 @@ public class TupleBrowser implements TupleSource {
 				return values.getTuples().get(index);
 			}
 			if (page == null) {
+				if (inPartial) {
+					inPartial = false;
+					continue;
+				}
 				return null;
 			}
 			if (values == null) {
@@ -217,7 +238,7 @@ public class TupleBrowser implements TupleSource {
 	}
 	
 	private int getOffset() {
-		if (valueSet != null) {
+		if (!inPartial && valueSet != null) {
 			return 0;
 		}
 		return direction?1:-1;

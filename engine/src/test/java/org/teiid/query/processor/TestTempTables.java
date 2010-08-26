@@ -236,6 +236,16 @@ public class TestTempTables {
 		sampleTable();
 		execute("select * from x where e1 >= 'b' order by e1 desc, e2 desc", new List[] {Arrays.asList("c", 1), Arrays.asList("b", 3), Arrays.asList("b", 2)}); //$NON-NLS-1$
 	}
+	
+	@Test public void testCompositeKeyPartial5() throws Exception {
+		sampleTable();
+		execute("select * from x where e1 in ('a', 'b')", new List[] {Arrays.asList("a", 1), Arrays.asList("b", 2), Arrays.asList("b", 3)}); //$NON-NLS-1$
+	}
+	
+	@Test public void testCompositeKeyPartial6() throws Exception {
+		execute("create local temporary table x (e1 string, e2 integer, primary key (e1, e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		execute("select * from x where e1 in ('a', 'b') order by e1 desc", new List[0]); //$NON-NLS-1$
+	}
 
 	private void sampleTable() throws Exception {
 		execute("create local temporary table x (e1 string, e2 integer, primary key (e1, e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$

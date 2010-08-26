@@ -23,7 +23,6 @@
 package org.teiid.query.tempdata;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -123,7 +122,7 @@ class TempTable {
 		private TupleBrowser browser;
 
 		private QueryTupleSource(TupleBrowser browser, Map map,
-				List<SingleElementSymbol> projectedCols, Criteria condition) {
+				List<? extends SingleElementSymbol> projectedCols, Criteria condition) {
 			this.browser = browser;
 			this.indexes = RelationalNode.getProjectionIndexes(map, projectedCols);
 			this.eval = new Evaluator(map, null, null);
@@ -281,47 +280,46 @@ class TempTable {
 		this.leafBatchSize = bm.getSchemaSize(columns.subList(0, primaryKeyLength));
 	}
 	
+	
 	private int reserveBuffers() {
 		return bm.reserveBuffers(leafBatchSize + (tree.getHeight() - 1)*keyBatchSize, BufferReserveMode.WAIT);
 	}
 
-	public TupleSource createTupleSource(final List<SingleElementSymbol> projectedCols, final Criteria condition, OrderBy orderBy) throws TeiidComponentException, TeiidProcessingException {
+	public TupleSource createTupleSource(final List<? extends SingleElementSymbol> projectedCols, final Criteria condition, OrderBy orderBy) throws TeiidComponentException, TeiidProcessingException {
 		Map map = RelationalNode.createLookupMap(getColumns());
 		
 		Boolean direction = null;
 		boolean orderByUsingIndex = false;
 		if (orderBy != null && rowId == null) {
 			int[] orderByIndexes = RelationalNode.getProjectionIndexes(map, orderBy.getSortKeys());
-			if (orderByIndexes.length < tree.getKeyLength()) {
-				orderByUsingIndex = false;
-			} else {
-				orderByUsingIndex = true;
-				for (int i = 0; i < tree.getKeyLength(); i++) {
-					if (orderByIndexes[i] != i) {
+			orderByUsingIndex = true;
+			for (int i = 0; i < tree.getKeyLength(); i++) {
+				if (orderByIndexes.length <= i) {
+					break;
+				}
+				if (orderByIndexes[i] != i) {
+					orderByUsingIndex = false;
+					break;
+				}
+			}
+			if (orderByUsingIndex) {
+				for (OrderByItem item : orderBy.getOrderByItems()) {
+					if (item.getNullOrdering() != null) {
 						orderByUsingIndex = false;
 						break;
 					}
-				}
-				if (orderByUsingIndex) {
-					for (int i = 0; i < tree.getKeyLength(); i++) {
-						OrderByItem item = orderBy.getOrderByItems().get(i);
-						if (item.getNullOrdering() != null) {
+					if (item.isAscending()) {
+						if (direction == null) {
+							direction = OrderBy.ASC;
+						} else if (direction != OrderBy.ASC) {
 							orderByUsingIndex = false;
 							break;
 						}
-						if (item.isAscending()) {
-							if (direction == null) {
-								direction = OrderBy.ASC;
-							} else if (direction != OrderBy.ASC) {
-								orderByUsingIndex = false;
-								break;
-							}
-						} else if (direction == null) {
-							direction = OrderBy.DESC;
-						} else if (direction != OrderBy.DESC) {
-							orderByUsingIndex = false;
-							break;
-						}
+					} else if (direction == null) {
+						direction = OrderBy.DESC;
+					} else if (direction != OrderBy.DESC) {
+						orderByUsingIndex = false;
+						break;
 					}
 				}
 			}
@@ -391,22 +389,9 @@ class TempTable {
 							value.add(constant.getValue());
 							values.add(value);
 						}
-					} else if (values != null && values.size() == 1 && indexCondition.valueSet.size() == 1) {
+					} else if (values != null && values.size() == 1 && values.iterator().next().size() == i && indexCondition.valueSet.size() == 1) {
 						values.iterator().next().add(indexCondition.valueSet.first().getValue());
 					}
-				}
-			}
-			if (indexConditions.length > 0) {
-				if (values != null) {
-					List<Object> value = values.iterator().next();
-					if (value.size() != tree.getKeyLength()) {
-						values = null;
-						lower = new ArrayList<Object>(value);
-						lower.addAll(Collections.nCopies(tree.getKeyLength() - value.size(), null));
-						upper = new ArrayList<Object>(value);
-					}
-				} else if (lower != null) {
-					lower.addAll(Collections.nCopies(tree.getKeyLength() - lower.size(), null));
 				}
 			}
 		}
