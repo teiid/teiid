@@ -153,7 +153,7 @@ public class Request {
         this.workContext = workContext;
         this.requestId = workContext.getRequestID(this.requestMsg.getExecutionId());
         this.connectorManagerRepo = workContext.getVDB().getAttachment(ConnectorManagerRepository.class);
-        this.useEntitlements = useEntitlements;
+        this.useEntitlements = useEntitlements && !workContext.getVDB().getDataPolicies().isEmpty();
         this.planCache = planCache;
     }
     
