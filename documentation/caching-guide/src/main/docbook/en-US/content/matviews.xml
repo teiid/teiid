@@ -27,35 +27,14 @@
 			</listitem>
 			<listitem>
 				<para>User ability to override use of materialized view cache for
-					specific queries through OPTION NO CACHE</para>
+					specific queries through <code>OPTION NOCACHE</code></para>
 			</listitem>
 		</itemizedlist>
 	</section>
 	<section>
 		<title>User Interaction</title>
-		<para>When client applications issue queries against a Relational
-			table or view that has been defined as a materialized view, the
-			Teiid query engine automatically routes that query to obtain the
-			results from the cache database.</para>
-		<para>Individual queries may override the use of materialized views by
-			specifying OPTION NOCACHE on the query.  This parameter may specify
-			one or more virtual groups to override (separated by commas, spaces
-			optional).  If no virtual groups are specified, materialized views tables will not be used transitively. 
-		</para>
-		<example>
-			<title>Full NOCACHE</title>
-			<programlisting>SELECT * from vg1, vg2, vg3 WHERE … OPTION NOCACHE</programlisting>
-		</example>
-		<example>
-			<title>Specific NOCACHE</title>
-			<programlisting>SELECT * from vg1, vg2, vg3 WHERE … OPTION NOCACHE vg1, vg3</programlisting>
-			<para>Only the vg1 and vg3 caches will be skipped vg2 or any materialized views nested under vg1 and vg3 will be used.</para>
-		</example>
-		<para>Option NOCACHE may be specified in virtual
-			group transformation queries.  In that way, transformations can
-			specify to always use real-time data obtained directly from a source.
-			 The use of caching and non-caching can be mixed in transformation
-			definitions, just as with user queries.</para>
+		<para>Similar to cached procedures, materialized view tables are used automatically when a query accesses the corresponding view.  
+		Usage of the cached results may be bypassed with an <code>OPTION NOCACHE</code> clause.  See the <link linkend="nocache">OPTION NOCACHE</link> section for more on its usage.</para>
 	</section>
 	<section>
 		<title>Materialized View Definition</title>
@@ -77,6 +56,9 @@
 			</listitem>
 		</itemizedlist>
 		</para>
+		<note><para>Materialized view tables are always scoped to the VDB.  If a materialized view definition directly or transitively contains a non-deterministic 
+		function call, such as random or hasRole, the resulting table will contain only the initially evaluated values.  In most instances you should consider 
+		nesting a materialized view without the deterministic results that is joined with relevant non-deterministic values in a parent view.</para></note>
 	</section>
 	<section>
 		<title>External Materialization</title>
@@ -112,6 +94,7 @@
 		<para>Internal materialization creates Teiid temporary tables to hold the materialized table.  While these tables are not fully durable, they perform 
 		well in most circumstances and the data is present at each Teiid instance which removes the single point of failure and network overhead of an external database. 
 		Internal materialization also provides more built-in facilities for refreshing and monitoring.</para>
+		<para>The cache hint, when used in the context of an internal materialized view transformation query, provides the ability to fine tune the materializated table.  The pref_mem option also applies to internal materialized views.  Internal table index pages already have a memory preference, so the perf_mem option indicates that the data pages should prefer memory as well.</para>
 		<section>
 			<title>Loading And Refreshing</title>
 			<para>An internal materialized view table is initially in an invalid state (there is no data).  The first user query will trigger an implicit loading of the data.  
@@ -128,27 +111,47 @@
 			subsequent refreshes performed with <code>refreshMatView</code> will use dependent materialized view tables if they exist.  Only one load may occur at a time.  If a load is already in progress when
 			the <code>SYS.refreshMatView</code> procedure is called, it will return -1 immediately rather than preempting the current load.
 			</para>
-			<para>The <link linkend="cache-hint">cache hint</link> may be used to automatically trigger a full snapshot refresh after a specified time to live.
-			<example>
-				<title>Auto-refresh Transformation Query</title>
-				<programlisting>/*+ cache(ttl:3600000) */ select t.col, t1.col from t, t1 where t.id = t1.id</programlisting>
-			</example>
-			</para>
-			<para>In advanced use-cases the <link linkend="cache-hint">cache hint</link> may also be used to mark an internal materialized view as updatable.
-			An updatable internal materialized view may use the <code>SYS.refreshMatViewRow</code> procedure to update a single row in the materialized table.
-			To be updatable the materialized view must have a single column primary key.  Composite keys are not yet supported by <code>SYS.refreshMatViewRow</code>.
-			<example>
-				<title>Updatable Scenario</title>
-				<para>Transofrmation Query: <programlisting>/*+ cache(updatable) */ select t.col, t1.col from t, t1 where t.id = t1.id</programlisting></para>
-				<para>Update: <programlisting>CALL SYS.updateMatViewRow(viewname=>'schema.matview', key=>5)</programlisting></para>
-				<para>Given that the schema.matview defines interger column col as it's primary key, the update will check the live source(s) for the row values.  
-				If it exists, the materialized view table row will be updated.  If it does not exist the correpsonding row will be deleted.</para>
-			</example>
-			The update query will not use dependent materialized view tables, so care should be taken to ensure that getting a single 
-			row from this transformation query performs well.  This may require the use of depedent join hints.
-			When the updatable option is not specified, accessing the materialized view table is more efficient because modifications do not need to be considered.  
- 			Therefore, only specify the updatable option if row based incremental updates are needed.  Even when performing row updates, full snapshot refreshes may be needed to ensure consistency.
-			</para>
+			<section>
+		   		<title>TTL Snapshot Refresh</title>
+		   		<para>The <link linkend="cache-hint">cache hint</link> may be used to automatically trigger a full snapshot refresh after a specified time to live.  
+		   		The refresh is equivalent to <code>CALL SYS.refreshMatView('view name', false)</code>, but performed asynchronously so that user queries do not block on the load.</para>
+				<example>
+					<title>Auto-refresh Transformation Query</title>
+					<programlisting>/*+ cache(ttl:3600000) */ select t.col, t1.col from t, t1 where t.id = t1.id</programlisting>
+					<para>The resulting materialized view will be reloaded every hour (3600000 milliseconds).</para>
+				</example>
+		 		<section>
+		 			<title>Limitations</title>
+		 			<itemizedlist>
+				   		<listitem><para>The automatic ttl refresh is not intended for complex loading scenarios, as nested materialized views will be used by the refresh query.
+				   		</para></listitem>
+				   		<listitem><para>The automatic ttl refresh is performed lazily, that is it is only trigger by using the table after the ttl has expired.  
+				   		For infrequently used tables with long load times, this means that data may be used well past the intended ttl. 
+				   		</para></listitem>
+				  	</itemizedlist>
+		 		</section>
+	 		</section>
+	 		<section>
+	 			<title>Updatable</title>
+	 			<para>In advanced use-cases the <link linkend="cache-hint">cache hint</link> may also be used to mark an internal materialized view as updatable.
+				An updatable internal materialized view may use the <code>SYS.refreshMatViewRow</code> procedure to update a single row in the materialized table.
+				If the source row exists, the materialized view table row will be updated.  If the source row does not exist, the correpsonding materialized row will be deleted.
+				To be updatable the materialized view must have a single column primary key.  Composite keys are not yet supported by <code>SYS.refreshMatViewRow</code>.
+				<example>
+					<title>Updatable Transformation Query</title>
+					<para>Transofrmation Query: <programlisting>/*+ cache(updatable) */ select t.col, t1.col from t, t1 where t.id = t1.id</programlisting></para>
+					<para>Update SQL: <programlisting>CALL SYS.updateMatViewRow(viewname=>'schema.matview', key=>5)</programlisting></para>
+					<para>Given that the schema.matview defines an interger column col as it's primary key, the update will check the live source(s) for the row values.</para>
+				</example>
+				The update query will not use dependent materialized view tables, so care should be taken to ensure that getting a single 
+				row from this transformation query performs well.  See the Reference Guide for information on controlling dependent joins, which may be applicable to increasing the performance of retrieving a single row.
+			    The refresh query does use nested caches, so this refresh method should be used with caution.
+			    </para>
+			    <para>
+				When the updatable option is not specified, accessing the materialized view table is more efficient because modifications do not need to be considered.  
+	 			Therefore, only specify the updatable option if row based incremental updates are needed.  Even when performing row updates, full snapshot refreshes may be needed to ensure consistency.
+				</para>
+	 		</section>
 		</section>
 		<section>
 			<title>Limitations</title>

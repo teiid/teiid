@@ -108,6 +108,9 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    private TempTableStore globalTables;
 	    
 	    private SessionAwareCache<PreparedPlan> planCache;
+	    
+	    private boolean resultSetCacheEnabled = true;
+	    
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -499,5 +502,13 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     	CacheID id = new CacheID(new ParseInfo(), key, getVdbName(), getVdbVersion(), getConnectionID(), getUserName());
     	this.globalState.planCache.put(id, determinismLevel, plan, null);
     }
+    
+    public boolean isResultSetCacheEnabled() {
+		return globalState.resultSetCacheEnabled;
+	}
+    
+    public void setResultSetCacheEnabled(boolean resultSetCacheEnabled) {
+		this.globalState.resultSetCacheEnabled = resultSetCacheEnabled;
+	}
 	
 }

@@ -358,6 +358,14 @@ public class RealMetadataFactory {
         createElements(vGroup4,
                                       new String[] { "x" }, //$NON-NLS-1$
                                       new String[] { DataTypeManager.DefaultDataTypes.STRING});
+        
+        Schema sp = createVirtualModel("sp", metadataStore); //$NON-NLS-1$
+        ColumnSet<Procedure> rs = createResultSet("sp1.vsprs1", new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
+        ProcedureParameter param = createParameter("param1", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
+        param.setNullType(NullType.Nullable);
+        QueryNode sp1qn = new QueryNode("sp1", "/*+ cache */ CREATE VIRTUAL PROCEDURE BEGIN SELECT x as StringKey from matsrc where x = param1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        Procedure vsp5 = createVirtualProcedure("sp1", sp, Arrays.asList(param), sp1qn); //$NON-NLS-1$
+        vsp5.setResultSet(rs);
 
         return createTransformationMetadata(metadataStore, "");
     }

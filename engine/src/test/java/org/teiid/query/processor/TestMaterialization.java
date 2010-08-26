@@ -101,5 +101,18 @@ public class TestMaterialization {
 		execute("SELECT * from vgroup4 where x is null", Arrays.asList((String)null));
 		assertEquals(2, hdm.getCommandHistory().size());
 	}
+	
+	@Test public void testProcedureCache() throws Exception {
+		execute("call sp1('one')", Arrays.asList("one"));
+		assertEquals(1, hdm.getCommandHistory().size());
+		execute("call sp1('one')", Arrays.asList("one"));
+		assertEquals(1, hdm.getCommandHistory().size());
+		execute("call sp1('one') option nocache sp.sp1", Arrays.asList("one"));
+		assertEquals(2, hdm.getCommandHistory().size());
+		execute("call sp1(null)");
+		assertEquals(3, hdm.getCommandHistory().size());
+		execute("call sp1(null)");
+		assertEquals(3, hdm.getCommandHistory().size());
+	}
     
 }

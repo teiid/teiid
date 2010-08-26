@@ -131,6 +131,7 @@ public class Request {
     protected boolean useEntitlements;
 	private TempTableStore globalTables;
 	private SessionAwareCache<PreparedPlan> planCache;
+	private boolean resultSetCacheEnabled = true;
 
     void initialize(RequestMessage requestMsg,
                               BufferManager bufferManager,
@@ -160,6 +161,10 @@ public class Request {
 		this.capabilitiesFinder = capabilitiesFinder;
 		this.metadata = metadata;
 		this.multiSourceModels = multiSourceModels;
+	}
+	
+	public void setResultSetCacheEnabled(boolean resultSetCacheEnabled) {
+		this.resultSetCacheEnabled = resultSetCacheEnabled;
 	}
     
 	/**
@@ -260,6 +265,7 @@ public class Request {
         context.setMetadata(this.metadata);
         context.setBufferManager(this.bufferManager);
         context.setPreparedPlanCache(planCache);
+        context.setResultSetCacheEnabled(this.resultSetCacheEnabled);
     }
 
     protected void checkReferences(List<Reference> references) throws QueryValidatorException {

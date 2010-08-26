@@ -88,6 +88,10 @@ public class CachedResults implements Serializable, Cachable {
 		this.hint = command.getCacheHint();
 	}
 	
+	public void setHint(CacheHint hint) {
+		this.hint = hint;
+	}
+	
 	public CacheHint getHint() {
 		return hint;
 	}

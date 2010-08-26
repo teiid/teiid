@@ -35,6 +35,7 @@ import org.teiid.cache.DefaultCache;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.function.metadata.FunctionMethod;
@@ -46,7 +47,7 @@ import org.teiid.vdb.runtime.VDBKey;
  * This class is used to cache session aware objects
  */
 public class SessionAwareCache<T> {
-	public static final int DEFAULT_MAX_SIZE_TOTAL = 250;
+	public static final int DEFAULT_MAX_SIZE_TOTAL = 512;
 
 	private Cache<CacheID, T> localCache;
 	private Cache<CacheID, T> distributedCache;
@@ -58,7 +59,7 @@ public class SessionAwareCache<T> {
 	private BufferManager bufferManager;
 	
 	public SessionAwareCache(){
-		this(new DefaultCacheFactory(), Cache.Type.RESULTSET, new CacheConfiguration(Policy.LRU, 60, DEFAULT_MAX_SIZE_TOTAL));
+		this(DEFAULT_MAX_SIZE_TOTAL);
 	}
 	
 	SessionAwareCache(int maxSize){
@@ -188,16 +189,28 @@ public class SessionAwareCache<T> {
 			this.sessionId = sessionId;
 		}
 		
+		/**
+		 * Set the raw (non-Constant) parameter values.
+		 * @param parameters
+		 * @return
+		 */
 		public boolean setParameters(List<?> parameters) {
 			if (parameters !=  null && !parameters.isEmpty()) {
 				this.parameters = new ArrayList<Serializable>();
 				for (Object obj:parameters) {
-					if (obj instanceof Serializable && obj instanceof Comparable<?>) {
-						this.parameters.add((Serializable)obj);
+					if (obj == null) {
+						this.parameters.add(null);
+						continue;
 					}
-					else{
+					if (!(obj instanceof Serializable)) {
 						return false;
 					}
+					
+					Class<?> type = DataTypeManager.determineDataTypeClass(obj);
+					if (DataTypeManager.isLOB(type) || type == DataTypeManager.DefaultDataClasses.OBJECT) {
+						return false;
+					}
+					this.parameters.add((Serializable)obj);
 				}
 			}
 			return true;

@@ -45,7 +45,7 @@ public class ClusterableCacheFactory implements CacheFactory, Serializable {
 		if (this.delegate == null) {
 			Object cacheManager = getClusteredCache();
 			if (cacheManager == null) {
-				this.delegate = new DefaultCacheFactory();
+				this.delegate = new DefaultCacheFactory(config);
 			}
 			else {
 				try {

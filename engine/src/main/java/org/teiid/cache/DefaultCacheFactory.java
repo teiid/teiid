@@ -34,7 +34,11 @@ public class DefaultCacheFactory implements CacheFactory, Serializable {
 	private volatile boolean destroyed = false;
 	
 	public DefaultCacheFactory() {
-		this.cacheRoot = new DefaultCache("Teiid"); //$NON-NLS-1$
+		this(CacheConfiguration.DEFAULT);
+	}
+		
+	public DefaultCacheFactory(CacheConfiguration config) {
+		this.cacheRoot = new DefaultCache("Teiid", config.getMaxEntries(), config.getMaxAgeInSeconds()*1000); //$NON-NLS-1$
 	}
 	
 	@Override

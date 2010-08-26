@@ -339,7 +339,7 @@ public class DQPCore implements DQP {
 	    request.initialize(requestMsg, bufferManager,
 				dataTierMgr, transactionService, state.sessionTables,
 				workContext, this.useEntitlements, this.prepPlanCache);
-		
+		request.setResultSetCacheEnabled(this.rsCache != null);
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
         RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
     	logMMCommand(workItem, Event.NEW, null); 
@@ -657,7 +657,7 @@ public class DQPCore implements DQP {
         this.processWorkerPool = new ThreadReuseExecutor(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, config.getMaxThreads());
         
         dataTierMgr = new TempTableDataManager(new DataTierManagerImpl(this,
-                                            this.bufferService), this.bufferManager, this.processWorkerPool); 
+                                            this.bufferService), this.bufferManager, this.processWorkerPool, this.rsCache); 
 	}
 	
 	public void setBufferService(BufferService service) {

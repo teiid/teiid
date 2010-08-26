@@ -257,6 +257,7 @@ public class TestProcessor {
             for (int i = 0; i < 100; i++) {
             	try {
             		id = collector.collectTuples();
+            		break;
             	} catch (BlockedException e) {
             		
             	}
