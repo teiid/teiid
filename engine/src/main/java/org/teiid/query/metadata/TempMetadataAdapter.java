@@ -23,9 +23,9 @@
 package org.teiid.query.metadata;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -363,7 +363,11 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     public Collection getIndexesInGroup(Object groupID)
         throws TeiidComponentException, QueryMetadataException {
         if(groupID instanceof TempMetadataID) {
-            return Collections.EMPTY_LIST;
+        	List<List<TempMetadataID>> result = ((TempMetadataID)groupID).getIndexes();
+        	if (result == null) {
+        		return Collections.emptyList();
+        	}
+        	return result;
         }
         return this.actualMetadata.getIndexesInGroup(groupID);   
     }
@@ -372,11 +376,15 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         throws TeiidComponentException, QueryMetadataException {
         
         if(groupID instanceof TempMetadataID) {
+        	LinkedList<List<TempMetadataID>> result = new LinkedList<List<TempMetadataID>>();
         	TempMetadataID id = (TempMetadataID)groupID;
-        	if (id.getPrimaryKey() == null) {
-        		return Collections.emptyList();
+        	if (id.getPrimaryKey() != null) {
+        		result.add(id.getPrimaryKey());
         	}
-            return Arrays.asList(groupID);
+        	if (id.getUniqueKeys() != null) {
+        		result.addAll(id.getUniqueKeys());
+        	}
+            return result;
         }
         return this.actualMetadata.getUniqueKeysInGroup(groupID);   
     }
@@ -401,8 +409,8 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     public List getElementIDsInKey(Object keyID) 
         throws TeiidComponentException, QueryMetadataException {
         
-    	if (keyID instanceof TempMetadataID) {
-    		return ((TempMetadataID)keyID).getPrimaryKey();
+    	if (keyID instanceof List) {
+    		return (List)keyID;
     	}
     	
         return this.actualMetadata.getElementIDsInKey(keyID);   
@@ -692,10 +700,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     @Override
     public Object getPrimaryKey(Object metadataID) {
     	if (metadataID instanceof TempMetadataID) {
-    		if (((TempMetadataID)metadataID).getPrimaryKey() != null) {
-    			return metadataID;
-    		}
-    		return null;
+    		return ((TempMetadataID)metadataID).getPrimaryKey();
     	}
     	return this.actualMetadata.getPrimaryKey(metadataID);
     }

@@ -62,7 +62,7 @@ public class TestMaterialization {
 		dataManager = new TempTableDataManager(hdm, BufferManagerFactory.getStandaloneBufferManager());
 	}
 	
-	private void execute(String sql, List... expectedResults) throws Exception {
+	private void execute(String sql, List<?>... expectedResults) throws Exception {
 		CommandContext cc = TestProcessor.createCommandContext();
 		cc.setTempTableStore(tempStore);
 		cc.setGlobalTableStore(globalStore);
@@ -113,6 +113,16 @@ public class TestMaterialization {
 		assertEquals(3, hdm.getCommandHistory().size());
 		execute("call sp1(null)");
 		assertEquals(3, hdm.getCommandHistory().size());
+	}
+	
+	@Test public void testCoveringSecondaryIndex() throws Exception {
+		execute("SELECT * from vgroup3 where y in ('zne', 'zwo') order by y desc", Arrays.asList("two", "zwo"), Arrays.asList("one", "zne"));
+		execute("SELECT * from vgroup3 where y is null", Arrays.asList((String)null, (String)null));
+	}
+	
+	@Test public void testNonCoveringSecondaryIndex() throws Exception {
+		execute("SELECT * from vgroup5 where y in ('zne', 'zwo') order by y desc", Arrays.asList("two", "zwo", 1), Arrays.asList("one", "zne", 1));
+		execute("SELECT * from vgroup5 where y is null", Arrays.asList((String)null, (String)null, 1));
 	}
     
 }

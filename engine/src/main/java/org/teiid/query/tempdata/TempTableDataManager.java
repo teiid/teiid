@@ -24,6 +24,7 @@ package org.teiid.query.tempdata;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -113,14 +114,8 @@ public class TempTableDataManager implements ProcessorDataManager {
 	    }, new SessionAwareCache<CachedResults>());
     }
 
-    /**
-     * Constructor takes the "real" ProcessorDataManager that this object will be a proxy to,
-     * and will pass most calls through to transparently.  Only when a request is registered for
-     * a temp group will this proxy do it's thing.
-     * @param processorDataManager the real ProcessorDataManager that this object is a proxy to
-     * @param cache 
-     */    
-    public TempTableDataManager(ProcessorDataManager processorDataManager, BufferManager bufferManager, Executor executor, SessionAwareCache<CachedResults> cache){
+    public TempTableDataManager(ProcessorDataManager processorDataManager, BufferManager bufferManager, 
+    		Executor executor, SessionAwareCache<CachedResults> cache){
         this.processorDataManager = processorDataManager;
         this.bufferManager = bufferManager;
         this.executor = executor;
@@ -159,42 +154,9 @@ public class TempTableDataManager implements ProcessorDataManager {
 	        			return result;
 	        		}
         		} else if (proc.getGroup().isGlobalTable()) {
-        			String fullName = context.getMetadata().getFullName(proc.getProcedureID());
-        			LinkedList<Object> vals = new LinkedList<Object>();
-        			for (SPParameter param : proc.getInputParameters()) {
-        				vals.add(((Constant)param.getExpression()).getValue());
-					}
-        			//collapse the hash to single byte for the key to restrict the possible results to 256
-        			int hash = vals.hashCode();
-        			hash |= (hash >>> 16);
-        			hash |= (hash >>> 8);
-        			hash &= 0x000000ff;
-        			CacheID cid = new CacheID(new ParseInfo(), fullName + hash, context.getVdbName(), 
-        					context.getVdbVersion(), context.getConnectionID(), context.getUserName());
-        			cid.setParameters(vals);
-    		    	CachedResults results = cache.get(cid);
-    		    	if (results != null) {
-    		    		TupleBuffer buffer = results.getResults();
-    		    		return buffer.createIndexedTupleSource();
-    		    	}
-        			CacheHint hint = proc.getCacheHint();
-        			proc.setCacheHint(null);
-        			Option option = new Option();
-        			option.setNoCache(true);
-        			option.addNoCacheGroup(fullName);
-        			proc.setOption(option);
-        			int determinismLevel = context.resetDeterminismLevel();
-        			QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(proc.toString(), fullName.toUpperCase(), context);
-        			qp.setNonBlocking(true);
-        			BatchCollector bc = qp.createBatchCollector();
-        			TupleBuffer tb = bc.collectTuples();
-        			CachedResults cr = new CachedResults();
-        			cr.setResults(tb);
-        			cr.setHint(hint);
-        			cache.put(cid, context.getDeterminismLevel(), cr, hint != null?hint.getTtl():null);
-        			context.setDeterminismLevel(determinismLevel);
-        			return tb.createIndexedTupleSource();
+        			return handleCachedProcedure(context, proc);
         		}
+        		return null; //it's not a stored procedure we want to handle
         	}
         	
         	GroupSymbol group = ((ProcedureContainer)command).getGroup();
@@ -248,6 +210,50 @@ public class TempTableDataManager implements ProcessorDataManager {
         return null;
     }
 
+	private TupleSource handleCachedProcedure(CommandContext context,
+			StoredProcedure proc) throws TeiidComponentException,
+			QueryMetadataException, TeiidProcessingException {
+		String fullName = context.getMetadata().getFullName(proc.getProcedureID());
+		LogManager.logDetail(LogConstants.CTX_DQP, "processing cached procedure request for", fullName); //$NON-NLS-1$
+		LinkedList<Object> vals = new LinkedList<Object>();
+		for (SPParameter param : proc.getInputParameters()) {
+			vals.add(((Constant)param.getExpression()).getValue());
+		}
+		//collapse the hash to single byte for the key to restrict the possible results to 256
+		int hash = vals.hashCode();
+		hash |= (hash >>> 16);
+		hash |= (hash >>> 8);
+		hash &= 0x000000ff;
+		CacheID cid = new CacheID(new ParseInfo(), fullName + hash, context.getVdbName(), 
+				context.getVdbVersion(), context.getConnectionID(), context.getUserName());
+		cid.setParameters(vals);
+		CachedResults results = cache.get(cid);
+		if (results != null) {
+			TupleBuffer buffer = results.getResults();
+			return buffer.createIndexedTupleSource();
+		}
+		//construct a query with a no cache hint
+		//note that it's safe to use the stringified form of the parameters because
+		//it's not possible to use xml/clob/blob/object
+		CacheHint hint = proc.getCacheHint();
+		proc.setCacheHint(null);
+		Option option = new Option();
+		option.setNoCache(true);
+		option.addNoCacheGroup(fullName);
+		proc.setOption(option);
+		int determinismLevel = context.resetDeterminismLevel();
+		QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(proc.toString(), fullName.toUpperCase(), context);
+		qp.setNonBlocking(true);
+		BatchCollector bc = qp.createBatchCollector();
+		TupleBuffer tb = bc.collectTuples();
+		CachedResults cr = new CachedResults();
+		cr.setResults(tb);
+		cr.setHint(hint);
+		cache.put(cid, context.getDeterminismLevel(), cr, hint != null?hint.getTtl():null);
+		context.setDeterminismLevel(determinismLevel);
+		return tb.createIndexedTupleSource();
+	}
+
 	private TupleSource handleSystemProcedures(CommandContext context, StoredProcedure proc)
 			throws TeiidComponentException, QueryMetadataException,
 			QueryProcessingException, QueryResolverException,
@@ -259,6 +265,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			Object groupID = validateMatView(metadata, proc);
 			String matViewName = metadata.getFullName(groupID);
 			String matTableName = RelationalPlanner.MAT_PREFIX+matViewName.toUpperCase();
+			LogManager.logDetail(LogConstants.CTX_MATVIEWS, "processing refreshmatview for", matViewName); //$NON-NLS-1$
 			MatTableInfo info = globalStore.getMatTableInfo(matTableName);
 			boolean invalidate = Boolean.TRUE.equals(((Constant)proc.getParameter(1).getExpression()).getValue());
 			MatState oldState = info.setState(MatState.NEEDS_LOADING, invalidate?Boolean.FALSE:null);
@@ -387,23 +394,24 @@ public class TempTableDataManager implements ProcessorDataManager {
 		QueryMetadataInterface metadata = context.getMetadata();
 		Create create = new Create();
 		create.setTable(group);
-		create.setColumns(ResolverUtil.resolveElementsInGroup(group, metadata));
+		List<ElementSymbol> allColumns = ResolverUtil.resolveElementsInGroup(group, metadata); 
+		create.setColumns(allColumns);
 		Object pk = metadata.getPrimaryKey(group.getMetadataID());
 		if (pk != null) {
-			for (Object col : metadata.getElementIDsInKey(pk)) {
-				create.getPrimaryKey().add(create.getColumns().get(metadata.getPosition(col)-1));
-			}
+			List<ElementSymbol> pkColumns = resolveIndex(metadata, allColumns, pk);
+			create.getPrimaryKey().addAll(pkColumns);
 		}
 		TempTable table = globalStore.addTempTable(tableName, create, bufferManager, false);
 		table.setUpdatable(false);
 		CacheHint hint = table.getCacheHint();
+		boolean updatable = false;
 		if (hint != null) {
 			table.setPreferMemory(hint.getPrefersMemory());
 			if (hint.getTtl() != null) {
 				info.setTtl(table.getCacheHint().getTtl());
 			}
 			if (pk != null) {
-				table.setUpdatable(hint.isUpdatable());
+				updatable = hint.isUpdatable();
 			}
 		}
 		int rowCount = -1;
@@ -418,6 +426,16 @@ public class TempTableDataManager implements ProcessorDataManager {
 			//TODO: if this insert fails, it's unnecessary to do the undo processing
 			table.insert(ts, table.getColumns());
 			rowCount = table.getRowCount();
+			//TODO: could pre-process indexes to remove overlap
+			for (Object index : metadata.getIndexesInGroup(group.getMetadataID())) {
+				List<ElementSymbol> columns = resolveIndex(metadata, allColumns, index);
+				table.addIndex(columns);
+			}
+			for (Object key : metadata.getUniqueKeysInGroup(group.getMetadataID())) {
+				List<ElementSymbol> columns = resolveIndex(metadata, allColumns, key);
+				table.addIndex(columns);
+			}
+			table.setUpdatable(updatable);
 		} catch (TeiidComponentException e) {
 			LogManager.logError(LogConstants.CTX_MATVIEWS, e, QueryExecPlugin.Util.getString("TempTableDataManager.failed_load", tableName)); //$NON-NLS-1$
 			throw e;
@@ -434,6 +452,20 @@ public class TempTableDataManager implements ProcessorDataManager {
 			}
 		}
 		return rowCount;
+	}
+
+	/**
+	 * Return a list of ElementSymbols for the given index/key object
+	 */
+	private List<ElementSymbol> resolveIndex(QueryMetadataInterface metadata,
+			List<ElementSymbol> allColumns, Object pk)
+			throws TeiidComponentException, QueryMetadataException {
+		Collection<?> pkIds = metadata.getElementIDsInKey(pk);
+		List<ElementSymbol> pkColumns = new ArrayList<ElementSymbol>(pkIds.size());
+		for (Object col : pkIds) {
+			pkColumns.add(allColumns.get(metadata.getPosition(col)-1));
+		}
+		return pkColumns;
 	}
 
 	public Object lookupCodeValue(CommandContext context, String codeTableName,

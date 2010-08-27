@@ -490,12 +490,12 @@ public class RelationalPlanner {
 						if (container.areResultsCachable() && Query.areResultsCachable(container.getProcedureParameters().keySet()) && context.isResultSetCacheEnabled()) {
 							container.getGroup().setGlobalTable(true);
 							container.setCacheHint(c.getCacheHint());
-							recordAnnotation(analysisRecord, Annotation.MATERIALIZED_VIEW, Priority.LOW, "SimpleQueryResolver.procedure_cache_used", container.getGroup()); //$NON-NLS-1$
+							recordAnnotation(analysisRecord, Annotation.CACHED_PROCEDURE, Priority.LOW, "SimpleQueryResolver.procedure_cache_used", container.getGroup()); //$NON-NLS-1$
 							return;
 						}
-						recordAnnotation(analysisRecord, Annotation.MATERIALIZED_VIEW, Priority.MEDIUM, "SimpleQueryResolver.procedure_cache_not_usable", container.getGroup()); //$NON-NLS-1$
+						recordAnnotation(analysisRecord, Annotation.CACHED_PROCEDURE, Priority.MEDIUM, "SimpleQueryResolver.procedure_cache_not_usable", container.getGroup()); //$NON-NLS-1$
 					} else {
-						recordAnnotation(analysisRecord, Annotation.MATERIALIZED_VIEW, Priority.LOW, "SimpleQueryResolver.procedure_cache_not_used", container.getGroup()); //$NON-NLS-1$
+						recordAnnotation(analysisRecord, Annotation.CACHED_PROCEDURE, Priority.LOW, "SimpleQueryResolver.procedure_cache_not_used", container.getGroup()); //$NON-NLS-1$
 					}
 				}
 			}
@@ -984,15 +984,17 @@ public class RelationalPlanner {
 					id.setCardinality(metadata.getCardinality(table.getMetadataID()));
 					
 					Object pk = metadata.getPrimaryKey(table.getMetadataID());
-					//primary key
 					if (pk != null) {
-						List cols = metadata.getElementIDsInKey(pk);
-						ArrayList<TempMetadataID> primaryKey = new ArrayList<TempMetadataID>(cols.size());
-						for (Object coldId : cols) {
-							int pos = metadata.getPosition(coldId) - 1;
-							primaryKey.add(id.getElements().get(pos));
-						}
+						ArrayList<TempMetadataID> primaryKey = resolveIndex(metadata, id, pk);
 						id.setPrimaryKey(primaryKey);
+					}
+					Collection keys = metadata.getUniqueKeysInGroup(table.getMetadataID());
+					for (Object key : keys) {
+						id.addUniqueKey(resolveIndex(metadata, id, key));
+					}
+					Collection indexes = metadata.getIndexesInGroup(table.getMetadataID());
+					for (Object index : indexes) {
+						id.addIndex(resolveIndex(metadata, id, index));
 					}
 					Command c = getCommand(table, metadata.getVirtualPlan(table.getMetadataID()), SQLConstants.Reserved.SELECT, metadata, analysisRecord);
 					CacheHint hint = c.getCacheHint();
@@ -1006,6 +1008,18 @@ public class RelationalPlanner {
 			recordAnnotation(analysisRecord, Annotation.MATERIALIZED_VIEW, Priority.LOW, "SimpleQueryResolver.cache_hint_used", table, matTableName, id.getCacheHint()); //$NON-NLS-1$
 		}
 		return id;
+	}
+
+	private static ArrayList<TempMetadataID> resolveIndex(
+			QueryMetadataInterface metadata, TempMetadataID id, Object pk)
+			throws TeiidComponentException, QueryMetadataException {
+		List cols = metadata.getElementIDsInKey(pk);
+		ArrayList<TempMetadataID> primaryKey = new ArrayList<TempMetadataID>(cols.size());
+		for (Object coldId : cols) {
+			int pos = metadata.getPosition(coldId) - 1;
+			primaryKey.add(id.getElements().get(pos));
+		}
+		return primaryKey;
 	}
 
 	private static Command getCommand(GroupSymbol virtualGroup, QueryNode qnode,

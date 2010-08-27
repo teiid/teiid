@@ -33,12 +33,14 @@ import org.teiid.core.TeiidProcessingException;
 
 /**
  * Implements intelligent browsing over a {@link STree}
+ * 
+ * TODO: this is not as efficient as it should be over partial matches
  */
 public class TupleBrowser implements TupleSource {
 	
 	private final STree tree;
 	
-	private List<List<Object>> valueSet;
+	private TupleSource valueSet;
 	
 	private SPage page;
 	private int index;
@@ -53,12 +55,13 @@ public class TupleBrowser implements TupleSource {
 	private boolean inPartial;
 
 	/**
-	 * Construct a value based browser
+	 * Construct a value based browser.  The {@link TupleSource} should already be in the
+	 * proper direction.
 	 * @param sTree
 	 * @param valueSet
 	 * @param direction
 	 */
-	public TupleBrowser(STree sTree, List<List<Object>> valueSet, boolean direction) {
+	public TupleBrowser(STree sTree, TupleSource valueSet, boolean direction) {
 		this.tree = sTree;
 		this.direction = direction;
 		this.valueSet = valueSet;
@@ -80,7 +83,7 @@ public class TupleBrowser implements TupleSource {
 	}
 
 	private void init(List<Object> lowerBound,
-			List<Object> upperBound)
+			List<?> upperBound)
 			throws TeiidComponentException {
 		if (lowerBound != null) {
 			lowerBound.addAll(Collections.nCopies(tree.getKeyLength() - lowerBound.size(), null));
@@ -156,11 +159,11 @@ public class TupleBrowser implements TupleSource {
 		for (;;) {
 			//first check for value iteration
 			if (!inPartial && valueSet != null) {
-				if (valueSet.isEmpty()) {
+				List<?> newValue = valueSet.nextTuple();
+				if (newValue == null) {
 					resetState();
 					return null;
 				}
-				List<Object> newValue = direction?valueSet.remove(0):valueSet.remove(valueSet.size() -1);
 				if (newValue.size() < tree.getKeyLength()) {
 					init(new ArrayList<Object>(newValue), newValue);
 					inPartial = true;
