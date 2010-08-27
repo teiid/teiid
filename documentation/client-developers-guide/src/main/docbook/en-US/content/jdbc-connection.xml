@@ -407,7 +407,7 @@
             directory.  Based on the type of deployment (XA, driver, or local), the contents of the file will be different.  See the following sections for more.</para></listitem>
         </orderedlist>
         
-        <para>Tje data source will then be accessable through the JNDI name specified in the -ds.xml file.</para>
+        <para>The data source will then be accessable through the JNDI name specified in the -ds.xml file.</para>
         
         <section id="as_xa_connection">
            <title>DataSource Connection</title>
