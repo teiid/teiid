@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.api.exception.query.QueryResolverException;
@@ -172,6 +173,7 @@ public class TestDQPCore {
         }
     }
     
+    @Ignore("visibility no longer ristricts access")
 	@Test public void testLookupVisibility() throws Exception {
 		helpTestVisibilityFails("select lookup('bqt3.smalla', 'intkey', 'stringkey', '?')"); //$NON-NLS-1$
 	}

@@ -51,6 +51,7 @@ public interface DataPolicy {
 	 */
 	List<String> getMappedRoleNames();
 	
+	boolean isAnyAuthenticated();
 	
 	interface DataPermission {
 		/**

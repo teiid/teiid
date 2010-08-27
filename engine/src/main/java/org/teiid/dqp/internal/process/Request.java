@@ -461,8 +461,10 @@ public class Request {
 	}
 
 	protected void validateAccess(Command command) throws QueryValidatorException, TeiidComponentException {
-		AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(this.workContext.getVDB(), this.useEntitlements, this.workContext.getAllowedDataPolicies(), this.workContext.getUserName());
-		validateWithVisitor(visitor, this.metadata, command);
+		if (useEntitlements) {
+			AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(this.workContext.getAllowedDataPolicies(), this.workContext.getUserName());
+			validateWithVisitor(visitor, this.metadata, command);
+		}
 	}
 	
 }

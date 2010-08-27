@@ -98,6 +98,7 @@
                             <xs:element name="mapped-role-name" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
 						</xs:sequence>
 						<xs:attribute name="name" type="xs:string" use="required"/>
+						<xs:attribute name="any-authenticated" type="xs:boolean"/>
 					</xs:complexType>
 				</xs:element>
                 <xs:element name="entry" minOccurs="0" maxOccurs="unbounded">

@@ -5,7 +5,7 @@
 ]>
 <chapter id="dataroles">
     <title>Data Roles</title>
-    <para>Data roles, also called entitlements, are sets of permissions that are defined 
+    <para>Data roles, also called entitlements, are sets of permissions defined 
     per VDB that dictate data access (create, read,  update, delete). The use of data roles can be disabled system wide with the property in 
     &jboss-beans; file in bean configuration section of <code>RuntimeEngineDeployer</code> with property <code>useDataRoles</code>.</para>
     
@@ -26,14 +26,16 @@
 		Thus it is possible to set very general permissions at high-level resource path names and to override only as necessary at more specific resource paths. 
 		</para>
 
-		<para>Permission grants are only needed for resources that are visible.
-			All non-visible, typically physical, models in a VDB are automatically
-			inaccessible by user level requests. Permissions are also only applied
-			to the columns and tables in the user query - not to every resource
-			accessed transitively through views and procedures.
+		<para>Permission grants are only needed for resources that a role needs access to.
+			Permissions are also only applied to the columns/tables/procedures in the user query - not to every resource
+			accessed transitively through view and procedure definitions.
 			It is important therefore to ensure that permission grants are applied
-			consistently across visible models that access the same resources.
+			consistently across models that access the same resources.
 		</para>
+		
+		<warning><para>Unlike previous versions of Teiid, non-visible models are accessible by user queries.  
+		To restrict user access at a model level, at least one data role should be created to enable data role checking.  
+		In turn that role can be mapped to any authenticated user and should not grant permissions to models that should be inaccessable.</para></warning>
 		    	
    	    <orderedlist>
 	        <para>To process a <emphasis>SELECT</emphasis> statement or a stored procedure execution, the user account requires the following access rights:</para>
@@ -65,6 +67,16 @@
 	        <listitem> <para><emphasis>READ</emphasis> - on the Procedure being executed.</para></listitem>
 	    </orderedlist>
 	       
+    </section>
+    
+    <section>
+    	<title>Role Mapping</title>
+    	<para>Each Teiid data role can be mapped to any number of container roles or any authenticated user.  
+    	You may control role membership through whatever system the Teiid security domain login modules are associated with. 
+    	The kit includes example files for use with the UsersRolesLoginModule - see teiid-security-roles.properties.</para>
+    	<para>It is possible for a user to have any number of container roles, which in turn imply a subset of Teiid data roles.  
+    	Each applicable Teiid data role contributes cumulatively to the permissions of the user. 
+    	No one role supercedes or negates the permissions of the other data roles.</para>
     </section>
 
 	<section>
