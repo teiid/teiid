@@ -10,7 +10,8 @@
 		<para>Typically a user name is required, however user names may be considered optional if the
 			identity of the user can be discerned by the password credential alone.  In
 			any case it is up to the configured security domain to determine whether a user can be
-			authenticated.</para>
+			authenticated. If you need authentication, the administrator must configure a LoginModule to be used with Teiid. 
+            See below for more information on how configure the Login module in JBoss AS.</para>
 			
 			<note><para>By default, access to Teiid is NOT secure. The default login modules are only 
 	        backed by file based authentication, which has a well known user 
@@ -18,6 +19,18 @@
 	        The same is true for making connections to the Admin Console application. 
 	        We DO NOT recommend leaving the default security profile as defined when you 
 	        are exposing sensitive data.</para></note>
+            <section>
+                <title>Pass-through Authentication</title>
+                <para>If your client application (web application or Web service) resides in the same JBoss AS instance as Teiid and 
+                client application uses a security-domain to handle the security concerns, then you can configure Teiid to use the 
+                same security-domain and not force the user to re-authenticate for using Teiid. In this case Teiid looks for a authenticated 
+                subject in the calling thread context and uses for its session and authorization purposes. To configure Teiid for this
+                pass-through authentication mechanism, you need change the Teiid's security-domain name to same name as your 
+                application's security domain name in the "teiid-jboss-beans.xml" file in the SessionService section. 
+                Please note that for this to work, the security-domain 
+                must be a JAAS based Login Module and your client application MUST obtain Teiid connection 
+                using <emphasis>Local</emphasis> Connection.</para>
+            </section>
 	</section>
 	<section>
 		<title>Authorization</title>
