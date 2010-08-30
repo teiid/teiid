@@ -200,8 +200,13 @@ public class VDBComponent extends Facet {
 									.getName()
 									.equals(
 											PluginConstants.ComponentType.VDB.Metrics.STATUS)) {
-								report.addData(new MeasurementDataTrait(
-										request, (String) metricReturnObject));
+								if (((String) metricReturnObject).equals("ACTIVE")) {
+									report.addData(new MeasurementDataTrait(
+											request, "UP"));
+								}else{
+									report.addData(new MeasurementDataTrait(
+											request, "DOWN"));
+								}
 							} else {
 								if (request
 										.getName()
