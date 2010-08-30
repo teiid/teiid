@@ -46,7 +46,8 @@
     
     <bean name="CacheFactory" class="org.teiid.cache.jboss.ClusterableCacheFactory">
         <property name="enabled">true</property>
-        <property name="clusteredCacheName">mvcc-shared</property>
+        <property name="cacheManager">java:TeiidCacheManager</property>
+        <property name="resultsetCacheName">teiid-resultset-cache</property>        
     </bean>
     
     <!-- Configuration for result set caching. 

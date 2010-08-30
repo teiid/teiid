@@ -29,6 +29,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.lang.ref.Reference;
+import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -391,6 +392,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     
     private volatile int activeBatchColumnCount = 0;
     private Map<String, TupleBufferInfo> activeBatches = new LinkedHashMap<String, TupleBufferInfo>();
+	private Map<String, TupleReference> tupleBufferMap = new ConcurrentHashMap<String, TupleReference>();
+	private ReferenceQueue<TupleBuffer> tupleBufferQueue = new ReferenceQueue<TupleBuffer>();
+    
     
     private StorageManager diskMgr;
 
@@ -614,5 +618,38 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 
 	public void shutdown() {
 	}
-    
+
+	@Override
+	public void addTupleBuffer(TupleBuffer tb) {
+		cleanDefunctTupleBuffers();
+		this.tupleBufferMap.put(tb.getId(), new TupleReference(tb, this.tupleBufferQueue));
+	}
+	
+	@Override
+	public TupleBuffer getTupleBuffer(String id) {		
+		cleanDefunctTupleBuffers();
+		Reference<TupleBuffer> r = this.tupleBufferMap.get(id);
+		if (r != null) {
+			return r.get();
+		}
+		return null;
+	}
+	
+	private void cleanDefunctTupleBuffers() {
+		while (true) {
+			Reference r = this.tupleBufferQueue.poll();
+			if (r == null) {
+				break;
+			}
+			this.tupleBufferMap.remove(((TupleReference)r).id);
+		}
+	}
+	
+	static class TupleReference extends WeakReference<TupleBuffer>{
+		String id;
+		public TupleReference(TupleBuffer referent, ReferenceQueue<? super TupleBuffer> q) {
+			super(referent, q);
+			id = referent.getId();
+		}
+	}
 }

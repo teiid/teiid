@@ -96,7 +96,7 @@ public class PlatformDiscoveryComponent implements ResourceDiscoveryComponent {
 
 		// Add to return values
 		discoveredResources.add(detail);
-		log.info("Discovered Teiid instance: " + mc.getName()); //$NON-NLS-1$
+		log.debug("Discovered Teiid instance: " + mc.getName()); //$NON-NLS-1$
 		return discoveredResources;
 
 	}

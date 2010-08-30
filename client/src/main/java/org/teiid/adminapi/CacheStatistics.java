@@ -19,32 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.cache.jboss;
+package org.teiid.adminapi;
 
-import org.jboss.cache.Cache;
-import org.jboss.cache.Fqn;
-import org.jboss.cache.Node;
-import org.jboss.cache.eviction.ExpirationAlgorithmConfig;
-import org.teiid.cache.DefaultCache;
-
-public class ExpirationAwareCache<K, V> extends JBossCache<K, V> {
-
-	public ExpirationAwareCache(Cache cacheStore, Fqn fqn) {
-		super(cacheStore, fqn);
-	}
-
-	@Override
-	public V put(K key, V value) {
-		return this.put(key, value, null);
-	}
+public interface CacheStatistics extends AdminObject {
 	
-	@Override
-	public V put(K key, V value, Long ttl) {
-		Node<K, V> node = getRootNode();
-		Node child = node.addChild(getFqn(key));
-		
-		long future = DefaultCache.getExpirationTime(config.getMaxAgeInSeconds()*1000, ttl);				
-		child.put(ExpirationAlgorithmConfig.EXPIRATION_KEY, future);
-		return (V)child.put(key, value);
-	}
+	double getHitRatio();
+	
+	int getTotalEntries();
+	
+	int getRequestCount();
+
 }

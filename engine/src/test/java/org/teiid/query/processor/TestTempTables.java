@@ -27,11 +27,15 @@ import static org.junit.Assert.*;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.dqp.internal.process.CachedResults;
+import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
@@ -60,9 +64,18 @@ public class TestTempTables {
 		metadata = new TempMetadataAdapter(FakeMetadataFactory.example1Cached(), tempStore.getMetadataStore());
 		FakeDataManager fdm = new FakeDataManager();
 	    TestProcessor.sampleData1(fdm);
-		dataManager = new TempTableDataManager(fdm, BufferManagerFactory.getStandaloneBufferManager());
+	    BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
+	    cache.setBufferManager(bm);
+	    Executor executor = new Executor() {
+			@Override
+			public void execute(Runnable command) {
+				command.run();
+			}
+	    };
+		dataManager = new TempTableDataManager(fdm, bm, executor, cache);
 	}
-
+	
 	@Test public void testInsertWithQueryExpression() throws Exception {
 		execute("create local temporary table x (e1 string, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
 		execute("insert into x (e2, e1) select e2, e1 from pm1.g1", new List[] {Arrays.asList(6)}); //$NON-NLS-1$

@@ -105,15 +105,6 @@ public class TempTableDataManager implements ProcessorDataManager {
 	private SessionAwareCache<CachedResults> cache;
     private Executor executor;
 
-    public TempTableDataManager(ProcessorDataManager processorDataManager, BufferManager bufferManager) {
-    	this(processorDataManager, bufferManager, new Executor() {
-			@Override
-			public void execute(Runnable command) {
-				command.run();
-			}
-	    }, new SessionAwareCache<CachedResults>());
-    }
-
     public TempTableDataManager(ProcessorDataManager processorDataManager, BufferManager bufferManager, 
     		Executor executor, SessionAwareCache<CachedResults> cache){
         this.processorDataManager = processorDataManager;

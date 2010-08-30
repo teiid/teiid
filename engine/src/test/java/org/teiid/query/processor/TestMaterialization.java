@@ -27,12 +27,16 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.QueryProcessorFactoryImpl;
+import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
@@ -59,7 +63,17 @@ public class TestMaterialization {
 		hdm.addData("SELECT matsrc.x FROM matsrc", new List[] {Arrays.asList((String)null), Arrays.asList("one"), Arrays.asList("two"), Arrays.asList("three")});
 		hdm.addData("SELECT mattable.info.e1, mattable.info.e2 FROM mattable.info", new List[] {Arrays.asList("a", 1), Arrays.asList("a", 2)});
 		hdm.addData("SELECT mattable.info.e2, mattable.info.e1 FROM mattable.info", new List[] {Arrays.asList(1, "a"), Arrays.asList(2, "a")});
-		dataManager = new TempTableDataManager(hdm, BufferManagerFactory.getStandaloneBufferManager());
+		
+	    BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
+	    cache.setBufferManager(bm);
+	    Executor executor = new Executor() {
+			@Override
+			public void execute(Runnable command) {
+				command.run();
+			}
+	    };
+		dataManager = new TempTableDataManager(hdm, bm, executor, cache);
 	}
 	
 	private void execute(String sql, List<?>... expectedResults) throws Exception {

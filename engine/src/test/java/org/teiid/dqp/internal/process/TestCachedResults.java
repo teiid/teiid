@@ -21,7 +21,8 @@
  */
 package org.teiid.dqp.internal.process;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -34,6 +35,7 @@ import org.junit.Test;
 import org.teiid.cache.Cache;
 import org.teiid.cache.DefaultCache;
 import org.teiid.common.buffer.BatchManager;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
@@ -93,11 +95,19 @@ public class TestCachedResults {
 		
 		tb.close();
 		
+		BufferManager bm = fbs.getBufferManager();
 		CachedResults results = new CachedResults();
 		results.setResults(tb);
 		results.setCommand(new Query());
 		Cache cache = new DefaultCache("dummy"); //$NON-NLS-1$
-		results.prepare(cache, fbs.getBufferManager());
+		
+		// simulate the jboss-cache remote transport, where the batches are remotely looked up
+		// in cache
+		for (int row=1; row<=tb.getRowCount();row+=4) {
+			cache.put(results.getId()+","+row, tb.getBatch(row), null); //$NON-NLS-1$ 
+		}
+		
+		results.prepare(cache, bm);
 		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -108,7 +118,7 @@ public class TestCachedResults {
 		CachedResults cachedResults = (CachedResults)ois.readObject();
 		ois.close();
 		
-		cachedResults.restore(cache, fbs.getBufferManager());
+		cachedResults.restore(cache, bm);
 		
 		// since restored, simulate a async cache flush
 		cache.clear();

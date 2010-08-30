@@ -25,7 +25,6 @@ package org.teiid.dqp.internal.process;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
@@ -62,8 +61,12 @@ public class CachedResults implements Serializable, Cachable {
 	private String[] types;
 	private CacheHint hint;
 	private int batchSize;
+	private String uuid;
+	private int rowCount;
 	
-	protected ArrayList<UUID> cachedBatches = new ArrayList<UUID>();
+	public String getId() {
+		return this.uuid;
+	}
 	
 	public AnalysisRecord getAnalysisRecord() {
 		return analysisRecord;
@@ -81,6 +84,8 @@ public class CachedResults implements Serializable, Cachable {
 		this.results = results;
 		this.batchSize = results.getBatchSize();
 		this.types = TupleBuffer.getTypeNames(results.getSchema());
+		this.rowCount = results.getRowCount();
+		this.uuid = results.getId();
 	}
 	
 	public void setCommand(Command command) {
@@ -107,19 +112,8 @@ public class CachedResults implements Serializable, Cachable {
 	@Override
 	public boolean prepare(Cache cache, BufferManager bufferManager) {
 		Assertion.assertTrue(!this.results.isForwardOnly());
-		try {
-			for (int row = 1; row <= this.results.getRowCount(); row+=this.results.getBatchSize()) {
-				TupleBatch batch = results.getBatch(row);
-				UUID uuid = java.util.UUID.randomUUID();
-				batch.preserveTypes();
-				cache.put(uuid, batch, this.hint != null?this.hint.getTtl():null);
-				this.cachedBatches.add(uuid);
-			}
-			return true;
-		} catch (TeiidComponentException e) {
-			LogManager.logDetail(LogConstants.CTX_DQP, DQPPlugin.Util.getString("failed_to_put_in_cache")); //$NON-NLS-1$
-		}
-		return false;
+		bufferManager.addTupleBuffer(this.results);
+		return true;
 	}
 
 	@Override
@@ -137,13 +131,15 @@ public class CachedResults implements Serializable, Cachable {
 				if (this.hint != null) {
 					buffer.setPrefersMemory(this.hint.getPrefersMemory());
 				}
-				for (UUID uuid : this.cachedBatches) {
-					TupleBatch batch =  (TupleBatch)cache.get(uuid);
+				
+				for (int row = 1; row <= this.rowCount; row+=this.batchSize) {
+					TupleBatch batch = (TupleBatch)cache.get(uuid+","+row); //$NON-NLS-1$
 					if (batch != null) {					
 						buffer.addTupleBatch(batch, true);
-					}
+					}					
 				}
-				this.results = buffer;				
+				this.results = buffer;	
+				bufferManager.addTupleBuffer(this.results);
 			}
 			return true;
 		} catch (TeiidComponentException e) {

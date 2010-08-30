@@ -116,4 +116,7 @@ public interface BufferManager extends StorageManager {
     
     STree createSTree(final List elements, String groupName, int keyLength);
     
+	void addTupleBuffer(TupleBuffer tb);
+	
+	TupleBuffer getTupleBuffer(String id);		
 }

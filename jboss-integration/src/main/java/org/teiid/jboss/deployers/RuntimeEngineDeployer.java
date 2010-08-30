@@ -49,6 +49,7 @@ import org.jboss.util.naming.Util;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.impl.CacheStatisticsMetadata;
 import org.teiid.adminapi.impl.DQPManagement;
 import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.SessionMetadata;
@@ -149,14 +150,14 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	
     	if (this.jdbcSocketConfiguration.isEnabled()) {
 	    	this.jdbcSocket = new SocketListener(this.jdbcSocketConfiguration, csr, this.dqpCore.getBufferManager(), offset);
-	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_enabled","Teiid JDBC = ",(this.jdbcSocketConfiguration.getSSLConfiguration().isSslEnabled()?"mms://":"mm://")+this.jdbcSocketConfiguration.getHostAddress().getHostName()+":"+this.jdbcSocketConfiguration.getPortNumber()+offset)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_enabled","Teiid JDBC = ",(this.jdbcSocketConfiguration.getSSLConfiguration().isSslEnabled()?"mms://":"mm://")+this.jdbcSocketConfiguration.getHostAddress().getHostName()+":"+(this.jdbcSocketConfiguration.getPortNumber()+offset))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     	} else {
     		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_not_enabled", "jdbc connections")); //$NON-NLS-1$ //$NON-NLS-2$
     	}
     	
     	if (this.adminSocketConfiguration.isEnabled()) {
 	    	this.adminSocket = new SocketListener(this.adminSocketConfiguration, csr, this.dqpCore.getBufferManager(), offset);
-	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_enabled","Teiid Admin", (this.adminSocketConfiguration.getSSLConfiguration().isSslEnabled()?"mms://":"mm://")+this.adminSocketConfiguration.getHostAddress().getHostName()+":"+this.adminSocketConfiguration.getPortNumber()+offset)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_enabled","Teiid Admin", (this.adminSocketConfiguration.getSSLConfiguration().isSslEnabled()?"mms://":"mm://")+this.adminSocketConfiguration.getHostAddress().getHostName()+":"+(this.adminSocketConfiguration.getPortNumber()+offset))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     	} else {
     		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_not_enabled", "admin connections")); //$NON-NLS-1$ //$NON-NLS-2$
     	}
@@ -164,7 +165,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	if (this.odbcSocketConfiguration.isEnabled()) {
     		this.vdbRepository.odbcEnabled();
 	    	this.odbcSocket = new ODBCSocketListener(this.odbcSocketConfiguration, csr, this.dqpCore.getBufferManager(), offset);
-	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("odbc_enabled","Teiid ODBC - SSL=", (this.odbcSocketConfiguration.getSSLConfiguration().isSslEnabled()?"ON":"OFF")+" Host = "+this.odbcSocketConfiguration.getHostAddress().getHostName()+" Port = "+this.odbcSocketConfiguration.getPortNumber()+offset)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("odbc_enabled","Teiid ODBC - SSL=", (this.odbcSocketConfiguration.getSSLConfiguration().isSslEnabled()?"ON":"OFF")+" Host = "+this.odbcSocketConfiguration.getHostAddress().getHostName()+" Port = "+(this.odbcSocketConfiguration.getPortNumber()+offset))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
     	} else {
     		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("odbc_not_enabled")); //$NON-NLS-1$
     	}    	
@@ -379,6 +380,12 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	@ManagementOperation(description="Clear the caches in the system", impact=Impact.ReadOnly)
 	public void clearCache(String cacheType) {
 		this.dqpCore.clearCache(cacheType);
+	}
+	
+	@Override
+	@ManagementOperation(description="Get the cache statistics", impact=Impact.ReadOnly)
+	public CacheStatisticsMetadata getCacheStatistics(String cacheType) {
+		return this.dqpCore.getCacheStatistics(cacheType);
 	}
 	
 	@Override

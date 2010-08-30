@@ -256,6 +256,30 @@
 			displayType="detail" category="throughput" property="userBufferSpace"
 			description="The currently used file buffer space in MB." />
 
+        <metric displayName="Prepared Plan Cache Hit Ratio %" defaultOn="true"
+            displayType="detail" category="performance" property="PREPARED_PLAN_CACHE.hitRatio"
+            description="Prepared plan cache hit ratio" />
+
+        <metric displayName="Prepared Plan Cache Size" defaultOn="true"
+            displayType="detail" category="performance" property="PREPARED_PLAN_CACHE.totalEntries"
+            description="Prepared plan cache size" />
+
+        <metric displayName="Prepared Plan Cache # of Requests" defaultOn="true"
+            displayType="detail" category="performance" property="PREPARED_PLAN_CACHE.requestCount"
+            description="Prepared plan cache # Requests made aginst cache" />
+            
+        <metric displayName="ResultSet Cache Hit Ratio %" defaultOn="true"
+            displayType="detail" category="performance" property="QUERY_SERVICE_RESULT_SET_CACHE.hitRatio"
+            description="ResultSet cache hit ratio" />
+
+        <metric displayName="ResultSet Cache Size" defaultOn="true"
+            displayType="detail" category="performance" property="QUERY_SERVICE_RESULT_SET_CACHE.totalEntries"
+            description="ResultSet cache Size" />
+
+        <metric displayName="ResultSet Cache  # of Requests" defaultOn="true"
+            displayType="detail" category="performance" property="QUERY_SERVICE_RESULT_SET_CACHE.requestCount"
+            description="ResultSet cache  # Requests made aginst cache" />
+
 		<resource-configuration>
 			<c:group name="teiidProperties" displayName="Runtime Engine Properties"
 				hiddenByDefault="false">

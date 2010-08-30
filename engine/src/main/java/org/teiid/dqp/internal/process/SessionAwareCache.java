@@ -55,6 +55,7 @@ public class SessionAwareCache<T> {
 	private int maxSize = DEFAULT_MAX_SIZE_TOTAL;
 	
 	private AtomicInteger cacheHit = new AtomicInteger();
+	private AtomicInteger totalRequests = new AtomicInteger();
 	
 	private BufferManager bufferManager;
 	
@@ -82,6 +83,8 @@ public class SessionAwareCache<T> {
 	}	
 	
 	public T get(CacheID id){
+
+		this.totalRequests.getAndIncrement();
 		
 		id.setSessionId(id.originalSessionId);
 		T result = localCache.get(id);
@@ -113,6 +116,17 @@ public class SessionAwareCache<T> {
 	
 	public int getCacheHitCount() {
 		return cacheHit.get();
+	}
+		
+	public int getRequestCount() {
+		return this.totalRequests.get();
+	}
+	
+	public int getTotalCacheEntries() {
+		if (this.localCache == this.distributedCache) {
+			return this.localCache.size();
+		}
+		return localCache.size() + distributedCache.size();
 	}
 	
 	public void put(CacheID id, int determinismLevel, T t, Long ttl){
@@ -249,16 +263,11 @@ public class SessionAwareCache<T> {
 	    
 	}
 	
-	//for testing purpose 
-	int getSpaceUsed() {
-		return localCache.size();
-	}
     int getSpaceAllowed() {
         return maxSize;
     }
     
     public void setBufferManager(BufferManager bufferManager) {
     	this.bufferManager = bufferManager;
-    }    
-    
+    }
 }

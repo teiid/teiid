@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.concurrent.Executor;
 
 import org.junit.Test;
 import org.teiid.client.metadata.ParameterInfo;
@@ -54,6 +55,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.XMLType;
+import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.QueryProcessorFactoryImpl;
 import org.teiid.dqp.internal.process.SessionAwareCache;
@@ -244,7 +246,15 @@ public class TestProcessor {
         	context.setGlobalTableStore(new TempTableStore("SYSTEM"));
         }
         if (!(dataManager instanceof TempTableDataManager)) {
-        	dataManager = new TempTableDataManager(dataManager, bufferMgr);
+    	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
+    	    cache.setBufferManager(bufferMgr);
+    	    Executor executor = new Executor() {
+    			@Override
+    			public void execute(Runnable command) {
+    				command.run();
+    			}
+    	    };        	
+        	dataManager = new TempTableDataManager(dataManager, bufferMgr, executor, cache);
         }        
         if (context.getQueryProcessorFactory() == null) {
         	context.setQueryProcessorFactory(new QueryProcessorFactoryImpl(bufferMgr, dataManager, new DefaultCapabilitiesFinder(), null, context.getMetadata()));

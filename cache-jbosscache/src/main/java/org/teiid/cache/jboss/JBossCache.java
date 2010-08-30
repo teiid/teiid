@@ -22,10 +22,7 @@
 
 package org.teiid.cache.jboss;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.jboss.cache.Fqn;
@@ -50,56 +47,61 @@ public class JBossCache<K, V> implements Cache<K, V> {
 		this.rootFqn = fqn;
 	}
 	
+	@Override
 	public V get(K key) {
-		return this.cacheStore.get(this.rootFqn, key);
+		Node<K, V> node = getRootNode();
+		Node child = node.getChild(getFqn(key));
+		if (child != null) {
+			return (V)child.get(key);
+		}
+		return null;
+	}
+
+	protected Fqn<String> getFqn(K key) {
+		if (key.getClass().isPrimitive() || key instanceof String) {
+			return Fqn.fromString(String.valueOf(key));
+		}
+		return Fqn.fromString(String.valueOf(key.getClass().getSimpleName()+key.hashCode()));
 	}
 
 	public V put(K key, V value) {
-		return this.cacheStore.put(this.rootFqn, key, value);
+		Node<K, V> node = getRootNode();
+		Node<K, V> child = node.addChild(getFqn(key));
+		return child.put(key, value);
 	}
 	
+	@Override
 	public V put(K key, V value, Long ttl) {
 		return this.put(key, value);
 	}
 
+	@Override
 	public V remove(K key) {
-		return this.cacheStore.remove(this.rootFqn, key);
-	}
-
-	public Set<K> keySet() {
-		Node<K, V> node = this.cacheStore.getRoot().getChild(this.rootFqn);
-		if (node != null) {
-			return node.getKeys();
+		Node<K, V> node = getRootNode();
+		Node child = node.getChild(getFqn(key));
+		if (child != null) {
+			return (V)child.remove(key);
 		}
-		return Collections.emptySet();
+		return null;
 	}
 	
+	@Override
 	public int size() {
-		Node<K, V> node = this.cacheStore.getRoot().getChild(this.rootFqn);
-		if (node != null) {
-			return node.dataSize();
-		}
-		return 0;
+		Node<K, V> node = getRootNode();
+		return node.getChildren().size();
 	}
 	
+	@Override
 	public void clear() {
-		Node<K, V> node = this.cacheStore.getRoot().getChild(this.rootFqn);
-		if (node != null) {
-			node.clearData();
+		Node<K, V> node = getRootNode();
+		node.clearData();
+		Set<Node<K,V>> nodes = new HashSet<Node<K, V>>(node.getChildren());
+		for (Node<K, V> child : nodes) {
+			child.clearData();
+			node.removeChild(child.getFqn());
 		}
 	}
 	
-	public Collection<V> values() {
-		Node<K, V> node = this.cacheStore.getRoot().getChild(this.rootFqn);
-		if (node != null) {
-			return node.getData().values();
-		}
-		return Collections.emptyList();
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
 	public synchronized void addListener(CacheListener listener) {
 		this.cacheListener = new JBossCacheListener(this.rootFqn, listener);
 		this.cacheStore.addCacheListener(this.cacheListener);
@@ -110,45 +112,12 @@ public class JBossCache<K, V> implements Cache<K, V> {
 		this.cacheListener = null;	
 	}
 
-	public Cache<K, V> addChild(String name) {
-		Node<K, V> node = getRootNode();
-		Node<K, V> childNode = node.addChild(Fqn.fromString(name));
-		return new JBossCache<K, V>(this.cacheStore, childNode.getFqn());
-	}
-
-	public Cache<K, V> getChild(String name) {
-		Node<K, V> node = getRootNode();
-		Node<K, V> child = node.getChild(Fqn.fromString(name));
-		if (child != null) {
-			return new JBossCache<K, V>(this.cacheStore, child.getFqn());
-		}
-		return null;
-	}
-
 	protected Node<K, V> getRootNode() {
 		Node<K, V> node = this.cacheStore.getNode(this.rootFqn);
 		if (node == null) {
 			throw new IllegalStateException("Cache Node "+ this.rootFqn +" not found."); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		return node;
-	}
-	
-	public List<Cache> getChildren() {
-		Node<K, V> node = getRootNode();
-		Set<Node<K,V>> nodes = node.getChildren();
-		if (nodes.isEmpty()) {
-			return Collections.emptyList();
-		}
-		List<Cache> children = new ArrayList<Cache>();
-		for(Node<K, V> child: nodes) {
-			children.add(new JBossCache<K, V>(this.cacheStore, child.getFqn()));
-		}
-		return children;
-	}
-
-	public boolean removeChild(String name) {
-		Node<K, V> node = getRootNode();
-		return node.removeChild(Fqn.fromString(name));
 	}
 
 	@Override

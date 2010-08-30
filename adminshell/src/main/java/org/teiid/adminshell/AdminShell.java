@@ -36,6 +36,7 @@ import java.util.logging.Logger;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminFactory;
+import org.teiid.adminapi.CacheStatistics;
 import org.teiid.adminapi.ProcessObject;
 import org.teiid.adminapi.PropertyDefinition;
 import org.teiid.adminapi.Request;
@@ -229,7 +230,13 @@ public class AdminShell {
 			throws AdminException {
 		return getAdmin().getWorkManagerStats(identifier);
 	}
-
+	
+	@Doc(text = "Get cache statistics for given cache type")
+	public static CacheStatistics getCacheStats(@Doc(text = "cacheType") String identifier)
+			throws AdminException {
+		return getAdmin().getCacheStats(identifier);
+	}
+	
 	@Doc(text = "Remove a role for the data policy")
 	public static void removeDataRoleMapping(
 			@Doc(text = "vdb name") String vdbName, 

@@ -21,30 +21,37 @@
  */
 package org.teiid.cache.jboss;
 
-import org.jboss.cache.Cache;
-import org.jboss.cache.Fqn;
-import org.jboss.cache.Node;
-import org.jboss.cache.eviction.ExpirationAlgorithmConfig;
-import org.teiid.cache.DefaultCache;
+import org.jboss.cache.config.CacheLoaderConfig.IndividualCacheLoaderConfig;
+import org.teiid.dqp.service.BufferService;
 
-public class ExpirationAwareCache<K, V> extends JBossCache<K, V> {
-
-	public ExpirationAwareCache(Cache cacheStore, Fqn fqn) {
-		super(cacheStore, fqn);
+public class TupleBatchCacheLoaderConfig extends IndividualCacheLoaderConfig {
+	private static final long serialVersionUID = -5926642610388245871L;
+	private BufferService service;
+	private long timeout;
+	
+	public long getTimeout() {
+		return timeout;
 	}
 
-	@Override
-	public V put(K key, V value) {
-		return this.put(key, value, null);
+	public void setTimeout(long timeout) {
+		this.timeout = timeout;
+	}
+
+	public TupleBatchCacheLoaderConfig() {
+		setClassName(TupleBatchCacheLoader.class.getName());
 	}
 	
-	@Override
-	public V put(K key, V value, Long ttl) {
-		Node<K, V> node = getRootNode();
-		Node child = node.addChild(getFqn(key));
-		
-		long future = DefaultCache.getExpirationTime(config.getMaxAgeInSeconds()*1000, ttl);				
-		child.put(ExpirationAlgorithmConfig.EXPIRATION_KEY, future);
-		return (V)child.put(key, value);
+	public TupleBatchCacheLoaderConfig(IndividualCacheLoaderConfig config) {
+		setClassName(TupleBatchCacheLoader.class.getName());
+		populateFromBaseConfig(config);
+	}
+	
+	
+	public void setBufferService(BufferService service) {
+		this.service = service;
+	}
+	
+	public BufferService getBufferService() {
+		return this.service;
 	}
 }

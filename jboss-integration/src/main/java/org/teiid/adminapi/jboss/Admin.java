@@ -55,6 +55,7 @@ import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminObject;
 import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.CacheStatistics;
 import org.teiid.adminapi.PropertyDefinition;
 import org.teiid.adminapi.Request;
 import org.teiid.adminapi.Session;
@@ -64,6 +65,7 @@ import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.WorkerPoolStatistics;
 import org.teiid.adminapi.VDB.ConnectionType;
+import org.teiid.adminapi.impl.CacheStatisticsMetadata;
 import org.teiid.adminapi.impl.PropertyDefinitionMetadata;
 import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.SessionMetadata;
@@ -698,5 +700,16 @@ public class Admin extends TeiidAdmin {
 			}
 		}
 		return matched;		
+	}
+
+	@Override
+	public CacheStatistics getCacheStats(String cacheType) throws AdminException {
+		try {
+			ManagedComponent mc = getView().getComponent(DQPNAME, DQPTYPE);
+			MetaValue value = ManagedUtil.executeOperation(mc, "getCacheStatistics", SimpleValueSupport.wrap(cacheType));//$NON-NLS-1$
+			return (CacheStatistics)MetaValueFactory.getInstance().unwrap(value, CacheStatisticsMetadata.class);	
+		} catch (Exception e) {
+			throw new AdminComponentException(e.getMessage(), e);
+		}
 	}
 }

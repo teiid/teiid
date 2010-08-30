@@ -109,7 +109,7 @@ public class TestPreparedPlanCache {
         
         helpPutPreparedPlans(cache, token2, 0, 121);
         helpPutPreparedPlans(cache, token, 0, 50);
-        assertTrue(cache.getSpaceUsed() <= 100);
+        assertTrue(cache.getTotalCacheEntries() <= 100);
     }
     
     @Test public void testZeroSizeCache() {
@@ -120,12 +120,12 @@ public class TestPreparedPlanCache {
         // Add 1 plan and verify it is not in the cache
         helpPutPreparedPlans(cache, token, 0, 1);
         assertNull(cache.get(new CacheID(token, pi, EXAMPLE_QUERY + 0))); 
-        assertEquals(0, cache.getSpaceUsed());
+        assertEquals(0, cache.getTotalCacheEntries());
         
         // Add another plan and verify it is not in the cache
         helpPutPreparedPlans(cache, token, 1, 1);
         assertNull(cache.get(new CacheID(token, pi, EXAMPLE_QUERY + 1))); 
-        assertEquals(0, cache.getSpaceUsed());        
+        assertEquals(0, cache.getTotalCacheEntries());        
     }
     
     // set init size to negative number, which should default to 100 (default)
