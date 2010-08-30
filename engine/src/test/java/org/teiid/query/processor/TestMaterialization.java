@@ -123,6 +123,12 @@ public class TestMaterialization {
 	@Test public void testNonCoveringSecondaryIndex() throws Exception {
 		execute("SELECT * from vgroup5 where y in ('zne', 'zwo') order by y desc", Arrays.asList("two", "zwo", 1), Arrays.asList("one", "zne", 1));
 		execute("SELECT * from vgroup5 where y is null", Arrays.asList((String)null, (String)null, 1));
+		execute("SELECT * from vgroup5 where y is null and z = 2");
+	}
+	
+	@Test public void testNonCoveringSecondaryIndexWithoutPrimaryKey() throws Exception {
+		execute("SELECT * from vgroup6 where y in ('zne', 'zwo') order by y desc", Arrays.asList("two", "zwo"), Arrays.asList("one", "zne"));
+		execute("SELECT * from vgroup6 where y is null", Arrays.asList((String)null, (String)null));
 	}
     
 }

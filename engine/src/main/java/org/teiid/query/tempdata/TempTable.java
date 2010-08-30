@@ -70,8 +70,6 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
  */
 class TempTable {
 	
-	private static final double LN_2 = Math.log(2);
-
 	private final class InsertUpdateProcessor extends UpdateProcessor {
 		
 		private boolean addRowId;
@@ -131,7 +129,9 @@ class TempTable {
 			this.condition = condition;
 			this.project = shouldProject();
 			this.reserved = reserveBuffers();
-			lock.readLock().lock();
+			if (updatable) {
+				lock.readLock().lock();
+			}
 		}
 
 		@Override
@@ -143,9 +143,6 @@ class TempTable {
 					bm.releaseBuffers(reserved);
 					reserved = 0;
 					return null;
-				}
-				if (rowId != null) {
-					next = next.subList(1, next.size());
 				}
 				if (condition != null && !eval.evaluate(condition, next)) {
 					continue;
@@ -159,7 +156,9 @@ class TempTable {
 		
 		@Override
 		public void closeSource() {
-			lock.readLock().unlock();
+			if (updatable) {
+				lock.readLock().unlock();
+			}
 			bm.releaseBuffers(reserved);
 			reserved = 0;
 			browser.closeSource();
@@ -269,7 +268,6 @@ class TempTable {
 	TempTable(TempMetadataID tid, BufferManager bm, List<ElementSymbol> columns, int primaryKeyLength, String sessionID) {
 		this.tid = tid;
 		this.bm = bm;
-		this.columnMap = RelationalNode.createLookupMap(columns);
 		if (primaryKeyLength == 0) {
             ElementSymbol id = new ElementSymbol("rowId"); //$NON-NLS-1$
     		id.setType(DataTypeManager.DefaultDataClasses.INTEGER);
@@ -279,6 +277,7 @@ class TempTable {
         } else {
         	tree = bm.createSTree(columns, sessionID, primaryKeyLength);
         }
+		this.columnMap = RelationalNode.createLookupMap(columns);
 		this.columns = columns;
 		this.sessionID = sessionID;
 		this.keyBatchSize = bm.getSchemaSize(columns);
@@ -296,8 +295,9 @@ class TempTable {
 				allColumns.add(elementSymbol);
 			}
 		}
-		TempTable indexTable = new TempTable(new TempMetadataID("idx", Collections.EMPTY_LIST), this.bm, allColumns, indexColumns.size(), this.sessionID); //$NON-NLS-1$
+		TempTable indexTable = new TempTable(new TempMetadataID("idx", Collections.EMPTY_LIST), this.bm, allColumns, allColumns.size(), this.sessionID); //$NON-NLS-1$
 		indexTable.setPreferMemory(this.tree.isPreferMemory());
+		indexTable.lock = this.lock;
 		if (indexTables == null) {
 			indexTables = new LinkedHashMap<List<ElementSymbol>, TempTable>();
 			indexTables.put(indexColumns, indexTable);
@@ -328,20 +328,22 @@ class TempTable {
 			if (ii.covering) {
 				return ii.table.createTupleSource(projectedCols, condition, orderBy, ii);
 			}
-			List<ElementSymbol> pkColumns = this.columns.subList(0, this.getPkLength());
+			List<ElementSymbol> pkColumns = this.columns.subList(0, this.tree.getKeyLength());
 			if (ii.ordering != null) {
 				//use order and join
-				primary.valueTs = ii.table.createTupleSource(pkColumns, condition, orderBy, ii);
+				primary.valueTs = ii.table.createTupleSource(pkColumns, 
+						Criteria.combineCriteria(ii.coveredCriteria), orderBy, ii);
 				primary.ordering = null;
-				return createTupleSource(projectedCols, condition, null, primary);
+				return createTupleSource(projectedCols, Criteria.combineCriteria(ii.nonCoveredCriteria), null, primary);
 			} 
 			//order by pk to localize lookup costs, then join
 			OrderBy pkOrderBy = new OrderBy();
 			for (ElementSymbol elementSymbol : pkColumns) {
 				pkOrderBy.addVariable(elementSymbol);
 			}
-			primary.valueTs = ii.table.createTupleSource(pkColumns, condition, pkOrderBy, ii);
-			return createTupleSource(projectedCols, condition, orderBy, primary);
+			primary.valueTs = ii.table.createTupleSource(pkColumns, 
+					Criteria.combineCriteria(ii.coveredCriteria), pkOrderBy, ii);
+			return createTupleSource(projectedCols, Criteria.combineCriteria(ii.nonCoveredCriteria), orderBy, primary);
 		}
 		
 		return createTupleSource(projectedCols, condition, orderBy, ii);
@@ -383,20 +385,20 @@ class TempTable {
 	/**
 	 * TODO: this could easily use statistics - the tree level 1 would be an ideal place
 	 * to compute them, since it minimizes page loads, and is a random sample.
-	 * @return
+	 * TODO: this should also factor in the block size
 	 */
 	private int estimateCost(OrderBy orderBy, IndexInfo ii, int rowCost) {
 		if (ii.valueSet.size() != 0) {
 			int length = ii.valueSet.get(0).size();
-			rowCost = Math.min(rowCost, ii.valueSet.size() * 1 << (ii.table.getPkLength() - length));
+			rowCost = ii.valueSet.size() * (ii.table.getPkLength() - length + 1);
 		} else if (ii.upper != null) {
 			rowCost /= 3;
 		} else if (ii.lower != null) {
 			rowCost /= 3;
 		}
 		int cost = Math.max(1, rowCost);
-		if (!ii.covering || (orderBy != null && ii.ordering == null)) {
-			cost = (int)(cost * Math.log(cost)/LN_2);
+		if (cost > 1 && (!ii.covering || (orderBy != null && ii.ordering == null))) {
+			cost *= (32 - Integer.numberOfLeadingZeros(cost - 1));
 		}
 		return cost;
 	}
@@ -542,7 +544,7 @@ class TempTable {
 		return CollectionTupleSource.createUpdateCountTupleSource(updateCount);
 	}
 	
-	private void insertTuple(List<Object> list, boolean ordered) throws TeiidComponentException, TeiidProcessingException {
+	private void insertTuple(List<?> list, boolean ordered) throws TeiidComponentException, TeiidProcessingException {
 		if (tree.insert(list, ordered?InsertMode.ORDERED:InsertMode.NEW) != null) {
 			throw new TeiidProcessingException(QueryPlugin.Util.getString("TempTable.duplicate_key")); //$NON-NLS-1$
 		}
@@ -563,17 +565,19 @@ class TempTable {
 					return null;
 				}
 				if (indexTables != null) {
-					//remove from each index table
-					/*for (TempTable index : this.indexTables.values()) {
-						index.tree
-					}*/
+					for (TempTable index : this.indexTables.values()) {
+						tuple = RelationalNode.projectTuple(RelationalNode.getProjectionIndexes(index.getColumnMap(), index.columns), result);
+						index.tree.remove(tuple);
+					}
 				}
 				return result;
 			} 
 			List<?> result = tree.insert(tuple, InsertMode.UPDATE);
 			if (indexTables != null) {
-				//update each index table
-				
+				for (TempTable index : this.indexTables.values()) {
+					tuple = RelationalNode.projectTuple(RelationalNode.getProjectionIndexes(index.getColumnMap(), index.columns), tuple);
+					index.tree.insert(tuple, InsertMode.UPDATE);
+				}
 			}
 			return result;
 		} finally {

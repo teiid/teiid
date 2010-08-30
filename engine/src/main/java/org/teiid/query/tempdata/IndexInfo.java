@@ -24,6 +24,7 @@ package org.teiid.query.tempdata;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.TreeSet;
@@ -43,6 +44,7 @@ import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 
 /**
  * Accumulates information about index usage.
@@ -56,6 +58,8 @@ class IndexInfo {
 	Boolean ordering;
 	boolean covering;
 	TupleSource valueTs;
+	List<Criteria> nonCoveredCriteria = new LinkedList<Criteria>();
+	List<Criteria> coveredCriteria = new LinkedList<Criteria>();
 	
 	public IndexInfo(TempTable table, final List<? extends SingleElementSymbol> projectedCols, final Criteria condition, OrderBy orderBy, boolean primary) {
 		this.table = table;
@@ -72,6 +76,16 @@ class IndexInfo {
 
 	private void processCriteria(Criteria condition) {
 		List<Criteria> crits = Criteria.separateCriteriaByAnd(condition);
+		for (Iterator<Criteria> critIter = crits.iterator(); critIter.hasNext();) {
+			Criteria criteria = critIter.next();
+			if (table.getColumnMap().keySet().containsAll(ElementCollectorVisitor.getElements(criteria, false))) {
+				coveredCriteria.add(criteria);
+			} else {
+				covering = false;
+				nonCoveredCriteria.add(criteria);
+				critIter.remove();
+			}
+		}
 		for (int i = 0; i < table.getPkLength(); i++) {
 			ElementSymbol keyColumn = table.getColumns().get(i);
 			for (Iterator<Criteria> critIter = crits.iterator(); critIter.hasNext();) {

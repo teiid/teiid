@@ -30,6 +30,7 @@ public class KeyRecord extends ColumnSet<Table> {
 		Primary,
 		Foreign,
 		Unique, //constraint
+		@Deprecated
 		NonUnique,
 		AccessPattern,
 		Index,
@@ -42,6 +43,9 @@ public class KeyRecord extends ColumnSet<Table> {
 	}
 	
 	public Type getType() {
+		if (type == Type.NonUnique) {
+			type = Type.Index;
+		}
 		return type;
 	}
 	
