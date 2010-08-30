@@ -568,7 +568,7 @@ public class DQPCore implements DQP {
 	private CacheStatisticsMetadata buildCacheStats(String name, SessionAwareCache cache) {
 		CacheStatisticsMetadata stats = new CacheStatisticsMetadata();
 		stats.setName(name);
-		stats.setHitRatio(cache.getRequestCount() == 0?0:(cache.getCacheHitCount()/cache.getRequestCount())*100);
+		stats.setHitRatio(cache.getRequestCount() == 0?0:((double)cache.getCacheHitCount()/cache.getRequestCount())*100);
 		stats.setTotalEntries(cache.getTotalCacheEntries());
 		stats.setRequestCount(cache.getRequestCount());
 		return stats;

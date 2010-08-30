@@ -258,27 +258,27 @@
 
         <metric displayName="Prepared Plan Cache Hit Ratio %" defaultOn="true"
             displayType="detail" category="performance" property="PREPARED_PLAN_CACHE.hitRatio"
-            description="Prepared plan cache hit ratio" />
+            description="Percentage of positive cache hits" />
 
         <metric displayName="Prepared Plan Cache Size" defaultOn="true"
             displayType="detail" category="performance" property="PREPARED_PLAN_CACHE.totalEntries"
-            description="Prepared plan cache size" />
+            description="Current number of entries in cache" />
 
         <metric displayName="Prepared Plan Cache # of Requests" defaultOn="true"
             displayType="detail" category="performance" property="PREPARED_PLAN_CACHE.requestCount"
-            description="Prepared plan cache # Requests made aginst cache" />
+            description="Total number of requests made aginst cache" />
             
         <metric displayName="ResultSet Cache Hit Ratio %" defaultOn="true"
             displayType="detail" category="performance" property="QUERY_SERVICE_RESULT_SET_CACHE.hitRatio"
-            description="ResultSet cache hit ratio" />
+            description="Percentage of positive cache hits" />
 
         <metric displayName="ResultSet Cache Size" defaultOn="true"
             displayType="detail" category="performance" property="QUERY_SERVICE_RESULT_SET_CACHE.totalEntries"
-            description="ResultSet cache Size" />
+            description="Current number of entries in cache" />
 
         <metric displayName="ResultSet Cache  # of Requests" defaultOn="true"
             displayType="detail" category="performance" property="QUERY_SERVICE_RESULT_SET_CACHE.requestCount"
-            description="ResultSet cache  # Requests made aginst cache" />
+            description="Total number of requests made aginst cache" />
 
 		<resource-configuration>
 			<c:group name="teiidProperties" displayName="Runtime Engine Properties"
