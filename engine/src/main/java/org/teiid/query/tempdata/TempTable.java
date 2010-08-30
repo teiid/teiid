@@ -315,6 +315,7 @@ class TempTable {
 		IndexInfo primary = new IndexInfo(this, projectedCols, condition, orderBy, true);
 		IndexInfo ii = primary;
 		if (indexTables != null && (condition != null || orderBy != null) && ii.valueSet.size() != 1) {
+			LogManager.logDetail(LogConstants.CTX_DQP, "Considering indexes on table", this, "for query", projectedCols, condition, orderBy); //$NON-NLS-1$ //$NON-NLS-2$
 			int rowCost = this.tree.getRowCount();
 			int bestCost = estimateCost(orderBy, ii, rowCost);
 			for (TempTable table : this.indexTables.values()) {
@@ -325,6 +326,7 @@ class TempTable {
 					bestCost = cost;
 				}
 			}
+			LogManager.logDetail(LogConstants.CTX_DQP, "Choose index", ii.table, "covering:", ii.coveredCriteria,"ordering:", ii.ordering); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			if (ii.covering) {
 				return ii.table.createTupleSource(projectedCols, condition, orderBy, ii);
 			}
@@ -345,7 +347,6 @@ class TempTable {
 					Criteria.combineCriteria(ii.coveredCriteria), pkOrderBy, ii);
 			return createTupleSource(projectedCols, Criteria.combineCriteria(ii.nonCoveredCriteria), orderBy, primary);
 		}
-		
 		return createTupleSource(projectedCols, condition, orderBy, ii);
 	}
 

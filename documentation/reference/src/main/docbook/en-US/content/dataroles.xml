@@ -6,10 +6,17 @@
 <chapter id="dataroles">
     <title>Data Roles</title>
     <para>Data roles, also called entitlements, are sets of permissions defined 
-    per VDB that dictate data access (create, read,  update, delete). The use of data roles can be disabled system wide with the property in 
-    &jboss-beans; file in bean configuration section of <code>RuntimeEngineDeployer</code> with property <code>useDataRoles</code>.</para>
+    per VDB that dictate data access (create, read,  update, delete). Data roles use a fine-grained permission system that Teiid will enforce
+     at runtime and provide audit log entries for access violations (see that Admin and Developers Guide for more on Audit Logging).</para>
     
-    <para>If data roles is enabled and data roles are defined in a VDB, then access permissions will be enforced by the Teiid Server.</para>
+    <para>Prior to applying data roles, you should consider restricting source system access through the fundamental design of your VDB.  
+    Foremost, Teiid can only access source entries that are represented in imported metadata.  You should narrow imported metadata to only what
+     is necessary for use by your VDB.  When using Teiid Designer, you may then go further and modify the imported metadata at a granular
+      level to remove specific columns, mark tables as non-updatable, etc.</para>
+    
+    <para>If data roles is enabled and data roles are defined in a VDB, then access permissions will be enforced by the Teiid Server.  
+    The use of data roles may be disabled system wide via the
+    &jboss-beans; file, by setting the property <code>useDataRoles</code> to false in the configuration section of the <code>RuntimeEngineDeployer</code>.</para>
     
     <warning><para>Unlike previous versions of Teiid data roles will only be checked if present in a VDB.  
     A VDB deployed without data roles is open for use by any authenticated user.</para></warning>
@@ -81,14 +88,15 @@
 
 	<section>
 		<title>XML Definition</title>
-	    <para>Data roles are defined inside the <code>vdb.xml</code> file (inside the .vdb Zip archive under META-INF/vdb.xml) if you used Designer. 
-    This example will show a sample "vdb.xml" file with few simple data rules.</para>
+	    <para>Data roles are defined inside the <code>vdb.xml</code> file (inside the .vdb Zip archive under META-INF/vdb.xml) if you used Designer.  
+	    The "vdb.xml" file is checked against the schema file <code>vdb-deployer.xsd</code>, which can be found in the kit under teiid-docs/schema.
+	    This example will show a sample "vdb.xml" file with few simple data roles.</para>
     
     <para>For example, if a VDB defines a table "TableA" in schema "modelName" with columns (column1, column2) - note that the column types do not matter.  And we wish to define three roles "RoleA", "RoleB", "RoleC" with following permissions:
    <orderedlist>
-    <listitem><para>RoleA has privileges to read, write access to TableA, but can not delete.</para></listitem>
-    <listitem><para>RoleB has no privileges that allow access to TableA</para></listitem>
-    <listitem><para>RoleC has privileges that only allow read access to TableA.column1</para></listitem>
+    <listitem><para>RoleA has permissions to read, write access to TableA, but can not delete.</para></listitem>
+    <listitem><para>RoleB has no permissions that allow access to TableA</para></listitem>
+    <listitem><para>RoleC has permissions that only allow read access to TableA.column1</para></listitem>
    </orderedlist>
 	</para>
     <example><title>vdb.xml defining RoleA, RoleB, and RoleC</title>
@@ -109,20 +117,6 @@
             <allow-update>true</allow-update>
         </permission>
 
-        <permission>
-            <resource-name>modelName.TableA.colum1</resource-name>
-            <allow-create>true</allow-create>
-            <allow-read>true</allow-read>
-            <allow-update>true</allow-update>
-        </permission>
-
-        <permission>
-            <resource-name>modelName.TableA.column2</resource-name>
-            <allow-create>true</allow-create>
-            <allow-read>true</allow-read>
-            <allow-update>true</allow-update>
-        </permission>
-
         <mapped-role-name>role1</mapped-role-name>
 
     </data-role>
@@ -136,8 +130,8 @@
         </permission>
 
         <permission>
-            <resource-name>modelName.TableA.colum1</resource-name>
-            <allow-read>true</allow-read>
+            <resource-name>modelName.TableA.colum2</resource-name>
+            <allow-read>false</allow-read>
         </permission>
 
         <mapped-role-name>role2</mapped-role-name>
@@ -145,14 +139,17 @@
 </vdb>]]></programlisting>    
 </example>   
    <para>The above XML defined two data roles, "RoleA" which allows everything except delete on the table, "RoleC" that 
-   allows only read operation on the table. Since Teiid uses deny by default, there is no explicit data-role entry needed for "RoleB".  The "mapped-role-name" defines the JAAS "role" to whom these policies are applicable.</para>
+   allows only read operation on the table. Since Teiid uses deny by default, there is no explicit data-role entry needed for "RoleB".  Note that explicit column permissions are 
+   not needed for RoleA, since the parent resource path, modelName.TableA, permissions still apply.  RoleC however must explicitly disallow read to column2.</para>  
    
-   <para>For assigning roles to your users in the JBoss AS, 
-   check out the instructions for the selected Login Module. Check the "Admin Guide" for configuring Login Modules.</para> 
-   
-   <para>The "vdb.xml" file is checked against the schema file <code>vdb-deployer.xsd</code>, check the documents sections of the Teiid kit
-   to find a copy of the schema file.</para>
+   <para>The "mapped-role-name" defines the container JAAS roles that are assigned the data role.  For assigning roles to your users in the JBoss AS, 
+   check out the instructions for the selected Login Module. Check the "Admin Guide" for configuring Login Modules.  You may also choose to allow any
+   authenticated user to have a data role by setting the any-authenticated attribute value to true on data-role element.</para> 
    
 	</section>
-
+	<section>
+		<title>System Functions</title>
+		<para>The <code>hasRole</code> system function will return true if the current user has the given data role.  
+		The <code>hasRole</code> function can be used in procedure or view definitions to allow for a more dynamic application of security - which allows for things such as value masking or row level security.</para>
+	</section>
 </chapter>

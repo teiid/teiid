@@ -162,9 +162,21 @@
 				</para>
 	 		</section>
 		</section>
-		<section>
+		<section id="internal-index">
 			<title>Secondary Indexes</title>
-			<para>Function based indexes, Covering indexes, converting unique to index</para>
+			<para>Internal materialized view tables will automatically create non-unique indexes for each unique constraint and index defined on the materialized view.  
+			These indexes are created as non-unique even for unique constraints since the materialized table is not intended as an enforcement point for data integrity 
+			and when updatable the table may not be consistent with underlying values and thus unable to satisfy constraints.  The primary key (if it exists) of the view will automatically be part of the covered columns for the index.</para>
+			<para>The secondary indexes are always created as trees - bitmap or hash indexes are not supported.  Teiid's metadata for indexes is currently limited.  
+			We are not currently able to capture additional information, such as specifying the evluated expressions, sort direction, additional columns to cover, etc.  You may workaround some of these limitations though.  
+			<itemizedlist>
+				<listitem><para>If a function based index is needed, consider adding another column to the view that projects the funciton expression, then place an index on that new column.  
+			Queries to the view will need to be modified as appropiate though to make use of the new column/index.</para></listitem>
+				<listitem><para>If additional covered columns are needed, they may simply be added to the index columns.  This however is only applicable to comparable types.  
+				Adding additional columns will increase the amount of space used by the index, but may allow 
+			its usage to result in higher performance when only the covered columns are used and the main table is not consulted.</para></listitem>
+			</itemizedlist>
+			</para>
 		</section>
 	</section>
 </chapter>

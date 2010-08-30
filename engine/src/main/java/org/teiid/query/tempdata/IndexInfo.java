@@ -32,6 +32,8 @@ import java.util.TreeSet;
 import org.teiid.common.buffer.TupleBrowser;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.sql.lang.CompareCriteria;
@@ -67,23 +69,25 @@ class IndexInfo {
 			covering = true;
 		}
 		if (table.getPkLength() > 0) {
-			processCriteria(condition);
+			processCriteria(condition, primary);
 			if (orderBy != null && (covering || this.table.getColumnMap().keySet().containsAll(orderBy.getSortKeys()))) {
 				ordering = useIndexForOrderBy(orderBy);
 			}
 		}
 	}
 
-	private void processCriteria(Criteria condition) {
+	private void processCriteria(Criteria condition, boolean primary) {
 		List<Criteria> crits = Criteria.separateCriteriaByAnd(condition);
-		for (Iterator<Criteria> critIter = crits.iterator(); critIter.hasNext();) {
-			Criteria criteria = critIter.next();
-			if (table.getColumnMap().keySet().containsAll(ElementCollectorVisitor.getElements(criteria, false))) {
-				coveredCriteria.add(criteria);
-			} else {
-				covering = false;
-				nonCoveredCriteria.add(criteria);
-				critIter.remove();
+		if (!primary) {
+			for (Iterator<Criteria> critIter = crits.iterator(); critIter.hasNext();) {
+				Criteria criteria = critIter.next();
+				if (table.getColumnMap().keySet().containsAll(ElementCollectorVisitor.getElements(criteria, false))) {
+					coveredCriteria.add(criteria);
+				} else {
+					covering = false;
+					nonCoveredCriteria.add(criteria);
+					critIter.remove();
+				}
 			}
 		}
 		for (int i = 0; i < table.getPkLength(); i++) {
@@ -244,11 +248,17 @@ class IndexInfo {
 	}
 	
 	TupleBrowser createTupleBrowser() throws TeiidComponentException {
-		boolean direction = ordering == null ? OrderBy.ASC : ordering;
+		boolean direction = OrderBy.ASC;
+		if (ordering != null) {
+			LogManager.logDetail(LogConstants.CTX_DQP, "Using index for ordering"); //$NON-NLS-1$
+			direction = ordering;
+		}
 		if (valueTs != null) {
+			LogManager.logDetail(LogConstants.CTX_DQP, "Using index value set"); //$NON-NLS-1$
 			return new TupleBrowser(this.table.getTree(), valueTs, direction);
 		}
 		if (!valueSet.isEmpty()) {
+			LogManager.logDetail(LogConstants.CTX_DQP, "Using index value set"); //$NON-NLS-1$
 			CollectionTupleSource cts = null;
 			if (direction == OrderBy.ASC) {
 				cts = new CollectionTupleSource(valueSet.iterator());
@@ -271,6 +281,9 @@ class IndexInfo {
 			}
 			return new TupleBrowser(this.table.getTree(), cts, direction);
 		}
+		if (lower != null || upper != null) {
+			LogManager.logDetail(LogConstants.CTX_DQP, "Using index for range query", lower, upper); //$NON-NLS-1$
+		} 
 		return new TupleBrowser(this.table.getTree(), lower, upper, direction);
 	}
 	
