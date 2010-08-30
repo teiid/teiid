@@ -444,7 +444,7 @@
            <programlisting><![CDATA[<datasources> 
   <local-tx-datasource> 
     <jndi-name>TEIID-DS</jndi-name> 
-    <connection-url>jdbc:metamatrix:myVDB@mm://localhost:31000</connection-url> 
+    <connection-url>jdbc:teiid:myVDB@mm://localhost:31000</connection-url> 
     <driver-class>org.teiid.jdbc.TeiidDriver</driver-class>              
     <user-name>admin</user-name>
     <password>teiid</password>
@@ -515,7 +515,7 @@
         	<programlisting><![CDATA[<datasources> 
   <local-tx-datasource> 
     <jndi-name>TEIID-DS</jndi-name> 
-    <connection-url>jdbc:metamatrix:myVDB@mm://localhost:31000,mm://localhost:32000</connection-url> 
+    <connection-url>jdbc:teiid:myVDB@mm://localhost:31000,mm://localhost:32000</connection-url> 
     <driver-class>org.teiid.jdbc.TeiidDriver</driver-class>              
     <user-name>admin</user-name>
     <password>teiid</password>
