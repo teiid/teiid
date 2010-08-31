@@ -51,6 +51,7 @@ public class SessionAwareCache<T> {
 
 	private Cache<CacheID, T> localCache;
 	private Cache<CacheID, T> distributedCache;
+	private Cache tupleBatchCache;
 	
 	private int maxSize = DEFAULT_MAX_SIZE_TOTAL;
 	
@@ -79,6 +80,12 @@ public class SessionAwareCache<T> {
 		}
 		else {
 			this.distributedCache = cacheFactory.get(type, config);
+			if (type == Cache.Type.RESULTSET) {
+				this.tupleBatchCache = cacheFactory.get(Cache.Type.RESULTSET_BATCHES, config);
+			}
+			else {
+				this.tupleBatchCache = this.distributedCache;
+			}
 		}
 	}	
 	
@@ -102,7 +109,7 @@ public class SessionAwareCache<T> {
 			
 			if (result != null && result instanceof Cachable) {
 				Cachable c = (Cachable)result;
-				if (!c.restore(this.distributedCache, this.bufferManager)) {
+				if (!c.restore(this.tupleBatchCache, this.bufferManager)) {
 					result = null;
 				}
 			}
@@ -149,7 +156,7 @@ public class SessionAwareCache<T> {
 			
 			if (t instanceof Cachable) {
 				Cachable c = (Cachable)t;
-				insert = c.prepare(this.distributedCache, this.bufferManager);
+				insert = c.prepare(this.tupleBatchCache, this.bufferManager);
 			}
 			
 			if (insert) {
