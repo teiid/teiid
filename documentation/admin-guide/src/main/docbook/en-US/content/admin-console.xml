@@ -6,6 +6,12 @@
    Teiid's Admin Console is built using the <ulink url="http://www.jboss.org/embjopr">Embedded JOPR</ulink> library and adds a additional plugin into the Embeeded JOPR program already available in the 
    <ulink url="http://www.jboss.org/jbossas">JBoss AS</ulink>.</para>
 
+    <mediaobject>
+      <imageobject>
+        <imagedata scalefit="1" fileref="../images/admin_console.png"/>
+      </imageobject>
+    </mediaobject>
+    
    <section>
      <title>What can be monitored and/or configured?</title>
      <para>Here are the steps to follow to install Teiid</para>
@@ -30,12 +36,6 @@
      <note>
         <para>The creation/modification of the datasource is managed by the JBossAS plugin.</para>
      </note>    
-    
-    <mediaobject>
-      <imageobject>
-        <imagedata fileref="../images/admin_console.png"/>
-      </imageobject>
-    </mediaobject>
     
     <section>
         <title>Configuration</title>
