@@ -28,6 +28,7 @@ package org.teiid.net.socket;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -117,6 +118,9 @@ public class SocketServerConnection implements ServerConnection {
 
 			Exception ex = null;
 			try {
+				if (!hostInfo.isResolved()) {
+					hostInfo = new HostInfo(hostInfo.getHostName(), new InetSocketAddress(hostInfo.getInetAddress(), hostInfo.getPortNumber()));
+				}
 				ILogon newLogon = connect(hostInfo);
 				if (this.logonResult == null) {
 			        try {
