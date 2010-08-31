@@ -76,6 +76,7 @@ public interface PluginConstants {
 				public final static String GET_SESSIONS = "getSessions"; //$NON-NLS-1$
 				public final static String GET_BUFFER_USAGE = "userBufferSpace"; //$NON-NLS-1$
 				public final static String GET_CACHE_STATS = "getCacheStatistics"; //$NON-NLS-1$
+				public final static String DEPLOY_VDB_BY_URL = "deployVdbByUrl"; //$NON-NLS-1$
 			}
 
 			public static interface Metrics {
@@ -225,7 +226,9 @@ public interface PluginConstants {
 			public final static String TRANSACTION_ID = "transactionID"; //$NON-NLS-1$
 			public final static String REQUEST_ID = "requestID"; //$NON-NLS-1$
 			public final static String SESSION_ID = "sessionID"; //$NON-NLS-1$
-
+			public final static String VDB_URL = "vdbUrl"; //$NON-NLS-1$
+			public final static String VDB_DEPLOY_NAME = "vdbDeployName"; //$NON-NLS-1$
+			public final static String VDB_VERSION = "vdbVersion"; //$NON-NLS-1$
 			public final static String NAME = "Name"; //$NON-NLS-1$
 			public final static String VALUE = "Value"; //$NON-NLS-1$
 

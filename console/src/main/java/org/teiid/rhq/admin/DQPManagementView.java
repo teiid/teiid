@@ -22,6 +22,7 @@
 package org.teiid.rhq.admin;
 
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -54,6 +55,7 @@ import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.RequestMetadataMapper;
 import org.teiid.rhq.plugin.objects.ExecutedResult;
+import org.teiid.rhq.plugin.util.DeploymentUtils;
 import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.Platform;
@@ -64,6 +66,8 @@ public class DQPManagementView implements PluginConstants {
 	private static ManagedComponent mc = null;
 	private static final Log LOG = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 	private static final MetaValueFactory metaValueFactory = MetaValueFactory.getInstance();
+	
+	private static final String VDB_EXT = ".vdb";
 
 	public DQPManagementView() {
 	}
@@ -224,6 +228,30 @@ public class DQPManagementView implements PluginConstants {
 			} catch (Exception e) {
 				final String msg = "Exception executing operation: " + Platform.Operations.KILL_REQUEST; //$NON-NLS-1$
 				LOG.error(msg, e);
+			}
+		} else if (operationName.equals(Platform.Operations.DEPLOY_VDB_BY_URL)) {
+			String vdbUrl = (String) valueMap.get(Operation.Value.VDB_URL);
+			String deployName = (String) valueMap.get(Operation.Value.VDB_DEPLOY_NAME);
+			Object vdbVersion = valueMap.get(Operation.Value.VDB_VERSION);
+			//strip off vdb extension if user added it
+			if (deployName.endsWith(VDB_EXT)){  
+				deployName = deployName.substring(0, deployName.lastIndexOf(VDB_EXT));  
+			}
+			if (vdbVersion!=null){
+				deployName = deployName + "." + ((Integer)vdbVersion).toString() + VDB_EXT; //$NON-NLS-1$ 
+			}
+			//add vdb extension if there was no version
+			if (!deployName.endsWith(VDB_EXT)){ 
+				deployName = deployName + VDB_EXT;  
+			}
+	
+			try {
+				URL url = new URL(vdbUrl);
+				DeploymentUtils.deployArchive(deployName, connection.getDeploymentManager(), url, false);
+			} catch (Exception e) {
+				final String msg = "Exception executing operation: " + Platform.Operations.DEPLOY_VDB_BY_URL; //$NON-NLS-1$
+				LOG.error(msg, e);
+				throw new RuntimeException(e);
 			}
 		}
 	}
