@@ -258,7 +258,7 @@ public class StoredProcedure extends ProcedureContainer {
 	 * @return Ordered list of SingleElementSymbol
 	 */
 	public List getProjectedSymbols(){
-		List result = new ArrayList();
+		List<ElementSymbol> result = new ArrayList<ElementSymbol>();
 		//add result set columns
 		List rsColumns = getResultSetColumns();
 		result.addAll(rsColumns);
@@ -266,24 +266,15 @@ public class StoredProcedure extends ProcedureContainer {
 			return result;
 		}
 		//add out/inout parameter symbols
-		Iterator iter = mapOfParameters.values().iterator();
-		while(iter.hasNext()){
-			SPParameter parameter = (SPParameter)iter.next();
-			if(parameter.getParameterType() == ParameterInfo.INOUT || parameter.getParameterType() == ParameterInfo.OUT){
-                ElementSymbol symbol = parameter.getParameterSymbol();
-                symbol.setGroupSymbol(getGroup());
-	        	result.add(symbol);
-	        }
-		}
-		//add return parameter
-		iter = mapOfParameters.values().iterator();
-		while(iter.hasNext()){
-			SPParameter parameter = (SPParameter)iter.next();
+		for (SPParameter parameter : mapOfParameters.values()) {
 			if(parameter.getParameterType() == ParameterInfo.RETURN_VALUE){
                 ElementSymbol symbol = parameter.getParameterSymbol();
                 symbol.setGroupSymbol(getGroup());
-                result.add(symbol);
-	        	break;
+                result.add(0, symbol);
+	        } else if(parameter.getParameterType() == ParameterInfo.INOUT || parameter.getParameterType() == ParameterInfo.OUT){
+                ElementSymbol symbol = parameter.getParameterSymbol();
+                symbol.setGroupSymbol(getGroup());
+	        	result.add(symbol);
 	        }
 		}
 		return result;

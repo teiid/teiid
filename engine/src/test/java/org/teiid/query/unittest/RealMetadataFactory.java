@@ -253,6 +253,9 @@ public class RealMetadataFactory {
         QueryNode vspqn6 = new QueryNode("vsp6", "CREATE VIRTUAL PROCEDURE BEGIN SELECT p1 as StringKey; END"); //$NON-NLS-1$ //$NON-NLS-2$
         Procedure vsp6 = createVirtualProcedure("MMSP6", mmspTest1, Arrays.asList(vsp6p1), vspqn6); //$NON-NLS-1$
         vsp6.setResultSet(vsprs6);
+        
+        createStoredProcedure("spRetOut", pm4, Arrays.asList(createParameter("ret", ParameterInfo.RETURN_VALUE, DataTypeManager.DefaultDataTypes.INTEGER),
+        		createParameter("x", ParameterInfo.OUT, DataTypeManager.DefaultDataTypes.INTEGER)), "spRetOut"); //$NON-NLS-1$ //$NON-NLS-2$
     	
     	return createTransformationMetadata(metadataStore, "bqt"); 
     }

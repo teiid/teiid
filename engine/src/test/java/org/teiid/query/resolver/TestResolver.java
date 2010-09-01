@@ -96,6 +96,7 @@ import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.FakeMetadataObject;
 import org.teiid.query.unittest.FakeMetadataStore;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.query.util.ErrorMessageKeys;
 
@@ -3021,6 +3022,13 @@ public class TestResolver {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpResolveUpdateProcedure(procedure, userUpdateStr);
+    }
+    
+    //return should be first, then out
+    @Test public void testParamOrder() {
+        Query resolvedQuery = (Query)helpResolve("SELECT * FROM (exec pm4.spRetOut()) as a", RealMetadataFactory.exampleBQTCached(), null); //$NON-NLS-1$
+        
+        assertEquals("A.ret", resolvedQuery.getProjectedSymbols().get(0).getName());
     }
     
 }
