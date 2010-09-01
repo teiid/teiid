@@ -111,7 +111,7 @@
     <!-- JDBC Socket connection properties (SSL see below) -->
     <bean name="JdbcSocketConfiguration" class="org.teiid.transport.SocketConfiguration">
         <property name="enabled">true</property>
-        <!-- property name="bindAddress">localhost</property-->
+        <property name="bindAddress">${jboss.bind.address}</property>
         <property name="portNumber">31000</property>
         <!-- Max number of threads dedicated to initial request processing (default 15) -->
         <property name="maxSocketThreads">15</property>
@@ -139,7 +139,7 @@
     <!-- Admin Socket connection settings (SSL see below) -->
     <bean name="AdminSocketConfiguration" class="org.teiid.transport.SocketConfiguration">
         <property name="enabled">true</property>
-        <!-- property name="bindAddress">localhost</property-->
+        <property name="bindAddress">${jboss.bind.address}</property>
         <property name="portNumber">31443</property>
         <!-- Max number of threads dedicated to Admin and initial request processing (default 4) -->
         <property name="maxSocketThreads">4</property>
@@ -167,7 +167,7 @@
     <!-- JDBC Socket connection properties (SSL see below) -->
     <bean name="OdbcSocketConfiguration" class="org.teiid.transport.SocketConfiguration">
         <property name="enabled">true</property>
-        <!-- property name="bindAddress">localhost</property-->
+        <property name="bindAddress">${jboss.bind.address}</property>
         <property name="portNumber">35432</property>
         <!-- Max number of threads dedicated to initial request processing (default 15) -->
         <property name="maxSocketThreads">15</property>
