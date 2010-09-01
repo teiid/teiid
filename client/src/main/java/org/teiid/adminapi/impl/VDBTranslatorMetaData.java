@@ -93,6 +93,7 @@ public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator
 		return this.description;
 	}
 	
+	@XmlAttribute(name = "description", required = true)
 	public void setDescription(String desc) {
 		this.description = desc;
 	}
