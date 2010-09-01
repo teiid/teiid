@@ -77,7 +77,7 @@ import org.teiid.translator.UpdateExecution;
 /**
  * JDBC implementation of Connector interface.
  */
-@Translator(name="jdbc-ansi")
+@Translator(name="jdbc-ansi", description="JDBC ANSI translator, can used with any ANSI compatible JDBC Driver")
 public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connection> {
 
 	public static final int DEFAULT_MAX_IN_CRITERIA = 1000;

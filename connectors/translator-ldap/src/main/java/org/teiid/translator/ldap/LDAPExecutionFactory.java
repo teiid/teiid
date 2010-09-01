@@ -41,7 +41,7 @@ import org.teiid.translator.UpdateExecution;
  * LDAP translator.  This is responsible for initializing 
  * a connection factory, and obtaining connections to LDAP.
  */
-@Translator(name="ldap")
+@Translator(name="ldap", description="A translator for LDAP directory")
 public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, LdapContext> {
 
 	public enum SearchDefaultScope {

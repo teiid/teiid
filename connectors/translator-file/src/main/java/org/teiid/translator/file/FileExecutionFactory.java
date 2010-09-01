@@ -61,7 +61,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
 
-@Translator(name="file")
+@Translator(name="file", description="File Translator, reads contents of files or writes to them")
 public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, FileConnection> {
 	
 	private final class FileProcedureExecution implements ProcedureExecution {

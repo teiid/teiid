@@ -35,7 +35,7 @@ import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 
-@Translator(name="hsql")
+@Translator(name="hsql", description="A translator for open source HSQL Database")
 public class HsqlExecutionFactory extends JDBCExecutionFactory {
 	
 	@Override

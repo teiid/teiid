@@ -75,6 +75,7 @@ public class TranslatorAnnotationScanningDeployer extends AbstractAnnotationDepl
 			TranslatorMetaData data = new TranslatorMetaData();
 			data.setName(bean.name());
 			data.setExecutionFactoryClass(clazz);
+			data.setDescription(bean.description()); 
 
 			return data;
 		}

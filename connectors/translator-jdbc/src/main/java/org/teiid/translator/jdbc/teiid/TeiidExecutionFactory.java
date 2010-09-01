@@ -35,7 +35,7 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 /** 
  * @since 4.3
  */
-@Translator(name="teiid")
+@Translator(name="teiid", description="A translator for Teiid Virtual Database")
 public class TeiidExecutionFactory extends JDBCExecutionFactory {
 	
 	public static final String SEVEN_0 = "7.0"; //$NON-NLS-1$

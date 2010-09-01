@@ -57,7 +57,7 @@ import org.teiid.translator.jdbc.oracle.MonthOrDayNameFunctionModifier;
  * Translator class for PostgreSQL.  Updated to expect a 8.0+ jdbc client
  * @since 4.3
  */
-@Translator(name="postgresql")
+@Translator(name="postgresql", description="A translator for postgreSQL Database")
 public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 	
 	public static final String EIGHT_0 = "8.0"; //$NON-NLS-1$

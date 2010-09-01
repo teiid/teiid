@@ -14,7 +14,7 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 /** 
  * Capabilities compatible with MM 5.5.x
  */
-@Translator(name="metamatrix")
+@Translator(name="metamatrix", description="A translator for MetaMatrix Virtual Database")
 public class MetaMatrixExecutionFactory extends JDBCExecutionFactory {
     
     public List<String> getSupportedFunctions() {

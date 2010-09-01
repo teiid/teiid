@@ -43,7 +43,7 @@ import org.teiid.translator.jdbc.LocateFunctionModifier;
 /** 
  * @since 4.3
  */
-@Translator(name="mysql")
+@Translator(name="mysql", description="A translator for open source MySQL Database, used with any version lower than 5")
 public class MySQLExecutionFactory extends JDBCExecutionFactory {
 	
 	public MySQLExecutionFactory() {

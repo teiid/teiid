@@ -41,8 +41,8 @@ import org.rhq.core.pluginapi.inventory.DiscoveredResourceDetails;
 import org.rhq.core.pluginapi.inventory.InvalidPluginConfigurationException;
 import org.rhq.core.pluginapi.inventory.ResourceDiscoveryComponent;
 import org.rhq.core.pluginapi.inventory.ResourceDiscoveryContext;
-import org.rhq.plugins.jbossas5.ApplicationServerComponent;
 import org.rhq.plugins.jbossas5.connection.ProfileServiceConnection;
+import org.teiid.core.util.ApplicationInfo;
 import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 
@@ -69,8 +69,9 @@ public class TranslatorDiscoveryComponent implements ResourceDiscoveryComponent 
 		for (ManagedComponent translator : translators) {
 
 			String translatorKey = translator.getName();
-			String translatorName = ProfileServiceUtil.getSimpleValue(
-					translator, "name", String.class);
+			String translatorName = ProfileServiceUtil.getSimpleValue(translator, "name", String.class); //$NON-NLS-1$
+			String description = ProfileServiceUtil.getSimpleValue(translator, "description", String.class); //$NON-NLS-1$
+			
 			/**
 			 * 
 			 * A discovered resource must have a unique key, that must stay the
@@ -80,8 +81,8 @@ public class TranslatorDiscoveryComponent implements ResourceDiscoveryComponent 
 					discoveryContext.getResourceType(), // ResourceType
 					translatorKey, // Resource Key
 					translatorName, // Resource Name
-					null, // Version
-					PluginConstants.ComponentType.Translator.DESCRIPTION, // Description
+					ApplicationInfo.getInstance().getReleaseNumber(), // Version
+					description, // Description
 					discoveryContext.getDefaultPluginConfiguration(), // Plugin config
 					null // Process info from a process scan
 			);
@@ -89,19 +90,19 @@ public class TranslatorDiscoveryComponent implements ResourceDiscoveryComponent 
 			// Get plugin config map for models
 			Configuration configuration = detail.getPluginConfiguration();
 
-			configuration.put(new PropertySimple("name", translatorName));
+			configuration.put(new PropertySimple("name", translatorName));//$NON-NLS-1$
 			detail.setPluginConfiguration(configuration);
 			
 			 // Add to return values
 			// First get translator specific properties
-			ManagedProperty translatorProps = translator.getProperty("property");
-			PropertyList list = new PropertyList("translatorList");
+			ManagedProperty translatorProps = translator.getProperty("property");//$NON-NLS-1$
+			PropertyList list = new PropertyList("translatorList");//$NON-NLS-1$
 			PropertyMap propMap = null;
 			getTranslatorValues(translatorProps.getValue(), propMap, list);
 
 			// Now get common properties
-			configuration.put(new PropertySimple("name", translatorName));
-			configuration.put(new PropertySimple("type",ProfileServiceUtil.getSimpleValue(translator,"type", String.class)));
+			configuration.put(new PropertySimple("name", translatorName));//$NON-NLS-1$
+			configuration.put(new PropertySimple("type",ProfileServiceUtil.getSimpleValue(translator,"type", String.class)));//$NON-NLS-1$ //$NON-NLS-2$
 
 			detail.setPluginConfiguration(configuration);
 			// Add to return values
@@ -121,9 +122,9 @@ public class TranslatorDiscoveryComponent implements ResourceDiscoveryComponent 
 			unwrappedvalue = (Map<String, T>) MetaValueFactory.getInstance().unwrap(pValue);
 
 			for (String key : unwrappedvalue.keySet()) {
-				map = new PropertyMap("properties");
-				map.put(new PropertySimple("name", key));
-				map.put(new PropertySimple("value", unwrappedvalue.get(key)));
+				map = new PropertyMap("properties");//$NON-NLS-1$
+				map.put(new PropertySimple("name", key));//$NON-NLS-1$
+				map.put(new PropertySimple("value", unwrappedvalue.get(key)));//$NON-NLS-1$
 				//map.put(new PropertySimple("description", "Custom property"));
 				list.add(map);
 			}

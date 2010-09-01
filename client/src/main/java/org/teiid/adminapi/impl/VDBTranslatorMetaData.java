@@ -42,6 +42,7 @@ public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator
 	private static final long serialVersionUID = -3454161477587996138L;
 	private String type;
 	private Class executionClass;
+	private String description;
 	
 	@Override
 	@ManagementProperty(description="Name of the Translator", mandatory = true)
@@ -85,5 +86,14 @@ public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator
 	public void setExecutionFactoryClass(Class clazz) {
 		this.executionClass = clazz;
 		addProperty(EXECUTION_FACTORY_CLASS, clazz.getName());
-	}	
+	}
+	
+	@ManagementProperty(description="Translator Description")
+	public String getDescription() {
+		return this.description;
+	}
+	
+	public void setDescription(String desc) {
+		this.description = desc;
+	}
 }

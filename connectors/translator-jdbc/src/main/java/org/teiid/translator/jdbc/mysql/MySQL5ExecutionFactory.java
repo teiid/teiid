@@ -32,7 +32,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.jdbc.FunctionModifier;
 
-@Translator(name="mysql5")
+@Translator(name="mysql5", description="A translator for open source MySQL5 Database")
 public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
 	
 	@Override

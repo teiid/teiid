@@ -33,7 +33,7 @@ import org.teiid.translator.Translator;
  * This capabilities class may come in handy for testing and for 
  * sources that support JDBC but don't support extended JDBC capabilities.  
  */
-@Translator(name="jdbc-simple")
+@Translator(name="jdbc-simple", description="An extended JDBC ANSI translator with some simple capabilities")
 public class SimpleJDBCExecutionFactory extends JDBCExecutionFactory {
 
 	public SimpleJDBCExecutionFactory() {

@@ -605,8 +605,9 @@
 			createDeletePolicy="both" creationDataType="configuration">
 
 			<resource-configuration>
-				<c:simple-property name="name" displayName="Name"
-					description="Name of the translator" readOnly="true" required="false" />
+				<c:simple-property name="name" displayName="Name" description="Name of the translator" readOnly="true" required="false" />
+                <c:simple-property name="description" displayName="Description" description="Description the translator" readOnly="true" required="false" />
+                
 				<c:list-property name="translatorList" readOnly="true"
 					required="false" displayName="Properties" description="Translator properties">
 					<c:map-property name="properties" readOnly="true">

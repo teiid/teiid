@@ -33,7 +33,7 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
 
-@Translator(name="access")
+@Translator(name="access", description="A translator for Microsoft Access Database")
 public class AccessExecutionFactory extends SybaseExecutionFactory {
 	
 	public AccessExecutionFactory() {

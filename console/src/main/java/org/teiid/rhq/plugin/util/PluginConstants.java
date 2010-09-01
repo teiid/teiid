@@ -124,7 +124,6 @@ public interface PluginConstants {
 			public final static String TYPE = "teiid"; //$NON-NLS-1$
 			public final static String SUBTYPE = "translator"; //$NON-NLS-1$
 			public final static String NAME = "Translator"; //$NON-NLS-1$
-			public final static String DESCRIPTION = "Teiid Translator"; //$NON-NLS-1$
 
 			public static interface Operations {
 

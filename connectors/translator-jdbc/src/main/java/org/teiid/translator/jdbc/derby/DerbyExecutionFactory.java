@@ -35,7 +35,7 @@ import org.teiid.translator.jdbc.oracle.LeftOrRightFunctionModifier;
 /** 
  * @since 4.3
  */
-@Translator(name="derby")
+@Translator(name="derby", description="A translator for Apache Derby Database")
 public class DerbyExecutionFactory extends DB2ExecutionFactory {
 	
 	public static final String TEN_1 = "10.1"; //$NON-NLS-1$
