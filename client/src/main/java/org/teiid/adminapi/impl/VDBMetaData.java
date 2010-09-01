@@ -45,7 +45,6 @@ import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
-import org.teiid.core.util.FileUtils;
 import org.teiid.core.util.StringUtil;
 
 
