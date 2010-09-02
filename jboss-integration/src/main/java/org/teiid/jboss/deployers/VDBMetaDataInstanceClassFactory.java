@@ -82,8 +82,9 @@ public class VDBMetaDataInstanceClassFactory extends AbstractInstanceClassFactor
 			List<ManagedObject> policies = (List<ManagedObject>)MetaValueFactory.getInstance().unwrap(property.getValue());
 			for(ManagedObject managedPolicy:policies) {
 				String policyName = ManagedUtil.getSimpleValue(managedPolicy, "name", String.class); //$NON-NLS-1$
+				Boolean anyAuthenticated = ManagedUtil.getSimpleValue(managedPolicy, "anyAuthenticated", Boolean.class); //$NON-NLS-1$
 				DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
-				
+				policy.setAnyAuthenticated(Boolean.TRUE.equals(anyAuthenticated));
 		        ManagedProperty mappedRoleNames = managedPolicy.getProperty("mappedRoleNames");//$NON-NLS-1$
 		        if (mappedRoleNames != null){
 		            List<String> roleNames = (List<String>)MetaValueFactory.getInstance().unwrap(mappedRoleNames.getValue());
