@@ -979,7 +979,7 @@ public class QueryRewriter {
 
         if (predicate.getJoinType() == JoinType.JOIN_UNION) {
             predicate.setJoinType(JoinType.JOIN_FULL_OUTER);
-            predicate.setJoinCriteria(Arrays.asList(new Object[] {FALSE_CRITERIA}));
+            predicate.setJoinCriteria(new ArrayList<Criteria>(Arrays.asList(FALSE_CRITERIA)));
         } else if (predicate.getJoinType() == JoinType.JOIN_RIGHT_OUTER) {
             predicate.setJoinType(JoinType.JOIN_LEFT_OUTER);
             FromClause leftClause = predicate.getLeftClause();
