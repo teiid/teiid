@@ -40,11 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.xml.transform.Source;
-
 import org.teiid.core.CorePlugin;
 import org.teiid.core.ErrorMessageKeys;
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.basic.AnyToObjectTransform;
 import org.teiid.core.types.basic.AnyToStringTransform;
 import org.teiid.core.types.basic.BooleanToNumberTransform;
@@ -731,21 +728,6 @@ public class DataTypeManager {
 			@Override
 			public XMLType transform(SQLXML value) {
 				return new XMLType(value);
-			}
-		});
-		//Note: the default transform from non-InputStreamFactory source is a fully materialized string
-		addSourceTransform(Source.class, new SourceTransform<Source, XMLType>() {
-			@Override
-			public XMLType transform(Source value) {
-				if (value instanceof InputStreamFactory) {
-					return new XMLType(new SQLXMLImpl((InputStreamFactory)value));
-				}
-				StandardXMLTranslator sxt = new StandardXMLTranslator(value);
-				try {
-					return new XMLType(new SQLXMLImpl(sxt.getString()));
-				} catch (Exception e) {
-					throw new TeiidRuntimeException(e);
-				}
 			}
 		});
 		addSourceTransform(Date.class, new SourceTransform<Date, Timestamp>() {

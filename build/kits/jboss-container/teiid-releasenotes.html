@@ -30,7 +30,8 @@
 	<LI><B>Improved Plan Caching</B> - plans used by internal materialization and stored procedure plans will be automatically cached in the prepared plan cache.  Improvements were also made to reduce the memory footprint of the plans.
     <LI><B>Refined Load Balancing and Fail Over</B> - clients can use use the statement "SET NEWINSTANCE TRUE" to allow their connection to select a new server instance.  See the Client Developer's Guide for more information. 
     <LI><B>Simplified Role Usage</B> - a role can now be assigned to any authenticated user via the any-authenticated attribute on the data-role element.
-    <LI><B>Materialized View Performance</B> - materialized view tables will now automatically create and use non-unique secondary indexes for unique constraints and indexes defined on the view.   
+    <LI><B>Materialized View Performance</B> - materialized view tables will now automatically create and use non-unique secondary indexes for unique constraints and indexes defined on the view. 
+    <LI><B>Binary Web Service Calls</B> - the ws translator now provides an invokeHttp procedure to return the blob contents and string content type of an http/https call.  
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -74,6 +75,8 @@ See the See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for m
 
 <h4>from 7.1</h4>
 <ul>
+	<li>Apache CXF is now expected to be used as the web services stack provider through JBossWS-CXF.  See the Admin Guide for instructions on 
+	installing CXF for use with Teiid's Salesforce and web service connectors.
 	<li>The default for data role checking is now "true".  However only VDBs with data roles will have roles enforced.
 	<li>The default prepared plan cache size was increased to 512, since it is targeted by internal plans as well.
 </ul>
@@ -106,26 +109,6 @@ See the See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for m
   <li>Start time is now significantly longer due to the container deployment.  However many operations can be performed on configruation files that will trigger a redeployment without the need for a restart.
   <li>Inversion of parse, format, and convert system functions is not used if it can be narrowing.  In situations where a predicate has the form: parseTime(column, 'format') = {t 'time value'} may lead to reduced performance, since
       the parseTime function cannot be pushed down.  This should be addressed in future releases.   
-</ul>
-
-<h4>Salesforce as Source</h4>
-Before Salesforce is used in your data integration project, the below issues need to be resolved.
-<ul>
-  <li>Manually copy the following libraries from the JBOSS_HOME/client directory to the JBOSS_HOME/lib/endorsed directory, so that the JAX-WS 2.0 apis supported by JBossWS are used:
-  	<ul>
-    	<li>jbossws-native-saaj.jar</li>
-    	<li>jbossws-native-jaxrpc.jar</li>
-    	<li>jbossws-native-jaxws.jar</li>
-    	<li>jbossws-native-jaxws-ext.jar</li>
-    </ul>
-  </li>
-  <li>There is issue with invoking "https" based URL with out specifying the either a keystore or truststore properties with JBoss remoting 2.5.1. Generally you do not need to specify the truststore as a anonymous truststore will be negotiated, however if you fail to supply the following system properties there will be a error message in the log (query will execute even with out the properties). Add these to JBOSS_INSTALL/bin/run.conf file under JAVA_OPTS
-  	<ul>
-    	<li>-Djava.net.ssl.keyStore=&lt;path-to-truststore&gt;</li>
-    	<li>-Djava.net.ssl.keyStoreType=&lt;certificate-type&gt;</li>
-    	<li>-Djava.net.ssl.keyStorePassword=&lt;password&gt;</li>
-    </ul>  	
-  </li>
 </ul>
 
 <h2><a name="LibraryUpdates">Thirdparty Library Updates</a></h2>

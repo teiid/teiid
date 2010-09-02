@@ -52,6 +52,8 @@ import org.teiid.translator.WSConnection;
 @Translator(name="ws", description="A translator for making Web Service calls")
 public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSConnection> {
 	
+	private static final String INVOKE_HTTP = "invokeHttp"; //$NON-NLS-1$
+
 	public enum Binding {
 		HTTP(HTTPBinding.HTTP_BINDING), 
 		SOAP11(SOAPBinding.SOAP11HTTP_BINDING),
@@ -104,6 +106,9 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
     @Override
     public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection)
     		throws TranslatorException {
+    	if (command.getProcedureName().equalsIgnoreCase(INVOKE_HTTP)) {
+    		return new BinaryWSProcedureExecution(command, metadata, executionContext, this, connection);
+    	}
 		return new WSProcedureExecution(command, metadata, executionContext, this, connection);
     }
     
@@ -140,11 +145,11 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		param.setNullType(NullType.Nullable);
 		
 		metadataFactory.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.XML, Type.ReturnValue, p); //$NON-NLS-1$
-		/*
+		
 		p = metadataFactory.addProcedure(INVOKE_HTTP);
 		p.setAnnotation("Invokes a webservice that returns an binary result"); //$NON-NLS-1$
 
-		param = metadataFactory.addProcedureParameter("method", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
+		param = metadataFactory.addProcedureParameter("action", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("Sets the HTTP Method (GET, POST - default, etc.)."); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
 
@@ -159,7 +164,6 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		
 		metadataFactory.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.BLOB, Type.ReturnValue, p); //$NON-NLS-1$
 		metadataFactory.addProcedureParameter("contentType", TypeFacility.RUNTIME_NAMES.STRING, Type.Out, p); //$NON-NLS-1$	
-		*/
 	}
 
 }

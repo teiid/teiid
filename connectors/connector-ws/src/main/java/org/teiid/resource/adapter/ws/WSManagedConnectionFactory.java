@@ -21,8 +21,16 @@
  */
 package org.teiid.resource.adapter.ws;
 
-import javax.resource.ResourceException;
+import java.util.List;
 
+import javax.resource.ResourceException;
+import javax.xml.namespace.QName;
+
+import org.apache.cxf.Bus;
+import org.apache.cxf.bus.spring.SpringBusFactory;
+import org.apache.cxf.configuration.Configurer;
+import org.apache.cxf.interceptor.Interceptor;
+import org.apache.cxf.jaxws.JaxWsClientFactoryBean;
 import org.teiid.core.BundleUtil;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.resource.spi.BasicConnectionFactory;
@@ -43,8 +51,26 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 	private String authPassword; // httpbasic - password
 	private String authUserName; // httpbasic - username
 
+	private Bus bus;
+	private QName portQName;
+	private List<Interceptor> outInterceptors;
+
 	@Override
 	public BasicConnectionFactory createConnectionFactory() throws ResourceException {
+		String configName = getWsSecurityConfigName();
+		if (configName == null) {
+			configName = WSConnectionImpl.DEFAULT_LOCAL_NAME; 
+		}
+		this.portQName = new QName(WSConnectionImpl.DEFAULT_NAMESPACE_URI, configName);
+		if (wsSecurityConfigURL != null) {
+			bus = new SpringBusFactory().createBus(wsSecurityConfigURL);
+			JaxWsClientFactoryBean instance = new JaxWsClientFactoryBean();
+			Configurer configurer = bus.getExtension(Configurer.class);
+	        if (null != configurer) {
+	            configurer.configureBean(portQName.toString() + ".jaxws-client.proxyFactory", instance); //$NON-NLS-1$
+	        }
+	        outInterceptors = instance.getOutInterceptors();
+		}
 		return new BasicConnectionFactory() {
 			@Override
 			public BasicConnection getConnection() throws ResourceException {
@@ -99,6 +125,18 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 
 	public void setWsSecurityConfigName(String wsSecurityConfigName) {
 		this.wsSecurityConfigName = wsSecurityConfigName;
+	}
+	
+	public Bus getBus() {
+		return bus;
+	}
+	
+	public QName getPortQName() {
+		return portQName;
+	}
+	
+	public List<Interceptor> getOutInterceptors() {
+		return outInterceptors;
 	}
 	
 }

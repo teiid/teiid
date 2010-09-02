@@ -83,7 +83,7 @@ public class WSProcedureExecution implements ProcedureExecution {
         String style = (String)arguments.get(0).getArgumentValue().getValue();
         String action = (String)arguments.get(1).getArgumentValue().getValue();
         XMLType docObject = (XMLType)arguments.get(2).getArgumentValue().getValue();
-        Source source = null;
+        StreamSource source = null;
     	try {
 	        source = convertToSource(docObject);
 	        String endpoint = (String)arguments.get(3).getArgumentValue().getValue();
@@ -99,7 +99,7 @@ public class WSProcedureExecution implements ProcedureExecution {
 	        	}
 	        }
 	        
-	        Dispatch<Source> dispatch = conn.createDispatch(style, endpoint, Source.class, executionFactory.getDefaultServiceMode()); 
+	        Dispatch<StreamSource> dispatch = conn.createDispatch(style, endpoint, StreamSource.class, executionFactory.getDefaultServiceMode()); 
 	
 			if (Binding.HTTP.getBindingId().equals(style)) {
 				if (action == null) {

@@ -48,8 +48,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import javax.xml.transform.Source;
-
 import org.teiid.common.buffer.BatchManager;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.FileStore;
@@ -60,20 +58,13 @@ import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.BatchManager.ManagedBatch;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.InputStreamFactory;
-import org.teiid.core.types.SQLXMLImpl;
-import org.teiid.core.types.SourceTransform;
-import org.teiid.core.types.StandardXMLTranslator;
-import org.teiid.core.types.XMLType;
 import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.processor.relational.ListNestedSortComparator;
-import org.teiid.query.processor.xml.XMLUtil;
 
 
 /**
@@ -502,25 +493,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     
 	@Override
 	public void initialize() throws TeiidComponentException {
-		//TODO: remove me - connectors should be able to do this statefully
-		DataTypeManager.addSourceTransform(Source.class, new SourceTransform<Source, XMLType>() {
-			@Override
-			public XMLType transform(Source value) {
-				if (value instanceof InputStreamFactory) {
-					return new XMLType(new SQLXMLImpl((InputStreamFactory)value));
-				}
-				StandardXMLTranslator sxt = new StandardXMLTranslator(value);
-				SQLXMLImpl sqlxml;
-				try {
-					sqlxml = XMLUtil.saveToBufferManager(BufferManagerImpl.this, sxt);
-				} catch (TeiidComponentException e) {
-					throw new TeiidRuntimeException(e);
-				} catch (TeiidProcessingException e) {
-					throw new TeiidRuntimeException(e);
-				}
-				return new XMLType(sqlxml);
-			}
-		});
+		
 	}
 	
     @Override

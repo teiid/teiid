@@ -18,7 +18,8 @@
         <includes>
           <include>**/*.sh</include>
         </includes>   
-        <fileMode>755</fileMode>      
+        <fileMode>755</fileMode>  
+        <directoryMode>0755</directoryMode>    
     </fileSet> 
           
     <fileSet>
@@ -39,6 +40,7 @@
       </includes>
       <outputDirectory>lib</outputDirectory>
       <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </fileSet>
 
     <fileSet>
@@ -47,7 +49,8 @@
             <include>vdb-deployer.xsd</include>
         </includes>                
         <outputDirectory>teiid-docs/schema</outputDirectory>
-        <fileMode>0644</fileMode>        
+        <fileMode>0644</fileMode>
+        <directoryMode>0755</directoryMode>        
     </fileSet>
     
 	<!-- We may want to do this if including multiple doc types or languages
