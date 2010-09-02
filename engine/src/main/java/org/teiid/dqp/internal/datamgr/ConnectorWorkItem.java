@@ -31,8 +31,6 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.Assertion;
 import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.message.AtomicRequestID;
@@ -49,7 +47,6 @@ import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionFactory;
@@ -75,9 +72,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     private volatile ResultSetExecution execution;
     private ProcedureBatchHandler procedureBatchHandler;
     private org.teiid.language.Command translatedCommand;
-    private Class<?>[] schema;
-    private List<Integer> convertToRuntimeType;
-    private boolean[] convertToDesiredRuntimeType;
+    private int expectedColumns;
         
     /* End state information */    
     private boolean lastBatch;
@@ -200,17 +195,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 	        this.connection = this.connector.getConnection(this.connectionFactory);
 	        // Translate the command
 	        Command command = this.requestMsg.getCommand();
-			List<SingleElementSymbol> symbols = this.requestMsg.getCommand().getProjectedSymbols();
-			this.schema = new Class[symbols.size()];
-			this.convertToDesiredRuntimeType = new boolean[symbols.size()];
-			this.convertToRuntimeType = new ArrayList<Integer>(symbols.size());
-			for (int i = 0; i < schema.length; i++) {
-				SingleElementSymbol symbol = symbols.get(i);
-				this.schema[i] = symbol.getType();
-				this.convertToDesiredRuntimeType[i] = true;
-				this.convertToRuntimeType.add(i);
-			}
-	
+	        this.expectedColumns = command.getProjectedSymbols().size();
 	        LanguageBridgeFactory factory = new LanguageBridgeFactory(queryMetadata);
 	        this.translatedCommand = factory.translate(command);
 	
@@ -285,8 +270,8 @@ public class ConnectorWorkItem implements ConnectorWork {
             		this.lastBatch = true;
             		break;
             	}
-            	if (row.size() != this.schema.length) {
-            		throw new AssertionError("Inproper results returned.  Expected " + this.schema.length + " columns, but was " + row.size()); //$NON-NLS-1$ //$NON-NLS-2$
+            	if (row.size() != this.expectedColumns) {
+            		throw new AssertionError("Inproper results returned.  Expected " + this.expectedColumns + " columns, but was " + row.size()); //$NON-NLS-1$ //$NON-NLS-2$
         		}
             	this.rowCount += 1;
             	batchSize++;
@@ -294,7 +279,6 @@ public class ConnectorWorkItem implements ConnectorWork {
             		row = this.procedureBatchHandler.padRow(row);
             	}
             	
-            	correctTypes(row);
             	rows.add(row);
 	            // Check for max result rows exceeded
 	            if(this.requestMsg.getMaxResultRows() > -1 && this.rowCount >= this.requestMsg.getMaxResultRows()){
@@ -318,7 +302,6 @@ public class ConnectorWorkItem implements ConnectorWork {
         	if (this.procedureBatchHandler != null) {
         		List row = this.procedureBatchHandler.getParameterRow();
         		if (row != null) {
-        			correctTypes(row);
         			rows.add(row);
         			this.rowCount++;
         		}
@@ -346,46 +329,6 @@ public class ConnectorWorkItem implements ConnectorWork {
 		return response;
 	}
 
-	private void correctTypes(List row) throws TranslatorException {
-		//TODO: add a proper source schema
-		for (int i = convertToRuntimeType.size() - 1; i >= 0; i--) {
-			int index = convertToRuntimeType.get(i);
-			Object value = row.get(index);
-			if (value != null) {
-				Object result = DataTypeManager.convertToRuntimeType(value);
-				if (DataTypeManager.isLOB(result.getClass())) {
-					this.securityContext.keepExecutionAlive(true);
-				}
-				if (value == result && !DataTypeManager.DefaultDataClasses.OBJECT.equals(this.schema[index])) {
-					convertToRuntimeType.remove(i);
-					continue;
-				}
-				row.set(index, result);
-			}
-		}
-		//TODO: add a proper intermediate schema
-		for (int i = 0; i < row.size(); i++) {
-			if (convertToDesiredRuntimeType[i]) {
-				Object value = row.get(i);
-				if (value != null) {
-					Object result;
-					try {
-						result = DataTypeManager.transformValue(value, value.getClass(), this.schema[i]);
-					} catch (TransformationException e) {
-						throw new TranslatorException(e);
-					}
-					if (value == result) {
-						convertToDesiredRuntimeType[i] = false;
-						continue;
-					}
-					row.set(i, result);
-				}
-			} else {
-				row.set(i, DataTypeManager.getCanonicalValue(row.get(i)));
-			}
-		}
-	}
-    
     public static AtomicResultsMessage createResultsMessage(List[] batch, List columnSymbols) {
         String[] dataTypes = TupleBuffer.getTypeNames(columnSymbols);        
         return new AtomicResultsMessage(batch, dataTypes);

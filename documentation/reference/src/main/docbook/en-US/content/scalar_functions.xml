@@ -1036,7 +1036,7 @@
             </entry>
           </row><row>
             <entry>
-              <para>TO_BYTES(x, encoding)</para>
+              <para id="to_bytes">TO_BYTES(x, encoding)</para>
             </entry>
             <entry>
               <para>Return a blob from the clob with the given encoding.  

@@ -98,7 +98,6 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 			try {
 				final URL url = new URL(endpoint);
 				final HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
-				httpConn.setDoOutput(true);
 				httpConn.setRequestMethod((String) requestContext.get(MessageContext.HTTP_REQUEST_METHOD));
 				Map<String, List<String>> header = (Map<String, List<String>>)requestContext.get(MessageContext.HTTP_REQUEST_HEADERS);
 				for (Map.Entry<String, List<String>> entry : header.entrySet()) {
@@ -113,7 +112,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 				}
 				
 				if (msg != null) {
-					httpConn.setDoInput(true);
+					httpConn.setDoOutput(true);
 					OutputStream os = httpConn.getOutputStream();
 					InputStream is = msg.getInputStream();
 					ObjectConverterUtil.write(os, is, -1);
@@ -220,16 +219,12 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 		} else {
 			//TODO: cache service/port/dispatch instances?
 			Bus bus = BusFactory.getThreadDefaultBus();
-			if (mcf.getSecurityType() == WSManagedConnectionFactory.SecurityType.WSSecurity) {
-				BusFactory.setThreadDefaultBus(mcf.getBus());
-			}
+			BusFactory.setThreadDefaultBus(mcf.getBus());
 			Service svc;
 			try {
 				svc = Service.create(svcQname);
 			} finally {
-				if (mcf.getSecurityType() == WSManagedConnectionFactory.SecurityType.WSSecurity) {
-					BusFactory.setThreadDefaultBus(bus);
-				}
+				BusFactory.setThreadDefaultBus(bus);
 			}
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_WS, MessageLevel.DETAIL)) {
 				LogManager.logDetail(LogConstants.CTX_WS, "Creating a dispatch with endpoint", endpoint); //$NON-NLS-1$

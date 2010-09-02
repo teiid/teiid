@@ -119,6 +119,7 @@ public class AutoGenDataService extends ConnectorManager{
                 Class type = symbol.getType();
                 row.add( getValue(type) );
             }
+            rows[i] = row;
         }   
         
         return rows;

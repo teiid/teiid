@@ -114,7 +114,6 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
-    	//TODO: this blob should bet buffered
         return Arrays.asList(returnValue, returnValue.getContentType());
     }    
     

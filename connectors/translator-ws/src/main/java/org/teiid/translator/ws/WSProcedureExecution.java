@@ -42,9 +42,6 @@ import javax.xml.ws.handler.MessageContext;
 import org.teiid.core.types.XMLType;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
-import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -62,7 +59,7 @@ public class WSProcedureExecution implements ProcedureExecution {
 	RuntimeMetadata metadata;
     ExecutionContext context;
     private Call procedure;
-    private SQLXML returnValue;
+    private Source returnValue;
     private WSConnection conn;
     private WSExecutionFactory executionFactory;
     
@@ -132,14 +129,7 @@ public class WSProcedureExecution implements ProcedureExecution {
 				// JBoss Native DispatchImpl throws exception when the source is null
 				source = new StreamSource(new StringReader("<none/>")); //$NON-NLS-1$
 			}
-			Source result = dispatch.invoke(source);
-			this.returnValue = this.executionFactory.convertToXMLType(result);
-			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_WS, MessageLevel.DETAIL)) {
-	        	try {
-					LogManager.logDetail(LogConstants.CTX_CONNECTOR, "WebService Response: " + this.returnValue.getString()); //$NON-NLS-1$
-				} catch (SQLException e) {
-				}
-	        }
+			this.returnValue = dispatch.invoke(source);
 		} catch (SQLException e) {
 			throw new TranslatorException(e);
 		} catch (WebServiceException e) {
@@ -153,9 +143,6 @@ public class WSProcedureExecution implements ProcedureExecution {
 		if (xml == null) {
 			return null;
 		}
-		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_WS, MessageLevel.DETAIL)) { 
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Request " + xml.getString()); //$NON-NLS-1$
-	    }
 		return xml.getSource(StreamSource.class);
 	}
     

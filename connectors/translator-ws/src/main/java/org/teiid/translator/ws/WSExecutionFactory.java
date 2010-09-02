@@ -22,12 +22,10 @@
 
 package org.teiid.translator.ws;
 
-import java.sql.SQLXML;
 import java.util.Collections;
 import java.util.List;
 
 import javax.resource.cci.ConnectionFactory;
-import javax.xml.transform.Source;
 import javax.xml.ws.Service.Mode;
 import javax.xml.ws.http.HTTPBinding;
 import javax.xml.ws.soap.SOAPBinding;
@@ -112,10 +110,6 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		return new WSProcedureExecution(command, metadata, executionContext, this, connection);
     }
     
-    public SQLXML convertToXMLType(Source value) {
-    	return (SQLXML)getTypeFacility().convertToRuntimeType(value);
-    } 	
-	
 	@Override
     public final List getSupportedFunctions() {
         return Collections.EMPTY_LIST;

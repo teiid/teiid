@@ -156,7 +156,7 @@
 				 <code>WsSecurityConfigName</code>.  The namespace URI for the QName should be http://teiid.org.</para>
 				 
 				 <example>
-            	<title>Example web service based data source</title>
+            	<title>Example WS-Security enabled data source</title>
                 <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
 <connection-factories>
    <no-tx-connection-factory>
@@ -203,6 +203,45 @@
 	<para>For more information on configuring CXF interceptors, 
 	please consult the <ulink url="https://cwiki.apache.org/CXF20DOC/ws-security.html">CXF documentation</ulink> or 
 	the <ulink url="http://community.jboss.org/wiki/JBossWS-StackCXFUserGuide#WSSecurity">JBossWS-CXF documentation</ulink>.</para>
+			</section>
+			<section>
+				<title>Logging</title>
+				<para>Even when not using WS-Security, the <code>WsSecurityConfigURL</code> config property may then be used to supply the Spring XML configuration 
+				file.  Logging of requests and responses may be enabled for the entire bus or for specific port configurations.  
+				If a specific port configuration is used, just as with WS-Security, the local name of the port 
+				QName should match <code>WsSecurityConfigName</code> and the namespace URI should be http://teiid.org.</para>
+				<example>
+            	<title>Example logging data source</title>
+                <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<connection-factories>
+   <no-tx-connection-factory>
+      <jndi-name>somewhere-ws-source</jndi-name>
+      <rar-name>teiid-connector-ws.rar</rar-name>
+      <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>      
+      <config-property name="EndPoint">http://somewhere.com</config-property>
+      <config-property name="WsSecurityConfigURL">${jboss.server.home.dir}/server/default/conf/xxx-jbossws-cxf.xml</config-property>
+      <config-property name="WsSecurityConfigName">port_y</config-property>
+   </no-tx-connection-factory>
+</connection-factories>]]></programlisting>
+<para>Corresponding xxx-jbossws-cxf.xml</para>
+<programlisting><![CDATA[<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:jaxws="http://cxf.apache.org/jaxws"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+          http://www.springframework.org/schema/beans/spring-beans.xsd
+          http://cxf.apache.org/jaxws
+          http://cxf.apache.org/schemas/jaxws.xsd">
+
+    <jaxws:client name="{http://teiid.org}port_y" 
+        createdFromAPI="true">
+        <jaxws:features>
+            <bean class="org.apache.cxf.feature.LoggingFeature"/>
+        </jaxws:features>
+    </jaxws:client>
+    
+</beans>]]></programlisting>
+</example>
+			<para>Logging is then performed at an INFO level to the org.apache.cxf.interceptor context.  Logging is only performed for non-binary web service calls.</para>
 			</section>
         </section>
         
