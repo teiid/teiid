@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<connection-factories>
+
+   <no-tx-connection-factory>
+      <!-- The jndi name of the DataSource -->
+      <jndi-name>webserviceDS</jndi-name>
+      
+      <!-- The resource archive file that defines JCA connection for Sales Force (do not change this) -->
+      <rar-name>teiid-connector-ws.rar</rar-name>
+      <!-- connection interface; (do not change this) -->
+      <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>      
+
+      <!-- End point for the web service -->
+      <config-property name="EndPoint">endpoint url</config-property>
+        
+            
+      <max-pool-size>1</max-pool-size>
+
+    </no-tx-connection-factory>
+
+</connection-factories>
