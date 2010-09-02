@@ -71,12 +71,15 @@
 
 <h2><a name="Configuration">Configuration Issues</a></h2>
 
-See the See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
+See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
 
 <h4>from 7.1</h4>
 <ul>
 	<li>Apache CXF is now expected to be used as the web services stack provider through JBossWS-CXF.  See the Admin Guide for instructions on 
-	installing CXF for use with Teiid's Salesforce and web service connectors.
+	installing CXF for use with Teiid's Salesforce and web service connectors.  The WS Resource Adapter's -ds.xml files should no longer use 
+	WSSecurityConfigURL and WSSecurityConfigName, rather they should be ConfigFile and ConfigName respectively.  The property values should no longer
+	refer to jboss-wsse-client.xml, but instead they should reference a CXF Spring configuration file and particular port configuration.  See the Admin Guide
+	for more on using CXF configuration files. 
 	<li>The default for data role checking is now "true".  However only VDBs with data roles will have roles enforced.
 	<li>The default prepared plan cache size was increased to 512, since it is targeted by internal plans as well.
 </ul>

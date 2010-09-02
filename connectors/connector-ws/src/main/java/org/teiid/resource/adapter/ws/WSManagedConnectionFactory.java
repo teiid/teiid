@@ -46,8 +46,8 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 	
 	private String endPoint;
 	private String securityType = SecurityType.None.name(); // None, HTTPBasic, WS-Security
-	private String wsSecurityConfigURL; // path to the "jboss-wsse-client.xml" file
-	private String wsSecurityConfigName; // ws-security config name in the above file
+	private String configFile; // path to the "jbossws-cxf.xml" file
+	private String configName; // config name in the above file
 	private String authPassword; // httpbasic - password
 	private String authUserName; // httpbasic - username
 
@@ -57,13 +57,13 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 
 	@Override
 	public BasicConnectionFactory createConnectionFactory() throws ResourceException {
-		String configName = getWsSecurityConfigName();
+		String configName = getConfigName();
 		if (configName == null) {
 			configName = WSConnectionImpl.DEFAULT_LOCAL_NAME; 
 		}
 		this.portQName = new QName(WSConnectionImpl.DEFAULT_NAMESPACE_URI, configName);
-		if (wsSecurityConfigURL != null) {
-			bus = new SpringBusFactory().createBus(wsSecurityConfigURL);
+		if (configFile != null) {
+			bus = new SpringBusFactory().createBus(configFile);
 			JaxWsClientFactoryBean instance = new JaxWsClientFactoryBean();
 			Configurer configurer = bus.getExtension(Configurer.class);
 	        if (null != configurer) {
@@ -111,20 +111,20 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 		this.securityType = securityType;
 	}	
 
-	public String getWsSecurityConfigURL() {
-		return wsSecurityConfigURL;
+	public String getConfigFile() {
+		return configFile;
 	}
 
-	public void setWsSecurityConfigURL(String wsSecurityConfigURL) {
-		this.wsSecurityConfigURL = wsSecurityConfigURL;
+	public void setConfigFile(String config) {
+		this.configFile = config;
 	}
 	
-	public String getWsSecurityConfigName() {
-		return wsSecurityConfigName;
+	public String getConfigName() {
+		return configName;
 	}
 
-	public void setWsSecurityConfigName(String wsSecurityConfigName) {
-		this.wsSecurityConfigName = wsSecurityConfigName;
+	public void setConfigName(String configName) {
+		this.configName = configName;
 	}
 	
 	public Bus getBus() {

@@ -145,16 +145,25 @@
    </no-tx-connection-factory>
 </connection-factories>]]></programlisting></example>
 			<section>
-				<title>WS-Security</title>
+				<title>CXF Configuration</title>
+				<para>Each web service data source may choose a particular CXF config file and port configuration. 
+				The <code>ConfigFile</code> config property specifies the Spring XML configuration 
+				file for the CXF Bus and port configuration to be used by connections.  
+				If no config file is specified then the system default configuration will be used.</para>
 				
-				<para>To enable the use of WS-Security, the <code>SecurityType</code> should be set to WSSecurity.  
-				The <code>WsSecurityConfigURL</code> config property may then be used to supply the Spring XML configuration 
-				file for the CXF Bus and port configuration to be used by these connections.  At this time however, Teiid does not expect or use
-				a WSDL to describe the service being used.  Thus the Spring XML configuration file is not an adjunct 
-				to policy information in the WSDL, it must instead contain all of the relevant policy configuration.  It is also expected that only
-				1 port configuration will be used by this data source.  You may explicitly set the local name of the port QName to use via the
-				 <code>WsSecurityConfigName</code>.  The namespace URI for the QName should be http://teiid.org.</para>
+				<para>Only 1 port configuration can be used by this data source.  You may explicitly set the local name of the port QName to use via the
+				 <code>ConfigName</code> property.  The namespace URI for the QName in your config file should be http://teiid.org.  
+				 See the sections on WS-Security, Logging, etc. for examples of using the CXF configuration file.</para>
 				 
+				<para>See the <ulink url="http://cxf.apache.org/docs/">CXF documentation</ulink> for all possible configuration options.</para>
+				<note><para>The CXF configuration is currently only applicable to non-binary web service calls.</para></note>
+			</section>
+			<section>
+				<title>WS-Security</title>
+				<para>To enable the use of WS-Security, the <code>SecurityType</code> should be set to WSSecurity.
+				At this time Teiid does not expect a WSDL to describe the service being used.  
+				Thus a Spring XML configuration file is not only required, it must instead contain all of the relevant policy configuration.  
+				And just as with the general configuration, each data source is limited to specifing only a single port configration to use.</para>
 				 <example>
             	<title>Example WS-Security enabled data source</title>
                 <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
@@ -164,8 +173,8 @@
       <rar-name>teiid-connector-ws.rar</rar-name>
       <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>      
       <config-property name="EndPoint">http://somewhere.com</config-property>
-      <config-property name="WsSecurityConfigURL">${jboss.server.home.dir}/server/default/conf/xxx-jbossws-cxf.xml</config-property>
-      <config-property name="WsSecurityConfigName">port_x</config-property>
+      <config-property name="ConfigFile">${jboss.server.home.dir}/server/default/conf/xxx-jbossws-cxf.xml</config-property>
+      <config-property name="ConfigName">port_x</config-property>
       <config-property name="SecurityType">WSSecurity</config-property>
    </no-tx-connection-factory>
 </connection-factories>]]></programlisting>
@@ -206,10 +215,7 @@
 			</section>
 			<section>
 				<title>Logging</title>
-				<para>Even when not using WS-Security, the <code>WsSecurityConfigURL</code> config property may then be used to supply the Spring XML configuration 
-				file.  Logging of requests and responses may be enabled for the entire bus or for specific port configurations.  
-				If a specific port configuration is used, just as with WS-Security, the local name of the port 
-				QName should match <code>WsSecurityConfigName</code> and the namespace URI should be http://teiid.org.</para>
+				<para>The CXF config property may also be used to control the logging of requests and responses for specific or all ports.  Logging, when enabled, will be performed at an INFO level to the org.apache.cxf.interceptor context.</para>
 				<example>
             	<title>Example logging data source</title>
                 <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
@@ -219,8 +225,8 @@
       <rar-name>teiid-connector-ws.rar</rar-name>
       <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>      
       <config-property name="EndPoint">http://somewhere.com</config-property>
-      <config-property name="WsSecurityConfigURL">${jboss.server.home.dir}/server/default/conf/xxx-jbossws-cxf.xml</config-property>
-      <config-property name="WsSecurityConfigName">port_y</config-property>
+      <config-property name="ConfigFile">${jboss.server.home.dir}/server/default/conf/xxx-jbossws-cxf.xml</config-property>
+      <config-property name="ConfigName">port_y</config-property>
    </no-tx-connection-factory>
 </connection-factories>]]></programlisting>
 <para>Corresponding xxx-jbossws-cxf.xml</para>
@@ -241,7 +247,28 @@
     
 </beans>]]></programlisting>
 </example>
-			<para>Logging is then performed at an INFO level to the org.apache.cxf.interceptor context.  Logging is only performed for non-binary web service calls.</para>
+			</section>
+			<section>
+				<title>Transport Settings</title>
+				<para>The CXF config property may also be used to control low level aspects of the HTTP transport.  See the <ulink url="http://cxf.apache.org/docs/client-http-transport-including-ssl-support.html">CXF documentation</ulink> for all possible options.</para>
+				<example>
+            	<title>Example Disabling Hostname Verification</title>
+<programlisting><![CDATA[<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:http-conf="http://cxf.apache.org/transports/http/configuration"
+       xsi:schemaLocation="http://cxf.apache.org/transports/http/configuration
+                           http://cxf.apache.org/schemas/configuration/http-conf.xsd
+                           http://www.springframework.org/schema/beans
+                             http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+  <http-conf:conduit name="{http://teiid.org}port_z.http-conduit">
+     <!-- WARNING ! disableCNcheck=true should NOT be used in production -->
+     <http-conf:tlsClientParameters disableCNcheck="true" />
+
+  </http-conf:conduit>
+</beans>
+]]></programlisting>
+</example>
 			</section>
         </section>
         
