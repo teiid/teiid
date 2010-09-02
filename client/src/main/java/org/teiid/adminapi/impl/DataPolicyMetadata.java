@@ -258,7 +258,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
     @Override
     @ManagementProperty(description="Indicates if the role is mapped to any authenticated user.")
 	public boolean isAnyAuthenticated() {
-		return false;
+		return this.anyAuthenticated;
 	}
     
     public void setAnyAuthenticated(boolean anyAuthenticated) {
