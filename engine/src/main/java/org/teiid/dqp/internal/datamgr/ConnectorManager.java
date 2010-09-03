@@ -33,6 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.resource.ResourceException;
 
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.Assertion;
@@ -51,6 +52,7 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Scope;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.resource.spi.WrappedConnection;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
@@ -102,8 +104,18 @@ public class ConnectorManager  {
 		MetadataFactory factory = new MetadataFactory(modelName, datatypes, importProperties);
 		Object connectionFactory = getConnectionFactory();
 		Object connection = executionFactory.getConnection(connectionFactory);
+		Object unwrapped = null;
+		
+		if (connection instanceof WrappedConnection) {
+			try {
+				unwrapped = ((WrappedConnection)connection).unwrap();
+			} catch (ResourceException e) {
+				throw new TranslatorException(DQPPlugin.Util.getString("failed_to_unwrap_connection")); //$NON-NLS-1$
+			}	
+		}
+		
 		try {
-			executionFactory.getMetadata(factory, connection);
+			executionFactory.getMetadata(factory, (unwrapped == null) ? connection:unwrapped);
 		} finally {
 			executionFactory.closeConnection(connection, connectionFactory);
 		}

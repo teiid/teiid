@@ -27,6 +27,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.resource.ResourceException;
+
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleBuffer;
@@ -47,6 +49,7 @@ import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.resource.spi.WrappedConnection;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionFactory;
@@ -193,6 +196,16 @@ public class ConnectorWorkItem implements ConnectorWork {
     	try {
 	    	this.connectionFactory = this.manager.getConnectionFactory();
 	        this.connection = this.connector.getConnection(this.connectionFactory);
+
+	        Object unwrapped = null;
+			if (connection instanceof WrappedConnection) {
+				try {
+					unwrapped = ((WrappedConnection)connection).unwrap();
+				} catch (ResourceException e) {
+					throw new TranslatorException(DQPPlugin.Util.getString("failed_to_unwrap_connection")); //$NON-NLS-1$
+				}	
+			}
+			
 	        // Translate the command
 	        Command command = this.requestMsg.getCommand();
 	        this.expectedColumns = command.getProjectedSymbols().size();
@@ -202,7 +215,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 	        RuntimeMetadata rmd = new RuntimeMetadataImpl(queryMetadata);
 	        
 	        // Create the execution based on mode
-	        final Execution exec = connector.createExecution(this.translatedCommand, this.securityContext, rmd, this.connection);
+	        final Execution exec = connector.createExecution(this.translatedCommand, this.securityContext, rmd, (unwrapped == null) ? this.connection:unwrapped);
 	        if (this.translatedCommand instanceof Call) {
 	        	this.execution = Assertion.isInstanceOf(exec, ProcedureExecution.class, "Call Executions are expected to be ProcedureExecutions"); //$NON-NLS-1$
 	        	StoredProcedure proc = (StoredProcedure)command;

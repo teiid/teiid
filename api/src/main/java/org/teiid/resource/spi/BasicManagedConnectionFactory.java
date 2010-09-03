@@ -47,11 +47,11 @@ public abstract class BasicManagedConnectionFactory implements ManagedConnection
 	private BasicResourceAdapter ra;
 	
 	@Override
-	public abstract Object createConnectionFactory() throws ResourceException;
+	public abstract BasicConnectionFactory createConnectionFactory() throws ResourceException;
 
 	@Override
-	public Object createConnectionFactory(ConnectionManager arg0) throws ResourceException {
-		return createConnectionFactory();
+	public Object createConnectionFactory(ConnectionManager cm) throws ResourceException {
+		return new WrappedConnectionFactory(createConnectionFactory(), cm, this);
 	}
 
 	@Override
