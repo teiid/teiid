@@ -29,7 +29,7 @@
                 application's security domain name in the "teiid-jboss-beans.xml" file in the SessionService section. 
                 Please note that for this to work, the security-domain 
                 must be a JAAS based Login Module and your client application MUST obtain Teiid connection 
-                using <emphasis>Local</emphasis> Connection.</para>
+                using <emphasis>Local</emphasis> Connection, with <emphasis>PassthroughAuthentication=true</emphasis> flag set.</para>
             </section>
 	</section>
 	<section>
