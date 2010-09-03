@@ -52,6 +52,8 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
     protected String name;
 	@XmlElement(name = "description")
     protected String description;
+	@XmlAttribute(name = "any-authenticated")
+	protected boolean anyAuthenticated;
 
     @XmlElement(name = "permission")
     protected PermissionMap permissions = new PermissionMap(new KeyBuilder<PermissionMetaData>() {
@@ -250,5 +252,16 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         	sb.append("]");//$NON-NLS-1$
         	return sb.toString();
         }
+	}
+
+
+    @Override
+    @ManagementProperty(description="Indicates if the role is mapped to any authenticated user.")
+	public boolean isAnyAuthenticated() {
+		return this.anyAuthenticated;
+	}
+    
+    public void setAnyAuthenticated(boolean anyAuthenticated) {
+		this.anyAuthenticated = anyAuthenticated;
 	}
 }

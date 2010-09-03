@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<connection-factories>
+    <no-tx-connection-factory>
+        <!-- The jndi name of the DataSource -->
+        <jndi-name>salesforceDS</jndi-name>
+        
+        <!-- The resource archive file that defines JCA connection for Sales Force (do not change this) -->
+        <rar-name>teiid-connector-salesforce.rar</rar-name>
+       
+        <!-- connection interface; (do not change this) -->
+        <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>
+        
+        <!-- URL; the below is test; replace with actual URL you need to connect to -->
+        <config-property name="URL">https://test.salesforce.com/services/Soap/u/10.0</config-property>
+        
+        <config-property name="username">user</config-property>
+        <config-property name="password">pass</config-property>
+        
+        <!-- connection pool size -->
+        <max-pool-size>1</max-pool-size>
+    </no-tx-connection-factory>
+</connection-factories>

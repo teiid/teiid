@@ -21,9 +21,6 @@
  */
 package org.teiid.cache.jboss;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.jboss.cache.Cache;
 import org.jboss.cache.Fqn;
 import org.jboss.cache.Node;
@@ -34,20 +31,6 @@ public class ExpirationAwareCache<K, V> extends JBossCache<K, V> {
 
 	public ExpirationAwareCache(Cache cacheStore, Fqn fqn) {
 		super(cacheStore, fqn);
-	}
-
-	@Override
-	public V get(K key) {
-		Node<K, V> node = getRootNode();
-		Node child = node.getChild(getFqn(key));
-		if (child != null) {
-			return (V)child.get(key);
-		}
-		return null;
-	}
-
-	private Fqn<String> getFqn(K key) {
-		return Fqn.fromString(String.valueOf(key.getClass().getSimpleName()+key.hashCode()));
 	}
 
 	@Override
@@ -64,32 +47,4 @@ public class ExpirationAwareCache<K, V> extends JBossCache<K, V> {
 		child.put(ExpirationAlgorithmConfig.EXPIRATION_KEY, future);
 		return (V)child.put(key, value);
 	}
-	
-	@Override
-	public V remove(K key) {
-		Node<K, V> node = getRootNode();
-		Node child = node.getChild(getFqn(key));
-		if (child != null) {
-			return (V)child.remove(key);
-		}
-		return null;
-	}
-	
-	@Override
-	public void clear() {
-		Node<K, V> node = getRootNode();
-		node.clearData();
-		Set<Node<K,V>> nodes = new HashSet<Node<K, V>>(node.getChildren());
-		for (Node<K, V> child : nodes) {
-			child.clearData();
-			node.removeChild(child.getFqn());
-		}
-	}
-	
-	@Override
-	public int size() {
-		Node<K, V> node = getRootNode();
-		return node.getChildren().size();
-	}
-
 }

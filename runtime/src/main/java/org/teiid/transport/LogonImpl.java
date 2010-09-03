@@ -22,6 +22,7 @@
 
 package org.teiid.transport;
 
+import java.util.Collection;
 import java.util.Properties;
 
 import javax.security.auth.login.LoginException;
@@ -41,6 +42,7 @@ import org.teiid.dqp.service.SessionService;
 import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.net.CommunicationException;
 import org.teiid.net.TeiidURL;
 import org.teiid.security.Credentials;
 
@@ -105,6 +107,18 @@ public class LogonImpl implements ILogon {
 			this.service.pingServer(id);
 		}
 		LogManager.logTrace(LogConstants.CTX_SECURITY, "Ping", id); //$NON-NLS-1$
+		return ResultsFuture.NULL_FUTURE;
+	}
+	
+	@Override
+	public ResultsFuture<?> ping(Collection<String> sessions)
+			throws TeiidComponentException, CommunicationException {
+		for (String string : sessions) {
+			try {
+				this.service.pingServer(string);
+			} catch (InvalidSessionException e) {
+			}
+		}
 		return ResultsFuture.NULL_FUTURE;
 	}
 

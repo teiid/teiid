@@ -278,15 +278,15 @@
                         </entry>
                         <entry>Server where the Teiid runtime installed</entry>
                     </row>
-                    <!-- <row>
+                    <row>
                         <entry>
                             <code>AlternateServers</code>
                         </entry>
                         <entry>
                             <code>String</code>
                         </entry>
-                        <entry>Optional , delimited list of host:port entries.  See the <link linkend="multiple_hosts">multiple hosts</link> section for more information.</entry>
-                    </row> -->
+                        <entry>Optional delimited list of host:port entries.  See the <link linkend="multiple_hosts">multiple hosts</link> section for more information.</entry>
+                    </row>
                     <row>
                         <entry>
                             <code>AdditionalProperties</code>
@@ -407,7 +407,7 @@
             directory.  Based on the type of deployment (XA, driver, or local), the contents of the file will be different.  See the following sections for more.</para></listitem>
         </orderedlist>
         
-        <para>Tje data source will then be accessable through the JNDI name specified in the -ds.xml file.</para>
+        <para>The data source will then be accessable through the JNDI name specified in the -ds.xml file.</para>
         
         <section id="as_xa_connection">
            <title>DataSource Connection</title>
@@ -444,7 +444,7 @@
            <programlisting><![CDATA[<datasources> 
   <local-tx-datasource> 
     <jndi-name>TEIID-DS</jndi-name> 
-    <connection-url>jdbc:metamatrix:myVDB@mm://localhost:31000</connection-url> 
+    <connection-url>jdbc:teiid:myVDB@mm://localhost:31000</connection-url> 
     <driver-class>org.teiid.jdbc.TeiidDriver</driver-class>              
     <user-name>admin</user-name>
     <password>teiid</password>
@@ -488,27 +488,63 @@
     
     <section id="multiple_hosts">
         <title>Using Multiple Hosts</title>
-        <para>A group of Teiid Servers in the same AS cluster may be connected using connection time failover and load-balancing.
-        To enable this feature the client needs to specify multiple host name and port number combinations on the URL connection string. 
-        The client will randomly pick any one the Teiid server from the list and will have session established with that server.  
-        If that server cannot be contacted, then a connection will be attempted to each of the remaining servers in random order.</para>   
-        
-        <!-- If the "autoFailover" connection property is set to "true", a failure with the connected server will cause the client to automatically failover 
-        to other available servers.  Even if autoFailover is not set, when using a managed DataSource based connection, the connection will randomly select a new server instance when it is returned to the pool.</para>
-        -->
-        <example><title>Example URL connection string</title><programlisting><![CDATA[jdbc:teiid:&lt;vdb-name&gt;@mm://host1:31000, host1:31001, host2:31000;version=2]]></programlisting></example>        
-        
-        <!-- <para>Currently when the fail over happens, the user is re-authenticated with the new server. The clustering 
-        feature coming up in the Teiid 7.1 release will define how the transparent session fail over will occur with out the 
-        re-authentication.</para>
-        
-        <para>You can also use this feature to distribute the query load among various avaialble Teiid Servers available. 
-        Load balancing happens automatically, when you are using a data source along with connection pooling. Each time a connection is 
-        grabbed from the pool, it will randomly select a Teiid Server to distribute the load. Note, that load balacing feature 
-        is not avaialble if you are using Teiid Driver to make your connection.</para>-->
-        
-        <para>If you are using DataSource to connect to Teiid Server, use "AlternateServers" property/method to define the failover servers.
-        Check out the Javadoc on the format of the string.</para>
+        <para>A group of Teiid Servers in the same JBoss AS cluster may be connected using failover and load-balancing features.
+        To enable theses features in their simplest form, the client needs to specify multiple host name and port number combinations on the URL connection string. 
+        <example><title>Example URL connection string</title><programlisting><![CDATA[jdbc:teiid:&lt;vdb-name&gt;@mm://host1:31000,host1:31001,host2:31000;version=2]]></programlisting></example>
+        </para>
+        <para>If you are using a DataSource to connect to Teiid Server, use the "AlternateServers" property/method to define the failover servers.  The format is also a comma separated list of host:port combinations.</para> 
+		<para>The client will randomly pick one the Teiid server from the list and establish a session with that server.  
+        If that server cannot be contacted, then a connection will be attempted to each of the remaining servers in random order.  
+        This allows for both connection time fail-over and random server selection load balancing.                
+        </para>
+        <section id="failover">
+        	<title>Fail Over</title>
+        	<para>Post connection fail over will be sued if you're using an admin connection (such as what is used by AdminShell) or if the autoFailover connection property is set to true. 
+        	Post connection failover works by sending a ping, at most every second, to test the connection prior to use.  If the ping fails, a new instance will be selected prior to the operation being attempted.  
+        	This is not true "transparent application failover" as the client will not restart the transaction/query/recreate session scoped temp tables, etc.  So this feature should be used with caution by non-admin connections.</para>
+        </section>
+        <section id="loadbalancing">
+        	<title>Load Balancing</title>
+        	<para>Post connection load balancing can be utilized in one of two ways.  First if you are using <code>TeiidDataSource</code> and the Connections returned by 
+        	Teiid <code>PooledConnections</code> have their <code>close</code> method called, then a new server instance will be selected automatically. 
+        	However when using driver based connections or even when using <code>TeiidDataSource</code> in a connection pool (such as JBoss AS), the automatic load balancing will not happen.  
+        	Second you can explicitly trigger load balancing through the use of the set statement: <programlisting>SET NEWINSTANCE TRUE</programlisting>
+        	Typically you will not need want to issue this statement manually, but instead use it as the connection test query on your DataSource configuration.
+        	<example>
+        		<title>JBoss AS DataSource With Post Connection Load Balancing</title>
+        	<programlisting><![CDATA[<datasources> 
+  <local-tx-datasource> 
+    <jndi-name>TEIID-DS</jndi-name> 
+    <connection-url>jdbc:teiid:myVDB@mm://localhost:31000,mm://localhost:32000</connection-url> 
+    <driver-class>org.teiid.jdbc.TeiidDriver</driver-class>              
+    <user-name>admin</user-name>
+    <password>teiid</password>
+     
+    <!-- pool and other JBoss datasource properties -->
+    <check-valid-connection-sql>SET NEWINSTANCE TRUE</check-valid-connection-sql>
+    <min-pool-size>5</min-pool-size> 
+    <max-pool-size>10</max-pool-size>
+  </local-tx-datasource> 
+</datasources>]]></programlisting>
+</example>
+        	</para>
+        	<para>Teiid by default maintians a pool of extra socket connections that are reused.  For load balancing, this reduces the potential cost of switching a connection to another server instance.  
+        	The default setting is to maintain 16 connections (see <code>org.teiid.sockets.maxCachedInstances</code> in the client jar's teiid-client-settings.properties file.  
+        	If you're client is connecting to large numbers of Teiid instances and you're using post connection time load balancing, then consider increasing the number of cached instances.  
+        	You may either set an analogous system property or create another version of teiid-client-settings.properties file and place it into the classpath ahead of the client jar.</para>
+        	<note><para>Session level temporary tables, currently running transactions, session level cache entries, and PreparedPlans for a given session will not be available on other cluster members.  
+        	Therefore, it is recommended that post connection time load balancing is only used when the logical connection could have been closed, but the actual connection is reused (the typical connection pool pattern).</para></note>
+        </section>
+        <section id="advancedconfig">
+        	<title>Advanced Configuration</title>
+        	<para>Server discovery, load balancing, fail over, retry, retry delay, etc. may be customize if the default policy is not sufficient.  
+        	See the <code>org.teiid.net.socket.ServerDiscovery</code> interface and default implementaion <code>org.teiid.net.socket.UrlServerDiscovery</code> for how to start with your customization.
+        	The <code>UrlServerDiscovery</code> implemenation provides the following: discovery of servers from the URL hosts (DataSource server/alternativeServers), random selection for load balancing and failover, 1 connection attempt per host, no biasing, black listing, or other advanced features.  
+        	Typically you'll want to extend the <code>UrlServerDiscovery</code> so that it can be used as the fallback strategy and to only implement the necessary changed methods.  
+        	It's important to consider that 1 <code>ServerDiscovery</code> instance will be created for each connection.  Any sharing of information between instances should be done through static state or some other shared lookup.       	
+        	</para>
+        	<para>Your customized server discovery class will then need to be referenced by the discoveryStategy connection/DataSource property by its full class name.</para>
+        </section>
     </section>
     
 </chapter>

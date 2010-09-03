@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<connection-factories>
+
+   <no-tx-connection-factory>
+      <!-- The jndi name of the DataSource -->
+      <jndi-name>fileDS</jndi-name>
+      
+      <!-- The resource archive file that defines JCA connection for Sales Force (do not change this) -->
+      <rar-name>teiid-connector-file.rar</rar-name>
+      <!-- connection interface; (do not change this) -->
+      <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>      
+
+       <!-- Directory where the data files are stored -->
+      <config-property name="ParentDirectory" type="java.lang.String">directory</config-property>
+            
+      <max-pool-size>20</max-pool-size>
+
+    </no-tx-connection-factory>
+
+</connection-factories>

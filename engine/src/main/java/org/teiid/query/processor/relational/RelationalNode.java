@@ -50,88 +50,102 @@ import org.teiid.query.util.CommandContext;
 
 
 public abstract class RelationalNode implements Cloneable, BatchProducer {
+	
+	static class NodeData {
+		int nodeID;
+		List elements;
+		Number estimateNodeCardinality;
+		Number setSizeEstimate;
+		Number depAccessEstimate;
+		Number estimateDepJoinCost;
+		Number estimateJoinCost;
+	}
 
-    // External context and state
-    private CommandContext context;
-    private BufferManager bufferManager;
-    private ProcessorDataManager dataMgr;
-    
-	// Node state
-	private int nodeID;
-    private List elements;
-    private int batchSize;
-    private RelationalNodeStatistics nodeStatistics;
+	static class ProcessingState {
+		CommandContext context;
+		BufferManager bufferManager;
+		ProcessorDataManager dataMgr;
+		int batchSize;
+		RelationalNodeStatistics nodeStatistics;
+		int beginBatch = 1;
+		List batchRows;
+		boolean lastBatch;
+		boolean closed;
+		
+		void reset() {
+			this.beginBatch = 1;
+			this.batchRows = null;
+			this.lastBatch = false;
+			this.closed = false;
+		}
+	}
 
-    // For collecting result batches
-    private int beginBatch = 1;
-    private List batchRows;
-    private boolean lastBatch = false;
-
+    private ProcessingState processingState;
+	private NodeData data;
 	/** The parent of this node, null if root. */
     private RelationalNode parent;
 
 	/** Child nodes, usually just 1 or 2 */
 	private RelationalNode[] children = new RelationalNode[2];
-    
-    // Cost Estimates
-    private Number estimateNodeCardinality;
-    private Number setSizeEstimate;
-    private Number depAccessEstimate;
-    private Number estimateDepJoinCost;
-    private Number estimateJoinCost;
-    
-    private boolean closed = false;
-    
+
+	protected RelationalNode() {
+		
+	}
+	
 	public RelationalNode(int nodeID) {
-		this.nodeID = nodeID;
+		this.data = new NodeData();
+		this.data.nodeID = nodeID;
 	}
 	
 	public boolean isLastBatch() {
-		return lastBatch;
+		return getProcessingState().lastBatch;
 	}
 	
 	public void setContext(CommandContext context) {
-		this.context = context;
+		this.getProcessingState().context = context;
 	}
 
     public void initialize(CommandContext context, BufferManager bufferManager, ProcessorDataManager dataMgr) {
-        this.context = context;
-        this.bufferManager = bufferManager;
-        this.dataMgr = dataMgr;
+        this.getProcessingState().context = context;
+        this.getProcessingState().bufferManager = bufferManager;
+        this.getProcessingState().dataMgr = dataMgr;
         
         if(context.getCollectNodeStatistics()) {
-            this.nodeStatistics = new RelationalNodeStatistics();
+            this.getProcessingState().nodeStatistics = new RelationalNodeStatistics();
         }
 
-        this.batchSize = bufferManager.getProcessorBatchSize();
+        this.getProcessingState().batchSize = bufferManager.getProcessorBatchSize();
     }
 
     public CommandContext getContext() {
-        return this.context;
+        return this.getProcessingState().context;
     }
 
 	public int getID() {
-		return this.nodeID;
+		return this.data.nodeID;
 	}
     
     public void setID(int nodeID) {
-        this.nodeID = nodeID;
+    	NodeData newData = new NodeData();
+    	newData.nodeID = nodeID;
+    	newData.elements = this.data.elements;
+        this.data = newData;
     }
 
     protected BufferManager getBufferManager() {
-        return this.bufferManager;
+        return this.getProcessingState().bufferManager;
     }
 
     protected ProcessorDataManager getDataManager() {
-        return this.dataMgr;
+        return this.getProcessingState().dataMgr;
     }
 
     protected String getConnectionID() {
-        return this.context.getConnectionID();
+        return this.getProcessingState().context.getConnectionID();
     }
 
     protected int getBatchSize() {
-        return this.batchSize;
+        return this.getProcessingState().batchSize;
     }
 
     public void reset() {
@@ -142,15 +156,13 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
                 break;
             }
         }
-
-        beginBatch = 1;
-        batchRows = null;
-        lastBatch = false;
-        closed = false;
+        if (this.getProcessingState() != null) {
+        	this.getProcessingState().reset();
+        }
     }
 
 	public void setElements(List elements) {
-		this.elements = elements;
+		this.data.elements = elements;
 	}
 	
 	@Override
@@ -159,7 +171,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 	}
 
 	public List getElements() {
-		return this.elements;
+		return this.data.elements;
 	}
     	
     public RelationalNode getParent() {
@@ -193,38 +205,38 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
     }
 
     protected void addBatchRow(List row) {
-        if(this.batchRows == null) {
-            this.batchRows = new ArrayList(this.batchSize / 4);
+        if(this.getProcessingState().batchRows == null) {
+            this.getProcessingState().batchRows = new ArrayList(this.getProcessingState().batchSize / 4);
         }
-        this.batchRows.add(row);
+        this.getProcessingState().batchRows.add(row);
     }
 
     protected void terminateBatches() {
-        this.lastBatch = true;
+        this.getProcessingState().lastBatch = true;
     }
 
     protected boolean isBatchFull() {
-        return (this.batchRows != null) && (this.batchRows.size() >= this.batchSize);
+        return (this.getProcessingState().batchRows != null) && (this.getProcessingState().batchRows.size() >= this.getProcessingState().batchSize);
     }
     
     protected boolean hasPendingRows() {
-    	return this.batchRows != null;
+    	return this.getProcessingState().batchRows != null;
     }
 
     protected TupleBatch pullBatch() {
         TupleBatch batch = null;
-        if(this.batchRows != null) {
-            batch = new TupleBatch(this.beginBatch, this.batchRows);
-            beginBatch += this.batchRows.size();
+        if(this.getProcessingState().batchRows != null) {
+            batch = new TupleBatch(this.getProcessingState().beginBatch, this.getProcessingState().batchRows);
+            getProcessingState().beginBatch += this.getProcessingState().batchRows.size();
         } else {
-            batch = new TupleBatch(this.beginBatch, Collections.EMPTY_LIST);
+            batch = new TupleBatch(this.getProcessingState().beginBatch, Collections.EMPTY_LIST);
         }
 
-        batch.setTerminationFlag(this.lastBatch);
+        batch.setTerminationFlag(this.getProcessingState().lastBatch);
 
         // Reset batch state
-        this.batchRows = null;
-        this.lastBatch = false;
+        this.getProcessingState().batchRows = null;
+        this.getProcessingState().lastBatch = false;
 
         // Return batch
         return batch;
@@ -251,22 +263,22 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
      * @since 4.2
      */
     public final TupleBatch nextBatch() throws BlockedException,  TeiidComponentException, TeiidProcessingException {
-        boolean recordStats = this.context != null && this.context.getCollectNodeStatistics();
+        boolean recordStats = this.getProcessingState().context != null && this.getProcessingState().context.getCollectNodeStatistics();
         
         try {
             while (true) {
             	//start timer for this batch
-                if(recordStats && this.context.getCollectNodeStatistics()) {
-                    this.nodeStatistics.startBatchTimer();
+                if(recordStats && this.getProcessingState().context.getCollectNodeStatistics()) {
+                    this.getProcessingState().nodeStatistics.startBatchTimer();
                 }
                 TupleBatch batch = nextBatchDirect();
                 if (recordStats) {
-                    if(this.context.getCollectNodeStatistics()) {
+                    if(this.getProcessingState().context.getCollectNodeStatistics()) {
                         // stop timer for this batch (normal)
-                        this.nodeStatistics.stopBatchTimer();
-                        this.nodeStatistics.collectCumulativeNodeStats(batch, RelationalNodeStatistics.BATCHCOMPLETE_STOP);
+                        this.getProcessingState().nodeStatistics.stopBatchTimer();
+                        this.getProcessingState().nodeStatistics.collectCumulativeNodeStats(batch, RelationalNodeStatistics.BATCHCOMPLETE_STOP);
                         if (batch.getTerminationFlag()) {
-                            this.nodeStatistics.collectNodeStats(this.getChildren(), this.getClassName());
+                            this.getProcessingState().nodeStatistics.collectNodeStats(this.getChildren(), this.getClassName());
                             //this.nodeStatistics.dumpProperties(this.getClassName());
                         }
                     }
@@ -283,21 +295,21 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
                 }
             }
         } catch (BlockedException e) {
-            if(recordStats && this.context.getCollectNodeStatistics()) {
+            if(recordStats && this.getProcessingState().context.getCollectNodeStatistics()) {
                 // stop timer for this batch (BlockedException)
-                this.nodeStatistics.stopBatchTimer();
-                this.nodeStatistics.collectCumulativeNodeStats(null, RelationalNodeStatistics.BLOCKEDEXCEPTION_STOP);
+                this.getProcessingState().nodeStatistics.stopBatchTimer();
+                this.getProcessingState().nodeStatistics.collectCumulativeNodeStats(null, RelationalNodeStatistics.BLOCKEDEXCEPTION_STOP);
             }
             throw e;
         } catch (QueryProcessor.ExpiredTimeSliceException e) {
-        	if(recordStats && this.context.getCollectNodeStatistics()) {
-                this.nodeStatistics.stopBatchTimer();
+        	if(recordStats && this.getProcessingState().context.getCollectNodeStatistics()) {
+                this.getProcessingState().nodeStatistics.stopBatchTimer();
             }
             throw e;
         } catch (TeiidComponentException e) {
             // stop timer for this batch (MetaMatrixComponentException)
-            if(recordStats &&  this.context.getCollectNodeStatistics()) {
-                this.nodeStatistics.stopBatchTimer();
+            if(recordStats &&  this.getProcessingState().context.getCollectNodeStatistics()) {
+                this.getProcessingState().nodeStatistics.stopBatchTimer();
             }
             throw e;
         }
@@ -317,7 +329,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 	public final void close()
 		throws TeiidComponentException {
 
-        if (!this.closed) {
+        if (!this.getProcessingState().closed) {
         	closeDirect();
             for(int i=0; i<children.length; i++) {
                 if(children[i] != null) {
@@ -326,7 +338,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
                     break;
                 }
             }
-            this.closed = true;
+            this.getProcessingState().closed = true;
         }
     }
 	
@@ -339,7 +351,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
      * @return
      */
     public boolean isClosed() {
-        return this.closed;
+        return this.getProcessingState().closed;
     }
     
 	/**
@@ -487,9 +499,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 	public abstract Object clone();
 
 	protected void copy(RelationalNode source, RelationalNode target){
-		if(source.elements != null){
-			target.elements = new ArrayList(source.elements);
-		}
+		target.data = source.data;
         
         target.children = new RelationalNode[source.children.length];
         for(int i=0; i<source.children.length; i++) {
@@ -505,9 +515,9 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
     public PlanNode getDescriptionProperties() {
         // Default implementation - should be overridden
         PlanNode result = new PlanNode(getClassName());
-        result.addProperty(PROP_OUTPUT_COLS, AnalysisRecord.getOutputColumnProperties(this.elements));
-        if(this.context != null && this.context.getCollectNodeStatistics()) {
-            result.addProperty(PROP_NODE_STATS_LIST, this.nodeStatistics.getStatisticsList());
+        result.addProperty(PROP_OUTPUT_COLS, AnalysisRecord.getOutputColumnProperties(this.data.elements));
+        if(this.getProcessingState().context != null && this.getProcessingState().context.getCollectNodeStatistics()) {
+            result.addProperty(PROP_NODE_STATS_LIST, this.getProcessingState().nodeStatistics.getStatisticsList());
         }
         List<String> costEstimates = this.getCostEstimates();
         if(costEstimates != null) {
@@ -526,57 +536,64 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
      * @since 4.2
      */
     public RelationalNodeStatistics getNodeStatistics() {
-        return this.nodeStatistics;
+        return this.getProcessingState().nodeStatistics;
     }
     
     public void setEstimateNodeCardinality(Number estimateNodeCardinality) {
-        this.estimateNodeCardinality = estimateNodeCardinality;
+        this.data.estimateNodeCardinality = estimateNodeCardinality;
     }
     
     public void setEstimateNodeSetSize(Number setSizeEstimate) {
-        this.setSizeEstimate = setSizeEstimate;
+        this.data.setSizeEstimate = setSizeEstimate;
     }
     
     public void setEstimateDepAccessCardinality(Number depAccessEstimate) {
-        this.depAccessEstimate = depAccessEstimate;
+        this.data.depAccessEstimate = depAccessEstimate;
     }
     
     public void setEstimateDepJoinCost(Number estimateDepJoinCost){
-        this.estimateDepJoinCost = estimateDepJoinCost;
+        this.data.estimateDepJoinCost = estimateDepJoinCost;
     }
     
     public void setEstimateJoinCost(Number estimateJoinCost){
-        this.estimateJoinCost = estimateJoinCost;
+        this.data.estimateJoinCost = estimateJoinCost;
     }
     
     private List<String> getCostEstimates() {
         List<String> costEstimates = new ArrayList<String>();
-        if(this.estimateNodeCardinality != null) {
-            costEstimates.add("Estimated Node Cardinality: "+ this.estimateNodeCardinality); //$NON-NLS-1$
+        if(this.data.estimateNodeCardinality != null) {
+            costEstimates.add("Estimated Node Cardinality: "+ this.data.estimateNodeCardinality); //$NON-NLS-1$
         }
-        if(this.setSizeEstimate != null) {
-            costEstimates.add("Estimated Independent Node Produced Set Size: "+ this.setSizeEstimate); //$NON-NLS-1$
+        if(this.data.setSizeEstimate != null) {
+            costEstimates.add("Estimated Independent Node Produced Set Size: "+ this.data.setSizeEstimate); //$NON-NLS-1$
         }
-        if(this.depAccessEstimate != null) {
-            costEstimates.add("Estimated Dependent Access Cardinality: "+ this.depAccessEstimate); //$NON-NLS-1$
+        if(this.data.depAccessEstimate != null) {
+            costEstimates.add("Estimated Dependent Access Cardinality: "+ this.data.depAccessEstimate); //$NON-NLS-1$
         }
-        if(this.estimateDepJoinCost != null) {
-            costEstimates.add("Estimated Dependent Join Cost: "+ this.estimateDepJoinCost); //$NON-NLS-1$
+        if(this.data.estimateDepJoinCost != null) {
+            costEstimates.add("Estimated Dependent Join Cost: "+ this.data.estimateDepJoinCost); //$NON-NLS-1$
         }
-        if(this.estimateJoinCost != null) {
-            costEstimates.add("Estimated Join Cost: "+ this.estimateJoinCost); //$NON-NLS-1$
+        if(this.data.estimateJoinCost != null) {
+            costEstimates.add("Estimated Join Cost: "+ this.data.estimateJoinCost); //$NON-NLS-1$
         }
         if(costEstimates.size() <= 0) {
             return null;
         }
         return costEstimates;
     }
-
     
     /** 
      * @return Returns the estimateNodeCardinality.
      */
     public Number getEstimateNodeCardinality() {
-        return this.estimateNodeCardinality;
+        return this.data.estimateNodeCardinality;
     }
+
+	private ProcessingState getProcessingState() {
+		//construct lazily since not all tests call initialize
+		if (this.processingState == null) {
+			this.processingState = new ProcessingState();
+		}
+		return processingState;
+	}
 }

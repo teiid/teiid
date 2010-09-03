@@ -33,11 +33,16 @@ import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.ArgCheck;
+import org.teiid.dqp.internal.process.PreparedPlan;
+import org.teiid.dqp.internal.process.SessionAwareCache;
+import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.SecurityFunctionEvaluator;
 import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.relational.PlanToProcessConverter;
+import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -67,7 +72,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    
 	    private Serializable commandPayload;
 	    
-	    private String vdbName;
+	    private String vdbName = ""; //$NON-NLS-1$
 	    
 	    private int vdbVersion;
 	    
@@ -101,6 +106,11 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    private BufferManager bufferManager;
 	    
 	    private TempTableStore globalTables;
+	    
+	    private SessionAwareCache<PreparedPlan> planCache;
+	    
+	    private boolean resultSetCacheEnabled = true;
+	    
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -136,12 +146,22 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
              
     }
 
-    public CommandContext() {        
+    public CommandContext() {
+    }
+    
+    private CommandContext(GlobalState state) {
+    	this.globalState = state;
     }
     
     public int getDeterminismLevel() {
 		return globalState.determinismLevel;
 	}
+    
+    public int resetDeterminismLevel() {
+    	int result = globalState.determinismLevel;
+    	globalState.determinismLevel = 0;
+    	return result;
+    }
     
     public void setDeterminismLevel(int level) {
     	globalState.determinismLevel = Math.max(globalState.determinismLevel, level);
@@ -163,8 +183,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     }
 
     public CommandContext clone() {
-    	CommandContext clone = new CommandContext();
-    	clone.globalState = this.globalState;
+    	CommandContext clone = new CommandContext(this.globalState);
     	clone.variableContext = this.variableContext;
     	clone.tempTableStore = this.tempTableStore;
     	if (this.recursionStack != null) {
@@ -453,6 +472,43 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     
     public void setNonBlocking(boolean nonBlocking) {
 		this.nonBlocking = nonBlocking;
+	}
+    
+    public void setPreparedPlanCache(SessionAwareCache<PreparedPlan> cache) {
+    	this.globalState.planCache = cache;
+    }
+    
+    public PreparedPlan getPlan(String key) {
+    	if (this.globalState.planCache == null) {
+    		return null;
+    	}
+    	CacheID id = new CacheID(new ParseInfo(), key, getVdbName(), getVdbVersion(), getConnectionID(), getUserName());
+    	PreparedPlan pp = this.globalState.planCache.get(id);
+    	if (pp != null) {
+    		if (id.getSessionId() != null) {
+    			setDeterminismLevel(FunctionMethod.USER_DETERMINISTIC);
+    		} else if (id.getUserName() != null) {
+    			setDeterminismLevel(FunctionMethod.SESSION_DETERMINISTIC);
+    		}
+        	return pp;
+    	}
+    	return null;
+    }
+    
+    public void putPlan(String key, PreparedPlan plan, int determinismLevel) {
+    	if (this.globalState.planCache == null) {
+    		return;
+    	}
+    	CacheID id = new CacheID(new ParseInfo(), key, getVdbName(), getVdbVersion(), getConnectionID(), getUserName());
+    	this.globalState.planCache.put(id, determinismLevel, plan, null);
+    }
+    
+    public boolean isResultSetCacheEnabled() {
+		return globalState.resultSetCacheEnabled;
+	}
+    
+    public void setResultSetCacheEnabled(boolean resultSetCacheEnabled) {
+		this.globalState.resultSetCacheEnabled = resultSetCacheEnabled;
 	}
 	
 }

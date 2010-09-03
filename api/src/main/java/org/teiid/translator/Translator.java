@@ -37,4 +37,5 @@ import java.lang.annotation.Target;
  */
 public @interface Translator {
 	String name();
+	String description() default "";
 }

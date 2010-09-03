@@ -47,7 +47,7 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.LocateFunctionModifier;
 import org.teiid.translator.jdbc.ModFunctionModifier;
 
-@Translator(name="db2")
+@Translator(name="db2", description="A translator for IBM DB2 Database")
 public class DB2ExecutionFactory extends JDBCExecutionFactory {
 
 	private final class NullHandlingFormatModifier extends

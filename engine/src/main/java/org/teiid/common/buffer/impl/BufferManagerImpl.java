@@ -29,6 +29,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.lang.ref.Reference;
+import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -47,8 +48,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import javax.xml.transform.Source;
-
 import org.teiid.common.buffer.BatchManager;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.FileStore;
@@ -59,20 +58,13 @@ import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.BatchManager.ManagedBatch;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.InputStreamFactory;
-import org.teiid.core.types.SQLXMLImpl;
-import org.teiid.core.types.SourceTransform;
-import org.teiid.core.types.StandardXMLTranslator;
-import org.teiid.core.types.XMLType;
 import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.processor.relational.ListNestedSortComparator;
-import org.teiid.query.processor.xml.XMLUtil;
 
 
 /**
@@ -391,6 +383,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     
     private volatile int activeBatchColumnCount = 0;
     private Map<String, TupleBufferInfo> activeBatches = new LinkedHashMap<String, TupleBufferInfo>();
+	private Map<String, TupleReference> tupleBufferMap = new ConcurrentHashMap<String, TupleReference>();
+	private ReferenceQueue<TupleBuffer> tupleBufferQueue = new ReferenceQueue<TupleBuffer>();
+    
     
     private StorageManager diskMgr;
 
@@ -498,25 +493,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     
 	@Override
 	public void initialize() throws TeiidComponentException {
-		//TODO: remove me - connectors should be able to do this statefully
-		DataTypeManager.addSourceTransform(Source.class, new SourceTransform<Source, XMLType>() {
-			@Override
-			public XMLType transform(Source value) {
-				if (value instanceof InputStreamFactory) {
-					return new XMLType(new SQLXMLImpl((InputStreamFactory)value));
-				}
-				StandardXMLTranslator sxt = new StandardXMLTranslator(value);
-				SQLXMLImpl sqlxml;
-				try {
-					sqlxml = XMLUtil.saveToBufferManager(BufferManagerImpl.this, sxt);
-				} catch (TeiidComponentException e) {
-					throw new TeiidRuntimeException(e);
-				} catch (TeiidProcessingException e) {
-					throw new TeiidRuntimeException(e);
-				}
-				return new XMLType(sqlxml);
-			}
-		});
+		
 	}
 	
     @Override
@@ -614,5 +591,38 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 
 	public void shutdown() {
 	}
-    
+
+	@Override
+	public void addTupleBuffer(TupleBuffer tb) {
+		cleanDefunctTupleBuffers();
+		this.tupleBufferMap.put(tb.getId(), new TupleReference(tb, this.tupleBufferQueue));
+	}
+	
+	@Override
+	public TupleBuffer getTupleBuffer(String id) {		
+		cleanDefunctTupleBuffers();
+		Reference<TupleBuffer> r = this.tupleBufferMap.get(id);
+		if (r != null) {
+			return r.get();
+		}
+		return null;
+	}
+	
+	private void cleanDefunctTupleBuffers() {
+		while (true) {
+			Reference r = this.tupleBufferQueue.poll();
+			if (r == null) {
+				break;
+			}
+			this.tupleBufferMap.remove(((TupleReference)r).id);
+		}
+	}
+	
+	static class TupleReference extends WeakReference<TupleBuffer>{
+		String id;
+		public TupleReference(TupleBuffer referent, ReferenceQueue<? super TupleBuffer> q) {
+			super(referent, q);
+			id = referent.getId();
+		}
+	}
 }

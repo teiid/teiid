@@ -106,39 +106,23 @@ public class QueryParser {
             throw new QueryParserException(QueryPlugin.Util.getString("QueryParser.emptysql")); //$NON-NLS-1$
         }
         
-        try {
-	        Command result = parseCommandWithParser(sql, parseInfo);
-	        if (parseInfo.cacheHint != null) {
-		        result.setCacheHint(parseInfo.cacheHint);
-	        }
-			return result;
-        } catch (QueryParserException e) {
-            if(sql.startsWith(XML_OPEN_BRACKET) || sql.startsWith(XQUERY_DECLARE)) {
-            	throw new QueryParserException(e, QueryPlugin.Util.getString("QueryParser.xqueryCompilation", sql)); //$NON-NLS-1$
-            }
-        	throw e;
-        }
-	}
-
-    /**
-     * Parse the String sql into a Command using the MetaMatrix parser.
-     * @param sql to parse
-     * @return parsed Command
-     * @throws QueryParserException
-     */
-    private Command parseCommandWithParser(String sql, ParseInfo parseInfo) throws QueryParserException {
-        Command result = null;
+    	Command result = null;
         try{
             result = getSqlParser(sql).command(parseInfo);
-            
+            result.setCacheHint(SQLParserUtil.getQueryCacheOption(sql));
         } catch(ParseException pe) {
+        	if(sql.startsWith(XML_OPEN_BRACKET) || sql.startsWith(XQUERY_DECLARE)) {
+            	throw new QueryParserException(pe, QueryPlugin.Util.getString("QueryParser.xqueryCompilation", sql)); //$NON-NLS-1$
+            }
             throw convertParserException(pe);
-
         } catch(TokenMgrError tme) {
+        	if(sql.startsWith(XML_OPEN_BRACKET) || sql.startsWith(XQUERY_DECLARE)) {
+            	throw new QueryParserException(tme, QueryPlugin.Util.getString("QueryParser.xqueryCompilation", sql)); //$NON-NLS-1$
+            }
             handleTokenMgrError(tme);
         }
-        return result;        
-    }
+		return result;
+	}
 
     /**
      * Takes a SQL string representing an SQL criteria (i.e. just the WHERE

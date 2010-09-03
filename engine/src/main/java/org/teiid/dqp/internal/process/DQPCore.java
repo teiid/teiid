@@ -41,6 +41,7 @@ import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.Request.ProcessingState;
 import org.teiid.adminapi.Request.ThreadState;
+import org.teiid.adminapi.impl.CacheStatisticsMetadata;
 import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.cache.Cache;
@@ -338,8 +339,8 @@ public class DQPCore implements DQP {
 	    ClientState state = this.getClientState(workContext.getSessionId(), true);
 	    request.initialize(requestMsg, bufferManager,
 				dataTierMgr, transactionService, state.sessionTables,
-				workContext, this.useEntitlements);
-		
+				workContext, this.useEntitlements, this.prepPlanCache);
+		request.setResultSetCacheEnabled(this.rsCache != null);
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
         RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
     	logMMCommand(workItem, Event.NEW, null); 
@@ -554,6 +555,24 @@ public class DQPCore implements DQP {
 		}
 	}
 	
+	public CacheStatisticsMetadata getCacheStatistics(String cacheType) {
+		if (cacheType.equalsIgnoreCase(Admin.Cache.PREPARED_PLAN_CACHE.toString())) {
+			return buildCacheStats(Admin.Cache.PREPARED_PLAN_CACHE.toString(), this.prepPlanCache);
+		}
+		else if (cacheType.equalsIgnoreCase(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.toString())) {
+			return buildCacheStats(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.toString(), this.rsCache);
+		}
+		return null;
+	}
+	
+	private CacheStatisticsMetadata buildCacheStats(String name, SessionAwareCache cache) {
+		CacheStatisticsMetadata stats = new CacheStatisticsMetadata();
+		stats.setName(name);
+		stats.setHitRatio(cache.getRequestCount() == 0?0:((double)cache.getCacheHitCount()/cache.getRequestCount())*100);
+		stats.setTotalEntries(cache.getTotalCacheEntries());
+		stats.setRequestCount(cache.getRequestCount());
+		return stats;
+	}
 	
     public Collection<String> getCacheTypes(){
     	ArrayList<String> caches = new ArrayList<String>();
@@ -639,6 +658,9 @@ public class DQPCore implements DQP {
         this.exceptionOnMaxSourceRows = config.isExceptionOnMaxSourceRows();
         
         this.chunkSize = config.getLobChunkSizeInKB() * 1024;
+
+        //get buffer manager
+        this.bufferManager = bufferService.getBufferManager();
         
         //result set cache
         CacheConfiguration rsCacheConfig = config.getResultsetCacheConfig();
@@ -651,13 +673,11 @@ public class DQPCore implements DQP {
         prepPlanCache = new SessionAwareCache<PreparedPlan>(this.cacheFactory, Cache.Type.PREPAREDPLAN,  new CacheConfiguration(Policy.LRU, 60*60*8, config.getPreparedPlanCacheMaxCount()));
         prepPlanCache.setBufferManager(this.bufferManager);
 		
-        //get buffer manager
-        this.bufferManager = bufferService.getBufferManager();
-
+        
         this.processWorkerPool = new ThreadReuseExecutor(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, config.getMaxThreads());
         
         dataTierMgr = new TempTableDataManager(new DataTierManagerImpl(this,
-                                            this.bufferService), this.bufferManager, this.processWorkerPool); 
+                                            this.bufferService), this.bufferManager, this.processWorkerPool, this.rsCache); 
 	}
 	
 	public void setBufferService(BufferService service) {
@@ -809,6 +829,6 @@ public class DQPCore implements DQP {
 	
 	public void setCacheFactory(CacheFactory factory) {
 		this.cacheFactory = factory;
-	}	
+	}
 	
 }

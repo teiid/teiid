@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,7 @@ import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.util.ErrorMessageKeys;
@@ -256,7 +258,7 @@ public class StoredProcedure extends ProcedureContainer {
 	 * @return Ordered list of SingleElementSymbol
 	 */
 	public List getProjectedSymbols(){
-		List result = new ArrayList();
+		List<ElementSymbol> result = new ArrayList<ElementSymbol>();
 		//add result set columns
 		List rsColumns = getResultSetColumns();
 		result.addAll(rsColumns);
@@ -264,24 +266,15 @@ public class StoredProcedure extends ProcedureContainer {
 			return result;
 		}
 		//add out/inout parameter symbols
-		Iterator iter = mapOfParameters.values().iterator();
-		while(iter.hasNext()){
-			SPParameter parameter = (SPParameter)iter.next();
-			if(parameter.getParameterType() == ParameterInfo.INOUT || parameter.getParameterType() == ParameterInfo.OUT){
-                ElementSymbol symbol = parameter.getParameterSymbol();
-                symbol.setGroupSymbol(getGroup());
-	        	result.add(symbol);
-	        }
-		}
-		//add return parameter
-		iter = mapOfParameters.values().iterator();
-		while(iter.hasNext()){
-			SPParameter parameter = (SPParameter)iter.next();
+		for (SPParameter parameter : mapOfParameters.values()) {
 			if(parameter.getParameterType() == ParameterInfo.RETURN_VALUE){
                 ElementSymbol symbol = parameter.getParameterSymbol();
                 symbol.setGroupSymbol(getGroup());
-                result.add(symbol);
-	        	break;
+                result.add(0, symbol);
+	        } else if(parameter.getParameterType() == ParameterInfo.INOUT || parameter.getParameterType() == ParameterInfo.OUT){
+                ElementSymbol symbol = parameter.getParameterSymbol();
+                symbol.setGroupSymbol(getGroup());
+	        	result.add(symbol);
 	        }
 		}
 		return result;
@@ -300,7 +293,7 @@ public class StoredProcedure extends ProcedureContainer {
      */
     @Override
     public int hashCode() {
-        return this.toString().hashCode();
+        return this.getGroup().hashCode();
     }
 
     public boolean equals(Object obj) {
@@ -314,7 +307,11 @@ public class StoredProcedure extends ProcedureContainer {
     		return false;
 		}
     	
-		return this.toString().equals(obj.toString());
+    	StoredProcedure other = (StoredProcedure)obj;
+    	
+		return sameOptionAndHint(other) && 
+		this.getGroup().equals(other.getGroup()) &&
+		this.mapOfParameters.equals(other.mapOfParameters);
     }
 
     public void clearParameters(){
@@ -407,9 +404,9 @@ public class StoredProcedure extends ProcedureContainer {
 	 * @see org.teiid.query.sql.lang.ProcedureContainer#getProcedureParameters()
 	 * @since 5.0
 	 */
-	public Map getProcedureParameters() {
+	public LinkedHashMap<ElementSymbol, Expression> getProcedureParameters() {
 	    
-	    HashMap map = new HashMap();
+		LinkedHashMap<ElementSymbol, Expression> map = new LinkedHashMap<ElementSymbol, Expression>();
 	    for (Iterator iter = this.getInputParameters().iterator(); iter.hasNext();) {
 	        
 	        SPParameter element = (SPParameter)iter.next();

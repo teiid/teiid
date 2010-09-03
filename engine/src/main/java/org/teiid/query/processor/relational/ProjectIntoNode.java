@@ -72,6 +72,10 @@ public class ProjectIntoNode extends RelationalNode {
     private TupleBatch currentBatch;
         	
     private TupleSource tupleSource;
+
+    protected ProjectIntoNode() {
+        super();
+    }
     
     public ProjectIntoNode(int nodeID) {
         super(nodeID);
@@ -244,7 +248,7 @@ public class ProjectIntoNode extends RelationalNode {
     }
     
     public Object clone(){
-        ProjectIntoNode clonedNode = new ProjectIntoNode(super.getID());
+        ProjectIntoNode clonedNode = new ProjectIntoNode();
         super.copy(this, clonedNode);
 
         clonedNode.intoGroup = intoGroup;

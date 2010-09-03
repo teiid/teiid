@@ -38,7 +38,6 @@ import org.teiid.client.security.ILogon;
 import org.teiid.client.security.LogonException;
 import org.teiid.client.security.LogonResult;
 import org.teiid.client.util.ExceptionUtil;
-import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.dqp.internal.process.DQPWorkContext;
@@ -123,11 +122,11 @@ public class LocalServerConnection implements ServerConnection {
 	}
 
 	@Override
-	public ResultsFuture<?> isOpen() {
+	public boolean isOpen(long msToTest) {
 		if (shutdown) {
-			return null;
+			return false;
 		}
-		return ResultsFuture.NULL_FUTURE;
+		return true;
 	}
 
 	public void close() {
@@ -164,5 +163,10 @@ public class LocalServerConnection implements ServerConnection {
 	@Override
 	public boolean isSameInstance(ServerConnection conn) throws CommunicationException {
 		return (conn instanceof LocalServerConnection);
+	}
+	
+	@Override
+	public void cleanUp() {
+		
 	}
 }

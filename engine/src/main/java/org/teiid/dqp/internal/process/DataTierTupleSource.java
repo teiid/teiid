@@ -22,22 +22,41 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
+import javax.activation.DataSource;
+import javax.xml.transform.Source;
+
 import org.teiid.client.SourceWarning;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.BlobImpl;
+import org.teiid.core.types.BlobType;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.SQLXMLImpl;
+import org.teiid.core.types.StandardXMLTranslator;
+import org.teiid.core.types.Streamable;
+import org.teiid.core.types.TransformationException;
+import org.teiid.core.types.XMLType;
 import org.teiid.core.util.Assertion;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorWork;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
+import org.teiid.query.processor.xml.XMLUtil;
+import org.teiid.query.processor.xml.XMLUtil.FileStoreInputStreamFactory;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.TranslatorException;
 
@@ -58,6 +77,10 @@ public class DataTierTupleSource implements TupleSource {
     private final ConnectorWork cwi;
     private final DataTierManagerImpl dtm;
     
+    private List<Integer> convertToRuntimeType;
+    private boolean[] convertToDesiredRuntimeType;
+    private Class<?>[] schema;
+    
     // Data state
     private int index;
     private int rowsProcessed;
@@ -66,6 +89,7 @@ public class DataTierTupleSource implements TupleSource {
     private volatile boolean canceled;
     private boolean executed;
     private volatile boolean done;
+    private boolean explicitClose;
     
     private volatile ResultsFuture<AtomicResultsMessage> futureResult;
     private volatile boolean running;
@@ -75,6 +99,17 @@ public class DataTierTupleSource implements TupleSource {
         this.workItem = workItem;
         this.cwi = cwi;
         this.dtm = dtm;
+		List<SingleElementSymbol> symbols = this.aqr.getCommand().getProjectedSymbols();
+		this.schema = new Class[symbols.size()];
+        this.convertToDesiredRuntimeType = new boolean[symbols.size()];
+		this.convertToRuntimeType = new ArrayList<Integer>(symbols.size());
+		for (int i = 0; i < symbols.size(); i++) {
+			SingleElementSymbol symbol = symbols.get(i);
+			this.schema[i] = symbol.getType();
+			this.convertToDesiredRuntimeType[i] = true;
+			this.convertToRuntimeType.add(i);
+		}
+        
     	Assertion.isNull(workItem.getConnectorRequest(aqr.getAtomicRequestID()));
         workItem.addConnectorRequest(aqr.getAtomicRequestID(), this);
         if (!aqr.isTransactional()) {
@@ -96,9 +131,74 @@ public class DataTierTupleSource implements TupleSource {
 		});
 	}
 
-    public List getSchema() {
-        return this.aqr.getCommand().getProjectedSymbols();
-    }
+	private List correctTypes(List row) throws TransformationException {
+		for (int i = convertToRuntimeType.size() - 1; i >= 0; i--) {
+			int idx = convertToRuntimeType.get(i);
+			Object value = row.get(idx);
+			if (value != null) {
+				Object result = convertToRuntimeType(value, this.schema[idx]);
+				if (DataTypeManager.isLOB(result.getClass())) {
+					explicitClose = true;
+				}
+				if (value == result && !DataTypeManager.DefaultDataClasses.OBJECT.equals(this.schema[idx])) {
+					convertToRuntimeType.remove(i);
+					continue;
+				}
+				row.set(idx, result);
+			}
+		}
+		//TODO: add a proper intermediate schema
+		for (int i = 0; i < row.size(); i++) {
+			if (convertToDesiredRuntimeType[i]) {
+				Object value = row.get(i);
+				if (value != null) {
+					Object result = DataTypeManager.transformValue(value, value.getClass(), this.schema[i]);
+					if (value == result) {
+						convertToDesiredRuntimeType[i] = false;
+						continue;
+					}
+					row.set(i, result);
+				}
+			} else {
+				row.set(i, DataTypeManager.getCanonicalValue(row.get(i)));
+			}
+		}
+		return row;
+	}
+
+	private Object convertToRuntimeType(Object value, Class<?> desiredType) throws TransformationException {
+		if (value instanceof DataSource && (!(value instanceof Source) || desiredType != DataTypeManager.DefaultDataClasses.XML)) {
+			if (value instanceof InputStreamFactory) {
+				return new BlobType(new BlobImpl((InputStreamFactory)value));
+			}
+			FileStore fs = dtm.getBufferManager().createFileStore("bytes"); //$NON-NLS-1$
+			//TODO: guess at the encoding from the content type
+			FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
+			
+			try {
+				ObjectConverterUtil.write(fsisf.getOuputStream(), ((DataSource)value).getInputStream(), -1);
+			} catch (IOException e) {
+				throw new TransformationException(e, e.getMessage());
+			}
+			return new BlobType(new BlobImpl(fsisf));
+		}
+		if (value instanceof Source) {
+			if (value instanceof InputStreamFactory) {
+				return new XMLType(new SQLXMLImpl((InputStreamFactory)value));
+			}
+			StandardXMLTranslator sxt = new StandardXMLTranslator((Source)value);
+			SQLXMLImpl sqlxml;
+			try {
+				sqlxml = XMLUtil.saveToBufferManager(dtm.getBufferManager(), sxt);
+			} catch (TeiidComponentException e) {
+				throw new TeiidRuntimeException(e);
+			} catch (TeiidProcessingException e) {
+				throw new TeiidRuntimeException(e);
+			}
+			return new XMLType(sqlxml);
+		}
+		return DataTypeManager.convertToRuntimeType(value);
+	}
 
     public List<?> nextTuple() throws TeiidComponentException, TeiidProcessingException {
     	while (true) {
@@ -124,7 +224,7 @@ public class DataTierTupleSource implements TupleSource {
     			receiveResults(results);
     		}
 	    	if (index < arm.getResults().length) {
-	            return this.arm.getResults()[index++];
+	            return correctTypes(this.arm.getResults()[index++]);
 	        }
 	    	arm = null;
 	    	if (isDone()) {
@@ -247,7 +347,7 @@ public class DataTierTupleSource implements TupleSource {
      * @see TupleSource#closeSource()
      */
     public void closeSource() {
-    	if (this.arm == null || this.arm.supportsImplicitClose()) {
+    	if (!explicitClose) {
         	fullyCloseSource();
     	}
     }
@@ -274,6 +374,7 @@ public class DataTierTupleSource implements TupleSource {
 
 	void receiveResults(AtomicResultsMessage response) {
 		this.arm = response;
+		explicitClose |= !arm.supportsImplicitClose();
         rowsProcessed += response.getResults().length;
         index = 0;
 		if (response.getWarnings() != null) {

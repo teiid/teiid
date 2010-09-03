@@ -395,7 +395,11 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         		}
         		String key = match.group(1);
         		String value = match.group(2);
-        		JDBCURL.addNormalizedProperty(key, value, this.driverConnection.getExecutionProperties());
+        		if (ExecutionProperties.NEWINSTANCE.equalsIgnoreCase(key) && Boolean.valueOf(value)) {
+        			this.getMMConnection().getServerConnection().cleanUp();
+        		} else {
+        			JDBCURL.addNormalizedProperty(key, value, this.driverConnection.getExecutionProperties());
+        		}
         		this.updateCounts = new int[] {0};
         		return;
         	}

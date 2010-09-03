@@ -45,7 +45,6 @@ import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
-import org.teiid.core.util.FileUtils;
 import org.teiid.core.util.StringUtil;
 
 
@@ -182,11 +181,11 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		if (path.endsWith("/")) { //$NON-NLS-1$
 			path = path.substring(0, path.length() - 1);
 		}
-		String fileName = FileUtils.getBaseFileNameWithoutExtension(path);
-		String prefix = getName() + VERSION_DELIM;
-		if (StringUtil.startsWithIgnoreCase(fileName, prefix)) {
+		String fileName = StringUtil.getLastToken(path, "/"); //$NON-NLS-1$
+		String[] parts = fileName.split("\\."); //$NON-NLS-1$
+		if (parts[0].equalsIgnoreCase(getName()) && parts.length >= 3) {
 			try {
-				int fileVersion = Integer.parseInt(fileName.substring(prefix.length()));
+				int fileVersion = Integer.parseInt(parts[parts.length - 2]);
 				this.setVersion(fileVersion);
 			} catch (NumberFormatException e) {
 				

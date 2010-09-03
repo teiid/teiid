@@ -250,9 +250,12 @@ public class RealMetadataFactory {
 
         ColumnSet<Procedure> vsprs6 = createResultSet("mmspTest1.vsprs1", new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         ProcedureParameter vsp6p1 = createParameter("p1", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
-        QueryNode vspqn6 = new QueryNode("vsp6", "CREATE VIRTUAL PROCEDURE BEGIN SELECT 1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn6 = new QueryNode("vsp6", "CREATE VIRTUAL PROCEDURE BEGIN SELECT p1 as StringKey; END"); //$NON-NLS-1$ //$NON-NLS-2$
         Procedure vsp6 = createVirtualProcedure("MMSP6", mmspTest1, Arrays.asList(vsp6p1), vspqn6); //$NON-NLS-1$
         vsp6.setResultSet(vsprs6);
+        
+        createStoredProcedure("spRetOut", pm4, Arrays.asList(createParameter("ret", ParameterInfo.RETURN_VALUE, DataTypeManager.DefaultDataTypes.INTEGER),
+        		createParameter("x", ParameterInfo.OUT, DataTypeManager.DefaultDataTypes.INTEGER)), "spRetOut"); //$NON-NLS-1$ //$NON-NLS-2$
     	
     	return createTransformationMetadata(metadataStore, "bqt"); 
     }
@@ -343,6 +346,7 @@ public class RealMetadataFactory {
                                       new String[] { "x" }, //$NON-NLS-1$
                                       new String[] { DataTypeManager.DefaultDataTypes.STRING});
         
+        //covering index
         QueryNode vTrans3 = new QueryNode("VGroup3", "SELECT x, 'z' || substring(x, 2) as y FROM matsrc");         //$NON-NLS-1$ //$NON-NLS-2$
         Table vGroup3 = createVirtualGroup("VGroup3", virtModel, vTrans3); //$NON-NLS-1$
         vGroup3.setMaterialized(true);
@@ -350,7 +354,8 @@ public class RealMetadataFactory {
                                       new String[] { "x", "y" }, //$NON-NLS-1$
                                       new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
         
-        createKey("pk", vGroup3, vElements3.subList(0, 1));
+        createKey(KeyRecord.Type.Primary, "pk", vGroup3, vElements3.subList(0, 1));
+        createKey(KeyRecord.Type.Index, "idx", vGroup3, vElements3.subList(1, 2));
 
         QueryNode vTrans4 = new QueryNode("VGroup4", "/*+ cache(ttl:100) */ SELECT x FROM matsrc");         //$NON-NLS-1$ //$NON-NLS-2$
         Table vGroup4 = createVirtualGroup("VGroup4", virtModel, vTrans4); //$NON-NLS-1$
@@ -358,6 +363,35 @@ public class RealMetadataFactory {
         createElements(vGroup4,
                                       new String[] { "x" }, //$NON-NLS-1$
                                       new String[] { DataTypeManager.DefaultDataTypes.STRING});
+        
+        //non-covering index
+        QueryNode vTrans5 = new QueryNode("VGroup5", "SELECT x, 'z' || substring(x, 2) as y, 1 as z FROM matsrc");         //$NON-NLS-1$ //$NON-NLS-2$
+        Table vGroup5 = createVirtualGroup("VGroup5", virtModel, vTrans5); //$NON-NLS-1$
+        vGroup5.setMaterialized(true);
+        List<Column> vElements5 = createElements(vGroup5,
+                                      new String[] { "x", "y", "z" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER});
+        
+        createKey(KeyRecord.Type.Primary, "pk", vGroup5, vElements5.subList(0, 1));
+        createKey(KeyRecord.Type.Index, "idx", vGroup5, vElements5.subList(1, 2));
+        
+        //no pk
+        QueryNode vTrans6 = new QueryNode("VGroup6", "SELECT x, 'z' || substring(x, 2) as y FROM matsrc");         //$NON-NLS-1$ //$NON-NLS-2$
+        Table vGroup6 = createVirtualGroup("VGroup6", virtModel, vTrans6); //$NON-NLS-1$
+        vGroup6.setMaterialized(true);
+        List<Column> vElements6 = createElements(vGroup6,
+                                      new String[] { "x", "y" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
+        
+        createKey(KeyRecord.Type.Index, "idx", vGroup6, vElements6.subList(1, 2));
+        
+        Schema sp = createVirtualModel("sp", metadataStore); //$NON-NLS-1$
+        ColumnSet<Procedure> rs = createResultSet("sp1.vsprs1", new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
+        ProcedureParameter param = createParameter("param1", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
+        param.setNullType(NullType.Nullable);
+        QueryNode sp1qn = new QueryNode("sp1", "/*+ cache */ CREATE VIRTUAL PROCEDURE BEGIN SELECT x as StringKey from matsrc where x = param1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        Procedure vsp5 = createVirtualProcedure("sp1", sp, Arrays.asList(param), sp1qn); //$NON-NLS-1$
+        vsp5.setResultSet(rs);
 
         return createTransformationMetadata(metadataStore, "");
     }
@@ -370,13 +404,22 @@ public class RealMetadataFactory {
 	 * metadata IDs)
 	 * @return key metadata object
 	 */
-	public static KeyRecord createKey(String name, Table group, List<Column> elements) {
-		KeyRecord key = new KeyRecord(org.teiid.metadata.KeyRecord.Type.Primary);
+	public static KeyRecord createKey(KeyRecord.Type type, String name, Table group, List<Column> elements) {
+		KeyRecord key = new KeyRecord(type);
 		key.setName(name);
 		for (Column column : elements) {
 			key.addColumn(column);
 		}
-		group.setPrimaryKey(key);
+		switch (type) {
+		case Primary:
+			group.setPrimaryKey(key);
+			break;
+		case Index:
+			group.getIndexes().add(key);
+			break;
+		default:
+			throw new AssertionError("TODO");
+		}
 		return key;
 	}
 

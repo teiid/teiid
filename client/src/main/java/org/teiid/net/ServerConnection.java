@@ -23,7 +23,6 @@
 package org.teiid.net;
 
 import org.teiid.client.security.LogonResult;
-import org.teiid.client.util.ResultsFuture;
 
 public interface ServerConnection {
 	
@@ -33,10 +32,12 @@ public interface ServerConnection {
 	
 	void close();
 	
-	ResultsFuture<?> isOpen();
+	boolean isOpen(long msToTest);
 	
 	LogonResult getLogonResult();
 	
 	boolean isSameInstance(ServerConnection conn) throws CommunicationException;
+	
+	void cleanUp();
 	
 }

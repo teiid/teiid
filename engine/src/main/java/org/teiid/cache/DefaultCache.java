@@ -139,7 +139,11 @@ public class DefaultCache<K, V> implements Cache<K, V>, Serializable {
 		if (ttl < 0) {
 			return Long.MAX_VALUE;
 		}
-		return System.currentTimeMillis() + ttl;
+		long result = System.currentTimeMillis() + ttl;
+		if (result < ttl) {
+			result = Long.MAX_VALUE;
+		}
+		return result;
 	}
 	
 	public V put(K key, V value, Long timeToLive) {

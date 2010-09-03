@@ -42,4 +42,5 @@ public interface DQPManagement {
     void mergeVDBs(String sourceVDBName, int sourceVDBVersion, String targetVDBName, int targetVDBVersion) throws AdminException;
     List<RequestMetadata> getLongRunningRequests();
     List<RequestMetadata> getRequestsUsingVDB(String vdbName, int vdbVersion) throws AdminException;
+    CacheStatisticsMetadata getCacheStatistics(String cacheType);
 }

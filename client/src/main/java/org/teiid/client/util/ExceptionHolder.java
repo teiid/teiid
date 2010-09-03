@@ -173,14 +173,14 @@ public class ExceptionHolder implements Externalizable {
 		}
 	}
 	
-	private Throwable readFromByteArray(byte[] contents) throws IOException {
+	private Throwable readFromByteArray(byte[] contents) {
 		// only for top level we would have the contents as not null.
 		if (contents != null) {
 			ByteArrayInputStream bais = new ByteArrayInputStream(contents);
-			ObjectInputStream ois = new ObjectInputStreamWithClassloader(bais, ExceptionHolder.class.getClassLoader());
 			try {
+				ObjectInputStream ois = new ObjectInputStreamWithClassloader(bais, ExceptionHolder.class.getClassLoader());
 				return (Throwable)ois.readObject();
-			} catch (ClassNotFoundException e) {
+			} catch (Exception e) {
 				// 
 			}
 		}

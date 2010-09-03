@@ -53,21 +53,32 @@
    <section>
      <title>Deploying VDB Dependencies</title>
         <para>Apart from deploying the VDB, the user is also responsible for providing all the necessary 
-        dependent libraries, configuration for creating the data sources that are needed by the Schemas (models) 
-        defined in "META-INF/vdb.xml" file inside your VDB.  This section shows you a sample VDB configuration needed.</para>
+        dependent libraries, configuration for creating the data sources that are needed by the models (schemas) 
+        defined in "META-INF/vdb.xml" file inside your VDB.  For example, if you are trying to integrate Oracle and File sources in your VDB, then you are responsible for 
+        providing the JDBC driver for the Oracle source and any necessary documents and configuration that are needed by the File Translator.</para>
         
-        <para>For example, if you are trying to integrate Oracle and File sources in your VDB, then you are responsible for 
-        providing the JDBC driver for the Oracle source, and any necessary documents and configuration that are needed by the File Translator.</para> 
+        <para>Data source instances may be used by only one VDB, or may be shared with as many VDBs or other applications as makes since for your deployments.  
+        Consider sharing connections to sources that have heavy-weight and resource constrained connections.</para>
         
-        <para>Once the VDB and its dependencies are deployed, then client applications can connect using the JDBC API.  If there are any errors in the deployment, a connection attempt will not be successful and a message will be logged. You can use the
-   		<link linkend="admin-console">admin-console</link> tool or check the log files for errors and correct them before proceeding.</para>    
+        <para>With the exception of JDBC, each of the data sources supported by has a corresponding .rar (zip format) file in &lt;jboss-install&gt;/server/&lt;profile&gt;/deploy/teiid/connectors.  
+        If not using JOPR or other tooling to create your -ds.xml files, you can consult the .rar files META-INF/ra.xml for a full description of how the source can be configured. 
+        </para>
+        
+        <para>Some -ds.xml files may contain passwords or other sensitive information.  
+        See the WIKI article <ulink url="http://community.jboss.org/wiki/EncryptingDataSourcePasswords">EncryptingDataSourcePasswords</ulink> to not store passwords in plain text.</para> 
+        
+        <para>Once the VDB and its dependencies are deployed, then client applications can connect using the JDBC API.  If there are any errors in the deployment, a connection attempt will not be successful and a message will be logged. 
+        You can use the <link linkend="admin-console">admin-console</link> tool or check the log files for errors and correct them before proceeding.</para>    
         
         <section>
-            <title>Creating An Oracle Data Source</title>
+            <title>JDBC Data Sources</title>
+            <para>The following is an example highlighting configuring an Oracle data source.  The process is nearly identical regardless of the vendor.  
+            Typically only the client jar and the setting in the -ds.xml file change.</para>
+            <para>There are templates for all the data sources in the "&lt;jboss-install&gt;/docs/examples/jca" directory.</para>
             <orderedlist>
                 <listitem> <para>Copy the Oracle JDBC JAR file into "&lt;jboss-install&gt;/server/&lt;profile&gt;/lib" directory </para> </listitem>
                 <listitem> <para>Create a "data source" to the Oracle instance in the JBoss container. This typically 
-                done by creating "xxx-ds.xml" file and copying this file to the "&lt;jboss-install&gt;/server/%lt;profile&gt;/deploy" 
+                done by creating "xxx-ds.xml" file and copying this file to the "&lt;jboss-install&gt;/server/&lt;profile&gt;/deploy" 
                 directory. The following shows a "-ds.xml" file template for Oracle. You can also use admin-console to create this data source. </para>
                 <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
 <datasources>
@@ -99,26 +110,206 @@
 </datasources>]]></programlisting>     
                 </listitem>
             </orderedlist>
-            <para>There are templates for all the data sources in the "&lt;jboss-install&gt;/docs/examples/jca" directory.</para>                           
             
         </section>        
         <section>
-            <title>Creating A File Data Source</title>
-            <para>File data source uses Teiid specific JCA connector. You  need to create "-ds.xml" file and copy it to the 
-            "&lt;jboss-install&gt;/server/%lt;profile&gt;/deploy" directory.</para>
+            <title>File Data Sources</title>
+            <para>File data sources use a Teiid specific JCA connector. You need to create "-ds.xml" file and copy it to the 
+            "&lt;jboss-install&gt;/server/&lt;profile&gt;/deploy" directory.</para>
             <example>
             	<title>Template for creating a File based data source</title>
                 <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
 <connection-factories>
    <no-tx-connection-factory>
       <jndi-name>text-source</jndi-name>
-      <rar-name>connector-file-{version}.rar</rar-name>
+      <rar-name>teiid-connector-file.rar</rar-name>
       <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>      
-      <config-property name="ParentDirectory" type="java.lang.String">path-to-the-directory-of-data-file</config-property>
-      <max-pool-size>1</max-pool-size>
-    </no-tx-connection-factory>
+      <config-property name="ParentDirectory">path-to-the-directory-of-data-file</config-property>
+   </no-tx-connection-factory>
 </connection-factories>]]></programlisting></example>             
         </section>
+        
+        <section>
+        	<title>Web Service Data Sources</title>
+        	<para>Web service data sources use a Teiid specific JCA connector. You need to create "-ds.xml" file and copy it to the 
+            "&lt;jboss-install&gt;/server/&lt;profile&gt;/deploy" directory.</para>
+            <example>
+            	<title>Template for creating a web service based data source</title>
+                <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<connection-factories>
+   <no-tx-connection-factory>
+      <jndi-name>somewhere-ws-source</jndi-name>
+      <rar-name>teiid-connector-ws.rar</rar-name>
+      <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>      
+      <config-property name="EndPoint">http://somewhere.com</config-property>
+   </no-tx-connection-factory>
+</connection-factories>]]></programlisting></example>
+			<section>
+				<title>CXF Configuration</title>
+				<para>Each web service data source may choose a particular CXF config file and port configuration. 
+				The <code>ConfigFile</code> config property specifies the Spring XML configuration 
+				file for the CXF Bus and port configuration to be used by connections.  
+				If no config file is specified then the system default configuration will be used.</para>
+				
+				<para>Only 1 port configuration can be used by this data source.  You may explicitly set the local name of the port QName to use via the
+				 <code>ConfigName</code> property.  The namespace URI for the QName in your config file should be http://teiid.org.  
+				 See the sections on WS-Security, Logging, etc. for examples of using the CXF configuration file.</para>
+				 
+				<para>See the <ulink url="http://cxf.apache.org/docs/">CXF documentation</ulink> for all possible configuration options.</para>
+				<note><para>The CXF configuration is currently only applicable to non-binary web service calls.</para></note>
+			</section>
+			<section>
+				<title>WS-Security</title>
+				<para>To enable the use of WS-Security, the <code>SecurityType</code> should be set to WSSecurity.
+				At this time Teiid does not expect a WSDL to describe the service being used.  
+				Thus a Spring XML configuration file is not only required, it must instead contain all of the relevant policy configuration.  
+				And just as with the general configuration, each data source is limited to specifing only a single port configration to use.</para>
+				 <example>
+            	<title>Example WS-Security enabled data source</title>
+                <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<connection-factories>
+   <no-tx-connection-factory>
+      <jndi-name>somewhere-ws-source</jndi-name>
+      <rar-name>teiid-connector-ws.rar</rar-name>
+      <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>      
+      <config-property name="EndPoint">http://somewhere.com</config-property>
+      <config-property name="ConfigFile">${jboss.server.home.dir}/server/default/conf/xxx-jbossws-cxf.xml</config-property>
+      <config-property name="ConfigName">port_x</config-property>
+      <config-property name="SecurityType">WSSecurity</config-property>
+   </no-tx-connection-factory>
+</connection-factories>]]></programlisting>
+<para>Corresponding xxx-jbossws-cxf.xml file that adds a timestamp to the SOAP header</para>
+<programlisting><![CDATA[<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:jaxws="http://cxf.apache.org/jaxws"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+          http://www.springframework.org/schema/beans/spring-beans.xsd
+          http://cxf.apache.org/jaxws
+          http://cxf.apache.org/schemas/jaxws.xsd">
+
+    <jaxws:client name="{http://teiid.org}port_x" 
+        createdFromAPI="true">
+        <jaxws:outInterceptors>
+            <bean class="org.apache.cxf.binding.soap.saaj.SAAJOutInterceptor"/>
+            <ref bean="Timestamp_Request"/>
+        </jaxws:outInterceptors>
+    </jaxws:client>
+
+    <bean 
+        class="org.apache.cxf.ws.security.wss4j.WSS4JOutInterceptor"
+        id="Timestamp_Request">
+        <constructor-arg>
+            <map>
+                <entry key="action" value="Timestamp"/>
+            <map>
+        </constructor-arg>
+    </bean>
+    
+</beans>]]></programlisting>
+	<para>Note that the client port configuration is matched to the data source instance by the QName {http://teiid.org}port_x.  
+	The configuration may contain other port confiruations with different local names.</para>
+</example>
+	<para>For more information on configuring CXF interceptors, 
+	please consult the <ulink url="https://cwiki.apache.org/CXF20DOC/ws-security.html">CXF documentation</ulink> or 
+	the <ulink url="http://community.jboss.org/wiki/JBossWS-StackCXFUserGuide#WSSecurity">JBossWS-CXF documentation</ulink>.</para>
+			</section>
+			<section>
+				<title>Logging</title>
+				<para>The CXF config property may also be used to control the logging of requests and responses for specific or all ports.  Logging, when enabled, will be performed at an INFO level to the org.apache.cxf.interceptor context.</para>
+				<example>
+            	<title>Example logging data source</title>
+                <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<connection-factories>
+   <no-tx-connection-factory>
+      <jndi-name>somewhere-ws-source</jndi-name>
+      <rar-name>teiid-connector-ws.rar</rar-name>
+      <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>      
+      <config-property name="EndPoint">http://somewhere.com</config-property>
+      <config-property name="ConfigFile">${jboss.server.home.dir}/server/default/conf/xxx-jbossws-cxf.xml</config-property>
+      <config-property name="ConfigName">port_y</config-property>
+   </no-tx-connection-factory>
+</connection-factories>]]></programlisting>
+<para>Corresponding xxx-jbossws-cxf.xml</para>
+<programlisting><![CDATA[<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:jaxws="http://cxf.apache.org/jaxws"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+          http://www.springframework.org/schema/beans/spring-beans.xsd
+          http://cxf.apache.org/jaxws
+          http://cxf.apache.org/schemas/jaxws.xsd">
+
+    <jaxws:client name="{http://teiid.org}port_y" 
+        createdFromAPI="true">
+        <jaxws:features>
+            <bean class="org.apache.cxf.feature.LoggingFeature"/>
+        </jaxws:features>
+    </jaxws:client>
+    
+</beans>]]></programlisting>
+</example>
+			</section>
+			<section>
+				<title>Transport Settings</title>
+				<para>The CXF config property may also be used to control low level aspects of the HTTP transport.  See the <ulink url="http://cxf.apache.org/docs/client-http-transport-including-ssl-support.html">CXF documentation</ulink> for all possible options.</para>
+				<example>
+            	<title>Example Disabling Hostname Verification</title>
+<programlisting><![CDATA[<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:http-conf="http://cxf.apache.org/transports/http/configuration"
+       xsi:schemaLocation="http://cxf.apache.org/transports/http/configuration
+                           http://cxf.apache.org/schemas/configuration/http-conf.xsd
+                           http://www.springframework.org/schema/beans
+                             http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+  <http-conf:conduit name="{http://teiid.org}port_z.http-conduit">
+     <!-- WARNING ! disableCNcheck=true should NOT be used in production -->
+     <http-conf:tlsClientParameters disableCNcheck="true" />
+
+  </http-conf:conduit>
+</beans>
+]]></programlisting>
+</example>
+			</section>
+        </section>
+        
+        <section>
+        	<title>Salesforce Data Sources</title>
+        	<para>Salesforce data sources use a Teiid specific JCA connector. You need to create "-ds.xml" file and copy it to the 
+            "&lt;jboss-install&gt;/server/&lt;profile&gt;/deploy" directory.</para>
+            <example>
+            	<title>Template for creating a Salesforce based data source</title>
+                <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<connection-factories>
+   <no-tx-connection-factory>
+      <jndi-name>sf-source</jndi-name>
+      <rar-name>teiid-connector-salesforce.rar</rar-name>
+      <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>      
+      <config-property name="URL">https://test.salesforce.com/services/Soap/u/10.0</config-property>
+      <config-property name="username">username</config-property>
+      <config-property name="password">password</config-property>
+   </no-tx-connection-factory>
+</connection-factories>]]></programlisting></example>
+        </section>
+        
+        <section>
+        	<title>LDAP Data Sources</title>
+        	<para>LDAP data sources use a Teiid specific JCA connector. You need to create "-ds.xml" file and copy it to the 
+            "&lt;jboss-install&gt;/server/&lt;profile&gt;/deploy" directory.</para>
+            <example>
+            	<title>Template for creating an LDAP based data source</title>
+                <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<connection-factories>
+   <no-tx-connection-factory>
+      <jndi-name>ldap-source</jndi-name>
+      <rar-name>teiid-connector-ldap.rar</rar-name>
+      <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>      
+      <config-property name="LdapAdminUserDN">cn=x,ou=y,dc=z</config-property>
+      <config-property name="LdapAdminUserPassword">password</config-property>
+      <config-property name="LdapUrl">ldap://ldapServer:389</config-property>
+   </no-tx-connection-factory>
+</connection-factories>]]></programlisting></example>
+        </section>
+        
    </section>
    
    <section id="vdb-versioning">

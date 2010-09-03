@@ -33,8 +33,6 @@ import org.teiid.core.TeiidRuntimeException;
 
 @ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class SocketConfiguration {
-	private static final String ANY = "0.0.0.0"; //$NON-NLS-1$
-	private static final String JBOSS_SERVER_BIND_ADDRESS = "jboss.bind.address";
 	
 	private int outputBufferSize;
 	private int inputBufferSize;
@@ -72,13 +70,8 @@ public class SocketConfiguration {
  	
 	private void resolveHostName() {
 		try {
-			// if host name not specified try to get it from the JBoss configuration
-			if (this.hostName == null) {
-				this.hostName = System.getProperty(JBOSS_SERVER_BIND_ADDRESS);
-			}
-			
 			// if not defined then see if can bind to local address; if supplied resolve it by name
-			if (this.hostName == null || ANY.equals(this.hostName)) {
+			if (this.hostName == null) {
 				this.hostName = InetAddress.getLocalHost().getHostName();
 			}
 		} catch (UnknownHostException e) {
@@ -117,6 +110,7 @@ public class SocketConfiguration {
 
 	public InetAddress getHostAddress() {
 		resolveHostName();
+		
 		if (this.hostAddress != null) {
 			return hostAddress;
 		}

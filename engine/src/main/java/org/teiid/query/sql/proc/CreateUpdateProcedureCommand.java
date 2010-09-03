@@ -32,6 +32,7 @@ import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
@@ -185,9 +186,11 @@ public class CreateUpdateProcedureCommand extends Command {
     	if(! (obj instanceof CreateUpdateProcedureCommand)) {
     		return false;
 		}
+    	
+    	CreateUpdateProcedureCommand other = (CreateUpdateProcedureCommand)obj;
         
         // Compare the block
-        return EquivalenceUtil.areEqual(getBlock(), ((CreateUpdateProcedureCommand)obj).getBlock());
+        return sameOptionAndHint(other) && EquivalenceUtil.areEqual(getBlock(), other.getBlock());
     } 
 
     /**
@@ -279,7 +282,7 @@ public class CreateUpdateProcedureCommand extends Command {
 		if(isUpdateProcedure()){
 			return false;
 		}
-		return true;
+		return Query.areResultsCachable(getProjectedSymbols());
 	}
     
     public GroupSymbol getVirtualGroup() {

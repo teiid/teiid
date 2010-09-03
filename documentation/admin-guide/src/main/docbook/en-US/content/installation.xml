@@ -47,6 +47,35 @@
      </orderedlist>
    </section>
    <section>
+     <title>CXF Installation</title>
+     <para>The usage of CXF is expected for utilizing Salesforce and Web Services connectivity through Teiid.  If you do not plan on integrating either of these features, then you may leave JBoss AS with the default "native" web services stack.</para>
+     <orderedlist>
+     	<listitem>
+     		<para>Download <ulink url="http://www.jboss.org/jbossws/downloads/">JBossWS-CXF 3.1.2</ulink> and unzip to a temporary location.</para>	
+     	</listitem>
+     	<listitem>
+     		<para>From the jbossws-cxf-bin-dist directory, save the ant.properties.example file as ant.properties and change the values for jboss510.home, jbossws.integration.target, jboss.server.instance, jboss.bind.address accordingly:
+     		<programlisting>
+...
+jboss510.home=&lt;jboss-install&gt;
+
+# The JBoss server under test. This can be [jboss500|jboss501|jboss510|jboss600]
+jbossws.integration.target=jboss510
+
+# The JBoss settings
+jboss.server.instance=&lt;profile&gt;
+jboss.bind.address=&lt;bind address&gt;
+</programlisting> The jboss-install location should be the root directory of your AS installation, profile (typically default) should indicate the profile selected for your Teiid installation, and the bind address should be the bind address used when launching JBoss AS (use the value localhost if you do not set the bind address when launching JBoss AS).</para>	
+     	</listitem>
+     	<listitem>
+     		<para>From the jbossws-cxf-bin-dist directory, install JBossWS-CXF by running the ANT build script: <programlisting>$ant deploy-jboss510</programlisting></para>
+     	</listitem>
+     	<listitem>
+     		<para>Optionally run tests to verify that there are no errors with the installation: <programlisting>$ant tests</programlisting></para>
+     	</listitem>
+     </orderedlist>
+   </section>
+   <section>
      <title>Directory Structure Explained</title>
      <example>
      <title>Directory Structure</title>

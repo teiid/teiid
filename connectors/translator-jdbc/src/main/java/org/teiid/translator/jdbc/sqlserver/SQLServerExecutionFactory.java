@@ -41,7 +41,7 @@ import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
 /**
  * Updated to assume the use of the DataDirect, 2005 driver, or later.
  */
-@Translator(name="sqlserver")
+@Translator(name="sqlserver", description="A translator for Microsoft SQL Server Database")
 public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 	
 	public static final String V_2005 = "2005"; //$NON-NLS-1$

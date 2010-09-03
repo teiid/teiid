@@ -82,7 +82,7 @@ public class AdminApiServerDiscovery extends UrlServerDiscovery {
 					&& (info.lastDiscoveryTime < System.currentTimeMillis() - DISCOVERY_TIMEOUT || info.knownHosts.isEmpty())) {
 				Admin serverAdmin = instance.getService(Admin.class);
 				try {
-					Collection<ProcessObject> processes = serverAdmin.getProcesses("*");
+					Collection<ProcessObject> processes = serverAdmin.getProcesses("*"); //$NON-NLS-1$
 					info.knownHosts.clear();
 					for (ProcessObject processObject : processes) {
 						if (!processObject.isEnabled() || !processObject.isRunning()) {

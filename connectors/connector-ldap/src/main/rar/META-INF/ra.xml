@@ -38,7 +38,7 @@
 
       <outbound-resourceadapter>
          <connection-definition>
-            <managedconnectionfactory-class>org.teiid.resource.cci.ldap.LDAPManagedConnectionFactory</managedconnectionfactory-class>
+            <managedconnectionfactory-class>org.teiid.resource.adapter.ldap.LDAPManagedConnectionFactory</managedconnectionfactory-class>
 
             <config-property>
                <description>{$display:"Ldap Admin User DN",$description:"User DN for the LDAP admin account.",$required:"true"}</description>

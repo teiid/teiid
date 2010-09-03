@@ -23,6 +23,7 @@
 package org.teiid.query.sql.lang;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -373,12 +374,10 @@ public class Query extends QueryCommand {
      * @return True if equal
      */
     public boolean equals(Object obj) {
-    	// Quick same object test
     	if(this == obj) {
     		return true;
 		}
 
-		// Quick fail tests		
     	if(!(obj instanceof Query)) {
     		return false;
 		}
@@ -392,8 +391,8 @@ public class Query extends QueryCommand {
                EquivalenceUtil.areEqual(getHaving(), other.getHaving()) &&
                EquivalenceUtil.areEqual(getOrderBy(), other.getOrderBy()) &&
                EquivalenceUtil.areEqual(getLimit(), other.getLimit()) &&
-               EquivalenceUtil.areEqual(getOption(), other.getOption()) &&
-               getIsXML() == other.getIsXML();
+               getIsXML() == other.getIsXML() &&
+               sameOptionAndHint(other);
     }
 
     /**
@@ -426,9 +425,8 @@ public class Query extends QueryCommand {
 		return areResultsCachable(projectedSymbols);
 	}
 
-	static boolean areResultsCachable(List projectedSymbols) {
-		for(int i=0; i<projectedSymbols.size(); i++){
-			SingleElementSymbol projectedSymbol = (SingleElementSymbol)projectedSymbols.get(i);
+	public static boolean areResultsCachable(Collection<? extends SingleElementSymbol> projectedSymbols) {
+		for (SingleElementSymbol projectedSymbol : projectedSymbols) {
 			if(DataTypeManager.isLOB(projectedSymbol.getType()) || projectedSymbol.getType() == DataTypeManager.DefaultDataClasses.OBJECT) {
 				return false;
 			}

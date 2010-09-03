@@ -35,7 +35,6 @@ import org.teiid.adminapi.ProcessObject;
 import org.teiid.client.security.LogonResult;
 import org.teiid.net.HostInfo;
 import org.teiid.net.TeiidURL;
-import org.teiid.net.socket.SocketServerInstance;
 
 
 public class TestAdminApiServerDiscovery extends TestCase {

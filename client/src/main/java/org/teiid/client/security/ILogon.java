@@ -21,11 +21,13 @@
  */
 
 package org.teiid.client.security;
+import java.util.Collection;
 import java.util.Properties;
 
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.net.CommunicationException;
 
 
 /**
@@ -33,7 +35,7 @@ import org.teiid.core.TeiidComponentException;
  */
 public interface ILogon {
     LogonResult logon(Properties connectionProperties)
-    throws LogonException, TeiidComponentException;
+    throws LogonException, TeiidComponentException, CommunicationException;
    
    /**
     * Ping the server to see if the client-server connection is alive.
@@ -41,8 +43,10 @@ public interface ILogon {
     * @throws ComponentNotFoundException if can't find the Session service.
     */
    ResultsFuture<?> ping()
-       throws InvalidSessionException, TeiidComponentException;
+       throws InvalidSessionException, TeiidComponentException, CommunicationException;
    
+   ResultsFuture<?> ping(Collection<String> sessions)
+   		throws TeiidComponentException, CommunicationException;
    
    /**
     * Log off the specified session.
@@ -51,5 +55,5 @@ public interface ILogon {
     */
    ResultsFuture<?> logoff() throws InvalidSessionException, TeiidComponentException;
    
-   void assertIdentity(SessionToken sessionId) throws InvalidSessionException, TeiidComponentException;
+   void assertIdentity(SessionToken sessionId) throws InvalidSessionException, TeiidComponentException, CommunicationException;
 }

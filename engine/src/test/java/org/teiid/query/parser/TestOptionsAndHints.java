@@ -43,11 +43,14 @@ import org.teiid.query.sql.lang.JoinPredicate;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.Option;
 import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.Select;
+import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
@@ -64,6 +67,7 @@ import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 
+@SuppressWarnings("nls")
 public class TestOptionsAndHints {
     
     /*+* Select a From db.g1 MAKENOTDEP, db.g2 MAKENOTDEP WHERE a = b */
@@ -1074,9 +1078,55 @@ public class TestOptionsAndHints {
         UnaryFromClause ufc = new UnaryFromClause();
         from.addClause(ufc);
         ufc.setGroup(new GroupSymbol("t1")); //$NON-NLS-1$
-        query.setFrom(from);           
-        query.setCacheHint(new CacheHint());
+        query.setFrom(from);
+        CacheHint hint = new CacheHint();
+        hint.setPrefersMemory(true);
+        hint.setTtl(Long.valueOf(2000));
+        query.setCacheHint(hint);
         TestParser.helpTest(sql, "/*+ cache(pref_mem ttl:2000) */ SELECT * FROM t1", query);         //$NON-NLS-1$
+    }
+    
+    @Test public void testCacheHintUnion() {
+        String sql = "/*+ cache( pref_mem) */ SELECT * FROM t1 union select * from t2"; //$NON-NLS-1$
+        
+        Query query = new Query();
+        Select select = new Select();
+        select.addSymbol(new AllSymbol());
+        query.setSelect(select);
+        From from = new From();
+        UnaryFromClause ufc = new UnaryFromClause();
+        from.addClause(ufc);
+        ufc.setGroup(new GroupSymbol("t1")); //$NON-NLS-1$
+        query.setFrom(from);
+        
+        Query query1 = new Query();
+        select = new Select();
+        select.addSymbol(new AllSymbol());
+        query1.setSelect(select);
+        from = new From();
+        ufc = new UnaryFromClause();
+        from.addClause(ufc);
+        ufc.setGroup(new GroupSymbol("t2")); //$NON-NLS-1$
+        query1.setFrom(from);
+        
+        SetQuery sq = new SetQuery(Operation.UNION, false, query, query1);
+        CacheHint hint = new CacheHint();
+        hint.setPrefersMemory(true);
+        sq.setCacheHint(hint);
+        TestParser.helpTest(sql, "/*+ cache(pref_mem) */ SELECT * FROM t1 UNION SELECT * FROM t2", sq);         //$NON-NLS-1$
+    }
+    
+    @Test public void testCacheHintCallableStatement() {
+        String sql = "/*+ cache */ { ? = call proc() }"; //$NON-NLS-1$
+        StoredProcedure sp = new StoredProcedure();
+        SPParameter param = new SPParameter(1, null);
+        param.setParameterType(SPParameter.RETURN_VALUE);
+        sp.setParameter(param);
+        sp.setProcedureName("proc");
+        sp.setCallableStatement(true);
+        CacheHint hint = new CacheHint();
+        sp.setCacheHint(hint);
+        TestParser.helpTest(sql, "/*+ cache */ EXEC proc()", sp);         //$NON-NLS-1$
     }
     
 }

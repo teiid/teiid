@@ -213,7 +213,7 @@ public class SetQuery extends QueryCommand {
         EquivalenceUtil.areEqual(this.rightQuery, other.rightQuery) &&
         EquivalenceUtil.areEqual(getOrderBy(), other.getOrderBy()) &&
         EquivalenceUtil.areEqual(getLimit(), other.getLimit()) &&
-        EquivalenceUtil.areEqual(getOption(), other.getOption());        
+        sameOptionAndHint(other);        
     }
 
     /**

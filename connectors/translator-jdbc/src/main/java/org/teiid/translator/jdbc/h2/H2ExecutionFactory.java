@@ -39,7 +39,7 @@ import org.teiid.translator.jdbc.ModFunctionModifier;
 import org.teiid.translator.jdbc.hsql.AddDiffModifier;
 import org.teiid.translator.jdbc.oracle.ConcatFunctionModifier;
 
-@Translator(name="h2")
+@Translator(name="h2", description="A translator for open source H2 Database")
 public class H2ExecutionFactory extends JDBCExecutionFactory {
 	
 	@Override

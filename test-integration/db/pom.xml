@@ -18,9 +18,6 @@
 	<name>DB Dependent Integration Tests</name>
  	<groupId>org.jboss.teiid.teiid-test-integration</groupId>
 	<description>Integration tests that require external database dependencies </description>
-
-	<version>7.2.0.Alpha1-SNAPSHOT</version>
-
 	<dependencies>
 
 		<dependency>

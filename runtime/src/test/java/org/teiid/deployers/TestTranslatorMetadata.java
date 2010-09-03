@@ -48,6 +48,7 @@ public class TestTranslatorMetadata {
 		
 		tm.setExecutionFactoryClass(ExecutionFactory.class);
 		tm.setName("Oracle");
+		tm.setDescription("desc");
 		tm.addProperty("ExtensionTranslationClassName", "org.teiid.translator.jdbc.oracle.OracleSQLTranslator");
 		
 		JAXBContext jc = JAXBContext.newInstance(new Class<?>[] {TranslatorMetaDataGroup.class});
@@ -65,6 +66,7 @@ public class TestTranslatorMetadata {
 		tm = group.getTranslators().get(0);
 		
 		assertEquals("Oracle", tm.getName());
+		assertEquals("desc", tm.getDescription());
 		assertEquals(ExecutionFactory.class.getName(), tm.getPropertyValue(Translator.EXECUTION_FACTORY_CLASS));
 		assertEquals("org.teiid.translator.jdbc.oracle.OracleSQLTranslator", tm.getPropertyValue("ExtensionTranslationClassName"));
 		

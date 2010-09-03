@@ -27,12 +27,16 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.dqp.internal.process.SimpleQueryProcessorFactory;
+import org.teiid.dqp.internal.process.CachedResults;
+import org.teiid.dqp.internal.process.QueryProcessorFactoryImpl;
+import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
@@ -59,17 +63,27 @@ public class TestMaterialization {
 		hdm.addData("SELECT matsrc.x FROM matsrc", new List[] {Arrays.asList((String)null), Arrays.asList("one"), Arrays.asList("two"), Arrays.asList("three")});
 		hdm.addData("SELECT mattable.info.e1, mattable.info.e2 FROM mattable.info", new List[] {Arrays.asList("a", 1), Arrays.asList("a", 2)});
 		hdm.addData("SELECT mattable.info.e2, mattable.info.e1 FROM mattable.info", new List[] {Arrays.asList(1, "a"), Arrays.asList(2, "a")});
-		dataManager = new TempTableDataManager(hdm, BufferManagerFactory.getStandaloneBufferManager());
+		
+	    BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
+	    cache.setBufferManager(bm);
+	    Executor executor = new Executor() {
+			@Override
+			public void execute(Runnable command) {
+				command.run();
+			}
+	    };
+		dataManager = new TempTableDataManager(hdm, bm, executor, cache);
 	}
 	
-	private void execute(String sql, List... expectedResults) throws Exception {
+	private void execute(String sql, List<?>... expectedResults) throws Exception {
 		CommandContext cc = TestProcessor.createCommandContext();
 		cc.setTempTableStore(tempStore);
 		cc.setGlobalTableStore(globalStore);
 		cc.setMetadata(metadata);
 		CapabilitiesFinder finder = new DefaultCapabilitiesFinder();
 		previousPlan = TestProcessor.helpGetPlan(TestProcessor.helpParse(sql), metadata, finder, cc);
-		cc.setQueryProcessorFactory(new SimpleQueryProcessorFactory(BufferManagerFactory.getStandaloneBufferManager(), dataManager, finder, null, metadata));
+		cc.setQueryProcessorFactory(new QueryProcessorFactoryImpl(BufferManagerFactory.getStandaloneBufferManager(), dataManager, finder, null, metadata));
 		TestProcessor.doProcess(previousPlan, dataManager, expectedResults, cc);
 	}
 
@@ -100,6 +114,35 @@ public class TestMaterialization {
 		Thread.sleep(150);
 		execute("SELECT * from vgroup4 where x is null", Arrays.asList((String)null));
 		assertEquals(2, hdm.getCommandHistory().size());
+	}
+	
+	@Test public void testProcedureCache() throws Exception {
+		execute("call sp1('one')", Arrays.asList("one"));
+		assertEquals(1, hdm.getCommandHistory().size());
+		execute("call sp1('one')", Arrays.asList("one"));
+		assertEquals(1, hdm.getCommandHistory().size());
+		execute("call sp1('one') option nocache sp.sp1", Arrays.asList("one"));
+		assertEquals(2, hdm.getCommandHistory().size());
+		execute("call sp1(null)");
+		assertEquals(3, hdm.getCommandHistory().size());
+		execute("call sp1(null)");
+		assertEquals(3, hdm.getCommandHistory().size());
+	}
+	
+	@Test public void testCoveringSecondaryIndex() throws Exception {
+		execute("SELECT * from vgroup3 where y in ('zne', 'zwo') order by y desc", Arrays.asList("two", "zwo"), Arrays.asList("one", "zne"));
+		execute("SELECT * from vgroup3 where y is null", Arrays.asList((String)null, (String)null));
+	}
+	
+	@Test public void testNonCoveringSecondaryIndex() throws Exception {
+		execute("SELECT * from vgroup5 where y in ('zne', 'zwo') order by y desc", Arrays.asList("two", "zwo", 1), Arrays.asList("one", "zne", 1));
+		execute("SELECT * from vgroup5 where y is null", Arrays.asList((String)null, (String)null, 1));
+		execute("SELECT * from vgroup5 where y is null and z = 2");
+	}
+	
+	@Test public void testNonCoveringSecondaryIndexWithoutPrimaryKey() throws Exception {
+		execute("SELECT * from vgroup6 where y in ('zne', 'zwo') order by y desc", Arrays.asList("two", "zwo"), Arrays.asList("one", "zne"));
+		execute("SELECT * from vgroup6 where y is null", Arrays.asList((String)null, (String)null));
 	}
     
 }

@@ -8,7 +8,6 @@
   <groupId>org.jboss.teiid</groupId>
   <artifactId>teiid-jboss-integration</artifactId>
   <name>teiid-jboss-integration</name>
-  <version>7.2.0.Alpha1-SNAPSHOT</version>
   <description>JBoss specific integration layer for teiid</description>
   
   <dependencies>

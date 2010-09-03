@@ -25,6 +25,7 @@ package org.teiid.query.metadata;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.teiid.core.util.LRUCache;
@@ -37,10 +38,27 @@ import org.teiid.query.sql.lang.CacheHint;
  * does not exist in a real metadata source.  Rather, it is used temporarily 
  * in context of processing a single query.  This metadata ID can be used to 
  * represent either a group or an element depending on the constructor used.
+ * 
+ * TODO: we should be using the real metadata objects, but internal and
+ * designer legacy keep us on the temp framework
  */
 public class TempMetadataID implements Serializable {
     
 	private static final int LOCAL_CACHE_SIZE = 8;
+	
+	static class TableData {
+		Collection<TempMetadataID> accessPatterns;
+		List<TempMetadataID> elements;
+		int cardinality = QueryMetadataInterface.UNKNOWN_CARDINALITY;
+		List<TempMetadataID> primaryKey;
+		QueryNode queryNode;
+		LRUCache<Object, Object> localCache;
+		CacheHint cacheHint;
+		List<List<TempMetadataID>> keys;
+		List<List<TempMetadataID>> indexes;
+	}
+	
+	private static TableData DUMMY_DATA = new TableData();
 	
 	public enum Type {
 		VIRTUAL,
@@ -50,18 +68,11 @@ public class TempMetadataID implements Serializable {
 	
     private String ID;      // never null, upper cased fully-qualified string
     private Type metadataType = Type.VIRTUAL;
-    
-    //Table metadata
-    private Collection<TempMetadataID> accessPatterns;
-    private List<TempMetadataID> elements;  // of TempMetadataID, only for group
-    private int cardinality = QueryMetadataInterface.UNKNOWN_CARDINALITY;
-    private List<TempMetadataID> primaryKey;
-    private QueryNode queryNode;
-    private transient LRUCache<Object, Object> localCache;
-    private CacheHint cacheHint;
-    
-    //Column metadata
     private Object originalMetadataID;
+    
+    private TableData data;
+    
+	//Column metadata
     private int position;
     private Class<?> type;     // type of this element, only for element
     
@@ -81,8 +92,9 @@ public class TempMetadataID implements Serializable {
      * @param isVirtual whether or not the group is a virtual group
      */
     public TempMetadataID(String ID, List<TempMetadataID> elements, Type type) {
+        this.data = new TableData();
         this.ID = ID;
-        this.elements = elements;
+        this.data.elements = elements;
         int pos = 1;
         for (TempMetadataID tempMetadataID : elements) {
 			tempMetadataID.setPosition(pos++);
@@ -133,7 +145,7 @@ public class TempMetadataID implements Serializable {
      * @return List of TempMetadataID for groups, null for elements
      */
     public List<TempMetadataID> getElements() { 
-        return this.elements;
+        return this.getTableData().elements;
     }
     
     /**
@@ -141,12 +153,12 @@ public class TempMetadataID implements Serializable {
      * @param elem
      */
     protected void addElement(TempMetadataID elem) {
-        if (this.elements != null) {
-            this.elements.add(elem);
-            elem.setPosition(this.elements.size());
+        if (this.getTableData().elements != null) {
+            this.getTableData().elements.add(elem);
+            elem.setPosition(this.getTableData().elements.size());
         }
-        if (this.localCache != null) {
-        	this.localCache.clear();
+        if (this.getTableData().localCache != null) {
+        	this.getTableData().localCache.clear();
         }
     }
 
@@ -198,7 +210,7 @@ public class TempMetadataID implements Serializable {
         return this.ID.hashCode();
     }
     
-    public void setOriginalMetadataID(Object metadataId) {
+	public void setOriginalMetadataID(Object metadataId) {
         this.originalMetadataID = metadataId;
     }
     
@@ -211,22 +223,22 @@ public class TempMetadataID implements Serializable {
     }
 
     public Collection<TempMetadataID> getAccessPatterns() {
-        if (this.accessPatterns == null) {
+        if (this.getTableData().accessPatterns == null) {
             return Collections.emptyList();
         }
-        return this.accessPatterns;
+        return this.getTableData().accessPatterns;
     }
 
     public void setAccessPatterns(Collection<TempMetadataID> accessPatterns) {
-        this.accessPatterns = accessPatterns;
+        this.getTableData().accessPatterns = accessPatterns;
     }
 
     public int getCardinality() {
-        return this.cardinality;
+        return this.getTableData().cardinality;
     }
 
     public void setCardinality(int cardinality) {
-        this.cardinality = cardinality;
+        this.getTableData().cardinality = cardinality;
     }
 
     public void setTempTable(boolean isTempTable) {
@@ -238,17 +250,17 @@ public class TempMetadataID implements Serializable {
     }
 
     Object getProperty(Object key) {
-    	if (this.localCache != null) {
-    		return this.localCache.get(key);
+    	if (this.getTableData().localCache != null) {
+    		return this.getTableData().localCache.get(key);
     	}
     	return null;
     }
     
     Object setProperty(Object key, Object value) {
-		if (this.localCache == null) {
-			this.localCache = new LRUCache<Object, Object>(LOCAL_CACHE_SIZE);
+		if (this.getTableData().localCache == null) {
+			this.getTableData().localCache = new LRUCache<Object, Object>(LOCAL_CACHE_SIZE);
     	}
-		return this.localCache.put(key, value);
+		return this.getTableData().localCache.put(key, value);
     }
 
 	public boolean isScalarGroup() {
@@ -260,11 +272,11 @@ public class TempMetadataID implements Serializable {
 	}
 
 	public List<TempMetadataID> getPrimaryKey() {
-		return primaryKey;
+		return getTableData().primaryKey;
 	}
 	
 	public void setPrimaryKey(List<TempMetadataID> primaryKey) {
-		this.primaryKey = primaryKey;
+		this.getTableData().primaryKey = primaryKey;
 	}
 	
 	public int getPosition() {
@@ -276,19 +288,48 @@ public class TempMetadataID implements Serializable {
 	}
 	
 	public QueryNode getQueryNode() {
-		return queryNode;
+		return getTableData().queryNode;
 	}
 	
 	public void setQueryNode(QueryNode queryNode) {
-		this.queryNode = queryNode;
+		this.getTableData().queryNode = queryNode;
 	}
 	
 	public CacheHint getCacheHint() {
-		return cacheHint;
+		return getTableData().cacheHint;
 	}
 	
 	public void setCacheHint(CacheHint cacheHint) {
-		this.cacheHint = cacheHint;
+		this.getTableData().cacheHint = cacheHint;
+	}
+	
+	public List<List<TempMetadataID>> getIndexes() {
+		return getTableData().indexes;
+	}
+	
+	public void addIndex(List<TempMetadataID> index) {
+		if (this.getTableData().indexes == null) {
+			this.getTableData().indexes = new LinkedList<List<TempMetadataID>>();
+		}
+		this.getTableData().indexes.add(index);
+	}
+	
+	public List<List<TempMetadataID>> getUniqueKeys() {
+		return getTableData().keys;
+	}
+	
+	public void addUniqueKey(List<TempMetadataID> key) {
+		if (this.getTableData().keys == null) {
+			this.getTableData().keys = new LinkedList<List<TempMetadataID>>();
+		}
+		this.getTableData().keys.add(key);
+	}
+
+	private TableData getTableData() {
+		if (data == null) {
+			return DUMMY_DATA;
+		}
+		return data;
 	}
 		
 }

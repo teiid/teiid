@@ -37,19 +37,20 @@ import org.teiid.core.TeiidRuntimeException;
 public class ClusterableCacheFactory implements CacheFactory, Serializable {
 	private static final long serialVersionUID = -1992994494154581234L;
 	private CacheFactory delegate;
-	private String cacheName;
+	private String resultsetCacheName;
 	private boolean enabled = false;
+	private String cacheManagerName;
 	
 	@Override
 	public <K, V> Cache<K, V> get(Type type, CacheConfiguration config) {
 		if (this.delegate == null) {
 			Object cacheManager = getClusteredCache();
 			if (cacheManager == null) {
-				this.delegate = new DefaultCacheFactory();
+				this.delegate = new DefaultCacheFactory(config);
 			}
 			else {
 				try {
-					this.delegate = new JBossCacheFactory(this.cacheName, cacheManager);
+					this.delegate = new JBossCacheFactory(this.resultsetCacheName, cacheManager);
 				} catch (Exception e) {
 					throw new TeiidRuntimeException("Failed to obtain the clusted cache"); //$NON-NLS-1$
 				}
@@ -58,8 +59,8 @@ public class ClusterableCacheFactory implements CacheFactory, Serializable {
 		return delegate.get(type, config);
 	}
 
-	public void setClusteredCacheName(String name) {
-		this.cacheName = name;
+	public void setResultsetCacheName(String name) {
+		this.resultsetCacheName = name;
 	}
 	
 	@Override
@@ -70,10 +71,10 @@ public class ClusterableCacheFactory implements CacheFactory, Serializable {
 	}
 	
 	private Object getClusteredCache() {
-		if (this.enabled) {
+		if (this.enabled && this.cacheManagerName != null) {
 			try {
 				Context ctx = new InitialContext();
-				return ctx.lookup("java:CacheManager"); //$NON-NLS-1$
+				return ctx.lookup(this.cacheManagerName);
 			} catch (NamingException e) {
 				return null;
 			}
@@ -83,5 +84,9 @@ public class ClusterableCacheFactory implements CacheFactory, Serializable {
 	
 	public void setEnabled(boolean value) {
 		this.enabled = value;
+	}
+	
+	public void setCacheManager(String mgrName) {
+		this.cacheManagerName = mgrName;
 	}
 }

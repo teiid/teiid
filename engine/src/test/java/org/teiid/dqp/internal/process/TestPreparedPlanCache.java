@@ -62,7 +62,7 @@ public class TestPreparedPlanCache {
     	//No PreparedPlan at the begining
     	assertNull(cache.get(id));
     	//create one
-    	cache.put(id, FunctionMethod.SESSION_DETERMINISTIC, new PreparedPlan());
+    	cache.put(id, FunctionMethod.SESSION_DETERMINISTIC, new PreparedPlan(), null);
     	//should have one now
     	assertNotNull("Unable to get prepared plan from cache", cache.get(id)); //$NON-NLS-1$
     }
@@ -109,7 +109,7 @@ public class TestPreparedPlanCache {
         
         helpPutPreparedPlans(cache, token2, 0, 121);
         helpPutPreparedPlans(cache, token, 0, 50);
-        assertTrue(cache.getSpaceUsed() <= 100);
+        assertTrue(cache.getTotalCacheEntries() <= 100);
     }
     
     @Test public void testZeroSizeCache() {
@@ -120,12 +120,12 @@ public class TestPreparedPlanCache {
         // Add 1 plan and verify it is not in the cache
         helpPutPreparedPlans(cache, token, 0, 1);
         assertNull(cache.get(new CacheID(token, pi, EXAMPLE_QUERY + 0))); 
-        assertEquals(0, cache.getSpaceUsed());
+        assertEquals(0, cache.getTotalCacheEntries());
         
         // Add another plan and verify it is not in the cache
         helpPutPreparedPlans(cache, token, 1, 1);
         assertNull(cache.get(new CacheID(token, pi, EXAMPLE_QUERY + 1))); 
-        assertEquals(0, cache.getSpaceUsed());        
+        assertEquals(0, cache.getTotalCacheEntries());        
     }
     
     // set init size to negative number, which should default to 100 (default)
@@ -149,7 +149,7 @@ public class TestPreparedPlanCache {
 	    	CacheID id = new CacheID(session, pi, dummy.toString());
 
 	    	PreparedPlan pPlan = new PreparedPlan();
-    		cache.put(id, FunctionMethod.SESSION_DETERMINISTIC, pPlan);
+    		cache.put(id, FunctionMethod.SESSION_DETERMINISTIC, pPlan, null);
     		pPlan.setCommand(dummy); 
     		pPlan.setPlan(new RelationalPlan(new ProjectNode(i)));
             AnalysisRecord analysisRecord = new AnalysisRecord(true, false);

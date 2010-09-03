@@ -38,6 +38,7 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
@@ -397,5 +398,9 @@ public class DataTierManagerImpl implements ProcessorDataManager {
     void scheduleWork(Runnable r, int priority, long delay) {
     	requestMgr.scheduleWork(r, priority, delay);
     }
+    
+    BufferManager getBufferManager() {
+		return bufferService.getBufferManager();
+	}
     
 }

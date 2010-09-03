@@ -44,7 +44,8 @@ public interface ServerDiscovery {
 	void init(TeiidURL url, Properties p);
 	
 	/**
-	 * Get the currently known hosts. 
+	 * Get the currently known hosts.  Will be called prior to connecting and after
+	 * authentication for each connection. 
 	 * @param result, the current {@link LogonResult} - may be null if unauthenticated 
 	 * @param instance, the currently connected instance - may be null if not connected
 	 * @return
@@ -67,5 +68,14 @@ public interface ServerDiscovery {
 	 * Shutdown this {@link ServerDiscovery}
 	 */
 	void shutdown();
+	
+	/**
+	 * Select the next instance to try.  The entry should be removed from the list
+	 * when no more attempts are desired.  
+	 * and not return null.
+	 * @param hosts
+	 * @return a non-null HostInfo to try
+	 */
+	HostInfo selectNextInstance(List<HostInfo> hosts);
 		
 }

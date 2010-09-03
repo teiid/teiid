@@ -33,7 +33,7 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 /** 
  * for Teradata database Release V2R5.1
  */
-@Translator(name="teradata")
+@Translator(name="teradata", description="A translator for Teradata Database")
 public class TeradataExecutionFactory extends JDBCExecutionFactory {
 
     public TeradataExecutionFactory() {

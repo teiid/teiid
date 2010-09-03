@@ -31,7 +31,8 @@ import org.teiid.net.TeiidURL;
 
 
 /**
- * Simple URL discovery strategy
+ * Simple URL discovery strategy with a random load balancing policy
+ * TOOD: add black listing support
  */
 public class UrlServerDiscovery implements ServerDiscovery {
 
@@ -68,6 +69,11 @@ public class UrlServerDiscovery implements ServerDiscovery {
 	@Override
 	public void shutdown() {
 		
+	}
+	
+	@Override
+	public HostInfo selectNextInstance(List<HostInfo> hosts) {
+		return hosts.remove((int) (Math.random() * hosts.size()));
 	}
 	
 }

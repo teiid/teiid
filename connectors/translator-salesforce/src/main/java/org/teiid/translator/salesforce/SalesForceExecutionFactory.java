@@ -48,7 +48,7 @@ import org.teiid.translator.salesforce.execution.ProcedureExecutionParentImpl;
 import org.teiid.translator.salesforce.execution.QueryExecutionImpl;
 import org.teiid.translator.salesforce.execution.UpdateExecutionImpl;
 
-@Translator(name="salesforce")
+@Translator(name="salesforce", description="A translator for Salesforce")
 public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFactory, SalesforceConnection> {
 
 	private String connectorStateClass;

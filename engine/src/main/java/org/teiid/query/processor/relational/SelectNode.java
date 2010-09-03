@@ -51,6 +51,10 @@ public class SelectNode extends SubqueryAwareRelationalNode {
     // State if blocked on evaluating a criteria
     private TupleBatch currentBatch;
     private int currentRow = 1;
+
+	protected SelectNode() {
+		super();
+	}
     
 	public SelectNode(int nodeID) {
 		super(nodeID);
@@ -117,7 +121,7 @@ public class SelectNode extends SubqueryAwareRelationalNode {
 	}
 	
 	public Object clone(){
-		SelectNode clonedNode = new SelectNode(super.getID());
+		SelectNode clonedNode = new SelectNode();
 		this.copy(this, clonedNode);
 		return clonedNode;
 	}

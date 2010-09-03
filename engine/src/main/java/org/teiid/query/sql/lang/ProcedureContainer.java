@@ -22,8 +22,10 @@
 
 package org.teiid.query.sql.lang;
 
-import java.util.Map;
+import java.util.LinkedHashMap;
 
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 
 
@@ -59,5 +61,5 @@ public abstract class ProcedureContainer extends Command {
         this.updateCount = updateCount;
     }
     
-    public abstract Map getProcedureParameters();
+    public abstract LinkedHashMap<ElementSymbol, Expression> getProcedureParameters();
 }

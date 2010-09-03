@@ -60,7 +60,7 @@
 				<para>More control of the cache hint.</para>
 			</listitem>
 			<listitem>
-				<para>The ability to use option nocache.</para>
+				<para>The ability to use <link linkend="nocache">OPTION NOCACHE</link>.</para>
 			</listitem>
 			<listitem>
 				<para>Usage of a materialized view lookup as an uncorrelated subquery is no different than the use of the lookup function.</para>

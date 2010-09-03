@@ -22,12 +22,10 @@
 
 package org.teiid.translator.ws;
 
-import java.sql.SQLXML;
 import java.util.Collections;
 import java.util.List;
 
 import javax.resource.cci.ConnectionFactory;
-import javax.xml.transform.Source;
 import javax.xml.ws.Service.Mode;
 import javax.xml.ws.http.HTTPBinding;
 import javax.xml.ws.soap.SOAPBinding;
@@ -49,9 +47,11 @@ import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.WSConnection;
 
-@Translator(name="ws")
+@Translator(name="ws", description="A translator for making Web Service calls")
 public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSConnection> {
 	
+	private static final String INVOKE_HTTP = "invokeHttp"; //$NON-NLS-1$
+
 	public enum Binding {
 		HTTP(HTTPBinding.HTTP_BINDING), 
 		SOAP11(SOAPBinding.SOAP11HTTP_BINDING),
@@ -104,13 +104,12 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
     @Override
     public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection)
     		throws TranslatorException {
+    	if (command.getProcedureName().equalsIgnoreCase(INVOKE_HTTP)) {
+    		return new BinaryWSProcedureExecution(command, metadata, executionContext, this, connection);
+    	}
 		return new WSProcedureExecution(command, metadata, executionContext, this, connection);
     }
     
-    public SQLXML convertToXMLType(Source value) {
-    	return (SQLXML)getTypeFacility().convertToRuntimeType(value);
-    } 	
-	
 	@Override
     public final List getSupportedFunctions() {
         return Collections.EMPTY_LIST;
@@ -132,7 +131,7 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 
 		//can be one of string, xml, clob
 		param = metadataFactory.addProcedureParameter("request", TypeFacility.RUNTIME_NAMES.XML, Type.In, p); //$NON-NLS-1$
-		param.setAnnotation("The XML document or root element that represents the request.  If the ExecutionFactory is configured in with a DefaultServiceMode or MESSAGE then SOAP request must contain the entire SOAP message."); //$NON-NLS-1$
+		param.setAnnotation("The XML document or root element that represents the request.  If the ExecutionFactory is configured in with a DefaultServiceMode of MESSAGE, then the SOAP request must contain the entire SOAP message."); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
 		
 		param = metadataFactory.addProcedureParameter("endpoint", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
@@ -140,11 +139,11 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		param.setNullType(NullType.Nullable);
 		
 		metadataFactory.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.XML, Type.ReturnValue, p); //$NON-NLS-1$
-		/*
+		
 		p = metadataFactory.addProcedure(INVOKE_HTTP);
 		p.setAnnotation("Invokes a webservice that returns an binary result"); //$NON-NLS-1$
 
-		param = metadataFactory.addProcedureParameter("method", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
+		param = metadataFactory.addProcedureParameter("action", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("Sets the HTTP Method (GET, POST - default, etc.)."); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
 
@@ -159,7 +158,6 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		
 		metadataFactory.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.BLOB, Type.ReturnValue, p); //$NON-NLS-1$
 		metadataFactory.addProcedureParameter("contentType", TypeFacility.RUNTIME_NAMES.STRING, Type.Out, p); //$NON-NLS-1$	
-		*/
 	}
 
 }

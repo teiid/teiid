@@ -39,9 +39,11 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.concurrent.Executor;
 
 import org.junit.Test;
 import org.teiid.client.metadata.ParameterInfo;
+import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.TupleBuffer;
@@ -53,7 +55,10 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.XMLType;
-import org.teiid.dqp.internal.process.SimpleQueryProcessorFactory;
+import org.teiid.dqp.internal.process.CachedResults;
+import org.teiid.dqp.internal.process.PreparedPlan;
+import org.teiid.dqp.internal.process.QueryProcessorFactoryImpl;
+import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionTree;
@@ -241,17 +246,35 @@ public class TestProcessor {
         	context.setGlobalTableStore(new TempTableStore("SYSTEM"));
         }
         if (!(dataManager instanceof TempTableDataManager)) {
-        	dataManager = new TempTableDataManager(dataManager, bufferMgr);
+    	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
+    	    cache.setBufferManager(bufferMgr);
+    	    Executor executor = new Executor() {
+    			@Override
+    			public void execute(Runnable command) {
+    				command.run();
+    			}
+    	    };        	
+        	dataManager = new TempTableDataManager(dataManager, bufferMgr, executor, cache);
         }        
         if (context.getQueryProcessorFactory() == null) {
-        	context.setQueryProcessorFactory(new SimpleQueryProcessorFactory(bufferMgr, dataManager, new DefaultCapabilitiesFinder(), null, context.getMetadata()));
+        	context.setQueryProcessorFactory(new QueryProcessorFactoryImpl(bufferMgr, dataManager, new DefaultCapabilitiesFinder(), null, context.getMetadata()));
         }
         TupleBuffer id = null;
         try {
             QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
-            processor.setNonBlocking(true);
+            //processor.setNonBlocking(true);
             BatchCollector collector = processor.createBatchCollector();
-            id = collector.collectTuples();
+            for (int i = 0; i < 100; i++) {
+            	try {
+            		id = collector.collectTuples();
+            		break;
+            	} catch (BlockedException e) {
+            		
+            	}
+            }
+            if (id == null) {
+            	fail("did not complete processing");
+            }
             if ( expectedResults != null ) {
             	examineResults(expectedResults, bufferMgr, id);
             }
@@ -335,6 +358,7 @@ public class TestProcessor {
         context.setProcessorBatchSize(BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE);
         context.setConnectorBatchSize(BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE);
         context.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
+        context.setPreparedPlanCache(new SessionAwareCache<PreparedPlan>());
 		return context;
 	}   
     	
@@ -7502,7 +7526,7 @@ public class TestProcessor {
     
     @Test public void testUncorrelatedScalarSubqueryPushdown() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        FakeMetadataFacade metadata = example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, false);
@@ -7512,15 +7536,41 @@ public class TestProcessor {
         
         ProcessorPlan plan = helpPlan("select pm1.g1.e1 from pm1.g1 where e1 < (select max(vm1.g1.e1) from vm1.g1)", metadata,  //$NON-NLS-1$
                                       null, capFinder,
-            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 < (SELECT MAX(g_1.e1) FROM pm1.g1 AS g_1)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 < (SELECT MAX(g_0.e1) FROM pm1.g1 AS g_0)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN);
         
         HardcodedDataManager hdm = new HardcodedDataManager();
         hdm.addData("SELECT MAX(g_0.e1) FROM pm1.g1 AS g_0", new List[] {Arrays.asList("c")});
         hdm.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 < 'c'", new List[] {Arrays.asList("a")});
-        
+        hdm.setBlockOnce(true);
         List[] expected = new List[] {
         		Arrays.asList("a"),
+        };    
+
+        helpProcess(plan, hdm, expected);
+    }
+    
+    @Test public void testUncorrelatedScalarSubqueryPushdown1() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        
+        BasicSourceCapabilities caps = getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, false);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpPlan("select pm1.g1.e1 from pm1.g1 where e1 < (select e1 from (EXEC pm1.sq1()) x order by e2 limit 1)", metadata,  //$NON-NLS-1$
+                                      null, capFinder,
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 < (SELECT e1 FROM (EXEC pm1.sq1()) AS x ORDER BY e2 LIMIT 1)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        checkNodeTypes(plan, FULL_PUSHDOWN);
+        
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 < 'z'", new List[] {Arrays.asList("c")});
+        hdm.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", new List[] {Arrays.asList("z", 1), Arrays.asList("b", 2)});
+        hdm.setBlockOnce(true);
+        List[] expected = new List[] {
+        		Arrays.asList("c"),
         };    
 
         helpProcess(plan, hdm, expected);

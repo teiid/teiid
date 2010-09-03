@@ -44,8 +44,6 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.dqp.internal.process.Request;
 import org.teiid.language.SQLConstants;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.execution.QueryExecPlugin;
@@ -485,8 +483,25 @@ public class RelationalPlanner {
 			}
 		}
 		if (c != null) {
-		    c = QueryRewriter.rewrite(c, metadata, context);
-		    addNestedCommand(sourceNode, container.getGroup(), container, c, false);
+			if (c.getCacheHint() != null) {
+				if (container instanceof StoredProcedure) {
+					boolean noCache = isNoCacheGroup(metadata, ((StoredProcedure) container).getProcedureID(), option);
+					if (!noCache) {
+						if (container.areResultsCachable() && Query.areResultsCachable(container.getProcedureParameters().keySet()) && context.isResultSetCacheEnabled()) {
+							container.getGroup().setGlobalTable(true);
+							container.setCacheHint(c.getCacheHint());
+							recordAnnotation(analysisRecord, Annotation.CACHED_PROCEDURE, Priority.LOW, "SimpleQueryResolver.procedure_cache_used", container.getGroup()); //$NON-NLS-1$
+							return;
+						}
+						recordAnnotation(analysisRecord, Annotation.CACHED_PROCEDURE, Priority.MEDIUM, "SimpleQueryResolver.procedure_cache_not_usable", container.getGroup()); //$NON-NLS-1$
+					} else {
+						recordAnnotation(analysisRecord, Annotation.CACHED_PROCEDURE, Priority.LOW, "SimpleQueryResolver.procedure_cache_not_used", container.getGroup()); //$NON-NLS-1$
+					}
+				}
+			}
+			//skip the rewrite here, we'll do that in the optimizer
+			//so that we know what the determinism level is.
+			addNestedCommand(sourceNode, container.getGroup(), container, c, false);
 		}
 	}
 
@@ -926,14 +941,14 @@ public class RelationalPlanner {
         		//not use cache
         		qnode = metadata.getVirtualPlan(metadataID);
         		//TODO: update the table for defaultMat
-        		recordMaterializationTableAnnotation(analysisRecord, QueryPlugin.Util.getString("SimpleQueryResolver.materialized_table_not_used", virtualGroup, matTableName)); //$NON-NLS-1$
+        		recordAnnotation(analysisRecord, Annotation.MATERIALIZED_VIEW, Priority.LOW, "SimpleQueryResolver.materialized_table_not_used", virtualGroup, matTableName); //$NON-NLS-1$
         	}else{
         		qnode = new QueryNode(groupName, null);
         		Query query = createMatViewQuery(matMetadataId, matTableName, Arrays.asList(new AllSymbol()), isImplicitGlobal);
         		query.setCacheHint(hint);
         		qnode.setCommand(query);
                 cacheString = "matview"; //$NON-NLS-1$
-                recordMaterializationTableAnnotation(analysisRecord, QueryPlugin.Util.getString("SimpleQueryResolver.Query_was_redirected_to_Mat_table", virtualGroup, matTableName)); //$NON-NLS-1$
+                recordAnnotation(analysisRecord, Annotation.MATERIALIZED_VIEW, Priority.LOW, "SimpleQueryResolver.Query_was_redirected_to_Mat_table", virtualGroup, matTableName); //$NON-NLS-1$
         	}
         } else {
             // Not a materialized view - query the primary transformation
@@ -969,28 +984,42 @@ public class RelationalPlanner {
 					id.setCardinality(metadata.getCardinality(table.getMetadataID()));
 					
 					Object pk = metadata.getPrimaryKey(table.getMetadataID());
-					//primary key
 					if (pk != null) {
-						List cols = metadata.getElementIDsInKey(pk);
-						ArrayList<TempMetadataID> primaryKey = new ArrayList<TempMetadataID>(cols.size());
-						for (Object coldId : cols) {
-							int pos = metadata.getPosition(coldId) - 1;
-							primaryKey.add(id.getElements().get(pos));
-						}
+						ArrayList<TempMetadataID> primaryKey = resolveIndex(metadata, id, pk);
 						id.setPrimaryKey(primaryKey);
+					}
+					Collection keys = metadata.getUniqueKeysInGroup(table.getMetadataID());
+					for (Object key : keys) {
+						id.addUniqueKey(resolveIndex(metadata, id, key));
+					}
+					Collection indexes = metadata.getIndexesInGroup(table.getMetadataID());
+					for (Object index : indexes) {
+						id.addIndex(resolveIndex(metadata, id, index));
 					}
 					Command c = getCommand(table, metadata.getVirtualPlan(table.getMetadataID()), SQLConstants.Reserved.SELECT, metadata, analysisRecord);
 					CacheHint hint = c.getCacheHint();
 					if (hint != null) {
-						recordMaterializationTableAnnotation(analysisRecord, QueryPlugin.Util.getString("SimpleQueryResolver.cache_hint_used", table, matTableName, hint)); //$NON-NLS-1$
+						recordAnnotation(analysisRecord, Annotation.MATERIALIZED_VIEW, Priority.LOW, "SimpleQueryResolver.cache_hint_used", table, matTableName, id.getCacheHint()); //$NON-NLS-1$
 					}
 					id.setCacheHint(hint);
 				}
 			}
 		} else if (id.getCacheHint() != null) {
-			recordMaterializationTableAnnotation(analysisRecord, QueryPlugin.Util.getString("SimpleQueryResolver.cache_hint_used", table, matTableName, id.getCacheHint())); //$NON-NLS-1$
+			recordAnnotation(analysisRecord, Annotation.MATERIALIZED_VIEW, Priority.LOW, "SimpleQueryResolver.cache_hint_used", table, matTableName, id.getCacheHint()); //$NON-NLS-1$
 		}
 		return id;
+	}
+
+	private static ArrayList<TempMetadataID> resolveIndex(
+			QueryMetadataInterface metadata, TempMetadataID id, Object pk)
+			throws TeiidComponentException, QueryMetadataException {
+		List cols = metadata.getElementIDsInKey(pk);
+		ArrayList<TempMetadataID> primaryKey = new ArrayList<TempMetadataID>(cols.size());
+		for (Object coldId : cols) {
+			int pos = metadata.getPosition(coldId) - 1;
+			primaryKey.add(id.getElements().get(pos));
+		}
+		return primaryKey;
 	}
 
 	private static Command getCommand(GroupSymbol virtualGroup, QueryNode qnode,
@@ -1034,29 +1063,23 @@ public class RelationalPlanner {
     		//only OPTION NOCACHE, no group specified
     		return true;
     	}       
+    	String fullName = metadata.getFullName(metadataID);
     	for (String groupName : option.getNoCacheGroups()) {
-            try {
-                Object noCacheGroupID = metadata.getGroupID(groupName);
-                if(metadataID.equals(noCacheGroupID)){
-                    return true;
-                }
-            } catch (QueryMetadataException e) {
-                //log that an unknown groups was used in the no cache
-                LogManager.logWarning(LogConstants.CTX_QUERY_RESOLVER, e, QueryPlugin.Util.getString("SimpleQueryResolver.unknown_group_in_nocache", groupName)); //$NON-NLS-1$
+            if(groupName.equalsIgnoreCase(fullName)){
+                return true;
             }
         }
         return false;
     }
     
-    private static void recordMaterializationTableAnnotation(AnalysisRecord analysis,
-                                                      String msg) {
-        if ( analysis.recordAnnotations() ) {
-            Annotation annotation = new Annotation(Annotation.MATERIALIZED_VIEW, 
-                                                         msg, 
-                                                         null, 
-                                                         Priority.LOW);
-            analysis.addAnnotation(annotation);
-        }
+    private static void recordAnnotation(AnalysisRecord analysis, String type, Priority priority, String msgKey, Object... parts) {
+    	if (analysis.recordAnnotations()) {
+    		Annotation annotation = new Annotation(type, 
+                    QueryPlugin.Util.getString(msgKey, parts), 
+                    null, 
+                    priority);
+    		analysis.addAnnotation(annotation);
+    	}
     }
 
 }

@@ -70,7 +70,6 @@ import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.ErrorMessageKeys;
@@ -115,7 +114,7 @@ public class UpdateProcedureResolver implements CommandResolver {
     	// then in the query transformation, this info is used in evaluating/validating
     	// has criteria/translate criteria clauses
         Command transformCmd = getQueryTransformCmd(virtualGroup, metadata);
-		Map symbolMap = SymbolMap.createSymbolMap(virtualGroup, (List<SingleElementSymbol>)transformCmd.getProjectedSymbols(), metadata).asMap();
+		Map symbolMap = SymbolMap.createSymbolMap(virtualGroup, transformCmd.getProjectedSymbols(), metadata).asMap();
 		procCommand.setSymbolMap(symbolMap);
     }
     

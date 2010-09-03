@@ -107,7 +107,7 @@ public final class XMLPlanner implements CommandPlanner{
         }
 
         // lookup mapping node for the user command
-        GroupSymbol group = (GroupSymbol)xmlQuery.getFrom().getGroups().iterator().next();
+        GroupSymbol group = xmlQuery.getFrom().getGroups().iterator().next();
 
         MappingDocument doc = (MappingDocument)metadata.getMappingNode(group.getMetadataID());
         doc = (MappingDocument)doc.clone();

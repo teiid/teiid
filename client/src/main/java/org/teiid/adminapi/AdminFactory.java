@@ -27,11 +27,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
 
 import org.teiid.client.security.LogonException;
 import org.teiid.client.util.ExceptionUtil;
-import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.net.CommunicationException;
@@ -51,42 +49,23 @@ public class AdminFactory {
 	
     private static final int DEFAULT_BOUNCE_WAIT = 2000;
         
-    private final class ReconnectingProxy implements InvocationHandler {
+    private final class AdminProxy implements InvocationHandler {
 
     	private Admin target;
     	private ServerConnection registry;
     	private Properties p;
     	private boolean closed;
     	
-    	public ReconnectingProxy(Properties p) throws ConnectionException, CommunicationException {
+    	public AdminProxy(Properties p) throws ConnectionException, CommunicationException {
     		this.p = p;
     		this.registry = serverConnectionFactory.getConnection(p);
     		this.target = registry.getService(Admin.class);
 		}
     	
-    	private synchronized Admin getTarget() throws AdminComponentException, CommunicationException {
+    	private synchronized Admin getTarget() throws AdminComponentException {
     		if (closed) {
     			throw new AdminComponentException(NetPlugin.Util.getString("ERR.014.001.0001")); //$NON-NLS-1$
     		}
-    		if (target != null) {
-    			ResultsFuture<?> ping = registry.isOpen();
-    			if (ping != null) {
-    				try {
-						ping.get();
-	    				return target;
-					} catch (InterruptedException e) {
-						throw new CommunicationException(e);
-					} catch (ExecutionException e) {
-						//assume recoverable
-					}
-    			}
-    		}
-    		try {
-    			registry = serverConnectionFactory.getConnection(p);
-    		} catch (ConnectionException e) {
-    			throw new AdminComponentException(e);
-    		}
-    		target = registry.getService(Admin.class);
     		return target;
     	}
     	
@@ -97,7 +76,6 @@ public class AdminFactory {
 				close();
 				return null;
 			}
-			Throwable t = null;
 			try {
 				return method.invoke(getTarget(), args);
 			} catch (InvocationTargetException e) {
@@ -109,10 +87,7 @@ public class AdminFactory {
 					}
 				}
 				throw e.getTargetException();
-			} catch (CommunicationException e) {
-				t = e;
 			}
-			throw t;
 		}
 		
 		public synchronized void close() {
@@ -231,7 +206,7 @@ public class AdminFactory {
     	p.setProperty(TeiidURL.CONNECTION.ADMIN, Boolean.TRUE.toString());
     	
 		try {
-			Admin serverAdmin = (Admin)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] { Admin.class }, new ReconnectingProxy(p));
+			Admin serverAdmin = (Admin)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] { Admin.class }, new AdminProxy(p));
 			return serverAdmin;
 		} catch (ConnectionException e) {				
 			throw new AdminComponentException(e);

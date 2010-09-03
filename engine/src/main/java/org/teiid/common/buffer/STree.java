@@ -392,4 +392,8 @@ public class STree {
 		this.preferMemory = preferMemory;
 	}
 	
+	public boolean isPreferMemory() {
+		return preferMemory;
+	}
+	
 }

@@ -47,7 +47,7 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 /** 
  * Translator class for accessing the ModeShape JCR repository.  
  */
-@Translator(name="modeshape")
+@Translator(name="modeshape", description="A translator for open source Modeshape JCA repository")
 public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 	
 	public ModeShapeExecutionFactory() {

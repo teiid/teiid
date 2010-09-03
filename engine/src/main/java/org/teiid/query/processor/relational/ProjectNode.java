@@ -62,6 +62,10 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
     // Saved state when blocked on evaluating a row - must be reset
     private TupleBatch currentBatch;
     private int currentRow = 1;
+    
+    protected ProjectNode() {
+    	super();
+    }
 
 	public ProjectNode(int nodeID) {
 		super(nodeID);
@@ -224,7 +228,7 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
 	}
 
 	public Object clone(){
-		ProjectNode clonedNode = new ProjectNode(super.getID());
+		ProjectNode clonedNode = new ProjectNode();
         this.copy(this, clonedNode);
 		return clonedNode;
 	}

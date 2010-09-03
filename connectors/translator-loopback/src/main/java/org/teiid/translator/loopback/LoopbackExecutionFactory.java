@@ -37,7 +37,7 @@ import org.teiid.translator.TranslatorProperty;
 /**
  * Loopback translator.
  */
-@Translator(name="loopback")
+@Translator(name="loopback", description="A translator for testing, that returns mock data")
 public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
 
 	private int waitTime = 0;

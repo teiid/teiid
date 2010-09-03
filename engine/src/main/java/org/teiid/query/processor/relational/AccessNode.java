@@ -56,6 +56,11 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	private TupleSource tupleSource;
 	private boolean isUpdate = false;
     private boolean returnedRows = false;
+    private Command nextCommand;
+    
+    protected AccessNode() {
+		super();
+	}
     
 	public AccessNode(int nodeID) {
 		super(nodeID);
@@ -66,6 +71,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
         tupleSource = null;
 		isUpdate = false;
         returnedRows = false;
+        nextCommand = null;
     }
 
 	public void setCommand(Command command) {
@@ -95,8 +101,9 @@ public class AccessNode extends SubqueryAwareRelationalNode {
         Command atomicCommand = command;
         boolean needProcessing = true;
         if(shouldEvaluate) {
-            atomicCommand = (Command) command.clone();
+            atomicCommand = nextCommand();
             needProcessing = prepareNextCommand(atomicCommand);
+            nextCommand = null;
         } else {
             needProcessing = RelationalNodeUtil.shouldExecute(atomicCommand, true);
         }
@@ -109,6 +116,15 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 		if(needProcessing) {
 			registerRequest(atomicCommand);
 		}
+	}
+
+	private Command nextCommand() {
+		//it's important to save the next command
+		//to ensure that the subquery ids remain stable
+		if (nextCommand == null) {
+			nextCommand = (Command) command.clone(); 
+		}
+		return nextCommand; 
 	}
 
     protected boolean prepareNextCommand(Command atomicCommand) throws TeiidComponentException, TeiidProcessingException {
@@ -155,11 +171,13 @@ public class AccessNode extends SubqueryAwareRelationalNode {
             	if (processCommandsIndividually() && hasPendingRows()) {
             		return pullBatch();
             	}
-                Command atomicCommand = (Command)command.clone();
+                Command atomicCommand = nextCommand();
                 if (prepareNextCommand(atomicCommand)) {
+                	nextCommand = null;
                     registerRequest(atomicCommand);
                     break;
                 }
+                nextCommand = null;
             }            
         }
         
@@ -204,7 +222,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	}
 
 	public Object clone(){
-		AccessNode clonedNode = new AccessNode(super.getID());
+		AccessNode clonedNode = new AccessNode();
 		this.copy(this, clonedNode);
 		return clonedNode;
 	}

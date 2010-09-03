@@ -22,10 +22,9 @@
 
 package org.teiid.query.sql.lang;
 
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
@@ -259,14 +258,13 @@ public class Update extends TranslatableProcedureContainer {
      * @see org.teiid.query.sql.lang.ProcedureContainer#getProcedureParameters()
      * @since 5.0
      */
-    public Map getProcedureParameters() {
+    public LinkedHashMap<ElementSymbol, Expression> getProcedureParameters() {
         
-        HashMap map = new HashMap();
+    	LinkedHashMap<ElementSymbol, Expression> map = new LinkedHashMap<ElementSymbol, Expression>();
         
         for (Iterator iter = getChangeList().getClauses().iterator(); iter.hasNext();) {
         	SetClause setClause = (SetClause)iter.next();
             ElementSymbol symbol = (ElementSymbol)(setClause.getSymbol()).clone();
-            symbol = (ElementSymbol)(setClause.getSymbol()).clone();
             symbol.setName(ProcedureReservedWords.INPUTS + SingleElementSymbol.SEPARATOR + symbol.getShortCanonicalName());
             map.put( symbol, setClause.getValue() );
         } // for

@@ -29,9 +29,27 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.jboss.ws.native</groupId>
-            <artifactId>jbossws-native-core</artifactId>
-            <version>3.1.1.GA</version>
+            <groupId>org.apache.cxf</groupId>
+  			<artifactId>cxf-rt-frontend-jaxws</artifactId>
+  			<version>2.2.2</version>
+            <scope>provided</scope>        
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+  			<artifactId>cxf-rt-transports-http</artifactId>
+  			<version>2.2.2</version>
+            <scope>provided</scope>        
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+  			<artifactId>cxf-rt-ws-security</artifactId>
+  			<version>2.2.2</version>
+            <scope>provided</scope>        
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+  			<artifactId>cxf-rt-ws-policy</artifactId>
+  			<version>2.2.2</version>
             <scope>provided</scope>        
         </dependency>
     </dependencies>

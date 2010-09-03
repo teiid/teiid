@@ -25,6 +25,7 @@ package org.teiid.query.tempdata;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -57,9 +58,7 @@ import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.SetClauseList;
-import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
@@ -123,14 +122,16 @@ class TempTable {
 		private TupleBrowser browser;
 
 		private QueryTupleSource(TupleBrowser browser, Map map,
-				List<SingleElementSymbol> projectedCols, Criteria condition) {
+				List<? extends SingleElementSymbol> projectedCols, Criteria condition) {
 			this.browser = browser;
 			this.indexes = RelationalNode.getProjectionIndexes(map, projectedCols);
 			this.eval = new Evaluator(map, null, null);
 			this.condition = condition;
 			this.project = shouldProject();
 			this.reserved = reserveBuffers();
-			lock.readLock().lock();
+			if (updatable) {
+				lock.readLock().lock();
+			}
 		}
 
 		@Override
@@ -142,9 +143,6 @@ class TempTable {
 					bm.releaseBuffers(reserved);
 					reserved = 0;
 					return null;
-				}
-				if (rowId != null) {
-					next = next.subList(1, next.size());
 				}
 				if (condition != null && !eval.evaluate(condition, next)) {
 					continue;
@@ -158,7 +156,9 @@ class TempTable {
 		
 		@Override
 		public void closeSource() {
-			lock.readLock().unlock();
+			if (updatable) {
+				lock.readLock().unlock();
+			}
 			bm.releaseBuffers(reserved);
 			reserved = 0;
 			browser.closeSource();
@@ -259,9 +259,11 @@ class TempTable {
 	private TempMetadataID tid;
 	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	private boolean updatable = true;
+	private LinkedHashMap<List<ElementSymbol>, TempTable> indexTables;
 	
 	private int keyBatchSize;
 	private int leafBatchSize;
+	private Map columnMap;
 
 	TempTable(TempMetadataID tid, BufferManager bm, List<ElementSymbol> columns, int primaryKeyLength, String sessionID) {
 		this.tid = tid;
@@ -275,71 +277,93 @@ class TempTable {
         } else {
         	tree = bm.createSTree(columns, sessionID, primaryKeyLength);
         }
+		this.columnMap = RelationalNode.createLookupMap(columns);
 		this.columns = columns;
 		this.sessionID = sessionID;
 		this.keyBatchSize = bm.getSchemaSize(columns);
 		this.leafBatchSize = bm.getSchemaSize(columns.subList(0, primaryKeyLength));
 	}
 	
+	void addIndex(List<ElementSymbol> indexColumns) throws TeiidComponentException, TeiidProcessingException {
+		List<ElementSymbol> keyColumns = columns.subList(0, tree.getKeyLength());
+		if (keyColumns.equals(indexColumns) || (indexTables != null && indexTables.containsKey(indexColumns))) {
+			return;
+		}
+		List<ElementSymbol> allColumns = new ArrayList<ElementSymbol>(indexColumns);
+		for (ElementSymbol elementSymbol : keyColumns) {
+			if (allColumns.indexOf(elementSymbol) < 0) {
+				allColumns.add(elementSymbol);
+			}
+		}
+		TempTable indexTable = new TempTable(new TempMetadataID("idx", Collections.EMPTY_LIST), this.bm, allColumns, allColumns.size(), this.sessionID); //$NON-NLS-1$
+		indexTable.setPreferMemory(this.tree.isPreferMemory());
+		indexTable.lock = this.lock;
+		if (indexTables == null) {
+			indexTables = new LinkedHashMap<List<ElementSymbol>, TempTable>();
+			indexTables.put(indexColumns, indexTable);
+		}
+		//TODO: ordered insert optimization
+		TupleSource ts = createTupleSource(allColumns, null, null);
+		indexTable.insert(ts, allColumns);
+	}
+	
 	private int reserveBuffers() {
 		return bm.reserveBuffers(leafBatchSize + (tree.getHeight() - 1)*keyBatchSize, BufferReserveMode.WAIT);
 	}
 
-	public TupleSource createTupleSource(final List<SingleElementSymbol> projectedCols, final Criteria condition, OrderBy orderBy) throws TeiidComponentException, TeiidProcessingException {
-		Map map = RelationalNode.createLookupMap(getColumns());
-		
-		Boolean direction = null;
-		boolean orderByUsingIndex = false;
-		if (orderBy != null && rowId == null) {
-			int[] orderByIndexes = RelationalNode.getProjectionIndexes(map, orderBy.getSortKeys());
-			if (orderByIndexes.length < tree.getKeyLength()) {
-				orderByUsingIndex = false;
-			} else {
-				orderByUsingIndex = true;
-				for (int i = 0; i < tree.getKeyLength(); i++) {
-					if (orderByIndexes[i] != i) {
-						orderByUsingIndex = false;
-						break;
-					}
-				}
-				if (orderByUsingIndex) {
-					for (int i = 0; i < tree.getKeyLength(); i++) {
-						OrderByItem item = orderBy.getOrderByItems().get(i);
-						if (item.getNullOrdering() != null) {
-							orderByUsingIndex = false;
-							break;
-						}
-						if (item.isAscending()) {
-							if (direction == null) {
-								direction = OrderBy.ASC;
-							} else if (direction != OrderBy.ASC) {
-								orderByUsingIndex = false;
-								break;
-							}
-						} else if (direction == null) {
-							direction = OrderBy.DESC;
-						} else if (direction != OrderBy.DESC) {
-							orderByUsingIndex = false;
-							break;
-						}
-					}
+	public TupleSource createTupleSource(final List<? extends SingleElementSymbol> projectedCols, final Criteria condition, OrderBy orderBy) throws TeiidComponentException, TeiidProcessingException {
+		IndexInfo primary = new IndexInfo(this, projectedCols, condition, orderBy, true);
+		IndexInfo ii = primary;
+		if (indexTables != null && (condition != null || orderBy != null) && ii.valueSet.size() != 1) {
+			LogManager.logDetail(LogConstants.CTX_DQP, "Considering indexes on table", this, "for query", projectedCols, condition, orderBy); //$NON-NLS-1$ //$NON-NLS-2$
+			int rowCost = this.tree.getRowCount();
+			int bestCost = estimateCost(orderBy, ii, rowCost);
+			for (TempTable table : this.indexTables.values()) {
+				IndexInfo secondary = new IndexInfo(table, projectedCols, condition, orderBy, false);
+				int cost = estimateCost(orderBy, secondary, rowCost);
+				if (cost < bestCost) {
+					ii = secondary;
+					bestCost = cost;
 				}
 			}
+			LogManager.logDetail(LogConstants.CTX_DQP, "Choose index", ii.table, "covering:", ii.coveredCriteria,"ordering:", ii.ordering); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			if (ii.covering) {
+				return ii.table.createTupleSource(projectedCols, condition, orderBy, ii);
+			}
+			List<ElementSymbol> pkColumns = this.columns.subList(0, this.tree.getKeyLength());
+			if (ii.ordering != null) {
+				//use order and join
+				primary.valueTs = ii.table.createTupleSource(pkColumns, 
+						Criteria.combineCriteria(ii.coveredCriteria), orderBy, ii);
+				primary.ordering = null;
+				return createTupleSource(projectedCols, Criteria.combineCriteria(ii.nonCoveredCriteria), null, primary);
+			} 
+			//order by pk to localize lookup costs, then join
+			OrderBy pkOrderBy = new OrderBy();
+			for (ElementSymbol elementSymbol : pkColumns) {
+				pkOrderBy.addVariable(elementSymbol);
+			}
+			primary.valueTs = ii.table.createTupleSource(pkColumns, 
+					Criteria.combineCriteria(ii.coveredCriteria), pkOrderBy, ii);
+			return createTupleSource(projectedCols, Criteria.combineCriteria(ii.nonCoveredCriteria), orderBy, primary);
 		}
-		if (!orderByUsingIndex) {
-			direction = OrderBy.ASC;
-		}
-		
-		TupleBrowser browser = createTupleBrower(condition, direction);
-		TupleSource ts = new QueryTupleSource(browser, map, projectedCols, condition);
+		return createTupleSource(projectedCols, condition, orderBy, ii);
+	}
+
+	private TupleSource createTupleSource(
+			final List<? extends SingleElementSymbol> projectedCols,
+			final Criteria condition, OrderBy orderBy, IndexInfo ii)
+			throws TeiidComponentException, TeiidProcessingException {
+		TupleBrowser browser = ii.createTupleBrowser();
+		TupleSource ts = new QueryTupleSource(browser, columnMap, projectedCols, condition);
 		
 		boolean usingQueryTupleSource = false;
 		try {
 			TupleBuffer tb = null;
-			if (!orderByUsingIndex && orderBy != null) {
+			if (ii.ordering == null && orderBy != null) {
 				SortUtility sort = new SortUtility(ts, orderBy.getOrderByItems(), Mode.SORT, bm, sessionID, projectedCols);
 				tb = sort.sort();
-			} else if (!updatable) {
+			} else if (updatable) {
 				tb = bm.createTupleBuffer(projectedCols, sessionID, TupleSourceType.PROCESSOR);
 				List<?> next = null;
 				while ((next = ts.nextTuple()) != null) {
@@ -359,61 +383,31 @@ class TempTable {
 		}
 	}
 
+	/**
+	 * TODO: this could easily use statistics - the tree level 1 would be an ideal place
+	 * to compute them, since it minimizes page loads, and is a random sample.
+	 * TODO: this should also factor in the block size
+	 */
+	private int estimateCost(OrderBy orderBy, IndexInfo ii, int rowCost) {
+		if (ii.valueSet.size() != 0) {
+			int length = ii.valueSet.get(0).size();
+			rowCost = ii.valueSet.size() * (ii.table.getPkLength() - length + 1);
+		} else if (ii.upper != null) {
+			rowCost /= 3;
+		} else if (ii.lower != null) {
+			rowCost /= 3;
+		}
+		int cost = Math.max(1, rowCost);
+		if (cost > 1 && (!ii.covering || (orderBy != null && ii.ordering == null))) {
+			cost *= (32 - Integer.numberOfLeadingZeros(cost - 1));
+		}
+		return cost;
+	}
+
 	private TupleBrowser createTupleBrower(Criteria condition, boolean direction) throws TeiidComponentException {
-		List<Object> lower = null;
-		List<Object> upper = null;
-		List<List<Object>> values = null;
-		if (condition != null && rowId == null) {
-			IndexCondition[] indexConditions = IndexCondition.getIndexConditions(condition, columns.subList(0, tree.getKeyLength()));
-			for (int i = 0; i < indexConditions.length; i++) {
-				IndexCondition indexCondition = indexConditions[i];
-				if (indexCondition.lower != null) {
-					if (i == 0) {
-						lower = new ArrayList<Object>(tree.getKeyLength());
-						lower.add(indexCondition.lower.getValue());
-					} if (lower != null && lower.size() == i) {
-						lower.add(indexCondition.lower.getValue());
-					}
-				} 
-				if (indexCondition.upper != null) {
-					if (i == 0) {
-						upper = new ArrayList<Object>(tree.getKeyLength());
-						upper.add(indexCondition.upper.getValue());
-					} else if (upper != null && upper.size() == i) {
-						upper.add(indexCondition.upper.getValue());
-					}
-				} 
-				if (!indexCondition.valueSet.isEmpty()) {
-					if (i == 0) {
-						values = new ArrayList<List<Object>>();
-						for (Constant constant : indexCondition.valueSet) {
-							List<Object> value = new ArrayList<Object>(tree.getKeyLength());
-							value.add(constant.getValue());
-							values.add(value);
-						}
-					} else if (values != null && values.size() == 1 && indexCondition.valueSet.size() == 1) {
-						values.iterator().next().add(indexCondition.valueSet.first().getValue());
-					}
-				}
-			}
-			if (indexConditions.length > 0) {
-				if (values != null) {
-					List<Object> value = values.iterator().next();
-					if (value.size() != tree.getKeyLength()) {
-						values = null;
-						lower = new ArrayList<Object>(value);
-						lower.addAll(Collections.nCopies(tree.getKeyLength() - value.size(), null));
-						upper = new ArrayList<Object>(value);
-					}
-				} else if (lower != null) {
-					lower.addAll(Collections.nCopies(tree.getKeyLength() - lower.size(), null));
-				}
-			}
-		}
-		if (values != null) {
-			return new TupleBrowser(this.tree, values, direction);
-		}
-		return new TupleBrowser(this.tree, lower, upper, direction);
+		IndexInfo ii = new IndexInfo(this, null, condition, null, true);
+		ii.ordering = direction;
+		return ii.createTupleBrowser();
 	}
 	
 	public int getRowCount() {
@@ -426,6 +420,11 @@ class TempTable {
 	
 	public void remove() {
 		tree.remove();
+		if (this.indexTables != null) {
+			for (TempTable indexTable : this.indexTables.values()) {
+				indexTable.remove();
+			}
+		}
 	}
 	
 	public List<ElementSymbol> getColumns() {
@@ -546,7 +545,7 @@ class TempTable {
 		return CollectionTupleSource.createUpdateCountTupleSource(updateCount);
 	}
 	
-	private void insertTuple(List<Object> list, boolean ordered) throws TeiidComponentException, TeiidProcessingException {
+	private void insertTuple(List<?> list, boolean ordered) throws TeiidComponentException, TeiidProcessingException {
 		if (tree.insert(list, ordered?InsertMode.ORDERED:InsertMode.NEW) != null) {
 			throw new TeiidProcessingException(QueryPlugin.Util.getString("TempTable.duplicate_key")); //$NON-NLS-1$
 		}
@@ -562,9 +561,26 @@ class TempTable {
 		try {
 			lock.writeLock().lock();
 			if (remove) {
-				return tree.remove(tuple);
+				List<?> result = tree.remove(tuple);
+				if (result == null) {
+					return null;
+				}
+				if (indexTables != null) {
+					for (TempTable index : this.indexTables.values()) {
+						tuple = RelationalNode.projectTuple(RelationalNode.getProjectionIndexes(index.getColumnMap(), index.columns), result);
+						index.tree.remove(tuple);
+					}
+				}
+				return result;
 			} 
-			return tree.insert(tuple, InsertMode.UPDATE);
+			List<?> result = tree.insert(tuple, InsertMode.UPDATE);
+			if (indexTables != null) {
+				for (TempTable index : this.indexTables.values()) {
+					tuple = RelationalNode.projectTuple(RelationalNode.getProjectionIndexes(index.getColumnMap(), index.columns), tuple);
+					index.tree.insert(tuple, InsertMode.UPDATE);
+				}
+			}
+			return result;
 		} finally {
 			lock.writeLock().unlock();
 		}
@@ -582,6 +598,11 @@ class TempTable {
 	
 	void setUpdatable(boolean updatable) {
 		this.updatable = updatable;
+		if (this.indexTables != null) {
+			for (TempTable index : this.indexTables.values()) {
+				index.setUpdatable(updatable);
+			}
+		}
 	}
 	
 	CacheHint getCacheHint() {
@@ -597,6 +618,19 @@ class TempTable {
 	
 	public boolean isUpdatable() {
 		return updatable;
+	}
+	
+	@Override
+	public String toString() {
+		return tid.getID() + " (" + columns + ")\n"; //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
+	Map getColumnMap() {
+		return this.columnMap;
+	}
+	
+	STree getTree() {
+		return tree;
 	}
 
 }

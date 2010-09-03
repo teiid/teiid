@@ -23,11 +23,10 @@
 package org.teiid.query.sql.lang;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.util.EquivalenceUtil;
@@ -50,11 +49,8 @@ public class Insert extends ProcedureContainer {
     /** Identifies the group to be udpdated. */
     private GroupSymbol group;
 
-    /** list of column variables, null = all columns */
-    private List variables = new LinkedList();
-
-    /** List of Expressions */
-    private List values = new LinkedList();
+    private List<ElementSymbol> variables = new LinkedList<ElementSymbol>();
+    private List<Expression> values = new LinkedList<Expression>();
     
     private QueryCommand queryExpression;
     
@@ -234,14 +230,13 @@ public class Insert extends ProcedureContainer {
      * @see org.teiid.query.sql.lang.ProcedureContainer#getParameters()
      * @since 5.0
      */
-    public Map getProcedureParameters() {
+    public LinkedHashMap<ElementSymbol, Expression> getProcedureParameters() {
         
         int iSize = getVariables().size();
-        HashMap map = new HashMap();
+        LinkedHashMap<ElementSymbol, Expression> map = new LinkedHashMap<ElementSymbol, Expression>();
         
         for (int j = 0; j < iSize; j++) {
-            ElementSymbol symbol = (ElementSymbol)((ElementSymbol)variables.get( j )).clone();
-            symbol = (ElementSymbol)((ElementSymbol)variables.get( j )).clone();
+            ElementSymbol symbol = (ElementSymbol)variables.get( j ).clone();
             symbol.setName(ProcedureReservedWords.INPUTS + SingleElementSymbol.SEPARATOR + symbol.getShortCanonicalName());
             map.put(symbol, values.get( j ) );
         } // for 

@@ -43,11 +43,8 @@ import org.rhq.core.domain.measurement.MeasurementDataNumeric;
 import org.rhq.core.domain.measurement.MeasurementReport;
 import org.rhq.core.domain.measurement.MeasurementScheduleRequest;
 import org.rhq.core.pluginapi.configuration.ConfigurationUpdateReport;
-import org.rhq.core.pluginapi.inventory.InvalidPluginConfigurationException;
-import org.rhq.core.pluginapi.inventory.ResourceComponent;
 import org.rhq.core.pluginapi.inventory.ResourceContext;
 import org.rhq.plugins.jbossas5.ApplicationServerComponent;
-import org.rhq.plugins.jbossas5.ProfileServiceComponent;
 import org.rhq.plugins.jbossas5.connection.ProfileServiceConnection;
 import org.teiid.rhq.admin.DQPManagementView;
 import org.teiid.rhq.plugin.util.PluginConstants;
@@ -59,22 +56,14 @@ import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.Platform;
  * 
  */
 public class PlatformComponent extends Facet {
-	private final Log LOG = LogFactory
-			.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
+	private final Log LOG = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 
-	String[] PLATFORM_SERVICES_NAMES = { "RuntimeEngineDeployer",
-			"BufferService", "SessionService", "JdbcSocketConfiguration" };
+	String[] PLATFORM_SERVICES_NAMES = { "RuntimeEngineDeployer", //$NON-NLS-1$
+			"BufferService", "SessionService", "JdbcSocketConfiguration" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @seeorg.teiid.rhq.plugin.Facet#start(org.rhq.core.pluginapi.inventory.
-	 * ResourceContext)
-	 */
 	@Override
 	public void start(ResourceContext context) {
-		this.setComponentName(context.getPluginConfiguration().getSimpleValue(
-				"name", null));
+		this.setComponentName(context.getPluginConfiguration().getSimpleValue(	"name", null)); //$NON-NLS-1$
 		this.resourceConfiguration = context.getPluginConfiguration();
 		super.start(context);
 	}
@@ -93,22 +82,15 @@ public class PlatformComponent extends Facet {
 
 		RunState runState;
 		try {
-			runState = ProfileServiceUtil.getRuntimeEngineDeployer(getConnection())
-					.getRunState();
+			runState = ProfileServiceUtil.getRuntimeEngineDeployer(getConnection()).getRunState();
 		} catch (NamingException e) {
-			LOG
-					.error("Naming exception getting: "
-							+ PluginConstants.ComponentType.Platform.TEIID_RUNTIME_ENGINE);
+			LOG	.debug("Naming exception getting: " + PluginConstants.ComponentType.Platform.TEIID_RUNTIME_ENGINE); //$NON-NLS-1$
 			return AvailabilityType.DOWN;
 		} catch (Exception e) {
-			LOG
-					.error("Exception getting: "
-							+ PluginConstants.ComponentType.Platform.TEIID_RUNTIME_ENGINE);
+			LOG	.debug("Exception getting: " 	+ PluginConstants.ComponentType.Platform.TEIID_RUNTIME_ENGINE); //$NON-NLS-1$
 			return AvailabilityType.DOWN;
 		}
-		return (runState == RunState.RUNNING) ? AvailabilityType.UP
-				: AvailabilityType.DOWN;
-
+		return (runState == RunState.RUNNING) ? AvailabilityType.UP: AvailabilityType.DOWN;
 	}
 
 	@Override
@@ -116,23 +98,21 @@ public class PlatformComponent extends Facet {
 			Configuration configuration, Map<String, Object> valueMap) {
 		// Parameter logic for System Operations
 		if (name.equals(Platform.Operations.KILL_REQUEST)) {
-			valueMap.put(Operation.Value.REQUEST_ID, configuration.getSimple(
-					Operation.Value.REQUEST_ID).getLongValue());
-			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(
-					Operation.Value.SESSION_ID).getLongValue());
+			valueMap.put(Operation.Value.REQUEST_ID, configuration.getSimple(Operation.Value.REQUEST_ID).getLongValue());
+			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(Operation.Value.SESSION_ID).getLongValue());
 		} else if (name.equals(Platform.Operations.KILL_REQUEST)) {
-			valueMap.put(Operation.Value.TRANSACTION_ID, configuration
-					.getSimple(Operation.Value.TRANSACTION_ID).getLongValue());
+			valueMap.put(Operation.Value.TRANSACTION_ID, configuration.getSimple(Operation.Value.TRANSACTION_ID).getLongValue());
 		} else if (name.equals(Platform.Operations.KILL_SESSION)) {
-			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(
-					Operation.Value.SESSION_ID).getLongValue());
+			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(Operation.Value.SESSION_ID).getLongValue());
+		} else if (name.equals(Platform.Operations.DEPLOY_VDB_BY_URL)) {
+			valueMap.put(Operation.Value.VDB_URL, configuration.getSimple(Operation.Value.VDB_URL).getStringValue());
+			valueMap.put(Operation.Value.VDB_DEPLOY_NAME, configuration.getSimple(Operation.Value.VDB_DEPLOY_NAME).getStringValue());
+			valueMap.put(Operation.Value.VDB_VERSION, configuration.getSimple(Operation.Value.VDB_VERSION).getIntegerValue());
 		}
-
 	}
 
 	@Override
-	public void getValues(MeasurementReport report,
-			Set<MeasurementScheduleRequest> requests) throws Exception {
+	public void getValues(MeasurementReport report, Set<MeasurementScheduleRequest> requests) throws Exception {
 
 		DQPManagementView view = new DQPManagementView();
 
@@ -146,56 +126,27 @@ public class PlatformComponent extends Facet {
 				// Initialize any parameters to be used in the retrieval of
 				// metric values
 
-				Object metricReturnObject = view.getMetric(getConnection(),
+				Object metric = view.getMetric(getConnection(),
 						getComponentType(), this.getComponentIdentifier(),
 						name, valueMap);
 
-				try {
-					if (request
-							.getName()
-							.equals(
-									PluginConstants.ComponentType.Platform.Metrics.QUERY_COUNT)) {
-						report.addData(new MeasurementDataNumeric(request,
-								(Double) metricReturnObject));
-					} else {
-						if (request
-								.getName()
-								.equals(
-										PluginConstants.ComponentType.Platform.Metrics.SESSION_COUNT)) {
-							report.addData(new MeasurementDataNumeric(request,
-									(Double) metricReturnObject));
-						} else {
-							if (request
-									.getName()
-									.equals(
-											PluginConstants.ComponentType.Platform.Metrics.LONG_RUNNING_QUERIES)) {
-								report.addData(new MeasurementDataNumeric(
-										request, (Double) metricReturnObject));
-							} else {
-								if (request
-										.getName()
-										.equals(
-												PluginConstants.ComponentType.Platform.Metrics.BUFFER_USAGE)) {
-									report.addData(new MeasurementDataNumeric(
-											request,
-											(Double) metricReturnObject));
-								}
-							}
-						}
-					}
-
-				} catch (Exception e) {
-					LOG.error("Failed to obtain measurement [" + name //$NON-NLS-1$
-							+ "]. Cause: " + e); //$NON-NLS-1$
-					throw (e);
+				if (metric instanceof Double) {
+					report.addData(new MeasurementDataNumeric(request, (Double) metric));
+				}
+				else if (metric instanceof Integer ){
+					report.addData(new MeasurementDataNumeric(request, new Double(((Integer)metric).doubleValue())));
+				}
+				else if (metric instanceof Long){
+					report.addData(new MeasurementDataNumeric(request, new Double(((Long)metric).longValue())));
+				}
+				else {
+					LOG.error("Metric value must be a numeric value"); //$NON-NLS-1$
 				}
 			}
 		} catch (Exception e) {
-			LOG.error("Failed to obtain measurement [" + name //$NON-NLS-1$
-					+ "]. Cause: " + e); //$NON-NLS-1$
+			LOG.error("Failed to obtain measurement [" + name 	+ "]. Cause: " + e); //$NON-NLS-1$ //$NON-NLS-2$
 			throw (e);
 		}
-
 	}
 
 	@Override
@@ -204,13 +155,6 @@ public class PlatformComponent extends Facet {
 		super.stop();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.teiid.rhq.plugin.Facet#updateResourceConfiguration(org.rhq.core.pluginapi
-	 * .configuration.ConfigurationUpdateReport)
-	 */
 	@Override
 	public void updateResourceConfiguration(ConfigurationUpdateReport report) {
 
@@ -231,27 +175,23 @@ public class PlatformComponent extends Facet {
 
 			for (String serviceName : PLATFORM_SERVICES_NAMES) {
 
-				managedComponent = managementView.getComponent(serviceName,
-						componentType);
-				Map<String, ManagedProperty> managedProperties = managedComponent
-						.getProperties();
+				managedComponent = managementView.getComponent(serviceName, componentType);
+				Map<String, ManagedProperty> managedProperties = managedComponent.getProperties();
 
-				ProfileServiceUtil.convertConfigurationToManagedProperties(
-						managedProperties, resourceConfig, resourceContext
-								.getResourceType());
+				ProfileServiceUtil.convertConfigurationToManagedProperties(managedProperties, resourceConfig, resourceContext.getResourceType());
 
 				try {
 					managementView.updateComponent(managedComponent);
 				} catch (Exception e) {
-					LOG.error("Unable to update component ["
-							+ managedComponent.getName() + "] of type "
-							+ componentType + ".", e);
+					LOG.error("Unable to update component [" //$NON-NLS-1$
+							+ managedComponent.getName() + "] of type " //$NON-NLS-1$
+							+ componentType + ".", e); //$NON-NLS-1$
 					report.setStatus(ConfigurationUpdateStatus.FAILURE);
 					report.setErrorMessageFromThrowable(e);
 				}
 			}
 		} catch (Exception e) {
-			LOG.error("Unable to process update request", e);
+			LOG.error("Unable to process update request", e); //$NON-NLS-1$
 			report.setStatus(ConfigurationUpdateStatus.FAILURE);
 			report.setErrorMessageFromThrowable(e);
 		}
@@ -285,20 +225,14 @@ public class PlatformComponent extends Facet {
 		// Get all ManagedComponents of type Teiid and subtype dqp
 		Set<ManagedComponent> mcSet = null;
 		try {
-			mcSet = ProfileServiceUtil
-					.getManagedComponents(
-							getConnection(),
-							new org.jboss.managed.api.ComponentType(
+			mcSet = ProfileServiceUtil.getManagedComponents(getConnection(),
+					new org.jboss.managed.api.ComponentType(
 									PluginConstants.ComponentType.Platform.TEIID_TYPE,
 									PluginConstants.ComponentType.Platform.TEIID_SUB_TYPE));
 		} catch (NamingException e) {
-			LOG
-					.error("NamingException getting components in Platform loadConfiguration(): "
-							+ e.getMessage());
+			LOG.error("NamingException getting components in Platform loadConfiguration(): "	+ e.getMessage()); //$NON-NLS-1$
 		} catch (Exception e) {
-			LOG
-					.error("Exception getting components in Platform loadConfiguration(): "
-							+ e.getMessage());
+			LOG.error("Exception getting components in Platform loadConfiguration(): "	+ e.getMessage()); //$NON-NLS-1$
 		}
 
 		for (ManagedComponent mc : mcSet) {
@@ -319,22 +253,18 @@ public class PlatformComponent extends Facet {
 				PropertySimple prop = new PropertySimple(mProp.getName(), value);
 				configuration.put(prop);
 			} catch (Exception e) {
-				LOG
-						.error("Exception setting properties in Platform loadConfiguration(): "
-								+ e.getMessage());
+				LOG.error("Exception setting properties in Platform loadConfiguration(): "	+ e.getMessage()); //$NON-NLS-1$
 			}
 		}
 	}
 
 	@Override
 	public ProfileServiceConnection getConnection() {
-		return ((ApplicationServerComponent) this.resourceContext
-				.getParentResourceComponent()).getConnection();
+		return ((ApplicationServerComponent) this.resourceContext.getParentResourceComponent()).getConnection();
 	}
 
 	@Override
 	public EmsConnection getEmsConnection() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

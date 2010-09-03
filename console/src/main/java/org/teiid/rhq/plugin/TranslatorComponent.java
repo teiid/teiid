@@ -63,16 +63,9 @@ public class TranslatorComponent extends Facet {
 		String RESOURCE_NAME = "resourceName";
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @seeorg.teiid.rhq.plugin.Facet#start(org.rhq.core.pluginapi.inventory.
-	 * ResourceContext)
-	 */
 	@Override
 	public void start(ResourceContext context) {
-		this.setComponentName(context.getPluginConfiguration().getSimpleValue(
-				"name", null));
+		this.setComponentName(context.getPluginConfiguration().getSimpleValue(	"name", null));
 		this.resourceConfiguration=context.getPluginConfiguration();
 		super.start(context);
 	}
@@ -94,8 +87,7 @@ public class TranslatorComponent extends Facet {
 	 * 
 	 * @see MeasurementFacet#getValues(MeasurementReport, Set)
 	 */
-	public void getValues(MeasurementReport report,
-			Set<MeasurementScheduleRequest> requests) {
+	public void getValues(MeasurementReport report, Set<MeasurementScheduleRequest> requests) {
 		for (MeasurementScheduleRequest request : requests) {
 			String name = request.getName();
 
@@ -107,11 +99,9 @@ public class TranslatorComponent extends Facet {
 				Number value = new Integer(1); // dummy measurement value -
 				// this should come from the
 				// managed resource
-				report.addData(new MeasurementDataNumeric(request, value
-						.doubleValue()));
+				report.addData(new MeasurementDataNumeric(request, value.doubleValue()));
 			} catch (Exception e) {
-				LOG.error("Failed to obtain measurement [" + name //$NON-NLS-1$
-						+ "]. Cause: " + e); //$NON-NLS-1$
+				LOG.error("Failed to obtain measurement [" + name 	+ "]. Cause: " + e); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		}
 
@@ -121,12 +111,8 @@ public class TranslatorComponent extends Facet {
 	protected void setOperationArguments(String name,
 			Configuration configuration, Map argumentMap) {
 		//No operations for translators
-
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.teiid.rhq.plugin.Facet#loadResourceConfiguration()
-	 */
 	@Override
 	public Configuration loadResourceConfiguration() {
 
@@ -144,8 +130,8 @@ public class TranslatorComponent extends Facet {
 			LOG.error(msg, e);
 		}
 		
-		String translatorName = ProfileServiceUtil.getSimpleValue(
-				translator, "name", String.class);
+		String translatorName = ProfileServiceUtil.getSimpleValue(	translator, "name", String.class);
+		String description = ProfileServiceUtil.getSimpleValue(	translator, "description", String.class);
 
 		Configuration c = resourceConfiguration;
 		PropertyList list = new PropertyList("translatorList");
@@ -153,12 +139,12 @@ public class TranslatorComponent extends Facet {
 		c.put(list);
 
 		// First get translator specific properties
-		ManagedProperty translatorProps = translator
-				.getProperty("property");
+		ManagedProperty translatorProps = translator.getProperty("property");
 		getTranslatorValues(translatorProps.getValue(), propMap, list);
 
 		// Now get common properties
 		c.put(new PropertySimple("name", translatorName));
+		c.put(new PropertySimple("description", description));
 		
 		return c;
 
@@ -169,8 +155,7 @@ public class TranslatorComponent extends Facet {
 		MetaType metaType = pValue.getMetaType();
 		Map<String, T> unwrappedvalue = null;
 		if (metaType.isComposite()) {
-			unwrappedvalue = (Map<String, T>) MetaValueFactory
-					.getInstance().unwrap(pValue);
+			unwrappedvalue = (Map<String, T>) MetaValueFactory	.getInstance().unwrap(pValue);
 
 			for (String key : unwrappedvalue.keySet()) {
 				map = new PropertyMap("property");

@@ -23,6 +23,7 @@
 package org.teiid.net;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 
 import org.teiid.core.util.ArgCheck;
@@ -31,6 +32,10 @@ import org.teiid.core.util.HashCodeUtil;
 
 /**
  * Defines the hostname/port or {@link InetAddress} to connect to a host.
+ * 
+ * Similar to an {@link InetSocketAddress} except that it can be constructed
+ * fully resolved, with an {@link InetAddress} and a hostname.
+ * 
  * @since 4.2
  */
 public class HostInfo {
@@ -38,14 +43,25 @@ public class HostInfo {
     private String hostName;
     private int portNumber = 0;
     private InetAddress inetAddress;
-
-    public InetAddress getInetAddress() throws UnknownHostException {
-    	if (inetAddress != null) {
-    		return inetAddress;
-    	}
-    	return InetAddress.getByName(this.hostName);
+    private boolean ssl;
+    
+    /**
+     * Construct a fully resolved {@link HostInfo}.
+     * @param hostName
+     * @param addr
+     */
+    public HostInfo(String hostName, InetSocketAddress addr) {
+    	this.hostName = hostName;
+    	this.portNumber = addr.getPort();
+    	this.inetAddress = addr.getAddress();
     }
     
+    /**
+     * Construct a {@link HostInfo} that can resolve each
+     * time an {@link InetAddress} is asked for.
+     * @param host
+     * @param port
+     */
     public HostInfo (String host, int port) {
     	ArgCheck.isNotNull(host);
 		this.hostName = host.toLowerCase();
@@ -59,6 +75,13 @@ public class HostInfo {
 			}
 		} catch (UnknownHostException e) {
 		}
+    }
+    
+    public InetAddress getInetAddress() throws UnknownHostException {
+    	if (inetAddress != null) {
+    		return inetAddress;
+    	}
+    	return InetAddress.getByName(this.hostName);
     }
     
     public String getHostName() {
@@ -87,7 +110,16 @@ public class HostInfo {
     		return false;
     	}
         HostInfo hostInfo = (HostInfo) obj;
-        return hostName.equals(hostInfo.getHostName()) && portNumber == hostInfo.getPortNumber();
+        if (portNumber != hostInfo.getPortNumber()) {
+        	return false;
+        }
+        if (inetAddress != null && hostInfo.inetAddress != null) {
+        	return inetAddress.equals(hostInfo.inetAddress);
+        }
+        if (ssl != hostInfo.ssl) {
+        	return false;
+        }
+        return hostName.equals(hostInfo.getHostName());
     }
 
     /** 
@@ -98,5 +130,17 @@ public class HostInfo {
         int hc = HashCodeUtil.hashCode(0, hostName);
         return HashCodeUtil.hashCode(hc, portNumber);
     }
+    
+    public boolean isResolved() {
+    	return this.inetAddress != null;
+    }
+    
+    public boolean isSsl() {
+		return ssl;
+	}
+    
+    public void setSsl(boolean ssl) {
+		this.ssl = ssl;
+	}
 
 }

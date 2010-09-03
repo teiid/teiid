@@ -29,12 +29,17 @@ public interface Cache<K, V>  {
 	
 	public enum Type {SESSION("Session"), //$NON-NLS-1$ 
 						RESULTSET("ResultSet"), //$NON-NLS-1$
+						RESULTSET_BATCHES(RESULTSET, "batches"), //$NON-NLS-1$
 						PREPAREDPLAN("PreparaedPlan"); //$NON-NLS-1$
 		
 		private String location;
 		
 		Type(String location){
 			this.location = location;
+		}
+		
+		Type(Type base, String location){
+			this.location = base.location+"/"+location; //$NON-NLS-1$
 		}
 		
 		public String location() {

@@ -176,6 +176,7 @@ public class TupleBatch implements Externalizable {
     }
 
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+    	rowOffset = in.readInt();
         terminationFlag = in.readBoolean();
         preservedTypes = (String[])in.readObject();
         if (types == null) {
@@ -187,6 +188,7 @@ public class TupleBatch implements Externalizable {
         }
     }
     public void writeExternal(ObjectOutput out) throws IOException {
+    	out.writeInt(this.rowOffset);
         out.writeBoolean(terminationFlag);
         out.writeObject(this.preservedTypes);
         BatchSerializer.writeBatch(out, types, getAllTuples());

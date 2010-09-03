@@ -36,8 +36,6 @@ import java.util.Set;
 
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
-import org.teiid.adminapi.impl.ModelMetaData;
-import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
@@ -75,32 +73,16 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 		STORED_PROCEDURE;
     }
     
-    private VDBMetaData vdb;
     private HashMap<String, DataPolicy> allowedPolicies;
     private String userName;
-    private boolean useEntitlements;
 
-    public AuthorizationValidationVisitor(VDBMetaData vdb, boolean useEntitlements, HashMap<String, DataPolicy> policies, String user) {
-        this.vdb = vdb;
+    public AuthorizationValidationVisitor(HashMap<String, DataPolicy> policies, String user) {
         this.allowedPolicies = policies;
         this.userName = user;
-        this.useEntitlements = useEntitlements;
     }
 
     // ############### Visitor methods for language objects ##################
     
-    @Override
-    public void visit(GroupSymbol obj) {
-    	try {
-    		Object modelID = getMetadata().getModelID(obj.getMetadataID());
-    		this.validateModelVisibility(modelID, obj);
-	    } catch(QueryMetadataException e) {
-	        handleException(e, obj);
-	    } catch(TeiidComponentException e) {
-	        handleException(e, obj);
-	    }
-    }
-
     public void visit(Delete obj) {
     	validateEntitlements(obj);
     }
@@ -118,7 +100,6 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     }
 
     public void visit(StoredProcedure obj) {
-    	this.validateModelVisibility(obj.getModelID(), obj.getGroup());
     	validateEntitlements(obj);
     }
     
@@ -126,7 +107,6 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     	if (FunctionLibrary.LOOKUP.equalsIgnoreCase(obj.getName())) {
     		try {
 				ResolverUtil.ResolvedLookup lookup = ResolverUtil.resolveLookup(obj, this.getMetadata());
-	    		validateModelVisibility(getMetadata().getModelID(lookup.getGroup().getMetadataID()), lookup.getGroup());
     			List<Symbol> symbols = new LinkedList<Symbol>();
 				symbols.add(lookup.getGroup());
 				symbols.add(lookup.getKeyElement());
@@ -289,30 +269,10 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 
     }
 
-    protected void validateModelVisibility(Object modelID, GroupSymbol group) {
-        if(modelID instanceof TempMetadataID){
-        	return;
-        }
-        try {
-		    String modelName = getMetadata().getFullName(modelID);
-		    ModelMetaData model = vdb.getModel(modelName);
-		    if(!model.isVisible()) {
-		        handleValidationError(DQPPlugin.Util.getString("ERR.018.005.0088", getMetadata().getFullName(group.getMetadataID()))); //$NON-NLS-1$
-		    }
-        } catch (TeiidComponentException e) {
-			handleException(e, group);
-		}
-    }
-
-    
     /**
      * Out of resources specified, return the subset for which the specified not have authorization to access.
      */
     public Set<String> getInaccessibleResources(DataPolicy.PermissionType action, Set<String> resources, Context context) {
-        if (!this.useEntitlements) {
-        	return Collections.emptySet();
-        }
-        
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
 	        // Audit - request
 	    	AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-request", this.userName, resources.toArray(new String[resources.size()])); //$NON-NLS-1$

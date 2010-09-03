@@ -38,7 +38,7 @@ public class TestSocketProfile {
     /** Valid format of urls*/
     @Test public void testAcceptsURL1()  throws Exception   {
         assertTrue(SocketProfile.acceptsURL("jdbc:teiid:jvdb@mm://localhost:1234")); //$NON-NLS-1$
-        assertTrue(SocketProfile.acceptsURL("jdbc:metamatrix:jvdb@mm://localhost:1234")); //$NON-NLS-1$
+        assertTrue(SocketProfile.acceptsURL("jdbc:teiid:jvdb@mm://localhost:1234")); //$NON-NLS-1$
         assertTrue(SocketProfile.acceptsURL("jdbc:teiid:vdb@mm://localhost:1234;version=x")); //$NON-NLS-1$
         assertTrue(SocketProfile.acceptsURL("jdbc:teiid:vdb@mm://localhost:1234")); //$NON-NLS-1$
         assertTrue(SocketProfile.acceptsURL("jdbc:teiid:vdb@mm://localhost:1234,localhost2:12342,localhost3:12343")); //$NON-NLS-1$       
@@ -58,7 +58,7 @@ public class TestSocketProfile {
         assertTrue(SocketProfile.acceptsURL("jdbc:teiid:vdb@mm://my-host.mydomain.com:53535,127.0.0.1:1234")); //$NON-NLS-1$
         assertTrue(SocketProfile.acceptsURL("jdbc:teiid:vdb@mm://123.123.123.123:53535,127.0.0.1:1234")); //$NON-NLS-1$
         
-        assertTrue(!SocketProfile.acceptsURL("jdbc:metamatrix:jvdb@localhost:1234")); //$NON-NLS-1$
+        assertTrue(!SocketProfile.acceptsURL("jdbc:teiid:jvdb@localhost:1234")); //$NON-NLS-1$
         assertTrue(!SocketProfile.acceptsURL("jdbc:teiid:jvdb@localhost:1234")); //$NON-NLS-1$
 
         //DQP type

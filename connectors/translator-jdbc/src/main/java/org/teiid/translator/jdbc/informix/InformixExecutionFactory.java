@@ -34,7 +34,7 @@ import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 
 
-@Translator(name="informix")
+@Translator(name="informix", description="A translator for Informix Database")
 public class InformixExecutionFactory extends JDBCExecutionFactory {
 
 	@Override

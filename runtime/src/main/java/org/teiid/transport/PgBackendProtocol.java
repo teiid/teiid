@@ -39,7 +39,6 @@ import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.ChannelDownstreamHandler;
 import org.jboss.netty.channel.ChannelEvent;
 import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelPipelineCoverage;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.MessageEvent;
 import org.teiid.core.util.ReflectionHelper;
@@ -54,7 +53,6 @@ import org.teiid.odbc.ODBCClientRemote;
  * Some parts of this code is taken from H2's implementation of ODBC
  */
 @SuppressWarnings("nls")
-@ChannelPipelineCoverage("one")
 public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRemote {
 	
     private static final int PG_TYPE_VARCHAR = 1043;

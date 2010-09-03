@@ -203,9 +203,7 @@ public class DQPWorkContext implements Serializable {
 	    	}
 	    	
 	    	// get data roles from the VDB
-	        List<DataPolicy> policies = getVDB().getDataPolicies();
-	        
-	    	for (DataPolicy policy : policies) {
+	    	for (DataPolicy policy : getVDB().getDataPolicies()) {
 	        	if (matchesPrincipal(userRoles, policy)) {
 	        		this.policies.put(policy.getName(), policy);
 	        	}
@@ -215,9 +213,14 @@ public class DQPWorkContext implements Serializable {
     }
     
 	private boolean matchesPrincipal(Set<String> userRoles, DataPolicy policy) {
+		if (policy.isAnyAuthenticated()) {
+			return true;
+		}
 		List<String> roles = policy.getMappedRoleNames();
 		for (String role:roles) {
-			return userRoles.contains(role);
+			if (userRoles.contains(role)) {
+				return true;
+			}
 		}
 		return false;
 	}    

@@ -206,7 +206,7 @@
                 ReadOnly = no
                 ServerType = Postgres
                 ConnSettings = 
-                UseServerSidePrepare=1
+                UseServerSidePrepare=0
                 ByteaAsLongVarBinary=1
                 Optimizer=0
                 Ksqo=0

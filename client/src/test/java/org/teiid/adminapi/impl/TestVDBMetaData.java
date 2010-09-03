@@ -29,6 +29,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -191,5 +193,12 @@ public class TestVDBMetaData {
 		PropertiesUtils.setBeanProperty(vdb, "url", "http://teiid.org/myvdb.vdb");
 		
 		assertEquals("http://teiid.org/myvdb.vdb", vdb.getUrl());
+	}
+	
+	@Test public void testSetUrlVersion() throws MalformedURLException {
+		VDBMetaData vdb = new VDBMetaData();
+		vdb.setName("foo");
+		vdb.setUrl(new URL("file:///x/foo.2.vdb"));
+		assertEquals(2, vdb.getVersion());
 	}
 }

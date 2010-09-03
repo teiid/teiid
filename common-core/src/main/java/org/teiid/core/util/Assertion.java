@@ -22,9 +22,6 @@
 
 package org.teiid.core.util;
 
-import java.util.Collection;
-import java.util.Map;
-
 import org.teiid.core.CorePlugin;
 
 
@@ -76,210 +73,6 @@ public final class Assertion {
 		throw new AssertionError(msg);
 	}
 
-	// ########################## boolean METHODS ###################################
-
-	public static final void isEqual(boolean value1, boolean value2) {
-        isEqual(value1,value2,null);
-	}
-
-	public static final void isEqual(boolean value1, boolean value2, String message) {
-        if ( value1 != value2 ) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("Assertion.isEqual",new Object[]{new Boolean(value1),new Boolean(value2)}); //$NON-NLS-1$
-            failed(msg);
-        }
-	}
-
-	public static final void isNotEqual(boolean value1, boolean value2) {
-        isNotEqual(value1,value2,null);
-	}
-
-	public static final void isNotEqual(boolean value1, boolean value2, String message) {
-        if ( value1 == value2 ) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("Assertion.isNotEqual",new Object[]{new Boolean(value1),new Boolean(value2)}); //$NON-NLS-1$
-            failed(msg);
-        }
-	}
-
-	// ########################## int METHODS ###################################
-
-	public static final void isEqual(int value1, int value2) {
-        isEqual(value1,value2,null);
-	}
-
-	public static final void isEqual(int value1, int value2, String message) {
-        if ( value1 != value2 ) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("Assertion.isEqual",new Object[]{new Integer(value1),new Integer(value2)}); //$NON-NLS-1$
-            failed(msg);
-        }
-	}
-
-	public static final void isNotEqual(int value1, int value2) {
-        isNotEqual(value1,value2,null);
-	}
-
-	public static final void isNotEqual(int value1, int value2, String message) {
-        if ( value1 == value2 ) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("Assertion.isNotEqual",new Object[]{new Integer(value1),new Integer(value2)}); //$NON-NLS-1$
-            failed(msg);
-        }
-	}
-
-	public static final void isNonNegative(int value) {
-        isNonNegative(value,null);
-	}
-
-	public static final void isNonNegative(int value, String message) {
-        if ( value < 0 ) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("Assertion.isNonNegative",new Object[]{new Integer(value)}); //$NON-NLS-1$
-            failed(msg);
-        }
-	}
-
-	public static final void isNonPositive(int value) {
-        isNonPositive(value,null);
-	}
-
-	public static final void isNonPositive(int value, String message) {
-        if ( value > 0 ) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("Assertion.isNonPositive",new Object[]{new Integer(value)}); //$NON-NLS-1$
-            failed(msg);
-        }
-	}
-
-	public static final void isNegative(int value) {
-        isNegative(value,null);
-	}
-
-	public static final void isNegative(int value, String message) {
-        if ( value >= 0 ) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("Assertion.isNegative",new Object[]{new Integer(value)}); //$NON-NLS-1$
-            failed(msg);
-        }
-	}
-
-	public static final void isPositive(int value) {
-        isPositive(value,null);
-	}
-
-	public static final void isPositive(int value, String message) {
-        if ( value <= 0 ) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("Assertion.isPositive",new Object[]{new Integer(value)}); //$NON-NLS-1$
-            failed(msg);
-        }
-	}
-
-	// ########################## long METHODS ###################################
-
-    public static final void isEqual(long value1, long value2) {
-        isEqual(value1,value2,null);
-    }
-
-    public static final void isEqual(long value1, long value2, String message) {
-        if ( value1 != value2 ) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("Assertion.isEqual",new Object[]{new Long(value1),new Long(value2)}); //$NON-NLS-1$
-            failed(msg);
-        }
-    }
-
-    public static final void isNotEqual(long value1, long value2) {
-        isNotEqual(value1,value2,null);
-    }
-
-    public static final void isNotEqual(long value1, long value2, String message) {
-        if ( value1 == value2 ) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("Assertion.isNotEqual",new Object[]{new Long(value1),new Long(value2)}); //$NON-NLS-1$
-            failed(msg);
-        }
-    }
-
-    public static final void isNonNegative(long value) {
-        isNonNegative(value,null);
-    }
-
-    public static final void isNonNegative(long value, String message) {
-        if ( value < 0 ) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("Assertion.isNonNegative",new Object[]{new Long(value)}); //$NON-NLS-1$
-            failed(msg);
-        }
-    }
-
-    public static final void isNonPositive(long value) {
-        isNonPositive(value,null);
-    }
-
-    public static final void isNonPositive(long value, String message) {
-        if ( value > 0 ) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("Assertion.isNonPositive",new Object[]{new Long(value)}); //$NON-NLS-1$
-            failed(msg);
-        }
-    }
-
-    public static final void isNegative(long value) {
-        isNegative(value,null);
-    }
-
-    public static final void isNegative(long value, String message) {
-        if ( value >= 0 ) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("Assertion.isNegative",new Object[]{new Long(value)}); //$NON-NLS-1$
-            failed(msg);
-        }
-    }
-
-    public static final void isPositive(long value) {
-        isPositive(value,null);
-    }
-
-    public static final void isPositive(long value, String message) {
-        if ( value <= 0 ) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("Assertion.isPositive",new Object[]{new Long(value)}); //$NON-NLS-1$
-            failed(msg);
-        }
-    }
-
-	// ########################## String METHODS ###################################
-
-	public static final void isNotZeroLength(String value) {
-        isNotZeroLength(value,null);
-	}
-
-	public static final void isNotZeroLength(String value, String message) {
-		isNotNull(value);
-        if ( value.length() == 0 ) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("Assertion.isNotZeroLength"); //$NON-NLS-1$
-            failed(msg);
-        }
-	}
-
 	// ########################## OBJECT METHODS ###################################
 	
 	public static final void isNull(Object value) {
@@ -308,61 +101,6 @@ public final class Assertion {
         }
 	}
 
-	/**
-	 * Compares with object1 == object2.
-	 */
-	public static final void isIdentical(Object object1, Object object2) {
-        isIdentical(object1,object2,null);
-	}
-
-	/**
-	 * Compares with object1 == object2.
-	 */
-	public static final void isIdentical(Object object1, Object object2, String message) {
-        if ( object1 != object2 ) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("Assertion.isIdentical",new Object[]{object1,object2}); //$NON-NLS-1$
-            failed(msg);
-        }
-	}
-
-	/**
-	 * Compares with object1.equals(object2).
-	 */
-	public static final void isEqual(Object object1, Object object2) {
-        isEqual(object1,object2,null);
-	}
-
-	/**
-	 * Compares with object1.equals(object2).
-	 */
-	public static final void isEqual(Object object1, Object object2, String message) {
-		if(object1 == null) {
-            if ( object2 != null ) {
-                final String msg = message != null ?
-                                   message :
-                                   CorePlugin.Util.getString("Assertion.isEqual",new Object[]{object1,object2}); //$NON-NLS-1$
-                failed(msg);
-            }
-            // else both are null
-		} else {
-            if ( object2 == null ) {
-                final String msg = message != null ?
-                                   message :
-                                   CorePlugin.Util.getString("Assertion.isEqual",new Object[]{object1,object2}); //$NON-NLS-1$
-                failed(msg);
-            }
-            // else both are not null
-            if ( !object1.equals(object2) ) {
-                final String msg = message != null ?
-                                   message :
-                                   CorePlugin.Util.getString("Assertion.isEqual",new Object[]{object1,object2}); //$NON-NLS-1$
-                failed(msg);
-            }
-		}
-	}
-
     /**
      * Verifies that the specified value is an instance of the specified class.
      * @param value            The value to verify
@@ -371,74 +109,17 @@ public final class Assertion {
      * @throws ClassCastException If the value is not an instance of the specified class.
      * @since 2.1
      */
-    public static final Object isInstanceOf(final Object object, final Class expectedClass, final String name) {
+    public static final <T> T isInstanceOf(final Object object, final Class<T> expectedClass, final String name) {
         if (object == null) {
             return null;
         }
-        final Class objClass = object.getClass();
+        final Class<?> objClass = object.getClass();
         if (!expectedClass.isAssignableFrom(objClass)) {
             final Object[] params = new Object[]{name, expectedClass, objClass.getName()};
             final String msg = CorePlugin.Util.getString("Assertion.invalidClassMessage",params); //$NON-NLS-1$
             throw new ClassCastException(msg);
         }
-        return object;
+        return expectedClass.cast(object);
     }
 
-	// ########################## COLLECTION METHODS ###################################
-	
-    public static final void isNotEmpty(Collection collection) {
-        isNotEmpty(collection,null);
-    }
-
-    public static final void isNotEmpty(Collection collection, String message) {
-        isNotNull(collection);
-        if ( collection.isEmpty() ) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("Assertion.isNotEmpty_Collection"); //$NON-NLS-1$
-            failed(msg);
-        }
-    }
-
-    public static final void isNotEmpty(Map map) {
-        isNotEmpty(map,null);
-    }
-
-    public static final void isNotEmpty(Map map, String message) {
-        isNotNull(map);
-        if ( map.isEmpty() ) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("Assertion.isNotEmpty_Map"); //$NON-NLS-1$
-            failed(msg);
-        }
-    }
-
-    public static final void contains(Collection collection, Object value) {
-        contains(collection,value,null);
-    }
-
-    public static final void contains(Collection collection, Object value, String message) {
-		isNotNull(collection);
-        if ( !collection.contains(value) ) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("Assertion.contains_Collection"); //$NON-NLS-1$
-            failed(msg);
-        }
-	}
-
-	public static final void containsKey(Map map, Object key) {
-        containsKey(map,key,null);
-	}
-
-	public static final void containsKey(Map map, Object key, String message) {
-		isNotNull(map);
-        if ( !map.containsKey(key) ) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("Assertion.contains_Map"); //$NON-NLS-1$
-            failed(msg);
-        }
-	}
 }

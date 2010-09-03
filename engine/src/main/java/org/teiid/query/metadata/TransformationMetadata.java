@@ -614,7 +614,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	    	result.add(tableRecordImpl.getPrimaryKey());
     	}
     	for (KeyRecord key : tableRecordImpl.getIndexes()) {
-			if (key.getType() == KeyRecord.Type.Index) {
+			if (key.getType() == KeyRecord.Type.Unique) {
 				result.add(key);
 			}
 		}

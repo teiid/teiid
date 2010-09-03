@@ -697,7 +697,7 @@ System.out.println(queryPlan);</programlisting>
               <para>LIMIT (limit result set to a certain range of results)</para>
             </listitem>
           </orderedlist>
-          <para>These clause translate into the following types of planning
+          <para>These clauses translate into the following types of planning
             nodes:</para>
           <itemizedlist>
             <listitem>
@@ -710,7 +710,7 @@ System.out.println(queryPlan);</programlisting>
               <para>GROUP BY: Group node</para>
             </listitem>
             <listitem>
-              <para>GROUP BY: Group node</para>
+              <para>HAVING: Select node</para>
             </listitem>
             <listitem>
               <para>SELECT: Project node and DupRemoval node (for SELECT DISTINCT)</para>
@@ -719,7 +719,7 @@ System.out.println(queryPlan);</programlisting>
               <para>INTO: Project node with a SOURCE Node</para>
             </listitem>
             <listitem>
-              <para>INTO: Project node with a SOURCE Node</para>
+              <para>ORDER BY: Sort node</para>
             </listitem>
             <listitem>
               <para>LIMIT: Limit node</para>

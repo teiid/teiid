@@ -66,14 +66,14 @@
             </config-property>
                                     
             <config-property>
-                <description>{$display:"URL to the  WS-Security Configuration File(jboss-wsse-client.xml)",$description:"JBoss WS-Security client configuration File"}</description>
-                <config-property-name>WsSecurityConfigURL</config-property-name>
+                <description>{$display:"CXF Configuration File",$description:"CXF client configuration File or URL"}</description>
+                <config-property-name>ConfigFile</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
             </config-property>
                         
             <config-property>
-                <description>{$display:"WS-Security Configuration Name in jboss-wsse-client.xml",$description:"JBoss WS-Security client configuration name to use"}</description>
-                <config-property-name>WsSecurityConfigName</config-property-name>
+                <description>{$display:"Configuration Name",$description:"Local name of the QName of the port configuration to use with this connection.  The port namespace URI should be http://teiid.org"}</description>
+                <config-property-name>ConfigName</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
             </config-property>
                          

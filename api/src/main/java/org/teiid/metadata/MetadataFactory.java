@@ -170,7 +170,7 @@ public class MetadataFactory {
 	 * @throws TranslatorException
 	 */
 	public KeyRecord addIndex(String name, boolean nonUnique, List<String> columnNames, Table table) throws TranslatorException {
-		KeyRecord index = new KeyRecord(nonUnique?KeyRecord.Type.NonUnique:KeyRecord.Type.Index);
+		KeyRecord index = new KeyRecord(nonUnique?KeyRecord.Type.Index:KeyRecord.Type.Unique);
 		index.setParent(table);
 		index.setColumns(new ArrayList<Column>(columnNames.size()));
 		index.setName(name);

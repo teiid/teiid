@@ -51,7 +51,7 @@ import org.teiid.translator.jdbc.ModFunctionModifier;
 import org.teiid.translator.jdbc.oracle.ConcatFunctionModifier;
 
 
-@Translator(name="sybase")
+@Translator(name="sybase", description="A translator for Sybase Database")
 public class SybaseExecutionFactory extends JDBCExecutionFactory {
 	
 	public static final String TWELVE_5 = "12.5"; //$NON-NLS-1$

@@ -42,13 +42,13 @@ import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineCoverage;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.DefaultChannelPipeline;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelHandler;
+import org.jboss.netty.channel.ChannelHandler.Sharable;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.jboss.netty.handler.stream.ChunkedWriteHandler;
 import org.teiid.common.buffer.StorageManager;
@@ -62,7 +62,7 @@ import org.teiid.net.socket.ObjectChannel;
  * Main class for creating Netty Nio Channels 
  */
 
-@ChannelPipelineCoverage(ChannelPipelineCoverage.ALL)
+@Sharable
 public class SSLAwareChannelHandler extends SimpleChannelHandler implements ChannelPipelineFactory {
 	
 	public class ObjectChannelImpl implements ObjectChannel {

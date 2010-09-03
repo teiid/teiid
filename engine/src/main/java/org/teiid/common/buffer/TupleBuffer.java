@@ -76,6 +76,7 @@ public class TupleBuffer {
 
 	private LobManager lobManager;
 	private int[] lobIndexes;
+	private String uuid;
 	
 	public TupleBuffer(BatchManager manager, String id, List<?> schema, int[] lobIndexes, int batchSize) {
 		this.manager = manager;
@@ -86,8 +87,15 @@ public class TupleBuffer {
 		if (this.lobIndexes != null) {
 			this.lobManager = new LobManager();
 		}
-		this.batchSize = batchSize;
+		this.batchSize = batchSize;		
 	}
+	
+	public String getId() {
+		if (this.uuid == null) {
+			this.uuid = java.util.UUID.randomUUID().toString();
+		}
+		return this.uuid;
+	}	
 	
 	public boolean isLobs() {
 		return lobIndexes != null;

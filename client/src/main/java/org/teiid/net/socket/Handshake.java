@@ -50,8 +50,8 @@ public class Handshake implements Externalizable {
     /** 
      * @param version The version to set.
      */
-    public void setVersion(String version) {
-        this.version = version;
+    public void setVersion() {
+        this.version = ApplicationInfo.getInstance().getMajorReleaseNumber();
     }
 
     /** 

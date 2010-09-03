@@ -45,6 +45,10 @@ public class PlanExecutionNode extends RelationalNode {
     private boolean isOpen;
     private boolean needsProcessing;
 
+	protected PlanExecutionNode() {
+		super();
+	}
+    
 	public PlanExecutionNode(int nodeID) {
 		super(nodeID);
 	}
@@ -154,7 +158,7 @@ public class PlanExecutionNode extends RelationalNode {
     }
 
 	public Object clone(){
-		PlanExecutionNode clonedNode = new PlanExecutionNode(super.getID());
+		PlanExecutionNode clonedNode = new PlanExecutionNode();
 		copy(this, clonedNode);
         return clonedNode;
 	}

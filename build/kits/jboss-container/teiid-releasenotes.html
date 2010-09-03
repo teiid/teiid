@@ -10,7 +10,7 @@
 <P><A HREF="http://www.teiid.org/"><IMG SRC="https://www.jboss.org/dms/teiid/images/teiid_banner.png" NAME="graphics1" ALT="Teiid" ALIGN=BOTTOM WIDTH=800></A>
 
 <H1>Teiid ${project.version} Release Notes</H1>
-<P>Teiid ${project.version} adds ODBC, SQL, performance, and caching features. 
+<P>Teiid ${project.version} adds performance and integration features. 
 
 <H2>Overview</H2>
 <UL>
@@ -26,36 +26,22 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <UL>
-    <LI><B>ODBC Support</B> - Support for ODBC access is now available through PostgreSQL ODBC driver clients.  See the Client Developer's Guide for more on how
-    to use Teiid's ODBC access.
-    <LI><B>Native Materialized Tables</B> - views marked as materialized without a target table will be materialized internally by Teiid.  Materialized view tables will 
-    be indexed by the primary key of the view if present and can be controlled through the expanded cache hint.  
-    There are also new system procedures refreshMatView and refreshMatViewRow to refresh internal materialized view contents.
-    <LI><B>Expanded Cache Hint</B> - The cache hint can now specify pref_mem to indicate that data should prefer to be held in memory, ttl to indicate the time-to-live, 
-    and updatable to indicate that a materialized view with a primary key can be updated by row with the refreshMatViewRow system procedure.
-    <LI><B>SQL Support</B>
-        <ul> 
-           <li>Added NULLS FIST/LAST handling - including pushdown support.  
-           <li>Added enhanced numeric stat aggregate functions STDDEV_POP, STDDEV_SAMP, VAR_POP, VAR_SAMP, with pushdown and aggregate decomposition.  
-           <li>Added support for the boolean aggregate functions ANY, SOME, EVERY.
-           <li>Added support for using boolean value expression as both criteria and expressions, e.g. "... where boolean_value" or "select x = 1 as boolean_value ...".
-           <li>Changed named procedure syntax to accept param=>value, rather than param=value.
-           <li>Added PRIMARY KEY and the associated index support to temp tables.
-        </ul>
-    <LI>
-    <LI><B>Parallel Source Queries</B> - reestablished parallel execution of source queries within a query plan along with a prioritized work system to help prevent resource contention.
-    <LI><B>Improved Insert Support</B> - Cross source inserts using a query expression can defer to the source to perform the entire insert atomically with source controlled batching.  
-    See maxPreparedInsertBatchSize on any JDBC translator supporting the InsertWithIterator capability.
-    <LI><B>SHOW Statement</B> - added client handling for the SHOW statement to retrieve query plan information and see parameter values.
-    <LI><B>User Identity</B> - Teiid DataSources in JBossAS connecting to a local Teiid instance can preserve the thread's user identity, rather than requiring
-    a new authentication.  See TeiidDataSource.setPassthroughAuthentication.
-    <LI><B>VDB Versioning</B> - The VDB version may be determined by the deployed file name.  The expected pattern is &lt;VDB Name&gt;.&lt;Version&gt;.vdb.  See the Admin Guide 
-    for more on how to use VDB versioning.
+	<LI><B>Procedure Result Caching</B> - virtual procedure definitions may use a cache hint to cache results in the result set cache.
+	<LI><B>Improved Plan Caching</B> - plans used by internal materialization and stored procedure plans will be automatically cached in the prepared plan cache.  Improvements were also made to reduce the memory footprint of the plans.
+    <LI><B>Refined Load Balancing and Fail Over</B> - clients can use use the statement "SET NEWINSTANCE TRUE" to allow their connection to select a new server instance.  See the Client Developer's Guide for more information. 
+    <LI><B>Simplified Role Usage</B> - a role can now be assigned to any authenticated user via the any-authenticated attribute on the data-role element.
+    <LI><B>Materialized View Performance</B> - materialized view tables will now automatically create and use non-unique secondary indexes for unique constraints and indexes defined on the view. 
+    <LI><B>Binary Web Service Calls</B> - the ws translator now provides an invokeHttp procedure to return the blob contents and string content type of an http/https call.  
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
 <ul>
   <li>Support for named parameter syntax using param=value has been deprecated, since it is ambiguous with a comparison predicate boolean value expression.  param<b>=></b>value should be used instead.  
+</ul>
+<h4>from 7.1</h4>
+<ul>
+  <li>The jdbc:metamatrix JDBC URL prefix is no longer accepted.  Use jdbc:teiid instead.
+  <li>Model visibility no longer restricts access to tables and procedures.  Setting visible to false will only hide entries from system tables.  Data roles should be used to restrict data access.
 </ul>
 <h4>from 7.0</h4>
 <ul>
@@ -85,7 +71,19 @@
 
 <h2><a name="Configuration">Configuration Issues</a></h2>
 
-See the See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
+See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
+
+<h4>from 7.1</h4>
+<ul>
+	<li>Apache CXF is now expected to be used as the web services stack provider through JBossWS-CXF.  See the Admin Guide for instructions on 
+	installing CXF for use with Teiid's Salesforce and web service connectors.  The WS Resource Adapter's -ds.xml files should no longer use 
+	WSSecurityConfigURL and WSSecurityConfigName, rather they should be ConfigFile and ConfigName respectively.  The property values should no longer
+	refer to jboss-wsse-client.xml, but instead they should reference a CXF Spring configuration file and particular port configuration.  See the Admin Guide
+	for more on using CXF configuration files. 
+	<li>The default for data role checking is now "true".  However only VDBs with data roles will have roles enforced.
+	<li>The default prepared plan cache size was increased to 512, since it is targeted by internal plans as well.
+</ul>
+
 <h4>from 7.0</h4>
 <ul>
     <li>The property to enable data roles in teiid-jboss-beans.xml has changed from useEntitlements to useDataRoles.
@@ -116,32 +114,12 @@ See the See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for m
       the parseTime function cannot be pushed down.  This should be addressed in future releases.   
 </ul>
 
-<h4>Salesforce as Source</h4>
-Before Salesforce is used in your data integration project, the below issues need to be resolved.
-<ul>
-  <li>Manually copy the following libraries from the JBOSS_HOME/client directory to the JBOSS_HOME/lib/endorsed directory, so that the JAX-WS 2.0 apis supported by JBossWS are used:
-  	<ul>
-    	<li>jbossws-native-saaj.jar</li>
-    	<li>jbossws-native-jaxrpc.jar</li>
-    	<li>jbossws-native-jaxws.jar</li>
-    	<li>jbossws-native-jaxws-ext.jar</li>
-    </ul>
-  </li>
-  <li>There is issue with invoking "https" based URL with out specifying the either a keystore or truststore properties with JBoss remoting 2.5.1. Generally you do not need to specify the truststore as a anonymous truststore will be negotiated, however if you fail to supply the following system properties there will be a error message in the log (query will execute even with out the properties). Add these to JBOSS_INSTALL/bin/run.conf file under JAVA_OPTS
-  	<ul>
-    	<li>-Djava.net.ssl.keyStore=&lt;path-to-truststore&gt;</li>
-    	<li>-Djava.net.ssl.keyStoreType=&lt;certificate-type&gt;</li>
-    	<li>-Djava.net.ssl.keyStorePassword=&lt;password&gt;</li>
-    </ul>  	
-  </li>
-</ul>
-
 <h2><a name="LibraryUpdates">Thirdparty Library Updates</a></h2>
 
 The following components have been updated:
 <h4>From 7.0</h4>
 <ul>
-	<li>Direct integration of JBossCache jars were removed.
+	<li>Direct integration of JBossCache jars was removed.
 	<li>Netty was upgraded to 3.2.0	
 	<li>JDOM was removed.
 </ul>
@@ -155,173 +133,6 @@ The following components have been updated:
 
 <h2><a name="Details">Detailed Release Notes</a></h2>
         Detailed Release Notes - Teiid - Version ${project.version}
-<h2>        Bug
-</h2>
-<ul>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-76'>TEIID-76</a>] -         Attempting to execute a procedure from MM to MM returns error &quot;&lt;procedure&gt;() does not exist&quot;
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-108'>TEIID-108</a>] -         xsd type conversion should be consistent
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1107'>TEIID-1107</a>] -         Add support for raising criteria if it has been pushed too far
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1140'>TEIID-1140</a>] -         Unnecessary jars in the Teiid deployment
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1141'>TEIID-1141</a>] -         getCatalogs call on DatabaseMetadata is returning no rows
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1144'>TEIID-1144</a>] -         PostgreSQL (simple capabilities) returning an unexpected number of rows
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1145'>TEIID-1145</a>] -         Unable to deploy VDB with virtual BQT2 model
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1147'>TEIID-1147</a>] -         Sybase concat function handling
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1149'>TEIID-1149</a>] -         Importing tables from a deployed VDB does not import columns
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1152'>TEIID-1152</a>] -         Jopr Plugin Needs to Handle Secure ProfileService Connection
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1153'>TEIID-1153</a>] -         Turned of ProfileService authenticatiion and it caused an NPE in the Teiid RHQ Plugin
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1157'>TEIID-1157</a>] -         NPE with texttable planning
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1166'>TEIID-1166</a>] -         Receiving ASSERTION FAILED: expected reference to be not null from SQL query with sub-select
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1169'>TEIID-1169</a>] -         VDBs are not being displayed in Jopr
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1172'>TEIID-1172</a>] -         Loopback translator fails to be invoked when a property is set
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1178'>TEIID-1178</a>] -         Jopr VDB loading error when Data Source is not available
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1180'>TEIID-1180</a>] -         the deprecated input group qualifier should be replaced with inputs
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1181'>TEIID-1181</a>] -         Teiid Pushdown queries producing unexpected results (Sybase 12.5)
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1182'>TEIID-1182</a>] -         UDF model is not being loaded if the file is not placed in the root location of VDB
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1183'>TEIID-1183</a>] -         Cannot create a SalesForce datasource throught the admin API.
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1185'>TEIID-1185</a>] -         Shutting down JBoss AS server causes NPE in ClusterableCacheFactory
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1186'>TEIID-1186</a>] -         broken internal link in Teiid Reference Documentation
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1188'>TEIID-1188</a>] -         Error while reading the template properties for LDAP
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1192'>TEIID-1192</a>] -         JDBC driver doesn&#39;t accept underscores _ in server names
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1200'>TEIID-1200</a>] -         Non-parsable SQL in transformation provides no help to user - NPE in stack trace
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1201'>TEIID-1201</a>] -         Property &#39;Url&#39; with value &#39;vfsfile:/home/pnittel/Teiid71/jboss-5.1.0.GA/server/default/deploy/EyeTuneZ-vdb.xml&#39; is not a valid URL
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1203'>TEIID-1203</a>] -         &quot;connector-ws&quot; is not visible as one of the avaialble connectors
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1206'>TEIID-1206</a>] -         NPE during the JDBC Metadata read when &quot;resultSetCacheMode=true&quot; turned on
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1208'>TEIID-1208</a>] -         VDB &quot;getStatus&quot; through Admin API always returning &quot;INACTIVE&quot;
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1216'>TEIID-1216</a>] -         Cannot pass xml result from one select as critera to another select
-</li>
-</ul>
-        
-<h2>        Feature Request
-</h2>
-<ul>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-168'>TEIID-168</a>] -         Refine caching behavior
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-250'>TEIID-250</a>] -         Enable Axis data compression in SFDC Connector, per SFDC API guidelines
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-715'>TEIID-715</a>] -         Add support for nulls first/last
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-829'>TEIID-829</a>] -         revamp code table caching
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-860'>TEIID-860</a>] -         Add odbc support
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-886'>TEIID-886</a>] -         Request for more statistical functions in Teiid
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-892'>TEIID-892</a>] -         Add a capability to control bulk insert batch size
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-908'>TEIID-908</a>] -         Enable access to the query plan without reference to Teiid classes.
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-968'>TEIID-968</a>] -         Timestamp literals with fractional seconds result in source query execution performance when being compared to less percise time types
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1006'>TEIID-1006</a>] -         Dynamic vdb metadata load enhancements
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1028'>TEIID-1028</a>] -         Make Materialized Views first class objects in the system
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1048'>TEIID-1048</a>] -         Embedded Connection should support the pass though authentication
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1151'>TEIID-1151</a>] -         Re-enable multi-threaded source query execution
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1155'>TEIID-1155</a>] -         Allow boolean value expressions to be used as criteria or expressions
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1167'>TEIID-1167</a>] -         Add support for primary key handling in temp tables
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1177'>TEIID-1177</a>] -         Allow for implicit temp table definition with just a query, omitting the columns 
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1179'>TEIID-1179</a>] -         Add a CommandContext interface to the teiid api
-</li>
-</ul>
-    
-<h2>        Patch
-</h2>
-<ul>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1184'>TEIID-1184</a>] -         Patch to refactor numbered &lt;sect&gt; tags in documentation to &lt;section&gt;
-</li>
-</ul>
-    
-<h2>        Quality Risk
-</h2>
-<ul>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-954'>TEIID-954</a>] -         Need method to control max amount of buffer disk space
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1150'>TEIID-1150</a>] -         Introduce alternative named parameter syntax
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1154'>TEIID-1154</a>] -         Remove JDOM
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1187'>TEIID-1187</a>] -         Refine vdb version logic
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1190'>TEIID-1190</a>] -         Procedure logic clean up
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1199'>TEIID-1199</a>] -         Use consistent names for security concepts
-</li>
-</ul>
-            
-<h2>        Task
-</h2>
-<ul>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-749'>TEIID-749</a>] -         Replace the TestNoArgConnector Test with an integration test.
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-882'>TEIID-882</a>] -         Look into using javax.xml.xpath in the XML-Relational connectors.
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-996'>TEIID-996</a>] -         Administration of the granular entitlements to data elements should be supported using the  management console.
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1055'>TEIID-1055</a>] -         Secure profile service access
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1142'>TEIID-1142</a>] -         Teiid should work with EAP 5.1 
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1143'>TEIID-1143</a>] -         Remove the version number from the RAR files, to promote easy migration between the versions
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1160'>TEIID-1160</a>] -         Add Support for Discovery of Dynamic VDBs in Teiid Jopr Plugin
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1165'>TEIID-1165</a>] -         Upgrade to Netty 3.2.0 final
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1173'>TEIID-1173</a>] -         Provide a facility to create &quot;empty&quot; VDBs for preview purpose
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1174'>TEIID-1174</a>] -         Allow &#39;-&#39; character in VDB names.
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1194'>TEIID-1194</a>] -         Document the recommended approach to using Teiid entitlements
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1207'>TEIID-1207</a>] -         Fix Yahoo Translator to work with &quot;Dynamic Portfoilo&quot; example
-</li>
-</ul>
-            
-<h2>        Sub-task
-</h2>
-<ul>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-958'>TEIID-958</a>] -         Provide ability to monitor buffer manager disk space usage and free space
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1189'>TEIID-1189</a>] -         JOPR support for multiple versions
-</li>
-<li>[<a href='https://jira.jboss.org/browse/TEIID-1198'>TEIID-1198</a>] -         Allow specifying the VDB version as part of the VDB name in the JDBC URL connection string.
-</li>
-</ul>
     
 <h2><a name="Documentation">Documentation and Help</a></h2>
 

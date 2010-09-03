@@ -35,10 +35,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.client.security.ILogon;
+import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.security.LogonException;
 import org.teiid.client.security.LogonResult;
+import org.teiid.client.security.SessionToken;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.ComponentNotFoundException;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.crypto.NullCryptor;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.dqp.service.SessionService;
@@ -69,19 +73,14 @@ public class TestCommSockets {
 		}
 	}
 
-	@Test public void testFailedConnect() throws Exception {
+	@Test(expected=CommunicationException.class) public void testFailedConnect() throws Exception {
 		SSLConfiguration config = new SSLConfiguration();
 		listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(),1024, 1024, 1, config, null, BufferManagerFactory.getStandaloneBufferManager());
 
-		try {
-			Properties p = new Properties();
-			String url = new TeiidURL(addr.getHostName(), listener.getPort() - 1, false).getAppServerURL();
-			p.setProperty(TeiidURL.CONNECTION.SERVER_URL, url); //wrong port
-			SocketServerConnectionFactory.getInstance().getConnection(p);
-			fail("exception expected"); //$NON-NLS-1$
-		} catch (CommunicationException e) {
-
-		}
+		Properties p = new Properties();
+		String url = new TeiidURL(addr.getHostName(), listener.getPort() - 1, false).getAppServerURL();
+		p.setProperty(TeiidURL.CONNECTION.SERVER_URL, url); //wrong port
+		SocketServerConnectionFactory.getInstance().getConnection(p);
 	}
 
 	@Test public void testConnectWithoutPooling() throws Exception {
@@ -157,7 +156,19 @@ public class TestCommSockets {
 				@Override
 				public LogonResult logon(Properties connProps)
 						throws LogonException, ComponentNotFoundException {
-					return new LogonResult();
+					return new LogonResult(new SessionToken("dummy"), "x", 1, "z");
+				}
+				
+				@Override
+				public ResultsFuture<?> ping() throws InvalidSessionException,
+						TeiidComponentException {
+					return ResultsFuture.NULL_FUTURE;
+				}
+				
+				@Override
+				public void assertIdentity(SessionToken checkSession)
+						throws InvalidSessionException, TeiidComponentException {
+					return;
 				}
 
 			}, null); 
@@ -208,6 +219,21 @@ public class TestCommSockets {
 		config.setAuthenticationMode(SSLConfiguration.ANONYMOUS);
 		Properties p = new Properties();
 		helpEstablishConnection(true, config, p);
+	}
+	
+	@Test public void testSelectNewInstance() throws Exception {
+		SSLConfiguration config = new SSLConfiguration();
+		Properties p = new Properties();
+		SocketServerConnection conn = helpEstablishConnection(false, config, p);
+		SocketListenerStats stats = listener.getStats();
+		assertEquals(2, stats.objectsRead); // handshake response, logon,
+		assertEquals(1, stats.sockets);
+		conn.cleanUp();
+		assertTrue(conn.isOpen(1000));
+		stats = listener.getStats();
+		assertEquals(5, stats.objectsRead); // ping (pool test), assert identity, ping (isOpen)
+		assertEquals(1, stats.sockets);
+		conn.close();
 	}
 	
 }

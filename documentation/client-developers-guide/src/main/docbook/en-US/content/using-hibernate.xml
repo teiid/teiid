@@ -43,7 +43,7 @@
        (replacing terms in angle brackets with the appropriate values):
        
        <programlisting><![CDATA[<property name="connection.url">
-	jdbc:metamatrix:<vdb-name>@mm://<host>:<port>;user=<user-name>;password=<password>
+	jdbc:teiid:<vdb-name>@mm://<host>:<port>;user=<user-name>;password=<password>
 </property>]]></programlisting></para>      
        </listitem>
        <listitem>

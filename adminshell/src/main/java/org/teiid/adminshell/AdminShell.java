@@ -36,6 +36,7 @@ import java.util.logging.Logger;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminFactory;
+import org.teiid.adminapi.CacheStatistics;
 import org.teiid.adminapi.ProcessObject;
 import org.teiid.adminapi.PropertyDefinition;
 import org.teiid.adminapi.Request;
@@ -154,11 +155,11 @@ public class AdminShell {
 		return getAdmin().getCacheTypes();
 	}
 	
-	@Doc(text = "Cancel a request")
+	@Doc(text = "Change a VDB Connection Type")
 	public static void changeVDBConnectionType(
 			@Doc(text = "vdb name") String vdbName, 
 			@Doc(text = "vdb version") int vdbVersion,
-			@Doc(text = "Connection Type") String type)
+			@Doc(text = "Connection Type (NONE, BY_VERSION, or ANY") String type)
 			throws AdminException {
 		getAdmin().changeVDBConnectionType(vdbName, vdbVersion, ConnectionType.valueOf(type));
 	}
@@ -229,7 +230,13 @@ public class AdminShell {
 			throws AdminException {
 		return getAdmin().getWorkManagerStats(identifier);
 	}
-
+	
+	@Doc(text = "Get cache statistics for given cache type")
+	public static CacheStatistics getCacheStats(@Doc(text = "cacheType") String identifier)
+			throws AdminException {
+		return getAdmin().getCacheStats(identifier);
+	}
+	
 	@Doc(text = "Remove a role for the data policy")
 	public static void removeDataRoleMapping(
 			@Doc(text = "vdb name") String vdbName, 

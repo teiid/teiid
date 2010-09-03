@@ -1126,9 +1126,10 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
           <para>OPTION NOCACHE</para>
         </listitem>
       </itemizedlist>
-      <para>Previous versions of Teiid accepted the PLANONLY, DEBUG, and SHOWPLAN option arguments.  These are no longer accepted in the OPTION clause.
+      <para>All tables specified in the OPTION clause should be fully qualified.</para>
+      <note><para>Previous versions of Teiid accepted the PLANONLY, DEBUG, and SHOWPLAN option arguments.  These are no longer accepted in the OPTION clause.
       Please see the Client Developers Guide for replacements to those options.
-      </para>
+      </para></note>
     </section>
   </section>
   <section id="set_operations">

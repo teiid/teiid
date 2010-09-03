@@ -47,7 +47,7 @@ public class TestSessionAwareCache {
 		Cachable result = Mockito.mock(Cachable.class);
 		
 		id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
-		cache.put(id, FunctionMethod.SESSION_DETERMINISTIC, result);
+		cache.put(id, FunctionMethod.SESSION_DETERMINISTIC, result, null);
 		
 		// make sure that in the case of session specific; we do not call prepare
 		// as session is local only call for distributed
@@ -71,7 +71,7 @@ public class TestSessionAwareCache {
 		Mockito.stub(result.prepare((Cache)anyObject(), (BufferManager)anyObject())).toReturn(true);
 		Mockito.stub(result.restore((Cache)anyObject(), (BufferManager)anyObject())).toReturn(true);
 				
-		cache.put(id, FunctionMethod.USER_DETERMINISTIC, result);
+		cache.put(id, FunctionMethod.USER_DETERMINISTIC, result, null);
 		
 		// make sure that in the case of session specific; we do not call prepare
 		// as session is local only call for distributed
@@ -97,7 +97,7 @@ public class TestSessionAwareCache {
 		Mockito.stub(result.prepare((Cache)anyObject(), (BufferManager)anyObject())).toReturn(true);
 		Mockito.stub(result.restore((Cache)anyObject(), (BufferManager)anyObject())).toReturn(true);		
 		
-		cache.put(id, FunctionMethod.VDB_DETERMINISTIC, result);
+		cache.put(id, FunctionMethod.VDB_DETERMINISTIC, result, null);
 		
 		// make sure that in the case of session specific; we do not call prepare
 		// as session is local only call for distributed

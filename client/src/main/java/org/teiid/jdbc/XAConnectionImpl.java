@@ -80,7 +80,7 @@ public class XAConnectionImpl implements XAConnection{
 					ex = ExceptionUtil.getExceptionOfType(e, CommunicationException.class);
 					if (ex instanceof SingleInstanceCommunicationException) {
 						ServerConnection sc = proxiedConnection.getServerConnection();
-						if (sc.isOpen() != null) {
+						if (!sc.isOpen(ServerConnection.PING_INTERVAL)) {
 							ex = null;
 						}
 					}

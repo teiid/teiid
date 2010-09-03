@@ -22,8 +22,6 @@
 
 package org.teiid.query.optimizer;
 
-import java.util.Map;
-
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
@@ -48,9 +46,6 @@ import org.teiid.query.processor.proc.ProgramInstruction;
 import org.teiid.query.processor.proc.WhileInstruction;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.DynamicCommand;
-import org.teiid.query.sql.lang.ProcedureContainer;
-import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.lang.TranslatableProcedureContainer;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.CommandStatement;
@@ -92,7 +87,7 @@ public final class ProcedurePlanner implements CommandPlanner {
             analysisRecord.println("PROCEDURE COMMAND: " + procCommand); //$NON-NLS-1$
         }
 
-        Assertion.isInstanceOf(procCommand, CreateUpdateProcedureCommand.class, "Wrong command type"); //$NON-NLS-1$
+        CreateUpdateProcedureCommand cupc = Assertion.isInstanceOf(procCommand, CreateUpdateProcedureCommand.class, "Wrong command type"); //$NON-NLS-1$
 
         if(debug) {
             analysisRecord.println("OPTIMIZING SUB-COMMANDS: "); //$NON-NLS-1$
@@ -104,34 +99,19 @@ public final class ProcedurePlanner implements CommandPlanner {
         	}
         }
 
-        Block block = ((CreateUpdateProcedureCommand) procCommand).getBlock();
+        Block block = cupc.getBlock();
 
-		Program programBlock = planBlock(((CreateUpdateProcedureCommand)procCommand), block, metadata, debug, idGenerator, capFinder, analysisRecord, context);
+		Program programBlock = planBlock(cupc, block, metadata, debug, idGenerator, capFinder, analysisRecord, context);
 
         if(debug) {
             analysisRecord.println("\n####################################################"); //$NON-NLS-1$
         }
-
+                
         // create plan from program and initialized environment
         ProcedurePlan plan = new ProcedurePlan(programBlock);
         
-        // propagate procedure parameters to the plan to allow runtime type checking
-        ProcedureContainer container = (ProcedureContainer)((CreateUpdateProcedureCommand) procCommand).getUserCommand();
-        
-        if (container != null) {
-        	if (container instanceof StoredProcedure) {
-        		plan.setRequiresTransaction(container.getUpdateCount() > 0);
-        	}
-            Map params = container.getProcedureParameters();
-            plan.setParams(params);
-            plan.setMetadata(metadata);
-            if (container instanceof TranslatableProcedureContainer) {
-            	plan.setImplicitParams(((TranslatableProcedureContainer)container).getImplicitParams());
-            }
-        }
-        
-        plan.setUpdateProcedure(((CreateUpdateProcedureCommand)procCommand).isUpdateProcedure());
-        plan.setOutputElements(((CreateUpdateProcedureCommand)procCommand).getProjectedSymbols());
+        plan.setUpdateProcedure(cupc.isUpdateProcedure());
+        plan.setOutputElements(cupc.getProjectedSymbols());
         
         if(debug) {
             analysisRecord.println("####################################################"); //$NON-NLS-1$
@@ -148,8 +128,8 @@ public final class ProcedurePlanner implements CommandPlanner {
 	 * @param block The <code>Block</code> to be planned
 	 * @param metadata Metadata used during planning
 	 * @param childNodes list of CommandTreeNode objects that contain the ProcessorPlans of the child nodes of this procedure
-	 * @param debug Boolean detemining if procedure plan needs to be printed for debug purposes
-	 * @param analysisRecord TODO
+	 * @param debug Boolean determining if procedure plan needs to be printed for debug purposes
+	 * @param analysisRecord
 	 * @return A Program resulting in the block planning
 	 * @throws QueryPlannerException if invalid statement is encountered in the block
 	 * @throws QueryMetadataException if there is an error accessing metadata
@@ -183,14 +163,14 @@ public final class ProcedurePlanner implements CommandPlanner {
 	/**
 	 * <p> Plan a {@link Statement} object, depending on the type of the statement construct the appropriate
 	 * {@link ProgramInstruction} return it to added to a {@link Program}. If the statement references a
-	 * <code>Command</code>, it looks up the child CommandTreeNodes to get approproiate child's ProcessrPlan
+	 * <code>Command</code>, it looks up the child CommandTreeNodes to get appropriate child's ProcessrPlan
 	 * and uses it for constructing the necessary instruction.</p>
 	 * @param statement The statement to be planned
 	 * @param metadata Metadata used during planning
 	 * @param childNodes list of CommandTreeNode objects that contain the ProcessorPlans of the child nodes of this procedure
-	 * @param debug Boolean detemining if procedure plan needs to be printed for debug purposes
-	 * @param analysisRecord TODO
-	 * @return An array containing index of the next child to be accessesd and the ProgramInstruction resulting
+	 * @param debug Boolean determining if procedure plan needs to be printed for debug purposes
+	 * @param analysisRecord
+	 * @return An array containing index of the next child to be accessed and the ProgramInstruction resulting
 	 * in the statement planning
 	 * @throws QueryPlannerException if invalid statement is encountered
 	 * @throws QueryMetadataException if there is an error accessing metadata

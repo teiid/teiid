@@ -48,6 +48,7 @@ import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.FakeDataStore;
+import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.TestProcessor;
@@ -73,7 +74,7 @@ public class TestProcedureProcessor {
     	return getProcedurePlan(userQuery, metadata, /*capabilitiesFinder*/null);
     }
     
-    public static ProcessorPlan getProcedurePlan(String userQuery, FakeMetadataFacade metadata, CapabilitiesFinder capabilitiesFinder) throws Exception {
+    public static ProcessorPlan getProcedurePlan(String userQuery, QueryMetadataInterface metadata, CapabilitiesFinder capabilitiesFinder) throws Exception {
         Command userCommand = QueryParser.getQueryParser().parseCommand(userQuery);
         QueryResolver.resolveCommand(userCommand, metadata);
         ValidatorReport report = Validator.validate(userCommand, metadata);
@@ -2634,6 +2635,17 @@ public class TestProcedureProcessor {
                 Arrays.asList( 51 ),
         };
         helpTestProcess(plan, expected, dataMgr, metadata);
+    }
+    
+    @Test public void testUnambiguousVirtualProc() throws Exception {
+        String userQuery = "EXEC MMSP6('1')"; //$NON-NLS-1$
+        QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
+        ProcessorPlan plan = getProcedurePlan(userQuery, metadata, TestOptimizer.getGenericFinder());
+
+        List[] expected = new List[] {
+                Arrays.asList( "1" ),
+        };
+        helpTestProcess(plan, expected, new HardcodedDataManager(), metadata);
     }
     
     private static final boolean DEBUG = false;

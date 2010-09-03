@@ -189,6 +189,15 @@ public interface Admin {
      */
     void clearCache(String cacheType) throws AdminException;
 
+    
+    /**
+     * Get the Cache Statistics for the given type
+     * @param cacheType Cache Type
+     * @return {@link CacheStatistics} 
+     * @throws AdminException  
+     */
+    CacheStatistics getCacheStats(String cacheType) throws AdminException;
+    
     /**
      * Terminate the Session
      *

@@ -24,6 +24,7 @@ package org.teiid.dqp.internal.process;
 
 import static org.junit.Assert.*;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cache.DefaultCacheFactory;
@@ -52,8 +53,12 @@ public class TestDataTierManager {
     private AtomicRequestMessage request;
     private Command command;
     private DataTierTupleSource info;
-    private AutoGenDataService connectorManager;
+    private AutoGenDataService connectorManager = new AutoGenDataService();
     private RequestWorkItem workItem;
+    
+    @Before public void setUp() {
+    	connectorManager = new AutoGenDataService();
+    }
     
     private static Command helpGetCommand(String sql, QueryMetadataInterface metadata) throws Exception {
         Command command = QueryParser.getQueryParser().parseCommand(sql);
@@ -69,7 +74,6 @@ public class TestDataTierManager {
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, FakeMetadataFactory.exampleBQTVDB());
         
-        connectorManager = new AutoGenDataService();
         rm = new DQPCore();
         rm.setTransactionService(new FakeTransactionService());
         rm.setBufferService(new FakeBufferService());
@@ -94,7 +98,7 @@ public class TestDataTierManager {
         context.setProcessorID(requestID);
         context.setVdbName("test"); //$NON-NLS-1$
         context.setVdbVersion(1);
-        context.setQueryProcessorFactory(new SimpleQueryProcessorFactory(bs.getBufferManager(), dtm, new DefaultCapabilitiesFinder(), null, metadata));
+        context.setQueryProcessorFactory(new QueryProcessorFactoryImpl(bs.getBufferManager(), dtm, new DefaultCapabilitiesFinder(), null, metadata));
         workItem = TestDQPCoreRequestHandling.addRequest(rm, original, requestID, null, workContext);
         
         request = new AtomicRequestMessage(original, workContext, nodeId);
@@ -126,8 +130,8 @@ public class TestDataTierManager {
     }
     
     @Test public void testNoRowsException() throws Exception {
-    	helpSetup(3);
     	this.connectorManager.setRows(0);
+    	helpSetup(3);
     	while (true) {
 	    	try {
 	        	assertNull(info.nextTuple());
