@@ -206,10 +206,10 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		for(Model m:deployment.getModels()) {
 			ModelMetaData model = (ModelMetaData)m;
 			List<SourceMappingMetadata> mappings = model.getSourceMappings();
+			if (model.getName().equals(CoreConstants.SYSTEM_MODEL) || model.getName().equals(CoreConstants.ODBC_MODEL)) {
+				continue;
+			}
 			for (SourceMappingMetadata mapping:mappings) {
-				if (mapping.getName().equals(CoreConstants.SYSTEM_MODEL) || model.getName().equals(CoreConstants.ODBC_MODEL)) {
-					continue;
-				}
 				ConnectorManager cm = cmr.getConnectorManager(mapping.getName());
 				String msg = cm.getStausMessage();
 				if (msg != null && msg.length() > 0) {
@@ -310,7 +310,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
     private void loadMetadata(VDBMetaData vdb, ModelMetaData model, boolean cache, File cacheFile, MetadataStoreGroup vdbStore, ConnectorManagerRepository cmr) {
     	Exception exception = null;
     	
-    	boolean loaded = false;;
+    	boolean loaded = false;
     	for (String sourceName: model.getSourceNames()) {
     		ConnectorManager cm = cmr.getConnectorManager(sourceName);
     		if (cm == null) {

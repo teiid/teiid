@@ -44,7 +44,6 @@ import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Datatype;
-import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.runtime.RuntimePlugin;

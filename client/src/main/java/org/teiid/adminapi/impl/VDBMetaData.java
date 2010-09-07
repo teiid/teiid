@@ -285,7 +285,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
     } 	
     
 	public String toString() {
-		return getName()+VERSION_DELIM+getVersion()+ models.getMap().values(); //$NON-NLS-1$
+		return getName()+VERSION_DELIM+getVersion()+ models.getMap().values(); 
 	}
 
 	public ModelMetaData getModel(String modelName) {
