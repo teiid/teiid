@@ -49,7 +49,7 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.salesforce.Messages;
+import org.teiid.translator.salesforce.SalesForcePlugin;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.Util;
 import org.teiid.translator.salesforce.execution.visitors.JoinQueryVisitor;
@@ -104,11 +104,11 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	}
 
 	public void cancel() throws TranslatorException {
-		LogManager.logDetail(LogConstants.CTX_CONNECTOR, Messages.getString("SalesforceQueryExecutionImpl.cancel"));//$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.cancel"));//$NON-NLS-1$
 	}
 
 	public void close() {
-		LogManager.logDetail(LogConstants.CTX_CONNECTOR, Messages.getString("SalesforceQueryExecutionImpl.close")); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.close")); //$NON-NLS-1$
 	}
 
 	@Override
@@ -248,7 +248,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 						if (element.getNameInSource().equalsIgnoreCase("id")) { //$NON-NLS-1$
 							setValueInColumn(j, sObject.getId(), result);
 						} else {
-							throw new TranslatorException(Messages.getString("SalesforceQueryExecutionImpl.missing.field")+ element.getNameInSource()); //$NON-NLS-1$
+							throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.missing.field")+ element.getNameInSource()); //$NON-NLS-1$
 						}
 					} else {
 						Object cell;
@@ -305,7 +305,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	@SuppressWarnings("unchecked")
 	private Object getCellDatum(Column element, Element elem) throws TranslatorException {
 		if(!element.getNameInSource().equals(elem.getLocalName())) {
-			throw new TranslatorException(Messages.getString("SalesforceQueryExecutionImpl.column.mismatch1") + element.getNameInSource() + Messages.getString("SalesforceQueryExecutionImpl.column.mismatch2") + elem.getLocalName()); //$NON-NLS-1$ //$NON-NLS-2$
+			throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.column.mismatch1") + element.getNameInSource() + SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.column.mismatch2") + elem.getLocalName()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		String value = elem.getTextContent();
 		Object result = null;
@@ -318,37 +318,31 @@ public class QueryExecutionImpl implements ResultSetExecution {
 			result = Boolean.valueOf(value);
 		} else if (type.equals(Double.class)) {
 			if (null != value) {
-				if(value.isEmpty()) {
-					result = null;
-				} else {
+				if(!value.isEmpty()) {
 					result = Double.valueOf(value);
 				}
 			}
 		} else if (type.equals(Integer.class)) {
 			if (null != value) {
-				if(value.isEmpty()) {
-					result = null;
-				} else {
+				if(!value.isEmpty()) {
 					result = Integer.valueOf(value);
 				}
 			}
 		} else if (type.equals(java.sql.Date.class)) {
 			if (null != value) {
-				if(value.isEmpty()) {
-					result = null;
-				} else {
+				if(!value.isEmpty()) {
 					result = java.sql.Date.valueOf(value);
 				}
 			}
 		} else if (type.equals(java.sql.Timestamp.class)) {
 			if (null != value) {
-				if(value.isEmpty()) {
-					result = null;
-				} else try {
-					Date date = Util.getSalesforceDateTimeFormat().parse(value);
-					result = new Timestamp(date.getTime());
-				} catch (ParseException e) {
-					throw new TranslatorException(e, Messages.getString("SalesforceQueryExecutionImpl.datatime.parse") + value); //$NON-NLS-1$
+				if(!value.isEmpty()) { 
+					try {
+						Date date = Util.getSalesforceDateTimeFormat().parse(value);
+						result = new Timestamp(date.getTime());
+					} catch (ParseException e) {
+						throw new TranslatorException(e, SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.datatime.parse") + value); //$NON-NLS-1$
+					}
 				}
 			}
 		} else {

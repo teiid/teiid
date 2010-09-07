@@ -30,9 +30,9 @@ import org.teiid.translator.TranslatorException;
 public class Util {
 
 	public static String stripQutes(String id) {
-		if((id.startsWith("'") && id.endsWith("'"))) {
+		if((id.startsWith("'") && id.endsWith("'"))) { //$NON-NLS-1$ //$NON-NLS-2$
 			id = id.substring(1,id.length()-1);
-		} else if ((id.startsWith("\"") && id.endsWith("\""))) {
+		} else if ((id.startsWith("\"") && id.endsWith("\""))) { //$NON-NLS-1$ //$NON-NLS-2$
 			id = id.substring(1,id.length()-1);
 		}
 		return id;
@@ -40,11 +40,11 @@ public class Util {
 	
 	public static String addSingleQuotes(String text) {
 		StringBuffer result = new StringBuffer();
-		if(!text.startsWith("'")) {
+		if(!text.startsWith("'")) { //$NON-NLS-1$
 			result.append('\'');
 		}
 		result.append(text);
-		if(!text.endsWith("'")) {
+		if(!text.endsWith("'")) { //$NON-NLS-1$
 			result.append('\'');
 		} 
 		return result.toString();
@@ -52,20 +52,20 @@ public class Util {
 	
 	public static void validateQueryLength(StringBuffer query) throws TranslatorException {
 		if(query.length() >= 10000) {
-			throw new TranslatorException(Messages.getString("Util.query.exceeds.max.length"));
+			throw new TranslatorException(SalesForcePlugin.Util.getString("Util.query.exceeds.max.length")); //$NON-NLS-1$
 		}
 	}
 
 	public static SimpleDateFormat getSalesforceDateTimeFormat() {
-			return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+			return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"); //$NON-NLS-1$
 	}
 	
 	public static SimpleDateFormat getTimeZoneOffsetFormat() {
-		return new SimpleDateFormat("Z");
+		return new SimpleDateFormat("Z"); //$NON-NLS-1$
 	}
 
 	public static DateFormat getSalesforceDateFormat() {
-		return new SimpleDateFormat("yyyy-MM-dd");
+		return new SimpleDateFormat("yyyy-MM-dd"); //$NON-NLS-1$
 	}
 	
 }
