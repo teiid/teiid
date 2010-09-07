@@ -248,7 +248,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 						if (element.getNameInSource().equalsIgnoreCase("id")) { //$NON-NLS-1$
 							setValueInColumn(j, sObject.getId(), result);
 						} else {
-							throw new TranslatorException("SalesforceQueryExecutionImpl.missing.field"+ element.getNameInSource()); //$NON-NLS-1$
+							throw new TranslatorException(Messages.getString("SalesforceQueryExecutionImpl.missing.field")+ element.getNameInSource()); //$NON-NLS-1$
 						}
 					} else {
 						Object cell;
@@ -305,7 +305,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	@SuppressWarnings("unchecked")
 	private Object getCellDatum(Column element, Element elem) throws TranslatorException {
 		if(!element.getNameInSource().equals(elem.getLocalName())) {
-			throw new TranslatorException("SalesforceQueryExecutionImpl.column.mismatch1" + element.getNameInSource() + "SalesforceQueryExecutionImpl.column.mismatch2" + elem.getLocalName()); //$NON-NLS-1$ //$NON-NLS-2$
+			throw new TranslatorException(Messages.getString("SalesforceQueryExecutionImpl.column.mismatch1") + element.getNameInSource() + Messages.getString("SalesforceQueryExecutionImpl.column.mismatch2") + elem.getLocalName()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		String value = elem.getTextContent();
 		Object result = null;
@@ -348,7 +348,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 					Date date = Util.getSalesforceDateTimeFormat().parse(value);
 					result = new Timestamp(date.getTime());
 				} catch (ParseException e) {
-					throw new TranslatorException(e, "SalesforceQueryExecutionImpl.datatime.parse" + value); //$NON-NLS-1$
+					throw new TranslatorException(e, Messages.getString("SalesforceQueryExecutionImpl.datatime.parse") + value); //$NON-NLS-1$
 				}
 			}
 		} else {
