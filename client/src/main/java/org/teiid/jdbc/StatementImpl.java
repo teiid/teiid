@@ -1044,7 +1044,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 	public void setMaxFieldSize(int max) throws SQLException {
 		checkStatement();
         if ( max < 0 ) {
-            throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Invalid_field_size")); //$NON-NLS-1$
+            throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Invalid_field_size", max)); //$NON-NLS-1$
         }
 		this.maxFieldSize = max;
 	}

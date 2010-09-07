@@ -383,7 +383,7 @@ public class Admin extends TeiidAdmin {
 				info = getView().getTemplate(TranslatorMetaData.TRANSLATOR_PREFIX+templateName);
 			}
 			if(info == null) {
-				throw new AdminProcessingException(IntegrationPlugin.Util.getString("connector_type_not_found", templateName)); //$NON-NLS-1$
+				throw new AdminProcessingException(IntegrationPlugin.Util.getString("template_not_found", templateName)); //$NON-NLS-1$
 			}
 			
 			ArrayList<PropertyDefinition> props = new ArrayList<PropertyDefinition>();
