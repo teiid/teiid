@@ -64,7 +64,7 @@ public class AdminFactory {
     	
     	private synchronized Admin getTarget() throws AdminComponentException {
     		if (closed) {
-    			throw new AdminComponentException(NetPlugin.Util.getString("ERR.014.001.0001")); //$NON-NLS-1$
+    			throw new AdminComponentException(NetPlugin.Util.getString("admin_conn_closed")); //$NON-NLS-1$
     		}
     		return target;
     	}
@@ -186,7 +186,7 @@ public class AdminFactory {
                                    String applicationName) throws AdminException {
         
         if (userName == null || userName.trim().length() == 0) {
-            throw new IllegalArgumentException(NetPlugin.Util.getString("ERR.014.001.0099")); //$NON-NLS-1$
+            throw new IllegalArgumentException(NetPlugin.Util.getString("invalid_parameter")); //$NON-NLS-1$
         }
         
     	final Properties p = new Properties();
