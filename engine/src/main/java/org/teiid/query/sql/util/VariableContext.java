@@ -28,7 +28,6 @@ import java.util.Map;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 public class VariableContext {
@@ -66,7 +65,7 @@ public class VariableContext {
     	} 
     	Object value = variableMap.get(variable);
     	if (value == null && !variableMap.containsKey(variable)) {
-    		throw new TeiidComponentException(ErrorMessageKeys.PROCESSOR_0033, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0033, variable, "No value was available")); //$NON-NLS-1$
+    		throw new TeiidComponentException("ERR.015.006.0033", QueryPlugin.Util.getString("ERR.015.006.0033", variable, "No value was available")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     	}
     	return value;
     }

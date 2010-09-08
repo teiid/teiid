@@ -40,7 +40,6 @@ import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -72,7 +71,7 @@ public final class RuleValidateWhereAll implements OptimizerRule {
             if(CapabilitiesUtil.requiresCriteria(modelID, metadata, capFinder) 
             		&& hasNoCriteria((Command) node.getProperty(NodeConstants.Info.ATOMIC_REQUEST))) {
                 String modelName = metadata.getFullName(modelID);
-                throw new QueryPlannerException(QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0024, modelName));
+                throw new QueryPlannerException(QueryExecPlugin.Util.getString("ERR.015.004.0024", modelName)); //$NON-NLS-1$
             }
 		}
 

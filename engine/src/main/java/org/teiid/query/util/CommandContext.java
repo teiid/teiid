@@ -401,11 +401,11 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	public Object getFromContext(Expression expression) throws TeiidComponentException {
 		if (variableContext == null || !(expression instanceof ElementSymbol)) {
-			throw new TeiidComponentException(ErrorMessageKeys.PROCESSOR_0033, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0033, expression, "No value was available")); //$NON-NLS-1$
+			throw new TeiidComponentException("ERR.015.006.0033", QueryPlugin.Util.getString("ERR.015.006.0033", expression, "No value was available")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 		Object value = variableContext.getValue((ElementSymbol)expression);
 		if (value == null && !variableContext.containsVariable((ElementSymbol)expression)) {
-			throw new TeiidComponentException(ErrorMessageKeys.PROCESSOR_0033, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0033, expression, "No value was available")); //$NON-NLS-1$
+			throw new TeiidComponentException("ERR.015.006.0033", QueryPlugin.Util.getString("ERR.015.006.0033", expression, "No value was available")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 		return value;
 	}

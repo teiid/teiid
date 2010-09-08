@@ -46,7 +46,6 @@ import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 public abstract class ProcedureContainerResolver implements CommandResolver {
@@ -88,7 +87,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         try {
             subCommand = parser.parseCommand(plan);
         } catch(QueryParserException e) {
-            throw new QueryResolverException(e, ErrorMessageKeys.RESOLVER_0045, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0045, group));
+            throw new QueryResolverException(e, "ERR.015.008.0045", QueryPlugin.Util.getString("ERR.015.008.0045", group)); //$NON-NLS-1$ //$NON-NLS-2$
         }
         
         if(subCommand instanceof CreateUpdateProcedureCommand){
@@ -204,7 +203,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
             String plan = getPlan(metadata, procCommand.getGroup());
             
             if(plan == null) {
-                throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0009, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0009, procCommand.getGroup(), procCommand.getClass().getSimpleName()));
+                throw new QueryResolverException("ERR.015.008.0009", QueryPlugin.Util.getString("ERR.015.008.0009", procCommand.getGroup(), procCommand.getClass().getSimpleName())); //$NON-NLS-1$ //$NON-NLS-2$
             }
             return plan;
         }

@@ -46,7 +46,6 @@ import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.function.metadata.FunctionParameter;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -107,7 +106,7 @@ public class FunctionTree {
             if(sourceObj instanceof FunctionMetadataSource) {
                 addSource((FunctionMetadataSource) sourceObj);
             } else {
-                Assertion.failed(QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0044, sourceObj.getClass().getName()));
+                Assertion.failed(QueryPlugin.Util.getString("ERR.015.001.0044", sourceObj.getClass().getName())); //$NON-NLS-1$
             }
         }
     }
@@ -127,7 +126,7 @@ public class FunctionTree {
             while(functionIter.hasNext()) {
                 Object functionObj = functionIter.next();
                 if(! (functionObj instanceof FunctionMethod)) {
-                    Assertion.failed(QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0045, functionObj.getClass().getName()));
+                    Assertion.failed(QueryPlugin.Util.getString("ERR.015.001.0045", functionObj.getClass().getName())); //$NON-NLS-1$
                 }
                 FunctionMethod method = (FunctionMethod) functionObj;
 
@@ -138,7 +137,7 @@ public class FunctionTree {
                     // Add to tree
                     addFunction(source, method);
 				} else {
-                    LogManager.logWarning(LogConstants.CTX_FUNCTION_TREE, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0046, new Object[]{method}));
+                    LogManager.logWarning(LogConstants.CTX_FUNCTION_TREE, QueryPlugin.Util.getString("ERR.015.001.0046", new Object[]{method})); //$NON-NLS-1$
 				}
             }
         }
@@ -310,10 +309,10 @@ public class FunctionTree {
               // not have the function jar files.  The modeler never invokes, so this isn't a
               // problem.
             } catch (Exception e) {                
-                throw new TeiidRuntimeException(e, ErrorMessageKeys.FUNCTION_0047, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0047, new Object[]{method.getInvocationClass(), invocationMethod, inputTypes}));
+                throw new TeiidRuntimeException(e, "ERR.015.001.0047", QueryPlugin.Util.getString("ERR.015.001.0047", new Object[]{method.getInvocationClass(), invocationMethod, inputTypes})); //$NON-NLS-1$ //$NON-NLS-2$
             } 
             if(invocationMethod != null && !FunctionTree.isValidMethod(invocationMethod)) {
-            	throw new TeiidRuntimeException(ErrorMessageKeys.FUNCTION_0047, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0047, new Object[]{method.getInvocationClass(), invocationMethod, inputTypes}));
+            	throw new TeiidRuntimeException("ERR.015.001.0047", QueryPlugin.Util.getString("ERR.015.001.0047", new Object[]{method.getInvocationClass(), invocationMethod, inputTypes})); //$NON-NLS-1$ //$NON-NLS-2$
             }
         } else {
             inputTypes.add(0, CommandContext.class);

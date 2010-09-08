@@ -98,7 +98,6 @@ import org.teiid.query.unittest.FakeMetadataObject;
 import org.teiid.query.unittest.FakeMetadataStore;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
-import org.teiid.query.util.ErrorMessageKeys;
 
 @SuppressWarnings("nls")
 public class TestResolver {
@@ -2900,7 +2899,7 @@ public class TestResolver {
     		fail("expected exception");
     	} catch (RuntimeException e) {
     		QueryResolverException qre = (QueryResolverException)e.getCause();
-    		assertEquals(ErrorMessageKeys.RESOLVER_0040, qre.getCode());
+    		assertEquals("ERR.015.008.0040", qre.getCode());
     	}
     }
     

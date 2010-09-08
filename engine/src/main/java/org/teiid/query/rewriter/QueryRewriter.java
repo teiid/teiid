@@ -150,7 +150,6 @@ import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.PredicateCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.util.ErrorMessageKeys;
 import org.teiid.translator.SourceSystemFunctions;
 
 
@@ -590,7 +589,7 @@ public class QueryRewriter {
 		try {
             ResolverVisitor.resolveLanguageObject(translatedCriteria, metadata);
 		} catch(TeiidException ex) {
-            throw new QueryValidatorException(ex, ErrorMessageKeys.REWRITER_0002, QueryExecPlugin.Util.getString(ErrorMessageKeys.REWRITER_0002, translatedCriteria));
+            throw new QueryValidatorException(ex, "ERR.015.009.0002", QueryExecPlugin.Util.getString("ERR.015.009.0002", translatedCriteria)); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
 		return translatedCriteria;
@@ -1168,7 +1167,7 @@ public class QueryRewriter {
                 return FALSE_CRITERIA;                
                 
             } catch(ExpressionEvaluationException e) {
-                throw new QueryValidatorException(e, ErrorMessageKeys.REWRITER_0001, QueryExecPlugin.Util.getString(ErrorMessageKeys.REWRITER_0001, crit));
+                throw new QueryValidatorException(e, "ERR.015.009.0001", QueryExecPlugin.Util.getString("ERR.015.009.0001", crit)); //$NON-NLS-1$ //$NON-NLS-2$
             }
         }
         
@@ -1383,7 +1382,7 @@ public class QueryRewriter {
                 Object result = descriptor.invokeFunction(new Object[] { const2.getValue(), const1.getValue() } );
                 combinedConst = new Constant(result, descriptor.getReturnType());
             } catch(FunctionExecutionException e) {
-            	throw new QueryValidatorException(e, ErrorMessageKeys.REWRITER_0003, QueryExecPlugin.Util.getString(ErrorMessageKeys.REWRITER_0003, e.getMessage()));
+            	throw new QueryValidatorException(e, "ERR.015.009.0003", QueryExecPlugin.Util.getString("ERR.015.009.0003", e.getMessage())); //$NON-NLS-1$ //$NON-NLS-2$
         	}
         } else {
             Function conversion = new Function(descriptor.getName(), new Expression[] { rightExpr, const1 });

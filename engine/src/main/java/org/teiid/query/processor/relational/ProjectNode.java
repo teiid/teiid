@@ -48,7 +48,6 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.SelectSymbol;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 public class ProjectNode extends SubqueryAwareRelationalNode {
@@ -218,7 +217,7 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
             Expression expression = ((ExpressionSymbol)symbol).getExpression();
 			tuple.add(getEvaluator(this.elementMap).evaluate(expression, values));
         } else {
-            Assertion.failed(QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0034, symbol.getClass().getName()));
+            Assertion.failed(QueryExecPlugin.Util.getString("ERR.015.006.0034", symbol.getClass().getName())); //$NON-NLS-1$
 		}
 	}
 

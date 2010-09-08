@@ -27,7 +27,6 @@ import java.util.Iterator;
 
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.report.ActivityReport;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 public class ValidatorReport extends ActivityReport {
@@ -51,12 +50,12 @@ public class ValidatorReport extends ActivityReport {
     public String getFailureMessage() {
         Collection failures = getItemsByType(ValidatorFailure.VALIDATOR_FAILURE);
         if(failures.size() == 0) {
-            return QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0064);
+            return QueryPlugin.Util.getString("ERR.015.012.0064"); //$NON-NLS-1$
         } else if(failures.size() == 1) {
             return failures.iterator().next().toString();
         } else {
             StringBuffer err = new StringBuffer();
-            err.append(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0063));
+            err.append(QueryPlugin.Util.getString("ERR.015.012.0063")); //$NON-NLS-1$
 
             Iterator iter = failures.iterator();
             ValidatorFailure failure = (ValidatorFailure) iter.next();

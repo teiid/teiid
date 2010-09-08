@@ -24,7 +24,6 @@ package org.teiid.query.sql.symbol;
 
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.util.ErrorMessageKeys;
 
 /**
  * <p>This is the server's representation of a metadata group symbol.  The group
@@ -132,7 +131,7 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 	 */
 	public void setMetadataID(Object metadataID) {
 		if(metadataID == null) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0016));
+            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0016")); //$NON-NLS-1$
 		}
 		this.metadataID = metadataID;
 	}

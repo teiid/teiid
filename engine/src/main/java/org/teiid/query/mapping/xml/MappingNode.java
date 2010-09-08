@@ -33,7 +33,6 @@ import java.util.Map;
 
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -386,7 +385,7 @@ public abstract class MappingNode implements Cloneable, Serializable {
             }
             return traverseDownForFirstNodeWithPropertyString(propertyKey, value, isStringValue, node, true);
         } else {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.MAPPING_0009, searchDirection ));
+            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.002.0009", searchDirection )); //$NON-NLS-1$
         }
     }
 

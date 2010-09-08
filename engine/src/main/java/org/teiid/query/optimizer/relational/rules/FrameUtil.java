@@ -67,7 +67,6 @@ import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 public class FrameUtil {
@@ -300,7 +299,7 @@ public class FrameUtil {
         try {
             return QueryRewriter.rewriteCriteria(criteria, null, null, metadata);
         } catch(TeiidProcessingException e) {
-            throw new QueryPlannerException(e, QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0023, criteria));
+            throw new QueryPlannerException(e, QueryExecPlugin.Util.getString("ERR.015.004.0023", criteria)); //$NON-NLS-1$
         } catch (TeiidComponentException e) {
         	throw new TeiidRuntimeException(e);
         }

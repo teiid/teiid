@@ -35,7 +35,6 @@ import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -80,7 +79,7 @@ public class UpdateValidationVisitor extends AbstractValidationVisitor {
      * @param obj The <code>SetQuery</code> object to be visited for validation
      */
     public void visit(SetQuery obj) {
-    	handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0001));
+    	handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0001")); //$NON-NLS-1$
     }
 
     /**
@@ -89,7 +88,7 @@ public class UpdateValidationVisitor extends AbstractValidationVisitor {
      * @param obj The <code>StoredProcedure</code> object to be visited for validation
      */
     public void visit(StoredProcedure obj) {
-        handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0002));
+        handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0002")); //$NON-NLS-1$
     }
 
     /**
@@ -98,7 +97,7 @@ public class UpdateValidationVisitor extends AbstractValidationVisitor {
      * @param obj The <code>Insert</code> object to be visited for validation
      */
     public void visit(Insert obj) {
-        handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0003));
+        handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0003")); //$NON-NLS-1$
     }
 
     /**
@@ -107,7 +106,7 @@ public class UpdateValidationVisitor extends AbstractValidationVisitor {
      * @param obj The <code>Update</code> object to be visited for validation
      */
     public void visit(Update obj) {
-        handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0004));
+        handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0004")); //$NON-NLS-1$
     }
 
     /**
@@ -116,7 +115,7 @@ public class UpdateValidationVisitor extends AbstractValidationVisitor {
      * @param obj The <code>Delete</code> object to be visited for validation
      */
     public void visit(Delete obj) {
-        handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0005));
+        handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0005")); //$NON-NLS-1$
     }
 
     /**
@@ -126,7 +125,7 @@ public class UpdateValidationVisitor extends AbstractValidationVisitor {
      */
     public void visit(Query obj) {
     	if((obj.getGroupBy() != null) || (obj.getHaving() != null)) {
-    		handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0006));
+    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0006")); //$NON-NLS-1$
     	}
     }
 
@@ -149,7 +148,7 @@ public class UpdateValidationVisitor extends AbstractValidationVisitor {
             Expression ex = SymbolMap.getExpression(symbol);
             
             if (!(ex instanceof ElementSymbol || ex instanceof Constant)) {
-                handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0007, symbol));
+                handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0007", symbol)); //$NON-NLS-1$
             }
     	}
 
@@ -170,12 +169,12 @@ public class UpdateValidationVisitor extends AbstractValidationVisitor {
     	GroupSymbol group = (GroupSymbol) groupIter.next();
 
     	if(groupIter.hasNext()) {
-    		handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0009, obj.getGroups()));
+    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0009", obj.getGroups())); //$NON-NLS-1$
     	} else {
 			try {
 				Object groupID = group.getMetadataID();
                 if(groupID instanceof TempMetadataID) {
-                    handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0002));
+                    handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0002")); //$NON-NLS-1$
                 } else {
     		    	Iterator elementsInGroupIter = getMetadata().getElementIDsInGroupID(groupID).iterator();
     				// walk through all the elements in the physical group
@@ -218,7 +217,7 @@ public class UpdateValidationVisitor extends AbstractValidationVisitor {
 
 			// this method should only be executed if the element is a required element
 			// and none of cases above are true
-		    handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0010, element));
+		    handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0010", element)); //$NON-NLS-1$
 		} catch(TeiidException e) {
 			handleException(e);
 		}

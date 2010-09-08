@@ -84,7 +84,6 @@ import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
-import org.teiid.query.util.ErrorMessageKeys;
 
 public class SimpleQueryResolver implements CommandResolver {
 
@@ -140,7 +139,7 @@ public class SimpleQueryResolver implements CommandResolver {
         String groupAlias = name.substring(0, index);
         List<GroupSymbol> groupSymbols = ResolverUtil.findMatchingGroups(groupAlias.toUpperCase(), groups, metadata);
         if(groupSymbols.isEmpty() || groupSymbols.size() > 1) {
-            String msg = QueryPlugin.Util.getString(groupSymbols.isEmpty()?ErrorMessageKeys.RESOLVER_0047:"SimpleQueryResolver.ambiguous_all_in_group", allInGroupSymbol);  //$NON-NLS-1$
+            String msg = QueryPlugin.Util.getString(groupSymbols.isEmpty()?"ERR.015.008.0047":"SimpleQueryResolver.ambiguous_all_in_group", allInGroupSymbol);  //$NON-NLS-1$ //$NON-NLS-2$
             QueryResolverException qre = new QueryResolverException(msg);
             qre.addUnresolvedSymbol(new UnresolvedSymbolDescription(allInGroupSymbol.toString(), msg));
             throw qre;
@@ -374,7 +373,7 @@ public class SimpleQueryResolver implements CommandResolver {
             visitNode(group);
             try {
 	            if (!group.isProcedure() && metadata.isXMLGroup(group.getMetadataID())) {
-	                throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0003, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0003));
+	                throw new QueryResolverException("ERR.015.008.0003", QueryPlugin.Util.getString("ERR.015.008.0003")); //$NON-NLS-1$ //$NON-NLS-2$
 	            }
 	            discoveredGroup(group);
 	            if (group.isProcedure()) {
@@ -506,8 +505,8 @@ public class SimpleQueryResolver implements CommandResolver {
 		private void addDiscoveredGroups() {
 			for (GroupSymbol group : discoveredGroups) {
 				if (!this.currentGroups.add(group)) {
-	                String msg = QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0046, group.getName());
-	                QueryResolverException qre = new QueryResolverException(ErrorMessageKeys.RESOLVER_0046, msg);
+	                String msg = QueryPlugin.Util.getString("ERR.015.008.0046", group.getName()); //$NON-NLS-1$
+	                QueryResolverException qre = new QueryResolverException("ERR.015.008.0046", msg); //$NON-NLS-1$
 	                qre.addUnresolvedSymbol(new UnresolvedSymbolDescription(group.toString(), msg));
 	                throw new TeiidRuntimeException(qre);
 	            }

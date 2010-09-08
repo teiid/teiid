@@ -33,7 +33,6 @@ import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -126,7 +125,7 @@ public class SPParameter implements Serializable, Cloneable {
     public void setParameterType(int parameterType){
         // validate against above types
         if(parameterType < ParameterInfo.IN || parameterType > ParameterInfo.RESULT_SET) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0006, parameterType));
+            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0006", parameterType)); //$NON-NLS-1$
         }
         this.parameterType = parameterType;
     }
@@ -244,7 +243,7 @@ public class SPParameter implements Serializable, Cloneable {
      */
     public ElementSymbol getResultSetColumn(int position){
         if(resultSetColumns == null){
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0009));
+            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0009")); //$NON-NLS-1$
         }
 
         //position is 1 based
@@ -252,7 +251,7 @@ public class SPParameter implements Serializable, Cloneable {
         if(position >= 0 && position < resultSetColumns.size()) {
             return (ElementSymbol) resultSetColumns.get(position);
         }
-        throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0010, new Integer(position + 1)));
+        throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0010", new Integer(position + 1))); //$NON-NLS-1$
     }
 
     /**

@@ -37,7 +37,6 @@ import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.visitor.AbstractSymbolMappingVisitor;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -124,7 +123,7 @@ public class XMLNodeMappingVisitor extends AbstractSymbolMappingVisitor {
 
         Collection unmappedSymbols = mappingVisitor.getUnmappedSymbols();
         if (unmappedSymbols != null && unmappedSymbols.size() > 0){
-            throw new QueryPlannerException(ErrorMessageKeys.OPTIMIZER_0046, QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0046, new Object[] {unmappedSymbols, object}));
+            throw new QueryPlannerException("ERR.015.004.0046", QueryExecPlugin.Util.getString("ERR.015.004.0046", new Object[] {unmappedSymbols, object})); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         return copy;

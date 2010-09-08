@@ -25,7 +25,6 @@ package org.teiid.core.types.basic;
 import java.sql.Timestamp;
 
 import org.teiid.core.CorePlugin;
-import org.teiid.core.ErrorMessageKeys;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
 
@@ -46,7 +45,7 @@ public class StringToTimestampTransform extends Transform {
 		try {
 			result = Timestamp.valueOf( (String) value );
 		} catch(Exception e) {
-			throw new TransformationException(e, ErrorMessageKeys.TYPES_ERR_0024, CorePlugin.Util.getString(ErrorMessageKeys.TYPES_ERR_0024, value));
+			throw new TransformationException(e, "ERR.003.029.0024", CorePlugin.Util.getString("ERR.003.029.0024", value)); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		//validate everything except for fractional seconds
 		if (!((String)value).startsWith(result.toString().substring(0, 19))) {

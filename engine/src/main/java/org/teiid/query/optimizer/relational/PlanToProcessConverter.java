@@ -95,7 +95,6 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 public class PlanToProcessConverter {
@@ -447,7 +446,7 @@ public class PlanToProcessConverter {
                 break;
 
 			default:
-                throw new QueryPlannerException(QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0007, NodeConstants.getNodeTypeString(node.getType())));
+                throw new QueryPlannerException(QueryExecPlugin.Util.getString("ERR.015.004.0007", NodeConstants.getNodeTypeString(node.getType()))); //$NON-NLS-1$
 		}
 
 		if(processNode != null) {
@@ -538,7 +537,7 @@ public class PlanToProcessConverter {
 			String cbName = metadata.getFullName(modelID);
 			return cbName;
 		} catch(QueryMetadataException e) {
-            throw new QueryPlannerException(e, QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0009));
+            throw new QueryPlannerException(e, QueryExecPlugin.Util.getString("ERR.015.004.0009")); //$NON-NLS-1$
 		}
 	}
 

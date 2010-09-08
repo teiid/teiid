@@ -29,7 +29,6 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -93,7 +92,7 @@ public class RecurseProgramCondition extends CriteriaCondition {
 
             //handle the case of exception on recursion limit reached
             if (terminate && this.exceptionOnRecursionLimit){
-                throw new TeiidComponentException(ErrorMessageKeys.PROCESSOR_0039, QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0039));
+                throw new TeiidComponentException("ERR.015.006.0039", QueryExecPlugin.Util.getString("ERR.015.006.0039")); //$NON-NLS-1$ //$NON-NLS-2$
             }
         }
 

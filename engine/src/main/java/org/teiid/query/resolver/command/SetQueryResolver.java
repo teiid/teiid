@@ -45,7 +45,6 @@ import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 public class SetQueryResolver implements CommandResolver {
@@ -76,7 +75,7 @@ public class SetQueryResolver implements CommandResolver {
         QueryResolver.resolveCommand(rightCommand, Collections.EMPTY_MAP, metadata.getMetadata(), analysis, false);
 
         if (firstProject.size() != rightCommand.getProjectedSymbols().size()) {
-            throw new QueryResolverException(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0035, setQuery.getOperation()));
+            throw new QueryResolverException(QueryPlugin.Util.getString("ERR.015.012.0035", setQuery.getOperation())); //$NON-NLS-1$
         }
         checkSymbolTypes(firstProjectTypes, rightCommand.getProjectedSymbols());
         

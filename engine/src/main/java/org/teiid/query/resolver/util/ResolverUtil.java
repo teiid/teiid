@@ -72,7 +72,6 @@ import org.teiid.query.sql.symbol.SelectSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -214,7 +213,7 @@ public class ResolverUtil {
         }
 
         //Expression is wrong type and can't convert
-        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0041, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0041, new Object[] {targetTypeName, sourceExpression, sourceTypeName}));
+        throw new QueryResolverException("ERR.015.008.0041", QueryPlugin.Util.getString("ERR.015.008.0041", new Object[] {targetTypeName, sourceExpression, sourceTypeName})); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public static Constant convertConstant(String sourceTypeName,
@@ -288,7 +287,7 @@ public class ResolverUtil {
         	Reference ref = (Reference)expression;
         	if (ref.isPositional() && ref.getType() == null) {
 	        	if (targetType == null) {
-	        		throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0026, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0026, surroundingExpression));
+	        		throw new QueryResolverException("ERR.015.008.0026", QueryPlugin.Util.getString("ERR.015.008.0026", surroundingExpression)); //$NON-NLS-1$ //$NON-NLS-2$
 	        	}
 	            ref.setType(targetType);
         	}
@@ -366,7 +365,7 @@ public class ResolverUtil {
     			        // if we already have a matched symbol, matching again here means it is duplicate/ambiguous
     			        if(matchedSymbol != null) {
     			        	if (!matchedSymbol.equals(knownElements.get(j))) {
-    			        		throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0042, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0042, symbolName));
+    			        		throw new QueryResolverException("ERR.015.008.0042", QueryPlugin.Util.getString("ERR.015.008.0042", symbolName)); //$NON-NLS-1$ //$NON-NLS-2$
     			        	}
     			        	continue;
     			        }
@@ -405,7 +404,7 @@ public class ResolverUtil {
         		try {
         	    	ResolverVisitor.resolveLanguageObject(symbol, fromClauseGroups, command.getExternalGroupContexts(), metadata);
         	    } catch(QueryResolverException e) {
-        	    	throw new QueryResolverException(e, ErrorMessageKeys.RESOLVER_0043, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0043, symbol.getName()) );
+        	    	throw new QueryResolverException(e, "ERR.015.008.0043", QueryPlugin.Util.getString("ERR.015.008.0043", symbol.getName()) );//$NON-NLS-1$ //$NON-NLS-2$
         	    } 
 			}
             ResolverVisitor.resolveLanguageObject(sortKey, metadata);
@@ -758,13 +757,13 @@ public class ResolverUtil {
 		// single projected symbol of the subquery
 		Class exprType = expression.getType();
 		if(exprType == null) {
-	        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0030, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0030, expression));
+	        throw new QueryResolverException("ERR.015.008.0030", QueryPlugin.Util.getString("ERR.015.008.0030", expression)); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		String exprTypeName = DataTypeManager.getDataTypeName(exprType);
 	
 		Collection projectedSymbols = crit.getCommand().getProjectedSymbols();
 		if (projectedSymbols.size() != 1){
-	        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0032, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0032, crit.getCommand()));
+	        throw new QueryResolverException("ERR.015.008.0032", QueryPlugin.Util.getString("ERR.015.008.0032", crit.getCommand())); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		Class subqueryType = ((Expression)projectedSymbols.iterator().next()).getType();
 		String subqueryTypeName = DataTypeManager.getDataTypeName(subqueryType);
@@ -772,7 +771,7 @@ public class ResolverUtil {
 	    try {
 	        result = convertExpression(expression, exprTypeName, subqueryTypeName, metadata);
 	    } catch (QueryResolverException qre) {
-	        throw new QueryResolverException(qre, ErrorMessageKeys.RESOLVER_0033, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0033, crit));
+	        throw new QueryResolverException(qre, "ERR.015.008.0033", QueryPlugin.Util.getString("ERR.015.008.0033", crit)); //$NON-NLS-1$ //$NON-NLS-2$
 	    }
 	    return result;
 	}
@@ -782,17 +781,17 @@ public class ResolverUtil {
 		ResolvedLookup result = new ResolvedLookup();
 	    // Special code to handle setting return type of the lookup function to match the type of the return element
 	    if( !(args[0] instanceof Constant) || !(args[1] instanceof Constant) || !(args[2] instanceof Constant)) {
-		    throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0063, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0063));
+		    throw new QueryResolverException("ERR.015.008.0063", QueryPlugin.Util.getString("ERR.015.008.0063")); //$NON-NLS-1$ //$NON-NLS-2$
 	    }
         // If code table name in lookup function refers to temp group throw exception
 		GroupSymbol groupSym = new GroupSymbol((String) ((Constant)args[0]).getValue());
 		try {
 			groupSym.setMetadataID(metadata.getGroupID((String) ((Constant)args[0]).getValue()));
 			if (groupSym.getMetadataID() instanceof TempMetadataID) {
-				throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0065, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0065, ((Constant)args[0]).getValue()));
+				throw new QueryResolverException("ERR.015.008.0065", QueryPlugin.Util.getString("ERR.015.008.0065", ((Constant)args[0]).getValue())); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		} catch(QueryMetadataException e) {
-			throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0062, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0062, ((Constant)args[0]).getValue()));
+			throw new QueryResolverException("ERR.015.008.0062", QueryPlugin.Util.getString("ERR.015.008.0062", ((Constant)args[0]).getValue())); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		result.setGroup(groupSym);
 		
@@ -803,7 +802,7 @@ public class ResolverUtil {
         try {
             ResolverVisitor.resolveLanguageObject(returnElement, groups, metadata);
         } catch(QueryMetadataException e) {
-            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0062, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0062, returnElementName));
+            throw new QueryResolverException("ERR.015.008.0062", QueryPlugin.Util.getString("ERR.015.008.0062", returnElementName)); //$NON-NLS-1$ //$NON-NLS-2$
         }
 		result.setReturnElement(returnElement);
         
@@ -812,7 +811,7 @@ public class ResolverUtil {
         try {
             ResolverVisitor.resolveLanguageObject(keyElement, groups, metadata);
         } catch(QueryMetadataException e) {
-            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0062, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0062, keyElementName));
+            throw new QueryResolverException("ERR.015.008.0062", QueryPlugin.Util.getString("ERR.015.008.0062", keyElementName)); //$NON-NLS-1$ //$NON-NLS-2$
         }
 		result.setKeyElement(keyElement);
 		args[3] = convertExpression(args[3], DataTypeManager.getDataTypeName(keyElement.getType()), metadata);
@@ -891,7 +890,7 @@ public class ResolverUtil {
 			            // didn't find this group ID
 			        } 
 	            } else if(matches > 1) {
-	                throw handleUnresolvedGroup(symbol, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0055));
+	                throw handleUnresolvedGroup(symbol, QueryPlugin.Util.getString("ERR.015.008.0055")); //$NON-NLS-1$
 	            }
 	        }
 	    }
@@ -908,7 +907,7 @@ public class ResolverUtil {
 	    }
 	    
 	    if(groupID == null) {
-	        throw handleUnresolvedGroup(symbol, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0056));
+	        throw handleUnresolvedGroup(symbol, QueryPlugin.Util.getString("ERR.015.008.0056")); //$NON-NLS-1$
 	    }
 	    // set real metadata ID in the symbol
 	    symbol.setMetadataID(groupID);

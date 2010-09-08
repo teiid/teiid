@@ -61,7 +61,6 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.util.ErrorMessageKeys;
 import org.xml.sax.Attributes;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
@@ -226,7 +225,7 @@ public class XMLPlan extends ProcessorPlan {
 		if (xmlSchemas == null || xmlSchemas.isEmpty()){
 		    // if there is no schema no need to validate
 		    // return a warning saying there is no schema
-            TeiidException noSchema = new TeiidComponentException(ErrorMessageKeys.PROCESSOR_0042, QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0042));
+            TeiidException noSchema = new TeiidComponentException("ERR.015.006.0042", QueryExecPlugin.Util.getString("ERR.015.006.0042")); //$NON-NLS-1$ //$NON-NLS-2$
 			addWarning(noSchema);
 			return;
 		}
@@ -389,7 +388,7 @@ public class XMLPlan extends ProcessorPlan {
         } catch (Exception e){
             e.printStackTrace();
             LogManager.logWarning(LogConstants.CTX_XML_PLAN, e,
-                                 QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0001));
+                                 QueryExecPlugin.Util.getString("ERR.015.006.0001")); //$NON-NLS-1$
         }
         return "XMLPlan"; //$NON-NLS-1$
     }
@@ -440,13 +439,13 @@ public class XMLPlan extends ProcessorPlan {
 		}
 		
 		public void error(SAXParseException ex){
-		    addException(new TeiidComponentException(ErrorMessageKeys.PROCESSOR_0049, QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0048, ex.getMessage())));
+		    addException(new TeiidComponentException("ERR.015.006.0049", QueryExecPlugin.Util.getString("ERR.015.006.0048", ex.getMessage()))); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		public void fatalError(SAXParseException ex){			
-		    addException(new TeiidComponentException(ErrorMessageKeys.PROCESSOR_0048, QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0048, ex.getMessage())));			
+		    addException(new TeiidComponentException("ERR.015.006.0048", QueryExecPlugin.Util.getString("ERR.015.006.0048", ex.getMessage())));			 //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		public void warning(SAXParseException ex){
-		    addException(new TeiidComponentException(ErrorMessageKeys.PROCESSOR_0049, QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0048, ex.getMessage())));
+		    addException(new TeiidComponentException("ERR.015.006.0049", QueryExecPlugin.Util.getString("ERR.015.006.0048", ex.getMessage()))); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 

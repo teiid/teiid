@@ -35,7 +35,6 @@ import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -66,7 +65,7 @@ public class GroupCollectorVisitor extends LanguageVisitor {
      */
 	public GroupCollectorVisitor(Collection<GroupSymbol> groups) {
         if(groups == null) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0023));
+            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0023")); //$NON-NLS-1$
         }
         this.groups = groups;
     }

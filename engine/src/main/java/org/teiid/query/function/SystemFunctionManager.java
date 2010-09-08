@@ -28,7 +28,6 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionMetadataValidator;
 import org.teiid.query.function.source.SystemSource;
 import org.teiid.query.report.ActivityReport;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 public class SystemFunctionManager {
@@ -44,7 +43,7 @@ public class SystemFunctionManager {
        	validateSource(systemSource, report);
 		if(report.hasItems()) {
 		    // Should never happen as SystemSource doesn't change
-		    System.err.println(QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0005, report));
+		    System.err.println(QueryPlugin.Util.getString("ERR.015.001.0005", report)); //$NON-NLS-1$
 		}
 		
 		systemFunctionTree = new FunctionTree(systemSource);

@@ -56,7 +56,6 @@ import org.teiid.query.sql.symbol.SelectSymbol;
 import org.teiid.query.sql.visitor.CommandCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -113,11 +112,11 @@ public class XMLQueryResolver implements CommandResolver {
         
         //we throw exceptions in these cases, since the clauses will not be resolved
         if (query.getGroupBy() != null) {
-            throw new QueryResolverException(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0031));
+            throw new QueryResolverException(QueryPlugin.Util.getString("ERR.015.012.0031")); //$NON-NLS-1$
         }
         
         if (query.getHaving() != null) {
-            throw new QueryResolverException(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0032));
+            throw new QueryResolverException(QueryPlugin.Util.getString("ERR.015.012.0032")); //$NON-NLS-1$
         }	
     }
 
@@ -200,7 +199,7 @@ public class XMLQueryResolver implements CommandResolver {
 			} else if (ss instanceof ExpressionSymbol) {
                 throw new QueryResolverException(QueryPlugin.Util.getString("XMLQueryResolver.no_expressions_in_select")); //$NON-NLS-1$
             } else if (ss instanceof AliasSymbol) {
-                throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0070, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0070));
+                throw new QueryResolverException("ERR.015.008.0070", QueryPlugin.Util.getString("ERR.015.008.0070")); //$NON-NLS-1$ //$NON-NLS-2$
             }
             
 		}
@@ -388,11 +387,11 @@ public class XMLQueryResolver implements CommandResolver {
             try {
                 ResolverVisitor.resolveLanguageObject(elem, Collections.EMPTY_LIST, externalGroups, metadata);
             } catch (QueryResolverException e) {
-                throw new QueryResolverException(e, ErrorMessageKeys.RESOLVER_0019, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0019, critElemName));
+                throw new QueryResolverException(e, "ERR.015.008.0019", QueryPlugin.Util.getString("ERR.015.008.0019", critElemName)); //$NON-NLS-1$ //$NON-NLS-2$
             }
         } else {
             // Found multiple matches
-            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0020, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0020, critElemName));
+            throw new QueryResolverException("ERR.015.008.0020", QueryPlugin.Util.getString("ERR.015.008.0020", critElemName)); //$NON-NLS-1$ //$NON-NLS-2$
         }
     }
 

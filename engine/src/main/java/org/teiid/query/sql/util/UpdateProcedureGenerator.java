@@ -35,7 +35,6 @@ import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.proc.*;
 import org.teiid.query.sql.symbol.*;
-import org.teiid.query.util.ErrorMessageKeys;
 import org.teiid.query.validator.UpdateValidationVisitor;
 import org.teiid.query.validator.ValidatorReport;
 
@@ -164,7 +163,7 @@ public class UpdateProcedureGenerator {
             throws TeiidComponentException, QueryMetadataException{
 
         if(physicalElements.size()!= virtualElements.size()) {
-            throw new QueryMetadataException(ErrorMessageKeys.SQL_0018, QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0018));
+            throw new QueryMetadataException("ERR.015.010.0018", QueryPlugin.Util.getString("ERR.015.010.0018")); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         //match the physical group elements to the virtual group elements

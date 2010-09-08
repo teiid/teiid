@@ -25,7 +25,6 @@ package org.teiid.query.sql.symbol;
 import org.teiid.core.util.Assertion;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -74,7 +73,7 @@ public class AliasSymbol extends SingleElementSymbol {
 	 */
 	public void setSymbol(SingleElementSymbol symbol) {
         if(symbol instanceof AliasSymbol || symbol == null){
-            Assertion.failed(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0029));
+            Assertion.failed(QueryPlugin.Util.getString("ERR.015.010.0029")); //$NON-NLS-1$
         }
 		this.symbol = symbol;
 	}

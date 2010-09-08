@@ -56,7 +56,6 @@ import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.util.ErrorMessageKeys;
 
 /**
  * Static method hooks for most of the function library.
@@ -236,14 +235,14 @@ public final class FunctionMethods {
                 return new Double(context.getNextRand(((Integer)seed).longValue()));
             }
         }
-        throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0069, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0069, "rand", seed)); //$NON-NLS-1$        
+        throw new FunctionExecutionException("ERR.015.001.0069", QueryPlugin.Util.getString("ERR.015.001.0069", "rand", seed)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$        
     }
         
     public static Object rand(CommandContext context) throws FunctionExecutionException {
         if(context != null) {
             return new Double(context.getNextRand());
         }
-        throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0069, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0069, "rand")); //$NON-NLS-1$
+        throw new FunctionExecutionException("ERR.015.001.0069", QueryPlugin.Util.getString("ERR.015.001.0069", "rand")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
     
 	// ================== Function = mod =====================
@@ -450,7 +449,7 @@ public final class FunctionMethods {
 		int month = getField(date, Calendar.MONTH);
 		
 		if (month > 11) {
-			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0066, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0066,
+			throw new FunctionExecutionException("ERR.015.001.0066", QueryPlugin.Util.getString("ERR.015.001.0066", //$NON-NLS-1$ //$NON-NLS-2$
 					new Object[] {"quarter", date.getClass().getName()})); //$NON-NLS-1$
 		}
 		return Integer.valueOf(month/3 + 1);
@@ -637,7 +636,7 @@ public final class FunctionMethods {
 		throws FunctionExecutionException {
 		int countValue = count.intValue();
         if(countValue < 0) {
-            throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0017, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0017, countValue));
+            throw new FunctionExecutionException("ERR.015.001.0017", QueryPlugin.Util.getString("ERR.015.001.0017", countValue)); //$NON-NLS-1$ //$NON-NLS-2$
         } 
         if(string.length() < countValue) {
             return string;
@@ -651,7 +650,7 @@ public final class FunctionMethods {
 		throws FunctionExecutionException {
 		int countValue = count.intValue();
         if(countValue < 0) {
-            throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0017, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0017, countValue));
+            throw new FunctionExecutionException("ERR.015.001.0017", QueryPlugin.Util.getString("ERR.015.001.0017", countValue)); //$NON-NLS-1$ //$NON-NLS-2$
         } else if(string.length() < countValue) {
             return string;
 		} else {
@@ -767,11 +766,11 @@ public final class FunctionMethods {
 
 		// Check some invalid cases
 		if(startValue < 1 || (startValue-1) > string1.length()) {
-			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0061, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0061, start, string1));
+			throw new FunctionExecutionException("ERR.015.001.0061", QueryPlugin.Util.getString("ERR.015.001.0061", start, string1)); //$NON-NLS-1$ //$NON-NLS-2$
 		} else if (len < 0) {
-			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0062, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0062, len));
+			throw new FunctionExecutionException("ERR.015.001.0062", QueryPlugin.Util.getString("ERR.015.001.0062", len)); //$NON-NLS-1$ //$NON-NLS-2$
 		} else if (string1.length() == 0 && (startValue > 1 || len >0) ) {
-			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0063, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0063));
+			throw new FunctionExecutionException("ERR.015.001.0063", QueryPlugin.Util.getString("ERR.015.001.0063")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
 		StringBuffer result = new StringBuffer();
@@ -853,7 +852,7 @@ public final class FunctionMethods {
     throws FunctionExecutionException {
 	    int length = padLength.intValue();
 	    if(length < 1) {
-	        throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0025, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0025));
+	        throw new FunctionExecutionException("ERR.015.001.0025", QueryPlugin.Util.getString("ERR.015.001.0025")); //$NON-NLS-1$ //$NON-NLS-2$
 	    }
 	    if(length < str.length()) {
 	        return str.substring(0, length);
@@ -863,7 +862,7 @@ public final class FunctionMethods {
 	    }
 	    // Get pad character
 	    if(padStr.length() == 0) {
-	        throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0027, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0027));
+	        throw new FunctionExecutionException("ERR.015.001.0027", QueryPlugin.Util.getString("ERR.015.001.0027")); //$NON-NLS-1$ //$NON-NLS-2$
 	    }
 	    // Pad string
 	    StringBuffer outStr = new StringBuffer(str);
@@ -908,7 +907,7 @@ public final class FunctionMethods {
     public static Object translate(String str, String in, String out)
         throws FunctionExecutionException {
         if(in.length() != out.length()) {
-            throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0031, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0031));
+            throw new FunctionExecutionException("ERR.015.001.0031", QueryPlugin.Util.getString("ERR.015.001.0031")); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         if(in.length() == 0 || str.length() == 0) {
@@ -942,7 +941,7 @@ public final class FunctionMethods {
 		try {
 			return DataTypeManager.transformValue(src, DataTypeManager.getDataTypeClass(type));
 		} catch(TransformationException e) {
-			throw new FunctionExecutionException(e, ErrorMessageKeys.FUNCTION_0033, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0033, new Object[]{src, DataTypeManager.getDataTypeName(src.getClass()), type}));
+			throw new FunctionExecutionException(e, "ERR.015.001.0033", QueryPlugin.Util.getString("ERR.015.001.0033", new Object[]{src, DataTypeManager.getDataTypeName(src.getClass()), type})); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 
@@ -959,7 +958,7 @@ public final class FunctionMethods {
     public static Object context(Object context, Object expression)
         throws FunctionExecutionException {
 
-        throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0035, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0035));
+        throw new FunctionExecutionException("ERR.015.001.0035", QueryPlugin.Util.getString("ERR.015.001.0035")); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
@@ -973,7 +972,7 @@ public final class FunctionMethods {
     public static Object rowlimit(Object expression)
         throws FunctionExecutionException {
     
-        throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0035a, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0035a));
+        throw new FunctionExecutionException("ERR.015.001.0035a", QueryPlugin.Util.getString("ERR.015.001.0035a")); //$NON-NLS-1$ //$NON-NLS-2$
     }    
 
     /**
@@ -987,7 +986,7 @@ public final class FunctionMethods {
     public static Object rowlimitexception(Object expression)
         throws FunctionExecutionException {
     
-        throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0035a, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0035a));
+        throw new FunctionExecutionException("ERR.015.001.0035a", QueryPlugin.Util.getString("ERR.015.001.0035a")); //$NON-NLS-1$ //$NON-NLS-2$
     }      
     
     // ================== Function = lookup =====================
@@ -1033,7 +1032,7 @@ public final class FunctionMethods {
             SimpleDateFormat sdf = new SimpleDateFormat(format);
             return sdf.format(date);
 		} catch (IllegalArgumentException iae) {
-			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0042, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0042 ,
+			throw new FunctionExecutionException("ERR.015.001.0042", QueryPlugin.Util.getString("ERR.015.001.0042" , //$NON-NLS-1$ //$NON-NLS-2$
 				iae.getMessage()));
 		}
 	}
@@ -1045,7 +1044,7 @@ public final class FunctionMethods {
 		try {
 			return df.parse(date);
 		} catch (ParseException e) {
-			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0043, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0043 ,
+			throw new FunctionExecutionException("ERR.015.001.0043", QueryPlugin.Util.getString("ERR.015.001.0043" , //$NON-NLS-1$ //$NON-NLS-2$
 					date, format));
 		}
 	}
@@ -1062,7 +1061,7 @@ public final class FunctionMethods {
 	        DecimalFormat df = new DecimalFormat(format);
 	        return df.format(number);
 		} catch (IllegalArgumentException iae) {
-			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0042, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0042 ,
+			throw new FunctionExecutionException("ERR.015.001.0042", QueryPlugin.Util.getString("ERR.015.001.0042" , //$NON-NLS-1$ //$NON-NLS-2$
 			iae.getMessage()));
 		}
 	}
@@ -1112,7 +1111,7 @@ public final class FunctionMethods {
 		try {
 			return df.parse(number);
 		} catch (ParseException e) {
-			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0043, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0043 ,
+			throw new FunctionExecutionException("ERR.015.001.0043", QueryPlugin.Util.getString("ERR.015.001.0043" , //$NON-NLS-1$ //$NON-NLS-2$
 					number,format));
 		}
 	}

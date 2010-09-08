@@ -70,7 +70,6 @@ import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.XMLQuery;
 import org.teiid.query.sql.symbol.XMLSerialize;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 public class ResolverVisitor extends LanguageVisitor {
@@ -184,7 +183,7 @@ public class ResolverVisitor extends LanguageVisitor {
                 resolveAgainstGroups(shortCanonicalName, matchedGroups, matches);
                 
                 if (matches.size() > 1) {
-                    handleUnresolvedElement(elementSymbol, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0053, elementSymbol));
+                    handleUnresolvedElement(elementSymbol, QueryPlugin.Util.getString("ERR.015.008.0053", elementSymbol)); //$NON-NLS-1$
                     return;
                 }
                 
@@ -199,9 +198,9 @@ public class ResolverVisitor extends LanguageVisitor {
         
         if (matches.isEmpty()) {
             if (groupMatched) {
-                handleUnresolvedElement(elementSymbol, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0054, elementSymbol));
+                handleUnresolvedElement(elementSymbol, QueryPlugin.Util.getString("ERR.015.008.0054", elementSymbol)); //$NON-NLS-1$
             } else {
-                handleUnresolvedElement(elementSymbol, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0051, elementSymbol));
+                handleUnresolvedElement(elementSymbol, QueryPlugin.Util.getString("ERR.015.008.0051", elementSymbol)); //$NON-NLS-1$
             }
             return;
         }
@@ -307,7 +306,7 @@ public class ResolverVisitor extends LanguageVisitor {
         try {
             resolveFunction(obj, this.metadata.getFunctionLibrary());
         } catch(QueryResolverException e) {
-        	if (ErrorMessageKeys.RESOLVER_0036.equals(e.getCode()) || ErrorMessageKeys.RESOLVER_0035.equals(e.getCode())) {
+        	if ("ERR.015.008.0036".equals(e.getCode()) || "ERR.015.008.0035".equals(e.getCode())) { //$NON-NLS-1$ //$NON-NLS-2$
 	        	if (unresolvedFunctions == null) {
 	        		unresolvedFunctions = new LinkedHashMap<Function, QueryResolverException>();
 	        	}
@@ -442,7 +441,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	        types[i] = args[i].getType();
 	        if(types[i] == null) {
 	        	if(!(args[i] instanceof Reference)){
-	                throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0035, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0035, new Object[] {args[i], function}));
+	                throw new QueryResolverException("ERR.015.008.0035", QueryPlugin.Util.getString("ERR.015.008.0035", new Object[] {args[i], function})); //$NON-NLS-1$ //$NON-NLS-2$
 	        	}
 	            hasArgWithoutType = true;
 	        }
@@ -466,14 +465,14 @@ public class ResolverVisitor extends LanguageVisitor {
 	        FunctionForm form = library.findFunctionForm(function.getName(), args.length);
 	        if(form == null) {
 	            // Unknown function form
-	            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0039, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0039, function));
+	            throw new QueryResolverException("ERR.015.008.0039", QueryPlugin.Util.getString("ERR.015.008.0039", function)); //$NON-NLS-1$ //$NON-NLS-2$
 	        }
 	        // Known function form - but without type information
 	        if (hasArgWithoutType) {
-	            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0036, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0036, function));
+	            throw new QueryResolverException("ERR.015.008.0036", QueryPlugin.Util.getString("ERR.015.008.0036", function)); //$NON-NLS-1$ //$NON-NLS-2$
 	        }
 	        // Known function form - unable to find implicit conversions
-	        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0040, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0040, function));
+	        throw new QueryResolverException("ERR.015.008.0040", QueryPlugin.Util.getString("ERR.015.008.0040", function)); //$NON-NLS-1$ //$NON-NLS-2$
 	    }
 	    
 	    if(fd.getName().equalsIgnoreCase(FunctionLibrary.CONVERT) || fd.getName().equalsIgnoreCase(FunctionLibrary.CAST)) {
@@ -487,7 +486,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	           !srcTypeClass.equals(dataTypeClass) &&
 	           !DataTypeManager.isTransformable(srcTypeClass, dataTypeClass)) {
 	
-	            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0037, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0037, new Object[] {DataTypeManager.getDataTypeName(srcTypeClass), dataType}));
+	            throw new QueryResolverException("ERR.015.008.0037", QueryPlugin.Util.getString("ERR.015.008.0037", new Object[] {DataTypeManager.getDataTypeName(srcTypeClass), dataType})); //$NON-NLS-1$ //$NON-NLS-2$
 	        }
 	    } else if(fd.getName().equalsIgnoreCase(FunctionLibrary.LOOKUP)) {
 			ResolverUtil.ResolvedLookup lookup = ResolverUtil.resolveLookup(function, metadata);
@@ -588,7 +587,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	        criteria.setUpperExpression(ResolverUtil.convertExpression(upper, upperTypeName, commonType, metadata));
 	    } else {
 	        // Couldn't find a common type to implicitly convert to
-	        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0027, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0027, expTypeName, lowerTypeName, criteria));
+	        throw new QueryResolverException("ERR.015.008.0027", QueryPlugin.Util.getString("ERR.015.008.0027", expTypeName, lowerTypeName, criteria)); //$NON-NLS-1$ //$NON-NLS-2$
 	    }
 	    // invariants: exp.getType() == lower.getType() == upper.getType()
 	}
@@ -649,7 +648,7 @@ public class ResolverVisitor extends LanguageVisitor {
 		
 		if (commonType == null) {
 	        // Neither are aggs, but types can't be reconciled
-	        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0027, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0027, new Object[] { leftTypeName, rightTypeName, ccrit }));
+	        throw new QueryResolverException("ERR.015.008.0027", QueryPlugin.Util.getString("ERR.015.008.0027", new Object[] { leftTypeName, rightTypeName, ccrit })); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		ccrit.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, commonType, metadata) );
 		ccrit.setRightExpression(ResolverUtil.convertExpression(rightExpression, rightTypeName, commonType, metadata) );
@@ -690,7 +689,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	                result = ResolverUtil.convertExpression(expr, type, DataTypeManager.DefaultDataTypes.CLOB, metadata);
 	
 	            } else {
-	                throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0029, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0029, mcrit));
+	                throw new QueryResolverException("ERR.015.008.0029", QueryPlugin.Util.getString("ERR.015.008.0029", mcrit)); //$NON-NLS-1$ //$NON-NLS-2$
 	            }
 	        }
 	    }
@@ -703,7 +702,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    // Check that each of the values are the same type as expression
 	    Class exprType = scrit.getExpression().getType();
 	    if(exprType == null) {
-	        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0030, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0030, scrit.getExpression()));
+	        throw new QueryResolverException("ERR.015.008.0030", QueryPlugin.Util.getString("ERR.015.008.0030", scrit.getExpression())); //$NON-NLS-1$ //$NON-NLS-2$
 	    }
 	
 	    String exprTypeName = DataTypeManager.getDataTypeName(exprType);
@@ -744,9 +743,9 @@ public class ResolverVisitor extends LanguageVisitor {
 	            while(valIter.hasNext()) {
 	                Expression value = (Expression) valIter.next();
 	                if(value.getType() == null) {
-	                    throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0030, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0030, value));
+	                    throw new QueryResolverException("ERR.015.008.0030", QueryPlugin.Util.getString("ERR.015.008.0030", value)); //$NON-NLS-1$ //$NON-NLS-2$
 	                } else if(! value.getType().equals(setType)) {
-	                    throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0031, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0031, scrit));
+	                    throw new QueryResolverException("ERR.015.008.0031", QueryPlugin.Util.getString("ERR.015.008.0031", scrit)); //$NON-NLS-1$ //$NON-NLS-2$
 	                }
 	            }
 	
@@ -754,7 +753,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	            scrit.setExpression(ResolverUtil.convertExpression(scrit.getExpression(), exprTypeName, setTypeName, metadata));
 	
 	        } else {
-	            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0031, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0031, scrit));
+	            throw new QueryResolverException("ERR.015.008.0031", QueryPlugin.Util.getString("ERR.015.008.0031", scrit)); //$NON-NLS-1$ //$NON-NLS-2$
 	        }
 	    }
 	
@@ -828,11 +827,11 @@ public class ResolverVisitor extends LanguageVisitor {
 	    // 3. Perform implicit type conversions
 	    String whenTypeName = ResolverUtil.getCommonType((String[])whenTypeNames.toArray(new String[whenTypeNames.size()]));
 	    if (whenTypeName == null) {
-	        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0068, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0068, "WHEN", obj)); //$NON-NLS-1$
+	        throw new QueryResolverException("ERR.015.008.0068", QueryPlugin.Util.getString("ERR.015.008.0068", "WHEN", obj)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	    }
 	    String thenTypeName = ResolverUtil.getCommonType((String[])thenTypeNames.toArray(new String[thenTypeNames.size()]));
 	    if (thenTypeName == null) {
-	        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0068, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0068, "THEN/ELSE", obj)); //$NON-NLS-1$
+	        throw new QueryResolverException("ERR.015.008.0068", QueryPlugin.Util.getString("ERR.015.008.0068", "THEN/ELSE", obj)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	    }
 	    obj.setExpression(ResolverUtil.convertExpression(obj.getExpression(), whenTypeName, metadata));
 	    ArrayList whens = new ArrayList(whenCount);
@@ -918,7 +917,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    // 3. Perform implicit type conversions
 	    String thenTypeName = ResolverUtil.getCommonType((String[])thenTypeNames.toArray(new String[thenTypeNames.size()]));
 	    if (thenTypeName == null) {
-	        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0068, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0068, "THEN/ELSE", obj)); //$NON-NLS-1$
+	        throw new QueryResolverException("ERR.015.008.0068", QueryPlugin.Util.getString("ERR.015.008.0068", "THEN/ELSE", obj)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	    }
 	    ArrayList thens = new ArrayList(whenCount);
 	    for (int i = 0; i < whenCount; i++) {

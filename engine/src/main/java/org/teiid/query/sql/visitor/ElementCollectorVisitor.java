@@ -35,7 +35,6 @@ import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.symbol.AllInGroupSymbol;
 import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -60,7 +59,7 @@ public class ElementCollectorVisitor extends LanguageVisitor {
      */
 	public ElementCollectorVisitor(Collection<ElementSymbol> elements) {
         if(elements == null) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0021));
+            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0021")); //$NON-NLS-1$
         }
         this.elements = elements;
     }

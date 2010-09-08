@@ -44,7 +44,6 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 public class CriteriaPlanner {
@@ -89,7 +88,7 @@ public class CriteriaPlanner {
                     if (context == null) {
                         context = otherContext;
                     } else if (context != otherContext){
-                        throw new QueryPlannerException(ErrorMessageKeys.OPTIMIZER_0068, QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0068, criteria));
+                        throw new QueryPlannerException("ERR.015.004.0068", QueryExecPlugin.Util.getString("ERR.015.004.0068", criteria)); //$NON-NLS-1$ //$NON-NLS-2$
                     }
                 }
                 
@@ -301,7 +300,7 @@ public class CriteriaPlanner {
             //assumes that all non-xml group elements are temp elements
             boolean hasTempElement = !metadata.isXMLGroup(group.getMetadataID());
             if(!first && hasTempElement && resultSet == null) {
-                throw new QueryPlannerException(ErrorMessageKeys.OPTIMIZER_0035, QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0035, conjunct));
+                throw new QueryPlannerException("ERR.015.004.0035", QueryExecPlugin.Util.getString("ERR.015.004.0035", conjunct)); //$NON-NLS-1$ //$NON-NLS-2$
             }
 
             if (hasTempElement) {
@@ -336,7 +335,7 @@ public class CriteriaPlanner {
 
         MappingNode contextNode = MappingNode.findNode(planEnv.mappingDoc, targetContext.getCanonicalName());
         if (contextNode == null){
-            throw new QueryPlannerException(ErrorMessageKeys.OPTIMIZER_0037, QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0037, targetContext));
+            throw new QueryPlannerException("ERR.015.004.0037", QueryExecPlugin.Util.getString("ERR.015.004.0037", targetContext)); //$NON-NLS-1$ //$NON-NLS-2$
         }
         return contextNode;
     }

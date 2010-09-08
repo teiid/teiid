@@ -41,7 +41,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.teiid.core.CorePlugin;
-import org.teiid.core.ErrorMessageKeys;
 import org.teiid.core.types.basic.AnyToObjectTransform;
 import org.teiid.core.types.basic.AnyToStringTransform;
 import org.teiid.core.types.basic.BooleanToNumberTransform;
@@ -323,7 +322,7 @@ public class DataTypeManager {
 	public static Transform getTransform(Class sourceType, Class targetType) {
 		if (sourceType == null || targetType == null) {
 			throw new IllegalArgumentException(CorePlugin.Util.getString(
-					ErrorMessageKeys.TYPES_ERR_0002, sourceType, targetType));
+					"ERR.003.029.0002", sourceType, targetType)); //$NON-NLS-1$
 		}
 		return getTransformFromMaps(
 				DataTypeManager.getDataTypeName(sourceType), DataTypeManager
@@ -345,7 +344,7 @@ public class DataTypeManager {
 			String targetTypeName) {
 		if (sourceTypeName == null || targetTypeName == null) {
 			throw new IllegalArgumentException(CorePlugin.Util.getString(
-					ErrorMessageKeys.TYPES_ERR_0003, sourceTypeName,
+					"ERR.003.029.0003", sourceTypeName, //$NON-NLS-1$
 					targetTypeName));
 		}
 		return getTransformFromMaps(sourceTypeName, targetTypeName);
@@ -363,7 +362,7 @@ public class DataTypeManager {
 	public static boolean isTransformable(Class sourceType, Class targetType) {
 		if (sourceType == null || targetType == null) {
 			throw new IllegalArgumentException(CorePlugin.Util.getString(
-					ErrorMessageKeys.TYPES_ERR_0002, sourceType, targetType));
+					"ERR.003.029.0002", sourceType, targetType)); //$NON-NLS-1$
 		}
 		return (getTransformFromMaps(DataTypeManager
 				.getDataTypeName(sourceType), DataTypeManager
@@ -385,7 +384,7 @@ public class DataTypeManager {
 			String targetTypeName) {
 		if (sourceTypeName == null || targetTypeName == null) {
 			throw new IllegalArgumentException(CorePlugin.Util.getString(
-					ErrorMessageKeys.TYPES_ERR_0003, sourceTypeName,
+					"ERR.003.029.0003", sourceTypeName, //$NON-NLS-1$
 					targetTypeName));
 		}
 		return (getTransformFromMaps(sourceTypeName, targetTypeName) != null);

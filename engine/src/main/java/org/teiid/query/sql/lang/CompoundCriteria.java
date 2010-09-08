@@ -30,7 +30,6 @@ import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -128,7 +127,7 @@ public class CompoundCriteria extends LogicalCriteria {
      */
     public void setOperator(int operator) {
         if (!isValidOperator(operator)) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0002, operator));
+            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0002", operator)); //$NON-NLS-1$
         }
         this.operator = operator;
     }

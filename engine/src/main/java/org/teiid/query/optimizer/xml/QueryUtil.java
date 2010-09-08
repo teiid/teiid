@@ -58,7 +58,6 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 
@@ -84,7 +83,7 @@ public class QueryUtil {
             try {
                 query = QueryParser.getQueryParser().parseCommand(queryNode.getQuery());            
             } catch (QueryParserException e) {
-                throw new QueryPlannerException(e, QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0054, new Object[]{queryNode.getGroupName(), queryNode.getQuery()}));
+                throw new QueryPlannerException(e, QueryExecPlugin.Util.getString("ERR.015.004.0054", new Object[]{queryNode.getGroupName(), queryNode.getQuery()})); //$NON-NLS-1$
             }
         } 
         return query;
@@ -144,7 +143,7 @@ public class QueryUtil {
             ResolverUtil.resolveGroup(gs, metadata);
             queryNode = metadata.getVirtualPlan(gs.getMetadataID());
         } catch (QueryResolverException e) {
-            throw new QueryPlannerException(e, ErrorMessageKeys.OPTIMIZER_0029, QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0029, groupName));
+            throw new QueryPlannerException(e, "ERR.015.004.0029", QueryExecPlugin.Util.getString("ERR.015.004.0029", groupName)); //$NON-NLS-1$ //$NON-NLS-2$
         }
         return queryNode;
     }    

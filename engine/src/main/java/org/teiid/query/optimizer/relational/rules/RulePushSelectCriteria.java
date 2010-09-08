@@ -57,7 +57,6 @@ import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 public final class RulePushSelectCriteria implements OptimizerRule {
@@ -298,7 +297,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                         return currentNode.getFirstChild();
                     } 
 				} catch(QueryMetadataException e) {
-                    throw new QueryPlannerException(e, QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0020, currentNode.getGroups()));
+                    throw new QueryPlannerException(e, QueryExecPlugin.Util.getString("ERR.015.004.0020", currentNode.getGroups())); //$NON-NLS-1$
 				}
 			} else if(currentNode.getType() == NodeConstants.Types.JOIN) {
 				//pushing below a join is not necessary under an access node

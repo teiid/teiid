@@ -28,7 +28,6 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.logging.LogManager;
 import org.teiid.query.execution.QueryExecPlugin;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -43,7 +42,7 @@ public class AbortProcessingInstruction extends ProcessorInstruction {
      * Default message included in the RuntimeException thrown from
      * {@link #process}
      */
-    public static final String DEFAULT_MESSAGE = QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0054);
+    public static final String DEFAULT_MESSAGE = QueryExecPlugin.Util.getString("ERR.015.006.0054"); //$NON-NLS-1$
 
     /**
      * Constructor for AbortProcessingInstruction.

@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -74,7 +73,7 @@ public class ActivityReport implements Serializable {
 	 */
 	public void addItem(ReportItem item) {
 		if(item == null) {
-	    	throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.REPORT_0001));
+	    	throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.007.0001")); //$NON-NLS-1$
 	    }
 
 	    this.items.add(item);
@@ -87,7 +86,7 @@ public class ActivityReport implements Serializable {
      */
     public void addItems(Collection items) {
         if(items == null) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.REPORT_0001));
+            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.007.0001")); //$NON-NLS-1$
         }
 
         Iterator iter = items.iterator();

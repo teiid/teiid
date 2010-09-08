@@ -28,7 +28,6 @@ import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -57,7 +56,7 @@ public class Max extends AggregateFunction {
                     maxValue = valueComp;
                 }
             } else {
-                throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0050, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0050, "MAX", value.getClass().getName())); //$NON-NLS-1$
+                throw new FunctionExecutionException("ERR.015.001.0050", QueryPlugin.Util.getString("ERR.015.001.0050", "MAX", value.getClass().getName())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             }
         }
     }

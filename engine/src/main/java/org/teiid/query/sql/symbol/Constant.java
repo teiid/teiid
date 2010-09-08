@@ -28,7 +28,6 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -58,10 +57,10 @@ public class Constant implements Expression, Comparable<Constant> {
 
         // Check that type is valid, then set it
         if(type == null) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0014));
+            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0014")); //$NON-NLS-1$
         }
         if(! DataTypeManager.getAllDataTypeClasses().contains(type)) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0015, type.getName()));
+            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0015", type.getName())); //$NON-NLS-1$
         }
         assert value == null || type.isAssignableFrom(value.getClass()) : "Invalid value for specified type."; //$NON-NLS-1$
         this.type = type;
