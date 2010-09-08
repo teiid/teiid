@@ -409,7 +409,6 @@ public class TempTableDataManager implements ProcessorDataManager {
 		try {
 			String fullName = metadata.getFullName(group.getMetadataID());
 			//TODO: order by primary key nulls first - then have an insert ordered optimization
-			//TODO: use the getCommand logic in RelationalPlanner to reuse commands for this.
 			String transformation = metadata.getVirtualPlan(group.getMetadataID()).getQuery();
 			QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(transformation, fullName, context);
 			qp.setNonBlocking(true);

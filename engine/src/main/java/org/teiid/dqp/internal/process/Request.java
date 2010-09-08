@@ -24,6 +24,7 @@ package org.teiid.dqp.internal.process;
 
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -59,6 +60,7 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.SecurityFunctionEvaluator;
+import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempCapabilitiesFinder;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -81,7 +83,9 @@ import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.util.CommandContext;
@@ -380,15 +384,24 @@ public class Request {
 
         List<Reference> references = ReferenceCollectorVisitor.getReferences(command);
         
-        //there should be no reference (?) for query/update executed as statement
         checkReferences(references);
         
         this.analysisRecord = new AnalysisRecord(requestMsg.getShowPlan() != ShowPlan.OFF, requestMsg.getShowPlan() == ShowPlan.DEBUG);
                 
         resolveCommand(command);
         
-        createCommandContext();
+        validateAccess(userCommand);
         
+        createCommandContext();
+
+        Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroups(command, true);
+        for (GroupSymbol groupSymbol : groups) {
+			if (groupSymbol.isTempTable()) {
+				this.context.setDeterminismLevel(FunctionMethod.SESSION_DETERMINISTIC);
+				break;
+			}
+		}
+
         validateQuery(command);
         
         command = QueryRewriter.rewrite(command, metadata, context);
@@ -447,8 +460,6 @@ public class Request {
         generatePlan();
         
         postProcessXML();
-        
-        validateAccess(userCommand);
         
         createProcessor();
     }
