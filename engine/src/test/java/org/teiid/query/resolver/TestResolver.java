@@ -1991,16 +1991,20 @@ public class TestResolver {
     @Test public void testUnaliasedOrderByFails() {
         helpResolveException("SELECT pm1.g1.e1 e2 FROM pm1.g1 group by pm1.g1.e1 ORDER BY pm1.g1.e2"); //$NON-NLS-1$
     }
+    
+    @Test public void testUnaliasedOrderByFails1() {
+        helpResolveException("SELECT pm1.g1.e1 e2 FROM pm1.g1 group by pm1.g1.e1 ORDER BY pm1.g1.e2 + 1"); //$NON-NLS-1$
+    }
 
     /** 
      * the group g1 is not known to the order by clause of a union
      */
     @Test public void testUnionOrderByFail() {
-        helpResolveException("SELECT pm1.g1.e1 FROM pm1.g1 UNION SELECT pm1.g2.e1 FROM pm1.g2 ORDER BY g1.e1", "Error Code:ERR.015.008.0043 Message:Element 'g1.e1' in ORDER BY was not found in SELECT clause."); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("SELECT pm1.g1.e1 FROM pm1.g1 UNION SELECT pm1.g2.e1 FROM pm1.g2 ORDER BY g1.e1", "ORDER BY expression 'g1.e1' cannot be used with a set query."); //$NON-NLS-1$ //$NON-NLS-2$
     }      
     
     @Test public void testUnionOrderByFail1() {
-        helpResolveException("SELECT pm1.g1.e1 FROM pm1.g1 UNION SELECT pm1.g2.e1 FROM pm1.g2 ORDER BY pm1.g1.e1", "Error Code:ERR.015.008.0043 Message:Element 'pm1.g1.e1' in ORDER BY was not found in SELECT clause."); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("SELECT pm1.g1.e1 FROM pm1.g1 UNION SELECT pm1.g2.e1 FROM pm1.g2 ORDER BY pm1.g1.e1", "ORDER BY expression 'pm1.g1.e1' cannot be used with a set query."); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testOrderByPartiallyQualified() {

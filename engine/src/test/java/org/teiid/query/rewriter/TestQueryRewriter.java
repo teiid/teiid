@@ -1030,7 +1030,7 @@ public class TestQueryRewriter {
         procedure = procedure + "Declare String var1;\n"; //$NON-NLS-1$
         procedure = procedure + "if(var1 = 'x' or var1 = 'y')\n"; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2, Input.e2, CHANGING.e2, CHANGING.e1 from pm1.g1 order by CHANGING.e1;\n"; //$NON-NLS-1$
+        procedure = procedure + "Select pm1.g1.e2, Input.e2, CHANGING.e2, CHANGING.e1 from pm1.g1 order by CHANGING.e1 + 1;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
         procedure = procedure + "END\n";         //$NON-NLS-1$
 

@@ -851,17 +851,20 @@ public class QueryRewriter {
         for (int i = 0; i < orderBy.getVariableCount(); i++) {
         	SingleElementSymbol querySymbol = orderBy.getVariable(i);
         	int index = orderBy.getExpressionPosition(i);
+    		boolean isUnrelated = false;
         	if (index == -1) {
     			unrelatedItems.add(orderBy.getOrderByItems().get(i));
-        		hasUnrelatedExpression |= (querySymbol instanceof ExpressionSymbol);
-        	  	continue; // must be unrelated
-        	}
-        	querySymbol = (SingleElementSymbol)projectedSymbols.get(index);
-        	Expression expr = SymbolMap.getExpression(querySymbol);
-        	if (!previousExpressions.add(expr) || (queryCommand instanceof Query && EvaluatableVisitor.isFullyEvaluatable(expr, true))) {
-                orderBy.removeOrderByItem(i--);
+    			isUnrelated = (querySymbol instanceof ExpressionSymbol);
         	} else {
+        		querySymbol = (SingleElementSymbol)projectedSymbols.get(index);
+        	}
+        	Expression expr = SymbolMap.getExpression(querySymbol);
+        	if (!previousExpressions.add(expr) || (queryCommand instanceof Query && EvaluatableVisitor.willBecomeConstant(expr))) {
+                orderBy.removeOrderByItem(i--);
+        	} else if (!isUnrelated) {
         		orderBy.getOrderByItems().get(i).setSymbol((SingleElementSymbol)querySymbol.clone());
+        	} else {
+        		hasUnrelatedExpression = true;
         	}
         }
         if (orderBy.getVariableCount() == 0) {
