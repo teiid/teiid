@@ -1983,6 +1983,14 @@ public class TestResolver {
     @Test public void testUnaliasedOrderBySucceeds() {
         helpResolve("SELECT pm1.g1.e1 a, pm1.g1.e1 b FROM pm1.g1 ORDER BY pm1.g1.e1"); //$NON-NLS-1$
     }
+    
+    @Test public void testUnaliasedOrderBySucceeds1() {
+        helpResolve("SELECT pm1.g1.e1 a FROM pm1.g1 group by pm1.g1.e1 ORDER BY pm1.g1.e1"); //$NON-NLS-1$
+    }
+    
+    @Test public void testUnaliasedOrderByFails() {
+        helpResolveException("SELECT pm1.g1.e1 e2 FROM pm1.g1 group by pm1.g1.e1 ORDER BY pm1.g1.e2"); //$NON-NLS-1$
+    }
 
     /** 
      * the group g1 is not known to the order by clause of a union
