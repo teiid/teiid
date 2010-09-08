@@ -28,7 +28,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogManager;
-import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.QueryPlugin;
 import org.xml.sax.SAXException;
 
 
@@ -70,7 +70,7 @@ public class MoveDocInstruction extends ProcessorInstruction {
                 doc.moveToLastChild();
                 break;
             default:
-                Assertion.failed(QueryExecPlugin.Util.getString("ERR.015.006.0051", direction)); //$NON-NLS-1$
+                Assertion.failed(QueryPlugin.Util.getString("ERR.015.006.0051", direction)); //$NON-NLS-1$
                 break;
         }
 

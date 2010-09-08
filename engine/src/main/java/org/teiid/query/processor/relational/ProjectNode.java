@@ -22,7 +22,7 @@
 
 package org.teiid.query.processor.relational;
 
-import static org.teiid.query.analysis.AnalysisRecord.*;
+import static org.teiid.query.analysis.AnalysisRecord.PROP_SELECT_COLS;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,8 +38,8 @@ import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
@@ -217,7 +217,7 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
             Expression expression = ((ExpressionSymbol)symbol).getExpression();
 			tuple.add(getEvaluator(this.elementMap).evaluate(expression, values));
         } else {
-            Assertion.failed(QueryExecPlugin.Util.getString("ERR.015.006.0034", symbol.getClass().getName())); //$NON-NLS-1$
+            Assertion.failed(QueryPlugin.Util.getString("ERR.015.006.0034", symbol.getClass().getName())); //$NON-NLS-1$
 		}
 	}
 

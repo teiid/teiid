@@ -43,7 +43,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
 import org.teiid.core.util.Assertion;
-import org.teiid.net.NetPlugin;
+import org.teiid.jdbc.JDBCPlugin;
 
 
 
@@ -208,7 +208,7 @@ public class SocketUtil {
             try {
                 stream = new FileInputStream(name);
             } catch (FileNotFoundException e) {
-                IOException exception = new IOException(NetPlugin.Util.getString("SocketHelper.keystore_not_found", name)); //$NON-NLS-1$
+                IOException exception = new IOException(JDBCPlugin.Util.getString("SocketHelper.keystore_not_found", name)); //$NON-NLS-1$
                 exception.initCause(e);
                 throw exception;
             } 

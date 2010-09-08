@@ -50,7 +50,6 @@ import org.teiid.core.types.ClobType;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.util.Assertion;
-import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorWork;
@@ -66,6 +65,7 @@ import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -372,7 +372,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	List<String> bindings = model.getSourceNames();
 	        if (bindings == null || bindings.size() != 1) {
 	            // this should not happen, but it did occur when setting up the SystemAdmin models
-	            throw new TeiidComponentException(DQPPlugin.Util.getString("DataTierManager.could_not_obtain_connector_binding", new Object[]{modelName, workItem.getDqpWorkContext().getVdbName(), workItem.getDqpWorkContext().getVdbVersion() })); //$NON-NLS-1$
+	            throw new TeiidComponentException(QueryPlugin.Util.getString("DataTierManager.could_not_obtain_connector_binding", new Object[]{modelName, workItem.getDqpWorkContext().getVdbName(), workItem.getDqpWorkContext().getVdbVersion() })); //$NON-NLS-1$
 	        }
 	        connectorBindingId = bindings.get(0); 
 	        Assertion.isNotNull(connectorBindingId, "could not obtain connector id"); //$NON-NLS-1$

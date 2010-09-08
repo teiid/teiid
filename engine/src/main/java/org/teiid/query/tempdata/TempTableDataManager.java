@@ -51,9 +51,9 @@ import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.Evaluator;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
@@ -188,7 +188,7 @@ public class TempTableDataManager implements ProcessorDataManager {
     		Create create = (Create)command;
     		String tempTableName = create.getTable().getCanonicalName();
     		if (contextStore.hasTempTable(tempTableName)) {
-                throw new QueryProcessingException(QueryExecPlugin.Util.getString("TempTableStore.table_exist_error", tempTableName));//$NON-NLS-1$
+                throw new QueryProcessingException(QueryPlugin.Util.getString("TempTableStore.table_exist_error", tempTableName));//$NON-NLS-1$
             }
     		contextStore.addTempTable(tempTableName, create, bufferManager, true);
             return CollectionTupleSource.createUpdateCountTupleSource(0);	
@@ -275,11 +275,11 @@ public class TempTableDataManager implements ProcessorDataManager {
 			Object pk = metadata.getPrimaryKey(groupID);
 			String matViewName = metadata.getFullName(groupID);
 			if (pk == null) {
-				throw new QueryProcessingException(QueryExecPlugin.Util.getString("TempTableDataManager.row_refresh_pk", matViewName)); //$NON-NLS-1$
+				throw new QueryProcessingException(QueryPlugin.Util.getString("TempTableDataManager.row_refresh_pk", matViewName)); //$NON-NLS-1$
 			}
 			List<?> ids = metadata.getElementIDsInKey(pk);
 			if (ids.size() > 1) {
-				throw new QueryProcessingException(QueryExecPlugin.Util.getString("TempTableDataManager.row_refresh_composite", matViewName)); //$NON-NLS-1$
+				throw new QueryProcessingException(QueryPlugin.Util.getString("TempTableDataManager.row_refresh_composite", matViewName)); //$NON-NLS-1$
 			}
 			String matTableName = RelationalPlanner.MAT_PREFIX+matViewName.toUpperCase();
 			MatTableInfo info = globalStore.getMatTableInfo(matTableName);
@@ -288,10 +288,10 @@ public class TempTableDataManager implements ProcessorDataManager {
 			}
 			TempTable tempTable = globalStore.getOrCreateTempTable(matTableName, new Query(), bufferManager, false);
 			if (!tempTable.isUpdatable()) {
-				throw new QueryProcessingException(QueryExecPlugin.Util.getString("TempTableDataManager.row_refresh_updatable", matViewName)); //$NON-NLS-1$
+				throw new QueryProcessingException(QueryPlugin.Util.getString("TempTableDataManager.row_refresh_updatable", matViewName)); //$NON-NLS-1$
 			}
 			Constant key = (Constant)proc.getParameter(2).getExpression();
-			LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryExecPlugin.Util.getString("TempTableDataManager.row_refresh", matViewName, key)); //$NON-NLS-1$
+			LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.getString("TempTableDataManager.row_refresh", matViewName, key)); //$NON-NLS-1$
 			String queryString = Reserved.SELECT + " * " + Reserved.FROM + ' ' + matViewName + ' ' + Reserved.WHERE + ' ' + //$NON-NLS-1$
 				metadata.getFullName(ids.iterator().next()) + " = ?" + ' ' + Reserved.OPTION + ' ' + Reserved.NOCACHE; //$NON-NLS-1$
 			QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(queryString, matViewName.toUpperCase(), context, key.getValue());
@@ -317,7 +317,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 		try {
 			Object groupID = metadata.getGroupID(name);
 			if (!metadata.hasMaterialization(groupID) || metadata.getMaterialization(groupID) != null) {
-				throw new QueryProcessingException(QueryExecPlugin.Util.getString("TempTableDataManager.not_implicit_matview", name)); //$NON-NLS-1$
+				throw new QueryProcessingException(QueryPlugin.Util.getString("TempTableDataManager.not_implicit_matview", name)); //$NON-NLS-1$
 			}
 			return groupID;
 		} catch (QueryMetadataException e) {
@@ -381,7 +381,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			GroupSymbol group, final String tableName,
 			TempTableStore globalStore, MatTableInfo info)
 			throws TeiidComponentException, TeiidProcessingException {
-		LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryExecPlugin.Util.getString("TempTableDataManager.loading", tableName)); //$NON-NLS-1$
+		LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.getString("TempTableDataManager.loading", tableName)); //$NON-NLS-1$
 		QueryMetadataInterface metadata = context.getMetadata();
 		Create create = new Create();
 		create.setTable(group);
@@ -428,10 +428,10 @@ public class TempTableDataManager implements ProcessorDataManager {
 			}
 			table.setUpdatable(updatable);
 		} catch (TeiidComponentException e) {
-			LogManager.logError(LogConstants.CTX_MATVIEWS, e, QueryExecPlugin.Util.getString("TempTableDataManager.failed_load", tableName)); //$NON-NLS-1$
+			LogManager.logError(LogConstants.CTX_MATVIEWS, e, QueryPlugin.Util.getString("TempTableDataManager.failed_load", tableName)); //$NON-NLS-1$
 			throw e;
 		} catch (TeiidProcessingException e) {
-			LogManager.logError(LogConstants.CTX_MATVIEWS, e, QueryExecPlugin.Util.getString("TempTableDataManager.failed_load", tableName)); //$NON-NLS-1$
+			LogManager.logError(LogConstants.CTX_MATVIEWS, e, QueryPlugin.Util.getString("TempTableDataManager.failed_load", tableName)); //$NON-NLS-1$
 			throw e;
 		} finally {
 			if (rowCount == -1) {
@@ -439,7 +439,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			} else {
 				globalStore.swapTempTable(tableName, table);
 				info.setState(MatState.LOADED, true);
-				LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryExecPlugin.Util.getString("TempTableDataManager.loaded", tableName, rowCount)); //$NON-NLS-1$
+				LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.getString("TempTableDataManager.loaded", tableName, rowCount)); //$NON-NLS-1$
 			}
 		}
 		return rowCount;

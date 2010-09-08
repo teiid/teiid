@@ -30,9 +30,9 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
@@ -75,7 +75,7 @@ public class CachedFinder implements CapabilitiesFinder {
         	try {
         		ConnectorManager mgr = this.connectorRepo.getConnectorManager(sourceName);
         		if (mgr == null) {
-        			throw new TranslatorException(DQPPlugin.Util.getString("CachedFinder.no_connector_found", sourceName, modelName, sourceName)); //$NON-NLS-1$
+        			throw new TranslatorException(QueryPlugin.Util.getString("CachedFinder.no_connector_found", sourceName, modelName, sourceName)); //$NON-NLS-1$
         		}
         		caps = mgr.getCapabilities();
         		break;

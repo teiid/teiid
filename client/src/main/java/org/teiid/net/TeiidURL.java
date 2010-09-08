@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
+import org.teiid.jdbc.JDBCPlugin;
+
 
 /**
  * Class defines the URL in the Teiid.
@@ -92,7 +94,7 @@ public class TeiidURL {
 
     public static final String FORMAT_SERVER = "mm[s]://server1:port1[,server2:port2]"; //$NON-NLS-1$
 
-    public static final String INVALID_FORMAT_SERVER = NetPlugin.Util.getString("MMURL.INVALID_FORMAT", new Object[] {FORMAT_SERVER}); //$NON-NLS-1$
+    public static final String INVALID_FORMAT_SERVER = JDBCPlugin.Util.getString("MMURL.INVALID_FORMAT", new Object[] {FORMAT_SERVER}); //$NON-NLS-1$
 
 
     

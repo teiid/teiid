@@ -36,8 +36,8 @@ import java.util.Set;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
@@ -141,7 +141,7 @@ public class RulePlanJoins implements OptimizerRule {
                         
             //quick check for satisfiability
             if (!joinRegion.isSatisfiable()) {
-                throw new QueryPlannerException(QueryExecPlugin.Util.getString("RulePlanJoins.cantSatisfy", joinRegion.getUnsatisfiedAccessPatterns())); //$NON-NLS-1$
+                throw new QueryPlannerException(QueryPlugin.Util.getString("RulePlanJoins.cantSatisfy", joinRegion.getUnsatisfiedAccessPatterns())); //$NON-NLS-1$
             }
                         
             planForDependencies(joinRegion);
@@ -378,7 +378,7 @@ public class RulePlanJoins implements OptimizerRule {
     private void planForDependencies(JoinRegion joinRegion) throws QueryPlannerException {
                 
         if (joinRegion.getJoinSourceNodes().isEmpty()) {
-            throw new QueryPlannerException(QueryExecPlugin.Util.getString("RulePlanJoins.cantSatisfy", joinRegion.getUnsatisfiedAccessPatterns())); //$NON-NLS-1$
+            throw new QueryPlannerException(QueryPlugin.Util.getString("RulePlanJoins.cantSatisfy", joinRegion.getUnsatisfiedAccessPatterns())); //$NON-NLS-1$
         }
         
         HashSet<GroupSymbol> currentGroups = new HashSet<GroupSymbol>();
@@ -437,7 +437,7 @@ public class RulePlanJoins implements OptimizerRule {
         }
         
         if (!dependentNodes.isEmpty()) {
-            throw new QueryPlannerException(QueryExecPlugin.Util.getString("RulePlanJoins.cantSatisfy", joinRegion.getUnsatisfiedAccessPatterns())); //$NON-NLS-1$
+            throw new QueryPlannerException(QueryPlugin.Util.getString("RulePlanJoins.cantSatisfy", joinRegion.getUnsatisfiedAccessPatterns())); //$NON-NLS-1$
         }
         
     }

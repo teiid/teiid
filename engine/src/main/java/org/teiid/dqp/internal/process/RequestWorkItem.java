@@ -45,7 +45,6 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor.PrioritizedRunnable;
 import org.teiid.dqp.message.AtomicRequestID;
@@ -57,8 +56,8 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.logging.CommandLogMessage.Event;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.processor.BatchCollector;
@@ -173,7 +172,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
                 state = ProcessingState.PROCESSING;
         		processNew();
                 if (isCanceled) {
-                	this.processingException = new TeiidProcessingException(QueryExecPlugin.Util.getString("QueryProcessor.request_cancelled", this.requestID)); //$NON-NLS-1$
+                	this.processingException = new TeiidProcessingException(QueryPlugin.Util.getString("QueryProcessor.request_cancelled", this.requestID)); //$NON-NLS-1$
                     state = ProcessingState.CLOSE;
                 } 
         	}
@@ -205,9 +204,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
                 		cause = cause.getCause();
                 	}
                 	StackTraceElement elem = cause.getStackTrace()[0];
-                    LogManager.logWarning(LogConstants.CTX_DQP, DQPPlugin.Util.getString("ProcessWorker.processing_error", e.getMessage(), requestID, e.getClass().getName(), elem)); //$NON-NLS-1$
+                    LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.getString("ProcessWorker.processing_error", e.getMessage(), requestID, e.getClass().getName(), elem)); //$NON-NLS-1$
                 }else {
-                    LogManager.logError(LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("ProcessWorker.error", requestID)); //$NON-NLS-1$
+                    LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("ProcessWorker.error", requestID)); //$NON-NLS-1$
                 }                                
             }
             
@@ -314,7 +313,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				try {
 	        		this.transactionService.rollback(transactionContext);
 	            } catch (XATransactionException e1) {
-	                LogManager.logWarning(LogConstants.CTX_DQP, e1, DQPPlugin.Util.getString("ProcessWorker.failed_rollback")); //$NON-NLS-1$           
+	                LogManager.logWarning(LogConstants.CTX_DQP, e1, QueryPlugin.Util.getString("ProcessWorker.failed_rollback")); //$NON-NLS-1$           
 	            } 
 			} else {
 				suspend();
@@ -376,7 +375,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	                cr.setAnalysisRecord(analysisRecord);
 	                cr.setResults(resultsBuffer);
 	                if (determinismLevel > FunctionMethod.SESSION_DETERMINISTIC) {
-	    				LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("RequestWorkItem.cache_nondeterministic", originalCommand)); //$NON-NLS-1$
+	    				LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.getString("RequestWorkItem.cache_nondeterministic", originalCommand)); //$NON-NLS-1$
 	    			}
 	                dqpCore.getRsCache().put(cid, determinismLevel, cr, originalCommand.getCacheHint() != null?originalCommand.getCacheHint().getTtl():null);
 			    }

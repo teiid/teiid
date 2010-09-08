@@ -25,7 +25,6 @@ package org.teiid.dqp.internal.process;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -39,12 +38,12 @@ import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.process.multisource.MultiSourceElement;
 import org.teiid.logging.AuditMessage;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.resolver.util.ResolverUtil;
@@ -262,7 +261,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
                 // is not authorized in the exception message
                 
                 handleValidationError(
-                    DQPPlugin.Util.getString("ERR.018.005.0095", new Object[]{DQPWorkContext.getWorkContext().getSessionId(), getActionLabel(actionCode)}), //$NON-NLS-1$                    
+                    QueryPlugin.Util.getString("ERR.018.005.0095", new Object[]{DQPWorkContext.getWorkContext().getSessionId(), getActionLabel(actionCode)}), //$NON-NLS-1$                    
                     inaccessibleSymbols);
             }
         }

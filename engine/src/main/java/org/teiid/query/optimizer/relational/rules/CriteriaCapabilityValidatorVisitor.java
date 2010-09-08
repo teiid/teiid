@@ -27,7 +27,7 @@ import java.util.Collection;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
@@ -482,7 +482,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 	                return null;
 	            }
 	        } catch(QueryMetadataException e) {
-	            throw new TeiidComponentException(e, QueryExecPlugin.Util.getString("RulePushSelectCriteria.Error_getting_modelID")); //$NON-NLS-1$
+	            throw new TeiidComponentException(e, QueryPlugin.Util.getString("RulePushSelectCriteria.Error_getting_modelID")); //$NON-NLS-1$
 	        }  
     	}
     	if (critNodeModelID == null) {

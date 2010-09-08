@@ -53,11 +53,11 @@ import org.teiid.adminapi.impl.TransactionMetadata;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
 import org.teiid.core.util.Assertion;
-import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.process.DQPCore.FutureWork;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionService;
 import org.teiid.dqp.service.TransactionContext.Scope;
+import org.teiid.query.QueryPlugin;
 
 
 public class TransactionServerImpl implements TransactionService {
@@ -136,7 +136,7 @@ public class TransactionServerImpl implements TransactionService {
 	public int prepare(final String threadId, XidImpl xid, boolean singleTM) throws XATransactionException {
         TransactionContext tc = checkXAState(threadId, xid, true, false);
         if (!tc.getSuspendedBy().isEmpty()) {
-            throw new XATransactionException(XAException.XAER_PROTO, DQPPlugin.Util.getString("TransactionServer.suspended_exist", xid)); //$NON-NLS-1$
+            throw new XATransactionException(XAException.XAER_PROTO, QueryPlugin.Util.getString("TransactionServer.suspended_exist", xid)); //$NON-NLS-1$
         }		
         
         // In the container this pass though
@@ -232,7 +232,7 @@ public class TransactionServerImpl implements TransactionService {
 					checkXAState(threadId, xid, false, false);
 					tc = transactions.getOrCreateTransactionContext(threadId);
 					if (tc.getTransactionType() != TransactionContext.Scope.NONE) {
-					    throw new XATransactionException(XAException.XAER_PROTO, DQPPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
+					    throw new XATransactionException(XAException.XAER_PROTO, QueryPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
 					}
 					tc.setTransactionTimeout(timeout);
 					tc.setXid(xid);
@@ -268,16 +268,16 @@ public class TransactionServerImpl implements TransactionService {
                 tc = checkXAState(threadId, xid, true, false);
                 TransactionContext threadContext = transactions.getOrCreateTransactionContext(threadId);
                 if (threadContext.getTransactionType() != TransactionContext.Scope.NONE) {
-                    throw new XATransactionException(XAException.XAER_PROTO, DQPPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
+                    throw new XATransactionException(XAException.XAER_PROTO, QueryPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
                 }
                 
                 if (flags == XAResource.TMRESUME && !tc.getSuspendedBy().remove(threadId)) {
-                    throw new XATransactionException(XAException.XAER_PROTO, DQPPlugin.Util.getString("TransactionServer.resume_failed", new Object[] {xid, threadId})); //$NON-NLS-1$
+                    throw new XATransactionException(XAException.XAER_PROTO, QueryPlugin.Util.getString("TransactionServer.resume_failed", new Object[] {xid, threadId})); //$NON-NLS-1$
                 }
                 break;
             }
             default:
-                throw new XATransactionException(XAException.XAER_INVAL, DQPPlugin.Util.getString("TransactionServer.unknown_flags")); //$NON-NLS-1$
+                throw new XATransactionException(XAException.XAER_INVAL, QueryPlugin.Util.getString("TransactionServer.unknown_flags")); //$NON-NLS-1$
         }
 
         tc.setThreadId(threadId);
@@ -304,7 +304,7 @@ public class TransactionServerImpl implements TransactionService {
                     break;
                 }
                 default:
-                    throw new XATransactionException(XAException.XAER_INVAL, DQPPlugin.Util.getString("TransactionServer.unknown_flags")); //$NON-NLS-1$
+                    throw new XATransactionException(XAException.XAER_INVAL, QueryPlugin.Util.getString("TransactionServer.unknown_flags")); //$NON-NLS-1$
             }
         } finally {
             tc.setThreadId(null);
@@ -316,15 +316,15 @@ public class TransactionServerImpl implements TransactionService {
         TransactionContext tc = transactions.getTransactionContext(xid);
         
         if (transactionExpected && tc == null) {
-            throw new XATransactionException(XAException.XAER_NOTA, DQPPlugin.Util.getString("TransactionServer.no_global_transaction", xid)); //$NON-NLS-1$
+            throw new XATransactionException(XAException.XAER_NOTA, QueryPlugin.Util.getString("TransactionServer.no_global_transaction", xid)); //$NON-NLS-1$
         } else if (!transactionExpected) {
             if (tc != null) {
-                throw new XATransactionException(XAException.XAER_DUPID, DQPPlugin.Util.getString("TransactionServer.existing_global_transaction", new Object[] {xid})); //$NON-NLS-1$
+                throw new XATransactionException(XAException.XAER_DUPID, QueryPlugin.Util.getString("TransactionServer.existing_global_transaction", new Object[] {xid})); //$NON-NLS-1$
             }
             if (!threadBound) {
                 tc = transactions.getOrCreateTransactionContext(threadId);
                 if (tc.getTransactionType() != TransactionContext.Scope.NONE) {
-                    throw new XATransactionException(XAException.XAER_PROTO, DQPPlugin.Util.getString("TransactionServer.existing_transaction", new Object[] {xid, threadId})); //$NON-NLS-1$
+                    throw new XATransactionException(XAException.XAER_PROTO, QueryPlugin.Util.getString("TransactionServer.existing_transaction", new Object[] {xid, threadId})); //$NON-NLS-1$
                 }
             }
             return null;
@@ -332,10 +332,10 @@ public class TransactionServerImpl implements TransactionService {
         
         if (threadBound) {
             if (!threadId.equals(tc.getThreadId())) {
-                throw new XATransactionException(XAException.XAER_PROTO, DQPPlugin.Util.getString("TransactionServer.wrong_transaction", xid)); //$NON-NLS-1$
+                throw new XATransactionException(XAException.XAER_PROTO, QueryPlugin.Util.getString("TransactionServer.wrong_transaction", xid)); //$NON-NLS-1$
             }
         } else if (tc.getThreadId() != null) {
-            throw new XATransactionException(XAException.XAER_PROTO, DQPPlugin.Util.getString("TransactionServer.concurrent_transaction", xid)); //$NON-NLS-1$
+            throw new XATransactionException(XAException.XAER_PROTO, QueryPlugin.Util.getString("TransactionServer.concurrent_transaction", xid)); //$NON-NLS-1$
         }
         
         return tc;
@@ -349,14 +349,14 @@ public class TransactionServerImpl implements TransactionService {
         try {
 	        if (tc.getTransactionType() != TransactionContext.Scope.NONE) {
 	            if (tc.getTransactionType() != TransactionContext.Scope.LOCAL) {
-	                throw new InvalidTransactionException(DQPPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
+	                throw new InvalidTransactionException(QueryPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
 	            }
 	            if (!transactionExpected) {
-	            	throw new InvalidTransactionException(DQPPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
+	            	throw new InvalidTransactionException(QueryPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
 	            }
 	            transactionManager.resume(tc.getTransaction());
 	        } else if (transactionExpected) {
-	        	throw new InvalidTransactionException(DQPPlugin.Util.getString("TransactionServer.no_transaction", threadId)); //$NON-NLS-1$
+	        	throw new InvalidTransactionException(QueryPlugin.Util.getString("TransactionServer.no_transaction", threadId)); //$NON-NLS-1$
 	        }
         } catch (InvalidTransactionException e) {
         	throw new XATransactionException(e);
@@ -464,7 +464,7 @@ public class TransactionServerImpl implements TransactionService {
      */
     public TransactionContext begin(TransactionContext context) throws XATransactionException{
         if (context.getTransactionType() != TransactionContext.Scope.NONE) {
-            throw new XATransactionException(DQPPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
+            throw new XATransactionException(QueryPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
         }
         beginDirect(context);
         context.setTransactionType(TransactionContext.Scope.REQUEST);

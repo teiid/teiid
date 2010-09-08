@@ -37,9 +37,9 @@ import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
-import org.teiid.dqp.DQPPlugin;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.ParseInfo;
@@ -143,7 +143,7 @@ public class CachedResults implements Serializable, Cachable {
 			}
 			return true;
 		} catch (TeiidComponentException e) {
-			LogManager.logDetail(LogConstants.CTX_DQP, DQPPlugin.Util.getString("not_found_cache")); //$NON-NLS-1$
+			LogManager.logDetail(LogConstants.CTX_DQP, QueryPlugin.Util.getString("not_found_cache")); //$NON-NLS-1$
 		}
 		return false;
 	}	

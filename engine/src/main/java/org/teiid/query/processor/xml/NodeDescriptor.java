@@ -25,7 +25,7 @@ package org.teiid.query.processor.xml;
 import java.util.Properties;
 
 import org.teiid.core.TeiidComponentException;
-import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.mapping.xml.MappingAttribute;
 import org.teiid.query.mapping.xml.MappingElement;
 import org.teiid.query.mapping.xml.MappingNode;
@@ -287,7 +287,7 @@ public class NodeDescriptor {
             } else if(namespacePrefix.equals(MappingNodeConstants.INSTANCES_NAMESPACE_PREFIX)) {
                 uri = MappingNodeConstants.INSTANCES_NAMESPACE;
             }else {
-                String msg = QueryExecPlugin.Util.getString("XMLPlanner.no_uri", new Object[] {namespacePrefix, name}); //$NON-NLS-1$
+                String msg = QueryPlugin.Util.getString("XMLPlanner.no_uri", new Object[] {namespacePrefix, name}); //$NON-NLS-1$
                 throw new TeiidComponentException(msg);
             }
         }

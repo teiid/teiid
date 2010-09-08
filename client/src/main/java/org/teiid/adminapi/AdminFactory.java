@@ -32,9 +32,9 @@ import org.teiid.client.security.LogonException;
 import org.teiid.client.util.ExceptionUtil;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.jdbc.JDBCPlugin;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
-import org.teiid.net.NetPlugin;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.ServerConnectionFactory;
 import org.teiid.net.TeiidURL;
@@ -64,7 +64,7 @@ public class AdminFactory {
     	
     	private synchronized Admin getTarget() throws AdminComponentException {
     		if (closed) {
-    			throw new AdminComponentException(NetPlugin.Util.getString("admin_conn_closed")); //$NON-NLS-1$
+    			throw new AdminComponentException(JDBCPlugin.Util.getString("admin_conn_closed")); //$NON-NLS-1$
     		}
     		return target;
     	}
@@ -186,7 +186,7 @@ public class AdminFactory {
                                    String applicationName) throws AdminException {
         
         if (userName == null || userName.trim().length() == 0) {
-            throw new IllegalArgumentException(NetPlugin.Util.getString("invalid_parameter")); //$NON-NLS-1$
+            throw new IllegalArgumentException(JDBCPlugin.Util.getString("invalid_parameter")); //$NON-NLS-1$
         }
         
     	final Properties p = new Properties();

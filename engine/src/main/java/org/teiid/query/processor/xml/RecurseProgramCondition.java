@@ -27,7 +27,7 @@ import java.util.Map;
 
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.lang.Criteria;
 
 
@@ -92,7 +92,7 @@ public class RecurseProgramCondition extends CriteriaCondition {
 
             //handle the case of exception on recursion limit reached
             if (terminate && this.exceptionOnRecursionLimit){
-                throw new TeiidComponentException("ERR.015.006.0039", QueryExecPlugin.Util.getString("ERR.015.006.0039")); //$NON-NLS-1$ //$NON-NLS-2$
+                throw new TeiidComponentException("ERR.015.006.0039", QueryPlugin.Util.getString("ERR.015.006.0039")); //$NON-NLS-1$ //$NON-NLS-2$
             }
         }
 

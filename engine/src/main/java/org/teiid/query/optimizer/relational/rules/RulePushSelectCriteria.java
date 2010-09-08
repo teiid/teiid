@@ -34,8 +34,8 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.Assertion;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
@@ -297,7 +297,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                         return currentNode.getFirstChild();
                     } 
 				} catch(QueryMetadataException e) {
-                    throw new QueryPlannerException(e, QueryExecPlugin.Util.getString("ERR.015.004.0020", currentNode.getGroups())); //$NON-NLS-1$
+                    throw new QueryPlannerException(e, QueryPlugin.Util.getString("ERR.015.004.0020", currentNode.getGroups())); //$NON-NLS-1$
 				}
 			} else if(currentNode.getType() == NodeConstants.Types.JOIN) {
 				//pushing below a join is not necessary under an access node

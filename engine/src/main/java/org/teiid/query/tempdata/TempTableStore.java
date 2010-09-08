@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.resolver.command.TempTableResolver;
@@ -210,7 +210,7 @@ public class TempTableStore {
             }
         }
         if (columns == null) {
-        	throw new QueryProcessingException(QueryExecPlugin.Util.getString("TempTableStore.table_doesnt_exist_error", tempTableID)); //$NON-NLS-1$
+        	throw new QueryProcessingException(QueryPlugin.Util.getString("TempTableStore.table_doesnt_exist_error", tempTableID)); //$NON-NLS-1$
         }
         Create create = new Create();
         create.setTable(new GroupSymbol(tempTableID));

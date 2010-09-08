@@ -45,7 +45,6 @@ import org.teiid.core.id.IDGenerator;
 import org.teiid.core.id.IntegerIDFactory;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
-import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.multisource.MultiSourceCapabilitiesFinder;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
@@ -57,6 +56,7 @@ import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.SecurityFunctionEvaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -185,7 +185,7 @@ public class Request {
         globalTables = vdbMetadata.getAttachment(TempTableStore.class);
 
         if (metadata == null) {
-            throw new TeiidComponentException(DQPPlugin.Util.getString("DQPCore.Unable_to_load_metadata_for_VDB_name__{0},_version__{1}", this.vdbName, this.vdbVersion)); //$NON-NLS-1$
+            throw new TeiidComponentException(QueryPlugin.Util.getString("DQPCore.Unable_to_load_metadata_for_VDB_name__{0},_version__{1}", this.vdbName, this.vdbVersion)); //$NON-NLS-1$
         }
         
         this.metadata = new TempMetadataAdapter(metadata, new TempMetadataStore());
@@ -215,7 +215,7 @@ public class Request {
         }
     	if ((this.requestMsg.getResultsMode() == ResultsMode.UPDATECOUNT && !returnsUpdateCount) 
     			|| (this.requestMsg.getResultsMode() == ResultsMode.RESULTSET && !returnsResultSet)) {
-        	throw new QueryValidatorException(DQPPlugin.Util.getString(this.requestMsg.getResultsMode()==ResultsMode.RESULTSET?"Request.no_result_set":"Request.result_set")); //$NON-NLS-1$ //$NON-NLS-2$
+        	throw new QueryValidatorException(QueryPlugin.Util.getString(this.requestMsg.getResultsMode()==ResultsMode.RESULTSET?"Request.no_result_set":"Request.result_set")); //$NON-NLS-1$ //$NON-NLS-2$
     	}
 
     	// Create command context, used in rewriting, planning, and processing
@@ -274,7 +274,7 @@ public class Request {
     
     static void referenceCheck(List<Reference> references) throws QueryValidatorException {
     	if (references != null && !references.isEmpty()) {
-    		throw new QueryValidatorException(DQPPlugin.Util.getString("Request.Invalid_character_in_query")); //$NON-NLS-1$
+    		throw new QueryValidatorException(QueryPlugin.Util.getString("Request.Invalid_character_in_query")); //$NON-NLS-1$
     	}
     }
 
@@ -431,9 +431,9 @@ public class Request {
                 	LogManager.logDetail(LogConstants.CTX_QUERY_PLANNER, analysisRecord.getAnnotations());
                 }
             }
-            LogManager.logDetail(LogConstants.CTX_DQP, new Object[] { DQPPlugin.Util.getString("BasicInterceptor.ProcessTree_for__4"), requestId, processPlan }); //$NON-NLS-1$
+            LogManager.logDetail(LogConstants.CTX_DQP, new Object[] { QueryPlugin.Util.getString("BasicInterceptor.ProcessTree_for__4"), requestId, processPlan }); //$NON-NLS-1$
         } catch (QueryMetadataException e) {
-            throw new QueryPlannerException(e, DQPPlugin.Util.getString("DQPCore.Unknown_query_metadata_exception_while_registering_query__{0}.", requestId)); //$NON-NLS-1$
+            throw new QueryPlannerException(e, QueryPlugin.Util.getString("DQPCore.Unknown_query_metadata_exception_while_registering_query__{0}.", requestId)); //$NON-NLS-1$
         }
     }
 

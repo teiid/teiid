@@ -22,7 +22,7 @@
 
 package org.teiid.query.processor.proc;
 
-import static org.teiid.query.analysis.AnalysisRecord.*;
+import static org.teiid.query.analysis.AnalysisRecord.PROP_SQL;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -41,8 +41,8 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.process.Request;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.logging.LogManager;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.QueryOptimizer;
@@ -129,7 +129,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 			Object value = procEnv.evaluateExpression(dynamicCommand.getSql());
 
 			if (value == null) {
-				throw new QueryProcessingException(QueryExecPlugin.Util
+				throw new QueryProcessingException(QueryPlugin.Util
 						.getString("ExecDynamicSqlInstruction.0")); //$NON-NLS-1$
 			}
 
@@ -214,7 +214,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
             procEnv.push(dynamicProgram);
 		} catch (TeiidProcessingException e) {
 			Object[] params = {dynamicCommand, dynamicCommand.getSql(), e.getMessage()};
-			throw new QueryProcessingException(e, QueryExecPlugin.Util.getString("ExecDynamicSqlInstruction.couldnt_execute", params)); //$NON-NLS-1$
+			throw new QueryProcessingException(e, QueryPlugin.Util.getString("ExecDynamicSqlInstruction.couldnt_execute", params)); //$NON-NLS-1$
 		} 
 	}
 
@@ -274,7 +274,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 
 		if (dynamicExpectedColumns != null && !dynamicExpectedColumns.isEmpty()) {
 			if (dynamicExpectedColumns.size() != sourceProjectedSymbolList.size()) {
-				throw new QueryProcessingException(QueryExecPlugin.Util
+				throw new QueryProcessingException(QueryPlugin.Util
 						.getString("ExecDynamicSqlInstruction.4")); //$NON-NLS-1$
 			}
 			// If there is only one project symbol, we won't validate the name.
@@ -305,7 +305,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 					Object[] params = new Object[] { sourceTypeName,
 							dynamicSymbol.getShortCanonicalName(),
 							dynamicTypeName };
-					throw new QueryProcessingException(QueryExecPlugin.Util
+					throw new QueryProcessingException(QueryPlugin.Util
 							.getString("ExecDynamicSqlInstruction.6", params)); //$NON-NLS-1$
 				}
 			}

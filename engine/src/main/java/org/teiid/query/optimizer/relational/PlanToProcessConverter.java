@@ -36,8 +36,8 @@ import org.teiid.core.id.IDGenerator;
 import org.teiid.core.id.IntegerID;
 import org.teiid.core.id.IntegerIDFactory;
 import org.teiid.core.util.Assertion;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -446,7 +446,7 @@ public class PlanToProcessConverter {
                 break;
 
 			default:
-                throw new QueryPlannerException(QueryExecPlugin.Util.getString("ERR.015.004.0007", NodeConstants.getNodeTypeString(node.getType()))); //$NON-NLS-1$
+                throw new QueryPlannerException(QueryPlugin.Util.getString("ERR.015.004.0007", NodeConstants.getNodeTypeString(node.getType()))); //$NON-NLS-1$
 		}
 
 		if(processNode != null) {
@@ -537,7 +537,7 @@ public class PlanToProcessConverter {
 			String cbName = metadata.getFullName(modelID);
 			return cbName;
 		} catch(QueryMetadataException e) {
-            throw new QueryPlannerException(e, QueryExecPlugin.Util.getString("ERR.015.004.0009")); //$NON-NLS-1$
+            throw new QueryPlannerException(e, QueryPlugin.Util.getString("ERR.015.004.0009")); //$NON-NLS-1$
 		}
 	}
 

@@ -61,7 +61,6 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.Streamable;
-import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor.PrioritizedRunnable;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
@@ -74,6 +73,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.logging.CommandLogMessage.Event;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
@@ -461,7 +461,7 @@ public class DQPCore implements DQP {
     RequestWorkItem getRequestWorkItem(RequestID reqID) throws TeiidProcessingException {
     	RequestWorkItem result = this.requests.get(reqID);
     	if (result == null) {
-    		throw new TeiidProcessingException(DQPPlugin.Util.getString("DQPCore.The_request_has_been_closed.", reqID));//$NON-NLS-1$
+    		throw new TeiidProcessingException(QueryPlugin.Util.getString("DQPCore.The_request_has_been_closed.", reqID));//$NON-NLS-1$
     	}
     	return result;
     }
@@ -514,7 +514,7 @@ public class DQPCore implements DQP {
     	if (markCancelled) {
             logMMCommand(workItem, Event.CANCEL, null);
     	} else {
-    		LogManager.logDetail(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPCore.failed_to_cancel")); //$NON-NLS-1$
+    		LogManager.logDetail(LogConstants.CTX_DQP, QueryPlugin.Util.getString("DQPCore.failed_to_cancel")); //$NON-NLS-1$
     	}
         return markCancelled;
     }
@@ -544,7 +544,7 @@ public class DQPCore implements DQP {
     }
     
     private void clearPlanCache(){
-        LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPCore.Clearing_prepared_plan_cache")); //$NON-NLS-1$
+        LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.getString("DQPCore.Clearing_prepared_plan_cache")); //$NON-NLS-1$
         this.prepPlanCache.clearAll();
     }
 

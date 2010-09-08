@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Streamable;
-import org.teiid.dqp.DQPPlugin;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.symbol.Expression;
 
 /**
@@ -64,7 +64,7 @@ public class LobManager {
     		lob = this.lobReferences.get(id);
     	}
     	if (lob == null) {
-    		throw new TeiidComponentException(DQPPlugin.Util.getString("ProcessWorker.wrongdata")); //$NON-NLS-1$
+    		throw new TeiidComponentException(QueryPlugin.Util.getString("ProcessWorker.wrongdata")); //$NON-NLS-1$
     	}
     	return lob;
     }

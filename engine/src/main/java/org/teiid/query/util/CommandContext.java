@@ -38,7 +38,6 @@ import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.SecurityFunctionEvaluator;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.relational.PlanToProcessConverter;
@@ -325,7 +324,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
         if (recursionStack == null) {
             recursionStack = new LinkedList<String>();
         } else if (recursionStack.contains(value)) {
-			throw new QueryProcessingException(QueryExecPlugin.Util.getString("ExecDynamicSqlInstruction.3", value)); //$NON-NLS-1$
+			throw new QueryProcessingException(QueryPlugin.Util.getString("ExecDynamicSqlInstruction.3", value)); //$NON-NLS-1$
         }
         
         recursionStack.push(value);

@@ -36,8 +36,8 @@ import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -83,7 +83,7 @@ public class QueryUtil {
             try {
                 query = QueryParser.getQueryParser().parseCommand(queryNode.getQuery());            
             } catch (QueryParserException e) {
-                throw new QueryPlannerException(e, QueryExecPlugin.Util.getString("ERR.015.004.0054", new Object[]{queryNode.getGroupName(), queryNode.getQuery()})); //$NON-NLS-1$
+                throw new QueryPlannerException(e, QueryPlugin.Util.getString("ERR.015.004.0054", new Object[]{queryNode.getGroupName(), queryNode.getQuery()})); //$NON-NLS-1$
             }
         } 
         return query;
@@ -143,7 +143,7 @@ public class QueryUtil {
             ResolverUtil.resolveGroup(gs, metadata);
             queryNode = metadata.getVirtualPlan(gs.getMetadataID());
         } catch (QueryResolverException e) {
-            throw new QueryPlannerException(e, "ERR.015.004.0029", QueryExecPlugin.Util.getString("ERR.015.004.0029", groupName)); //$NON-NLS-1$ //$NON-NLS-2$
+            throw new QueryPlannerException(e, "ERR.015.004.0029", QueryPlugin.Util.getString("ERR.015.004.0029", groupName)); //$NON-NLS-1$ //$NON-NLS-2$
         }
         return queryNode;
     }    

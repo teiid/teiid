@@ -37,8 +37,8 @@ import org.teiid.core.types.Streamable;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.ReaderInputStream;
-import org.teiid.dqp.DQPPlugin;
 import org.teiid.logging.LogManager;
+import org.teiid.query.QueryPlugin;
 
 
 public class LobWorkItem implements Work {
@@ -75,7 +75,7 @@ public class LobWorkItem implements Work {
             chunk = stream.getNextChunk();
             shouldClose = chunk.isLast();
         } catch (TeiidComponentException e) {            
-            LogManager.logWarning(org.teiid.logging.LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("ProcessWorker.LobError")); //$NON-NLS-1$
+            LogManager.logWarning(org.teiid.logging.LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("ProcessWorker.LobError")); //$NON-NLS-1$
             ex = e;
         } catch (IOException e) {
 			ex = e;
@@ -102,7 +102,7 @@ public class LobWorkItem implements Work {
 				stream.close();
 			}
 		} catch (IOException e) {
-			LogManager.logWarning(org.teiid.logging.LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("ProcessWorker.LobError")); //$NON-NLS-1$
+			LogManager.logWarning(org.teiid.logging.LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("ProcessWorker.LobError")); //$NON-NLS-1$
 		}
 		parent.removeLobStream(streamRequestId);
 	}    

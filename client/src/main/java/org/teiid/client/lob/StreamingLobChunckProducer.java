@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.teiid.client.DQP;
 import org.teiid.core.TeiidException;
 import org.teiid.core.types.Streamable;
-import org.teiid.net.NetPlugin;
+import org.teiid.jdbc.JDBCPlugin;
 
 
 public class StreamingLobChunckProducer implements LobChunkProducer {
@@ -71,7 +71,7 @@ public class StreamingLobChunckProducer implements LobChunkProducer {
 	    	Future<LobChunk> result = dqp.requestNextLobChunk(streamRequestId, requestId, streamable.getReferenceStreamId());
 	    	return result.get();
 	    } catch (Exception e) {
-	        IOException ex = new IOException(NetPlugin.Util.getString("StreamImpl.Unable_to_read_data_from_stream", e.getMessage())); //$NON-NLS-1$
+	        IOException ex = new IOException(JDBCPlugin.Util.getString("StreamImpl.Unable_to_read_data_from_stream", e.getMessage())); //$NON-NLS-1$
 	        ex.initCause(e);
 	        throw ex;                        
 	    }                

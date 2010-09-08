@@ -34,7 +34,6 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
-import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
@@ -44,6 +43,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
@@ -120,10 +120,10 @@ public class ConnectorWorkItem implements ConnectorWork {
     	        if(execution != null) {
     	            execution.cancel();
     	        }            
-    	        LogManager.logDetail(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("DQPCore.The_atomic_request_has_been_cancelled", this.id)); //$NON-NLS-1$
+    	        LogManager.logDetail(LogConstants.CTX_CONNECTOR, QueryPlugin.Util.getString("DQPCore.The_atomic_request_has_been_cancelled", this.id)); //$NON-NLS-1$
         	}
         } catch (TranslatorException e) {
-            LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, DQPPlugin.Util.getString("Cancel_request_failed", this.id)); //$NON-NLS-1$
+            LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, QueryPlugin.Util.getString("Cancel_request_failed", this.id)); //$NON-NLS-1$
         }
     }
     
@@ -170,7 +170,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     	}
         manager.logSRCCommand(this.requestMsg, this.securityContext, Event.ERROR, null);
         
-        String msg = DQPPlugin.Util.getString("ConnectorWorker.process_failed", this.id); //$NON-NLS-1$
+        String msg = QueryPlugin.Util.getString("ConnectorWorker.process_failed", this.id); //$NON-NLS-1$
         if (isCancelled.get()) {            
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, msg);
         } else if (t instanceof TranslatorException || t instanceof TeiidProcessingException) {
@@ -202,7 +202,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 				try {
 					unwrapped = ((WrappedConnection)connection).unwrap();
 				} catch (ResourceException e) {
-					throw new TranslatorException(DQPPlugin.Util.getString("failed_to_unwrap_connection")); //$NON-NLS-1$
+					throw new TranslatorException(QueryPlugin.Util.getString("failed_to_unwrap_connection")); //$NON-NLS-1$
 				}	
 			}
 			
@@ -300,7 +300,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 		        		this.lastBatch = true;
 		        		break;
 	            	} else if (this.rowCount > this.requestMsg.getMaxResultRows() && this.requestMsg.isExceptionOnMaxRows()) {
-	                    String msg = DQPPlugin.Util.getString("ConnectorWorker.MaxResultRowsExceed", this.requestMsg.getMaxResultRows()); //$NON-NLS-1$
+	                    String msg = QueryPlugin.Util.getString("ConnectorWorker.MaxResultRowsExceed", this.requestMsg.getMaxResultRows()); //$NON-NLS-1$
 	                    throw new TranslatorException(msg);
 	                }
 	            }
@@ -326,7 +326,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 		if ( !lastBatch && currentRowCount == 0 ) {
 		    // Defect 13366 - Should send all batches, even if they're zero size.
 		    // Log warning if received a zero-size non-last batch from the connector.
-		    LogManager.logWarning(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorWorker.zero_size_non_last_batch", requestMsg.getConnectorName())); //$NON-NLS-1$
+		    LogManager.logWarning(LogConstants.CTX_CONNECTOR, QueryPlugin.Util.getString("ConnectorWorker.zero_size_non_last_batch", requestMsg.getConnectorName())); //$NON-NLS-1$
 		}
 
 		AtomicResultsMessage response = createResultsMessage(rows.toArray(new List[currentRowCount]), requestMsg.getCommand().getProjectedSymbols());

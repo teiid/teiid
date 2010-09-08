@@ -31,7 +31,7 @@ import org.teiid.common.buffer.IndexedTupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.logging.LogManager;
-import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.mapping.xml.ResultSetInfo;
 import org.teiid.query.processor.BatchIterator;
 import org.teiid.query.processor.ProcessorDataManager;
@@ -123,7 +123,7 @@ class RelationalPlanExecutor implements PlanExecutor {
             // check if we walked over the row limit
             if (this.currentRow != null && this.resultInfo.getUserRowLimit() > 0 && this.currentRowNumber > this.resultInfo.getUserRowLimit()) {
                 if (this.resultInfo.exceptionOnRowlimit()) {
-                    throw new TeiidProcessingException(QueryExecPlugin.Util.getString("row_limit_passed", new Object[] { new Integer(this.resultInfo.getUserRowLimit()), this.resultInfo.getResultSetName()})); //$NON-NLS-1$                
+                    throw new TeiidProcessingException(QueryPlugin.Util.getString("row_limit_passed", new Object[] { new Integer(this.resultInfo.getUserRowLimit()), this.resultInfo.getResultSetName()})); //$NON-NLS-1$                
                 }
                 // well, we did not throw a exception, that means we need to limit it to current row
                 this.currentRow = null;

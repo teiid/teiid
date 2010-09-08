@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.net.NetPlugin;
+import org.teiid.jdbc.JDBCPlugin;
 
 
 
@@ -380,7 +380,7 @@ public class BatchSerializer {
 	                            break objectSearch;
 	                        }
 	                    }
-	                    throw new IOException(NetPlugin.Util.getString("BatchSerializer.datatype_mismatch", new Object[] {types[i], new Integer(i), objectClass})); //$NON-NLS-1$
+	                    throw new IOException(JDBCPlugin.Util.getString("BatchSerializer.datatype_mismatch", new Object[] {types[i], new Integer(i), objectClass})); //$NON-NLS-1$
 	                }
 	            }
             }

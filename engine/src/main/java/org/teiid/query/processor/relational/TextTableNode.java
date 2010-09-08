@@ -42,7 +42,7 @@ import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
-import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.TextTable.TextColumn;
@@ -179,13 +179,13 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 					index = nameIndexes.get(col.getName());
 				}
 				if (index >= vals.size()) {
-					throw new TeiidProcessingException(QueryExecPlugin.Util.getString("TextTableNode.no_value", col.getName(), textLine, systemId)); //$NON-NLS-1$
+					throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.no_value", col.getName(), textLine, systemId)); //$NON-NLS-1$
 				}
 				val = vals.get(index);
 				try {
 					tuple.add(DataTypeManager.transformValue(val, table.getColumns().get(output).getSymbol().getType()));
 				} catch (TransformationException e) {
-					throw new TeiidProcessingException(e, QueryExecPlugin.Util.getString("TextTableNode.conversion_error", col.getName(), textLine, systemId)); //$NON-NLS-1$
+					throw new TeiidProcessingException(e, QueryPlugin.Util.getString("TextTableNode.conversion_error", col.getName(), textLine, systemId)); //$NON-NLS-1$
 				}
 			}
 			addBatchRow(tuple);
@@ -267,7 +267,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		for (TextColumn col : table.getColumns()) {
 			Integer index = nameIndexes.get(col.getName().toUpperCase());
 			if (index == null) {
-				throw new TeiidProcessingException(QueryExecPlugin.Util.getString("TextTableNode.header_missing", col.getName(), systemId)); //$NON-NLS-1$
+				throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.header_missing", col.getName(), systemId)); //$NON-NLS-1$
 			}
 			nameIndexes.put(col.getName(), index);
 		}
@@ -301,7 +301,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				} 
 				line = readLine();
 				if (line == null) {
-					throw new TeiidProcessingException(QueryExecPlugin.Util.getString("TextTableNode.unclosed", systemId)); //$NON-NLS-1$
+					throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.unclosed", systemId)); //$NON-NLS-1$
 				}
 			}
 			char[] chars = line.toCharArray();
@@ -331,7 +331,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 								builder.append(chr);
 							} else {
 								if (builder.toString().trim().length() != 0) {
-									throw new TeiidProcessingException(QueryExecPlugin.Util.getString("TextTableNode.character_not_allowed", textLine, systemId)); //$NON-NLS-1$
+									throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.character_not_allowed", textLine, systemId)); //$NON-NLS-1$
 								}
 								qualified = true;
 								builder = new StringBuilder(); //start the entry over
@@ -342,11 +342,11 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				} else {
 					if (escaped) {
 						//don't understand other escape sequences yet
-						throw new TeiidProcessingException(QueryExecPlugin.Util.getString("TextTableNode.unknown_escape", chr, textLine, systemId)); //$NON-NLS-1$ 
+						throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.unknown_escape", chr, textLine, systemId)); //$NON-NLS-1$ 
 					}
 					if (wasQualified && !qualified) {
 						if (!Character.isWhitespace(chr)) {
-							throw new TeiidProcessingException(QueryExecPlugin.Util.getString("TextTableNode.character_not_allowed", textLine, systemId)); //$NON-NLS-1$
+							throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.character_not_allowed", textLine, systemId)); //$NON-NLS-1$
 						}
 						//else just ignore
 					} else {
@@ -371,7 +371,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	private List<String> parseFixedWidth(String line)
 			throws TeiidProcessingException {
 		if (line.length() < lineWidth) {
-			throw new TeiidProcessingException(QueryExecPlugin.Util.getString("TextTableNode.invalid_width", line.length(), lineWidth, textLine, systemId)); //$NON-NLS-1$
+			throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.invalid_width", line.length(), lineWidth, textLine, systemId)); //$NON-NLS-1$
 		}
 		ArrayList<String> result = new ArrayList<String>();
 		int beginIndex = 0;

@@ -46,7 +46,6 @@ import org.teiid.dqp.internal.process.Request;
 import org.teiid.language.SQLConstants;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -260,7 +259,7 @@ public class RelationalPlanner {
                 }
                 
                 if(! appliedHint) {
-                	String msg = QueryExecPlugin.Util.getString("ERR.015.004.0010", groupName); //$NON-NLS-1$
+                	String msg = QueryPlugin.Util.getString("ERR.015.004.0010", groupName); //$NON-NLS-1$
                 	if (this.analysisRecord.recordAnnotations()) {
                 		this.analysisRecord.addAnnotation(new Annotation(Annotation.HINTS, msg, "ignoring hint", Priority.MEDIUM)); //$NON-NLS-1$
                 	}

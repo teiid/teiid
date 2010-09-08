@@ -27,7 +27,7 @@ import java.util.Collection;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.mapping.xml.MappingNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -123,7 +123,7 @@ public class XMLNodeMappingVisitor extends AbstractSymbolMappingVisitor {
 
         Collection unmappedSymbols = mappingVisitor.getUnmappedSymbols();
         if (unmappedSymbols != null && unmappedSymbols.size() > 0){
-            throw new QueryPlannerException("ERR.015.004.0046", QueryExecPlugin.Util.getString("ERR.015.004.0046", new Object[] {unmappedSymbols, object})); //$NON-NLS-1$ //$NON-NLS-2$
+            throw new QueryPlannerException("ERR.015.004.0046", QueryPlugin.Util.getString("ERR.015.004.0046", new Object[] {unmappedSymbols, object})); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         return copy;
