@@ -1,28 +1,127 @@
-<!-- 
-TODO: incorporate a performance chapter.
-
-The information about document materialization belongs in the reference though.  And is not completely correct
-w.r.t. the use of document projection.
-
-        <para>Your application can use a statement object to execute queries that return XML documents.  
-        The query must specify a valid document in VDB, or should have used SQL XML functions 
-        to create a XMl document.</para>
-        <section>
-            <title>XML Streaming</title>
-            <para>XML documents are streamed from Teiid Server to the Teiid JDBC API.   
-            Normally, the document never materializes in the server memory, avoiding potential 
-            out-of-memory issues and improving the first response time for large documents. 
-            When using style sheets, or XQuery, the whole document 
-            must be materialized on the server.  Therefore memory issues may occur for large documents. 
-            A result document can be obtained from the JDBC resultset using <code>getSQLXML</code> method.
-            </para>
-            <para>The document is broken into pieces when being created and streamed.  
-            The maximum size of each piece in the stream can be configured with the 
-            <code>"lobChunkSizeInKB"</code> system property on the Server. The default value is 100 KB.  
-            At any given time, this is the maximum amount of memory that can be held by a particular 
-            XML query against the system.  In heavily loaded or memory-constrained scenarios, 
-            this value can decrease the amount of memory used.  As a side effect, streaming will occur in smaller pieces, reducing initial document response time while 
-            increasing full response time (as this is less efficient).</para>
-        </section>
-        
- -->
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/custom.dtd">
+%CustomDTD;
+]>
+<chapter id="performance">
+	<title>Performance Tuning</title>
+	<section id="memory_management">
+		<title>Memory Management</title>
+		<para>The BufferManager is responsible for tracking both memory and disk usage
+			by Teiid. Configuring the BufferManager properly is one of the most
+			important parts of ensuring high performance. See the &jboss-beans;
+			file for all BufferManager settings.
+		</para>
+		<para>
+			The Teiid engine uses batching to reduce the number of memory
+			rows processed at a given time. The batch sizes may be adjusted to larger values if few clients will be
+			accessing the Teiid server simultaneously.  
+		</para>
+		<para>
+			The <code>maxReserveBatchColumns</code>
+			setting determines the total number of batches (with a max of
+			<code>processorBatchSize</code> rows) multiplied by their column width
+			that can be held in memory directly by the BufferManager.
+			This number does not include persistent batches held by soft (such as
+			index pages) or weak references. When your installation can dedicate
+			more memory to Teiid, consider increasing this value in proportion to the number of gigabytes you
+			wish Teiid to use - e.g. 2GB on a 32 bit VM would double the value to
+			32768. For 64 bit VMs you should use a value of approximately 11000
+			per GB.
+			The BufferManager automatically triggers the use of a canonical
+			value cache when more than 25% of the reserve is in use.
+			This can dramatically cut the memory usage in situations where similar
+			value sets are being read through Teiid, but does introduce a lookup cost.
+			If you are processing large (100s of MBs) of highly unique datasets
+			through Teiid, you should consider <link linkend="system_properties">disabling value caching</link> since it
+			will not significantly reduce memory consumption.
+		</para>
+		<para>
+			Each intermediate result buffer, temporary LOB, and temporary table
+			is stored in its own set of buffer files,
+			where an individual file is
+			limited to <code>maxFileSize</code> megabytes.
+			Consider increasing the storage space available to all such
+			files <code>maxBufferSpace</code>
+			if your installation makes use of internal materialization, makes
+			heavy use of SQL/XML, or processes large row counts.
+		</para>
+	</section>
+	<section>
+		<title>Threading</title>
+		<para>Socket threads are configured for each <link linkend="socket_transport">transport</link>.  
+		They handle NIO non-blocking IO operations as well as directly servicing any operation that can run without blocking.</para>
+		<para>For longer running operations, the socket threads queue with work the query engine.  
+		The query engine has two settings that determine its thread utilization.  
+		<code>maxThreads</code> sets the total number of threads available for query engine work (processing plans, transaction control operations, processing source queries, etc.). 
+		You should consider increasing the maximum threads on systems with a large number of available processors and/or when it's common to issue non-transactional queries with that 
+		issue a large number of concurrent source requests.
+		<code>maxActivePlans</code>, which should always be smaller than maxThreads, sets the number of the maxThreads 
+		that should be used for user query processing.  Increasing the maxActivePlans should be considered for workloads with a high number of long 
+		running queries and/or systems with a large number of available processors.  If memory issues arise from increasing the max threads and the
+		max active plans, then consider decreasing the processor/connector batch sizes to limit the base number of memory rows consumed by each plan.</para>
+	</section>
+	<section>
+		<title>Cache Tuning</title>
+		<para>Caching can be tuned for cached result (including user query results and procedure results) and prepared plans (including user and stored procedure plans).  
+		Even though it is possible to disable or otherwise severely constrain these caches, this would probably never be done in practice as it would lead to poor performance.
+		</para><para>Cache statistics can be obtained through the Admin Console or Adminshell.  The statistics can be used to help tune cache parameters and ensure a hit ratio.</para>
+		<para>Plans are currently fully held in memory and may have a significant memory footprint.  When making extensive use of prepared statements and/or virtual procedures, 
+		the size of the plan cache may be increased proportionally to number of GB intended for use by Teiid.
+		</para><para>While the result cache parameters control the cache result entries (max number, eviction, etc.), the result batches themselves are accessed through the <link linkend="memory_management">BufferManager</link>.
+		If the size of the result cache is increased, you may need to tune the BufferManager configuration to ensure there is enough buffer space.
+		</para>
+	</section>
+	<section id="socket_transport">
+		<title>Socket Transports</title>
+		<para>Teiid separates the configuration of its socket transports for
+			JDBC, ODBC, and Admin access.
+			Typical installations will not need to
+			adjust the default thread and buffer
+			size settings. At this time, ODBC
+			queries are executed synchronously from the socket thread.
+			Simultaneous long-running queries may exhaust the available threads.
+			Consider increasing the default max threads (15) for ODBC if you
+			expect a higher concurrent load of long-running queries.</para>
+	</section>
+	<section>
+		<title>LOBs</title>
+		<para>LOBs and XML documents are streamed from the Teiid Server to the
+			Teiid JDBC API.  
+			Normally, these values are not materialized in the
+			server memory - avoiding potential out-of-memory issues.
+			When using style sheets, or XQuery, whole XML documents must be
+			materialized on the server.
+			Even when using the XMLQuery or XMLTable functions and
+			document projection is applied, memory issues may occur for large
+			documents.
+		</para>
+		<para>
+			LOBs are broken into pieces when being created and streamed. 
+			The maximum size of each piece when fetched by the client can be
+			configured with the <code>"lobChunkSizeInKB"</code>
+			property in the &jboss-beans; file. The default value is 100 KB.
+			When dealing with extremely large LOBs, you may consider increasing this
+			value to decrease the amount of round-trips to stream the result.
+			Setting the value too high may cause the server or client to have
+			memory issues.
+		</para>
+		<para>Source LOB values are typically accessed by reference, rather
+			than having the value copied to a temporary location.
+			Thus care must be taken to ensure that source LOBs are returned in a
+			memory-safe manner.  
+        </para>
+	</section>
+	<section>
+		<title>Other Considerations</title>
+		<para>When
+			using Teiid in a development environment, you may consider setting
+			the maxSourceRows property in the &jboss-beans;
+			file to reasonably small level value (e.g. 10000) to prevent large
+			amounts of data from being pulled from sources.
+			Leaving the exceptionOnMaxSourceRows set to true will alert the developer
+			through an exception that an attempt was made to retrieve more than
+			the specified number of rows.
+		</para>
+	</section>
+</chapter>
