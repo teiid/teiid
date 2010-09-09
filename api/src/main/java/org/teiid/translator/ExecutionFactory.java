@@ -753,7 +753,7 @@ public class ExecutionFactory<F, C> {
     	try {
 	    	if (className == null) {
 	    		if (defaultClass == null) {
-	    			throw new TranslatorException("Neither class name or default class specified to create an instance"); //$NON-NLS-1$
+	    			throw new TranslatorException("Neither class name nor default class specified to create an instance"); //$NON-NLS-1$
 	    		}
 	    		return expectedType.cast(defaultClass.newInstance());
 	    	}
@@ -776,5 +776,13 @@ public class ExecutionFactory<F, C> {
      */
     public void getMetadata(MetadataFactory metadataFactory, C conn) throws TranslatorException {
     	
+    }
+    
+    /**
+     * Indicates if LOBs are usable after the execution is closed.
+     * @return true if LOBs can be used after close
+     */
+    public boolean areLobsUsableAfterClose() {
+    	return false;
     }
 }

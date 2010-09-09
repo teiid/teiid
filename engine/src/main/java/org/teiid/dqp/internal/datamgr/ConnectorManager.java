@@ -136,7 +136,6 @@ public class ConnectorManager  {
     }
     
     public ConnectorWork registerRequest(AtomicRequestMessage message) throws TeiidComponentException {
-        // Set the connector ID to be used; if not already set. 
     	checkStatus();
     	AtomicRequestID atomicRequestId = message.getAtomicRequestID();
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {atomicRequestId, "Create State"}); //$NON-NLS-1$
@@ -156,7 +155,7 @@ public class ConnectorManager  {
      */
     void removeState(AtomicRequestID id) {
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {id, "Remove State"}); //$NON-NLS-1$
-        ConnectorWorkItem cwi = requestStates.remove(id);
+        requestStates.remove(id);
     }
 
     int size() {

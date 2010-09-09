@@ -42,6 +42,8 @@ public class AtomicResultsMessage implements Externalizable {
     
     // by default we support implicit close.
     private boolean supportsImplicitClose = true;
+    
+    private boolean supportsCloseWithLobs;
 
     private boolean isTransactional;
     
@@ -59,6 +61,14 @@ public class AtomicResultsMessage implements Externalizable {
     public boolean supportsImplicitClose() {
         return this.supportsImplicitClose;
     }
+    
+    public boolean supportsCloseWithLobs() {
+		return supportsCloseWithLobs;
+	}
+    
+    public void setSupportsCloseWithLobs(boolean supportsCloseWithLobs) {
+		this.supportsCloseWithLobs = supportsCloseWithLobs;
+	}
     
     public void setSupportsImplicitClose(boolean supportsImplicitClose) {
         this.supportsImplicitClose = supportsImplicitClose;
@@ -83,6 +93,7 @@ public class AtomicResultsMessage implements Externalizable {
         supportsImplicitClose = in.readBoolean();
         warnings = (List<Exception>)in.readObject();
         isTransactional = in.readBoolean();
+        supportsCloseWithLobs = in.readBoolean();
 	}
 
 	public void writeExternal(ObjectOutput out) throws IOException {
@@ -92,6 +103,7 @@ public class AtomicResultsMessage implements Externalizable {
         out.writeBoolean(supportsImplicitClose);
         out.writeObject(warnings);
         out.writeBoolean(isTransactional);
+        out.writeBoolean(supportsCloseWithLobs);
 	}
 
 	public boolean isTransactional() {

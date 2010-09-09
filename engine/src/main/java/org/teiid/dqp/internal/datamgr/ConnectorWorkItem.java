@@ -335,6 +335,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 		response.setSupportsImplicitClose(!this.securityContext.keepExecutionAlive());
 		response.setTransactional(this.securityContext.isTransactional());
 		response.setWarnings(this.securityContext.getWarnings());
+		response.setSupportsCloseWithLobs(this.connector.areLobsUsableAfterClose());
 
 		if ( lastBatch ) {
 		    response.setFinalRow(rowCount);

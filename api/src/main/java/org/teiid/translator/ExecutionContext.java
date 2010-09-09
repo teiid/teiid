@@ -109,8 +109,14 @@ public interface ExecutionContext {
     /**
      * When the execution is turned on with "alive=true", the execution object will not
      * be implicitly closed at the end of the last batch.  It will only be closed at end
-     * of the user query. This is useful in keeping the connection open for 
+     * of the user query. 
+     * <p>
+     * The engine will already detect situations when the connection should stay open for 
      * LOB (clob/blob/xml) streaming.
+     * <p>
+     * Keeping the execution alive unnecessarily may cause issues with connection usage
+     * as the connection instance may not be usable by other queries.
+     * 
      * @param alive
      */
     void keepExecutionAlive(boolean alive);
