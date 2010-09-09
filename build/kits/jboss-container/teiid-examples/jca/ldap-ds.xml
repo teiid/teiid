@@ -7,7 +7,7 @@
       <jndi-name>ldapDS</jndi-name>
       
       <!-- The resource archive file that defines JCA connection for Sales Force (do not change this) -->
-      <rar-name>teiid-connector-file.rar</rar-name>
+      <rar-name>teiid-connector-ldap.rar</rar-name>
       <!-- connection interface; (do not change this) -->
       <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>      
 
