@@ -38,6 +38,8 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.FileUtils;
 import org.teiid.dqp.service.BufferService;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.runtime.RuntimePlugin;
 
 
@@ -76,7 +78,10 @@ public class BufferServiceImpl implements BufferService, Serializable {
 
     public void start(){
     	try {
-
+    		LogManager.logDetail(LogConstants.CTX_DQP, "Starting BufferManager using", bufferDir); //$NON-NLS-1$
+    		if (!bufferDir.exists()) {
+    			this.bufferDir.mkdirs();
+    		}
             // Construct and initialize the buffer manager
             this.bufferMgr = new BufferManagerImpl();
             this.bufferMgr.setConnectorBatchSize(Integer.valueOf(connectorBatchSize));
@@ -88,6 +93,9 @@ public class BufferServiceImpl implements BufferService, Serializable {
             
             // If necessary, add disk storage manager
             if(useDisk) {
+            	// start the file storage manager in clean state
+                // wise FileStorageManager is smart enough to clean up after itself
+                cleanDirectory(bufferDir);
                 // Get the properties for FileStorageManager and create.
                 fsm = new FileStorageManager();
                 fsm.setStorageDirectory(bufferDir.getCanonicalPath());
@@ -96,10 +104,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 fsm.setMaxBufferSpace(maxBufferSpace*MB);
                 fsm.initialize();        
                 this.bufferMgr.setStorageManager(fsm);
-                
-                // start the file storage manager in clean state
-                // wise FileStorageManager is smart enough to clen up after itself
-                cleanDirectory(bufferDir);
             } else {
             	this.bufferMgr.setStorageManager(new MemoryStorageManager());
             }
@@ -112,6 +116,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
     }
    
     public void stop() {
+    	LogManager.logDetail(LogConstants.CTX_DQP, "Stopping BufferManager using", bufferDir); //$NON-NLS-1$
         bufferMgr.shutdown();
 
         // Delete the buffer directory
@@ -131,9 +136,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
 
 	public void setDiskDirectory(String dir) {
 		this.bufferDir = new File(dir, "buffer"); //$NON-NLS-1$
-		if (!bufferDir.exists()) {
-			this.bufferDir.mkdirs();
-		}
 	}
 
 	public void setProcessorBatchSize(int size) {
