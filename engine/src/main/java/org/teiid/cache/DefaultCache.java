@@ -217,5 +217,10 @@ public class DefaultCache<K, V> implements Cache<K, V>, Serializable {
 	public String getName() {
 		return name;
 	}
+
+	@Override
+	public Set<K> keys() {
+		return map.keySet();
+	}
 	
 }

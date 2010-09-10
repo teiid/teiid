@@ -206,10 +206,9 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 					//ignore
 				}
 
-				// dump the caches. TODO:It would have nice if only removed this VDB
-				// specific cache, but based on JBoss cache structure it is hard to just get keys
-				dqpCore.clearCache(Cache.PREPARED_PLAN_CACHE.toString());
-				dqpCore.clearCache(Cache.QUERY_SERVICE_RESULT_SET_CACHE.toString());
+				// dump the caches. 
+				dqpCore.clearCache(Cache.PREPARED_PLAN_CACHE.toString(), name, version);
+				dqpCore.clearCache(Cache.QUERY_SERVICE_RESULT_SET_CACHE.toString(), name, version);
 			}			
 		});    	
 	}	

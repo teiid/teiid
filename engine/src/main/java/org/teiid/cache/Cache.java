@@ -22,6 +22,8 @@
 
 package org.teiid.cache;
 
+import java.util.Set;
+
 /**
  * Abstraction over cache providers
  */
@@ -94,4 +96,10 @@ public interface Cache<K, V>  {
 	 * @return
 	 */
 	String getName();
+	
+	/**
+	 * Return all the keys
+	 * @return
+	 */
+	Set<K> keys();
 }

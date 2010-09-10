@@ -555,6 +555,18 @@ public class DQPCore implements DQP {
 		}
 	}
 	
+    private void clearPlanCache(String vdbName, int version){
+        LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.getString("DQPCore.Clearing_prepared_plan_cache")); //$NON-NLS-1$
+        this.prepPlanCache.clearForVDB(vdbName, version);
+    }
+
+	private void clearResultSetCache(String vdbName, int version) {
+		//clear cache in server
+		if(rsCache != null){
+			rsCache.clearForVDB(vdbName, version);
+		}
+	}
+	
 	public CacheStatisticsMetadata getCacheStatistics(String cacheType) {
 		if (cacheType.equalsIgnoreCase(Admin.Cache.PREPARED_PLAN_CACHE.toString())) {
 			return buildCacheStats(Admin.Cache.PREPARED_PLAN_CACHE.toString(), this.prepPlanCache);
@@ -592,6 +604,18 @@ public class DQPCore implements DQP {
 			break;
 		}
 	}
+	
+	public void clearCache(String cacheType, String vdbName, int version) {
+		Admin.Cache cache = Admin.Cache.valueOf(cacheType);
+		switch (cache) {
+		case PREPARED_PLAN_CACHE:
+			clearPlanCache(vdbName, version);
+			break;
+		case QUERY_SERVICE_RESULT_SET_CACHE:
+			clearResultSetCache(vdbName, version);
+			break;
+		}
+	}	
     
 	public Collection<org.teiid.adminapi.Transaction> getTransactions() {
 		return this.transactionService.getTransactions();
