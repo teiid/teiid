@@ -49,6 +49,7 @@ import org.jboss.util.naming.Util;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.Admin.Cache;
 import org.teiid.adminapi.impl.CacheStatisticsMetadata;
 import org.teiid.adminapi.impl.DQPManagement;
 import org.teiid.adminapi.impl.RequestMetadata;
@@ -62,6 +63,7 @@ import org.teiid.client.util.ExceptionUtil;
 import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DQPCore;
@@ -181,6 +183,35 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	        	LogManager.logError(LogConstants.CTX_RUNTIME, ne, IntegrationPlugin.Util.getString("jndi_failed", new Date(System.currentTimeMillis()).toString())); //$NON-NLS-1$
 	    	}
     	}
+    	
+    	// add vdb life cycle listeners
+		this.vdbRepository.addListener(new VDBLifeCycleListener() {
+
+			@Override
+			public void added(String name, int version) {
+				
+			}
+			
+			@Override
+			public void removed(String name, int version) {
+				// terminate all the previous sessions
+				try {
+					Collection<SessionMetadata> sessions = sessionService.getActiveSessions();
+					for (SessionMetadata session:sessions) {
+						if (name.equalsIgnoreCase(session.getVDBName()) && version == session.getVDBVersion()){
+							sessionService.terminateSession(session.getSessionId(), null);
+						}
+					}
+				} catch (SessionServiceException e) {
+					//ignore
+				}
+
+				// dump the caches. TODO:It would have nice if only removed this VDB
+				// specific cache, but based on JBoss cache structure it is hard to just get keys
+				dqpCore.clearCache(Cache.PREPARED_PLAN_CACHE.toString());
+				dqpCore.clearCache(Cache.QUERY_SERVICE_RESULT_SET_CACHE.toString());
+			}			
+		});    	
 	}	
     
     public void stop() {

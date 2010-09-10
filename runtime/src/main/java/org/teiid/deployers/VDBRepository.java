@@ -61,6 +61,7 @@ public class VDBRepository implements Serializable{
 	private MetadataStore systemStore;
 	private MetadataStore odbcStore;
 	private boolean odbcEnabled = false;
+	private List<VDBLifeCycleListener> listeners = new ArrayList<VDBLifeCycleListener>();
 	
 	public void addVDB(VDBMetaData vdb, MetadataStoreGroup stores, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr) throws DeploymentException {
 		if (getVDB(vdb.getName(), vdb.getVersion()) != null) {
@@ -85,6 +86,7 @@ public class VDBRepository implements Serializable{
 			addODBCModel(vdb);
 			this.vdbRepo.put(vdbId(vdb), new CompositeVDB(vdb, stores, visibilityMap, udf, cmr, this.systemStore, odbcStore));
 		}
+		notifyAdd(vdb.getName(), vdb.getVersion());
 	}
 
 	private void addODBCModel(VDBMetaData vdb) {
@@ -186,6 +188,7 @@ public class VDBRepository implements Serializable{
 			for (CompositeVDB other:this.vdbRepo.values()) {
 				other.removeChild(key);
 			}
+			notifyRemove(key.getName(), key.getVersion());
 			return true;
 		}
 		return false;
@@ -227,10 +230,30 @@ public class VDBRepository implements Serializable{
 		}
 	}
 	
-	public void updateVDB(String name, int version) {
+	void updateVDB(String name, int version) {
 		CompositeVDB v = this.vdbRepo.get(new VDBKey(name, version));
 		if (v!= null) {
 			v.update(v.getVDB());
+		}
+	}
+	
+	public synchronized void addListener(VDBLifeCycleListener listener) {
+		this.listeners.add(listener);
+	}
+	
+	public synchronized void removeListener(VDBLifeCycleListener listener) {
+		this.listeners.remove(listener);
+	}
+	
+	private void notifyAdd(String name, int version) {
+		for(VDBLifeCycleListener l:this.listeners) {
+			l.added(name, version);
+		}
+	}
+	
+	private void notifyRemove(String name, int version) {
+		for(VDBLifeCycleListener l:this.listeners) {
+			l.removed(name, version);
 		}
 	}
 }
