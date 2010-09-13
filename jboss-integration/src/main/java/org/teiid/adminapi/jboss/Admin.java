@@ -544,29 +544,34 @@ public class Admin extends TeiidAdmin {
 			throw new AdminProcessingException(IntegrationPlugin.Util.getString("policy_not_found", policyName, vdbName, vdbVersion)); //$NON-NLS-1$
 		}
 		
-        ManagedProperty mappedRoleNames = managedPolicy.getProperty("mappedRoleNames");//$NON-NLS-1$
-        CollectionValueSupport roleCollection = (CollectionValueSupport)mappedRoleNames.getValue();
-        ArrayList<MetaValue> modifiedRoleNames = new ArrayList<MetaValue>();
-        if (roleCollection != null) {
-	        MetaValue[] roleNames = roleCollection.getElements();
-	        for (MetaValue mv:roleNames) {
-	        	String existing = (String)((SimpleValueSupport)mv).getValue();
-	        	if (!existing.equals(role)) {
-	        		modifiedRoleNames.add(mv);
-	        	}
+		if (role != null) {
+	        ManagedProperty mappedRoleNames = managedPolicy.getProperty("mappedRoleNames");//$NON-NLS-1$
+	        CollectionValueSupport roleCollection = (CollectionValueSupport)mappedRoleNames.getValue();
+	        ArrayList<MetaValue> modifiedRoleNames = new ArrayList<MetaValue>();
+	        if (roleCollection != null) {
+		        MetaValue[] roleNames = roleCollection.getElements();
+		        for (MetaValue mv:roleNames) {
+		        	String existing = (String)((SimpleValueSupport)mv).getValue();
+		        	if (!existing.equals(role)) {
+		        		modifiedRoleNames.add(mv);
+		        	}
+		        }
 	        }
-        }
-        else {
-        	roleCollection = new CollectionValueSupport(new CollectionMetaType("java.util.List", SimpleMetaType.STRING)); //$NON-NLS-1$
-        	mappedRoleNames.setValue(roleCollection);
-        }
-        
-        if (add) {
-        	modifiedRoleNames.add(ManagedUtil.wrap(SimpleMetaType.STRING, role));
-        }
-        
-        roleCollection.setElements(modifiedRoleNames.toArray(new MetaValue[modifiedRoleNames.size()]));
-        
+	        else {
+	        	roleCollection = new CollectionValueSupport(new CollectionMetaType("java.util.List", SimpleMetaType.STRING)); //$NON-NLS-1$
+	        	mappedRoleNames.setValue(roleCollection);
+	        }
+	        
+	        if (add) {
+	        	modifiedRoleNames.add(ManagedUtil.wrap(SimpleMetaType.STRING, role));
+	        }
+	        
+	        roleCollection.setElements(modifiedRoleNames.toArray(new MetaValue[modifiedRoleNames.size()]));
+		} else {
+			ManagedProperty anyAuthenticated = managedPolicy.getProperty("anyAuthenticated");//$NON-NLS-1$
+			anyAuthenticated.setValue(SimpleValueSupport.wrap(add));
+		}
+		
 		try {
 			getView().updateComponent(mc);
 		} catch (Exception e) {
@@ -584,6 +589,12 @@ public class Admin extends TeiidAdmin {
 	public void removeDataRoleMapping(String vdbName, int vdbVersion, String policyName, String role)  throws AdminException{
 		manageRoleToDataPolicy(vdbName, vdbVersion, policyName, role, false);
 	}	
+	
+	@Override
+	public void setAnyAuthenticatedForDataRole(String vdbName, int vdbVersion,
+			String dataRole, boolean anyAuthenticated) throws AdminException {
+		manageRoleToDataPolicy(vdbName, vdbVersion, dataRole, null, anyAuthenticated);
+	}
 
 	@Override
 	public void mergeVDBs(String sourceVDBName, int sourceVDBVersion, String targetVDBName, int targetVDBVersion) throws AdminException {
