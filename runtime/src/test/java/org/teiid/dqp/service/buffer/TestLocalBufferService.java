@@ -22,30 +22,18 @@
 
 package org.teiid.dqp.service.buffer;
 
+import static org.junit.Assert.*;
+
+import org.junit.Test;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.common.buffer.impl.FileStorageManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.services.BufferServiceImpl;
 
-import junit.framework.TestCase;
-
 @SuppressWarnings("nls")
-public class TestLocalBufferService extends TestCase {
+public class TestLocalBufferService {
 
-    public TestLocalBufferService(String name) {
-        super(name);
-    }
-
-    public void testMissingRequiredProperties() throws Exception {        
-        BufferServiceImpl svc = new BufferServiceImpl();
-        svc.setDiskDirectory(UnitTestUtil.getTestScratchPath()+"/teiid");
-
-        // These are defaults if none of the properties are set.
-        assertTrue(svc.getBufferDirectory().isDirectory() && svc.getBufferDirectory().exists());
-        assertTrue(svc.isUseDisk());
-    }
-    
-    public void testCheckMemPropertyGotSet() throws Exception {
+    @Test public void testCheckMemPropertyGotSet() throws Exception {
         BufferServiceImpl svc = new BufferServiceImpl();
         svc.setDiskDirectory(UnitTestUtil.getTestScratchPath()+"/teiid/1");
         svc.setUseDisk(true);
@@ -61,7 +49,7 @@ public class TestLocalBufferService extends TestCase {
         assertTrue(((FileStorageManager)mgr.getStorageManager()).getDirectory().endsWith(svc.getBufferDirectory().getName()));
     }
 
-    public void testCheckMemPropertyGotSet2() throws Exception {
+    @Test public void testCheckMemPropertyGotSet2() throws Exception {
         BufferServiceImpl svc = new BufferServiceImpl();
         svc.setDiskDirectory(UnitTestUtil.getTestScratchPath()+"/teiid/1");
         svc.setUseDisk(false);
