@@ -35,12 +35,14 @@ import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Literal;
 import org.teiid.language.NamedTable;
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.SQLConversionVisitor;
 
 
 
@@ -76,10 +78,7 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
                 return objs; 
             	}
         }   );
-        	
-
-
-           
+       
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
    	 
@@ -126,31 +125,58 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 				return null;
 			}
 		}, FunctionModifier.BOOLEAN);
+    	
+    	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
      }    
+    
+    /**
+     * Create the {@link SQLConversionVisitor} that will perform translation.  Typical custom
+     * JDBC connectors will not need to create custom conversion visitors, rather implementors 
+     * should override existing {@link JDBCExecutionFactory} methods.
+     * @return the {@link SQLConversionVisitor}
+     */
+    public SQLConversionVisitor getSQLConversionVisitor() {
+    	return new SQLConversionVisitor(this);
+    }
     
 
 	@Override
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
 
-	if (obj instanceof NamedTable) {
-
-	    NamedTable nt = (NamedTable) obj;
-	    List<String> ntlist = new ArrayList<String>(1);
-
-	    ntlist.add("[" + nt.getMetadataObject().getNameInSource() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
-	    return ntlist;
-	}
-
-	if (obj instanceof ColumnReference) {
-	    ColumnReference elem = (ColumnReference) obj;
-	    List<String> ntlist = new ArrayList<String>(1);
-	    ntlist.add("[" + elem.getMetadataObject().getNameInSource() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
-	    return ntlist;
-
-	}
-
-	return super.translate(obj, context);
+		if (obj instanceof NamedTable) {	
+		    NamedTable nt = (NamedTable) obj;
+		    List<String> ntlist = new ArrayList<String>(1);
+		    ntlist.add("[" + trimTics(nt.getMetadataObject().getNameInSource()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+		    return ntlist;
+		}
+	
+		if (obj instanceof ColumnReference) {
+		    ColumnReference elem = (ColumnReference) obj;
+		    List<String> ntlist = new ArrayList<String>(1);
+		    ntlist.add("[" + trimTics(elem.getMetadataObject().getNameInSource()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+		    return ntlist;	
+		}
+	
+		return super.translate(obj, context);
     }
+	
+	/**
+	 * Because the Teiid Designer Import from JDBC adds tic's to a nameInSource that has special characters,
+	 * they have to be removed when building the sql syntax
+	 * @param name
+	 * @return
+	 */
+	private String trimTics(String name) {
+		String rtn = name;
+		if (rtn.startsWith("'")) {
+			rtn = rtn.substring(1);	
+		}
+		
+		if (rtn.endsWith("'")) {
+			rtn = rtn.substring(0, rtn.indexOf("'"));
+		}
+		return rtn;
+	}
     
     @Override
     public String translateLiteralBoolean(Boolean booleanValue) {
@@ -182,13 +208,13 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public List<String> getSupportedFunctions() {
-	List<String> supportedFunctions = new ArrayList<String>();
-	supportedFunctions.addAll(super.getSupportedFunctions());
-	supportedFunctions.add("PATH"); //$NON-NLS-1$
-	supportedFunctions.add("NAME"); //$NON-NLS-1$
-	supportedFunctions.add("ISCHILDNODE"); //$NON-NLS-1$
-	
-	return supportedFunctions;
+		List<String> supportedFunctions = new ArrayList<String>();
+		supportedFunctions.addAll(super.getSupportedFunctions());
+		supportedFunctions.add("PATH"); //$NON-NLS-1$
+		supportedFunctions.add("NAME"); //$NON-NLS-1$
+		supportedFunctions.add("ISCHILDNODE"); //$NON-NLS-1$
+		
+		return supportedFunctions;
 
     }
         

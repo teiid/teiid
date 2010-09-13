@@ -64,61 +64,81 @@ public class TestModeShapeSqlTranslator {
 		tc.translateCommand(obj);
 		assertEquals("Did not get correct sql", expectedOutput, tc.getSql()); //$NON-NLS-1$
 	}
-
+	
 	@Test
-	public void testSimpleSelect() throws Exception {
-		String input = "select Model from Car"; //$NON-NLS-1$
-		String output = "SELECT [car:Model] FROM [car:Car]"; //$NON-NLS-1$
+	public void testSelectAllFromBase() throws Exception {
+		String input = "select * from nt_base"; //$NON-NLS-1$
+		String output = "SELECT [jcr:mixinTypes] FROM [nt:base]"; //$NON-NLS-1$
 
 		// FakeTranslationFactory.getInstance().getExampleTranslationUtility(),
 		helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
 
 	}
-
+	
 	@Test
-	public void testWhereClause() throws Exception {
-
-		String input = "select Model from Car WHERE Make = 'Honda'"; //$NON-NLS-1$
-		String output = "SELECT [car:Model] FROM [car:Car] WHERE [car:Make] = 'Honda'"; //$NON-NLS-1$
+	public void testSelectColumnFromBase() throws Exception {
+		String input = "select jcr_mixinTypes from nt_base"; //$NON-NLS-1$
+		String output = "SELECT [jcr:mixinTypes] FROM [nt:base]"; //$NON-NLS-1$
 
 		// FakeTranslationFactory.getInstance().getExampleTranslationUtility(),
 		helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
 
-	}
-
-	@Test
-	public void testOrderBy() throws Exception {
-
-		String input = "select Model from Car ORDER BY Make"; //$NON-NLS-1$
-		String output = "SELECT [car:Model] FROM [car:Car] ORDER BY [car:Make]"; //$NON-NLS-1$
-
-		// FakeTranslationFactory.getInstance().getExampleTranslationUtility(),
-		helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
-
-	}
-
-	@Ignore
-	@Test
-	public void testUsingAlias() throws Exception {
-
-		String input = "select c.Model from Car As c"; //$NON-NLS-1$
-		String output = "SELECT c.[car:Model] FROM [car:Car] As c"; //$NON-NLS-1$
-
-		// FakeTranslationFactory.getInstance().getExampleTranslationUtility(),
-		helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
-
-	}
-
-	@Ignore
-	@Test
-	public void testUsingNameFunction() throws Exception {
-
-		String input = "select Model from Car as car WHERE PATH('car') LIKE '%/Hybrid/%'"; //$NON-NLS-1$
-		String output = "SELECT [car:Model] FROM [car:Car] WHERE PATH(car:Car) LIKE '%/Hybrid/%'"; //$NON-NLS-1$
-
-		// FakeTranslationFactory.getInstance().getExampleTranslationUtility(),
-		helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
-
-	}
+	}	
+//
+//	@Test
+//	public void testSimpleSelect() throws Exception {
+//		String input = "select Model from Car"; //$NON-NLS-1$
+//		String output = "SELECT [car:Model] FROM [car:Car]"; //$NON-NLS-1$
+//
+//		// FakeTranslationFactory.getInstance().getExampleTranslationUtility(),
+//		helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
+//
+//	}
+//
+//	@Test
+//	public void testWhereClause() throws Exception {
+//
+//		String input = "select Model from Car WHERE Make = 'Honda'"; //$NON-NLS-1$
+//		String output = "SELECT [car:Model] FROM [car:Car] WHERE [car:Make] = 'Honda'"; //$NON-NLS-1$
+//
+//		// FakeTranslationFactory.getInstance().getExampleTranslationUtility(),
+//		helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
+//
+//	}
+//
+//	@Test
+//	public void testOrderBy() throws Exception {
+//
+//		String input = "select Model from Car ORDER BY Make"; //$NON-NLS-1$
+//		String output = "SELECT [car:Model] FROM [car:Car] ORDER BY [car:Make]"; //$NON-NLS-1$
+//
+//		// FakeTranslationFactory.getInstance().getExampleTranslationUtility(),
+//		helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
+//
+//	}
+//
+//	@Ignore
+//	@Test
+//	public void testUsingAlias() throws Exception {
+//
+//		String input = "select c.Model from Car As c"; //$NON-NLS-1$
+//		String output = "SELECT c.[car:Model] FROM [car:Car] As c"; //$NON-NLS-1$
+//
+//		// FakeTranslationFactory.getInstance().getExampleTranslationUtility(),
+//		helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
+//
+//	}
+//
+//	@Ignore
+//	@Test
+//	public void testUsingNameFunction() throws Exception {
+//
+//		String input = "select Model from Car as car WHERE PATH('car') LIKE '%/Hybrid/%'"; //$NON-NLS-1$
+//		String output = "SELECT [car:Model] FROM [car:Car] WHERE PATH(car:Car) LIKE '%/Hybrid/%'"; //$NON-NLS-1$
+//
+//		// FakeTranslationFactory.getInstance().getExampleTranslationUtility(),
+//		helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
+//
+//	}
 
 }
