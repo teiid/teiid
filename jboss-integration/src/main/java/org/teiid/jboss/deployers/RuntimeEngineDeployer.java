@@ -145,7 +145,11 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 				}
     		}
     	}
-    	
+    	/*
+    	 * having only a single clientserviceregistry means that the admin and jdbc ports are functionally equivalent.
+    	 * this is an undocuemented feature.  Designer integration relies on this to use the same port
+    	 * for admin and preview logic.
+    	 */
     	this.csr.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
     	this.csr.registerClientService(DQP.class, proxyService(DQP.class, this.dqpCore, LogConstants.CTX_DQP), LogConstants.CTX_DQP);
     	this.csr.registerClientService(Admin.class, proxyService(Admin.class, admin, LogConstants.CTX_ADMIN_API), LogConstants.CTX_ADMIN_API);
@@ -188,12 +192,12 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		this.vdbRepository.addListener(new VDBLifeCycleListener() {
 
 			@Override
-			public void added(String name, int version) {
+			public void removed(String name, int version) {
 				
 			}
 			
 			@Override
-			public void removed(String name, int version) {
+			public void added(String name, int version) {
 				// terminate all the previous sessions
 				try {
 					Collection<SessionMetadata> sessions = sessionService.getActiveSessions();

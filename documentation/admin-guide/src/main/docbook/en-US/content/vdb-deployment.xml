@@ -13,6 +13,10 @@
      <title>Deploying a VDB</title>
         <para>Once you have a "VDB" built it can be deployed in Teiid runtime in different ways.</para>
         
+        <warning><para>If <link linkend="vdb-versioning">VDB versioning</link> is not used to give distinct version numbers, overwriting a VDB of the same name
+        will terminate all connections to the old VDB.  It is recommended that VDB versioning be used for production systems.
+        </para></warning>
+        
         <section>
             <title>Direct File Deployment</title>
             <para>Copy the VDB file into the "&lt;jboss-install&gt;/server/&lt;profile&gt;/deploy" directory. 
@@ -47,7 +51,7 @@
             deploy a VDB use this method. This method is preferable for OEM users, who are trying to extend the
             Teiid's capabilities through their applications.</para>
         </section>
-                 
+        
    </section>
 
    <section>
