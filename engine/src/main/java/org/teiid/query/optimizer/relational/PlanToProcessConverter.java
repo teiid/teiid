@@ -471,7 +471,8 @@ public class PlanToProcessConverter {
             return aNode;
         }
         GroupSymbol group = node.getGroups().iterator().next();
-        if (!CoreConstants.SYSTEM_MODEL.equals(metadata.getFullName(metadata.getModelID(group.getMetadataID())))) {
+        if (!CoreConstants.SYSTEM_MODEL.equals(metadata.getFullName(metadata.getModelID(group.getMetadataID()))) 
+        		&& !CoreConstants.SYSTEM_ADMIN_MODEL.equals(metadata.getFullName(metadata.getModelID(group.getMetadataID())))) {
             return aNode;
         }
         List projectSymbols = (List) node.getProperty(NodeConstants.Info.OUTPUT_COLS);

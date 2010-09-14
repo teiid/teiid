@@ -948,7 +948,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     		return null;
     	}
     	Resource r = this.vdbEntries.get(resourcePath);
-    	if (r != null && r.visible) {
+    	if (r != null) {
     		return r.file;
     	}
     	return null;
@@ -981,10 +981,8 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     public String[] getVDBResourcePaths() throws TeiidComponentException, QueryMetadataException {
     	LinkedList<String> paths = new LinkedList<String>();
     	for (Map.Entry<String, Resource> entry : this.vdbEntries.entrySet()) {
-			if (entry.getValue().visible) {
-				paths.add(entry.getKey());
-			}
-		}
+			paths.add(entry.getKey());
+    	}
     	return paths.toArray(new String[paths.size()]);
     }
     

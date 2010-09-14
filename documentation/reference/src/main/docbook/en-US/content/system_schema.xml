@@ -2,10 +2,56 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="system_schema">
     <title>System Schema</title>
+    <para>The built-in SYS and SYSADMIN schemas provide metadata tables and procedures against the current VDB.</para>
 	<section id="system_tables">
 		<title>System Tables</title>
 		<section>
 			<title>VDB, Schema, and Properties</title>
+			<section>
+				<title>SYSADMIN.VDBResources</title>
+				<para>This table provides the current VDB contents.</para>
+				<informaltable frame="all">
+					<tgroup cols="3">
+						<thead>
+							<row>
+								<entry>
+									<para>Column Name</para>
+								</entry>
+								<entry>
+									<para>Type</para>
+								</entry>
+								<entry>
+									<para>Description</para>
+								</entry>
+							</row>
+						</thead>
+						<tbody>
+							<row>
+								<entry>
+									<para>resourcePath</para>
+								</entry>
+								<entry>
+									<para>string</para>
+								</entry>
+								<entry>
+									<para>The path to the contents.</para>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									<para>contents</para>
+								</entry>
+								<entry>
+									<para>blob</para>
+								</entry>
+								<entry>
+									<para>The contents as a blob.</para>
+								</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</informaltable>
+			</section>
 			<section>
 				<title>SYS.VirtualDatabases</title>
 				<para>This table supplies information about the currently
@@ -393,7 +439,7 @@
 				</informaltable>
 			</section>
 			<section>
-				<title>SYS.MatViews</title>
+				<title>SYSADMIN.MatViews</title>
 				<para>This table supplies information about all the materailized views in the virtual database.</para>
 				<informaltable frame="all">
 					<tgroup cols="3">
@@ -1726,40 +1772,7 @@
 				<tbody>
 					<row>
 						<entry>
-							<para>getCharacterVDBResource</para>
-						</entry>
-						<entry>
-							<para>(string resourcePath)</para>
-						</entry>
-						<entry>
-							<para>A single column containing the resource as a clob.</para>
-						</entry>
-					</row>
-					<row>
-						<entry>
-							<para>getBinaryVDBResource</para>
-						</entry>
-						<entry>
-							<para>(sting resourcePath)</para>
-						</entry>
-						<entry>
-							<para>A single column containing the resource as a blob.</para>
-						</entry>
-					</row>
-					<row>
-						<entry>
-							<para>getVDBResourcePaths</para>
-						</entry>
-						<entry>
-							<para>()</para>
-						</entry>
-						<entry>
-							<para>A single column containing the resource paths as strings.</para>
-						</entry>
-					</row>
-					<row>
-						<entry>
-							<para>getXMLSchemas</para>
+							<para>SYS.getXMLSchemas</para>
 						</entry>
 						<entry>
 							<para>(string document)</para>
@@ -1770,7 +1783,7 @@
 					</row>
 					<row>
 						<entry>
-							<para>refreshMatView</para>
+							<para>SYSADMIN.refreshMatView</para>
 						</entry>
 						<entry>
 							<para>(string ViewName, boolean Invalidate)</para>
@@ -1781,7 +1794,7 @@
 					</row>
 					<row>
 						<entry>
-							<para>refreshMatViewRow</para>
+							<para>SYSADMIN.refreshMatViewRow</para>
 						</entry>
 						<entry>
 							<para>(string ViewName, object Key)</para>

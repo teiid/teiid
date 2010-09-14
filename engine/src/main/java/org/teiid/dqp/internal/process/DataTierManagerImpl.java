@@ -43,13 +43,11 @@ import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
-import org.teiid.core.types.ClobImpl;
-import org.teiid.core.types.ClobType;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.util.Assertion;
+import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorWork;
@@ -99,14 +97,15 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		KEYCOLUMNS,
 		PROCEDUREPARAMS,
 		REFERENCEKEYCOLUMNS,
-		PROPERTIES,
-		MATVIEWS
+		PROPERTIES
+	}
+	
+	private enum SystemAdminTables {
+		MATVIEWS,
+		VDBRESOURCES
 	}
 	
 	private enum SystemProcs {
-		GETCHARACTERVDBRESOURCE,
-		GETBINARYVDBRESOURCE,
-		GETVDBRESOURCEPATHS,
 		GETXMLSCHEMAS
 	}
 	
@@ -122,7 +121,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	public TupleSource registerRequest(CommandContext context, Command command, String modelName, String connectorBindingId, int nodeID) throws TeiidComponentException, TeiidProcessingException {
 		RequestWorkItem workItem = requestMgr.getRequestWorkItem((RequestID)context.getProcessorID());
 		
-		if(CoreConstants.SYSTEM_MODEL.equals(modelName)) {
+		if(CoreConstants.SYSTEM_MODEL.equals(modelName) || CoreConstants.SYSTEM_ADMIN_MODEL.equals(modelName)) {
 			return processSystemQuery(context, command, workItem.getDqpWorkContext());
 		}
 		
@@ -147,12 +146,58 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		int vdbVersion = workContext.getVdbVersion();
 		VDBMetaData vdb = workContext.getVDB();
 		CompositeMetadataStore metadata = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
+		TransformationMetadata indexMetadata = vdb.getAttachment(TransformationMetadata.class);
 		Collection rows = new ArrayList();
 		int oid = 0;
 		if (command instanceof Query) {
 			Query query = (Query)command;
 			UnaryFromClause ufc = (UnaryFromClause)query.getFrom().getClauses().get(0);
 			GroupSymbol group = ufc.getGroup();
+			if (StringUtil.startsWithIgnoreCase(group.getNonCorrelationName(), (CoreConstants.SYSTEM_ADMIN_MODEL))) {
+				final SystemAdminTables sysTable = SystemAdminTables.valueOf(group.getNonCorrelationName().substring(CoreConstants.SYSTEM_ADMIN_MODEL.length() + 1).toUpperCase());
+				switch (sysTable) {
+				case MATVIEWS:
+					for (Schema schema : getVisibleSchemas(vdb, metadata)) {
+						for (Table table : schema.getTables().values()) {
+							if (!table.isMaterialized()) {
+								continue;
+							}
+							String targetSchema = null;
+							String matTableName = null;
+							String state = null;
+							Timestamp updated = null;
+							Integer cardinaltity = null;
+							Boolean valid = null;
+							if (table.getMaterializedTable() == null) {
+								TempTableStore globalStore = context.getGlobalTableStore();
+								matTableName = RelationalPlanner.MAT_PREFIX+table.getFullName().toUpperCase();
+								MatTableInfo info = globalStore.getMatTableInfo(matTableName);
+								valid = info.isValid();
+								state = info.getState().name();
+								updated = info.getUpdateTime()==-1?null:new Timestamp(info.getUpdateTime());
+								TempMetadataID id = globalStore.getMetadataStore().getTempGroupID(matTableName);
+								if (id != null) {
+									cardinaltity = id.getCardinality();
+								}
+								//ttl, pref_mem - not part of proper metadata
+							} else {
+								Table t = table.getMaterializedTable();
+								matTableName = t.getName();
+								targetSchema = t.getParent().getName();
+							}
+							rows.add(Arrays.asList(vdbName, schema.getName(), table.getName(), targetSchema, matTableName, valid, state, updated, cardinaltity));
+						}
+					}
+					break;
+				case VDBRESOURCES:
+					String[] filePaths = indexMetadata.getVDBResourcePaths();
+			        for (String filePath : filePaths) {
+		        		rows.add(Arrays.asList(filePath, new BlobType(indexMetadata.getVDBResourceAsBlob(filePath))));
+			        }
+					break;
+				}
+				return new CollectionTupleSource(rows.iterator());
+			}
 			final SystemTables sysTable = SystemTables.valueOf(group.getNonCorrelationName().substring(CoreConstants.SYSTEM_MODEL.length() + 1).toUpperCase());
 			switch (sysTable) {
 			case DATATYPES:
@@ -263,65 +308,15 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 								}
 							}
 							break;
-						case MATVIEWS:
-							if (!table.isMaterialized()) {
-								continue;
-							}
-							String targetSchema = null;
-							String matTableName = null;
-							String state = null;
-							Timestamp updated = null;
-							Integer cardinaltity = null;
-							Boolean valid = null;
-							if (table.getMaterializedTable() == null) {
-								TempTableStore globalStore = context.getGlobalTableStore();
-								matTableName = RelationalPlanner.MAT_PREFIX+table.getFullName().toUpperCase();
-								MatTableInfo info = globalStore.getMatTableInfo(matTableName);
-								valid = info.isValid();
-								state = info.getState().name();
-								updated = info.getUpdateTime()==-1?null:new Timestamp(info.getUpdateTime());
-								TempMetadataID id = globalStore.getMetadataStore().getTempGroupID(matTableName);
-								if (id != null) {
-									cardinaltity = id.getCardinality();
-								}
-								//ttl, pref_mem - not part of proper metadata
-							} else {
-								Table t = table.getMaterializedTable();
-								matTableName = t.getName();
-								targetSchema = t.getParent().getName();
-							}
-							rows.add(Arrays.asList(vdbName, schema.getName(), table.getName(), targetSchema, matTableName, valid, state, updated, cardinaltity));
-							break;
 						}
 					}
 				}
 				break;
 			}
 		} else {					
-			TransformationMetadata indexMetadata = vdb.getAttachment(TransformationMetadata.class);
 			StoredProcedure proc = (StoredProcedure)command;			
 			final SystemProcs sysTable = SystemProcs.valueOf(proc.getProcedureCallableName().substring(CoreConstants.SYSTEM_MODEL.length() + 1).toUpperCase());
 			switch (sysTable) {
-			case GETVDBRESOURCEPATHS:
-		        String[] filePaths = indexMetadata.getVDBResourcePaths();
-		        for (String filePath : filePaths) {
-		        	rows.add(Arrays.asList(filePath, filePath.endsWith(".INDEX"))); //$NON-NLS-1$
-		        }
-				break;
-			case GETBINARYVDBRESOURCE:
-				String filePath = (String)((Constant)proc.getParameter(1).getExpression()).getValue();
-				BlobImpl contents = indexMetadata.getVDBResourceAsBlob(filePath);
-				if (contents != null) {
-					rows.add(Arrays.asList(new BlobType(contents)));
-				}
-				break;
-			case GETCHARACTERVDBRESOURCE:
-				filePath = (String)((Constant)proc.getParameter(1).getExpression()).getValue();
-				ClobImpl filecontents = indexMetadata.getVDBResourceAsClob(filePath);
-				if (filecontents != null) {
-					rows.add(Arrays.asList(new ClobType(filecontents)));
-				}
-				break;
 			case GETXMLSCHEMAS:
 				try {
 					Object groupID = indexMetadata.getGroupID((String)((Constant)proc.getParameter(1).getExpression()).getValue());

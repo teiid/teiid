@@ -36,6 +36,7 @@ import java.util.Set;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.dqp.internal.process.multisource.MultiSourceElement;
@@ -241,6 +242,11 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
                     }
                 }
                 fullName = getMetadata().getFullName(metadataID);
+                Object modelId = getMetadata().getModelID(metadataID);
+                String modelName = getMetadata().getFullName(modelId);
+                if (CoreConstants.SYSTEM_MODEL.equals(modelName) || CoreConstants.ODBC_MODEL.equals(modelName)) {
+                	continue;
+                }
                 nameToSymbolMap.put(fullName, symbol);
             } catch(QueryMetadataException e) {
                 handleException(e);
@@ -261,7 +267,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
                 // is not authorized in the exception message
                 
                 handleValidationError(
-                    QueryPlugin.Util.getString("ERR.018.005.0095", new Object[]{DQPWorkContext.getWorkContext().getSessionId(), getActionLabel(actionCode)}), //$NON-NLS-1$                    
+                    QueryPlugin.Util.getString("ERR.018.005.0095", userName, getActionLabel(actionCode)), //$NON-NLS-1$                    
                     inaccessibleSymbols);
             }
         }

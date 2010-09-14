@@ -139,7 +139,7 @@ public class TempTableDataManager implements ProcessorDataManager {
         if (command instanceof ProcedureContainer) {
         	if (command instanceof StoredProcedure) {
         		StoredProcedure proc = (StoredProcedure)command;
-        		if (CoreConstants.SYSTEM_MODEL.equals(modelName)) {
+        		if (CoreConstants.SYSTEM_ADMIN_MODEL.equals(modelName)) {
 	        		TupleSource result = handleSystemProcedures(context, proc);
 	        		if (result != null) {
 	        			return result;

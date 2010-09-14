@@ -32,9 +32,12 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.sql.Blob;
+import java.sql.Clob;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.SQLXML;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -279,12 +282,19 @@ public class ResultSetUtil {
         int totalRows = 0;
         while (rs.next()) {
             for (int j = 1; j <= count; j++) {
+                Object obj = rs.getObject(j);
+                if (obj instanceof SQLXML) {
+                	obj = ((SQLXML)obj).getString();
+                } else if (obj instanceof Clob) {
+                	obj = "Clob[" + ((Clob)obj).length() + "]"; //$NON-NLS-1$ //$NON-NLS-2$
+                } else if (obj instanceof Blob) {
+                	obj = "Blob[" + ((Blob)obj).length() + "]"; //$NON-NLS-1$ //$NON-NLS-2$
+                }
                 if (maxColWidth == 0) {
-                    Object obj = rs.getObject(j);
-                    out.print(obj == null ? NULL : obj); //$NON-NLS-1$
+                    out.print(obj == null ? NULL : obj); 
                     if (j != count) out.print(SPACER);
                 } else {
-                    String resizedString = resizeString(rs.getObject(j), sizes[j-1]);
+                    String resizedString = resizeString(obj, sizes[j-1]);
                     out.print(resizedString);
                     if (j != count && resizedString.length() <= sizes[j-1]) {
                         out.print(SPACER);
@@ -346,7 +356,7 @@ public class ResultSetUtil {
                 try {
                     Method m = RSMD.getMethod(METADATA_METHODS[i], params);
                     Object obj = m.invoke(rsmd, columnParam);
-                    String stringVal = (obj == null) ? NULL : obj.toString(); //$NON-NLS-1$
+                    String stringVal = (obj == null) ? NULL : obj.toString(); 
                     metadataStrings[col - 1][i] = stringVal;
                     if (maxColWidths[i] < stringVal.length()) { 
                         maxColWidths[i] = stringVal.length();
@@ -378,7 +388,7 @@ public class ResultSetUtil {
 
     private static String resizeString(Object obj, int size) {
         if (obj == null) {
-            return resizeString(NULL, size); //$NON-NLS-1$
+            return resizeString(NULL, size); 
         }
         String str = obj.toString();
         if (str.length() == size) {
