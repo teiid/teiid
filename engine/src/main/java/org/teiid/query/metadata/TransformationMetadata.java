@@ -203,7 +203,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		
 		Collection<String> filteredResult = new ArrayList<String>(matches.size());
 		for (Table table : matches) {
-			if (vdbMetaData == null || vdbMetaData.getModel(table.getParent().getName()).isVisible()) {
+			if (vdbMetaData == null || vdbMetaData.isVisible(table.getParent().getName())) {
 	        	filteredResult.add(table.getFullName());
 	        }
 		}
@@ -354,7 +354,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         
         for (StoredProcedureInfo storedProcedureInfo : results) {
         	Schema schema = (Schema)storedProcedureInfo.getModelID();
-	        if(vdbMetaData == null || vdbMetaData.getModel(schema.getName()).isVisible()){
+	        if(vdbMetaData == null || vdbMetaData.isVisible(schema.getName())){
 	        	if (result != null) {
 	    			throw new QueryMetadataException(QueryPlugin.Util.getString("ambiguous_procedure", fullyQualifiedProcedureName)); //$NON-NLS-1$
 	    		}

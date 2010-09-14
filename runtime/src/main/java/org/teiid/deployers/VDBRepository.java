@@ -35,8 +35,6 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import org.jboss.deployers.spi.DeploymentException;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
-import org.teiid.adminapi.Model;
-import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.types.DataTypeManager;
@@ -78,37 +76,14 @@ public class VDBRepository implements Serializable{
 		}
 		
 		if (this.odbcStore == null) {
-			addSystemModel(vdb);
 			this.vdbRepo.put(vdbId(vdb), new CompositeVDB(vdb, stores, visibilityMap, udf, cmr, this.systemStore));
 		}
 		else {
-			addSystemModel(vdb);
-			addODBCModel(vdb);
 			this.vdbRepo.put(vdbId(vdb), new CompositeVDB(vdb, stores, visibilityMap, udf, cmr, this.systemStore, odbcStore));
 		}
 		notifyAdd(vdb.getName(), vdb.getVersion());
 	}
 
-	private void addODBCModel(VDBMetaData vdb) {
-		// add the ODBC model
-		ModelMetaData odbcSystem = new ModelMetaData();
-		odbcSystem.setName(CoreConstants.ODBC_MODEL);
-		odbcSystem.setVisible(true);
-		odbcSystem.setModelType(Model.Type.VIRTUAL);
-		vdb.addModel(odbcSystem);
-	}
-	
-	private void addSystemModel(VDBMetaData vdb) {
-		// Add system model to the deployed VDB
-		ModelMetaData system = new ModelMetaData();
-		system.setName(CoreConstants.SYSTEM_MODEL);
-		system.setVisible(true);
-		system.setModelType(Model.Type.PHYSICAL);
-		system.addSourceMapping(CoreConstants.SYSTEM_MODEL, CoreConstants.SYSTEM_MODEL, CoreConstants.SYSTEM_MODEL); 
-		system.setSupportsMultiSourceBindings(false);
-		vdb.addModel(system);		
-	}
-	
 	public VDBMetaData getVDB(String name, int version) {
 		CompositeVDB v = this.vdbRepo.get(new VDBKey(name, version));
 		if (v != null) {
