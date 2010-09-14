@@ -88,9 +88,6 @@ public class BasicManagedConnection implements ManagedConnection {
 	
 	@Override
 	public Object getConnection(Subject arg0, ConnectionRequestInfo arg1) throws ResourceException {
-		if(!(arg1 instanceof ConnectionRequestInfoWrapper)) {
-			throw new ResourceException("Un-recognized Connection Request Info object received"); //$NON-NLS-1$
-		}
 		ConnectionContext.setSubject(arg0);
 		
 		WrappedConnection wc = new WrappedConnection(this); 
