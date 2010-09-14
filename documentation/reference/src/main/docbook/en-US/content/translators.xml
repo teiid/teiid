@@ -815,4 +815,43 @@ my-vdb.xml: (The vdb-deployer.xml schema for this file is available in the schem
 </itemizedlist>
 </section>
 </section>
+<section>
+    <title>Multi-Source Models and VDB</title>
+    <para>When you have multiple instances of data that are using identical schema (horizantal sharding), Teiid can help you
+    aggregate data accoss all the instances, using "multi-source" models. In this scenario, instead of creating/importing a model for
+    every data source, user needs to define a one source model that represents the schema and configure multiple data 
+    "sources" underneath it. During runtime, when a query issued aginst this model, the query engine analyzes 
+    the information and gathers the required data from 
+    all the sources configured and aggregates the results and provides in a single result set.</para>
+    
+    <para>To mark a model as "multi-source", the user needs to supply property called "supports-multi-source-bindings", in the "vdb.xml" file. 
+    Also, the user need to define multiple sources. Here is code example showing single model with multiple sources defined.</para>
+    <programlisting><![CDATA[
+<vdb name="vdbname" version="1">
+    <model visible="true" type="PHYSICAL" name="Customers" path="/Test/Customers.xmi">
+          <property name="supports-multi-source-bindings" value="true"/>
+          <source name="chicago" translator-name="oracle" connection-jndi-name="chicago-customers"/>
+          <source name="newyork" translator-name="oracle" connection-jndi-name="newyork-customers"/>
+          <source name="la" translator-name="oracle" connection-jndi-name="la-customers"/>
+     </model>
+</vdb>    
+    ]]></programlisting>    
+    <para>In the above example, the VDB defined has single model called "Customers", that has multiple sources, namely 
+    chicago, newyork, la that define different instances of data. Every time a model is marked as "multi-source", the 
+    runtime engine adds a additional column called "SOURCE_NAME" to every table in that model. This column maps to the 
+    source's name from the XML. For example, in the above xml that would be "chicago", "la", "newyork". Essentially then 
+    user can write queries like</para>
+    <programlisting><![CDATA[ 
+      select * from table where SOURCE_NAME = 'newyork'
+      update table column=value  where SOURCE_NAME='newyork'
+      delete from table where column = x and SOURCE_NAME='newyork'    
+    ]]></programlisting>    
+    <para>Note that when user do not supply the "SOURCE_NAME" in the criteria, it applies to all the sources. Unfortunately 
+    Teiid currently do not support INSERT, this planned for future releases. Another useful feature along with this 
+    feature is "partial results" to skip unavailble souces if they are down.</para>
+    <note><para>Currenlty the tooling support for managing the multi-source feature is limited, so if you need to use this feature
+    build the VDB as usual in the Teiid Designer and then edit the "vdb.xml" file in the VDB archive using a Text editor to 
+    add the addtional sources as defined above. Make sure that you also deploy a data source for each source defined.</para></note>
+</section>
+
 </chapter>
