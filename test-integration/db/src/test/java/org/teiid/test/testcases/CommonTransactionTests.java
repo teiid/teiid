@@ -594,7 +594,6 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * Note: This is producing the below error some times; however this is SQL Server issue.
      * http://support.microsoft.com/?kbid=834849
      */
-    @Ignore
     @Test
     public void testMultipleSourcePartialProcessingUsingLimit() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourcePartialProcessingUsingLimit") {
@@ -616,7 +615,6 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
      * Note: This is producing the below error some times; however this is SQL Server issue.
      * http://support.microsoft.com/?kbid=834849
      */
-    @Ignore
     @Test
     public void testMultipleSourcePartialProcessingUsingMakedep() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourcePartialProcessingUsingMakedep") {
@@ -629,8 +627,4 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
         // run test
         getTransactionContainter().runTransaction(userTxn);       
     }        
-    
-    
-    
-
 }
