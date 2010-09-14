@@ -224,7 +224,6 @@ public class ManagedUtil {
 	
 	public static void deployArchive(DeploymentManager deploymentManager, String fileName, URL resourceURL, boolean deployExploded) throws AdminProcessingException {
 		List<DeploymentOption> deploymentOptions = new ArrayList<DeploymentOption>();
-		deploymentOptions.add(DeploymentOption.FailIfExists);
 		if (deployExploded) {
 			deploymentOptions.add(DeploymentOption.Explode);
 		}
