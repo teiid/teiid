@@ -49,13 +49,16 @@ public class TranslatorException extends TeiidException{
     }
     
     public TranslatorException( String errorCode, String message ) {
-        super( message, errorCode);
+        super( errorCode, message);
     }
     
     public TranslatorException( int errorCode, String message ) {
         super(message, Integer.toString(errorCode));
-    }    
+    } 
     
+    public TranslatorException(Throwable e, int errorCode, String message ) {
+        super(e, Integer.toString(errorCode), message);
+    }
 
     /**
      * Construct an instance from a message and an exception to chain to this one.
