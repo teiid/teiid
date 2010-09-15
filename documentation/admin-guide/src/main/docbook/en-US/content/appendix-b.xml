@@ -16,6 +16,7 @@
 		that would work in Java,
 		BeanShell, Groovy, etc.</para>
 	<programlisting><![CDATA[import static org.teiid.adminshell.AdminShell.*;
+import static org.teiid.adminshell.GroovySqlExtensions.*;
 import org.teiid.adminapi.*;]]></programlisting>
 	<para>Note that the provided shell and console executables
 		automatically have the proper class path set and inject the proper
