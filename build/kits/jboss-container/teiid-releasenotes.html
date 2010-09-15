@@ -31,7 +31,8 @@
     <LI><B>Refined Load Balancing and Fail Over</B> - clients can use use the statement "SET NEWINSTANCE TRUE" to allow their connection to select a new server instance.  See the Client Developer's Guide for more information. 
     <LI><B>Simplified Role Usage</B> - a role can now be assigned to any authenticated user via the any-authenticated attribute on the data-role element.
     <LI><B>Materialized View Performance</B> - materialized view tables will now automatically create and use non-unique secondary indexes for unique constraints and indexes defined on the view. 
-    <LI><B>Binary Web Service Calls</B> - the ws translator now provides an invokeHttp procedure to return the blob contents and string content type of an http/https call.  
+    <LI><B>Binary Web Service Calls</B> - the ws translator now provides an invokeHttp procedure to return the blob contents and string content type of an http/https call.
+    <LI><B>Improved clustering support</B> - see the Admin Guide chapter on clustering.  
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -125,6 +126,10 @@ See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on c
 <h2><a name="LibraryUpdates">Thirdparty Library Updates</a></h2>
 
 The following components have been updated:
+<h4>From 7.0</h4>
+<ul>
+	<li>Netty was upgraded to 3.2.1	
+</ul>
 <h4>From 7.0</h4>
 <ul>
 	<li>Direct integration of JBossCache jars were removed.
