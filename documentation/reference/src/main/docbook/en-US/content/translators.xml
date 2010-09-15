@@ -1,568 +1,779 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="translators">
-<title>Translators</title>
-<section>
-<title>Introduction to the Teiid Connector Architecture</title>
-<para>The TCA (Teiid Connector Architecture) provides Teiid with a robust mechanism for integrating with external systems.  The TCA defines a common client interface between Teiid and an external system that includes metadata as to what SQL constructs are supported for pushdown and the ability to import metadata from the external system.</para>
-<para>>A Translator is the heart of the TCA and acts as the bridge logic between Teiid and an external system, which is most commonly accessed through a JCA resource adapter.  See the Teiid Developers Guide for details on developing custom Translators and JCA resource adapters for use with Teiid.</para>
-<note>
-<para>The TCA is not the same as the JCA, the JavaEE Connector Architecture, although the TCA is designed for use with JCA resource adapters.</para>
-</note>
-<note>
-<para>The import capabilities of Teiid Translators is currently only used in <link linkend="dynamic_vdbs">dynamic VDBs</link> and not by the Teiid Designer.</para>
-</note>
-</section>
-<section>
-<title>Translators</title>
-<para>A Translator is typically paired with a particular JCA resource adapter.  In instances where pooling, environment dependent configuration management, advanced security handling, etc. are not needed, then a JCA resource adapter is not needed.  The configuration of JCA ConnectionFactories for needed resource adapters is not part of this guide, please see the Teiid Admin Guide and the kit examples for configuring resource adapters for use in JBossAS.</para>
-<para>Translators can have a number of configurable properties.  These are broken down into execution properties, which determine aspects of how data is retrieved, and import settings, which determine what metadata is read for import.</para>
-<para>The execution properties for a translator typically have reasonable defaults.  For specific translator types, e.g. the Derby translator, base execution properties are already tuned to match the source.  In most cases the user will not need to adjust their values.</para>
-<table>
-<title>Base Execution Properties - shared by all translators</title>
-<tgroup cols="3">
-<colspec colwidth=".75*" />
-<colspec colwidth="1.5*" />
-<colspec colwidth=".5*" />
-<thead>
-<row>
-<entry>Name</entry>
-<entry>Description</entry>
-<entry>Default</entry>
-</row>
-</thead>
-<tbody>
-<row>
-<entry>Immutable</entry>
-<entry>Set to true to indicate that the source never changes.</entry>
-<entry>false</entry>
-</row>
-<row>
-<entry>RequiresCriteria</entry>
-<entry>Set to true to indicate that source SELECT/UPDATE/DELETE queries require a where clause.</entry>
-<entry>false</entry>
-</row>
-<row>
-<entry>SupportsOrderBy</entry>
-<entry>Set to true to indicate that the ORDER BY clause is supported.</entry>
-<entry>false</entry>
-</row>
-<row>
-<entry>SupportsOuterJoins</entry>
-<entry>Set to true to indicate that OUTER JOINs are supported.</entry>
-<entry>false</entry>
-</row>
-<row>
-<entry>SupportsFullOuterJoins</entry>
-<entry>If outer joins are supported, true indicates that FULL OUTER JOINs are supported.</entry>
-<entry>false</entry>
-</row>
-<row>
-<entry>SupportsInnerJoins</entry>
-<entry>Set to true to indicate that INNER JOINs are supported.</entry>
-<entry>false</entry>
-</row>
-<row>
-<entry>SupportedJoinCriteria</entry>
-<entry>If joins are supported, defines what criteria may be used as the join criteria.  May be one of (ANY, THETA, EQUI, or KEY).</entry>
-<entry>ANY</entry>
-</row>
-</tbody>
-</tgroup>
-</table>
-<note>
-<para>Only a subset of the metadata as to what SQL constructs the source supports can be set through execution properties.  If more control is needed, please consult the Teiid Developers Guide.</para>
-</note>
-<para>There are no base importer settings.</para>
-<section>
-<title>File Translator</title>
-<para>The file translator, known by the type name <emphasis>file</emphasis>, exposes stored procedures to leverage file system resources exposed by the file resource adapter.  
-It will commonly be used with the <link linkend="texttable">TEXTTABLE</link> or <link linkend="xmltable">XMLTABLE</link> table functions to use CSV or XML formated data.</para>
-<table>
-<title>Execution Properties</title>
-<tgroup cols="3">
-<thead>
-<row>
-<entry>Name</entry>
-<entry>Description</entry>
-<entry>Default</entry>
-</row>
-</thead>
-<tbody>
-<row>
-<entry>Encoding</entry>
-<entry>The encoding that should be used for CLOBs returned by the getTextFiles procedure</entry>
-<entry>The system default encoding</entry>
-</row>
-</tbody>
-</tgroup>
-</table>
-<para>There are file importer settings, but it does provide metadata for dynamic vdbs.</para>
-<section><title>Usage</title>
-<para>Retrieve all files as BLOBs with the given extension at the given path. <programlisting>call getFiles('path/*.ext')</programlisting>
-If the extension pattern is not specified and the path is a directory, then all files in the directory will be returned.  If the path or filename doesn't exist, then no results will be returned.
-</para>
-<para>Retrieve all files as CLOBs with the given extension at the given path. <programlisting>call getTextFiles('path/*.ext')</programlisting></para>
-<para>Save the CLOB, BLOB, or XML file to given path <programlisting>call saveFile('path', value)</programlisting></para>
-<para>See the database metadata for full descriptions of the getFiles, getTextFiles, and saveFile procedures.</para>
-</section>
-</section>
-<section>
-<title>JDBC Translator</title>
-<para>The JDBC translator bridges between SQL semantic and data type difference between Teiid and a target RDBMS.  Teiid has a range of specific translators that target the most popular open source and proprietary databases.</para>
-<itemizedlist>
-<para>Type names</para>
-<listitem>
-<para><emphasis>jdbc-ansi</emphasis> - declares support for most SQL constructs supported by Teiid, except for row limit/offset and EXCEPT/INTERCECT.  Translates source SQL into ANSI compliant syntax.  This translator should be used when another more specific type is not available.</para>
-</listitem>
-<listitem>
-<para><emphasis>jdbc-simple</emphasis> - same as jdbc-ansi, except disables support for function, UNION, and aggregate pushdown.</para>
-</listitem>
-<listitem>
-<para><emphasis>db2</emphasis> - for use with DB2 8 or later.</para>
-</listitem>
-<listitem>
-<para><emphasis>derby</emphasis> - for use with Derby 10.1 or later.</para>
-</listitem>
-<listitem>
-<para><emphasis>h2</emphasis> - for use with H2 version 1.1 or later.</para>
-</listitem>
-<listitem>
-<para><emphasis>hsql</emphasis> - for use with HSQLDB 1.7 or later.</para>
-</listitem>
-<listitem>
-<para><emphasis>informix</emphasis> - for use with any version.</para>
-</listitem>
-<listitem>
-<para><emphasis>metamatrix</emphasis> - for use with MetaMatrix 5.5.0 or later.</para>
-</listitem>
-<listitem>
-<para><emphasis>mysql</emphasis>/<emphasis>mysql5</emphasis> - for use with MySQL version 4.x and 5 or later respectively.  <note><para>The MySQL Translators expect the database or session to be using ANSI mode.  If the database is not using ANSI mode, an initialization query should be used on the pool to set ANSI mode:  <programlisting>set SESSION sql_mode = 'ANSI'</programlisting></para></note></para>
-</listitem>
-<listitem>
-<para><emphasis>oracle</emphasis> - for use with Oracle 9i or later.  Sequences may be used with the Oracle translator.  
-A sequence may be modeled as a table with a name in source of DUAL and columns with the name in source set to &lt;sequencesequence name&gt;.[nextval|currentval].  
-You can use a sequence as the default value for insert columns by setting the column to autoincrement and the name in source to &lt;element name&gt;:SEQUENCE=&lt;sequence name&gt;.&lt;sequence value&gt;.</para>
-</listitem>
-<listitem>
-<para><emphasis>postgresql</emphasis> - for use with 8.0 or later clients and 7.1 or later server.</para>
-</listitem>
-<listitem>
-<para><emphasis>sybase</emphasis> - for use with Sybase version 12.5 or later.</para>
-</listitem>
-<listitem>
-<para><emphasis>teiid</emphasis> - for use with Teiid 6.0 or later.</para>
-</listitem>
-<listitem>
-<para><emphasis>teradata</emphasis> - for use with Teradata V2R5.1 or later.</para>
-</listitem>
-</itemizedlist>
-<table>
-<title>Execution Properties - shared by all JDBC Translators</title>
-<tgroup cols="3">
-<colspec colwidth=".75*" />
-<colspec colwidth="1.5*" />
-<colspec colwidth=".5*" />
-<thead>
-<row>
-<entry>Name</entry>
-<entry>Description</entry>
-<entry>Default</entry>
-</row>
-</thead>
-<tbody>
-<row>
-<entry>DatabaseTimeZone</entry>
-<entry>The time zone of the database.  Used when fetchings date, time, or timestamp values.</entry>
-<entry>The system default time zone</entry>
-</row>
-<row>
-<entry>DatabaseVersion</entry>
-<entry>The specific database version.  Used to further tune pushdown support.</entry>
-<entry>The base supported version</entry>
-</row>
-<row>
-<entry>TrimStrings</entry>
-<entry>true to trim trailing whitespace from fixed length character strings.  Note that Teiid only has a string, or varchar, type that treats trailing whitespace as meaningful.</entry>
-<entry>false</entry>
-</row>
-<row>
-<entry>UseBindVariables</entry>
-<entry>true to indicate that PreparedStatements should be used and that literal values in the source query should be replace with bind variables.  If false only LOB values will trigger the use of PreparedStatements.</entry>
-<entry>true</entry>
-</row>
-<row>
-<entry>UseCommentsInSourceQuery</entry>
-<entry>This will embed a /*comment*/ leading comment with session/request id in source SQL query for informational purposes</entry>
-<entry>false</entry>
-</row>
-<row>
-<entry>MaxPreparedInsertBatchSize</entry>
-<entry>The max size of a prepared insert batch.</entry>
-<entry>2048</entry>
-</row>
-</tbody>
-</tgroup>
-</table>
-<table>
-<title>Importer Properties - shared by all JDBC Translators</title>
-<tgroup cols="3">
-<colspec colwidth=".75*" />
-<colspec colwidth="1.5*" />
-<colspec colwidth=".3*" />
-<thead>
-<row>
-<entry>Name</entry>
-<entry>Description</entry>
-<entry>Default</entry>
-</row>
-</thead>
-<tbody>
-<row>
-<entry>catalog</entry>
-<entry>See DatabaseMetaData.getTables<footnote label="1" id="dbmd"><para>Full JavaDoc for <ulink url="http://java.sun.com/javase/6/docs/api/java/sql/DatabaseMetaData.html">DatabaseMetaData</ulink></para></footnote></entry>
-<entry>null</entry>
-</row>
-<row>
-<entry>schemaPattern</entry>
-<entry>See DatabaseMetaData.getTables<footnoteref linkend="dbmd"/></entry>
-<entry>null</entry>
-</row>
-<row>
-<entry>tableNamePattern</entry>
-<entry>See DatabaseMetaData.getTables<footnoteref linkend="dbmd"/></entry>
-<entry>null</entry>
-</row>
-<row>
-<entry>procedurePatternName</entry>
-<entry>See DatabaseMetaData.getProcedures<footnoteref linkend="dbmd"/></entry>
-<entry>null</entry>
-</row>
-<row>
-<entry>tableTypes</entry>
-<entry>Comma separated list - without spaces - of imported table types.  See DatabaseMetaData.getTables<footnoteref linkend="dbmd"/></entry>
-<entry>null</entry>
-</row>
-<row>
-<entry>useFullSchemaName</entry>
-<entry>When false, directs the importer to drop the source catalog/schema from the Teiid object name, so that the Teiid fully qualified name will be in the form of &lt;model name&gt;.&lt;table name&gt; - Note: that this may lead to objects with duplicate names when importing from multiple schemas, which results in an exception</entry>
-<entry>true</entry>
-</row>
-<row>
-<entry>importKeys</entry>
-<entry>true to import primary and foriegn keys</entry>
-<entry>true</entry>
-</row>
-<row>
-<entry>importIndexes</entry>
-<entry>true to import index/unique key/cardinality information</entry>
-<entry>true</entry>
-</row>
-<row>
-<entry>importApproximateIndexes</entry>
-<entry>true to import approximate index information.  See DatabaseMetaData.getIndexInfo<footnoteref linkend="dbmd"/></entry>
-<entry>true</entry>
-</row>
-<row>
-<entry>importProcedures</entry>
-<entry>true to import procedures and procedure columns - Note that it is not always possible to import procedure result set columns due to database limitations.  It is also not currently possible to import overloaded procedures.</entry>
-<entry>true</entry>
-</row>
-<row>
-<entry>widenUnsignedTypes</entry>
-<entry>true to convert unsigned types to the next widest type.  For example SQL Server reports tinyint as an unsigned type.  With this option enabled, tinyint would be imported as a short instead of a byte.</entry>
-<entry>true</entry>
-</row>
-<row>
-<entry>quoteNameInSource</entry>
-<entry>false will override the default and direct Teiid to create source queries using unquoted identifiers.</entry>
-<entry>true</entry>
-</row>
-</tbody>
-</tgroup>
-</table>
-<warning>
-<para>The default import settings will crawl all available metadata.  This import process is time consuming and full metadata import is not needed in most situations.  Most commonly you'll want to limit import by schemaPattern and tableTypes.</para></warning>
-<para>Example importer settings to only import tables and views from my-schema.<programlisting><![CDATA[...
-<property name="importer.tableTypes" value="TABLE,VIEW"/>
-<property name="importer.schemaPattern" value="my-schema"/>
-...]]></programlisting></para>
-<section><title>Usage</title>
-<para>Usage of a JDBC source is straight-forward.  Using Teiid SQL, the source ma be queried as if the tables and procedures were local to the Teiid system.
-</para>
-</section>
-</section>
-<section>
-<title>LDAP Translator</title>
-<para>The LDAP translator, known by the type name <emphasis>ldap</emphasis>, exposes an LDAP directory tree relationally with pusdown support for filtering via criteria.  This is typically coupled with the LDAP resource adapter.</para>
-<table>
-<title>Execution Properties</title>
-<tgroup cols="3">
-<thead>
-<row>
-<entry>Name</entry>
-<entry>Description</entry>
-<entry>Default</entry>
-</row>
-</thead>
-<tbody>
-<row>
-<entry>SearchDerfaultBaseDN</entry>
-<entry>Default Base DN for LDAP Searches</entry>
-<entry>null</entry>
-</row>
-<row>
-<entry>SearchDefaultScope</entry>
-<entry>Default Scope for LDAP Searches. Can be one of SUBTREE_SCOPE, OBJECT_SCOPE, ONELEVEL_SCOPE.</entry>
-<entry>ONELEVEL_SCOPE</entry>
-</row>
-<row>
-<entry>RestrictToObjectClass</entry>
-<entry>Restrict Searches to objectClass named in the Name field for a table</entry>
-<entry>false</entry>
-</row>
-</tbody>
-</tgroup>
-</table>
-</section>
-<section>
-<title>Loopback Translator</title>
-<para>The Loopback translator, known by the type name <emphasis>loopback</emphasis>, provides a quick testing solution.  It supports all SQL constructs and returns default results, with configurable behavior.</para>
-<table>
-<title>Execution Properties</title>
-<tgroup cols="3">
-<colspec colwidth=".75*" />
-<colspec colwidth="1.5*" />
-<colspec colwidth=".5*" />
-<thead>
-<row>
-<entry>Name</entry>
-<entry>Description</entry>
-<entry>Default</entry>
-</row>
-</thead>
-<tbody>
-<row>
-<entry>ThrowError</entry>
-<entry>true to always throw an error</entry>
-<entry>false</entry>
-</row>
-<row>
-<entry>RowCount</entry>
-<entry>Rows returned for non-update queries.</entry>
-<entry>1</entry>
-</row>
-<row>
-<entry>WaitTime</entry>
-<entry>Wait randomly up to this number of milliseconds with each sourc query.</entry>
-<entry>0</entry>
-</row>
-<row>
-<entry>PollIntervalInMilli</entry>
-<entry>if positive results will be "asynchronusly" returned - that is a DataNotAvailableException will be thrown initially and the engine will wait the poll interval before polling for the results.</entry>
-<entry>-1</entry>
-</row>
-</tbody>
-</tgroup>
-</table>
-<para>There are no import settings for the Loopback translator; it also does not provide metadata - it should be used as a testing stub.</para>
-</section>
-<section>
-<title>Salesforce Translator</title>
-<para>The Salesforce translator, known by the type name <emphasis>salesforce</emphasis> supports the SELECT, DELETE, INSERT and UPDATE operations against a Salesforce.com account.  It is designed for use with the Teiid Salesforce resource adapter.</para>
-<table>
-<title>Execution Properties</title>
-<tgroup cols="3">
-<colspec colwidth=".75*" />
-<colspec colwidth="1.5*" />
-<colspec colwidth=".5*" />
-<thead>
-<row>
-<entry>Name</entry>
-<entry>Description</entry>
-<entry>Default</entry>
-</row>
-</thead>
-<tbody>
-<row>
-<entry>ModelAuditFeilds</entry>
-<entry>Audit Model Fields</entry>
-<entry>false</entry>
-</row>
-</tbody>
-</tgroup>
-</table>
-<para>The Salesforce translator can import metadata, but does not currently have import settings.</para>
-<section>
-<title>Usage</title>
-<section>
-<title>SQL Processing</title>
-<para>Salesforce does not provide the same set of
-			functionality as a relational database. For example, Salesforce does
-			not support arbitrary joins between tables. However, working in
-			combination with the Teiid Query Planner, the Salesforce
-			connector
-			supports nearly all of the SQL syntax supported by the
-			Teiid.
+    <title>Translators</title>
+
+    <section>
+        <title>Introduction to the Teiid Connector Architecture</title>
+        <para>
+        The Teiid Connector Architecture (TCA) provides Teiid with a robust mechanism 
+        for integrating with external systems.  The TCA defines a common client interface 
+        between Teiid and an external system that includes metadata as to what SQL 
+        constructs are supported for pushdown and the ability to import metadata from 
+        the external system.
         </para>
-        <para>The Salesforce Connector executes SQL commands by “pushing
-			down” the command to Salesforce whenever possible, based on the
-			supported capabilities. Teiid will automatically provide
-			additional database functionality when the Salesforce Connector does
-			not	explicitly provide support for a given SQL construct. In these
-			cases, the SQL construct cannot be “pushed down” to the data source,
-			so it will be evaluated in Teiid, in order to ensure that the
-			operation is performed.
+        
+        <para>
+        A Translator is the heart of the TCA and acts as the bridge logic between Teiid 
+        and an external system, which is most commonly accessed through a JCA resource 
+        adapter.  Refer to the Teiid Developers Guide for details on developing custom 
+        Translators and JCA resource adapters for use with Teiid.
         </para>
-        <para>In cases where certain SQL capabilities cannot be pushed down
-			to Salesforce, Teiid will push down the capabilities that are
-			supported, and fetch a set of data from Salesforce. Then, Teiid
-			will evaluate the additional capabilities, creating a subset of the
-			original data set. Finally, Teiid will pass the result to the
-			client.
+        
+        <note>
+            <para>
+            The TCA is not the same as the JCA, the JavaEE Connector Architecture, although 
+            the TCA is designed for use with JCA resource adapters.
+            </para>
+        </note>
+        
+        <note>
+            <para>
+            The import capabilities of Teiid Translators is currently only used in 
+            <link linkend="dynamic_vdbs">dynamic VDBs</link> and not by the Teiid Designer.
+            </para>
+        </note>
+        
+    </section>
+
+    <section>
+        <title>Translators</title>
+        <para>
+        A Translator is typically paired with a particular JCA resource adapter.  In 
+        instances where pooling, environment dependent configuration management, advanced 
+        security handling, etc. are not needed, then a JCA resource adapter is not needed.  
+        The configuration of JCA ConnectionFactories for needed resource adapters is not 
+        part of this guide, please see the Teiid Administrator Guide and the kit examples 
+        for configuring resource adapters for use in JBossAS.
+        </para>
+        
+        <para>
+        Translators can have a number of configurable properties.  These are broken down 
+        into execution properties, which determine aspects of how data is retrieved, and 
+        import settings, which determine what metadata is read for import.
+        </para>
+        
+        <para>
+        The execution properties for a translator typically have reasonable defaults.  For 
+        specific translator types, e.g. the Derby translator, base execution properties are 
+        already tuned to match the source.  In most cases the user will not need to adjust 
+        their values.
         </para>
 
-        <programlisting><![CDATA[SELECT sum(Reports) FROM Supervisor where Division = 'customer support';]]></programlisting>
-        <para>Neither Salesforce nor the Salesforce Connector support
-			the sum() scalar function, but they do support CompareCriteriaEquals,
-			so the query that is passed to Salesforce by the connector will be
-			transformed to this query.
-        </para>
-        <programlisting><![CDATA[SELECT Reports FROM Supervisor where Division = 'customer support';]]></programlisting>
-        <para>The sum() scalar function will be applied by the Teiid
-			Query Engine to the result set returned by the connector.
-        </para>
-        <para>In some cases multiple calls to the Salesforce application
-			will be made to support the SQL passed to the connector.
-        </para>
-        <programlisting><![CDATA[DELETE From Case WHERE Status = 'Closed';]]></programlisting>
-        <para>The API in Salesforce to delete objects only supports
-			deleting by ID. In order to accomplish this the Salesforce connector
-			will first execute a query to get the IDs of the correct objects, and
-			then delete those objects. So the above DELETE command will result in
-			the following two commands.
-        </para>
-        <programlisting><![CDATA[SELECT ID From Case WHERE Status = 'Closed';
-DELETE From Case where ID IN (<result of query>);*]]></programlisting>
-        <para>*The Salesforce API DELETE call is not expressed in SQL, but
-			the above is an SQL equivalent expression.
-        </para>
-        <para>It's useful to be aware of unsupported capabilities, in
-			order
-			to avoid fetching large data sets from Salesforce and making you
-			queries as performant as possible. See all <link linkend="sf_supported">Supported Capabilities</link>.
-        </para>
+        <table>
+            <title>Base Execution Properties - shared by all translators</title>
+            <tgroup cols="3">
+                <colspec colwidth="3*" />
+                <colspec colwidth="6*" />
+                <colspec colwidth="2*" />
+                <thead>
+                    <row>
+                        <entry>Name</entry>
+                        <entry>Description</entry>
+                        <entry>Default</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>Immutable</entry>
+                        <entry>Set to true to indicate that the source never changes.</entry>
+                        <entry>false</entry>
+                    </row>
+                    <row>
+                        <entry>RequiresCriteria</entry>
+                        <entry>Set to true to indicate that source SELECT/UPDATE/DELETE queries require a where clause.</entry>
+                        <entry>false</entry>
+                    </row>
+                    <row>
+                        <entry>SupportsOrderBy</entry>
+                        <entry>Set to true to indicate that the ORDER BY clause is supported.</entry>
+                        <entry>false</entry>
+                    </row>
+                    <row>
+                        <entry>SupportsOuterJoins</entry>
+                        <entry>Set to true to indicate that OUTER JOINs are supported.</entry>
+                        <entry>false</entry>
+                    </row>
+                    <row>
+                        <entry>SupportsFullOuterJoins</entry>
+                        <entry>If outer joins are supported, true indicates that FULL OUTER JOINs are supported.</entry>
+                        <entry>false</entry>
+                    </row>
+                    <row>
+                        <entry>SupportsInnerJoins</entry>
+                        <entry>Set to true to indicate that INNER JOINs are supported.</entry>
+                        <entry>false</entry>
+                    </row>
+                    <row>
+                        <entry>SupportedJoinCriteria</entry>
+                        <entry>If joins are supported, defines what criteria may be used as the join criteria.  May be one of (ANY, THETA, EQUI, or KEY).</entry>
+                        <entry>ANY</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+        
+        <note>
+            <para>
+            Only a subset of the metadata as to what SQL constructs the source supports 
+            can be set through execution properties.  If more control is needed, please 
+            consult the Teiid Developers Guide.
+            </para>
+        </note>
+        
+        <para>There are no base importer settings.</para>
+
+        <section>
+            <title>File Translator</title>
+            <para>
+            The file translator, known by the type name <emphasis>file</emphasis>, exposes 
+            stored procedures to leverage file system resources exposed by the file resource 
+            adapter. It will commonly be used with the <link linkend="texttable">TEXTTABLE</link> 
+            or <link linkend="xmltable">XMLTABLE</link> table functions to use CSV or XML 
+            formated data.
+            </para>
+
+            <table>
+                <title>Execution Properties</title>
+                <tgroup cols="3">
+                    <colspec colwidth="1*" />
+                    <colspec colwidth="4*" />
+                    <colspec colwidth="1*" />
+                    <thead>
+                        <row>
+                            <entry>Name</entry>
+                            <entry>Description</entry>
+                            <entry>Default</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>Encoding</entry>
+                            <entry>The encoding that should be used for CLOBs returned by the getTextFiles procedure</entry>
+                            <entry>The system default encoding</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            
+            <para>There are file importer settings, but it does provide metadata for dynamic vdbs.</para>
+            
+            <section>
+                <title>Usage</title>
+                <para>
+                Retrieve all files as BLOBs with the given extension at the given path.
+                </para>
+                
+                <programlisting>call getFiles('path/*.ext')</programlisting>
+                
+                <para>
+                If the extension pattern is not specified and the path is a directory, 
+                then all files in the directory will be returned.  If the path or filename 
+                doesn't exist, then no results will be returned.
+                </para>
+                
+                <para>
+                Retrieve all files as CLOBs with the given extension at the given path.
+                </para>
+                <programlisting>call getTextFiles('path/*.ext')</programlisting>
+                
+                <para>
+                Save the CLOB, BLOB, or XML file to given path
+                </para>
+                <programlisting>call saveFile('path', value)</programlisting>
+                
+                <para>
+                See the database metadata for full descriptions of the getFiles, 
+                getTextFiles, and saveFile procedures.
+                </para>
+            </section>
+
         </section>
-		<section>
-        <title>Selecting from Multi-Select Picklists</title>
+        
+        <section>
+            <title>JDBC Translator</title>
+            <para>
+            The JDBC translator bridges between SQL semantic and data type difference 
+            between Teiid and a target RDBMS.  Teiid has a range of specific translators 
+            that target the most popular open source and proprietary databases.
+            </para>
+
+            <itemizedlist>
+                <title>Type names:</title>
+                <listitem>
+                    <para>
+                    <emphasis>jdbc-ansi</emphasis> - declares support for most SQL 
+                    constructs supported by Teiid, except for row limit/offset and 
+                    EXCEPT/INTERCECT.  Translates source SQL into ANSI compliant syntax.  
+                    This translator should be used when another more specific type is 
+                    not available.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>jdbc-simple</emphasis> - same as jdbc-ansi, except disables 
+                    support for function, UNION, and aggregate pushdown.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>db2</emphasis> - for use with DB2 8 or later.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>derby</emphasis> - for use with Derby 10.1 or later.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>h2</emphasis> - for use with H2 version 1.1 or later.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>hsql</emphasis> - for use with HSQLDB 1.7 or later.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>informix</emphasis> - for use with any version.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>metamatrix</emphasis> - for use with MetaMatrix 5.5.0 or later.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>mysql</emphasis>/<emphasis>mysql5</emphasis> - for use with 
+                    MySQL version 4.x and 5 or later respectively.  
+                    </para>
+                    <para>
+                    The MySQL Translators expect the database or session to be using ANSI 
+                    mode.  If the database is not using ANSI mode, an initialization query 
+                    should be used on the pool to set ANSI mode:  
+                    </para>
+                    <programlisting>set SESSION sql_mode = 'ANSI'</programlisting>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>oracle</emphasis> - for use with Oracle 9i or later.  
+                    Sequences may be used with the Oracle translator. A sequence may be 
+                    modeled as a table with a name in source of DUAL and columns with the 
+                    name in source set to <code>&lt;sequencesequence name&gt;.[nextval|currentval].</code>  
+                    You can use a sequence as the default value for insert columns by 
+                    setting the column to autoincrement and the name in source to 
+                    <code>&lt;element name&gt;:SEQUENCE=&lt;sequence name&gt;.&lt;sequence value&gt;</code>.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>postgresql</emphasis> - for use with 8.0 or later clients 
+                    and 7.1 or later server.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>sybase</emphasis> - for use with Sybase version 12.5 or later.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>teiid</emphasis> - for use with Teiid 6.0 or later.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>teradata</emphasis> - for use with Teradata V2R5.1 or later.
+                    </para>
+                </listitem>
+            </itemizedlist>
+            
+            <table>
+                <title>Execution Properties - shared by all JDBC Translators</title>
+                <tgroup cols="3">
+                    <colspec colwidth="3*" />
+                    <colspec colwidth="6*" />
+                    <colspec colwidth="2*" />
+                    <thead>
+                        <row>
+                            <entry>Name</entry>
+                            <entry>Description</entry>
+                            <entry>Default</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                    <row>
+                        <entry>DatabaseTimeZone</entry>
+                        <entry>The time zone of the database.  Used when fetchings date, time, or timestamp values.</entry>
+                        <entry>The system default time zone</entry>
+                    </row>
+                    <row>
+                        <entry>DatabaseVersion</entry>
+                        <entry>The specific database version.  Used to further tune pushdown support.</entry>
+                        <entry>The base supported version</entry>
+                    </row>
+                    <row>
+                        <entry>TrimStrings</entry>
+                        <entry>true to trim trailing whitespace from fixed length character strings.  Note that Teiid only has a string, or varchar, type that treats trailing whitespace as meaningful.</entry>
+                        <entry>false</entry>
+                    </row>
+                    <row>
+                        <entry>UseBindVariables</entry>
+                        <entry>true to indicate that PreparedStatements should be used and that literal values in the source query should be replace with bind variables.  If false only LOB values will trigger the use of PreparedStatements.</entry>
+                        <entry>true</entry>
+                    </row>
+                    <row>
+                        <entry>UseCommentsInSourceQuery</entry>
+                        <entry>This will embed a /*comment*/ leading comment with session/request id in source SQL query for informational purposes</entry>
+                        <entry>false</entry>
+                    </row>
+                    <row>
+                        <entry>MaxPreparedInsertBatchSize</entry>
+                        <entry>The max size of a prepared insert batch.</entry>
+                        <entry>2048</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+            
+        <table>
+            <title>Importer Properties - shared by all JDBC Translators</title>
+            <tgroup cols="3">
+            <colspec colwidth="3*" />
+            <colspec colwidth="6*" />
+            <colspec colwidth="2*" />
+                <thead>
+                    <row>
+                        <entry>Name</entry>
+                        <entry>Description</entry>
+                        <entry>Default</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>catalog</entry>
+                        <entry>See DatabaseMetaData.getTables<footnote label="1" id="dbmd"><para>Full JavaDoc for <ulink url="http://java.sun.com/javase/6/docs/api/java/sql/DatabaseMetaData.html">DatabaseMetaData</ulink></para></footnote></entry>
+                        <entry>null</entry>
+                    </row>
+                    <row>
+                        <entry>schemaPattern</entry>
+                        <entry>See DatabaseMetaData.getTables<footnoteref linkend="dbmd"/></entry>
+                        <entry>null</entry>
+                    </row>
+                    <row>
+                        <entry>tableNamePattern</entry>
+                        <entry>See DatabaseMetaData.getTables<footnoteref linkend="dbmd"/></entry>
+                        <entry>null</entry>
+                    </row>
+                    <row>
+                        <entry>procedurePatternName</entry>
+                        <entry>See DatabaseMetaData.getProcedures<footnoteref linkend="dbmd"/></entry>
+                        <entry>null</entry>
+                    </row>
+                    <row>
+                        <entry>tableTypes</entry>
+                        <entry>Comma separated list - without spaces - of imported table types.  See DatabaseMetaData.getTables<footnoteref linkend="dbmd"/></entry>
+                        <entry>null</entry>
+                    </row>
+                    <row>
+                        <entry>useFullSchemaName</entry>
+                        <entry>When false, directs the importer to drop the source catalog/schema from the Teiid object name, so that the Teiid fully qualified name will be in the form of &lt;model name&gt;.&lt;table name&gt; - Note: that this may lead to objects with duplicate names when importing from multiple schemas, which results in an exception</entry>
+                        <entry>true</entry>
+                    </row>
+                    <row>
+                        <entry>importKeys</entry>
+                        <entry>true to import primary and foriegn keys</entry>
+                        <entry>true</entry>
+                    </row>
+                    <row>
+                        <entry>importIndexes</entry>
+                        <entry>true to import index/unique key/cardinality information</entry>
+                        <entry>true</entry>
+                    </row>
+                    <row>
+                        <entry>importApproximateIndexes</entry>
+                        <entry>true to import approximate index information.  See DatabaseMetaData.getIndexInfo<footnoteref linkend="dbmd"/></entry>
+                        <entry>true</entry>
+                    </row>
+                    <row>
+                        <entry>importProcedures</entry>
+                        <entry>true to import procedures and procedure columns - Note that it is not always possible to import procedure result set columns due to database limitations.  It is also not currently possible to import overloaded procedures.</entry>
+                        <entry>true</entry>
+                    </row>
+                    <row>
+                        <entry>widenUnsignedTypes</entry>
+                        <entry>true to convert unsigned types to the next widest type.  For example SQL Server reports tinyint as an unsigned type.  With this option enabled, tinyint would be imported as a short instead of a byte.</entry>
+                        <entry>true</entry>
+                    </row>
+                    <row>
+                        <entry>quoteNameInSource</entry>
+                        <entry>false will override the default and direct Teiid to create source queries using unquoted identifiers.</entry>
+                        <entry>true</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+
+        <warning>
+            <para>
+            The default import settings will crawl all available metadata.  This import 
+            process is time consuming and full metadata import is not needed in most 
+            situations.  Most commonly you'll want to limit import by schemaPattern 
+            and tableTypes.
+            </para>
+        </warning>
+
         <para>
-			A multi-select picklist is a field type in Salesforce that can
-			contain multiple values in a single field. Query criteria operators
-			for fields of this type in SOQL are limited to EQ, NE, includes and
-			excludes. The full Salesforce documentation for selecting from
-			mullti-select picklists can be found at the following link.
-            <ulink
-				url="http://www.salesforce.com/us/developer/docs/api/index_Left.htm#StartTopic=Content%2Fsforce_api_calls_soql_querying_multiselect_picklists.htm|SkinName=webhelp">Querying Mulit-select Picklists
-            </ulink>
+        Example importer settings to only import tables and views from my-schema.
         </para>
-        <para>Teiid SQL does not support the includes or
-			excludes operators, but the Salesforce connector provides user
-			defined function definitions for these operators that provided
-			equivalent functionality for fields of type multi-select. The
-			definition for the functions is:
+        <programlisting language="XML" role="XML"><![CDATA[...
+<property name="importer.tableTypes" value="TABLE,VIEW"/>
+<property name="importer.schemaPattern" value="my-schema"/>
+...]]></programlisting>
+
+        <section>
+            <title>Usage</title>
+            <para>
+            Usage of a JDBC source is straight-forward.  Using Teiid SQL, the source may be 
+            queried as if the tables and procedures were local to the Teiid system.
+            </para>
+        </section>
+        
+    </section>
+    
+    <section>
+        <title>LDAP Translator</title>
+        <para>
+        The LDAP translator, known by the type name <emphasis>ldap</emphasis>, exposes an 
+        LDAP directory tree relationally with pushdown support for filtering via criteria.  
+        This is typically coupled with the LDAP resource adapter.
         </para>
-        <programlisting><![CDATA[boolean includes(Column column, String param)
-boolean excludes(Column column, String param)]]></programlisting>
-        <para>For example, take a single multi-select picklist column
-			called Status that contains all of these values.
+        
+        <table>
+            <title>Execution Properties</title>
+            <tgroup cols="3">
+                <thead>
+                    <row>
+                        <entry>Name</entry>
+                        <entry>Description</entry>
+                        <entry>Default</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>SearchDerfaultBaseDN</entry>
+                        <entry>Default Base DN for LDAP Searches</entry>
+                        <entry>null</entry>
+                    </row>
+                    <row>
+                        <entry>SearchDefaultScope</entry>
+                        <entry>Default Scope for LDAP Searches. Can be one of SUBTREE_SCOPE, OBJECT_SCOPE, ONELEVEL_SCOPE.</entry>
+                        <entry>ONELEVEL_SCOPE</entry>
+                    </row>
+                    <row>
+                        <entry>RestrictToObjectClass</entry>
+                        <entry>Restrict Searches to objectClass named in the Name field for a table</entry>
+                        <entry>false</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+    </section>
+
+    <section>
+        <title>Loopback Translator</title>
+        <para>
+        The Loopback translator, known by the type name <emphasis>loopback</emphasis>, 
+        provides a quick testing solution.  It supports all SQL constructs and returns 
+        default results, with configurable behavior.
         </para>
-        <itemizedlist mark='opencircle'>
-            <listitem>
-                <para>
-					current
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-					working
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-					critical
-                </para>
-            </listitem>
-        </itemizedlist>
-        <para>For that column, all of the below are valid queries:</para>
-        <programlisting><![CDATA[SELECT * FROM Issue WHERE true = includes (Status, 'current, working' );
+        
+        <table>
+            <title>Execution Properties</title>
+            <tgroup cols="3">
+                <colspec colwidth="3*" />
+                <colspec colwidth="6*" />
+                <colspec colwidth="2*" />
+                <thead>
+                    <row>
+                        <entry>Name</entry>
+                        <entry>Description</entry>
+                        <entry>Default</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>ThrowError</entry>
+                        <entry>true to always throw an error</entry>
+                        <entry>false</entry>
+                    </row>
+                    <row>
+                        <entry>RowCount</entry>
+                        <entry>Rows returned for non-update queries.</entry>
+                        <entry>1</entry>
+                    </row>
+                    <row>
+                        <entry>WaitTime</entry>
+                        <entry>Wait randomly up to this number of milliseconds with each sourc query.</entry>
+                        <entry>0</entry>
+                    </row>
+                    <row>
+                        <entry>PollIntervalInMilli</entry>
+                        <entry>if positive results will be "asynchronously" returned - that is a DataNotAvailableException will be thrown initially and the engine will wait the poll interval before polling for the results.</entry>
+                        <entry>-1</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+
+        <para>
+        There are no import settings for the Loopback translator; it also does not 
+        provide metadata - it should be used as a testing stub.
+        </para>
+        
+    </section>
+    
+    <section>
+        <title>Salesforce Translator</title>
+        <para>
+        The Salesforce translator, known by the type name <emphasis>salesforce</emphasis> 
+        supports the SELECT, DELETE, INSERT and UPDATE operations against a Salesforce.com 
+        account.  It is designed for use with the Teiid Salesforce resource adapter.
+        </para>
+        
+        <table>
+            <title>Execution Properties</title>
+            <tgroup cols="3">
+                <colspec colwidth="3*" />
+                <colspec colwidth="6*" />
+                <colspec colwidth="2*" />
+                <thead>
+                    <row>
+                        <entry>Name</entry>
+                        <entry>Description</entry>
+                        <entry>Default</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>ModelAuditFeilds</entry>
+                        <entry>Audit Model Fields</entry>
+                        <entry>false</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+
+        <para>
+        The Salesforce translator can import metadata, but does not currently 
+        have import settings.
+        </para>
+        
+        <section>
+            <title>Usage</title>
+            <section>
+                <title>SQL Processing</title>
+                    <para>
+                    Salesforce does not provide the same set of
+                    functionality as a relational database. For example, Salesforce does
+                    not support arbitrary joins between tables. However, working in
+                    combination with the Teiid Query Planner, the Salesforce
+                    connector supports nearly all of the SQL syntax supported by the
+                    Teiid.
+                    </para>
+                    <para>
+                    The Salesforce Connector executes SQL commands by “pushing
+                    down” the command to Salesforce whenever possible, based on the
+                    supported capabilities. Teiid will automatically provide
+                    additional database functionality when the Salesforce Connector does
+                    not	explicitly provide support for a given SQL construct. In these
+                    cases, the SQL construct cannot be “pushed down” to the data source,
+                    so it will be evaluated in Teiid, in order to ensure that the
+                    operation is performed.
+                    </para>
+                    <para>
+                    In cases where certain SQL capabilities cannot be pushed down
+                    to Salesforce, Teiid will push down the capabilities that are
+                    supported, and fetch a set of data from Salesforce. Then, Teiid
+                    will evaluate the additional capabilities, creating a subset of the
+                    original data set. Finally, Teiid will pass the result to the
+                    client.
+                    </para>
+    
+                    <programlisting language="SQL"><![CDATA[SELECT sum(Reports) FROM Supervisor where Division = 'customer support';]]></programlisting>
+    
+                    <para>
+                    Neither Salesforce nor the Salesforce Connector support
+                    the sum() scalar function, but they do support CompareCriteriaEquals,
+                    so the query that is passed to Salesforce by the connector will be
+                    transformed to this query.
+                    </para>
+                    
+                    <programlisting language="SQL"><![CDATA[SELECT Reports FROM Supervisor where Division = 'customer support';]]></programlisting>
+    
+                    <para>
+                    The sum() scalar function will be applied by the Teiid Query Engine to 
+                    the result set returned by the connector.
+                    </para>
+                    
+                    <para>
+                    In some cases multiple calls to the Salesforce application
+                    will be made to support the SQL passed to the connector.
+                    </para>
+                    
+                    <programlisting language="SQL"><![CDATA[DELETE From Case WHERE Status = 'Closed';]]></programlisting>
+                    
+                    <para>
+                    The API in Salesforce to delete objects only supports
+                    deleting by ID. In order to accomplish this the Salesforce connector
+                    will first execute a query to get the IDs of the correct objects, and
+                    then delete those objects. So the above DELETE command will result in
+                    the following two commands.
+                    </para>
+                    
+                    <programlisting language="SQL"><![CDATA[SELECT ID From Case WHERE Status = 'Closed';
+DELETE From Case where ID IN (<result of query>);]]></programlisting>
+
+                    <para>
+                    *The Salesforce API DELETE call is not expressed in SQL, but
+                    the above is an SQL equivalent expression.
+                    </para>
+                    
+                    <para>
+                    It's useful to be aware of unsupported capabilities, in order
+                    to avoid fetching large data sets from Salesforce and making you
+                    queries as performant as possible. 
+                    See all <link linkend="sf_supported">Supported Capabilities</link>.
+                    </para>
+                    
+                </section>
+                
+                <section>
+                    <title>Selecting from Multi-Select Picklists</title>
+                    <para>
+                    A multi-select picklist is a field type in Salesforce that can
+                    contain multiple values in a single field. Query criteria operators
+                    for fields of this type in SOQL are limited to EQ, NE, includes and
+                    excludes. The full Salesforce documentation for selecting from
+                    mullti-select picklists can be found at the following link.
+                    <ulink url="http://www.salesforce.com/us/developer/docs/api/index_Left.htm#StartTopic=Content%2Fsforce_api_calls_soql_querying_multiselect_picklists.htm|SkinName=webhelp">Querying Mulit-select Picklists</ulink>
+                    </para>
+        
+                    <para>
+                    Teiid SQL does not support the includes or
+                    excludes operators, but the Salesforce connector provides user
+                    defined function definitions for these operators that provided
+                    equivalent functionality for fields of type multi-select. The
+                    definition for the functions is:
+                    </para>
+                    
+                    <programlisting>boolean includes(Column column, String param)
+boolean excludes(Column column, String param)</programlisting>
+
+                    <para>
+                    For example, take a single multi-select picklist column
+                    called Status that contains all of these values.
+                    </para>
+                    
+                    <itemizedlist mark='opencircle'>
+                        <listitem>
+                            <para>current</para>
+                        </listitem>
+                        <listitem>
+                            <para>working</para>
+                        </listitem>
+                        <listitem>
+                            <para>critical</para>
+                        </listitem>
+                    </itemizedlist>
+                
+                    <para>
+                    For that column, all of the below are valid queries:
+                    </para>
+                    
+                    <programlisting language="SQL"><![CDATA[SELECT * FROM Issue WHERE true = includes (Status, 'current, working' );
 SELECT * FROM Issue WHERE true = excludes (Status, 'current, working' );
 SELECT * FROM Issue WHERE true = includes (Status, 'current;working, critical' );]]></programlisting>
-        <para>EQ and NE criteria will pass to Salesforce as supplied. For
-			example, these queries will not be modified by the connector.
-        </para>
-        <programlisting><![CDATA[SELECT * FROM Issue WHERE Status = 'current';
+
+                    <para>
+                    EQ and NE criteria will pass to Salesforce as supplied. For
+                    example, these queries will not be modified by the connector.
+                    </para>
+                    
+                    <programlisting language="SQL"><![CDATA[SELECT * FROM Issue WHERE Status = 'current';
 SELECT * FROM Issue WHERE Status = 'current;critical';
 SELECT * FROM Issue WHERE Status != 'current;working';]]></programlisting>
-	</section>
-    <section>
-        <title>Selecting All Objects</title>
-        <para>
-			The Salesforce connector supports the calling the queryAll operation
-			from the Salesforce API. The queryAll operation is equivalent
-			to the query operation with the exception that it returns data about
-            <emphasis role="strong">all current and deleted</emphasis>
-			objects in the system.
-        </para>
-        <para>The connector determines if it will call the
-			query or queryAll operation via reference to the
-			 isDeleted property present on each  Salesforce object, 
-			 and modeled as a column on each table generated by
-			the importer. By default this value is set to
-			False when the model is generated and thus the connector calls
-			query. Users are free to change the value in the model to True,
-			changing the default behavior of the connector to be queryAll.
-        </para>
-        <para>The behavior is different if isDeleted is used as a parameter
-			in the query. If the isDeleted column is used as a parameter
-			in the query, and the value is 'true' the connector will call queryAll.
-        </para>
-        <programlisting><![CDATA[select * from Contact where isDeleted = true;]]></programlisting>
-        <para>If the isDeleted column is used as a parameter in the query,
-			and the value is 'false' the connector perform the default behavior
-			will call query.
-        </para>
-        <programlisting><![CDATA[
-			select * from Contact where isDeleted = false;           
-         ]]>
-        </programlisting>
-    </section>
-    <section>
-        <title>Selecting Updated Objects</title>
-        <para>If the option is selected when importing metadata from
-			Salesforce, a GetUpdated procedure is generated in the model with
-			the following sturcture:
-        </para>
-        <programlisting><![CDATA[GetUpdated (ObjectName IN string,
+
+                </section>
+                <section>
+                    <title>Selecting All Objects</title>
+                    <para>
+                    The Salesforce connector supports the calling the queryAll operation
+                    from the Salesforce API. The queryAll operation is equivalent
+                    to the query operation with the exception that it returns data about
+                    <emphasis role="strong">all current and deleted</emphasis>
+                    objects in the system.
+                    </para>
+                    <para>
+                    The connector determines if it will call the
+                    query or queryAll operation via reference to the
+                    isDeleted property present on each  Salesforce object, 
+                    and modeled as a column on each table generated by
+                    the importer. By default this value is set to
+                    False when the model is generated and thus the connector calls
+                    query. Users are free to change the value in the model to True,
+                    changing the default behavior of the connector to be queryAll.
+                    </para>
+                    <para>
+                    The behavior is different if isDeleted is used as a parameter
+                    in the query. If the isDeleted column is used as a parameter
+                    in the query, and the value is 'true' the connector will call queryAll.
+                    </para>
+                    
+                    <programlisting language="SQL"><![CDATA[select * from Contact where isDeleted = true;</programlisting>
+                    
+                    <para>
+                    If the isDeleted column is used as a parameter in the query,
+                    and the value is 'false' the connector perform the default behavior
+                    will call query.
+                    </para>
+                    
+                    <programlisting language="SQL"><![CDATA[select * from Contact where isDeleted = false;]]></programlisting>
+                </section>
+                <section>
+                    <title>Selecting Updated Objects</title>
+                    <para>
+                    If the option is selected when importing metadata from
+                    Salesforce, a GetUpdated procedure is generated in the model with
+                    the following structure:
+                    </para>
+                    
+                    <programlisting language="SQL"><![CDATA[GetUpdated (ObjectName IN string,
 	StartDate IN datetime, 
 	EndDate IN datetime,
 	LatestDateCovered OUT datetime)
 returns
 	ID string]]></programlisting>
-        <para>
-			See the description of the
-            <ulink
-				url="http://www.salesforce.com/us/developer/docs/api/Content/sforce_api_calls_getupdated.htm">GetUpdated
-            </ulink>
-			operation in the Salesforce documentation for usage details.
-        </para>
-    </section>
-    <section>
-        <title>Selecting Deleted Objects</title>
-        <para>If the option is selected when importing metadata from
-			Salesforce, a GetDeleted procedure is generated in the model with
-			the following sturcture:
-        </para>
-        <programlisting><![CDATA[GetDeleted (ObjectName IN string,
+	
+                    <para>
+                    See the description of the
+                    <ulink url="http://www.salesforce.com/us/developer/docs/api/Content/sforce_api_calls_getupdated.htm">GetUpdated</ulink>
+                    operation in the Salesforce documentation for usage details.
+                    </para>
+                    
+                </section>
+                <section>
+                    <title>Selecting Deleted Objects</title>
+                    <para>
+                    If the option is selected when importing metadata from
+                    Salesforce, a GetDeleted procedure is generated in the model with
+                    the following structure:
+                    </para>
+                    
+                    <programlisting language="SQL"><![CDATA[GetDeleted (ObjectName IN string,
 	StartDate IN datetime, 
 	EndDate IN datetime,
 	EarliestDateAvailable OUT datetime,
@@ -570,173 +781,256 @@ returns
 returns
 	ID string,
 	DeletedDate datetime]]></programlisting>
-        <para>
-			See the description of the
-            <ulink
-				url="http://www.salesforce.com/us/developer/docs/api/Content/sforce_api_calls_getdeleted.htm">GetDeleted
-            </ulink>
-			operation in the Salesforce documentation for usage details.
-        </para>
-    </section>
-    <section>
-        <title>Relationship Queries</title>
-        <para>Salesforce does not support joins like a relational database, 
-        but it does have support for queries that include parent-to-child
-        or child-to-parent relationships between objects.  These are termed 
-        Relationship Queries.  The SalesForce connector supports Relationship 
-        Queries through Outer Join syntax.
-        </para>
-        <programlisting><![CDATA[SELECT Account.name, Contact.Name from Contact LEFT OUTER JOIN Account 
-on Contact.Accountid = Account.id]]></programlisting>
-        <para>This query shows the correct syntax to query a SalesForce model with 
-        to produce a relationship query from child to parent.  It resolves to the 
-        following query to SalesForce.
-        </para>
-        <programlisting><![CDATA[SELECT Contact.Account.Name, Contact.Name FROM Contact]]>
-        </programlisting>
-        <programlisting><![CDATA[select Contact.Name, Account.Name from Account Left outer Join Contact
-on Contact.Accountid = Account.id]]></programlisting>
-        <para>This query shows the correct syntax to query a SalesForce model with 
-        to produce a relationship query from parent to child.  It resolves to the 
-        following query to SalesForce.
-        </para>
-        <programlisting><![CDATA[SELECT Account.Name, (SELECT Contact.Name FROM
-Account.Contacts) FROM Account]]></programlisting>
-        <para>
-			See the description of the
-            <ulink
-				url="http://www.salesforce.com/us/developer/docs/api/index_Left.htm#StartTopic=Content/sforce_api_calls_soql_relationships.htm">Relationship Queries
-            </ulink>
-			operation in the SalesForce documentation for limitations.
-        </para>
-	    </section>
-		<section id="sf_supported">
-		<title>Supported Capabilities</title>
-		<para>The following are the the connector capabilities supported by
-			the Salesforce Connector. These SQL constructs will be pushed down to
-			Salesforce.</para>
-		<itemizedlist mark='opencircle'>
-		<listitem><para>
-				SELECT command
-			</para></listitem>
-		<listitem><para>
-				INSERT Command
-			</para></listitem>
-		<listitem><para>
-				UPDATE Command
-			</para></listitem>
-		<listitem><para>
-				DELETE Command
-			</para></listitem>
-		<listitem><para>
-				CompareCriteriaEquals
-			</para></listitem>
-		<listitem><para>
-				InCriteria
-			</para></listitem>
-		<listitem><para>
-				LikeCriteria - Supported for String fields only.
-			</para></listitem>
-		<listitem><para>
-				RowLimit
-			</para></listitem>
-		<listitem><para>
-				AggregatesCountStar
-			</para></listitem>
-		<listitem><para>
-				NotCriteria
-			</para></listitem>
-		<listitem><para>
-				OrCriteria
-			</para></listitem>
-		<listitem><para>
-				CompareCriteriaOrdered
-			</para></listitem>
-		<listitem><para>
-				OuterJoins with join criteria KEY
-			</para></listitem>
-		</itemizedlist>
-	</section>
-</section>
-</section>
-<section>
-<title>Web Services Translator</title>
-<para>The Web Services translator, known by the type name <emphasis>ws</emphasis>, exposes stored procedures for calling web services backed by a Teiid WS resource adapter.  
-It will commonly be used with the <link linkend="texttable">TEXTTABLE</link> or <link linkend="xmltable">XMLTABLE</link> table functions to use CSV or XML formated data.</para>
-<table>
-<title>Execution Properties</title>
-<tgroup cols="3">
-<thead>
-<row>
-<entry>Name</entry>
-<entry>Description</entry>
-<entry>Default</entry>
-</row>
-</thead>
-<tbody>
-<row>
-<entry>DefaultBinding</entry>
-<entry>The binding that should be used if one is not specified.  Can be one of HTTP, SOAP11, or SOAP12</entry>
-<entry>SOAP12</entry>
-</row>
-<row>
-<entry>DefaultServiceMode</entry>
-<entry>The default service mode.  For SOAP, MESSAGE mode indicates that the request will contain the entire SOAP envelope and not just the contents of the SOAP body.  Can be one of MESSAGE or PAYLOAD</entry>
-<entry>PAYLOAD</entry>
-</row>
-<row>
-<entry>XMLParamName</entry>
-<entry>Used with the HTTP binding (typically with the GET method) to indicate that the request document should be part of the query string.</entry>
-<entry>null - unused</entry>
-</row>
-</tbody>
-</tgroup>
-</table>
-<para>There are ws importer settings, but it does provide metadata for dynamic vdbs.</para>
-<section><title>Usage</title>
-<para>The WS translator exposes low level procedures for accessing web services.  See also the ws-weather example in the kit.</para>
-<section>
-<title>Invoke Procedure</title>
-<para>invoke allows for multiple binding, or protocol modes, including HTTP, SOAP11, and SOAP12. 
-<programlisting>Procedure invoke(binding in STRING, action in STRING, request in XML, endpoint in STRING) returns XML</programlisting>
-</para>
-<para>The binding may be one of null (to use the default) HTTP, SOAP11, or SOAP12.  Action with a SOAP binding indicates the SOAPAction value.  Action with a HTTP binding indicates the HTTP method (GET, POST, etc.), which defaults to POST.</para>
-<para>A null value for the binding or endpoint will use the default value.  The default endpoint is specified in the WS resource adapter configuration.  The endpoint URL may be absolute or relative.  If it's relative then it will be combined with the default endpoint.</para>
-<para>Since multiple parameters are not required to have values, it is often more clear to call the invoke procedure with named parameter syntax. e.g. <programlisting>call invoke(binding=>'HTTP', action=>'GET')</programlisting></para>
-<para>The request XML should be a valid XML document or root element.</para>
-</section>
-<section>
-<title>InvokeHTTP Procedure</title>
-<para>invokeHttp can return the byte contents of an HTTP(S) call. 
-<programlisting>Procedure invokeHttp(action in STRING, request in OBJECT, endpoint in STRING, contentType out STRING) returns BLOB</programlisting>
-</para>
-<para>Action indicates the HTTP method (GET, POST, etc.), which defaults to POST.</para>
-<para>A null value for endpoint will use the default value.  The default endpoint is specified in the WS resource adapter configuration.  The endpoint URL may be absolute or relative.  If it's relative then it will be combined with the default endpoint.</para>
-<para>Since multiple parameters are not required to have values, it is often more clear to call the invoke procedure with named parameter syntax. e.g. <programlisting>call invokeHttp(action=>'GET')</programlisting></para>
-<para>The request can be one of SQLXML, STRING, BLOB, or CLOB.  The request will be sent as the POST payload in byte form.  For STRING/CLOB values this will default to the UTF-8 encoding.  To control the byte encoding, see the <link linkend="to_bytes">to_bytes</link> function.</para>
-</section>
-</section>
-</section>
-</section>
-<section id="dynamic_vdbs">
-<title>Dynamic VDBs</title>
-<para>
-Teiid integration is available via a "Dynamic VDB" without the need for Teiid Designer tooling.  While this mode of operation does not yet allow for the creation of view layers, the underlying sources can still be queried as if they are a single source.  See the kit's "teiid-example/dynamicvdb-*" for working examples.
-</para>
-<para>
-To build a dynamic vdb, you'll need to create a "&lt;some-name&gt;-vdb.xml" file.  The XML file captures information about the VDB, the sources it integrate, and preferences for importing metadata.
-</para>
-<note>
-<para>
-VDB name pattern must adhere to "-vdb.xml"  for the Teiid VDB deployer to recognize this file as a dynamic VDB.
-</para>
-</note>
-<para>
-my-vdb.xml: (The vdb-deployer.xml schema for this file is available in the schema folder under the docs with the Teiid distribution.)
-</para>
-<programlisting><![CDATA[<vdb name="${vdb-name}" version=${vdb-version}>
 
-    <property name="UseConnectorMetadata" value="..."/>
+                    <para>
+                    See the description of the
+                    <ulink url="http://www.salesforce.com/us/developer/docs/api/Content/sforce_api_calls_getdeleted.htm">GetDeleted</ulink>
+                    operation in the Salesforce documentation for usage details.
+                    </para>
+                    
+                </section>
+                <section>
+                    <title>Relationship Queries</title>
+                    <para>
+                    Salesforce does not support joins like a relational database, 
+                    but it does have support for queries that include parent-to-child
+                    or child-to-parent relationships between objects.  These are termed 
+                    Relationship Queries.  The SalesForce connector supports Relationship 
+                    Queries through Outer Join syntax.
+                    </para>
+                    
+                    <programlisting language="SQL"><![CDATA[SELECT Account.name, Contact.Name from Contact LEFT OUTER JOIN Account 
+on Contact.Accountid = Account.id]]></programlisting>
+
+                    <para>
+                    This query shows the correct syntax to query a SalesForce model with 
+                    to produce a relationship query from child to parent.  It resolves to the 
+                    following query to SalesForce.
+                    </para>
+                    
+                    <programlisting language="SQL"><![CDATA[SELECT Contact.Account.Name, Contact.Name FROM Contact]]></programlisting>
+                    
+                    <programlisting language="SQL"><![CDATA[select Contact.Name, Account.Name from Account Left outer Join Contact
+on Contact.Accountid = Account.id]]></programlisting>
+    
+                    <para>
+                    This query shows the correct syntax to query a SalesForce model with 
+                    to produce a relationship query from parent to child.  It resolves to the 
+                    following query to SalesForce.
+                    </para>
+                    
+                    <programlisting language="SQL"><![CDATA[SELECT Account.Name, (SELECT Contact.Name FROM
+Account.Contacts) FROM Account]]></programlisting>
+        
+                    <para>
+                    See the description of the
+                    <ulink url="http://www.salesforce.com/us/developer/docs/api/index_Left.htm#StartTopic=Content/sforce_api_calls_soql_relationships.htm">Relationship Queries</ulink>
+                    operation in the SalesForce documentation for limitations.
+                    </para>
+                </section>
+        
+                <section id="sf_supported">
+                    <title>Supported Capabilities</title>
+                    <para>
+                    The following are the the connector capabilities supported by
+                    the Salesforce Connector. These SQL constructs will be pushed down to
+                    Salesforce.
+                    </para>
+                    
+                    <itemizedlist mark='opencircle'>
+                        <listitem>
+                            <para>SELECT command</para>
+                        </listitem>
+                        <listitem>
+                            <para>INSERT Command</para>
+                        </listitem>
+                        <listitem>
+                            <para>UPDATE Command</para>
+                        </listitem>
+                        <listitem>
+                            <para>DELETE Command</para>
+                        </listitem>
+                        <listitem>
+                            <para>CompareCriteriaEquals</para>
+                        </listitem>
+                        <listitem>
+                            <para>InCriteria</para>
+                        </listitem>
+                        <listitem>
+                            <para>LikeCriteria - Supported for String fields only.</para>
+                        </listitem>
+                        <listitem>
+                            <para>RowLimit</para>
+                        </listitem>
+                        <listitem>
+                            <para>AggregatesCountStar</para>
+                        </listitem>
+                        <listitem>
+                            <para>NotCriteria</para>
+                        </listitem>
+                        <listitem>
+                            <para>OrCriteria</para>
+                        </listitem>
+                        <listitem>
+                            <para>CompareCriteriaOrdered</para>
+                        </listitem>
+                        <listitem>
+                            <para>OuterJoins with join criteria KEY</para>
+                        </listitem>
+                    </itemizedlist>
+                </section>
+                
+            </section>
+        </section>
+        
+        <section>
+            <title>Web Services Translator</title>
+            <para>
+            The Web Services translator, known by the type name <emphasis>ws</emphasis>, 
+            exposes stored procedures for calling web services backed by a Teiid WS 
+            resource adapter. It will commonly be used with the 
+            <link linkend="texttable">TEXTTABLE</link> or 
+            <link linkend="xmltable">XMLTABLE</link> table functions to use CSV or XML 
+            formated data.
+            </para>
+            
+            <table>
+                <title>Execution Properties</title>
+                <tgroup cols="3">
+                    <colspec colwidth="3*" />
+                    <colspec colwidth="6*" />
+                    <colspec colwidth="2*" />
+                    <thead>
+                        <row>
+                            <entry>Name</entry>
+                            <entry>Description</entry>
+                            <entry>Default</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>DefaultBinding</entry>
+                            <entry>The binding that should be used if one is not specified.  Can be one of HTTP, SOAP11, or SOAP12</entry>
+                            <entry>SOAP12</entry>
+                        </row>
+                        <row>
+                            <entry>DefaultServiceMode</entry>
+                            <entry>The default service mode.  For SOAP, MESSAGE mode indicates that the request will contain the entire SOAP envelope and not just the contents of the SOAP body.  Can be one of MESSAGE or PAYLOAD</entry>
+                            <entry>PAYLOAD</entry>
+                        </row>
+                        <row>
+                            <entry>XMLParamName</entry>
+                            <entry>Used with the HTTP binding (typically with the GET method) to indicate that the request document should be part of the query string.</entry>
+                            <entry>null - unused</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            
+            <para>
+            There are ws importer settings, but it does provide metadata for dynamic VDBs.
+            </para>
+    
+            <section>
+                <title>Usage</title>
+                <para>
+                The WS translator exposes low level procedures for accessing web services.  
+                See also the ws-weather example in the kit.
+                </para>
+
+                <section>
+                    <title>Invoke Procedure</title>
+                    <para>
+                    Invoke allows for multiple binding, or protocol modes, including 
+                    HTTP, SOAP11, and SOAP12. 
+                    </para>
+                    <programlisting>Procedure invoke(binding in STRING, action in STRING, request in XML, endpoint in STRING) returns XML</programlisting>
+
+                    <para>
+                    The binding may be one of null (to use the default) HTTP, SOAP11, or 
+                    SOAP12.  Action with a SOAP binding indicates the SOAPAction value.  
+                    Action with a HTTP binding indicates the HTTP method (GET, POST, etc.), 
+                    which defaults to POST.
+                    </para>
+                    
+                    <para>
+                    A null value for the binding or endpoint will use the default value.  
+                    The default endpoint is specified in the WS resource adapter 
+                    configuration.  The endpoint URL may be absolute or relative.  If it's 
+                    relative then it will be combined with the default endpoint.
+                    </para>
+                    
+                    <para>
+                    Since multiple parameters are not required to have values, it is often 
+                    more clear to call the invoke procedure with named parameter syntax. 
+                    </para> 
+                    <programlisting>call invoke(binding=>'HTTP', action=>'GET')</programlisting>
+                    <para>The request XML should be a valid XML document or root element.</para>
+                </section>
+
+                <section>
+                    <title>InvokeHTTP Procedure</title>
+                    <para>
+                    <methodname>invokeHttp</methodname> can return the byte contents of an HTTP(S) call. 
+                    </para>
+                    <programlisting>Procedure invokeHttp(action in STRING, request in OBJECT, endpoint in STRING, contentType out STRING) returns BLOB</programlisting>
+        
+                    <para>
+                    Action indicates the HTTP method (GET, POST, etc.), which defaults to POST.
+                    </para>
+                    <para>
+                    A null value for endpoint will use the default value.  The default endpoint 
+                    is specified in the WS resource adapter configuration.  The endpoint URL may 
+                    be absolute or relative.  If it's relative then it will be combined with the 
+                    default endpoint.
+                    </para>
+                    <para>
+                    Since multiple parameters are not required to have values, it is often more 
+                    clear to call the invoke procedure with named parameter syntax.
+                    </para>
+                    <programlisting>call invokeHttp(action=>'GET')</programlisting>
+                    
+                    <para>
+                    The request can be one of SQLXML, STRING, BLOB, or CLOB.  The request will be 
+                    sent as the POST payload in byte form.  For STRING/CLOB values this will 
+                    default to the UTF-8 encoding.  To control the byte encoding, see the 
+                    <link linkend="to_bytes">to_bytes</link> function.
+                    </para>
+                </section>
+            </section>
+        </section>
+    </section>
+    
+    <section id="dynamic_vdbs">
+        <title>Dynamic VDBs</title>
+        <para>
+        Teiid integration is available via a "Dynamic VDB" without the need for Teiid Designer 
+        tooling.  While this mode of operation does not yet allow for the creation of view 
+        layers, the underlying sources can still be queried as if they are a single source.  See 
+        the kit's "teiid-example/dynamicvdb-*" for working examples.
+        </para>
+
+        <para>
+        To build a dynamic VDB, you'll need to create a 
+        <filename><replaceable>SOME-NAME</replaceable>-vdb.xml</filename> file.  The XML file captures 
+        information about the VDB, the sources it integrate, and preferences for importing metadata.
+        </para>
+        
+        <note>
+            <para>
+            VDB name pattern must adhere to "-vdb.xml"  for the Teiid VDB deployer to 
+            recognize this file as a dynamic VDB.
+            </para>
+        </note>
+        
+        <para>
+        my-vdb.xml: (The vdb-deployer.xml schema for this file is available in the schema 
+        folder under the docs with the Teiid distribution.)
+        </para>
+        
+        <programlisting role="XML" language="XML"><![CDATA[<vdb name="${vdb-name}" version="${vdb-version}">
+
+    <property name="UseConnectorMetadata" value="..." />
 
     <!-- define a model fragment for each data source -->
     <model name="${model-name}">
@@ -751,107 +1045,238 @@ my-vdb.xml: (The vdb-deployer.xml schema for this file is available in the schem
  
     <!-- create translator instances that override default properties -->
 
-    <translator name="${translator-name}" type="${translator-type}"/>
+    <translator name="${translator-name}" type="${translator-type}" />
  
-        <property name="..." value="..."/> 
+        <property name="..." value="..." /> 
         ...
 
     </translator> 
-</vdb>
-]]></programlisting>
-<section>
-<title>VDB Element</title>
-<itemizedlist>
-	<title>Attributes</title>
-	<listitem><para><emphasis>name</emphasis> - The name of the VDB.  The VDB name referenced through the driver or datasource during the connection time.</para>
-	</listitem>
-	<listitem><para><emphasis>version</emphasis> - The version of the VDB (should be an positive integer).  This determines the deployed directory location (see Name), and provides an explicit versioning mechanism to the VDB name.</para>
-	</listitem>
-</itemizedlist>
-<itemizedlist>
-	<title>Property Elements</title>
-	<listitem><para><emphasis>UseConnectorMetadata</emphasis> - Setting to use connector supplied metadata. Can be "true" or "cached".  "true" will obtain metadata once for every launch of Teiid.   "cached" will save a file containing the metadata into the &lt;jboss-install&gt;/server/&lt;profile&gt;/data/teiid directory</para>
-	</listitem>
-</itemizedlist>
-</section>
-<section>
-<title>Model Element</title>
-<itemizedlist>
-	<title>Attributes</title>
-	<listitem><para><emphasis>name</emphasis> - The name of the model is used as a top level schema name for all of the  metadata imported from the connector.  The name should be unique among all Models in the VDB and should not contain the '.' character.</para>
-	</listitem>
-	<listitem><para><emphasis>version</emphasis> - The version of the VDB (should be an positive integer).  This determines the deployed directory location (see Name), and provides an explicit versioning mechanism to the VDB name.</para>
-	</listitem>
-</itemizedlist>
-<itemizedlist>
-	<title>Source Element</title>
-	<listitem><para><emphasis>name</emphasis> - The name of the source to use for this model. This can be any name you like, but will typically be the same as the model name.  Having a name different than the model name is only useful in multi-source scenarios.
-	</para></listitem>
-	<listitem><para><emphasis>translator-name</emphasis> - The name or type of the Teiid Translator to use.  Possible values include the built-in types (ws, file, ldap, oracle, sqlserver, db2, derby, etc.) and translators defined in the translators section. 
-	</para></listitem>
-	<listitem><para><emphasis>connection-jndi-name</emphasis> - The JNDI name of this source's connection factory. There should be a corresponding "-ds.xml" file that defines the connection factory in the JBoss AS.  Check out the  deploying vdb dependencies section for info. You also need to deploy these connection factories before you can deploy the vdb.
-	</para></listitem>
-</itemizedlist>
-<itemizedlist>
-	<title>Property Elements</title>
-	<listitem><para><emphasis>importer.&lt;propertyname&gt;</emphasis> - Property to be used by the connector importer for the model for purposes importing metadata.  See possible property name/values in the Translator specific section. Note that using these properties you can narrow or widen the data elements available for integration.
-	</para></listitem>
-</itemizedlist>
-</section>
-<section>
-<title>Translator Element</title>
-<itemizedlist>
-	<title>Attributes</title>
-	<listitem><para><emphasis>name</emphasis> - The name of the the Translator.  Referenced by the source element.</para>
-	</listitem>
-	<listitem><para><emphasis>type</emphasis> - The base type of the Translator.  Can be one of the built-in types (ws, file, ldap, oracle, sqlserver, db2, derby, etc.).
-	</para>
-	</listitem>
-</itemizedlist>
-<itemizedlist>
-	<title>Property Elements</title>
-	<listitem><para>Set a value that overrides a translator default property.  See possible property name/values in the Translator specific section.
-	</para></listitem>
-</itemizedlist>
-</section>
-</section>
-<section>
-    <title>Multi-Source Models and VDB</title>
-    <para>When you have multiple instances of data that are using identical schema (horizantal sharding), Teiid can help you
-    aggregate data accoss all the instances, using "multi-source" models. In this scenario, instead of creating/importing a model for
-    every data source, user needs to define a one source model that represents the schema and configure multiple data 
-    "sources" underneath it. During runtime, when a query issued aginst this model, the query engine analyzes 
-    the information and gathers the required data from 
-    all the sources configured and aggregates the results and provides in a single result set.</para>
+</vdb>]]></programlisting>
+
+        <section>
+            <title>VDB Element</title>
+            <itemizedlist>
+                <title>Attributes</title>
+                <listitem>
+                    <para>
+                    <emphasis>name</emphasis>
+                    </para>
+                    <para>
+                    The name of the VDB.  The VDB name 
+                    referenced through the driver or datasource during the connection time.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>version</emphasis>
+                    </para>
+                    <para>
+                    The version of the VDB (should be an 
+                    positive integer).  This determines the deployed directory location 
+                    (see Name), and provides an explicit versioning mechanism to the VDB 
+                    name.
+                    </para>
+                </listitem>
+            </itemizedlist>
+            
+            <itemizedlist>
+                <title>Property Elements</title>
+                <listitem>
+                    <para>
+                    <emphasis>UseConnectorMetadata</emphasis>
+                    </para>
+                    <para>
+                    Setting to use connector 
+                    supplied metadata. Can be "true" or "cached".  "true" will obtain 
+                    metadata once for every launch of Teiid.   "cached" will save a file 
+                    containing the metadata into the 
+                    <filename><replaceable>PROFILE</replaceable>/data/teiid</filename> directory
+                    </para>
+                </listitem>
+            </itemizedlist>
+            
+        </section>
+        
+        <section>
+            <title>Model Element</title>
+            <itemizedlist>
+                <title>Attributes</title>
+                <listitem>
+                    <para>
+                    <emphasis>name</emphasis>
+                    </para>
+                    <para>
+                    The name of the model is used as a 
+                    top level schema name for all of the  metadata imported from the 
+                    connector.  The name should be unique among all Models in the VDB and 
+                    should not contain the '.' character.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>version</emphasis>
+                    </para>
+                    <para>
+                    The version of the VDB (should be an 
+                    positive integer).  This determines the deployed directory location 
+                    (see Name), and provides an explicit versioning mechanism to the VDB 
+                    name.
+                    </para>
+                </listitem>
+            </itemizedlist>
+            
+            <itemizedlist>
+                <title>Source Element</title>
+                <listitem>
+                    <para>
+                    <emphasis>name</emphasis>
+                    </para>
+                    <para>
+                    The name of the source to use for this 
+                    model. This can be any name you like, but will typically be the same 
+                    as the model name.  Having a name different than the model name is 
+                    only useful in multi-source scenarios.	
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>translator-name</emphasis>
+                    </para>
+                    <para>
+                    The name or type of the Teiid Translator to use.  Possible values include 
+                    the built-in types (ws, file, ldap, oracle, sqlserver, db2, derby, etc.) 
+                    and translators defined in the translators section. 
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>connection-jndi-name</emphasis>
+                    </para>
+                    <para>
+                    The JNDI name of this source's connection factory. There should be a 
+                    corresponding "-ds.xml" file that defines the connection factory in 
+                    the JBoss AS.  Check out the  deploying VDB dependencies section for 
+                    info. You also need to deploy these connection factories before you 
+                    can deploy the VDB.	
+                    </para>
+                </listitem>
+            </itemizedlist>
+            
+            <itemizedlist>
+                <title>Property Elements</title>
+                <listitem>
+                    <para>
+                    <emphasis>importer.&lt;propertyname&gt;</emphasis>
+                    </para>
+                    <para>
+                    Property to be used by the connector importer for the model for purposes 
+                    importing metadata.  See possible property name/values in the 
+                    Translator specific section. Note that using these properties you 
+                    can narrow or widen the data elements available for integration.
+                    </para>
+                </listitem>
+            </itemizedlist>
+            
+        </section>
+        <section>
+            <title>Translator Element</title>
+            <itemizedlist>
+                <title>Attributes</title>
+                <listitem>
+                    <para>
+                    <emphasis>name</emphasis>
+                    </para>
+                    <para>
+                    The name of the the Translator.  Referenced by the source element.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>type</emphasis>
+                    </para>
+                    <para>
+                    The base type of the Translator.  Can be one of the built-in types (ws, 
+                    file, ldap, oracle, sqlserver, db2, derby, etc.).
+                    </para>
+                </listitem>
+            </itemizedlist>
+            
+            <itemizedlist>
+                <title>Property Elements</title>
+                <listitem>
+                    <para>
+                    Set a value that overrides a translator default property.  See 
+                    possible property name/values in the Translator specific section.
+                    </para>
+                </listitem>
+            </itemizedlist>        
+        </section>
+        
+    </section>
+    <section>
+        <title>Multi-Source Models and VDB</title>
+        <para>
+        When you have multiple instances of data that are using identical schema 
+        (horizontal sharding), Teiid can help you aggregate data across all the 
+        instances, using "multi-source" models. In this scenario, instead of 
+        creating/importing a model for every data source, user needs to define one 
+        source model that represents the schema and configure multiple data "sources" 
+        underneath it. During runtime, when a query issued against this model, the query 
+        engine analyzes the information and gathers the required data from all the 
+        sources configured and aggregates the results and provides in a single result set.
+        </para>
     
-    <para>To mark a model as "multi-source", the user needs to supply property called "supports-multi-source-bindings", in the "vdb.xml" file. 
-    Also, the user need to define multiple sources. Here is code example showing single model with multiple sources defined.</para>
-    <programlisting><![CDATA[
-<vdb name="vdbname" version="1">
+        <para>
+        To mark a model as multi-source, the user needs to supply property called 
+        <property>supports-multi-source-bindings</property>, in the "vdb.xml" file.  
+        Also, the user needs to define multiple sources. Here is code example showing single model with 
+        multiple sources defined.
+        </para>
+        
+        <programlisting role="XML" language="XML"><![CDATA[<vdb name="vdbname" version="1">
     <model visible="true" type="PHYSICAL" name="Customers" path="/Test/Customers.xmi">
-          <property name="supports-multi-source-bindings" value="true"/>
-          <source name="chicago" translator-name="oracle" connection-jndi-name="chicago-customers"/>
-          <source name="newyork" translator-name="oracle" connection-jndi-name="newyork-customers"/>
-          <source name="la" translator-name="oracle" connection-jndi-name="la-customers"/>
-     </model>
-</vdb>    
-    ]]></programlisting>    
-    <para>In the above example, the VDB defined has single model called "Customers", that has multiple sources, namely 
-    chicago, newyork, la that define different instances of data. Every time a model is marked as "multi-source", the 
-    runtime engine adds a additional column called "SOURCE_NAME" to every table in that model. This column maps to the 
-    source's name from the XML. For example, in the above xml that would be "chicago", "la", "newyork". Essentially then 
-    user can write queries like</para>
-    <programlisting><![CDATA[ 
-      select * from table where SOURCE_NAME = 'newyork'
-      update table column=value  where SOURCE_NAME='newyork'
-      delete from table where column = x and SOURCE_NAME='newyork'    
-    ]]></programlisting>    
-    <para>Note that when user do not supply the "SOURCE_NAME" in the criteria, it applies to all the sources. Unfortunately 
-    Teiid currently do not support INSERT, this planned for future releases. Another useful feature along with this 
-    feature is "partial results" to skip unavailble souces if they are down.</para>
-    <note><para>Currenlty the tooling support for managing the multi-source feature is limited, so if you need to use this feature
-    build the VDB as usual in the Teiid Designer and then edit the "vdb.xml" file in the VDB archive using a Text editor to 
-    add the addtional sources as defined above. Make sure that you also deploy a data source for each source defined.</para></note>
-</section>
+        <property name="supports-multi-source-bindings" value="true"/>
+        <source name="chicago" 
+            translator-name="oracle" connection-jndi-name="chicago-customers"/>
+        <source name="newyork" 
+            translator-name="oracle" connection-jndi-name="newyork-customers"/>
+        <source name="la" 
+            translator-name="oracle" connection-jndi-name="la-customers"/>
+    </model>
+</vdb>]]></programlisting>
+
+        <para>
+        In the above example, the VDB defined has single model called <literal>Customers</literal>, 
+        that has multiple sources (<literal>chicago</literal>, <literal>newyork</literal>, 
+        and <literal>la</literal>) that define different instances of data. Every 
+        time a model is marked as "multi-source", the 
+        runtime engine adds a additional column called "SOURCE_NAME" to every table in 
+        that model. This column maps to the source's name from the XML. In 
+        the above XML code that would be <literal>chicago</literal>, <literal>la</literal>, 
+        <literal>newyork</literal>. This allows queries like the following:
+        </para>
+        
+        <programlisting language="SQL"><![CDATA[select * from table where SOURCE_NAME = 'newyork'
+update table column=value  where SOURCE_NAME='chicago'
+delete from table where column = x and SOURCE_NAME='la']]></programlisting>
+      
+        <para>
+        Note that when user do not supply the "SOURCE_NAME" in the criteria, it applies 
+        to all the sources. Unfortunately Teiid currently does not support INSERT, this 
+        planned for future releases. Another useful feature along with this feature is 
+        "partial results" to skip unavailable sources if they are down.
+        </para>
+        
+        <note>
+            <para>
+            Currently the tooling support for managing the multi-source feature is 
+            limited, so if you need to use this feature build the VDB as usual in 
+            the Teiid Designer and then edit the "vdb.xml" file in the VDB archive 
+            using a Text editor to add the additional sources as defined above. 
+            You must deploy a data source for each source defined.
+            </para>
+        </note>
+        
+    </section>
 
 </chapter>
