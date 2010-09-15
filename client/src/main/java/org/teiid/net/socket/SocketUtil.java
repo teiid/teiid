@@ -43,6 +43,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
 import org.teiid.core.util.Assertion;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.JDBCPlugin;
 
 
@@ -61,14 +62,12 @@ public class SocketUtil {
     static final String KEYSTORE_TYPE = "org.teiid.ssl.keyStoreType"; //$NON-NLS-1$
     static final String KEYSTORE_PASSWORD = "org.teiid.ssl.keyStorePassword"; //$NON-NLS-1$
     static final String KEYSTORE_FILENAME = "org.teiid.ssl.keyStore"; //$NON-NLS-1$
+    public static final String ALLOW_ANON = "org.teiid.ssl.allowAnon"; //$NON-NLS-1$
     
-    static final String DEFAULT_KEYSTORE_PROTOCOL = "SSLv3"; //$NON-NLS-1$
     static final String DEFAULT_KEYSTORE_TYPE = "JKS"; //$NON-NLS-1$
     
-    public static final String NONE = "none"; //$NON-NLS-1$
-    
     public static final String ANON_CIPHER_SUITE = "TLS_DH_anon_WITH_AES_128_CBC_SHA"; //$NON-NLS-1$
-    public static final String ANON_PROTOCOL = "TLS"; //$NON-NLS-1$
+    public static final String DEFAULT_PROTOCOL = "TLSv1"; //$NON-NLS-1$
     
     public static class SSLSocketFactory {
     	private boolean isAnon;
@@ -93,23 +92,20 @@ public class SocketUtil {
         String keystore = props.getProperty(KEYSTORE_FILENAME); 
         String keystorePassword = props.getProperty(KEYSTORE_PASSWORD); 
         String keystoreType = props.getProperty(KEYSTORE_TYPE, DEFAULT_KEYSTORE_TYPE); 
-        String keystoreProtocol = props.getProperty(PROTOCOL, DEFAULT_KEYSTORE_PROTOCOL); 
+        String keystoreProtocol = props.getProperty(PROTOCOL, DEFAULT_PROTOCOL); 
         String keystoreAlgorithm = props.getProperty(KEYSTORE_ALGORITHM); 
         String truststore = props.getProperty(TRUSTSTORE_FILENAME, keystore); 
         String truststorePassword = props.getProperty(TRUSTSTORE_PASSWORD, keystorePassword); 
         
-        boolean anon = NONE.equalsIgnoreCase(truststore);
+        boolean anon = PropertiesUtils.getBooleanProperty(props, ALLOW_ANON, true);
         
         SSLContext result = null;
-        // 0) anon
         // 1) keystore != null = 2 way SSL (can define a separate truststore too)
         // 2) truststore != null = 1 way SSL (here we can define custom properties for truststore; useful when 
         //    client like a appserver have to define multiple certs without importing 
         //    all the certificates into one single certificate
         // 3) else = javax properties; this is default way to define the SSL anywhere.
-        if (anon) {
-        	result = getAnonSSLContext();
-        } else if (keystore != null) {
+        if (keystore != null) {
             // 2 way SSL
             result = getClientSSLContext(keystore, keystorePassword, truststore, truststorePassword, keystoreAlgorithm, keystoreType, keystoreProtocol);
         } else  if(truststore != null) {
@@ -149,7 +145,7 @@ public class SocketUtil {
     }
 
     public static SSLContext getAnonSSLContext() throws IOException, GeneralSecurityException {
-        return getSSLContext(null, null, null, null, null, null, ANON_PROTOCOL);
+        return getSSLContext(null, null, null, null, null, null, DEFAULT_PROTOCOL);
     }
     
     public static SSLContext getSSLContext(String keystore,

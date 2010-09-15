@@ -78,6 +78,10 @@ See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on c
 
 <h4>from 7.1</h4>
 <ul>
+    <li>Teiid clients now allow the usage of anonymous SSL by default.  
+    This changes allows the admin port (default 31443) to use anonymous SSL by default, rather than just securing logon traffic.  
+    Admin clients should therefore use the mms protocol instead of mm.  This will encrypt all admin traffic and ensure that any passwords in configuration files will
+    be encrypted in transit.  See the Admin Guide to upgrade from anonymous SSL to 1-way or 2-way authentication.
 	<li>Apache CXF is now expected to be used as the web services stack provider through JBossWS-CXF.  See the Admin Guide for instructions on 
 	installing CXF for use with Teiid's Salesforce and web service connectors.  The WS Resource Adapter's -ds.xml files should no longer use 
 	WSSecurityConfigURL and WSSecurityConfigName, rather they should be ConfigFile and ConfigName respectively.  The property values should no longer

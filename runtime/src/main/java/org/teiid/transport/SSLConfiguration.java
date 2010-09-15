@@ -40,15 +40,18 @@ public class SSLConfiguration {
     public static final String ONEWAY = "1-way"; //$NON-NLS-1$ - one way is the default
     public static final String TWOWAY = "2-way"; //$NON-NLS-1$
     public static final String ANONYMOUS = "anonymous"; //$NON-NLS-1$
+    
+    public static final String LOGIN = "logIn"; //$NON-NLS-1$
+    public static final String DISABLED = "disabled"; //$NON-NLS-1$
+    public static final String ENABLED = "enabled"; //$NON-NLS-1$
 
-    private static final String DEFAULT_SSL_PROTOCOL = "SSLv3"; //$NON-NLS-1$
     private static final String DEFAULT_KEYSTORE_TYPE = "JKS"; //$NON-NLS-1$
     
     /*
      * External SSL resource settings
      */
-    private boolean sslEnabled = false;
-    private String sslProtocol = DEFAULT_SSL_PROTOCOL;
+    private String mode = LOGIN;
+    private String sslProtocol = SocketUtil.DEFAULT_PROTOCOL;
     private String keyManagerFactoryAlgorithm = KeyManagerFactory.getDefaultAlgorithm();
     private String keyStoreType = DEFAULT_KEYSTORE_TYPE;
     private String keyStoreFileName;
@@ -56,11 +59,6 @@ public class SSLConfiguration {
     private String trustStoreFileName;
     private String trustStorePassword = ""; //$NON-NLS-1$
     private String authenticationMode = ONEWAY;
-    
-    /*
-     * Client encryption property.  This may belong somewhere else
-     */
-    boolean clientEncryptionEnabled = true;
     
     public SSLEngine getServerSSLEngine() throws IOException, GeneralSecurityException {
         if (!isSslEnabled()) {
@@ -94,17 +92,21 @@ public class SSLConfiguration {
         return result;
     }
 
-    public boolean isSslEnabled() {
-        return this.sslEnabled;
-    }
-    
     public boolean isClientEncryptionEnabled() {
-        return this.clientEncryptionEnabled;
+        return LOGIN.equals(mode);
     }
     
-    public void setSslEnabled(boolean value) {
-    	this.sslEnabled = value;
+    public boolean isSslEnabled() {
+    	return ENABLED.equals(mode);
     }
+    
+    public String getMode() {
+		return mode;
+	}
+    
+    public void setMode(String mode) {
+		this.mode = mode;
+	}
     
     public void setKeystoreFilename(String value) {
     	this.keyStoreFileName = value;
@@ -138,7 +140,4 @@ public class SSLConfiguration {
     	this.authenticationMode = value;
     }
     
-    public void setClientEncryptionEnabled(boolean value) {
-    	this.clientEncryptionEnabled = value;
-    }
 }

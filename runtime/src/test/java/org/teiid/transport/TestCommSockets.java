@@ -138,7 +138,7 @@ public class TestCommSockets {
 
 	@Test public void testConnectWithoutClientEncryption() throws Exception {
 		SSLConfiguration config = new SSLConfiguration();
-		config.setClientEncryptionEnabled(false);
+		config.setMode(SSLConfiguration.DISABLED);
 		SocketServerConnection conn = helpEstablishConnection(false, config, new Properties());
 		assertTrue(conn.selectServerInstance().getCryptor() instanceof NullCryptor);
 		conn.close();
@@ -204,10 +204,9 @@ public class TestCommSockets {
 
 	@Test public void testAnonSSLConnect() throws Exception {
 		SSLConfiguration config = new SSLConfiguration();
-		config.setSslEnabled(true);
+		config.setMode(SSLConfiguration.ENABLED);
 		config.setAuthenticationMode(SSLConfiguration.ANONYMOUS);
 		Properties p = new Properties();
-		p.setProperty(SocketUtil.TRUSTSTORE_FILENAME, SocketUtil.NONE);
 		helpEstablishConnection(true, config, p);
 		SocketServerConnection conn = helpEstablishConnection(true, config, p);
 		conn.close();
@@ -215,9 +214,10 @@ public class TestCommSockets {
 	
 	@Test(expected=CommunicationException.class) public void testNonSSLConnectWithSSLServer() throws Exception {
 		SSLConfiguration config = new SSLConfiguration();
-		config.setSslEnabled(true);
+		config.setMode(SSLConfiguration.ENABLED);
 		config.setAuthenticationMode(SSLConfiguration.ANONYMOUS);
 		Properties p = new Properties();
+		p.setProperty(SocketUtil.ALLOW_ANON, Boolean.FALSE.toString());
 		helpEstablishConnection(true, config, p);
 	}
 	

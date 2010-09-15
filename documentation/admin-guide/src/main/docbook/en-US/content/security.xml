@@ -74,7 +74,7 @@
 			successfully or unsuccessfully authenticates the
 			user.
 		</para>
-		<para>If no domain can authenticate the user, the logon
+		<para>If no domain can authenticate the user, the login
 			attempt will fail.
 			Details of the failed attempt including invalid users, which
 			domains were consulted, etc. will be in the server log with appropriate
@@ -102,19 +102,20 @@
 		
 	</section>
 	
-	<section id="connfigure_server">
+	<section id="ssl_config">
         <title>Configuring SSL</title>
         <para>The Teiid's configuration file 
         <code>&lt;jboss-install&gt;/server/&lt;profile&gt;/deploy/teiid/teiid-jboss-beans.xml</code>, 
-        contains the properties to configure SSL.</para>
+        contains the properties to configure SSL per socket transport.</para>
         <itemizedlist>
-        	<para>There are two separate connection profiles:</para>
-            <listitem><para>JDBC Connection - The <code>JdbcSslConfiguration</code> bean configuration defines this.</para></listitem>
-            <listitem><para>Admin Connection - The <code>AdminSslConfiguration</code> bean configuration defines this.</para></listitem>
+        	<para>There are three socket transports, each with it's own SSL configuration:</para>
+            <listitem><para>JDBC Connections - uses the <code>JdbcSslConfiguration</code> bean configuration.  Defaults to only encrypt login traffic, none of the other properties are used.</para></listitem>
+            <listitem><para>Admin Connections - uses the <code>AdminSslConfiguration</code> bean configuration.  Defaults to encrypting all traffic with anonymous SSL, none of the other properties are used.</para></listitem>
+            <listitem><para>ODBC Connections - uses the <code>OdbcSslConfiguration</code> bean configuration.  Defaults to no SSL.</para></listitem>
         </itemizedlist>
         <example><title>Example Configuration</title>
 	    <programlisting><![CDATA[<bean name="JdbcSslConfiguration" class="org.teiid.transport.SSLConfiguration">
-    <property name="sslEnabled">false</property>
+    <property name="mode">login</property>
     <property name="keystoreFilename">cert.keystore</property>
     <property name="keystorePassword">passwd</property>
     <property name="keystoreType">JKS</property>
@@ -124,27 +125,50 @@
     <property name="truststorePassword">passwd</property>
     <!--  1-way, 2-way, anonymous -->
     <property name="authenticationMode">1-way</property>
-    <property name="clientEncryptionEnabled">true</property>
 </bean>]]></programlisting>       
 </example>
-           <orderedlist>
+           <itemizedlist>
            	<title>Properties</title>
-            <listitem><para>sslEnabled - true|false, SSL usage either turned ON or OFF </para></listitem>
-            <listitem><para>sslProtocol- Type of SSL protocol to be used. Default is SSLv3</para></listitem>
+            <listitem><para>mode - diabled|login|enabled, disabled = no transport or message level security will be used.  
+            login = only the login traffic will be encrypted at a message level using 128 bit AES with an ephemerial DH key exchange. No other config values are needed in this mode.
+            enabled = traffic will be secured using the other configuration properties.</para></listitem>
+            <listitem><para>sslProtocol- Type of SSL protocol to be used. Default is TLSv1</para></listitem>
             <listitem><para>keystoreType - Keystore type created by the keytool. Default "JKS" is used.</para></listitem>
-            <listitem><para>authenticationMode - anonymous|1-way|2-way,  Type of SSL mode, see  
-            above about different <link linkend="ssl_modes">SSL modes</link> available.</para></listitem>
+            <listitem><para>authenticationMode - anonymous|1-way|2-way,  Type of <link linkend="ssl_aut">SSL Authentication Mode</link>.</para></listitem>
             <listitem><para>keymanagementAlgorithm - Type of key algorithm used. Default 
             is based upon the VM, e.g. "SunX509"</para></listitem>
             <listitem><para>keystoreFilename - The file name of the keystore, which contains the 
-            private key of the Server. This must be available in the classpath of Teiid Server</para></listitem>
+            private key of the Server. This must be available in the classpath of Teiid Server.</para></listitem>
             <listitem><para>keystorePassword - password for the keystore.</para></listitem>
             <listitem><para>truststoreFilename - if "authenticationMode" is chosen 
             as "2-way", then this property must be provided. This is the truststore that contains the 
             public key for the client. Depending upon how you created the keystore and truststores, 
             this may be same file as defined under  "keystoreFilename" property.</para></listitem>
             <listitem><para>truststorePassword - password for the truststore. </para></listitem>
-           </orderedlist>  
-           
+           </itemizedlist>  
+      	<section id="ssl_auth">
+      		<title>SSL Authentication Modes</title>
+      		<para>SSL supports multiple authentication modes.  In most secure intranet environments, anonymous is suitable to just bulk encrypt traffic without the need
+      		to setup SSL certificates. 
+      		</para>
+      		<itemizedlist>
+      			<listitem><para><emphasis>anonymous</emphasis> - no certificates are exchanged, settings are not needed for the keystore and truststore properties.  
+      			Client must have <code>org.teiid.ssl.allowAnon</code> set to true (the default) to connect to an anonymous server.
+      			</para></listitem>
+      			<listitem><para><emphasis>1-way</emphasis> - the server will present a certificate, which is obtained from the keystore related properties.  
+      			The client should have a truststore configured to accept the server certificate. 
+      			</para></listitem>
+      			<listitem><para><emphasis>2-way</emphasis> - the server will present a certificate, which is obtained from the keystore related properties.
+      			The client should have a truststore configured to accept the server certificate.  The client is also expected to present a certificate, which is obtained from its
+      			keystore.  The client certificate should be accepted by the trust store configured by the truststore related properties.
+      			</para></listitem>
+      		</itemizedlist>
+      	</section>
+      	<section id="encryption_strength">
+      		<title>Encryption Strength</title>
+      		<para>Both anonymous SSL and login only encryption are configured to use 128 bit AES encryption.  
+      		1-way and 2-way SSL allow for cipher suite negotiation based upon the default cipher suites supported by the respective Java platforms of the client and server.		
+      		</para>
+      	</section> 
     </section>
 </chapter>
