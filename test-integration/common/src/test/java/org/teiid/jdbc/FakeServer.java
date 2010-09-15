@@ -123,6 +123,10 @@ public class FakeServer extends ClientServiceRegistryImpl {
 			throw new RuntimeException(e);
 		}		
 	}
+	
+	public void removeVDB(String vdbName) {
+		this.repo.removeVDB(vdbName, 1);
+	}
 
 	private void addModel(VDBMetaData vdbMetaData, Schema schema) {
 		ModelMetaData model = new ModelMetaData();
