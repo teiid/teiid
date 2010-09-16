@@ -23,7 +23,6 @@
 package org.teiid.jdbc;
 
 import java.io.Serializable;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -63,6 +62,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.util.SqlUtil;
+import org.teiid.core.util.StringUtil;
 
 
 public class StatementImpl extends WrapperImpl implements TeiidStatement {
@@ -144,8 +144,9 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     //Map<out/inout/return param index --> index in results>
     protected Map outParamIndexMap = new HashMap();
     
-    private static Pattern SET_STATEMENT = Pattern.compile("\\s*set\\s*(\\w+)\\s*(\\w*)", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    private static Pattern SHOW_STATEMENT = Pattern.compile("\\s*show\\s*(\\w*)", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    private static Pattern TRANSACTION_STATEMENT = Pattern.compile("\\s*(commit|rollback|(start\\s*transaction))\\s*;?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    private static Pattern SET_STATEMENT = Pattern.compile("\\s*set\\s*(\\w+)\\s*(\\w*);?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    private static Pattern SHOW_STATEMENT = Pattern.compile("\\s*show\\s*(\\w*);?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     /**
      * Factory Constructor 
      * @param driverConnection
@@ -399,6 +400,22 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         			this.getMMConnection().getServerConnection().cleanUp();
         		} else {
         			JDBCURL.addNormalizedProperty(key, value, this.driverConnection.getExecutionProperties());
+        		}
+        		this.updateCounts = new int[] {0};
+        		return;
+        	}
+        	match = TRANSACTION_STATEMENT.matcher(commands[0]);
+        	if (match.matches()) {
+        		if (resultsMode == ResultsMode.RESULTSET) {
+        			throw new TeiidSQLException(JDBCPlugin.Util.getString("StatementImpl.set_result_set")); //$NON-NLS-1$
+        		}
+        		String command = match.group(1);
+        		if (StringUtil.startsWithIgnoreCase(command, "start")) { //$NON-NLS-1$
+        			this.getConnection().setAutoCommit(false);
+        		} else if (command.equalsIgnoreCase("commit")) { //$NON-NLS-1$
+        			this.getConnection().setAutoCommit(true);
+        		} else if (command.equalsIgnoreCase("rollback")) { //$NON-NLS-1$
+        			this.getConnection().rollback(false);
         		}
         		this.updateCounts = new int[] {0};
         		return;
@@ -996,7 +1013,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 		checkStatement();
 	}
 	
-	public Connection getConnection() throws SQLException {
+	public ConnectionImpl getConnection() throws SQLException {
 		return this.driverConnection;
 	}
 

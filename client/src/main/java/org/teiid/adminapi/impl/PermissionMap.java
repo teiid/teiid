@@ -1,7 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
  * Copyright (C) 2008 Red Hat, Inc.
- * Copyright (C) 2000-2007 MetaMatrix, Inc.
  * Licensed to Red Hat, Inc. under one or more contributor 
  * license agreements.  See the copyright.txt file in the
  * distribution for a full listing of individual contributors.

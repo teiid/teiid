@@ -279,7 +279,7 @@ public class TeiidDataSource extends BaseDataSource {
 
     /**
      * Returns a string containing a comma delimited list of alternate 
-     * MetaMatrix Server(s).  
+     * server(s).  
      * 
      * The list will be in the form of server2[:port2][,server3[:port3]].  If no 
      * alternate servers have been defined <code>null</code> is returned. 

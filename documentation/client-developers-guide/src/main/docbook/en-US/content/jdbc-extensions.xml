@@ -253,6 +253,19 @@ String debugLog = planRs.getString("DEBUG_LOG");
         </itemizedlist>
         <para>The SHOW statement is most commonly used to retrieve the query plan, see the plan <link linkend="plan_debug">debug example</link>.</para>        
        </section>
+       
+       <section id="transaction_statement">
+       	<title>Transaction Statements</title>
+       	<para>In situations where the direct use of the JDBC connection is not possible, transaction statements can be used to control a local transaction.</para>
+       	<itemizedlist>
+       		<listitem><para><emphasis>START TRANSACTION</emphasis> - synonym for <code>connection.setAutoCommit(false)</code></para>
+       		</listitem>
+       		<listitem><para><emphasis>COMMIT</emphasis> - synonym for <code>connection.setAutoCommit(true)</code></para>
+       		</listitem>
+       		<listitem><para><emphasis>ROLLBACK</emphasis> - synonym for <code>connection.rollback()</code> and returning to auto commit mode.</para>
+       		</listitem>
+       	</itemizedlist>
+       </section>
                             
        <section id="partial_results">
         <title>Partial Results Mode</title>
