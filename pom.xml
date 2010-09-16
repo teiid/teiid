@@ -82,9 +82,6 @@
           This is to enable faster build for development time.
           -->
       <id>dev</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
       <modules>
         <module>build</module>
       </modules>
