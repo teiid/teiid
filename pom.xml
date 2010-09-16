@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.jboss.teiid</groupId>
-	<artifactId>teiid</artifactId>
+	<artifactId>teiid-parent</artifactId>
 	<packaging>pom</packaging>
 	<name>Teiid</name>
 	<version>7.1.1</version>
@@ -67,61 +67,28 @@
 		</developer>
 	</developers>
 	<profiles>
-		<profile>
-		  <!-- 
+    <profile>
+      <!-- 
           This profile is activated manually, as in "mvn ... -P release ..."
 		  -->
-			<id>release</id>
-			<build>
-				<plugins>
-					<plugin>
-						<artifactId>maven-assembly-plugin</artifactId>
-						<version>2.2-beta-5</version>
-						<configuration>
-							<descriptors>
-								<descriptor>build/assembly/src.xml</descriptor>
-                                <descriptor>build/assembly/docs.xml</descriptor>                                
-								<descriptor>build/assembly/client-jar.xml</descriptor>
-                                <descriptor>build/assembly/jboss-container/dist.xml</descriptor>
-                                <descriptor>build/assembly/adminshell/adminshell-dist.xml</descriptor>								
-							</descriptors>
-							<outputDirectory>target/distribution</outputDirectory>
-							<workDirectory>target/assembly/work</workDirectory>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-			<modules>
-                <module>build</module>
-				<module>documentation</module>
-			</modules>
-		</profile>
-        <profile>
-          <!--
+      <id>release</id>
+      <modules>
+        <module>documentation</module>
+        <module>build</module>        
+      </modules>
+    </profile>
+    <profile>
+      <!--
           This is to enable faster build for development time.
           -->
-            <id>dev</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>build/assembly/client-jar.xml</descriptor>
-                                <descriptor>build/assembly/jboss-container/dist.xml</descriptor>
-                                <descriptor>build/assembly/adminshell/adminshell-dist.xml</descriptor>
-                            </descriptors>
-                            <outputDirectory>target/distribution</outputDirectory>
-                            <workDirectory>target/assembly/work</workDirectory>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-            <modules>
-                <module>build</module>
-            </modules>
-        </profile>        
+      <id>dev</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <modules>
+        <module>build</module>
+      </modules>
+    </profile>
 	</profiles>
 	<build>
 	<!-- This section defines the default plugin settings inherited by child projects. -->
@@ -504,7 +471,7 @@
 		<module>hibernate-dialect</module>
         <module>jboss-integration</module>
 		<module>test-integration</module>
-	</modules>
+  </modules>
     <distributionManagement>
         <repository>
             <id>jboss-releases-repository</id>

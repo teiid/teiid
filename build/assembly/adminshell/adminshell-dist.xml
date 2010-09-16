@@ -12,6 +12,7 @@
   <moduleSets>
     <moduleSet>
         <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
                
         <includes>
             <include>org.jboss.teiid:teiid-adminshell</include>
@@ -39,7 +40,7 @@
   <fileSets>
       
     <fileSet>
-        <directory>build/target/kits/adminshell</directory>
+        <directory>target/kits/adminshell</directory>
         <outputDirectory>/</outputDirectory>      
         <includes>
           <include>**/*.sh</include>
@@ -48,7 +49,7 @@
     </fileSet> 
           
     <fileSet>
-        <directory>build/target/kits/adminshell</directory>
+        <directory>target/kits/adminshell</directory>
         <outputDirectory>/</outputDirectory>      
         <excludes>
           <exclude>**/*.sh</exclude>
@@ -57,7 +58,7 @@
     </fileSet>      
     
     <fileSet>
-      <directory>target/distribution</directory>
+      <directory>target</directory>
       <includes>
         <include>teiid-${version}-client.jar</include>
       </includes>
@@ -69,7 +70,7 @@
   
   <files>
         <file>
-            <source>target/distribution/teiid-${version}-docs/admin-guide/en-US/pdf/teiid_admin_guide.pdf</source>
+            <source>target/teiid-${version}-docs/admin-guide/en-US/pdf/teiid_admin_guide.pdf</source>
             <fileMode>0644</fileMode>
         </file>
     </files>

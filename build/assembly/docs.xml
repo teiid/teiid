@@ -12,7 +12,8 @@
     <moduleSets>
         <moduleSet>
             <includeSubModules>true</includeSubModules>
-    
+            <useAllReactorProjects>true</useAllReactorProjects>
+
             <includes>
                 <include>org.jboss.teiid.documentation:admin-guide</include>
                 <include>org.jboss.teiid.documentation:reference</include>

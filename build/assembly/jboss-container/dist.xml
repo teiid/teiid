@@ -13,7 +13,7 @@
   <fileSets>
           
     <fileSet>
-        <directory>build/target/kits/jboss-container</directory>
+        <directory>target/kits/jboss-container</directory>
         <outputDirectory>/</outputDirectory>      
         <includes>
           <include>**/*.sh</include>
@@ -23,7 +23,7 @@
     </fileSet> 
           
     <fileSet>
-        <directory>build/target/kits/jboss-container</directory>
+        <directory>target/kits/jboss-container</directory>
         <outputDirectory>/</outputDirectory>      
         <excludes>
           <exclude>**/*.sh</exclude>
@@ -34,7 +34,7 @@
           
     <!-- only true dependency file for any client --> 
     <fileSet>
-      <directory>target/distribution</directory>
+      <directory>target</directory>
       <includes>
         <include>teiid-${version}-client.jar</include>
       </includes>
@@ -44,7 +44,7 @@
     </fileSet>
 
     <fileSet>
-        <directory>client/src/main/resources</directory>
+        <directory>../client/src/main/resources</directory>
         <includes>
             <include>vdb-deployer.xsd</include>
         </includes>                
@@ -70,32 +70,32 @@
   
     <files>
         <file>
-            <source>target/distribution/teiid-${version}-docs/admin-guide/en-US/pdf/teiid_admin_guide.pdf</source>
+            <source>target/teiid-${version}-docs/admin-guide/en-US/pdf/teiid_admin_guide.pdf</source>
             <outputDirectory>teiid-docs</outputDirectory>
             <fileMode>0644</fileMode>
         </file>
         <file>
-            <source>target/distribution/teiid-${version}-docs/reference/en-US/pdf/teiid_reference.pdf</source>
+            <source>target/teiid-${version}-docs/reference/en-US/pdf/teiid_reference.pdf</source>
             <outputDirectory>teiid-docs</outputDirectory>
             <fileMode>0644</fileMode>
         </file>
         <file>
-            <source>target/distribution/teiid-${version}-docs/quick-start-example/en-US/pdf/teiid_quick_start_example.pdf</source>
+            <source>target/teiid-${version}-docs/quick-start-example/en-US/pdf/teiid_quick_start_example.pdf</source>
             <outputDirectory>teiid-docs</outputDirectory>
             <fileMode>0644</fileMode>
         </file>
         <file>
-            <source>target/distribution/teiid-${version}-docs/developer-guide/en-US/pdf/teiid_developer_guide.pdf</source>
+            <source>target/teiid-${version}-docs/developer-guide/en-US/pdf/teiid_developer_guide.pdf</source>
             <outputDirectory>teiid-docs</outputDirectory>
             <fileMode>0644</fileMode>
         </file>
         <file>
-            <source>target/distribution/teiid-${version}-docs/client-developers-guide/en-US/pdf/teiid_client_developers_guide.pdf</source>
+            <source>target/teiid-${version}-docs/client-developers-guide/en-US/pdf/teiid_client_developers_guide.pdf</source>
             <outputDirectory>teiid-docs</outputDirectory>
             <fileMode>0644</fileMode>
         </file>
         <file>
-            <source>target/distribution/teiid-${version}-docs/caching-guide/en-US/pdf/teiid_caching_guide.pdf</source>
+            <source>target/teiid-${version}-docs/caching-guide/en-US/pdf/teiid_caching_guide.pdf</source>
             <outputDirectory>teiid-docs</outputDirectory>
             <fileMode>0644</fileMode>
         </file>        
@@ -104,7 +104,9 @@
   
   <!--  these have external dependent clients like connectors-->
   <moduleSets>
+        
     <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
       	<include>org.jboss.teiid:teiid-hibernate-dialect</include>   
       </includes>
@@ -118,6 +120,7 @@
     <!-- These are Teiid internal dependencies; to make JCA work -->
     <moduleSet>
         <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
 
         <includes>
             <include>org.jboss.teiid:teiid-jboss-integration</include>            
@@ -142,7 +145,8 @@
     <!-- These are built in connectors  -->
     <moduleSet>
         <includeSubModules>true</includeSubModules>
-               
+        <useAllReactorProjects>true</useAllReactorProjects>
+
         <includes>
             <include>org.jboss.teiid.connectors:connector-file:rar</include>
             <include>org.jboss.teiid.connectors:connector-ldap:rar</include>
@@ -171,7 +175,8 @@
     <!-- These are built in translators  -->
     <moduleSet>
         <includeSubModules>true</includeSubModules>
-               
+        <useAllReactorProjects>true</useAllReactorProjects>
+
         <includes>
             <include>org.jboss.teiid.connectors:translator-jdbc</include>
             <include>org.jboss.teiid.connectors:translator-loopback</include>
@@ -201,7 +206,8 @@
     <!-- Include the JOPR plugin -->    
     <moduleSet>
         <includeSubModules>true</includeSubModules>
-               
+        <useAllReactorProjects>true</useAllReactorProjects>
+
         <includes>
             <include>org.jboss.teiid:teiid-console</include>
         </includes>
