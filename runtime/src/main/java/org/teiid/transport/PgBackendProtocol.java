@@ -107,7 +107,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 				throw e.getCause();
 			}		
 		} catch (Throwable e) {
-			// TODO: handle this.
+			terminate(e);
 		}
 	}
 		
