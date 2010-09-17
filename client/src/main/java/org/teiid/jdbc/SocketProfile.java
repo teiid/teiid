@@ -60,7 +60,7 @@ final class SocketProfile {
      */
     
     // This host/port pattern allows just a . or a - to be in the host part.
-    static final String HOST_PORT_PATTERN = "[\\p{Alnum}\\.\\-\\_]+:\\d+"; //$NON-NLS-1$
+    static final String HOST_PORT_PATTERN = "\\[?[\\p{Alnum}\\.\\-\\_:]+\\]?:\\d+"; //$NON-NLS-1$
     static final String URL_PATTERN = "jdbc:teiid:([\\w-\\.]+)@mm[s]?://"+HOST_PORT_PATTERN+"(,"+HOST_PORT_PATTERN+")*(;.*)?"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     static Pattern urlPattern = Pattern.compile(URL_PATTERN);
     

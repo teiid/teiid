@@ -24,29 +24,16 @@ package org.teiid.net;
 
 import java.util.List;
 
-import org.teiid.net.HostInfo;
-import org.teiid.net.TeiidURL;
-
-import junit.framework.TestCase;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 
-
-/** 
- * @since 4.2
- */
-public class TestMMURL extends TestCase {
+public class TestTeiidURL {
     
     public static final String REQUIRED_URL = TeiidURL.FORMAT_SERVER;
 
-    /**
-     * Constructor for TestMMURL.
-     * @param name
-     */
-    public TestMMURL(String name) {
-        super(name);
-    }
-    
-    public final void testMMURL() {
+    @Test
+    public final void testTeiidURL() {
         String SERVER_URL = "mm://localhost:31000"; //$NON-NLS-1$
         assertTrue(TeiidURL.isValidServerURL(SERVER_URL)); 
         
@@ -56,6 +43,20 @@ public class TestMMURL extends TestCase {
         assertEquals(1,hosts.size());  
     }
     
+    @Test
+    public final void testTeiidURLIPv6() {
+        String SERVER_URL = "mm://[3ffe:ffff:0100:f101::1]:31000"; //$NON-NLS-1$
+        assertTrue(TeiidURL.isValidServerURL(SERVER_URL)); 
+        
+        TeiidURL url = new TeiidURL(SERVER_URL);
+        List<HostInfo> hosts = url.getHostInfo();
+        assertNotNull("TeiidURL should have 1 Host", hosts );  //$NON-NLS-1$ 
+        assertEquals(1,hosts.size());
+        assertEquals("3ffe:ffff:0100:f101::1", hosts.get(0).getHostName()); //$NON-NLS-1$
+        assertEquals(31000, hosts.get(0).getPortNumber()); 
+    }    
+    
+    @Test
     public final void testBogusProtocol() {  
         String SERVER_URL = "foo://localhost:31000"; //$NON-NLS-1$
         assertFalse(TeiidURL.isValidServerURL(SERVER_URL));
@@ -67,6 +68,8 @@ public class TestMMURL extends TestCase {
             assertEquals(TeiidURL.INVALID_FORMAT_SERVER, e.getMessage());
         }
     }
+    
+    @Test
     public final void testBogusProtocol1() {       
         String SERVER_URL = "foo://localhost:31000"; //$NON-NLS-1$
         assertFalse(TeiidURL.isValidServerURL(SERVER_URL));
@@ -79,7 +82,8 @@ public class TestMMURL extends TestCase {
         }
     }
     
-    public final void testMMURLSecure() {
+    @Test
+    public final void testTeiidURLSecure() {
         String SERVER_URL = "mms://localhost:31000"; //$NON-NLS-1$
         assertTrue(TeiidURL.isValidServerURL(SERVER_URL)); 
 
@@ -89,7 +93,8 @@ public class TestMMURL extends TestCase {
         assertEquals(1,hosts.size());  
     }
     
-    public final void testMMURLBadProtocolMM() {
+    @Test
+    public final void testTeiidURLBadProtocolMM() {
         String SERVER_URL = "mmm://localhost:31000"; //$NON-NLS-1$
         assertFalse(TeiidURL.isValidServerURL(SERVER_URL)); 
 
@@ -101,7 +106,8 @@ public class TestMMURL extends TestCase {
         }
     }
     
-    public final void testMMURLWrongSlash() {
+    @Test
+    public final void testTeiidURLWrongSlash() {
         String SERVER_URL = "mm:\\\\localhost:31000"; //$NON-NLS-1$
         assertFalse(TeiidURL.isValidServerURL(SERVER_URL));
 
@@ -113,7 +119,8 @@ public class TestMMURL extends TestCase {
         }
     }
     
-    public final void testMMURLOneSlash() {
+    @Test
+    public final void testTeiidURLOneSlash() {
         String SERVER_URL = "mm:/localhost:31000"; //$NON-NLS-1$
         assertFalse(TeiidURL.isValidServerURL(SERVER_URL)); 
         
@@ -125,7 +132,8 @@ public class TestMMURL extends TestCase {
         }
     }
     
-    public final void testMMURLNoHost() {
+    @Test
+    public final void testTeiidURLNoHost() {
         String SERVER_URL = "mm://:31000"; //$NON-NLS-1$
         assertFalse(TeiidURL.isValidServerURL(SERVER_URL)); 
 
@@ -137,7 +145,8 @@ public class TestMMURL extends TestCase {
         }
     }
     
-    public final void testMMURLNoHostAndPort() {
+    @Test
+    public final void testTeiidURLNoHostAndPort() {
         String SERVER_URL = "mm://:"; //$NON-NLS-1$
         assertFalse(TeiidURL.isValidServerURL(SERVER_URL)); 
 
@@ -149,7 +158,8 @@ public class TestMMURL extends TestCase {
         }
     }
     
-    public final void testMMURLNoHostAndPort2() {
+    @Test
+    public final void testTeiidURLNoHostAndPort2() {
         String SERVER_URL = "mm://"; //$NON-NLS-1$
         assertFalse(TeiidURL.isValidServerURL(SERVER_URL)); 
 
@@ -161,7 +171,8 @@ public class TestMMURL extends TestCase {
         }
     }
     
-    public final void testMMURLBadPort() {
+    @Test
+    public final void testTeiidURLBadPort() {
         String SERVER_URL = "mm://localhost:port"; //$NON-NLS-1$
         assertFalse(TeiidURL.isValidServerURL(SERVER_URL)); 
 
@@ -172,7 +183,8 @@ public class TestMMURL extends TestCase {
         }
     }
     
-    public final void testMMURL2Hosts() {
+    @Test
+    public final void testTeiidURL2Hosts() {
         String SERVER_URL = "mm://localhost:31000,localhost:31001"; //$NON-NLS-1$        
         assertTrue(TeiidURL.isValidServerURL(SERVER_URL)); 
 
@@ -182,7 +194,23 @@ public class TestMMURL extends TestCase {
         assertEquals(2,hosts.size());  
     }
     
-    public final void testMMURL3Hosts() {
+    @Test
+    public final void testTeiidIPv6URL2Hosts() {
+        String SERVER_URL = "mm://[3ffe:ffff:0100:f101::1]:31000,[::1]:31001, 127.0.0.1:31003"; //$NON-NLS-1$        
+        assertTrue(TeiidURL.isValidServerURL(SERVER_URL)); 
+
+        TeiidURL url = new TeiidURL(SERVER_URL); 
+        List<HostInfo> hosts = url.getHostInfo();
+        assertNotNull("TeiidURL should have 3 Host", hosts );  //$NON-NLS-1$ 
+        assertEquals(3, hosts.size());  
+        
+        assertEquals("3ffe:ffff:0100:f101::1", hosts.get(0).getHostName());//$NON-NLS-1$
+        assertEquals(31001, hosts.get(1).getPortNumber());
+        assertEquals("127.0.0.1", hosts.get(2).getHostName());//$NON-NLS-1$
+    }    
+    
+    @Test
+    public final void testTeiidURL3Hosts() {
         String SERVER_URL = "mm://localhost:31000,localhost:31001,localhost:31002"; //$NON-NLS-1$        
         assertTrue(TeiidURL.isValidServerURL(SERVER_URL)); 
 
@@ -192,6 +220,7 @@ public class TestMMURL extends TestCase {
         assertEquals(3,hosts.size());  
     }
 
+    @Test
     public final void testGetHostInfo() {
         String SERVER_URL = "mm://localhost:31000"; //$NON-NLS-1$        
         assertTrue(TeiidURL.isValidServerURL(SERVER_URL)); 
@@ -200,23 +229,27 @@ public class TestMMURL extends TestCase {
         assertNotNull(url.getHostInfo() );  
     }
 
+    @Test
     public final void testGetProtocolStandalone() {
         TeiidURL url = new TeiidURL("mm://localhost:31000"); //$NON-NLS-1$
         assertNotNull(url);
         assertEquals("mm://localhost:31000",url.getAppServerURL()); //$NON-NLS-1$
     }
 
+    @Test
     public final void testHasMoreElements() {
         TeiidURL url = new TeiidURL("mm://localhost:31000,localhost:31001"); //$NON-NLS-1$
         assertNotNull(url);
         assertFalse(url.getHostInfo().isEmpty());
     }
 
+    @Test
     public final void testNextElement() {
         TeiidURL url = new TeiidURL("mm://localhost:31000,localhost:31001"); //$NON-NLS-1$
         assertEquals(2, url.getHostInfo().size());
     }
 
+    @Test
     public final void testHostInfoEquals() {
         HostInfo expectedResults = new HostInfo("localhost",31000);  //$NON-NLS-1$
         TeiidURL url = new TeiidURL("mm://localhost:31000"); //$NON-NLS-1$
@@ -224,6 +257,7 @@ public class TestMMURL extends TestCase {
         assertEquals(expectedResults,actualResults);
     }
         
+    @Test
     public final void testWithEmbeddedSpaces() {
         HostInfo expectedResults = new HostInfo("localhost",12345);  //$NON-NLS-1$
         
@@ -235,6 +269,7 @@ public class TestMMURL extends TestCase {
         assertEquals(expectedResults,actualResults);
     }
     
+    @Test
     public final void testHostPortConstructor() {
         HostInfo expectedResults = new HostInfo("myhost", 12345);  //$NON-NLS-1$
         
@@ -247,6 +282,7 @@ public class TestMMURL extends TestCase {
         assertEquals("mm://myhost:12345", url.getAppServerURL()); //$NON-NLS-1$
     }
     
+    @Test
     public final void testHostPortConstructorSSL() {
         HostInfo expectedResults = new HostInfo("myhost",12345);  //$NON-NLS-1$ 
         

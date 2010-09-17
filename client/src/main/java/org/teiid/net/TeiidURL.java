@@ -125,6 +125,9 @@ public class TeiidURL {
     
     public TeiidURL(String host, int port, boolean secure) {
         usingSSL = secure;
+        if(host.startsWith("[")) { //$NON-NLS-1$
+        	host = host.substring(1, host.indexOf(']'));
+        }
 		hosts.add(new HostInfo(host, port));
     }
     
@@ -232,13 +235,29 @@ public class TeiidURL {
             throw new IllegalArgumentException(exceptionMessage);
         }
         while (st.hasMoreTokens()) {
-            st2 = new StringTokenizer(st.nextToken(), COLON_DELIMITER);
+        	String nextToken = st.nextToken();
             try {
-                String host = st2.nextToken().trim();
-                String port = st2.nextToken().trim();
+            	String host = ""; //$NON-NLS-1$
+            	String port = ""; //$NON-NLS-1$
+	        	if (nextToken.startsWith("[")) { //$NON-NLS-1$
+	        		int hostEnd = nextToken.indexOf("]:"); //$NON-NLS-1$
+	        		host = nextToken.substring(1, hostEnd);
+	        		port = nextToken.substring(hostEnd+2);
+	        	}
+	        	else {
+	        		st2 = new StringTokenizer(nextToken, COLON_DELIMITER);
+	                host = st2.nextToken().trim();
+	                port = st2.nextToken().trim();
+	        	}
+	        	
                 if (host.equals("")) { //$NON-NLS-1$
                     throw new IllegalArgumentException("hostname can't be empty"); //$NON-NLS-1$
                 }
+
+                if (port.equals("")) { //$NON-NLS-1$
+                    throw new IllegalArgumentException("port can't be empty"); //$NON-NLS-1$
+                }
+                
                 int portNumber;
                 try {
                     portNumber = Integer.parseInt(port);
@@ -250,11 +269,13 @@ public class TeiidURL {
                 }
                 HostInfo hostInfo = new HostInfo(host, portNumber);
                 hosts.add(hostInfo);
+	        	
             } catch (NoSuchElementException nsee) {
                 throw new IllegalArgumentException(exceptionMessage);
             } catch (NullPointerException ne) {
                 throw new IllegalArgumentException(exceptionMessage);
             }
+        	
         }
     }
 
@@ -275,7 +296,15 @@ public class TeiidURL {
             Iterator<HostInfo> iter = hosts.iterator();
             while (iter.hasNext()) {
                 HostInfo host = iter.next();
+                
+                boolean ipv6HostName = host.getHostName().indexOf(':') != -1;
+                if (ipv6HostName) {
+                	sb.append('[');
+                }
                 sb.append(host.getHostName());
+                if (ipv6HostName) {
+                	sb.append(']');
+                }                
                 sb.append(COLON_DELIMITER); 
                 sb.append(host.getPortNumber());
                 if (iter.hasNext()) {
