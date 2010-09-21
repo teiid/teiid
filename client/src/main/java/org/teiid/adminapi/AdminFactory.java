@@ -53,11 +53,9 @@ public class AdminFactory {
 
     	private Admin target;
     	private ServerConnection registry;
-    	private Properties p;
     	private boolean closed;
     	
     	public AdminProxy(Properties p) throws ConnectionException, CommunicationException {
-    		this.p = p;
     		this.registry = serverConnectionFactory.getConnection(p);
     		this.target = registry.getService(Admin.class);
 		}
@@ -75,6 +73,9 @@ public class AdminFactory {
 			if (method.getName().equals("close")) { //$NON-NLS-1$
 				close();
 				return null;
+			}
+			if (!method.getDeclaringClass().equals(Admin.class)) {
+				return method.invoke(this, args);
 			}
 			try {
 				return method.invoke(getTarget(), args);
