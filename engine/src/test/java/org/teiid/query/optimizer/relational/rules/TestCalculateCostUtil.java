@@ -24,6 +24,9 @@ package org.teiid.query.optimizer.relational.rules;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
+
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
@@ -35,7 +38,6 @@ import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.TestVirtualDepJoin;
 import org.teiid.query.processor.relational.RelationalPlan;
@@ -47,7 +49,7 @@ import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.FakeMetadataObject;
 import org.teiid.query.util.CommandContext;
 
-
+@SuppressWarnings("nls")
 public class TestCalculateCostUtil {
 
     // =====================================================================
@@ -302,6 +304,21 @@ public class TestCalculateCostUtil {
         
         float cost = NewCalculateCostUtil.computeCostForTree(joinNode, metadata);
         assertTrue(cost == NewCalculateCostUtil.UNKNOWN_VALUE);
+    }
+    
+    @Ignore("this logic needs to be refined to work better")
+    @Test public void testEstimateJoinNodeCostOneUnknown() throws Exception {
+        QueryMetadataInterface metadata = FakeMetadataFactory.example4();
+        PlanNode joinNode = helpGetJoinNode(NewCalculateCostUtil.UNKNOWN_VALUE, 500, JoinType.JOIN_INNER);
+        joinNode.setProperty(NodeConstants.Info.JOIN_CRITERIA, Arrays.asList(helpGetCriteria("pm1.g1.e1 = pm1.g2.e1", metadata)));
+        float cost = NewCalculateCostUtil.computeCostForTree(joinNode, metadata);
+        assertEquals(10000, cost, 0);
+    }
+    
+    @Test public void testEstimateNdvPostJoin() throws Exception {
+    	String query = "SELECT account FROM US.Accounts, Europe.CustAccts, CustomerMaster.Customers where account + accid + CustomerMaster.Customers.id = 1000000"; //$NON-NLS-1$
+    	
+    	helpTestQuery(1E9f, query, new String[] {"SELECT g_0.accid FROM Europe.CustAccts AS g_0", "SELECT g_0.id FROM CustomerMaster.Customers AS g_0", "SELECT g_0.account FROM US.Accounts AS g_0"});
     }
 
     /** 
@@ -732,10 +749,17 @@ public class TestCalculateCostUtil {
         op +  
         "SELECT id, convert(accid / 10000, long), mod(accid, 10000), convert(type, integer), amount, 'EU' from Europe.CustAccts"; //$NON-NLS-1$
         
-        RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlan(query, TestVirtualDepJoin.exampleVirtualDepJoin(), new String[] {"SELECT g_0.customer, g_0.account, g_0.txnid, g_0.txn, g_0.pennies FROM US.Accounts AS g_0 WHERE g_0.txn <> 'X'", "SELECT g_0.id, g_0.accid, g_0.type, g_0.amount FROM Europe.CustAccts AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+        String[] expected = new String[] {"SELECT g_0.customer, g_0.account, g_0.txnid, g_0.txn, g_0.pennies FROM US.Accounts AS g_0 WHERE g_0.txn <> 'X'", "SELECT g_0.id, g_0.accid, g_0.type, g_0.amount FROM Europe.CustAccts AS g_0"};
+        
+        helpTestQuery(cost, query, expected);
+    }
+
+	private void helpTestQuery(float cost, String query, String[] expected)
+			throws TeiidComponentException, TeiidProcessingException {
+		RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlan(query, TestVirtualDepJoin.exampleVirtualDepJoin(), expected, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
         
         assertEquals(cost, plan.getRootNode().getEstimateNodeCardinality());
-    }
+	}
     
     @Test public void testUnion() throws Exception {
     	helpTestSetOp("UNION ", 1375000.0f); //$NON-NLS-1$
