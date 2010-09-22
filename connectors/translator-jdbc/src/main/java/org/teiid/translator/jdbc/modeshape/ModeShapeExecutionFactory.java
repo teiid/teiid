@@ -35,8 +35,10 @@ import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Literal;
 import org.teiid.language.NamedTable;
-import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.ConvertModifier;
@@ -60,24 +62,7 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
     public void start() throws TranslatorException {
         super.start();
         
-        registerFunctionModifier("PATH", new FunctionModifier() { //$NON-NLS-1$
-            
-            @Override
-            public List<?> translate(Function function) {
-           	List<Object> objs = new ArrayList<Object>();
-
-        	List<Expression> parms = function.getParameters();
-        	
-        	for (Expression s : parms) 
-        	{
-        	    String v = s.toString();
-        	    v.replace('\'', ' ');
-        	    objs.add(v);
-         	}
-
-                return objs; 
-            	}
-        }   );
+		registerFunctionModifier("PATH", new PathFunctionModifier());
        
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
@@ -127,6 +112,10 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 		}, FunctionModifier.BOOLEAN);
     	
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
+    	
+
+    	LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Started"); //$NON-NLS-1$
+
      }    
     
     /**
@@ -136,48 +125,35 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
      * @return the {@link SQLConversionVisitor}
      */
     public SQLConversionVisitor getSQLConversionVisitor() {
-    	return new SQLConversionVisitor(this);
+    	return new ModeShapeSQLVisitor(this);
     }
     
 
 	@Override
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
-
 		if (obj instanceof NamedTable) {	
 		    NamedTable nt = (NamedTable) obj;
 		    List<String> ntlist = new ArrayList<String>(1);
-		    ntlist.add("[" + trimTics(nt.getMetadataObject().getNameInSource()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+		    ntlist.add(ModeShapeUtil.createJCRName(nt.getMetadataObject().getNameInSource()));
 		    return ntlist;
-		}
-	
-		if (obj instanceof ColumnReference) {
+		} else if (obj instanceof ColumnReference) {
 		    ColumnReference elem = (ColumnReference) obj;
-		    List<String> ntlist = new ArrayList<String>(1);
-		    ntlist.add("[" + trimTics(elem.getMetadataObject().getNameInSource()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
-		    return ntlist;	
-		}
+		    
+		    String nameInSource = "NoNameInSource";
+		    if (elem.getMetadataObject() != null) {
+		    	nameInSource = elem.getMetadataObject().getNameInSource();
+			    
+			    List<String> ntlist = new ArrayList<String>(1);
+				ntlist.add(ModeShapeUtil.createJCRName(nameInSource));
+
+			    return ntlist;
+		    } 
+		} 
 	
 		return super.translate(obj, context);
     }
-	
-	/**
-	 * Because the Teiid Designer Import from JDBC adds tic's to a nameInSource that has special characters,
-	 * they have to be removed when building the sql syntax
-	 * @param name
-	 * @return
-	 */
-	private String trimTics(String name) {
-		String rtn = name;
-		if (rtn.startsWith("'")) {
-			rtn = rtn.substring(1);	
-		}
 		
-		if (rtn.endsWith("'")) {
-			rtn = rtn.substring(0, rtn.indexOf("'"));
-		}
-		return rtn;
-	}
-    
+   
     @Override
     public String translateLiteralBoolean(Boolean booleanValue) {
         if(booleanValue.booleanValue()) {
