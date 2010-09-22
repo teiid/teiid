@@ -75,7 +75,7 @@ public class TestTempTables {
 				command.run();
 			}
 	    };
-		dataManager = new TempTableDataManager(fdm, bm, executor, cache);
+		dataManager = new TempTableDataManager(fdm, bm, executor, cache, null, null);
 	}
 	
 	@Test public void testInsertWithQueryExpression() throws Exception {

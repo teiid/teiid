@@ -31,6 +31,7 @@ import java.util.concurrent.Executor;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidProcessingException;
@@ -73,7 +74,7 @@ public class TestMaterialization {
 				command.run();
 			}
 	    };
-		dataManager = new TempTableDataManager(hdm, bm, executor, cache);
+		dataManager = new TempTableDataManager(hdm, bm, executor, cache, cache, new DefaultCacheFactory());
 	}
 	
 	private void execute(String sql, List<?>... expectedResults) throws Exception {

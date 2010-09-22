@@ -113,4 +113,9 @@ public class JBossCacheFactory implements CacheFactory, Serializable{
 	public void stop() {
 		destroy();
 	}
+	
+	@Override
+	public boolean isReplicated() {
+		return true;
+	}
 }

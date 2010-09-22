@@ -700,8 +700,13 @@ public class DQPCore implements DQP {
         
         this.processWorkerPool = new ThreadReuseExecutor(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, config.getMaxThreads());
         
+        SessionAwareCache<CachedResults> matTables = null;
+        if (cacheFactory.isReplicated()) {
+        	matTables = new SessionAwareCache<CachedResults>();
+        }
+        
         dataTierMgr = new TempTableDataManager(new DataTierManagerImpl(this,
-                                            this.bufferService), this.bufferManager, this.processWorkerPool, this.rsCache); 
+                                            this.bufferService), this.bufferManager, this.processWorkerPool, this.rsCache, matTables, this.cacheFactory); 
 	}
 	
 	public void setBufferService(BufferService service) {

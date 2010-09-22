@@ -182,8 +182,9 @@ public class SessionAwareCache<T> {
 	
 	private void clearCache(Cache<CacheID, T> cache, String vdbName, int version) {
 		Set<CacheID> keys = cache.keys();
+		VDBKey vdbKey = new VDBKey(vdbName, version);
 		for (CacheID key:keys) {
-			if (key.vdbInfo.getName().equalsIgnoreCase(vdbName) && key.vdbInfo.getVersion() == version) {
+			if (key.vdbInfo.equals(vdbKey)) {
 				cache.remove(key);
 			}
 		}

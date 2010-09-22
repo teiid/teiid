@@ -84,16 +84,19 @@ public class TempTableStore {
     		}
 		}
 		
-		public synchronized MatState setState(MatState state, Boolean valid) {
+		public synchronized MatState setState(MatState state, Boolean valid, Long timestamp) {
 			MatState oldState = this.state;
 			if (valid != null) {
 				this.valid = valid;
 			}
 			setState(state);
+			if (timestamp != null) {
+				this.updateTime = timestamp;
+			}
 			notifyAll();
 			return oldState;
 		}
-
+		
 		private void setState(MatState state) {
 			this.state = state;
 			this.updateTime = System.currentTimeMillis();
@@ -113,6 +116,10 @@ public class TempTableStore {
 		
 		public synchronized boolean isValid() {
 			return valid;
+		}
+		
+		public synchronized long getTtl() {
+			return ttl;
 		}
 		
 	}

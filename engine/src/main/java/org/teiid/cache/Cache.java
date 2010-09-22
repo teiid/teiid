@@ -29,10 +29,12 @@ import java.util.Set;
  */
 public interface Cache<K, V>  {
 	
-	public enum Type {SESSION("Session"), //$NON-NLS-1$ 
-						RESULTSET("ResultSet"), //$NON-NLS-1$
-						RESULTSET_BATCHES(RESULTSET, "batches"), //$NON-NLS-1$
-						PREPAREDPLAN("PreparaedPlan"); //$NON-NLS-1$
+	public enum Type {
+		MATTABLES("MatTables"), //$NON-NLS-1$ 
+		MATTABLEUPDATES("MatTableUpdates"), //$NON-NLS-1$
+		RESULTSET("ResultSet"), //$NON-NLS-1$
+		RESULTSET_BATCHES(RESULTSET, "batches"), //$NON-NLS-1$
+		PREPAREDPLAN("PreparaedPlan"); //$NON-NLS-1$
 		
 		private String location;
 		

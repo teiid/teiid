@@ -122,7 +122,8 @@
 			</para>
 			<section>
 		   		<title>TTL Snapshot Refresh</title>
-		   		<para>The <link linkend="cache-hint">cache hint</link> may be used to automatically trigger a full snapshot refresh after a specified time to live.  
+		   		<para>The <link linkend="cache-hint">cache hint</link> may be used to automatically trigger a full snapshot refresh after a specified time to live (ttl).  
+		   		The ttl starts from the time the table is finished loading.  
 		   		The refresh is equivalent to <code>CALL SYSADMIN.refreshMatView('view name', false)</code>, but performed asynchronously so that user queries do not block on the load.</para>
 				<example>
 					<title>Auto-refresh Transformation Query</title>
@@ -177,6 +178,17 @@
 			its usage to result in higher performance when only the covered columns are used and the main table is not consulted.</para></listitem>
 			</itemizedlist>
 			</para>
+		</section>
+		<section>
+			<title>Clustering Considerations</title>
+			<para>Each member in a cluster maintains its own copy of each materialized table and associated indexes.  
+			With cache clustering enabled, an additional snapshot copy of the table is maintained for loading by other members.  
+			An attempt is made to ensure each member receives the same full refresh events as the others.  
+			Full consistency for updatable materialized views however is not guarenteed.  
+			Periodic full refreshes of updatable materialized view tables helps ensure consistency among members.
+			<note><para>Loads of materialized tables are not coordinated across the cluster.  It is possible for the same ttl expiration to trigger a load at each member.</para></note> 
+		    In many clustered scenarios using external materialization is advantagious to fully control the loading of the tables and to have materialized data that is durable.
+		    </para>
 		</section>
 	</section>
 </chapter>
