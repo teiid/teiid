@@ -211,6 +211,8 @@ public class DQPCore implements DQP {
     private int currentlyActivePlans;
     private LinkedList<RequestWorkItem> waitingPlans = new LinkedList<RequestWorkItem>();
     private CacheFactory cacheFactory;
+
+	private SessionAwareCache<CachedResults> matTables;
     
     /**
      * perform a full shutdown and wait for 10 seconds for all threads to finish
@@ -615,6 +617,9 @@ public class DQPCore implements DQP {
 			clearResultSetCache(vdbName, version);
 			break;
 		}
+		if (this.matTables != null) {
+			this.matTables.clearForVDB(vdbName, version);
+		}
 	}	
     
 	public Collection<org.teiid.adminapi.Transaction> getTransactions() {
@@ -700,7 +705,6 @@ public class DQPCore implements DQP {
         
         this.processWorkerPool = new ThreadReuseExecutor(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, config.getMaxThreads());
         
-        SessionAwareCache<CachedResults> matTables = null;
         if (cacheFactory.isReplicated()) {
         	matTables = new SessionAwareCache<CachedResults>();
         }

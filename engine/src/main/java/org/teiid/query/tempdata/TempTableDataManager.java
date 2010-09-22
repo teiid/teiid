@@ -138,7 +138,8 @@ public class TempTableDataManager implements ProcessorDataManager {
     
     private static class MatTableEntry implements Serializable {
 		private static final long serialVersionUID = 8559613701442751579L;
-    	transient long lastUpdate = System.currentTimeMillis();
+    	long lastUpdate = System.currentTimeMillis();
+    	boolean valid;
     }
     
     private Cache<MatTableKey, MatTableEntry> tables;
@@ -156,7 +157,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 	        tables = cacheFactory.get(Cache.Type.MATTABLES, cc);
         }
     }
-
+    
 	public TupleSource registerRequest(
 		CommandContext context,
 		Command command,
@@ -303,6 +304,9 @@ public class TempTableDataManager implements ProcessorDataManager {
 			LogManager.logDetail(LogConstants.CTX_MATVIEWS, "processing refreshmatview for", matViewName); //$NON-NLS-1$
 			MatTableInfo info = globalStore.getMatTableInfo(matTableName);
 			boolean invalidate = Boolean.TRUE.equals(((Constant)proc.getParameter(1).getExpression()).getValue());
+			if (invalidate) {
+				touchTable(context, matTableName, false);
+			}
 			MatState oldState = info.setState(MatState.NEEDS_LOADING, invalidate?Boolean.FALSE:null, null);
 			if (oldState == MatState.LOADING) {
 				return CollectionTupleSource.createUpdateCountTupleSource(-1);
@@ -395,7 +399,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 				if (entry != null && entry.lastUpdate > info.getUpdateTime() 
 						&& info.getState() != MatState.LOADING) {
 					//remote load
-					info.setState(MatState.NEEDS_LOADING, null, null);
+					info.setState(MatState.NEEDS_LOADING, entry.valid, null);
 					loadTime = entry.lastUpdate;
 				}
 			}
@@ -497,12 +501,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 					BatchCollector bc = qp.createBatchCollector();
 					TupleBuffer tb = bc.collectTuples();
 					cr.setResults(tb);
-					MatTableKey key = new MatTableKey();
-					key.name = fullName;
-					key.vdb = new VDBKey(context.getVdbName(), context.getVdbVersion());
-					MatTableEntry matTableEntry = new MatTableEntry();
-					matTableEntry.lastUpdate = 0;
-					tables.put(key, matTableEntry, null);
+					touchTable(context, fullName, true);
 					this.distributedCache.put(cid, FunctionMethod.VDB_DETERMINISTIC, cr, info.getTtl());
 					ts = tb.createIndexedTupleSource();
 				} else {
@@ -539,6 +538,15 @@ public class TempTableDataManager implements ProcessorDataManager {
 			}
 		}
 		return rowCount;
+	}
+
+	private void touchTable(CommandContext context, String fullName, boolean valid) {
+		MatTableKey key = new MatTableKey();
+		key.name = fullName;
+		key.vdb = new VDBKey(context.getVdbName(), context.getVdbVersion());
+		MatTableEntry matTableEntry = new MatTableEntry();
+		matTableEntry.valid = valid;
+		tables.put(key, matTableEntry, null);
 	}
 
 	/**
