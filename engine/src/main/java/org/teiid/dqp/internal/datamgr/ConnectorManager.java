@@ -88,7 +88,14 @@ public class ConnectorManager  {
 		
     	if(ef != null) {
     		if (ef.isSourceRequired()) {
-    			Object conn = getConnectionFactory();
+    			
+    			Object conn = null;
+				try {
+					conn = getConnectionFactory();
+				} catch (TranslatorException e) {
+					// treat this as connection not found. 
+				}
+				
     			if (conn == null) {
     				sb.append(QueryPlugin.Util.getString("datasource_not_found", this.connectionName)); //$NON-NLS-1$
     			}
@@ -232,7 +239,7 @@ public class ConnectorManager  {
      * Get the ConnectionFactory object required by this manager
      * @return
      */
-    protected Object getConnectionFactory() {
+    protected Object getConnectionFactory() throws TranslatorException {
     	if (this.connectionName != null) {
     		String jndiName = this.connectionName;
     		if (!this.connectionName.startsWith(JAVA_CONTEXT)) {
@@ -249,7 +256,8 @@ public class ConnectorManager  {
 					}
 				}
 			} catch (NamingException e) {
-			}    		
+				throw new TranslatorException(e, QueryPlugin.Util.getString("connection_factory_not_found", this.connectionName)); //$NON-NLS-1$
+			}   			
     	}
     	return null;
     }
