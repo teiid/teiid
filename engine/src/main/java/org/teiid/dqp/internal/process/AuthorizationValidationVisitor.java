@@ -231,18 +231,22 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
                 Object metadataID = null;
                 if(symbol instanceof ElementSymbol) {                    
                     metadataID = ((ElementSymbol)symbol).getMetadataID();
-                    GroupSymbol groupSymbol = ((ElementSymbol)symbol).getGroupSymbol();
-                    if (metadataID instanceof MultiSourceElement || metadataID instanceof TempMetadataID || groupSymbol == null || isSystemModel(groupSymbol.getMetadataID())) {
+                    if (metadataID instanceof MultiSourceElement || metadataID instanceof TempMetadataID) {
                         continue;
                     }
                 } else if(symbol instanceof GroupSymbol) {
                     GroupSymbol group = (GroupSymbol)symbol;
                     metadataID = group.getMetadataID();
-                    if ((metadataID instanceof TempMetadataID && !group.isProcedure()) || isSystemModel(metadataID)) {
+                    if (metadataID instanceof TempMetadataID && !group.isProcedure()) {
                         continue;
                     }
                 }
                 fullName = getMetadata().getFullName(metadataID);
+                Object modelId = getMetadata().getModelID(metadataID);
+                String modelName = getMetadata().getFullName(modelId);
+                if (CoreConstants.SYSTEM_MODEL.equals(modelName) || CoreConstants.ODBC_MODEL.equals(modelName)) {
+                	continue;
+                }
                 nameToSymbolMap.put(fullName, symbol);
             } catch(QueryMetadataException e) {
                 handleException(e);
@@ -267,13 +271,6 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
                     inaccessibleSymbols);
             }
         }
-
-    }
-    
-    private boolean isSystemModel(Object groupMetadataID) throws QueryMetadataException, TeiidComponentException {
-        Object modelId = getMetadata().getModelID(groupMetadataID);
-        String modelName = getMetadata().getFullName(modelId);
-        return (CoreConstants.SYSTEM_MODEL.equals(modelName) || CoreConstants.ODBC_MODEL.equals(modelName));
     }
 
     /**
