@@ -220,7 +220,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         if (parent == null) {
         	throw createInvalidRecordTypeException(groupOrElementID);
         }
-        parent = metadataRecord.getParent();
+        parent = parent.getParent();
         if (parent instanceof Schema) {
         	return parent;
         }
