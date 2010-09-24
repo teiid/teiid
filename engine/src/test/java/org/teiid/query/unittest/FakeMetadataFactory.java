@@ -178,6 +178,7 @@ public class FakeMetadataFactory {
 		FakeMetadataObject vm1 = createVirtualModel("vm1");	 //$NON-NLS-1$
 		FakeMetadataObject vm2 = createVirtualModel("vm2");	 //$NON-NLS-1$
         FakeMetadataObject tm1 = createVirtualModel("tm1"); //$NON-NLS-1$
+        FakeMetadataObject sys = createPhysicalModel("SYS"); //$NON-NLS-1$
 
 		// Create physical groups
 		FakeMetadataObject pm1g1 = createPhysicalGroup("pm1.g1", pm1); //$NON-NLS-1$
@@ -198,6 +199,7 @@ public class FakeMetadataFactory {
 		FakeMetadataObject pm5g2 = createPhysicalGroup("pm5.g2", pm5); //$NON-NLS-1$
 		FakeMetadataObject pm5g3 = createPhysicalGroup("pm5.g3", pm5); //$NON-NLS-1$
         FakeMetadataObject pm6g1 = createPhysicalGroup("pm6.g1", pm6); //$NON-NLS-1$
+        FakeMetadataObject sysTables = createPhysicalGroup("SYS.Tables", sys); //$NON-NLS-1$
         
 				
 		// Create physical elements
@@ -258,6 +260,9 @@ public class FakeMetadataFactory {
         List pm6g1e = createElements(pm6g1,
             new String[] { "e1", "e2" }, //$NON-NLS-1$ //$NON-NLS-2$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
+        List sysTablese = createElements(sysTables,
+                new String[] { "e1", "e2" }, //$NON-NLS-1$ //$NON-NLS-2$
+                new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
         
 
         // Create access patterns - pm4
@@ -1237,6 +1242,10 @@ public class FakeMetadataFactory {
         store.addObject(pm6);
         store.addObject(pm6g1);
         store.addObjects(pm6g1e);
+        
+        store.addObject(sys);
+        store.addObject(sysTables);
+        store.addObjects(sysTablese);
 
         store.addObject(tm1);
         store.addObject(tm1g1);

@@ -296,4 +296,7 @@ public class TestAuthorizationValidationVisitor {
 		}
 	}
 
+    @Test public void testSystemTablesAccessible() throws Exception {
+        helpTest(exampleAuthSvc2(), "select * from Sys.tables", FakeMetadataFactory.example1Cached(), new String[] {}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 }
