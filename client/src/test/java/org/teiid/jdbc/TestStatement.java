@@ -84,5 +84,18 @@ public class TestStatement {
 		assertEquals(Boolean.TRUE.toString(), p.getProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS));
 	}
 
+	@Test public void testTransactionStatements() throws Exception {
+		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+		Properties p = new Properties();
+		Mockito.stub(conn.getExecutionProperties()).toReturn(p);
+		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		assertFalse(statement.execute("start transaction")); //$NON-NLS-1$
+		Mockito.verify(conn).setAutoCommit(false);
+		assertFalse(statement.execute("commit")); //$NON-NLS-1$
+		Mockito.verify(conn).setAutoCommit(true);
+		assertFalse(statement.execute("start transaction")); //$NON-NLS-1$
+		assertFalse(statement.execute("rollback")); //$NON-NLS-1$
+		Mockito.verify(conn).rollback(false);
+	}
 	
 }

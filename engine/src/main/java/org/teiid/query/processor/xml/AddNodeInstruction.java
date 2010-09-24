@@ -22,7 +22,12 @@
 
 package org.teiid.query.processor.xml;
 
-import static org.teiid.query.analysis.AnalysisRecord.*;
+import static org.teiid.query.analysis.AnalysisRecord.PROP_DATA_COL;
+import static org.teiid.query.analysis.AnalysisRecord.PROP_DEFAULT;
+import static org.teiid.query.analysis.AnalysisRecord.PROP_NAMESPACE;
+import static org.teiid.query.analysis.AnalysisRecord.PROP_NAMESPACE_DECL;
+import static org.teiid.query.analysis.AnalysisRecord.PROP_OPTIONAL;
+import static org.teiid.query.analysis.AnalysisRecord.PROP_TAG;
 
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -34,7 +39,7 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.logging.LogManager;
-import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.symbol.ElementSymbol;
 
 
@@ -139,9 +144,9 @@ public class AddNodeInstruction extends ProcessorInstruction {
         }
         
         if (!success){
-            String elem = (isElement ? QueryExecPlugin.Util.getString("AddNodeInstruction.element__1" ) : QueryExecPlugin.Util.getString("AddNodeInstruction.attribute__2")); //$NON-NLS-1$ //$NON-NLS-2$
+            String elem = (isElement ? QueryPlugin.Util.getString("AddNodeInstruction.element__1" ) : QueryPlugin.Util.getString("AddNodeInstruction.attribute__2")); //$NON-NLS-1$ //$NON-NLS-2$
             Object[] params = new Object[]{elem, this.descriptor.getQName(), this.descriptor.getNamespaceURI(), this.descriptor.getNamespaceURIs()};
-            String msg = QueryExecPlugin.Util.getString("AddNodeInstruction.Unable_to_add_xml_{0}_{1},_namespace_{2},_namespace_declarations_{3}_3", params); //$NON-NLS-1$
+            String msg = QueryPlugin.Util.getString("AddNodeInstruction.Unable_to_add_xml_{0}_{1},_namespace_{2},_namespace_declarations_{3}_3", params); //$NON-NLS-1$
             throw new TeiidComponentException(msg);
         }
         

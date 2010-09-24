@@ -549,7 +549,7 @@ public final class StringUtil {
                     // ... and the previous character is not uppercase, then insert
                     if ( !previousCharUppercase ) {
                         // ... and this is not the 'M' of 'MetaMatrix' ...
-                        if ( currentChar != 'M' || i < 4 || (!newName.substring(i-4).startsWith(CorePlugin.Util.getString("StringUtil.Displayable.MetaMatrix"))) ) { //$NON-NLS-1$
+                        if ( currentChar != 'M' || i < 4 || (!newName.substring(i-4).startsWith(CorePlugin.Util.getString("StringUtil.Displayable"))) ) { //$NON-NLS-1$
                             newName.insert(i, ' ' );
                             ++i;        // skip, since we just move the character back one position
                         }

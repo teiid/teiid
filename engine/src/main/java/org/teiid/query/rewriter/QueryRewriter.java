@@ -55,8 +55,8 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionMethods;
@@ -150,7 +150,6 @@ import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.PredicateCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.util.ErrorMessageKeys;
 import org.teiid.translator.SourceSystemFunctions;
 
 
@@ -395,7 +394,7 @@ public class QueryRewriter {
                 
                 whileStatement.setCondition(crit);
                 if(crit.equals(TRUE_CRITERIA)) {
-                    throw new QueryValidatorException(QueryExecPlugin.Util.getString("QueryRewriter.infinite_while")); //$NON-NLS-1$
+                    throw new QueryValidatorException(QueryPlugin.Util.getString("QueryRewriter.infinite_while")); //$NON-NLS-1$
                 } else if(crit.equals(FALSE_CRITERIA) || crit.equals(UNKNOWN_CRITERIA)) {
                     return null;
                 } 
@@ -590,7 +589,7 @@ public class QueryRewriter {
 		try {
             ResolverVisitor.resolveLanguageObject(translatedCriteria, metadata);
 		} catch(TeiidException ex) {
-            throw new QueryValidatorException(ex, ErrorMessageKeys.REWRITER_0002, QueryExecPlugin.Util.getString(ErrorMessageKeys.REWRITER_0002, translatedCriteria));
+            throw new QueryValidatorException(ex, "ERR.015.009.0002", QueryPlugin.Util.getString("ERR.015.009.0002", translatedCriteria)); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
 		return translatedCriteria;
@@ -851,17 +850,20 @@ public class QueryRewriter {
         for (int i = 0; i < orderBy.getVariableCount(); i++) {
         	SingleElementSymbol querySymbol = orderBy.getVariable(i);
         	int index = orderBy.getExpressionPosition(i);
+    		boolean isUnrelated = false;
         	if (index == -1) {
     			unrelatedItems.add(orderBy.getOrderByItems().get(i));
-        		hasUnrelatedExpression |= (querySymbol instanceof ExpressionSymbol);
-        	  	continue; // must be unrelated
-        	}
-        	querySymbol = (SingleElementSymbol)projectedSymbols.get(index);
-        	Expression expr = SymbolMap.getExpression(querySymbol);
-        	if (!previousExpressions.add(expr) || (queryCommand instanceof Query && EvaluatableVisitor.isFullyEvaluatable(expr, true))) {
-                orderBy.removeOrderByItem(i--);
+    			isUnrelated = (querySymbol instanceof ExpressionSymbol);
         	} else {
+        		querySymbol = (SingleElementSymbol)projectedSymbols.get(index);
+        	}
+        	Expression expr = SymbolMap.getExpression(querySymbol);
+        	if (!previousExpressions.add(expr) || (queryCommand instanceof Query && EvaluatableVisitor.willBecomeConstant(expr))) {
+                orderBy.removeOrderByItem(i--);
+        	} else if (!isUnrelated) {
         		orderBy.getOrderByItems().get(i).setSymbol((SingleElementSymbol)querySymbol.clone());
+        	} else {
+        		hasUnrelatedExpression = true;
         	}
         }
         if (orderBy.getVariableCount() == 0) {
@@ -1165,7 +1167,7 @@ public class QueryRewriter {
                 return FALSE_CRITERIA;                
                 
             } catch(ExpressionEvaluationException e) {
-                throw new QueryValidatorException(e, ErrorMessageKeys.REWRITER_0001, QueryExecPlugin.Util.getString(ErrorMessageKeys.REWRITER_0001, crit));
+                throw new QueryValidatorException(e, "ERR.015.009.0001", QueryPlugin.Util.getString("ERR.015.009.0001", crit)); //$NON-NLS-1$ //$NON-NLS-2$
             }
         }
         
@@ -1380,7 +1382,7 @@ public class QueryRewriter {
                 Object result = descriptor.invokeFunction(new Object[] { const2.getValue(), const1.getValue() } );
                 combinedConst = new Constant(result, descriptor.getReturnType());
             } catch(FunctionExecutionException e) {
-            	throw new QueryValidatorException(e, ErrorMessageKeys.REWRITER_0003, QueryExecPlugin.Util.getString(ErrorMessageKeys.REWRITER_0003, e.getMessage()));
+            	throw new QueryValidatorException(e, "ERR.015.009.0003", QueryPlugin.Util.getString("ERR.015.009.0003", e.getMessage())); //$NON-NLS-1$ //$NON-NLS-2$
         	}
         } else {
             Function conversion = new Function(descriptor.getName(), new Expression[] { rightExpr, const1 });
@@ -2493,7 +2495,7 @@ public class QueryRewriter {
                 if (result == null) {
                     result = changingValue;
                 } else if (!result.equals(changingValue)) {
-                	throw new QueryValidatorException(QueryExecPlugin.Util.getString("VariableSubstitutionVisitor.Input_vars_should_have_same_changing_state", expr)); //$NON-NLS-1$
+                	throw new QueryValidatorException(QueryPlugin.Util.getString("VariableSubstitutionVisitor.Input_vars_should_have_same_changing_state", expr)); //$NON-NLS-1$
                 }
             }
         }

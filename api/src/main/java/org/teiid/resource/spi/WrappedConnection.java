@@ -69,5 +69,9 @@ public class WrappedConnection implements Connection {
 	public ResultSetInfo getResultSetInfo() throws ResourceException {
 		return this.mc.getConnection().getResultSetInfo();
 	}
+	
+	public Connection unwrap() throws ResourceException {
+		return this.mc.getConnection();
+	}
 
 }

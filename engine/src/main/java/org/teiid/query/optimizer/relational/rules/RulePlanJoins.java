@@ -36,8 +36,8 @@ import java.util.Set;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
@@ -141,7 +141,7 @@ public class RulePlanJoins implements OptimizerRule {
                         
             //quick check for satisfiability
             if (!joinRegion.isSatisfiable()) {
-                throw new QueryPlannerException(QueryExecPlugin.Util.getString("RulePlanJoins.cantSatisfy", joinRegion.getUnsatisfiedAccessPatterns())); //$NON-NLS-1$
+                throw new QueryPlannerException(QueryPlugin.Util.getString("RulePlanJoins.cantSatisfy", joinRegion.getUnsatisfiedAccessPatterns())); //$NON-NLS-1$
             }
                         
             planForDependencies(joinRegion);
@@ -237,7 +237,7 @@ public class RulePlanJoins implements OptimizerRule {
                      *  Ideally we should be a little smarter in case 2 
                      *    - pushing down a same source cross join can be done if we know that a dependent join will be performed 
                      */
-                    boolean hasJoinCriteria = false; 
+                    //boolean hasJoinCriteria = false; 
                     LinkedList<Criteria> joinCriteria = new LinkedList<Criteria>();
                     Object modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode1, metadata);
                     SupportedJoinCriteria sjc = CapabilitiesUtil.getSupportedJoinCriteria(modelId, metadata, capFinder);
@@ -250,25 +250,27 @@ public class RulePlanJoins implements OptimizerRule {
                         
                         if (sources.contains(accessNode1)) {
                             if (sources.contains(accessNode2) && sources.size() == 2) {
-                                hasJoinCriteria = true;
+                                //hasJoinCriteria = true;
                                 Criteria crit = (Criteria)critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-								if (RuleRaiseAccess.isSupportedJoinCriteria(sjc, crit, modelId, metadata, capFinder)) {
+								if (RuleRaiseAccess.isSupportedJoinCriteria(sjc, crit, modelId, metadata, capFinder, null)) {
 	                                joinCriteriaNodes.add(critNode);
 	                                joinCriteria.add(crit);
                                 }
                             } else if (!accessNodes.containsAll(sources)) {
-                                hasJoinCriteria = true;
+                                //hasJoinCriteria = true;
                             }
                         } else if (sources.contains(accessNode2) && !accessNodes.containsAll(sources)) {
-                            hasJoinCriteria = true;
+                           //hasJoinCriteria = true;
                         }
                     }
                     
                     /*
-                     * If we failed to find direct criteria, but still have non-pushable or criteria to
-                     * other groups we'll use additional checks
+                     * If we failed to find direct criteria, a cross join may still be acceptable
                      */
-                    if ((!hasJoinCriteria || joinCriteriaNodes.isEmpty()) && !canPushCrossJoin(metadata, context, accessNode1, accessNode2)) {
+                    if (joinCriteriaNodes.isEmpty() && !canPushCrossJoin(metadata, context, accessNode1, accessNode2)) {
+                    	//if (hasJoinCriteria) {
+                    		//a cross join would still be a good idea given that a dependent join can be used
+                    	//}
                     	continue;
                     }                    
                     
@@ -277,7 +279,7 @@ public class RulePlanJoins implements OptimizerRule {
                     JoinType joinType = joinCriteria.isEmpty()?JoinType.JOIN_CROSS:JoinType.JOIN_INNER;
                     
                     //try to push to the source
-                    if (RuleRaiseAccess.canRaiseOverJoin(toTest, metadata, capFinder, joinCriteria, joinType) == null) {
+                    if (RuleRaiseAccess.canRaiseOverJoin(toTest, metadata, capFinder, joinCriteria, joinType, null) == null) {
                         continue;
                     }
                     
@@ -378,7 +380,7 @@ public class RulePlanJoins implements OptimizerRule {
     private void planForDependencies(JoinRegion joinRegion) throws QueryPlannerException {
                 
         if (joinRegion.getJoinSourceNodes().isEmpty()) {
-            throw new QueryPlannerException(QueryExecPlugin.Util.getString("RulePlanJoins.cantSatisfy", joinRegion.getUnsatisfiedAccessPatterns())); //$NON-NLS-1$
+            throw new QueryPlannerException(QueryPlugin.Util.getString("RulePlanJoins.cantSatisfy", joinRegion.getUnsatisfiedAccessPatterns())); //$NON-NLS-1$
         }
         
         HashSet<GroupSymbol> currentGroups = new HashSet<GroupSymbol>();
@@ -437,7 +439,7 @@ public class RulePlanJoins implements OptimizerRule {
         }
         
         if (!dependentNodes.isEmpty()) {
-            throw new QueryPlannerException(QueryExecPlugin.Util.getString("RulePlanJoins.cantSatisfy", joinRegion.getUnsatisfiedAccessPatterns())); //$NON-NLS-1$
+            throw new QueryPlannerException(QueryPlugin.Util.getString("RulePlanJoins.cantSatisfy", joinRegion.getUnsatisfiedAccessPatterns())); //$NON-NLS-1$
         }
         
     }
@@ -521,7 +523,7 @@ public class RulePlanJoins implements OptimizerRule {
      * @param metadata
      * @return
      */
-    Object[] findBestJoinOrder(JoinRegion region, QueryMetadataInterface metadata) {
+    Object[] findBestJoinOrder(JoinRegion region, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
         int regionCount = region.getJoinSourceNodes().size();
         
         List<Integer> orderList = new ArrayList<Integer>(regionCount);

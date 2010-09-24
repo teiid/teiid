@@ -34,8 +34,8 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.Assertion;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
@@ -57,7 +57,6 @@ import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 public final class RulePushSelectCriteria implements OptimizerRule {
@@ -95,7 +94,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 	            	continue;
 	            }
 	            
-	            PlanNode sourceNode = findOriginatingNode(metadata, capFinder, critNode);
+	            PlanNode sourceNode = findOriginatingNode(metadata, capFinder, critNode, analysisRecord);
 	            
 	            if(sourceNode == null) {
                     deadNodes.add(critNode);
@@ -138,7 +137,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 	}
 
 	private PlanNode findOriginatingNode(QueryMetadataInterface metadata,
-			CapabilitiesFinder capFinder, PlanNode critNode)
+			CapabilitiesFinder capFinder, PlanNode critNode, AnalysisRecord record)
 			throws TeiidComponentException, QueryMetadataException {
 		if (critNode.getGroups().isEmpty()) {
 	        //check to see if pushing may impact cardinality
@@ -147,7 +146,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 	        	return groupNode;
 	        }
 
-			Object modelId = getSubqueryModelId(metadata, capFinder, critNode);
+			Object modelId = getSubqueryModelId(metadata, capFinder, critNode, record);
 			if (modelId != null) {
 				for (PlanNode node : NodeEditor.findAllNodes(critNode, NodeConstants.Types.SOURCE)) {
 		            GroupSymbol group = node.getGroups().iterator().next();
@@ -162,11 +161,11 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 	}
 
 	private Object getSubqueryModelId(QueryMetadataInterface metadata,
-			CapabilitiesFinder capFinder, PlanNode critNode)
+			CapabilitiesFinder capFinder, PlanNode critNode, AnalysisRecord record)
 			throws TeiidComponentException, QueryMetadataException {
 		Object modelId = null;
 		for (SubqueryContainer subqueryContainer : critNode.getSubqueryContainers()) {
-			Object validId = CriteriaCapabilityValidatorVisitor.validateSubqueryPushdown(subqueryContainer, null, metadata, capFinder);
+			Object validId = CriteriaCapabilityValidatorVisitor.validateSubqueryPushdown(subqueryContainer, null, metadata, capFinder, record);
 			if (validId == null) {
 				return null;
 			}
@@ -283,7 +282,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 			// Look for situations where we don't allow SELECT to be pushed
 			if(currentNode.getType() == NodeConstants.Types.ACCESS) {
                 try {
-                    if (!RuleRaiseAccess.canRaiseOverSelect(currentNode, metadata, capFinder, critNode)) {
+                    if (!RuleRaiseAccess.canRaiseOverSelect(currentNode, metadata, capFinder, critNode, null)) {
                         return currentNode;
                     }
                     
@@ -298,7 +297,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                         return currentNode.getFirstChild();
                     } 
 				} catch(QueryMetadataException e) {
-                    throw new QueryPlannerException(e, QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0020, currentNode.getGroups()));
+                    throw new QueryPlannerException(e, QueryPlugin.Util.getString("ERR.015.004.0020", currentNode.getGroups())); //$NON-NLS-1$
 				}
 			} else if(currentNode.getType() == NodeConstants.Types.JOIN) {
 				//pushing below a join is not necessary under an access node

@@ -1,0 +1,26 @@
+string                                                             blob                                                             
+resourcePath                                                       contents                                                         
+/parts/partsmd/PartsSupplier.xmi                                   Blob[9655]                                                       
+/ConfigurationInfo.def                                             Blob[4830]                                                       
+/META-INF/MANIFEST.MF                                              Blob[25]                                                         
+/MetaMatrix-VdbManifestModel.xmi                                   Blob[2393]                                                       
+/runtime-inf/ANNOTATION.INDEX                                      Blob[8212]                                                       
+/runtime-inf/COLUMNS.INDEX                                         Blob[25021]                                                      
+/runtime-inf/DATATYPES.INDEX                                       Blob[42378]                                                      
+/runtime-inf/DELETE_TRANSFORM.INDEX                                Blob[8212]                                                       
+/runtime-inf/FILES.INDEX                                           Blob[8212]                                                       
+/runtime-inf/INSERT_TRANSFORM.INDEX                                Blob[8212]                                                       
+/runtime-inf/KEYS.INDEX                                            Blob[25014]                                                      
+/runtime-inf/MAPPING_TRANSFORM.INDEX                               Blob[8212]                                                       
+/runtime-inf/MODELS.INDEX                                          Blob[24855]                                                      
+/runtime-inf/PROCEDURES.INDEX                                      Blob[8212]                                                       
+/runtime-inf/PROC_TRANSFORM.INDEX                                  Blob[8212]                                                       
+/runtime-inf/PROPERTIES.INDEX                                      Blob[8212]                                                       
+/runtime-inf/SELECT_TRANSFORM.INDEX                                Blob[8212]                                                       
+/runtime-inf/TABLES.INDEX                                          Blob[24947]                                                      
+/runtime-inf/UPDATE_TRANSFORM.INDEX                                Blob[8212]                                                       
+/runtime-inf/VDBS.INDEX                                            Blob[24924]                                                      
+Row Count : 20
+getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
+resourcePath   12             PartsSupplier   java.lang.String    resourcePath    string             SYSADMIN       VDBResources  255                   255           0         false            true             false       true                  1           false       true          true      true        
+contents       2004           PartsSupplier   java.sql.Blob       contents        blob               SYSADMIN       VDBResources  2147483647            2147483647    0         false            true             false       true                  1           false       true          true      true        

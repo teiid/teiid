@@ -1,11 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
-    <artifactId>teiid</artifactId>
+    <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
     <version>7.2.0.Alpha2-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>build</artifactId>
+  <artifactId>teiid</artifactId>
   <name>Build</name>
   <description>Teiid Build</description>
     <build>
@@ -34,5 +34,60 @@
                 </excludes>
             </resource>
         </resources>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <artifactId>maven-assembly-plugin</artifactId>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+        <plugins>
+          <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+
+            <configuration>
+              <descriptors>
+                <descriptor>assembly/client-jar.xml</descriptor>
+                <descriptor>assembly/jboss-container/dist.xml</descriptor>
+                <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
+              </descriptors>
+            </configuration>
+
+            <executions>
+              <execution>
+                <id>create-assemblies</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>single</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
     </build>
+    
+    <profiles>
+      <profile>
+        <!-- 
+            This profile is activated manually, as in "mvn ... -P release ..."
+  		  -->
+        <id>release</id>
+        <build>
+          <plugins>
+            <plugin>
+              <artifactId>maven-assembly-plugin</artifactId>
+              <configuration>
+                <descriptors>
+                  <descriptor>assembly/src.xml</descriptor>
+                  <descriptor>assembly/docs.xml</descriptor>
+                  <descriptor>assembly/client-jar.xml</descriptor>
+                  <descriptor>assembly/jboss-container/dist.xml</descriptor>
+                  <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
+                </descriptors>
+              </configuration>
+            </plugin>
+          </plugins>
+        </build>
+      </profile>
+    </profiles>
 </project>

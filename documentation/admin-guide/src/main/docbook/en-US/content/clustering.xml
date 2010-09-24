@@ -6,12 +6,12 @@
    To cluster JBoss AS instances use these <ulink url="http://www.jboss.org/jbossas/docs/5-x.html">instructions</ulink> then Teiid instances
    are clustered as well. Just make sure that you installed Teiid in every JBoss AS node before starting the cluster. 
    There is one specific configuration that needs to be done for enabling the replicated (distributed) cache in Teiid. 
-   To enable distributed cache rename "&lt;jboss-as&gt;/server/&lt;profile&gt;/deploy/teiid/teiid-cache-manager-jboss-beans-rename-me.xml" file
-   to  "&lt;jboss-as&gt;/server/&lt;profile&gt;/deploy/teiid/teiid-cache-manager-jboss-beans.xml".         
+   To enable distributed caching, rename the "&lt;jboss-as&gt;/server/&lt;profile&gt;/deploy/teiid/teiid-cache-manager-jboss-beans-rename-me.xml" file
+   to "&lt;jboss-as&gt;/server/&lt;profile&gt;/deploy/teiid/teiid-cache-manager-jboss-beans.xml".         
    </para>
    
    <para>
-        Typically users create clusters to improve the performance of the system through  
+        Typically users create clusters to improve the performance of the system through:  
         <orderedlist>
             <listitem> <para>Load Balancing: Take look at the Client developers guide on how to use load balancing between multiple nodes.</para> </listitem>
             <listitem> <para>Fail Over: Take look at the Client developers guide on how to use fail over between multiple nodes.</para> </listitem>

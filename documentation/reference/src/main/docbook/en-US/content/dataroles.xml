@@ -43,6 +43,9 @@
 		<warning><para>Unlike previous versions of Teiid, non-visible models are accessible by user queries.  
 		To restrict user access at a model level, at least one data role should be created to enable data role checking.  
 		In turn that role can be mapped to any authenticated user and should not grant permissions to models that should be inaccessable.</para></warning>
+		
+		<para>Permissions are not applicable to the SYS and pg_catalog schemas.  These metadata reporting schemas are always accessible regardless of the user.
+		The SYSADMIN schema however may need permissions as applicable.</para>
 		    	
    	    <orderedlist>
 	        <para>To process a <emphasis>SELECT</emphasis> statement or a stored procedure execution, the user account requires the following access rights:</para>

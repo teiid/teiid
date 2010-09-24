@@ -39,7 +39,6 @@ import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
-import org.teiid.query.util.ErrorMessageKeys;
 
 /** 
  * Validate that all ElementSymbol and ExpressionSymbols used in the HAVING 
@@ -64,14 +63,14 @@ public class AggregateValidationVisitor extends AbstractValidationVisitor {
         if(aggExp != null) {
             Collection<AggregateSymbol> nestedAggs = AggregateSymbolCollectorVisitor.getAggregates(aggExp, true);
             if(nestedAggs.size() > 0) {
-                handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0039, nestedAggs), nestedAggs);
+                handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0039", nestedAggs), nestedAggs); //$NON-NLS-1$
             }
         }
         
         // Verify data type of aggregate expression
         Type aggregateFunction = obj.getAggregateFunction();
         if((aggregateFunction == Type.SUM || aggregateFunction == Type.AVG) && obj.getType() == null) {
-            handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0041, new Object[] {aggregateFunction, obj}), obj);
+            handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0041", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
         } else if (obj.getType() != DataTypeManager.DefaultDataClasses.NULL) {
         	if (aggregateFunction == Type.XMLAGG && aggExp.getType() != DataTypeManager.DefaultDataClasses.XML) {
         		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_xml", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
@@ -84,7 +83,7 @@ public class AggregateValidationVisitor extends AbstractValidationVisitor {
         }
         if(obj.isEnhancedNumeric()) {
         	if (!Number.class.isAssignableFrom(aggExp.getType())) {
-        		handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0041, new Object[] {aggregateFunction, obj}), obj);
+        		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0041", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
         	}
         	if (obj.isDistinct()) {
         		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.invalid_distinct", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
@@ -121,11 +120,11 @@ public class AggregateValidationVisitor extends AbstractValidationVisitor {
         
         if(groupExpressions == null) {
             if (symbol instanceof ElementSymbol) {
-                handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0037, symbol), symbol);
+                handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0037", symbol), symbol); //$NON-NLS-1$
             }
         } else if(! groupExpressions.contains(symbol)) {
             if (symbol instanceof ElementSymbol) {
-                handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0038, symbol), symbol);
+                handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0038", symbol), symbol); //$NON-NLS-1$
             }
         } else {
             validateBelow = false;

@@ -95,7 +95,7 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 	}	
 	
 	@Override
-	public Object createConnectionFactory() throws ResourceException {
+	public BasicConnectionFactory createConnectionFactory() throws ResourceException {
 		return new BasicConnectionFactory() {
 			@Override
 			public SalesforceConnectionImpl getConnection() throws ResourceException {

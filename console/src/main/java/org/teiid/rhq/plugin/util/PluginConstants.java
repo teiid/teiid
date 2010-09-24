@@ -118,6 +118,19 @@ public interface PluginConstants {
 			}
 
 		}
+		
+		public interface DATA_ROLE {
+
+			public final static String NAME = "VDB Data Role"; //$NON-NLS-1$
+			public final static String DESCRIPTION = "Data/Security Role for a Teiid Virtual Database (VDB)"; //$NON-NLS-1$
+
+			public static interface Operations {
+			}
+			
+			public static interface Metrics {
+			}
+
+		}
 
 		public interface Translator {
 

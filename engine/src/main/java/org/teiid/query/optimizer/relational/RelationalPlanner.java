@@ -46,7 +46,6 @@ import org.teiid.dqp.internal.process.Request;
 import org.teiid.language.SQLConstants;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -105,7 +104,6 @@ import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.util.ErrorMessageKeys;
 import org.teiid.query.validator.ValidationVisitor;
 
 
@@ -261,7 +259,7 @@ public class RelationalPlanner {
                 }
                 
                 if(! appliedHint) {
-                	String msg = QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0010, groupName);
+                	String msg = QueryPlugin.Util.getString("ERR.015.004.0010", groupName); //$NON-NLS-1$
                 	if (this.analysisRecord.recordAnnotations()) {
                 		this.analysisRecord.addAnnotation(new Annotation(Annotation.HINTS, msg, "ignoring hint", Priority.MEDIUM)); //$NON-NLS-1$
                 	}
@@ -1036,7 +1034,7 @@ public class RelationalPlanner {
                 try {
                 	result = QueryParser.getQueryParser().parseCommand(qnode.getQuery());
                 } catch(QueryParserException e) {
-                    throw new QueryResolverException(e, ErrorMessageKeys.RESOLVER_0011, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0011, qnode.getGroupName()));
+                    throw new QueryResolverException(e, "ERR.015.008.0011", QueryPlugin.Util.getString("ERR.015.008.0011", qnode.getGroupName())); //$NON-NLS-1$ //$NON-NLS-2$
                 }
                 
                 //Handle bindings and references

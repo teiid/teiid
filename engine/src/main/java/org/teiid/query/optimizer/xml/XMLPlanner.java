@@ -33,8 +33,8 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.mapping.xml.MappingNode;
 import org.teiid.query.mapping.xml.MappingNodeLogger;
@@ -290,7 +290,7 @@ public final class XMLPlanner implements CommandPlanner{
             // in the orderby. static nodes do not qualify for ordering.
             if (elementNode.getNameInSource() == null){
                 Object[] params = new Object[] {elementNode, orderBy};
-                String msg = QueryExecPlugin.Util.getString("XMLPlanner.The_XML_document_element_{0}_is_not_mapped_to_data_and_cannot_be_used_in_the_ORDER_BY_clause__{1}_1", params); //$NON-NLS-1$
+                String msg = QueryPlugin.Util.getString("XMLPlanner.The_XML_document_element_{0}_is_not_mapped_to_data_and_cannot_be_used_in_the_ORDER_BY_clause__{1}_1", params); //$NON-NLS-1$
                 throw new QueryPlannerException(msg);
             }
             

@@ -43,9 +43,9 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
-import org.teiid.net.NetPlugin;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.TeiidURL;
+import org.teiid.runtime.RuntimePlugin;
 
 
 public class LocalServerConnection implements ServerConnection {
@@ -95,7 +95,7 @@ public class LocalServerConnection implements ServerConnection {
 
 			public Object invoke(Object arg0, final Method arg1, final Object[] arg2) throws Throwable {
 				if (shutdown) {
-					throw ExceptionUtil.convertException(arg1, new TeiidComponentException(NetPlugin.Util.getString("LocalTransportHandler.Transport_shutdown"))); //$NON-NLS-1$
+					throw ExceptionUtil.convertException(arg1, new TeiidComponentException(RuntimePlugin.Util.getString("LocalTransportHandler.Transport_shutdown"))); //$NON-NLS-1$
 				}
 				try {
 					if (passthrough && !arg1.getDeclaringClass().equals(ILogon.class)) {

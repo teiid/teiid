@@ -82,6 +82,7 @@ public class DQPWorkContext implements Serializable {
     
     public void setSession(SessionMetadata session) {
 		this.session = session;
+		this.policies = null;
 	}
     
     public void setSecurityHelper(SecurityHelper securityHelper) {

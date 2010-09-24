@@ -35,12 +35,16 @@ import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Literal;
 import org.teiid.language.NamedTable;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.SQLConversionVisitor;
 
 
 
@@ -58,28 +62,8 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
     public void start() throws TranslatorException {
         super.start();
         
-        registerFunctionModifier("PATH", new FunctionModifier() { //$NON-NLS-1$
-            
-            @Override
-            public List<?> translate(Function function) {
-           	List<Object> objs = new ArrayList<Object>();
-
-        	List<Expression> parms = function.getParameters();
-        	
-        	for (Expression s : parms) 
-        	{
-        	    String v = s.toString();
-        	    v.replace('\'', ' ');
-        	    objs.add(v);
-         	}
-
-                return objs; 
-            	}
-        }   );
-        	
-
-
-           
+		registerFunctionModifier("PATH", new PathFunctionModifier());
+       
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
    	 
@@ -126,32 +110,50 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 				return null;
 			}
 		}, FunctionModifier.BOOLEAN);
+    	
+    	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
+    	
+
+    	LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Started"); //$NON-NLS-1$
+
      }    
+    
+    /**
+     * Create the {@link SQLConversionVisitor} that will perform translation.  Typical custom
+     * JDBC connectors will not need to create custom conversion visitors, rather implementors 
+     * should override existing {@link JDBCExecutionFactory} methods.
+     * @return the {@link SQLConversionVisitor}
+     */
+    public SQLConversionVisitor getSQLConversionVisitor() {
+    	return new ModeShapeSQLVisitor(this);
+    }
     
 
 	@Override
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
+		if (obj instanceof NamedTable) {	
+		    NamedTable nt = (NamedTable) obj;
+		    List<String> ntlist = new ArrayList<String>(1);
+		    ntlist.add(ModeShapeUtil.createJCRName(nt.getMetadataObject().getNameInSource()));
+		    return ntlist;
+		} else if (obj instanceof ColumnReference) {
+		    ColumnReference elem = (ColumnReference) obj;
+		    
+		    String nameInSource = "NoNameInSource";
+		    if (elem.getMetadataObject() != null) {
+		    	nameInSource = elem.getMetadataObject().getNameInSource();
+			    
+			    List<String> ntlist = new ArrayList<String>(1);
+				ntlist.add(ModeShapeUtil.createJCRName(nameInSource));
 
-	if (obj instanceof NamedTable) {
-
-	    NamedTable nt = (NamedTable) obj;
-	    List<String> ntlist = new ArrayList<String>(1);
-
-	    ntlist.add("[" + nt.getMetadataObject().getNameInSource() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
-	    return ntlist;
-	}
-
-	if (obj instanceof ColumnReference) {
-	    ColumnReference elem = (ColumnReference) obj;
-	    List<String> ntlist = new ArrayList<String>(1);
-	    ntlist.add("[" + elem.getMetadataObject().getNameInSource() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
-	    return ntlist;
-
-	}
-
-	return super.translate(obj, context);
+			    return ntlist;
+		    } 
+		} 
+	
+		return super.translate(obj, context);
     }
-    
+		
+   
     @Override
     public String translateLiteralBoolean(Boolean booleanValue) {
         if(booleanValue.booleanValue()) {
@@ -182,13 +184,13 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public List<String> getSupportedFunctions() {
-	List<String> supportedFunctions = new ArrayList<String>();
-	supportedFunctions.addAll(super.getSupportedFunctions());
-	supportedFunctions.add("PATH"); //$NON-NLS-1$
-	supportedFunctions.add("NAME"); //$NON-NLS-1$
-	supportedFunctions.add("ISCHILDNODE"); //$NON-NLS-1$
-	
-	return supportedFunctions;
+		List<String> supportedFunctions = new ArrayList<String>();
+		supportedFunctions.addAll(super.getSupportedFunctions());
+		supportedFunctions.add("PATH"); //$NON-NLS-1$
+		supportedFunctions.add("NAME"); //$NON-NLS-1$
+		supportedFunctions.add("ISCHILDNODE"); //$NON-NLS-1$
+		
+		return supportedFunctions;
 
     }
         

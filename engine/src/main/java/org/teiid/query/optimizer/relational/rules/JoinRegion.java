@@ -42,6 +42,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.resolver.util.AccessPattern;
 import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.CompoundCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -233,8 +234,10 @@ class JoinRegion {
      * @param joinOrder
      * @param metadata
      * @return
+     * @throws TeiidComponentException 
+     * @throws QueryMetadataException 
      */
-    public double scoreRegion(Object[] joinOrder, QueryMetadataInterface metadata) {
+    public double scoreRegion(Object[] joinOrder, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
         List<Map.Entry<PlanNode, PlanNode>> joinSourceEntries = new ArrayList<Map.Entry<PlanNode, PlanNode>>(joinSourceNodes.entrySet());
         double totalIntermediatCost = 0;
         double cost = 1;
@@ -263,17 +266,35 @@ class JoinRegion {
             
             float sourceCost = ((Float)joinSourceRoot.getProperty(NodeConstants.Info.EST_CARDINALITY)).floatValue();
             
-            if (sourceCost == NewCalculateCostUtil.UNKNOWN_VALUE) {
-                sourceCost = UNKNOWN_TUPLE_EST;
-            } else if (Double.isInfinite(sourceCost) || Double.isNaN(sourceCost)) {
-                sourceCost = UNKNOWN_TUPLE_EST * 10;
-            }
-            
-            cost *= sourceCost;
+            List<PlanNode> applicableCriteria = null;
             
             if (!criteria.isEmpty() && i > 0) {
-                List<PlanNode> applicableCriteria = getJoinCriteriaForGroups(groups, criteria);
-                
+                applicableCriteria = getJoinCriteriaForGroups(groups, criteria);
+            }
+            
+        	if (sourceCost == NewCalculateCostUtil.UNKNOWN_VALUE) {
+        		sourceCost = UNKNOWN_TUPLE_EST;
+                if (applicableCriteria != null && !applicableCriteria.isEmpty()) {
+                	CompoundCriteria cc = new CompoundCriteria();
+                	for (PlanNode planNode : applicableCriteria) {
+    					cc.addCriteria((Criteria) planNode.getProperty(NodeConstants.Info.SELECT_CRITERIA));
+    				}
+                	sourceCost = (float)cost;
+                	criteria.removeAll(applicableCriteria);
+	            	applicableCriteria = null;
+            		if (NewCalculateCostUtil.usesKey(cc, metadata)) {
+    	            	sourceCost = Math.min(UNKNOWN_TUPLE_EST, sourceCost * Math.min(NewCalculateCostUtil.UNKNOWN_JOIN_SCALING, sourceCost));
+            		} else {
+    	            	sourceCost = Math.min(UNKNOWN_TUPLE_EST, sourceCost * Math.min(NewCalculateCostUtil.UNKNOWN_JOIN_SCALING * 2, sourceCost));
+            		}
+                }
+            } else if (Double.isInfinite(sourceCost) || Double.isNaN(sourceCost)) {
+            	return Double.MAX_VALUE;
+            }
+        
+            cost *= sourceCost;
+            
+            if (applicableCriteria != null) {
                 for (PlanNode criteriaNode : applicableCriteria) {
                     float filter = ((Float)criteriaNode.getProperty(NodeConstants.Info.EST_SELECTIVITY)).floatValue();
                     
@@ -282,7 +303,6 @@ class JoinRegion {
                 
                 criteria.removeAll(applicableCriteria);
             }
-            
             totalIntermediatCost += cost;
         }
         

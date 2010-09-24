@@ -24,7 +24,6 @@ package org.teiid.query.sql.lang;
 
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.util.ErrorMessageKeys;
 
 /**
  * <p>The common functionality of a {@link CompareCriteria} and a
@@ -79,7 +78,7 @@ public abstract class AbstractCompareCriteria extends PredicateCriteria {
      */
     public void setOperator( int operator ) {
         if (operator < EQ || operator > GE) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0001, operator));
+            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0001", operator)); //$NON-NLS-1$
         }
         this.operator = operator;
     }

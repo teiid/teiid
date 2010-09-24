@@ -28,7 +28,7 @@ import java.util.Map;
 
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.util.VariableContext;
 
@@ -83,7 +83,7 @@ class XMLContext {
             if (this.parentContext != null) {
                 return this.parentContext.getCurrentRow(aliasResultName);
             }
-            throw new TeiidComponentException(QueryExecPlugin.Util.getString("results_not_found", aliasResultName)); //$NON-NLS-1$
+            throw new TeiidComponentException(QueryPlugin.Util.getString("results_not_found", aliasResultName)); //$NON-NLS-1$
         }
         return executor.currentRow();
     }
@@ -100,7 +100,7 @@ class XMLContext {
             if (this.parentContext != null) {
                 return this.parentContext.getNextRow(aliasResultName);
             }
-            throw new TeiidComponentException(QueryExecPlugin.Util.getString("results_not_found", aliasResultName)); //$NON-NLS-1$
+            throw new TeiidComponentException(QueryPlugin.Util.getString("results_not_found", aliasResultName)); //$NON-NLS-1$
         }
         return executor.nextRow();
     }
@@ -138,7 +138,7 @@ class XMLContext {
             if (this.parentContext != null) {
                 return this.parentContext.getOutputElements(resultName);
             }
-            throw new TeiidComponentException(QueryExecPlugin.Util.getString("results_not_found", resultName)); //$NON-NLS-1$
+            throw new TeiidComponentException(QueryPlugin.Util.getString("results_not_found", resultName)); //$NON-NLS-1$
         }
         return executor.getOutputElements();        
     }

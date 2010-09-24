@@ -22,6 +22,9 @@
 
 package org.teiid.systemmodel;
 
+import java.io.IOException;
+import java.sql.SQLException;
+
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -97,15 +100,9 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		checkResult("testKeyColumns", "select* from SYS.KeyColumns order by Name, KeyName"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	@Test public void testVDBResourcePathsProcedure() {
-
-		String[] expected = { "ResourcePath[string]	isBinary[boolean]",
-							"/parts/partsmd/PartsSupplier.xmi	false",
-							"/ConfigurationInfo.def	false",
-							"/MetaMatrix-VdbManifestModel.xmi	false", 
-		};
-		execute("exec getVDBResourcePaths()",new Object[] {}); //$NON-NLS-1$
-		assertResults(expected);
+	@Test public void testVDBResources() throws IOException, SQLException {
+		execute("select * from vdbresources",new Object[] {}); //$NON-NLS-1$
+		TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
 	}
 
 	@Test public void testColumns() throws Exception {

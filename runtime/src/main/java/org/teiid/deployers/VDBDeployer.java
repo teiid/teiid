@@ -171,9 +171,6 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map = new IdentityHashMap<Translator, ExecutionFactory<Object, Object>>();
 		
 		for (Model model:deployment.getModels()) {
-			if (model.getName().equals(CoreConstants.SYSTEM_MODEL) || model.getName().equals(CoreConstants.ODBC_MODEL)){
-				continue;
-			}			
 			for (String source:model.getSourceNames()) {
 				if (cmr.getConnectorManager(source) != null) {
 					continue;
@@ -207,9 +204,6 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 			ModelMetaData model = (ModelMetaData)m;
 			List<SourceMappingMetadata> mappings = model.getSourceMappings();
 			for (SourceMappingMetadata mapping:mappings) {
-				if (mapping.getName().equals(CoreConstants.SYSTEM_MODEL) || model.getName().equals(CoreConstants.ODBC_MODEL)) {
-					continue;
-				}
 				ConnectorManager cm = cmr.getConnectorManager(mapping.getName());
 				String msg = cm.getStausMessage();
 				if (msg != null && msg.length() > 0) {
@@ -274,10 +268,6 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
     	
     	// make sure we are configured correctly first
 		for (final ModelMetaData model:vdb.getModelMetaDatas().values()) {
-			if (model.getName().equals(CoreConstants.SYSTEM_MODEL) || model.getName().equals(CoreConstants.ODBC_MODEL)){
-				continue;
-			}
-		
 	    	if (model.getSourceNames().isEmpty()) {
 	    		throw new DeploymentException(RuntimePlugin.Util.getString("fail_to_deploy", vdb.getName()+"-"+vdb.getVersion(), model.getName())); //$NON-NLS-1$ //$NON-NLS-2$
 	    	}
@@ -310,7 +300,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
     private void loadMetadata(VDBMetaData vdb, ModelMetaData model, boolean cache, File cacheFile, MetadataStoreGroup vdbStore, ConnectorManagerRepository cmr) {
     	Exception exception = null;
     	
-    	boolean loaded = false;;
+    	boolean loaded = false;
     	for (String sourceName: model.getSourceNames()) {
     		ConnectorManager cm = cmr.getConnectorManager(sourceName);
     		if (cm == null) {

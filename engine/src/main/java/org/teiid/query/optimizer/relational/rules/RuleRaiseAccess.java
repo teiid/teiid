@@ -73,7 +73,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
             raisedNode = false;
 
             for (PlanNode accessNode : NodeEditor.findAllNodes(plan, NodeConstants.Types.ACCESS)) {
-                PlanNode newRoot = raiseAccessNode(plan, accessNode, metadata, capFinder, afterJoinPlanning);
+                PlanNode newRoot = raiseAccessNode(plan, accessNode, metadata, capFinder, afterJoinPlanning, analysisRecord);
                 if(newRoot != null) {
                     raisedNode = true;
                     plan = newRoot;
@@ -87,7 +87,8 @@ public final class RuleRaiseAccess implements OptimizerRule {
     /**
      * @return null if nothing changed, and a new plan root if something changed
      */
-    static PlanNode raiseAccessNode(PlanNode rootNode, PlanNode accessNode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, boolean afterJoinPlanning) 
+    static PlanNode raiseAccessNode(PlanNode rootNode, PlanNode accessNode, QueryMetadataInterface metadata, 
+    		CapabilitiesFinder capFinder, boolean afterJoinPlanning, AnalysisRecord record) 
     throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
         
         PlanNode parentNode = accessNode.getParent();
@@ -103,7 +104,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
         switch(parentNode.getType()) {
             case NodeConstants.Types.JOIN:
             {
-                modelID = canRaiseOverJoin(modelID, parentNode, metadata, capFinder, afterJoinPlanning);
+                modelID = canRaiseOverJoin(modelID, parentNode, metadata, capFinder, afterJoinPlanning, record);
                 if(modelID != null) {
                     raiseAccessOverJoin(parentNode, modelID, true);                    
                     return rootNode;
@@ -117,7 +118,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
                 
                 for (int i = 0; i < projectCols.size(); i++) {
                     SingleElementSymbol symbol = (SingleElementSymbol)projectCols.get(i);
-                    if(! canPushSymbol(symbol, true, modelID, metadata, capFinder)) {
+                    if(! canPushSymbol(symbol, true, modelID, metadata, capFinder, record)) {
                         return null;
                     } 
                 }
@@ -138,10 +139,13 @@ public final class RuleRaiseAccess implements OptimizerRule {
             {     
                 // If model supports the support constant parameter, then move access node
                 if(!CapabilitiesUtil.supportsSelectDistinct(modelID, metadata, capFinder)) {
+                	recordDebug("cannot push dupremove, since distinct is not supported by source", parentNode, record); //$NON-NLS-1$
                 	return null;
                 }
                 
+                //TODO: this check is too specific the columns could be used in expressions that are comparable
                 if (!CapabilitiesUtil.checkElementsAreSearchable((List)NodeEditor.findNodePreOrder(parentNode, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS), metadata, SupportConstants.Element.SEARCHABLE_COMPARE)) {
+                	recordDebug("cannot push dupremove, since not all columns are comparable at the source", parentNode, record); //$NON-NLS-1$
                 	return null;
                 }
                 
@@ -149,7 +153,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
             }
             case NodeConstants.Types.SORT:
             {         
-                if (canRaiseOverSort(accessNode, metadata, capFinder, parentNode)) {
+                if (canRaiseOverSort(accessNode, metadata, capFinder, parentNode, record)) {
                     return performRaise(rootNode, accessNode, parentNode);
                 }
                 return null;
@@ -157,7 +161,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
             case NodeConstants.Types.GROUP:            
             {                
                 Set<AggregateSymbol> aggregates = RulePushAggregates.collectAggregates(parentNode);
-                if (canRaiseOverGroupBy(parentNode, accessNode, aggregates, metadata, capFinder)) {
+                if (canRaiseOverGroupBy(parentNode, accessNode, aggregates, metadata, capFinder, record)) {
                     return performRaise(rootNode, accessNode, parentNode);
                 }
                 return null;
@@ -180,7 +184,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
             	if (parentNode.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)) {
             		return null;
             	}
-            	if (canRaiseOverSelect(accessNode, metadata, capFinder, parentNode)) {
+            	if (canRaiseOverSelect(accessNode, metadata, capFinder, parentNode, record)) {
                     RulePushSelectCriteria.satisfyAccessPatterns(parentNode, accessNode);
                     return performRaise(rootNode, accessNode, parentNode);                      
             	}
@@ -212,7 +216,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
 				}
     			PlanNode newParent = grandParent.getParent();
 				//TODO: use costing or heuristics instead of always raising
-    			PlanNode newRoot = raiseAccessNode(rootNode, accessNode, metadata, capFinder, afterJoinPlanning);
+    			PlanNode newRoot = raiseAccessNode(rootNode, accessNode, metadata, capFinder, afterJoinPlanning, record);
     			if (newRoot == null) {
 					//return the tree to its original state
     				parentNode.addFirstChild(accessNode);
@@ -291,7 +295,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
                                          PlanNode accessNode,
                                          Collection<? extends SingleElementSymbol> aggregates,
                                          QueryMetadataInterface metadata,
-                                         CapabilitiesFinder capFinder) throws QueryMetadataException,
+                                         CapabilitiesFinder capFinder, AnalysisRecord record) throws QueryMetadataException,
                                                         TeiidComponentException {
         Object modelID = getModelIDFromAccess(accessNode, metadata);
         if(modelID == null) {
@@ -299,29 +303,36 @@ public final class RuleRaiseAccess implements OptimizerRule {
         }
         List<SingleElementSymbol> groupCols = (List<SingleElementSymbol>)groupNode.getProperty(NodeConstants.Info.GROUP_COLS);
         if(!CapabilitiesUtil.supportsAggregates(groupCols, modelID, metadata, capFinder)) {
+        	recordDebug("cannot push group by, since group by is not supported by source", groupNode, record); //$NON-NLS-1$
             return false;
         }
         if (groupCols != null) {
             for (SingleElementSymbol singleElementSymbol : groupCols) {
-                if (!canPushSymbol(singleElementSymbol, false, modelID, metadata, capFinder)) {
+                if (!canPushSymbol(singleElementSymbol, false, modelID, metadata, capFinder, record)) {
                     return false;
                 }
             }
         }
         if (aggregates != null) {
             for (SingleElementSymbol aggregateSymbol : aggregates) {
-                if(! CriteriaCapabilityValidatorVisitor.canPushLanguageObject(aggregateSymbol, modelID, metadata, capFinder)) {
+                if(! CriteriaCapabilityValidatorVisitor.canPushLanguageObject(aggregateSymbol, modelID, metadata, capFinder, record)) {
                     return false;
                 }
             }
         }
         return CapabilitiesUtil.checkElementsAreSearchable(groupCols, metadata, SupportConstants.Element.SEARCHABLE_COMPARE);
     }
+
+	private static void recordDebug(String message, PlanNode node, AnalysisRecord record) {
+		if (record != null && record.recordDebug()) {
+			record.println(message + " " + node.nodeToString()); //$NON-NLS-1$
+		}
+	}
     
     static boolean canRaiseOverSort(PlanNode accessNode,
                                    QueryMetadataInterface metadata,
                                    CapabilitiesFinder capFinder,
-                                   PlanNode parentNode) throws QueryMetadataException,
+                                   PlanNode parentNode, AnalysisRecord record) throws QueryMetadataException,
                                                        TeiidComponentException {
         // Find the model for this node by getting ACCESS node's model
         Object modelID = getModelIDFromAccess(accessNode, metadata);
@@ -333,7 +344,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
         List<OrderByItem> sortCols = ((OrderBy)parentNode.getProperty(NodeConstants.Info.SORT_ORDER)).getOrderByItems();
         for (OrderByItem symbol : sortCols) {
             //TODO: this check shouldn't be necessary, since the order by is not introducing new expressions
-            if(! canPushSymbol(symbol.getSymbol(), true, modelID, metadata, capFinder)) {
+            if(! canPushSymbol(symbol.getSymbol(), true, modelID, metadata, capFinder, record)) {
                 return false;
             }
             boolean supportsNullOrdering = CapabilitiesUtil.supports(Capability.QUERY_ORDERBY_NULL_ORDERING, modelID, metadata, capFinder);
@@ -407,7 +418,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
     static boolean canRaiseOverSelect(PlanNode accessNode,
                                         QueryMetadataInterface metadata,
                                         CapabilitiesFinder capFinder,
-                                        PlanNode parentNode) throws QueryMetadataException,
+                                        PlanNode parentNode, AnalysisRecord record) throws QueryMetadataException,
                                                             TeiidComponentException,
                                                             QueryPlannerException {
         if (parentNode.hasBooleanProperty(NodeConstants.Info.IS_PHANTOM)) {
@@ -422,6 +433,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
         } 
         
         if (parentNode.hasBooleanProperty(NodeConstants.Info.IS_HAVING) && !CapabilitiesUtil.supports(Capability.QUERY_HAVING, modelID, metadata, capFinder)) {
+        	recordDebug("cannot push having, since having is not supported by source", parentNode, record); //$NON-NLS-1$
         	return false;
         }
         
@@ -433,7 +445,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
         
         Criteria crit = (Criteria) parentNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
         
-        if(!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(crit, modelID, metadata, capFinder) ) { 
+        if(!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(crit, modelID, metadata, capFinder, record) ) { 
             return false;                        
         } 
         
@@ -456,13 +468,14 @@ public final class RuleRaiseAccess implements OptimizerRule {
      * @throws QueryMetadataException
      * @since 4.1.2
      */
-    private static boolean canPushSymbol(SingleElementSymbol symbol, boolean inSelectClause, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    private static boolean canPushSymbol(SingleElementSymbol symbol, boolean inSelectClause, Object modelID, 
+    		QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord record) 
     throws TeiidComponentException, QueryMetadataException {
 
         Expression expr = SymbolMap.getExpression(symbol);
         
         // Do the normal checks
-        if(! CriteriaCapabilityValidatorVisitor.canPushLanguageObject(expr, modelID, metadata, capFinder)) {
+        if(! CriteriaCapabilityValidatorVisitor.canPushLanguageObject(expr, modelID, metadata, capFinder, record)) {
             return false;
         }
         
@@ -499,7 +512,8 @@ public final class RuleRaiseAccess implements OptimizerRule {
      * @return The modelID if the raise can proceed and what common model these combined
      * nodes will be sent to
      */
-	private static Object canRaiseOverJoin(Object modelId, PlanNode joinNode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, boolean afterJoinPlanning) 
+	private static Object canRaiseOverJoin(Object modelId, PlanNode joinNode, QueryMetadataInterface metadata, 
+			CapabilitiesFinder capFinder, boolean afterJoinPlanning, AnalysisRecord record) 
 		throws QueryMetadataException, TeiidComponentException {
 		
         List crits = (List) joinNode.getProperty(NodeConstants.Info.JOIN_CRITERIA);
@@ -536,14 +550,14 @@ public final class RuleRaiseAccess implements OptimizerRule {
 			}
 		}
         
-        return canRaiseOverJoin(joinNode.getChildren(), metadata, capFinder, crits, type);		
+        return canRaiseOverJoin(joinNode.getChildren(), metadata, capFinder, crits, type, record);		
 	}
 
     static Object canRaiseOverJoin(List<PlanNode> children,
                                            QueryMetadataInterface metadata,
                                            CapabilitiesFinder capFinder,
                                            List<Criteria> crits,
-                                           JoinType type) throws QueryMetadataException,
+                                           JoinType type, AnalysisRecord record) throws QueryMetadataException,
                                                          TeiidComponentException {
         //we only want to consider binary joins
         if (children.size() != 2) {
@@ -602,7 +616,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
 					List<Object> rightIds = null;
 					GroupSymbol leftGroup = null;
 					for (Criteria crit : crits) {
-				        if (!isSupportedJoinCriteria(sjc, crit, accessModelID, metadata, capFinder)) {
+				        if (!isSupportedJoinCriteria(sjc, crit, accessModelID, metadata, capFinder, record)) {
 				        	return null;
 				        }
 			        	if (sjc != SupportedJoinCriteria.KEY) {
@@ -663,9 +677,10 @@ public final class RuleRaiseAccess implements OptimizerRule {
     /**
      * Checks criteria one predicate at a time.  Only tests up to the equi restriction.
      */
-    static boolean isSupportedJoinCriteria(SupportedJoinCriteria sjc, Criteria crit, Object accessModelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    static boolean isSupportedJoinCriteria(SupportedJoinCriteria sjc, Criteria crit, Object accessModelID, 
+    		QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord record) 
     throws QueryMetadataException, TeiidComponentException {
-    	if(!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(crit, accessModelID, metadata, capFinder) ) { 
+    	if(!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(crit, accessModelID, metadata, capFinder, record) ) { 
             return false;                        
         } 
         if (sjc == SupportedJoinCriteria.ANY) {

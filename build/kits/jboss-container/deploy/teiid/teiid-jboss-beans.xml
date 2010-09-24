@@ -123,7 +123,14 @@
     </bean>
     
     <bean name="JdbcSslConfiguration" class="org.teiid.transport.SSLConfiguration">
-        <property name="sslEnabled">false</property>
+        <!-- can be one of disabled, login, or enabled 
+             disabled = no transport or message level security will be used
+             login = only the login traffic will be encrypted at a message level
+                     using 128 bit AES with an ephemerial DH key exchange. 
+                     No other config values are needed in this mode
+             enabled = traffic will be secured using this configuration
+        -->
+        <property name="mode">login</property>
         <property name="keystoreFilename">cert.keystore</property>
         <property name="keystorePassword">passwd</property>
         <property name="keystoreType">JKS</property>
@@ -133,7 +140,6 @@
         <property name="truststorePassword">passwd</property>
         <!--  1-way, 2-way, anonymous -->
         <property name="authenticationMode">1-way</property>
-        <property name="clientEncryptionEnabled">true</property>
     </bean>
     
     <!-- Admin Socket connection settings (SSL see below) -->
@@ -151,7 +157,14 @@
     </bean>
     
     <bean name="AdminSslConfiguration" class="org.teiid.transport.SSLConfiguration">
-        <property name="sslEnabled">false</property>
+        <!-- can be one of disabled, login, or enabled 
+             disabled = no transport or message level security will be used
+             login = only the login traffic will be encrypted at a message level
+                     using 128 bit AES with an ephemerial DH key exchange. 
+                     No other config values are needed in this mode
+             enabled = traffic will be secured using this configuration
+        -->
+        <property name="mode">enabled</property>
         <property name="keystoreFilename">cert.keystore</property>
         <property name="keystorePassword">passwd</property>
         <property name="keystoreType">JKS</property>
@@ -161,7 +174,6 @@
         <property name="truststorePassword">passwd</property>
         <!--  1-way, 2-way, anonymous -->
         <property name="authenticationMode">anonymous</property>
-        <property name="clientEncryptionEnabled">true</property>
     </bean>
     
     <!-- JDBC Socket connection properties (SSL see below) -->
@@ -179,7 +191,11 @@
     </bean>
     
     <bean name="OdbcSslConfiguration" class="org.teiid.transport.SSLConfiguration">
-        <property name="sslEnabled">false</property>
+        <!-- can be one of disabled or enabled 
+             disabled = no transport or message level security will be used
+             enabled = traffic will be secured using this configuration
+        -->
+        <property name="mode">disabled</property>
         <property name="keystoreFilename">cert.keystore</property>
         <property name="keystorePassword">passwd</property>
         <property name="keystoreType">JKS</property>
@@ -189,7 +205,6 @@
         <property name="truststorePassword">passwd</property>
         <!--  1-way, 2-way, anonymous -->
         <property name="authenticationMode">1-way</property>
-        <property name="clientEncryptionEnabled">true</property>
     </bean>    
             
     <!-- teiid's default security domain, replace this with your own if needs to be any other JAAS domain  -->

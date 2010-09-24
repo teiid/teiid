@@ -154,19 +154,21 @@
 				</c:list-property>
 			</results>
 		</operation>
-		
+
 		<operation name="deployVdbByUrl" displayName="Deploy a VDB via URL"
 			description="Deploy a VDB using a URL">
 			<parameters>
 				<c:simple-property displayName="VDB URL" name="vdbUrl"
 					type="file" required="true" description="The URL of the VDB to deploy" />
-				<c:simple-property displayName="VDB Deploy File Name" name="vdbDeployName"
-					type="string" required="true" description="The deployment file name to use. Must match the VDB Name you are deploying." />
+				<c:simple-property displayName="VDB Deploy File Name"
+					name="vdbDeployName" type="string" required="true"
+					description="The deployment file name to use. Must match the VDB Name you are deploying." />
 				<c:simple-property displayName="VDB Version" name="vdbVersion"
-					type="integer" required="false" description="The version to use for the deployed VDB (leave blank for overwrite of version one)" />
+					type="integer" required="false"
+					description="The version to use for the deployed VDB (leave blank for overwrite of version one)" />
 			</parameters>
 		</operation>
-		
+
 
 		<operation name="terminateSession" displayName="Terminate Session"
 			description="Terminate a specified session">
@@ -269,29 +271,29 @@
 			displayType="detail" category="throughput" property="userBufferSpace"
 			description="The currently used file buffer space in MB." />
 
-        <metric displayName="Prepared Plan Cache Hit Ratio %" defaultOn="true"
-            displayType="detail" category="performance" property="PREPARED_PLAN_CACHE.hitRatio"
-            description="Percentage of positive cache hits" />
+		<metric displayName="Prepared Plan Cache Hit Ratio %"
+			defaultOn="true" displayType="detail" category="performance"
+			property="PREPARED_PLAN_CACHE.hitRatio" description="Percentage of positive cache hits" />
 
-        <metric displayName="Prepared Plan Cache Size" defaultOn="true"
-            displayType="detail" category="performance" property="PREPARED_PLAN_CACHE.totalEntries"
-            description="Current number of entries in cache" />
+		<metric displayName="Prepared Plan Cache Size" defaultOn="true"
+			displayType="detail" category="performance" property="PREPARED_PLAN_CACHE.totalEntries"
+			description="Current number of entries in cache" />
 
-        <metric displayName="Prepared Plan Cache # of Requests" defaultOn="true"
-            displayType="detail" category="performance" property="PREPARED_PLAN_CACHE.requestCount"
-            description="Total number of requests made against cache" />
-            
-        <metric displayName="ResultSet Cache Hit Ratio %" defaultOn="true"
-            displayType="detail" category="performance" property="QUERY_SERVICE_RESULT_SET_CACHE.hitRatio"
-            description="Percentage of positive cache hits" />
+		<metric displayName="Prepared Plan Cache # of Requests"
+			defaultOn="true" displayType="detail" category="performance"
+			property="PREPARED_PLAN_CACHE.requestCount" description="Total number of requests made against cache" />
 
-        <metric displayName="ResultSet Cache Size" defaultOn="true"
-            displayType="detail" category="performance" property="QUERY_SERVICE_RESULT_SET_CACHE.totalEntries"
-            description="Current number of entries in cache" />
+		<metric displayName="ResultSet Cache Hit Ratio %" defaultOn="true"
+			displayType="detail" category="performance"
+			property="QUERY_SERVICE_RESULT_SET_CACHE.hitRatio" description="Percentage of positive cache hits" />
 
-        <metric displayName="ResultSet Cache  # of Requests" defaultOn="true"
-            displayType="detail" category="performance" property="QUERY_SERVICE_RESULT_SET_CACHE.requestCount"
-            description="Total number of requests made against cache" />
+		<metric displayName="ResultSet Cache Size" defaultOn="true"
+			displayType="detail" category="performance"
+			property="QUERY_SERVICE_RESULT_SET_CACHE.totalEntries" description="Current number of entries in cache" />
+
+		<metric displayName="ResultSet Cache  # of Requests" defaultOn="true"
+			displayType="detail" category="performance"
+			property="QUERY_SERVICE_RESULT_SET_CACHE.requestCount" description="Total number of requests made against cache" />
 
 		<resource-configuration>
 			<c:group name="teiidProperties" displayName="Runtime Engine Properties"
@@ -498,7 +500,7 @@
 							<c:option value="INACTIVE" name="DOWN" default="true" />
 						</c:property-options>
 					</c:simple-property>
-					<c:simple-property name="connectionType" type="string" 
+					<c:simple-property name="connectionType" type="string"
 						description="Allowable Connections: 1) NONE - disallow new connections 2) BY VERSION - allow connections only if the version is specified or if this is the earliest 'BY VERSION' vdb and there are no vdbs marked as 'ANY' 
 3) ANY - allow connections with or without a version specified. If multiple versions of same VDB are deployed, connect to one specified with ANY, or if there are multiple VDBs with ANY then connect to the latest version with ANY "
 						required="false">
@@ -597,6 +599,32 @@
 					</c:list-property>
 				</c:group>
 			</resource-configuration>
+
+			<service name="Data Roles" description="Data Roles for this VDB"
+				class="DataRoleComponent" discovery="DataRoleDiscoveryComponent">
+
+				<resource-configuration>
+					<c:simple-property name="name" displayName="Name"
+						description="Name of the data role" readOnly="true" required="false" />
+					<c:simple-property name="anyAuthenticated"
+						displayName="Any Authenticated" type="boolean"
+						description="Indicates if the role is mapped to any authenticated user"
+						readOnly="false" required="false" />
+					<c:simple-property name="description"
+						displayName="Description" type="string"
+						description="Description of this data role"
+						readOnly="true" required="false" />	
+					<c:list-property name="mappedRoleNameList"
+						readOnly="false" required="false" displayName="Mapped Role Names"
+						description="Mapped role names for this data role">
+						<c:map-property name="map" readOnly="false">
+							<c:simple-property name="name" displayName="Name"
+								description="Name of this mapped role" readOnly="true" />
+						</c:map-property>
+					</c:list-property>
+				</resource-configuration>
+
+			</service>
 
 		</service>
 

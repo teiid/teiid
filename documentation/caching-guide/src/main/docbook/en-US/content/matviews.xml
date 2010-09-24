@@ -108,22 +108,23 @@
 			<title>Loading And Refreshing</title>
 			<para>An internal materialized view table is initially in an invalid state (there is no data).  The first user query will trigger an implicit loading of the data.  
 			All other queries against the materialized view will block until the load completes.
-			In some situations administrators may wish to better control when the cache is loaded with a call to <code>SYS.refreshMatView</code>.  The initial load may itself trigger the initial load
+			In some situations administrators may wish to better control when the cache is loaded with a call to <code>SYSADMIN.refreshMatView</code>.  The initial load may itself trigger the initial load
 			of dependent materialized views.  After the initial load user queries against the materialized view table will only block if it is in an invalid state.
-			The valid state may also be controled through the <code>SYS.refreshMatView</code> procedure.
+			The valid state may also be controled through the <code>SYSADMIN.refreshMatView</code> procedure.
 			<example>
 				<title>Invalidating Refresh</title>
-				<programlisting>CALL SYS.refreshMatView(viewname=>'schema.matview', invalidate=>true)</programlisting>
+				<programlisting>CALL SYSADMIN.refreshMatView(viewname=>'schema.matview', invalidate=>true)</programlisting>
 				<para>matview will be refreshed and user queries will block until the refresh is complete (or fails).</para>
 			</example>
 			While the initial load may trigger a transitive loading of dependent materialized views, 
 			subsequent refreshes performed with <code>refreshMatView</code> will use dependent materialized view tables if they exist.  Only one load may occur at a time.  If a load is already in progress when
-			the <code>SYS.refreshMatView</code> procedure is called, it will return -1 immediately rather than preempting the current load.
+			the <code>SYSADMIN.refreshMatView</code> procedure is called, it will return -1 immediately rather than preempting the current load.
 			</para>
 			<section>
 		   		<title>TTL Snapshot Refresh</title>
-		   		<para>The <link linkend="cache-hint">cache hint</link> may be used to automatically trigger a full snapshot refresh after a specified time to live.  
-		   		The refresh is equivalent to <code>CALL SYS.refreshMatView('view name', false)</code>, but performed asynchronously so that user queries do not block on the load.</para>
+		   		<para>The <link linkend="cache-hint">cache hint</link> may be used to automatically trigger a full snapshot refresh after a specified time to live (ttl).  
+		   		The ttl starts from the time the table is finished loading.  
+		   		The refresh is equivalent to <code>CALL SYSADMIN.refreshMatView('view name', false)</code>, but performed asynchronously so that user queries do not block on the load.</para>
 				<example>
 					<title>Auto-refresh Transformation Query</title>
 					<programlisting>/*+ cache(ttl:3600000) */ select t.col, t1.col from t, t1 where t.id = t1.id</programlisting>
@@ -143,13 +144,13 @@
 	 		<section>
 	 			<title>Updatable</title>
 	 			<para>In advanced use-cases the <link linkend="cache-hint">cache hint</link> may also be used to mark an internal materialized view as updatable.
-				An updatable internal materialized view may use the <code>SYS.refreshMatViewRow</code> procedure to update a single row in the materialized table.
+				An updatable internal materialized view may use the <code>SYSADMIN.refreshMatViewRow</code> procedure to update a single row in the materialized table.
 				If the source row exists, the materialized view table row will be updated.  If the source row does not exist, the correpsonding materialized row will be deleted.
-				To be updatable the materialized view must have a single column primary key.  Composite keys are not yet supported by <code>SYS.refreshMatViewRow</code>.
+				To be updatable the materialized view must have a single column primary key.  Composite keys are not yet supported by <code>SYSADMIN.refreshMatViewRow</code>.
 				<example>
 					<title>Updatable Transformation Query</title>
 					<para>Transofrmation Query: <programlisting>/*+ cache(updatable) */ select t.col, t1.col from t, t1 where t.id = t1.id</programlisting></para>
-					<para>Update SQL: <programlisting>CALL SYS.updateMatViewRow(viewname=>'schema.matview', key=>5)</programlisting></para>
+					<para>Update SQL: <programlisting>CALL SYSADMIN.updateMatViewRow(viewname=>'schema.matview', key=>5)</programlisting></para>
 					<para>Given that the schema.matview defines an interger column col as it's primary key, the update will check the live source(s) for the row values.</para>
 				</example>
 				The update query will not use dependent materialized view tables, so care should be taken to ensure that getting a single 
@@ -177,6 +178,17 @@
 			its usage to result in higher performance when only the covered columns are used and the main table is not consulted.</para></listitem>
 			</itemizedlist>
 			</para>
+		</section>
+		<section>
+			<title>Clustering Considerations</title>
+			<para>Each member in a cluster maintains its own copy of each materialized table and associated indexes.  
+			With cache clustering enabled, an additional snapshot copy of the table is maintained for loading by other members.  
+			An attempt is made to ensure each member receives the same full refresh events as the others.  
+			Full consistency for updatable materialized views however is not guarenteed.  
+			Periodic full refreshes of updatable materialized view tables helps ensure consistency among members.
+			<note><para>Loads of materialized tables are not coordinated across the cluster.  It is possible for the same ttl expiration to trigger a load at each member.</para></note> 
+		    In many clustered scenarios using external materialization is advantagious to fully control the loading of the tables and to have materialized data that is durable.
+		    </para>
 		</section>
 	</section>
 </chapter>

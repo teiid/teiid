@@ -118,4 +118,27 @@ public class TestSocketProfile {
         assertTrue(p.getProperty(BaseDataSource.APP_NAME).equals("Client")); //$NON-NLS-1$
         assertEquals(7, p.size());        
     }    
+    
+    @Test
+    public void testIPV6() throws SQLException{
+    	assertTrue(SocketProfile.acceptsURL("jdbc:teiid:vdb@mm://[::1]:53535,127.0.0.1:1234")); //$NON-NLS-1$
+    	assertTrue(SocketProfile.acceptsURL("jdbc:teiid:vdb@mm://[3ffe:ffff:0100:f101::1]:53535,127.0.0.1:1234")); //$NON-NLS-1$
+    	
+    	Properties p = new Properties();
+        SocketProfile.parseURL("jdbc:teiid:BQT@mms://[3ffe:ffff:0100:f101::1]:1234;version=3", p); //$NON-NLS-1$
+        assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
+        assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("3")); //$NON-NLS-1$
+        assertTrue(p.getProperty(TeiidURL.CONNECTION.SERVER_URL).equals("mms://[3ffe:ffff:0100:f101::1]:1234")); //$NON-NLS-1$
+        assertTrue(p.getProperty(BaseDataSource.VERSION).equals("3")); //$NON-NLS-1$
+    }
+    
+    @Test
+    public void testIPV6MultipleHosts() throws SQLException{
+    	Properties p = new Properties();
+        SocketProfile.parseURL("jdbc:teiid:BQT@mms://[3ffe:ffff:0100:f101::1]:1234,[::1]:31000,127.0.0.1:2134;version=3", p); //$NON-NLS-1$
+        assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
+        assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("3")); //$NON-NLS-1$
+        assertTrue(p.getProperty(TeiidURL.CONNECTION.SERVER_URL).equals("mms://[3ffe:ffff:0100:f101::1]:1234,[::1]:31000,127.0.0.1:2134")); //$NON-NLS-1$
+        assertTrue(p.getProperty(BaseDataSource.VERSION).equals("3")); //$NON-NLS-1$
+    }    
 }

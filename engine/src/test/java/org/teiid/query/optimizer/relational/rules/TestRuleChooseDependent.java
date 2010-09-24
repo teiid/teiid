@@ -213,9 +213,7 @@ public class TestRuleChooseDependent extends TestCase {
         null,
         null, 
         joinCriteria, 
-        expectedMadeDependent);        
-
-
+        expectedMadeDependent, null, null);        
     }
 
     /**
@@ -253,7 +251,7 @@ public class TestRuleChooseDependent extends TestCase {
                                                         Criteria atomicRequestCrit2a,  //optional
                                                         Collection atomicJoinCriteria2,  //optional
                                                         Collection joinCriteria, 
-                                                        int expectedMadeDependent) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
+                                                        int expectedMadeDependent, Number expectedCost1, Number expectedCost2) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
 //EXAMPLE:
 //    Project(groups=[])
 //      Join(groups=[], props={21=joinCriteria, 23=true, 22=INNER JOIN})
@@ -407,6 +405,10 @@ public class TestRuleChooseDependent extends TestCase {
         Float cost2 = (Float)accessNode2.getProperty(NodeConstants.Info.EST_CARDINALITY);
         assertNotNull(cost2);
         assertNotNull(cost1);
+        if (expectedCost1 != null) {
+        	assertEquals(expectedCost1.longValue(), cost1.longValue());
+        	assertEquals(expectedCost2.longValue(), cost2.longValue());
+        }
     }    
     
     // ################################## ACTUAL TESTS ################################
@@ -574,9 +576,9 @@ public class TestRuleChooseDependent extends TestCase {
          atomicCrit2a, 
          atomicJoinCrits2,
          crits, 
-         expected);        
+         expected, -1, 57734);        
     }
-
+    
     /**
      * Tests that heuristics will take cardinality of a group into account when 
      * making a dependent join.
@@ -1064,7 +1066,7 @@ public class TestRuleChooseDependent extends TestCase {
          atomicCrit2a, 
          atomicJoinCrits2,
          crits, 
-         expected);        
+         expected, 1000, 1);        
     }    
 
     public void testCardinalityWithAtomicCrossJoin() throws Exception {
@@ -1110,7 +1112,7 @@ public class TestRuleChooseDependent extends TestCase {
          atomicCrit2a, 
          atomicJoinCrits2,
          crits, 
-         expected);        
+         expected, 1000, 1E5);        
     } 
     
     public void testCardinalityWithAtomicCrossJoin2() throws Exception {
@@ -1156,7 +1158,7 @@ public class TestRuleChooseDependent extends TestCase {
          atomicCrit2a, 
          atomicJoinCrits2,
          crits, 
-         expected);        
+         expected, 1000, 9999899648l);        
     }     
 
     // ################################## TEST SUITE ################################

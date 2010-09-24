@@ -33,7 +33,6 @@ import javax.xml.ws.BindingProvider;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
-import org.teiid.translator.salesforce.Messages;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.execution.DataPayload;
 import org.teiid.translator.salesforce.execution.DeletedObject;
@@ -115,7 +114,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
 				throw new ResourceException(e.getCause().getMessage());
 			}
-			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Login was successful for username " + username);
+			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Login was successful for username " + username); //$NON-NLS-1$
 
 			sh = new SessionHeader();
 			sh.setSessionId(loginResult.getSessionId());
@@ -156,7 +155,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		
 		if(batchSize > 2000) {
 			batchSize = 2000;
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, Messages.getString("SalesforceQueryExecutionImpl.reduced.batch.size")); //$NON-NLS-1$
+			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "reduced.batch.size"); //$NON-NLS-1$
 		}
 		
 		QueryResult qr = null;
@@ -216,7 +215,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			DeleteResult result = results.get(i);
 			if(!result.isSuccess()) {
 				if(allGood) {
-					errorMessages.append("Error(s) executing DELETE: ");
+					errorMessages.append("Error(s) executing DELETE: "); //$NON-NLS-1$
 					allGood = false;
 				}
 				List<com.sforce.soap.partner.Error> errors = result.getErrors();

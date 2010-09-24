@@ -39,7 +39,6 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -149,7 +148,7 @@ public class StoredProcedure extends ProcedureContainer {
     */
     public void setParameter(SPParameter parameter){
         if(parameter == null){
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0011));
+            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0011")); //$NON-NLS-1$
         }
 
         Integer key = new Integer(parameter.getIndex());

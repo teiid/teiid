@@ -25,8 +25,8 @@ package org.teiid.query.optimizer.relational.rules;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
@@ -40,7 +40,6 @@ import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -72,7 +71,7 @@ public final class RuleValidateWhereAll implements OptimizerRule {
             if(CapabilitiesUtil.requiresCriteria(modelID, metadata, capFinder) 
             		&& hasNoCriteria((Command) node.getProperty(NodeConstants.Info.ATOMIC_REQUEST))) {
                 String modelName = metadata.getFullName(modelID);
-                throw new QueryPlannerException(QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0024, modelName));
+                throw new QueryPlannerException(QueryPlugin.Util.getString("ERR.015.004.0024", modelName)); //$NON-NLS-1$
             }
 		}
 

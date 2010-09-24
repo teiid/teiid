@@ -50,7 +50,7 @@ public class WrappedConnectionFactory implements ConnectionFactory, Referenceabl
 	
 	@Override
 	public Connection getConnection() throws ResourceException {
-		return (Connection)cm.allocateConnection(mcf, new ConnectionRequestInfoWrapper(this.delegate));
+		return (Connection)cm.allocateConnection(mcf, null);
 	}
 
 
@@ -66,7 +66,7 @@ public class WrappedConnectionFactory implements ConnectionFactory, Referenceabl
 
 	@Override
 	public Connection getConnection(ConnectionSpec arg0) throws ResourceException {
-		return getConnection();
+		return (Connection)cm.allocateConnection(mcf, new ConnectionRequestInfoWrapper(arg0));
 	}
 
 	@Override

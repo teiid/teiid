@@ -72,7 +72,6 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -105,7 +104,7 @@ public class UpdateProcedureResolver implements CommandResolver {
 
         // If still haven't found virtual group, the external metadata is bad
         if(virtualGroup == null) {
-            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0012, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0012));
+            throw new QueryResolverException("ERR.015.008.0012", QueryPlugin.Util.getString("ERR.015.008.0012")); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
 		ResolveVirtualGroupCriteriaVisitor.resolveCriteria(procCommand, virtualGroup, metadata);
@@ -132,7 +131,7 @@ public class UpdateProcedureResolver implements CommandResolver {
         try {
             transformCmd = QueryParser.getQueryParser().parseCommand(transformQuery);
         } catch(QueryParserException e) {
-            throw new QueryResolverException(e, ErrorMessageKeys.RESOLVER_0013, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0013, virtualGroup));
+            throw new QueryResolverException(e, "ERR.015.008.0013", QueryPlugin.Util.getString("ERR.015.008.0013", virtualGroup)); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         QueryResolver.resolveCommand(transformCmd, metadata);
@@ -289,7 +288,7 @@ public class UpdateProcedureResolver implements CommandResolver {
                 String groupName = loopStmt.getCursorName();
 
                 if (metadata.getMetadataStore().getTempGroupID(groupName) != null) {
-                    throw new QueryResolverException(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0065));
+                    throw new QueryResolverException(QueryPlugin.Util.getString("ERR.015.012.0065")); //$NON-NLS-1$
                 }
                 
 	        	//check - cursor name should not start with #
@@ -314,7 +313,7 @@ public class UpdateProcedureResolver implements CommandResolver {
             case Statement.TYPE_CONTINUE:
                 break;
             default:
-                throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0015, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0015, statement.getType()));
+                throw new QueryResolverException("ERR.015.008.0015", QueryPlugin.Util.getString("ERR.015.008.0015", statement.getType())); //$NON-NLS-1$ //$NON-NLS-2$
         }
     }
 
@@ -340,7 +339,7 @@ public class UpdateProcedureResolver implements CommandResolver {
             sepIndex = varName.lastIndexOf(ElementSymbol.SEPARATOR);
             String groupName = varName.substring(0, sepIndex);
             if(!groupName.equals(ProcedureReservedWords.VARIABLES)) {
-                handleUnresolvableDeclaration(variable, QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0031, new Object[]{ProcedureReservedWords.VARIABLES, variable}));
+                handleUnresolvableDeclaration(variable, QueryPlugin.Util.getString("ERR.015.010.0031", new Object[]{ProcedureReservedWords.VARIABLES, variable})); //$NON-NLS-1$
             }
         }
         boolean exists = false;
@@ -351,7 +350,7 @@ public class UpdateProcedureResolver implements CommandResolver {
         	//ignore, not already defined
         }
         if (exists) {
-        	handleUnresolvableDeclaration(variable, QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0032, variable.getOutputName()));
+        	handleUnresolvableDeclaration(variable, QueryPlugin.Util.getString("ERR.015.010.0032", variable.getOutputName())); //$NON-NLS-1$
         }
         variable.setType(DataTypeManager.getDataTypeClass(typeName));
         variable.setGroupSymbol(variables);

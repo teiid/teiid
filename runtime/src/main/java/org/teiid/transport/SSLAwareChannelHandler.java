@@ -54,8 +54,8 @@ import org.jboss.netty.handler.stream.ChunkedWriteHandler;
 import org.teiid.common.buffer.StorageManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.net.NetPlugin;
 import org.teiid.net.socket.ObjectChannel;
+import org.teiid.runtime.RuntimePlugin;
 
 
 /**
@@ -216,7 +216,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 			ChannelStateEvent e) throws Exception {
 		ChannelListener listener = this.listeners.remove(e.getChannel());
 		if (listener != null) {
-			LogManager.logDetail(LogConstants.CTX_TRANSPORT, NetPlugin.Util.getString("SSLAwareChannelHandler.channel_closed")); //$NON-NLS-1$
+			LogManager.logDetail(LogConstants.CTX_TRANSPORT, RuntimePlugin.Util.getString("SSLAwareChannelHandler.channel_closed")); //$NON-NLS-1$
 			listener.disconnected();
 		}
 	}

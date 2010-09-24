@@ -25,7 +25,6 @@ package org.teiid.core.types.basic;
 import java.math.BigDecimal;
 
 import org.teiid.core.CorePlugin;
-import org.teiid.core.ErrorMessageKeys;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
 
@@ -44,7 +43,7 @@ public class StringToBigDecimalTransform extends Transform {
 		try {
 			return new BigDecimal(((String)value).trim());
 		} catch(NumberFormatException e) {
-			throw new TransformationException(ErrorMessageKeys.TYPES_ERR_0014, CorePlugin.Util.getString(ErrorMessageKeys.TYPES_ERR_0014, value));
+			throw new TransformationException("ERR.003.029.0014", CorePlugin.Util.getString("ERR.003.029.0014", value)); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 

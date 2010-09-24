@@ -38,7 +38,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.QueryPlugin;
 
 
 /**
@@ -116,7 +116,7 @@ public class FileStorageManager implements StorageManager {
 			        fileAccess.seek(fileOffset - entry.getKey());
 			        return fileAccess.read(b, offSet, length);
 				} catch (IOException e) {
-					throw new TeiidComponentException(e, QueryExecPlugin.Util.getString("FileStoreageManager.error_reading", fileInfo.file.getAbsoluteFile())); //$NON-NLS-1$
+					throw new TeiidComponentException(e, QueryPlugin.Util.getString("FileStoreageManager.error_reading", fileInfo.file.getAbsoluteFile())); //$NON-NLS-1$
 				} finally {
 					fileInfo.close();
 				}
@@ -130,7 +130,7 @@ public class FileStorageManager implements StorageManager {
 			long used = usedBufferSpace.addAndGet(length);
 			if (used > maxBufferSpace) {
 				usedBufferSpace.addAndGet(-length);
-				throw new TeiidComponentException(QueryExecPlugin.Util.getString("FileStoreageManager.space_exhausted", maxBufferSpace)); //$NON-NLS-1$
+				throw new TeiidComponentException(QueryPlugin.Util.getString("FileStoreageManager.space_exhausted", maxBufferSpace)); //$NON-NLS-1$
 			}
 			Map.Entry<Long, FileInfo> entry = this.storageFiles.lastEntry();
 			boolean createNew = false;
@@ -159,7 +159,7 @@ public class FileStorageManager implements StorageManager {
 		            fileAccess.seek(pointer);
 		            fileAccess.write(bytes, offset, length);
 		        } catch(IOException e) {
-		            throw new TeiidComponentException(e, QueryExecPlugin.Util.getString("FileStoreageManager.error_reading", fileInfo.file.getAbsoluteFile())); //$NON-NLS-1$
+		            throw new TeiidComponentException(e, QueryPlugin.Util.getString("FileStoreageManager.error_reading", fileInfo.file.getAbsoluteFile())); //$NON-NLS-1$
 		        } finally {
 		        	fileInfo.close();
 		        }
@@ -202,17 +202,17 @@ public class FileStorageManager implements StorageManager {
      */
     public void initialize() throws TeiidComponentException {
         if(this.directory == null) {
-        	throw new TeiidComponentException(QueryExecPlugin.Util.getString("FileStoreageManager.no_directory")); //$NON-NLS-1$
+        	throw new TeiidComponentException(QueryPlugin.Util.getString("FileStoreageManager.no_directory")); //$NON-NLS-1$
         }
 
         dirFile = new File(this.directory);
         if(dirFile.exists()) {
             if(! dirFile.isDirectory()) {
-            	throw new TeiidComponentException(QueryExecPlugin.Util.getString("FileStoreageManager.not_a_directory", dirFile.getAbsoluteFile())); //$NON-NLS-1$
+            	throw new TeiidComponentException(QueryPlugin.Util.getString("FileStoreageManager.not_a_directory", dirFile.getAbsoluteFile())); //$NON-NLS-1$
 
             }
         } else if(! dirFile.mkdirs()) {
-        	throw new TeiidComponentException(QueryExecPlugin.Util.getString("FileStoreageManager.error_creating", dirFile.getAbsoluteFile())); //$NON-NLS-1$
+        	throw new TeiidComponentException(QueryPlugin.Util.getString("FileStoreageManager.error_creating", dirFile.getAbsoluteFile())); //$NON-NLS-1$
         }
     }
     
@@ -240,7 +240,7 @@ public class FileStorageManager implements StorageManager {
             }
             return storageFile;
         } catch(IOException e) {
-        	throw new TeiidComponentException(e, QueryExecPlugin.Util.getString("FileStoreageManager.error_creating", name + "_" + fileNumber)); //$NON-NLS-1$ //$NON-NLS-2$
+        	throw new TeiidComponentException(e, QueryPlugin.Util.getString("FileStoreageManager.error_creating", name + "_" + fileNumber)); //$NON-NLS-1$ //$NON-NLS-2$
         }
     }
     

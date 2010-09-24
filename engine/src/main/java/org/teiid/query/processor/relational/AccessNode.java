@@ -22,7 +22,8 @@
 
 package org.teiid.query.processor.relational;
 
-import static org.teiid.query.analysis.AnalysisRecord.*;
+import static org.teiid.query.analysis.AnalysisRecord.PROP_MODEL_NAME;
+import static org.teiid.query.analysis.AnalysisRecord.PROP_SQL;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,8 +37,8 @@ import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
@@ -138,7 +139,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
             // Defect 16059 - Rewrite the command once the references have been replaced with values.
             QueryRewriter.evaluateAndRewrite(atomicCommand, eval, context, metadata);
         } catch (QueryValidatorException e) {
-            throw new TeiidProcessingException(e, QueryExecPlugin.Util.getString("AccessNode.rewrite_failed", atomicCommand)); //$NON-NLS-1$
+            throw new TeiidProcessingException(e, QueryPlugin.Util.getString("AccessNode.rewrite_failed", atomicCommand)); //$NON-NLS-1$
         }
         
         return RelationalNodeUtil.shouldExecute(atomicCommand, true);

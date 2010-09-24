@@ -45,7 +45,7 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.salesforce.Messages;
+import org.teiid.translator.salesforce.SalesForcePlugin;
 import org.teiid.translator.salesforce.Util;
 
 
@@ -54,21 +54,21 @@ import org.teiid.translator.salesforce.Util;
  */
 public abstract class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisitor {
 
-    private static final String RESTRICTEDMULTISELECTPICKLIST = "restrictedmultiselectpicklist";
-	private static final String MULTIPICKLIST = "multipicklist";
-	protected static final String SELECT = "SELECT";
-    protected static final String FROM = "FROM";
-    protected static final String WHERE = "WHERE";
-    protected static final String ORDER_BY = "ORDER BY";
-    protected static final String LIMIT = "LIMIT";
-    protected static final String SPACE = " ";
-    protected static final String EXCLUDES = "EXCLUDES";
-    protected static final String INCLUDES = "includes";
-    protected static final String COMMA = ",";
-    protected static final String SEMI = ";";
-    protected static final String APOS = "'";
-    protected static final String OPEN = "(";
-    protected static final String CLOSE = ")";
+    private static final String RESTRICTEDMULTISELECTPICKLIST = "restrictedmultiselectpicklist"; //$NON-NLS-1$
+	private static final String MULTIPICKLIST = "multipicklist"; //$NON-NLS-1$
+	protected static final String SELECT = "SELECT"; //$NON-NLS-1$
+    protected static final String FROM = "FROM"; //$NON-NLS-1$
+    protected static final String WHERE = "WHERE"; //$NON-NLS-1$
+    protected static final String ORDER_BY = "ORDER BY"; //$NON-NLS-1$
+    protected static final String LIMIT = "LIMIT"; //$NON-NLS-1$
+    protected static final String SPACE = " "; //$NON-NLS-1$
+    protected static final String EXCLUDES = "EXCLUDES"; //$NON-NLS-1$
+    protected static final String INCLUDES = "includes"; //$NON-NLS-1$
+    protected static final String COMMA = ","; //$NON-NLS-1$
+    protected static final String SEMI = ";"; //$NON-NLS-1$
+    protected static final String APOS = "'"; //$NON-NLS-1$
+    protected static final String OPEN = "("; //$NON-NLS-1$
+    protected static final String CLOSE = ")"; //$NON-NLS-1$
 
     protected RuntimeMetadata metadata;
     private HashMap<Comparison.Operator, String> comparisonOperators;
@@ -87,12 +87,12 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
     public CriteriaVisitor( RuntimeMetadata metadata ) {
         this.metadata = metadata;
         comparisonOperators = new HashMap<Comparison.Operator, String>();
-        comparisonOperators.put(Operator.EQ, "=");
-        comparisonOperators.put(Operator.GE, ">=");
-        comparisonOperators.put(Operator.GT, ">");
-        comparisonOperators.put(Operator.LE, "<=");
-        comparisonOperators.put(Operator.LT, "<");
-        comparisonOperators.put(Operator.NE, "!=");
+        comparisonOperators.put(Operator.EQ, "="); //$NON-NLS-1$
+        comparisonOperators.put(Operator.GE, ">="); //$NON-NLS-1$
+        comparisonOperators.put(Operator.GT, ">"); //$NON-NLS-1$
+        comparisonOperators.put(Operator.LE, "<="); //$NON-NLS-1$
+        comparisonOperators.put(Operator.LT, "<"); //$NON-NLS-1$
+        comparisonOperators.put(Operator.NE, "!="); //$NON-NLS-1$
     }
 
     @Override
@@ -111,12 +111,11 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
     public void visit( Like criteria ) {
         try {
             if (isIdColumn(criteria.getLeftExpression())) {
-                TranslatorException e = new TranslatorException(Messages.getString("CriteriaVisitor.LIKE.not.supported.on.Id"));
+                TranslatorException e = new TranslatorException(SalesForcePlugin.Util.getString("CriteriaVisitor.LIKE.not.supported.on.Id")); //$NON-NLS-1$
                 exceptions.add(e);
             }
             if (isMultiSelectColumn(criteria.getLeftExpression())) {
-                TranslatorException e = new TranslatorException(
-                                                              Messages.getString("CriteriaVisitor.LIKE.not.supported.on.multiselect"));
+                TranslatorException e = new TranslatorException(SalesForcePlugin.Util.getString("CriteriaVisitor.LIKE.not.supported.on.multiselect")); //$NON-NLS-1$
                 exceptions.add(e);
             }
         } catch (TranslatorException e) {
@@ -187,9 +186,9 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
     public void parseFunction( Function func ) {
         String functionName = func.getName();
         try {
-            if (functionName.equalsIgnoreCase("includes")) {
+            if (functionName.equalsIgnoreCase("includes")) { //$NON-NLS-1$
                 generateMultiSelect(func, INCLUDES);
-            } else if (functionName.equalsIgnoreCase("excludes")) {
+            } else if (functionName.equalsIgnoreCase("excludes")) { //$NON-NLS-1$
                 generateMultiSelect(func, EXCLUDES);
             }
         } catch (TranslatorException e) {
@@ -238,13 +237,13 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
 
     private void validateFunction( List<Expression> expressions ) throws TranslatorException {
         if (expressions.size() != 2) {
-            throw new TranslatorException(Messages.getString("CriteriaVisitor.invalid.arg.count"));
+            throw new TranslatorException(SalesForcePlugin.Util.getString("CriteriaVisitor.invalid.arg.count")); //$NON-NLS-1$
         }
         if (!(expressions.get(0) instanceof ColumnReference)) {
-            throw new TranslatorException(Messages.getString("CriteriaVisitor.function.not.column.arg"));
+            throw new TranslatorException(SalesForcePlugin.Util.getString("CriteriaVisitor.function.not.column.arg")); //$NON-NLS-1$
         }
         if (!(expressions.get(1) instanceof Literal)) {
-            throw new TranslatorException(Messages.getString("CriteriaVisitor.function.not.literal.arg"));
+            throw new TranslatorException(SalesForcePlugin.Util.getString("CriteriaVisitor.function.not.literal.arg")); //$NON-NLS-1$
         }
     }
 
@@ -253,7 +252,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         criterion.append(OPEN);
         boolean first = true;
         String fullParam = param.toString();
-        String[] params = fullParam.split(",");
+        String[] params = fullParam.split(","); //$NON-NLS-1$
         for (int i = 0; i < params.length; i++) {
             String token = params[i];
             if (first) {
@@ -309,7 +308,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
 
             criteriaList.add(queryString.toString());
 
-            if (columnName.equals("IsDeleted")) {
+            if (columnName.equals("IsDeleted")) { //$NON-NLS-1$
                 Literal isDeletedLiteral = (Literal)compCriteria.getRightExpression();
                 Boolean isDeleted = (Boolean)isDeletedLiteral.getValue();
                 if (isDeleted) {
@@ -328,9 +327,9 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         queryString.append(getValue(leftExp));
         queryString.append(' ');
         if (criteria.isNegated()) {
-            queryString.append("NOT ");
+            queryString.append("NOT "); //$NON-NLS-1$
         }
-        queryString.append("IN");
+        queryString.append("IN"); //$NON-NLS-1$
         queryString.append('(');
         Column column = ((ColumnReference)criteria.getLeftExpression()).getMetadataObject();
         boolean timeColumn = isTimeColumn(column);
@@ -366,17 +365,16 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
             Literal literal = (Literal)expr;
             result = literal.getValue().toString();
         } else {
-            throw new RuntimeException("unknown type in SalesforceQueryExecution.getValue(): " + expr.toString());
+            throw new RuntimeException("unknown type in SalesforceQueryExecution.getValue(): " + expr.toString()); //$NON-NLS-1$
         }
         return result;
     }
 
     protected void loadColumnMetadata( NamedTable group ) throws TranslatorException {
         table = group.getMetadataObject();
-        String supportsQuery = table.getProperties().get("Supports Query");
+        String supportsQuery = table.getProperties().get("Supports Query"); //$NON-NLS-1$
         if (!Boolean.valueOf(supportsQuery)) {
-            throw new TranslatorException(table.getNameInSource() + " "
-                                         + Messages.getString("CriteriaVisitor.query.not.supported"));
+            throw new TranslatorException(table.getNameInSource() + " " + SalesForcePlugin.Util.getString("CriteriaVisitor.query.not.supported")); //$NON-NLS-1$ //$NON-NLS-2$
         }
         List<Column> columnIds = table.getColumns();
         for (Column element : columnIds) {
@@ -384,7 +382,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
             columnElementsByName.put(name, element);
 
             // influences queryAll behavior
-            if (element.getNameInSource().equals("IsDeleted")) {
+            if (element.getNameInSource().equals("IsDeleted")) { //$NON-NLS-1$
                 String isDeleted = element.getDefaultValue();
                 if (Boolean.parseBoolean(isDeleted)) {
                     this.queryAll = true;
@@ -398,7 +396,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         if (expression instanceof ColumnReference) {
             Column element = ((ColumnReference)expression).getMetadataObject();
             String nameInSource = element.getNameInSource();
-            if (nameInSource.equalsIgnoreCase("id")) {
+            if (nameInSource.equalsIgnoreCase("id")) { //$NON-NLS-1$
                 result = true;
             }
         }

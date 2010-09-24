@@ -137,22 +137,41 @@ public class TeiidDataSource extends BaseDataSource {
 		String serverURL = ""; //$NON-NLS-1$
 		
 		serverURL = "" + ( this.secure ? TeiidURL.SECURE_PROTOCOL : TeiidURL.DEFAULT_PROTOCOL ); //$NON-NLS-1$
+		
+		if (this.serverName.indexOf(':') != -1) {
+			serverURL += "["; //$NON-NLS-1$
+		}
+			
 		serverURL += "" + this.serverName; //$NON-NLS-1$
+		
+		if (this.serverName.indexOf(':') != -1) {
+			serverURL += "]"; //$NON-NLS-1$
+		}
+		
 		if ( this.portNumber != 0 ) 
 			serverURL += TeiidURL.COLON_DELIMITER  + this.portNumber;
+		
 		if ( this.alternateServers.length() > 0 ) {
         	String[] as = this.alternateServers.split( TeiidURL.COMMA_DELIMITER);
         	
         	for ( int i = 0; i < as.length; i++ ) {
-        		String[] server = as[i].split( TeiidURL.COLON_DELIMITER );
-
-        		if ( server.length > 0 ) {
-        			serverURL += TeiidURL.COMMA_DELIMITER + server[0];
-        			if ( server.length > 1 ) {
-        				serverURL += TeiidURL.COLON_DELIMITER + server[1];
-        			} else {
-        				serverURL += TeiidURL.COLON_DELIMITER + this.portNumber;
-        			}
+        		if (as[i].startsWith("[") && as[i].endsWith("]:")) { //$NON-NLS-1$ //$NON-NLS-2$
+        			serverURL += (TeiidURL.COMMA_DELIMITER + as[i]);
+        		}
+        		else if (as[i].startsWith("[") && as[i].endsWith("]")) { //$NON-NLS-1$ //$NON-NLS-2$
+        			serverURL += (TeiidURL.COMMA_DELIMITER +as[i] + TeiidURL.COLON_DELIMITER + this.portNumber);
+        		}
+        		else {
+	        		String[] server = as[i].split(TeiidURL.COLON_DELIMITER );
+	
+	        		if ( server.length > 0 ) {
+	        			serverURL += TeiidURL.COMMA_DELIMITER + server[0];
+	        			if ( server.length > 1 ) {
+	        				serverURL += TeiidURL.COLON_DELIMITER + server[1];
+	        			} else {
+	        				serverURL += TeiidURL.COLON_DELIMITER + this.portNumber;
+	        			}
+	        		}
         		}
         	}
 		}
@@ -279,7 +298,7 @@ public class TeiidDataSource extends BaseDataSource {
 
     /**
      * Returns a string containing a comma delimited list of alternate 
-     * MetaMatrix Server(s).  
+     * server(s).  
      * 
      * The list will be in the form of server2[:port2][,server3[:port3]].  If no 
      * alternate servers have been defined <code>null</code> is returned. 

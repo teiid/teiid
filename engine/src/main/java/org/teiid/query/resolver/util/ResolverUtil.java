@@ -72,7 +72,6 @@ import org.teiid.query.sql.symbol.SelectSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -214,7 +213,7 @@ public class ResolverUtil {
         }
 
         //Expression is wrong type and can't convert
-        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0041, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0041, new Object[] {targetTypeName, sourceExpression, sourceTypeName}));
+        throw new QueryResolverException("ERR.015.008.0041", QueryPlugin.Util.getString("ERR.015.008.0041", new Object[] {targetTypeName, sourceExpression, sourceTypeName})); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public static Constant convertConstant(String sourceTypeName,
@@ -288,7 +287,7 @@ public class ResolverUtil {
         	Reference ref = (Reference)expression;
         	if (ref.isPositional() && ref.getType() == null) {
 	        	if (targetType == null) {
-	        		throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0026, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0026, surroundingExpression));
+	        		throw new QueryResolverException("ERR.015.008.0026", QueryPlugin.Util.getString("ERR.015.008.0026", surroundingExpression)); //$NON-NLS-1$ //$NON-NLS-2$
 	        	}
 	            ref.setType(targetType);
         	}
@@ -351,13 +350,38 @@ public class ResolverUtil {
         for (int i = 0; i < orderBy.getVariableCount(); i++) {
         	SingleElementSymbol sortKey = orderBy.getVariable(i);
         	if (sortKey instanceof ElementSymbol) {
-        		int index = resolveSortKey(fromClauseGroups, knownElements, metadata, isSimpleQuery,
-    					knownShortNames, (ElementSymbol)sortKey);
-                if (index == -1) {
-                	index = expressions.indexOf(SymbolMap.getExpression(sortKey));
-                }
-                orderBy.setExpressionPosition(i, index);
-                continue;
+        		ElementSymbol symbol = (ElementSymbol)sortKey;
+        		String groupPart = metadata.getGroupName(symbol.getName());
+        		String symbolName = symbol.getName();
+        		String shortName = symbol.getShortName();
+        		if (groupPart == null) {
+        			int position = -1;
+    				SingleElementSymbol matchedSymbol = null;
+    				// walk the SELECT col short names, looking for a match on the current ORDER BY 'short name'
+    				for(int j=0; j<knownShortNames.length; j++) {
+    					if( !shortName.equalsIgnoreCase( knownShortNames[j] )) {
+    						continue;
+    					}
+    			        // if we already have a matched symbol, matching again here means it is duplicate/ambiguous
+    			        if(matchedSymbol != null) {
+    			        	if (!matchedSymbol.equals(knownElements.get(j))) {
+    			        		throw new QueryResolverException("ERR.015.008.0042", QueryPlugin.Util.getString("ERR.015.008.0042", symbolName)); //$NON-NLS-1$ //$NON-NLS-2$
+    			        	}
+    			        	continue;
+    			        }
+    			        matchedSymbol = knownElements.get(j);
+    			        position = j;
+    				}
+    				if (matchedSymbol != null) {
+    				    TempMetadataID tempMetadataID = new TempMetadataID(symbol.getName(), matchedSymbol.getType());
+    				    symbol.setMetadataID(tempMetadataID);
+    				    symbol.setType(matchedSymbol.getType());
+    				}
+                    if (position != -1) {
+                        orderBy.setExpressionPosition(i, position);
+                        continue;
+                    }
+        		}
         	} else if (sortKey instanceof ExpressionSymbol) {
         		// check for legacy positional
     			ExpressionSymbol es = (ExpressionSymbol)sortKey;
@@ -377,75 +401,22 @@ public class ResolverUtil {
     			throw new QueryResolverException(QueryPlugin.Util.getString("ResolverUtil.setquery_order_expression", sortKey)); //$NON-NLS-1$	 
     		}
         	for (ElementSymbol symbol : ElementCollectorVisitor.getElements(sortKey, false)) {
-                resolveSortKey(fromClauseGroups, null, metadata, isSimpleQuery, null, symbol); 
+        		try {
+        	    	ResolverVisitor.resolveLanguageObject(symbol, fromClauseGroups, command.getExternalGroupContexts(), metadata);
+        	    } catch(QueryResolverException e) {
+        	    	throw new QueryResolverException(e, "ERR.015.008.0043", QueryPlugin.Util.getString("ERR.015.008.0043", symbol.getName()) );//$NON-NLS-1$ //$NON-NLS-2$
+        	    } 
 			}
             ResolverVisitor.resolveLanguageObject(sortKey, metadata);
             
             int index = expressions.indexOf(SymbolMap.getExpression(sortKey));
+            if (index == -1 && !isSimpleQuery) {
+    	        throw new QueryResolverException(QueryPlugin.Util.getString("ResolverUtil.invalid_unrelated", sortKey)); //$NON-NLS-1$
+        	}
         	orderBy.setExpressionPosition(i, index);
         }
     }
     
-    private static int resolveSortKey(List fromClauseGroups, List knownElements,
-			QueryMetadataInterface metadata, boolean isSimpleQuery,
-			String[] knownShortNames, ElementSymbol symbol) throws TeiidComponentException,
-			QueryMetadataException, QueryResolverException {
-		SingleElementSymbol matchedSymbol = null;
-		String symbolName = symbol.getName();
-		String groupPart = metadata.getGroupName(symbolName);
-		String shortName = symbol.getShortName();
-		
-		//check for union order by 
-		if (fromClauseGroups.isEmpty() && groupPart != null && !shortName.equals(symbolName)) {
-		    throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0043, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0043, symbolName));
-		}
-
-		if (knownShortNames != null) {
-			// walk the SELECT col short names, looking for a match on the current ORDER BY 'short name'
-			for(int i=0; i<knownShortNames.length; i++) {
-				if( shortName.equalsIgnoreCase( knownShortNames[i] )) {
-			        if (groupPart != null) {
-			            Object knownSymbol = knownElements.get(i);
-			            if(knownSymbol instanceof ElementSymbol) {
-			                ElementSymbol knownElement = (ElementSymbol) knownSymbol;
-			                GroupSymbol group = knownElement.getGroupSymbol();
-			                
-			                // skip this one if the two short names are not from the same group
-			                if (!nameMatchesGroup(groupPart.toUpperCase(), group.getCanonicalName())) {
-			                    continue;
-			                }
-			            }
-			        }
-			        
-			        // if we already have a matched symbol, matching again here means it is duplicate/ambiguous
-			        if(matchedSymbol != null) {
-			            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0042, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0042, symbolName));
-			        }
-			        matchedSymbol = (SingleElementSymbol)knownElements.get(i);
-			    }
-			}
-			if (matchedSymbol != null) {
-			    TempMetadataID tempMetadataID = new TempMetadataID(symbol.getName(), matchedSymbol.getType());
-			    int position = knownElements.indexOf(matchedSymbol);
-			    symbol.setMetadataID(tempMetadataID);
-			    symbol.setType(matchedSymbol.getType());
-			    return position;
-			}
-		}
-		            		           
-		if (!isSimpleQuery) {
-	        throw new QueryResolverException(QueryPlugin.Util.getString("ResolverUtil.invalid_unrelated", symbol.getName())); //$NON-NLS-1$
-	    }
-	    // Didn't find it by full name or short name, so try resolving
-	    try {
-	    	ResolverVisitor.resolveLanguageObject(symbol, fromClauseGroups, metadata);
-	    } catch(QueryResolverException e) {
-	    	throw new QueryResolverException(e, ErrorMessageKeys.RESOLVER_0043, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0043, symbol.getName()) );
-	    }
-		return -1;
-	}
-
-
     /** 
      * Get the default value for the parameter, which could be null
      * if the parameter is set to NULLABLE.  If no default is available,
@@ -786,13 +757,13 @@ public class ResolverUtil {
 		// single projected symbol of the subquery
 		Class exprType = expression.getType();
 		if(exprType == null) {
-	        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0030, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0030, expression));
+	        throw new QueryResolverException("ERR.015.008.0030", QueryPlugin.Util.getString("ERR.015.008.0030", expression)); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		String exprTypeName = DataTypeManager.getDataTypeName(exprType);
 	
 		Collection projectedSymbols = crit.getCommand().getProjectedSymbols();
 		if (projectedSymbols.size() != 1){
-	        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0032, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0032, crit.getCommand()));
+	        throw new QueryResolverException("ERR.015.008.0032", QueryPlugin.Util.getString("ERR.015.008.0032", crit.getCommand())); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		Class subqueryType = ((Expression)projectedSymbols.iterator().next()).getType();
 		String subqueryTypeName = DataTypeManager.getDataTypeName(subqueryType);
@@ -800,7 +771,7 @@ public class ResolverUtil {
 	    try {
 	        result = convertExpression(expression, exprTypeName, subqueryTypeName, metadata);
 	    } catch (QueryResolverException qre) {
-	        throw new QueryResolverException(qre, ErrorMessageKeys.RESOLVER_0033, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0033, crit));
+	        throw new QueryResolverException(qre, "ERR.015.008.0033", QueryPlugin.Util.getString("ERR.015.008.0033", crit)); //$NON-NLS-1$ //$NON-NLS-2$
 	    }
 	    return result;
 	}
@@ -810,17 +781,17 @@ public class ResolverUtil {
 		ResolvedLookup result = new ResolvedLookup();
 	    // Special code to handle setting return type of the lookup function to match the type of the return element
 	    if( !(args[0] instanceof Constant) || !(args[1] instanceof Constant) || !(args[2] instanceof Constant)) {
-		    throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0063, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0063));
+		    throw new QueryResolverException("ERR.015.008.0063", QueryPlugin.Util.getString("ERR.015.008.0063")); //$NON-NLS-1$ //$NON-NLS-2$
 	    }
         // If code table name in lookup function refers to temp group throw exception
 		GroupSymbol groupSym = new GroupSymbol((String) ((Constant)args[0]).getValue());
 		try {
 			groupSym.setMetadataID(metadata.getGroupID((String) ((Constant)args[0]).getValue()));
 			if (groupSym.getMetadataID() instanceof TempMetadataID) {
-				throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0065, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0065, ((Constant)args[0]).getValue()));
+				throw new QueryResolverException("ERR.015.008.0065", QueryPlugin.Util.getString("ERR.015.008.0065", ((Constant)args[0]).getValue())); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		} catch(QueryMetadataException e) {
-			throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0062, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0062, ((Constant)args[0]).getValue()));
+			throw new QueryResolverException("ERR.015.008.0062", QueryPlugin.Util.getString("ERR.015.008.0062", ((Constant)args[0]).getValue())); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		result.setGroup(groupSym);
 		
@@ -831,7 +802,7 @@ public class ResolverUtil {
         try {
             ResolverVisitor.resolveLanguageObject(returnElement, groups, metadata);
         } catch(QueryMetadataException e) {
-            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0062, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0062, returnElementName));
+            throw new QueryResolverException("ERR.015.008.0062", QueryPlugin.Util.getString("ERR.015.008.0062", returnElementName)); //$NON-NLS-1$ //$NON-NLS-2$
         }
 		result.setReturnElement(returnElement);
         
@@ -840,7 +811,7 @@ public class ResolverUtil {
         try {
             ResolverVisitor.resolveLanguageObject(keyElement, groups, metadata);
         } catch(QueryMetadataException e) {
-            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0062, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0062, keyElementName));
+            throw new QueryResolverException("ERR.015.008.0062", QueryPlugin.Util.getString("ERR.015.008.0062", keyElementName)); //$NON-NLS-1$ //$NON-NLS-2$
         }
 		result.setKeyElement(keyElement);
 		args[3] = convertExpression(args[3], DataTypeManager.getDataTypeName(keyElement.getType()), metadata);
@@ -919,7 +890,7 @@ public class ResolverUtil {
 			            // didn't find this group ID
 			        } 
 	            } else if(matches > 1) {
-	                throw handleUnresolvedGroup(symbol, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0055));
+	                throw handleUnresolvedGroup(symbol, QueryPlugin.Util.getString("ERR.015.008.0055")); //$NON-NLS-1$
 	            }
 	        }
 	    }
@@ -936,7 +907,7 @@ public class ResolverUtil {
 	    }
 	    
 	    if(groupID == null) {
-	        throw handleUnresolvedGroup(symbol, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0056));
+	        throw handleUnresolvedGroup(symbol, QueryPlugin.Util.getString("ERR.015.008.0056")); //$NON-NLS-1$
 	    }
 	    // set real metadata ID in the symbol
 	    symbol.setMetadataID(groupID);

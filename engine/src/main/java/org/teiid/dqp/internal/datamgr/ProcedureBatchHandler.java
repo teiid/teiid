@@ -30,12 +30,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.teiid.dqp.DQPPlugin;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.language.Argument.Direction;
-import org.teiid.translator.TranslatorException;
+import org.teiid.query.QueryPlugin;
 import org.teiid.translator.ProcedureExecution;
+import org.teiid.translator.TranslatorException;
 
 
 class ProcedureBatchHandler {
@@ -67,7 +67,7 @@ class ProcedureBatchHandler {
 	
 	List padRow(List row) throws TranslatorException {
         if (row.size() != resultSetCols) {
-            throw new TranslatorException(DQPPlugin.Util.getString("ConnectorWorker.ConnectorWorker_result_set_unexpected_columns", new Object[] {proc, new Integer(resultSetCols), new Integer(row.size())})); //$NON-NLS-1$
+            throw new TranslatorException(QueryPlugin.Util.getString("ConnectorWorker.ConnectorWorker_result_set_unexpected_columns", new Object[] {proc, new Integer(resultSetCols), new Integer(row.size())})); //$NON-NLS-1$
         }
         if (paramCols == 0) {
         	return row;

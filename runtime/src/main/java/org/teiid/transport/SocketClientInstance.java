@@ -37,10 +37,10 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.net.CommunicationException;
-import org.teiid.net.NetPlugin;
 import org.teiid.net.socket.Handshake;
 import org.teiid.net.socket.Message;
 import org.teiid.net.socket.ObjectChannel;
+import org.teiid.runtime.RuntimePlugin;
 
 
 /**
@@ -130,7 +130,7 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
             
             //ensure the key information
             if (returnedPublicKey == null) {
-                throw new CommunicationException(NetPlugin.Util.getString("SocketClientInstance.invalid_sessionkey")); //$NON-NLS-1$
+                throw new CommunicationException(RuntimePlugin.Util.getString("SocketClientInstance.invalid_sessionkey")); //$NON-NLS-1$
             }
             
             try {

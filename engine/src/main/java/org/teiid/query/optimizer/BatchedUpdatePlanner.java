@@ -31,8 +31,8 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.core.id.IntegerID;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
@@ -195,7 +195,7 @@ public class BatchedUpdatePlanner implements CommandPlanner {
         } else if (type == Command.TYPE_DELETE) {
             return ((Delete)command).getGroup();
         }
-        throw new TeiidRuntimeException(QueryExecPlugin.Util.getString("BatchedUpdatePlanner.unrecognized_command", command)); //$NON-NLS-1$
+        throw new TeiidRuntimeException(QueryPlugin.Util.getString("BatchedUpdatePlanner.unrecognized_command", command)); //$NON-NLS-1$
     }
     
     /**

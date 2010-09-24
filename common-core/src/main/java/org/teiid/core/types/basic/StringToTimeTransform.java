@@ -25,7 +25,6 @@ package org.teiid.core.types.basic;
 import java.sql.Time;
 
 import org.teiid.core.CorePlugin;
-import org.teiid.core.ErrorMessageKeys;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
 
@@ -46,7 +45,7 @@ public class StringToTimeTransform extends Transform {
 		try {
 			result = Time.valueOf((String)value);
 		} catch(Exception e) {
-			throw new TransformationException(e, ErrorMessageKeys.TYPES_ERR_0025, CorePlugin.Util.getString(ErrorMessageKeys.TYPES_ERR_0025, value));
+			throw new TransformationException(e, "ERR.003.029.0025", CorePlugin.Util.getString("ERR.003.029.0025", value)); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		if (!result.toString().equals(value)) {
 			throw new TransformationException(CorePlugin.Util.getString("transform.invalid_string_for_date", value, getTargetType().getSimpleName())); //$NON-NLS-1$

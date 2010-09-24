@@ -20,20 +20,24 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.dqp;
+package org.teiid.translator.jdbc.modeshape.functions;
 
-import java.util.ResourceBundle;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.teiid.core.BundleUtil;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.translator.jdbc.FunctionModifier;
 
 
 /**
- * DQPPlugin
+ * Function for IsChildNode
+ * @since 7.1
  */
-public class DQPPlugin {
+public class IsChildNode {
 
-    public static final String PLUGIN_ID = DQPPlugin.class.getPackage().getName(); 
-	public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,
-	                                                     PLUGIN_ID + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$
+    public boolean isChildNode(String childSelectorName, String parentSelectorName) {
+		return false;
+    }
 
 }

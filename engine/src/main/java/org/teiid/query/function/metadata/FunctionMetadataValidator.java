@@ -29,7 +29,6 @@ import org.teiid.api.exception.query.FunctionMetadataException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.report.ActivityReport;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -79,7 +78,7 @@ public class FunctionMetadataValidator {
      */
     public static final void validateFunctionMethod(FunctionMethod method, ActivityReport report) {
         if(method == null) {
-            updateReport(report, method, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0052, "FunctionMethod")); //$NON-NLS-1$
+            updateReport(report, method, QueryPlugin.Util.getString("ERR.015.001.0052", "FunctionMethod")); //$NON-NLS-1$ //$NON-NLS-2$
             return;  // can't validate
         }
 
@@ -127,7 +126,7 @@ public class FunctionMetadataValidator {
      */
     public static final void validateFunctionParameter(FunctionParameter param) throws FunctionMetadataException {
         if(param == null) {
-            throw new FunctionMetadataException(ErrorMessageKeys.FUNCTION_0053, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0053));
+            throw new FunctionMetadataException("ERR.015.001.0053", QueryPlugin.Util.getString("ERR.015.001.0053")); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         // Validate attributes
@@ -166,7 +165,7 @@ public class FunctionMetadataValidator {
         validateIsNotNull(type, "Type"); //$NON-NLS-1$
 
         if(DataTypeManager.getDataTypeClass(type) == null) {
-            throw new FunctionMetadataException(ErrorMessageKeys.FUNCTION_0054, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0054, type));
+            throw new FunctionMetadataException("ERR.015.001.0054", QueryPlugin.Util.getString("ERR.015.001.0054", type)); //$NON-NLS-1$ //$NON-NLS-2$
         }
     }
 
@@ -227,7 +226,7 @@ public class FunctionMetadataValidator {
      */
 	private static final void validateIsNotNull(Object object, String objName) throws FunctionMetadataException {
 		if(object == null) {
-		    throw new FunctionMetadataException(ErrorMessageKeys.FUNCTION_0052, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0052, objName));
+		    throw new FunctionMetadataException("ERR.015.001.0052", QueryPlugin.Util.getString("ERR.015.001.0052", objName)); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 
@@ -241,7 +240,7 @@ public class FunctionMetadataValidator {
      */
 	private static final void validateLength(String string, int maxLength, String strName) throws FunctionMetadataException {
 	 	if(string.length() > maxLength) {
-	 	 	throw new FunctionMetadataException(ErrorMessageKeys.FUNCTION_0055, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0055,strName, new Integer(maxLength)));
+	 	 	throw new FunctionMetadataException("ERR.015.001.0055", QueryPlugin.Util.getString("ERR.015.001.0055",strName, new Integer(maxLength))); //$NON-NLS-1$ //$NON-NLS-2$
 	 	}
 	}
 
@@ -262,14 +261,14 @@ public class FunctionMetadataValidator {
 
 			char firstChar = name.charAt(0);
 			if(! Character.isLetter(firstChar)) {
-			 	throw new FunctionMetadataException(ErrorMessageKeys.FUNCTION_0056, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0056,strName, new Character(firstChar)));
+			 	throw new FunctionMetadataException("ERR.015.001.0056", QueryPlugin.Util.getString("ERR.015.001.0056",strName, new Character(firstChar))); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 
 			// Then check the rest of the characters
 			for(int i=1; i<name.length(); i++) {
 				char ch = name.charAt(i);
 				if(! (Character.isLetterOrDigit(ch) || ch == '_')) {
-				 	throw new FunctionMetadataException(ErrorMessageKeys.FUNCTION_0057, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0057,strName, new Character(ch)));
+				 	throw new FunctionMetadataException("ERR.015.001.0057", QueryPlugin.Util.getString("ERR.015.001.0057",strName, new Character(ch))); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			}
 	    }
@@ -288,7 +287,7 @@ public class FunctionMetadataValidator {
 		if(identifier.length() > 0) {
 			char firstChar = identifier.charAt(0);
 			if(! Character.isJavaIdentifierStart(firstChar)) {
-			 	throw new FunctionMetadataException(ErrorMessageKeys.FUNCTION_0056, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0056,strName, new Character(firstChar)));
+			 	throw new FunctionMetadataException("ERR.015.001.0056", QueryPlugin.Util.getString("ERR.015.001.0056",strName, new Character(firstChar))); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 
 			// Then check the rest of the characters
@@ -296,13 +295,13 @@ public class FunctionMetadataValidator {
 				char ch = identifier.charAt(i);
 				if(! Character.isJavaIdentifierPart(ch)) {
 				    if(! allowMultiple || ! (ch == '.')) {
-					 	throw new FunctionMetadataException(ErrorMessageKeys.FUNCTION_0057, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0057,strName, new Character(ch)));
+					 	throw new FunctionMetadataException("ERR.015.001.0057", QueryPlugin.Util.getString("ERR.015.001.0057",strName, new Character(ch))); //$NON-NLS-1$ //$NON-NLS-2$
 				    }
 				}
 			}
 
 			if(identifier.charAt(identifier.length()-1) == '.') {
-			 	throw new FunctionMetadataException(ErrorMessageKeys.FUNCTION_0058, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0058,strName));
+			 	throw new FunctionMetadataException("ERR.015.001.0058", QueryPlugin.Util.getString("ERR.015.001.0058",strName)); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 	    }
 	}

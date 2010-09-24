@@ -49,9 +49,13 @@ public class DefaultCacheFactory implements CacheFactory, Serializable {
 	@Override
 	public <K, V> Cache<K, V> get(Type type, CacheConfiguration config) {
 		if (!destroyed) {
-			Cache node = cacheRoot.addChild(type.location());
-			return node;
+			return cacheRoot.addChild(type.location());
 		}
 		throw new TeiidRuntimeException("Cache system has been shutdown"); //$NON-NLS-1$
+	}
+	
+	@Override
+	public boolean isReplicated() {
+		return false;
 	}
 }

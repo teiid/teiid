@@ -43,7 +43,6 @@ import org.jboss.virtual.spi.VirtualFileHandler;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
-import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.id.UUID;
@@ -210,20 +209,10 @@ public class IndexMetadataFactory {
 		this.vdbEntries = visibilityMap;
 	}
 	
-	private final static boolean isSystemModelWithSystemTableType(String modelName) {
-        return CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(modelName);
-    }
-	
 	private boolean isFileVisible(String pathInVDB, VDBMetaData vdb) {
 
 		if (pathInVDB.endsWith(".xmi")) { //$NON-NLS-1$
 			String modelName = StringUtil.getFirstToken(StringUtil.getLastToken(pathInVDB, "/"), "."); //$NON-NLS-1$ //$NON-NLS-2$
-	
-			// If this is any of the Public System Models, like JDBC,ODBC system
-			// models
-			if (isSystemModelWithSystemTableType(modelName)) {
-				return true;
-			}
 	
 			ModelMetaData model = vdb.getModel(modelName);
 			if (model != null) {

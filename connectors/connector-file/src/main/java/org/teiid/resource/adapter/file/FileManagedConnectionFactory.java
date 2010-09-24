@@ -37,7 +37,7 @@ public class FileManagedConnectionFactory extends BasicManagedConnectionFactory{
 	private String parentDirectory;
 	
 	@Override
-	public Object createConnectionFactory() throws ResourceException {
+	public BasicConnectionFactory createConnectionFactory() throws ResourceException {
 		if (this.parentDirectory == null) {
 			throw new InvalidPropertyException(UTIL.getString("parentdirectory_not_set")); //$NON-NLS-1$
 		}

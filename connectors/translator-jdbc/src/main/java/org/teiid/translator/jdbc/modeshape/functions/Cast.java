@@ -20,27 +20,23 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.query.execution;
+package org.teiid.translator.jdbc.modeshape.functions;
 
-import java.util.ResourceBundle;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.teiid.core.BundleUtil;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.translator.jdbc.FunctionModifier;
 
 /**
- * QueryPlugin
- * <p>Used here in <code>query</code> to have access to the new
- * logging framework for <code>LogManager</code>.</p>
+ * Function for Cast
+ * @since 7.1
  */
-public class QueryExecPlugin { // extends Plugin {
+public class Cast {
+	
+	public Object cast(String literal, String asType) {
+		return "";
+    }
 
-    /**
-     * The plug-in identifier of this plugin
-     */
-    public static final String PLUGIN_ID = QueryExecPlugin.class.getPackage().getName();
-
-    /**
-     * Provides access to the plugin's log and to it's resources.
-     */
-	public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,
-	                                                     PLUGIN_ID + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$
 }

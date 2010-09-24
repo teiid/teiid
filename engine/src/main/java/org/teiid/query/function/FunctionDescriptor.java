@@ -37,7 +37,6 @@ import org.teiid.core.util.PropertiesUtils;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -236,7 +235,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         // give name and types from fd
         Method method = getInvocationMethod();
         if(method == null) {
-        	throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0002, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0002, getName()));
+        	throw new FunctionExecutionException("ERR.015.001.0002", QueryPlugin.Util.getString("ERR.015.001.0002", getName())); //$NON-NLS-1$ //$NON-NLS-2$
         }
         
         if (getDeterministic() >= FunctionMethod.USER_DETERMINISTIC && values.length > 0 && values[0] instanceof CommandContext) {
@@ -255,11 +254,11 @@ public class FunctionDescriptor implements Serializable, Cloneable {
             Object result = method.invoke(null, values);
             return importValue(result, getReturnType());
         } catch(ArithmeticException e) {
-    		throw new FunctionExecutionException(e, ErrorMessageKeys.FUNCTION_0003, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0003, getName()));
+    		throw new FunctionExecutionException(e, "ERR.015.001.0003", QueryPlugin.Util.getString("ERR.015.001.0003", getName())); //$NON-NLS-1$ //$NON-NLS-2$
         } catch(InvocationTargetException e) {
-            throw new FunctionExecutionException(e.getTargetException(), ErrorMessageKeys.FUNCTION_0003, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0003, getName()));
+            throw new FunctionExecutionException(e.getTargetException(), "ERR.015.001.0003", QueryPlugin.Util.getString("ERR.015.001.0003", getName())); //$NON-NLS-1$ //$NON-NLS-2$
         } catch(IllegalAccessException e) {
-            throw new FunctionExecutionException(e, ErrorMessageKeys.FUNCTION_0004, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0004, method.toString()));
+            throw new FunctionExecutionException(e, "ERR.015.001.0004", QueryPlugin.Util.getString("ERR.015.001.0004", method.toString())); //$NON-NLS-1$ //$NON-NLS-2$
         } catch (TransformationException e) {
         	throw new FunctionExecutionException(e, e.getMessage());
 		}

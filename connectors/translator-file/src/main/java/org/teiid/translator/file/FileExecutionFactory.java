@@ -221,4 +221,9 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 		param.setAnnotation("The contents to save.  Can be one of CLOB, BLOB, or XML");
 	} 
 	
+	@Override
+	public boolean areLobsUsableAfterClose() {
+		return true;
+	}
+	
 }

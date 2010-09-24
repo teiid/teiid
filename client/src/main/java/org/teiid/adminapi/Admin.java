@@ -234,21 +234,30 @@ public interface Admin {
      *  
      * @param vdbName
      * @param vdbVersion
-     * @param policyName
-     * @param role
+     * @param dataRole
+     * @param mappedRoleName
      */
-    void addDataRoleMapping(String vdbName, int vdbVersion, String policyName, String role) throws AdminException;
+    void addDataRoleMapping(String vdbName, int vdbVersion, String dataRole, String mappedRoleName) throws AdminException;
     
     /**
-     * Assign a Role name to the Data Role in a given VDB
+     * Remove a Role name to the Data Role in a given VDB
      *  
      * @param vdbName
      * @param vdbVersion
-     * @param policyName
-     * @param role
+     * @param dataRole
+     * @param mappedRoleName
      */
-    void removeDataRoleMapping(String vdbName, int vdbVersion, String policyName, String role) throws AdminException;
+    void removeDataRoleMapping(String vdbName, int vdbVersion, String dataRole, String mappedRoleName) throws AdminException;
     
+    /**
+     * Set the any authenticated flag on the Data Role in a given VDB
+     *  
+     * @param vdbName
+     * @param vdbVersion
+     * @param dataRole
+     * @param anyAuthenticated
+     */
+    void setAnyAuthenticatedForDataRole(String vdbName, int vdbVersion, String dataRole, boolean anyAuthenticated) throws AdminException;
     
     /**
      * Merge the Source VDB into Target VDB. Both Source and Target VDBs must be present for this method to

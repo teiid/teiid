@@ -34,7 +34,7 @@ public class JDBCExecutionException extends TranslatorException {
 
 	public JDBCExecutionException(SQLException error,
 			TranslatedCommand... commands) {
-		super(error.getErrorCode(), commands == null ? error.getMessage() : JDBCPlugin.Util.getString("JDBCQueryExecution.Error_executing_query__1", //$NON-NLS-1$
+		super(error, error.getErrorCode(), commands == null || commands.length == 0 ? error.getMessage() : JDBCPlugin.Util.getString("JDBCQueryExecution.Error_executing_query__1", //$NON-NLS-1$
 						error.getMessage(), Arrays.toString(commands)));
 	}
 }

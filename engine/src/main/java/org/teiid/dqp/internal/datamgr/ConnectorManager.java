@@ -33,10 +33,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.resource.ResourceException;
 
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.Assertion;
-import org.teiid.dqp.DQPPlugin;
 import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.logging.CommandLogMessage;
@@ -47,10 +47,12 @@ import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Scope;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.resource.spi.WrappedConnection;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
@@ -86,14 +88,21 @@ public class ConnectorManager  {
 		
     	if(ef != null) {
     		if (ef.isSourceRequired()) {
-    			Object conn = getConnectionFactory();
+    			
+    			Object conn = null;
+				try {
+					conn = getConnectionFactory();
+				} catch (TranslatorException e) {
+					// treat this as connection not found. 
+				}
+				
     			if (conn == null) {
-    				sb.append(DQPPlugin.Util.getString("datasource_not_found", this.connectionName)); //$NON-NLS-1$
+    				sb.append(QueryPlugin.Util.getString("datasource_not_found", this.connectionName)); //$NON-NLS-1$
     			}
     		}
     	}
     	else {
-    		sb.append(DQPPlugin.Util.getString("translator_not_found", this.translatorName)); //$NON-NLS-1$
+    		sb.append(QueryPlugin.Util.getString("translator_not_found", this.translatorName)); //$NON-NLS-1$
     	}
     	return sb.toString();
     }
@@ -102,8 +111,18 @@ public class ConnectorManager  {
 		MetadataFactory factory = new MetadataFactory(modelName, datatypes, importProperties);
 		Object connectionFactory = getConnectionFactory();
 		Object connection = executionFactory.getConnection(connectionFactory);
+		Object unwrapped = null;
+		
+		if (connection instanceof WrappedConnection) {
+			try {
+				unwrapped = ((WrappedConnection)connection).unwrap();
+			} catch (ResourceException e) {
+				throw new TranslatorException(QueryPlugin.Util.getString("failed_to_unwrap_connection")); //$NON-NLS-1$
+			}	
+		}
+		
 		try {
-			executionFactory.getMetadata(factory, connection);
+			executionFactory.getMetadata(factory, (unwrapped == null) ? connection:unwrapped);
 		} finally {
 			executionFactory.closeConnection(connection, connectionFactory);
 		}
@@ -124,7 +143,6 @@ public class ConnectorManager  {
     }
     
     public ConnectorWork registerRequest(AtomicRequestMessage message) throws TeiidComponentException {
-        // Set the connector ID to be used; if not already set. 
     	checkStatus();
     	AtomicRequestID atomicRequestId = message.getAtomicRequestID();
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {atomicRequestId, "Create State"}); //$NON-NLS-1$
@@ -144,7 +162,7 @@ public class ConnectorManager  {
      */
     void removeState(AtomicRequestID id) {
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {id, "Remove State"}); //$NON-NLS-1$
-        ConnectorWorkItem cwi = requestStates.remove(id);
+        requestStates.remove(id);
     }
 
     int size() {
@@ -156,7 +174,7 @@ public class ConnectorManager  {
      * @throws TranslatorException 
      */
     public void start() {
-        LogManager.logDetail(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorManagerImpl.Initializing_connector", translatorName)); //$NON-NLS-1$
+        LogManager.logDetail(LogConstants.CTX_CONNECTOR, QueryPlugin.Util.getString("ConnectorManagerImpl.Initializing_connector", translatorName)); //$NON-NLS-1$
     }
     
     /**
@@ -221,7 +239,7 @@ public class ConnectorManager  {
      * Get the ConnectionFactory object required by this manager
      * @return
      */
-    protected Object getConnectionFactory() {
+    protected Object getConnectionFactory() throws TranslatorException {
     	if (this.connectionName != null) {
     		String jndiName = this.connectionName;
     		if (!this.connectionName.startsWith(JAVA_CONTEXT)) {
@@ -238,14 +256,15 @@ public class ConnectorManager  {
 					}
 				}
 			} catch (NamingException e) {
-			}    		
+				throw new TranslatorException(e, QueryPlugin.Util.getString("connection_factory_not_found", this.connectionName)); //$NON-NLS-1$
+			}   			
     	}
     	return null;
     }
     
     private void checkStatus() throws TeiidComponentException {
     	if (stopped) {
-    		throw new TeiidComponentException(DQPPlugin.Util.getString("ConnectorManager.not_in_valid_state", this.translatorName)); //$NON-NLS-1$
+    		throw new TeiidComponentException(QueryPlugin.Util.getString("ConnectorManager.not_in_valid_state", this.translatorName)); //$NON-NLS-1$
     	}
     }
     

@@ -52,9 +52,9 @@ import org.teiid.core.crypto.CryptoException;
 import org.teiid.core.crypto.Cryptor;
 import org.teiid.core.crypto.DhKeyGenerator;
 import org.teiid.core.crypto.NullCryptor;
+import org.teiid.jdbc.JDBCPlugin;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.HostInfo;
-import org.teiid.net.NetPlugin;
 
 
 /**
@@ -112,7 +112,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 				Object obj = this.socketChannel.read();
 				
 				if (!(obj instanceof Handshake)) {
-					throw new CommunicationException(NetPlugin.Util.getString("SocketServerInstanceImpl.handshake_error"));  //$NON-NLS-1$
+					throw new CommunicationException(JDBCPlugin.Util.getString("SocketServerInstanceImpl.handshake_error"));  //$NON-NLS-1$
 				}
 				handshake = (Handshake)obj;
 				break;

@@ -41,7 +41,7 @@ public class TeiidRuntimeException extends RuntimeException {
     public static final long serialVersionUID = -4035276728007979320L;
     
     private static final String EMPTY_STRING = ""; //$NON-NLS-1$
-    public static final String CAUSED_BY_STRING = CorePlugin.Util.getString("MetaMatrixRuntimeException.Caused_by"); //$NON-NLS-1$
+    public static final String CAUSED_BY_STRING = CorePlugin.Util.getString("RuntimeException.Caused_by"); //$NON-NLS-1$
     
     //############################################################################################################################
     //# Static Methods                                                                                                           #

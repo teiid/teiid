@@ -108,12 +108,12 @@ public class AdminShell {
 	    p = props;
 	}
 
-	@Doc(text = "Adds a role to the specified policy")
+	@Doc(text = "Adds a mapped role to the specified data role")
 	public static void addDataRoleMapping(
 			@Doc(text = "vdb name") String vdbName, 
 			@Doc(text = "vdb version") int vdbVersion,
-			@Doc(text = "policy name") String policyName, 
-			@Doc(text = "role") String role) throws AdminException {
+			@Doc(text = "dataRole name") String policyName, 
+			@Doc(text = "mapped role name") String role) throws AdminException {
 		getAdmin().addDataRoleMapping(vdbName, vdbVersion, policyName, role);
 	}
 
@@ -237,15 +237,24 @@ public class AdminShell {
 		return getAdmin().getCacheStats(identifier);
 	}
 	
-	@Doc(text = "Remove a role for the data policy")
+	@Doc(text = "Remove a mapped role for the data role")
 	public static void removeDataRoleMapping(
 			@Doc(text = "vdb name") String vdbName, 
 			@Doc(text = "vdb version") int vdbVersion,
-			@Doc(text = "policy name") String policyName, 
-			@Doc(text = "role name") String role) throws AdminException {
+			@Doc(text = "dataRole name") String policyName, 
+			@Doc(text = "mapped role name") String role) throws AdminException {
 		getAdmin()
 				.removeDataRoleMapping(vdbName, vdbVersion, policyName, role);
 	}
+
+	@Doc(text = "Set the any authenticated flag for the data role")
+    public static void setAnyAuthenticatedForDataRole(
+    		@Doc(text = "vdb name")String vdbName, 
+    		@Doc(text = "vdb version")int vdbVersion, 
+    		@Doc(text = "dataRole name")String dataRole, 
+    		@Doc(text = "any authenticated") boolean anyAuthenticated) throws AdminException {
+    	getAdmin().setAnyAuthenticatedForDataRole(vdbName, vdbVersion, dataRole, anyAuthenticated);
+    }
 
 	@Doc(text = "Set a runtime property")
 	public static void setRuntimeProperty(

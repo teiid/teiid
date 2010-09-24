@@ -483,6 +483,43 @@ public class TestTeiidDataSource extends TestCase {
                             "jdbc:teiid:vdbName@mm://hostname:7001;fetchSize=500;ApplicationName=JDBC;VirtualDatabaseVersion=1.2.3;partialResultsMode=true;VirtualDatabaseName=vdbName"); //$NON-NLS-1$
     }
 
+    public void testBuildingIPv6() {
+        final String serverName = "3ffe:ffff:0100:f101::1"; //$NON-NLS-1$
+        final String vdbName = "vdbName"; //$NON-NLS-1$
+        final String vdbVersion = "1"; //$NON-NLS-1$
+        final int portNumber = 7001;
+        final String transactionAutoWrap = null;
+        final String partialMode = "true"; //$NON-NLS-1$
+        final boolean secure = false;
+        helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, 500, false, secure,
+                            "jdbc:teiid:vdbName@mm://[3ffe:ffff:0100:f101::1]:7001;fetchSize=500;ApplicationName=JDBC;VirtualDatabaseVersion=1;partialResultsMode=true;VirtualDatabaseName=vdbName"); //$NON-NLS-1$
+    }    
+
+    public void testBuildingIPv6WithBrackets() {
+        final String serverName = "[3ffe:ffff:0100:f101::1]"; //$NON-NLS-1$
+        final String vdbName = "vdbName"; //$NON-NLS-1$
+        final String vdbVersion = "1"; //$NON-NLS-1$
+        final int portNumber = 7001;
+        final String transactionAutoWrap = null;
+        final String partialMode = "true"; //$NON-NLS-1$
+        final boolean secure = false;
+        helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, 500, false, secure,
+                            "jdbc:teiid:vdbName@mm://[3ffe:ffff:0100:f101::1]:7001;fetchSize=500;ApplicationName=JDBC;VirtualDatabaseVersion=1;partialResultsMode=true;VirtualDatabaseName=vdbName"); //$NON-NLS-1$
+    }    
+    
+    public void testBuildingIPv6Alternate() {
+        final String serverName = "3ffe:ffff:0100:f101::1"; //$NON-NLS-1$
+        final String vdbName = "vdbName"; //$NON-NLS-1$
+        final String vdbVersion = "1"; //$NON-NLS-1$
+        final int portNumber = 7001;
+        final String transactionAutoWrap = null;
+        final String partialMode = "true"; //$NON-NLS-1$
+        final boolean secure = false;
+        final String alternates = "[::1],127.0.0.1:1234"; //$NON-NLS-1$
+        helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternates,transactionAutoWrap, partialMode, 500, false, secure,
+                            "jdbc:teiid:vdbName@mm://[3ffe:ffff:0100:f101::1]:7001,[::1]:7001,127.0.0.1:1234;fetchSize=500;ApplicationName=JDBC;VirtualDatabaseVersion=1;partialResultsMode=true;VirtualDatabaseName=vdbName"); //$NON-NLS-1$
+    }     
+    
     public void testBuildingURL2() {
         final String serverName = "hostName"; //$NON-NLS-1$
         final String vdbName = "vdbName"; //$NON-NLS-1$

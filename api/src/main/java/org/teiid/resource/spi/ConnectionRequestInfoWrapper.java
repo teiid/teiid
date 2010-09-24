@@ -21,12 +21,13 @@
  */
 package org.teiid.resource.spi;
 
+import javax.resource.cci.ConnectionSpec;
 import javax.resource.spi.ConnectionRequestInfo;
 
 class ConnectionRequestInfoWrapper implements ConnectionRequestInfo {
-	BasicConnectionFactory cf;
+	ConnectionSpec cs;
 	
-	public ConnectionRequestInfoWrapper(BasicConnectionFactory cf) {
-		this.cf = cf;
+	public ConnectionRequestInfoWrapper(ConnectionSpec cs) {
+		this.cs = cs;
 	}
 }

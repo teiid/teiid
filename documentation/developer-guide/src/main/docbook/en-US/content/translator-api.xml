@@ -680,10 +680,10 @@ int count = visitor.getCount();
     <title>Translator Capabilities</title>
 	<para>The <code>ExecutionFactory</code> class defines all the methods that describe the capabilities of a Translator. 
        These are used by the Connector Manager to determine what kinds of commands the translator is
-		capable of executing. A base  <code>ExecutionFactory</code> class implements all the basic capabilities, which says
-        your translator does not support any cpabilities. Your extended 
+		capable of executing. A base  <code>ExecutionFactory</code> class implements all the basic capabilities methods, which says
+        your translator does not support any capabilities. Your extended 
         <code>ExecutionFactory</code> class must override the the necessary methods to specify which
-		capabilities your translator supports.  </para>
+		capabilities your translator supports.  You should consult the debug log of query planning (set showplan debug) to see if desired pushdown requires additional capabilities.</para>
     <section>
       <title>Capability Scope</title>
 		<para>

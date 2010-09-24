@@ -89,4 +89,12 @@ public class ClusterableCacheFactory implements CacheFactory, Serializable {
 	public void setCacheManager(String mgrName) {
 		this.cacheManagerName = mgrName;
 	}
+	
+	@Override
+	public boolean isReplicated() {
+		if (delegate == null) {
+			return false;
+		}
+		return delegate.isReplicated();
+	}
 }

@@ -32,8 +32,8 @@ import java.util.Set;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
@@ -118,7 +118,7 @@ public class RulePlanProcedures implements OptimizerRule {
                 defaults.add(defaultValue);
                 
                 if (defaultValue == null && !coveredParams.contains(symbol)) {
-                    throw new QueryPlannerException(QueryExecPlugin.Util.getString("RulePlanProcedures.no_values", symbol)); //$NON-NLS-1$
+                    throw new QueryPlannerException(QueryPlugin.Util.getString("RulePlanProcedures.no_values", symbol)); //$NON-NLS-1$
                 }
             }
             

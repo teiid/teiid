@@ -22,7 +22,7 @@
 
 package org.teiid.query.processor.proc;
 
-import static org.teiid.query.analysis.AnalysisRecord.*;
+import static org.teiid.query.analysis.AnalysisRecord.PROP_OUTPUT_COLS;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,8 +46,8 @@ import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.logging.LogManager;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.processor.BatchIterator;
@@ -64,7 +64,6 @@ import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.util.ErrorMessageKeys;
 
 /**
  */
@@ -190,7 +189,7 @@ public class ProcedurePlan extends ProcessorPlan {
 		
 		            //check constraint
 		            if (value == null && !metadata.elementSupports(param.getMetadataID(), SupportConstants.Element.NULL)) {
-		                throw new QueryValidatorException(QueryExecPlugin.Util.getString("ProcedurePlan.nonNullableParam", expr)); //$NON-NLS-1$
+		                throw new QueryValidatorException(QueryPlugin.Util.getString("ProcedurePlan.nonNullableParam", expr)); //$NON-NLS-1$
 		            }
 		            setParameterValue(param, context, value);
 		        }
@@ -532,7 +531,7 @@ public class ProcedurePlan extends ProcessorPlan {
 	private CursorState getCursorState(String rsKey) throws TeiidComponentException {
 		CursorState state = this.cursorStates.get(rsKey);
 		if (state == null) {
-			throw new TeiidComponentException(QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0037, rsKey));
+			throw new TeiidComponentException(QueryPlugin.Util.getString("ERR.015.006.0037", rsKey)); //$NON-NLS-1$
 		}
 		return state;
 	}

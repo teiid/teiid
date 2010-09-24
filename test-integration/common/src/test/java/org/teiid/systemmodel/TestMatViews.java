@@ -53,7 +53,7 @@ public class TestMatViews {
 	
 	@Test public void testSystemMatViewsWithImplicitLoad() throws Exception {
 		Statement s = conn.createStatement();
-		ResultSet rs = s.executeQuery("select * from SYS.MatViews order by name");
+		ResultSet rs = s.executeQuery("select * from MatViews order by name");
 		assertTrue(rs.next());
 		assertEquals("NEEDS_LOADING", rs.getString("loadstate"));
 		assertEquals("#MAT_TEST.ERRORVIEW", rs.getString("targetName"));
@@ -65,7 +65,7 @@ public class TestMatViews {
 		assertEquals("#MAT_TEST.RANDOMVIEW", rs.getString("targetName"));
 		rs = s.executeQuery("select * from MatView");
 		assertTrue(rs.next());
-		rs = s.executeQuery("select * from SYS.MatViews where name = 'MatView'");
+		rs = s.executeQuery("select * from MatViews where name = 'MatView'");
 		assertTrue(rs.next());
 		assertEquals("LOADED", rs.getString("loadstate"));
 		try {
@@ -73,17 +73,17 @@ public class TestMatViews {
 		} catch (SQLException e) {
 			
 		}
-		rs = s.executeQuery("select * from SYS.MatViews where name = 'ErrorView'");
+		rs = s.executeQuery("select * from MatViews where name = 'ErrorView'");
 		assertTrue(rs.next());
 		assertEquals("FAILED_LOAD", rs.getString("loadstate"));
 	}
 	
 	@Test public void testSystemMatViewsWithExplicitRefresh() throws Exception {
 		Statement s = conn.createStatement();
-		ResultSet rs = s.executeQuery("select * from (call SYS.refreshMatView('TEST.MATVIEW', false)) p");
+		ResultSet rs = s.executeQuery("select * from (call refreshMatView('TEST.MATVIEW', false)) p");
 		assertTrue(rs.next());
 		assertEquals(1, rs.getInt(1));
-		rs = s.executeQuery("select * from SYS.MatViews where name = 'MatView'");
+		rs = s.executeQuery("select * from MatViews where name = 'MatView'");
 		assertTrue(rs.next());
 		assertEquals("LOADED", rs.getString("loadstate"));
 		assertEquals(true, rs.getBoolean("valid"));
@@ -91,12 +91,12 @@ public class TestMatViews {
 	
 	@Test(expected=TeiidSQLException.class) public void testSystemMatViewsInvalidView() throws Exception {
 		Statement s = conn.createStatement();
-		s.execute("call SYS.refreshMatView('TEST.NotMat', false)");
+		s.execute("call refreshMatView('TEST.NotMat', false)");
 	}
 	
 	@Test(expected=TeiidSQLException.class) public void testSystemMatViewsInvalidView1() throws Exception {
 		Statement s = conn.createStatement();
-		s.execute("call SYS.refreshMatView('foo', false)");
+		s.execute("call refreshMatView('foo', false)");
 	}
 	
 	@Test public void testSystemMatViewsWithRowRefresh() throws Exception {
@@ -108,15 +108,15 @@ public class TestMatViews {
 		
 		Statement s = conn.createStatement();
 		//prior to load refresh of a single row returns -1
-		ResultSet rs = s.executeQuery("select * from (call SYS.refreshMatViewRow('TEST.RANDOMVIEW', 0)) p");
+		ResultSet rs = s.executeQuery("select * from (call refreshMatViewRow('TEST.RANDOMVIEW', 0)) p");
 		assertTrue(rs.next());
 		assertEquals(-1, rs.getInt(1));
 		assertFalse(rs.next());
 		
-		rs = s.executeQuery("select * from (call SYS.refreshMatView('TEST.RANDOMVIEW', false)) p");
+		rs = s.executeQuery("select * from (call refreshMatView('TEST.RANDOMVIEW', false)) p");
 		assertTrue(rs.next());
 		assertEquals(1, rs.getInt(1));
-		rs = s.executeQuery("select * from SYS.MatViews where name = 'RandomView'");
+		rs = s.executeQuery("select * from MatViews where name = 'RandomView'");
 		assertTrue(rs.next());
 		assertEquals("LOADED", rs.getString("loadstate"));
 		assertEquals(true, rs.getBoolean("valid"));
@@ -124,23 +124,23 @@ public class TestMatViews {
 		assertTrue(rs.next());
 		double key = rs.getDouble(1);
 		
-		rs = s.executeQuery("select * from (call SYS.refreshMatViewRow('TEST.RANDOMVIEW', "+key+")) p");
+		rs = s.executeQuery("select * from (call refreshMatViewRow('TEST.RANDOMVIEW', "+key+")) p");
 		assertTrue(rs.next());
 		assertEquals(1, rs.getInt(1)); //1 row updated (removed)
 		
 		rs = s.executeQuery("select * from TEST.RANDOMVIEW");
 		assertFalse(rs.next());
 		
-		rs = s.executeQuery("select * from (call SYS.refreshMatViewRow('TEST.RANDOMVIEW', "+key+")) p");
+		rs = s.executeQuery("select * from (call refreshMatViewRow('TEST.RANDOMVIEW', "+key+")) p");
 		assertTrue(rs.next());
 		assertEquals(0, rs.getInt(1)); //no rows updated
 	}
 	
 	@Test(expected=TeiidSQLException.class) public void testSystemMatViewsWithRowRefreshNoPk() throws Exception {
 		Statement s = conn.createStatement();
-		s.executeQuery("select * from (call SYS.refreshMatView('TEST.MATVIEW', false)) p");
+		s.executeQuery("select * from (call refreshMatView('TEST.MATVIEW', false)) p");
 		//prior to load refresh of a single row returns -1
-		s.executeQuery("select * from (call SYS.refreshMatViewRow('TEST.MATVIEW', 0)) p");
+		s.executeQuery("select * from (call refreshMatViewRow('TEST.MATVIEW', 0)) p");
 	}
 
 }

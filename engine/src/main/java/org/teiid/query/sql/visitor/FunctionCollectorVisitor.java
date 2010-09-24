@@ -32,7 +32,6 @@ import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -71,7 +70,7 @@ public class FunctionCollectorVisitor extends LanguageVisitor {
      */
     public FunctionCollectorVisitor(Collection functions, String functionName) {
         if(functions == null) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0022));
+            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0022")); //$NON-NLS-1$
         }
         this.functions = functions;
         this.functionName = functionName;

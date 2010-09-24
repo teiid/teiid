@@ -97,11 +97,11 @@ public class TestStringUtil extends TestCase {
     }
 
     public void testComputeDisplayableForm4() {
-        helpTestComputeDisplayableForm("MetaMatrix", "MetaMatrix"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestComputeDisplayableForm("MetaMatrix", "Meta Matrix"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testComputeDisplayableForm5() {
-        helpTestComputeDisplayableForm("metaMatrix", "MetaMatrix"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestComputeDisplayableForm("metaMatrix", "Meta Matrix"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testComputeDisplayableForm6() {
@@ -109,15 +109,15 @@ public class TestStringUtil extends TestCase {
     }
 
     public void testComputeDisplayableForm7() {
-        helpTestComputeDisplayableForm("SomeMetaMatrixEmbedded", "Some MetaMatrix Embedded"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestComputeDisplayableForm("SomeMetaMatrixEmbedded", "Some Meta Matrix Embedded"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testComputeDisplayableForm8() {
-        helpTestComputeDisplayableForm("SomeMetaMetaMatrixMetaEmbedded", "Some Meta MetaMatrix Meta Embedded"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestComputeDisplayableForm("SomeMetaMetaMatrixMetaEmbedded", "Some Meta Meta Matrix Meta Embedded"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testComputeDisplayableForm9() {
-        helpTestComputeDisplayableForm("SomemetaMatrixMetaMatrixMetaEmbedded", "Somemeta Matrix MetaMatrix Meta Embedded"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestComputeDisplayableForm("SomemetaMatrixMetaMatrixMetaEmbedded", "Somemeta Matrix Meta Matrix Meta Embedded"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
 	public void testComputePluralForm1() {

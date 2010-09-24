@@ -34,7 +34,6 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -105,7 +104,7 @@ public class GroupBy implements LanguageObject {
      */
     public void replaceSymbols( Collection symbols ) {
 		if(symbols == null) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0003));
+            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0003")); //$NON-NLS-1$
 		}
 
 		this.symbols = new ArrayList(symbols);

@@ -57,7 +57,6 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -154,7 +153,7 @@ public class ExecResolver extends ProcedureContainerResolver {
         }
 
         if(!namedParameters && (inputParams != inputExpressions.size())) {
-            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0007, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0007, new Object[] {new Integer(inputParams), new Integer(inputExpressions.size()), storedProcedureCommand.getGroup().toString()}));
+            throw new QueryResolverException("ERR.015.008.0007", QueryPlugin.Util.getString("ERR.015.008.0007", new Object[] {new Integer(inputParams), new Integer(inputExpressions.size()), storedProcedureCommand.getGroup().toString()})); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         // Walk through the resolved parameters and set the expressions from the
@@ -268,7 +267,7 @@ public class ExecResolver extends ProcedureContainerResolver {
                     // and add implicit conversion if necessary
                     Class exprType = expr.getType();
                     if(paramType == null || exprType == null) {
-                        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0061, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0061, storedProcedureCommand.getProcedureName(), param.getName()));
+                        throw new QueryResolverException("ERR.015.008.0061", QueryPlugin.Util.getString("ERR.015.008.0061", storedProcedureCommand.getProcedureName(), param.getName())); //$NON-NLS-1$ //$NON-NLS-2$
                     }
                     String tgtType = DataTypeManager.getDataTypeName(paramType);
                     String srcType = DataTypeManager.getDataTypeName(exprType);

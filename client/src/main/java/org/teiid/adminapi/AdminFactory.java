@@ -32,9 +32,9 @@ import org.teiid.client.security.LogonException;
 import org.teiid.client.util.ExceptionUtil;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.jdbc.JDBCPlugin;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
-import org.teiid.net.NetPlugin;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.ServerConnectionFactory;
 import org.teiid.net.TeiidURL;
@@ -53,18 +53,16 @@ public class AdminFactory {
 
     	private Admin target;
     	private ServerConnection registry;
-    	private Properties p;
     	private boolean closed;
     	
     	public AdminProxy(Properties p) throws ConnectionException, CommunicationException {
-    		this.p = p;
     		this.registry = serverConnectionFactory.getConnection(p);
     		this.target = registry.getService(Admin.class);
 		}
     	
     	private synchronized Admin getTarget() throws AdminComponentException {
     		if (closed) {
-    			throw new AdminComponentException(NetPlugin.Util.getString("ERR.014.001.0001")); //$NON-NLS-1$
+    			throw new AdminComponentException(JDBCPlugin.Util.getString("admin_conn_closed")); //$NON-NLS-1$
     		}
     		return target;
     	}
@@ -75,6 +73,9 @@ public class AdminFactory {
 			if (method.getName().equals("close")) { //$NON-NLS-1$
 				close();
 				return null;
+			}
+			if (!method.getDeclaringClass().equals(Admin.class)) {
+				return method.invoke(this, args);
 			}
 			try {
 				return method.invoke(getTarget(), args);
@@ -186,7 +187,7 @@ public class AdminFactory {
                                    String applicationName) throws AdminException {
         
         if (userName == null || userName.trim().length() == 0) {
-            throw new IllegalArgumentException(NetPlugin.Util.getString("ERR.014.001.0099")); //$NON-NLS-1$
+            throw new IllegalArgumentException(JDBCPlugin.Util.getString("invalid_parameter")); //$NON-NLS-1$
         }
         
     	final Properties p = new Properties();

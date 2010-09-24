@@ -36,8 +36,8 @@ import org.teiid.core.id.IDGenerator;
 import org.teiid.core.id.IntegerID;
 import org.teiid.core.id.IntegerIDFactory;
 import org.teiid.core.util.Assertion;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -95,7 +95,6 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 public class PlanToProcessConverter {
@@ -447,7 +446,7 @@ public class PlanToProcessConverter {
                 break;
 
 			default:
-                throw new QueryPlannerException(QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0007, NodeConstants.getNodeTypeString(node.getType())));
+                throw new QueryPlannerException(QueryPlugin.Util.getString("ERR.015.004.0007", NodeConstants.getNodeTypeString(node.getType()))); //$NON-NLS-1$
 		}
 
 		if(processNode != null) {
@@ -472,7 +471,8 @@ public class PlanToProcessConverter {
             return aNode;
         }
         GroupSymbol group = node.getGroups().iterator().next();
-        if (!CoreConstants.SYSTEM_MODEL.equals(metadata.getFullName(metadata.getModelID(group.getMetadataID())))) {
+        if (!CoreConstants.SYSTEM_MODEL.equals(metadata.getFullName(metadata.getModelID(group.getMetadataID()))) 
+        		&& !CoreConstants.SYSTEM_ADMIN_MODEL.equals(metadata.getFullName(metadata.getModelID(group.getMetadataID())))) {
             return aNode;
         }
         List projectSymbols = (List) node.getProperty(NodeConstants.Info.OUTPUT_COLS);
@@ -538,7 +538,7 @@ public class PlanToProcessConverter {
 			String cbName = metadata.getFullName(modelID);
 			return cbName;
 		} catch(QueryMetadataException e) {
-            throw new QueryPlannerException(e, QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0009));
+            throw new QueryPlannerException(e, QueryPlugin.Util.getString("ERR.015.004.0009")); //$NON-NLS-1$
 		}
 	}
 

@@ -30,7 +30,6 @@ import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -90,7 +89,7 @@ public class Avg extends Sum {
                 try {
                     return ((BigDecimal)sum).divide(new BigDecimal(count), AVG_SCALE, BigDecimal.ROUND_HALF_UP);
                 } catch(ArithmeticException e) {
-                    throw new FunctionExecutionException(e, ErrorMessageKeys.FUNCTION_0048, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0048, sum, new Integer(count)));
+                    throw new FunctionExecutionException(e, "ERR.015.001.0048", QueryPlugin.Util.getString("ERR.015.001.0048", sum, new Integer(count))); //$NON-NLS-1$ //$NON-NLS-2$
                 }
             default:
                 throw new AssertionError("unknown accumulator type"); //$NON-NLS-1$

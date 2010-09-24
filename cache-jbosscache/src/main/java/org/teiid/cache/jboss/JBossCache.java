@@ -128,4 +128,15 @@ public class JBossCache<K, V> implements Cache<K, V> {
 	void setCacheConfiguration(CacheConfiguration config) {
 		this.config = config;
 	}
+
+	@Override
+	public Set<K> keys() {
+		HashSet keys = new HashSet();
+		Node<K, V> node = getRootNode();
+		Set<Node<K, V>> children = node.getChildren();
+		for (Node<K, V> child:children) {
+			keys.addAll(child.getData().keySet());
+		}
+		return keys;
+	}
 }

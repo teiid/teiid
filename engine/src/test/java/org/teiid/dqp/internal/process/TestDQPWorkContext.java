@@ -22,6 +22,11 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.util.Map;
+
+import org.mockito.Mockito;
+import org.teiid.adminapi.DataPolicy;
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.core.util.UnitTestUtil;
 
 import junit.framework.TestCase;
@@ -58,4 +63,16 @@ public class TestDQPWorkContext extends TestCase {
 		assertEquals("querybuilder", copy.getAppName()); //$NON-NLS-1$
 	}
 
+	
+	public void testClearPolicies() {
+		DQPWorkContext message = new DQPWorkContext();
+		message.setSession(Mockito.mock(SessionMetadata.class));
+		Map<String, DataPolicy> map = message.getAllowedDataPolicies();
+		map.put("role", Mockito.mock(DataPolicy.class)); //$NON-NLS-1$
+		assertFalse(map.isEmpty());
+		
+		message.setSession(Mockito.mock(SessionMetadata.class));
+		map = message.getAllowedDataPolicies();
+		assertTrue(map.isEmpty());
+	}
 }

@@ -62,7 +62,7 @@
    -->
    
    <!-- un-comment to enable Teiid COMMAND log
-   <appender name="COMMAND" class="org.apache.log4j.RollingFileAppender">
+   <appender name="COMMAND" class="org.jboss.logging.appender.RollingFileAppender">
      <param name="File" value="${jboss.server.log.dir}/teiid-command.log"/>
      <param name="MaxFileSize" value="1000KB"/>
      <param name="MaxBackupIndex" value="25"/>

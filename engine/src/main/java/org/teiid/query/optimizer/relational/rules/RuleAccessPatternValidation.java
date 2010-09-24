@@ -27,8 +27,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.api.exception.query.QueryPlannerException;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
@@ -41,7 +41,6 @@ import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -116,7 +115,7 @@ public final class RuleAccessPatternValidation implements OptimizerRule {
         }
         
         Object groups = node.getGroups();
-        throw new QueryPlannerException(QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0012, new Object[] {groups, accessPatterns}));
+        throw new QueryPlannerException(QueryPlugin.Util.getString("ERR.015.004.0012", new Object[] {groups, accessPatterns})); //$NON-NLS-1$
     }
     
 	public String toString() {

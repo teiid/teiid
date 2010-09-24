@@ -28,7 +28,6 @@ import java.util.List;
 
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 public class CaseExpression extends AbstractCaseExpression {
@@ -68,7 +67,7 @@ public class CaseExpression extends AbstractCaseExpression {
      */
     public void setExpression(Expression expr) {
         if (expr == null) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0035));
+            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0035")); //$NON-NLS-1$
         }
         this.expression = expr;
     }
@@ -106,18 +105,18 @@ public class CaseExpression extends AbstractCaseExpression {
      */
     public void setWhen(List when, List then) {
         if (when == null || then == null) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0036));
+            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0036")); //$NON-NLS-1$
         }
         if (when.size() != then.size() ||
             when.size() < 1) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0036));
+            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0036")); //$NON-NLS-1$
         }
         for (int i = 0 ; i < when.size(); i++) {
             if (!(when.get(i) instanceof Expression)) {
-                throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0037));
+                throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0037")); //$NON-NLS-1$
             }
             if (!(then.get(i) instanceof Expression)) {
-                throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0038));
+                throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0038")); //$NON-NLS-1$
             }
         }
         if (this.when != when) {

@@ -35,8 +35,6 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import org.jboss.deployers.spi.DeploymentException;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
-import org.teiid.adminapi.Model;
-import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.types.DataTypeManager;
@@ -44,7 +42,6 @@ import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Datatype;
-import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.runtime.RuntimePlugin;
@@ -62,6 +59,7 @@ public class VDBRepository implements Serializable{
 	private MetadataStore systemStore;
 	private MetadataStore odbcStore;
 	private boolean odbcEnabled = false;
+	private List<VDBLifeCycleListener> listeners = new ArrayList<VDBLifeCycleListener>();
 	
 	public void addVDB(VDBMetaData vdb, MetadataStoreGroup stores, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr) throws DeploymentException {
 		if (getVDB(vdb.getName(), vdb.getVersion()) != null) {
@@ -78,36 +76,14 @@ public class VDBRepository implements Serializable{
 		}
 		
 		if (this.odbcStore == null) {
-			addSystemModel(vdb);
 			this.vdbRepo.put(vdbId(vdb), new CompositeVDB(vdb, stores, visibilityMap, udf, cmr, this.systemStore));
 		}
 		else {
-			addSystemModel(vdb);
-			addODBCModel(vdb);
 			this.vdbRepo.put(vdbId(vdb), new CompositeVDB(vdb, stores, visibilityMap, udf, cmr, this.systemStore, odbcStore));
 		}
+		notifyAdd(vdb.getName(), vdb.getVersion());
 	}
 
-	private void addODBCModel(VDBMetaData vdb) {
-		// add the ODBC model
-		ModelMetaData odbcSystem = new ModelMetaData();
-		odbcSystem.setName(CoreConstants.ODBC_MODEL);
-		odbcSystem.setVisible(true);
-		odbcSystem.setModelType(Model.Type.VIRTUAL);
-		vdb.addModel(odbcSystem);
-	}
-	
-	private void addSystemModel(VDBMetaData vdb) {
-		// Add system model to the deployed VDB
-		ModelMetaData system = new ModelMetaData();
-		system.setName(CoreConstants.SYSTEM_MODEL);
-		system.setVisible(true);
-		system.setModelType(Model.Type.PHYSICAL);
-		system.addSourceMapping(CoreConstants.SYSTEM_MODEL, CoreConstants.SYSTEM_MODEL, CoreConstants.SYSTEM_MODEL); 
-		system.setSupportsMultiSourceBindings(false);
-		vdb.addModel(system);		
-	}
-	
 	public VDBMetaData getVDB(String name, int version) {
 		CompositeVDB v = this.vdbRepo.get(new VDBKey(name, version));
 		if (v != null) {
@@ -187,6 +163,7 @@ public class VDBRepository implements Serializable{
 			for (CompositeVDB other:this.vdbRepo.values()) {
 				other.removeChild(key);
 			}
+			notifyRemove(key.getName(), key.getVersion());
 			return true;
 		}
 		return false;
@@ -228,10 +205,30 @@ public class VDBRepository implements Serializable{
 		}
 	}
 	
-	public void updateVDB(String name, int version) {
+	void updateVDB(String name, int version) {
 		CompositeVDB v = this.vdbRepo.get(new VDBKey(name, version));
 		if (v!= null) {
 			v.update(v.getVDB());
+		}
+	}
+	
+	public synchronized void addListener(VDBLifeCycleListener listener) {
+		this.listeners.add(listener);
+	}
+	
+	public synchronized void removeListener(VDBLifeCycleListener listener) {
+		this.listeners.remove(listener);
+	}
+	
+	private void notifyAdd(String name, int version) {
+		for(VDBLifeCycleListener l:this.listeners) {
+			l.added(name, version);
+		}
+	}
+	
+	private void notifyRemove(String name, int version) {
+		for(VDBLifeCycleListener l:this.listeners) {
+			l.removed(name, version);
 		}
 	}
 }

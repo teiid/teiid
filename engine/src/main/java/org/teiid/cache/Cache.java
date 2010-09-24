@@ -22,15 +22,19 @@
 
 package org.teiid.cache;
 
+import java.util.Set;
+
 /**
  * Abstraction over cache providers
  */
 public interface Cache<K, V>  {
 	
-	public enum Type {SESSION("Session"), //$NON-NLS-1$ 
-						RESULTSET("ResultSet"), //$NON-NLS-1$
-						RESULTSET_BATCHES(RESULTSET, "batches"), //$NON-NLS-1$
-						PREPAREDPLAN("PreparaedPlan"); //$NON-NLS-1$
+	public enum Type {
+		MATTABLES("MatTables"), //$NON-NLS-1$ 
+		MATTABLEUPDATES("MatTableUpdates"), //$NON-NLS-1$
+		RESULTSET("ResultSet"), //$NON-NLS-1$
+		RESULTSET_BATCHES(RESULTSET, "batches"), //$NON-NLS-1$
+		PREPAREDPLAN("PreparaedPlan"); //$NON-NLS-1$
 		
 		private String location;
 		
@@ -94,4 +98,10 @@ public interface Cache<K, V>  {
 	 * @return
 	 */
 	String getName();
+	
+	/**
+	 * Return all the keys
+	 * @return
+	 */
+	Set<K> keys();
 }

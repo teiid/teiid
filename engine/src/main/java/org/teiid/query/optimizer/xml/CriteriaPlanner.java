@@ -30,7 +30,7 @@ import java.util.Set;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.mapping.xml.MappingNode;
@@ -44,7 +44,6 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 public class CriteriaPlanner {
@@ -89,7 +88,7 @@ public class CriteriaPlanner {
                     if (context == null) {
                         context = otherContext;
                     } else if (context != otherContext){
-                        throw new QueryPlannerException(ErrorMessageKeys.OPTIMIZER_0068, QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0068, criteria));
+                        throw new QueryPlannerException("ERR.015.004.0068", QueryPlugin.Util.getString("ERR.015.004.0068", criteria)); //$NON-NLS-1$ //$NON-NLS-2$
                     }
                 }
                 
@@ -137,7 +136,7 @@ public class CriteriaPlanner {
             
             MappingNode elementRsNode = node.getSourceNode(); 
             if (elementRsNode == null) {
-                throw new QueryPlannerException(QueryExecPlugin.Util.getString("CriteriaPlanner.invalid_element", elementSymbol)); //$NON-NLS-1$
+                throw new QueryPlannerException(QueryPlugin.Util.getString("CriteriaPlanner.invalid_element", elementSymbol)); //$NON-NLS-1$
             }
             
             String elementRsFullName = elementRsNode.getFullyQualifiedName().toUpperCase();
@@ -154,7 +153,7 @@ public class CriteriaPlanner {
                 continue;
             }
             
-            throw new QueryPlannerException(QueryExecPlugin.Util.getString("CriteriaPlanner.invalid_context", elementSymbol, context.getFullyQualifiedName())); //$NON-NLS-1$
+            throw new QueryPlannerException(QueryPlugin.Util.getString("CriteriaPlanner.invalid_context", elementSymbol, context.getFullyQualifiedName())); //$NON-NLS-1$
         }
         return resultSets;
     }
@@ -186,7 +185,7 @@ public class CriteriaPlanner {
    
         if (criteriaResultSets.size() != 1) {
             //TODO: this assumption could be relaxed if we allow context to be from a document perspective, rather than from a result set
-            throw new QueryPlannerException(QueryExecPlugin.Util.getString("CriteriaPlanner.no_context", criteria)); //$NON-NLS-1$
+            throw new QueryPlannerException(QueryPlugin.Util.getString("CriteriaPlanner.no_context", criteria)); //$NON-NLS-1$
         }
         return (MappingSourceNode)criteriaResultSets.iterator().next();
     }
@@ -259,7 +258,7 @@ public class CriteriaPlanner {
         MappingNode node = MappingNode.findNode(planEnv.mappingDoc, fullyQualifiedNodeName.toUpperCase());
         MappingSourceNode sourceNode = node.getSourceNode();
         if (sourceNode == null) {
-            String msg = QueryExecPlugin.Util.getString("XMLPlanner.The_rowlimit_parameter_{0}_is_not_in_the_scope_of_any_mapping_class", fullyQualifiedNodeName); //$NON-NLS-1$
+            String msg = QueryPlugin.Util.getString("XMLPlanner.The_rowlimit_parameter_{0}_is_not_in_the_scope_of_any_mapping_class", fullyQualifiedNodeName); //$NON-NLS-1$
             throw new QueryPlannerException(msg);
         }
         
@@ -268,7 +267,7 @@ public class CriteriaPlanner {
         // Check for conflicting row limits on the same mapping class
         int existingLimit = criteriaRsInfo.getUserRowLimit();
         if (existingLimit > 0 && existingLimit != rowLimit) {
-            String msg = QueryExecPlugin.Util.getString("XMLPlanner.Criteria_{0}_contains_conflicting_row_limits", wholeCrit); //$NON-NLS-1$
+            String msg = QueryPlugin.Util.getString("XMLPlanner.Criteria_{0}_contains_conflicting_row_limits", wholeCrit); //$NON-NLS-1$
             throw new QueryPlannerException(msg);
         }
         
@@ -301,13 +300,13 @@ public class CriteriaPlanner {
             //assumes that all non-xml group elements are temp elements
             boolean hasTempElement = !metadata.isXMLGroup(group.getMetadataID());
             if(!first && hasTempElement && resultSet == null) {
-                throw new QueryPlannerException(ErrorMessageKeys.OPTIMIZER_0035, QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0035, conjunct));
+                throw new QueryPlannerException("ERR.015.004.0035", QueryPlugin.Util.getString("ERR.015.004.0035", conjunct)); //$NON-NLS-1$ //$NON-NLS-2$
             }
 
             if (hasTempElement) {
                 String currentResultSet = metadata.getFullName(element.getGroupSymbol().getMetadataID());
                 if (resultSet != null && !resultSet.equalsIgnoreCase(currentResultSet)) {
-                    throw new QueryPlannerException(QueryExecPlugin.Util.getString("CriteriaPlanner.multiple_staging", conjunct)); //$NON-NLS-1$
+                    throw new QueryPlannerException(QueryPlugin.Util.getString("CriteriaPlanner.multiple_staging", conjunct)); //$NON-NLS-1$
                 } 
                 resultSet = currentResultSet;
             }
@@ -317,7 +316,7 @@ public class CriteriaPlanner {
         if (resultSet != null) {
             Collection functions = ContextReplacerVisitor.replaceContextFunctions(conjunct);
             if (!functions.isEmpty()) {
-                throw new QueryPlannerException(QueryExecPlugin.Util.getString("CriteriaPlanner.staging_context")); //$NON-NLS-1$
+                throw new QueryPlannerException(QueryPlugin.Util.getString("CriteriaPlanner.staging_context")); //$NON-NLS-1$
             }
             
             //should also throw an exception if it contains a row limit function
@@ -336,7 +335,7 @@ public class CriteriaPlanner {
 
         MappingNode contextNode = MappingNode.findNode(planEnv.mappingDoc, targetContext.getCanonicalName());
         if (contextNode == null){
-            throw new QueryPlannerException(ErrorMessageKeys.OPTIMIZER_0037, QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0037, targetContext));
+            throw new QueryPlannerException("ERR.015.004.0037", QueryPlugin.Util.getString("ERR.015.004.0037", targetContext)); //$NON-NLS-1$ //$NON-NLS-2$
         }
         return contextNode;
     }

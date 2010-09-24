@@ -383,13 +383,6 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
         }
     }
     
-    /**
-     * <p>This creates a MMStatement object for sending SQL statements to the MetaMatrix
-     * server.  This should be used for statements without parameters.  For statements
-     * that are executed many times, use the PreparedStatement object.</p>
-     * @return a Statement object.
-     * @throws a SQLException if a MetaMatrix server access error occurs.
-     */
     public Statement createStatement() throws SQLException {
         return createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
     }
@@ -439,14 +432,6 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
         }
     }
 
-    /**
-     * <p>This method returns the current status of the connection in regards to it's
-     * auto-commit state.  By default, the auto-commit is set to true.  Meaning that
-     * any transaction that occurs is automatically commited to the MetaMatrix server.
-     * #See corresponding setAutoCommit() method.</p>
-     * @return true if the statements on this connection get committed on execution.
-     * @throws SQLException should never happen
-     */
     public boolean getAutoCommit() throws SQLException {
         //Check to see the connection is open
        checkConnection();
@@ -563,26 +548,10 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
         return closed;
     }
 
-    /**
-     * <p>This method will return whether this connection is read only or not.
-     * It will throw a SQLException if a MetaMatrix server access error occurs.
-     * @return boolean value indication if connection is readonly
-     * @throws SQLException, should never occur
-     */
     public boolean isReadOnly() throws SQLException {
          return readOnly; 
     }
 
-    /**
-     * <p>This method will convert the given SQL String into a MetaMatrix SQL Request.
-     * This will convert any date escape sequences into the appropriate MetaMatrix
-     * type, and any kind of data transformations that the MetaMatrix server would
-     * expect.  This method returns the native form of the statement that the driver
-     * would have sent.</p>
-     * @param sql string to be coverted into SQL understood by metamatrix
-     * @return uncoverted sql string(escape parsing takesplace in metamatrix)
-     * @throws SQLException, should never occur
-     */
     public String nativeSQL(String sql) throws SQLException {
         // return the string argument without any modifications.
         // escape syntaxes are directly supported in the server
@@ -639,16 +608,6 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
         }
     }
 
-    /**
-     * <p>This method creates a MMPreparedStatement which is used for sending parameterized
-     * SQL statements to the MetaMatrix server.  A statement with or without IN parameters
-     * can be pre-compiled and stored in a MMPreparedStatement object.  Since the MetaMatrix
-     * server does not pre-compile statements, a sql statement will be constructed using the
-     * parameters supplied which would be used for execution of this preparedStatement object.</p>
-     * @param sql string representing a prepared statement
-     * @return a PreparedStatement object
-     * @throws SQLException if there is an error creating a prepared statement object
-     */
     public PreparedStatementImpl prepareStatement(String sql) throws SQLException {
         return prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
     }
@@ -676,34 +635,21 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
         return newStatement;
     }
 
-    /**
-     * <p>This method creates a MMPreparedStatement which is used for sending parameterized
-     * SQL statements to the MetaMatrix server and it has the capability to retrieve auto-generated keys.</p>
-     * @param sql string representing a prepared statement
-     * @param intValue indicating the result set Type
-     * @param intValue indicating the result set concurrency
-     * @param intValue indicating the result set holdability
-     * @return a PreparedStatement object
-     * @throws SQLException if there is an error creating a prepared statement object
-     */
     public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency,
         int resultSetHoldability ) throws SQLException {
     	throw SqlUtil.createFeatureNotSupportedException();
     }
 
-    /**
-     * <p>This method will drop all changes made since the beginning of the transaction
-     * and release any MetaMatrix server locks currently held by this connection. This
-     * method rolls back transactions on all the statements currently open on this connection.
-     * This is used when then auto-commit has been disabled.</p>
-     * @see setAutoCommit(boolean) method for more information.
-     * @throws SQLException if there is an error rolling back.
-     */
     public void rollback() throws SQLException {
         rollback(true);
     }
     
-    void rollback(boolean startTxn) throws SQLException {
+    /**
+     * Rollback the current local transaction
+     * @param startTxn
+     * @throws SQLException
+     */
+    public void rollback(boolean startTxn) throws SQLException {
 
         //Check to see the connection is open
         checkConnection();
@@ -727,17 +673,6 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
         }
     }
 
-    /**
-     * <p>This method will set the connection's auto commit mode accordingly.  By
-     * default this is set to true (auto-commit is turned on).  An auto-commit
-     * value of true means any statements will automatically be made permanent if
-     * they are successful after the last row of the ReulstSet has been retrieved
-     * or the next execute occurs, whichever comes first.  If set to false, changes
-     * can be either be committed (using the commit() method) or rolled back ("undo
-     * the changes" by using the rollback() method).</p>
-     * @param boolean value indicating if autoCommit is turned on
-     * @throws SQLException is metamatrix access error occurs.
-     */
     public void setAutoCommit(boolean autoCommit) throws SQLException {
         //Check to see the connection is open
         checkConnection();
@@ -756,7 +691,7 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
     }
 
     /**
-     * <p>Metamatrix does not allow setting a catalog through a connection. This
+     * <p>Teiid does not allow setting a catalog through a connection. This
      * method silently ignores the request as per the specification.</p>
      * @param The string values which sets the catalog name on the connection.
      * @throws SQLException This should never occur.

@@ -49,10 +49,10 @@ import org.teiid.client.util.ExceptionUtil;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
+import org.teiid.jdbc.JDBCPlugin;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.HostInfo;
-import org.teiid.net.NetPlugin;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.TeiidURL;
 
@@ -103,7 +103,7 @@ public class SocketServerConnection implements ServerConnection {
 	public synchronized SocketServerInstance selectServerInstance()
 			throws CommunicationException, ConnectionException {
 		if (closed) {
-			throw new CommunicationException(NetPlugin.Util.getString("SocketServerConnection.closed")); //$NON-NLS-1$ 
+			throw new CommunicationException(JDBCPlugin.Util.getString("SocketServerConnection.closed")); //$NON-NLS-1$ 
 		}
 		if (this.serverInstance != null && (!failOver || this.serverInstance.isOpen())) {
 			return this.serverInstance;
@@ -145,7 +145,7 @@ public class SocketServerConnection implements ServerConnection {
 			        	if (e.getCause() instanceof CommunicationException) {
 			        		throw (CommunicationException)e.getCause();
 			        	}
-			            throw new CommunicationException(e, NetPlugin.Util.getString("PlatformServerConnectionFactory.Unable_to_find_a_component_used_in_logging_on_to")); //$NON-NLS-1$
+			            throw new CommunicationException(e, JDBCPlugin.Util.getString("PlatformServerConnectionFactory.Unable_to_find_a_component_used_in_logging_on_to")); //$NON-NLS-1$
 			        } 
 				}
 				return this.serverInstance;
@@ -157,13 +157,13 @@ public class SocketServerConnection implements ServerConnection {
 			this.serverDiscovery.markInstanceAsBad(hostInfo);
 			if (knownHosts == 1) { //just a single host, use the exception
 				if (ex instanceof UnknownHostException) {
-					throw new SingleInstanceCommunicationException(ex, NetPlugin.Util.getString("SocketServerInstance.Connection_Error.Unknown_Host", hostInfo.getHostName())); //$NON-NLS-1$
+					throw new SingleInstanceCommunicationException(ex, JDBCPlugin.Util.getString("SocketServerInstance.Connection_Error.Unknown_Host", hostInfo.getHostName())); //$NON-NLS-1$
 				}
-				throw new SingleInstanceCommunicationException(ex,NetPlugin.Util.getString("SocketServerInstance.Connection_Error.Connect_Failed", hostInfo.getHostName(), String.valueOf(hostInfo.getPortNumber()), ex.getMessage())); //$NON-NLS-1$
+				throw new SingleInstanceCommunicationException(ex,JDBCPlugin.Util.getString("SocketServerInstance.Connection_Error.Connect_Failed", hostInfo.getHostName(), String.valueOf(hostInfo.getPortNumber()), ex.getMessage())); //$NON-NLS-1$
 			}
 			log.log(Level.FINE, "Unable to connect to host", ex); //$NON-NLS-1$
 		}
-		throw new CommunicationException(NetPlugin.Util.getString("SocketServerInstancePool.No_valid_host_available", hostCopy.toString())); //$NON-NLS-1$
+		throw new CommunicationException(JDBCPlugin.Util.getString("SocketServerInstancePool.No_valid_host_available", hostCopy.toString())); //$NON-NLS-1$
 	}
 
 	private ILogon connect(HostInfo hostInfo) throws CommunicationException,

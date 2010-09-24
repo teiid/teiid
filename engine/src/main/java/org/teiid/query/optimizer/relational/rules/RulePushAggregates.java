@@ -386,7 +386,7 @@ public class RulePushAggregates implements
         projectPlanNode.setProperty(NodeConstants.Info.PROJECT_COLS, projectedViewSymbols);
         projectPlanNode.addGroup(group);
         if (pushdown) {
-        	while (RuleRaiseAccess.raiseAccessNode(root, originalNode, metadata, capFinder, true) != null) {
+        	while (RuleRaiseAccess.raiseAccessNode(root, originalNode, metadata, capFinder, true, null) != null) {
         		//continue to raise
         	}
         }
@@ -487,7 +487,7 @@ public class RulePushAggregates implements
     		
             //check for push down
             if (stageGroup.getFirstChild().getType() == NodeConstants.Types.ACCESS 
-                            && RuleRaiseAccess.canRaiseOverGroupBy(stageGroup, stageGroup.getFirstChild(), aggregates, metadata, capFinder)) {
+                            && RuleRaiseAccess.canRaiseOverGroupBy(stageGroup, stageGroup.getFirstChild(), aggregates, metadata, capFinder, null)) {
                 RuleRaiseAccess.performRaise(null, stageGroup.getFirstChild(), stageGroup);
                 if (stagedGroupingSymbols.isEmpty()) {
                     RuleRaiseAccess.performRaise(null, stageGroup.getParent(), stageGroup.getParent().getParent());

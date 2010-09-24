@@ -36,4 +36,10 @@ public interface CacheFactory {
 	 * Destroy the cache factory and any caches underneath.
 	 */
 	void destroy();
+	
+	/**
+	 * Return true if replicated caches are created by this factory
+	 * @return
+	 */
+	boolean isReplicated();
 }

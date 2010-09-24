@@ -135,13 +135,8 @@ public class PreparedStatementRequest extends Request {
             //if prepared plan does not exist, create one
             prepPlan = new PreparedPlan();
             LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Query does not exist in cache: ", sqlQuery}); //$NON-NLS-1$
-        }
-
-        ProcessorPlan cachedPlan = prepPlan.getPlan();
-        
-        if (cachedPlan == null) {
-	        super.generatePlan();
-        	if (!this.addedLimit) { //TODO: this is a little problematic
+            super.generatePlan();
+	        if (!this.addedLimit) { //TODO: this is a little problematic
             	prepPlan.setCommand(this.userCommand);
 		        // Defect 13751: Clone the plan in its current state (i.e. before processing) so that it can be used for later queries
 		        prepPlan.setPlan(processPlan.clone());
@@ -149,15 +144,17 @@ public class PreparedStatementRequest extends Request {
 		        this.prepPlanCache.put(id, this.context.getDeterminismLevel(), prepPlan, userCommand.getCacheHint() != null?userCommand.getCacheHint().getTtl():null);
         	}
         } else {
+        	ProcessorPlan cachedPlan = prepPlan.getPlan();
+        	this.userCommand = prepPlan.getCommand();
+            validateAccess(userCommand);    
         	LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Query exist in cache: ", sqlQuery }); //$NON-NLS-1$
             processPlan = cachedPlan.clone();
             //already in cache. obtain the values from cache
             analysisRecord = prepPlan.getAnalysisRecord();
             
-            this.userCommand = prepPlan.getCommand();
             createCommandContext();
         }
-                
+        
         if (requestMsg.isBatchedUpdate()) {
 	        handlePreparedBatchUpdate();
         } else {

@@ -57,7 +57,6 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -151,7 +150,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         try {
             resolveList(insert.getVariables(), metadata, null, groups);
         } catch (QueryResolverException e) {
-            throw new QueryResolverException(e, QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0054, insert.getGroup(), e.getUnresolvedSymbols()));
+            throw new QueryResolverException(e, QueryPlugin.Util.getString("ERR.015.012.0054", insert.getGroup(), e.getUnresolvedSymbols())); //$NON-NLS-1$
         }
     }
 
@@ -176,7 +175,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         
         // check that # of variables == # of values
         if(values.size() != insert.getVariables().size()) {
-            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0010, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0010, insert.getVariables().size(), values.size()));
+            throw new QueryResolverException("ERR.015.008.0010", QueryPlugin.Util.getString("ERR.015.008.0010", insert.getVariables().size(), values.size())); //$NON-NLS-1$ //$NON-NLS-2$
         }
         
         Iterator valueIter = values.iterator();

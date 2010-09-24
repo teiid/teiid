@@ -46,7 +46,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.XMLType;
-import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
@@ -132,7 +132,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 			try {
 				item = result.next();
 			} catch (XPathException e) {
-				throw new TeiidProcessingException(e, QueryExecPlugin.Util.getString("XMLTableNode.error", e.getMessage())); //$NON-NLS-1$
+				throw new TeiidProcessingException(e, QueryPlugin.Util.getString("XMLTableNode.error", e.getMessage())); //$NON-NLS-1$
 			}
 			rowCount++;
 			if (item == null) {
@@ -164,7 +164,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 						continue;
 					}
 					if (pathIter.next() != null) {
-						throw new TeiidProcessingException(QueryExecPlugin.Util.getString("XMLTableName.multi_value", proColumn.getName())); //$NON-NLS-1$
+						throw new TeiidProcessingException(QueryPlugin.Util.getString("XMLTableName.multi_value", proColumn.getName())); //$NON-NLS-1$
 					}
 					Object value = Value.convertToJava(colItem);
 					if (value instanceof Item) {
@@ -184,7 +184,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 					value = FunctionDescriptor.importValue(value, proColumn.getSymbol().getType());
 					tuple.add(value);
 				} catch (XPathException e) {
-					throw new TeiidProcessingException(e, QueryExecPlugin.Util.getString("XMLTableNode.path_error", proColumn.getName())); //$NON-NLS-1$
+					throw new TeiidProcessingException(e, QueryPlugin.Util.getString("XMLTableNode.path_error", proColumn.getName())); //$NON-NLS-1$
 				}
 			}
 		}

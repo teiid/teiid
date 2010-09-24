@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.resolver.command.TempTableResolver;
@@ -84,16 +84,19 @@ public class TempTableStore {
     		}
 		}
 		
-		public synchronized MatState setState(MatState state, Boolean valid) {
+		public synchronized MatState setState(MatState state, Boolean valid, Long timestamp) {
 			MatState oldState = this.state;
 			if (valid != null) {
 				this.valid = valid;
 			}
 			setState(state);
+			if (timestamp != null) {
+				this.updateTime = timestamp;
+			}
 			notifyAll();
 			return oldState;
 		}
-
+		
 		private void setState(MatState state) {
 			this.state = state;
 			this.updateTime = System.currentTimeMillis();
@@ -113,6 +116,10 @@ public class TempTableStore {
 		
 		public synchronized boolean isValid() {
 			return valid;
+		}
+		
+		public synchronized long getTtl() {
+			return ttl;
 		}
 		
 	}
@@ -210,7 +217,7 @@ public class TempTableStore {
             }
         }
         if (columns == null) {
-        	throw new QueryProcessingException(QueryExecPlugin.Util.getString("TempTableStore.table_doesnt_exist_error", tempTableID)); //$NON-NLS-1$
+        	throw new QueryProcessingException(QueryPlugin.Util.getString("TempTableStore.table_doesnt_exist_error", tempTableID)); //$NON-NLS-1$
         }
         Create create = new Create();
         create.setTable(new GroupSymbol(tempTableID));

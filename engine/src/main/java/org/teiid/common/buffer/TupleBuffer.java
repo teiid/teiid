@@ -32,10 +32,10 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.util.Assertion;
-import org.teiid.dqp.DQPPlugin;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.symbol.Expression;
 
 
@@ -259,7 +259,7 @@ public class TupleBuffer {
 	    
     public Streamable<?> getLobReference(String id) throws TeiidComponentException {
     	if (lobManager == null) {
-    		throw new TeiidComponentException(DQPPlugin.Util.getString("ProcessWorker.wrongdata")); //$NON-NLS-1$
+    		throw new TeiidComponentException(QueryPlugin.Util.getString("ProcessWorker.wrongdata")); //$NON-NLS-1$
     	}
     	return lobManager.getLobReference(id);
     }

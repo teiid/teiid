@@ -53,7 +53,7 @@
             the "version" property at the same time is not allowed.
              </para></listitem>
             <listitem><para>mm - defines Teiid JDBC protocol, mms defines a secure channel (see the <link linkend="ssl">SSL chapter</link> for more)</para></listitem>
-            <listitem><para>&lt;host&gt; - defines the server where the Teiid Server is installed</para></listitem>
+            <listitem><para>&lt;host&gt; - defines the server where the Teiid Server is installed. If you are using IPv6 binding address as the host name, place it in square brackets. ex:[::1]</para></listitem>
             <listitem><para>&lt;port&gt; - defines the port on which the Teiid Server is listening for incoming JDBC connections.</para></listitem>
             <listitem><para>[prop-name=prop-value] - additionally you can supply any number of name value pairs separated by semi-colon 
             [;]. All supported URL properties are defined in the <link linkend="connection_properties">connection properties section</link>.  Property values should be URL encoded if they contain reserved characters, e.g. ('?', '=', ';', etc.)</para></listitem>
@@ -218,7 +218,7 @@
                         <entry>
                             <code>boolean</code>
                         </entry>
-                        <entry>Only applies to embedded connections. When this option is set to "true", then Teiid looks for 
+                        <entry>Only applies to "local" connections. When this option is set to "true", then Teiid looks for 
                         already authenticated security context on the calling thread. If one found it uses that users credentials 
                         to create session. Teiid also verifies that the same user is using this connection during the life of the connection.
                         if it finds a different security context on the calling thread, it switches the identity on the connection,
@@ -276,7 +276,8 @@
                         <entry>
                             <code>String</code>
                         </entry>
-                        <entry>Server where the Teiid runtime installed</entry>
+                        <entry>Server hostname where the Teiid runtime installed. If you are using IPv6 binding address as the host name, 
+                        place it in square brackets. ex:[::1]</entry>
                     </row>
                     <row>
                         <entry>
@@ -285,7 +286,9 @@
                         <entry>
                             <code>String</code>
                         </entry>
-                        <entry>Optional delimited list of host:port entries.  See the <link linkend="multiple_hosts">multiple hosts</link> section for more information.</entry>
+                        <entry>Optional delimited list of host:port entries.  See the <link linkend="multiple_hosts">multiple hosts</link> 
+                        section for more information. If you are using IPv6 binding address as the host name, 
+                        place them in square brackets. ex:[::1]</entry>
                     </row>
                     <row>
                         <entry>
@@ -339,7 +342,7 @@
                         <entry>
                             <code>boolean</code>
                         </entry>
-                        <entry>Only applies to embedded connections. When this option is set to "true", then Teiid looks for 
+                        <entry>Only applies to "local" connections. When this option is set to "true", then Teiid looks for 
                         already authenticated security context on the calling thread. If one found it uses that users credentials 
                         to create session. Teiid also verifies that the same user is using this connection during the life of the connection.
                         if it finds a different security context on the calling thread, it switches the identity on the connection,

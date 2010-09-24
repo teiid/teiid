@@ -27,7 +27,8 @@ import java.util.Collection;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.QueryPlugin;
+import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
@@ -83,6 +84,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     private Object modelID;
     private QueryMetadataInterface metadata;
     private CapabilitiesFinder capFinder;
+    private AnalysisRecord analysisRecord;
 
     // Retrieved during initialization and cached
     private SourceCapabilities caps;
@@ -105,48 +107,48 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     
     @Override
     public void visit(XMLAttributes obj) {
-    	markInvalid();
+    	markInvalid(obj, "Pushdown of XMLAttributes not allowed"); //$NON-NLS-1$
     }
     
     @Override
     public void visit(XMLNamespaces obj) {
-    	markInvalid();
+    	markInvalid(obj, "Pushdown of XMLNamespaces not allowed"); //$NON-NLS-1$
     }
     
     @Override
     public void visit(XMLForest obj) {
-    	markInvalid();
+    	markInvalid(obj, "Pushdown of XMLForest not allowed"); //$NON-NLS-1$
     }
     
     @Override
     public void visit(XMLElement obj) {
-    	markInvalid();
+    	markInvalid(obj, "Pushdown of XMLElement not allowed"); //$NON-NLS-1$
     }
     
     @Override
     public void visit(XMLSerialize obj) {
-    	markInvalid();
+    	markInvalid(obj, "Pushdown of XMLSerialize not allowed"); //$NON-NLS-1$
     }
     
     @Override
     public void visit(XMLParse obj) {
-    	markInvalid();
+    	markInvalid(obj, "Pushdown of XMLParse not allowed"); //$NON-NLS-1$
     }
     
     @Override
     public void visit(XMLQuery obj) {
-    	markInvalid();
+    	markInvalid(obj, "Pushdown of XMLQuery not allowed"); //$NON-NLS-1$
     }
     
     @Override
     public void visit(QueryString obj) {
-    	markInvalid();
+    	markInvalid(obj, "Pushdown of QueryString not allowed"); //$NON-NLS-1$
     }
     
     public void visit(AggregateSymbol obj) {
         try {
             if(! CapabilitiesUtil.supportsAggregateFunction(modelID, obj, metadata, capFinder)) {
-                markInvalid();
+                markInvalid(obj, "Aggregate function pushdown not supported by source"); //$NON-NLS-1$
             }         
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e));
@@ -157,7 +159,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     
     public void visit(CaseExpression obj) {
         if(! this.caps.supportsCapability(Capability.QUERY_CASE)) {
-            markInvalid();
+            markInvalid(obj, "CaseExpression pushdown not supported by source"); //$NON-NLS-1$
         }
     }
     
@@ -186,10 +188,12 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 
         // Check if compares are allowed
         if(! this.caps.supportsCapability(operatorCap)) {
-            markInvalid();
+            markInvalid(obj, "ordered CompareCriteria not supported by source"); //$NON-NLS-1$
+            return;
         }                       
         if (negated && !this.caps.supportsCapability(Capability.CRITERIA_NOT)) {
-        	markInvalid();
+        	markInvalid(obj, "Negation is not supported by source"); //$NON-NLS-1$
+        	return;
         }
         
         // Check capabilities of the elements
@@ -206,12 +210,8 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         int operator = crit.getOperator();
         
         // Verify capabilities are supported
-        if(operator == CompoundCriteria.OR) {
-            // Check if OR is allowed
-            if(! this.caps.supportsCapability(Capability.CRITERIA_OR)) {
-                markInvalid();
-                return;
-            }                       
+        if(operator == CompoundCriteria.OR && !this.caps.supportsCapability(Capability.CRITERIA_OR)) {
+                markInvalid(crit, "OR criteria not supported by source"); //$NON-NLS-1$
         }
     }
 
@@ -221,8 +221,12 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
             if (EvaluatableVisitor.willBecomeConstant(obj, true)) { 
                 return; 
             }
-            if(obj.getFunctionDescriptor().getPushdown() == FunctionMethod.CANNOT_PUSHDOWN || ! CapabilitiesUtil.supportsScalarFunction(modelID, obj, metadata, capFinder)) {
-                markInvalid();
+            if(obj.getFunctionDescriptor().getPushdown() == FunctionMethod.CANNOT_PUSHDOWN) {
+            	markInvalid(obj, "Function metadata indicates it cannot be pusheddown."); //$NON-NLS-1$
+            	return;
+            }
+            if (! CapabilitiesUtil.supportsScalarFunction(modelID, obj, metadata, capFinder)) {
+                markInvalid(obj, obj.isImplicit()?"":"(implicit) convert" + " Function not supported by source"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             }
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e));
@@ -234,12 +238,12 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     public void visit(IsNullCriteria obj) {
         // Check if compares are allowed
         if(! this.caps.supportsCapability(Capability.CRITERIA_ISNULL)) {
-            markInvalid();
+            markInvalid(obj, "IsNull not supported by source"); //$NON-NLS-1$
             return;
         }
         
         if (obj.isNegated() && !this.caps.supportsCapability(Capability.CRITERIA_NOT)) {
-        	markInvalid();
+        	markInvalid(obj, "Negation is not supported by source"); //$NON-NLS-1$
             return;
         }        
     }
@@ -247,21 +251,21 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     public void visit(MatchCriteria obj) {
         // Check if compares are allowed
         if(! this.caps.supportsCapability(Capability.CRITERIA_LIKE)) {
-            markInvalid();
+            markInvalid(obj, "Like is not supported by source"); //$NON-NLS-1$
             return;
         }
         
         // Check ESCAPE char if necessary
         if(obj.getEscapeChar() != MatchCriteria.NULL_ESCAPE_CHAR) {
             if(! this.caps.supportsCapability(Capability.CRITERIA_LIKE_ESCAPE)) {
-                markInvalid();
+                markInvalid(obj, "Like escape is not supported by source"); //$NON-NLS-1$
                 return;
             }                
         }
         
         //check NOT
         if(obj.isNegated() && ! this.caps.supportsCapability(Capability.CRITERIA_NOT)) {
-        	markInvalid();
+        	markInvalid(obj, "Negation is not supported by source"); //$NON-NLS-1$
         	return;
         }
 
@@ -278,18 +282,14 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     public void visit(NotCriteria obj) {
         // Check if compares are allowed
         if(! this.caps.supportsCapability(Capability.CRITERIA_NOT)) {
-            markInvalid();
+            markInvalid(obj, "Negation is not supported by source"); //$NON-NLS-1$
             return;
         }
     }
 
     public void visit(SearchedCaseExpression obj) {
-        if (this.caps == null) {
-            return;
-        }
-         
         if(! this.caps.supportsCapability(Capability.QUERY_SEARCHED_CASE)) {
-            markInvalid();
+            markInvalid(obj, "SearchedCase is not supported by source"); //$NON-NLS-1$
         }
     }
     
@@ -299,7 +299,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
             int maxSize = CapabilitiesUtil.getMaxInCriteriaSize(modelID, metadata, capFinder); 
             
             if (maxSize > 0 && crit.getValues().size() > maxSize) {
-                markInvalid();
+                markInvalid(crit, "SetCriteria size exceeds maximum for source"); //$NON-NLS-1$
                 return;
             }
         } catch(QueryMetadataException e) {
@@ -315,13 +315,13 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     public void visit(ExistsCriteria crit) {
         // Check if exists criteria are allowed
         if(! this.caps.supportsCapability(Capability.CRITERIA_EXISTS)) {
-            markInvalid();
+            markInvalid(crit, "Exists is not supported by source"); //$NON-NLS-1$
             return;
         }
         
         try {
-			if (validateSubqueryPushdown(crit, modelID, metadata, capFinder) == null) {
-				markInvalid();
+			if (validateSubqueryPushdown(crit, modelID, metadata, capFinder, analysisRecord) == null) {
+				markInvalid(crit.getCommand(), "Subquery cannot be pushed down"); //$NON-NLS-1$
 			}
 		} catch (TeiidComponentException e) {
 			handleException(e);
@@ -346,7 +346,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
                 break;
         }
         if(! this.caps.supportsCapability(capability)) {
-            markInvalid();
+            markInvalid(crit, "SubqueryCompare not supported by source"); //$NON-NLS-1$
             return;
         }
         
@@ -354,8 +354,8 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         
         // Check capabilities of the elements
         try {
-            if (validateSubqueryPushdown(crit, modelID, metadata, capFinder) == null) {
-            	markInvalid();
+            if (validateSubqueryPushdown(crit, modelID, metadata, capFinder, analysisRecord) == null) {
+            	markInvalid(crit.getCommand(), "Subquery cannot be pushed down"); //$NON-NLS-1$
             }
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e));
@@ -368,11 +368,12 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     public void visit(ScalarSubquery obj) {
     	try {    
             if(!this.caps.supportsCapability(Capability.QUERY_SUBQUERIES_SCALAR) 
-            		|| validateSubqueryPushdown(obj, modelID, metadata, capFinder) == null) {
+            		|| validateSubqueryPushdown(obj, modelID, metadata, capFinder, analysisRecord) == null) {
             	if (obj.getCommand().getCorrelatedReferences() == null) {
             		obj.setShouldEvaluate(true);
             	} else {
-            		markInvalid();
+            		markInvalid(obj.getCommand(), !this.caps.supportsCapability(Capability.QUERY_SUBQUERIES_SCALAR)?
+            				"Correlated ScalarSubquery is not supported":"Subquery cannot be pushed down"); //$NON-NLS-1$ //$NON-NLS-2$
             	}
             }
         } catch(QueryMetadataException e) {
@@ -387,12 +388,12 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         try {    
             // Check if compares with subqueries are allowed
             if(! this.caps.supportsCapability(Capability.CRITERIA_IN_SUBQUERY)) {
-                markInvalid();
+                markInvalid(crit, "SubqueryIn is not supported by source"); //$NON-NLS-1$
                 return;
             }
 
-            if (validateSubqueryPushdown(crit, modelID, metadata, capFinder) == null) {
-            	markInvalid();
+            if (validateSubqueryPushdown(crit, modelID, metadata, capFinder, analysisRecord) == null) {
+            	markInvalid(crit.getCommand(), "Subquery cannot be pushed down"); //$NON-NLS-1$
             }
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e));
@@ -405,12 +406,12 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         try {    
             // Check if compares are allowed
             if(! this.caps.supportsCapability(Capability.CRITERIA_IN)) {
-                markInvalid();
+                markInvalid(crit, "In is not supported by source"); //$NON-NLS-1$
                 return;
             }
             
             if (crit.isNegated() && !this.caps.supportsCapability(Capability.CRITERIA_NOT)) {
-            	markInvalid();
+            	markInvalid(crit, "Negation is not supported by source"); //$NON-NLS-1$
                 return;
             }
             // Check capabilities of the elements
@@ -431,7 +432,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     private void checkElementsAreSearchable(LanguageObject crit, int searchableType)
     throws QueryMetadataException, TeiidComponentException {
     	if (!CapabilitiesUtil.checkElementsAreSearchable(Arrays.asList(crit), metadata, searchableType)) {
-    		markInvalid();
+    		markInvalid(crit, "not all source columns support search type"); //$NON-NLS-1$
     	}
     }
     
@@ -445,7 +446,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
      * @return
      * @throws TeiidComponentException
      */
-    static Object validateSubqueryPushdown(SubqueryContainer subqueryContainer, Object critNodeModelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws TeiidComponentException {
+    static Object validateSubqueryPushdown(SubqueryContainer subqueryContainer, Object critNodeModelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord) throws TeiidComponentException {
     	ProcessorPlan plan = subqueryContainer.getCommand().getProcessorPlan();
     	if (plan != null) {
 	        if(!(plan instanceof RelationalPlan)) {
@@ -482,7 +483,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 	                return null;
 	            }
 	        } catch(QueryMetadataException e) {
-	            throw new TeiidComponentException(e, QueryExecPlugin.Util.getString("RulePushSelectCriteria.Error_getting_modelID")); //$NON-NLS-1$
+	            throw new TeiidComponentException(e, QueryPlugin.Util.getString("RulePushSelectCriteria.Error_getting_modelID")); //$NON-NLS-1$
 	        }  
     	}
     	if (critNodeModelID == null) {
@@ -497,7 +498,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
                 }
                 //TODO: this check sees as correlated references as coming from the containing scope
                 //but this is only an issue with deeply nested subqueries
-                if (!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(subqueryContainer.getCommand(), critNodeModelID, metadata, capFinder)) {
+                if (!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(subqueryContainer.getCommand(), critNodeModelID, metadata, capFinder, analysisRecord )) {
                     return null;
                 }
             }
@@ -519,16 +520,19 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         return this.exception;
     }
     
-    private void markInvalid() {
+    private void markInvalid(LanguageObject object, String reason) {
         this.valid = false;
         setAbort(true);
+        if (analysisRecord != null && analysisRecord.recordDebug()) {
+        	analysisRecord.println(reason + " " + object); //$NON-NLS-1$
+        }
     }
     
     public boolean isValid() {
         return this.valid;
     }
 
-    public static boolean canPushLanguageObject(LanguageObject obj, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException {
+    public static boolean canPushLanguageObject(LanguageObject obj, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord) throws QueryMetadataException, TeiidComponentException {
         if(obj == null) {
             return true;
         }

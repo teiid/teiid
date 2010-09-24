@@ -111,6 +111,29 @@ public class TestSessionAwareCache {
 		
 		assertTrue(result==c);
 	}
+	
+	@Test
+	public void testVDBRemoval() {
+		
+		SessionAwareCache<Cachable> cache = new SessionAwareCache<Cachable>();
+		
+		CacheID id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
+		
+		Cachable result = Mockito.mock(Cachable.class);
+		Mockito.stub(result.prepare((Cache)anyObject(), (BufferManager)anyObject())).toReturn(true);
+		Mockito.stub(result.restore((Cache)anyObject(), (BufferManager)anyObject())).toReturn(true);		
+		
+		id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
+		cache.put(id, FunctionMethod.VDB_DETERMINISTIC, result, null);
+		
+		Object c = cache.get(id);
+		
+		assertTrue(result==c);
+		
+		cache.clearForVDB("vdb-name", 1);
+		
+		assertNull(cache.get(id));
+	}
 
 	
 	public static DQPWorkContext buildWorkContext() {

@@ -44,7 +44,6 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -75,7 +74,7 @@ public class BindVariableVisitor extends LanguageVisitor {
 	 * @param metadata source of metadata
 	 */
 	public BindVariableVisitor(List bindings, QueryMetadataInterface metadata) {
-		ArgCheck.isNotNull(bindings, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0049));
+		ArgCheck.isNotNull(bindings, QueryPlugin.Util.getString("ERR.015.008.0049")); //$NON-NLS-1$
         
 		this.bindings = bindings;
 		this.metadata = metadata;
@@ -118,7 +117,7 @@ public class BindVariableVisitor extends LanguageVisitor {
         try { 
             bindReference(obj, binding);
         } catch(QueryParserException e) {
-            handleException(new QueryResolverException(QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0022), e.getMessage()));
+            handleException(new QueryResolverException(QueryPlugin.Util.getString("ERR.015.008.0022"), e.getMessage())); //$NON-NLS-1$
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e, e.getMessage()));    
         } catch(QueryResolverException e) {
@@ -149,7 +148,7 @@ public class BindVariableVisitor extends LanguageVisitor {
         Expression expr = QueryParser.getQueryParser().parseExpression(binding);
 
         if(!(expr instanceof ElementSymbol)) {
-            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0025, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0025, expr));
+            throw new QueryResolverException("ERR.015.008.0025", QueryPlugin.Util.getString("ERR.015.008.0025", expr)); //$NON-NLS-1$ //$NON-NLS-2$
         }
         
         ElementSymbol element = (ElementSymbol) expr;

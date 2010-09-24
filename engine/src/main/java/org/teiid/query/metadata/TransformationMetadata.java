@@ -49,7 +49,6 @@ import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.LRUCache;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.StringUtil;
-import org.teiid.dqp.DQPPlugin;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnSet;
@@ -126,7 +125,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     public static final String DELIMITER_STRING = String.valueOf(DELIMITER_CHAR);
     
     // error message cached to avoid i18n lookup each time
-    public static String NOT_EXISTS_MESSAGE = StringUtil.Constants.SPACE+DQPPlugin.Util.getString("TransformationMetadata.does_not_exist._1"); //$NON-NLS-1$
+    public static String NOT_EXISTS_MESSAGE = StringUtil.Constants.SPACE+QueryPlugin.Util.getString("TransformationMetadata.does_not_exist._1"); //$NON-NLS-1$
 
     private static Properties EMPTY_PROPS = new Properties();
     
@@ -204,7 +203,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		
 		Collection<String> filteredResult = new ArrayList<String>(matches.size());
 		for (Table table : matches) {
-			if (vdbMetaData == null || vdbMetaData.getModel(table.getParent().getName()).isVisible()) {
+			if (vdbMetaData == null || vdbMetaData.isVisible(table.getParent().getName())) {
 	        	filteredResult.add(table.getFullName());
 	        }
 		}
@@ -221,7 +220,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         if (parent == null) {
         	throw createInvalidRecordTypeException(groupOrElementID);
         }
-        parent = metadataRecord.getParent();
+        parent = parent.getParent();
         if (parent instanceof Schema) {
         	return parent;
         }
@@ -355,7 +354,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         
         for (StoredProcedureInfo storedProcedureInfo : results) {
         	Schema schema = (Schema)storedProcedureInfo.getModelID();
-	        if(vdbMetaData == null || vdbMetaData.getModel(schema.getName()).isVisible()){
+	        if(vdbMetaData == null || vdbMetaData.isVisible(schema.getName())){
 	        	if (result != null) {
 	    			throw new QueryMetadataException(QueryPlugin.Util.getString("ambiguous_procedure", fullyQualifiedProcedureName)); //$NON-NLS-1$
 	    		}
@@ -457,7 +456,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
         Table tableRecord = (Table) groupID;
         if (!tableRecord.isVirtual()) {
-            throw new QueryMetadataException(DQPPlugin.Util.getString("TransformationMetadata.QueryPlan_could_not_be_found_for_physical_group__6")+tableRecord.getFullName()); //$NON-NLS-1$
+            throw new QueryMetadataException(QueryPlugin.Util.getString("TransformationMetadata.QueryPlan_could_not_be_found_for_physical_group__6")+tableRecord.getFullName()); //$NON-NLS-1$
         }
         String transQuery = tableRecord.getSelectTransformation();
         QueryNode queryNode = new QueryNode(tableRecord.getFullName(), transQuery);
@@ -477,7 +476,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     	ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecordImpl = (Table)groupID;
         if (!tableRecordImpl.isVirtual()) {
-            throw new QueryMetadataException(DQPPlugin.Util.getString("TransformationMetadata.InsertPlan_could_not_be_found_for_physical_group__8")+tableRecordImpl.getFullName()); //$NON-NLS-1$
+            throw new QueryMetadataException(QueryPlugin.Util.getString("TransformationMetadata.InsertPlan_could_not_be_found_for_physical_group__8")+tableRecordImpl.getFullName()); //$NON-NLS-1$
         }
         return ((Table)groupID).getInsertPlan();
     }
@@ -486,7 +485,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecordImpl = (Table)groupID;
         if (!tableRecordImpl.isVirtual()) {
-        	throw new QueryMetadataException(DQPPlugin.Util.getString("TransformationMetadata.InsertPlan_could_not_be_found_for_physical_group__10")+tableRecordImpl.getFullName());         //$NON-NLS-1$
+        	throw new QueryMetadataException(QueryPlugin.Util.getString("TransformationMetadata.InsertPlan_could_not_be_found_for_physical_group__10")+tableRecordImpl.getFullName());         //$NON-NLS-1$
         }
         return ((Table)groupID).getUpdatePlan();
     }
@@ -495,7 +494,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecordImpl = (Table)groupID;
         if (!tableRecordImpl.isVirtual()) {
-            throw new QueryMetadataException(DQPPlugin.Util.getString("TransformationMetadata.DeletePlan_could_not_be_found_for_physical_group__12")+tableRecordImpl.getFullName()); //$NON-NLS-1$
+            throw new QueryMetadataException(QueryPlugin.Util.getString("TransformationMetadata.DeletePlan_could_not_be_found_for_physical_group__12")+tableRecordImpl.getFullName()); //$NON-NLS-1$
         }
         return ((Table)groupID).getDeletePlan();
     }
@@ -506,7 +505,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
         switch(modelConstant) {
             default:
-                throw new UnsupportedOperationException(DQPPlugin.Util.getString("TransformationMetadata.Unknown_support_constant___12") + modelConstant); //$NON-NLS-1$
+                throw new UnsupportedOperationException(QueryPlugin.Util.getString("TransformationMetadata.Unknown_support_constant___12") + modelConstant); //$NON-NLS-1$
         }        
     }
 
@@ -519,7 +518,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
             case SupportConstants.Group.UPDATE:
                 return tableRecord.supportsUpdate();
             default:
-                throw new UnsupportedOperationException(DQPPlugin.Util.getString("TransformationMetadata.Unknown_support_constant___12") + groupConstant); //$NON-NLS-1$
+                throw new UnsupportedOperationException(QueryPlugin.Util.getString("TransformationMetadata.Unknown_support_constant___12") + groupConstant); //$NON-NLS-1$
         }
     }
 
@@ -554,7 +553,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                 case SupportConstants.Element.SIGNED:
                     return columnRecord.isSigned();
                 default:
-                    throw new UnsupportedOperationException(DQPPlugin.Util.getString("TransformationMetadata.Unknown_support_constant___12") + elementConstant); //$NON-NLS-1$
+                    throw new UnsupportedOperationException(QueryPlugin.Util.getString("TransformationMetadata.Unknown_support_constant___12") + elementConstant); //$NON-NLS-1$
             }
         } else if(elementID instanceof ProcedureParameter) {
             ProcedureParameter columnRecord = (ProcedureParameter) elementID;            
@@ -583,7 +582,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                 case SupportConstants.Element.SIGNED:
                     return true;
                 default:
-                    throw new UnsupportedOperationException(DQPPlugin.Util.getString("TransformationMetadata.Unknown_support_constant___12") + elementConstant); //$NON-NLS-1$
+                    throw new UnsupportedOperationException(QueryPlugin.Util.getString("TransformationMetadata.Unknown_support_constant___12") + elementConstant); //$NON-NLS-1$
             }
             
         } else {            
@@ -592,7 +591,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
     
     private IllegalArgumentException createInvalidRecordTypeException(Object elementID) {
-        return new IllegalArgumentException(DQPPlugin.Util.getString("TransformationMetadata.Invalid_type", elementID.getClass().getName()));         //$NON-NLS-1$
+        return new IllegalArgumentException(QueryPlugin.Util.getString("TransformationMetadata.Invalid_type", elementID.getClass().getName()));         //$NON-NLS-1$
     }
 
     public int getMaxSetSize(final Object modelID) throws TeiidComponentException, QueryMetadataException {
@@ -717,7 +716,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                 mappingDoc = reader.loadDocument(inputStream);
                 mappingDoc.setName(groupName);
             } catch (Exception e){
-                throw new TeiidComponentException(e, DQPPlugin.Util.getString("TransformationMetadata.Error_trying_to_read_virtual_document_{0},_with_body__n{1}_1", groupName, mappingDoc)); //$NON-NLS-1$
+                throw new TeiidComponentException(e, QueryPlugin.Util.getString("TransformationMetadata.Error_trying_to_read_virtual_document_{0},_with_body__n{1}_1", groupName, mappingDoc)); //$NON-NLS-1$
             } finally {
             	try {
 					inputStream.close();
@@ -792,7 +791,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         	}
         	
         	if (schema == null) {
-        		throw new QueryMetadataException(DQPPlugin.Util.getString("TransformationMetadata.Error_trying_to_read_schemas_for_the_document/table____1")+groupName);             //$NON-NLS-1$		
+        		throw new QueryMetadataException(QueryPlugin.Util.getString("TransformationMetadata.Error_trying_to_read_schemas_for_the_document/table____1")+groupName);             //$NON-NLS-1$		
         	}
         	schemas.add(schema);
         }
@@ -949,7 +948,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     		return null;
     	}
     	Resource r = this.vdbEntries.get(resourcePath);
-    	if (r != null && r.visible) {
+    	if (r != null) {
     		return r.file;
     	}
     	return null;
@@ -982,10 +981,8 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     public String[] getVDBResourcePaths() throws TeiidComponentException, QueryMetadataException {
     	LinkedList<String> paths = new LinkedList<String>();
     	for (Map.Entry<String, Resource> entry : this.vdbEntries.entrySet()) {
-			if (entry.getValue().visible) {
-				paths.add(entry.getKey());
-			}
-		}
+			paths.add(entry.getKey());
+    	}
     	return paths.toArray(new String[paths.size()]);
     }
     

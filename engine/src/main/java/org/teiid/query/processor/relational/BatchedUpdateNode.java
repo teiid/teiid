@@ -34,8 +34,8 @@ import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
-import org.teiid.query.execution.QueryExecPlugin;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.util.VariableContext;
@@ -136,7 +136,7 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
                     addBatchRow(Arrays.asList(new Object[] {tuple.get(0)}));
                 } else {
                     // Should never happen since the number of expected results is known
-                    throw new TeiidComponentException(QueryExecPlugin.Util.getString("BatchedUpdateNode.unexpected_end_of_batch", commandCount, numExpectedCounts)); //$NON-NLS-1$
+                    throw new TeiidComponentException(QueryPlugin.Util.getString("BatchedUpdateNode.unexpected_end_of_batch", commandCount, numExpectedCounts)); //$NON-NLS-1$
                 }
             }
         }

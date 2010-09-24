@@ -253,6 +253,19 @@ String debugLog = planRs.getString("DEBUG_LOG");
         </itemizedlist>
         <para>The SHOW statement is most commonly used to retrieve the query plan, see the plan <link linkend="plan_debug">debug example</link>.</para>        
        </section>
+       
+       <section id="transaction_statement">
+       	<title>Transaction Statements</title>
+       	<para>In situations where the direct use of the JDBC connection is not possible, transaction statements can be used to control a local transaction.</para>
+       	<itemizedlist>
+       		<listitem><para><emphasis>START TRANSACTION</emphasis> - synonym for <code>connection.setAutoCommit(false)</code></para>
+       		</listitem>
+       		<listitem><para><emphasis>COMMIT</emphasis> - synonym for <code>connection.setAutoCommit(true)</code></para>
+       		</listitem>
+       		<listitem><para><emphasis>ROLLBACK</emphasis> - synonym for <code>connection.rollback()</code> and returning to auto commit mode.</para>
+       		</listitem>
+       	</itemizedlist>
+       </section>
                             
        <section id="partial_results">
         <title>Partial Results Mode</title>
@@ -279,26 +292,53 @@ String debugLog = planRs.getString("DEBUG_LOG");
         
         <para>For each source that is excluded from the query, a warning will be generated 
         describing the source and the failure.  These warnings can be obtained from the 
-        <code>ResultSet.getWarnings()</code> method.  This method returns a <code>SQLWarning</code> object but 
+        <code>Statement.getWarnings()</code> method.  This method returns a <code>SQLWarning</code> object but 
         in the case of "partial results" warnings, this will be an object of 
         type <code>org.teiid.jdbc.PartialResultsWarning</code> class.  This class can be 
         used to obtain a list of all the failed sources by name and to obtain 
         the specific exception thrown by each resource adaptor. </para>
         
-        <para>Below is an example of printing the list of failed sources:</para>
-       <programlisting><![CDATA[statement.setExecutionProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE, “true”);
-ResultSet results = statement.executeQuery(“SELECT Name FROM Accounts”);
-SQLWarning warning = results.getWarnings();
-if(warning instanceof PartialResultsWarning) {
-	PartialResultsWarning partialWarning = (PartialResultsWarning) warning;
- 	Collection failedConnectors = partialWarning.getFailedConnectors();
- 	Iterator iter = failedConnectors.iterator();
- 	while(iter.hasNext()) {
- 		String connectorName = (String) iter.next();
- 		SQLException connectorException =  partialWarning.getConnectorException(connectorName);
- 		System.out.println(connectorName + “: “ +ConnectorException.getMessage();
-    }
-}]]></programlisting>         
+        <note>
+          <para> Since Teiid supports cursoring before the entire result is formed, it is
+            possible that a data source failure will not
+            be determined until after the first batch of results have
+            been returned to the client. This can happen in the case of
+            unions, but not joins. To ensure that all warnings have been accumulated, the 
+            statement should be checked after the entire result set has been read.</para>
+        </note>
+        
+        <para>
+          Partial results mode is off by default but can be turned on for all queries in a Connection with either
+          setPartialResultsMode("true") on a DataSource or
+          partialResultsMode=true on a JDBC URL. In either case, partial
+          results mode may be toggled later with a <link linkend="set_statement">set statement</link>.
+        </para>
+        <example>
+          <title>Setting Partial Results Mode</title>
+          <programlisting>Statement statement = ...obtain statement from Connection... 
+statement.execute("set partialResultsMode true");</programlisting>
+        </example>
+      
+        <example>
+          <title>Getting Partial Results Warnings
+          </title>
+          <programlisting>statement.execute("set partialResultsMode true");
+ResultSet results = statement.executeQuery("SELECT Name FROM Accounts");
+while (results.next()) {
+  ... //process the result set
+} 
+SQLWarning warning = statement.getWarnings(); 
+if(warning instanceof PartialResultsWarning) { 
+  PartialResultsWarning partialWarning = (PartialResultsWarning)warning; 
+  Collection failedConnectors = partialWarning.getFailedConnectors(); 
+  Iterator iter = failedConnectors.iterator(); 
+  while(iter.hasNext()) { 
+    String connectorName = (String) iter.next(); 
+    SQLException connectorException = partialWarning.getConnectorException(connectorName); 
+    System.out.println(connectorName + ": " + ConnectorException.getMessage();
+  }
+}</programlisting>
+        </example>         
        </section>
        
        <section>

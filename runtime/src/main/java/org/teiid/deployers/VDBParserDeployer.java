@@ -46,7 +46,6 @@ import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.core.CoreConstants;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.VdbConstants;
@@ -190,9 +189,6 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 		if (vdbMO != null) {
 			VDBMetaData vdb = (VDBMetaData) vdbMO.getAttachment();
 			for (Model m : vdb.getModels()) {
-				if (m.getName().equals(CoreConstants.SYSTEM_MODEL) || m.getName().equals(CoreConstants.ODBC_MODEL) ) {
-					continue;
-				}
 				ManagedObject mo = this.mof.initManagedObject(m, ModelMetaData.class, m.getName(),m.getName());
 				if (mo == null) {
 					throw new DeploymentException("could not create managed object"); //$NON-NLS-1$

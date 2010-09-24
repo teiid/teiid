@@ -29,7 +29,6 @@ import java.util.List;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 public class SearchedCaseExpression extends AbstractCaseExpression {
@@ -81,18 +80,18 @@ public class SearchedCaseExpression extends AbstractCaseExpression {
      */
     public void setWhen(List when, List then) {
         if (when == null || then == null) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0036));
+            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0036")); //$NON-NLS-1$
         }
         if (when.size() != then.size() ||
             when.size() < 1) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0036));
+            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0036")); //$NON-NLS-1$
         }
         for (int i = 0 ; i < when.size(); i++) {
             if (!(when.get(i) instanceof Criteria)) {
-                throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0039));
+                throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0039")); //$NON-NLS-1$
             }
             if (!(then.get(i) instanceof Expression)) {
-                throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0038));
+                throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0038")); //$NON-NLS-1$
             }
         }
         if (this.when != when) {

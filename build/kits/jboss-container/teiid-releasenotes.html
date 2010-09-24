@@ -26,12 +26,15 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <UL>
+    <LI><B>Transaction Statements</B> - JDBC/ODBC now accepts START TRANSACTION, COMMIT, and ROLLBACK statements to control local transactions.
 	<LI><B>Procedure Result Caching</B> - virtual procedure definitions may use a cache hint to cache results in the result set cache.
 	<LI><B>Improved Plan Caching</B> - plans used by internal materialization and stored procedure plans will be automatically cached in the prepared plan cache.  Improvements were also made to reduce the memory footprint of the plans.
     <LI><B>Refined Load Balancing and Fail Over</B> - clients can use use the statement "SET NEWINSTANCE TRUE" to allow their connection to select a new server instance.  See the Client Developer's Guide for more information. 
     <LI><B>Simplified Role Usage</B> - a role can now be assigned to any authenticated user via the any-authenticated attribute on the data-role element.
     <LI><B>Materialized View Performance</B> - materialized view tables will now automatically create and use non-unique secondary indexes for unique constraints and indexes defined on the view. 
-    <LI><B>Binary Web Service Calls</B> - the ws translator now provides an invokeHttp procedure to return the blob contents and string content type of an http/https call.  
+    <LI><B>Binary Web Service Calls</B> - the ws translator now provides an invokeHttp procedure to return the blob contents and string content type of an http/https call.
+    <LI><B>Improved clustering support</B> - see the Admin Guide chapter on clustering.
+    <LI><B>IPv6 support</B> - Teiid can started using IPv6 bind address and can be used with JDBC connection.   
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -40,6 +43,9 @@
 </ul>
 <h4>from 7.1</h4>
 <ul>
+  <li>The SYSADMIN schema was created to hold procedures and tables that should not be generally accessible.  SYS and pg_catalog are now always accessible - permissions do not apply to these schemas.  The SYS.getBinaryVDBResource, SYS.getCharacterVDBResource, and SYS.getVDBResourcePaths have been replaced with the
+ SYSADMIN.VDBResources table.  The Matviews table and the refreshMatView/refreshMatViewRow procedures were also moved into SYSADMIN.
+  <li>Overwriting an existing VDB will cause old connections to be terminated.  Production systems should rely on VDB versioning.
   <li>The jdbc:metamatrix JDBC URL prefix is no longer accepted.  Use jdbc:teiid instead.
   <li>Model visibility no longer restricts access to tables and procedures.  Setting visible to false will only hide entries from system tables.  Data roles should be used to restrict data access.
 </ul>
@@ -75,6 +81,11 @@ See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on c
 
 <h4>from 7.1</h4>
 <ul>
+    <li>Teiid clients now allow the usage of anonymous SSL by default.  
+    This changes allows the admin port (default 31443) to use anonymous SSL by default, rather than just securing login traffic.  
+    Admin clients should therefore use the mms protocol instead of mm.  This will encrypt all admin traffic and ensure that any passwords in configuration files will
+    be encrypted in transit.  See the Admin Guide to upgrade from anonymous SSL to 1-way or 2-way authentication.
+    The config properties sslEnabled and clientEncryptionEnabled for SSLConfiguration beans have been combined to a single property mode, that can have the values disabled|login|enabled.
 	<li>Apache CXF is now expected to be used as the web services stack provider through JBossWS-CXF.  See the Admin Guide for instructions on 
 	installing CXF for use with Teiid's Salesforce and web service connectors.  The WS Resource Adapter's -ds.xml files should no longer use 
 	WSSecurityConfigURL and WSSecurityConfigName, rather they should be ConfigFile and ConfigName respectively.  The property values should no longer
@@ -117,6 +128,10 @@ See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on c
 <h2><a name="LibraryUpdates">Thirdparty Library Updates</a></h2>
 
 The following components have been updated:
+<h4>From 7.1</h4>
+<ul>
+	<li>Netty was upgraded to 3.2.1	
+</ul>
 <h4>From 7.0</h4>
 <ul>
 	<li>Direct integration of JBossCache jars was removed.

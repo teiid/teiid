@@ -159,5 +159,10 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		metadataFactory.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.BLOB, Type.ReturnValue, p); //$NON-NLS-1$
 		metadataFactory.addProcedureParameter("contentType", TypeFacility.RUNTIME_NAMES.STRING, Type.Out, p); //$NON-NLS-1$	
 	}
+	
+	@Override
+	public boolean areLobsUsableAfterClose() {
+		return true;
+	}
 
 }

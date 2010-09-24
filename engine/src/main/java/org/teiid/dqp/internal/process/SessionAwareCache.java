@@ -25,6 +25,7 @@ package org.teiid.dqp.internal.process;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.cache.Cachable;
@@ -173,6 +174,21 @@ public class SessionAwareCache<T> {
 		this.localCache.clear();
 		this.distributedCache.clear();
 	}	
+	
+	public void clearForVDB(String vdbName, int version) {
+		clearCache(this.localCache, vdbName, version);
+		clearCache(this.distributedCache, vdbName, version);
+	}
+	
+	private void clearCache(Cache<CacheID, T> cache, String vdbName, int version) {
+		Set<CacheID> keys = cache.keys();
+		VDBKey vdbKey = new VDBKey(vdbName, version);
+		for (CacheID key:keys) {
+			if (key.vdbInfo.equals(vdbKey)) {
+				cache.remove(key);
+			}
+		}
+	}
 	
 	public static class CacheID implements Serializable {
 		private static final long serialVersionUID = 8261905111156764744L;

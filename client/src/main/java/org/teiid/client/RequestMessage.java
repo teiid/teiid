@@ -33,7 +33,7 @@ import java.util.List;
 
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.ExternalizeUtil;
-import org.teiid.net.NetPlugin;
+import org.teiid.jdbc.JDBCPlugin;
 
 
 /**
@@ -221,7 +221,7 @@ public class RequestMessage implements Externalizable {
     		if (!(txnAutoWrapMode.equals(TXN_WRAP_OFF)
     			|| txnAutoWrapMode.equals(TXN_WRAP_ON)
     			|| txnAutoWrapMode.equals(TXN_WRAP_DETECT))) {
-    			throw new TeiidProcessingException(NetPlugin.Util.getString("RequestMessage.invalid_txnAutoWrap", txnAutoWrapMode)); //$NON-NLS-1$
+    			throw new TeiidProcessingException(JDBCPlugin.Util.getString("RequestMessage.invalid_txnAutoWrap", txnAutoWrapMode)); //$NON-NLS-1$
     		}
     	} 
         this.txnAutoWrapMode = txnAutoWrapMode;

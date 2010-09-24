@@ -223,6 +223,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		Prepared previous = this.preparedMap.get(prepareName);
 		if (previous == null) {
 			this.client.errorOccurred(RuntimePlugin.Util.getString("bad_binding", prepareName)); //$NON-NLS-1$
+			return;
 		}		
 		
 		if (bindName == null || bindName.length() == 0) {
@@ -357,11 +358,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				}
 				else if ((m = rollbackPattern.matcher(modified)).matches()) {
 					try {
-						if (!this.connection.getAutoCommit()) {
-							this.connection.rollback();
-							this.connection.setAutoCommit(true);
-							modified = "SELECT 'ROLLBACK'"; //$NON-NLS-1$
-						}
+						this.connection.rollback(false);
+						modified = "SELECT 'ROLLBACK'"; //$NON-NLS-1$
 					} catch (SQLException e) {
 						this.client.errorOccurred(e);
 					}					
@@ -416,7 +414,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	                break;
 	            } finally {
 	                try {
-						stmt.close();
+	                	if (stmt != null) {
+	                		stmt.close();
+	                	}
 					} catch (SQLException e) {
 						this.client.errorOccurred(e);
 						break;

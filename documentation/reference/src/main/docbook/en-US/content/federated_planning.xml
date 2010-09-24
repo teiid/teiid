@@ -284,80 +284,17 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
     <section>
       <title>Partial Results</title>
       <para>Teiid provides the capability to obtain "partial
-        results" in the event of data source unavailability. This is
+        results" in the event of data source unavailability or failure. This is
         especially useful when unioning information from multiple
         sources, or when doing a left outer join, where you are
         'appending' columns to a master record but still want the record
-        if the extra info is not available.</para>
-      <para> If one or more data sources are unavailable to return
-        results, then the result set obtained from the remaining
-        available sources will be returned. In the case of joins, an
-        unavailable data source essentially contributes zero tuples to
-        the result set.</para>
-      <section>
-        <title>Setting Partial Results Mode</title>
-        <para>
-          Partial results mode is off by default but can be turned on by
-          default for all queries in a Connection with either
-          setPartialResultsMode("true") on a DataSource or
-          partialResultsMode=true on a JDBC URL. In either case, partial
-          results mode may be overridden with a set statement.
-        </para>
-        <example>
-          <title>Example - Setting Partial Results Mode</title>
-          <programlisting>Statement statement = ...obtain statement from Connection... 
-statement.execute("set partialResultsMode true");</programlisting>
-        </example>
-      </section>
-      <section>
-        <title>Source Unavailability</title>
+        if the extra information is not available.</para>
+      
         <para>A source is considered to be 'unavailable' if the
           connection factory associated with the source issues an
           exception in response to a query. The exception will be
           propagated to the query processor, where it will become a
-          warning in the result set.</para>
-        <warning>
-          <para> Since Teiid supports multi-source cursoring, it is
-            possible that the unavailability of a data source will not
-            be determined until after the first batch of results have
-            been returned to the client. This can happen in the case of
-            unions, but not joins. In this situation, there will be no
-            warnings in the result set when the client is processing the
-            first batch of results. The client will be responsible for
-            periodically checking the status of warnings in the results
-            object as results are being processed, to see if a new
-            warning has been added due to the detection of an
-            unavailable source. [Note that client applications have no
-            notion of ‘batches’, which are purely a server-side entity.
-            Client apps deal only with records.]</para>
-        </warning>
-        <para> For each source that is excluded from a query, a warning
-          will be generated describing the source and the failure. These
-          warnings can be obtained from the Statement.getWarnings()
-          method. This method returns a SQLWarning object but in the
-          case of "partial results" warnings, this will be an object of
-          type org.teiid.jdbc.PartialResultsWarning. This class
-          can be used to obtain a list of all the failed connectors by
-          name and to obtain the specific exception thrown by each
-          connector.</para>
-        <example>
-          <title>Example - Printing List of Failed Sources
-          </title>
-          <programlisting>statement.execute("set partialResultsMode true");
-ResultSet results = statement.executeQuery("SELECT Name FROM Accounts"); 
-SQLWarning warning = statement.getWarnings(); 
-if(warning instanceof PartialResultsWarning) { 
-  PartialResultsWarning partialWarning = (PartialResultsWarning)warning; 
-  Collection failedConnectors = partialWarning.getFailedConnectors(); 
-  Iterator iter = failedConnectors.iterator(); 
-  while(iter.hasNext()) { 
-    String connectorName = (String) iter.next(); 
-    SQLException connectorException = partialWarning.getConnectorException(connectorName); 
-    System.out.println(connectorName + ": " + ConnectorException.getMessage();
-  }
-}</programlisting>
-        </example>
-      </section>
+          warning on the statement.  See the Client Guide for more on Partial Results Mode and SQLWarnings.</para>
     </section>
   </section>
   <section id="query_plan">

@@ -23,7 +23,6 @@
 package org.teiid.dqp.internal.process;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -70,21 +69,21 @@ import org.teiid.translator.TranslatorException;
  * notify the parent plan and just schedule the next poll. 
  */
 public class DataTierTupleSource implements TupleSource {
-
+	
     // Construction state
     private final AtomicRequestMessage aqr;
     private final RequestWorkItem workItem;
     private final ConnectorWork cwi;
     private final DataTierManagerImpl dtm;
     
-    private List<Integer> convertToRuntimeType;
+    private boolean[] convertToRuntimeType;
     private boolean[] convertToDesiredRuntimeType;
     private Class<?>[] schema;
     
     // Data state
     private int index;
     private int rowsProcessed;
-    private volatile AtomicResultsMessage arm;
+    private AtomicResultsMessage arm;
     private boolean closed;
     private volatile boolean canceled;
     private boolean executed;
@@ -102,12 +101,12 @@ public class DataTierTupleSource implements TupleSource {
 		List<SingleElementSymbol> symbols = this.aqr.getCommand().getProjectedSymbols();
 		this.schema = new Class[symbols.size()];
         this.convertToDesiredRuntimeType = new boolean[symbols.size()];
-		this.convertToRuntimeType = new ArrayList<Integer>(symbols.size());
+		this.convertToRuntimeType = new boolean[symbols.size()];
 		for (int i = 0; i < symbols.size(); i++) {
 			SingleElementSymbol symbol = symbols.get(i);
 			this.schema[i] = symbol.getType();
 			this.convertToDesiredRuntimeType[i] = true;
-			this.convertToRuntimeType.add(i);
+			this.convertToRuntimeType[i] = true;
 		}
         
     	Assertion.isNull(workItem.getConnectorRequest(aqr.getAtomicRequestID()));
@@ -132,25 +131,26 @@ public class DataTierTupleSource implements TupleSource {
 	}
 
 	private List correctTypes(List row) throws TransformationException {
-		for (int i = convertToRuntimeType.size() - 1; i >= 0; i--) {
-			int idx = convertToRuntimeType.get(i);
-			Object value = row.get(idx);
-			if (value != null) {
-				Object result = convertToRuntimeType(value, this.schema[idx]);
-				if (DataTypeManager.isLOB(result.getClass())) {
-					explicitClose = true;
-				}
-				if (value == result && !DataTypeManager.DefaultDataClasses.OBJECT.equals(this.schema[idx])) {
-					convertToRuntimeType.remove(i);
-					continue;
-				}
-				row.set(idx, result);
-			}
-		}
 		//TODO: add a proper intermediate schema
 		for (int i = 0; i < row.size(); i++) {
+			Object value = row.get(i);
+			if (value == null) {
+				continue;
+			}
+			if (convertToRuntimeType[i]) {
+				boolean lob = !arm.supportsCloseWithLobs() && DataTypeManager.isLOB(value.getClass());
+				Object result = convertToRuntimeType(value, this.schema[i]);
+				if (value == result && !DataTypeManager.DefaultDataClasses.OBJECT.equals(this.schema[i])) {
+					convertToRuntimeType[i] = false;
+				} else {
+					if (lob && DataTypeManager.isLOB(result.getClass()) && DataTypeManager.isLOB(this.schema[i])) {
+						explicitClose = true;
+					}				
+					row.set(i, result);
+					value = result;
+				}
+			}
 			if (convertToDesiredRuntimeType[i]) {
-				Object value = row.get(i);
 				if (value != null) {
 					Object result = DataTypeManager.transformValue(value, value.getClass(), this.schema[i]);
 					if (value == result) {
@@ -160,7 +160,7 @@ public class DataTierTupleSource implements TupleSource {
 					row.set(i, result);
 				}
 			} else {
-				row.set(i, DataTypeManager.getCanonicalValue(row.get(i)));
+				row.set(i, DataTypeManager.getCanonicalValue(value));
 			}
 		}
 		return row;

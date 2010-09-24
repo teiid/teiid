@@ -37,7 +37,7 @@ import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingBaseNode;
 import org.teiid.query.mapping.xml.MappingDocument;
@@ -335,7 +335,7 @@ public class XMLQueryPlanner {
             }
             
             if (!singleParentage) {
-                throw new QueryPlannerException(QueryExecPlugin.Util.getString("XMLQueryPlanner.cannot_plan", rsInfo.getCriteria())); //$NON-NLS-1$
+                throw new QueryPlannerException(QueryPlugin.Util.getString("XMLQueryPlanner.cannot_plan", rsInfo.getCriteria())); //$NON-NLS-1$
             }
             
             QueryUtil.handleBindings(command, planNode, planEnv);

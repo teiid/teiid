@@ -26,7 +26,6 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -91,7 +90,7 @@ public abstract class Symbol implements LanguageObject {
 	 */
 	public void setName(String name) {
 		if(name == null) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0017));
+            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0017")); //$NON-NLS-1$
 		}
 		this.name = name;
 		this.outputName = null;

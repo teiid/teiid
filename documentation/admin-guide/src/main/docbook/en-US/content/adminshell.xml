@@ -274,5 +274,21 @@ useConnection(conn1);
 // close the connection in the "conn1"
 disconnectAll();]]></programlisting>
   </section>
-  
+  <section>
+  		<title>Interactive Shell Nuances</title>
+  		<para>The interactive shell uses a special shell interpretter and therefore has different behavior than just writting a script in Groovy.  
+  		See the <ulink url="http://groovy.codehaus.org/Groovy+Shell">Groovy Shell Documentation</ulink> for more on its usage.  Notable differences:
+  		<itemizedlist>
+  			<listitem>
+  				<para>Def statements do not define a variable in the context of the Shell, e.g. do not use <code>def x = 1</code>, use <code>x = 1</code></para>
+  			</listitem>
+  			<listitem>
+  				<para>Shell commands (as seen through <code>help</code>) using the non-functional shell syntax are only available in the shell.</para>
+  			</listitem>
+  			<listitem>
+  				<para>Groovy classes using annotations cannot be parsed in the Shell.</para>
+  			</listitem>
+  		</itemizedlist>
+  		</para>
+  </section>
 </chapter>

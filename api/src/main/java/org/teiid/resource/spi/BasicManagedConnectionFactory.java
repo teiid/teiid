@@ -37,6 +37,7 @@ import javax.resource.spi.ValidatingManagedConnectionFactory;
 import javax.security.auth.Subject;
 
 import org.teiid.core.TeiidException;
+import org.teiid.core.util.Assertion;
 import org.teiid.core.util.ReflectionHelper;
 
 
@@ -45,20 +46,29 @@ public abstract class BasicManagedConnectionFactory implements ManagedConnection
 	private static final long serialVersionUID = -7302713800883776790L;
 	private PrintWriter log;
 	private BasicResourceAdapter ra;
+	private BasicConnectionFactory cf;
 	
 	@Override
-	public abstract Object createConnectionFactory() throws ResourceException;
+	public abstract BasicConnectionFactory createConnectionFactory() throws ResourceException;
 
 	@Override
-	public Object createConnectionFactory(ConnectionManager arg0) throws ResourceException {
-		return createConnectionFactory();
+	public Object createConnectionFactory(ConnectionManager cm) throws ResourceException {
+		this.cf = createConnectionFactory();
+		return new WrappedConnectionFactory(this.cf, cm, this);
 	}
 
 	@Override
 	public ManagedConnection createManagedConnection(Subject arg0, ConnectionRequestInfo arg1) throws ResourceException {
-		ConnectionRequestInfoWrapper criw = (ConnectionRequestInfoWrapper)arg1;
+		Assertion.isNotNull(this.cf);
 		ConnectionContext.setSubject(arg0);
-		BasicConnection connection = criw.cf.getConnection();
+		
+		BasicConnection connection = null;
+		if (arg1 instanceof ConnectionRequestInfoWrapper) {
+			connection = this.cf.getConnection(((ConnectionRequestInfoWrapper)arg1).cs);
+		}
+		else {
+			connection = this.cf.getConnection();
+		}
 		ConnectionContext.setSubject(null);
 		return new BasicManagedConnection(connection);
 	}

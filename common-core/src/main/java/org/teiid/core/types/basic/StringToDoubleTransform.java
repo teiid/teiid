@@ -23,7 +23,6 @@
 package org.teiid.core.types.basic;
 
 import org.teiid.core.CorePlugin;
-import org.teiid.core.ErrorMessageKeys;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
 
@@ -41,7 +40,7 @@ public class StringToDoubleTransform extends Transform {
 		try {
 			return Double.valueOf((String)value);
 		} catch(NumberFormatException e) {
-			throw new TransformationException(ErrorMessageKeys.TYPES_ERR_0019, CorePlugin.Util.getString(ErrorMessageKeys.TYPES_ERR_0019, value));
+			throw new TransformationException("ERR.003.029.0019", CorePlugin.Util.getString("ERR.003.029.0019", value)); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 

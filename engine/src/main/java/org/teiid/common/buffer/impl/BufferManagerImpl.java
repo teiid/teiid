@@ -63,7 +63,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.query.execution.QueryExecPlugin;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.processor.relational.ListNestedSortComparator;
 
 
@@ -291,9 +291,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			        }
 					return batch;
 		        } catch(IOException e) {
-		        	throw new TeiidComponentException(e, QueryExecPlugin.Util.getString("FileStoreageManager.error_reading", batchManager.id)); //$NON-NLS-1$
+		        	throw new TeiidComponentException(e, QueryPlugin.Util.getString("FileStoreageManager.error_reading", batchManager.id)); //$NON-NLS-1$
 		        } catch (ClassNotFoundException e) {
-		        	throw new TeiidComponentException(e, QueryExecPlugin.Util.getString("FileStoreageManager.error_reading", batchManager.id)); //$NON-NLS-1$
+		        	throw new TeiidComponentException(e, QueryPlugin.Util.getString("FileStoreageManager.error_reading", batchManager.id)); //$NON-NLS-1$
 		        } finally {
 		        	this.batchManager.compactionLock.readLock().unlock();
 		        }

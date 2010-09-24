@@ -35,7 +35,6 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.util.ErrorMessageKeys;
 
 
 /**
@@ -147,7 +146,7 @@ public class MappingOutputter {
      */
     void addElementProperty(String name, Object value ) throws XMLStreamException {
         if ( value == null ) {
-            throw new IllegalArgumentException( QueryPlugin.Util.getString(ErrorMessageKeys.MAPPING_0010, name) );
+            throw new IllegalArgumentException( QueryPlugin.Util.getString("ERR.015.002.0010", name) ); //$NON-NLS-1$
         }
         if (value instanceof Collection){
             Iterator i = ((Collection)value).iterator();
@@ -172,7 +171,7 @@ public class MappingOutputter {
         } else if ( obj instanceof Boolean ) {
             return getXMLText( (Boolean)obj );
         } else {
-            throw new IllegalArgumentException( QueryPlugin.Util.getString(ErrorMessageKeys.MAPPING_0011, obj.getClass().getName() ));
+            throw new IllegalArgumentException( QueryPlugin.Util.getString("ERR.015.002.0011", obj.getClass().getName() )); //$NON-NLS-1$
         }
     }
 

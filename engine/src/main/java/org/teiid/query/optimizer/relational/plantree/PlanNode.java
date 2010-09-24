@@ -378,5 +378,13 @@ public class PlanNode {
 		}
 		return ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(toSearch);
 	}
+	
+	public float getCardinality() {
+		Float cardinality = (Float) this.getProperty(NodeConstants.Info.EST_CARDINALITY);
+		if (cardinality == null) {
+			return -1f;
+		}
+		return cardinality;
+	}
         
 }

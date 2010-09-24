@@ -19,22 +19,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
+package org.teiid.deployers;
 
-package org.teiid.translator.salesforce;
-
-import java.util.MissingResourceException;
-
-import org.teiid.core.BundleUtil;
-
-public class Messages {
-	
-	private static final BundleUtil RESOURCE_BUNDLE = BundleUtil.getBundleUtil(Messages.class);
-
-	public static String getString(String key) {
-		try {
-			return RESOURCE_BUNDLE.getString(key);
-		} catch (MissingResourceException e) {
-			return '!' + key + '!';
-		}
-	}
+public interface VDBLifeCycleListener {
+	void added(String name, int version);
+	void removed(String name, int version);
 }
