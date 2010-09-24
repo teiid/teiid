@@ -220,7 +220,9 @@ public class DefaultCache<K, V> implements Cache<K, V>, Serializable {
 
 	@Override
 	public Set<K> keys() {
-		return map.keySet();
+		synchronized(this.map) {
+			return new HashSet<K>(map.keySet());
+		}
 	}
 	
 }
