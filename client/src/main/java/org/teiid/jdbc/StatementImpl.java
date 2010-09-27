@@ -478,8 +478,8 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         try {
         	resultsMsg = sendRequestMessageAndWait(reqMessage);
         } catch ( Throwable ex ) {
-            String msg = JDBCPlugin.Util.getString("MMStatement.Error_executing_stmt", reqMessage.getCommandString()); //$NON-NLS-1$ 
-            logger.log(Level.SEVERE, msg, ex);
+        	String msg = JDBCPlugin.Util.getString("MMStatement.Error_executing_stmt", reqMessage.getCommandString()); //$NON-NLS-1$ 
+            logger.log(ex instanceof SQLException?Level.WARNING:Level.SEVERE, msg, ex);
             throw TeiidSQLException.create(ex, msg);
         }
         
@@ -881,7 +881,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
      * Send out request message with necessary states.
      */
     protected ResultsMessage sendRequestMessageAndWait(RequestMessage reqMsg)
-        throws SQLException, InterruptedException, TimeoutException {
+        throws SQLException, InterruptedException {
         this.currentRequestID = this.driverConnection.nextRequestID();
         // Create a request message
         reqMsg.setExecutionPayload(this.payload);        
@@ -925,7 +925,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         }
     	 
     	if (commandStatus == TIMED_OUT) {
-            throw new TimeoutException(JDBCPlugin.Util.getString("MMStatement.Timeout_before_complete")); //$NON-NLS-1$
+            throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Timeout_before_complete")); //$NON-NLS-1$
         }    	
     	return result;
     }

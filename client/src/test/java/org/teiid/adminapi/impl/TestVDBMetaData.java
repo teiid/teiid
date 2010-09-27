@@ -85,6 +85,7 @@ public class TestVDBMetaData {
 		TranslatorMetaData t1 = new TranslatorMetaData();
 		t1.setName("oracleOverride");
 		t1.setType("oracle");
+		t1.setDescription("hello world");
 		t1.addProperty("my-property", "my-value");
 		List<Translator> list = new ArrayList<Translator>();
 		list.add(t1);
@@ -160,7 +161,7 @@ public class TestVDBMetaData {
 		assertEquals("oracleOverride", translator.getName());
 		assertEquals("oracle", translator.getType());
 		assertEquals("my-value", translator.getPropertyValue("my-property"));
-				
+		assertEquals("hello world", translator.getDescription());
 		List<DataPolicy> roles = vdb.getDataPolicies();
 		
 		assertTrue(roles.size() == 1);
