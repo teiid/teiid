@@ -42,7 +42,7 @@ public class FunctionMetadataValidator {
 	/**
 	 *  Maximum length for function names, parameter names, categories, and descriptions.
 	 */
-	public static final int MAX_LENGTH = 128;
+	public static final int MAX_LENGTH = 255;
 
     // Can't construct
 	private FunctionMetadataValidator() {
@@ -139,7 +139,7 @@ public class FunctionMetadataValidator {
      * Determine whether a function or parameter name is valid.  The following items are validated:
      * <UL>
      * <LI>Validate that name is not null</LI>
-     * <LI>Validate that name has length <= 128</LI>
+     * <LI>Validate that name has length <= MAX_LENGTH</LI>
      * <LI>Validate that name starts with alphabetic character</LI>
      * <LI>Validate that name contains only valid characters: letters, numbers, and _</LI>
      * </UL>
@@ -172,14 +172,14 @@ public class FunctionMetadataValidator {
     /**
      * Determine whether a description is valid.  The following items are validated:
      * <UL>
-     * <LI>Validate that description (if not null) has length <= 128</LI>
+     * <LI>Validate that description (if not null) has length <= 4000</LI>
      * </UL>
      * @param description Description to validate
      * @throws FunctionMetadataException Thrown if description is not valid in some way
      */
     public static final void validateDescription(String description) throws FunctionMetadataException {
 		if(description != null) {
-        	validateLength(description, MAX_LENGTH, "Description"); //$NON-NLS-1$
+        	validateLength(description, DataTypeManager.MAX_STRING_LENGTH, "Description"); //$NON-NLS-1$
 		}
     }
 
@@ -187,7 +187,7 @@ public class FunctionMetadataValidator {
      * Determine whether a category is valid.  The following items are validated:
      * <UL>
      * <LI>Validate that category is not null</LI>
-     * <LI>Validate that category has length <= 128</LI>
+     * <LI>Validate that category has length <= MAX_LENGTH</LI>
      * </UL>
      * @param category Category to validate
      * @throws FunctionMetadataException Thrown if category is not valid in some way
