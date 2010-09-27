@@ -36,11 +36,11 @@ import org.teiid.translator.jdbc.FunctionModifier;
  */
 public class IsSameNode {
 
-    public boolean isSameNode(String selectorName, String joinSelectorName) {
+    public static boolean isSameNode(String selectorName, String joinSelectorName) {
 		return false;
     }
 
-    public boolean isSameNode(String selectorName, String joinSelectorName, String selectorPathName) {
+    public static boolean isSameNode(String selectorName, String joinSelectorName, String selectorPathName) {
 		return false;
     }
 

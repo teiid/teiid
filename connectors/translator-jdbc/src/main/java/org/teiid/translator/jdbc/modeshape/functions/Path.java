@@ -37,11 +37,11 @@ import org.teiid.translator.jdbc.FunctionModifier;
 public class Path {
 
     
-    public String path() {
+    public static String path() {
 		return "";
     }
 	
-	public String path(String name) {
+	public static String path(String name) {
 		return "";
     }
 

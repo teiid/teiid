@@ -35,7 +35,7 @@ import org.teiid.translator.jdbc.FunctionModifier;
  */
 public class Cast {
 	
-	public Object cast(String literal, String asType) {
+	public static Object cast(String literal, String asType) {
 		return "";
     }
 

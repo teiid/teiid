@@ -36,7 +36,7 @@ import org.teiid.translator.jdbc.FunctionModifier;
  */
 public class IsChildNode {
 
-    public boolean isChildNode(String childSelectorName, String parentSelectorName) {
+    public static boolean isChildNode(String childSelectorName, String parentSelectorName) {
 		return false;
     }
 

@@ -35,7 +35,7 @@ import org.teiid.translator.jdbc.FunctionModifier;
  */
 public class Name {
 	
-	public String name(String name) {
+	public static String name(String name) {
 		return "";
     }
 
