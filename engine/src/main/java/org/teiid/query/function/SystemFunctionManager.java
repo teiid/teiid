@@ -46,7 +46,7 @@ public class SystemFunctionManager {
 		    System.err.println(QueryPlugin.Util.getString("ERR.015.001.0005", report)); //$NON-NLS-1$
 		}
 		
-		systemFunctionTree = new FunctionTree(systemSource);
+		systemFunctionTree = new FunctionTree(systemSource, true);
     }
 	
     

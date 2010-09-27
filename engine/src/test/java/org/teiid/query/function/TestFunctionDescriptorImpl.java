@@ -24,13 +24,11 @@ package org.teiid.query.function;
 
 import java.lang.reflect.Method;
 
+import junit.framework.TestCase;
+
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.query.function.FunctionDescriptor;
-import org.teiid.query.function.FunctionTree;
 import org.teiid.query.function.metadata.FunctionMethod;
-
-import junit.framework.TestCase;
 
 
 public class TestFunctionDescriptorImpl extends TestCase {
@@ -72,10 +70,6 @@ public class TestFunctionDescriptorImpl extends TestCase {
             return null;
         } 
 
-        // Validate method
-        if(! FunctionTree.isValidMethod(method)) {
-            return null;
-        }
         return method;
     }
     

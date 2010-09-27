@@ -22,96 +22,117 @@
 
 package org.teiid.query.function;
 
-import java.util.ArrayList;
+import static org.junit.Assert.*;
+
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.logging.LogManager;
-import org.teiid.query.function.FunctionForm;
-import org.teiid.query.function.FunctionLibrary;
-import org.teiid.query.function.FunctionMetadataSource;
-import org.teiid.query.function.FunctionTree;
-import org.teiid.query.function.SystemFunctionManager;
-import org.teiid.query.function.UDFSource;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.function.metadata.FunctionParameter;
 import org.teiid.query.function.source.SystemSource;
 
+@SuppressWarnings("nls")
+public class TestFunctionTree {
 
-public class TestFunctionTree extends TestCase {
-
-	// ################################## FRAMEWORK ################################
-	
-	public TestFunctionTree(String name) { 
-		super(name);		
-	}	
-	
-	// ################################## TEST HELPERS ################################
-	
-	// ################################## ACTUAL TESTS ################################
-	
     /** 
      * Walk through all functions by metadata and verify that we can look 
      * each one up by signature
      */
-    public void testWalkTree() {
+    @Test public void testWalkTree() {
         SystemSource source = new SystemSource();
         FunctionTree ft = new FunctionTree(source);
         
-        Collection categories = ft.getCategories();
-        Iterator catIter = categories.iterator();
-        while(catIter.hasNext()) { 
-            String category = (String) catIter.next();
-            LogManager.logInfo("test", "Category: " + category); //$NON-NLS-1$ //$NON-NLS-2$
-            
-            Collection functions = ft.getFunctionForms(category);
-            Iterator functionIter = functions.iterator();
-            while(functionIter.hasNext()) { 
-                FunctionForm form = (FunctionForm) functionIter.next();
-                LogManager.logInfo("test", "\tFunction: " + form.getDisplayString());                 //$NON-NLS-1$ //$NON-NLS-2$
-            }            
+        Collection<String> categories = ft.getCategories();
+        for (String category : categories) {
+            Collection<FunctionForm> functions = ft.getFunctionForms(category);
+            assertTrue(functions.size() > 0);
         }        
     }
     
-    /**
-     * Test what happens when a function is loaded that does not have a class in the
-     * classpath.  This *should* be ok as long as the function is not invoked.
-     */
-    public void testUnloadableFunction() { 
-        // Create dummy source
-    	FunctionMetadataSource dummySource = new FunctionMetadataSource() {
-    	 	public Collection getFunctionMethods() {
-    	 	    // Build dummy method
-    	 	    FunctionMethod method = new FunctionMethod(
-    	 	    	"dummy", null, "no category", "nonexistentClass", "noMethod",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-    	 	    	new FunctionParameter[0], 
-    	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING) ); //$NON-NLS-1$
-
-    	 	    // Wrap method in a list 
-    	 		List methods = new ArrayList();
-    	 		methods.add(method);
-    	 		return methods;    
-    	 	}  
-    	 	
-    	 	public Class getInvocationClass(String className) throws ClassNotFoundException { 
-    	 	    throw new ClassNotFoundException("Could not find class " + className); //$NON-NLS-1$
-    	 	}
-    	};	 
-    	
-    	new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(dummySource.getFunctionMethods())));
+    public String z() {
+    	return null;
     }
     
-    public void testNullCategory() {
+    protected static String x() {
+    	return null;
+    }
+    
+    public static String y() {
+    	return null;
+    }
+    
+    @Test public void testLoadErrors() {
+    	FunctionMethod method = new FunctionMethod(
+    			"dummy", null, null, FunctionMethod.CAN_PUSHDOWN, "nonexistentClass", "noMethod",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+	 	    	new FunctionParameter[0], 
+	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING)); //$NON-NLS-1$
+    	
+    	//allowed, since we're not validating the class
+    	new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(Arrays.asList(method))));
+    	
+    	//should fail, no class
+    	try {
+    		new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(Arrays.asList(method)), true));
+    		fail();
+    	} catch (TeiidRuntimeException e) {
+    		
+    	}
+    	
+    	method.setInvocationClass(TestFunctionTree.class.getName());
+    	
+    	//should fail, no method
+    	try {
+    		new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(Arrays.asList(method)), true));
+    		fail();
+    	} catch (TeiidRuntimeException e) {
+    		
+    	}
+    	
+    	method.setInvocationMethod("testLoadErrors");
+    	
+    	//should fail, not void
+    	try {
+    		new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(Arrays.asList(method)), true));
+    		fail();
+    	} catch (TeiidRuntimeException e) {
+    		
+    	}    	
+    	
+    	method.setInvocationMethod("x");
+    	
+    	//should fail, not public
+    	try {
+    		new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(Arrays.asList(method)), true));
+    		fail();
+    	} catch (TeiidRuntimeException e) {
+    		
+    	}    
+    	
+    	method.setInvocationMethod("z");
+    	
+    	//should fail, not static
+    	try {
+    		new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(Arrays.asList(method)), true));
+    		fail();
+    	} catch (TeiidRuntimeException e) {
+    		
+    	} 
+
+    	method.setInvocationMethod("y");
+    	
+    	//valid!
+    	new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(Arrays.asList(method)), true));
+    }
+    
+    @Test public void testNullCategory() {
     	FunctionMetadataSource fms = Mockito.mock(FunctionMetadataSource.class);
     	Mockito.stub(fms.getFunctionMethods()).toReturn(Arrays.asList(new FunctionMethod(
-    			"dummy", null, null, FunctionMethod.MUST_PUSHDOWN, "nonexistentClass", "noMethod",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    			"dummy", null, null, FunctionMethod.MUST_PUSHDOWN, "nonexistentClass", "noMethod",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 	 	    	new FunctionParameter[0], 
 	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING) //$NON-NLS-1$
     	)));

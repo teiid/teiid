@@ -72,43 +72,24 @@ public class FunctionTree {
 	 * Function lookup and invocation use: Function name (uppercase) to Map (recursive tree)
 	 */
     private Map treeRoot = new HashMap();
+    private boolean validateClass;
 
     /**
      * Construct a new tree with the given source of function metadata.
      * @param source The metadata source
      */
     public FunctionTree(FunctionMetadataSource source) {
+    	this(source, false);
+    }
+    
+    /**
+     * Construct a new tree with the given source of function metadata.
+     * @param source The metadata source
+     */
+    public FunctionTree(FunctionMetadataSource source, boolean validateClass) {
         // Load data structures
+    	this.validateClass = validateClass;
         addSource(source);
-    }
-
-    /**
-     * Construct a new tree with the given collection of sources.
-     * @param sources The collection of function metadata sources ({@link org.teiid.query.function.FunctionMetadataSource})
-     */
-    FunctionTree(Collection sources) {
-        // Load data structures
-        addSources(sources);
-    }
-
-    /**
-     * Add a collection of functions to the data structures.
-     * @param sources The function metadata sources ({@link org.teiid.query.function.FunctionMetadataSource})
-     */
-    private void addSources(Collection sources) {
-        if(sources == null) {
-            return;
-        }
-
-        Iterator sourceIter = sources.iterator();
-        while(sourceIter.hasNext()) {
-            Object sourceObj = sourceIter.next();
-            if(sourceObj instanceof FunctionMetadataSource) {
-                addSource((FunctionMetadataSource) sourceObj);
-            } else {
-                Assertion.failed(QueryPlugin.Util.getString("ERR.015.001.0044", sourceObj.getClass().getName())); //$NON-NLS-1$
-            }
-        }
     }
 
     /**
@@ -294,7 +275,7 @@ public class FunctionTree {
         // Defect 20007 - Ignore the invocation method if pushdown is not required.
         if (method.getPushdown() == FunctionMethod.CAN_PUSHDOWN || method.getPushdown() == FunctionMethod.CANNOT_PUSHDOWN) {
             try {
-                Class methodClass = source.getInvocationClass(method.getInvocationClass());
+                Class<?> methodClass = source.getInvocationClass(method.getInvocationClass());
                 ReflectionHelper helper = new ReflectionHelper(methodClass);
                 try {
                 	invocationMethod = helper.findBestMethodWithSignature(method.getInvocationMethod(), inputTypes);
@@ -304,15 +285,31 @@ public class FunctionTree {
                 	requiresContext = true;
                 }
             } catch (ClassNotFoundException e) {
-              // Failed to load class, so can't load method - this will fail at invocation time.
-              // We don't fail here because this situation can occur in the modeler, which does
-              // not have the function jar files.  The modeler never invokes, so this isn't a
-              // problem.
+            	if (validateClass) {
+            		throw new TeiidRuntimeException(e, "ERR.015.001.0047", QueryPlugin.Util.getString("FunctionTree.no_class", method.getName(), method.getInvocationClass())); //$NON-NLS-1$ //$NON-NLS-2$
+            	}
+            } catch (NoSuchMethodException e) {
+            	throw new TeiidRuntimeException(e, "ERR.015.001.0047", QueryPlugin.Util.getString("FunctionTree.no_method", method, method.getInvocationClass(), method.getInvocationMethod())); //$NON-NLS-1$ //$NON-NLS-2$
             } catch (Exception e) {                
-                throw new TeiidRuntimeException(e, "ERR.015.001.0047", QueryPlugin.Util.getString("ERR.015.001.0047", new Object[]{method.getInvocationClass(), invocationMethod, inputTypes})); //$NON-NLS-1$ //$NON-NLS-2$
+                throw new TeiidRuntimeException(e, "ERR.015.001.0047", QueryPlugin.Util.getString("ERR.015.001.0047", method, method.getInvocationClass(), method.getInvocationMethod())); //$NON-NLS-1$ //$NON-NLS-2$
             } 
-            if(invocationMethod != null && !FunctionTree.isValidMethod(invocationMethod)) {
-            	throw new TeiidRuntimeException("ERR.015.001.0047", QueryPlugin.Util.getString("ERR.015.001.0047", new Object[]{method.getInvocationClass(), invocationMethod, inputTypes})); //$NON-NLS-1$ //$NON-NLS-2$
+            if (invocationMethod != null) {
+            	// Check return type is non void
+        		Class<?> methodReturn = invocationMethod.getReturnType();
+        		if(methodReturn.equals(Void.TYPE)) {
+        			throw new TeiidRuntimeException("ERR.015.001.0047", QueryPlugin.Util.getString("FunctionTree.not_void", method.getName(), invocationMethod)); //$NON-NLS-1$ //$NON-NLS-2$
+        		}
+
+        		// Check that method is public
+        		int modifiers = invocationMethod.getModifiers();
+        		if(! Modifier.isPublic(modifiers)) {
+        			throw new TeiidRuntimeException("ERR.015.001.0047", QueryPlugin.Util.getString("FunctionTree.not_public", method.getName(), invocationMethod)); //$NON-NLS-1$ //$NON-NLS-2$
+        		}
+
+        		// Check that method is static
+        		if(! Modifier.isStatic(modifiers)) {
+        			throw new TeiidRuntimeException("ERR.015.001.0047", QueryPlugin.Util.getString("FunctionTree.not_static", method.getName(), invocationMethod)); //$NON-NLS-1$ //$NON-NLS-2$
+        		}
             }
         } else {
             inputTypes.add(0, CommandContext.class);
@@ -342,33 +339,6 @@ public class FunctionTree {
         node.put(DESCRIPTOR_KEY, descriptor);
     }
     
-	/**
-	 * Validate a method looked up by reflection.  The method should have a non-void return type
-	 * and be a public static method.
-	 * @param method Method to validate
-	 * @return True if valid
-	 */
-	static boolean isValidMethod(Method method) {
-		// Check return type is non void
-		Class methodReturn = method.getReturnType();
-		if(methodReturn.equals(Void.TYPE)) {
-		    return false;
-		}
-
-		// Check that method is public
-		int modifiers = method.getModifiers();
-		if(! Modifier.isPublic(modifiers)) {
-		    return false;
-		}
-
-		// Check that method is static
-		if(! Modifier.isStatic(modifiers)) {
-		    return false;
-		}
-
-		return true;
-	}
-
     /**
      * Look up a function descriptor by signature in the tree.  If none is
      * found, null is returned.

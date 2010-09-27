@@ -157,7 +157,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         if (udfMethods == null) {
         	udfMethods = Collections.emptyList();
         }
-        this.functionLibrary = new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(udfMethods)));
+        this.functionLibrary = new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(udfMethods), true));
     }
     
     //==================================================================================
