@@ -80,6 +80,14 @@ public class TestResultsSummary {
     }
 
     public synchronized void addTestResult(String querySetID, TestResult result) {
+    	
+     	if (result == null) {
+    	    System.err
+		    .println("Error - trying to add a null result set for querysetID: " + querySetID); //$NON-NLS-1$
+    	    throw new RuntimeException(
+		    "Error - trying to add a null result set for querysetID: " + querySetID); //$NON-NLS-1$
+
+    	}
 	Collection<TestResult> results = null;
 	if (this.testResults.containsKey(querySetID)) {
 	    results = this.testResults.get(querySetID);
@@ -92,7 +100,7 @@ public class TestResultsSummary {
     }
 
     public Collection<TestResult> getTestResults(String querySetID) {
-	return this.testResults.get(querySetID);
+    	return this.testResults.get(querySetID);
     }
 
     private static PrintStream getSummaryStream(String outputDir,
@@ -397,7 +405,10 @@ public class TestResultsSummary {
 	String outputDir = scenario.getResultsGenerator().getOutputDir();
 
 	//       CombinedTestClient.log("Calculating and printing result statistics"); //$NON-NLS-1$
-	if (testResults.size() > 0) {
+	if (testResults == null) {
+		// do nothing
+
+	} else if (testResults.size() > 0) {
 	    // Create output file
 	    String outputFileName = generateFileName(querySetID, System
 		    .currentTimeMillis(), runNumber);

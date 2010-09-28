@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.jdom.JDOMException;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.StringUtil;
 import org.teiid.test.client.ClassFactory;
 import org.teiid.test.client.ExpectedResults;
@@ -493,26 +494,63 @@ public class XMLExpectedResults implements ExpectedResults {
             // Compare actual elements with expected elements column by column in this row
             for (int col = 0; col < actualColumnCount; col++) {
                 // Get actual value
-                final Object actualValue = actualRecord.get(col);
+                Object actualValue = actualRecord.get(col);
                 // Get expected value
-                final Object expectedValue = expectedRecord.get(col);
+                Object expectedValue = expectedRecord.get(col);
  
                 //              DEBUG:
                 //                debugOut.println(" Col: " +(col +1) + ": expectedValue:[" + expectedValue + "] actualValue:[" + actualValue +
                 // "]");
 
                 // Compare these values
-                if (expectedValue == null) {
+                if ( ( expectedValue == null && actualValue != null) ||
+                		(actualValue == null && expectedValue != null) ){
                     // Compare nulls
-                    if (actualValue != null) {
                         throw new QueryTestFailedException(eMsg + "Value mismatch at row " + (row + 1) //$NON-NLS-1$
                                                            + " and column " + (col + 1) //$NON-NLS-1$
                                                            + ": expected = [" //$NON-NLS-1$
-                                                           + expectedValue + "], actual = [" //$NON-NLS-1$
-                                                           + actualValue + "]"); //$NON-NLS-1$
+                                                           + (expectedValue!=null?expectedValue:"null") + "], actual = [" //$NON-NLS-1$
+                                                           + (actualValue!=null?actualValue:"null")  + "]"); //$NON-NLS-1$
 
-                    }
-                } else {
+                } 
+                	
+                if (actualValue instanceof Blob || actualValue instanceof Clob || actualValue instanceof SQLXML) {
+                    	 
+                	if (actualValue instanceof Clob){
+                		Clob c = (Clob)actualValue;
+                		try {
+							actualValue = ObjectConverterUtil.convertToString(c.getAsciiStream());
+							
+						} catch (Throwable e) {
+							// TODO Auto-generated catch block
+							throw new QueryTestFailedException(e);
+						}
+                	} else if (actualValue instanceof Blob){
+                    		Blob b = (Blob)actualValue;
+                    		try {
+    							actualValue = ObjectConverterUtil.convertToString(b.getBinaryStream());
+    							
+    						} catch (Throwable e) {
+    							// TODO Auto-generated catch block
+    							throw new QueryTestFailedException(e);
+    						}
+                    } else if (actualValue instanceof SQLXML){
+                    	SQLXML s = (SQLXML)actualValue;
+                		try {
+							actualValue = ObjectConverterUtil.convertToString(s.getBinaryStream());
+							
+						} catch (Throwable e) {
+							// TODO Auto-generated catch block
+							throw new QueryTestFailedException(e);
+						}
+                    } 
+
+                	
+                	if (!(expectedValue instanceof String)) {
+                		expectedValue = expectedValue.toString();
+                	}
+                } 
+                	
                     // Compare values with equals
                     if (!expectedValue.equals(actualValue)) {
                         // DEBUG:
@@ -521,18 +559,21 @@ public class XMLExpectedResults implements ExpectedResults {
                 	
                          if (expectedValue instanceof String) {
                             final String expectedString = (String)expectedValue;
-                            if (actualValue instanceof Blob || actualValue instanceof Clob || actualValue instanceof SQLXML) {
-                                // LOB types are special case - metadata says they're Object types so
-                                // expected results are of type String. Actual object type is MMBlob, MMClob.
-                                // Must compare w/ String verion of actual!
-                                if (!expectedValue.equals(actualValue.toString())) {
-                                    throw new QueryTestFailedException(eMsg + "LOB Value mismatch at row " + (row + 1) //$NON-NLS-1$
-                                                                       + " and column " + (col + 1) //$NON-NLS-1$
-                                                                       + ": expected = [" //$NON-NLS-1$
-                                                                       + expectedValue + "], actual = [" //$NON-NLS-1$
-                                                                       + actualValue + "]"); //$NON-NLS-1$
-                                }
-                            } else if (!(actualValue instanceof String)) {
+//                            if (actualValue instanceof Blob || actualValue instanceof Clob || actualValue instanceof SQLXML) {
+//                            	
+//                            	Clob c = (Clob)actualValue;
+//                                // LOB types are special case - metadata says they're Object types so
+//                                // expected results are of type String. Actual object type is MMBlob, MMClob.
+//                                // Must compare w/ String verion of actual!
+//                                if (!expectedValue.equals(actualValue.toString())) {
+//                                    throw new QueryTestFailedException(eMsg + "LOB Value mismatch at row " + (row + 1) //$NON-NLS-1$
+//                                                                       + " and column " + (col + 1) //$NON-NLS-1$
+//                                                                       + ": expected = [" //$NON-NLS-1$
+//                                                                       + expectedValue + "], actual = [" //$NON-NLS-1$
+//                                                                       + actualValue + "]"); //$NON-NLS-1$
+//                                }
+//                            } else 
+                            if (!(actualValue instanceof String)) {
                                 throw new QueryTestFailedException(eMsg + "Value mismatch at row " + (row + 1) //$NON-NLS-1$
                                                                    + " and column " + (col + 1) //$NON-NLS-1$
                                                                    + ": expected = [" //$NON-NLS-1$
@@ -552,7 +593,7 @@ public class XMLExpectedResults implements ExpectedResults {
               
                         }
                     }
-                }
+
             } // end loop through columns
         } // end loop through rows
     }

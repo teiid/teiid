@@ -166,10 +166,20 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 		testStatus, beginTS, endTS, resultException, null);
 	
 	
-	this.querySet.handleTestResult(rs, this.internalResultSet, this.updateCount, resultFromQuery, sql);
+
+	System.out.println("ADD THE TEST RESULT");
+
+	this.testResultsSummary.addTestResult(query.geQuerySetID(), rs);
 
 	
-	this.testResultsSummary.addTestResult(query.geQuerySetID(), rs);
+	try {
+		System.out.println("HANDLE RESULT " + this.internalResultSet.isClosed());
+	} catch (SQLException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+	
+	this.querySet.handleTestResult(rs, this.internalResultSet, this.updateCount, resultFromQuery, sql);
 
     }
 

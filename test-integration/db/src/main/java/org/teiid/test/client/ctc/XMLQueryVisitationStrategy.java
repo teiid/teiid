@@ -26,9 +26,12 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Blob;
+import java.sql.Clob;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -43,6 +46,7 @@ import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.internal.core.xml.SAXBuilderHelper;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -50,6 +54,7 @@ import org.teiid.test.client.QuerySQL;
 import org.teiid.test.client.QueryTest;
 import org.teiid.test.client.ctc.QueryResults.ColumnInfo;
 import org.teiid.test.framework.TestLogger;
+import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 import org.teiid.test.util.StringUtil;
 
@@ -944,6 +949,12 @@ public class XMLQueryVisitationStrategy {
     private Element produceResults(ResultSet object, int beginRow, int endRow)
             throws JDOMException, SQLException {
 
+    	if (object.isClosed()) {
+            throw new SQLException(
+            "ResultSet is closed at this point, unable to product results"); //$NON-NLS-1$
+    		
+    	}
+    	
         if ( beginRow < START_ROW ) {
             throw new IllegalArgumentException(
                     "The starting row cannot be less than 1."); //$NON-NLS-1$
@@ -1118,7 +1129,7 @@ public class XMLQueryVisitationStrategy {
      * @return the root element of the XML segment that was produced.
      * @exception JDOMException if there is an error producing XML.
      */
-    public Element produceMsg(Object object, Element parent) throws JDOMException {
+    public Element produceMsg(Object object, Element parent) throws JDOMException, SQLException {
         if ( object == null ) {
             throw new IllegalArgumentException("Null object reference."); //$NON-NLS-1$
         }
@@ -1229,16 +1240,52 @@ public class XMLQueryVisitationStrategy {
      * @return the root element of the XML segment that was produced.
      * @exception JDOMException if there is an error producing the message.
      */
-    private Element produceObject(Object object, Element parent) throws JDOMException {
+    private Element produceObject(Object object, Element parent) throws JDOMException, SQLException {
 
+    	System.out.println("PRODUCT OBJECT");
         // ----------------------
         // Create the Object element ...
         // ----------------------
         Element objectElement = new Element(TagNames.Elements.OBJECT);
         
+        String result = null;
+        if (object instanceof Blob || object instanceof Clob || object instanceof SQLXML) {
+       	 
+        	if (object instanceof Clob){
+        		Clob c = (Clob)object;
+        		try {
+        			result = ObjectConverterUtil.convertToString(c.getAsciiStream());
+					
+				} catch (Throwable e) {
+					// TODO Auto-generated catch block
+					throw new SQLException(e);
+				}
+        	} else if (object instanceof Blob){
+            		Blob b = (Blob)object;
+            		try {
+            			result = ObjectConverterUtil.convertToString(b.getBinaryStream());
+						
+					} catch (Throwable e) {
+						// TODO Auto-generated catch block
+						throw new SQLException(e);
+					}
+            } else if (object instanceof SQLXML){
+            	SQLXML s = (SQLXML)object;
+        		try {
+        			result = ObjectConverterUtil.convertToString(s.getBinaryStream());
+					
+				} catch (Throwable e) {
+					// TODO Auto-generated catch block
+					throw new SQLException(e);
+				}
+            } 
+        } else {
+        	result = object.toString();
+        }
+        
  //       System.out.println("ProductObject (before encoding): " + object.toString() );
  //       try {
-            objectElement.setText(object.toString());
+            objectElement.setText(result);
             	//	URLEncoder.encode(object.toString(), "UTF-8"));
  //       } catch (UnsupportedEncodingException e) {
             // UTF-8 is supported natively by all jvms
