@@ -43,4 +43,5 @@ public interface DQPManagement {
     List<RequestMetadata> getLongRunningRequests();
     List<RequestMetadata> getRequestsUsingVDB(String vdbName, int vdbVersion) throws AdminException;
     CacheStatisticsMetadata getCacheStatistics(String cacheType);
+    List<List> executeQuery(String vdbName, int version, String command, long timoutInMilli) throws AdminException;
 }

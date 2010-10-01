@@ -26,14 +26,20 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.resource.spi.XATerminator;
 import javax.resource.spi.work.WorkManager;
+import javax.security.auth.login.LoginException;
 import javax.transaction.TransactionManager;
 
 import org.jboss.managed.api.ManagedOperation.Impact;
@@ -49,6 +55,7 @@ import org.jboss.util.naming.Util;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.Admin.Cache;
 import org.teiid.adminapi.impl.CacheStatisticsMetadata;
 import org.teiid.adminapi.impl.DQPManagement;
@@ -58,8 +65,12 @@ import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.adminapi.jboss.AdminProvider;
 import org.teiid.cache.CacheFactory;
 import org.teiid.client.DQP;
+import org.teiid.client.RequestMessage;
+import org.teiid.client.ResultsMessage;
 import org.teiid.client.security.ILogon;
+import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.util.ExceptionUtil;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
@@ -78,6 +89,7 @@ import org.teiid.logging.Log4jListener;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.net.TeiidURL;
 import org.teiid.security.SecurityHelper;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
@@ -395,10 +407,10 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     }
     
 	@Override
-    @ManagementOperation(description="Cancel a Request",params={@ManagementParameter(name="sessionId",description="The session Identifier"), @ManagementParameter(name="requestId",description="The request Identifier")})    
-    public boolean cancelRequest(String sessionId, long requestId) throws AdminException {
+    @ManagementOperation(description="Cancel a Request",params={@ManagementParameter(name="sessionId",description="The session Identifier"), @ManagementParameter(name="executionId",description="The Execution Identifier")})    
+    public boolean cancelRequest(String sessionId, long executionId) throws AdminException {
     	try {
-			return this.dqpCore.cancelRequest(sessionId, requestId);
+			return this.dqpCore.cancelRequest(sessionId, executionId);
 		} catch (TeiidComponentException e) {
 			throw new AdminComponentException(e);
 		}
@@ -464,4 +476,77 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	public void setCacheFactory(CacheFactory factory) {
 		this.dqpCore.setCacheFactory(factory);
 	}
+	
+	@Override
+    @ManagementOperation(description="Execute a sql query", params={@ManagementParameter(name="vdbName"),@ManagementParameter(name="vdbVersion"), @ManagementParameter(name="command")})	
+	public List<List> executeQuery(final String vdbName, final int version, final String command, final long timoutInMilli) throws AdminException {
+		Properties properties = new Properties();
+		properties.setProperty(TeiidURL.JDBC.VDB_NAME, vdbName);
+		properties.setProperty(TeiidURL.JDBC.VDB_VERSION, String.valueOf(version));
+		
+		String user = "JOPR ADMIN"; //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("admin_executing", user, command)); //$NON-NLS-1$
+		
+		SessionMetadata session = null;
+		try {
+			session = this.sessionService.createSession(user, null, "JOPR", properties, false, false); //$NON-NLS-1$
+		} catch (SessionServiceException e1) {
+			throw new AdminProcessingException(e1);
+		} catch (LoginException e1) {
+			throw new AdminProcessingException(e1);
+		}
+
+		final long requestID =  0L;
+		
+		DQPWorkContext context = new DQPWorkContext();
+		context.setSession(session);
+		
+		try {
+			return context.runInContext(new Callable<List<List>>() {
+				@Override
+				public List<List> call() throws Exception {
+					ArrayList<List> results = new ArrayList<List>();
+					
+					long start = System.currentTimeMillis();
+					RequestMessage request = new RequestMessage(command);
+					request.setExecutionId(0L);
+					request.setRowLimit(getMaxRowsFetchSize()); // this would limit the number of rows that are returned.
+					Future<ResultsMessage> message = dqpCore.executeRequest(requestID, request);
+					ResultsMessage rm = message.get(timoutInMilli, TimeUnit.MILLISECONDS);
+					
+			        if (rm.getException() != null) {
+			            throw new AdminProcessingException(rm.getException());
+			        }
+			        
+			        if (rm.isUpdateResult()) {
+			        	results.addAll(new ArrayList(Arrays.asList("update count"))); //$NON-NLS-1$
+			        	results.addAll(Arrays.asList(rm.getResults()));			        	
+			        }
+			        else {
+				        results.addAll(new ArrayList(Arrays.asList(rm.getColumnNames())));
+				        results.addAll(Arrays.asList(rm.getResults()));
+				        
+				        while (rm.getFinalRow() == -1 || rm.getLastRow() < rm.getFinalRow()) {
+				        	long elapsed = System.currentTimeMillis() - start;
+							message = dqpCore.processCursorRequest(requestID, rm.getLastRow()+1, 1024);
+							rm = message.get(timoutInMilli-elapsed, TimeUnit.MILLISECONDS);
+							results.addAll(Arrays.asList(rm.getResults()));
+				        }
+			        }
+
+			        long elapsed = System.currentTimeMillis() - start;
+			        ResultsFuture<?> response = dqpCore.closeRequest(requestID);
+			        response.get(timoutInMilli-elapsed, TimeUnit.MILLISECONDS);
+					return results;
+				}
+			});
+		} catch (Throwable t) {
+			throw new AdminProcessingException(t);
+		} finally {
+			try {
+				sessionService.closeSession(session.getSessionId());
+			} catch (InvalidSessionException e) { //ignore
+			}			
+		}
+	}	
 }

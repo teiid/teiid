@@ -293,10 +293,10 @@ public class Admin extends TeiidAdmin {
     }
 	
 	@Override
-	public void cancelRequest(String sessionId, long requestId) throws AdminException{
+	public void cancelRequest(String sessionId, long executionId) throws AdminException{
 		try {
 			ManagedComponent mc = getView().getComponent(DQPNAME, DQPTYPE);	
-			ManagedUtil.executeOperation(mc, "cancelRequest", SimpleValueSupport.wrap(sessionId), SimpleValueSupport.wrap(requestId));//$NON-NLS-1$
+			ManagedUtil.executeOperation(mc, "cancelRequest", SimpleValueSupport.wrap(sessionId), SimpleValueSupport.wrap(executionId));//$NON-NLS-1$
 		} catch (Exception e) {
 			throw new AdminComponentException(e.getMessage(), e);
 		}     	

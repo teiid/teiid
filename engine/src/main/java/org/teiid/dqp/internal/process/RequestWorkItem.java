@@ -561,7 +561,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     
     public boolean requestCancel() throws TeiidComponentException {
     	synchronized (this) {
-        	if (this.isCanceled) {
+        	if (this.isCanceled || this.closeRequested) {
         		return false;
         	}
         	this.isCanceled = true;

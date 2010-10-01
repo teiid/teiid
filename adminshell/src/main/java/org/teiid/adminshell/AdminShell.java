@@ -132,9 +132,9 @@ public class AdminShell {
 	@Doc(text = "Cancel a request")
 	public static void cancelRequest(
 			@Doc(text = "session id") String sessionId, 
-			@Doc(text = "request id") long requestId)
+			@Doc(text = "execution id") long executionId)
 			throws AdminException {
-		getAdmin().cancelRequest(sessionId, requestId);
+		getAdmin().cancelRequest(sessionId, executionId);
 	}
 
 	@Doc(text = "Clear the given cache")

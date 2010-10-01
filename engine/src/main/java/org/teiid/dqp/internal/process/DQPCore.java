@@ -497,8 +497,8 @@ public class DQPCore implements DQP {
         } 
     }
 
-    public boolean cancelRequest(String sessionId, long requestId) throws TeiidComponentException {
-    	RequestID requestID = new RequestID(sessionId, requestId);
+    public boolean cancelRequest(String sessionId, long executionId) throws TeiidComponentException {
+    	RequestID requestID = new RequestID(sessionId, executionId);
     	return cancelRequest(requestID);
     }
     

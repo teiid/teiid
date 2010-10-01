@@ -211,11 +211,11 @@ public interface Admin {
      * Cancel Request
      *
      * @param sessionId session Identifier for the request.
-     * @param requestId request Identifier
+     * @param executionId request Identifier
      * 
      * @throws AdminException  
      */
-    void cancelRequest(String sessionId, long requestId) throws AdminException;
+    void cancelRequest(String sessionId, long executionId) throws AdminException;
   
     /**
      * Mark the given global transaction as rollback only.
