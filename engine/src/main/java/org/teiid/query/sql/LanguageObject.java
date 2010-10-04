@@ -48,6 +48,9 @@ public interface LanguageObject extends Cloneable {
     public static class Util {
 
 		public static <S extends LanguageObject, T extends S> ArrayList<S> deepClone(List<T> collection, Class<S> type) {
+			if (collection == null) {
+				return null;
+			}
 			ArrayList<S> result = new ArrayList<S>(collection.size());
 			for (LanguageObject obj : collection) {
 				result.add(type.cast(obj.clone()));

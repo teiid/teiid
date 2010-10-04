@@ -51,6 +51,8 @@ import org.teiid.language.SetQuery;
 import org.teiid.language.SubqueryComparison;
 import org.teiid.language.SubqueryIn;
 import org.teiid.language.Update;
+import org.teiid.language.With;
+import org.teiid.language.WithItem;
 
 /**
  * Visits each node in  a hierarchy of ILanguageObjects. The default
@@ -158,6 +160,7 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     }
 
     public void visit(Select obj) {
+    	visitNode(obj.getWith());
     	visitNodes(obj.getDerivedColumns());
         visitNodes(obj.getFrom());
         visitNode(obj.getWhere());
@@ -203,6 +206,7 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     }
     
     public void visit(SetQuery obj) {
+    	visitNode(obj.getWith());
     	if (visitSubcommands) {
 	    	visitNode(obj.getLeftQuery());
 	        visitNode(obj.getRightQuery());
@@ -229,5 +233,20 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     	visitNode(obj.getSymbol());
     	visitNode(obj.getValue());
     }
+    
+    @Override
+    public void visit(With obj) {
+    	visitNodes(obj.getItems());
+    }
+    
+    @Override
+    public void visit(WithItem obj) {
+    	visitNode(obj.getTable());
+    	visitNodes(obj.getColumns());
+    	if (visitSubcommands) {
+    		visitNode(obj.getSubquery());
+    	}
+    }
+    
 
 }

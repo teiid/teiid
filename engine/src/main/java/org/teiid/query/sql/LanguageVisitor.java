@@ -33,6 +33,7 @@ import org.teiid.query.sql.symbol.*;
  * the public visit methods should be overridden to provide the visitor functionality. 
  * These public visit methods SHOULD NOT be called directly.</p>
  */
+@SuppressWarnings("unused")
 public abstract class LanguageVisitor {
     
     private boolean abort = false;
@@ -135,4 +136,5 @@ public abstract class LanguageVisitor {
     public void visit(QueryString obj) {}
     public void visit(XMLParse obj) {}
     public void visit(ExpressionCriteria obj) {}
+    public void visit(WithQueryCommand obj) {}
 }

@@ -62,7 +62,7 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.LocateFunctionModifier;
 
 
-@Translator(name="oracle", description="A translator for Oracle Database")
+@Translator(name="oracle", description="A translator for Oracle 9i Database or later")
 public class OracleExecutionFactory extends JDBCExecutionFactory {
 
 	private static final String TIME_FORMAT = "HH24:MI:SS"; //$NON-NLS-1$

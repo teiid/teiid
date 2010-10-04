@@ -63,6 +63,9 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
 	
     @Override
     public void close() {
+    	if (joinNode == null) {
+    		return;
+    	}
     	super.close();
     	for (TupleBuffer tupleSourceID : this.partitions) {
 			tupleSourceID.remove();

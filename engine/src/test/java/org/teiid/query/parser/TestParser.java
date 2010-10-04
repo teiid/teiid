@@ -78,6 +78,7 @@ import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.TextTable.TextColumn;
@@ -6856,6 +6857,22 @@ public class TestParser {
     @Test public void testExpressionCriteria1() throws Exception {
     	SearchedCaseExpression sce = new SearchedCaseExpression(Arrays.asList(new NotCriteria(new ExpressionCriteria(new ElementSymbol("x")))), Arrays.asList(new ElementSymbol("y")));
     	helpTestExpression("case when not x then y end", "CASE WHEN NOT (x) THEN y END", sce);
+    }
+    
+    @Test public void testWithClause() throws Exception {
+    	Query query = getOrderByQuery(null);
+    	query.setWith(Arrays.asList(new WithQueryCommand(new GroupSymbol("x"), null, getOrderByQuery(null))));
+        helpTest("WITH x AS (SELECT a FROM db.g WHERE b = aString) SELECT a FROM db.g WHERE b = aString", "WITH x AS (SELECT a FROM db.g WHERE b = aString) SELECT a FROM db.g WHERE b = aString", query); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testExplicitTable() throws Exception {
+    	Query query = new Query();
+        Select select = new Select();
+        query.setSelect(select);
+        select.addSymbol(new AllSymbol());
+        From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("X"))));
+        query.setFrom(from);
+    	helpTest("TABLE X", "SELECT * FROM X", query);
     }
 
 }

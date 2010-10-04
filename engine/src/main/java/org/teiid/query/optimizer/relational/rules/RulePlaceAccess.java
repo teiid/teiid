@@ -44,7 +44,6 @@ import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -134,6 +133,11 @@ public final class RulePlaceAccess implements
             Object hint = sourceNode.removeProperty(NodeConstants.Info.IS_OPTIONAL);
             if (hint != null) {
                 accessNode.setProperty(NodeConstants.Info.IS_OPTIONAL, hint);
+            }
+            
+            Object modelId = sourceNode.removeProperty(NodeConstants.Info.MODEL_ID);
+            if (modelId != null) {
+                accessNode.setProperty(NodeConstants.Info.MODEL_ID, modelId);
             }
 
             // Insert
@@ -265,7 +269,7 @@ public final class RulePlaceAccess implements
         }
 
         // Create the new symbol
-        GroupSymbol newSymbol = (GroupSymbol)oldSymbol.clone();
+        GroupSymbol newSymbol = oldSymbol.clone();
         newSymbol.setName(newName);
         newSymbol.setDefinition(newDefinition);
         return newSymbol;

@@ -38,6 +38,9 @@ public abstract class JoinStrategy {
     private int reserved;
 
     public void close() {
+    	if (joinNode == null) {
+    		return;
+    	}
     	joinNode.getBufferManager().releaseBuffers(reserved);
 		reserved = 0;
         try {

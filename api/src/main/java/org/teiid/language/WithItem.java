@@ -20,24 +20,47 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.query.sql.navigator;
+package org.teiid.language;
 
-import org.teiid.query.sql.LanguageObject;
-import org.teiid.query.sql.LanguageVisitor;
+import java.util.List;
 
+import org.teiid.language.visitor.LanguageObjectVisitor;
 
-/** 
- * @since 4.2
- */
-public class PreOrderNavigator extends PreOrPostOrderNavigator {
+public class WithItem extends BaseLanguageObject implements SubqueryContainer {
+	
+	private NamedTable table;
+	private List<ColumnReference> columns;
+	private QueryExpression queryExpression;
 
-    public PreOrderNavigator(LanguageVisitor visitor) {
-        super(visitor, PRE_ORDER, false);
-    }
+	public NamedTable getTable() {
+		return table;
+	}
+	
+	public void setTable(NamedTable table) {
+		this.table = table;
+	}
+	
+	public List<ColumnReference> getColumns() {
+		return columns;
+	}
+	
+	public void setColumns(List<ColumnReference> columns) {
+		this.columns = columns;
+	}
+	
+	@Override
+	public QueryExpression getSubquery() {
+		return queryExpression;
+	}
 
-    public static void doVisit(LanguageObject object, LanguageVisitor visitor) {
-        PreOrderNavigator nav = new PreOrderNavigator(visitor);
-        object.acceptVisitor(nav);
-    }
+	@Override
+	public void setSubquery(QueryExpression query) {
+		this.queryExpression = query;
+	}
+
+	@Override
+	public void acceptVisitor(LanguageObjectVisitor visitor) {
+		visitor.visit(this);
+	}
 
 }

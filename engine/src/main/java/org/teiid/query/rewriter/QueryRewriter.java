@@ -111,6 +111,7 @@ import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.TranslatableProcedureContainer;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.PredicateCriteria.Negatable;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
@@ -231,16 +232,23 @@ public class QueryRewriter {
         
         switch(command.getType()) {
 			case Command.TYPE_QUERY:
+                QueryCommand queryCommand = (QueryCommand)command;
+            	if (removeOrderBy && queryCommand.getLimit() == null) {
+            		queryCommand.setOrderBy(null);
+                }
+            	if (queryCommand.getWith() != null) {
+            		for (WithQueryCommand withQueryCommand : queryCommand.getWith()) {
+            			if (withQueryCommand.getColumns() == null) {
+            				List<ElementSymbol> columns = ResolverUtil.resolveElementsInGroup(withQueryCommand.getGroupSymbol(), metadata);
+            				withQueryCommand.setColumns(LanguageObject.Util.deepClone(columns, ElementSymbol.class));
+            			}
+						rewriteSubqueryContainer(withQueryCommand, true);
+					}
+            	}
                 if(command instanceof Query) {
                     command = rewriteQuery((Query) command);
                 }else {
                     command = rewriteSetQuery((SetQuery) command);
-                }
-            	if (removeOrderBy) {
-                	QueryCommand queryCommand = (QueryCommand)command;
-                	if (queryCommand.getLimit() == null) {
-                		queryCommand.setOrderBy(null);
-                	}
                 }
                 break;
             case Command.TYPE_STORED_PROCEDURE:

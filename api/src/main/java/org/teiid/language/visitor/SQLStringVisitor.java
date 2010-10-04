@@ -71,6 +71,8 @@ import org.teiid.language.SubqueryComparison;
 import org.teiid.language.SubqueryIn;
 import org.teiid.language.TableReference;
 import org.teiid.language.Update;
+import org.teiid.language.With;
+import org.teiid.language.WithItem;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SQLConstants.Tokens;
@@ -676,6 +678,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     public void visit(Select obj) {
+    	if (obj.getWith() != null) {
+    		append(obj.getWith());
+    	}
 		buffer.append(SELECT).append(Tokens.SPACE);
         buffer.append(getSourceComment(obj));
         if (obj.isDistinct()) {
@@ -824,6 +829,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
     
     public void visit(SetQuery obj) {
+    	if (obj.getWith() != null) {
+    		append(obj.getWith());
+    	}
         appendSetQuery(obj, obj.getLeftQuery(), false);
         
         buffer.append(Tokens.SPACE);
@@ -873,6 +881,29 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         	}
             append(obj);
         }
+    }
+    
+    @Override
+    public void visit(With obj) {
+    	buffer.append(WITH);
+    	buffer.append(Tokens.SPACE);
+    	append(obj.getItems());
+    }
+    
+    @Override
+    public void visit(WithItem obj) {
+    	append(obj.getTable());
+    	buffer.append(Tokens.SPACE);
+    	if (obj.getColumns() != null) {
+    		buffer.append(Tokens.LPAREN);
+    		append(obj.getColumns());
+    		buffer.append(Tokens.RPAREN);
+    		buffer.append(Tokens.SPACE);
+    	}
+    	buffer.append(AS);
+		buffer.append(Tokens.LPAREN);
+		append(obj.getSubquery());
+		buffer.append(Tokens.RPAREN);
     }
  
     /**

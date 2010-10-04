@@ -438,7 +438,7 @@ public void setFoo(String value) {
 	<section>
 		<title>QueryExpression Structure</title>
 		<para><code>QueryExpression</code> is the base for both SELECT queries and set queries.  It may optionally take an
-         <code>OrderBy</code> (representing a SQL ORDER BY clause) and a <code>Limit</code> (represent a SQL LIMIT clause)</para>
+         <code>OrderBy</code> (representing a SQL ORDER BY clause), a <code>Limit</code> (represent a SQL LIMIT clause), or a <code>With</code> (represents a SQL WITH clause).</para>
     </section>      
 
     <section>
@@ -458,6 +458,14 @@ public void setFoo(String value) {
 		<para>A <code>QueryExpression</code> can also be a <code>SetQuery</code> that represents on of the SQL set operations (UNION,
 			INTERSECT, EXCEPT) on two <code>QueryExpression</code>. The all flag may be set to
 			indicate UNION ALL (currently INTERSECT and EXCEPT ALL are not allowed in Teiid)</para>
+    </section>
+    
+    <section>
+      <title>With Structure</title>
+      
+      <para>A <code>With</code> clause contains named <code>QueryExpressions</code> held by <code>WithItem</code>s that can be 
+      referenced as tables in the main <code>QueryExpression</code>.</para>
+    
     </section>
         
     <section>    
@@ -1265,6 +1273,17 @@ int count = visitor.getCount();
                   <para>Translator supports inserts with an iterator of values.  The values would typically be from an evaluated QueryExpression.</para>
                 </entry>
               </row>         
+              <row>
+                <entry>
+                  <para>CommonTableExpressions</para>
+                </entry>
+                <entry>
+                  <para/>
+                </entry>
+                <entry>
+                  <para>Translator supports the WITH clause.</para>
+                </entry>
+              </row>
             </tbody>
           </tgroup>
         </table>

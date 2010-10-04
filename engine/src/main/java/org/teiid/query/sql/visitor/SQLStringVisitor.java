@@ -79,6 +79,7 @@ import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.TextTable.TextColumn;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
@@ -631,13 +632,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(SPACE);
         append(BY);
         append(SPACE);
-        for (Iterator<OrderByItem> iterator = obj.getOrderByItems().iterator(); iterator.hasNext();) {
-            OrderByItem item = iterator.next();
-            visitNode(item);
-            if (iterator.hasNext()) {
-                append(", "); //$NON-NLS-1$				
-            }
-        }
+        registerNodes(obj.getOrderByItems(), 0);
     }
 
     @Override
@@ -725,9 +720,27 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(" = "); //$NON-NLS-1$
         visitNode(obj.getValue());
     }
+    
+    @Override
+    public void visit(WithQueryCommand obj) {
+    	visitNode(obj.getGroupSymbol());
+    	append(SPACE);
+    	if (obj.getColumns() != null && !obj.getColumns().isEmpty()) {
+    		append(Tokens.LPAREN);
+    		registerNodes(obj.getColumns(), 0);
+    		append(Tokens.RPAREN);
+    		append(SPACE);
+    	}
+    	append(AS);
+    	append(SPACE);
+    	append(Tokens.LPAREN);
+    	visitNode(obj.getCommand());
+    	append(Tokens.RPAREN);
+    }
 
     public void visit( Query obj ) {
-        addCacheHint(obj.getCacheHint());
+    	addCacheHint(obj.getCacheHint());
+    	addWithClause(obj);
         visitNode(obj.getSelect());
 
         if (obj.getInto() != null) {
@@ -775,6 +788,15 @@ public class SQLStringVisitor extends LanguageVisitor {
             visitNode(obj.getOption());
         }
     }
+
+	private void addWithClause(QueryCommand obj) {
+		if (obj.getWith() != null && !obj.getWith().isEmpty()) {
+    		append(WITH);
+    		append(SPACE);
+            registerNodes(obj.getWith(), 0);
+    		beginClause(0);
+    	}
+	}
 
     protected void visitCriteria( String keyWord,
                                   Criteria crit ) {
@@ -858,6 +880,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     public void visit( SetQuery obj ) {
         addCacheHint(obj.getCacheHint());
+        addWithClause(obj);
         QueryCommand query = obj.getLeftQuery();
         appendSetQuery(obj, query, false);
 

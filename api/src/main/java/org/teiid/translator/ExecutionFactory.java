@@ -785,4 +785,8 @@ public class ExecutionFactory<F, C> {
     public boolean areLobsUsableAfterClose() {
     	return false;
     }
+    
+    public boolean supportsCommonTableExpressions() {
+    	return false;
+    }
 }

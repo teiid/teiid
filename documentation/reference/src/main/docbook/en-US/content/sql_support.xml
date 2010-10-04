@@ -401,6 +401,11 @@
         <para>A SELECT command has a number of clauses:</para>
         <listitem>  
           <para>
+            <link linkend="with_clause">WITH ...</link>
+          </para>
+        </listitem>
+        <listitem>  
+          <para>
             <link linkend="select_clause">SELECT ...</link>
           </para>
         </listitem>
@@ -445,6 +450,10 @@
       </para>
       <itemizedlist>
         <listitem>
+          <para>WITH stage - gathers all rows from all with items in the order listed.  Subsequent with items and the main query can reference the a with item as if it is a table.
+          </para>
+        </listitem>
+        <listitem>
           <para>FROM stage - gathers all rows from all tables involved in the query and logically joins them with a Cartesian product, producing a single large table with all columns from all tables. Joins and join criteria are then applied to filter rows that do not match the join structure.
           </para>
         </listitem>
@@ -482,6 +491,11 @@
         named. Because the WHERE clause is processed before the SELECT, the
         columns have not yet been named and the aliases are not yet known.
       </para>
+      <note>
+        <para>
+	      The explicit table syntax <code>TABLE x</code> may be used as a shortcut for <code>SELECT * FROM x</code>.
+	    </para>
+      </note>
     </section>
     <section id="insert_command">
       <title>INSERT Command</title>
@@ -725,10 +739,26 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
   <section>
     <title>SQL Clauses</title>
     <para>This section describes the clauses that are used in the various <link linkend="sql_commands">SQL commands</link> described in the previous section. Nearly all these features follow standard SQL syntax and functionality, so any SQL reference can be used for more information.</para>
+    <section id="with_clause">
+      <title>WITH Clause</title>
+      <para>
+      Teiid supports non-recursive common table expressions via the WITH clause.  With clause items may be referenced as tables in subsequent with clause items and in the main query.  The WITH clause can be thought of as providing query scoped temporary tables.
+      </para>
+      <para>
+        Usage:
+        <synopsis label="Usage">WITH name [(column, ...)] AS (query expression) ... </synopsis>
+      </para>
+      <itemizedlist>
+        <para>Syntax Rules:</para>
+        <listitem><para>All of the projected column names must be unique.  If they are not unique, then the column name list must be provided.</para></listitem>
+        <listitem><para>If the columns of the WITH clause item are declared, then they must match the number of columns projected by the query expression.</para></listitem>
+        <listitem><para>Each with clause item must have a unique name.</para></listitem>
+      </itemizedlist> 
+    </section>
     <section id="select_clause">
       <title>SELECT Clause</title>
       <para>
-      SQL queries start with the SELECT keyword and are often referred to as "SELECT statements". Teiid supports most of the standard SQL query constructs.
+      SQL queries that start with the SELECT keyword and are often referred to as "SELECT statements". Teiid supports most of the standard SQL query constructs.
       </para>
       <para>
         Usage:

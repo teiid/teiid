@@ -61,6 +61,7 @@ import org.teiid.query.sql.lang.Into;
 import org.teiid.query.sql.lang.JoinPredicate;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.lang.StoredProcedure;
@@ -71,6 +72,7 @@ import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.lang.TableFunctionReference;
 import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.symbol.AliasSymbol;
@@ -95,7 +97,9 @@ public class SimpleQueryResolver implements CommandResolver {
     public void resolveCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals)
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 
-        Query query = (Query) command;
+    	Query query = (Query) command;
+    	
+    	resolveWith(metadata, analysis, query);
         
         try {
             QueryResolverVisitor qrv = new QueryResolverVisitor(query, metadata, analysis);
@@ -132,6 +136,58 @@ public class SimpleQueryResolver implements CommandResolver {
             ResolverUtil.resolveNullLiterals(symbols);
         }
     }
+
+	static void resolveWith(TempMetadataAdapter metadata,
+			AnalysisRecord analysis, QueryCommand query) throws QueryResolverException, TeiidComponentException {
+		if (query.getWith() == null || query.getWith().isEmpty()) {
+			return;
+		}
+		LinkedHashSet<GroupSymbol> discoveredGroups = new LinkedHashSet<GroupSymbol>();
+		for (WithQueryCommand obj : query.getWith()) {
+            QueryCommand queryExpression = obj.getCommand();
+            
+            QueryResolver.setChildMetadata(queryExpression, query);
+            
+            try {
+                QueryResolver.resolveCommand(queryExpression, Collections.EMPTY_MAP, metadata.getMetadata(), analysis, false);
+            } catch (TeiidException err) {
+                throw new TeiidRuntimeException(err);
+            }
+
+            if (!discoveredGroups.add(obj.getGroupSymbol())) {
+            	throw new QueryResolverException("Duplicate WITH clause item name {0}");
+            }
+            List<? extends SingleElementSymbol> projectedSymbols = obj.getCommand().getProjectedSymbols();
+            if (obj.getColumns() != null && !obj.getColumns().isEmpty()) {
+            	if (obj.getColumns().size() != projectedSymbols.size()) {
+            		throw new QueryResolverException("The number of WITH clause columns for item {0} do not match the query expression");
+            	}
+            	Iterator<ElementSymbol> iter = obj.getColumns().iterator();
+            	for (SingleElementSymbol singleElementSymbol : projectedSymbols) {
+            		ElementSymbol es = iter.next();
+            		es.setType(singleElementSymbol.getType());
+				}
+            	projectedSymbols = obj.getColumns();
+            } 
+            TempMetadataID id = ResolverUtil.addTempGroup(metadata, obj.getGroupSymbol(), projectedSymbols, true);
+            obj.getGroupSymbol().setMetadataID(metadata.getMetadataStore().getTempGroupID(obj.getGroupSymbol().getName()));
+            obj.getGroupSymbol().setIsTempTable(true);
+            List<GroupSymbol> groups = Collections.singletonList(obj.getGroupSymbol());
+            if (obj.getColumns() != null && !obj.getColumns().isEmpty()) {
+	            for (SingleElementSymbol singleElementSymbol : projectedSymbols) {
+	                ResolverVisitor.resolveLanguageObject(singleElementSymbol, groups, metadata);
+				}
+            }
+            if (obj.getColumns() != null && !obj.getColumns().isEmpty()) {
+            	Iterator<ElementSymbol> iter = obj.getColumns().iterator();
+                for (TempMetadataID colid : id.getElements()) {
+            		ElementSymbol es = iter.next();
+            		es.setMetadataID(colid);
+            		es.setGroupSymbol(obj.getGroupSymbol());
+				}
+            }
+        }
+	}
 
     private static GroupSymbol resolveAllInGroup(AllInGroupSymbol allInGroupSymbol, Set<GroupSymbol> groups, QueryMetadataInterface metadata) throws QueryResolverException, QueryMetadataException, TeiidComponentException {       
         String name = allInGroupSymbol.getName();
@@ -197,7 +253,7 @@ public class SimpleQueryResolver implements CommandResolver {
             }
         }
                         
-        private void resolveSubQuery(SubqueryContainer obj, Collection<GroupSymbol> externalGroups) {
+        private void resolveSubQuery(SubqueryContainer<?> obj, Collection<GroupSymbol> externalGroups) {
             Command command = obj.getCommand();
             
             QueryResolver.setChildMetadata(command, query);

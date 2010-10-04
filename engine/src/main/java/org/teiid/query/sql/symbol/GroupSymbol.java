@@ -51,6 +51,8 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
     private boolean isGlobalTable;
     private boolean isProcedure;
     
+    private Object modelMetadataId;
+    
     private String outputDefinition;
     
     /**
@@ -83,6 +85,14 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 	public GroupSymbol(String name, String definition) {
 		super(name);
 		setDefinition(definition);
+	}
+	
+	public Object getModelMetadataId() {
+		return modelMetadataId;
+	}
+	
+	public void setModelMetadataId(Object modelMetadataId) {
+		this.modelMetadataId = modelMetadataId;
 	}
 	
 	public String getNonCorrelationName() {
@@ -177,7 +187,7 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 	 * Return a deep copy of this object.
 	 * @return Deep copy of the object
 	 */
-	public Object clone() {
+	public GroupSymbol clone() {
 		GroupSymbol copy = new GroupSymbol(getName(), getCanonical(), getDefinition());
 		if(getMetadataID() != null) {
 			copy.setMetadataID(getMetadataID());
@@ -187,6 +197,7 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
         copy.setOutputDefinition(this.getOutputDefinition());
         copy.setOutputName(this.getOutputName());
         copy.isGlobalTable = isGlobalTable;
+        copy.modelMetadataId = modelMetadataId;
 		return copy;
 	}
 

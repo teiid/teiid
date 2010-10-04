@@ -34,6 +34,7 @@ import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.resolver.util.ResolverUtil;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -175,12 +176,14 @@ public class SetQuery extends QueryCommand {
         copy.setAll(this.all);
         
         if(this.getOrderBy() != null) { 
-            copy.setOrderBy( (OrderBy) this.getOrderBy().clone() );
+            copy.setOrderBy(this.getOrderBy().clone());
         }
  
         if(this.getLimit() != null) { 
             copy.setLimit( (Limit) this.getLimit().clone() );
         }
+        
+        copy.setWith(LanguageObject.Util.deepClone(this.getWith(), WithQueryCommand.class));
         
         if (this.projectedTypes != null) {
         	copy.setProjectedTypes(new ArrayList<Class<?>>(projectedTypes), this.metadata);
@@ -213,6 +216,7 @@ public class SetQuery extends QueryCommand {
         EquivalenceUtil.areEqual(this.rightQuery, other.rightQuery) &&
         EquivalenceUtil.areEqual(getOrderBy(), other.getOrderBy()) &&
         EquivalenceUtil.areEqual(getLimit(), other.getLimit()) &&
+        EquivalenceUtil.areEqual(getWith(), other.getWith()) &&
         sameOptionAndHint(other);        
     }
 

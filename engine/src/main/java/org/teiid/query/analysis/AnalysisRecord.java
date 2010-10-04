@@ -76,6 +76,7 @@ public class AnalysisRecord implements Serializable {
     public static final String PROP_NODE_COST_ESTIMATES = "Cost Estimates";  //$NON-NLS-1$
     public static final String PROP_ROW_OFFSET = "Row Offset";  //$NON-NLS-1$
     public static final String PROP_ROW_LIMIT = "Row Limit";  //$NON-NLS-1$
+    public static final String PROP_WITH = "With"; //$NON-NLS-1$
     
     // XML
     public static final String PROP_MESSAGE = "Message"; //$NON-NLS-1$

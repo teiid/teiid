@@ -34,6 +34,7 @@ import org.teiid.query.sql.lang.ExistsCriteria;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
+import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 
@@ -113,6 +114,11 @@ public class ValueIteratorProviderCollectorVisitor extends LanguageVisitor {
      */
     public void visit(ScalarSubquery obj) {
         this.valueIteratorProviders.add(obj);
+    }
+    
+    @Override
+    public void visit(WithQueryCommand obj) {
+    	this.valueIteratorProviders.add(obj);
     }
 
     /**

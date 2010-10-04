@@ -250,4 +250,9 @@ public class DB2ExecutionFactory extends JDBCExecutionFactory {
 	public boolean supportsAggregatesEnhancedNumeric() {
 		return true;
 	}
+	
+	@Override
+	public boolean supportsCommonTableExpressions() {
+		return true;
+	}
 }

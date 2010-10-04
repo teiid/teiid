@@ -24,68 +24,21 @@ package org.teiid.query.sql.navigator;
 
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.lang.ExistsCriteria;
-import org.teiid.query.sql.lang.SubqueryCompareCriteria;
-import org.teiid.query.sql.lang.SubqueryFromClause;
-import org.teiid.query.sql.lang.SubquerySetCriteria;
-import org.teiid.query.sql.proc.CommandStatement;
-import org.teiid.query.sql.proc.LoopStatement;
-import org.teiid.query.sql.symbol.ScalarSubquery;
 
 
 /** 
  * @since 4.2
  */
-public class DeepPreOrderNavigator extends PreOrderNavigator {
+public class DeepPreOrderNavigator extends PreOrPostOrderNavigator {
 
     /** 
      * @param visitor
      * @since 4.2
      */
     public DeepPreOrderNavigator(LanguageVisitor visitor) {
-        super(visitor);
+    	super(visitor, PreOrPostOrderNavigator.PRE_ORDER, true);
     }
 
-
-    public void visit(ExistsCriteria obj) {
-        visitVisitor(obj);
-        visitNode(obj.getCommand());
-    }
-    public void visit(ScalarSubquery obj) {
-        visitVisitor(obj);
-        visitNode(obj.getCommand());
-    }
-    public void visit(SubqueryCompareCriteria obj) {
-        visitVisitor(obj);
-        visitNode(obj.getLeftExpression());
-        visitNode(obj.getCommand());
-    }
-    public void visit(SubqueryFromClause obj) {
-        visitVisitor(obj);
-        visitNode(obj.getCommand());
-        visitNode(obj.getGroupSymbol());
-    }
-    public void visit(SubquerySetCriteria obj) {
-        visitVisitor(obj);
-        visitNode(obj.getCommand());
-        visitNode(obj.getExpression());
-    }
-    
-    @Override
-    public void visit(CommandStatement obj) {
-    	visitVisitor(obj);
-    	visitNode(obj.getCommand());
-        visitVisitor(obj);
-    }
-    
-    @Override
-    public void visit(LoopStatement obj) {
-    	visitVisitor(obj);
-    	visitNode(obj.getCommand());
-        visitNode(obj.getBlock());
-        visitVisitor(obj);
-    }
-    
     public static void doVisit(LanguageObject object, LanguageVisitor visitor) {
         DeepPreOrderNavigator nav = new DeepPreOrderNavigator(visitor);
         object.acceptVisitor(nav);

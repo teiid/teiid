@@ -462,4 +462,9 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     	return getDatabaseVersion().compareTo(EIGHT_2) >= 0;
     }
     
+    @Override
+    public boolean supportsCommonTableExpressions() {
+    	return getDatabaseVersion().compareTo(EIGHT_4) >= 0;
+    }
+    
 }

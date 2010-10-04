@@ -22,6 +22,8 @@
 
 package org.teiid.query.sql.lang;
 
+import java.util.List;
+
 
 
 /**
@@ -36,6 +38,8 @@ public abstract class QueryCommand extends Command {
 
     /** Limit on returned rows */
     private Limit limit;
+    
+    private List<WithQueryCommand> with;
         
     /**
      * Get the order by clause for the query.
@@ -60,6 +64,14 @@ public abstract class QueryCommand extends Command {
     public void setLimit(Limit limit) {
         this.limit = limit;
     }
+    
+    public List<WithQueryCommand> getWith() {
+		return with;
+	}
+    
+    public void setWith(List<WithQueryCommand> with) {
+		this.with = with;
+	}
     
 	public abstract Query getProjectedQuery();
 }

@@ -53,11 +53,14 @@ import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
+import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
+import org.teiid.query.optimizer.relational.rules.CriteriaCapabilityValidatorVisitor;
 import org.teiid.query.optimizer.relational.rules.RuleConstants;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.ProcessorPlan;
@@ -68,6 +71,7 @@ import org.teiid.query.resolver.util.BindVariableVisitor;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.LanguageObject.Util;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
@@ -91,6 +95,8 @@ import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.TableFunctionReference;
 import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.lang.WithQueryCommand;
+import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -140,6 +146,53 @@ public class RelationalPlanner {
             analysisRecord.println("\n----------------------------------------------------------------------------"); //$NON-NLS-1$
             analysisRecord.println("GENERATE CANONICAL: \n" + command); //$NON-NLS-1$
 		}   
+		
+		PlanToProcessConverter planToProcessConverter = null;
+        if (context != null) {
+        	planToProcessConverter = context.getPlanToProcessConverter();
+        }
+        if (planToProcessConverter == null) {
+        	planToProcessConverter = new PlanToProcessConverter(metadata, idGenerator, analysisRecord, capFinder);
+        }
+		
+		//plan with
+        List<WithQueryCommand> withList = null;
+        Object modelID = null;
+		boolean supportsWithPushdown = true;
+		List<WithQueryCommand> pushDownWith = null;
+		if (command instanceof QueryCommand) {
+			QueryCommand queryCommand = (QueryCommand)command;
+			final HashSet<String> names = new HashSet<String>();
+			if (queryCommand.getWith() != null && !queryCommand.getWith().isEmpty()) {
+	        	withList = queryCommand.getWith();
+	        	for (WithQueryCommand with : queryCommand.getWith()) {
+	        		Command subCommand = with.getCommand();
+	                ProcessorPlan procPlan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
+	                subCommand.setProcessorPlan(procPlan);
+	                QueryCommand withCommand = CriteriaCapabilityValidatorVisitor.getQueryCommand(procPlan);
+	                if (withCommand != null && supportsWithPushdown) {
+	                	modelID = CriteriaCapabilityValidatorVisitor.validateCommandPushdown(modelID, metadata, capFinder, withCommand);
+	            	}
+	                if (modelID == null) {
+	                	supportsWithPushdown = false;
+	                } else {
+	                	if (pushDownWith == null) {
+	                		pushDownWith = new ArrayList<WithQueryCommand>();
+	                	}
+	                	WithQueryCommand wqc = new WithQueryCommand(with.getGroupSymbol(), with.getColumns(), withCommand);
+	                	pushDownWith.add(wqc);
+	                }
+		        	names.add(with.getGroupSymbol().getCanonicalName());
+				}
+	        	if (modelID != null && supportsWithPushdown) {
+	        		supportsWithPushdown = CapabilitiesUtil.supports(Capability.COMMON_TABLE_EXPRESSIONS, modelID, metadata, capFinder);
+	        	}
+				if (supportsWithPushdown) {
+					addModelIds(command, modelID, names);
+				}
+	        }
+		}
+				
         PlanNode plan;
 		try {
 			plan = generatePlan(command);
@@ -163,20 +216,45 @@ public class RelationalPlanner {
         // Run rule-based optimizer
         plan = executeRules(rules, plan);
 
-        PlanToProcessConverter planToProcessConverter = null;
-        if (context != null) {
-        	planToProcessConverter = context.getPlanToProcessConverter();
-        }
-        if (planToProcessConverter == null) {
-        	planToProcessConverter = new PlanToProcessConverter(metadata, idGenerator, analysisRecord, capFinder);
-        }
-        
         RelationalPlan result = planToProcessConverter.convert(plan);
-        
+        if (withList != null && supportsWithPushdown) {
+        	QueryCommand queryCommand = CriteriaCapabilityValidatorVisitor.getQueryCommand(result);
+        	if (queryCommand != null) { 
+				if (CriteriaCapabilityValidatorVisitor.validateCommandPushdown(modelID, metadata, capFinder, queryCommand) == null) {
+					supportsWithPushdown = false;
+				} else {
+					queryCommand.setWith(pushDownWith);
+				}
+        	} else {
+        		supportsWithPushdown = false;
+        	}
+        }
+        if (!supportsWithPushdown) {
+        	result.setWith(withList);
+        }
         result.setOutputElements(topCols);
         
         return result;
     }
+
+    /**
+     * mark all relevant group symbols as being from the modelid
+     * @param command
+     * @param modelID
+     * @param names
+     */
+	private void addModelIds(Command command, final Object modelID,
+			final HashSet<String> names) {
+		PreOrPostOrderNavigator.doVisit(command, new LanguageVisitor() {
+			@Override
+			public void visit(UnaryFromClause obj) {
+				GroupSymbol group = obj.getGroup();
+				if (names.contains(group.getNonCorrelationName().toUpperCase())) {
+					group.setModelMetadataId(modelID);
+				}
+			}
+		}, PreOrPostOrderNavigator.POST_ORDER, true);  
+	}
 
 	public void initialize(Command command, IDGenerator idGenerator,
 			QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
@@ -651,6 +729,9 @@ public class RelationalPlanner {
             	nestedCommand = resolveVirtualGroup(group);
             }
             node = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
+            if (group.getModelMetadataId() != null) {
+            	node.setProperty(Info.MODEL_ID, group.getModelMetadataId());
+            }
             node.addGroup(group);
             if (nestedCommand != null) {
             	addNestedCommand(node, group, nestedCommand, nestedCommand, true);

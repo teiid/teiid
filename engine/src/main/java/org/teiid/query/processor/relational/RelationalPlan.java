@@ -22,22 +22,31 @@
 
 package org.teiid.query.processor.relational;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
+import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.language.SQLConstants;
+import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.processor.relational.ProjectIntoNode.Mode;
+import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.lang.Create;
+import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.lang.WithQueryCommand;
+import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.util.CommandContext;
-
 
 /**
  */
@@ -46,6 +55,11 @@ public class RelationalPlan extends ProcessorPlan {
 	// Initialize state - don't reset
 	private RelationalNode root;
 	private List outputCols;
+	private List<WithQueryCommand> with;
+	
+	private List<WithQueryCommand> withToProcess;
+	private BatchCollector withBatchCollector;
+	private TempTableStore tempTableStore;
 
     /**
      * Constructor for RelationalPlan.
@@ -61,13 +75,26 @@ public class RelationalPlan extends ProcessorPlan {
     public void setRootNode(RelationalNode root) {
         this.root = root;
     }
-
+    
+    public void setWith(List<WithQueryCommand> with) {
+		this.with = with;
+	}
+    
     /**
      * @see ProcessorPlan#connectDataManager(ProcessorDataManager)
      */
     public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
-        setContext(context);        
-		connectExternal(this.root, context, dataMgr, bufferMgr);	
+    	if (this.with != null) {
+    		context = context.clone();
+    		tempTableStore = new TempTableStore(context.getConnectionID());
+            tempTableStore.setParentTempTableStore(context.getTempTableStore());
+            context.setTempTableStore(tempTableStore);
+    		for (WithQueryCommand withCommand : this.with) {
+    			withCommand.getCommand().getProcessorPlan().initialize(context, dataMgr, bufferMgr);
+			}
+        } 
+    	setContext(context);
+        connectExternal(this.root, context, dataMgr, bufferMgr);	
     }        
 
 	private void connectExternal(RelationalNode node, CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {		
@@ -94,7 +121,30 @@ public class RelationalPlan extends ProcessorPlan {
 
     public void open()
         throws TeiidComponentException, TeiidProcessingException {
-            
+    	if (this.with != null) {
+    		if (withToProcess == null) {
+    			withToProcess = new LinkedList<WithQueryCommand>(with);
+    		}
+    		while (!withToProcess.isEmpty()) {
+    			WithQueryCommand withCommand = withToProcess.get(0); 
+    			if (withBatchCollector == null) {
+	        		ProcessorPlan plan = withCommand.getCommand().getProcessorPlan();
+					QueryProcessor qp = new QueryProcessor(plan, getContext(), this.root.getBufferManager(), this.root.getDataManager());
+					withBatchCollector = qp.createBatchCollector();
+    			}
+				TupleBuffer tb = withBatchCollector.collectTuples();
+				Create create = new Create();
+				create.setColumns(withCommand.getColumns());
+				create.setTable(withCommand.getGroupSymbol());
+				this.root.getDataManager().registerRequest(getContext(), create, TempMetadataAdapter.TEMP_MODEL.getID(), null, 0);
+				Insert insert = new Insert(withCommand.getGroupSymbol(), withCommand.getColumns(), null);
+        		insert.setTupleSource(tb.createIndexedTupleSource(true));
+        		this.root.getDataManager().registerRequest(getContext(), insert, TempMetadataAdapter.TEMP_MODEL.getID(), null, 0);
+        		this.tempTableStore.setUpdatable(withCommand.getGroupSymbol().getCanonicalName(), false);
+        		withToProcess.remove(0);
+        		withBatchCollector = null;
+			}
+        }            
         this.root.open();
     }
 
@@ -109,7 +159,14 @@ public class RelationalPlan extends ProcessorPlan {
 
     public void close()
         throws TeiidComponentException {
-            
+    	if (this.with != null) {
+    		for (WithQueryCommand withCommand : this.with) {
+    			withCommand.getCommand().getProcessorPlan().close();
+			}
+    		if (this.tempTableStore != null) {
+    			this.tempTableStore.removeTempTables();
+    		}
+        }    
         this.root.close();
     }
 
@@ -120,20 +177,47 @@ public class RelationalPlan extends ProcessorPlan {
         super.reset();
         
         this.root.reset();
+        if (this.with != null) {
+        	withToProcess = null;
+        	withBatchCollector = null;
+        	for (WithQueryCommand withCommand : this.with) {
+				withCommand.getCommand().getProcessorPlan().reset();
+			}
+        }
     }
 
 	public String toString() {
-		return this.root.toString();    
+		StringBuilder sb = new StringBuilder();
+		if (this.with != null) {
+			sb.append(SQLConstants.Reserved.WITH);
+			for (WithQueryCommand withCommand : this.with) {
+				sb.append("\n"); //$NON-NLS-1$
+				sb.append(withCommand.getCommand().getProcessorPlan());
+			}
+		}
+		sb.append(this.root.toString());
+		return sb.toString();
 	}
     
 	public RelationalPlan clone(){
 		RelationalPlan plan = new RelationalPlan((RelationalNode)root.clone());
-		plan.setOutputElements(new ArrayList(( outputCols != null ? outputCols : Collections.EMPTY_LIST )));
+		plan.setOutputElements(outputCols);
+		if (with != null) {
+			List<WithQueryCommand> newWith = LanguageObject.Util.deepClone(this.with, WithQueryCommand.class);
+			for (WithQueryCommand withQueryCommand : newWith) {
+				withQueryCommand.getCommand().setProcessorPlan(withQueryCommand.getCommand().getProcessorPlan().clone());
+			}
+			plan.setWith(newWith);
+		}
 		return plan;
 	}
 	
     public PlanNode getDescriptionProperties() {
-    	return this.root.getDescriptionProperties();
+    	PlanNode node = this.root.getDescriptionProperties();
+    	if (this.with != null) {
+    		AnalysisRecord.addLanaguageObjects(node, AnalysisRecord.PROP_WITH, this.with);
+        }
+    	return node;
     }
     
     /** 
@@ -145,6 +229,16 @@ public class RelationalPlan extends ProcessorPlan {
     
     @Override
     public boolean requiresTransaction(boolean transactionalReads) {
+    	if (this.with != null) {
+    		if (transactionalReads) {
+    			return true;
+    		}
+    		for (WithQueryCommand withCommand : this.with) {
+				if (withCommand.getCommand().getProcessorPlan().requiresTransaction(transactionalReads)) {
+					return true;
+				}
+			}
+    	}
     	return requiresTransaction(transactionalReads, root);
     }
     

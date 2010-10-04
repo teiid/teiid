@@ -266,9 +266,9 @@ public class TempMetadataID implements Serializable {
 	public boolean isScalarGroup() {
 		return this.metadataType == Type.SCALAR;
 	}
-
-	public void setScalarGroup() {
-		this.metadataType = Type.SCALAR;
+	
+	public void setMetadataType(Type metadataType) {
+		this.metadataType = metadataType;
 	}
 
 	public List<TempMetadataID> getPrimaryKey() {

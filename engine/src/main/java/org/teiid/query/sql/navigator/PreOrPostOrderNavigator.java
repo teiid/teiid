@@ -65,6 +65,7 @@ import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
@@ -115,10 +116,12 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     public static final boolean POST_ORDER = false;
     
     private boolean order;
+    private boolean deep;
     
-    public PreOrPostOrderNavigator(LanguageVisitor visitor, boolean order) {
+    public PreOrPostOrderNavigator(LanguageVisitor visitor, boolean order, boolean deep) {
         super(visitor);
         this.order = order;
+        this.deep = deep;
     }
 
     protected void preVisitVisitor(LanguageObject obj) {
@@ -192,6 +195,9 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     }
     public void visit(CommandStatement obj) {
         preVisitVisitor(obj);
+        if (deep) {
+        	visitNode(obj.getCommand());
+        }
         postVisitVisitor(obj);
     }
     public void visit(CompareCriteria obj) {
@@ -247,6 +253,9 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     }
     public void visit(ExistsCriteria obj) {
         preVisitVisitor(obj);
+        if (deep) {
+        	visitNode(obj.getCommand());
+        }
         postVisitVisitor(obj);        
     }
     public void visit(ExpressionSymbol obj) {
@@ -343,6 +352,9 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     }
     public void visit(LoopStatement obj) {
         preVisitVisitor(obj);
+        if (deep) {
+        	visitNode(obj.getCommand());
+        }
         visitNode(obj.getBlock());
         postVisitVisitor(obj);
     }
@@ -396,6 +408,9 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     }
     public void visit(ScalarSubquery obj) {
         preVisitVisitor(obj);
+        if (deep) {
+        	visitNode(obj.getCommand());
+        }
         postVisitVisitor(obj);
     }
     public void visit(SearchedCaseExpression obj) {
@@ -445,16 +460,25 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     public void visit(SubqueryCompareCriteria obj) {
         preVisitVisitor(obj);
         visitNode(obj.getLeftExpression());
+        if (deep) {
+        	visitNode(obj.getCommand());
+        }
         postVisitVisitor(obj);
     }
     public void visit(SubqueryFromClause obj) {
         preVisitVisitor(obj);
+        if (deep) {
+        	visitNode(obj.getCommand());
+        }
         visitNode(obj.getGroupSymbol());
         postVisitVisitor(obj);
     }
     public void visit(SubquerySetCriteria obj) {
         preVisitVisitor(obj);
         visitNode(obj.getExpression());
+        if (deep) {
+        	visitNode(obj.getCommand());
+        }
         postVisitVisitor(obj);
     }
     public void visit(TranslateCriteria obj) {
@@ -608,8 +632,22 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     	postVisitVisitor(obj);
     }
     
+    @Override
+    public void visit(WithQueryCommand obj) {
+    	preVisitVisitor(obj);
+    	visitNodes(obj.getColumns());
+    	if (deep) {
+    		visitNode(obj.getCommand());
+    	}
+    	postVisitVisitor(obj);
+    }
+    
     public static void doVisit(LanguageObject object, LanguageVisitor visitor, boolean order) {
-        PreOrPostOrderNavigator nav = new PreOrPostOrderNavigator(visitor, order);
+    	doVisit(object, visitor, order, false);
+    }
+    
+    public static void doVisit(LanguageObject object, LanguageVisitor visitor, boolean order, boolean deep) {
+        PreOrPostOrderNavigator nav = new PreOrPostOrderNavigator(visitor, order, deep);
         object.acceptVisitor(nav);
     }
 

@@ -57,6 +57,8 @@ public class SetQueryResolver implements CommandResolver {
 
         SetQuery setQuery = (SetQuery) command;
         
+        SimpleQueryResolver.resolveWith(metadata, analysis, setQuery);
+        
         QueryCommand firstCommand = setQuery.getLeftQuery();
         
         QueryResolver.setChildMetadata(firstCommand, setQuery);
@@ -81,7 +83,7 @@ public class SetQueryResolver implements CommandResolver {
         
         if (resolveNullLiterals) {
             for (int i = 0; i < firstProjectTypes.size(); i++) {
-                Class<?> clazz = (Class<?>) firstProjectTypes.get(i);
+                Class<?> clazz = firstProjectTypes.get(i);
                 
                 if (clazz == null || clazz.equals(DataTypeManager.DefaultDataClasses.NULL)) {
                     firstProjectTypes.set(i, DataTypeManager.DefaultDataClasses.STRING);
@@ -107,7 +109,7 @@ public class SetQueryResolver implements CommandResolver {
     }
 
     private void setProjectedTypes(SetQuery setQuery,
-                                   List firstProjectTypes, QueryMetadataInterface metadata) throws QueryResolverException {
+                                   List<Class<?>> firstProjectTypes, QueryMetadataInterface metadata) throws QueryResolverException {
         for (QueryCommand subCommand : setQuery.getQueryCommands()) {
             if (!(subCommand instanceof SetQuery)) {
                 continue;
@@ -117,7 +119,7 @@ public class SetQueryResolver implements CommandResolver {
             if (child.getOrderBy() != null) {
                 for (int j = 0; j < projectedSymbols.size(); j++) {
                     SingleElementSymbol ses = (SingleElementSymbol)projectedSymbols.get(j);
-                    Class targetType = (Class)firstProjectTypes.get(j);
+                    Class<?> targetType = firstProjectTypes.get(j);
                     if (ses.getType() != targetType && orderByContainsVariable(child.getOrderBy(), ses, j)) {
                         String sourceTypeName = DataTypeManager.getDataTypeName(ses.getType());
                         String targetTypeName = DataTypeManager.getDataTypeName(targetType);

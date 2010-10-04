@@ -40,7 +40,7 @@ public class AggregateSymbolCollectorVisitor extends LanguageVisitor {
     public static class AggregateStopNavigator extends PreOrPostOrderNavigator {
         
         public AggregateStopNavigator(LanguageVisitor visitor) {
-            super(visitor, PreOrPostOrderNavigator.POST_ORDER);
+            super(visitor, PreOrPostOrderNavigator.POST_ORDER, false);
         }
         
         public void visit(AggregateSymbol obj) {

@@ -28,6 +28,7 @@ public abstract class QueryExpression extends BaseLanguageObject implements Comm
 
     private OrderBy orderBy;
     private Limit limit;
+    private With with;
 
     public abstract Select getProjectedQuery();
     
@@ -93,4 +94,12 @@ public abstract class QueryExpression extends BaseLanguageObject implements Comm
     public void setLimit(Limit limit) {
         this.limit = limit;
     }
+    
+    public With getWith() {
+		return with;
+	}
+    
+    public void setWith(With with) {
+		this.with = with;
+	}
 }

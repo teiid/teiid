@@ -52,6 +52,7 @@ import org.teiid.query.sql.lang.IsNullCriteria;
 import org.teiid.query.sql.lang.MatchCriteria;
 import org.teiid.query.sql.lang.NotCriteria;
 import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubqueryContainer;
@@ -446,45 +447,17 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
      * @return
      * @throws TeiidComponentException
      */
-    static Object validateSubqueryPushdown(SubqueryContainer subqueryContainer, Object critNodeModelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord) throws TeiidComponentException {
+    public static Object validateSubqueryPushdown(SubqueryContainer subqueryContainer, Object critNodeModelID, 
+    		QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord) throws TeiidComponentException {
     	ProcessorPlan plan = subqueryContainer.getCommand().getProcessorPlan();
     	if (plan != null) {
-	        if(!(plan instanceof RelationalPlan)) {
-	            return null;
-	        }
-	                    
-	        RelationalPlan rplan = (RelationalPlan) plan;
-	        
-	        // Check that the plan is just an access node                
-	        RelationalNode accessNode = rplan.getRootNode();
-	        if(accessNode == null || ! (accessNode instanceof AccessNode) || accessNode.getChildren()[0] != null) {
-	            return null;
-	        }
-	        
-	        // Check that command in access node is a query
-	        Command command = ((AccessNode)accessNode).getCommand();
-	        if(command == null || !(command instanceof Query) || ((Query)command).getIsXML()) {
-	            return null;
-	        }
-	        
-	        // Check that query in access node is for the same model as current node
-	        try {                
-	            Collection subQueryGroups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(command, false);
-	            if(subQueryGroups.size() == 0) {
-	                // No FROM?
-	                return null;
-	            }
-	            GroupSymbol subQueryGroup = (GroupSymbol)subQueryGroups.iterator().next();
-	
-	            Object modelID = metadata.getModelID(subQueryGroup.getMetadataID());
-	            if (critNodeModelID == null) {
-	            	critNodeModelID = modelID;
-	            } else if(!CapabilitiesUtil.isSameConnector(critNodeModelID, modelID, metadata, capFinder)) {
-	                return null;
-	            }
-	        } catch(QueryMetadataException e) {
-	            throw new TeiidComponentException(e, QueryPlugin.Util.getString("RulePushSelectCriteria.Error_getting_modelID")); //$NON-NLS-1$
-	        }  
+    		QueryCommand queryCommand = getQueryCommand(plan);
+    		
+    		if (queryCommand == null) {
+    			return null;
+    		}
+    		
+    		critNodeModelID = validateCommandPushdown(critNodeModelID, metadata, capFinder,	queryCommand);  
     	}
     	if (critNodeModelID == null) {
     		return null;
@@ -509,6 +482,56 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         // Found no reason why this node is not eligible
         return critNodeModelID;
     }
+
+	public static Object validateCommandPushdown(Object critNodeModelID,
+			QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
+			QueryCommand queryCommand) throws TeiidComponentException {
+		// Check that query in access node is for the same model as current node
+		try {                
+		    Collection subQueryGroups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(queryCommand, false);
+		    if(subQueryGroups.size() == 0) {
+		        // No FROM?
+		        return null;
+		    }
+		    GroupSymbol subQueryGroup = (GroupSymbol)subQueryGroups.iterator().next();
+
+		    Object modelID = subQueryGroup.getModelMetadataId();
+		    if (modelID == null) {
+		    	modelID = metadata.getModelID(subQueryGroup.getMetadataID());
+		    }
+		    if (critNodeModelID == null) {
+		    	critNodeModelID = modelID;
+		    } else if(!CapabilitiesUtil.isSameConnector(critNodeModelID, modelID, metadata, capFinder)) {
+		        return null;
+		    }
+		} catch(QueryMetadataException e) {
+		    throw new TeiidComponentException(e, QueryPlugin.Util.getString("RulePushSelectCriteria.Error_getting_modelID")); //$NON-NLS-1$
+		}
+		return critNodeModelID;
+	}
+
+	public static QueryCommand getQueryCommand(ProcessorPlan plan) {
+		if(!(plan instanceof RelationalPlan)) {
+		    return null;
+		}
+		            
+		RelationalPlan rplan = (RelationalPlan) plan;
+		
+		// Check that the plan is just an access node                
+		RelationalNode accessNode = rplan.getRootNode();
+		if(accessNode == null || ! (accessNode instanceof AccessNode) || accessNode.getChildren()[0] != null) {
+		    return null;
+		}
+		
+		// Check that command in access node is a query
+		Command command = ((AccessNode)accessNode).getCommand();
+		if(command == null || !(command instanceof QueryCommand) || ((command instanceof Query) && ((Query)command).getIsXML())) {
+		    return null;
+		}
+		
+		QueryCommand queryCommand = (QueryCommand)command;
+		return queryCommand;
+	}
         
     private void handleException(TeiidComponentException e) {
         this.valid = false;

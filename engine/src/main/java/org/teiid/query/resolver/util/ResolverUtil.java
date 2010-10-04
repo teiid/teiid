@@ -486,7 +486,7 @@ public class ResolverUtil {
 		GroupInfo groupInfo = (GroupInfo)metadata.getFromMetadataCache(group.getMetadataID(), key);
     	
         if (groupInfo == null) {
-        	group = (GroupSymbol)group.clone();
+        	group = group.clone();
             // get all elements from the metadata
             List elementIDs = metadata.getElementIDsInGroupID(group.getMetadataID());
 

@@ -1286,8 +1286,8 @@ Insert insert(ParseInfo info) :
 {
 	Insert insert = new Insert();
 	String group = null;
-	String element = null;
 	List values = null;
+	List<ElementSymbol> columns = null;
 	Option option = null;
 	QueryCommand query = null;
 }
@@ -1295,20 +1295,9 @@ Insert insert(ParseInfo info) :
 	<INSERT> <INTO>
 	group = id()
 
-	[LOOKAHEAD(<LPAREN><ID>)
-		<LPAREN>
-		element = id()
-		{
-			insert.addVariable(new ElementSymbol(element));
-		}
-		(	<COMMA>
-			element = id()
-			{
-				insert.addVariable(new ElementSymbol(element));
-			}
-		)*
-		<RPAREN>
-	]
+	[LOOKAHEAD(<LPAREN><ID>) columns = columnList(false) {
+	  insert.setVariables(columns);
+	}]
 
 	(
 		( <VALUES>
@@ -1337,6 +1326,35 @@ Insert insert(ParseInfo info) :
 		insert.setGroup(new GroupSymbol(group) );
 
 		return insert;
+	}
+}
+
+List<ElementSymbol> columnList(boolean validate) :
+{
+	String element = null;
+	List<ElementSymbol> symbols = new LinkedList<ElementSymbol>();
+}
+{
+   <LPAREN>
+	element = id()
+	{
+		if (validate) {
+			element = validateElementName(element);
+		}
+		symbols.add(new ElementSymbol(element));
+	}
+	(	<COMMA>
+		element = id()
+		{
+			if (validate) {
+				element = validateElementName(element);
+			}
+			symbols.add(new ElementSymbol(element));
+		}
+	)*
+	<RPAREN>
+	{
+		return symbols;
 	}
 }
 
@@ -1446,11 +1464,41 @@ Delete delete(ParseInfo info) :
 QueryCommand queryExpression(ParseInfo info) :
 {
 	QueryCommand query = null;
+	List<WithQueryCommand> withList = null;
+	WithQueryCommand withQueryCommand = null;
 }
 {
+	[<WITH> withQueryCommand = withListElement(info)
+	  {
+	    withList = new LinkedList<WithQueryCommand>();
+	    withList.add(withQueryCommand);
+	  }
+	  (	<COMMA>
+	    withQueryCommand = withListElement(info)
+	    {
+            withList.add(withQueryCommand);
+	    }
+	  )*
+	]
 	query = queryExpressionBody(info)
 	{
+		query.setWith(withList);
 		return query;
+	}
+}
+
+WithQueryCommand withListElement(ParseInfo info) :
+{
+   String name = null;
+   List<ElementSymbol> columns = null;
+   QueryCommand queryExpression = null;
+}
+{
+	name = id()
+	[ columns = columnList(true)] 
+	<AS> <LPAREN> queryExpression = queryExpression(info) <RPAREN>
+	{
+	    return new WithQueryCommand(new GroupSymbol(validateAlias(name)), columns, queryExpression);
 	}
 }
 
@@ -1506,10 +1554,17 @@ QueryCommand queryTerm(ParseInfo info) :
 QueryCommand queryPrimary(ParseInfo info) : 
 {
     QueryCommand query = null;
+    String name = null;
 }
 {
     (
         query=query(info) | 
+        (<TABLE> name=id() {
+           Query q = new Query();
+           q.setSelect(new Select(Arrays.asList(new AllSymbol())));
+           q.setFrom(new From(Arrays.asList(new UnaryFromClause(new GroupSymbol(name)))));
+           query = q;
+        }) |
         (<LPAREN> query=queryExpressionBody(info) <RPAREN>)
     )    
     {

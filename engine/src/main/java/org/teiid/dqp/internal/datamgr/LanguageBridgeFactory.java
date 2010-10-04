@@ -62,6 +62,8 @@ import org.teiid.language.SortSpecification;
 import org.teiid.language.SubqueryComparison;
 import org.teiid.language.SubqueryIn;
 import org.teiid.language.TableReference;
+import org.teiid.language.With;
+import org.teiid.language.WithItem;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.language.SortSpecification.Ordering;
@@ -101,6 +103,7 @@ import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Constant;
@@ -169,6 +172,7 @@ public class LanguageBridgeFactory {
         result.setRightQuery(translate(union.getRightQuery()));
         result.setOrderBy(translate(union.getOrderBy()));
         result.setLimit(translate(union.getLimit()));
+        result.setWith(translate(union.getWith()));
         return result;
     }
 
@@ -209,7 +213,29 @@ public class LanguageBridgeFactory {
 				translate(query.getCriteria()), translate(query.getGroupBy()),
 				translate(query.getHaving()), translate(query.getOrderBy()));
         q.setLimit(translate(query.getLimit()));
+        q.setWith(translate(query.getWith()));
         return q;
+    }
+    
+    public With translate(List<WithQueryCommand> with) {
+    	if (with == null || with.isEmpty()) {
+    		return null;
+    	}
+    	With result = new With();
+    	ArrayList<WithItem> items = new ArrayList<WithItem>(with.size());
+    	for (WithQueryCommand withQueryCommand : with) {
+			WithItem item = new WithItem();
+			item.setTable(translate(withQueryCommand.getGroupSymbol()));
+			if (withQueryCommand.getColumns() != null) {
+				List<ColumnReference> translatedElements = new ArrayList<ColumnReference>(withQueryCommand.getColumns().size());
+		        for (ElementSymbol es: withQueryCommand.getColumns()) {
+		            translatedElements.add(translate(es));
+		        }
+			}
+			item.setSubquery(translate(withQueryCommand.getCommand()));
+		}
+    	result.setItems(items);
+    	return result;
     }
 
     public TableReference translate(FromClause clause) {

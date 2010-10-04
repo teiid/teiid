@@ -205,4 +205,9 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	return true;
     }
     
+    @Override
+    public boolean supportsCommonTableExpressions() {
+    	return true;
+    }
+    
 }

@@ -63,6 +63,8 @@ import org.teiid.language.SortSpecification;
 import org.teiid.language.SubqueryComparison;
 import org.teiid.language.SubqueryIn;
 import org.teiid.language.Update;
+import org.teiid.language.With;
+import org.teiid.language.WithItem;
 
 
 /**
@@ -232,6 +234,16 @@ public class CollectorVisitor<T> implements LanguageObjectVisitor {
     public void visit(IteratorValueSource obj) {
     	checkInstance(obj);    	
     }
+    
+    @Override
+    public void visit(With obj) {
+    	checkInstance(obj); 
+    }
+    
+    @Override
+    public void visit(WithItem obj) {
+    	checkInstance(obj); 
+    }
 
     /**
      * This is a utility method to instantiate and run the visitor in conjunction 
@@ -244,7 +256,7 @@ public class CollectorVisitor<T> implements LanguageObjectVisitor {
     public static <T> Collection<T> collectObjects(Class<T> type, LanguageObject object) {
         CollectorVisitor<T> visitor = new CollectorVisitor<T>(type);
         DelegatingHierarchyVisitor hierarchyVisitor = new DelegatingHierarchyVisitor(visitor, null);
-        object.acceptVisitor(hierarchyVisitor);
+        hierarchyVisitor.visitNode(object);
         return visitor.getCollectedObjects();
     }
     

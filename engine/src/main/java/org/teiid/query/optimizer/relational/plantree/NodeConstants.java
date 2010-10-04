@@ -32,17 +32,18 @@ public final class NodeConstants {
         private Types() {}
 
         static final int NO_TYPE = 0;
-        public static final int ACCESS = 2<<0;
-        public static final int DUP_REMOVE = 2<<1;
-        public static final int JOIN = 2<<2;
-        public static final int PROJECT = 2<<3;
-        public static final int SELECT = 2<<4;
-        public static final int SORT = 2<<5;
-        public static final int SOURCE = 2<<6;
-        public static final int GROUP = 2<<7;
-        public static final int SET_OP = 2<<8;
-        public static final int NULL = 2<<9;
-        public static final int TUPLE_LIMIT = 2<<10;
+        public static final int ACCESS = 1<<0;
+        public static final int DUP_REMOVE = 1<<1;
+        public static final int JOIN = 1<<2;
+        public static final int PROJECT = 1<<3;
+        public static final int SELECT = 1<<4;
+        public static final int SORT = 1<<5;
+        public static final int SOURCE = 1<<6;
+        public static final int GROUP = 1<<7;
+        public static final int SET_OP = 1<<8;
+        public static final int NULL = 1<<9;
+        public static final int TUPLE_LIMIT = 1<<10;
+        public static final int WITH = 1<<11;
     }
 
     /**
@@ -63,6 +64,7 @@ public final class NodeConstants {
             case NodeConstants.Types.SET_OP:        return "SetOperation"; //$NON-NLS-1$
             case NodeConstants.Types.NULL:          return "Null"; //$NON-NLS-1$
             case NodeConstants.Types.TUPLE_LIMIT:   return "TupleLimit"; //$NON-NLS-1$
+            case NodeConstants.Types.WITH:   		return "With"; //$NON-NLS-1$
             default:                                return "Unknown: " + type; //$NON-NLS-1$
         }
     }
@@ -71,6 +73,7 @@ public final class NodeConstants {
     public enum Info {
         ATOMIC_REQUEST,      // Command
         MODEL_ID,            // Object (model ID)
+        IS_COMMON_TABLE,
         PROCEDURE_CRITERIA,
         PROCEDURE_INPUTS,
         PROCEDURE_DEFAULTS,

@@ -222,13 +222,17 @@ public class QueryResolver {
     public static boolean isXMLQuery(Query query, QueryMetadataInterface metadata)
      throws TeiidComponentException, QueryMetadataException, QueryResolverException {
 
+        if (query.getWith() != null && !query.getWith().isEmpty()) {
+        	return false;
+        }
+
         // Check first group
         From from = query.getFrom();
         if(from == null){
             //select with no from
             return false;
         }
-        
+                
         if (from.getClauses().size() != 1) {
             return false;
         }

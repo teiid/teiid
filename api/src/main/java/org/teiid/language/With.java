@@ -20,24 +20,27 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.query.sql.navigator;
+package org.teiid.language;
 
-import org.teiid.query.sql.LanguageObject;
-import org.teiid.query.sql.LanguageVisitor;
+import java.util.List;
 
+import org.teiid.language.visitor.LanguageObjectVisitor;
 
-/** 
- * @since 4.2
- */
-public class PreOrderNavigator extends PreOrPostOrderNavigator {
+public class With extends BaseLanguageObject {
+	
+	private List<WithItem> items;
 
-    public PreOrderNavigator(LanguageVisitor visitor) {
-        super(visitor, PRE_ORDER, false);
-    }
+	public List<WithItem> getItems() {
+		return items;
+	}
+	
+	public void setItems(List<WithItem> items) {
+		this.items = items;
+	}
 
-    public static void doVisit(LanguageObject object, LanguageVisitor visitor) {
-        PreOrderNavigator nav = new PreOrderNavigator(visitor);
-        object.acceptVisitor(nav);
-    }
+	@Override
+	public void acceptVisitor(LanguageObjectVisitor visitor) {
+		visitor.visit(this);
+	}
 
 }

@@ -162,7 +162,7 @@ public class Insert extends ProcedureContainer {
      * Set a collection of variables that replace the existing variables
      * @param vars Variables to be set on this object (ElementSymbols)
      */
-    public void setVariables(Collection vars) {
+    public void setVariables(Collection<ElementSymbol> vars) {
         this.variables.clear();        
         this.variables.addAll(vars);
     }

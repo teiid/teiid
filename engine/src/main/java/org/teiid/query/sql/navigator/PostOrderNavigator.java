@@ -32,7 +32,7 @@ import org.teiid.query.sql.LanguageVisitor;
 public class PostOrderNavigator extends PreOrPostOrderNavigator {
 
     public PostOrderNavigator(LanguageVisitor visitor) {
-        super(visitor, POST_ORDER);
+        super(visitor, POST_ORDER, false);
     }
 
     public static void doVisit(LanguageObject object, LanguageVisitor visitor) {

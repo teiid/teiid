@@ -196,6 +196,13 @@ public class TempTableStore {
         }
     }
     
+    public void setUpdatable(String name, boolean updatable) {
+    	TempTable table = groupToTupleSourceID.get(name);
+    	if (table != null) {
+    		table.setUpdatable(updatable);
+    	}
+    }
+    
     TempTable getOrCreateTempTable(String tempTableID, Command command, BufferManager buffer, boolean delegate) throws QueryProcessingException{
     	TempTable tsID = groupToTupleSourceID.get(tempTableID);
         if(tsID != null) {

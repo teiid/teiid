@@ -24,46 +24,17 @@ package org.teiid.query.sql.navigator;
 
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.lang.ExistsCriteria;
-import org.teiid.query.sql.lang.SubqueryCompareCriteria;
-import org.teiid.query.sql.lang.SubqueryFromClause;
-import org.teiid.query.sql.lang.SubquerySetCriteria;
-import org.teiid.query.sql.symbol.ScalarSubquery;
 
 
 /** 
  * @since 4.2
  */
-public class DeepPostOrderNavigator extends PostOrderNavigator {
+public class DeepPostOrderNavigator extends PreOrPostOrderNavigator {
 
     public DeepPostOrderNavigator(LanguageVisitor visitor) {
-        super(visitor);
+        super(visitor, PreOrPostOrderNavigator.POST_ORDER, true);
     }
 
-    public void visit(ExistsCriteria obj) {
-        visitNode(obj.getCommand());
-        visitVisitor(obj);
-    }
-    public void visit(ScalarSubquery obj) {
-        visitNode(obj.getCommand());
-        visitVisitor(obj);
-    }
-    public void visit(SubqueryCompareCriteria obj) {
-        visitNode(obj.getLeftExpression());
-        visitNode(obj.getCommand());
-        visitVisitor(obj);
-    }
-    public void visit(SubqueryFromClause obj) {
-        visitNode(obj.getCommand());
-        visitNode(obj.getGroupSymbol());
-        visitVisitor(obj);
-    }
-    public void visit(SubquerySetCriteria obj) {
-        visitNode(obj.getCommand());
-        visitNode(obj.getExpression());
-        visitVisitor(obj);
-    }
-    
     public static void doVisit(LanguageObject object, LanguageVisitor visitor) {
         DeepPostOrderNavigator nav = new DeepPostOrderNavigator(visitor);
         object.acceptVisitor(nav);

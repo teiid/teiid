@@ -3042,4 +3042,16 @@ public class TestResolver {
         assertEquals("A.ret", resolvedQuery.getProjectedSymbols().get(0).getName());
     }
     
+    @Test public void testWithDuplidateName() {
+    	helpResolveException("with x as (TABLE pm1.g1), x as (TABLE pm1.g2) SELECT * from x");
+    }
+    
+    @Test public void testWithColumns() {
+    	helpResolveException("with x (a, b) as (TABLE pm1.g1) SELECT * from x");
+    }
+    
+    @Test public void testWithNameMatchesFrom() {
+    	helpResolve("with x as (TABLE pm1.g1) SELECT * from (TABLE x) x");
+    }
+        
 }

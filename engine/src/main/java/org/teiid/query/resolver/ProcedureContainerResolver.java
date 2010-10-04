@@ -37,6 +37,7 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.metadata.TempMetadataID.Type;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.ProcedureReservedWords;
@@ -228,7 +229,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 		GroupSymbol variables = new GroupSymbol(name);
 	    externalGroups.addGroup(variables);
 	    TempMetadataID tid = metadata.addTempGroup(name, symbols);
-	    tid.setScalarGroup();
+	    tid.setMetadataType(Type.SCALAR);
 	    variables.setMetadataID(tid);
 	    return variables;
 	}

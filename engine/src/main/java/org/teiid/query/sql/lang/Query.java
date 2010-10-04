@@ -349,6 +349,8 @@ public class Query extends QueryCommand {
         if(getLimit() != null) {
             copy.setLimit( (Limit) getLimit().clone());
         }
+        
+        copy.setWith(LanguageObject.Util.deepClone(this.getWith(), WithQueryCommand.class));
 
         // Defect 13751: should clone isXML state.
         copy.setIsXML(getIsXML());
@@ -391,6 +393,7 @@ public class Query extends QueryCommand {
                EquivalenceUtil.areEqual(getHaving(), other.getHaving()) &&
                EquivalenceUtil.areEqual(getOrderBy(), other.getOrderBy()) &&
                EquivalenceUtil.areEqual(getLimit(), other.getLimit()) &&
+               EquivalenceUtil.areEqual(getWith(), other.getWith()) &&
                getIsXML() == other.getIsXML() &&
                sameOptionAndHint(other);
     }
