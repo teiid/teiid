@@ -10,11 +10,11 @@
         developers, we provided a base implementation framework.
         If you already have a JCA Connector or some other mechanism to get data from your source system, you can skip this chapter.</para>
 
-    <para>If you are not familiar with JCA API, please read the <ulink url="http://java.sun.com/j2ee/connector/">JCA 1.5 Specification</ulink>. 
+    <para>If you are not familiar with JCA API, please read the JCA 1.5 Specification at <ulink url="http://java.sun.com/j2ee/connector/"/>. 
     There are lot of online tutorials on how to design and build a JCA Connector. The below we show you to build very simple connector, 
     however building actual connector that supports transactions, security can get much more complex.</para>
     
-    <para>Check out the following links <ulink url="http://docs.jboss.org/jbossas/jboss4guide/r4/html/ch7.chapt.html">Connectors on JBoss</ulink> </para>
+    <para>Refer to the JBoss Application Server Connectors documentation at <ulink url="http://docs.jboss.org/jbossas/jboss4guide/r4/html/ch7.chapt.html"/>.</para>
 	
     <section>
 		<title>Using the Teiid Framework</title>
@@ -45,46 +45,44 @@
             attribute for each configuration variable, and then provide both "getter" and "setter" methods for them. 
             Note to use only "java.lang" objects as the attributes, DO NOT use Java primitives for defining and accessing the properties.
             See the following code for an example.</para>
-            <programlisting><![CDATA[public class MyManagedConnectionFactory extends BasicManagedConnectionFactory {
-    @Override
-	public Object createConnectionFactory() throws ResourceException {
-        return new MyConnectionFactory();
-    }
-    
-    // config property name (metadata for these are defined inside the ra.xml)
-    String userName;
-    public String getUserName() {
-        return this.userName;
-    }
-    public void setUserName(String name) {
-        this.userName = name;
-    }
-    
-    // config property count  (metadata for these are defined inside the ra.xml)
-    Integer count;
-    public Integer getCount() {
-        return this.count;
-    }
-    public void setCount(Integer value) {
-        this.count = value;
-    }               
+            <programlisting language="Java" role="JAVA"><![CDATA[public class MyManagedConnectionFactory extends BasicManagedConnectionFactory 
+{
+   @Override
+   public Object createConnectionFactory() throws ResourceException 
+   {
+      return new MyConnectionFactory();
+   }
+
+   // config property name (metadata for these are defined inside the ra.xml)
+   String userName;
+   public String getUserName()          {  return this.userName;  }
+   public void setUserName(String name){  this.userName = name;  }
+
+   // config property count  (metadata for these are defined inside the ra.xml)
+   Integer count;
+   public Integer getCount()            {  return this.count;  }
+   public void setCount(Integer value) {  this.count = value; }               
+
 }]]></programlisting>
         </section>
 		<section>
 			<title>Define the Connection Factory class</title>
 			<para>Extend the <code>BasicConnectionFactory</code> class, and provide a implementation for the "getConnection()" method.</para>
-          <programlisting><![CDATA[public class MyConnectionFactory extends BasicConnectionFactory {
-    @Override
-    public MyConnection getConnection() throws ResourceException {
-        return new MyConnection();
-    }
+          <programlisting language="Java" role="JAVA"><![CDATA[public class MyConnectionFactory extends BasicConnectionFactory 
+{
+   @Override
+   public MyConnection getConnection() throws ResourceException 
+   {
+      return new MyConnection();
+   }  
 }]]></programlisting>
           <para>Since the Managed connection object created the "ConnectionFactory" class it has access to all the configuration 
           parameters, if "getConnection" method needs to do pass any of credentials to the underlying EIS system. 
           The Connection Factory class can also get reference to the calling user's <code>javax.security.auth.Subject</code> during 
           "getConnection" method by calling  
-    
-          <programlisting><![CDATA[Subject subject = ConnectionContext.getSubject();]]></programlisting>      
+          </para>
+          <programlisting language="Java" role="JAVA"><![CDATA[Subject subject = ConnectionContext.getSubject();]]></programlisting>      
+          <para>
           This "Subject" object can give access to logged-in user's credentials and roles that are defined. Note that this may be null.
           </para>
           <para>Note that you can define "security-domain" for this resource adapter, that is separate from 
@@ -98,29 +96,34 @@
             of the Connection object in the Translator. If your
             connection is stateful, then override "isAlive()" and "cleanup()" methods and provide proper implementations. These are called
             to check if a Connection is stale or need to flush them from the connection pool etc. by the Container.</para>
-          <programlisting><![CDATA[public class MyConnection extends BasicConnection {
-
-     public void doSomeOperation(command){
-         // do some operation with EIS system..
-         // This is method you use in the Translator, you should know
-         // what need to be done here for your source..
-     }
+          <programlisting language="Java" role="JAVA"><![CDATA[public class MyConnection extends BasicConnection 
+{
+   public void doSomeOperation(command)
+   {
+      // do some operation with EIS system..
+      // This is method you use in the Translator, you should know
+      // what need to be done here for your source..
+   }
      
-     @Override
-     public boolean isAlive() {
-         return true;
-     }
-      @Override
-     public void cleanUp() {
+   @Override
+   public boolean isAlive() 
+   {
+      return true;
+   }
+   
+   @Override
+   public void cleanUp() 
+   {
          
-     }
+   }
 }]]></programlisting> 
         </section>
         
         <section>
             <title>XA Transactions</title>
-            <para>If you EIS source can participate in XA transactions, then on your <link linkend="connection">Connection</link> object, 
-            override the "getXAResource()" method and provide the "XAResource" object for the EIS system. 
+            <para>If your EIS source can participate in XA transactions, then on your Connection object, 
+            override the "getXAResource()" method and provide the "XAResource" object for the EIS system.
+            Refer to <xref linkend="connection"/>.
             Also, You need to extend the "BasicResourceAdapter" class and provide implementation for method
             "public XAResource[] getXAResources(ActivationSpec[] specs)" to participate in crash recovery. </para>
             
@@ -131,17 +134,26 @@
         
         <section>
             <title>Define the configuration properties in a "ra.xml" file</title>
-            <para>Define a "ra.xml" file (sample shown in the <link linkend="appendix_a">appendix-a</link>) in "META-INF" directory of your RAR file.
-            For every configuration property defined inside the <link linkend="managed_connection_factory">ManagedConnectionFactory</link>
+            <para>
+            Define a "ra.xml" file in "META-INF" directory of your RAR file.  
+            An example file is provided in <xref linkend="appendix_a"/>.
+            </para>
+            <para>
+            For every configuration property defined inside the ManagedConnectionFactory
              class, define the following XML configuration 
             fragment inside the "ra.xml" file. These properties are used by user to configure instance of this Connector inside a 
             Container. Also, during the startup the Container reads these properties from this file and knows how to inject 
-            provided values in the "-ds.xml" file into a instance of "ManagedConnectionFactory" to create the Connection.</para>
-          <programlisting><![CDATA[<config-property>
-    <description>{$display:"${display-name}",$description:"${description}", $allowed="${allowed}", $required="${true|false}", $defaultValue="${default-value}"}</description>
-    <config-property-name>${property-name}</config-property-name>
-    <config-property-type>${property-type}</config-property-type>
-    <config-property-value>${optioal-property-value}</config-property-value>
+            provided values in the "-ds.xml" file into a instance of "ManagedConnectionFactory" to create the Connection.
+            Refer to <xref linkend="managed_connection_factory"/>.
+            </para>
+          <programlisting role="XML" language="XML"><![CDATA[<config-property>
+   <description>
+      {$display:"${display-name}",$description:"${description}", $allowed="${allowed}", 
+      $required="${true|false}", $defaultValue="${default-value}"}
+   </description>
+   <config-property-name>${property-name}</config-property-name>
+   <config-property-type>${property-type}</config-property-type>
+   <config-property-value>${optioal-property-value}</config-property-value>
 </config-property>]]></programlisting> 
            
            <para>The format and contents of "&lt;description&gt;" element may be used as extended metadata for tooling.  The special format must begin and end with curly braces e.g. {...}.  This use of the special format and all properties is optional.  Property names begin with '$' and are separated from the value with ':'.  Double quotes identifies a single value.  A pair of square brackets, e.g. [...], containing comma separated double quoted entries denotes a list value. 
@@ -193,37 +205,39 @@
               <para>Maven: If you are using maven, use &lt;packaging&gt; element value as "rar". Teiid uses maven, you can look at any of
               the "connector" projects for sample "pom.xml" file. Here is sample pom.xml file.</para>
               
-              <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <modelVersion>4.0.0</modelVersion>
-    <artifactId>connector-{name}</artifactId>
-    <groupId>org.company.project</groupId>
-    <name>Name Connector</name>
-    <packaging>rar</packaging>
-    <description>This connector is a sample</description>
+              <programlisting role="XML" language="XML"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <modelVersion>4.0.0</modelVersion>
+   <artifactId>connector-{name}</artifactId>
+   <groupId>org.company.project</groupId>
+   <name>Name Connector</name>
+   <packaging>rar</packaging>
+   <description>This connector is a sample</description>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-common-core</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>javax.resource</groupId>
-            <artifactId>connector-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
+   <dependencies>
+      <dependency>
+         <groupId>org.jboss.teiid</groupId>
+         <artifactId>teiid-api</artifactId>
+         <scope>provided</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.jboss.teiid</groupId>
+         <artifactId>teiid-common-core</artifactId>
+         <scope>provided</scope>
+      </dependency>
+      <dependency>
+         <groupId>javax.resource</groupId>
+         <artifactId>connector-api</artifactId>
+         <scope>provided</scope>
+      </dependency>
+   </dependencies>
+
 </project>]]></programlisting>                
             </listitem>
          </itemizedlist>
         <para>Make sure that the RAR file, under its "META-INF" directory has the "ra.xml" file.  If you are using maven 
-        see <ulink url="http://maven.apache.org/plugins/maven-rar-plugin/"></ulink>In the root of the RAR file, 
+        refer to <ulink url="http://maven.apache.org/plugins/maven-rar-plugin/"/>.  In the root of the RAR file, 
         you can embed the JAR file containing your connector code and any dependent library JAR files. </para>
     </section>
     
@@ -239,25 +253,29 @@
         
         <itemizedlist>
             <listitem>
-                <para>Create "${name}-ds.xml" file, and copy it into "deploy" directory of JBoss AS.
-                  <programlisting><![CDATA[<!DOCTYPE connection-factories PUBLIC
-          "-//JBoss//DTD JBOSS JCA Config 1.5//EN"
-          "http://www.jboss.org/j2ee/dtd/jboss-ds_1_5.dtd">
+                <para>
+                Create "${name}-ds.xml" file, and copy it into "deploy" directory of JBoss AS.
+                </para>
+                <programlisting language="XML" role="XML"><![CDATA[<!DOCTYPE connection-factories PUBLIC 
+   "-//JBoss//DTD JBOSS JCA Config 1.5//EN" "http://www.jboss.org/j2ee/dtd/jboss-ds_1_5.dtd">
 
 <connection-factories>
-    <no-tx-connection-factory>
-        <jndi-name>${jndi-name}</jndi-name>
-        <rar-name>${name}.rar</rar-name>
-        <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>
-        
-        <!-- define all the properties defined in the "ra.xml" that required or needs to be modified from defaults -->
-        <!-- each property is defined in single element --> 
-        <config-property name="prop-name" type="java.lang.String">prop-value</config-property>
-        
-    </no-tx-connection-factory>
+      <no-tx-connection-factory>
+         <jndi-name>${jndi-name}</jndi-name>
+         <rar-name>${name}.rar</rar-name>
+         <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>
+
+   <!--  
+   define all the properties defined in the "ra.xml" that required or needs to be 
+   modified from defaults each property is defined in single element 
+   --> 
+         <config-property name="prop-name" type="java.lang.String">prop-value</config-property>
+
+</no-tx-connection-factory>
 </connection-factories>]]></programlisting>     
-                  There are lot more properties that you can define for pooling, transactions, security etc in this file. 
-                  Check JBoss AS documentation for all the avaialble properties.           
+                <para>  
+                There are lot more properties that you can define for pooling, transactions, security etc in this file. 
+                Check JBoss AS documentation for all the avaialble properties.           
                 </para>
             </listitem>
             <listitem>

@@ -8,37 +8,88 @@
         <para>
             LoginModules are an essential part of the JAAS security
             framework and provide Teiid customizable user authentication and the
-            ability to reuse existing LoginModules defined for JBossAS. See
-            <ulink
-                url="http://docs.jboss.org/jbossas/admindevel326/html/ch8.chapter.html">JBossAS Security</ulink>
-            for general information on configuring security in JBossAS.</para>
+            ability to reuse existing LoginModules defined for JBossAS. Refer to 
+            the JBoss Application Server security documentation for information about 
+            configuring security in JBoss Application Server,  
+            <ulink url="http://docs.jboss.org/jbossas/admindevel326/html/ch8.chapter.html"/>.
+            </para>
     
 		<section>
 			<title>Built-in LoginModules</title>
-			<para>JBossAS provides several LoginModules for common authentication needs, such as authenticating from text files or LDAP. 
-            The below are are some of the available in JBoss AS </para>
+			<para>
+			JBoss Application Server provides several LoginModules for common 
+			authentication needs, such as authenticating from text files or LDAP. 
+         </para>
 
-            <para>See for all the available <ulink url="http://community.jboss.org/docs/DOC-11287">  login modules.</ulink></para>
+         <para>
+         Below are are some of those available in JBoss Application Server:
+         </para>
+         
+         <variablelist>
 
-	        <para>See <ulink url="http://community.jboss.org/docs/DOC-12510">UserRoles LoginModule configuration</ulink> 
-            for utilizing simple file based authentication.</para>
-            <para>See <ulink url="http://community.jboss.org/docs/DOC-11253">LDAP LoginModule configuration</ulink> for
-             utilizing LDAP based authentication. </para>
-            <para>See <ulink url="http://community.jboss.org/docs/DOC-9511">Database LoginModule configuration</ulink> for
-             utilizing Database based authentication. </para>
+            <varlistentry>
+               <term>UserRoles LoginModule</term>
+               <listitem>
+                  <para>
+                  Login module that uses simple file based authentication. 
+                  </para>
+                  <para>
+                  Refer to <ulink url="http://community.jboss.org/docs/DOC-12510"/>.
+                  </para>
+               </listitem>
+               </varlistentry>
+               <varlistentry>
+                  <term>LDAP LoginModule</term>
+               <listitem>
+                  <para>
+                  Login module that uses LDAP based authentication.
+                  </para>
+                  <para>
+                  Refer to <ulink url="http://community.jboss.org/docs/DOC-11253"/>.  
+                  </para>
+               </listitem>
+               </varlistentry>
+               <varlistentry>
+                  <term>Database LoginModule</term>
+               <listitem>
+                  <para>
+                  Login module that uses Database-based authentication.
+                  </para>
+                  <para>
+                  Refer to <ulink url="http://community.jboss.org/docs/DOC-9511"/>.
+                  </para>
+               </listitem>
+               </varlistentry>
+               <varlistentry>
+                  <term>Cert LoginModule</term>
+               <listitem>
+                  <para>
+                  Login module that uses X509 certificate based authentication. 
+                  </para>
+                  <para>
+                  See <ulink url="http://community.jboss.org/docs/DOC-9160"/>.
+                  </para>
+               </listitem>
+            </varlistentry>
+         
+         </variablelist>
 
-            <para>See <ulink url="http://community.jboss.org/docs/DOC-9160">Cert LoginModule configuration</ulink> for
-             utilizing X509 certificate based authentication. </para>
-		</section>
+         <para>
+         For all the available login modules refer to <ulink url="http://community.jboss.org/docs/DOC-11287"/>.
+         </para>
+
+      </section>
+		
 		<section>
 			<title>Custom LoginModules</title>
 			<para>
-				If your authentication needs go beyond the provided LoginModules, please consult the
-				<ulink url="http://java.sun.com/j2se/1.5.0/docs/guide/security/jaas/JAASLMDevGuide.html">JAAS development guide</ulink>.
+				If your authentication needs go beyond the provided LoginModules, please refer 
+				to the JAAS development guide at 
+				<ulink url="http://java.sun.com/j2se/1.5.0/docs/guide/security/jaas/JAASLMDevGuide.html"/>.
 				There are also numerous guides available.
 			</para>
             
-            <para>If you are extending one of the built-in LoginModules, please see 
-            <ulink url="http://community.jboss.org/docs/DOC-9466">this</ulink>.</para>
+            <para>If you are extending one of the built-in LoginModules, refer to  
+            <ulink url="http://community.jboss.org/docs/DOC-9466"/>.</para>
 		</section>
 </chapter>

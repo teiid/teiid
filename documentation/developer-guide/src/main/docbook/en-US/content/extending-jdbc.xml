@@ -40,7 +40,7 @@
       <section>
         <title>Capabilities Extension</title>
         <para>This extension must override the methods that begin with "supports" that describe translator capabilities.
-        For all the available translator capabilities please see <link linkend="translator_capabilities">this</link>.</para>
+        Refer to <xref linkend="translator_capabilities"/> for all the available translator capabilities.</para>
         
         <para>The most common example is adding 
         support for a scalar function – this requires both declaring that the translator has the capability 
@@ -59,15 +59,20 @@
           	<para>Change basic SQL syntax options.  See the useXXX methods, e.g. useSelectLimit returns true for SQLServer to indicate that limits are applied in the SELECT clause.</para>
           </listitem>
           <listitem>
-            <para>Register one or more <link linkend="function_modifiers">FunctionModifiers</link> that define how a scalar function should be modified or transformed.</para>
+            <para>Register one or more FunctionModifiers that define how a scalar function should be modified or transformed.</para>
           </listitem>
           <listitem>
-            <para>Modify a LanguageObject. - see the translate, translateXXX, and <link linkend="function_modifiers">FunctionModifiers</link>.translate methods.  Modify the passed in object and return null to indicate that the standard syntax output should be used.</para>
+            <para>Modify a LanguageObject. - see the translate, translateXXX, and FunctionModifiers.translate methods.  Modify the passed in object and return null to indicate that the standard syntax output should be used.</para>
           </listitem>
           <listitem>
-            <para>Change the way SQL strings are formed for a LanguageObject. - - see the translate, translateXXX, and <link linkend="function_modifiers">FunctionModifiers</link>.translate methods.  Return a list of parts, which can contain strings and LanguageObjects, that will be appended in order to the SQL string.  If the in coming LanguageObject appears in the returned list it will not be translated again.</para>
+            <para>Change the way SQL strings are formed for a LanguageObject. - - see the translate, translateXXX, and FunctionModifiers.translate methods.  Return a list of parts, which can contain strings and LanguageObjects, that will be appended in order to the SQL string.  If the in coming LanguageObject appears in the returned list it will not be translated again.</para>
           </listitem>
       </itemizedlist>
+      
+      <para>
+      Refer to <xref linkend="function_modifiers"/>.
+      </para>
+      
       </section>
       
       <section>
@@ -86,7 +91,7 @@
     
       <section>
     <title>Adding Function Support</title>
-      <para>See <link linkend="udfs">User Defined Functions</link> for adding new functions to Teiid.  This example will show you how to declare support for the function 
+      <para>Refer to <xref linkend="udfs"/> for adding new functions to Teiid.  This example will show you how to declare support for the function 
       and modify how the function is passed to the data source.</para>
       <para>Following is a summary of all coding steps in supporting a new scalar function:</para>
       <orderedlist>
@@ -99,25 +104,27 @@
       </orderedlist>      
       <para>There is a capabilities method getSupportedFunctions() that declares all supported scalar functions.</para>
       <informalexample>
-      	<para>An example of an extended capabilities class to add support for the “abs” absolute value function:</para>
-        <programlisting><![CDATA[package my.connector;
-            
+      	<para>An example of an extended capabilities class to add support for the "abs" absolute value function:</para>
+        <programlisting language="Java" role="JAVA"><![CDATA[package my.connector;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class ExtendedJDBCExecutionFactory extends JDBCExecutionFactory {
-    @Override
-    public List getSupportedFunctions() {
-        List supportedFunctions = new ArrayList();
-        supportedFunctions.addAll(super.getSupportedFunctions());
-        supportedFunctions.add("ABS"); 
-        return supportedFunctions;
-    }
+public class ExtendedJDBCExecutionFactory extends JDBCExecutionFactory 
+{
+   @Override
+   public List getSupportedFunctions() 
+   {
+      List supportedFunctions = new ArrayList();
+      supportedFunctions.addAll(super.getSupportedFunctions());
+      supportedFunctions.add("ABS"); 
+      return supportedFunctions;
+   }
 }]]></programlisting></informalexample>      
           <para>In general, it is a good idea to call super.getSupportedFunctions() to ensure that you retain any function 
           support provided by the translator you are extending.</para>
           <para>This may be all that is needed to support a Teiid function if the JDBC data source supports the 
-          same syntax as Teiid.  The built-in SQL translation will translate most functions as: “function(arg1, arg2, …)”.</para>       
+          same syntax as Teiid.  The built-in SQL translation will translate most functions as: "function(arg1, arg2, …)".</para>       
     <section id="function_modifiers">
       <title>Using FunctionModifiers</title>
       <para>In some cases you may need to translate the function differently or even insert 
@@ -129,18 +136,19 @@ public class ExtendedJDBCExecutionFactory extends JDBCExecutionFactory {
 <informalexample>      
       <para>An example of overriding the translate method to change the MOD(a, b) function into an infix operator for Sybase (a % b).  The translate method returns a list of strings and language objects that will be assembled by the translator into a final string.  The strings will be used as is and the language objects will be further processed by the translator.</para>
       
-      <programlisting><![CDATA[public class ModFunctionModifier implements FunctionModifier {
-          
-    public List translate(Function function) {
-        List parts = new ArrayList();
-        parts.add("(");        
-        Expression[] args = function.getParameters();
-        parts.add(args[0]);
-        parts.add(" % "); 
-        parts.add(args[1]);
-        parts.add(")");    
-        return parts;
-    }
+      <programlisting language="Java" role="JAVA"><![CDATA[public class ModFunctionModifier implements FunctionModifier 
+{
+   public List translate(Function function) 
+   {
+      List parts = new ArrayList();
+      parts.add("(");        
+      Expression[] args = function.getParameters();
+      parts.add(args[0]);
+      parts.add(" % "); 
+      parts.add(args[1]);
+      parts.add(")");    
+      return parts;
+   }
 }]]></programlisting> 
 </informalexample>   
       
@@ -150,8 +158,8 @@ public class ExtendedJDBCExecutionFactory extends JDBCExecutionFactory {
       <table frame='all'>
         <title>Common Modifiers</title>
         <tgroup cols='2' align='left' colsep='1' rowsep='1'>
-          <colspec colname='c1' colwidth=".4*"/>
-          <colspec colname='c2' colwidth="1*"/>
+          <colspec colname='c1' colwidth="2*"/>
+          <colspec colname='c2' colwidth="5*"/>
           <thead>      
             <row>
               <entry><para>Modifier</para></entry>
@@ -161,7 +169,7 @@ public class ExtendedJDBCExecutionFactory extends JDBCExecutionFactory {
           <tbody>
             <row>
               <entry><para>AliasModifier</para></entry>
-              <entry><para>Handles simply renaming a function (“ucase” to “upper” for example)</para></entry>
+              <entry><para>Handles simply renaming a function ("ucase" to "upper" for example)</para></entry>
             </row>
             <row>
               <entry><para>EscapeSyntaxModifier</para></entry>
@@ -172,18 +180,20 @@ public class ExtendedJDBCExecutionFactory extends JDBCExecutionFactory {
       </table>
       <para>To register the function modifiers for your supported functions, 
       you must call the <code>ExecutionFactory.registerFunctionModifier(String name, FunctionModifier modifier)</code> method.
-      <programlisting><![CDATA[public class ExtendedJDBCExecutionFactory extends JDBCExecutionFactory
-              
-	@Override
-	public void start() {
-	    super.start();
-	    
-	    // register functions.
-	    registerFunctionModifier("abs", new MyAbsModifier()); 
-	    registerFunctionModifier("concat", new AliasModifier(“concat2”)); 
-	}
-}]]></programlisting></para>
-      <para>Support for the two functions being registered (“abs” and “concat”) must be declared 
+      </para>
+      <programlisting language="Java" role="JAVA"><![CDATA[public class ExtendedJDBCExecutionFactory extends JDBCExecutionFactory
+{              
+   @Override
+   public void start() 
+   {
+      super.start();
+
+      // register functions.
+      registerFunctionModifier("abs", new MyAbsModifier()); 
+      registerFunctionModifier("concat", new AliasModifier("concat2")); 
+   }
+}]]></programlisting>
+      <para>Support for the two functions being registered ("abs" and "concat") must be declared 
       in the capabilities as well.  Functions that do not have modifiers registered will be translated as usual.  
       </para>
     </section>
@@ -192,10 +202,13 @@ public class ExtendedJDBCExecutionFactory extends JDBCExecutionFactory {
   <section>
     <title>Installing Extensions</title>
     <para>Once you have developed an extension to the JDBC translator, you must install it into the Teiid Server. 
-    The process of <link linkend="translator_package">packaging</link> or <link linkend="translator_deploy">deploying</link> the 
+    The process of packaging or deploying the 
     extended JDBC translators is exactly as any other other translator. Since the RDMS is accessible already through its JDBC
     driver, there is no need to develop a resource adapter for this source as JBoss AS provides a wrapper JCA connector (DataSource)
     for any JDBC driver. 
+     </para>
+     <para>
+     Refer to <xref linkend="translator_package"/> and <xref linkend="translator_deploy"/> for more details.
      </para>
      </section>
 </chapter>

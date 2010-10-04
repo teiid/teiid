@@ -36,7 +36,7 @@
           </dependency>
         </dependencies>
         <configuration>
-          <sourceDocumentName>main.xml</sourceDocumentName>
+          <sourceDocumentName>Developer_Guide.xml</sourceDocumentName>
           <imageResource>
             <directory>${basedir}/src/main/docbook/en-US</directory>
             <excludes>

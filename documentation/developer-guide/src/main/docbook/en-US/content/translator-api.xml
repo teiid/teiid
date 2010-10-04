@@ -32,22 +32,26 @@
             <para>Every software program requires some external configuration, that defines ways user can alter the behavior of a program.
              If this translator needs configurable properties define a variable for every property  as an attribute in the extended
              "ExecutionFactory" class. Then define a "get" and "set" methods for each of them. Also, annotate each "get" method with
-              <code>@TranslatorProperty</code> annotation and provide the metadata about the property. For example, if you need a
-              property called "foo",
-                    <programlisting><![CDATA[private String foo = "balh";
-
+              <code>@TranslatorProperty</code> annotation and provide the metadata about the property. 
+             </para>
+             <para>
+             For example, if you need a property called "foo",  by providing the annotation on 
+             these properties, the Teiid tooling will automatically interrogate and provide 
+             graphical way to configure your Translator. 
+             </para>
+                    <programlisting language="Java" role="JAVA"><![CDATA[private String foo = "blah";
 @TranslatorProperty(display="Foo property", description="description about Foo") 
-public String getFoo() {
-    return foo;
+public String getFoo() 
+{
+   return foo;
 }
 
-public void setFoo(String value) {
-    return this.foo = value;
+public void setFoo(String value) 
+{
+   return this.foo = value;
 }]]> </programlisting>
-                    
-                    by providing the annotation on these properties, the Teiid tooling will automatically interrogate and 
-                    provide graphical way to configure your
-                    Translator. Only java primitive (int), primitive object wrapper (java.lang.Integer), or Enum types are supported as Translator properties. 
+                    <para>
+                    Only java primitive (int), primitive object wrapper (java.lang.Integer), or Enum types are supported as Translator properties. 
                     The default value will be derived from calling the getter, if available, on a newly constructed instance. 
                     All properties <emphasis>should</emphasis> have a default value. If there is no applicable default, then the property should be marked in the annotation as required.  
                     Initialization will fail if a required property value is not provided.
@@ -84,7 +88,7 @@ public void setFoo(String value) {
             <title>TranslatorCapabilities</title>
             <para>These are various methods that typically begin with method 
                     signature "supports" on the "ExecutionFactory" class. These methods need to be overridden to describe the execution 
-                    capabilities of the Translator.  See <link linkend="translator_capabilities">Translator Capabilities</link> for more on these methods.</para>
+                    capabilities of the Translator.  Refer to <xref linkend="translator_capabilities"/> for more on these methods.</para>
         </section>     
         
         <section>
@@ -161,16 +165,19 @@ public void setFoo(String value) {
 			</para>
 		</section>
 	</section>
+	
 	<section>
-		<title>Executing Commands</title>
-		<section>
+	   <title>Executing Commands</title>
+	   <section>
 			<title>Execution Modes</title>
-			<para>
-				The Teiid query engine uses the "ExecutionFactory" class to obtain the "Execution" interface for the command it is
-				executing. The actual queries themselves are sent to translators in the form of a set of objects, which are further
-				described in <link linkend="command_language">Command Language</link>.  
-                translators are allowed to support any subset of the available execution modes.
-			</para>
+         <para>
+         The Teiid query engine uses the "ExecutionFactory" class to obtain the "Execution" 
+         interface for the command it is executing. The actual queries themselves are sent 
+         to translators in the form of a set of objects, which are further described in 
+         Command Language. Refer to <xref linkend="command_language"/>. Translators are 
+         allowed to support any subset of the available execution modes.
+         </para>
+			
 			<table frame='all'>
 				<title>Types of Execution Modes</title>
 				<tgroup cols='3' align='left' colsep='1' rowsep='1'>
@@ -311,9 +318,8 @@ public void setFoo(String value) {
 		package. These objects can be combined to represent any possible
 		command that Teiid may send to the Translator. However, it is possible
 		to notify Teiid that your Translator can only accept certain kinds of
-		constructs via the capabilities defined on the "ExecutionFactory" class. See the section on using
-		<link linkend="translator_capabilities">Translator Capabilities</link>
-		for more information.
+		constructs via the capabilities defined on the "ExecutionFactory" class. Refer to 
+		<xref linkend="translator_capabilities"/> for more information.
 	</para>
 	<para>The language objects all extend from the <code>LanguageObject</code> interface.
 		Language objects should be thought of as a tree where each node is a
@@ -322,7 +328,7 @@ public void setFoo(String value) {
 	<para>All commands sent to your Translator are in the form of these
 		language trees, where the root of the tree is a subclass of <code>Command</code>.
 		Command has several sub-interfaces, namely: 
-        
+   </para>     
         <itemizedlist>
             <listitem><para><code>QueryExpression</code></para></listitem>
             <listitem><para><code>Insert</code></para></listitem>
@@ -331,11 +337,13 @@ public void setFoo(String value) {
             <listitem><para><code>BatchedUpdates</code></para></listitem>
             <listitem><para><code>Call</code></para></listitem>
         </itemizedlist>        
-        
-		Important components of	these commands are expressions, criteria, and joins, which are examined
-		in closer detail below. Also see the <ulink url="&javaDocUrl;">Teiid JavaDocs</ulink>
-		for more on the classes and interfaces described here.
-	</para>
+
+      <para>
+      Important components of	these commands are expressions, criteria, and joins, 
+      which are examined in closer detail below. For more on the classes and interfaces 
+      described here, refer to the Teiid JavaDocs <ulink url="&javaDocUrl;"/>.
+      </para>
+	
     <section>
       <title>Expressions</title>
 		<para>An expression represents a single value in context, although in
@@ -430,9 +438,8 @@ public void setFoo(String value) {
         <code>Join</code>
         s with a single root. This latter form
         is the ANSI perfered style. If you wish all pushdown queries containing joins to be in ANSI style have the
-        capability "useAnsiJoin" return true. See
-        <link linkend="command_form_capabilities">Command Form Capabilities</link>
-        for more information.
+        capability "useAnsiJoin" return true. Refer to 
+        <xref linkend="command_form_capabilities"/> for more information.
     </para>
     </section>
 	<section>
@@ -542,7 +549,7 @@ public void setFoo(String value) {
     
   <section>
     <title>Runtime Metadata</title>
-		<para>Teiid uses a library of metadata, known as "runtime metadata” for
+		<para>Teiid uses a library of metadata, known as "runtime metadata" for
 			each virtual database that is deployed in Teiid. The runtime metadata
 			is a subset of metadata as defined by models in the Teiid models that
 			compose the virtual database.  While builing your VDB in the Designer, you can define what 
@@ -578,14 +585,12 @@ public void setFoo(String value) {
 				<title>Obtaining Metadata Properties</title>
 				      <para>The process of getting a Table's properties is sometimes needed for translator development.  For example 
       to get the "NameInSource" property or all extension properties:</para>
-      <programlisting><![CDATA[
-//getting the Table metadata from an Table is straight-forward
+      <programlisting language="Java" role="JAVA"><![CDATA[//getting the Table metadata from an Table is straight-forward
 Table table = runtimeMetadata.getTable("table-name");
 String contextName = table.getNameInSource();
 
 //The props will contain extension properties
-Map<String, String> props = table.getProperties();       
-      ]]></programlisting>
+Map<String, String> props = table.getProperties();]]></programlisting>
 			</example>
       
     </section>
@@ -661,8 +666,7 @@ Map<String, String> props = table.getProperties();
 			not processing order.</para>
 		<para>Write code to execute your visitor using the utility methods on
 			DelegatingHierarchyVisitor:</para>
-      <programlisting><![CDATA[
-// Get object tree 
+      <programlisting language="Java" role="JAVA"><![CDATA[// Get object tree 
 LanguageObject objectTree = …
 
 // Create your visitor initialize as necessary
@@ -672,8 +676,7 @@ MyVisitor visitor = new MyVisitor();
 DelegatingHierarchyVisitor.preOrderVisit(visitor, objectTree);
 
 // Retrieve state collected while visiting
-int count = visitor.getCount();       
-      ]]></programlisting>      
+int count = visitor.getCount();]]></programlisting>      
     </section>
   </section>
   <section id="translator_capabilities">
@@ -698,9 +701,9 @@ int count = visitor.getCount();
         <table frame='all'>
           <title>Available Capabilities</title>
           <tgroup cols='3' align='left' colsep='1' rowsep='1'>
-            <colspec colname='c1' colwidth="1.5*" />
+            <colspec colname='c1' colwidth="1*" />
             <colspec colname='c2' colwidth="1*" />
-            <colspec colname='c3' colwidth="2*" />
+            <colspec colname='c3' colwidth="3*" />
             <thead>
               <row>
                 <entry>
@@ -824,7 +827,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Translator can support comparison criteria with the operator "=”.</para>
+                  <para>Translator can support comparison criteria with the operator "=".</para>
                 </entry>
               </row>
               <row>
@@ -835,7 +838,7 @@ int count = visitor.getCount();
                   <para/>
                 </entry>
                 <entry>
-                  <para>Translator can support comparison criteria with the operator "&gt;” or "&lt;".</para>
+                  <para>Translator can support comparison criteria with the operator "&gt;" or "&lt;".</para>
                 </entry>
               </row>
               <row>
@@ -1140,7 +1143,7 @@ int count = visitor.getCount();
                   <para />
                 </entry>
                 <entry>
-                  <para>Translator can support "searched” CASE expressions anywhere that expressions are
+                  <para>Translator can support "searched" CASE expressions anywhere that expressions are
                     accepted.</para>
                 </entry>
               </row>
@@ -1287,8 +1290,8 @@ int count = visitor.getCount();
 		<para>The method <code>ExecutionFactory.getSupportedFunctions()</code> can be
 			used to specify which scalar functions the Translator supports.  The
 			set of possible functions is based on the set of functions supported
-			by Teiid.  This set can be found in the <ulink url="&docUrl;">Reference</ulink>
-			documentation.  If the Translator states that it supports a function,
+			by Teiid.  This set can be found in the Reference documentation at
+            <ulink url="&docUrl;"/>.  If the Translator states that it supports a function,
 			it must support all type combinations and overloaded forms of that
 			function.</para>
 		<para>There are also five standard operators that can also be specified in the
@@ -1339,9 +1342,9 @@ int count = visitor.getCount();
 		<section>
 			<title>Data Types</title>
 			<para>Teiid supports three large object runtime data types:  blob,
-				clob, and xml.	 A blob is a “binary large object”, a clob is a
-				“character large object”, and “xml” is a “xml
-				document”.  Columns modeled as a blob, clob, or xml are treated similarly by
+				clob, and xml.	 A blob is a "binary large object", a clob is a
+				"character large object", and "xml" is a "xml
+				document".  Columns modeled as a blob, clob, or xml are treated similarly by
 				the	translator framework to support memory-safe streaming.  </para>
 		</section>
 		<section>
@@ -1389,7 +1392,7 @@ int count = visitor.getCount();
 
 		<para>When the "keepAlive" alive flag is set, then the execution object is only closed when user's Statement is closed.</para>
 
-		<programlisting><![CDATA[executionContext.keepExecutionAlive(true);]]></programlisting>
+		<programlisting language="Java" role="JAVA"><![CDATA[executionContext.keepExecutionAlive(true);]]></programlisting>
 
 	</section>
 
@@ -1405,17 +1408,21 @@ int count = visitor.getCount();
     
     <section id="translator_package">
         <title>Packaging</title>
-        <para>Once the "ExecutionFactory" class is implemented, package it in a JAR file. The only 
-         additional requirement is provide a file called "jboss-beans.xml" in the "META-INF" directory of the JAR file, with
-                following contents.
-                <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+        <para>
+        Once the "ExecutionFactory" class is implemented, package it in a JAR file. The only 
+        additional requirement is provide a file called "jboss-beans.xml" in the "META-INF" 
+        directory of the JAR file, with following contents.  Replace ${name} with name of your 
+        translator, and replace ${execution-factory-class} with your overridden ExecutionFactory 
+        class name. This will register the Translator for use with tooling and Admin API.
+        </para>
+        <programlisting role="XML" language="XML"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
 <deployment xmlns="urn:jboss:bean-deployer:2.0">
-   
+
    <bean name="translator-${name}-template" class="org.teiid.templates.TranslatorDeploymentTemplate">
       <property name="info"><inject bean="translator-${name}"/></property>
       <property name="managedObjectFactory"><inject bean="ManagedObjectFactory"/></property>
    </bean>
-    
+
    <bean name="translator-${name}" class="org.teiid.templates.TranslatorTemplateInfo">
       <constructor factoryMethod="createTemplateInfo">
          <factory bean="TranslatorDeploymentTemplateInfoFactory"/>
@@ -1425,11 +1432,10 @@ int count = visitor.getCount();
          <parameter class="java.lang.String">${name}</parameter>         
       </constructor>
    </bean> 
-   
+
 </deployment>]]></programlisting>
                 
-                replace ${name} with name of your translator, and replace ${execution-factory-class} with your 
-                overridden ExecutionFactory class name. This will register the Translator for use with tooling and Admin API.</para>
+                
     </section>
     
     <section id="translator_deploy">

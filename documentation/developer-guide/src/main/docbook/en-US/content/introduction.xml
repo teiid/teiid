@@ -8,7 +8,7 @@
   <section>
   <title>Introduction to the Teiid Connector Architecture</title>
   
-  <itemizedlist>
+  <orderedlist>
   	<para>Integrating data from a Enterprise Information System (EIS) into Teiid, is separated into two parts.</para>
   	<listitem>
       <para>A Translator, which is required.</para>
@@ -16,20 +16,20 @@
     <listitem>
       <para>An optional Resource Adapter, which will typically be a JCA Resource Adapter (also called a JEE Connector) </para>
     </listitem>
-  </itemizedlist>  
+  </orderedlist>  
   
   <para>A Translator is used to:</para>
-  <itemizedlist>
+  <orderedlist>
     <listitem>
-      <para>Translate a Teiid-specific command into a native command.</para>
+      <para>Translate a Teiid-specific command into a native command,</para>
     </listitem>
     <listitem>
-      <para>Execute the command.</para>
+      <para>Execute the command,</para>
     </listitem>
     <listitem>
       <para>Return batches of results translated to expected Teiid types.</para>
     </listitem>
-  </itemizedlist>
+  </orderedlist>
   
   <para>A Resource Adapter:</para>
   <itemizedlist>
@@ -37,9 +37,11 @@
       <para>Handles all communications with individual enterprise information system (EIS), which can include databases, data feeds, flat files, etc.</para>
     </listitem>
     <listitem>
-      <para>Can be a <ulink url="http://java.sun.com/j2ee/connector/">JCA Connector</ulink> or any other custom connection provider. 
+      <para>Can be a JCA Connector or any other custom connection provider. 
       The reason Teiid recommends and uses JCA is this specification defines how one can write, package, and configure access to EIS system in consistent manner.
       There are also various commercial/open source software vendors already providing JCA Connectors to access a variety of back-end systems.</para>
+      <para>
+      Refer to <ulink url="http://java.sun.com/j2ee/connector/"/>.</para>
     </listitem>
     <listitem>
       <para>Abstracts Translators from many common concerns, such as connection information, resource pooling, or authentication.</para>
@@ -55,47 +57,76 @@
       you can use one of these enterprise information systems, you do not need to develop a custom one.
     </para>
     <para>Teiid offers the following translators:</para>
-    <itemizedlist>
-      <listitem>
-        <para>
-          <emphasis>JDBC:</emphasis>
-          Works with many relational databases. The JDBC translator is validated against the following database
-          systems: Oracle, Microsoft SQL Server, IBM DB2, MySQL, Postgres, Derby, Sybase, H2, and HSQL. In addition, the JDBC Translator can
-          often be used with other 3rd-party drivers and provides a wide range of extensibility options to
-          specialize behavior against those drivers.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          <emphasis>File:</emphasis>
-          Provides a procedural way to access the file system to handle text files.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          <emphasis>WS:</emphasis> Provides procedural access to XML content via Web Services.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          <emphasis>LDAP:</emphasis> Accesses to LDAP directory services.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          <emphasis>Salesforce:</emphasis> Works with Salesforce interfaces.
-        </para>
-      </listitem>
-    </itemizedlist>
+
+      <variablelist>
+         <varlistentry>
+            <term>JDBC Translator</term>
+            <listitem>
+               <para>
+               Works with many relational databases. The JDBC translator is validated 
+               against the following database systems: Oracle, Microsoft SQL Server, 
+               IBM DB2, MySQL, Postgres, Derby, Sybase, H2, and HSQL. In addition, the 
+               JDBC Translator can often be used with other 3rd-party drivers and provides 
+               a wide range of extensibility options to specialize behavior against those 
+               drivers.
+               </para>
+            </listitem>
+         </varlistentry>
+         <varlistentry>
+            <term>File Translator</term>
+            <listitem>
+               <para>
+               Provides a procedural way to access the file system to handle text files.
+               </para>
+            </listitem>
+         </varlistentry>
+         <varlistentry>
+            <term>WS Translator</term>
+            <listitem>
+               <para>
+               Provides procedural access to XML content using Web Services.
+               </para>
+            </listitem>
+         </varlistentry>
+         <varlistentry>
+            <term>LDAP Translator</term>
+            <listitem>
+               <para>
+               Accesses to LDAP directory services.
+               </para>
+            </listitem>
+         </varlistentry>
+         <varlistentry>
+            <term>Salesforce Translator</term>
+            <listitem>
+               <para>
+               Works with Salesforce interfaces.
+               </para>
+            </listitem>
+         </varlistentry>
+      </variablelist>
+      
     <section>
     <title>Custom Translators</title>
-    <orderedlist numeration="arabic">
-      <para>High-level Translator development procedure:</para>
+
+     <para>
+      Below are the high-level steps for creating custom Translators.  This guide covers 
+      how to do each of these steps in detail. It also provides additional information for
+      advanced topics, such as streaming large objects. 
+    </para>
+
+    <para>
+    For sample Translator code, refer to the Teiid source code at 
+    <ulink url="http://anonsvn.jboss.org/repos/teiid/trunk/connectors/"/>.
+    </para>
+    
+    <orderedlist>
       <listitem>
-        <para><link linkend="custom_ra_intro"></link>Create a new or reuse an existing Resource Adapater for the EIS system, to be used with this Translator</para>
+        <para>Create a new or reuse an existing Resource Adapater for the EIS system, to be used with this Translator.</para>
+        <para>Refer to <xref linkend="custom_ra_intro"/>.</para>
       </listitem>
       <listitem>
-        <para>Implement the required classes defined by the <link linkend="translator_api">Translator API</link>.</para>
+        <para>Implement the required classes defined by the Translator API.</para>
         <itemizedlist>
           <listitem>
             <para>Create an ExecutionFactory – Extend the <code>org.teiid.translator.ExecutionFactory</code> class</para>
@@ -104,28 +135,26 @@
             <para>Create relevant Executions (and sub-interfaces) – specifies how to execute each type of command</para>
           </listitem>
         </itemizedlist>
+       <para>Refer to <xref linkend="translator_api"/>.</para>
       </listitem>
       <listitem>
-        <para>Define the <link linkend="translator_package">template</link> for exposing configuration properties.</para>
+        <para>Define the template for exposing configuration properties.
+        Refer to <xref linkend="translator_package"/>.</para>
       </listitem>
       <listitem>
-        <para><link linkend="translator_deploy">Deploy</link> your Translator.</para>
-        <itemizedlist>
-          <listitem>
-            <para>Deploy a Virtual Database (VDB) utilizing your Translator.</para>
-          </listitem>
-        </itemizedlist>
+        <para>Deploy your Translator.
+       Refer to <xref linkend="translator_deploy"/>.</para>
       </listitem>
+       <listitem>
+         <para>Deploy a Virtual Database (VDB) that uses your Translator.</para>
+       </listitem>
       <listitem>
         <para>Execute queries via Teiid.</para>
       </listitem>
     </orderedlist>
-    <para>
-      This guide covers how to do each of these steps in detail. It also provides additional information for
-      advanced topics, such as streaming large objects. For sample
-      Translator code, please check the <ulink url="http://anonsvn.jboss.org/repos/teiid/trunk/connectors/">Teiid source code</ulink>
-    </para>
-  </section>
+
+
+    </section>
   </section>
   <section>
     <title>Do You Need a New Resource Adapter?</title>
@@ -160,7 +189,8 @@
     <orderedlist numeration="arabic">
     	<para>High-level Resource Adapter development procedure:</para>
         <listitem>
-            <para>Understand the <ulink url="http://java.sun.com/j2ee/connector/">JEE Connector</ulink> specification to have basic idea about what JCA connectors are how they are developed and packaged.</para>
+            <para>Understand the JEE Connector specification to have basic idea about what JCA connectors are how they are developed and packaged.</para>
+            <para>Refer to <ulink url="http://java.sun.com/j2ee/connector/"/>.</para>
         </listitem>
       <listitem>
         <para>Gather all necessary information about your Enterprise Information System (EIS). You will need
@@ -198,16 +228,16 @@
         </itemizedlist>
       </listitem>
       <listitem>
-        <para><link linkend="ra_package">Package</link> your resource adapter.</para>
+        <para>Package your resource adapter.  Refer to <xref linkend="ra_package"/>.</para>
       </listitem>      
       <listitem>
-        <para><link linkend="ra_package">Deploy</link> your resource adapter.</para>
+        <para>Deploy your resource adapter.  Refer to <xref linkend="ra_package"/>.</para>
       </listitem>
     </orderedlist>
     <para>
       This guide covers how to do each of these steps in detail. It also provides additional information for
-      advanced topics, such as transactions. For a sample
-      resource adapter code, please check the <ulink url="http://anonsvn.jboss.org/repos/teiid/trunk/connectors/">Teiid Source code</ulink>
+      advanced topics, such as transactions. For sample
+      resource adapter code refer to the Teiid Source code at <ulink url="http://anonsvn.jboss.org/repos/teiid/trunk/connectors/"/>.
     </para>
   </section>    
   </section>
@@ -217,13 +247,13 @@
   	<para>Teiid is highly extensible in other ways:</para>
   	<itemizedlist>
   		<listitem>
-  			<para>You may add <link linkend="udfs">User Defined Functions</link>.</para>
+  			<para>You may add User Defined Functions.  Refer to <xref linkend="udfs"/>.</para>
   		</listitem>
   		<listitem>
-  			<para>You may adapt <link linkend="logging">logging</link> to your needs, which is especially useful for custom audit or command logging.</para>
+  			<para>You may adapt logging to your needs, which is especially useful for custom audit or command logging.  Refer to <xref linkend="logging"/>.</para>
   		</listitem>
   		<listitem>
-  			<para>You may change the <link linkend="custom_security">security</link> subsystem for custom authentication and authorization.</para>
+  			<para>You may change the subsystem for custom authentication and authorization.  Refer to <xref linkend="custom_login_modules"/>.</para>
   		</listitem>
   	</itemizedlist>
   </section>

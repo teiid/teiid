@@ -95,7 +95,7 @@
 			functions score and contains:
       </para>
 		<informalexample>
-			<programlisting>SELECT score(1), ID, FREEDATA FROM Docs WHERE contains(freedata, 'nick', 1) &gt; 0</programlisting>
+			<programlisting language="SQL">SELECT score(1), ID, FREEDATA FROM Docs WHERE contains(freedata, 'nick', 1) &gt; 0</programlisting>
 		</informalexample>
 		<para>
 			The
@@ -136,7 +136,9 @@
 			<listitem>
 				<para>
 					Create a new translator jar containing your custom
-					ExecutionFactory. See <link linkend="translator_package">packaging</link> and <link linkend="translator_deploy">deployment</link> instructions for using the jar.</para>
+					ExecutionFactory. Refer to <xref linkend="translator_package"/> and 
+					<xref linkend="translator_deploy"/> for instructions on using the JAR file.
+					</para>
 			</listitem>
 		</itemizedlist>
 	</section>
@@ -163,8 +165,7 @@
 				<listitem>
 					<para>
 						Number of input arguments and types must match the function metadata defined
-						in section
-						<link linkend="define_udf">Install user-defined functions</link>
+						in <xref linkend="define_udf"/>.
 					</para>
 				</listitem>
 				<listitem>
@@ -181,22 +182,24 @@
 			This <code>CommandContext</code> parameter does not need to be delared in the function metadata.</para>
 			<example>
 				<title>Sample code</title>
-				<programlisting><![CDATA[package org.something;
+				<programlisting language="Java" role="JAVA"><![CDATA[package org.something;
 
-public class TempConv {
-              
-    /**
-     * Converts the given Celsius temperature to Fahrenheit, and returns the
-     * value.
-     * @param doubleCelsiusTemp 
-     * @return Fahrenheit 
-     */
-    public static Double celsiusToFahrenheit(Double doubleCelsiusTemp){
-        if (doubleCelsiusTemp == null) {
-        	return null;
-        }
-        return (doubleCelsiusTemp)*9/5 + 32;
-    }
+public class TempConv 
+{
+   /**
+   * Converts the given Celsius temperature to Fahrenheit, and returns the
+   * value.
+   * @param doubleCelsiusTemp 
+   * @return Fahrenheit 
+   */
+   public static Double celsiusToFahrenheit(Double doubleCelsiusTemp)
+   {
+      if (doubleCelsiusTemp == null) 
+      {
+         return null;
+      }
+      return (doubleCelsiusTemp)*9/5 + 32;
+   }
 }]]></programlisting>
 			</example>
 		</section>
