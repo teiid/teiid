@@ -29,6 +29,7 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
 
@@ -79,7 +80,7 @@ public class BatchIterator extends AbstractTupleSource {
 	protected List<?> getCurrentTuple() throws TeiidComponentException,
 			BlockedException, TeiidProcessingException {
 		List<?> tuple = super.getCurrentTuple();
-		if (mark && saveOnMark && this.getCurrentIndex() > this.buffer.getRowCount()) {
+		if (tuple != null && mark && saveOnMark && this.getCurrentIndex() > this.buffer.getRowCount()) {
         	this.buffer.setRowCount(this.getCurrentIndex() - 1);
         	this.buffer.addTuple(tuple);
         }
@@ -122,14 +123,20 @@ public class BatchIterator extends AbstractTupleSource {
 			this.buffer.purge();
     	}
     	mark = true;
+    	if (saveOnMark) {
+        	try {
+    			getCurrentTuple();
+    		} catch (TeiidException e) {
+    		}
+    	}
     }
     
     @Override
     public void setPosition(int position) {
-    	super.setPosition(position);
     	if (this.buffer == null && position < getCurrentIndex() && position < (this.batch != null ? batch.getBeginRow() : Integer.MAX_VALUE)) {
 			throw new UnsupportedOperationException("Backwards positioning is not allowed"); //$NON-NLS-1$
     	}
+    	super.setPosition(position);
     }
     
 }

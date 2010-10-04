@@ -72,4 +72,23 @@ public class TestBatchIterator {
 		assertEquals(2, bi.nextTuple().get(0));
 	}
 	
+	@Test public void testReset2() throws Exception {
+		BatchIterator bi = new BatchIterator(new FakeRelationalNode(1, new List[] {
+			Arrays.asList(1),
+			Arrays.asList(2),
+		}, 2));
+		BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+		TupleBuffer tb = bm.createTupleBuffer(Arrays.asList(new ElementSymbol("x")), "test", TupleSourceType.PROCESSOR);
+		bi.setBuffer(tb, true);  //$NON-NLS-1$
+		bi.hasNext();
+		bi.mark();
+		bi.nextTuple();
+		bi.nextTuple();
+		assertNull(bi.nextTuple());
+		bi.reset();
+		bi.hasNext();
+		assertEquals(1, bi.getCurrentIndex());
+		assertEquals(1, bi.nextTuple().get(0));
+	}
+	
 }
