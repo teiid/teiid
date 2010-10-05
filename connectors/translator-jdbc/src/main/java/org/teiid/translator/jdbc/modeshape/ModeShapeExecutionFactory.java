@@ -29,169 +29,104 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Expression;
+import org.teiid.language.Comparison;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Literal;
-import org.teiid.language.NamedTable;
+import org.teiid.language.Not;
+import org.teiid.language.Comparison.Operator;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.jdbc.ConvertModifier;
-import org.teiid.translator.jdbc.FunctionModifier;
+import org.teiid.translator.TypeFacility;
+import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
-import org.teiid.translator.jdbc.SQLConversionVisitor;
-
-
 
 /** 
  * Translator class for accessing the ModeShape JCR repository.  
  */
-@Translator(name="modeshape", description="A translator for open source Modeshape JCA repository")
+@Translator(name="modeshape", description="A translator for the open source Modeshape JCR Repository")
 public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 	
 	public ModeShapeExecutionFactory() {
 		setDatabaseVersion("2.0"); //$NON-NLS-1$
+		setUseBindVariables(false);
 	}
 	
     @Override
     public void start() throws TranslatorException {
         super.start();
         
-		registerFunctionModifier("PATH", new PathFunctionModifier());
-       
-        //add in type conversion
-        ConvertModifier convertModifier = new ConvertModifier();
-   	 
+		registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("UpperCase")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.LCASE,new AliasModifier("LowerCase")); //$NON-NLS-1$
         
-        convertModifier.addTypeMapping("boolean", FunctionModifier.BOOLEAN); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("smallint", FunctionModifier.BYTE, FunctionModifier.SHORT); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("integer", FunctionModifier.INTEGER); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("bigint", FunctionModifier.LONG); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("real", FunctionModifier.FLOAT); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("float8", FunctionModifier.DOUBLE); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("numeric(38)", FunctionModifier.BIGINTEGER); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("decimal", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("varchar(4000)", FunctionModifier.STRING); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
-    	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.TIMESTAMP, new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				return Arrays.asList(function.getParameters().get(0), " + TIMESTAMP '1970-01-01'"); //$NON-NLS-1$
-			}
-		});
-    	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				return Arrays.asList("cast(date_trunc('second', ", function.getParameters().get(0), ") AS time)"); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-		});
-    	convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", "YYYY-MM-DD")); //$NON-NLS-1$ //$NON-NLS-2$
-    	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", "HH24:MI:SS")); //$NON-NLS-1$ //$NON-NLS-2$
-    	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", "YYYY-MM-DD HH24:MI:SS.UF")); //$NON-NLS-1$ //$NON-NLS-2$
-    	convertModifier.addConvert(FunctionModifier.BOOLEAN, FunctionModifier.STRING, new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				Expression stringValue = function.getParameters().get(0);
-				return Arrays.asList("CASE WHEN ", stringValue, " THEN 'true' WHEN not(", stringValue, ") THEN 'false' END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			}
-		});
-    	convertModifier.addSourceConversion(new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				((Literal)function.getParameters().get(1)).setValue("integer"); //$NON-NLS-1$
-				return null;
-			}
-		}, FunctionModifier.BOOLEAN);
-    	
-    	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
-    	
-
-    	LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Started"); //$NON-NLS-1$
-
-     }    
-    
-    /**
-     * Create the {@link SQLConversionVisitor} that will perform translation.  Typical custom
-     * JDBC connectors will not need to create custom conversion visitors, rather implementors 
-     * should override existing {@link JDBCExecutionFactory} methods.
-     * @return the {@link SQLConversionVisitor}
-     */
-    public SQLConversionVisitor getSQLConversionVisitor() {
-    	return new ModeShapeSQLVisitor(this);
-    }
-    
-
-	@Override
-    public List<?> translate(LanguageObject obj, ExecutionContext context) {
-		if (obj instanceof NamedTable) {	
-		    NamedTable nt = (NamedTable) obj;
-		    List<String> ntlist = new ArrayList<String>(1);
-		    ntlist.add(ModeShapeUtil.createJCRName(nt.getMetadataObject().getNameInSource()));
-		    return ntlist;
-		} else if (obj instanceof ColumnReference) {
-		    ColumnReference elem = (ColumnReference) obj;
-		    
-		    String nameInSource = "NoNameInSource";
-		    if (elem.getMetadataObject() != null) {
-		    	nameInSource = elem.getMetadataObject().getNameInSource();
-			    
-			    List<String> ntlist = new ArrayList<String>(1);
-				ntlist.add(ModeShapeUtil.createJCRName(nameInSource));
-
-			    return ntlist;
-		    } 
-		} 
-	
-		return super.translate(obj, context);
-    }
+		registerFunctionModifier("JCR_ISCHILDNODE", new IdentifierFunctionModifier()); //$NON-NLS-1$
+		registerFunctionModifier("JCR_ISDESCENDANTNODE", new IdentifierFunctionModifier()); //$NON-NLS-1$
+		registerFunctionModifier("JCR_ISSAMENODE", new IdentifierFunctionModifier()); //$NON-NLS-1$
+		registerFunctionModifier("JCR_REFERENCE", new IdentifierFunctionModifier()); //$NON-NLS-1$
+		registerFunctionModifier("JCR_CONTAINS", new IdentifierFunctionModifier()); //$NON-NLS-1$
 		
-   
-    @Override
-    public String translateLiteralBoolean(Boolean booleanValue) {
-        if(booleanValue.booleanValue()) {
-            return "TRUE"; //$NON-NLS-1$
-        }
-        return "FALSE"; //$NON-NLS-1$
-    }
+    	LogManager.logTrace(LogConstants.CTX_CONNECTOR, "ModeShape Translator Started"); //$NON-NLS-1$
+     }    
     
     @Override
     public String translateLiteralDate(Date dateValue) {
-        return "DATE '" + formatDateValue(dateValue) + "'"; //$NON-NLS-1$//$NON-NLS-2$
+    	return "CAST('" + formatDateValue(dateValue) + "' AS DATE)"; //$NON-NLS-1$//$NON-NLS-2$
     }
 
     @Override
     public String translateLiteralTime(Time timeValue) {
-        return "TIME '" + formatDateValue(timeValue) + "'"; //$NON-NLS-1$//$NON-NLS-2$
+    	return "CAST('" + formatDateValue(timeValue) + "' AS DATE)"; //$NON-NLS-1$//$NON-NLS-2$
     }
     
     @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
-        return "TIMESTAMP '" + formatDateValue(timestampValue) + "'"; //$NON-NLS-1$//$NON-NLS-2$ 
+    	return "CAST('" + formatDateValue(timestampValue) + "' AS DATE)"; //$NON-NLS-1$//$NON-NLS-2$  
     }
     
     @Override
-    public int getTimestampNanoPrecision() {
-    	return 6;
+    public String translateLiteralBoolean(Boolean booleanValue) {
+    	return "CAST('" + booleanValue.toString() + "' AS BOOLEAN)"; //$NON-NLS-1$//$NON-NLS-2$ 
     }
     
     @Override
     public List<String> getSupportedFunctions() {
 		List<String> supportedFunctions = new ArrayList<String>();
 		supportedFunctions.addAll(super.getSupportedFunctions());
-		supportedFunctions.add("PATH"); //$NON-NLS-1$
-		supportedFunctions.add("NAME"); //$NON-NLS-1$
-		supportedFunctions.add("ISCHILDNODE"); //$NON-NLS-1$
-		
+		supportedFunctions.add(SourceSystemFunctions.UCASE); 
+		supportedFunctions.add(SourceSystemFunctions.LCASE); 
+		supportedFunctions.add(SourceSystemFunctions.LENGTH);
+		supportedFunctions.add("JCR_ISCHILDNODE"); //$NON-NLS-1$
+		supportedFunctions.add("JCR_ISDESCENDANTNODE"); //$NON-NLS-1$
+		supportedFunctions.add("JCR_ISSAMENODE"); //$NON-NLS-1$
+		supportedFunctions.add("JCR_REFERENCE"); //$NON-NLS-1$
+		supportedFunctions.add("JCR_CONTAINS"); //$NON-NLS-1$
 		return supportedFunctions;
-
+    }
+    
+    @Override
+    public List<?> translate(LanguageObject obj, ExecutionContext context) {
+    	if (obj instanceof Comparison) {
+    		Comparison compare = (Comparison)obj;
+    		if (compare.getLeftExpression().getType() == TypeFacility.RUNTIME_TYPES.BOOLEAN 
+    				&& compare.getLeftExpression() instanceof Function 
+    				&& compare.getRightExpression() instanceof Literal) {
+    			boolean isTrue = Boolean.TRUE.equals(((Literal)compare.getRightExpression()).getValue());
+    			if ((isTrue && compare.getOperator() == Operator.EQ) || (!isTrue && compare.getOperator() == Operator.NE)) {
+    				return Arrays.asList(compare.getLeftExpression());
+    			}
+    			if ((!isTrue && compare.getOperator() == Operator.EQ) || (isTrue && compare.getOperator() == Operator.NE)) {
+    				return Arrays.asList("NOT ", compare.getLeftExpression()); //$NON-NLS-1$
+    			}
+    		}
+    	} else if (obj instanceof Not) {
+    		Not not = (Not)obj;
+    		return Arrays.asList("NOT ", not.getCriteria()); //$NON-NLS-1$
+    	}
+    	return super.translate(obj, context);
     }
         
     @Override
@@ -199,4 +134,114 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 		return false;
 	}
     
+    @Override
+    public boolean supportsAggregatesAvg() {
+    	return false;
+    }
+    
+    @Override
+    public boolean supportsAggregatesCountStar() {
+    	return false;
+    }
+    
+    @Override
+    public boolean supportsAggregatesCount() {
+    	return false;
+    }
+
+    @Override
+    public boolean supportsAggregatesEnhancedNumeric() {
+    	return false;
+    }
+
+    @Override
+    public boolean supportsAggregatesMax() {
+    	return false;
+    }
+
+    @Override
+    public boolean supportsAggregatesMin() {
+    	return false;
+    }
+    
+    @Override
+    public boolean supportsAggregatesSum() {
+    	return false;
+    }
+    
+    @Override
+    public boolean supportsGroupBy() {
+    	return false;
+    }
+    
+    @Override
+    public boolean supportsHaving() {
+    	return false;
+    }
+    
+    @Override
+    public boolean supportsSelectExpression() {
+    	return false;
+    }
+    
+    @Override
+    public boolean supportsCaseExpressions() {
+    	return false;
+    }
+    
+    @Override
+    public boolean supportsCorrelatedSubqueries() {
+    	return false;
+    }
+    
+    @Override
+    public boolean supportsExistsCriteria() {
+    	return false;
+    }
+    
+    @Override
+    public boolean supportsInCriteriaSubquery() {
+    	return false;
+    }
+    
+    @Override
+    public boolean supportsInlineViews() {
+    	return false;
+    }
+    
+    @Override
+    public boolean supportsOrderByNullOrdering() {
+    	return false;
+    }
+    
+    @Override
+    public boolean supportsQuantifiedCompareCriteriaAll() {
+    	return false;
+    }
+    
+    @Override
+    public boolean supportsQuantifiedCompareCriteriaSome() {
+    	return false;
+    }
+    
+    @Override
+    public boolean supportsScalarSubqueries() {
+    	return false;
+    }
+    
+    @Override
+    public boolean supportsSearchedCaseExpressions() {
+    	return false;
+    }
+    
+    @Override
+    public boolean supportsExcept() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsIntersect() {
+    	return true;
+    }
+        
 }

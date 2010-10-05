@@ -260,7 +260,7 @@ public class RealMetadataFactory {
     	return createTransformationMetadata(metadataStore, "bqt"); 
     }
 
-	private static TransformationMetadata createTransformationMetadata(
+	public static TransformationMetadata createTransformationMetadata(
 			MetadataStore metadataStore, String vdbName) {
 		CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
     	VDBMetaData vdbMetaData = new VDBMetaData();

@@ -563,7 +563,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @param modifier
      */
     public void registerFunctionModifier(String name, FunctionModifier modifier) {
-    	this.functionModifiers.put(name, modifier);
+    	this.functionModifiers.put(name.toLowerCase(), modifier);
     }
     
     /**
