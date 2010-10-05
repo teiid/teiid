@@ -37,7 +37,7 @@ public class Handshake implements Externalizable {
     
 	private static final long serialVersionUID = 7839271224736355515L;
     
-    private String version = ApplicationInfo.getInstance().getMajorReleaseNumber();
+    private String version = ApplicationInfo.getInstance().getReleaseNumber();
     private byte[] publicKey;
     
     /** 
@@ -51,7 +51,7 @@ public class Handshake implements Externalizable {
      * @param version The version to set.
      */
     public void setVersion() {
-        this.version = ApplicationInfo.getInstance().getMajorReleaseNumber();
+        this.version = ApplicationInfo.getInstance().getReleaseNumber();
     }
 
     /** 
