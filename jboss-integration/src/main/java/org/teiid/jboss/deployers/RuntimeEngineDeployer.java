@@ -478,7 +478,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	}
 	
 	@Override
-    @ManagementOperation(description="Execute a sql query", params={@ManagementParameter(name="vdbName"),@ManagementParameter(name="vdbVersion"), @ManagementParameter(name="command")})	
+    @ManagementOperation(description="Execute a sql query", params={@ManagementParameter(name="vdbName"),@ManagementParameter(name="vdbVersion"), @ManagementParameter(name="command"), @ManagementParameter(name="timoutInMilli")})	
 	public List<List> executeQuery(final String vdbName, final int version, final String command, final long timoutInMilli) throws AdminException {
 		Properties properties = new Properties();
 		properties.setProperty(TeiidURL.JDBC.VDB_NAME, vdbName);
