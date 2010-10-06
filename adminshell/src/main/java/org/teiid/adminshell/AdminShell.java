@@ -365,7 +365,7 @@ public class AdminShell {
 		return getAdmin().getDataSourceTemplateNames();
 	}
 	
-	@Doc(text = "Get the current Admin connection")
+	@Doc(text = "Get the current org.teiid.adminapi.Admin instance for direct use. Note: Used for advanced usecases to bypass AdminShell methods")
 	public static Admin getAdmin() {
 		if (internalAdmin == null) {
 	        throw new NullPointerException("Not connected.  You must call a \"connectAsAdmin\" method or choose an active connection via \"useConnection\"."); //$NON-NLS-1$
