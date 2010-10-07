@@ -469,6 +469,35 @@
 				</results>
 			</operation>
 
+			<operation name="getMaterializedViews" displayName="Get Materialized View Info"
+				description="Get any Materialized Views for this VDB">
+				<results>
+
+					<c:list-property name="list" displayName=" Materialized Views"
+						description="Get information related to Materialized Views, if any, for this VDB"
+						required="false">
+						<c:map-property name="map">
+							<c:simple-property displayName="Schema Name"
+								name="schemaName" type="string" description="Name of the schema that is materialized" />
+							<c:simple-property displayName="Name" name="name"
+								type="string" description="Name of the materialized table" />
+							<c:simple-property displayName="Target Schema Name"
+								name="targetSchemaName" type="string" description="Name of the materialized schema" />
+							<c:simple-property displayName="Target Name"
+								name="targetName" type="string" description="Name of target table" />
+							<c:simple-property displayName="Created Time"
+								name="valid" type="string" description="Indicates if data in table is valid for use" />
+							<c:simple-property displayName="Current State"
+								name="loadState" type="string" description="Processing time for the request" />
+							<c:simple-property displayName="Last Updated"
+								name="updated" type="string" description="Last time of data refresh" />
+							<c:simple-property displayName="Cardinality"
+								name="cardinality" type="string" description="Row count" />
+						</c:map-property>
+					</c:list-property>
+				</results>
+			</operation>
+
 			<metric displayName="Status" defaultOn="true" dataType="trait"
 				displayType="summary" category="availability" property="status"
 				description="The status of this VDB" />
@@ -611,9 +640,8 @@
 						description="Indicates if the role is mapped to any authenticated user"
 						readOnly="false" required="false" />
 					<c:simple-property name="description"
-						displayName="Description" type="string"
-						description="Description of this data role"
-						readOnly="true" required="false" />	
+						displayName="Description" type="string" description="Description of this data role"
+						readOnly="true" required="false" />
 					<c:list-property name="mappedRoleNameList"
 						readOnly="false" required="false" displayName="Mapped Role Names"
 						description="Mapped role names for this data role">
@@ -633,9 +661,11 @@
 			createDeletePolicy="both" creationDataType="configuration">
 
 			<resource-configuration>
-				<c:simple-property name="name" displayName="Name" description="Name of the translator" readOnly="true" required="false" />
-                <c:simple-property name="description" displayName="Description" description="Description the translator" readOnly="true" required="false" />
-                
+				<c:simple-property name="name" displayName="Name"
+					description="Name of the translator" readOnly="true" required="false" />
+				<c:simple-property name="description" displayName="Description"
+					description="Description the translator" readOnly="true" required="false" />
+
 				<c:list-property name="translatorList" readOnly="true"
 					required="false" displayName="Properties" description="Translator properties">
 					<c:map-property name="properties" readOnly="true">

@@ -82,7 +82,8 @@ import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.VDB;
  * 
  */
 public class VDBComponent extends Facet {
-	private final Log LOG = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
+	private final Log LOG = LogFactory
+			.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 
 	/*
 	 * (non-Javadoc)
@@ -122,7 +123,7 @@ public class VDBComponent extends Facet {
 		} else if (name.equals(Platform.Operations.KILL_SESSION)) {
 			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(
 					Operation.Value.SESSION_ID).getLongValue());
-		}
+		} 
 
 	}
 
@@ -134,9 +135,10 @@ public class VDBComponent extends Facet {
 	@Override
 	public AvailabilityType getAvailability() {
 		// TODO Remove vdb version after no longer viable in Teiid
-		String version = this.resourceConfiguration.getSimpleValue(
-				"version", null);
-		String status = DQPManagementView.getVDBStatus(getConnection(), this.name);
+		String version = this.resourceConfiguration.getSimpleValue("version",
+				null);
+		String status = DQPManagementView.getVDBStatus(getConnection(),
+				this.name);
 		if (status.equals("ACTIVE")) {
 			return AvailabilityType.UP;
 		}
@@ -165,8 +167,9 @@ public class VDBComponent extends Facet {
 			String name = request.getName();
 			LOG.debug("Measurement name = " + name); //$NON-NLS-1$
 
-			Object metricReturnObject = view.getMetric(getConnection(), getComponentType(), this
-					.getComponentIdentifier(), name, valueMap);
+			Object metricReturnObject = view.getMetric(getConnection(),
+					getComponentType(), this.getComponentIdentifier(), name,
+					valueMap);
 
 			try {
 				if (request.getName().equals(
@@ -200,10 +203,11 @@ public class VDBComponent extends Facet {
 									.getName()
 									.equals(
 											PluginConstants.ComponentType.VDB.Metrics.STATUS)) {
-								if (((String) metricReturnObject).equals("ACTIVE")) {
+								if (((String) metricReturnObject)
+										.equals("ACTIVE")) {
 									report.addData(new MeasurementDataTrait(
 											request, "UP"));
-								}else{
+								} else {
 									report.addData(new MeasurementDataTrait(
 											request, "DOWN"));
 								}
@@ -350,7 +354,7 @@ public class VDBComponent extends Facet {
 
 		ManagedComponent mcVdb = null;
 		try {
-			mcVdb = ProfileServiceUtil.getManagedComponent( getConnection(),
+			mcVdb = ProfileServiceUtil.getManagedComponent(getConnection(),
 					new org.jboss.managed.api.ComponentType(
 							PluginConstants.ComponentType.VDB.TYPE,
 							PluginConstants.ComponentType.VDB.SUBTYPE),
@@ -371,8 +375,8 @@ public class VDBComponent extends Facet {
 				"description", String.class);
 		String vdbStatus = ProfileServiceUtil.getSimpleValue(mcVdb, "status",
 				String.class);
-		String connectionType = ProfileServiceUtil.getSimpleValue(mcVdb, "connectionType",
-				String.class);
+		String connectionType = ProfileServiceUtil.getSimpleValue(mcVdb,
+				"connectionType", String.class);
 		String vdbURL = ProfileServiceUtil.getSimpleValue(mcVdb, "url",
 				String.class);
 
@@ -614,7 +618,8 @@ public class VDBComponent extends Facet {
 							new PropertySimple("type", translatorType),
 							new PropertySimple("propertyName", propertyName),
 							new PropertySimple("propertyValue", propertyValue));
-					// Only want translator name and value to show up for the first row,
+					// Only want translator name and value to show up for the
+					// first row,
 					// so we will blank them out here.
 					translatorName = "";
 					translatorType = "";
@@ -655,9 +660,9 @@ public class VDBComponent extends Facet {
 
 	@Override
 	public ProfileServiceConnection getConnection() {
-		return ((PlatformComponent)this.resourceContext.getParentResourceComponent()).getConnection();
+		return ((PlatformComponent) this.resourceContext
+				.getParentResourceComponent()).getConnection();
 	}
-
 
 	@Override
 	public EmsConnection getEmsConnection() {
