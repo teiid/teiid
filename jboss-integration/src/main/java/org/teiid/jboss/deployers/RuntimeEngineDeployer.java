@@ -25,6 +25,11 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.SQLException;
+import java.sql.SQLXML;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -102,7 +107,8 @@ import org.teiid.transport.SocketListener;
 @ManagementObject(name="RuntimeEngineDeployer", isRuntime=true, componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManagement, Serializable , ClientServiceRegistry  {
 	private static final long serialVersionUID = -4676205340262775388L;
-
+	private static SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss.SSSZ"); //$NON-NLS-1$
+	
 	private transient SocketConfiguration jdbcSocketConfiguration;
 	private transient SocketConfiguration adminSocketConfiguration;
 	private transient SocketConfiguration odbcSocketConfiguration;
@@ -524,13 +530,13 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 			        }
 			        else {
 				        results.addAll(new ArrayList(Arrays.asList(rm.getColumnNames())));
-				        results.addAll(Arrays.asList(rm.getResults()));
+				        results.addAll(Arrays.asList(fixResults(rm.getResults())));
 				        
 				        while (rm.getFinalRow() == -1 || rm.getLastRow() < rm.getFinalRow()) {
 				        	long elapsed = System.currentTimeMillis() - start;
 							message = dqpCore.processCursorRequest(requestID, rm.getLastRow()+1, 1024);
 							rm = message.get(timoutInMilli-elapsed, TimeUnit.MILLISECONDS);
-							results.addAll(Arrays.asList(rm.getResults()));
+							results.addAll(Arrays.asList(fixResults(rm.getResults())));
 				        }
 			        }
 
@@ -549,4 +555,47 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 			}			
 		}
 	}	
+	
+	/**
+	 * Managed Object framework has bug that does not currently allow 
+	 * sending a NULL in the Collection Value, so sending literal string "null". 
+	 * If you send them as Array Value, the MO is packaged as composite object and would like 
+	 * all the elements in array to be same type which is not the case with results. 
+	 */
+	List[] fixResults(List[] rows) throws SQLException {
+		List[] newResults = new List[rows.length];
+		
+		for(int i = 0; i < rows.length; i++) {
+			List row = rows[i];
+			ArrayList newRow = new ArrayList();
+			for (Object col:row) {
+				if (col == null) {
+					newRow.add("null"); //$NON-NLS-1$ 
+				}
+				else {
+					if (col instanceof Number || col instanceof String || col instanceof Character) {
+						newRow.add(col);
+					}
+					else if (col instanceof Date){
+						newRow.add(SDF.format((Date)col));
+					}
+					else if (col instanceof Blob) {
+						newRow.add("blob"); //$NON-NLS-1$
+					}
+					else if (col instanceof Clob) {
+						newRow.add("clob"); //$NON-NLS-1$
+					}
+					else if (col instanceof SQLXML) {
+						SQLXML xml = (SQLXML)col;
+						newRow.add(xml.getString());
+					}
+					else {
+						newRow.add(col.toString());
+					}
+				}
+			}
+			newResults[i] = newRow;
+		}		
+		return newResults;
+	}
 }
