@@ -107,7 +107,6 @@ import org.teiid.transport.SocketListener;
 @ManagementObject(name="RuntimeEngineDeployer", isRuntime=true, componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManagement, Serializable , ClientServiceRegistry  {
 	private static final long serialVersionUID = -4676205340262775388L;
-	private static SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss.SSSZ"); //$NON-NLS-1$
 	
 	private transient SocketConfiguration jdbcSocketConfiguration;
 	private transient SocketConfiguration adminSocketConfiguration;
@@ -575,9 +574,6 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 				else {
 					if (col instanceof Number || col instanceof String || col instanceof Character) {
 						newRow.add(col);
-					}
-					else if (col instanceof Date){
-						newRow.add(SDF.format((Date)col));
 					}
 					else if (col instanceof Blob) {
 						newRow.add("blob"); //$NON-NLS-1$
