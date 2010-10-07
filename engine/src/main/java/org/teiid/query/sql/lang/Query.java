@@ -441,4 +441,9 @@ public class Query extends QueryCommand {
     public Query getProjectedQuery() {
         return this;
     }
+    
+    @Override
+    public boolean returnsResultSet() {
+    	return into == null;
+    }
 }  // END CLASS

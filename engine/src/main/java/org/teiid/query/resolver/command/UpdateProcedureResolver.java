@@ -231,9 +231,12 @@ public class UpdateProcedureResolver implements CommandResolver {
                             dynamicCommand.setAsColumns(Collections.EMPTY_LIST);
                         }
                     }
-                    //this could be the last select statement, set the projected symbol
-                    //on the virtual procedure command
-                    command.setResultsCommand(subCommand);
+                    
+                    if (subCommand.returnsResultSet()) {
+	                    //this could be the last select statement, set the projected symbol
+	                    //on the virtual procedure command
+	                    command.setResultsCommand(subCommand);
+                    }
                 }
 
                 break;

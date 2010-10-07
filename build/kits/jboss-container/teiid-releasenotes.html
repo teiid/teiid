@@ -43,6 +43,8 @@
 </ul>
 <h4>from 7.1</h4>
 <ul>
+  <li>Subqueries are no longer allowed to be SELECT INTO.
+  <li>INSERT/UPDATE/DELETE cannot be used to create implicit return cursors in non-update virtual procedures.  You can instead use "integer_var = UPDATE ...; SELECT integer_var;".  
   <li>The SYSADMIN schema was created to hold procedures and tables that should not be generally accessible.  SYS and pg_catalog are now always accessible - permissions do not apply to these schemas.  The SYS.getBinaryVDBResource, SYS.getCharacterVDBResource, and SYS.getVDBResourcePaths have been replaced with the
  SYSADMIN.VDBResources table.  The Matviews table and the refreshMatView/refreshMatViewRow procedures were also moved into SYSADMIN.
   <li>Overwriting an existing VDB will cause old connections to be terminated.  Production systems should rely on VDB versioning.

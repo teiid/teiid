@@ -63,6 +63,7 @@ import org.teiid.query.sql.lang.Delete;
 import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.Drop;
 import org.teiid.query.sql.lang.DynamicCommand;
+import org.teiid.query.sql.lang.ExistsCriteria;
 import org.teiid.query.sql.lang.GroupBy;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.Into;
@@ -81,6 +82,8 @@ import org.teiid.query.sql.lang.SetClauseList;
 import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
+import org.teiid.query.sql.lang.SubqueryContainer;
+import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.Update;
@@ -266,6 +269,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
 
 	public void visit(SubquerySetCriteria obj) {
+		validateSubquery(obj);
 		if (isNonComparable(obj.getExpression())) {
 			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj),obj); //$NON-NLS-1$
     	}
@@ -376,6 +380,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     
     @Override
     public void visit(ScalarSubquery obj) {
+    	validateSubquery(obj);
         Collection<SingleElementSymbol> projSymbols = obj.getCommand().getProjectedSymbols();
 
         //Scalar subquery should have one projected symbol (query with one expression
@@ -1021,6 +1026,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
      * @since 4.3
      */
     public void visit(SubqueryCompareCriteria obj) {
+    	validateSubquery(obj);
     	if (isNonComparable(obj.getLeftExpression())) {
     		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj),obj);    		 //$NON-NLS-1$
     	}
@@ -1349,5 +1355,21 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xmlserialize_type"), obj); //$NON-NLS-1$
     	}
     }
-        
+    
+    @Override
+    public void visit(ExistsCriteria obj) {
+    	validateSubquery(obj);
+    }
+    
+    @Override
+    public void visit(SubqueryFromClause obj) {
+    	validateSubquery(obj);
+    }
+    
+    public void validateSubquery(SubqueryContainer subQuery) {
+    	if (subQuery.getCommand() instanceof Query && ((Query)subQuery.getCommand()).getInto() != null) {
+        	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.subquery_insert"), subQuery.getCommand()); //$NON-NLS-1$
+        }
+    }
+    
 }

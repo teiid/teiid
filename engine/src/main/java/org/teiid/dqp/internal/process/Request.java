@@ -78,9 +78,7 @@ import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Limit;
-import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
-import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -203,20 +201,8 @@ public class Request {
     }
     
     protected void createCommandContext() throws QueryValidatorException {
-    	boolean returnsResultSet = false;
-    	this.returnsUpdateCount = true;
-        if(userCommand instanceof Query) {
-        	Query query = (Query)userCommand;
-    		returnsResultSet = query.getInto() == null;
-    		returnsUpdateCount = !returnsResultSet;
-        } else if (userCommand instanceof SetQuery) {
-        	returnsResultSet = true;
-        	returnsUpdateCount = false;
-        } else if (userCommand instanceof StoredProcedure) {
-        	returnsUpdateCount = false;
-        	StoredProcedure proc = (StoredProcedure)userCommand;
-        	returnsResultSet = proc.returnsResultSet();
-        }
+    	boolean returnsResultSet = userCommand.returnsResultSet();
+    	this.returnsUpdateCount = !(userCommand instanceof StoredProcedure) && !returnsResultSet;
     	if ((this.requestMsg.getResultsMode() == ResultsMode.UPDATECOUNT && !returnsUpdateCount) 
     			|| (this.requestMsg.getResultsMode() == ResultsMode.RESULTSET && !returnsResultSet)) {
         	throw new QueryValidatorException(QueryPlugin.Util.getString(this.requestMsg.getResultsMode()==ResultsMode.RESULTSET?"Request.no_result_set":"Request.result_set")); //$NON-NLS-1$ //$NON-NLS-2$
