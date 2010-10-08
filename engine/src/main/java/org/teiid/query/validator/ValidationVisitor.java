@@ -97,6 +97,7 @@ import org.teiid.query.sql.proc.CriteriaSelector;
 import org.teiid.query.sql.proc.DeclareStatement;
 import org.teiid.query.sql.proc.HasCriteria;
 import org.teiid.query.sql.proc.IfStatement;
+import org.teiid.query.sql.proc.LoopStatement;
 import org.teiid.query.sql.proc.TranslateCriteria;
 import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.symbol.AggregateSymbol;
@@ -1366,7 +1367,13 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	validateSubquery(obj);
     }
     
-    public void validateSubquery(SubqueryContainer subQuery) {
+    @Override
+    public void visit(LoopStatement obj) {
+    	validateSubquery(obj);
+    }
+
+    //TODO: it may be simplier to catch this in the parser
+    private void validateSubquery(SubqueryContainer subQuery) {
     	if (subQuery.getCommand() instanceof Query && ((Query)subQuery.getCommand()).getInto() != null) {
         	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.subquery_insert"), subQuery.getCommand()); //$NON-NLS-1$
         }

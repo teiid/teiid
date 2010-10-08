@@ -345,30 +345,35 @@ public class TestValidator {
         try {
             ValidatorReport report = Validator.validate(command, metadata);
             
-            // Get invalid objects from report
-            Collection actualObjs = new ArrayList();
-            report.collectInvalidObjects(actualObjs);
-
-            // Compare expected and actual objects
-            Set expectedStrings = new HashSet(Arrays.asList(expectedStringArray));
-            Set actualStrings = new HashSet();
-            Iterator objIter = actualObjs.iterator();
-            while(objIter.hasNext()) {
-                LanguageObject obj = (LanguageObject) objIter.next();
-                actualStrings.add(SQLStringVisitor.getSQLString(obj));
-            }
-
-            if(expectedStrings.size() == 0 && actualStrings.size() > 0) {
-                fail("Expected no failures but got some: " + report.getFailureMessage()); //$NON-NLS-1$ 
-            } else if(actualStrings.size() == 0 && expectedStrings.size() > 0) {
-                fail("Expected some failures but got none for sql = " + command); //$NON-NLS-1$
-            } else {
-                assertEquals("Expected and actual sets of strings are not the same: ", expectedStrings, actualStrings); //$NON-NLS-1$
-            }
+            examineReport(command, expectedStringArray, report);
             return report;
         } catch(TeiidException e) {
 			throw new TeiidRuntimeException(e);
         }
+	}
+
+	private static void examineReport(Object command,
+			String[] expectedStringArray, ValidatorReport report) {
+		// Get invalid objects from report
+		Collection actualObjs = new ArrayList();
+		report.collectInvalidObjects(actualObjs);
+
+		// Compare expected and actual objects
+		Set<String> expectedStrings = new HashSet(Arrays.asList(expectedStringArray));
+		Set<String> actualStrings = new HashSet<String>();
+		Iterator objIter = actualObjs.iterator();
+		while(objIter.hasNext()) {
+		    LanguageObject obj = (LanguageObject) objIter.next();
+		    actualStrings.add(SQLStringVisitor.getSQLString(obj));
+		}
+
+		if(expectedStrings.size() == 0 && actualStrings.size() > 0) {
+		    fail("Expected no failures but got some: " + report.getFailureMessage()); //$NON-NLS-1$ 
+		} else if(actualStrings.size() == 0 && expectedStrings.size() > 0) {
+		    fail("Expected some failures but got none for sql = " + command); //$NON-NLS-1$
+		} else {
+		    assertEquals("Expected and actual sets of strings are not the same: ", expectedStrings, actualStrings); //$NON-NLS-1$
+		}
 	}
 
 	private void helpValidateProcedure(String procedure, String userUpdateStr, String procedureType) {
@@ -2044,5 +2049,18 @@ public class TestValidator {
 
     @Test public void testInvalidIntoSubquery3() {
     	helpValidate("SELECT e2 FROM pm1.g2 WHERE e2 in (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3')", new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testInvalidIntoSubquery4() throws Exception {
+        StringBuffer procedure = new StringBuffer("CREATE VIRTUAL PROCEDURE\n") //$NON-NLS-1$
+                                .append("BEGIN\n") //$NON-NLS-1$
+                                .append("loop on (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3') as x\n") //$NON-NLS-1$
+                                .append("BEGIN\nSELECT 1;\nEND\nSELECT 1\n;END\n"); //$NON-NLS-1$
+        
+        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        
+        // Validate
+        ValidatorReport report = helpValidateInModeler("pm1.vsp36", procedure.toString(), metadata);  //$NON-NLS-1$
+        examineReport(procedure, new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, report);
     }
 }
