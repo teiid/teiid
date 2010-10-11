@@ -75,13 +75,6 @@ public interface Admin {
     void deleteVDB(String vdbName, int vdbVersion) throws AdminException;
     
     /**
-     * Set a process level property. 
-     * @param propertyName - name of the property
-     * @param propertyValue - value of the property
-     */
-    void setRuntimeProperty(String propertyName, String propertyValue) throws AdminException;
-    
-    /**
      * Get the VDBs that currently deployed in the system
      *
      * @return Collection of {@link VDB}s.  There could be multiple VDBs with the
@@ -116,13 +109,12 @@ public interface Admin {
     Translator getTranslator(String deployedName) throws AdminException;
 
     /**
-     * Get the Work Manager stats that correspond to the specified identifier pattern.
+     * Get the Worker Pool statistics in runtime engine.
      *
-     * @param identifier - an identifier for the queues {@link QueueWorkerPool}. 
-     * @return Collection of {@link QueueWorkerPool}
+     * @return {@link WorkerPoolStatistics}
      * @throws AdminException 
      */
-    WorkerPoolStatistics getWorkManagerStats(String identifier) throws AdminException;
+    WorkerPoolStatistics getWorkerPoolStats() throws AdminException;
     
     /**
      * Get the Caches that correspond to the specified identifier pattern
@@ -169,18 +161,6 @@ public interface Admin {
      */
     Collection<Transaction> getTransactions() throws AdminException;
     
-    
-   /**
-     * Get the processes that correspond to the specified identifier pattern.
-     *
-     * @param processIdentifier the unique identifier for for a {@link org.teiid.adminapi.ProcessObject ProcessObject}
-     * in the system or "{@link org.teiid.adminapi.AdminObject#WILDCARD WILDCARD}"
-     * if all Processes are desired.
-     * @return Collection of {@link org.teiid.adminapi.ProcessObject ProcessObject}
-     * @throws AdminException if there's a system error.
-     */
-    Collection<ProcessObject> getProcesses(String processIdentifier) throws AdminException;
-
     /**
      * Clear the cache or caches specified by the cacheIdentifier.
      * @param cacheType Cache Type

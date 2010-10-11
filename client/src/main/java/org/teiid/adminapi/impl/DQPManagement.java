@@ -30,7 +30,7 @@ import org.teiid.adminapi.AdminException;
 public interface DQPManagement {
     List<RequestMetadata> getRequestsForSession(String sessionId) ;
     List<RequestMetadata> getRequests();
-    WorkerPoolStatisticsMetadata getWorkManagerStatistics(String identifier);
+    WorkerPoolStatisticsMetadata getWorkerPoolStatistics();
     void terminateSession(String terminateeId);
     boolean cancelRequest(String sessionId, long requestId) throws AdminException;
     Collection<String> getCacheTypes();

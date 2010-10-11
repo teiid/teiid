@@ -37,7 +37,6 @@ import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminFactory;
 import org.teiid.adminapi.CacheStatistics;
-import org.teiid.adminapi.ProcessObject;
 import org.teiid.adminapi.PropertyDefinition;
 import org.teiid.adminapi.Request;
 import org.teiid.adminapi.Session;
@@ -183,13 +182,6 @@ public class AdminShell {
 		return getAdmin().getTemplatePropertyDefinitions(templateName);
 	}
 
-	@Doc(text = "Get the ProcessObject instances for the given identifier")
-	public static Collection<ProcessObject> getProcesses(
-			@Doc(text = "identifier") String processIdentifier)
-			throws AdminException {
-		return getAdmin().getProcesses(processIdentifier);
-	}
-
 	@Doc(text = "Get all Request instances")
 	public static Collection<Request> getRequests() throws AdminException {
 		return getAdmin().getRequests();
@@ -224,11 +216,10 @@ public class AdminShell {
 		return getAdmin().getVDBs();
 	}
 
-	@Doc(text = "Get WorkerPoolStatistics for the given WorkManager")
-	public static WorkerPoolStatistics getWorkManagerStats(
-			@Doc(text = "identifier") String identifier)
+	@Doc(text = "Get thread pool statistics for Teiid")
+	public static WorkerPoolStatistics getWorkerPoolStats()
 			throws AdminException {
-		return getAdmin().getWorkManagerStats(identifier);
+		return getAdmin().getWorkerPoolStats();
 	}
 	
 	@Doc(text = "Get cache statistics for given cache type")
@@ -255,14 +246,6 @@ public class AdminShell {
     		@Doc(text = "any authenticated") boolean anyAuthenticated) throws AdminException {
     	getAdmin().setAnyAuthenticatedForDataRole(vdbName, vdbVersion, dataRole, anyAuthenticated);
     }
-
-	@Doc(text = "Set a runtime property")
-	public static void setRuntimeProperty(
-			@Doc(text = "name") String propertyName, 
-			@Doc(text = "value") String propertyValue)
-			throws AdminException {
-		getAdmin().setRuntimeProperty(propertyName, propertyValue);
-	}
 
 	@Doc(text = "Terminate a session and associated requests")
 	public static void terminateSession(

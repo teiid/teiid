@@ -50,6 +50,7 @@
   <li>Overwriting an existing VDB will cause old connections to be terminated.  Production systems should rely on VDB versioning.
   <li>The jdbc:metamatrix JDBC URL prefix is no longer accepted.  Use jdbc:teiid instead.
   <li>Model visibility no longer restricts access to tables and procedures.  Setting visible to false will only hide entries from system tables.  Data roles should be used to restrict data access.
+  <li>On Admin API "getWorkManagerStats" methods renamed to "getWorkerPoolStats". Also, "setRuntimeProperty" and "getProcesses" methods are not supported.
 </ul>
 <h4>from 7.0</h4>
 <ul>

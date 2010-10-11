@@ -472,7 +472,7 @@ public class DQPCore implements DQP {
     	return this.requests.get(processorID);
 	}
 	
-    public WorkerPoolStatisticsMetadata getWorkManagerStatistics() {
+    public WorkerPoolStatisticsMetadata getWorkerPoolStatistics() {
     	return this.processWorkerPool.getStats();
     }
            

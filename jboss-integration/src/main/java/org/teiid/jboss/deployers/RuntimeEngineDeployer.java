@@ -29,7 +29,6 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -393,16 +392,9 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	
 	
 	@Override
-	@ManagementOperation(description="Get Runtime workmanager statistics", impact=Impact.ReadOnly,params={@ManagementParameter(name="identifier",description="Use \"runtime\" for engine, or connector name for connector")})
-    public WorkerPoolStatisticsMetadata getWorkManagerStatistics(String identifier) {
-		if ("runtime".equalsIgnoreCase(identifier)) { //$NON-NLS-1$
-			return this.dqpCore.getWorkManagerStatistics();
-		}
-		/*ConnectorManager cm = this.dqpCore.getConnectorManagerRepository().getConnectorManager(identifier);
-		if (cm != null) {
-			return cm.getWorkManagerStatistics();
-		}*/
-		return null;
+	@ManagementOperation(description="Get thread statistics worker pool", impact=Impact.ReadOnly,params={@ManagementParameter(name="identifier",description="Get thread statistics worker pool")})
+    public WorkerPoolStatisticsMetadata getWorkerPoolStatistics(){
+		return this.dqpCore.getWorkerPoolStatistics();
 	}
 	
 	@Override
