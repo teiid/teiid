@@ -471,6 +471,7 @@
 
 			<operation name="getMaterializedViews" displayName="Get Materialized View Info"
 				description="Get any Materialized Views for this VDB">
+
 				<results>
 
 					<c:list-property name="list" displayName=" Materialized Views"
@@ -490,11 +491,31 @@
 							<c:simple-property displayName="Current State"
 								name="loadState" type="string" description="Processing time for the request" />
 							<c:simple-property displayName="Last Updated"
-								name="updated" type="string" description="Last time of data refresh" />
+								name="updated" type="integer" description="Last time of data refresh" />
 							<c:simple-property displayName="Cardinality"
-								name="cardinality" type="string" description="Row count" />
+								name="cardinality" type="integer" description="Row count" />
 						</c:map-property>
 					</c:list-property>
+				</results>
+			</operation>
+
+			<operation name="reloadMaterializedView" displayName="Refresh a Materialized View"
+				description="Refresh a given any Materialized View for this VDB">
+				<parameters>
+					<c:simple-property displayName="Materialized View Schema"
+						name="schema" type="string" required="true"
+						description="The schema name of the Materialized View to refresh" />
+					<c:simple-property displayName="Materialized View Table"
+						name="table" type="string" required="true"
+						description="The table name of the Materialized View to refresh" />
+					<c:simple-property displayName="Invalidate Current Materialized View"
+						name="invalidate" type="boolean" required="true"
+						description="If true, will invalidate the current Materialized View" />
+				</parameters>
+
+				<results>
+					<c:simple-property displayName="Result" name="operationResult"
+						type="string" description="Result of refresh" />
 				</results>
 			</operation>
 

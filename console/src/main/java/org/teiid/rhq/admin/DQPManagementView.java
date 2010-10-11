@@ -327,8 +327,20 @@ public class DQPManagementView implements PluginConstants {
 					connection, formatVdbName(vdbName), Integer
 							.parseInt(vdbVersion));
 			getResultsCollectionValue(resultsMetaValue, sqlResultsObject);
-			operationResult.setContent(createReportResultListForMatViewQuery(fieldNameList,
-					sqlResultsObject.iterator()));
+			operationResult.setContent(createReportResultListForMatViewQuery(
+					fieldNameList, sqlResultsObject.iterator()));
+		} else if (operationName.equals(VDB.Operations.RELOAD_MATVIEW)) {
+			List<String> fieldNameList = operationResult.getFieldNameList();
+			MetaValue resultsMetaValue = reloadMaterializedView(connection,
+					formatVdbName(vdbName), Integer.parseInt(vdbVersion),
+					(String) valueMap.get(Operation.Value.MATVIEW_SCHEMA),
+					(String) valueMap.get(Operation.Value.MATVIEW_TABLE),
+					(Boolean) valueMap.get(Operation.Value.INVALIDATE_MATVIEW));
+			if (resultsMetaValue==null) {
+				operationResult.setContent("failure - see log for details"); //$NON-NLS-1$
+			} else {
+				operationResult.setContent("data successfully refreshed!"); //$NON-NLS-1$
+			}
 		}
 
 	}
@@ -390,7 +402,7 @@ public class DQPManagementView implements PluginConstants {
 				MetaValueFactory.getInstance().create(
 						Operation.Value.MAT_VIEW_QUERY),
 				MetaValueFactory.getInstance()
-						.create(Long.parseLong("9999999")) };
+						.create(Long.parseLong("9999999")) }; //$NON-NLS-1$
 
 		try {
 			resultsCollection = executeManagedOperation(connection,
@@ -402,6 +414,36 @@ public class DQPManagementView implements PluginConstants {
 		}
 
 		return resultsCollection;
+
+	}
+
+	protected MetaValue reloadMaterializedView(
+			ProfileServiceConnection connection, String vdbName,
+			int vdbVersion, String schema, String table, Boolean invalidate) {
+
+		MetaValue result = null;
+		String matView = schema + "." + table; //$NON-NLS-1$
+		String query = PluginConstants.Operation.Value.MAT_VIEW_REFRESH;
+		query = query.replace("param1", matView); //$NON-NLS-1$
+		query = query.replace("param2", invalidate.toString()); //$NON-NLS-1$
+		MetaValue[] args = new MetaValue[] {
+				MetaValueFactory.getInstance().create(vdbName),
+				MetaValueFactory.getInstance().create(vdbVersion),
+				MetaValueFactory.getInstance().create(query),
+				MetaValueFactory.getInstance()
+						.create(Long.parseLong("9999999")) }; //$NON-NLS-1$
+
+		try {
+			result = executeManagedOperation(connection,
+					getRuntimeEngineDeployer(connection, mc),
+					VDB.Operations.EXECUTE_QUERIES, args);
+		} catch (Exception e) {
+			final String msg = "Exception executing operation: " + VDB.Operations.RELOAD_MATVIEW; //$NON-NLS-1$
+			LOG.error(msg, e);
+			
+		}
+
+		return result;
 
 	}
 
@@ -504,10 +546,11 @@ public class DQPManagementView implements PluginConstants {
 				} catch (Exception e) {
 					final String msg = "Exception getting the AdminApi in " + operation; //$NON-NLS-1$
 					LOG.error(msg, e);
+					throw new RuntimeException(e);
 				}
 			}
 		}
-		throw new Exception("No operation found with given name =" + operation); //$NON-NLS-1$
+		throw new Exception("No operation found with given name = " + operation); //$NON-NLS-1$
 
 	}
 
@@ -712,11 +755,25 @@ public class DQPManagementView implements PluginConstants {
 			for (MetaValue value : ((CollectionValueSupport) pValue)
 					.getElements()) {
 				if (value.getMetaType().isCollection()) {
-							ArrayList<String> row = (ArrayList<String>)MetaValueFactory.getInstance().unwrap(value);
-							list.add(row);
+					ArrayList<String> row = (ArrayList<String>) MetaValueFactory
+							.getInstance().unwrap(value);
+					list.add(row);
 				}
 			}
 		}
+	}
+
+	private void getResultsCollectionValueForMatViewRefresh(MetaValue pValue,
+			Collection<ArrayList<String>> list) {
+		MetaType metaType = pValue.getMetaType();
+		for (MetaValue value : ((CollectionValueSupport) pValue).getElements()) {
+			if (value.getMetaType().isCollection()) {
+				ArrayList<String> row = (ArrayList<String>) MetaValueFactory
+						.getInstance().unwrap(value);
+				list.add(row);
+			}
+		}
+
 	}
 
 	public static <T> void getTransactionCollectionValue(MetaValue pValue,
@@ -801,21 +858,22 @@ public class DQPManagementView implements PluginConstants {
 		}
 		return reportResultList;
 	}
-	
-	private Collection createReportResultListForMatViewQuery(List fieldNameList,
-			Iterator objectIter) {
+
+	private Collection createReportResultListForMatViewQuery(
+			List fieldNameList, Iterator objectIter) {
 		Collection reportResultList = new ArrayList();
 
-		//Iterate throught rows
+		// Iterate through rows
 		while (objectIter.hasNext()) {
-			ArrayList<String> columnValues = (ArrayList<String>)objectIter.next();
+			ArrayList<String> columnValues = (ArrayList<String>) objectIter
+					.next();
 
 			Class cls = null;
 			try {
 				Iterator fieldIter = fieldNameList.iterator();
-				Map reportValueMap = new HashMap<String, String>();
-				//Iterate through columns with a row
-				for (String columnValue: columnValues) {
+				Map reportValueMap = new HashMap<String, Object>();
+				// Iterate through columns with a row
+				for (Object columnValue : columnValues) {
 					String fieldName = (String) fieldIter.next();
 					reportValueMap.put(fieldName, columnValue);
 				}

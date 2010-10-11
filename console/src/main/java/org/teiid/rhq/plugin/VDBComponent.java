@@ -123,8 +123,14 @@ public class VDBComponent extends Facet {
 		} else if (name.equals(Platform.Operations.KILL_SESSION)) {
 			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(
 					Operation.Value.SESSION_ID).getLongValue());
-		} 
-
+		} else if (name.equals(VDB.Operations.RELOAD_MATVIEW)) {
+			valueMap.put(Operation.Value.MATVIEW_SCHEMA, configuration.getSimple(
+					Operation.Value.MATVIEW_SCHEMA).getStringValue());
+			valueMap.put(Operation.Value.MATVIEW_TABLE, configuration.getSimple(
+					Operation.Value.MATVIEW_TABLE).getStringValue());
+			valueMap.put(Operation.Value.INVALIDATE_MATVIEW, configuration.getSimple(
+					Operation.Value.INVALIDATE_MATVIEW).getBooleanValue());
+		}
 	}
 
 	/*
