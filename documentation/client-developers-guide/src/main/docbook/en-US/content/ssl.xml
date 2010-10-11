@@ -8,7 +8,7 @@
     
     <para>This chapter will shows you various security configurations 
     that can be used with Teiid in securing your data access. Note that data level
-    security (<link linkend="entitlements">data roles</link>) are explained in separate chapter.</para>
+    security called as "data roles" are explained in Reference Guide. This chapter pertains to transport level security.</para>
     
     <section id="default_security">
         <title>Default Security</title>

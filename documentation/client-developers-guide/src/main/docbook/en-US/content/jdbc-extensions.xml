@@ -142,7 +142,8 @@
                         </entry>
                         <entry>
                             <para>Determines whether XML documents returned by XML document models will be validated 
-                            against their schema after processing.  See the <link linkend="document_validation">document validation</link> section.</para>
+                            against their schema after processing.  See the Reference Guide's "XML SELECT Command" chapter and 
+                            "document validation" section.</para>
                         </entry>
                     </row>      
                     <row>
