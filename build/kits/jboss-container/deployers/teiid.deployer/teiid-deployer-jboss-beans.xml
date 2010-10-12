@@ -4,7 +4,15 @@
 
     <!-- Deployer specific Stuff -->
     <bean name="VDBStructure" class="org.teiid.deployers.VDBStructure" />
-    <bean name="VDBRepository" class="org.teiid.deployers.VDBRepository"/>
+    
+    <bean name="SystemFunctionManager" class="org.teiid.query.function.SystemFunctionManager">
+        <property name="allowEnvFunction">false</property>
+    </bean>  
+        
+    <bean name="VDBRepository" class="org.teiid.deployers.VDBRepository">
+        <property name="systemFunctionManager"><inject bean="SystemFunctionManager"/></property>
+    </bean>
+    
     <bean name="SecurityHelper" class="org.teiid.jboss.JBossSecurityHelper"/>    
         
    <bean name="JBossLifeCycleListener" class="org.teiid.jboss.JBossLifeCycleListener"/>

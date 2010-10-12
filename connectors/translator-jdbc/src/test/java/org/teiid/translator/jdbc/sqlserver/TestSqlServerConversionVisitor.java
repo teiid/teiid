@@ -36,6 +36,7 @@ import org.teiid.metadata.Table;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
@@ -158,7 +159,7 @@ public class TestSqlServerConversionVisitor {
         obj.setNativeType("uniqueidentifier"); //$NON-NLS-1$
         
         CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
-        QueryMetadataInterface metadata = new TransformationMetadata(null, store, null, null);
+        QueryMetadataInterface metadata = new TransformationMetadata(null, store, null, null, FakeMetadataFactory.SFM.getSystemFunctions());
         
         TranslationUtility tu = new TranslationUtility(metadata);
         Command command = tu.parseCommand("select max(x) from bar"); //$NON-NLS-1$

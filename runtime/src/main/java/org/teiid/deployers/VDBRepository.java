@@ -43,6 +43,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.translator.TranslatorException;
@@ -60,6 +61,7 @@ public class VDBRepository implements Serializable{
 	private MetadataStore odbcStore;
 	private boolean odbcEnabled = false;
 	private List<VDBLifeCycleListener> listeners = new ArrayList<VDBLifeCycleListener>();
+	private SystemFunctionManager systemFunctionManager;
 	
 	public void addVDB(VDBMetaData vdb, MetadataStoreGroup stores, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr) throws DeploymentException {
 		if (getVDB(vdb.getName(), vdb.getVersion()) != null) {
@@ -76,10 +78,10 @@ public class VDBRepository implements Serializable{
 		}
 		
 		if (this.odbcStore == null) {
-			this.vdbRepo.put(vdbId(vdb), new CompositeVDB(vdb, stores, visibilityMap, udf, cmr, this.systemStore));
+			this.vdbRepo.put(vdbId(vdb), new CompositeVDB(vdb, stores, visibilityMap, udf, this.systemFunctionManager.getSystemFunctions(), cmr, this.systemStore));
 		}
 		else {
-			this.vdbRepo.put(vdbId(vdb), new CompositeVDB(vdb, stores, visibilityMap, udf, cmr, this.systemStore, odbcStore));
+			this.vdbRepo.put(vdbId(vdb), new CompositeVDB(vdb, stores, visibilityMap, udf, this.systemFunctionManager.getSystemFunctions(), cmr, this.systemStore, odbcStore));
 		}
 		notifyAdd(vdb.getName(), vdb.getVersion());
 	}
@@ -208,7 +210,7 @@ public class VDBRepository implements Serializable{
 	void updateVDB(String name, int version) {
 		CompositeVDB v = this.vdbRepo.get(new VDBKey(name, version));
 		if (v!= null) {
-			v.update(v.getVDB());
+			v.update(v.getVDB(), systemFunctionManager.getSystemFunctions());
 		}
 	}
 	
@@ -230,5 +232,9 @@ public class VDBRepository implements Serializable{
 		for(VDBLifeCycleListener l:this.listeners) {
 			l.removed(name, version);
 		}
+	}
+	
+	public void setSystemFunctionManager(SystemFunctionManager mgr) {
+		this.systemFunctionManager = mgr;
 	}
 }

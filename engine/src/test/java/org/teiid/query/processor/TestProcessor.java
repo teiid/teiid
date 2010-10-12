@@ -22,8 +22,14 @@
 
 package org.teiid.query.processor;
 
-import static org.junit.Assert.*;
-import static org.teiid.query.optimizer.TestOptimizer.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.teiid.query.optimizer.TestOptimizer.FULL_PUSHDOWN;
+import static org.teiid.query.optimizer.TestOptimizer.checkNodeTypes;
+import static org.teiid.query.optimizer.TestOptimizer.getTypicalCapabilities;
+import static org.teiid.query.optimizer.TestOptimizer.helpPlan;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -5272,7 +5278,7 @@ public class TestProcessor {
         caps.setFunctionSupport("myrtrim", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        FunctionLibrary funcLibrary = new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(new FakeFunctionMetadataSource().getFunctionMethods())));
+        FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree(new UDFSource(new FakeFunctionMetadataSource().getFunctionMethods())));
         FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
         
         processPreparedStatement(sql, expected, dataManager, capFinder,
@@ -5320,7 +5326,7 @@ public class TestProcessor {
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm4", caps); //$NON-NLS-1$
 
-        FunctionLibrary funcLibrary = new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(new FakeFunctionMetadataSource().getFunctionMethods())));
+        FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree(new UDFSource(new FakeFunctionMetadataSource().getFunctionMethods())));
         FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
         
         processPreparedStatement(sql, expected, dataManager, capFinder,

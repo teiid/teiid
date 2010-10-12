@@ -22,7 +22,7 @@
 
 package org.teiid.query.processor.relational;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -36,13 +36,11 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.TupleBatch;
-import org.teiid.common.buffer.TupleSource;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.function.FunctionDescriptor;
-import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.function.aggregate.AggregateFunction;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.FakeTupleSource;
@@ -52,6 +50,7 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
 
@@ -272,7 +271,7 @@ public class TestGroupingNode {
         
         // Set grouping elements to null 
         List groupingElements = new ArrayList();
-        groupingElements.add(col1); //$NON-NLS-1$
+        groupingElements.add(col1); 
         node.setGroupingElements(groupingElements);         
         CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
         
@@ -309,7 +308,7 @@ public class TestGroupingNode {
         col2.setType(Integer.class);
         
         Function func = new Function("lookup", new Expression[] { new Constant("pm1.g1"), new Constant("e2"), new Constant("e1"), col2 }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        FunctionDescriptor desc = SystemFunctionManager.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, Integer.class } ); //$NON-NLS-1$
+        FunctionDescriptor desc = FakeMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, Integer.class } ); //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
         func.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         
@@ -320,7 +319,7 @@ public class TestGroupingNode {
         node.setElements(outputElements);
         
         List groupingElements = new ArrayList();
-        groupingElements.add(col1); //$NON-NLS-1$
+        groupingElements.add(col1); 
         node.setGroupingElements(groupingElements);   
         CommandContext context = new CommandContext("pid", "test", null, null, 1);    //$NON-NLS-1$ //$NON-NLS-2$
         
@@ -434,7 +433,7 @@ public class TestGroupingNode {
         node.setElements(outputElements);
         
         List groupingElements = new ArrayList();
-        groupingElements.add(col1); //$NON-NLS-1$
+        groupingElements.add(col1); 
         node.setGroupingElements(groupingElements);
 		return node;
 	}

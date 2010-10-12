@@ -51,6 +51,7 @@
   <li>The jdbc:metamatrix JDBC URL prefix is no longer accepted.  Use jdbc:teiid instead.
   <li>Model visibility no longer restricts access to tables and procedures.  Setting visible to false will only hide entries from system tables.  Data roles should be used to restrict data access.
   <li>On Admin API "getWorkManagerStats" methods renamed to "getWorkerPoolStats". Also, "setRuntimeProperty" and "getProcesses" methods are not supported.
+  <li>A new system function "session_id" is added to the system function library. By default "ENV" system function is now turned off. To enable it edit Teiid configuration file.
 </ul>
 <h4>from 7.0</h4>
 <ul>

@@ -36,7 +36,6 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.Assertion;
 import org.teiid.query.function.FunctionLibrary;
-import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingBaseNode;
 import org.teiid.query.mapping.xml.MappingDocument;
@@ -58,7 +57,7 @@ public class FakeMetadataFacade extends BasicQueryMetadata {
 
 	public FakeMetadataFacade(FakeMetadataStore store) {
 		this.store = store;
-		this.functionLibrary = SystemFunctionManager.getSystemFunctionLibrary();
+		this.functionLibrary = FakeMetadataFactory.SFM.getSystemFunctionLibrary();
 	}
 	
 	public FakeMetadataFacade(FakeMetadataStore store, FunctionLibrary funcLibrary) {
@@ -204,7 +203,7 @@ public class FakeMetadataFacade extends BasicQueryMetadata {
     	FakeMetadataObject group = (FakeMetadataObject) groupID;
 		QueryNode queryNode = (QueryNode) group.getProperty(FakeMetadataObject.Props.PLAN);
 		if (queryNode.getQuery() == null) {
-		    throw new QueryMetadataException("no query");
+		    throw new QueryMetadataException("no query");//$NON-NLS-1$
 		}
 		return queryNode;
 	}

@@ -22,7 +22,8 @@
 
 package org.teiid.query.processor.eval;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -59,6 +60,7 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.TestCaseExpression;
 import org.teiid.query.sql.symbol.TestSearchedCaseExpression;
 import org.teiid.query.sql.util.ValueIterator;
+import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
 @SuppressWarnings("nls")
@@ -192,7 +194,7 @@ public class TestExpressionEvaluator {
         e2.setType(String.class);
         
         Function func = new Function("concat", new Expression[] { e1, e2 }); //$NON-NLS-1$
-        FunctionDescriptor desc = SystemFunctionManager.getSystemFunctionLibrary().findFunction("concat", new Class[] { String.class, String.class } ); //$NON-NLS-1$
+        FunctionDescriptor desc = FakeMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("concat", new Class[] { String.class, String.class } ); //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
 
         SingleElementSymbol[] elements = new SingleElementSymbol[] {
@@ -214,7 +216,7 @@ public class TestExpressionEvaluator {
         e2.setType(String.class);
         
         Function func = new Function("concat", new Expression[] { e2, e1 }); //$NON-NLS-1$
-        FunctionDescriptor desc = SystemFunctionManager.getSystemFunctionLibrary().findFunction("concat", new Class[] { String.class, String.class } ); //$NON-NLS-1$
+        FunctionDescriptor desc = FakeMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("concat", new Class[] { String.class, String.class } ); //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
 
         SingleElementSymbol[] elements = new SingleElementSymbol[] {
@@ -235,7 +237,7 @@ public class TestExpressionEvaluator {
         e1.setType(Integer.class);        
         
         Function func = new Function("lookup", new Expression[] { new Constant("pm1.g1"), new Constant("e2"), new Constant("e1"), e1 }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        FunctionDescriptor desc = SystemFunctionManager.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, String.class } ); //$NON-NLS-1$
+        FunctionDescriptor desc = FakeMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, String.class } ); //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
 
         SingleElementSymbol[] elements = new SingleElementSymbol[] {
@@ -307,7 +309,7 @@ public class TestExpressionEvaluator {
 
     @Test public void testUser() throws Exception {
         Function func = new Function("user", new Expression[] {}); //$NON-NLS-1$
-        FunctionDescriptor desc = SystemFunctionManager.getSystemFunctionLibrary().findFunction("user", new Class[] {} );         //$NON-NLS-1$
+        FunctionDescriptor desc = FakeMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("user", new Class[] {} );         //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
 
         FakeDataManager dataMgr = new FakeDataManager();
@@ -324,7 +326,7 @@ public class TestExpressionEvaluator {
      */
     @Test public void testEnv() throws Exception {
         Function func = new Function("env", new Expression[] {}); //$NON-NLS-1$
-        FunctionDescriptor desc = SystemFunctionManager.getSystemFunctionLibrary().findFunction("env", new Class[] {String.class} );         //$NON-NLS-1$
+        FunctionDescriptor desc = FakeMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("env", new Class[] {String.class} );         //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
         
         FakeDataManager dataMgr = new FakeDataManager();
@@ -350,7 +352,7 @@ public class TestExpressionEvaluator {
         } else {
             parameterSignature = new Class[] { String.class };
         }        
-        FunctionDescriptor desc = SystemFunctionManager.getSystemFunctionLibrary().findFunction("commandpayload", parameterSignature );         //$NON-NLS-1$
+        FunctionDescriptor desc = FakeMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("commandpayload", parameterSignature );         //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
         
         FakeDataManager dataMgr = new FakeDataManager();       

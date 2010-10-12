@@ -269,7 +269,7 @@ public class RealMetadataFactory {
     	for (Schema schema : metadataStore.getSchemas().values()) {
 			vdbMetaData.addModel(FakeMetadataFactory.createModel(schema.getName(), schema.isPhysical()));
 		}
-    	return new TransformationMetadata(vdbMetaData, store, null, null);
+    	return new TransformationMetadata(vdbMetaData, store, null, null, FakeMetadataFactory.SFM.getSystemFunctions());
 	}
     
     /** 

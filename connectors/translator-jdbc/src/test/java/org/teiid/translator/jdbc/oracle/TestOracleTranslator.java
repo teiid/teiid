@@ -722,7 +722,7 @@ public class TestOracleTranslator {
         RealMetadataFactory.createElements(dual, new String[] {"something"}, new String[] {DataTypeManager.DefaultDataTypes.STRING}); //$NON-NLS-1$
         
         CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
-        return new TransformationMetadata(null, store, null, null);
+        return new TransformationMetadata(null, store, null, null, FakeMetadataFactory.SFM.getSystemFunctions());
     }
 
 	public void helpTestVisitor(String vdb, String input, String expectedOutput) throws TranslatorException {
