@@ -239,6 +239,9 @@ public class RelationalPlan extends ProcessorPlan {
 				}
 			}
     	}
+    	if (this.root.isMultiSource()) {
+    		return true;
+    	}
     	return requiresTransaction(transactionalReads, root);
     }
     

@@ -33,20 +33,31 @@ import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.PlanToProcessConverter;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.processor.relational.AccessNode;
+import org.teiid.query.processor.relational.GroupingNode;
 import org.teiid.query.processor.relational.NullNode;
+import org.teiid.query.processor.relational.ProjectNode;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalNodeUtil;
 import org.teiid.query.processor.relational.UnionAllNode;
+import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
+import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.ExpressionSymbol;
+import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.util.CommandContext;
 
 
@@ -102,6 +113,10 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
             // Replace all multi-source elements with the source name
             DeepPreOrderNavigator.doVisit(command, new MultiSourceElementReplacementVisitor(sourceName));
 
+            if (!RelationalNodeUtil.shouldExecute(command, false)) {
+                continue;
+            }
+            
             // Rewrite the command now that criteria may have been simplified
             try {
                 command = QueryRewriter.rewrite(command, metadata, null);                    
@@ -133,17 +148,44 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
             }
             default:
             {
-                // More than 1 access node - replace with a union
+
+            	UnionAllNode unionNode = new UnionAllNode(getID());
+            	unionNode.setElements(accessNode.getElements());
                 
-                UnionAllNode unionNode = new UnionAllNode(getID());
-                unionNode.setElements(accessNode.getElements());
-                
-                RelationalNode parent = unionNode;
-                                
                 for (AccessNode newNode : accessNodes) {
-                    unionNode.addChild(newNode);
+                	unionNode.addChild(newNode);
                 }
+            	
+            	RelationalNode parent = unionNode;
+            	
+                // More than 1 access node - replace with a union
+            	if (RelationalNodeUtil.isUpdate(accessNode.getCommand())) {
+            		
+            		GroupingNode groupNode = new GroupingNode(getID());                    
+            		AggregateSymbol sumCount = new AggregateSymbol("SumCount", NonReserved.SUM, false, (Expression)accessNode.getElements().get(0)); //$NON-NLS-1$          		
+            		List outputElements = new ArrayList();            		
+            		outputElements.add(sumCount); 
+            		groupNode.setElements(outputElements);
+            		groupNode.addChild(unionNode);
+            		
+            		ProjectNode projectNode = new ProjectNode(getID());
+            		// two converts because, the 2nd one does not resolve because of no metadata about the expression.
+            		Function convertFunc = new Function(FunctionLibrary.CONVERT, new Expression[] {new Constant(new Long(0)), new Constant(DataTypeManager.DefaultDataTypes.INTEGER)});
+            		ResolverVisitor.resolveLanguageObject(convertFunc, metadata);
+            		Function convertFunc2 = new Function(FunctionLibrary.CONVERT, new Expression[] {sumCount, new Constant(DataTypeManager.DefaultDataTypes.INTEGER)});
+            		convertFunc2.setFunctionDescriptor(convertFunc.getFunctionDescriptor());
+            		
+            		Expression rowCount = new ExpressionSymbol("RowCount", convertFunc2); //$NON-NLS-1$            		
+            		outputElements = new ArrayList();            		
+            		outputElements.add(rowCount);             		
+            		projectNode.setElements(outputElements);
+            		projectNode.setSelectSymbols(outputElements);
+            		projectNode.addChild(groupNode);
+            		
+            		parent = projectNode;
+            	}
                 
+                parent.setMultiSource(true);
                 return parent;
             }
         }

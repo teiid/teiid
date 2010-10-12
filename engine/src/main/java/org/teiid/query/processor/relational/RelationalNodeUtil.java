@@ -29,6 +29,7 @@ import org.teiid.query.eval.Evaluator;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Delete;
+import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.Limit;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
@@ -123,6 +124,13 @@ public class RelationalNodeUtil {
                     return true;
                 }
                 break;
+            case Command.TYPE_INSERT:
+            	Insert insert = (Insert) command;
+            	QueryCommand expr = insert.getQueryExpression();
+            	if (expr != null) {
+            		return shouldExecute(expr, simplifyCriteria);
+            	}
+            	return true;
             case Command.TYPE_UPDATE:
                 Update update = (Update) command;
                 
@@ -174,7 +182,7 @@ public class RelationalNodeUtil {
      * @return
      * @since 4.2
      */
-    static boolean isUpdate(Command command) {
+    public static boolean isUpdate(Command command) {
         int commandType = command.getType();
         return commandType == Command.TYPE_INSERT ||
                commandType == Command.TYPE_UPDATE ||

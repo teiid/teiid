@@ -271,7 +271,7 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
                 case SupportConstants.Element.SELECT:
                     return true;
                 case SupportConstants.Element.UPDATE:
-                    return false;
+                    return true;
                 case SupportConstants.Element.DEFAULT_VALUE:
                     return false;
                 case SupportConstants.Element.AUTO_INCREMENT:

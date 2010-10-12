@@ -87,6 +87,8 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 
 	/** Child nodes, usually just 1 or 2 */
 	private RelationalNode[] children = new RelationalNode[2];
+	
+	private boolean multiSource;
 
 	protected RelationalNode() {
 		
@@ -596,4 +598,12 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 		}
 		return processingState;
 	}
+	
+	public boolean isMultiSource() {
+		return multiSource;
+	}
+
+	public void setMultiSource(boolean multiSource) {
+		this.multiSource = multiSource;
+	}	
 }

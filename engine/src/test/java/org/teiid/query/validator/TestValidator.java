@@ -22,7 +22,9 @@
 
 package org.teiid.query.validator;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,6 +46,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingDocument;
@@ -2030,4 +2033,10 @@ public class TestValidator {
         helpValidate("SELECT e2, (SELECT e1, e2 FROM pm1.g1 WHERE e2 = '3') FROM pm1.g2", new String[] {"SELECT e1, e2 FROM pm1.g1 WHERE e2 = '3'"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
+    @Test public void testDisallowUpdateOnMultisourceElement() throws Exception {  
+    	Set<String> models = new HashSet<String>();
+    	models.add("pm1");
+        ValidatorReport report = helpValidateInModeler("pm1.vsp36", "UPDATE PM1.G1 set SOURCE_NAME='blah'", new MultiSourceMetadataWrapper(FakeMetadataFactory.example1Cached(), models));  //$NON-NLS-1$
+        assertEquals(report.toString(), 1, report.getItems().size());
+    }
 }

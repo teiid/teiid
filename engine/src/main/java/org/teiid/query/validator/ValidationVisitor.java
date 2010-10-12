@@ -42,6 +42,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
+import org.teiid.dqp.internal.process.multisource.MultiSourceElement;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionLibrary;
@@ -788,7 +789,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	            ElementSymbol nextElmnt = (ElementSymbol) ignoreIter.next();
 				if(!getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.DEFAULT_VALUE) &&
 					!getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.NULL) &&
-                    !getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT)) {
+                    !getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT) &&
+                     !(nextElmnt.getMetadataID() instanceof MultiSourceElement)) {
 		                handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0053", new Object[] {insertGroup, nextElmnt}), nextElmnt); //$NON-NLS-1$
 				}
 			}
@@ -842,6 +844,11 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                 // Check that left side element is updatable
                 if(! getMetadata().elementSupports(elementID.getMetadataID(), SupportConstants.Element.UPDATE)) {
                     handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0059", elementID), elementID); //$NON-NLS-1$
+                }
+                
+                Object metadataID = elementID.getMetadataID();
+                if (metadataID instanceof MultiSourceElement){
+                	handleValidationError(QueryPlugin.Util.getString("multi_source_update_not_allowed", elementID), elementID); //$NON-NLS-1$
                 }
 
 			    // Check that right expression is a constant and is non-null

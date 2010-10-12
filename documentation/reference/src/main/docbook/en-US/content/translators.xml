@@ -1229,7 +1229,7 @@ Account.Contacts) FROM Account]]></programlisting>
         <para>
         To mark a model as multi-source, the user needs to supply property called 
         <property>supports-multi-source-bindings</property>, in the "vdb.xml" file.  
-        Also, the user needs to define multiple sources. Here is code example showing single model with 
+        Also, the user needs to define multiple sources. Here is code example showing dynamic vdb with single model with 
         multiple sources defined.
         </para>
         
@@ -1258,12 +1258,13 @@ Account.Contacts) FROM Account]]></programlisting>
         
         <programlisting language="SQL"><![CDATA[select * from table where SOURCE_NAME = 'newyork'
 update table column=value  where SOURCE_NAME='chicago'
-delete from table where column = x and SOURCE_NAME='la']]></programlisting>
+delete from table where column = x and SOURCE_NAME='la'
+insert into table (column, SOURCE_NAME) VALUES ('value', 'newyork')]]></programlisting>
       
         <para>
-        Note that when user do not supply the "SOURCE_NAME" in the criteria, it applies 
-        to all the sources. Unfortunately Teiid currently does not support INSERT, this 
-        planned for future releases. Another useful feature along with this feature is 
+        Note that when user do not supply the "SOURCE_NAME" in the criteria, the command applies 
+        to all the sources. If SOURCE_NAME supplied, the query is executed only aginst the source specified. 
+        Another useful feature along with this feature is 
         "partial results" to skip unavailable sources if they are down.
         </para>
         
@@ -1273,7 +1274,7 @@ delete from table where column = x and SOURCE_NAME='la']]></programlisting>
             limited, so if you need to use this feature build the VDB as usual in 
             the Teiid Designer and then edit the "vdb.xml" file in the VDB archive 
             using a Text editor to add the additional sources as defined above. 
-            You must deploy a data source for each source defined.
+            You must deploy a separate data source for each source defined in the xml file.
             </para>
         </note>
         

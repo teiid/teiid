@@ -45,7 +45,7 @@ public class TestMultiSourceElementReplacementVisitor extends TestCase {
         
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleMultiBinding();
         Set<String> multiSourceModels = new HashSet<String>();
-        multiSourceModels.add("MultiModel");
+        multiSourceModels.add("MultiModel"); //$NON-NLS-1$
         MultiSourceMetadataWrapper wrapper = new MultiSourceMetadataWrapper(metadata, multiSourceModels);  
         
         return wrapper;
@@ -120,6 +120,24 @@ public class TestMultiSourceElementReplacementVisitor extends TestCase {
         helpTest("SELECT a FROM MultiModel.Phys WHERE SOURCE_NAME = (SELECT b FROM MultiModel.Phys WHERE SOURCE_NAME IN ('x'))", //$NON-NLS-1$
                  getMetadata(),
                  "SELECT a FROM MultiModel.Phys WHERE 'x' = (SELECT b FROM MultiModel.Phys WHERE 'x' IN ('x'))"); //$NON-NLS-1$
+    }
+    
+    public void testInsertMatching() throws Exception {
+        helpTest("INSERT INTO MultiModel.Phys(a, SOURCE_NAME) VALUES('a', 'x')", //$NON-NLS-1$
+                 getMetadata(),
+                 "INSERT INTO MultiModel.Phys (a, SOURCE_NAME) SELECT a WHERE '1' = '2'"); //$NON-NLS-1$
+    }
+    
+    public void testInsertNotMatching() throws Exception {
+        helpTest("INSERT INTO MultiModel.Phys(a, SOURCE_NAME) VALUES('a', 'y')", //$NON-NLS-1$
+                 getMetadata(),
+                 "INSERT INTO MultiModel.Phys (a, SOURCE_NAME) SELECT a WHERE '1' = '2'"); //$NON-NLS-1$
+    }
+    
+    public void testInsertAll() throws Exception {
+        helpTest("INSERT INTO MultiModel.Phys(a) VALUES('a')", //$NON-NLS-1$
+                 getMetadata(),
+                 "INSERT INTO MultiModel.Phys (a) VALUES ('a')"); //$NON-NLS-1$
     }
 
 }
