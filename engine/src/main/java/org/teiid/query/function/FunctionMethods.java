@@ -56,7 +56,6 @@ import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.util.ContextProperties;
 
 /**
  * Static method hooks for most of the function library.
@@ -1242,11 +1241,7 @@ public final class FunctionMethods {
     }
     
     public static Object session_id(CommandContext context) {
-        Properties envProps = context.getEnvironmentProperties();
-        if(envProps != null && envProps.containsKey(ContextProperties.SESSION_ID)) {
-            return envProps.getProperty(ContextProperties.SESSION_ID);
-        }
-        return null;
+        return context.getConnectionID();
     }
     
     // ================= Function - MODIFYTIMEZONE ========================
