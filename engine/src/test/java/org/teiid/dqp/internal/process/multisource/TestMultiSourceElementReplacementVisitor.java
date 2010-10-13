@@ -123,15 +123,15 @@ public class TestMultiSourceElementReplacementVisitor extends TestCase {
     }
     
     public void testInsertMatching() throws Exception {
-        helpTest("INSERT INTO MultiModel.Phys(a, SOURCE_NAME) VALUES('a', 'x')", //$NON-NLS-1$
+        helpTest("INSERT INTO MultiModel.Phys(a, SOURCE_NAME) VALUES ('a', 'x')", //$NON-NLS-1$
                  getMetadata(),
-                 "INSERT INTO MultiModel.Phys (a, SOURCE_NAME) SELECT a WHERE '1' = '2'"); //$NON-NLS-1$
+                 "INSERT INTO MultiModel.Phys (a) VALUES ('a')"); //$NON-NLS-1$
     }
     
     public void testInsertNotMatching() throws Exception {
-        helpTest("INSERT INTO MultiModel.Phys(a, SOURCE_NAME) VALUES('a', 'y')", //$NON-NLS-1$
+        helpTest("INSERT INTO MultiModel.Phys(a, SOURCE_NAME) VALUES ('a', 'y')", //$NON-NLS-1$
                  getMetadata(),
-                 "INSERT INTO MultiModel.Phys (a, SOURCE_NAME) SELECT a WHERE '1' = '2'"); //$NON-NLS-1$
+                 "INSERT INTO MultiModel.Phys (a) SELECT a FROM MultiModel.Phys WHERE 1 = 0"); //$NON-NLS-1$
     }
     
     public void testInsertAll() throws Exception {

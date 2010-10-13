@@ -2036,7 +2036,7 @@ public class TestValidator {
     @Test public void testDisallowUpdateOnMultisourceElement() throws Exception {  
     	Set<String> models = new HashSet<String>();
     	models.add("pm1");
-        ValidatorReport report = helpValidateInModeler("pm1.vsp36", "UPDATE PM1.G1 set SOURCE_NAME='blah'", new MultiSourceMetadataWrapper(FakeMetadataFactory.example1Cached(), models));  //$NON-NLS-1$
+        ValidatorReport report = helpValidateInModeler("pm1.vsp36", "UPDATE PM1.G1 set SOURCE_NAME='blah'", new MultiSourceMetadataWrapper(FakeMetadataFactory.example1(), models));  //$NON-NLS-1$
         assertEquals(report.toString(), 1, report.getItems().size());
     }
 }
