@@ -486,7 +486,7 @@
 								name="targetSchemaName" type="string" description="Name of the materialized schema" />
 							<c:simple-property displayName="Target Name"
 								name="targetName" type="string" description="Name of target table" />
-							<c:simple-property displayName="Created Time"
+							<c:simple-property displayName="Is Valid"
 								name="valid" type="string" description="Indicates if data in table is valid for use" />
 							<c:simple-property displayName="Current State"
 								name="loadState" type="string" description="Processing time for the request" />
@@ -505,12 +505,12 @@
 					<c:simple-property displayName="Materialized View Schema"
 						name="schema" type="string" required="true"
 						description="The schema name of the Materialized View to refresh" />
-					<c:simple-property displayName="Materialized View Table"
+					<c:simple-property displayName="Materialized View Name"
 						name="table" type="string" required="true"
-						description="The table name of the Materialized View to refresh" />
-					<c:simple-property displayName="Invalidate Current Materialized View"
-						name="invalidate" type="boolean" required="true"
-						description="If true, will invalidate the current Materialized View" />
+						description="The name of the Materialized View to refresh" />
+					<c:simple-property displayName="Invalidate Current Materialized View Table"
+						name="invalidate" type="boolean" required="true" default="false"
+						description="If yes, will block all queries against the current Materialized View table until refreshed." />
 				</parameters>
 
 				<results>
