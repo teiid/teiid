@@ -24,6 +24,7 @@
  */
 package org.teiid.translator.jdbc.sqlserver;
 
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -203,6 +204,10 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     @Override
     public boolean booleanNullable() {
     	return true;
+    }
+    
+    public boolean hasTimeType() {
+    	return getDatabaseVersion().compareTo(V_2005) >= 0;
     }
     
 }

@@ -603,7 +603,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      */
     public String translateLiteralTime(Time timeValue) {
     	if (!hasTimeType()) {
-    		return "{ts '1970-01-01 " + formatDateValue(timeValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
+    		return translateLiteralTimestamp(new Timestamp(timeValue.getTime())); 
     	}
         return "{t '" + formatDateValue(timeValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
     }

@@ -38,6 +38,7 @@ public class AccessExecutionFactory extends SybaseExecutionFactory {
 	
 	public AccessExecutionFactory() {
 		setSupportsOrderBy(false);
+		setDatabaseVersion("2003"); //$NON-NLS-1$
 	}
 	
     @Override

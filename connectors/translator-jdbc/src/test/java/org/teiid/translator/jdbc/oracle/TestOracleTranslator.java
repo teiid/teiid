@@ -559,7 +559,7 @@ public class TestOracleTranslator {
         helpTestVisitor(getTestVDB(),
             "select {t '13:59:59'} FROM parts", //$NON-NLS-1$
             null,
-            "SELECT {ts '1970-01-01 13:59:59'} FROM PARTS"); //$NON-NLS-1$
+            "SELECT to_date('1970-01-01 13:59:59', 'YYYY-MM-DD HH24:MI:SS') FROM PARTS"); //$NON-NLS-1$
     }
 
     @Test public void testTimestampLiteral() throws Exception {
