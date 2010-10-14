@@ -186,8 +186,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 				}
 				resultBatch = new ArrayList<List<Object>>();
 					
-				for(int resultIndex = 0; resultIndex < results.getSize(); resultIndex++) {
-					SObject sObject = results.getRecords().get(resultIndex);
+				for(SObject sObject : results.getRecords()) {
 					List<Object[]> result = getObjectData(sObject);
 					for(Iterator<Object[]> i = result.iterator(); i.hasNext(); ) {
 						resultBatch.add(Arrays.asList(i.next()));
