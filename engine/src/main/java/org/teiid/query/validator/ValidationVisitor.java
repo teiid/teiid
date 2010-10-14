@@ -81,6 +81,7 @@ import org.teiid.query.sql.lang.SetClause;
 import org.teiid.query.sql.lang.SetClauseList;
 import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.lang.SetQuery;
+import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.SubqueryFromClause;
@@ -376,7 +377,16 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	if(groupName.equals(ProcedureReservedWords.CHANGING) || groupName.equals(ProcedureReservedWords.INPUTS)) {
 			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0012", ProcedureReservedWords.INPUTS, ProcedureReservedWords.CHANGING), obj); //$NON-NLS-1$
 		}
-
+    	
+    	if (obj.getExpression() instanceof ScalarSubquery) {
+    		ScalarSubquery ss = (ScalarSubquery)obj.getExpression();
+    		if (ss.getCommand() instanceof StoredProcedure) {
+    			StoredProcedure sp = (StoredProcedure)ss.getCommand();
+    			if (sp.returnsResultSet() || !sp.returnsScalarValue()) {
+    				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.procedure_assigment"), obj); //$NON-NLS-1$    				
+    			}
+    		}
+    	}
     }
     
     @Override
@@ -418,6 +428,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 		// varible cannot be one of the special variables
     	if(elementname.equals(ProcedureReservedWords.ROWS_UPDATED)) {
 			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0017", new Object[] {ProcedureReservedWords.ROWS_UPDATED}), obj); //$NON-NLS-1$
+		} else if(elementname.equals(ProcedureReservedWords.ROWCOUNT)) {
+			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0017", new Object[] {ProcedureReservedWords.ROWCOUNT}), obj); //$NON-NLS-1$
 		}
         
         visit((AssignmentStatement)obj);

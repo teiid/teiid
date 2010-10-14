@@ -40,6 +40,8 @@ public class ProcedureReservedWords {
     public static final String INPUTS = "INPUTS"; //$NON-NLS-1$
 
     public static final String ROWS_UPDATED = "ROWS_UPDATED"; //$NON-NLS-1$
+    
+    public static final String ROWCOUNT = "ROWCOUNT"; //$NON-NLS-1$
 
 	public static final String CHANGING = "CHANGING"; //$NON-NLS-1$
 
