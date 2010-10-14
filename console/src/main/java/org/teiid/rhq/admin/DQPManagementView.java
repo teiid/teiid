@@ -69,7 +69,7 @@ public class DQPManagementView implements PluginConstants {
 	private static final MetaValueFactory metaValueFactory = MetaValueFactory
 			.getInstance();
 
-	private static final String VDB_EXT = ".vdb";
+	private static final String VDB_EXT = ".vdb"; //$NON-NLS-1$
 
 	public DQPManagementView() {
 	}
@@ -330,7 +330,6 @@ public class DQPManagementView implements PluginConstants {
 			operationResult.setContent(createReportResultListForMatViewQuery(
 					fieldNameList, sqlResultsObject.iterator()));
 		} else if (operationName.equals(VDB.Operations.RELOAD_MATVIEW)) {
-			List<String> fieldNameList = operationResult.getFieldNameList();
 			MetaValue resultsMetaValue = reloadMaterializedView(connection,
 					formatVdbName(vdbName), Integer.parseInt(vdbVersion),
 					(String) valueMap.get(Operation.Value.MATVIEW_SCHEMA),
@@ -865,7 +864,7 @@ public class DQPManagementView implements PluginConstants {
 
 		// Iterate through rows
 		while (objectIter.hasNext()) {
-			ArrayList<String> columnValues = (ArrayList<String>) objectIter
+			ArrayList<Object> columnValues = (ArrayList<Object>) objectIter
 					.next();
 
 			Class cls = null;
