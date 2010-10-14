@@ -469,13 +469,13 @@
 				</results>
 			</operation>
 
-			<operation name="getMaterializedViews" displayName="Get Materialized View Info"
-				description="Get any Materialized Views for this VDB">
+			<operation name="getMaterializedViews" displayName="List Materialized View Info"
+				description="List any Materialized Views for this VDB">
 
 				<results>
 
-					<c:list-property name="list" displayName=" Materialized Views"
-						description="Get information related to Materialized Views, if any, for this VDB"
+					<c:list-property name="list" displayName="Materialized Views"
+						description="List information related to Materialized Views, if any, for this VDB"
 						required="false">
 						<c:map-property name="map">
 							<c:simple-property displayName="Schema Name"
@@ -486,7 +486,7 @@
 								name="targetSchemaName" type="string" description="Name of the materialized schema" />
 							<c:simple-property displayName="Target Name"
 								name="targetName" type="string" description="Name of target table" />
-							<c:simple-property displayName="Is Valid"
+							<c:simple-property displayName="Valid"
 								name="valid" type="string" description="Indicates if data in table is valid for use" />
 							<c:simple-property displayName="Current State"
 								name="loadState" type="string" description="Processing time for the request" />
@@ -510,7 +510,7 @@
 						description="The name of the Materialized View to refresh" />
 					<c:simple-property displayName="Invalidate Current Materialized View Table"
 						name="invalidate" type="boolean" required="true" default="false"
-						description="If yes, will block all queries against the current Materialized View table until refreshed." />
+						description="If yes, will block all queries against the current Materialized View table until data is refreshed." />
 				</parameters>
 
 				<results>
