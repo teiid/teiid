@@ -232,7 +232,8 @@ public interface PluginConstants {
 		public static interface Value {
 			public final static String STOP_NOW = "stopNow"; //$NON-NLS-1$  
 			public final static String MAT_VIEW_QUERY = "select SchemaName, Name, TargetSchemaName, TargetName, " + //$NON-NLS-1$ 
-														"Valid, LoadState, Updated, Cardinality from SYSADMIN.MATVIEWS"; //$NON-NLS-1$  
+														"Valid, LoadState, Updated, Cardinality from SYSADMIN.MATVIEWS " +  //$NON-NLS-1$  
+														"where SchemaName != 'pg_catalog'"; //$NON-NLS-1$  
 			public final static String MAT_VIEW_REFRESH = "exec SYSADMIN.refreshMatView('param1','param2');";  //$NON-NLS-1$
 			public final static String WAIT_UNTIL_FINISHED = "waitUntilFinished"; //$NON-NLS-1$
 
