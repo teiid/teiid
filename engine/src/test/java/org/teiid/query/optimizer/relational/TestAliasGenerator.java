@@ -27,8 +27,8 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.dqp.internal.datamgr.LanguageBridgeFactory;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.optimizer.relational.AliasGenerator;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.TestResolver;
 import org.teiid.query.rewriter.QueryRewriter;
@@ -39,7 +39,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
-
+@SuppressWarnings("nls")
 public class TestAliasGenerator {
     
     private Command helpTest(String sql,
@@ -159,7 +159,10 @@ public class TestAliasGenerator {
     @Test public void testStripAliases1() throws Exception {
     	String sql = "select intkey as a, stringkey as b from BQT1.SmallA ORDER BY a, b"; //$NON-NLS-1$
         String expected = "SELECT BQT1.SmallA.intkey, BQT1.SmallA.stringkey FROM BQT1.SmallA ORDER BY BQT1.SmallA.intkey, BQT1.SmallA.stringkey"; //$NON-NLS-1$
-        helpTest(sql, expected, false, true, FakeMetadataFactory.exampleBQTCached());
+        Command command = helpTest(sql, expected, false, true, FakeMetadataFactory.exampleBQTCached());
+        LanguageBridgeFactory lbf = new LanguageBridgeFactory(FakeMetadataFactory.exampleBQTCached());
+        org.teiid.language.Command c = lbf.translate(command);
+        assertEquals("SELECT SmallA.IntKey, SmallA.StringKey FROM SmallA ORDER BY SmallA.IntKey, SmallA.StringKey", c.toString());
     }
     
 }

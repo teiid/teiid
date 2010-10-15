@@ -243,5 +243,10 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsIntersect() {
     	return true;
     }
+    
+    @Override
+    public boolean supportsSetQueryOrderBy() {
+    	return false;
+    }
         
 }

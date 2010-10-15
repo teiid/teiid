@@ -263,7 +263,7 @@ public class AliasGenerator extends PreOrderNavigator {
      */
     public void visit(Query obj) {
         if (obj.getOrderBy() != null || obj.getLimit() != null) {
-            visitor.namingContext.aliasColumns = true && !stripColumnAliases;
+            visitor.namingContext.aliasColumns = !stripColumnAliases;
         }        
         visitNode(obj.getFrom());
         visitNode(obj.getCriteria());
@@ -360,8 +360,10 @@ public class AliasGenerator extends PreOrderNavigator {
 	                        
 	            if (needsAlias) {
 	                element = new AliasSymbol(element.getShortName(), (SingleElementSymbol)expr);
-	                obj.getOrderByItems().get(i).setSymbol(element);
+	            } else if (expr instanceof ElementSymbol) {
+	            	element = (ElementSymbol)expr;
 	            }
+	            item.setSymbol(element);
 	            element.setOutputName(name);
             }
             

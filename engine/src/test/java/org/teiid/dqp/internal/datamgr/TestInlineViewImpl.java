@@ -48,7 +48,7 @@ public class TestInlineViewImpl extends TestCase {
     }
 
     public void testGetQuery() throws Exception {
-        assertEquals("SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE 100 >= 200 AND 500 < 600 GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING 100 >= 200 AND 500 < 600 ORDER BY e1, e2 DESC, e3, e4 DESC", example().getQuery().toString()); //$NON-NLS-1$
+        assertEquals("SELECT DISTINCT g1.e1, g1.e2, g1.e3, g1.e4 FROM g1, g2 AS myAlias, g3, g4 WHERE 100 >= 200 AND 500 < 600 GROUP BY g1.e1, g1.e2, g1.e3, g1.e4 HAVING 100 >= 200 AND 500 < 600 ORDER BY g1.e1, g1.e2 DESC, g1.e3, g1.e4 DESC", example().getQuery().toString()); //$NON-NLS-1$
     }
 
 }
