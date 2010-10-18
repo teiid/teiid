@@ -1276,7 +1276,15 @@ delete from table where column = x and SOURCE_NAME='la']]></programlisting>
             You must deploy a data source for each source defined.
             </para>
         </note>
-        
+
+        <note>
+            <para>
+            If you would like to use "SOURCE_NAME" in your transformations to control which sources are accessed or updated, 
+            you would manually need to add this extra column on your view table in
+            the Designer. This column will not be automatically added on the source table, when you import 
+            the medata from source.
+            </para>
+        </note>        
     </section>
 
 </chapter>
