@@ -422,7 +422,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	
 			//TODO: support fetching more than 1 batch
 			boolean fromBuffer = false;
-    		if (batch == null || !(batch.containsRow(this.begin))) {
+    		if (batch == null || !(batch.containsRow(this.begin) || (batch.getTerminationFlag() && batch.getEndRow() <= this.begin))) {
 	    		if (savedBatch != null && savedBatch.containsRow(this.begin)) {
 	    			batch = savedBatch;
 	    		} else {
