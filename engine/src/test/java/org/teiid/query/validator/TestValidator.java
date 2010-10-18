@@ -39,6 +39,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
@@ -56,7 +57,6 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.SPParameter;
-import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
@@ -381,21 +381,29 @@ public class TestValidator {
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleUpdateProc(procedureType, procedure);
 
         try {
-        	
-	        Command command = helpResolve(userUpdateStr, metadata);
-        	//System.out.println(command.printCommandTree());
-            ValidatorReport report = Validator.validate(command, metadata); 
-            //System.out.println("\nReport = \n" + report);
-        
-            // Get invalid objects from report
-            Collection actualObjs = new ArrayList();
-            report.collectInvalidObjects(actualObjs);
-            if(actualObjs.size() > 0) {
-                fail("Expected no failures but got some: " + report.getFailureMessage());            	 //$NON-NLS-1$
-            }
+        	validateProcedure(userUpdateStr, metadata);
         } catch(TeiidException e) {
             throw new TeiidRuntimeException(e);
         }
+	}
+
+	private void validateProcedure(String userUpdateStr,
+			QueryMetadataInterface metadata) throws QueryResolverException,
+			QueryMetadataException, TeiidComponentException,
+			QueryValidatorException {
+		ProcedureContainer command = (ProcedureContainer)helpResolve(userUpdateStr, metadata);
+		
+		Command proc = QueryResolver.expandCommand(command, metadata, AnalysisRecord.createNonRecordingRecord());
+		
+		ValidatorReport report = Validator.validate(proc, metadata);
+		if(report.hasItems()) {
+		    throw new QueryValidatorException(report.getFailureMessage());
+		}
+
+		report = Validator.validate(command, metadata);
+		if(report.hasItems()) {
+		    throw new QueryValidatorException(report.getFailureMessage());
+		}
 	}
 	
 	private void helpFailProcedure(String procedure, String userUpdateStr, String procedureType) {
@@ -403,15 +411,9 @@ public class TestValidator {
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleUpdateProc(procedureType, procedure);
 
         try {
-        	
-	        ProcedureContainer command = (ProcedureContainer)helpResolve(userUpdateStr, metadata);
-        	CreateUpdateProcedureCommand cmd = (CreateUpdateProcedureCommand)QueryResolver.expandCommand(command, metadata, null);
-            ValidatorReport report = Validator.validate(cmd, metadata); 
-        
-            // Get invalid objects from report
-            Collection actualObjs = new ArrayList();
-            report.collectInvalidObjects(actualObjs);
-            assertTrue("Expected some failures but got none for procedure = " + procedure, !actualObjs.isEmpty()); //$NON-NLS-1$ 
+        	validateProcedure(userUpdateStr, metadata);
+        	fail("Expected failures for " + procedure);
+        } catch (QueryValidatorException e) {
         } catch(TeiidException e) {
 			throw new RuntimeException(e);
         }
