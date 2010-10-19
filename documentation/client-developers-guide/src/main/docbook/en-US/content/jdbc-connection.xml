@@ -335,19 +335,6 @@
                         </entry>
                         <entry>Name given to this data source</entry>
                     </row>  
-                    <row>
-                        <entry>
-                            <code>PassthroughAuthentication</code>
-                        </entry>
-                        <entry>
-                            <code>boolean</code>
-                        </entry>
-                        <entry>Only applies to "local" connections. When this option is set to "true", then Teiid looks for 
-                        already authenticated security context on the calling thread. If one found it uses that users credentials 
-                        to create session. Teiid also verifies that the same user is using this connection during the life of the connection.
-                        if it finds a different security context on the calling thread, it switches the identity on the connection,
-                        if the new user is also eligible to log in to Teiid otherwise connection fails to execute.</entry>
-                    </row>                     
                                                                                                                                                            
                 </tbody>
             </tgroup>
