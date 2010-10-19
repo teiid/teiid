@@ -108,7 +108,7 @@ EXECUTE STRING ‘SELECT ID, First || ‘‘ ‘‘ || Last AS Name, Birthdate F
             <title>Example Assignment
             </title>
             <programlisting>EXECUTE STRING &lt;expression&gt; AS x string INTO #temp; 
-DECLARE string VARIABLES.RESULT = SEELCT x FROM #temp;</programlisting>
+DECLARE string VARIABLES.RESULT = (SELECT x FROM #temp);</programlisting>
           </example>
         </listitem>
         <listitem>
@@ -178,11 +178,15 @@ EXECUTE STRING &lt;expression&gt; AS x integer INTO #temp;</programlisting>
           <para>The VARIABLES group is always implied even if it is not specified.
           </para>
         </listitem>
+        <listitem>
+          <para>The assignment value follows the same rules as for an Assignment Statement.
+          </para>
+        </listitem>
       </itemizedlist>
     </section>
     <section>
       <title>Assignment Statement</title>
-      <para>An assignment statement assigns a value to a variable by either evaluating an expression or executing a SELECT command that returns a column value from a single row.</para>
+      <para>An assignment statement assigns a value to a variable by either evaluating an expression.</para>
       <para>
         Usage:
         <synopsis label="Usage" >&lt;variable reference&gt; = &lt;expression&gt;;</synopsis>
@@ -194,10 +198,21 @@ EXECUTE STRING &lt;expression&gt; AS x integer INTO #temp;</programlisting>
           </para>
         </listitem>
         <listitem>
-          <para>VARIABLES.x = SELECT Column1 FROM MySchema.MyTable;
+          <para>VARIABLES.x = (SELECT Column1 FROM MySchema.MyTable);
+          </para>
+        </listitem>
+        <listitem>
+          <para>VARIABLES.ROWS_UPDATED = INSERT INTO X (COL) VALUES (1);
+          </para>
+        </listitem>
+        <listitem>
+          <para>VARIABLES.x = EXEC proc();
           </para>
         </listitem>
       </itemizedlist>
+      <note><para>Teiid will accept assignments in the form of "var = command", such is shown above with the INSERT and the EXEC.  
+      However these are truly not expression values and will have alternative syntax in subsequent releases.  
+      An assignment directly using a EXEC is only valid if the procedure has a return value.</para></note>
     </section>
     <section>
       <title>If Statement</title>
@@ -282,8 +297,8 @@ END</synopsis>
         the procedure. The BEGIN and END keywords are used to denote block
         boundaries. Within the body of the procedure, any valid <link linkend="procedure_language">statement</link> may be used.
       </para>
-      <para>The last command statement executed in the procedure will be
-        return as the result. The output of that statement must match the
+      <para>There is no explict cursoring or return statement, rather the last command statement executed in the procedure that returns a result set will be
+        returned as the result. The output of that statement must match the
         expected result set and parameters of the procedure.</para>      
     </section>
     <section>
@@ -374,29 +389,12 @@ END
         or variables in the procedure.</para>
       <para> A virtual procedure call will return a result set just like any
         SELECT, so you can use this in many places you can use a SELECT.
-        However, within a virtual procedure itself you cannot always use an
-        EXEC directly. Instead, you use the following syntax:</para>
-      <programlisting>SELECT * FROM (EXEC ...) AS x</programlisting>
-      <itemizedlist>
-        <para>The following are some examples of how you can use the
-          results of a virtual procedure call within a virtual procedure
-          definition:</para>
-        <listitem>
-          <para>LOOP instruction - you can walk through the results and
-            do work on a row-by-row basis</para>
-        </listitem>
-        <listitem>
-          <para>Assignment instruction - you can run a command and
-            set the first column / first row value returned to a variable
-          </para>
-        </listitem>
-        <listitem>
-          <para><code>SELECT * INTO #temp FROM (EXEC ...) AS x</code> - you can
-            select the results from a virtual procedure into a temp table,
-            which you can then query against as if it were a physical table.
-          </para>
-        </listitem>
-      </itemizedlist>  
+        Typically you'll use the following syntax:</para>
+      <programlisting>SELECT * FROM (EXEC ...) AS x</programlisting>  
+    </section>
+    <section>
+    	<title>Limitations</title>
+    	<para>Teiid virtual procedures can only be defined in Teiid Designer.  They also cannot use IN/OUT, OUT, or RETURN paramters and may only return 1 result set.</para>
     </section>
   </section>  
   <section id="update_procedures">
@@ -427,7 +425,7 @@ BEGIN
   ...
 END</synopsis>
       </para>
-      <para>The CREATE VIRTUAL PROCEDURE line demarcates the beginning of
+      <para>The CREATE PROCEDURE line demarcates the beginning of
         the procedure. The BEGIN and END keywords are used to denote block
         boundaries. Within the body of the procedure, any valid <link linkend="procedure_language">statement</link> may be used.
       </para>
@@ -472,13 +470,19 @@ END</synopsis>
       </section>
       <section id="rowsupdated_variable">
         <title>ROWS_UPDATED Variable</title>
-        <para> Teiid returns the value of the VARIABLES.ROWS_UPDATED variable as a response to an update command executed against
+        <para> Teiid returns the value of the integer VARIABLES.ROWS_UPDATED variable as a response to an update command executed against
           the view. Your procedure must set the value that returns
           when an application executes an update command against the view, 
           which triggers invocation of the update procedure. For
           example, if an UPDATE command is issued that affects 5 records, the
           ROWS_UPDATED should be set appropriately so that the user will
           receive '5' for the count of records affected.</para>
+          <example>
+			<title>Sample Usage</title>
+			<programlisting language="SQL"><![CDATA[...
+VARIABLES.ROWS_UPDATED = UPDATE FOO SET X = 1 WHERE TRANSLATE CRITERIA;
+...]]></programlisting>
+		  </example>
       </section>
     </section>  
     <section>
