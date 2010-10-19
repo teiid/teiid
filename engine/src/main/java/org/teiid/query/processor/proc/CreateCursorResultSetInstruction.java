@@ -41,10 +41,12 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
 	
     protected String rsName;
     protected ProcessorPlan plan;
+    private boolean update;
     
-    public CreateCursorResultSetInstruction(String rsName, ProcessorPlan plan){
+    public CreateCursorResultSetInstruction(String rsName, ProcessorPlan plan, boolean update){
         this.rsName = rsName;
         this.plan = plan;
+        this.update = update;
     }
     
     /**
@@ -64,6 +66,16 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
         }
         
         procEnv.executePlan(plan, rsName);
+        
+        if (update) {
+        	boolean hasNext = procEnv.iterateCursor(rsName);
+    		if (hasNext) {
+    			procEnv.getContext().getVariableContext().setValue(ProcedurePlan.ROWCOUNT, procEnv.getCurrentRow(rsName).get(0));
+    		} else {
+    			procEnv.getContext().getVariableContext().setValue(ProcedurePlan.ROWCOUNT, 0);
+    		}
+    		procEnv.removeResults(rsName);
+        }
     }
 
     /**
@@ -71,7 +83,7 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
      */
     public CreateCursorResultSetInstruction clone(){
         ProcessorPlan clonedPlan = this.plan.clone();
-        return new CreateCursorResultSetInstruction(this.rsName, clonedPlan);
+        return new CreateCursorResultSetInstruction(this.rsName, clonedPlan, update);
     }
     
     public String toString(){

@@ -508,5 +508,15 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 	public Object getPrimaryKey(Object metadataID) {
 		return null;
 	}
+	
+	@Override
+	public boolean isMultiSource(Object modelId) {
+		return false;
+	}
+	
+	@Override
+	public boolean isMultiSourceElement(Object elementId) {
+		return false;
+	}
     
 }

@@ -23,6 +23,7 @@
 package org.teiid.adminapi.jboss;
 
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -59,7 +60,6 @@ import org.teiid.adminapi.CacheStatistics;
 import org.teiid.adminapi.PropertyDefinition;
 import org.teiid.adminapi.Request;
 import org.teiid.adminapi.Session;
-import org.teiid.adminapi.TeiidAdmin;
 import org.teiid.adminapi.Transaction;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
@@ -75,7 +75,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.jboss.IntegrationPlugin;
 
-public class Admin extends TeiidAdmin {	
+public class Admin implements org.teiid.adminapi.Admin, Serializable {	
 	private static final String CONNECTOR_PREFIX = "connector-"; //$NON-NLS-1$
 	private static final ProfileKey DEFAULT_PROFILE_KEY = new ProfileKey(ProfileKey.DEFAULT);
 	private static final long serialVersionUID = 7081309086056911304L;
@@ -293,10 +293,10 @@ public class Admin extends TeiidAdmin {
     }
 	
 	@Override
-	public void cancelRequest(String sessionId, long requestId) throws AdminException{
+	public void cancelRequest(String sessionId, long executionId) throws AdminException{
 		try {
 			ManagedComponent mc = getView().getComponent(DQPNAME, DQPTYPE);	
-			ManagedUtil.executeOperation(mc, "cancelRequest", SimpleValueSupport.wrap(sessionId), SimpleValueSupport.wrap(requestId));//$NON-NLS-1$
+			ManagedUtil.executeOperation(mc, "cancelRequest", SimpleValueSupport.wrap(sessionId), SimpleValueSupport.wrap(executionId));//$NON-NLS-1$
 		} catch (Exception e) {
 			throw new AdminComponentException(e.getMessage(), e);
 		}     	
@@ -355,10 +355,10 @@ public class Admin extends TeiidAdmin {
 	}
 	
 	@Override
-	public WorkerPoolStatistics getWorkManagerStats(String identifier) throws AdminException {
+	public WorkerPoolStatistics getWorkerPoolStats() throws AdminException {
 		try {
 			ManagedComponent mc = getView().getComponent(DQPNAME, DQPTYPE);
-			MetaValue value = ManagedUtil.executeOperation(mc, "getWorkManagerStatistics", SimpleValueSupport.wrap(identifier));//$NON-NLS-1$
+			MetaValue value = ManagedUtil.executeOperation(mc, "getWorkerPoolStatistics");//$NON-NLS-1$
 			return (WorkerPoolStatistics)MetaValueFactory.getInstance().unwrap(value, WorkerPoolStatisticsMetadata.class);	
 		} catch (Exception e) {
 			throw new AdminComponentException(e.getMessage(), e);

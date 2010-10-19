@@ -29,13 +29,12 @@ import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
-import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.language.SQLConstants;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.TempMetadataAdapter;
-import org.teiid.query.processor.BatchCollector;
+import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.QueryProcessor;
@@ -58,8 +57,9 @@ public class RelationalPlan extends ProcessorPlan {
 	private List<WithQueryCommand> with;
 	
 	private List<WithQueryCommand> withToProcess;
-	private BatchCollector withBatchCollector;
+	private QueryProcessor withProcessor;
 	private TempTableStore tempTableStore;
+	private boolean multisourceUpdate;
 
     /**
      * Constructor for RelationalPlan.
@@ -127,22 +127,26 @@ public class RelationalPlan extends ProcessorPlan {
     		}
     		while (!withToProcess.isEmpty()) {
     			WithQueryCommand withCommand = withToProcess.get(0); 
-    			if (withBatchCollector == null) {
+    			if (withProcessor == null) {
 	        		ProcessorPlan plan = withCommand.getCommand().getProcessorPlan();
-					QueryProcessor qp = new QueryProcessor(plan, getContext(), this.root.getBufferManager(), this.root.getDataManager());
-					withBatchCollector = qp.createBatchCollector();
+					withProcessor = new QueryProcessor(plan, getContext(), this.root.getBufferManager(), this.root.getDataManager());
+					Create create = new Create();
+					create.setColumns(withCommand.getColumns());
+					create.setTable(withCommand.getGroupSymbol());
+					this.root.getDataManager().registerRequest(getContext(), create, TempMetadataAdapter.TEMP_MODEL.getID(), null, 0);
     			}
-				TupleBuffer tb = withBatchCollector.collectTuples();
-				Create create = new Create();
-				create.setColumns(withCommand.getColumns());
-				create.setTable(withCommand.getGroupSymbol());
-				this.root.getDataManager().registerRequest(getContext(), create, TempMetadataAdapter.TEMP_MODEL.getID(), null, 0);
-				Insert insert = new Insert(withCommand.getGroupSymbol(), withCommand.getColumns(), null);
-        		insert.setTupleSource(tb.createIndexedTupleSource(true));
-        		this.root.getDataManager().registerRequest(getContext(), insert, TempMetadataAdapter.TEMP_MODEL.getID(), null, 0);
+    			while (true) {
+    				TupleBatch batch = withProcessor.nextBatch();
+    				Insert insert = new Insert(withCommand.getGroupSymbol(), withCommand.getColumns(), null);
+            		insert.setTupleSource(new CollectionTupleSource(batch.getTuples().iterator()));
+            		this.root.getDataManager().registerRequest(getContext(), insert, TempMetadataAdapter.TEMP_MODEL.getID(), null, 0);
+    				if (batch.getTerminationFlag()) {
+    					break;
+    				}
+    			}
         		this.tempTableStore.setUpdatable(withCommand.getGroupSymbol().getCanonicalName(), false);
         		withToProcess.remove(0);
-        		withBatchCollector = null;
+        		withProcessor = null;
 			}
         }            
         this.root.open();
@@ -179,7 +183,7 @@ public class RelationalPlan extends ProcessorPlan {
         this.root.reset();
         if (this.with != null) {
         	withToProcess = null;
-        	withBatchCollector = null;
+        	withProcessor = null;
         	for (WithQueryCommand withCommand : this.with) {
 				withCommand.getCommand().getProcessorPlan().reset();
 			}
@@ -227,8 +231,15 @@ public class RelationalPlan extends ProcessorPlan {
         this.outputCols = outputCols;
     }
     
+    public void setMultisourceUpdate(boolean multisourceUpdate) {
+		this.multisourceUpdate = multisourceUpdate;
+	}
+    
     @Override
     public boolean requiresTransaction(boolean transactionalReads) {
+    	if (multisourceUpdate) {
+    		return true;
+    	}
     	if (this.with != null) {
     		if (transactionalReads) {
     			return true;
@@ -238,9 +249,6 @@ public class RelationalPlan extends ProcessorPlan {
 					return true;
 				}
 			}
-    	}
-    	if (this.root.isMultiSource()) {
-    		return true;
     	}
     	return requiresTransaction(transactionalReads, root);
     }
@@ -257,7 +265,7 @@ public class RelationalPlan extends ProcessorPlan {
 		}
     	if (node instanceof ProjectIntoNode) {
     		if (((ProjectIntoNode)node).getMode() == Mode.ITERATOR) {
-    			return false;
+    			return transactionalReads;
     		}
     		return true;
     	} else if (node instanceof AccessNode) {

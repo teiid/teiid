@@ -143,7 +143,7 @@ public class BatchedUpdatePlan extends ProcessorPlan {
             	openPlan();
             }
             // Execute nextBatch() on each plan in sequence
-            List<List> currentBatch = updatePlans[planIndex].nextBatch().getTuples(); // Can throw BlockedException
+            List<List<?>> currentBatch = updatePlans[planIndex].nextBatch().getTuples(); // Can throw BlockedException
             for (int i = 0; i < currentBatch.size(); i++, commandIndex++) {
                 updateCounts[commandIndex] = currentBatch.get(i);
             }

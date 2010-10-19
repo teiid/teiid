@@ -659,8 +659,6 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit( DynamicCommand obj ) {
         append(EXECUTE);
         append(SPACE);
-        append(STRING);
-        append(SPACE);
         visitNode(obj.getSql());
 
         if (obj.isAsClauseSet()) {
@@ -926,41 +924,47 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     public void visit( StoredProcedure obj ) {
         addCacheHint(obj.getCacheHint());
+        if (obj.isCalledWithReturn()) {
+        	for (SPParameter param : obj.getParameters()) {
+    			if (param.getParameterType() == SPParameter.RETURN_VALUE) {
+    				if (param.getExpression() == null) {
+    					append("?"); //$NON-NLS-1$
+    				} else {
+    					visitNode(param.getExpression());
+    				}
+    			}
+    		}
+        	append(SPACE);
+        	append(Tokens.EQ);
+        	append(SPACE);
+        }
         // exec clause
         append(EXEC);
         append(SPACE);
         append(obj.getProcedureName());
         append("("); //$NON-NLS-1$
-        List params = obj.getInputParameters();
-        if (params != null) {
-            Iterator iter = params.iterator();
-            while (iter.hasNext()) {
-                SPParameter param = (SPParameter)iter.next();
+        boolean first = true;
+        for (SPParameter param : obj.getParameters()) {
+        	if (param.getParameterType() == SPParameter.RETURN_VALUE || param.getParameterType() == SPParameter.RESULT_SET || param.getExpression() == null) {
+        		continue;
+        	}
+        	if (first) {
+        		first = false;
+        	} else {
+        		append(", "); //$NON-NLS-1$
+        	}
+            if (obj.displayNamedParameters()) {
+                append(escapeSinglePart(ElementSymbol.getShortName(param.getParameterSymbol().getOutputName())));
+                append(" => "); //$NON-NLS-1$
+            }
 
-                if (obj.displayNamedParameters()) {
-                    append(escapeSinglePart(ElementSymbol.getShortName(param.getParameterSymbol().getOutputName())));
-                    append(" => "); //$NON-NLS-1$
-                }
-
-                if (param.getExpression() == null) {
-                    if (param.getName() != null) {
-                        outputDisplayName(obj.getParamFullName(param));
-                    } else {
-                        append("?"); //$NON-NLS-1$
-                    }
-                } else {
-                    boolean addParens = !obj.displayNamedParameters() && param.getExpression() instanceof CompareCriteria;
-                    if (addParens) {
-                        append(Tokens.LPAREN);
-                    }
-                    visitNode(param.getExpression());
-                    if (addParens) {
-                        append(Tokens.RPAREN);
-                    }
-                }
-                if (iter.hasNext()) {
-                    append(", "); //$NON-NLS-1$
-                }
+            boolean addParens = !obj.displayNamedParameters() && param.getExpression() instanceof CompareCriteria;
+            if (addParens) {
+                append(Tokens.LPAREN);
+            }
+            visitNode(param.getExpression());
+            if (addParens) {
+                append(Tokens.RPAREN);
             }
         }
         append(")"); //$NON-NLS-1$
@@ -1358,17 +1362,9 @@ public class SQLStringVisitor extends LanguageVisitor {
         visitNode(obj.getVariable());
         if (obj.getExpression() != null) {
             append(" = "); //$NON-NLS-1$
-            addStatementArgument(obj.getExpression());
+            visitNode(obj.getExpression());
         }
         append(";"); //$NON-NLS-1$
-    }
-
-    private void addStatementArgument( Expression expr ) {
-        if (expr instanceof ScalarSubquery) {
-            visitNode(((ScalarSubquery)expr).getCommand());
-        } else {
-            visitNode(expr);
-        }
     }
 
     public void visit( IfStatement obj ) {
@@ -1485,7 +1481,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit( RaiseErrorStatement obj ) {
         append(ERROR);
         append(SPACE);
-        addStatementArgument(obj.getExpression());
+        visitNode(obj.getExpression());
         append(";"); //$NON-NLS-1$
     }
 

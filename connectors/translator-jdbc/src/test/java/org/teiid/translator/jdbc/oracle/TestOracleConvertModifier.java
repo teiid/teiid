@@ -487,11 +487,11 @@ public class TestOracleConvertModifier {
     // Source = TIME
 
     @Test public void testTimeToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createTime(23, 59, 59), java.sql.Time.class), "string", "to_char({ts '1970-01-01 23:59:59'}, 'HH24:MI:SS')"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createTime(23, 59, 59), java.sql.Time.class), "string", "to_char(to_date('1970-01-01 23:59:59', 'YYYY-MM-DD HH24:MI:SS'), 'HH24:MI:SS')"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testTimeToTimestamp() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createTime(23, 59, 59), java.sql.Time.class), "timestamp", "cast({ts '1970-01-01 23:59:59'} AS timestamp)"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createTime(23, 59, 59), java.sql.Time.class), "timestamp", "cast(to_date('1970-01-01 23:59:59', 'YYYY-MM-DD HH24:MI:SS') AS timestamp)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // Source = TIMESTAMP

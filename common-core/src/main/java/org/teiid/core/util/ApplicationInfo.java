@@ -70,10 +70,6 @@ public final class ApplicationInfo implements Serializable {
 		return props.getProperty("build.releaseNumber"); //$NON-NLS-1$
 	}
     
-	public String getMajorReleaseNumber() {
-		return getReleaseNumber().substring(0, getReleaseNumber().lastIndexOf('.')); 
-	}
-	
 	public int getMajorReleaseVersion() {
 		String version = getReleaseNumber().substring(0, getReleaseNumber().indexOf('.'));
 		return Integer.parseInt(version);

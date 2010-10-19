@@ -336,8 +336,7 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
      */
     public List getCurrentRecord() throws SQLException {
     	checkClosed();
-        List wholeRecord = batchResults.getCurrentRow();
-        return wholeRecord.subList(0, wholeRecord.size() - getOffset());
+        return batchResults.getCurrentRow();
     }
     /*
      * @see java.sql.ResultSet#getType()
@@ -1062,6 +1061,9 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 	 * @throws SQLException
 	 */
 	public boolean isAfterLast() throws SQLException {
+		if (getFinalRowNumber() == -1) {
+			return false;
+		}
 		// return true if the current row has a next row
 		// it is also not the last
 		return !hasNext() && this.getAbsoluteRowNumber() > BEFORE_FIRST_ROW && this.getAbsoluteRowNumber() > getFinalRowNumber();

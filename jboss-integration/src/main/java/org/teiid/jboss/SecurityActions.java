@@ -25,6 +25,7 @@ import java.security.AccessController;
 import java.security.Principal;
 import java.security.PrivilegedAction;
 
+import javax.resource.spi.security.PasswordCredential;
 import javax.security.auth.Subject;
 
 import org.jboss.security.SecurityContext;
@@ -81,5 +82,27 @@ class SecurityActions {
 					return null;
 				}
 			});
+	   }	   
+	   
+	   static class AddCredentialsAction implements PrivilegedAction
+	   {
+	      Subject subject;
+	      PasswordCredential cred;
+	      AddCredentialsAction(Subject subject, PasswordCredential cred)
+	      {
+	         this.subject = subject;
+	         this.cred = cred;
+	      }
+	      public Object run()
+	      {
+	         subject.getPrivateCredentials().add(cred);
+	         return null;
+	      }
+	   }
+
+	   static void addCredentials(Subject subject, PasswordCredential cred)
+	   {
+	      AddCredentialsAction action = new AddCredentialsAction(subject, cred);
+	      AccessController.doPrivileged(action);
 	   }	   
 }

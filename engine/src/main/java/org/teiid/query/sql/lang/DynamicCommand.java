@@ -255,5 +255,10 @@ public class DynamicCommand extends Command {
     public void setAsClauseSet(boolean asClauseSet) {
         this.asClauseSet = asClauseSet;
     }
+    
+    @Override
+    public boolean returnsResultSet() {
+    	return intoGroup == null;
+    }
 
 }

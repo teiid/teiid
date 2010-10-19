@@ -50,8 +50,7 @@ public class QueryScenarioImpl extends QueryScenario {
      */
     @Override
     public void handleTestResult(TestResult tr, ResultSet resultSet, int updateCnt, boolean resultFromQuery, String sql) {
-
-	Throwable resultException = tr.getException();
+ 	Throwable resultException = tr.getException();
 	if (getResultsMode().equalsIgnoreCase(
 		TestProperties.RESULT_MODES.COMPARE)) {
 	    

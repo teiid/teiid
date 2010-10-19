@@ -47,7 +47,7 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
     private List elements;
     
     public LoopInstruction(Program loopProgram, String rsName, ProcessorPlan plan) {
-        super(rsName, plan);
+        super(rsName, plan, false);
         this.loopProgram = loopProgram;
     }
 

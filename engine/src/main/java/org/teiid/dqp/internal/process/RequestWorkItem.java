@@ -422,7 +422,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	
 			//TODO: support fetching more than 1 batch
 			boolean fromBuffer = false;
-    		if (batch == null || !(batch.containsRow(this.begin))) {
+    		if (batch == null || !(batch.containsRow(this.begin) || (batch.getTerminationFlag() && batch.getEndRow() <= this.begin))) {
 	    		if (savedBatch != null && savedBatch.containsRow(this.begin)) {
 	    			batch = savedBatch;
 	    		} else {
@@ -441,7 +441,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     			} else if (fromBuffer && isForwardOnly()) {
         			savedBatch = batch;
     			}
-                List<List> memoryRows = batch.getTuples();
+                List<List<?>> memoryRows = batch.getTuples();
                 batch = new TupleBatch(beginRow, memoryRows.subList(beginRow - batch.getBeginRow(), endRow - batch.getBeginRow() + 1));
                 batch.setTerminationFlag(last);
     		} else if (!fromBuffer){
@@ -561,7 +561,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     
     public boolean requestCancel() throws TeiidComponentException {
     	synchronized (this) {
-        	if (this.isCanceled) {
+        	if (this.isCanceled || this.closeRequested) {
         		return false;
         	}
         	this.isCanceled = true;

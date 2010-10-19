@@ -22,33 +22,26 @@
 
 package org.teiid.dqp.internal.datamgr;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.teiid.language.OrderBy;
 import org.teiid.language.SortSpecification;
+import org.teiid.query.sql.symbol.ElementSymbol;
 
-public class TestOrderByImpl extends TestCase {
-
-    /**
-     * Constructor for TestOrderByImpl.
-     * @param name
-     */
-    public TestOrderByImpl(String name) {
-        super(name);
-    }
+public class TestOrderByImpl {
 
     public static org.teiid.query.sql.lang.OrderBy helpExample() {
-        ArrayList elements = new ArrayList();
+        ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
         elements.add(TestElementImpl.helpExample("vm1.g1", "e1")); //$NON-NLS-1$ //$NON-NLS-2$
         elements.add(TestElementImpl.helpExample("vm1.g1", "e2")); //$NON-NLS-1$ //$NON-NLS-2$
         elements.add(TestElementImpl.helpExample("vm1.g1", "e3")); //$NON-NLS-1$ //$NON-NLS-2$
         elements.add(TestElementImpl.helpExample("vm1.g1", "e4")); //$NON-NLS-1$ //$NON-NLS-2$
         
-        ArrayList types = new ArrayList();
+        ArrayList<Boolean> types = new ArrayList<Boolean>();
         types.add(Boolean.TRUE);
         types.add(Boolean.FALSE);
         types.add(Boolean.TRUE);
@@ -57,17 +50,13 @@ public class TestOrderByImpl extends TestCase {
     }
     
     public static OrderBy example() throws Exception {
-        return TstLanguageBridgeFactory.factory.translate(helpExample());
+        return TstLanguageBridgeFactory.factory.translate(helpExample(), false);
     }
 
-    public void testGetItems() throws Exception {
-        List items = example().getSortSpecifications();
+    @Test public void testGetItems() throws Exception {
+        List<SortSpecification> items = example().getSortSpecifications();
         assertNotNull(items);
         assertEquals(4, items.size());
-        for (Iterator i = items.iterator(); i.hasNext();) {
-            assertTrue(i.next() instanceof SortSpecification);
-        }
-        
     }
 
 }

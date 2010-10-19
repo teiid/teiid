@@ -172,7 +172,7 @@ public class DataSourceMgr {
 		modelToDatasourceMap.clear();
 	}
 	
-	dsfactory.cleanup();
+	if (dsfactory != null) dsfactory.cleanup();
 	
 	DataSourceMgr.reset();
 	

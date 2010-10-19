@@ -56,7 +56,7 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
  * </UL>
  */
 public class SubqueryCompareCriteria extends AbstractCompareCriteria
-implements SubqueryContainer, ContextReference {
+implements SubqueryContainer<QueryCommand>, ContextReference {
 
 	private static AtomicInteger ID = new AtomicInteger();
 
@@ -71,14 +71,14 @@ implements SubqueryContainer, ContextReference {
 
     private int predicateQuantifier = ALL;
 
-    private Command command;
+    private QueryCommand command;
     private String id = "$scc/id" + ID.getAndIncrement(); //$NON-NLS-1$
 
     public SubqueryCompareCriteria(){
         super();
     }
 
-    public SubqueryCompareCriteria(Expression leftExpression, Command subCommand, int operator, int predicateQuantifier) {
+    public SubqueryCompareCriteria(Expression leftExpression, QueryCommand subCommand, int operator, int predicateQuantifier) {
         setLeftExpression(leftExpression);
         setCommand(subCommand);
         setOperator(operator);
@@ -119,7 +119,7 @@ implements SubqueryContainer, ContextReference {
         this.predicateQuantifier = predicateQuantifier;
     }
 
-    public Command getCommand() {
+    public QueryCommand getCommand() {
         return this.command;
     }
 
@@ -127,7 +127,7 @@ implements SubqueryContainer, ContextReference {
      * Set the subquery command (either a SELECT or a procedure execution).
      * @param command Command to execute to get the values for the criteria
      */
-    public void setCommand(Command command) {
+    public void setCommand(QueryCommand command) {
         this.command = command;
     }
 
@@ -199,9 +199,9 @@ implements SubqueryContainer, ContextReference {
             leftCopy = (Expression) getLeftExpression().clone();
         }
 
-        Command copyCommand = null;
+        QueryCommand copyCommand = null;
         if(getCommand() != null) {
-            copyCommand = (Command) getCommand().clone();
+            copyCommand = (QueryCommand) getCommand().clone();
         }
 
         return new SubqueryCompareCriteria(leftCopy, copyCommand, this.getOperator(), this.getPredicateQuantifier());

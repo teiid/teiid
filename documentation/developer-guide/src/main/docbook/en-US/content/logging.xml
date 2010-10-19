@@ -8,23 +8,23 @@
 	<section id="custom_logging">
 		<title>Customized Logging</title>
 		<para>
-			The Teiid system provides a wealth of information via logging. To
-			control logging level, contexts, and log locations, you should be
-			familiar with
-			<ulink url="http://logging.apache.org/log4j/">log4j</ulink>
-			and the container's jboss-log4j.xml configuration file.  
-			Teiid also provides a &lt;profile&gt;/conf/jboss-teiid-log4j.xml containing much of information from chapter.
-            Check out Admin Guide for more details about different Teiid contexts available.
+		The Teiid system provides a wealth of information using logging. To control logging level, 
+        contexts, and log locations, you should be familiar with log4j and the container's 
+        <filename>jboss-log4j.xml</filename> configuration file.  Teiid also provides a 
+        <filename><replaceable>PROFILE</replaceable>/conf/jboss-teiid-log4j.xml</filename> containing 
+        much of information from this chapter.  Refer to the Administrator Guide for more details about 
+        different Teiid contexts available.  Refer to <ulink url="http://logging.apache.org/log4j/"/> 
+        for more information about log4j.
 		</para>
 		
         <para>
 			If the default log4j logging mechanisms are not sufficient for your
-			logging needs you may need a different appender - see
-			<ulink url="http://logging.apache.org/log4j/1.2/apidocs/index.html">the log4j javadocs</ulink>. 
+			logging needs you may need a different appender, refer to the log4j javadocs at
+			<ulink url="http://logging.apache.org/log4j/1.2/apidocs/index.html"/>.   
             Note that log4j already provides quite a few appenders including JMS, RDBMS, and SMTP.
 		</para>
-		<para>If you want a custom appender, follow the Log4J directions to write a custom appender. See instructions 
-        <ulink url="http://logging.apache.org/log4net/release/faq.html">here</ulink>. If you develop a custom 
+		<para>If you want a custom appender, follow the Log4J directions to write a custom appender. Refer to 
+		the instructions at <ulink url="http://logging.apache.org/log4net/release/faq.html"/>. If you develop a custom 
             logging solution, the implementation jar should be placed in the "lib" directory of the JBoss AS server profile
 			Teiid is installed in.
     	</para>

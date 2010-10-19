@@ -25,7 +25,7 @@ package org.teiid.query.sql.symbol;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
@@ -38,11 +38,11 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  * of this could be used wherever an Expression is legal, but it is
  * specifically needed for the SELECT clause.
  */
-public class ScalarSubquery implements Expression, SubqueryContainer, ContextReference {
+public class ScalarSubquery implements Expression, SubqueryContainer<QueryCommand>, ContextReference {
 
 	private static AtomicInteger ID = new AtomicInteger();
 	
-    private Command command;
+    private QueryCommand command;
     private Class<?> type;
     private int hashCode;
     private String id = "$sc/id" + ID.getAndIncrement(); //$NON-NLS-1$
@@ -55,7 +55,7 @@ public class ScalarSubquery implements Expression, SubqueryContainer, ContextRef
         super();
     }
 
-    public ScalarSubquery(Command subqueryCommand){
+    public ScalarSubquery(QueryCommand subqueryCommand){
         this.setCommand(subqueryCommand);
     }
     
@@ -104,7 +104,7 @@ public class ScalarSubquery implements Expression, SubqueryContainer, ContextRef
         this.type = type;
     }
 
-    public Command getCommand() {
+    public QueryCommand getCommand() {
         return this.command;
     }
 
@@ -112,7 +112,7 @@ public class ScalarSubquery implements Expression, SubqueryContainer, ContextRef
      * Sets the command.  Also modifies the hash code of this object, so
      * caution should be used in using this method.
      */
-    public void setCommand(Command command){
+    public void setCommand(QueryCommand command){
         this.command = command;
         this.hashCode = command.hashCode();
     }
@@ -152,9 +152,9 @@ public class ScalarSubquery implements Expression, SubqueryContainer, ContextRef
      * @see java.lang.Object#clone()
      */
     public Object clone() {
-        Command copyCommand = null;
+    	QueryCommand copyCommand = null;
         if(getCommand() != null) {
-            copyCommand = (Command) getCommand().clone();
+            copyCommand = (QueryCommand) getCommand().clone();
         }
         ScalarSubquery clone = new ScalarSubquery(copyCommand);
         //Don't invoke the lazy-loading getType()

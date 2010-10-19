@@ -22,21 +22,22 @@
 
 package org.teiid.dqp.internal.process;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.Test;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
-import junit.framework.TestCase;
-
-
-public class TestCallableStatement extends TestCase {
+@SuppressWarnings("nls")
+public class TestCallableStatement {
 	
-	public void testMissingInput() throws Exception {
+	@Test public void testMissingInput() throws Exception {
 		String sql = "{? = call pm4.spTest9()}"; //$NON-NLS-1$
 
 		try {
@@ -47,7 +48,7 @@ public class TestCallableStatement extends TestCase {
 		}
 	}
 	
-	public void testReturnParameter() throws Exception {
+	@Test public void testReturnParameter() throws Exception {
 		String sql = "{? = call pm4.spTest9(?)}"; //$NON-NLS-1$
 
 		List values = new ArrayList();
@@ -57,7 +58,7 @@ public class TestCallableStatement extends TestCase {
 		expected[0] = Arrays.asList(1);
 		
 		HardcodedDataManager dataManager = new HardcodedDataManager();
-		dataManager.addData("EXEC pm4.spTest9(1)", expected);
+		dataManager.addData("? = EXEC pm4.spTest9(1)", expected);
 		
 		TestPreparedStatement.helpTestProcessing(sql, values, expected, dataManager, FakeMetadataFactory.exampleBQTCached(), true, FakeMetadataFactory.exampleBQTVDB());
 	}
@@ -66,7 +67,7 @@ public class TestCallableStatement extends TestCase {
 	 * same result as above, but the return parameter is not specified
 	 * TODO: it would be best if the return parameter were not actually returned here, since it wasn't specified in the initial sql
 	 */
-	public void testNoReturnParameter() throws Exception {
+	@Test public void testNoReturnParameter() throws Exception {
 		String sql = "{call pm4.spTest9(?)}"; //$NON-NLS-1$
 
 		List values = new ArrayList();
@@ -81,7 +82,7 @@ public class TestCallableStatement extends TestCase {
 		TestPreparedStatement.helpTestProcessing(sql, values, expected, dataManager, FakeMetadataFactory.exampleBQTCached(), true, FakeMetadataFactory.exampleBQTVDB());
 	}
 		
-	public void testOutParameter() throws Exception {
+	@Test public void testOutParameter() throws Exception {
 		String sql = "{call pm2.spTest8(?, ?)}"; //$NON-NLS-1$
 
 		List values = new ArrayList();
@@ -96,7 +97,18 @@ public class TestCallableStatement extends TestCase {
 		TestPreparedStatement.helpTestProcessing(sql, values, expected, dataManager, FakeMetadataFactory.exampleBQTCached(), true, FakeMetadataFactory.exampleBQTVDB());
 	}
 	
-	public void testInputExpression() throws Exception {
+	@Test(expected=QueryResolverException.class) public void testInvalidReturn() throws Exception {
+		String sql = "{? = call pm2.spTest8(?, ?)}"; //$NON-NLS-1$
+
+		List values = Arrays.asList(2);
+		
+		List[] expected = new List[0];
+		
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		TestPreparedStatement.helpTestProcessing(sql, values, expected, dataManager, FakeMetadataFactory.exampleBQTCached(), true, FakeMetadataFactory.exampleBQTVDB());
+	}
+	
+	@Test public void testInputExpression() throws Exception {
 		String sql = "{call pm2.spTest8(1, ?)}"; //$NON-NLS-1$
 
 		List[] expected = new List[1];

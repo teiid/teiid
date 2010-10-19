@@ -22,7 +22,11 @@
 
 package org.teiid.query.optimizer;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,18 +39,16 @@ import org.junit.Test;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionTree;
-import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.function.UDFSource;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
@@ -4253,7 +4255,7 @@ public class TestOptimizer {
         caps.setFunctionSupport("xyz", true);         //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        FunctionLibrary funcLibrary = new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(new FakeFunctionMetadataSource().getFunctionMethods())));
+        FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree(new UDFSource(new FakeFunctionMetadataSource().getFunctionMethods())));
         FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
         
          

@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryProcessingException;
@@ -41,6 +42,7 @@ import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -62,6 +64,7 @@ import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.FakeMetadataObject;
 import org.teiid.query.unittest.FakeMetadataStore;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorFailure;
@@ -70,7 +73,7 @@ import org.teiid.query.validator.ValidatorReport;
 @SuppressWarnings({"unchecked", "nls"})
 public class TestProcedureProcessor {
 	
-    public static ProcessorPlan getProcedurePlan(String userQuery, FakeMetadataFacade metadata) throws Exception {
+    public static ProcessorPlan getProcedurePlan(String userQuery, QueryMetadataInterface metadata) throws Exception {
     	return getProcedurePlan(userQuery, metadata, /*capabilitiesFinder*/null);
     }
     
@@ -1514,7 +1517,7 @@ public class TestProcedureProcessor {
 
         helpTestProcessFailure(plan,
                                dataMgr,
-                               "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'EXEC pm1.sq2(''First'')' AS e1 string, e2 integer\" with the SQL statement \"'EXEC pm1.sq2(''First'')'\" due to: There is a recursive invocation of group 'PM1.SQ2'. Please correct the SQL.", metadata); //$NON-NLS-1$
+                               "Couldn't execute the dynamic SQL command \"EXECUTE 'EXEC pm1.sq2(''First'')' AS e1 string, e2 integer\" with the SQL statement \"'EXEC pm1.sq2(''First'')'\" due to: There is a recursive invocation of group 'PM1.SQ2'. Please correct the SQL.", metadata); //$NON-NLS-1$
     }
     
     @Test public void testDynamicCommandIncorrectProjectSymbolCount() throws Exception {
@@ -1544,7 +1547,7 @@ public class TestProcedureProcessor {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
     	
-        helpTestProcessFailure(plan, dataMgr, "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'EXEC pm1.sq1(''First'')' AS e1 string, e2 integer\" with the SQL statement \"'EXEC pm1.sq1(''First'')'\" due to: The dynamic sql string contains an incorrect number of elements.", metadata); //$NON-NLS-1$
+        helpTestProcessFailure(plan, dataMgr, "Couldn't execute the dynamic SQL command \"EXECUTE 'EXEC pm1.sq1(''First'')' AS e1 string, e2 integer\" with the SQL statement \"'EXEC pm1.sq1(''First'')'\" due to: The dynamic sql string contains an incorrect number of elements.", metadata); //$NON-NLS-1$
      }
     
     @Test public void testDynamicCommandPositional() throws Exception {
@@ -1596,7 +1599,7 @@ public class TestProcedureProcessor {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
     	
-        helpTestProcessFailure(plan, dataMgr, "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'select e1 from pm1.g1'\" with the SQL statement \"'select e1 from pm1.g1'\" due to: The datatype 'string' for element 'E1' in the dynamic SQL cannot be implicitly converted to 'integer'.", metadata); //$NON-NLS-1$
+        helpTestProcessFailure(plan, dataMgr, "Couldn't execute the dynamic SQL command \"EXECUTE 'select e1 from pm1.g1'\" with the SQL statement \"'select e1 from pm1.g1'\" due to: The datatype 'string' for element 'E1' in the dynamic SQL cannot be implicitly converted to 'integer'.", metadata); //$NON-NLS-1$
      }
      
     @Test public void testDynamicCommandWithTwoDynamicStatements() throws Exception {
@@ -2646,6 +2649,17 @@ public class TestProcedureProcessor {
                 Arrays.asList( "1" ),
         };
         helpTestProcess(plan, expected, new HardcodedDataManager(), metadata);
+    }
+    
+    @Ignore
+    @Test public void testProcReturn() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.exampleBQTCached();
+        String userQuery = "EXEC TEIIDSP7(1)"; //$NON-NLS-1$
+        HardcodedDataManager dataMgr = new HardcodedDataManager();
+        ProcessorPlan plan = getProcedurePlan(userQuery, metadata);
+        dataMgr.addData("VARIABLES.x = EXEC spTest9(1)", new List[] {Arrays.asList(3)});
+        List[] expected = new List[] {Arrays.asList(new Object[] {new Integer(3)})};
+        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     private static final boolean DEBUG = false;

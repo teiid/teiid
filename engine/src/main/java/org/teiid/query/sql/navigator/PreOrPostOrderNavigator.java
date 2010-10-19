@@ -386,6 +386,7 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     }
     public void visit(Query obj) {
         preVisitVisitor(obj);
+        visitNodes(obj.getWith());
         visitNode(obj.getSelect());
         visitNode(obj.getInto());
         visitNode(obj.getFrom());
@@ -435,6 +436,7 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     }
     public void visit(SetQuery obj) {
         preVisitVisitor(obj);
+        visitNodes(obj.getWith());
         visitNodes(obj.getQueryCommands());
         visitNode(obj.getOrderBy());
         visitNode(obj.getLimit());

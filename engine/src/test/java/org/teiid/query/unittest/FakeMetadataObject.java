@@ -190,7 +190,6 @@ public class FakeMetadataObject implements Comparable, Serializable {
         public static final String NATIVE_TYPE = "nativeType";  // String  //$NON-NLS-1$
         public static final String MAX_VALUE = "maxValue";      // String //$NON-NLS-1$
         public static final String MIN_VALUE = "minValue";      // String //$NON-NLS-1$
-        public static final String IS_PROC_INPUT = "isProcedureInputElement";      // String //$NON-NLS-1$
         public static final String DISTINCT_VALUES = "distinctValues";      // Integer //$NON-NLS-1$
         public static final String NULL_VALUES = "nullValues";      // Integer //$NON-NLS-1$
         public static final String MODELED_TYPE = "modeledType";    // String //$NON-NLS-1$

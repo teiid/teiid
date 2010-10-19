@@ -25,11 +25,14 @@
 package org.teiid.translator.jdbc.sybase;
 
 import java.sql.CallableStatement;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.teiid.language.Command;
@@ -37,10 +40,10 @@ import org.teiid.language.Function;
 import org.teiid.language.Limit;
 import org.teiid.language.OrderBy;
 import org.teiid.language.SetQuery;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
@@ -60,6 +63,7 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
 	
 	public SybaseExecutionFactory() {
 		setDatabaseVersion(TWELVE_5);
+		setSupportsFullOuterJoins(false);
 	}
     
     public void start() throws TranslatorException {
@@ -173,13 +177,13 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
 		return Arrays.asList("stuff(stuff(convert(varchar, ", function.getParameters().get(0), ", 102), 5, 1, '-'), 8, 1, '-')"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
     
-    /**
-     * Written to only support version 15
-     * @param function
-     * @return
-     */
+    //TODO: this looses the milliseconds
 	protected List<?> convertTimestampToString(Function function) {
-		return Arrays.asList("stuff(convert(varchar, ", function.getParameters().get(0), ", 123), 11, 1, ' ')"); //$NON-NLS-1$ //$NON-NLS-2$
+		LinkedList<Object> result = new LinkedList<Object>();
+		result.addAll(convertDateToString(function));
+		result.add(' ');
+		result.addAll(convertTimeToString(function));
+		return result;
 	}
     
     @Override
@@ -365,4 +369,15 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
     	}
     	super.bindValue(stmt, param, paramType, i);
     }
+    
+    @Override
+    public String translateLiteralTimestamp(Timestamp timestampValue) {
+    	return "CAST('" + formatDateValue(timestampValue) +"' AS DATETIME)"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Override
+    public String translateLiteralDate(Date dateValue) {
+    	return "CAST('" + formatDateValue(dateValue) +"' AS DATE)"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
 }

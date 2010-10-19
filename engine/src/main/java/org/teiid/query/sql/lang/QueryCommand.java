@@ -74,4 +74,9 @@ public abstract class QueryCommand extends Command {
 	}
     
 	public abstract Query getProjectedQuery();
+	
+	@Override
+	public boolean returnsResultSet() {
+		return true;
+	}
 }

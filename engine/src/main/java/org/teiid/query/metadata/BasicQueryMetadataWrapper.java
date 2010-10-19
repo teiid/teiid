@@ -373,5 +373,15 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 	public Object getPrimaryKey(Object metadataID) {
 		return actualMetadata.getPrimaryKey(metadataID);
 	}
+	
+	@Override
+	public boolean isMultiSource(Object modelId) throws QueryMetadataException, TeiidComponentException {
+		return actualMetadata.isMultiSource(modelId);
+	}
+	
+	@Override
+	public boolean isMultiSourceElement(Object elementId) {
+		return actualMetadata.isMultiSourceElement(elementId);
+	}
 
 }

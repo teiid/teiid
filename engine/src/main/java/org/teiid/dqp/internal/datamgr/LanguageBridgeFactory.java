@@ -170,7 +170,7 @@ public class LanguageBridgeFactory {
         }
         result.setLeftQuery(translate(union.getLeftQuery()));
         result.setRightQuery(translate(union.getRightQuery()));
-        result.setOrderBy(translate(union.getOrderBy()));
+        result.setOrderBy(translate(union.getOrderBy(), true));
         result.setLimit(translate(union.getLimit()));
         result.setWith(translate(union.getWith()));
         return result;
@@ -211,7 +211,7 @@ public class LanguageBridgeFactory {
 		Select q = new Select(translatedSymbols, query
 				.getSelect().isDistinct(), items,
 				translate(query.getCriteria()), translate(query.getGroupBy()),
-				translate(query.getHaving()), translate(query.getOrderBy()));
+				translate(query.getHaving()), translate(query.getOrderBy(), false));
         q.setLimit(translate(query.getLimit()));
         q.setWith(translate(query.getWith()));
         return q;
@@ -443,7 +443,7 @@ public class LanguageBridgeFactory {
         return new org.teiid.language.GroupBy(translatedItems);
     }
 
-    public org.teiid.language.OrderBy translate(OrderBy orderBy) {
+    public org.teiid.language.OrderBy translate(OrderBy orderBy, boolean set) {
         if(orderBy == null){
             return null;
         }
@@ -454,10 +454,10 @@ public class LanguageBridgeFactory {
             Ordering direction = items.get(i).isAscending() ? Ordering.ASC: Ordering.DESC;
             
             SortSpecification orderByItem = null;                                
-            if(symbol instanceof AliasSymbol || !items.get(i).isUnrelated()){
-            	orderByItem = new SortSpecification(direction, new ColumnReference(null, symbol.getOutputName(), null, symbol.getType()));
-            } else {
+            if(items.get(i).isUnrelated() || (!set && symbol instanceof ElementSymbol)){
             	orderByItem = new SortSpecification(direction, translate(symbol));                                
+            } else {
+            	orderByItem = new SortSpecification(direction, new ColumnReference(null, symbol.getOutputName(), null, symbol.getType()));
             }
             orderByItem.setNullOrdering(items.get(i).getNullOrdering());
             translatedItems.add(orderByItem);

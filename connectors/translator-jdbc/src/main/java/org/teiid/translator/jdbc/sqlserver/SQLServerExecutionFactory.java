@@ -206,6 +206,11 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     }
     
     @Override
+    public boolean hasTimeType() {
+    	return getDatabaseVersion().compareTo(V_2005) >= 0;
+    }
+    
+    @Override
     public boolean supportsCommonTableExpressions() {
     	return true;
     }

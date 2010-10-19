@@ -100,7 +100,9 @@ public class ProcedurePlan extends ProcessorPlan {
 	private static ElementSymbol ROWS_UPDATED =
 			new ElementSymbol(ProcedureReservedWords.VARIABLES+"."+ProcedureReservedWords.ROWS_UPDATED); //$NON-NLS-1$
 
-	private static int NO_ROWS_UPDATED = 0;
+	static ElementSymbol ROWCOUNT =
+		new ElementSymbol(ProcedureReservedWords.VARIABLES+"."+ProcedureReservedWords.ROWCOUNT); //$NON-NLS-1$
+
 	private VariableContext currentVarContext;
     private boolean isUpdateProcedure = true;
 
@@ -393,13 +395,14 @@ public class ProcedurePlan extends ProcessorPlan {
         
 	private void createVariableContext() {
 		this.currentVarContext = new VariableContext(true);
-        this.currentVarContext.setValue(ROWS_UPDATED, new Integer(NO_ROWS_UPDATED));
+        this.currentVarContext.setValue(ROWS_UPDATED, 0);
+        this.currentVarContext.setValue(ROWCOUNT, 0);
 	}
 
     private TupleSource getUpdateCountAsToupleSource() {
     	Object rowCount = currentVarContext.getValue(ROWS_UPDATED);
     	if(rowCount == null) {
-			rowCount = new Integer(NO_ROWS_UPDATED);
+			rowCount = 0;
     	}
         return CollectionTupleSource.createUpdateCountTupleSource((Integer)rowCount);
     }
@@ -415,7 +418,7 @@ public class ProcedurePlan extends ProcessorPlan {
 		return this.currentVarContext;
     }
 
-    public CursorState executePlan(ProcessorPlan command, String rsName)
+    public void executePlan(ProcessorPlan command, String rsName)
         throws TeiidComponentException, TeiidProcessingException {
     	
         CursorState state = this.cursorStates.get(rsName.toUpperCase());
@@ -438,12 +441,10 @@ public class ProcedurePlan extends ProcessorPlan {
 	            this.currentState = state;
         	}
         	//force execution to the first batch
-    		this.currentState.ts.hasNext();
-
+        	this.currentState.ts.hasNext();
 	        this.cursorStates.put(rsName.toUpperCase(), this.currentState);
 	        this.currentState = null;
         }
-        return state;
     }
     
     /** 
@@ -536,7 +537,7 @@ public class ProcedurePlan extends ProcessorPlan {
 		return state;
 	}
 
-    public void removeResults(String rsName) throws TeiidComponentException {
+    public void removeResults(String rsName) {
         String rsKey = rsName.toUpperCase();
         CursorState state = this.cursorStates.remove(rsKey);
         if (state != null) {

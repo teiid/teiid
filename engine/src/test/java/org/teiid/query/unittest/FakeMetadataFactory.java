@@ -39,6 +39,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.metadata.Table;
+import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingAttribute;
 import org.teiid.query.mapping.xml.MappingDocument;
@@ -51,6 +52,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 @SuppressWarnings("nls")
 public class FakeMetadataFactory {
 
+	public static SystemFunctionManager SFM = new SystemFunctionManager();
     private static FakeMetadataFacade CACHED_EXAMPLE1 = example1();
     private static FakeMetadataFacade CACHED_AGGREGATES = exampleAggregates();
         
@@ -430,8 +432,8 @@ public class FakeMetadataFactory {
         FakeMetadataObject vm1g38 = createVirtualGroup("vm1.g38", vm1, vm1g38n1); //$NON-NLS-1$
         
 		// Create virtual groups
-		QueryNode vm1g39n1 = new QueryNode("vm1.g39", "SELECT * FROM pm1.g39"); //$NON-NLS-1$ //$NON-NLS-2$
-		FakeMetadataObject vm1g39 = createUpdatableVirtualGroup("vm1.g39", vm1, vm1g39n1, "CREATE VIRTUAL PROCEDURE BEGIN LOOP ON (SELECT pm1.g1.e2 FROM pm1.g1 where pm1.g1.e2=3) AS mycursor begin update pm1.g1 set pm1.g1.e1 = input.e1 where pm1.g1.e1 = input.e1; update pm1.g1 set pm1.g1.e2 = input.e2 where pm1.g1.e2 = input.e2; END END"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm1g39n1 = new QueryNode("vm1.g39", "SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+		FakeMetadataObject vm1g39 = createUpdatableVirtualGroup("vm1.g39", vm1, vm1g39n1, "CREATE PROCEDURE BEGIN LOOP ON (SELECT pm1.g1.e2 FROM pm1.g1 where pm1.g1.e2=3) AS mycursor begin update pm1.g1 set pm1.g1.e1 = input.e1 where pm1.g1.e1 = input.e1; ROWS_UPDATED = ROWS_UPDATED + ROWCOUNT;\nupdate pm1.g1 set pm1.g1.e2 = input.e2 where pm1.g1.e2 = input.e2; END END"); //$NON-NLS-1$ //$NON-NLS-2$
         
 		// Create virtual elements
 		List vm1g39e = createElements(vm1g39, 
@@ -968,7 +970,7 @@ public class FakeMetadataFactory {
 
         vm1g37.putProperty(FakeMetadataObject.Props.INSERT_PROCEDURE, "CREATE PROCEDURE BEGIN ROWS_UPDATED = INSERT INTO pm4.g1(e1, e2, e3, e4) values(INPUT.e1, INPUT.e2, INPUT.e3, INPUT.e4); END"); //$NON-NLS-1$
         vm1g37.putProperty(FakeMetadataObject.Props.DELETE_PROCEDURE, "CREATE PROCEDURE BEGIN ROWS_UPDATED = DELETE FROM pm4.g1 where translate criteria; END"); //$NON-NLS-1$
-        QueryNode vspqn37 = new QueryNode("vsp37", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; VARIABLES.x=5; INSERT INTO vm1.g1(e2) values(VARIABLES.x); END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn37 = new QueryNode("vsp37", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; VARIABLES.x=5; INSERT INTO vm1.g1(e2) values(VARIABLES.x); SELECT ROWCOUNT; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp37 = createVirtualProcedure("pm1.vsp37", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn37); //$NON-NLS-1$
 
         QueryNode vspqn33 = new QueryNode("vsp33", new StringBuffer("CREATE VIRTUAL PROCEDURE")  //$NON-NLS-1$//$NON-NLS-2$
@@ -1003,10 +1005,8 @@ public class FakeMetadataFactory {
 //        QueryNode vgvpn7 = new QueryNode("vm1.vgvp7", "SELECT P.e2 as ve1, P.e1 as ve2 FROM (EXEC pm1.vsp47(vm1.vgvp7.ve1, vm1.vgvp7.ve2)) as P"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vgvp7 = createVirtualGroup("vm1.vgvp7", vm1, vgvpn7); //$NON-NLS-1$
         FakeMetadataObject vgvp7e1 = FakeMetadataFactory.createElement("vm1.vgvp7.ve1", vgvp7, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
-        vgvp7e1.putProperty(FakeMetadataObject.Props.IS_PROC_INPUT, Boolean.TRUE);
         vgvp7e1.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
         FakeMetadataObject vgvp7e2 = FakeMetadataFactory.createElement("vm1.vgvp7.ve2", vgvp7, DataTypeManager.DefaultDataTypes.STRING, 1); //$NON-NLS-1$
-        vgvp7e2.putProperty(FakeMetadataObject.Props.IS_PROC_INPUT, Boolean.TRUE);
         vgvp7e2.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
         FakeMetadataObject vgvp7e3 = FakeMetadataFactory.createElement("vm1.vgvp7.ve3", vgvp7, DataTypeManager.DefaultDataTypes.STRING, 2); //$NON-NLS-1$
         FakeMetadataObject vgvp7e4 = FakeMetadataFactory.createElement("vm1.vgvp7.ve4", vgvp7, DataTypeManager.DefaultDataTypes.STRING, 3); //$NON-NLS-1$
@@ -1026,60 +1026,48 @@ public class FakeMetadataFactory {
 		QueryNode vgvpn1 = new QueryNode("vm1.vgvp1", "SELECT P.e1 as ve3 FROM (EXEC pm1.vsp26(vm1.vgvp1.ve1, vm1.vgvp1.ve2)) as P"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vgvp1 = createVirtualGroup("vm1.vgvp1", vm1, vgvpn1); //$NON-NLS-1$
         FakeMetadataObject vgvp1e1 = FakeMetadataFactory.createElement("vm1.vgvp1.ve1", vgvp1, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
-        vgvp1e1.putProperty(FakeMetadataObject.Props.IS_PROC_INPUT, Boolean.TRUE);
         vgvp1e1.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
         FakeMetadataObject vgvp1e2 = FakeMetadataFactory.createElement("vm1.vgvp1.ve2", vgvp1, DataTypeManager.DefaultDataTypes.STRING, 1); //$NON-NLS-1$
-        vgvp1e2.putProperty(FakeMetadataObject.Props.IS_PROC_INPUT, Boolean.TRUE);
         vgvp1e2.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
         FakeMetadataObject vgvp1e3 = FakeMetadataFactory.createElement("vm1.vgvp1.ve3", vgvp1, DataTypeManager.DefaultDataTypes.STRING, 2); //$NON-NLS-1$
       
 		QueryNode vgvpn2 = new QueryNode("vm1.vgvp2", "SELECT P.e1 as ve3 FROM (EXEC pm1.vsp26(vm1.vgvp2.ve1, vm1.vgvp2.ve2)) as P where P.e1='a'"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vgvp2 = createVirtualGroup("vm1.vgvp2", vm1, vgvpn2); //$NON-NLS-1$
         FakeMetadataObject vgvp2e1 = FakeMetadataFactory.createElement("vm1.vgvp2.ve1", vgvp2, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
-        vgvp2e1.putProperty(FakeMetadataObject.Props.IS_PROC_INPUT, Boolean.TRUE);
         vgvp2e1.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
         FakeMetadataObject vgvp2e2 = FakeMetadataFactory.createElement("vm1.vgvp2.ve2", vgvp2, DataTypeManager.DefaultDataTypes.STRING, 1); //$NON-NLS-1$
-        vgvp2e2.putProperty(FakeMetadataObject.Props.IS_PROC_INPUT, Boolean.TRUE);
         vgvp2e2.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
         FakeMetadataObject vgvp2e3 = FakeMetadataFactory.createElement("vm1.vgvp2.ve3", vgvp2, DataTypeManager.DefaultDataTypes.STRING, 2); //$NON-NLS-1$
    
 		QueryNode vgvpn3 = new QueryNode("vm1.vgvp3", "SELECT P.e1 as ve3 FROM (EXEC pm1.vsp26(vm1.vgvp3.ve1, vm1.vgvp3.ve2)) as P, pm1.g2 where P.e1=g2.e1"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vgvp3 = createVirtualGroup("vm1.vgvp3", vm1, vgvpn3); //$NON-NLS-1$
         FakeMetadataObject vgvp3e1 = FakeMetadataFactory.createElement("vm1.vgvp3.ve1", vgvp3, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
-        vgvp3e1.putProperty(FakeMetadataObject.Props.IS_PROC_INPUT, Boolean.TRUE);
         vgvp3e1.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
         FakeMetadataObject vgvp3e2 = FakeMetadataFactory.createElement("vm1.vgvp3.ve2", vgvp3, DataTypeManager.DefaultDataTypes.STRING, 1); //$NON-NLS-1$
-        vgvp3e2.putProperty(FakeMetadataObject.Props.IS_PROC_INPUT, Boolean.TRUE);
         vgvp3e2.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
         FakeMetadataObject vgvp3e3 = FakeMetadataFactory.createElement("vm1.vgvp3.ve3", vgvp3, DataTypeManager.DefaultDataTypes.STRING, 2); //$NON-NLS-1$
 
 		QueryNode vgvpn4 = new QueryNode("vm1.vgvp4", "SELECT P.e1 as ve3 FROM (EXEC pm1.vsp26(vm1.vgvp4.ve1, vm1.vgvp4.ve2)) as P, vm1.g1 where P.e1=g1.e1"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vgvp4 = createVirtualGroup("vm1.vgvp4", vm1, vgvpn4); //$NON-NLS-1$
         FakeMetadataObject vgvp4e1 = FakeMetadataFactory.createElement("vm1.vgvp4.ve1", vgvp4, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
-        vgvp4e1.putProperty(FakeMetadataObject.Props.IS_PROC_INPUT, Boolean.TRUE);
         vgvp4e1.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
         FakeMetadataObject vgvp4e2 = FakeMetadataFactory.createElement("vm1.vgvp4.ve2", vgvp4, DataTypeManager.DefaultDataTypes.STRING, 1); //$NON-NLS-1$
-        vgvp4e2.putProperty(FakeMetadataObject.Props.IS_PROC_INPUT, Boolean.TRUE);
         vgvp4e2.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
         FakeMetadataObject vgvp4e3 = FakeMetadataFactory.createElement("vm1.vgvp4.ve3", vgvp4, DataTypeManager.DefaultDataTypes.STRING, 2); //$NON-NLS-1$
         
 		QueryNode vgvpn5 = new QueryNode("vm1.vgvp5", "SELECT * FROM vm1.vgvp4 where vm1.vgvp4.ve1=vm1.vgvp5.ve1 and  vm1.vgvp4.ve2=vm1.vgvp5.ve2"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vgvp5 = createVirtualGroup("vm1.vgvp5", vm1, vgvpn5); //$NON-NLS-1$
         FakeMetadataObject vgvp5e1 = FakeMetadataFactory.createElement("vm1.vgvp5.ve1", vgvp5, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
-        vgvp5e1.putProperty(FakeMetadataObject.Props.IS_PROC_INPUT, Boolean.TRUE);
         vgvp5e1.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
         FakeMetadataObject vgvp5e2 = FakeMetadataFactory.createElement("vm1.vgvp5.ve2", vgvp5, DataTypeManager.DefaultDataTypes.STRING, 1); //$NON-NLS-1$
-        vgvp5e2.putProperty(FakeMetadataObject.Props.IS_PROC_INPUT, Boolean.TRUE);
         vgvp5e2.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
         FakeMetadataObject vgvp5e3 = FakeMetadataFactory.createElement("vm1.vgvp5.ve3", vgvp5, DataTypeManager.DefaultDataTypes.STRING, 2); //$NON-NLS-1$
 
 		QueryNode vgvpn6 = new QueryNode("vm1.vgvp6", "SELECT P.e1 as ve3, P.e2 as ve4 FROM (EXEC pm1.vsp26(vm1.vgvp6.ve1, vm1.vgvp6.ve2)) as P"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vgvp6 = createVirtualGroup("vm1.vgvp6", vm1, vgvpn6); //$NON-NLS-1$
         FakeMetadataObject vgvp6e1 = FakeMetadataFactory.createElement("vm1.vgvp6.ve1", vgvp6, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
-        vgvp6e1.putProperty(FakeMetadataObject.Props.IS_PROC_INPUT, Boolean.TRUE);
         vgvp6e1.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
         FakeMetadataObject vgvp6e2 = FakeMetadataFactory.createElement("vm1.vgvp6.ve2", vgvp6, DataTypeManager.DefaultDataTypes.STRING, 1); //$NON-NLS-1$
-        vgvp6e2.putProperty(FakeMetadataObject.Props.IS_PROC_INPUT, Boolean.TRUE);
         vgvp6e2.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
         FakeMetadataObject vgvp6e3 = FakeMetadataFactory.createElement("vm1.vgvp6.ve3", vgvp6, DataTypeManager.DefaultDataTypes.STRING, 2); //$NON-NLS-1$
         FakeMetadataObject vgvp6e4 = FakeMetadataFactory.createElement("vm1.vgvp6.ve4", vgvp6, DataTypeManager.DefaultDataTypes.INTEGER, 3); //$NON-NLS-1$

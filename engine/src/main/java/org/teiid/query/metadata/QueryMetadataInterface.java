@@ -680,4 +680,8 @@ public interface QueryMetadataInterface {
     FunctionLibrary getFunctionLibrary();
     
     Object getPrimaryKey(Object metadataID);
+    
+    boolean isMultiSource(Object modelId) throws QueryMetadataException, TeiidComponentException;
+    
+    boolean isMultiSourceElement(Object elementId);
 }

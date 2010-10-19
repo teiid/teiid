@@ -42,7 +42,6 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
-import org.teiid.dqp.internal.process.multisource.MultiSourceElement;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionLibrary;
@@ -64,6 +63,7 @@ import org.teiid.query.sql.lang.Delete;
 import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.Drop;
 import org.teiid.query.sql.lang.DynamicCommand;
+import org.teiid.query.sql.lang.ExistsCriteria;
 import org.teiid.query.sql.lang.GroupBy;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.Into;
@@ -76,25 +76,32 @@ import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.lang.SetClause;
 import org.teiid.query.sql.lang.SetClauseList;
 import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.lang.SetQuery;
+import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
+import org.teiid.query.sql.lang.SubqueryContainer;
+import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.proc.AssignmentStatement;
+import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.proc.CriteriaSelector;
 import org.teiid.query.sql.proc.DeclareStatement;
 import org.teiid.query.sql.proc.HasCriteria;
 import org.teiid.query.sql.proc.IfStatement;
+import org.teiid.query.sql.proc.LoopStatement;
 import org.teiid.query.sql.proc.TranslateCriteria;
 import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.symbol.AggregateSymbol;
@@ -226,6 +233,10 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         validateHasProjectedSymbols(obj);
         validateGroupSupportsUpdate(obj.getGroup());
         validateInsert(obj);
+        
+        if (obj.getQueryExpression() != null) {
+        	validateMultisourceInsert(obj.getGroup());
+        }
     }
 
     @Override
@@ -267,6 +278,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
 
 	public void visit(SubquerySetCriteria obj) {
+		validateSubquery(obj);
 		if (isNonComparable(obj.getExpression())) {
 			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj),obj); //$NON-NLS-1$
     	}
@@ -300,7 +312,20 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     public void visit(Into obj) {
         GroupSymbol target = obj.getGroup();
         validateGroupSupportsUpdate(target);
+        validateMultisourceInsert(obj.getGroup());
     }
+
+	private void validateMultisourceInsert(GroupSymbol group) {
+		try {
+			if (getMetadata().isMultiSource(getMetadata().getModelID(group.getMetadataID()))) {
+				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.multisource_insert", group), group); //$NON-NLS-1$
+			}
+        } catch (QueryMetadataException e) {
+			handleException(e);
+		} catch (TeiidComponentException e) {
+			handleException(e);
+		}
+	}
 
     public void visit(Function obj) {
     	if(FunctionLibrary.LOOKUP.equalsIgnoreCase(obj.getName())) {
@@ -367,16 +392,34 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	
     	ElementSymbol variable = obj.getVariable();
 
-    	String groupName = variable.getGroupSymbol().getCanonicalName();
-
-    	if(groupName.equals(ProcedureReservedWords.CHANGING) || groupName.equals(ProcedureReservedWords.INPUTS)) {
-			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0012", ProcedureReservedWords.INPUTS, ProcedureReservedWords.CHANGING), obj); //$NON-NLS-1$
-		}
-
+    	validateAssignment(obj, variable);
     }
     
     @Override
+    public void visit(CommandStatement obj) {
+    	if (obj.getCommand() instanceof StoredProcedure) {
+    		StoredProcedure proc = (StoredProcedure)obj.getCommand();
+    		for (SPParameter param : proc.getParameters()) {
+				if ((param.getParameterType() == SPParameter.RETURN_VALUE 
+						|| param.getParameterType() == SPParameter.OUT) && param.getExpression() instanceof ElementSymbol) {
+					validateAssignment(obj, (ElementSymbol)param.getExpression());
+				}
+			}
+    	}
+    }
+
+	private void validateAssignment(LanguageObject obj,
+			ElementSymbol variable) {
+		String groupName = variable.getGroupSymbol().getCanonicalName();
+		//This will actually get detected by the resolver, since we inject an automatic declaration.
+    	if(groupName.equals(ProcedureReservedWords.CHANGING) || groupName.equals(ProcedureReservedWords.INPUTS)) {
+			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0012", ProcedureReservedWords.INPUTS, ProcedureReservedWords.CHANGING), obj); //$NON-NLS-1$
+		}
+	}
+    
+    @Override
     public void visit(ScalarSubquery obj) {
+    	validateSubquery(obj);
         Collection<SingleElementSymbol> projSymbols = obj.getCommand().getProjectedSymbols();
 
         //Scalar subquery should have one projected symbol (query with one expression
@@ -413,9 +456,11 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 		// varible cannot be one of the special variables
     	if(elementname.equals(ProcedureReservedWords.ROWS_UPDATED)) {
 			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0017", new Object[] {ProcedureReservedWords.ROWS_UPDATED}), obj); //$NON-NLS-1$
+		} else if(elementname.equals(ProcedureReservedWords.ROWCOUNT)) {
+			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0017", new Object[] {ProcedureReservedWords.ROWCOUNT}), obj); //$NON-NLS-1$
 		}
         
-        visit((AssignmentStatement)obj);
+        validateAssignment(obj, obj.getVariable());
     }
 
     public void visit(IfStatement obj) {
@@ -790,7 +835,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 				if(!getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.DEFAULT_VALUE) &&
 					!getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.NULL) &&
                     !getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT) &&
-                     !(nextElmnt.getMetadataID() instanceof MultiSourceElement)) {
+                     !getMetadata().isMultiSourceElement(nextElmnt.getMetadataID())) {
 		                handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0053", new Object[] {insertGroup, nextElmnt}), nextElmnt); //$NON-NLS-1$
 				}
 			}
@@ -847,7 +892,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                 }
                 
                 Object metadataID = elementID.getMetadataID();
-                if (metadataID instanceof MultiSourceElement){
+                if (getMetadata().isMultiSourceElement(metadataID)){
                 	handleValidationError(QueryPlugin.Util.getString("multi_source_update_not_allowed", elementID), elementID); //$NON-NLS-1$
                 }
 
@@ -1028,6 +1073,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
      * @since 4.3
      */
     public void visit(SubqueryCompareCriteria obj) {
+    	validateSubquery(obj);
     	if (isNonComparable(obj.getLeftExpression())) {
     		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj),obj);    		 //$NON-NLS-1$
     	}
@@ -1356,5 +1402,32 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xmlserialize_type"), obj); //$NON-NLS-1$
     	}
     }
-        
+    
+    @Override
+    public void visit(ExistsCriteria obj) {
+    	validateSubquery(obj);
+    }
+    
+    @Override
+    public void visit(SubqueryFromClause obj) {
+    	validateSubquery(obj);
+    }
+    
+    @Override
+    public void visit(LoopStatement obj) {
+    	validateSubquery(obj);
+    }
+    
+    @Override
+    public void visit(WithQueryCommand obj) {
+    	validateSubquery(obj);
+    }
+
+    //TODO: it may be simplier to catch this in the parser
+    private void validateSubquery(SubqueryContainer subQuery) {
+    	if (subQuery.getCommand() instanceof Query && ((Query)subQuery.getCommand()).getInto() != null) {
+        	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.subquery_insert"), subQuery.getCommand()); //$NON-NLS-1$
+        }
+    }
+    
 }

@@ -1872,7 +1872,7 @@ public class TestQueryRewriter {
         
         String rewriten = getRewritenProcedure(userUpdateStr, metadata);
         
-        String expected = "CREATE PROCEDURE\nBEGIN\nDECLARE string var1 = 'x';\nROWS_UPDATED = UPDATE vm1.g2 SET e1 = var1;\nEND"; //$NON-NLS-1$
+        String expected = "CREATE PROCEDURE\nBEGIN\nDECLARE string var1 = 'x';\nUPDATE vm1.g2 SET e1 = var1;\nROWS_UPDATED = VARIABLES.ROWCOUNT;\nEND"; //$NON-NLS-1$
         
         assertEquals(expected, rewriten);
     }

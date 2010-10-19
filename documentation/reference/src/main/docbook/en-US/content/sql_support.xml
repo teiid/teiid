@@ -1236,8 +1236,9 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
       <para>Subqueries supported in the criteria of the outer query include subqueries in an IN clause, subqueries using the ANY/SOME or ALL predicate quantifier, and subqueries using the EXISTS predicate. </para>
       <example>
         <title>Example Subquery in WHERE Using EXISTS</title>
-        <programlisting>SELECT a FROM X WHERE EXISTS (SELECT b, c FROM Y WHERE c=3)</programlisting>
+        <programlisting>SELECT a FROM X WHERE EXISTS (SELECT 1 FROM Y WHERE c=X.a)</programlisting>
       </example>
+      <note><para>EXISTS subqueries should typically follow the convention "SELECT 1 FROM ..." to prevent unnecessary evaluation of select expressions.</para></note>
       <para>
         The following usages of subqueries must each select only one column, but can return any number of rows.
       </para>

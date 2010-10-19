@@ -134,6 +134,10 @@ public class ExecutedOperationResultImpl implements ExecutedResult {
 						.getPropertyDefinitions();
 				PropertyDefinition listPropDefinition = (PropertyDefinition) propDefs
 						.get(LISTNAME);
+				
+				if (listPropDefinition == null) {
+					continue;
+				}
 
 				PropertyDefinition propertyDefinitionMap = ((PropertyDefinitionList) listPropDefinition)
 						.getMemberDefinition();

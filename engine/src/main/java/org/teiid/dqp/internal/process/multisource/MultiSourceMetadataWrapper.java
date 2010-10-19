@@ -330,5 +330,15 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
         
 		return actualMetadata.getNativeType(elementID);
 	}
+	
+	@Override
+	public boolean isMultiSource(Object modelId) throws QueryMetadataException, TeiidComponentException {
+		return multiSourceModels.contains(getFullName(modelId));
+	}
+	
+	@Override
+	public boolean isMultiSourceElement(Object elementId) {
+		return elementId instanceof MultiSourceElement;
+	}
 
 }

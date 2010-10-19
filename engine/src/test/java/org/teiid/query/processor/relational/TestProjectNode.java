@@ -28,6 +28,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import junit.framework.TestCase;
+
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
@@ -37,18 +39,15 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.function.FunctionDescriptor;
-import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.ProcessorDataManager;
-import org.teiid.query.processor.relational.ProjectNode;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.util.CommandContext;
-
-import junit.framework.TestCase;
 
 
 /**
@@ -213,7 +212,7 @@ public class TestProjectNode extends TestCase {
         elements.add(es1);
         
         Function func = new Function("concat", new Expression[] { es1, new Constant("abc")}); //$NON-NLS-1$ //$NON-NLS-2$
-        FunctionDescriptor fd = SystemFunctionManager.getSystemFunctionLibrary().findFunction("concat", new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING }); //$NON-NLS-1$
+        FunctionDescriptor fd = FakeMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("concat", new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING }); //$NON-NLS-1$
         func.setFunctionDescriptor(fd);
         func.setType(DataTypeManager.DefaultDataClasses.STRING);
         ExpressionSymbol expr = new ExpressionSymbol("expr", func); //$NON-NLS-1$
@@ -237,7 +236,7 @@ public class TestProjectNode extends TestCase {
         elements.add(es1);
         
         Function func = new Function("convert", new Expression[] { es1, new Constant("integer")}); //$NON-NLS-1$ //$NON-NLS-2$
-        FunctionDescriptor fd = SystemFunctionManager.getSystemFunctionLibrary().findFunction("convert", new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING }); //$NON-NLS-1$
+        FunctionDescriptor fd = FakeMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("convert", new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING }); //$NON-NLS-1$
         func.setFunctionDescriptor(fd);
         func.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         ExpressionSymbol expr = new ExpressionSymbol("expr", func); //$NON-NLS-1$
@@ -260,7 +259,7 @@ public class TestProjectNode extends TestCase {
         elements.add(es1);
 
         Function func = new Function("lookup", new Expression[] { new Constant("pm1.g1"), new Constant("e2"), new Constant("e1"), es1 }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        FunctionDescriptor desc = SystemFunctionManager.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, String.class } ); //$NON-NLS-1$
+        FunctionDescriptor desc = FakeMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, String.class } ); //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
         func.setType(DataTypeManager.DefaultDataClasses.STRING);
         

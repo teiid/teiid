@@ -36,11 +36,11 @@ import org.teiid.query.sql.symbol.Expression;
  * of values returned from a subquery.  This criteria can be represented as
  * "<expression> IN (SELECT ...)".
  */
-public class SubquerySetCriteria extends AbstractSetCriteria implements SubqueryContainer, ContextReference {
+public class SubquerySetCriteria extends AbstractSetCriteria implements SubqueryContainer<QueryCommand>, ContextReference {
 
 	private static AtomicInteger ID = new AtomicInteger();
 
-    private Command command;
+    private QueryCommand command;
     private String id = "$ssc/id" + ID.getAndIncrement(); //$NON-NLS-1$
 
     /**
@@ -50,7 +50,7 @@ public class SubquerySetCriteria extends AbstractSetCriteria implements Subquery
         super();
     }
 
-    public SubquerySetCriteria(Expression expression, Command subCommand) {
+    public SubquerySetCriteria(Expression expression, QueryCommand subCommand) {
         setExpression(expression);
         setCommand(subCommand);
     }
@@ -69,7 +69,7 @@ public class SubquerySetCriteria extends AbstractSetCriteria implements Subquery
      * Set the subquery command (either a SELECT or a procedure execution).
      * @param command Command to execute to get the values for the criteria
      */
-    public void setCommand(Command command) {
+    public void setCommand(QueryCommand command) {
         this.command = command;
     }
 
@@ -77,7 +77,7 @@ public class SubquerySetCriteria extends AbstractSetCriteria implements Subquery
      * Get the subquery command used to produce the values for this SetCriteria.
      * @return Command Command to execute
      */
-    public Command getCommand() {
+    public QueryCommand getCommand() {
         return this.command;
     }
 
@@ -134,9 +134,9 @@ public class SubquerySetCriteria extends AbstractSetCriteria implements Subquery
             copy = (Expression) getExpression().clone();
         }
 
-        Command copyCommand = null;
+        QueryCommand copyCommand = null;
         if(getCommand() != null) {
-            copyCommand = (Command) getCommand().clone();
+        	copyCommand = (QueryCommand) getCommand().clone();
         }
 
         SubquerySetCriteria criteriaCopy = new SubquerySetCriteria(copy, copyCommand);

@@ -28,9 +28,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Properties;
 
-import org.teiid.client.security.LogonException;
 import org.teiid.client.util.ExceptionUtil;
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.JDBCPlugin;
 import org.teiid.net.CommunicationException;
@@ -42,29 +40,26 @@ import org.teiid.net.socket.SocketServerConnectionFactory;
 
 
 /** 
- * Singleton factory for ServerAdmins.
- * @since 4.3
+ * Singleton factory for class for creating Admin connections to the Teiid
  */
 public class AdminFactory {
 	
-    private static final int DEFAULT_BOUNCE_WAIT = 2000;
-        
     private final class AdminProxy implements InvocationHandler {
 
-    	private Admin target;
-    	private ServerConnection registry;
+    	private Admin admin;
+    	private ServerConnection serverConnection;
     	private boolean closed;
     	
     	public AdminProxy(Properties p) throws ConnectionException, CommunicationException {
-    		this.registry = serverConnectionFactory.getConnection(p);
-    		this.target = registry.getService(Admin.class);
+    		this.serverConnection = serverConnectionFactory.getConnection(p);
+    		this.admin = serverConnection.getService(Admin.class);
 		}
     	
     	private synchronized Admin getTarget() throws AdminComponentException {
     		if (closed) {
     			throw new AdminComponentException(JDBCPlugin.Util.getString("admin_conn_closed")); //$NON-NLS-1$
     		}
-    		return target;
+    		return admin;
     	}
     	
 		@Override
@@ -81,11 +76,7 @@ public class AdminFactory {
 				return method.invoke(getTarget(), args);
 			} catch (InvocationTargetException e) {
 				if (ExceptionUtil.getExceptionOfType(e, CommunicationException.class) != null) {
-					this.target = null;
-					if (method.getName().endsWith("restart")) { //$NON-NLS-1$
-						bounceSystem(true);
-						return null;
-					}
+					this.admin = null;
 				}
 				throw e.getTargetException();
 			}
@@ -96,53 +87,22 @@ public class AdminFactory {
 				return;
 			}
 			this.closed = true;
-			if (registry != null) {
-				registry.close();
+			if (serverConnection != null) {
+				serverConnection.close();
 			}
-		}
-		
-		public void bounceSystem(boolean waitUntilDone) {
-	        if (!waitUntilDone) {
-	        	return;
-	        }
-        	//we'll wait 2 seconds for the server to come up
-        	try {
-				Thread.sleep(bounceWait);
-			} catch (InterruptedException e) {
-				throw new TeiidRuntimeException(e);
-			}
-			
-			//we'll wait 30 seconds for the server to come back up
-        	for (int i = 0; i < 15; i++) {
-        		try {
-        			getTarget().getProcesses(AdminObject.WILDCARD);
-        			return;
-        		} catch (Exception e) {
-                    //reestablish a connection and retry
-                    try {
-						Thread.sleep(bounceWait);
-					} catch (InterruptedException ex) {
-						throw new TeiidRuntimeException(ex);
-					}                                        
-        		}
-        	}
-		}
+		}		
     }
 
 	public static final String DEFAULT_APPLICATION_NAME = "Admin"; //$NON-NLS-1$
 
-    /**Singleton instance*/
-    private static AdminFactory instance = new AdminFactory(SocketServerConnectionFactory.getInstance(), DEFAULT_BOUNCE_WAIT);
+    private static AdminFactory instance = new AdminFactory(SocketServerConnectionFactory.getInstance());
     
     private ServerConnectionFactory serverConnectionFactory;
-    private int bounceWait;
     
-    AdminFactory(ServerConnectionFactory connFactory, int bounceWait) {
+    AdminFactory(ServerConnectionFactory connFactory) {
     	this.serverConnectionFactory = connFactory;
-    	this.bounceWait = bounceWait;
     }
     
-    /**Get the singleton instance*/
     public static AdminFactory getInstance() {
         return instance;
     }
@@ -155,11 +115,7 @@ public class AdminFactory {
      * @param password
      * @param serverURL
      * @return
-     * @throws LogonException
      * @throws AdminException
-     * @throws CommunicationException 
-     * @throws LogonException 
-     * @since 4.3
      */
     public Admin createAdmin(String userName,
                              char[] password,
@@ -174,12 +130,9 @@ public class AdminFactory {
      * @param userName
      * @param password
      * @param serverURL
+     * @param applicationName
      * @return
-     * @throws LogonException
      * @throws AdminException
-     * @throws CommunicationException 
-     * @throws LogonException 
-     * @since 4.3
      */
     public Admin createAdmin(String userName,
                                    char[] password,

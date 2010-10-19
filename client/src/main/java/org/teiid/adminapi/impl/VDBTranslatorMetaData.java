@@ -41,7 +41,7 @@ import org.teiid.adminapi.Translator;
 public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator {
 	private static final long serialVersionUID = -3454161477587996138L;
 	private String type;
-	private Class executionClass;
+	private Class<?> executionClass;
 	private String description;
 	
 	@Override
@@ -83,7 +83,7 @@ public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator
 		return this.executionClass;
 	}	
 	
-	public void setExecutionFactoryClass(Class clazz) {
+	public void setExecutionFactoryClass(Class<?> clazz) {
 		this.executionClass = clazz;
 		addProperty(EXECUTION_FACTORY_CLASS, clazz.getName());
 	}
@@ -93,7 +93,7 @@ public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator
 		return this.description;
 	}
 	
-	@XmlAttribute(name = "description", required = true)
+	@XmlAttribute(name = "description")
 	public void setDescription(String desc) {
 		this.description = desc;
 	}

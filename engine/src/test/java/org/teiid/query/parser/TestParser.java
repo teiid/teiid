@@ -3549,36 +3549,15 @@ public class TestParser {
         query.setFrom(from);
         query.setCriteria(criteria);
         
-        Command queryCmd = query;
-        
         Expression expr = new Constant("aString"); //$NON-NLS-1$
         
-        AssignmentStatement queryStmt = new AssignmentStatement(a, queryCmd);
+        AssignmentStatement queryStmt = new AssignmentStatement(a, query);
         AssignmentStatement exprStmt = new AssignmentStatement(a, expr);
         
-        helpStmtTest("a = SELECT a1 FROM g WHERE a2 = 5;", "a = SELECT a1 FROM g WHERE a2 = 5;", //$NON-NLS-1$ //$NON-NLS-2$
+        helpStmtTest("a = SELECT a1 FROM g WHERE a2 = 5;", "a = (SELECT a1 FROM g WHERE a2 = 5);", //$NON-NLS-1$ //$NON-NLS-2$
             queryStmt);
         
         helpStmtTest("a = 'aString';", "a = 'aString';", exprStmt);      //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-     @Test public void testAssignStatement2() throws Exception {
-        Insert insert = new Insert();
-        insert.setGroup(new GroupSymbol("g")); //$NON-NLS-1$
-        List vars = new ArrayList();
-        vars.add(new ElementSymbol("a")); //$NON-NLS-1$
-                
-        insert.setVariables(vars);
-        List values = new ArrayList();
-        values.add(new Reference(0));
-        insert.setValues(values);
-   
-        //Command insertCmd = insert;       
-        AssignmentStatement insertStmt = new AssignmentStatement(new ElementSymbol("b"), insert); //$NON-NLS-1$
-                
-        helpStmtTest("b = INSERT INTO g (a) VALUES (?);", "b = INSERT INTO g (a) VALUES (?);", //$NON-NLS-1$ //$NON-NLS-2$
-            insertStmt);
-           
     }
     
     @Test public void testDeclareStatement() throws Exception {
@@ -3602,7 +3581,7 @@ public class TestParser {
         String type = new String("string"); //$NON-NLS-1$
         DeclareStatement stmt = new DeclareStatement(a, type, new ScalarSubquery(sampleQuery()));
     
-        helpStmtTest("DECLARE string a = SELECT a1 FROM g WHERE a2 = 5;","DECLARE string a = SELECT a1 FROM g WHERE a2 = 5;", stmt); //$NON-NLS-1$ //$NON-NLS-2$
+        helpStmtTest("DECLARE string a = SELECT a1 FROM g WHERE a2 = 5;","DECLARE string a = (SELECT a1 FROM g WHERE a2 = 5);", stmt); //$NON-NLS-1$ //$NON-NLS-2$
     }
       
     @Test public void testStatement() throws Exception {
@@ -3675,7 +3654,7 @@ public class TestParser {
         
         CommandStatement cmdStmt = new CommandStatement(sqlCmd);
    
-        helpStmtTest("exec string 'SELECT a1 FROM g WHERE a2 = 5' as a1 string into #g;", "EXECUTE STRING 'SELECT a1 FROM g WHERE a2 = 5' AS a1 string INTO #g;", //$NON-NLS-1$ //$NON-NLS-2$
+        helpStmtTest("exec string 'SELECT a1 FROM g WHERE a2 = 5' as a1 string into #g;", "EXECUTE 'SELECT a1 FROM g WHERE a2 = 5' AS a1 string INTO #g;", //$NON-NLS-1$ //$NON-NLS-2$
         cmdStmt);       
     }
     
@@ -3704,7 +3683,7 @@ public class TestParser {
         
         CommandStatement cmdStmt = new CommandStatement(sqlCmd);
    
-        helpStmtTest("execute string z as a1 string, a2 integer into #g update 1;", "EXECUTE STRING z AS a1 string, a2 integer INTO #g UPDATE 1;", //$NON-NLS-1$ //$NON-NLS-2$
+        helpStmtTest("execute string z as a1 string, a2 integer into #g update 1;", "EXECUTE z AS a1 string, a2 integer INTO #g UPDATE 1;", //$NON-NLS-1$ //$NON-NLS-2$
         cmdStmt);       
     }
     
@@ -3722,7 +3701,7 @@ public class TestParser {
         
         CommandStatement cmdStmt = new CommandStatement(sqlCmd);
    
-        helpStmtTest("execute string z using a=b;", "EXECUTE STRING z USING a = b;", //$NON-NLS-1$ //$NON-NLS-2$
+        helpStmtTest("execute immediate z using a=b;", "EXECUTE z USING a = b;", //$NON-NLS-1$ //$NON-NLS-2$
         cmdStmt);       
     }
 
@@ -3744,27 +3723,25 @@ public class TestParser {
     /** original test */
     @Test public void testCreateUpdateProcedureCommand(){
         helpTestCreateUpdateProcedureCommandCase3025("CREATE PROCEDURE\nBEGIN\nDECLARE short var1;"+ //$NON-NLS-1$
-           "IF(HAS IS NULL CRITERIA ON (a))\nBEGIN\nvar1 = SELECT a1 FROM g WHERE a2 = 5;\nEND\n"+ //$NON-NLS-1$
-           "ELSE\nBEGIN\nDECLARE short var2;\nvar2 = SELECT b1 FROM g WHERE a2 = 5;\nEND\n" + //$NON-NLS-1$
+           "IF(HAS IS NULL CRITERIA ON (a))\nBEGIN\nvar1 = (SELECT a1 FROM g WHERE a2 = 5);\nEND\n"+ //$NON-NLS-1$
+           "ELSE\nBEGIN\nDECLARE short var2;\nvar2 = (SELECT b1 FROM g WHERE a2 = 5);\nEND\n" + //$NON-NLS-1$
            " END"); //$NON-NLS-1$
                   
     }
 
-    /** test that a command in parens isn't parsed as a ScalarSubquery */
     @Test public void testCreateUpdateProcedureCommandCase3025_1(){
  
         helpTestCreateUpdateProcedureCommandCase3025("CREATE PROCEDURE\nBEGIN\nDECLARE short var1;"+ //$NON-NLS-1$
          "IF(HAS IS NULL CRITERIA ON (a))\nBEGIN\nvar1 = (SELECT a1 FROM g WHERE a2 = 5);\nEND\n"+ //$NON-NLS-1$
-         "ELSE\nBEGIN\nDECLARE short var2;\nvar2 = SELECT b1 FROM g WHERE a2 = 5;\nEND\n" + //$NON-NLS-1$
+         "ELSE\nBEGIN\nDECLARE short var2;\nvar2 = (SELECT b1 FROM g WHERE a2 = 5);\nEND\n" + //$NON-NLS-1$
          " END"); //$NON-NLS-1$ 
                   
     }    
 
-    /** test that a command in DOUBLE parens isn't parsed as a ScalarSubquery */
     @Test public void testCreateUpdateProcedureCommandCase3025_2(){
         helpTestCreateUpdateProcedureCommandCase3025("CREATE PROCEDURE\nBEGIN\nDECLARE short var1;"+ //$NON-NLS-1$
            "IF(HAS IS NULL CRITERIA ON (a))\nBEGIN\nvar1 = ((SELECT a1 FROM g WHERE a2 = 5) );\nEND\n"+ //$NON-NLS-1$
-           "ELSE\nBEGIN\nDECLARE short var2;\nvar2 = SELECT b1 FROM g WHERE a2 = 5;\nEND\n" + //$NON-NLS-1$
+           "ELSE\nBEGIN\nDECLARE short var2;\nvar2 = (SELECT b1 FROM g WHERE a2 = 5);\nEND\n" + //$NON-NLS-1$
            " END"); //$NON-NLS-1$ 
     }     
 
@@ -3790,8 +3767,7 @@ public class TestParser {
         query.setFrom(from);
         query.setCriteria(criteria);
         
-        Command queryCmd = query;
-        AssignmentStatement queryStmt = new AssignmentStatement(var1, queryCmd);
+        AssignmentStatement queryStmt = new AssignmentStatement(var1, query);
               
         Block ifBlock = new Block();      
         ifBlock.addStatement(queryStmt);
@@ -3810,7 +3786,7 @@ public class TestParser {
         elseQuery.setCriteria(criteria);
         
         Command elseQueryCmd = elseQuery;
-        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQueryCmd);
+        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQuery);
         
         Block elseBlock = new Block();
         List elseStmts = new ArrayList();
@@ -3842,9 +3818,9 @@ public class TestParser {
         cmd.setBlock(block);
  
          helpTest(procedureString, "CREATE PROCEDURE"+"\n"+"BEGIN"+"\n"+"DECLARE short var1;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ 
-           "IF(HAS IS NULL CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = SELECT a1 FROM g WHERE a2 = 5;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+           "IF(HAS IS NULL CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = (SELECT a1 FROM g WHERE a2 = 5);"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
            "END"+"\n"+"ELSE"+"\n"+"BEGIN"+"\n"+"DECLARE short var2;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
-           "var2 = SELECT b1 FROM g WHERE a2 = 5;"+"\n"+"END"+"\n"+"END", cmd); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+           "var2 = (SELECT b1 FROM g WHERE a2 = 5);"+"\n"+"END"+"\n"+"END", cmd); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
         
     }
 
@@ -3853,7 +3829,7 @@ public class TestParser {
  
         String procedureString = "CREATE PROCEDURE\nBEGIN\nDECLARE short var1;"+ //$NON-NLS-1$
          "IF(HAS IS NULL CRITERIA ON (a))\nBEGIN\nvar1 = (concat('x', 'y') );\nEND\n"+ //$NON-NLS-1$
-         "ELSE\nBEGIN\nDECLARE short var2;\nvar2 = SELECT b1 FROM g WHERE a2 = 5;\nEND\n" + //$NON-NLS-1$
+         "ELSE\nBEGIN\nDECLARE short var2;\nvar2 = (SELECT b1 FROM g WHERE a2 = 5);\nEND\n" + //$NON-NLS-1$
          " END"; //$NON-NLS-1$
         
         helpTestCreateUpdateProcedureCommandCase3025_Expression(procedureString);
@@ -3864,7 +3840,7 @@ public class TestParser {
  
         String procedureString = "CREATE PROCEDURE\nBEGIN\nDECLARE short var1;"+ //$NON-NLS-1$
          "IF(HAS IS NULL CRITERIA ON (a))\nBEGIN\nvar1 = ((concat('x', 'y') ));\nEND\n"+ //$NON-NLS-1$
-         "ELSE\nBEGIN\nDECLARE short var2;\nvar2 = SELECT b1 FROM g WHERE a2 = 5;\nEND\n" + //$NON-NLS-1$
+         "ELSE\nBEGIN\nDECLARE short var2;\nvar2 = (SELECT b1 FROM g WHERE a2 = 5);\nEND\n" + //$NON-NLS-1$
          " END"; //$NON-NLS-1$
         
         helpTestCreateUpdateProcedureCommandCase3025_Expression(procedureString);
@@ -3875,7 +3851,7 @@ public class TestParser {
  
         String procedureString = "CREATE PROCEDURE\nBEGIN\nDECLARE short var1;"+ //$NON-NLS-1$
          "IF(HAS IS NULL CRITERIA ON (a))\nBEGIN\nvar1 = concat('x', 'y') ;\nEND\n"+ //$NON-NLS-1$
-         "ELSE\nBEGIN\nDECLARE short var2;\nvar2 = SELECT b1 FROM g WHERE a2 = 5;\nEND\n" + //$NON-NLS-1$
+         "ELSE\nBEGIN\nDECLARE short var2;\nvar2 = (SELECT b1 FROM g WHERE a2 = 5);\nEND\n" + //$NON-NLS-1$
          " END"; //$NON-NLS-1$
         
         helpTestCreateUpdateProcedureCommandCase3025_Expression(procedureString);
@@ -3887,7 +3863,7 @@ public class TestParser {
         String expectedString = "CREATE PROCEDURE"+"\n"+"BEGIN"+"\n"+"DECLARE short var1;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ 
         "IF(HAS IS NULL CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = concat('x', 'y');"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
         "END"+"\n"+"ELSE"+"\n"+"BEGIN"+"\n"+"DECLARE short var2;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
-        "var2 = SELECT b1 FROM g WHERE a2 = 5;"+"\n"+"END"+"\n"+"END"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+        "var2 = (SELECT b1 FROM g WHERE a2 = 5);"+"\n"+"END"+"\n"+"END"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
                   
         //declare var1
         ElementSymbol var1 = new ElementSymbol("var1"); //$NON-NLS-1$
@@ -3921,8 +3897,7 @@ public class TestParser {
         elseQuery.setFrom(from);
         elseQuery.setCriteria(criteria);
         
-        Command elseQueryCmd = elseQuery;
-        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQueryCmd);
+        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQuery);
         
         Block elseBlock = new Block();
         List elseStmts = new ArrayList();
@@ -3979,8 +3954,7 @@ public class TestParser {
         query.setFrom(from);
         query.setCriteria(criteria);
         
-        Command queryCmd = query;
-        AssignmentStatement queryStmt = new AssignmentStatement(var1, queryCmd);
+        AssignmentStatement queryStmt = new AssignmentStatement(var1, query);
               
         Block ifBlock = new Block();      
         ifBlock.addStatement(queryStmt);
@@ -3998,8 +3972,7 @@ public class TestParser {
         elseQuery.setFrom(from);
         elseQuery.setCriteria(criteria);
         
-        Command elseQueryCmd = elseQuery;
-        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQueryCmd);
+        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQuery);
         
         Block elseBlock = new Block();
         List elseStmts = new ArrayList();
@@ -4032,9 +4005,9 @@ public class TestParser {
            " IF(HAS CRITERIA ON (a)) BEGIN var1 = SELECT a1 FROM g WHERE a2 = 5; END"+ //$NON-NLS-1$
            " ELSE BEGIN DECLARE short var2; var2 = SELECT b1 FROM g WHERE a2 = 5; END" + //$NON-NLS-1$
            " END", "CREATE PROCEDURE"+"\n"+"BEGIN"+"\n"+"DECLARE short var1;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-           "IF(HAS CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = SELECT a1 FROM g WHERE a2 = 5;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+           "IF(HAS CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = (SELECT a1 FROM g WHERE a2 = 5);"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
            "END"+"\n"+"ELSE"+"\n"+"BEGIN"+"\n"+"DECLARE short var2;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
-           "var2 = SELECT b1 FROM g WHERE a2 = 5;"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+           "var2 = (SELECT b1 FROM g WHERE a2 = 5);"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     }
     
      @Test public void testCreateUpdateProcedureCommand0(){
@@ -4059,8 +4032,7 @@ public class TestParser {
         query.setFrom(from);
         query.setCriteria(criteria);
         
-        Command queryCmd = query;
-        AssignmentStatement queryStmt = new AssignmentStatement(var1, queryCmd);
+        AssignmentStatement queryStmt = new AssignmentStatement(var1, query);
               
         Block ifBlock = new Block();      
         ifBlock.addStatement(queryStmt);
@@ -4078,8 +4050,7 @@ public class TestParser {
         elseQuery.setFrom(from);
         elseQuery.setCriteria(criteria);
         
-        Command elseQueryCmd = elseQuery;
-        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQueryCmd);
+        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQuery);
         
         Block elseBlock = new Block();
         List elseStmts = new ArrayList();
@@ -4112,9 +4083,9 @@ public class TestParser {
            " IF(HAS CRITERIA) BEGIN var1 = SELECT a1 FROM g WHERE a2 = 5; END"+ //$NON-NLS-1$
            " ELSE BEGIN DECLARE short var2; var2 = SELECT b1 FROM g WHERE a2 = 5; END" + //$NON-NLS-1$
            " END", "CREATE PROCEDURE"+"\n"+"BEGIN"+"\n"+"DECLARE short var1;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-           "IF(HAS CRITERIA)"+"\n"+"BEGIN"+"\n"+ "var1 = SELECT a1 FROM g WHERE a2 = 5;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+           "IF(HAS CRITERIA)"+"\n"+"BEGIN"+"\n"+ "var1 = (SELECT a1 FROM g WHERE a2 = 5);"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
            "END"+"\n"+"ELSE"+"\n"+"BEGIN"+"\n"+"DECLARE short var2;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
-           "var2 = SELECT b1 FROM g WHERE a2 = 5;"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+           "var2 = (SELECT b1 FROM g WHERE a2 = 5);"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     }
     
     /**IF statement with has LIKE criteria */
@@ -4140,8 +4111,7 @@ public class TestParser {
         query.setFrom(from);
         query.setCriteria(criteria);
         
-        Command queryCmd = query;
-        AssignmentStatement queryStmt = new AssignmentStatement(var1, queryCmd);
+        AssignmentStatement queryStmt = new AssignmentStatement(var1, query);
               
         Block ifBlock = new Block();      
         ifBlock.addStatement(queryStmt);
@@ -4159,8 +4129,7 @@ public class TestParser {
         elseQuery.setFrom(from);
         elseQuery.setCriteria(criteria);
         
-        Command elseQueryCmd = elseQuery;
-        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQueryCmd);
+        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQuery);
         
         Block elseBlock = new Block();
         List elseStmts = new ArrayList();
@@ -4194,9 +4163,9 @@ public class TestParser {
            " IF(HAS LIKE CRITERIA ON (a)) BEGIN var1 = SELECT a1 FROM g WHERE a2 = 5; END"+ //$NON-NLS-1$
            " ELSE BEGIN DECLARE short var2; var2 = SELECT b1 FROM g WHERE a2 = 5; END" + //$NON-NLS-1$
            " END", "CREATE PROCEDURE"+"\n"+"BEGIN"+"\n"+"DECLARE short var1;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-           "IF(HAS LIKE CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = SELECT a1 FROM g WHERE a2 = 5;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+           "IF(HAS LIKE CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = (SELECT a1 FROM g WHERE a2 = 5);"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
            "END"+"\n"+"ELSE"+"\n"+"BEGIN"+"\n"+"DECLARE short var2;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
-           "var2 = SELECT b1 FROM g WHERE a2 = 5;"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+           "var2 = (SELECT b1 FROM g WHERE a2 = 5);"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     }
     
     /**IF statement with has IN criteria */
@@ -4222,8 +4191,7 @@ public class TestParser {
         query.setFrom(from);
         query.setCriteria(criteria);
         
-        Command queryCmd = query;
-        AssignmentStatement queryStmt = new AssignmentStatement(var1, queryCmd);
+        AssignmentStatement queryStmt = new AssignmentStatement(var1, query);
               
         Block ifBlock = new Block();      
         ifBlock.addStatement(queryStmt);
@@ -4241,8 +4209,7 @@ public class TestParser {
         elseQuery.setFrom(from);
         elseQuery.setCriteria(criteria);
         
-        Command elseQueryCmd = elseQuery;
-        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQueryCmd);
+        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQuery);
         
         Block elseBlock = new Block();
         List elseStmts = new ArrayList();
@@ -4276,9 +4243,9 @@ public class TestParser {
            " IF(HAS IN CRITERIA ON (a)) BEGIN var1 = SELECT a1 FROM g WHERE a2 = 5; END"+ //$NON-NLS-1$
            " ELSE BEGIN DECLARE short var2; var2 = SELECT b1 FROM g WHERE a2 = 5; END" + //$NON-NLS-1$
            " END", "CREATE PROCEDURE"+"\n"+"BEGIN"+"\n"+"DECLARE short var1;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-           "IF(HAS IN CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = SELECT a1 FROM g WHERE a2 = 5;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+           "IF(HAS IN CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = (SELECT a1 FROM g WHERE a2 = 5);"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
            "END"+"\n"+"ELSE"+"\n"+"BEGIN"+"\n"+"DECLARE short var2;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
-           "var2 = SELECT b1 FROM g WHERE a2 = 5;"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+           "var2 = (SELECT b1 FROM g WHERE a2 = 5);"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     }
     
     /**IF statement with has <> criteria */
@@ -4304,8 +4271,7 @@ public class TestParser {
         query.setFrom(from);
         query.setCriteria(criteria);
         
-        Command queryCmd = query;
-        AssignmentStatement queryStmt = new AssignmentStatement(var1, queryCmd);
+        AssignmentStatement queryStmt = new AssignmentStatement(var1, query);
               
         Block ifBlock = new Block();      
         ifBlock.addStatement(queryStmt);
@@ -4323,8 +4289,7 @@ public class TestParser {
         elseQuery.setFrom(from);
         elseQuery.setCriteria(criteria);
         
-        Command elseQueryCmd = elseQuery;
-        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQueryCmd);
+        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQuery);
         
         Block elseBlock = new Block();
         List elseStmts = new ArrayList();
@@ -4358,9 +4323,9 @@ public class TestParser {
            " IF(HAS <> CRITERIA ON (a)) BEGIN var1 = SELECT a1 FROM g WHERE a2 = 5; END"+ //$NON-NLS-1$
            " ELSE BEGIN DECLARE short var2; var2 = SELECT b1 FROM g WHERE a2 = 5; END" + //$NON-NLS-1$
            " END", "CREATE PROCEDURE"+"\n"+"BEGIN"+"\n"+"DECLARE short var1;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-           "IF(HAS <> CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = SELECT a1 FROM g WHERE a2 = 5;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+           "IF(HAS <> CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = (SELECT a1 FROM g WHERE a2 = 5);"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
            "END"+"\n"+"ELSE"+"\n"+"BEGIN"+"\n"+"DECLARE short var2;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
-           "var2 = SELECT b1 FROM g WHERE a2 = 5;"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+           "var2 = (SELECT b1 FROM g WHERE a2 = 5);"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     }
     
     /**Has criteria in WHERE clause*/
@@ -4386,8 +4351,7 @@ public class TestParser {
         query.setFrom(from);
         query.setCriteria(criteria);
         
-        Command queryCmd = query;
-        AssignmentStatement queryStmt = new AssignmentStatement(var1, queryCmd);
+        AssignmentStatement queryStmt = new AssignmentStatement(var1, query);
               
         Block ifBlock = new Block();      
         ifBlock.addStatement(queryStmt);
@@ -4418,8 +4382,7 @@ public class TestParser {
         //has criteria for else block
         elseQuery.setCriteria(hasSelector2);
         
-        Command elseQueryCmd = elseQuery;
-        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQueryCmd);
+        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQuery);
          
         Block elseBlock = new Block();
         List elseStmts = new ArrayList();
@@ -4448,9 +4411,9 @@ public class TestParser {
            " IF(HAS <> CRITERIA ON (a)) BEGIN var1 = SELECT a1 FROM g WHERE a2 = 5; END"+ //$NON-NLS-1$
            " ELSE BEGIN DECLARE short var2; var2 = SELECT b1 FROM g WHERE HAS CRITERIA ON (a); END" + //$NON-NLS-1$
            " END", "CREATE PROCEDURE"+"\n"+"BEGIN"+"\n"+"DECLARE short var1;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-           "IF(HAS <> CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = SELECT a1 FROM g WHERE a2 = 5;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+           "IF(HAS <> CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = (SELECT a1 FROM g WHERE a2 = 5);"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
            "END"+"\n"+"ELSE"+"\n"+"BEGIN"+"\n"+"DECLARE short var2;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
-           "var2 = SELECT b1 FROM g WHERE HAS CRITERIA ON (a);"+"\n"+"END"+"\n"+"END", cmd);                                        //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+           "var2 = (SELECT b1 FROM g WHERE HAS CRITERIA ON (a));"+"\n"+"END"+"\n"+"END", cmd);                                        //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     }
         
     /** Translate criteria (empty criteriaSelector in WHERE clause*/
@@ -4476,8 +4439,7 @@ public class TestParser {
         query.setFrom(from);
         query.setCriteria(criteria);
         
-        Command queryCmd = query;
-        AssignmentStatement queryStmt = new AssignmentStatement(var1, queryCmd);
+        AssignmentStatement queryStmt = new AssignmentStatement(var1, query);
               
         Block ifBlock = new Block();      
         ifBlock.addStatement(queryStmt);
@@ -4511,8 +4473,7 @@ public class TestParser {
         TranslateCriteria transCriteria = new TranslateCriteria(critSelector2, critList); 
         elseQuery.setCriteria(transCriteria);
         
-        Command elseQueryCmd = elseQuery;
-        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQueryCmd);
+        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQuery);
          
         Block elseBlock = new Block();
         List elseStmts = new ArrayList();
@@ -4539,11 +4500,11 @@ public class TestParser {
        
         helpTest("CREATE PROCEDURE BEGIN DECLARE short var1;"+ //$NON-NLS-1$
            " IF(HAS <> CRITERIA ON (a)) BEGIN var1 = SELECT a1 FROM g WHERE a2 = 5; END"+ //$NON-NLS-1$
-           " ELSE BEGIN DECLARE short var2; var2 = SELECT b1 FROM g WHERE TRANSLATE CRITERIA ON (a) WITH (a = 5); END" + //$NON-NLS-1$
+           " ELSE BEGIN DECLARE short var2; var2 = (SELECT b1 FROM g WHERE TRANSLATE CRITERIA ON (a) WITH (a = 5)); END" + //$NON-NLS-1$
            " END", "CREATE PROCEDURE"+"\n"+"BEGIN"+"\n"+"DECLARE short var1;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-           "IF(HAS <> CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = SELECT a1 FROM g WHERE a2 = 5;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+           "IF(HAS <> CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = (SELECT a1 FROM g WHERE a2 = 5);"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
            "END"+"\n"+"ELSE"+"\n"+"BEGIN"+"\n"+"DECLARE short var2;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
-           "var2 = SELECT b1 FROM g WHERE TRANSLATE CRITERIA ON (a) WITH (a = 5);"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+           "var2 = (SELECT b1 FROM g WHERE TRANSLATE CRITERIA ON (a) WITH (a = 5));"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     }
     
     /** Translate criteria (is null criteriaSelector in WHERE clause*/
@@ -4569,8 +4530,7 @@ public class TestParser {
         query.setFrom(from);
         query.setCriteria(criteria);
         
-        Command queryCmd = query;
-        AssignmentStatement queryStmt = new AssignmentStatement(var1, queryCmd);
+        AssignmentStatement queryStmt = new AssignmentStatement(var1, query);
               
         Block ifBlock = new Block();      
         ifBlock.addStatement(queryStmt);
@@ -4604,8 +4564,7 @@ public class TestParser {
         TranslateCriteria transCriteria = new TranslateCriteria(critSelector2, critList); 
         elseQuery.setCriteria(transCriteria);
         
-        Command elseQueryCmd = elseQuery;
-        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQueryCmd);
+        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQuery);
          
         Block elseBlock = new Block();
         List elseStmts = new ArrayList();
@@ -4634,9 +4593,9 @@ public class TestParser {
            " IF(HAS <> CRITERIA ON (a)) BEGIN var1 = SELECT a1 FROM g WHERE a2 = 5; END"+ //$NON-NLS-1$
            " ELSE BEGIN DECLARE short var2; var2 = SELECT b1 FROM g WHERE TRANSLATE IS NULL CRITERIA ON (a) WITH (a = 5); END" + //$NON-NLS-1$
            " END", "CREATE PROCEDURE"+"\n"+"BEGIN"+"\n"+"DECLARE short var1;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-           "IF(HAS <> CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = SELECT a1 FROM g WHERE a2 = 5;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+           "IF(HAS <> CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = (SELECT a1 FROM g WHERE a2 = 5);"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
            "END"+"\n"+"ELSE"+"\n"+"BEGIN"+"\n"+"DECLARE short var2;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
-           "var2 = SELECT b1 FROM g WHERE TRANSLATE IS NULL CRITERIA ON (a) WITH (a = 5);"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+           "var2 = (SELECT b1 FROM g WHERE TRANSLATE IS NULL CRITERIA ON (a) WITH (a = 5));"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     }
     
         /** Translate criteria ( only with WHERE clause) */
@@ -4662,8 +4621,7 @@ public class TestParser {
         query.setFrom(from);
         query.setCriteria(criteria);
         
-        Command queryCmd = query;
-        AssignmentStatement queryStmt = new AssignmentStatement(var1, queryCmd);
+        AssignmentStatement queryStmt = new AssignmentStatement(var1, query);
               
         Block ifBlock = new Block();      
         ifBlock.addStatement(queryStmt);
@@ -4697,8 +4655,7 @@ public class TestParser {
         
         elseQuery.setCriteria(transCriteria);
         
-        Command elseQueryCmd = elseQuery;
-        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQueryCmd);
+        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQuery);
          
         Block elseBlock = new Block();
         List elseStmts = new ArrayList();
@@ -4727,9 +4684,9 @@ public class TestParser {
            " IF(HAS <> CRITERIA ON (a)) BEGIN var1 = SELECT a1 FROM g WHERE a2 = 5; END"+ //$NON-NLS-1$
            " ELSE BEGIN DECLARE short var2; var2 = SELECT b1 FROM g WHERE TRANSLATE CRITERIA WITH (a = 5); END" + //$NON-NLS-1$
            " END", "CREATE PROCEDURE"+"\n"+"BEGIN"+"\n"+"DECLARE short var1;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-           "IF(HAS <> CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = SELECT a1 FROM g WHERE a2 = 5;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+           "IF(HAS <> CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = (SELECT a1 FROM g WHERE a2 = 5);"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
            "END"+"\n"+"ELSE"+"\n"+"BEGIN"+"\n"+"DECLARE short var2;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
-           "var2 = SELECT b1 FROM g WHERE TRANSLATE CRITERIA WITH (a = 5);"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+           "var2 = (SELECT b1 FROM g WHERE TRANSLATE CRITERIA WITH (a = 5));"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     }
     
     /** Translate criteria ( only with WHERE clause) */
@@ -4755,8 +4712,7 @@ public class TestParser {
         query.setFrom(from);
         query.setCriteria(criteria);
         
-        Command queryCmd = query;
-        AssignmentStatement queryStmt = new AssignmentStatement(var1, queryCmd);
+        AssignmentStatement queryStmt = new AssignmentStatement(var1, query);
               
         Block ifBlock = new Block();      
         ifBlock.addStatement(queryStmt);
@@ -4795,8 +4751,7 @@ public class TestParser {
         
         elseQuery.setCriteria(transCriteria);
         
-        Command elseQueryCmd = elseQuery;
-        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQueryCmd);
+        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQuery);
          
         Block elseBlock = new Block();
         List elseStmts = new ArrayList();
@@ -4825,9 +4780,9 @@ public class TestParser {
            " IF(HAS <> CRITERIA ON (a)) BEGIN var1 = SELECT a1 FROM g WHERE a2 = 5; END"+ //$NON-NLS-1$
            " ELSE BEGIN DECLARE short var2; var2 = SELECT b1 FROM g WHERE TRANSLATE CRITERIA WITH (a = 5, m = 6); END" + //$NON-NLS-1$
            " END", "CREATE PROCEDURE"+"\n"+"BEGIN"+"\n"+"DECLARE short var1;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-           "IF(HAS <> CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = SELECT a1 FROM g WHERE a2 = 5;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+           "IF(HAS <> CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = (SELECT a1 FROM g WHERE a2 = 5);"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
            "END"+"\n"+"ELSE"+"\n"+"BEGIN"+"\n"+"DECLARE short var2;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
-           "var2 = SELECT b1 FROM g WHERE TRANSLATE CRITERIA WITH (a = 5, m = 6);"+"\n"+"END"+"\n"+"END", cmd);  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+           "var2 = (SELECT b1 FROM g WHERE TRANSLATE CRITERIA WITH (a = 5, m = 6));"+"\n"+"END"+"\n"+"END", cmd);  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
                                           
     }
    
@@ -4854,8 +4809,7 @@ public class TestParser {
         query.setFrom(from);
         query.setCriteria(criteria);
         
-        Command queryCmd = query;
-        AssignmentStatement queryStmt = new AssignmentStatement(var1, queryCmd);
+        AssignmentStatement queryStmt = new AssignmentStatement(var1, query);
               
         Block ifBlock = new Block();      
         ifBlock.addStatement(queryStmt);
@@ -4888,8 +4842,7 @@ public class TestParser {
                 
         elseQuery.setCriteria(transCrit);
         
-        Command elseQueryCmd = elseQuery;
-        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQueryCmd);
+        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQuery);
          
         Block elseBlock = new Block();
         List elseStmts = new ArrayList();
@@ -4918,9 +4871,9 @@ public class TestParser {
            " IF(HAS <> CRITERIA ON (a)) BEGIN var1 = SELECT a1 FROM g WHERE a2 = 5; END"+ //$NON-NLS-1$
            " ELSE BEGIN DECLARE short var2; var2 = SELECT b1 FROM g WHERE TRANSLATE CRITERIA; END" + //$NON-NLS-1$
            " END", "CREATE PROCEDURE"+"\n"+"BEGIN"+"\n"+"DECLARE short var1;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-           "IF(HAS <> CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = SELECT a1 FROM g WHERE a2 = 5;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+           "IF(HAS <> CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = (SELECT a1 FROM g WHERE a2 = 5);"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
            "END"+"\n"+"ELSE"+"\n"+"BEGIN"+"\n"+"DECLARE short var2;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
-           "var2 = SELECT b1 FROM g WHERE TRANSLATE CRITERIA;"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+           "var2 = (SELECT b1 FROM g WHERE TRANSLATE CRITERIA);"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     }
     
     /**IF statement with has criteria no on */
@@ -4946,8 +4899,7 @@ public class TestParser {
         query.setFrom(from);
         query.setCriteria(criteria);
         
-        Command queryCmd = query;
-        AssignmentStatement queryStmt = new AssignmentStatement(var1, queryCmd);
+        AssignmentStatement queryStmt = new AssignmentStatement(var1, query);
               
         Block ifBlock = new Block();      
         ifBlock.addStatement(queryStmt);
@@ -4965,8 +4917,7 @@ public class TestParser {
         elseQuery.setFrom(from);
         elseQuery.setCriteria(criteria);
         
-        Command elseQueryCmd = elseQuery;
-        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQueryCmd);
+        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQuery);
         
         Block elseBlock = new Block();
         List elseStmts = new ArrayList();
@@ -4993,9 +4944,9 @@ public class TestParser {
            " IF(HAS CRITERIA) BEGIN var1 = SELECT a1 FROM g WHERE a2 = 5; END"+ //$NON-NLS-1$
            " ELSE BEGIN DECLARE short var2; var2 = SELECT b1 FROM g WHERE a2 = 5; END" + //$NON-NLS-1$
            " END", "CREATE PROCEDURE"+"\n"+"BEGIN"+"\n"+"DECLARE short var1;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-           "IF(HAS CRITERIA)"+"\n"+"BEGIN"+"\n"+ "var1 = SELECT a1 FROM g WHERE a2 = 5;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+           "IF(HAS CRITERIA)"+"\n"+"BEGIN"+"\n"+ "var1 = (SELECT a1 FROM g WHERE a2 = 5);"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
            "END"+"\n"+"ELSE"+"\n"+"BEGIN"+"\n"+"DECLARE short var2;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
-           "var2 = SELECT b1 FROM g WHERE a2 = 5;"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+           "var2 = (SELECT b1 FROM g WHERE a2 = 5);"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     }
      
     @Test public void testSubquerySetCriteria0() { 
@@ -5070,7 +5021,8 @@ public class TestParser {
               
         StoredProcedure exec = new StoredProcedure();
         exec.setProcedureName("m.sq1");               //$NON-NLS-1$
-        SubquerySetCriteria subCrit = new SubquerySetCriteria(expr, exec);
+        Query query = new Query(new Select(Arrays.asList(new AllSymbol())), new From(Arrays.asList(new SubqueryFromClause("x", exec))), null, null, null);
+        SubquerySetCriteria subCrit = new SubquerySetCriteria(expr, query);
        
         Query outer = new Query();
         outer.setSelect(select);
@@ -5078,7 +5030,7 @@ public class TestParser {
         outer.setCriteria(subCrit);
                      
         helpTest("SELECT a FROM db.g WHERE b IN (EXEC m.sq1())", //$NON-NLS-1$
-            "SELECT a FROM db.g WHERE b IN (EXEC m.sq1())", //$NON-NLS-1$
+            "SELECT a FROM db.g WHERE b IN (SELECT * FROM (EXEC m.sq1()) AS x)", //$NON-NLS-1$
              outer);        
     }          
 

@@ -51,7 +51,7 @@ public class TestSessionServiceImpl {
 			
 		}
 		
-		SessionMetadata info = ssi.createSession("steve", null, "foo", new Properties(), false); //$NON-NLS-1$ //$NON-NLS-2$
+		SessionMetadata info = ssi.createSession("steve", null, "foo", new Properties(), false, true); //$NON-NLS-1$ //$NON-NLS-2$
 		if (securityEnabled) {
 			Mockito.verify(impl).authenticateUser("steve", null, "foo", domains, false); 
 		}

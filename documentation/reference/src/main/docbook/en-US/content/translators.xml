@@ -1277,7 +1277,15 @@ insert into table (column, SOURCE_NAME) VALUES ('value', 'newyork')]]></programl
             You must deploy a separate data source for each source defined in the xml file.
             </para>
         </note>
-        
+
+        <note>
+            <para>
+            If you would like to use "SOURCE_NAME" in your transformations to control which sources are accessed or updated, 
+            you would manually need to add this extra column on your view table in
+            the Designer. This column will not be automatically added on the source table, when you import 
+            the medata from source.
+            </para>
+        </note>        
     </section>
 
 </chapter>

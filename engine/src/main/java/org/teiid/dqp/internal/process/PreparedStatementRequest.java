@@ -110,9 +110,8 @@ public class PreparedStatementRequest extends Request {
 		for (Iterator<SPParameter> params = spParams.iterator(); params.hasNext();) {
 			SPParameter param = params.next();
 			if (param.getParameterType() == SPParameter.RETURN_VALUE) {
-				continue;
-			}
-			if (param.getExpression() instanceof Reference && index > inParameterCount) {
+				inParameterCount++;
+			} else if (param.getExpression() instanceof Reference && index > inParameterCount) {
 				//assume it's an output parameter
 				this.prepPlan.getReferences().remove(param.getExpression());
 				continue;

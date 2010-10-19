@@ -22,7 +22,13 @@
 
 package org.teiid.query.resolver;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -50,13 +56,11 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionLibrary;
-import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.parser.QueryParser;
-import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.BindVariableVisitor;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.ProcedureReservedWords;
@@ -1400,7 +1404,7 @@ public class TestResolver {
         String tgtTypeName = DataTypeManager.DefaultDataTypes.DATE;
         Expression expression = new Constant("2003-02-27"); //$NON-NLS-1$
         
-		FunctionLibrary library = SystemFunctionManager.getSystemFunctionLibrary();                         
+		FunctionLibrary library = FakeMetadataFactory.SFM.getSystemFunctionLibrary();                         
 		FunctionDescriptor fd = library.findFunction(FunctionLibrary.CONVERT, new Class[] { srcType, DataTypeManager.DefaultDataClasses.STRING });
 
 		Function conversion = new Function(fd.getName(), new Expression[] { expression, new Constant(tgtTypeName) });
@@ -1436,7 +1440,7 @@ public class TestResolver {
 		String tgtTypeName = DataTypeManager.DefaultDataTypes.DATE;
 		Expression expression = new Constant("2003-02-27"); //$NON-NLS-1$
         
-		FunctionLibrary library = SystemFunctionManager.getSystemFunctionLibrary();                        
+		FunctionLibrary library = FakeMetadataFactory.SFM.getSystemFunctionLibrary();                        
 		FunctionDescriptor fd = library.findFunction(FunctionLibrary.CONVERT, new Class[] { srcType, DataTypeManager.DefaultDataClasses.STRING });
 
 		Function conversion = new Function(fd.getName(), new Expression[] { expression, new Constant(tgtTypeName) });
@@ -1886,7 +1890,7 @@ public class TestResolver {
         //String sql = "select intkey from SmallA where user() = 'bqt2'";
 
         // Expected left expression
-        FunctionLibrary library = SystemFunctionManager.getSystemFunctionLibrary();                          
+        FunctionLibrary library = FakeMetadataFactory.SFM.getSystemFunctionLibrary();                          
         FunctionDescriptor fd = library.findFunction(FunctionLibrary.USER, new Class[] { });
         Function user = new Function(fd.getName(), new Expression[] {});
         user.setFunctionDescriptor(fd);
@@ -2238,13 +2242,13 @@ public class TestResolver {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e2 from pm1.g1 where e2=INPUTS.e2;\n"; //$NON-NLS-1$
+        procedure = procedure + "ROWS_UPDATED = (Select pm1.g1.e2 from pm1.g1 where e2=INPUTS.e2);\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
         String userUpdateStr = "UPDATE vm1.g1 SET e2=40"; //$NON-NLS-1$
         
         Command command = helpResolveUpdateProcedure(procedure, userUpdateStr);
-        assertEquals("CREATE PROCEDURE\nBEGIN\nDECLARE integer var1;\nROWS_UPDATED = SELECT pm1.g1.e2 FROM pm1.g1 WHERE e2 = INPUTS.e2;\nEND", command.toString());
+        assertEquals("CREATE PROCEDURE\nBEGIN\nDECLARE integer var1;\nROWS_UPDATED = (SELECT pm1.g1.e2 FROM pm1.g1 WHERE e2 = INPUTS.e2);\nEND", command.toString());
     }
     
     @Test public void testDefect16894_resolverException_1() {

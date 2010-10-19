@@ -559,7 +559,7 @@ public class TestOracleTranslator {
         helpTestVisitor(getTestVDB(),
             "select {t '13:59:59'} FROM parts", //$NON-NLS-1$
             null,
-            "SELECT {ts '1970-01-01 13:59:59'} FROM PARTS"); //$NON-NLS-1$
+            "SELECT to_date('1970-01-01 13:59:59', 'YYYY-MM-DD HH24:MI:SS') FROM PARTS"); //$NON-NLS-1$
     }
 
     @Test public void testTimestampLiteral() throws Exception {
@@ -722,7 +722,7 @@ public class TestOracleTranslator {
         RealMetadataFactory.createElements(dual, new String[] {"something"}, new String[] {DataTypeManager.DefaultDataTypes.STRING}); //$NON-NLS-1$
         
         CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
-        return new TransformationMetadata(null, store, null, null);
+        return new TransformationMetadata(null, store, null, null, FakeMetadataFactory.SFM.getSystemFunctions());
     }
 
 	public void helpTestVisitor(String vdb, String input, String expectedOutput) throws TranslatorException {
@@ -731,7 +731,7 @@ public class TestOracleTranslator {
 
     @Test public void testLimitWithNestedInlineView() throws Exception {
         String input = "select max(intkey), stringkey from (select intkey, stringkey from bqt1.smalla order by intkey limit 100) x group by stringkey"; //$NON-NLS-1$
-        String output = "SELECT MAX(x.intkey), x.stringkey FROM (SELECT * FROM (SELECT SmallA.IntKey, SmallA.StringKey FROM SmallA ORDER BY intkey) WHERE ROWNUM <= 100) x GROUP BY x.stringkey"; //$NON-NLS-1$
+        String output = "SELECT MAX(x.intkey), x.stringkey FROM (SELECT * FROM (SELECT SmallA.IntKey, SmallA.StringKey FROM SmallA ORDER BY SmallA.IntKey) WHERE ROWNUM <= 100) x GROUP BY x.stringkey"; //$NON-NLS-1$
                
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
                 input, 

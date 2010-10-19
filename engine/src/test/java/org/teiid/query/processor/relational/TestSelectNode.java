@@ -22,7 +22,8 @@
 
 package org.teiid.query.processor.relational;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,7 +41,6 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
-import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.processor.BatchIterator;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.ProcessorDataManager;
@@ -51,6 +51,7 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
 public class TestSelectNode {
@@ -236,7 +237,7 @@ public class TestSelectNode {
         elements.add(es1);
 
         Function func = new Function("lookup", new Expression[] { new Constant("pm1.g1"), new Constant("e2"), new Constant("e1"), es1 }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        FunctionDescriptor desc = SystemFunctionManager.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, Integer.class } ); //$NON-NLS-1$
+        FunctionDescriptor desc = FakeMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, Integer.class } ); //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
         func.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         CompareCriteria crit = new CompareCriteria(func, CompareCriteria.EQ, new Constant(new Integer(1))); 

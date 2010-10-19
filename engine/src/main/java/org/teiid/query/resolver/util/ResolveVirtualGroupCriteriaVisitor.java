@@ -34,7 +34,6 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
-import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.proc.CriteriaSelector;
 import org.teiid.query.sql.proc.TranslateCriteria;
 import org.teiid.query.sql.symbol.ElementSymbol;

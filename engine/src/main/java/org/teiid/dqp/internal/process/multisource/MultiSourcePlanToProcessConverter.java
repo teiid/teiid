@@ -37,7 +37,6 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.PlanToProcessConverter;
@@ -45,19 +44,19 @@ import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.GroupingNode;
 import org.teiid.query.processor.relational.NullNode;
+import org.teiid.query.processor.relational.ProjectIntoNode;
 import org.teiid.query.processor.relational.ProjectNode;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalNodeUtil;
+import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.processor.relational.UnionAllNode;
-import org.teiid.query.resolver.util.ResolverVisitor;
+import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
-import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.util.CommandContext;
 
 
@@ -66,6 +65,9 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 	private Set<String> multiSourceModels;
 	private DQPWorkContext workContext;
 	
+	private boolean multiSource;
+	private boolean update;
+	
 	public MultiSourcePlanToProcessConverter(QueryMetadataInterface metadata,
 			IDGenerator idGenerator, AnalysisRecord analysisRecord,
 			CapabilitiesFinder capFinder, Set<String> multiSourceModels,
@@ -73,6 +75,22 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 		super(metadata, idGenerator, analysisRecord, capFinder);
 		this.multiSourceModels = multiSourceModels;
 		this.workContext = workContext;
+	}
+	
+	@Override
+	public synchronized RelationalPlan convert(PlanNode planNode)
+			throws QueryPlannerException, TeiidComponentException {
+			RelationalPlan result = null;
+		try {
+			result = super.convert(planNode);
+			return result;
+		} finally {
+			if (result != null && update && multiSource) {
+				result.setMultisourceUpdate(true);
+			}
+			update = false;
+			multiSource = false;
+		}
 	}
 
 	protected RelationalNode convertNode(PlanNode planNode) throws QueryPlannerException, TeiidComponentException {
@@ -84,6 +102,8 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 			} catch (TeiidProcessingException e) {
 				throw new QueryPlannerException(e, e.getMessage());
 			} 
+		} else if (node instanceof ProjectIntoNode) {
+			throw new AssertionError("Multisource insert with query expression not allowed not allowed, should have been caught in validation."); //$NON-NLS-1$
 		}
 		
 		return node;
@@ -148,7 +168,7 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
             }
             default:
             {
-
+            	multiSource = true;
             	UnionAllNode unionNode = new UnionAllNode(getID());
             	unionNode.setElements(accessNode.getElements());
                 
@@ -160,23 +180,20 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
             	
                 // More than 1 access node - replace with a union
             	if (RelationalNodeUtil.isUpdate(accessNode.getCommand())) {
-            		
+            		update = true;
             		GroupingNode groupNode = new GroupingNode(getID());                    
             		AggregateSymbol sumCount = new AggregateSymbol("SumCount", NonReserved.SUM, false, (Expression)accessNode.getElements().get(0)); //$NON-NLS-1$          		
-            		List outputElements = new ArrayList();            		
+            		List<Expression> outputElements = new ArrayList<Expression>(1);            		
             		outputElements.add(sumCount); 
             		groupNode.setElements(outputElements);
             		groupNode.addChild(unionNode);
             		
             		ProjectNode projectNode = new ProjectNode(getID());
-            		// two converts because, the 2nd one does not resolve because of no metadata about the expression.
-            		Function convertFunc = new Function(FunctionLibrary.CONVERT, new Expression[] {new Constant(new Long(0)), new Constant(DataTypeManager.DefaultDataTypes.INTEGER)});
-            		ResolverVisitor.resolveLanguageObject(convertFunc, metadata);
-            		Function convertFunc2 = new Function(FunctionLibrary.CONVERT, new Expression[] {sumCount, new Constant(DataTypeManager.DefaultDataTypes.INTEGER)});
-            		convertFunc2.setFunctionDescriptor(convertFunc.getFunctionDescriptor());
             		
-            		Expression rowCount = new ExpressionSymbol("RowCount", convertFunc2); //$NON-NLS-1$            		
-            		outputElements = new ArrayList();            		
+            		Expression intSum = ResolverUtil.convertExpression(sumCount, DataTypeManager.DefaultDataTypes.STRING, metadata);
+            		
+            		Expression rowCount = new ExpressionSymbol("RowCount", intSum); //$NON-NLS-1$            		
+            		outputElements = new ArrayList<Expression>(1);            		
             		outputElements.add(rowCount);             		
             		projectNode.setElements(outputElements);
             		projectNode.setSelectSymbols(outputElements);
@@ -184,8 +201,6 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
             		
             		parent = projectNode;
             	}
-                
-                parent.setMultiSource(true);
                 return parent;
             }
         }

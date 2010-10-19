@@ -55,7 +55,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     /**
      * Construct a source of system metadata.
      */
-    public SystemSource() {
+    public SystemSource(boolean allowEnvFunction) {
 		// +, -, *, /
         addArithmeticFunction(SourceSystemFunctions.ADD_OP, QueryPlugin.Util.getString("SystemSource.Add_desc"), "plus", QueryPlugin.Util.getString("SystemSource.Add_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         addArithmeticFunction(SourceSystemFunctions.SUBTRACT_OP, QueryPlugin.Util.getString("SystemSource.Subtract_desc"), "minus", QueryPlugin.Util.getString("SystemSource.Subtract_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
@@ -158,7 +158,10 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         addLookupFunctions();
         addUserFunction();
         addCurrentDatabaseFunction();
-        addEnvFunction();
+        if (allowEnvFunction) {
+        	addEnvFunction();
+        }
+        addSessionIdFunction();
         addCommandPayloadFunctions();
 		addIfNullFunctions();
         
@@ -786,6 +789,12 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
                      },
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Env_result")), false, FunctionMethod.SESSION_DETERMINISTIC ) );                     //$NON-NLS-1$ //$NON-NLS-2$
     }
+    
+    private void addSessionIdFunction() {
+        functions.add(
+            new FunctionMethod(FunctionLibrary.SESSION_ID, QueryPlugin.Util.getString("SystemSource.session_id_desc"), MISCELLANEOUS, FunctionMethod.CANNOT_PUSHDOWN, FUNCTION_CLASS, "session_id", null, //$NON-NLS-1$ //$NON-NLS-2$ 
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.session_id_result")), false, FunctionMethod.SESSION_DETERMINISTIC) );                     //$NON-NLS-1$ //$NON-NLS-2$
+    }    
     
     private void addCommandPayloadFunctions() {
         functions.add(

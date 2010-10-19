@@ -81,7 +81,7 @@ public class UpdateProcedureGenerator {
             return null;
         }
 
-		GroupSymbol pGroup = (GroupSymbol)query.getFrom().getGroups().iterator().next();
+		GroupSymbol pGroup = query.getFrom().getGroups().iterator().next();
         String pGroupName = pGroup.getName();
         if(pGroup.getDefinition() != null) {
             pGroupName = pGroup.getDefinition();
@@ -104,7 +104,7 @@ public class UpdateProcedureGenerator {
 				insert.setGroup(new GroupSymbol(pGroupName));
 				insert.setVariables(variables);
 				insert.setValues(values);
-                AssignmentStatement assignStmt = new AssignmentStatement(rowsUpdated, insert);
+				AssignmentStatement assignStmt = new AssignmentStatement(rowsUpdated, insert);
 				Block b = new Block();
     			b.addStatement(assignStmt);
     			cupc = new CreateUpdateProcedureCommand(b);
@@ -123,7 +123,7 @@ public class UpdateProcedureGenerator {
 					update.addChange(variable, value);
 				}
 				update.setCriteria(new TranslateCriteria(new CriteriaSelector()));
-                AssignmentStatement assignStmt = new AssignmentStatement(rowsUpdated, update);
+				AssignmentStatement assignStmt = new AssignmentStatement(rowsUpdated, update);
 				Block b = new Block();
     			b.addStatement(assignStmt);
     			cupc = new CreateUpdateProcedureCommand(b);
@@ -134,7 +134,7 @@ public class UpdateProcedureGenerator {
 				Delete delete = new Delete();
 				delete.setGroup(new GroupSymbol(pGroupName));
 				delete.setCriteria(new TranslateCriteria(new CriteriaSelector()));
-                AssignmentStatement assignStmt = new AssignmentStatement(rowsUpdated, delete);
+				AssignmentStatement assignStmt = new AssignmentStatement(rowsUpdated, delete);
 				Block b = new Block();
     			b.addStatement(assignStmt);
     			cupc = new CreateUpdateProcedureCommand(b);

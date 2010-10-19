@@ -29,10 +29,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
-import org.teiid.query.parser.QueryParser;
 import org.teiid.query.sql.lang.AbstractCompareCriteria;
 import org.teiid.query.sql.lang.CacheHint;
-import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Delete;
@@ -776,8 +774,7 @@ public class TestOptionsAndHints {
         query.setFrom(from);
         query.setCriteria(criteria);
         
-        Command queryCmd = query;
-        AssignmentStatement queryStmt = new AssignmentStatement(var1, queryCmd);
+        AssignmentStatement queryStmt = new AssignmentStatement(var1, query);
               
         Block ifBlock = new Block();      
         ifBlock.addStatement(queryStmt);
@@ -800,8 +797,7 @@ public class TestOptionsAndHints {
         elseQuery.setFrom(elseFrom);
         elseQuery.setCriteria(criteria);
         
-        Command elseQueryCmd = elseQuery;
-        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQueryCmd);
+        AssignmentStatement elseQueryStmt = new AssignmentStatement(var2, elseQuery);
         
         Block elseBlock = new Block();
         List elseStmts = new ArrayList();
@@ -832,12 +828,12 @@ public class TestOptionsAndHints {
         cmd.setBlock(block);
        
         TestParser.helpTest("CREATE PROCEDURE BEGIN DECLARE short var1;"+ //$NON-NLS-1$
-           " IF(HAS IN CRITERIA ON (a)) BEGIN var1 = SELECT a1 FROM g WHERE a2 = 5; END"+ //$NON-NLS-1$
+           " IF(HAS IN CRITERIA ON (a)) BEGIN var1 = (SELECT a1 FROM g WHERE a2 = 5); END"+ //$NON-NLS-1$
            " ELSE BEGIN DECLARE short var2; var2 = SELECT b1 FROM g, /*+ optional */ h WHERE a2 = 5; END" + //$NON-NLS-1$
            " END", "CREATE PROCEDURE"+"\n"+"BEGIN"+"\n"+"DECLARE short var1;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-           "IF(HAS IN CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = SELECT a1 FROM g WHERE a2 = 5;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+           "IF(HAS IN CRITERIA ON (a))"+"\n"+"BEGIN"+"\n"+ "var1 = (SELECT a1 FROM g WHERE a2 = 5);"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
            "END"+"\n"+"ELSE"+"\n"+"BEGIN"+"\n"+"DECLARE short var2;"+"\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
-           "var2 = SELECT b1 FROM g, /*+ optional */ h WHERE a2 = 5;"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+           "var2 = (SELECT b1 FROM g, /*+ optional */ h WHERE a2 = 5);"+"\n"+"END"+"\n"+"END", cmd);                      //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     }
 
     @Test public void testStoredQueryWithOption(){
@@ -1126,7 +1122,7 @@ public class TestOptionsAndHints {
         sp.setCallableStatement(true);
         CacheHint hint = new CacheHint();
         sp.setCacheHint(hint);
-        TestParser.helpTest(sql, "/*+ cache */ EXEC proc()", sp);         //$NON-NLS-1$
+        TestParser.helpTest(sql, "/*+ cache */ ? = EXEC proc()", sp);         //$NON-NLS-1$
     }
     
 }

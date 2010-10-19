@@ -43,7 +43,7 @@ public class TestSystemSource extends TestCase {
 	// ################################## ACTUAL TESTS ################################
 	
 	public void testValidate() {
-	    SystemSource source = new SystemSource();
+	    SystemSource source = new SystemSource(false);
 	    ActivityReport report = new ActivityReport("Test Report");	    	     //$NON-NLS-1$
 		FunctionMetadataValidator.validateFunctionMethods(source.getFunctionMethods(), report);
 

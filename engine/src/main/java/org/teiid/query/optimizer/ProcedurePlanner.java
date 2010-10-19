@@ -224,7 +224,10 @@ public final class ProcedurePlanner implements CommandPlanner {
 				if (command.getType() == Command.TYPE_DYNAMIC){
 					instruction = new ExecDynamicSqlInstruction(parentProcCommand,((DynamicCommand)command), metadata, idGenerator, capFinder );
 				}else{
-					instruction = new CreateCursorResultSetInstruction(CreateCursorResultSetInstruction.RS_NAME, commandPlan);
+					instruction = new CreateCursorResultSetInstruction(CreateCursorResultSetInstruction.RS_NAME, commandPlan, 
+							command.getType() == Command.TYPE_INSERT 
+							|| command.getType() == Command.TYPE_UPDATE
+							|| command.getType() == Command.TYPE_DELETE);
 				}
                 
 				if(debug) {

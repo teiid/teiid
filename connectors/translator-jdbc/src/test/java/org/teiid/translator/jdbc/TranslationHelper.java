@@ -51,7 +51,7 @@ public class TranslationHelper {
     	return helpTranslate(vdbFileName, null, sql);
     }
     
-    public static Command helpTranslate(String vdbFileName, String udf, String sql) {
+    public static TranslationUtility getTranslationUtility(String vdbFileName, String udf) {
     	TranslationUtility util = null;
     	if (PARTS_VDB.equals(vdbFileName)) {
     		util = new TranslationUtility(TranslationHelper.class.getResource(vdbFileName));
@@ -62,16 +62,24 @@ public class TranslationHelper {
     	}
     	
     	if (udf != null) {
-    		try {
-				Collection <FunctionMethod> methods = FunctionMetadataReader.loadFunctionMethods(TranslationHelper.class.getResource(udf).openStream());
-				util.setUDF(methods);
-			} catch (IOException e) {
-				throw new TeiidRuntimeException("failed to load UDF"); //$NON-NLS-1$
-			} catch (JAXBException e) {
-				throw new TeiidRuntimeException("failed to load UDF"); //$NON-NLS-1$
-			}
+    		loadUDFs(udf, util);
     	}
-        return util.parseCommand(sql);        
+    	return util;
+    }
+
+	public static void loadUDFs(String udf, TranslationUtility util) {
+		try {
+			Collection <FunctionMethod> methods = FunctionMetadataReader.loadFunctionMethods(TranslationHelper.class.getResource(udf).openStream());
+			util.setUDF(methods);
+		} catch (IOException e) {
+			throw new TeiidRuntimeException("failed to load UDF"); //$NON-NLS-1$
+		} catch (JAXBException e) {
+			throw new TeiidRuntimeException("failed to load UDF"); //$NON-NLS-1$
+		}
+	}
+    
+    public static Command helpTranslate(String vdbFileName, String udf, String sql) {
+        return getTranslationUtility(vdbFileName, udf).parseCommand(sql);        
     }    
 
 	public static void helpTestVisitor(String vdb, String input, String expectedOutput, JDBCExecutionFactory translator) throws TranslatorException {

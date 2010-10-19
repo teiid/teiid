@@ -66,7 +66,7 @@ public interface SessionService {
     public SessionMetadata createSession(String userName,
                                                Credentials credentials,
                                                String applicationName,
-                                               Properties properties, boolean admin)
+                                               Properties properties, boolean admin, boolean authenticate)
             throws LoginException, SessionServiceException;
 
     /**

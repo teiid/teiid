@@ -103,7 +103,8 @@ public class TranslationUtility {
 		this.metadata = new BasicQueryMetadataWrapper(this.metadata) {
 			@Override
 			public FunctionLibrary getFunctionLibrary() {
-				return new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(methods)));
+				SystemFunctionManager sfm = new SystemFunctionManager();
+				return new FunctionLibrary(sfm.getSystemFunctions(), new FunctionTree(new UDFSource(methods)));
 			}
 		};
 	}

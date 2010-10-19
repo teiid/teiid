@@ -1416,7 +1416,7 @@ public class TestSQLStringVisitor extends TestCase {
         q1.setFrom(from);
             	
     	AssignmentStatement assigStmt =	new AssignmentStatement(new ElementSymbol("a"), q1); //$NON-NLS-1$
-		helpTest(assigStmt, "a = SELECT x FROM g;"); //$NON-NLS-1$
+		helpTest(assigStmt, "a = (SELECT x FROM g);"); //$NON-NLS-1$
     }
     
     public void testCriteriaSelector1() {
@@ -1722,7 +1722,7 @@ public class TestSQLStringVisitor extends TestCase {
 	    obj.setAsClauseSet(true);	    
 	    obj.setIntoGroup(new GroupSymbol("#g")); //$NON-NLS-1$
 	    
-	    helpTest(obj, "EXECUTE STRING 'SELECT a1 FROM g WHERE a2 = 5' AS a1 string INTO #g"); //$NON-NLS-1$
+	    helpTest(obj, "EXECUTE 'SELECT a1 FROM g WHERE a2 = 5' AS a1 string INTO #g"); //$NON-NLS-1$
     }
 
     public void testScalarSubquery() {
@@ -1848,20 +1848,6 @@ public class TestSQLStringVisitor extends TestCase {
         SetQuery sq = new SetQuery(Operation.UNION, false, q1, q2);
 
         helpTest(sq, expected);        
-    } 
-    
-    public void testNullExpressionInNamedParameter() {
-        
-        String expected = "EXEC sp1(PARAM => sp1.PARAM)"; //$NON-NLS-1$
-        
-        StoredProcedure sp = new StoredProcedure();
-        sp.setDisplayNamedParameters(true);
-        sp.setProcedureName("sp1"); //$NON-NLS-1$
-
-        SPParameter param = new SPParameter(0, ParameterInfo.IN, "sp1.PARAM"); //$NON-NLS-1$
-        sp.setParameter(param);
-
-        helpTest(sp, expected);        
     } 
 
     public void testLimit() {

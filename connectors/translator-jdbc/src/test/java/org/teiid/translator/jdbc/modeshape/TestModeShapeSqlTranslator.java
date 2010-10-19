@@ -22,18 +22,21 @@
 
 package org.teiid.translator.jdbc.modeshape;
 
-import static org.junit.Assert.assertEquals;
+import java.util.List;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
-import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Command;
-import org.teiid.language.LanguageFactory;
-import org.teiid.translator.ExecutionContext;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
+import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.jdbc.TranslatedCommand;
+import org.teiid.translator.TypeFacility;
+import org.teiid.translator.jdbc.TranslationHelper;
 
 /**
  */
@@ -41,57 +44,56 @@ import org.teiid.translator.jdbc.TranslatedCommand;
 public class TestModeShapeSqlTranslator {
 
 	private static ModeShapeExecutionFactory TRANSLATOR;
+	private static TranslationUtility UTIL;
+    private static String UDF = "/JCRFunctions.xmi"; //$NON-NLS-1$;
 
-	private static String MODESHAPE_VDB = (UnitTestUtil.getTestDataPath() != null ? UnitTestUtil
-			.getTestDataPath()
-			: "src/test/resources")
-			+ "/ModeShape.vdb";
-	
-    
     @BeforeClass
     public static void setUp() throws TranslatorException {
         TRANSLATOR = new ModeShapeExecutionFactory();
         TRANSLATOR.setUseBindVariables(false);
         TRANSLATOR.start();
-
+        UTIL = new TranslationUtility(getMetadata());
+        TranslationHelper.loadUDFs(UDF, UTIL);
+    }
+    
+    public static TransformationMetadata getMetadata() {
+    	MetadataStore store = new MetadataStore();
+    	Schema modeshape = RealMetadataFactory.createPhysicalModel("modeshape", store);
+    	Table nt_base = RealMetadataFactory.createPhysicalGroup("nt_base", modeshape);
+    	nt_base.setNameInSource("\"nt:base\"");
+		List<Column> cols = RealMetadataFactory.createElements(nt_base, new String[] { "mode_path",
+				"mode_properties", "jcr_primaryType", "prop" }, new String[] {
+				TypeFacility.RUNTIME_NAMES.STRING,
+				TypeFacility.RUNTIME_NAMES.STRING,
+				TypeFacility.RUNTIME_NAMES.STRING,
+				TypeFacility.RUNTIME_NAMES.STRING });
+		cols.get(0).setNameInSource("\"mode:path\"");
+		cols.get(1).setNameInSource("\"mode:properties\"");
+		cols.get(2).setNameInSource("\"jcr:primaryType\"");
+    	return RealMetadataFactory.createTransformationMetadata(store, "modeshape");
     }
 
-	public void helpTestVisitor(TranslationUtility util, String input,
-			String expectedOutput) throws TranslatorException {
-		// Convert from sql to objects
-		Command obj = util.parseCommand(input);
-
-		TranslatedCommand tc = new TranslatedCommand(Mockito
-				.mock(ExecutionContext.class), TRANSLATOR);
-		tc.translateCommand(obj);
-		assertEquals("Did not get correct sql", expectedOutput, tc.getSql()); //$NON-NLS-1$
+	public void helpTestVisitor(String input, String expectedOutput) throws TranslatorException {
+		Command obj = UTIL.parseCommand(input, true, true);
+		TranslationHelper.helpTestVisitor(expectedOutput, TRANSLATOR, obj);
 	}
 	
 	@Test
 	public void testSelectAllFromBase() throws Exception {
 		String input = "select * from nt_base"; //$NON-NLS-1$
-		String output = "SELECT [jcr:primaryType] FROM [nt:base]"; //$NON-NLS-1$
+		String output = "SELECT g_0.\"mode:path\", g_0.\"mode:properties\", g_0.\"jcr:primaryType\", g_0.prop FROM \"nt:base\" AS g_0"; //$NON-NLS-1$
 
-		helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
+		helpTestVisitor(input, output);
 
 	}
 	
 	@Test
-	public void testSelectColumnFromBase() throws Exception {
-		String input = "select jcr_primaryType from nt_base"; //$NON-NLS-1$
-		String output = "SELECT [jcr:primaryType] FROM [nt:base]"; //$NON-NLS-1$
+	public void testPredicate() throws Exception {
 
-		helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
+		String input = "SELECT x.jcr_primaryType from nt_base inner join nt_base as x on jcr_issamenode(nt_base.mode_path, x.mode_path) = true where jcr_isdescendantnode(nt_base.mode_path, 'x/y/z') = true and jcr_reference(nt_base.mode_properties) = 'x'"; //$NON-NLS-1$
+		String output = "SELECT g_1.\"jcr:primaryType\" FROM \"nt:base\" AS g_0 INNER JOIN \"nt:base\" AS g_1 ON issamenode(g_0, g_1) WHERE isdescendantnode(g_0, 'x/y/z') AND reference(g_0.*) = 'x'"; //$NON-NLS-1$
 
-	}	
-
-	@Test
-	public void testWhereClause() throws Exception {
-
-		String input = "SELECT jcr_primaryType from nt_base WHERE jcr_primaryType = 'relational:column'"; //$NON-NLS-1$
-		String output = "SELECT [jcr:primaryType] FROM [nt:base] WHERE [jcr:primaryType] = 'relational:column'"; //$NON-NLS-1$
-
-		helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
+		helpTestVisitor(input, output);
 
 	}
 
@@ -99,9 +101,9 @@ public class TestModeShapeSqlTranslator {
 	public void testOrderBy() throws Exception {
 
 		String input = "SELECT jcr_primaryType from nt_base ORDER BY jcr_primaryType"; //$NON-NLS-1$
-		String output = "SELECT [jcr:primaryType] FROM [nt:base] ORDER BY [jcr:primaryType] ASC"; //$NON-NLS-1$
+		String output = "SELECT g_0.\"jcr:primaryType\" AS c_0 FROM \"nt:base\" AS g_0 ORDER BY c_0"; //$NON-NLS-1$
 
-		helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
+		helpTestVisitor(input, output);
 
 	}
 
@@ -109,12 +111,10 @@ public class TestModeShapeSqlTranslator {
 	public void testUsingLike() throws Exception {
 
 		String input = "SELECT jcr_primaryType from nt_base WHERE jcr_primaryType LIKE '%relational%'"; //$NON-NLS-1$
-		String output = "SELECT [jcr:primaryType] FROM [nt:base] WHERE [jcr:primaryType] LIKE '%relational%'"; //$NON-NLS-1$
+		String output = "SELECT g_0.\"jcr:primaryType\" FROM \"nt:base\" AS g_0 WHERE g_0.\"jcr:primaryType\" LIKE '%relational%'"; //$NON-NLS-1$
 
-		helpTestVisitor(new TranslationUtility(MODESHAPE_VDB), input, output);
+		helpTestVisitor(input, output);
 
 	}
 	
-
-
 }

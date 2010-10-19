@@ -189,21 +189,21 @@ public class TestSybaseSQLConversionVisitor {
     public void testDateLiteral() {
         helpTestVisitor(getTestVDB(),
             "select {d '2002-12-31'} FROM parts", //$NON-NLS-1$
-            "SELECT {d '2002-12-31'} FROM PARTS"); //$NON-NLS-1$
+            "SELECT CAST('2002-12-31' AS DATE) FROM PARTS"); //$NON-NLS-1$
     }
 
     @Test
     public void testTimeLiteral() {
         helpTestVisitor(getTestVDB(),
             "select {t '13:59:59'} FROM parts", //$NON-NLS-1$
-            "SELECT {ts '1970-01-01 13:59:59'} FROM PARTS"); //$NON-NLS-1$
+            "SELECT CAST('1970-01-01 13:59:59.0' AS DATETIME) FROM PARTS"); //$NON-NLS-1$
     }
 
     @Test
     public void testTimestampLiteral() {
         helpTestVisitor(getTestVDB(),
             "select {ts '2002-12-31 13:59:59'} FROM parts", //$NON-NLS-1$
-            "SELECT {ts '2002-12-31 13:59:59.0'} FROM PARTS"); //$NON-NLS-1$
+            "SELECT CAST('2002-12-31 13:59:59.0' AS DATETIME) FROM PARTS"); //$NON-NLS-1$
     }
     
     @Test

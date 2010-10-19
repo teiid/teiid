@@ -26,6 +26,8 @@ import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ScalarSubquery;
@@ -41,8 +43,8 @@ public class AssignmentStatement extends Statement implements ExpressionStatemen
 
 	// the variable to which a value is assigned
 	private ElementSymbol variable;
-	    
     private Expression value;
+    private Command command;
 
 	/**
 	 * Constructor for AssignmentStatement.
@@ -51,15 +53,43 @@ public class AssignmentStatement extends Statement implements ExpressionStatemen
 		super();
 	}
 	
-	public AssignmentStatement(ElementSymbol variable, Command value) {
+	public AssignmentStatement(ElementSymbol variable, QueryCommand value) {
         this.variable = variable;
         this.value = new ScalarSubquery(value);        
+    }
+	
+	@Deprecated
+	public AssignmentStatement(ElementSymbol variable, Command value) {
+        this.variable = variable;
+        if (value instanceof QueryCommand) {
+        	this.value = new ScalarSubquery((QueryCommand)value);
+        } else {
+        	this.command = value;
+        }
     }
 	
     public AssignmentStatement(ElementSymbol variable, Expression value) {
         this.variable = variable;
         this.value = value;        
     }
+    
+    @Deprecated
+    public Command getCommand() {
+    	if (command != null) {
+    		return command;
+    	}
+    	if (value instanceof ScalarSubquery && ((ScalarSubquery)value).getCommand() instanceof Query) {
+    		Query query = (Query)((ScalarSubquery)value).getCommand();
+    		if (query.getInto() != null) {
+    			return query;
+    		}
+    	}
+    	return null;
+	}
+    
+    public void setCommand(Command command) {
+		this.command = command;
+	}
  
     /**
      * @see #getExpression()

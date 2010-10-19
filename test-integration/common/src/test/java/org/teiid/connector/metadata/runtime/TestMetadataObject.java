@@ -24,8 +24,9 @@ package org.teiid.connector.metadata.runtime;
 
 import java.util.List;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
 
+import org.junit.Test;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Call;
@@ -41,17 +42,9 @@ import org.teiid.metadata.Table;
 
 /**
  */
-public class TestMetadataObject extends TestCase {
+public class TestMetadataObject {
 
     private static TranslationUtility CONNECTOR_METADATA_UTILITY = createTranslationUtility(getTestVDBName());
-
-    /**
-     * Constructor for TestMetadataID.
-     * @param name
-     */
-    public TestMetadataObject(String name) {
-        super(name);
-    }
 
     private static String getTestVDBName() {
     	return UnitTestUtil.getTestDataPath() + "/ConnectorMetadata.vdb"; //$NON-NLS-1$
@@ -83,11 +76,11 @@ public class TestMetadataObject extends TestCase {
         }
     }
     
-    public void testGroupID() throws Exception {
+    @Test public void testGroupID() throws Exception {
         helpTestGroupID("ConnectorMetadata.TestTable", "TestTable", 7, CONNECTOR_METADATA_UTILITY);//$NON-NLS-1$ //$NON-NLS-2$ 
     }   
 
-    public void testGroupID_longName() throws Exception {
+    @Test public void testGroupID_longName() throws Exception {
         helpTestGroupID("ConnectorMetadata.TestCatalog.TestSchema.TestTable2", "TestCatalog.TestSchema.TestTable2", 1, CONNECTOR_METADATA_UTILITY);//$NON-NLS-1$ //$NON-NLS-2$ 
     }   
 
@@ -108,11 +101,11 @@ public class TestMetadataObject extends TestCase {
         assertEquals(groupName, elementID.getParent().getFullName());        
     }
     
-    public void testElementID() throws Exception {
+    @Test public void testElementID() throws Exception {
         helpTestElementID("ConnectorMetadata.TestTable", "TestNameInSource", CONNECTOR_METADATA_UTILITY);//$NON-NLS-1$ //$NON-NLS-2$ 
     }   
 
-    public void testElementID_longName() throws Exception {
+    @Test public void testElementID_longName() throws Exception {
         helpTestElementID("ConnectorMetadata.TestCatalog.TestSchema.TestTable2", "TestCol", CONNECTOR_METADATA_UTILITY);//$NON-NLS-1$ //$NON-NLS-2$ 
     }   
 
@@ -155,17 +148,17 @@ public class TestMetadataObject extends TestCase {
         }
     }
     
-    public void testProcedureID() throws Exception {
+    @Test public void testProcedureID() throws Exception {
         String[] paramNames = new String[] { "InParam", "OutParam", "InOutParam", "ReturnParam" };          //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$//$NON-NLS-4$
         helpTestProcedureID("ConnectorMetadata.TestProc1", "TestProc1", 2, paramNames, null, CONNECTOR_METADATA_UTILITY); //$NON-NLS-1$ //$NON-NLS-2$               
     }
 
-    public void testProcedureID_resultSet() throws Exception {
+    @Test public void testProcedureID_resultSet() throws Exception {
         String[] paramNames = new String[] { "Param1"};          //$NON-NLS-1$
         helpTestProcedureID("ConnectorMetadata.TestProc2", "TestProc2", 1, paramNames, "RSParam", CONNECTOR_METADATA_UTILITY); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$               
     }
 
-    public void testProcedureID_longName() throws Exception {
+    @Test public void testProcedureID_longName() throws Exception {
         helpTestProcedureID("ConnectorMetadata.TestCatalog.TestSchema.TestProc", "TestCatalog.TestSchema.TestProc", 0, new String[0], null, CONNECTOR_METADATA_UTILITY); //$NON-NLS-1$ //$NON-NLS-2$
     }
 

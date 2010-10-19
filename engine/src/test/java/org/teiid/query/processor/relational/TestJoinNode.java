@@ -39,14 +39,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.function.FunctionDescriptor;
-import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.processor.FakeDataManager;
-import org.teiid.query.processor.relational.JoinNode;
-import org.teiid.query.processor.relational.JoinStrategy;
-import org.teiid.query.processor.relational.MergeJoinStrategy;
-import org.teiid.query.processor.relational.NestedLoopJoinStrategy;
-import org.teiid.query.processor.relational.PartitionedSortJoin;
-import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.JoinType;
@@ -54,6 +47,7 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
 
@@ -209,7 +203,7 @@ public class TestJoinNode {
 
             case FUNCTION_CRITERIA :
                 Function func = new Function("lookup", new Expression[] { new Constant("pm1.g1"), new Constant("e2"), new Constant("e1"), es1 }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-                FunctionDescriptor desc = SystemFunctionManager.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, Integer.class }); //$NON-NLS-1$
+                FunctionDescriptor desc = FakeMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, Integer.class }); //$NON-NLS-1$
                 func.setFunctionDescriptor(desc);
                 func.setType(DataTypeManager.DefaultDataClasses.INTEGER);
                 CompareCriteria joinCriteria = new CompareCriteria(es2, CompareCriteria.EQ, func);

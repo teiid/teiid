@@ -361,18 +361,9 @@ public class QueryRewriter {
 				if (expr != null) {
 					expr = rewriteExpressionDirect(expr);
 	                exprStmt.setExpression(expr);
-	                if (expr instanceof ScalarSubquery) {
-	                	ScalarSubquery ss = (ScalarSubquery)expr;
-	                    if(ss.getCommand().getType() == Command.TYPE_UPDATE) {
-	                        Update update = (Update)ss.getCommand();
-	                        if (update.getChangeList().isEmpty()) {
-	                            exprStmt.setExpression(new Constant(INTEGER_ZERO));
-	                        }
-	                    }
-	                }
 				}
 				return exprStmt;
-			case Statement.TYPE_COMMAND:
+            case Statement.TYPE_COMMAND:
 				CommandStatement cmdStmt = (CommandStatement) statement;
                 rewriteSubqueryContainer(cmdStmt, false);
                 

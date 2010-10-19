@@ -25,6 +25,7 @@ package org.teiid.query.sql.proc;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
@@ -64,6 +65,11 @@ public class DeclareStatement extends AssignmentStatement {
 	 * @param valueType The type of this variable
 	 */
 	public DeclareStatement(ElementSymbol variable, String varType, Expression value) {
+        super(variable, value);
+		this.varType = varType;
+	}
+	
+	@Deprecated public DeclareStatement(ElementSymbol variable, String varType, Command value) {
         super(variable, value);
 		this.varType = varType;
 	}

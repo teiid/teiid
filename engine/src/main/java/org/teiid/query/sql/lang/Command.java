@@ -340,4 +340,8 @@ public abstract class Command implements LanguageObject {
     	return EquivalenceUtil.areEqual(this.cacheHint, cmd.cacheHint) && 
     	EquivalenceUtil.areEqual(this.option, cmd.option);
     }
+    
+    public boolean returnsResultSet() {
+        return false;
+    }
 }

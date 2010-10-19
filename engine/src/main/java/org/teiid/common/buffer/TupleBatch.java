@@ -47,7 +47,7 @@ public class TupleBatch implements Externalizable {
 	private static final long serialVersionUID = 6304443387337336957L;
 	
 	private int rowOffset;    
-    private List<List> tuples;
+    private List<List<?>> tuples;
     
     // Optional state
     private boolean terminationFlag = false;
@@ -73,7 +73,7 @@ public class TupleBatch implements Externalizable {
      * @param tuples array of List objects, each of which is
      * a single tuple
      */
-    public TupleBatch(int beginRow, List[] tuples) {
+    public TupleBatch(int beginRow, List<?>[] tuples) {
         this.rowOffset = beginRow;
         this.tuples = Arrays.asList(tuples);
     }
@@ -124,7 +124,7 @@ public class TupleBatch implements Externalizable {
         return tuples.get(rowIndex-rowOffset);
     }
     
-    public List<List> getTuples() {
+    public List<List<?>> getTuples() {
 		return tuples;
 	}
     
@@ -182,7 +182,7 @@ public class TupleBatch implements Externalizable {
         if (types == null) {
         	types = preservedTypes;
         }
-        tuples = new ArrayList<List>();
+        tuples = new ArrayList<List<?>>();
         for (List tuple : BatchSerializer.readBatch(in, types)) {
         	tuples.add(tuple);
         }

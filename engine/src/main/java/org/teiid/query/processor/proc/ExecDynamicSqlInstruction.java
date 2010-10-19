@@ -191,7 +191,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 							.createNonRecordingRecord(), procEnv
 							.getContext());
             
-			CreateCursorResultSetInstruction inst = new CreateCursorResultSetInstruction(CreateCursorResultSetInstruction.RS_NAME, commandPlan) {
+			CreateCursorResultSetInstruction inst = new CreateCursorResultSetInstruction(CreateCursorResultSetInstruction.RS_NAME, commandPlan, dynamicCommand.getIntoGroup() != null) {
 				@Override
 				public void process(ProcedurePlan procEnv)
 						throws BlockedException, TeiidComponentException,

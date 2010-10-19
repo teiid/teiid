@@ -136,7 +136,7 @@ public class SessionServiceImpl implements SessionService {
 	}
 	
 	@Override
-	public SessionMetadata createSession(String userName, Credentials credentials, String applicationName, Properties properties, boolean adminConnection) 
+	public SessionMetadata createSession(String userName, Credentials credentials, String applicationName, Properties properties, boolean adminConnection, boolean authenticate) 
 		throws LoginException, SessionServiceException {
 		ArgCheck.isNotNull(applicationName);
         ArgCheck.isNotNull(properties);
@@ -161,7 +161,7 @@ public class SessionServiceImpl implements SessionService {
             throw new SessionServiceException(RuntimePlugin.Util.getString("SessionServiceImpl.reached_max_sessions", new Object[] {new Long(sessionMaxLimit)})); //$NON-NLS-1$
         }
         
-        if (!domains.isEmpty()) {
+        if (!domains.isEmpty() && authenticate) {
 	        // Authenticate user...
 	        // if not authenticated, this method throws exception
         	boolean onlyAllowPassthrough = Boolean.valueOf(properties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$

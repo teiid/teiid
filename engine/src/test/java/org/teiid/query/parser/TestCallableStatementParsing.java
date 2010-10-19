@@ -29,7 +29,7 @@ import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.sql.lang.StoredProcedure;
 
-
+@SuppressWarnings("nls")
 public class TestCallableStatementParsing {
     
     private void helpTestIllegalCall(String call) {
@@ -46,7 +46,7 @@ public class TestCallableStatementParsing {
         assertTrue(sp.isCallableStatement());
         assertEquals(returnValue, sp.returnsScalarValue());
         assertEquals("procedure_name", sp.getProcedureName()); //$NON-NLS-1$
-        assertEquals("EXEC procedure_name(?, ?, ?)", sp.toString()); //$NON-NLS-1$
+        assertEquals((returnValue ? "? = ":"") +"EXEC procedure_name(?, ?, ?)", sp.toString()); //$NON-NLS-1$
     }
             
     @Test public void testCallNoParams() throws QueryParserException {

@@ -62,7 +62,6 @@ import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionTree;
-import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.function.UDFSource;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -5272,7 +5271,7 @@ public class TestProcessor {
         caps.setFunctionSupport("myrtrim", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        FunctionLibrary funcLibrary = new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(new FakeFunctionMetadataSource().getFunctionMethods())));
+        FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree(new UDFSource(new FakeFunctionMetadataSource().getFunctionMethods())));
         FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
         
         processPreparedStatement(sql, expected, dataManager, capFinder,
@@ -5320,7 +5319,7 @@ public class TestProcessor {
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm4", caps); //$NON-NLS-1$
 
-        FunctionLibrary funcLibrary = new FunctionLibrary(SystemFunctionManager.getSystemFunctions(), new FunctionTree(new UDFSource(new FakeFunctionMetadataSource().getFunctionMethods())));
+        FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree(new UDFSource(new FakeFunctionMetadataSource().getFunctionMethods())));
         FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
         
         processPreparedStatement(sql, expected, dataManager, capFinder,
@@ -6243,7 +6242,7 @@ public class TestProcessor {
                             new List[] { Arrays.asList(new Object[] { new Integer(1) } )});
         
         // Create expected results 
-        List[] expected = new List[] { Arrays.asList(new Object[] { new Integer(1)})};        
+        List[] expected = new List[] { Arrays.asList(0)};        
         
         // Run query 
         helpProcess(plan, dataManager, expected);  

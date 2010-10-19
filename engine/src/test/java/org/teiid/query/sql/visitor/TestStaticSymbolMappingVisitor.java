@@ -37,6 +37,7 @@ import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.IsNullCriteria;
 import org.teiid.query.sql.lang.MatchCriteria;
 import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.lang.StoredProcedure;
@@ -233,7 +234,7 @@ public class TestStaticSymbolMappingVisitor extends TestCase {
     public void testVisitSubquerySetCriteria() {
         SubquerySetCriteria ssc = new SubquerySetCriteria();
         ssc.setExpression(new Function("length", new Expression[] {exampleElement(true, 0)})); //$NON-NLS-1$
-        ssc.setCommand(new Insert());
+        ssc.setCommand(new Query());
         helpTest(ssc,getSymbolMap());
     }
 	

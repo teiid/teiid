@@ -79,13 +79,13 @@
 			Details of the failed attempt including invalid users, which
 			domains were consulted, etc. will be in the server log with appropriate
 			levels of severity.</para>
-			    <note>
-        <para>The security-domain defined for the JDBC connection and Admin connections are separate.
-            The default name of JDBC connection's security-domain is "teiid-security". The default name for Admin connection
-            is "jmx-console". For the Admin connection's security domain, the user is allowed 
-            to change which LoginModule that "jmx-console" pointing to, however should not change the name of the domain, as this name is
-            shared between the "admin-console" application.</para>
-    </note>    
+        <note>
+            <para>The security-domain defined for the JDBC connection and Admin connections are separate.
+                The default name of JDBC connection's security-domain is "teiid-security". The default name for Admin connection
+                is "jmx-console". For the Admin connection's security domain, the user is allowed
+                to change which LoginModule that "jmx-console" pointing to, however should not change the name of the domain, as this name is
+                shared between the "admin-console" application.</para>
+        </note>    
 			
 		<section>
 			<title>Built-in LoginModules</title>
@@ -93,14 +93,139 @@
 			<para>The UsersRolesLoginModule, which utilizes simple text files
 				to authenticate users and to define
 				their groups.  The teiid-jboss-beans.xml configuration file contains an example of how to use UsersRolesLoginModule.  
-				Note that this is typically not for production use.
+				Note that this is typically not for production use and is strongly recommended that you replace this login module. Please 
+                also note that, you can install multiple login modules as part of single security domain configuration and configure them 
+                to part of login process. For example, for "teiid-security" domain, you can configure a file based and also LDAP based login modules, 
+                and have your user authenticated with either both or single login module.  
 	        </para>
 	        <para>See <ulink url="http://community.jboss.org/docs/DOC-11253">LDAP LoginModule configuration</ulink> for utilizing LDAP based authentication.
-            If you want use a your own Custom Login module, check out the Developer's Guide for instructions.
+            If you want write your own Custom Login module, check out the Developer's Guide for instructions.
 	        </para>
 		</section>
 		
-	</section>
+        <section>
+            <title>Security at Data Source level</title>
+            <para>In some use cases, user might need to pass-in different credentials to their data sources based on the logged in user
+            than using the shared credentials for all the logged users. To support this feature, JBoss AS and Teiid provide multiple different 
+            login modules to be used in conjunction with Teiid's main security domain. See this 
+            <ulink url="http://community.jboss.org/docs/DOC-9350">document</ulink> for details on configuration. Note that the below 
+            directions need to be used in conjunction with this document.</para>
+            
+            <section>
+                <title>CallerIdentity and Trusted Payload</title>
+                <para>If client wants to pass in simple text password or a certificate or a custom serialized object 
+                as token credential to the data source, user can configure "CallerIdentity" login module.                
+                Using this login module, user can pass-in same credential that user logged into Teiid security domain to the 
+                data source. Here is a sample configuration, this needs to be configured in "teiid-jboss-beans.xml" file.
+                </para>
+                
+            <programlisting><![CDATA[            
+    <application-policy xmlns="urn:jboss:security-beans:1.0" name="teiid-security">
+        <authentication>
+            
+            <login-module code="org.jboss.security.auth.spi.UsersRolesLoginModule" flag="required">
+                <module-option name = "password-stacking">useFirstPass</module-option>
+                <module-option name="usersProperties">props/teiid-security-users.properties</module-option>
+                <module-option name="rolesProperties">props/teiid-security-roles.properties</module-option>
+            </login-module>
+            
+            <login-module code="org.jboss.resource.security.CallerIdentityLoginModule" flag="required">
+                <module-option name = "password-stacking">useFirstPass</module-option>
+                <module-option name = "managedConnectionFactoryName">jboss.jca:service=LocalTxCM,name=DefaultDS</module-option>
+            </login-module>
+                        
+        </authentication>
+    </application-policy>  
+            ]]></programlisting>
+            
+            <para>In the -ds.xml file that is defined as the "managedConnectionFactoryName" in the above configuration, 
+            you need to add the following element</para>
+            
+            <programlisting><![CDATA[
+                <security-domain>teiid-security</security-domain>
+            ]]></programlisting>
+            
+            <para>In the above configuration example, in the primary login module "UsersRolesLoginModule" is setup to hold the 
+            passwords in the file, and when user logs in with password, the same password will be also set on the logged in Subject after 
+            authentication. This credentials can be extracted by the data source by asking for Subject's private credentials.</para>
+            
+            <para>To use a certificate or serialized object instead of plain password as the token, simply replace the simple text password
+                with Base64 encoded contents of the serialized object. Please note that, encoding and decoding of this object 
+                is strictly up to the user as JBoss AS and Teiid will only act like carrier of the information from 
+                login module to connection factory. Using this CallerIdentity module, the connection pool for data source is segmented
+                by Subject.</para>
+            </section>
+        <section>
+            <title>Role Based Credential Map</title>
+            <para>In some use cases, the users are divided by their functionality and they have varied level of security access to 
+            data sources. These types of users are identified by their roles as to what they have access to. In the above "CallerIdentity" 
+            login scenario, that may be too fine-grained security at data sources, that can lead resource exhaustion as every user has 
+            their own separate connection. 
+            Using Role based security gives a balance, where the users with same role are treated equally 
+            for authentication purposes at the data source. Teiid provides a login module called "RoleBasedCredentialMap" 
+            for this purposes, where administrator can define a role based authentication module, where given the role of the user
+            from the primary login module, this module will hold credentail to that role. So, it is container of credentials that
+            map to different roles. If a user has multiple roles, the first role that has the credential will be chosen.
+            Below find the sample configuration.</para>
+            
+            <programlisting><![CDATA[            
+    <application-policy xmlns="urn:jboss:security-beans:1.0" name="teiid-security">
+        <authentication>
+            
+            <login-module code="org.jboss.security.auth.spi.UsersRolesLoginModule" flag="required">
+                <module-option name = "password-stacking">useFirstPass</module-option>
+                <module-option name="usersProperties">props/teiid-security-users.properties</module-option>
+                <module-option name="rolesProperties">props/teiid-security-roles.properties</module-option>
+            </login-module>
+            
+            <login-module code="org.teiid.jboss.RoleBasedCredentialMapIdentityLoginModule" flag="required">
+                <module-option name = "password-stacking">useFirstPass</module-option>
+                <module-option name="credentialMap">props/teiid-credentialmap.properties</module-option>
+                <module-option name = "managedConnectionFactoryName">jboss.jca:service=LocalTxCM,name=DefaultDS</module-option>
+            </login-module>            
+                        
+        </authentication>
+    </application-policy>  
+            ]]></programlisting>         
+            <para>In the -ds.xml file that is defined as the "managedConnectionFactoryName" in the above configuration, 
+            you need to add the following element</para>
+            
+            <programlisting><![CDATA[
+                <security-domain>teiid-security</security-domain>
+            ]]></programlisting>
+            
+            <para>In the above configuration example, in the primary login module "UsersRolesLoginModule" is setup for logging in
+            the primary user and assign some roles. The "RoleBasedCredentialMap" login module is configured to hold 
+            role to password information in the file defined by "credentialMap" property. When user logs in, the role information 
+            from the primary login module is taken, and extracts the role's passsword and attaches as 
+            a private credential to the Subject. If you want use this for role based trusted token, you can configure the Base64 based
+            endcoding/decoded object as defined above.</para>
+            
+            <para>You can also encrypt the password instead of plain text password using this module. Just include the encrypted
+             password in the file defined by the "credentialMap" property, and define following properties in 
+             the "RoleBasedCredentialMap" login module.</para>
+             
+            <programlisting><![CDATA[            
+            <login-module code="org.teiid.jboss.RoleBasedCredentialMapIdentityLoginModule" flag="required">
+                <module-option name = "password-stacking">useFirstPass</module-option>
+                <module-option name="credentialMap">props/teiid-credentialmap.properties</module-option>
+                <module-option name = "managedConnectionFactoryName">jboss.jca:service=LocalTxCM,name=DefaultDS</module-option>
+                
+               <!-- below properties are only required when passwords are encrypted -->
+               <module-option name = "pbealgo">PBEWithMD5AndDES</module-option>
+               <module-option name = "pbepass">testPBEIdentityLoginModule</module-option>
+               <module-option name = "salt">abcdefgh</module-option>
+               <module-option name = "iterationCount">19</module-option>
+            </login-module>            
+            ]]></programlisting>         
+             
+            <para>For full details about encryption of the password, please follow this 
+            <ulink url="http://community.jboss.org/docs/DOC-9703">document</ulink>'s 
+            "A KeyStore based login module for encrypting a datasource password" section. Be sure to give the same configuration elements
+            in the above configuration, as they are used to encrypt the password.</para>             
+            </section>            
+        </section>
+	  </section>
 	
 	<section id="ssl_config">
         <title>Configuring SSL</title>
@@ -134,7 +259,7 @@
             enabled = traffic will be secured using the other configuration properties.</para></listitem>
             <listitem><para>sslProtocol- Type of SSL protocol to be used. Default is TLSv1</para></listitem>
             <listitem><para>keystoreType - Keystore type created by the keytool. Default "JKS" is used.</para></listitem>
-            <listitem><para>authenticationMode - anonymous|1-way|2-way,  Type of <link linkend="ssl_aut">SSL Authentication Mode</link>.</para></listitem>
+            <listitem><para>authenticationMode - anonymous|1-way|2-way,  Type of <link linkend="ssl_auth">SSL Authentication Mode</link>.</para></listitem>
             <listitem><para>keymanagementAlgorithm - Type of key algorithm used. Default 
             is based upon the VM, e.g. "SunX509"</para></listitem>
             <listitem><para>keystoreFilename - The file name of the keystore, which contains the 

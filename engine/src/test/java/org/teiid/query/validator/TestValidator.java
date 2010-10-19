@@ -22,9 +22,7 @@
 
 package org.teiid.query.validator;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,6 +39,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
@@ -59,7 +58,6 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.SPParameter;
-import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
@@ -348,30 +346,35 @@ public class TestValidator {
         try {
             ValidatorReport report = Validator.validate(command, metadata);
             
-            // Get invalid objects from report
-            Collection actualObjs = new ArrayList();
-            report.collectInvalidObjects(actualObjs);
-
-            // Compare expected and actual objects
-            Set expectedStrings = new HashSet(Arrays.asList(expectedStringArray));
-            Set actualStrings = new HashSet();
-            Iterator objIter = actualObjs.iterator();
-            while(objIter.hasNext()) {
-                LanguageObject obj = (LanguageObject) objIter.next();
-                actualStrings.add(SQLStringVisitor.getSQLString(obj));
-            }
-
-            if(expectedStrings.size() == 0 && actualStrings.size() > 0) {
-                fail("Expected no failures but got some: " + report.getFailureMessage()); //$NON-NLS-1$ 
-            } else if(actualStrings.size() == 0 && expectedStrings.size() > 0) {
-                fail("Expected some failures but got none for sql = " + command); //$NON-NLS-1$
-            } else {
-                assertEquals("Expected and actual sets of strings are not the same: ", expectedStrings, actualStrings); //$NON-NLS-1$
-            }
+            examineReport(command, expectedStringArray, report);
             return report;
         } catch(TeiidException e) {
 			throw new TeiidRuntimeException(e);
         }
+	}
+
+	private static void examineReport(Object command,
+			String[] expectedStringArray, ValidatorReport report) {
+		// Get invalid objects from report
+		Collection actualObjs = new ArrayList();
+		report.collectInvalidObjects(actualObjs);
+
+		// Compare expected and actual objects
+		Set<String> expectedStrings = new HashSet(Arrays.asList(expectedStringArray));
+		Set<String> actualStrings = new HashSet<String>();
+		Iterator objIter = actualObjs.iterator();
+		while(objIter.hasNext()) {
+		    LanguageObject obj = (LanguageObject) objIter.next();
+		    actualStrings.add(SQLStringVisitor.getSQLString(obj));
+		}
+
+		if(expectedStrings.size() == 0 && actualStrings.size() > 0) {
+		    fail("Expected no failures but got some: " + report.getFailureMessage()); //$NON-NLS-1$ 
+		} else if(actualStrings.size() == 0 && expectedStrings.size() > 0) {
+		    fail("Expected some failures but got none for sql = " + command); //$NON-NLS-1$
+		} else {
+		    assertEquals("Expected and actual sets of strings are not the same: ", expectedStrings, actualStrings); //$NON-NLS-1$
+		}
 	}
 
 	private void helpValidateProcedure(String procedure, String userUpdateStr, String procedureType) {
@@ -379,21 +382,29 @@ public class TestValidator {
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleUpdateProc(procedureType, procedure);
 
         try {
-        	
-	        Command command = helpResolve(userUpdateStr, metadata);
-        	//System.out.println(command.printCommandTree());
-            ValidatorReport report = Validator.validate(command, metadata); 
-            //System.out.println("\nReport = \n" + report);
-        
-            // Get invalid objects from report
-            Collection actualObjs = new ArrayList();
-            report.collectInvalidObjects(actualObjs);
-            if(actualObjs.size() > 0) {
-                fail("Expected no failures but got some: " + report.getFailureMessage());            	 //$NON-NLS-1$
-            }
+        	validateProcedure(userUpdateStr, metadata);
         } catch(TeiidException e) {
             throw new TeiidRuntimeException(e);
         }
+	}
+
+	private void validateProcedure(String userUpdateStr,
+			QueryMetadataInterface metadata) throws QueryResolverException,
+			QueryMetadataException, TeiidComponentException,
+			QueryValidatorException {
+		ProcedureContainer command = (ProcedureContainer)helpResolve(userUpdateStr, metadata);
+		
+		Command proc = QueryResolver.expandCommand(command, metadata, AnalysisRecord.createNonRecordingRecord());
+		
+		ValidatorReport report = Validator.validate(proc, metadata);
+		if(report.hasItems()) {
+		    throw new QueryValidatorException(report.getFailureMessage());
+		}
+
+		report = Validator.validate(command, metadata);
+		if(report.hasItems()) {
+		    throw new QueryValidatorException(report.getFailureMessage());
+		}
 	}
 	
 	private void helpFailProcedure(String procedure, String userUpdateStr, String procedureType) {
@@ -401,15 +412,9 @@ public class TestValidator {
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleUpdateProc(procedureType, procedure);
 
         try {
-        	
-	        ProcedureContainer command = (ProcedureContainer)helpResolve(userUpdateStr, metadata);
-        	CreateUpdateProcedureCommand cmd = (CreateUpdateProcedureCommand)QueryResolver.expandCommand(command, metadata, null);
-            ValidatorReport report = Validator.validate(cmd, metadata); 
-        
-            // Get invalid objects from report
-            Collection actualObjs = new ArrayList();
-            report.collectInvalidObjects(actualObjs);
-            assertTrue("Expected some failures but got none for procedure = " + procedure, !actualObjs.isEmpty()); //$NON-NLS-1$ 
+        	validateProcedure(userUpdateStr, metadata);
+        	fail("Expected failures for " + procedure);
+        } catch (QueryValidatorException e) {
         } catch(TeiidException e) {
 			throw new RuntimeException(e);
         }
@@ -2032,11 +2037,47 @@ public class TestValidator {
     @Test public void testValidateScalarSubqueryTooManyColumns() {        
         helpValidate("SELECT e2, (SELECT e1, e2 FROM pm1.g1 WHERE e2 = '3') FROM pm1.g2", new String[] {"SELECT e1, e2 FROM pm1.g1 WHERE e2 = '3'"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
+    
+    @Test public void testInvalidIntoSubquery() {
+    	helpValidate("SELECT e2, (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3') FROM pm1.g2", new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
+    @Test public void testInvalidIntoSubquery1() {
+    	helpValidate("SELECT e2 FROM pm1.g2 WHERE EXISTS (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3')", new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testInvalidIntoSubquery2() {
+    	helpValidate("SELECT * FROM (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3') x", new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    @Test public void testInvalidIntoSubquery3() {
+    	helpValidate("SELECT e2 FROM pm1.g2 WHERE e2 in (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3')", new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testInvalidIntoSubquery4() throws Exception {
+        StringBuffer procedure = new StringBuffer("CREATE VIRTUAL PROCEDURE\n") //$NON-NLS-1$
+                                .append("BEGIN\n") //$NON-NLS-1$
+                                .append("loop on (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3') as x\n") //$NON-NLS-1$
+                                .append("BEGIN\nSELECT 1;\nEND\nSELECT 1\n;END\n"); //$NON-NLS-1$
+        
+        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        
+        // Validate
+        ValidatorReport report = helpValidateInModeler("pm1.vsp36", procedure.toString(), metadata);  //$NON-NLS-1$
+        examineReport(procedure, new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, report);
+    }
+    
     @Test public void testDisallowUpdateOnMultisourceElement() throws Exception {  
     	Set<String> models = new HashSet<String>();
     	models.add("pm1");
         ValidatorReport report = helpValidateInModeler("pm1.vsp36", "UPDATE PM1.G1 set SOURCE_NAME='blah'", new MultiSourceMetadataWrapper(FakeMetadataFactory.example1(), models));  //$NON-NLS-1$
         assertEquals(report.toString(), 1, report.getItems().size());
     }
+    
+    @Test public void testDisallowProjectIntoMultiSource() throws Exception {  
+    	Set<String> models = new HashSet<String>();
+    	models.add("pm1");
+        helpValidate("insert into pm1.g1 select * from pm1.g1", new String[] {"pm1.g1"}, new MultiSourceMetadataWrapper(FakeMetadataFactory.example1(), models));  //$NON-NLS-1$
+    }
+
 }

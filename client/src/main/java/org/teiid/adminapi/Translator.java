@@ -31,4 +31,10 @@ public interface Translator extends AdminObject{
 	 * @return
 	 */
 	public String getType();
+	
+	/**
+	 * Get the Translator description
+	 * @return
+	 */
+	public String getDescription();
 }

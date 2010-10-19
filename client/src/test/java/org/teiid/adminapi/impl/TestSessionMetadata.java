@@ -33,13 +33,14 @@ public class TestSessionMetadata {
 	@Test public void testMapping() {
 		SessionMetadata session = new SessionMetadata();
 		session.setSessionId("test");
-		
+		session.setApplicationName("foo");
 		SessionMetadataMapper smm = new SessionMetadataMapper();
 		MetaValue mv = smm.createMetaValue(smm.getMetaType(), session);
 		
 		SessionMetadata session1 = smm.unwrapMetaValue(mv);
 		
 		assertEquals(session.getSessionId(), session1.getSessionId());
+		assertEquals(session.getApplicationName(), session1.getApplicationName());
 	}
 
 }

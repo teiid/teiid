@@ -34,6 +34,7 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.UnresolvedSymbolDescription;
+import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogManager;
@@ -56,6 +57,8 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.DynamicCommand;
 import org.teiid.query.sql.lang.GroupContext;
+import org.teiid.query.sql.lang.SPParameter;
+import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
@@ -161,9 +164,14 @@ public class UpdateProcedureResolver implements CommandResolver {
             ElementSymbol updateCount = new ElementSymbol(countVar);
             updateCount.setType(DataTypeManager.DefaultDataClasses.INTEGER);
             symbols.add(updateCount);
-            ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, metadata.getMetadataStore(), externalGroups, symbols);         
         }
-        
+
+        String countVar = ProcedureReservedWords.VARIABLES + ElementSymbol.SEPARATOR + ProcedureReservedWords.ROWCOUNT;
+        ElementSymbol updateCount = new ElementSymbol(countVar);
+        updateCount.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        symbols.add(updateCount);
+
+        ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, metadata.getMetadataStore(), externalGroups, symbols);         
         resolveBlock(procCommand, procCommand.getBlock(), externalGroups, metadata, procCommand.isUpdateProcedure(), analysis);
     }
 
@@ -209,6 +217,22 @@ public class UpdateProcedureResolver implements CommandResolver {
                 
                 TempMetadataStore discoveredMetadata = resolveEmbeddedCommand(metadata, externalGroups, subCommand, analysis);
                 
+                if (subCommand instanceof StoredProcedure) {
+                	StoredProcedure sp = (StoredProcedure)subCommand;
+                	for (SPParameter param : sp.getParameters()) {
+                		if (!(param.getExpression() instanceof ElementSymbol)) {
+                			continue;
+                		}
+            			switch (param.getParameterType()) {
+        	            case ParameterInfo.INOUT:
+        	            case ParameterInfo.OUT:
+        	            case ParameterInfo.RETURN_VALUE:
+        	            	sp.setCallableStatement(true);
+        	            	break;
+        	            }
+					}
+                }
+                
                 if (discoveredMetadata != null) {
                     metadata.getMetadataStore().getData().putAll(discoveredMetadata.getData());
                 }
@@ -231,9 +255,12 @@ public class UpdateProcedureResolver implements CommandResolver {
                             dynamicCommand.setAsColumns(Collections.EMPTY_LIST);
                         }
                     }
-                    //this could be the last select statement, set the projected symbol
-                    //on the virtual procedure command
-                    command.setResultsCommand(subCommand);
+                    
+                    if (subCommand.returnsResultSet()) {
+	                    //this could be the last select statement, set the projected symbol
+	                    //on the virtual procedure command
+	                    command.setResultsCommand(subCommand);
+                    }
                 }
 
                 break;

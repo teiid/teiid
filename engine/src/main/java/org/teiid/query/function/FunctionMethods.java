@@ -1240,6 +1240,10 @@ public final class FunctionMethods {
         return value;            
     }
     
+    public static Object session_id(CommandContext context) {
+        return context.getConnectionID();
+    }
+    
     // ================= Function - MODIFYTIMEZONE ========================
     
     public static Object modifyTimeZone(Timestamp value, String originalTimezoneString, String targetTimezoneString) {

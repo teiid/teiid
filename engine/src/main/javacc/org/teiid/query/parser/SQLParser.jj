@@ -457,7 +457,7 @@ Command userCommand(ParseInfo info) :
 }
 {
 	(command = queryExpression(info) |
-	command = storedProcedure(info) |
+	command = storedProcedure(info, new StoredProcedure()) |
 	command = insert(info) |
 	command = update(info) |
 	command = delete(info) |
@@ -574,9 +574,9 @@ Statement delimitedStatement(ParseInfo info) :
     Statement stmt = null;
 }           
 {
-     (stmt = sqlStatement(info) |
+     (LOOKAHEAD(3) stmt = assignStatement(info) |
+	  stmt = sqlStatement(info) |
       stmt = errorStatement(info) |
-	  stmt = assignStatement(info) |
 	  stmt = declareStatement(info) |
 	  stmt = continueStatement(info) |
 	  stmt = breakStatement(info)
@@ -819,7 +819,7 @@ DeclareStatement declareStatement(ParseInfo info) :
     String var = null;    
     Constant type = null;  
     ElementSymbol variableID = null;
-    Expression value = null;
+    LanguageObject value = null;
 }
 {
     <DECLARE>
@@ -828,13 +828,18 @@ DeclareStatement declareStatement(ParseInfo info) :
     {
         variableID = new ElementSymbol(var);
     }
-    [<EQ>
+    [(nonReserved(":=")|<EQ>)
      value = assignStatementOperand(info)
     ]
     
     {
-        declStmt = new DeclareStatement(variableID, (String)type.getValue(), value);
-        return declStmt;
+        if (value instanceof Expression) {
+    		return new DeclareStatement(variableID, (String)type.getValue(), (Expression)value);
+    	}
+    	if (value instanceof QueryCommand) {
+    		return new DeclareStatement(variableID, (String)type.getValue(), new ScalarSubquery((QueryCommand)value));
+    	}
+    	return new DeclareStatement(variableID, (String)type.getValue(), (Command)value);
     }           
 }
 
@@ -844,22 +849,26 @@ DeclareStatement declareStatement(ParseInfo info) :
  */
 AssignmentStatement assignStatement(ParseInfo info) :
 {
-    Expression value = null;
+    LanguageObject value = null;
     String var = null;
     ElementSymbol elementID = null;
 }
 {
-    
     var = id()
     {
         elementID = new ElementSymbol(var);              
     } 
-    <EQ>
+    (nonReserved(":=")|<EQ>)
     value = assignStatementOperand(info)
         
     {   
-        AssignmentStatement assignStmt = new AssignmentStatement(elementID, value);
-        return assignStmt;
+    	if (value instanceof Expression) {
+    		return new AssignmentStatement(elementID, (Expression)value);
+    	}
+    	if (value instanceof QueryCommand) {
+    		return new AssignmentStatement(elementID, (QueryCommand)value);
+    	}
+    	return new AssignmentStatement(elementID, (Command)value);
     }    
 }
 
@@ -868,26 +877,22 @@ AssignmentStatement assignStatement(ParseInfo info) :
  * arbitrarily deeply in parentheses.
  * @throws ParseException if parsing failed
  */
-Expression assignStatementOperand(ParseInfo info) :
+LanguageObject assignStatementOperand(ParseInfo info) :
 {
     LanguageObject value = null;
 }
 {
 
     (
-      LOOKAHEAD(<INSERT><INTO>) (value = insert(info)) |
-      value = update(info) |
-      value = delete(info) |
-	  value = storedProcedure(info) |
-	  LOOKAHEAD(expression(info)) (value = expression(info)) |      
-      value = queryExpression(info)
+	  LOOKAHEAD(<INSERT><INTO>) (value = insert(info)) | //deprecated
+      value = update(info) | //deprecated
+      value = delete(info) | //deprecated
+      LOOKAHEAD(expression(info)) (value = expression(info)) |      
+      value = queryExpression(info) //deprecated should be a scalar subquery
     ) 
         
     {   
-    	if (value instanceof Expression) {
-    		return (Expression)value;
-    	}
-        return new ScalarSubquery((Command)value);
+        return value;
     }    
 }
 
@@ -899,10 +904,26 @@ CommandStatement sqlStatement(ParseInfo info) :
 {
     CommandStatement cmdStmt = null;
     Command cmd = null;
+    String var = null;
+    ElementSymbol elementID = null;
+    StoredProcedure storedProcedure = null;
 }
 {
-    (LOOKAHEAD((<EXECUTE>|<EXEC>) <STRING>) (cmd = dynamicCommand(info)) |
-     cmd = userCommand(info)
+    (LOOKAHEAD(2) (cmd = userCommand(info)) |
+     cmd = dynamicCommand(info) |
+     (
+      var = id()
+      {
+        storedProcedure = new StoredProcedure();
+        elementID = new ElementSymbol(var);
+        SPParameter parameter = new SPParameter(1, SPParameter.RETURN_VALUE, "return"); //$NON-NLS-1$
+        parameter.setExpression(elementID);
+	    storedProcedure.setParameter(parameter);  
+	    storedProcedure.setCalledWithReturn(true);            
+      } 
+      (nonReserved(":=")|<EQ>)
+      cmd = storedProcedure(info, storedProcedure) 
+     )
     )
   
     {
@@ -1013,7 +1034,7 @@ DynamicCommand dynamicCommand(ParseInfo info) :
 	SetClauseList setClauseList = null;
 }
 { 
-    (<EXECUTE>|<EXEC>) <STRING>
+    (<EXECUTE>|<EXEC>) [(<STRING>|<IMMEDIATE>)]
     sql = expression(info)
     {
         dcStmt.setSql(sql);
@@ -1133,6 +1154,7 @@ StoredProcedure callableStatement(ParseInfo info) :
 	 {
 	   parameter = new SPParameter(parameterIndex++, SPParameter.RETURN_VALUE, "return"); //$NON-NLS-1$
 	   storedProcedure.setParameter(parameter);
+	   storedProcedure.setCalledWithReturn(true);
 	 }
 	]
 	<CALL> procName = id()
@@ -1166,9 +1188,8 @@ StoredProcedure callableStatement(ParseInfo info) :
  * * Parse stored query command
  * @throws ParseException if parsing failed
  */
-StoredProcedure storedProcedure(ParseInfo info) :
+StoredProcedure storedProcedure(ParseInfo info, StoredProcedure storedProcedure) :
 {
-	StoredProcedure storedProcedure = new StoredProcedure();
 	String procName = null;
 	Option option = null;
 }
@@ -1187,7 +1208,7 @@ StoredProcedure storedProcedure(ParseInfo info) :
 		 LOOKAHEAD(<ID> <EQ>)
 		 storedProcedure = executeNamedParams(info, storedProcedure)
 		 | 		
-		 storedProcedure = executeUnnamedParams(info, storedProcedure, 1)
+		 storedProcedure = executeUnnamedParams(info, storedProcedure, storedProcedure.getParameters().size() + 1)
 		)
 		
 		<RPAREN>
@@ -2261,7 +2282,7 @@ SubqueryFromClause subqueryFromClause(ParseInfo info) :
 	]
 	lparen = <LPAREN> 
 	( command = queryExpression(info) |
-      command = storedProcedure(info) )
+      command = storedProcedure(info, new StoredProcedure()) )
 	<RPAREN>
 	[<AS>]
 	aliasID = id()
@@ -2492,14 +2513,21 @@ CompareCriteria compareCrit(ParseInfo info, Expression expression) :
 	}
 }
 
-Command subquery(ParseInfo info) :
+QueryCommand subquery(ParseInfo info) :
 {
-    Command subquery = null;
+    QueryCommand subquery = null;
+    StoredProcedure proc = null;
 }
 {
 	<LPAREN>	
-	( subquery = queryExpression(info) |
-      subquery = storedProcedure(info) )
+	( subquery = queryExpression(info) | 
+	 (
+		proc = storedProcedure(info, new StoredProcedure()) //deprecated	  
+	 )
+	 {
+	    subquery = new Query(new Select(Arrays.asList(new AllSymbol())), new From(Arrays.asList(new SubqueryFromClause("x", proc))), null, null, null);
+	 }
+	)
 	<RPAREN>
 	{
 		return subquery;
@@ -2514,7 +2542,7 @@ Command subquery(ParseInfo info) :
 SubqueryCompareCriteria subqueryCompareCriteria(ParseInfo info, Expression expression) :
 {
     SubqueryCompareCriteria subqueryCrit = null;
-    Command subquery = null;
+    QueryCommand subquery = null;
     Token operator = null;
     Token quantifier = null;
     
@@ -2645,7 +2673,7 @@ AbstractSetCriteria setCrit(ParseInfo info, Expression expression) :
 {
 	Expression value = null;
 	List setList = new ArrayList();
-	Command command = null;
+	QueryCommand command = null;
 	boolean negated = false;
 	AbstractSetCriteria criteria = null;
 }
@@ -3091,7 +3119,7 @@ Expression valueExpressionPrimary(ParseInfo info) :
 	Expression expression = null;
 	Token symbol = null;
 	Constant literal = null;	
-	Command subquery = null;
+	QueryCommand subquery = null;
 }
 {
         (

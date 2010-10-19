@@ -29,13 +29,12 @@ import junit.framework.TestCase;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.client.DQP;
-import org.teiid.client.security.ILogon;
 import org.teiid.client.util.ExceptionUtil;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 
-
+@SuppressWarnings("nls")
 public class TestSocketServiceRegistry extends TestCase {
 
 	interface Foo{
@@ -53,7 +52,7 @@ public class TestSocketServiceRegistry extends TestCase {
 	
 	public void testAdminExceptionConversion() throws Exception {
 		
-		Method m = Admin.class.getMethod("getProcesses", new Class[] {String.class});
+		Method m = Admin.class.getMethod("getCacheStats", new Class[] {String.class});
 		
 		Throwable t = ExceptionUtil.convertException(m, new TeiidComponentException());
 		

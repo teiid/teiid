@@ -34,6 +34,7 @@ import java.util.TreeMap;
 
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.metadata.StoredProcedureInfo;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -71,9 +72,8 @@ public class StoredProcedure extends ProcedureContainer {
     //whether parameters should be displayed in traditional indexed
     //manor, or as named parameters
     private boolean displayNamedParameters;
-    
+    private boolean calledWithReturn;
     private boolean isCallableStatement;
-    
     private boolean isProcedureRelational;
     
     /**
@@ -154,8 +154,6 @@ public class StoredProcedure extends ProcedureContainer {
         Integer key = new Integer(parameter.getIndex());
         if(parameter.getParameterType() == ParameterInfo.RESULT_SET){
         	resultSetParameterKey = key;
-        }else if(parameter.getParameterType() == ParameterInfo.RETURN_VALUE){
-        	returnsScalarValue = true;
         }
 
         mapOfParameters.put(key, parameter);
@@ -213,25 +211,19 @@ public class StoredProcedure extends ProcedureContainer {
         copy.setModelID(getModelID());
         copy.setProcedureName(getProcedureName());
         copy.setProcedureCallableName(getProcedureCallableName());
-        copy.returnsScalarValue = returnsScalarValue();
         copy.setProcedureID(getProcedureID());
-        copy.setGroup((GroupSymbol)getGroup().clone());
+        copy.setGroup(getGroup().clone());
         if (getTemporaryMetadata() != null){
             copy.setTemporaryMetadata(new HashMap(getTemporaryMetadata()));
         }
         copy.callableName = callableName;
-
+        copy.calledWithReturn = calledWithReturn;
         List<SPParameter> params = getParameters();
         for(int i=0; i<params.size(); i++) {
             copy.setParameter((SPParameter)params.get(i).clone());
         }
         copy.resultSetParameterKey = resultSetParameterKey;
         this.copyMetadataState(copy);
-
-        if(this.group != null) {
-            copy.setGroup((GroupSymbol)this.group.clone());
-        }
-        
         copy.displayNamedParameters = displayNamedParameters;
         copy.isCallableStatement = isCallableStatement;
         copy.isProcedureRelational = isProcedureRelational;
@@ -243,7 +235,12 @@ public class StoredProcedure extends ProcedureContainer {
     }
 
     public boolean returnsScalarValue(){
-        return returnsScalarValue;
+    	for (SPParameter param : this.mapOfParameters.values()) {
+        	if (param.getParameterType() == SPParameter.RETURN_VALUE) {
+        		return true;
+        	}
+    	}
+    	return false;
     }
     
     public boolean returnParameters() {
@@ -413,7 +410,16 @@ public class StoredProcedure extends ProcedureContainer {
 	   } // for
 	    
 	    return map;
-	}	
+	}
+
+	public void setCalledWithReturn(boolean calledWithReturn) {
+		this.calledWithReturn = calledWithReturn;
+	}
+
+	public boolean isCalledWithReturn() {
+		return calledWithReturn;
+	}
+
 }
 
 

@@ -47,6 +47,7 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.index.IndexMetadataFactory;
 import org.teiid.metadata.index.VDBMetadataFactory;
+import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.services.SessionServiceImpl;
@@ -68,6 +69,7 @@ public class FakeServer extends ClientServiceRegistryImpl {
 		this.logon = new LogonImpl(sessionService, null);
 		
 		this.repo.setSystemStore(VDBMetadataFactory.getSystem());
+		this.repo.setSystemFunctionManager(new SystemFunctionManager());
 		this.repo.odbcEnabled();
 		this.repo.start();
 		

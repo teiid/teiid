@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/custom.dtd">
+%CustomDTD;
+]>
 <chapter id="scalar_functions">
 	<title>Scalar Functions</title>
 	<para>
@@ -1862,12 +1865,24 @@
               <para><code>ENV(key)</code></para>
             </entry>
             <entry>
-              <para>Retrieve an environment property. The only key
-                currently allowed is ‘sessionid’, although this will expand
-                in the future.</para>
+              <para>Retrieve a system environment property. The only key specific to the current session is ‘sessionid’.  
+                However the preferred mechanism for getting the session id is with the session_id() function.  
+                To prevent untrusted access to system properties, the use of this function must be specifically enabled in the &jboss-beans; file.
+                </para>
             </entry>
             <entry>
               <para>key in {string}, return is string</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para><code>SESSION_ID()</code></para>
+            </entry>
+            <entry>
+              <para>Retrieve the string form of the current session id.</para>
+            </entry>
+            <entry>
+              <para>return is string</para>
             </entry>
           </row>
           <row>

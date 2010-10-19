@@ -28,6 +28,9 @@ import java.util.List;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.ProcedureReservedWords;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
@@ -77,6 +80,21 @@ public class Block implements LanguageObject {
 	 * @param statement The <code>Statement</code> to be added to the block
 	 */
 	public void addStatement(Statement statement) {
+		if (statement instanceof AssignmentStatement) {
+			AssignmentStatement stmt = (AssignmentStatement)statement;
+			Command cmd = stmt.getCommand();
+			if (cmd != null) {
+				statements.add(new CommandStatement(cmd));
+				stmt.setCommand(null);
+				stmt.setExpression(null);
+				String fullName = ProcedureReservedWords.VARIABLES+ElementSymbol.SEPARATOR+ProcedureReservedWords.ROWCOUNT;
+				if (stmt.getVariable().getCanonicalName().equals(ProcedureReservedWords.ROWCOUNT) 
+						|| stmt.getVariable().getCanonicalName().equals(fullName)) {
+					return;
+				}
+				stmt.setExpression(new ElementSymbol(fullName));
+			}
+		}
 		statements.add(statement);
 	}
 	

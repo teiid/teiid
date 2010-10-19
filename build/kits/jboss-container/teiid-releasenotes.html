@@ -39,7 +39,8 @@
     <LI><B>Materialized View Performance</B> - materialized view tables will now automatically create and use non-unique secondary indexes for unique constraints and indexes defined on the view. 
     <LI><B>Binary Web Service Calls</B> - the ws translator now provides an invokeHttp procedure to return the blob contents and string content type of an http/https call.
     <LI><B>Improved clustering support</B> - see the Admin Guide chapter on clustering.
-    <LI><B>IPv6 support</B> - Teiid can started using IPv6 bind address and can be used with JDBC connection.   
+    <LI><B>IPv6 support</B> - Teiid can started using IPv6 bind address and can be used with JDBC connection.
+    <LI><B>SESSION_ID</b> - A new system function "SESSION_ID" is added to the system function library.    
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -48,11 +49,17 @@
 </ul>
 <h4>from 7.1</h4>
 <ul>
+  <li>Subqueries are no longer allowed to be SELECT INTO.
+  <li>INSERT/UPDATE/DELETE cannot be used to create implicit return cursors in non-update virtual procedures.  You can instead use "integer_var = UPDATE ...; SELECT integer_var;".  
   <li>The SYSADMIN schema was created to hold procedures and tables that should not be generally accessible.  SYS and pg_catalog are now always accessible - permissions do not apply to these schemas.  The SYS.getBinaryVDBResource, SYS.getCharacterVDBResource, and SYS.getVDBResourcePaths have been replaced with the
  SYSADMIN.VDBResources table.  The Matviews table and the refreshMatView/refreshMatViewRow procedures were also moved into SYSADMIN.
   <li>Overwriting an existing VDB will cause old connections to be terminated.  Production systems should rely on VDB versioning.
   <li>The jdbc:metamatrix JDBC URL prefix is no longer accepted.  Use jdbc:teiid instead.
   <li>Model visibility no longer restricts access to tables and procedures.  Setting visible to false will only hide entries from system tables.  Data roles should be used to restrict data access.
+  <li>Admin API "getWorkManagerStats" methods renamed to "getWorkerPoolStats". Also, "setRuntimeProperty" and "getProcesses" methods were removed.
+  <li>By default the "ENV" system function is now turned off. To enable it, edit the teiid-jboss-beans.xml configuration file.
+  <li>The use of VARIABLES.ROWCOUNT is now reserved. Use a different 
+  <li>Direct assignments in virtual procedures using stored procedures (e.g. var = EXEC foo()) are only valid if the procedure has a return parameter and no result set.  
 </ul>
 <h4>from 7.0</h4>
 <ul>

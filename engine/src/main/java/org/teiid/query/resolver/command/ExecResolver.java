@@ -96,7 +96,7 @@ public class ExecResolver extends ProcedureContainerResolver {
 
         // Get old parameters as they may have expressions set on them - collect
         // those expressions to copy later into the resolved parameters
-        List oldParams = storedProcedureCommand.getParameters();
+        List<SPParameter> oldParams = storedProcedureCommand.getParameters();
 
         boolean namedParameters = storedProcedureCommand.displayNamedParameters();
         
@@ -104,7 +104,7 @@ public class ExecResolver extends ProcedureContainerResolver {
         // as if named parameters were used.  Even though the StoredProcedure was not
         // parsed that way, the user may have entered no parameters with the intention
         // of relying on all default values of all optional parameters.
-        if (oldParams.size() == 0) {
+        if (oldParams.size() == 0 || (oldParams.size() == 1 && storedProcedureCommand.isCalledWithReturn())) {
         	storedProcedureCommand.setDisplayNamedParameters(true);
             namedParameters = true;
         }
@@ -113,81 +113,99 @@ public class ExecResolver extends ProcedureContainerResolver {
         // the procedure was parsed with named or unnamed parameters, the keys
         // for this map will either be the String names of the parameters or
         // the Integer indices, as entered in the user query
-        Map inputExpressions = new HashMap();
-        Iterator oldParamIter = oldParams.iterator();
-        while(oldParamIter.hasNext()) {
-            SPParameter param = (SPParameter) oldParamIter.next();
-            if(param.getExpression() != null) {
-                if (namedParameters) {
-                    if (inputExpressions.put(param.getName().toUpperCase(), param.getExpression()) != null) {
-                    	throw new QueryResolverException(QueryPlugin.Util.getString("ExecResolver.duplicate_named_params", param.getName().toUpperCase())); //$NON-NLS-1$
-                    }
-                } else {
-                    inputExpressions.put(new Integer(param.getIndex()), param.getExpression());
+        Map<Object, Expression> inputExpressions = new HashMap<Object, Expression>();
+        for (SPParameter param : oldParams) {
+            if(param.getExpression() == null) {
+            	continue;
+            }
+            if (namedParameters && param.getParameterType() != SPParameter.RETURN_VALUE) {
+                if (inputExpressions.put(param.getName().toUpperCase(), param.getExpression()) != null) {
+                	throw new QueryResolverException(QueryPlugin.Util.getString("ExecResolver.duplicate_named_params", param.getName().toUpperCase())); //$NON-NLS-1$
                 }
+            } else {
+                inputExpressions.put(param.getIndex(), param.getExpression());
             }
         }
 
         storedProcedureCommand.clearParameters();
-        
+        int origInputs = inputExpressions.size();
         /*
          * Take the values set from the stored procedure implementation, and match up with the
          * types of parameter it is from the metadata and then reset the newly joined parameters
          * into the stored procedure command.  If it is a result set get those columns and place
          * them into the stored procedure command as well.
          */
-        List metadataParams = storedProcedureInfo.getParameters();
-        List clonedMetadataParams = new ArrayList();
+        List<SPParameter> metadataParams = storedProcedureInfo.getParameters();
+        List<SPParameter> clonedMetadataParams = new ArrayList<SPParameter>(metadataParams.size());
         int inputParams = 0;
-        Iterator paramIter = metadataParams.iterator();
-        while(paramIter.hasNext()){
-            SPParameter metadataParameter  = (SPParameter)paramIter.next();
+        int outParams = 0;
+        boolean hasReturnValue = false;
+        for (SPParameter metadataParameter : metadataParams) {
             if( (metadataParameter.getParameterType()==ParameterInfo.IN) ||
                 (metadataParameter.getParameterType()==ParameterInfo.INOUT)){
 
                 inputParams++;
+            } else if (metadataParameter.getParameterType() == ParameterInfo.OUT) {
+            	outParams++;
+            } else if (metadataParameter.getParameterType() == ParameterInfo.RETURN_VALUE) {
+            	hasReturnValue = true;
             }
             SPParameter clonedParam = (SPParameter)metadataParameter.clone();
             clonedMetadataParams.add(clonedParam);
             storedProcedureCommand.setParameter(clonedParam);
         }
-
-        if(!namedParameters && (inputParams != inputExpressions.size())) {
-            throw new QueryResolverException("ERR.015.008.0007", QueryPlugin.Util.getString("ERR.015.008.0007", new Object[] {new Integer(inputParams), new Integer(inputExpressions.size()), storedProcedureCommand.getGroup().toString()})); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        if (storedProcedureCommand.isCalledWithReturn() && !hasReturnValue) {
+        	throw new QueryResolverException(QueryPlugin.Util.getString("ExecResolver.return_expected", storedProcedureCommand.getGroup()));  //$NON-NLS-1$
         }
 
+        if(!namedParameters && (inputParams > inputExpressions.size())) {
+            throw new QueryResolverException("ERR.015.008.0007", QueryPlugin.Util.getString("ERR.015.008.0007", inputParams, origInputs, storedProcedureCommand.getGroup())); //$NON-NLS-1$ //$NON-NLS-2$
+        }
+        
         // Walk through the resolved parameters and set the expressions from the
         // input parameters
-        paramIter = clonedMetadataParams.iterator();
         int exprIndex = 1;
         HashSet<String> expected = new HashSet<String>();
-        while(paramIter.hasNext()) {
-            SPParameter param = (SPParameter) paramIter.next();
-            if(param.getParameterType() == ParameterInfo.IN || param.getParameterType() == ParameterInfo.INOUT) {
-                
-                if (namedParameters) {
-                    String nameKey = param.getName();
-                    nameKey = metadata.getShortElementName(nameKey);
-                    nameKey = nameKey.toUpperCase();
-                    Expression expr = (Expression)inputExpressions.remove(nameKey);
-                    // With named parameters, have to check on optional params and default values
-                    if (expr == null) {
-                    	expr = ResolverUtil.getDefault(param.getParameterSymbol(), metadata);
-                    	param.setUsingDefault(true);
-                    	expected.add(nameKey);
-                    } 
-                    param.setExpression(expr);                    
-                } else {
-                    Expression expr = (Expression)inputExpressions.remove(new Integer(exprIndex));
-                    param.setExpression(expr);
-                }
-                exprIndex++;
+        if (storedProcedureCommand.isCalledWithReturn() && hasReturnValue) {
+	        for (SPParameter param : clonedMetadataParams) {
+	        	if (param.getParameterType() == SPParameter.RETURN_VALUE) {
+	        		Expression expr = inputExpressions.remove(exprIndex++);
+	                param.setExpression(expr);
+	        	}
+	        }
+        }
+        for (SPParameter param : clonedMetadataParams) {
+            if(param.getParameterType() == SPParameter.RESULT_SET || param.getParameterType() == SPParameter.RETURN_VALUE) {
+            	continue;
+            }
+            if (namedParameters) {
+                String nameKey = param.getName();
+                nameKey = metadata.getShortElementName(nameKey);
+                nameKey = nameKey.toUpperCase();
+                Expression expr = inputExpressions.remove(nameKey);
+                // With named parameters, have to check on optional params and default values
+                if (expr == null && param.getParameterType() != ParameterInfo.OUT) {
+                	expr = ResolverUtil.getDefault(param.getParameterSymbol(), metadata);
+                	param.setUsingDefault(true);
+                	expected.add(nameKey);
+                } 
+                param.setExpression(expr);                    
+            } else {
+            	if(param.getParameterType() == SPParameter.OUT) {
+            		continue;
+            	}
+                Expression expr = inputExpressions.remove(exprIndex++);
+                param.setExpression(expr);
             }
         }
         
         // Check for leftovers, i.e. params entered by user w/ wrong/unknown names
-        if (namedParameters && !inputExpressions.isEmpty()) {
-            throw new QueryResolverException(QueryPlugin.Util.getString("ExecResolver.invalid_named_params", inputExpressions.keySet(), expected)); //$NON-NLS-1$
+        if (!inputExpressions.isEmpty()) {
+        	if (namedParameters) {
+        		throw new QueryResolverException(QueryPlugin.Util.getString("ExecResolver.invalid_named_params", inputExpressions.keySet(), expected)); //$NON-NLS-1$
+        	}
+        	throw new QueryResolverException("ERR.015.008.0007", QueryPlugin.Util.getString("ERR.015.008.0007", inputParams, origInputs, storedProcedureCommand.getGroup().toString())); //$NON-NLS-1$ //$NON-NLS-2$
         }
         
         // Create temporary metadata that defines a group based on either the stored proc

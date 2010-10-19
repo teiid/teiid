@@ -82,6 +82,8 @@ public abstract class Statement implements LanguageObject {
      */
     public static final int TYPE_BREAK = 9;
     
+    public static final int TYPE_UPDATE = 10;
+    
 	/**
 	 * Return type of statement to make it easier to build switch statements by statement type.
 	 * @return Type from TYPE constants

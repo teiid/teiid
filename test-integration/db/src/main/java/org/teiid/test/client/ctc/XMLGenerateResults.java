@@ -123,6 +123,12 @@ public class XMLGenerateResults implements ResultsGenerator {
 	    String query, ResultSet result, Throwable ex, int testStatus)
 	    throws QueryTestFailedException {
 
+    	try {
+			System.out.println("GENERATE QRF: " + result.isClosed());
+		} catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 	File resultsFile = createNewResultsFile(queryID, querySetID,
 		getGenerateDir());
 	OutputStream outputStream;

@@ -38,6 +38,7 @@ import org.teiid.metadata.Column.SearchType;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.salesforce.execution.visitors.JoinQueryVisitor;
 import org.teiid.translator.salesforce.execution.visitors.SelectVisitor;
@@ -95,7 +96,7 @@ public class TestVisitors {
             Column obj = contactCols.get(i);
             obj.setNameInSource(contactNameInSource[i]);
         }
-        return new TransformationMetadata(null, new CompositeMetadataStore(store), null, null);
+        return new TransformationMetadata(null, new CompositeMetadataStore(store), null, null, FakeMetadataFactory.SFM.getSystemFunctions());
     }    
 
 	private static TranslationUtility translationUtility = new TranslationUtility(exampleSalesforce());

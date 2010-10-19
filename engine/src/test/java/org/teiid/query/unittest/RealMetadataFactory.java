@@ -209,8 +209,8 @@ public class RealMetadataFactory {
         spTest8a.setResultSet(rs2a);
         
         Schema pm4 = createPhysicalModel("pm4", metadataStore); //$NON-NLS-1$
-        ProcedureParameter rs4p1 = createParameter("inkey", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
-        ProcedureParameter rs4p2 = createParameter("ret", ParameterInfo.RETURN_VALUE, DataTypeManager.DefaultDataTypes.INTEGER);  //$NON-NLS-1$
+        ProcedureParameter rs4p1 = createParameter("ret", ParameterInfo.RETURN_VALUE, DataTypeManager.DefaultDataTypes.INTEGER);  //$NON-NLS-1$
+        ProcedureParameter rs4p2 = createParameter("inkey", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
         createStoredProcedure("spTest9", pm4, Arrays.asList(rs4p1, rs4p2), "spTest9"); //$NON-NLS-1$ //$NON-NLS-2$
         
         Schema pm3 = createPhysicalModel("pm3", metadataStore); //$NON-NLS-1$
@@ -256,11 +256,17 @@ public class RealMetadataFactory {
         
         createStoredProcedure("spRetOut", pm4, Arrays.asList(createParameter("ret", ParameterInfo.RETURN_VALUE, DataTypeManager.DefaultDataTypes.INTEGER),
         		createParameter("x", ParameterInfo.OUT, DataTypeManager.DefaultDataTypes.INTEGER)), "spRetOut"); //$NON-NLS-1$ //$NON-NLS-2$
-    	
+        
+        ColumnSet<Procedure> vsprs7 = createResultSet("TEIIDSP7.vsprs1", new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
+        ProcedureParameter vsp7p1 = createParameter("p1", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        QueryNode vspqn7 = new QueryNode("TEIIDSP7", "CREATE VIRTUAL PROCEDURE BEGIN declare integer x; x = exec spTest9(p1); select convert(x, string); END"); //$NON-NLS-1$ //$NON-NLS-2$
+        Procedure vsp7 = createVirtualProcedure("TEIIDSP7", mmspTest1, Arrays.asList(vsp7p1), vspqn7); //$NON-NLS-1$
+        vsp7.setResultSet(vsprs7);
+        
     	return createTransformationMetadata(metadataStore, "bqt"); 
     }
 
-	private static TransformationMetadata createTransformationMetadata(
+	public static TransformationMetadata createTransformationMetadata(
 			MetadataStore metadataStore, String vdbName) {
 		CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
     	VDBMetaData vdbMetaData = new VDBMetaData();
@@ -269,7 +275,7 @@ public class RealMetadataFactory {
     	for (Schema schema : metadataStore.getSchemas().values()) {
 			vdbMetaData.addModel(FakeMetadataFactory.createModel(schema.getName(), schema.isPhysical()));
 		}
-    	return new TransformationMetadata(vdbMetaData, store, null, null);
+    	return new TransformationMetadata(vdbMetaData, store, null, null, FakeMetadataFactory.SFM.getSystemFunctions());
 	}
     
     /** 

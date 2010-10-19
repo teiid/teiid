@@ -81,7 +81,7 @@ public class SessionMetadataMapper extends MetaMapper<SessionMetadata> {
 			CompositeMetaType composite = (CompositeMetaType) metaType;
 			CompositeValueSupport session = new CompositeValueSupport(composite);
 			
-			session.set(APPLICATION_NAME, SimpleValueSupport.wrap(object.getName()));
+			session.set(APPLICATION_NAME, SimpleValueSupport.wrap(object.getApplicationName()));
 			session.set(CREATED_TIME, SimpleValueSupport.wrap(object.getCreatedTime()));
 			session.set(CLIENT_HOST_NAME, SimpleValueSupport.wrap(object.getClientHostName()));
 			session.set(IP_ADDRESS, SimpleValueSupport.wrap(object.getIPAddress()));

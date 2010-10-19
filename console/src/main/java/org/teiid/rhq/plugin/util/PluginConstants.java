@@ -97,13 +97,16 @@ public interface PluginConstants {
 
 			public static interface Operations {
 
-				public final static String GET_QUERIES = "listQueries"; //$NON-NLS-1$					
+				public final static String GET_QUERIES = "listQueries"; //$NON-NLS-1$	
+				public final static String EXECUTE_QUERIES = "executeQuery"; //$NON-NLS-1$
 				public final static String GET_LONGRUNNINGQUERIES = "getLongRunningRequests"; //$NON-NLS-1$
 				public final static String KILL_REQUEST = "cancelRequest"; //$NON-NLS-1$
 				public final static String KILL_SESSION = "terminateSession"; //$NON-NLS-1$
 				public final static String GET_PROPERTIES = "getProperties"; //$NON-NLS-1$
 				public final static String GET_REQUESTS = "getRequestsUsingVDB"; //$NON-NLS-1$
 				public final static String GET_SESSIONS = "getSessions"; //$NON-NLS-1$
+				public final static String GET_MATVIEWS = "getMaterializedViews"; //$NON-NLS-1$
+				public final static String RELOAD_MATVIEW = "reloadMaterializedView"; //$NON-NLS-1$
 
 			}
 			
@@ -227,7 +230,11 @@ public interface PluginConstants {
 		 * @since 1.0
 		 */
 		public static interface Value {
-			public final static String STOP_NOW = "stopNow"; //$NON-NLS-1$               
+			public final static String STOP_NOW = "stopNow"; //$NON-NLS-1$  
+			public final static String MAT_VIEW_QUERY = "select SchemaName, Name, TargetSchemaName, TargetName, " + //$NON-NLS-1$ 
+														"Valid, LoadState, Updated, Cardinality from SYSADMIN.MATVIEWS " +  //$NON-NLS-1$  
+														"where SchemaName != 'pg_catalog'"; //$NON-NLS-1$  
+			public final static String MAT_VIEW_REFRESH = "exec SYSADMIN.refreshMatView('param1','param2');";  //$NON-NLS-1$
 			public final static String WAIT_UNTIL_FINISHED = "waitUntilFinished"; //$NON-NLS-1$
 
 			public final static String INCLUDE_SOURCE_QUERIES = "includeSourceQueries"; //$NON-NLS-1$
@@ -243,6 +250,9 @@ public interface PluginConstants {
 			public final static String VDB_VERSION = "vdbVersion"; //$NON-NLS-1$
 			public final static String NAME = "Name"; //$NON-NLS-1$
 			public final static String VALUE = "Value"; //$NON-NLS-1$
+			public final static String MATVIEW_SCHEMA = "schema"; //$NON-NLS-1$
+			public final static String MATVIEW_TABLE = "table"; //$NON-NLS-1$
+			public final static String INVALIDATE_MATVIEW = "invalidate"; //$NON-NLS-1$
 
 		}
 
