@@ -40,7 +40,9 @@
     <LI><B>Binary Web Service Calls</B> - the ws translator now provides an invokeHttp procedure to return the blob contents and string content type of an http/https call.
     <LI><B>Improved clustering support</B> - see the Admin Guide chapter on clustering.
     <LI><B>IPv6 support</B> - Teiid can started using IPv6 bind address and can be used with JDBC connection.
-    <LI><B>SESSION_ID</b> - A new system function "SESSION_ID" is added to the system function library.    
+    <LI><B>SESSION_ID</B> - A new system function "SESSION_ID" is added to the system function library.
+    <LI><B>Assignment Syntax Improvements<B> - Teiid's procedure syntax for assignments was clarified so that the assignment value must be a proper expression.  INSERT/UPDATE/DELETE update counts must be obtained from VARIABLES.ROWCOUNT, scalar values must be obtained via a scalar subquery.  
+    The parser will continue to accept the old syntax and convert the query into the proper form.      
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

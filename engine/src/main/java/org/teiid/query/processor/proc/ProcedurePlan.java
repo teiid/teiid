@@ -22,7 +22,7 @@
 
 package org.teiid.query.processor.proc;
 
-import static org.teiid.query.analysis.AnalysisRecord.PROP_OUTPUT_COLS;
+import static org.teiid.query.analysis.AnalysisRecord.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,9 +42,13 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.IndexedTupleSource;
 import org.teiid.common.buffer.TupleBatch;
+import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -73,6 +77,7 @@ public class ProcedurePlan extends ProcessorPlan {
 		QueryProcessor processor;
 		IndexedTupleSource ts;
 		List<?> currentRow;
+		TupleBuffer resultsBuffer;
 	}
 	
     private Program originalProgram;
@@ -418,7 +423,7 @@ public class ProcedurePlan extends ProcessorPlan {
 		return this.currentVarContext;
     }
 
-    public void executePlan(ProcessorPlan command, String rsName)
+    public void executePlan(ProcessorPlan command, String rsName, Map<ElementSymbol, ElementSymbol> procAssignments, boolean keepRs)
         throws TeiidComponentException, TeiidProcessingException {
     	
         CursorState state = this.cursorStates.get(rsName.toUpperCase());
@@ -433,16 +438,45 @@ public class ProcedurePlan extends ProcessorPlan {
 		        state = new CursorState();
 		        state.processor = new QueryProcessor(command, subContext, this.bufferMgr, this.dataMgr);
 		        state.ts = new BatchIterator(state.processor);
-		        
-	            //keep a reference to the tuple source
-	            //it may be the last one
-	            this.lastTupleSource = state.ts;
-	            
+		        if (procAssignments != null && state.processor.getOutputElements().size() - procAssignments.size() > 0) {
+		        	state.resultsBuffer = bufferMgr.createTupleBuffer(state.processor.getOutputElements().subList(0, state.processor.getOutputElements().size() - procAssignments.size()), getContext().getConnectionID(), TupleSourceType.PROCESSOR);
+		        }
 	            this.currentState = state;
         	}
         	//force execution to the first batch
         	this.currentState.ts.hasNext();
+            if (procAssignments != null) {
+            	while (this.currentState.ts.hasNext()) {
+            		if (this.currentState.currentRow != null && this.currentState.resultsBuffer != null) {
+            			this.currentState.resultsBuffer.addTuple(this.currentState.currentRow.subList(0, this.currentState.resultsBuffer.getSchema().size()));
+            			this.currentState.currentRow = null;
+            		}
+            		this.currentState.currentRow = this.currentState.ts.nextTuple();
+            	}
+            	//process assignments
+            	Assertion.assertTrue(this.currentState.currentRow != null);
+            	for (Map.Entry<ElementSymbol, ElementSymbol> entry : procAssignments.entrySet()) {
+            		if (entry.getValue() == null) {
+            			continue;
+            		}
+            		int index = this.currentState.processor.getOutputElements().indexOf(entry.getKey());
+            		getCurrentVariableContext().setValue(entry.getValue(), DataTypeManager.transformValue(this.currentState.currentRow.get(index), entry.getValue().getType()));
+				}
+            	//no resultset
+            	if (this.currentState.resultsBuffer == null) {
+            		this.currentState.processor.closeProcessing();
+            		this.currentState = null;
+            		return;
+            	}
+            	this.currentState.resultsBuffer.close();
+            	this.currentState.ts = this.currentState.resultsBuffer.createIndexedTupleSource();
+            }
 	        this.cursorStates.put(rsName.toUpperCase(), this.currentState);
+	        //keep a reference to the tuple source
+            //it may be the last one
+	        if (keepRs) {
+	        	this.lastTupleSource = this.currentState.ts;
+	        }
 	        this.currentState = null;
         }
     }
@@ -542,6 +576,9 @@ public class ProcedurePlan extends ProcessorPlan {
         CursorState state = this.cursorStates.remove(rsKey);
         if (state != null) {
         	state.processor.closeProcessing();
+        	if (state.resultsBuffer != null) {
+        		state.resultsBuffer.remove();
+        	}
         }
     }
 

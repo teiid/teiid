@@ -43,7 +43,7 @@ public class HardcodedDataManager implements
                                  ProcessorDataManager {
 
     // sql string to data
-    private Map data = new HashMap();
+    private Map<String, List[]> data = new HashMap<String, List[]>();
     
     // valid models - if null, any is assumed valid
     private Set validModels;
@@ -53,7 +53,7 @@ public class HardcodedDataManager implements
     private boolean blockOnce;
     
     // Collect all commands run against this class
-    private List commandHistory = new ArrayList(); // Commands
+    private List<Command> commandHistory = new ArrayList<Command>(); // Commands
     
     public HardcodedDataManager() {
     	this(true);
@@ -123,7 +123,7 @@ public class HardcodedDataManager implements
         
         List projectedSymbols = command.getProjectedSymbols();
 
-        List[] rows = (List[]) data.get(command.toString());
+        List[] rows = data.get(command.toString());
         if(rows == null) {
             if (mustRegisterCommands) {
                 throw new TeiidComponentException("Unknown command: " + command.toString());  //$NON-NLS-1$

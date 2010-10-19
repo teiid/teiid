@@ -91,7 +91,7 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
 
     public boolean testCondition(ProcedurePlan procEnv) throws TeiidComponentException, TeiidProcessingException {
         if(!procEnv.resultSetExists(rsName)) {
-            procEnv.executePlan(plan, rsName);            
+            procEnv.executePlan(plan, rsName, null, false);            
         }
         
         return procEnv.iterateCursor(rsName);

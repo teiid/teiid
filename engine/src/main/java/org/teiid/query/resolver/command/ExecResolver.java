@@ -270,33 +270,40 @@ public class ExecResolver extends ProcedureContainerResolver {
             while(paramIter.hasNext()) {
                 SPParameter param = (SPParameter) paramIter.next();
                 Expression expr = param.getExpression();
-                if(expr != null) {
-                    for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr)) {
-                        QueryResolver.setChildMetadata(container.getCommand(), command);
-                        
-                        QueryResolver.resolveCommand(container.getCommand(), Collections.EMPTY_MAP, metadata.getMetadata(), analysis);
-                    }
-                    ResolverVisitor.resolveLanguageObject(expr, null, externalGroups, metadata);
-                    Class paramType = param.getClassType();
+                if(expr == null) {
+                	continue;
+                }
+                for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr)) {
+                    QueryResolver.setChildMetadata(container.getCommand(), command);
+                    
+                    QueryResolver.resolveCommand(container.getCommand(), Collections.EMPTY_MAP, metadata.getMetadata(), analysis);
+                }
+                ResolverVisitor.resolveLanguageObject(expr, null, externalGroups, metadata);
+                Class paramType = param.getClassType();
 
-                    ResolverUtil.setDesiredType(expr, paramType, storedProcedureCommand);
-                    
-                    // Compare type of parameter expression against parameter type
-                    // and add implicit conversion if necessary
-                    Class exprType = expr.getType();
-                    if(paramType == null || exprType == null) {
-                        throw new QueryResolverException("ERR.015.008.0061", QueryPlugin.Util.getString("ERR.015.008.0061", storedProcedureCommand.getProcedureName(), param.getName())); //$NON-NLS-1$ //$NON-NLS-2$
-                    }
-                    String tgtType = DataTypeManager.getDataTypeName(paramType);
-                    String srcType = DataTypeManager.getDataTypeName(exprType);
-                    Expression result = null;
-                    
-                    try {
-                        result = ResolverUtil.convertExpression(expr, tgtType, metadata);
-                    } catch (QueryResolverException e) {
-                        throw new QueryResolverException(e, QueryPlugin.Util.getString("ExecResolver.Param_convert_fail", new Object[] { srcType, tgtType}));                                     //$NON-NLS-1$
-                    }                                                       
-                    param.setExpression(result);
+                ResolverUtil.setDesiredType(expr, paramType, storedProcedureCommand);
+                
+                // Compare type of parameter expression against parameter type
+                // and add implicit conversion if necessary
+                Class exprType = expr.getType();
+                if(paramType == null || exprType == null) {
+                    throw new QueryResolverException("ERR.015.008.0061", QueryPlugin.Util.getString("ERR.015.008.0061", storedProcedureCommand.getProcedureName(), param.getName())); //$NON-NLS-1$ //$NON-NLS-2$
+                }
+                String tgtType = DataTypeManager.getDataTypeName(paramType);
+                String srcType = DataTypeManager.getDataTypeName(exprType);
+                Expression result = null;
+                                
+                if (param.getParameterType() == SPParameter.RETURN_VALUE || param.getParameterType() == SPParameter.OUT) {
+                	if (!ResolverUtil.canImplicitlyConvert(tgtType, srcType)) {
+                		throw new QueryResolverException(QueryPlugin.Util.getString("ExecResolver.out_type_mismatch", param.getParameterSymbol(), tgtType, srcType)); //$NON-NLS-1$
+                	}
+                } else {
+	                try {
+	                    result = ResolverUtil.convertExpression(expr, tgtType, metadata);
+	                } catch (QueryResolverException e) {
+	                    throw new QueryResolverException(e, QueryPlugin.Util.getString("ExecResolver.Param_convert_fail", new Object[] { srcType, tgtType}));                                     //$NON-NLS-1$
+	                }                                                       
+	                param.setExpression(result);
                 }
             }
         }

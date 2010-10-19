@@ -2883,6 +2883,10 @@ public class TestResolver {
     	assertEquals(3, proc.getProjectedSymbols().size());
     }
     
+    @Test public void testOutWithWrongType() {
+    	helpResolveException("exec pm2.spTest8(inkey=>1, outkey=>{t '12:00:00'})", FakeMetadataFactory.exampleBQTCached());
+    }
+    
     @Test public void testProcRelationalWithOutParam() {
     	Query proc = (Query)helpResolve("select * from pm2.spTest8 where inkey = 1", FakeMetadataFactory.exampleBQTCached(), null);
     	assertEquals(3, proc.getProjectedSymbols().size());

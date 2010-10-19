@@ -26,11 +26,14 @@ package org.teiid.query.processor.proc;
 
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
+import java.util.Map;
+
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.sql.symbol.ElementSymbol;
 
 
 /**
@@ -42,6 +45,7 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
     protected String rsName;
     protected ProcessorPlan plan;
     private boolean update;
+    private Map<ElementSymbol, ElementSymbol> procAssignments;
     
     public CreateCursorResultSetInstruction(String rsName, ProcessorPlan plan, boolean update){
         this.rsName = rsName;
@@ -49,15 +53,11 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
         this.update = update;
     }
     
-    /**
-     * If the result set named rsName does not exist yet in the {@link ProcedurePlan}, then
-     * this instruction will define that result set.  It will then throw a BlockedException if
-     * this result set is selecting from other than temp groups (because those results will be
-     * delivered asynchronously).  IF the result set named rsName does already exist, this 
-     * instruction will just increment the program counter and do nothing else.
-     * @throws BlockedException if this result set is not selecting from
-     * only temp groups
-     */
+    public void setProcAssignments(
+			Map<ElementSymbol, ElementSymbol> procAssignments) {
+		this.procAssignments = procAssignments;
+	}
+    
     public void process(ProcedurePlan procEnv)
         throws BlockedException, TeiidComponentException, TeiidProcessingException {
 
@@ -65,7 +65,7 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
             procEnv.removeResults(rsName);
         }
         
-        procEnv.executePlan(plan, rsName);
+        procEnv.executePlan(plan, rsName, procAssignments, !update);
         
         if (update) {
         	boolean hasNext = procEnv.iterateCursor(rsName);
@@ -83,7 +83,9 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
      */
     public CreateCursorResultSetInstruction clone(){
         ProcessorPlan clonedPlan = this.plan.clone();
-        return new CreateCursorResultSetInstruction(this.rsName, clonedPlan, update);
+        CreateCursorResultSetInstruction clone = new CreateCursorResultSetInstruction(this.rsName, clonedPlan, update);
+        clone.setProcAssignments(procAssignments);
+        return clone;
     }
     
     public String toString(){

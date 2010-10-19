@@ -259,7 +259,7 @@ public class RealMetadataFactory {
         
         ColumnSet<Procedure> vsprs7 = createResultSet("TEIIDSP7.vsprs1", new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         ProcedureParameter vsp7p1 = createParameter("p1", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
-        QueryNode vspqn7 = new QueryNode("TEIIDSP7", "CREATE VIRTUAL PROCEDURE BEGIN declare integer x; x = exec spTest9(p1); select convert(x, string); END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn7 = new QueryNode("TEIIDSP7", "CREATE VIRTUAL PROCEDURE BEGIN declare integer x; x = exec spTest9(p1); declare integer y; exec spTest11(inkey=>x, outkey=>y); select convert(x, string) || y; END"); //$NON-NLS-1$ //$NON-NLS-2$
         Procedure vsp7 = createVirtualProcedure("TEIIDSP7", mmspTest1, Arrays.asList(vsp7p1), vspqn7); //$NON-NLS-1$
         vsp7.setResultSet(vsprs7);
         

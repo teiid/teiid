@@ -22,6 +22,9 @@
 
 package org.teiid.query.optimizer;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
@@ -46,6 +49,8 @@ import org.teiid.query.processor.proc.ProgramInstruction;
 import org.teiid.query.processor.proc.WhileInstruction;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.DynamicCommand;
+import org.teiid.query.sql.lang.SPParameter;
+import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.CommandStatement;
@@ -55,7 +60,9 @@ import org.teiid.query.sql.proc.LoopStatement;
 import org.teiid.query.sql.proc.RaiseErrorStatement;
 import org.teiid.query.sql.proc.Statement;
 import org.teiid.query.sql.proc.WhileStatement;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.visitor.CommandCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 
@@ -228,6 +235,29 @@ public final class ProcedurePlanner implements CommandPlanner {
 							command.getType() == Command.TYPE_INSERT 
 							|| command.getType() == Command.TYPE_UPDATE
 							|| command.getType() == Command.TYPE_DELETE);
+					//handle stored procedure calls
+					if (command.getType() == Command.TYPE_STORED_PROCEDURE) {
+						StoredProcedure sp = (StoredProcedure)command;
+						if (sp.isCallableStatement()) {
+							Map<ElementSymbol, ElementSymbol> assignments = new LinkedHashMap<ElementSymbol, ElementSymbol>();
+							for (SPParameter param : sp.getParameters()) {
+								if (param.getParameterType() == SPParameter.RESULT_SET 
+										|| param.getParameterType() == SPParameter.IN) {
+									continue;
+								}
+								Expression expr = param.getExpression();
+								if (expr instanceof Reference) {
+									expr = ((Reference)expr).getExpression();
+								}
+								ElementSymbol symbol = null;
+								if (expr instanceof ElementSymbol) {
+									symbol = (ElementSymbol)expr; 
+								}
+								assignments.put(param.getParameterSymbol(), symbol);
+							}
+							((CreateCursorResultSetInstruction)instruction).setProcAssignments(assignments);
+						}
+					}
 				}
                 
 				if(debug) {
