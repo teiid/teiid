@@ -126,12 +126,14 @@ public class NestedTableJoinStrategy extends JoinStrategy {
 				
 				List<?> outputTuple = outputTuple(this.leftSource.getCurrentTuple(), this.rightSource.getCurrentTuple());
                 
-                if (this.joinNode.matchesCriteria(outputTuple)) {
-                	joinNode.addBatchRow(outputTuple);
-                	outerMatched = true;
-                } 
+                boolean matches = this.joinNode.matchesCriteria(outputTuple);
                 
                 rightSource.saveNext();
+
+                if (matches) {
+                	outerMatched = true;
+                	joinNode.addBatchRow(outputTuple);
+                }
 			}
 			
 			if (!outerMatched && this.joinNode.getJoinType() == JoinType.JOIN_LEFT_OUTER) {
