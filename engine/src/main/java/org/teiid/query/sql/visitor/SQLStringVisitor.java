@@ -908,35 +908,35 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(SPACE);
         append(obj.getProcedureName());
         append("("); //$NON-NLS-1$
-        List params = obj.getInputParameters();
-        if (params != null) {
-            Iterator iter = params.iterator();
-            while (iter.hasNext()) {
-                SPParameter param = (SPParameter)iter.next();
+        boolean first = true;
+        for (SPParameter param : obj.getInputParameters()) {
+            if (param.isUsingDefault()) {
+            	continue;
+            }
+            if (first) {
+            	first = false;
+            } else {
+            	append(", "); //$NON-NLS-1$
+            }
+            if (obj.displayNamedParameters()) {
+                append(escapeSinglePart(ElementSymbol.getShortName(param.getParameterSymbol().getOutputName())));
+                append(" => "); //$NON-NLS-1$
+            }
 
-                if (obj.displayNamedParameters()) {
-                    append(escapeSinglePart(ElementSymbol.getShortName(param.getParameterSymbol().getOutputName())));
-                    append(" => "); //$NON-NLS-1$
-                }
-
-                if (param.getExpression() == null) {
-                    if (param.getName() != null) {
-                        outputDisplayName(obj.getParamFullName(param));
-                    } else {
-                        append("?"); //$NON-NLS-1$
-                    }
+            if (param.getExpression() == null) {
+                if (param.getName() != null) {
+                    outputDisplayName(obj.getParamFullName(param));
                 } else {
-                    boolean addParens = !obj.displayNamedParameters() && param.getExpression() instanceof CompareCriteria;
-                    if (addParens) {
-                        append(Tokens.LPAREN);
-                    }
-                    visitNode(param.getExpression());
-                    if (addParens) {
-                        append(Tokens.RPAREN);
-                    }
+                    append("?"); //$NON-NLS-1$
                 }
-                if (iter.hasNext()) {
-                    append(", "); //$NON-NLS-1$
+            } else {
+                boolean addParens = !obj.displayNamedParameters() && param.getExpression() instanceof CompareCriteria;
+                if (addParens) {
+                    append(Tokens.LPAREN);
+                }
+                visitNode(param.getExpression());
+                if (addParens) {
+                    append(Tokens.RPAREN);
                 }
             }
         }
