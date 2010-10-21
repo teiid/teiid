@@ -198,7 +198,19 @@ public class TestTextTable {
         process(sql, expected);
     }
 
-    public static void process(String sql, List[] expectedResults) throws Exception {    
+	@Test public void testTextTableMultiBatch() throws Exception {
+		String sql = "select x.* from (select * from pm1.g1 where e1 = 'c') y, texttable(e1 || '\n' || e2 || '\n' || e3 COLUMNS x string) x";
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("c"),
+        		Arrays.asList("1"),
+        		Arrays.asList("true"),
+        };    
+
+        process(sql, expected);
+    }   
+	
+	public static void process(String sql, List[] expectedResults) throws Exception {    
     	FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
     	ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
