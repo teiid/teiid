@@ -28,6 +28,7 @@ import java.sql.SQLXML;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -88,9 +89,26 @@ import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.symbol.DerivedColumn;
 import org.teiid.query.sql.symbol.XMLNamespaces;
 import org.teiid.query.sql.symbol.XMLNamespaces.NamespaceItem;
+import org.teiid.translator.WSConnection.Util;
 
 @SuppressWarnings("serial")
 public class SaxonXQueryExpression {
+	
+	public static class Result {
+		public SequenceIterator iter;
+		public List<Source> sources = new LinkedList<Source>();
+		
+		public void close() {
+			for (Source source : sources) {
+				Util.closeSource(source);
+			}
+			if (iter != null) {
+				iter.close();
+			}
+			sources.clear();
+			iter = null;
+		}
+	}
 	
 	private static final Expression DUMMY_EXPRESSION = new Expression() {
 		@Override
@@ -133,7 +151,7 @@ public class SaxonXQueryExpression {
 	private net.sf.saxon.query.XQueryExpression xQuery;    
 	private Configuration config = new Configuration();
 	private PathMapRoot contextRoot;
-	
+
     public SaxonXQueryExpression(String xQueryString, XMLNamespaces namespaces, List<DerivedColumn> passing, List<XMLTable.XMLColumn> columns) 
     throws QueryResolverException {
         config.setErrorListener(ERROR_LISTENER);
@@ -354,47 +372,55 @@ public class SaxonXQueryExpression {
 	    	xmlColumn.setPathExpression(exp);
 		}
 	}
-    
-    public SequenceIterator evaluateXQuery(Object context, Map<String, Object> parameterValues) throws TeiidProcessingException {
+	
+    public Result evaluateXQuery(Object context, Map<String, Object> parameterValues) throws TeiidProcessingException {
         DynamicQueryContext dynamicContext = new DynamicQueryContext(config);
-        
+
+        Result result = new Result();
         try {
-	        for (Map.Entry<String, Object> entry : parameterValues.entrySet()) {
-	            Object value = entry.getValue();
-	            if(value instanceof SQLXML) {                    
-	            	value = XMLSystemFunctions.convertToSource(value);
-	            } else if (value instanceof java.util.Date) {
-	            	java.util.Date d = (java.util.Date)value;
-	            	value = XMLSystemFunctions.convertToAtomicValue(value);
-	            }
-	            dynamicContext.setParameter(entry.getKey(), value);                
+	        try {
+		        for (Map.Entry<String, Object> entry : parameterValues.entrySet()) {
+		            Object value = entry.getValue();
+		            if(value instanceof SQLXML) {                    
+		            	value = XMLSystemFunctions.convertToSource(value);
+		            	result.sources.add((Source)value);
+		            } else if (value instanceof java.util.Date) {
+		            	value = XMLSystemFunctions.convertToAtomicValue(value);
+		            }
+		            dynamicContext.setParameter(entry.getKey(), value);                
+		        }
+	        } catch (TransformerException e) {
+	        	throw new TeiidProcessingException(e);
 	        }
-        } catch (TransformerException e) {
-        	throw new TeiidProcessingException(e);
+	        if (context != null) {
+	        	Source source = XMLSystemFunctions.convertToSource(context);
+	        	result.sources.add(source);
+	            if (contextRoot != null) {
+	            	//create our own filter as this logic is not provided in the free saxon
+	                ProxyReceiver filter = new PathMapFilter(contextRoot);
+	                AugmentedSource sourceInput = AugmentedSource.makeAugmentedSource(source);
+	                sourceInput.addFilter(filter);
+	                source = sourceInput;
+	            }
+	            DocumentInfo doc;
+				try {
+					doc = config.buildDocument(source);
+				} catch (XPathException e) {
+					throw new TeiidProcessingException(e, QueryPlugin.Util.getString("SaxonXQueryExpression.bad_context")); //$NON-NLS-1$
+				}
+		        dynamicContext.setContextItem(doc);
+	        }
+	        try {
+	        	result.iter = xQuery.iterator(dynamicContext);
+	        	return result;
+	        } catch (TransformerException e) {
+	        	throw new TeiidProcessingException(e, QueryPlugin.Util.getString("SaxonXQueryExpression.bad_xquery")); //$NON-NLS-1$
+	        }       
+        } finally {
+        	if (result.iter == null) {
+        		result.close();
+        	}
         }
-        
-        if (context != null) {
-        	Source source = XMLSystemFunctions.convertToSource(context);
-            if (contextRoot != null) {
-            	//create our own filter as this logic is not provided in the free saxon
-                ProxyReceiver filter = new PathMapFilter(contextRoot);
-                AugmentedSource sourceInput = AugmentedSource.makeAugmentedSource(source);
-                sourceInput.addFilter(filter);
-                source = sourceInput;
-            }
-            DocumentInfo doc;
-			try {
-				doc = config.buildDocument(source);
-			} catch (XPathException e) {
-				throw new TeiidProcessingException(e, QueryPlugin.Util.getString("SaxonXQueryExpression.bad_context")); //$NON-NLS-1$
-			}
-	        dynamicContext.setContextItem(doc);
-        }
-        try {
-        	return xQuery.iterator(dynamicContext);
-        } catch (TransformerException e) {
-        	throw new TeiidProcessingException(e, QueryPlugin.Util.getString("SaxonXQueryExpression.bad_xquery")); //$NON-NLS-1$
-        }       
     }
     
 	public XMLType createXMLType(final SequenceIterator iter, BufferManager bufferManager, boolean emptyOnEmpty) throws XPathException, TeiidComponentException, TeiidProcessingException {
