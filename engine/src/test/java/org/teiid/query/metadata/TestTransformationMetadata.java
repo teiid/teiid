@@ -31,7 +31,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.jboss.virtual.VirtualFile;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -42,6 +44,7 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.translator.TranslatorException;
 
@@ -71,6 +74,14 @@ public class TestTransformationMetadata {
 		
 		MetadataFactory mf1 = new MetadataFactory("x1", datatypes, new Properties()); //$NON-NLS-1$
 		mf1.addProcedure("y"); //$NON-NLS-1$
+		
+		Table table = mf1.addTable("doc");
+		table.setSchemaPaths(Arrays.asList("../../x.xsd"));
+		table.setResourcePath("/a/b/doc.xmi");
+		
+		HashMap<String, Resource> resources = new HashMap<String, Resource>();
+		resources.put("/x.xsd", new Resource(Mockito.mock(VirtualFile.class), true));
+		
 		CompositeMetadataStore cms = new CompositeMetadataStore(Arrays.asList(mf.getMetadataStore(), mf1.getMetadataStore()));
 		
 		VDBMetaData vdb = new VDBMetaData();
@@ -79,8 +90,9 @@ public class TestTransformationMetadata {
 		
 		vdb.addModel(buildModel("x"));
 		vdb.addModel(buildModel("x1"));
+		vdb.addModel(buildModel("y"));
 		
-		return new TransformationMetadata(vdb, cms, null, null, FakeMetadataFactory.SFM.getSystemFunctions());
+		return new TransformationMetadata(vdb, cms, resources, null, FakeMetadataFactory.SFM.getSystemFunctions());
 	}
 	
 	ModelMetaData buildModel(String name) {
@@ -129,6 +141,11 @@ public class TestTransformationMetadata {
 	@Test public void testElementId() throws Exception {
 		TransformationMetadata tm = exampleTransformationMetadata();
 		tm.getElementID("x.FoO.coL");
+	}
+	
+	@Test public void testRelativeSchemas() throws Exception {
+		TransformationMetadata tm = exampleTransformationMetadata();
+		assertEquals(1, tm.getXMLSchemas(tm.getGroupID("x1.doc")).size());
 	}
 	
 }

@@ -783,10 +783,22 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         	path = path.replace(File.separatorChar, '/');
         }
         for (String string : schemaPaths) {
-        	SQLXMLImpl schema = getVDBResourceAsSQLXML(string);
-        	
+        	String parentPath = path;
+        	boolean relative = false;
+        	while (string.startsWith("../")) { //$NON-NLS-1$
+        		relative = true;
+        		string = string.substring(3);
+        		parentPath = new File(parentPath).getParent();
+        	}
+        	SQLXMLImpl schema = null;
+        	if (!relative) {
+        		schema = getVDBResourceAsSQLXML(string);
+        	}
         	if (schema == null) {
-        		schema = getVDBResourceAsSQLXML(path + '/' + string);
+        		if (!parentPath.endsWith("/")) { //$NON-NLS-1$
+        			parentPath += "/"; //$NON-NLS-1$
+        		}
+        		schema = getVDBResourceAsSQLXML(parentPath + string);
         	}
         	
         	if (schema == null) {
