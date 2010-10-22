@@ -39,6 +39,7 @@ import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
+import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.processor.ProcessorPlan;
@@ -378,24 +379,20 @@ public final class RuleCollapseSource implements OptimizerRule {
 
     private void processLimit(PlanNode node,
                               QueryCommand query, QueryMetadataInterface metadata) {
+    	
         Expression limit = (Expression)node.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT);
-        if (limit != null) {
-            if (query.getLimit() != null) {
-                Expression oldlimit = query.getLimit().getRowLimit();
-                query.getLimit().setRowLimit(RulePushLimit.getMinValue(limit, oldlimit)); 
-            } else {
-                query.setLimit(new Limit(null, limit));
-            }
-        }
         Expression offset = (Expression)node.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT);
-        if (offset != null) {
-            if (query.getLimit() != null) {
-                Expression oldoffset = query.getLimit().getOffset();
-                query.getLimit().setOffset(RulePushLimit.getSum(offset, oldoffset, metadata.getFunctionLibrary())); 
-            } else {
-                query.setLimit(new Limit(offset, null));
-            }
+        
+        PlanNode limitNode = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
+        Expression childLimit = null;
+        Expression childOffset = null;
+        if (query.getLimit() != null) {
+        	childLimit = query.getLimit().getRowLimit();
+        	childOffset = query.getLimit().getOffset();
         }
+        RulePushLimit.combineLimits(limitNode, metadata, limit, offset, childLimit, childOffset);
+        
+        query.setLimit(new Limit((Expression)limitNode.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT), (Expression)limitNode.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT)));
     }
 
     /** 
