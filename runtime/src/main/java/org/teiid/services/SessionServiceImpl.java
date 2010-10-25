@@ -48,7 +48,6 @@ import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.security.SessionToken;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.deployers.VDBRepository;
-import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.service.SessionService;
 import org.teiid.dqp.service.SessionServiceException;
@@ -221,18 +220,19 @@ public class SessionServiceImpl implements SessionService {
 			else {
 				vdb = this.vdbRepository.getVDB(vdbName, Integer.parseInt(vdbVersion));
 			}         
-		} catch (VirtualDatabaseException e) {
-			throw new SessionServiceException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, vdbVersion)); //$NON-NLS-1$ 
 		} catch (NumberFormatException e) {
-			throw new SessionServiceException(e, RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, vdbVersion)); //$NON-NLS-1$
+			throw new SessionServiceException(e, RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._3", vdbVersion)); //$NON-NLS-1$
 		}
 		
 		if (vdb == null) {
 			throw new SessionServiceException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._1", vdbName, vdbVersion)); //$NON-NLS-1$
 		}
 		
-		if (vdb.getStatus() != VDB.Status.ACTIVE || vdb.getConnectionType() == ConnectionType.NONE) {
+		if (vdb.getStatus() != VDB.Status.ACTIVE) {
 			throw new SessionServiceException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, vdbVersion)); //$NON-NLS-1$
+		}
+		if (vdb.getConnectionType() == ConnectionType.NONE) {
+			throw new SessionServiceException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._4", vdbName, vdbVersion)); //$NON-NLS-1$
 		}
 		return vdb;
 	}
