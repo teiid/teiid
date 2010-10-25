@@ -34,6 +34,7 @@ import org.junit.Test;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
+import org.teiid.metadata.Column;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
@@ -41,6 +42,7 @@ import org.teiid.translator.jdbc.SQLConversionVisitor;
 
 /**
  */
+@SuppressWarnings("nls")
 public class TestOracleConvertModifier {
 
     private static final LanguageFactory LANG_FACTORY = new LanguageFactory();
@@ -499,6 +501,13 @@ public class TestOracleConvertModifier {
     @Test public void testTimestampToString() throws Exception {
         Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 10000000);        
         helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "string", "to_char({ts '2003-11-01 12:05:02.01'}, 'YYYY-MM-DD HH24:MI:SS.FF')"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testTimestampToString1() throws Exception {
+    	Column column = new Column();
+    	column.setNativeType("DATE");
+    	column.setNameInSource("dt");
+        helpTest(LANG_FACTORY.createColumnReference("dt", LANG_FACTORY.createNamedTable("x", null, null), column, Timestamp.class), "string", "to_char(x.dt, 'YYYY-MM-DD HH24:MI:SS')"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testTimestampToDate() throws Exception {
