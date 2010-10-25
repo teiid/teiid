@@ -31,6 +31,7 @@
 	       <LI><B>Non-Recursive Common Table Expressions</B> - The WITH clause (and associated pushdown) for non-recursive queries is now supported.
 	       <LI><B>Explicit Table Syntax</B> - TABLE x can now be used as a shortcut for SELECT * FROM x
 	    </UL>
+	<LI><B>JSON Support</B> - JSON, which could be obtained through the ws-translator using http calls or other methods, can be converted to XML using the system function jsonToXml.  XMLTABLE and other integration logic can then be used on the JSON results.
     <LI><B>Transaction Statements</B> - JDBC/ODBC now accepts START TRANSACTION, COMMIT, and ROLLBACK statements to control local transactions.
 	<LI><B>Procedure Result Caching</B> - virtual procedure definitions may use a cache hint to cache results in the result set cache.
 	<LI><B>Improved Plan Caching</B> - plans used by internal materialization and stored procedure plans will be automatically cached in the prepared plan cache.  Improvements were also made to reduce the memory footprint of the plans.
@@ -52,7 +53,7 @@
 <h4>from 7.1</h4>
 <ul>
   <li>Subqueries are no longer allowed to be SELECT INTO.
-  <li>INSERT/UPDATE/DELETE cannot be used to create implicit return cursors in non-update virtual procedures.  You can instead use "integer_var = UPDATE ...; SELECT integer_var;".  
+  <li>INSERT/UPDATE/DELETE cannot be used to create implicit return cursors in non-update virtual procedures.  You can instead use "UPDATE ...; SELECT VARIABLES.ROWCOUNT;".  
   <li>The SYSADMIN schema was created to hold procedures and tables that should not be generally accessible.  SYS and pg_catalog are now always accessible - permissions do not apply to these schemas.  The SYS.getBinaryVDBResource, SYS.getCharacterVDBResource, and SYS.getVDBResourcePaths have been replaced with the
  SYSADMIN.VDBResources table.  The Matviews table and the refreshMatView/refreshMatViewRow procedures were also moved into SYSADMIN.
   <li>Overwriting an existing VDB will cause old connections to be terminated.  Production systems should rely on VDB versioning.
@@ -60,8 +61,8 @@
   <li>Model visibility no longer restricts access to tables and procedures.  Setting visible to false will only hide entries from system tables.  Data roles should be used to restrict data access.
   <li>Admin API "getWorkManagerStats" methods renamed to "getWorkerPoolStats". Also, "setRuntimeProperty" and "getProcesses" methods were removed.
   <li>By default the "ENV" system function is now turned off. To enable it, edit the teiid-jboss-beans.xml configuration file.
-  <li>The use of VARIABLES.ROWCOUNT is now reserved. Use a different 
-  <li>Direct assignments in virtual procedures using stored procedures (e.g. var = EXEC foo()) are only valid if the procedure has a return parameter and no result set.  
+  <li>The use of VARIABLES.ROWCOUNT is now reserved.
+  <li>Exec statements of the form "var = EXEC foo()" are only valid if the procedure foo has a return parameter.
 </ul>
 <h4>from 7.0</h4>
 <ul>
@@ -144,6 +145,7 @@ See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on c
 The following components have been updated:
 <h4>From 7.1</h4>
 <ul>
+    <li>json-simple 1.1 was added.
 	<li>Netty was upgraded to 3.2.1	
 </ul>
 <h4>From 7.0</h4>

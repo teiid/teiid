@@ -1916,6 +1916,44 @@
     <title>XML Functions</title>
     <para>XML functions provide functionality for working with XML data. </para>
     <section>
+    	<title>JSONTOXML</title>
+    	<para>Returns an xml document from JSON.</para>
+        <para><synopsis>JSONTOXML(rootElementName, json)</synopsis></para>
+        <para>rootElementName is a string, json is in {clob, blob}. Return value is xml.</para>
+        <para>The appropriate UTF encoding (8, 16LE. 16BE, 32LE, 32BE) will be detected for JSON blobs.  If another encoding is used, see the to_chars function.</para>
+        <para>The result is always a well-formed XML document.</para>
+        <para>The mapping to XML uses the following rules:
+        <itemizedlist>
+        	<listitem>
+        		<para>The current element name is initially the rootElementName, and becomes the object value name as the JSON structure is traversed.</para>
+        	</listitem>
+        	<listitem>
+        		<para>All element names must be valid xml 1.1 names.  Invalid names are fully escaped according to the SQLXML specification.</para>
+        	</listitem>
+        	<listitem>
+        		<para>Each object or primitive value will be enclosed in an element with the current name.</para>
+        	</listitem>
+        	<listitem>
+        		<para>Unless an array value is the root, it will not be enclosed in an additional element.</para>
+        	</listitem>
+        </itemizedlist> 
+        </para>
+        <example>
+        	<title>Sample JSON to XML for jsonToXml('person', x)</title>
+        	<para>JSON:</para>
+        	<programlisting language="JSON">{ "firstName" : "John" , "children" : [ "Randy", "Judy" ] }</programlisting>
+        	<para>XML:</para>
+        	<programlisting language="XML"><![CDATA[<?xml version="1.0" ?><person><firstName>John</firstName><children>Randy</children><children>Judy<children></person>]]></programlisting>
+        </example>
+        <example>
+        	<title>Sample JSON to XML for jsonToXml('person', x) with a root array.</title>
+        	<para>JSON:</para>
+        	<programlisting language="JSON">[{ "firstName" : "George" }, { "firstName" : "Jerry" }]</programlisting>
+        	<para>XML (Notice there is an extra "person" wrapping element to keep the XML well-formed):</para>
+        	<programlisting language="XML"><![CDATA[<?xml version="1.0" ?><person><person><firstName>George</firstName></person><person><firstName>Jerry</firstName></person></person>]]></programlisting>
+        </example>
+    </section>
+    <section>
     	<title>XMLCOMMENT</title>
     	<para>Returns an xml comment.</para>
     	<para><synopsis>XMLCOMMENT(comment)</synopsis></para>

@@ -26,19 +26,29 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.sql.SQLException;
+import java.sql.SQLXML;
 import java.util.TimeZone;
+
+import javax.sql.rowset.serial.SerialBlob;
+import javax.sql.rowset.serial.SerialClob;
+import javax.sql.rowset.serial.SerialException;
 
 import net.sf.saxon.trans.XPathException;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.unittest.TimestampUtil;
+import org.teiid.query.util.CommandContext;
 
 @SuppressWarnings("nls")
 public class TestXMLSystemFunctions {
@@ -181,6 +191,32 @@ public class TestXMLSystemFunctions {
 	@Test public void testNameEscaping2() throws Exception {
 		assertEquals("_u000A_", XMLSystemFunctions.escapeName(new String(new char[] {10}), true));
     }
+	
+	@Test public void testJsonToXml() throws Exception {
+		String json = "[0,{\"1\":{\"2\":{\"3\":{\"4\":[5,{\"6\":7}]}}}}]";
+		String expected = "<?xml version=\"1.0\" ?><Array><Array>0</Array><Array><_u0031_><_u0032_><_u0033_><_u0034_><_u0034_>5</_u0034_><_u0034_><_u0036_>7</_u0036_></_u0034_></_u0034_></_u0033_></_u0032_></_u0031_></Array></Array>";
+		helpTestJson(json, "Array", expected);
+	}
+
+	private void helpTestJson(String json, String rootName, String expected)
+			throws SQLException, TeiidComponentException,
+			TeiidProcessingException, SerialException, IOException {
+		CommandContext cc = new CommandContext();
+		cc.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
+		SQLXML xml = XMLSystemFunctions.jsonToXml(cc, rootName, new SerialClob(json.toCharArray()));
+		assertEquals(expected, xml.getString());
+		xml = XMLSystemFunctions.jsonToXml(cc, rootName, new SerialBlob(json.getBytes(Charset.forName("UTF-8"))));
+		assertEquals(expected, xml.getString());
+		xml = XMLSystemFunctions.jsonToXml(cc, rootName, new SerialBlob(json.getBytes(Charset.forName("UTF-32BE"))));
+		assertEquals(expected, xml.getString());
+	}
+	
+	@Test public void testJsonToXml1() throws Exception {
+		String json = "{ \"firstName\": \"John\", \"lastName\": \"Smith\", \"age\": 25, \"address\": { \"streetAddress\": \"21 2nd Street\", \"city\": \"New York\", \"state\": \"NY\", "+
+		         "\"postalCode\": \"10021\" }, \"phoneNumber\": [ { \"type\": \"home\", \"number\": \"212 555-1234\" }, { \"type\": \"fax\", \"number\": \"646 555-4567\" } ] }"; 
+		String expected = "<?xml version=\"1.0\" ?><Person><firstName>John</firstName><lastName>Smith</lastName><age>25</age><address><streetAddress>21 2nd Street</streetAddress><city>New York</city><state>NY</state><postalCode>10021</postalCode></address><phoneNumber><phoneNumber><type>home</type><number>212 555-1234</number></phoneNumber><number><type>fax</type><number>646 555-4567</number></number></phoneNumber></Person>";
+		helpTestJson(json, "Person", expected);
+	}
 	
 	@BeforeClass static public void setUpOnce() {
 		TimeZone.setDefault(TimeZone.getTimeZone("GMT-6:00"));

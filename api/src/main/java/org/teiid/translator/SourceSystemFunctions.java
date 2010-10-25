@@ -142,5 +142,7 @@ public class SourceSystemFunctions {
 	public static final String XMLCONCAT = "xmlconcat"; //$NON-NLS-1$
 	public static final String XMLCOMMENT = "xmlcomment"; //$NON-NLS-1$
 	public static final String XMLPI = "xmlpi"; //$NON-NLS-1$
+	
+	public static final String JSONTOXML = "jsontoxml"; //$NON-NLS-1$
 
 }

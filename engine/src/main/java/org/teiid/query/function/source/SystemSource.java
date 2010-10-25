@@ -179,6 +179,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         addXmlConcat();
         addXmlComment();
         addXmlPi();
+        addJsonToXml();
         
         addSecurityFunctions();
         
@@ -968,6 +969,19 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 		            new FunctionParameter("name", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xmlpi_param1")), //$NON-NLS-1$ //$NON-NLS-2$
 		            new FunctionParameter("value", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.xmlpi_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.xmlpi_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    private void addJsonToXml() {
+        functions.add(new FunctionMethod(SourceSystemFunctions.JSONTOXML, QueryPlugin.Util.getString("SystemSource.jsonToXml_description"), XML, XML_FUNCTION_CLASS, "jsonToXml", //$NON-NLS-1$ //$NON-NLS-2$  
+                new FunctionParameter[] { 
+        	new FunctionParameter("rootElementName", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.jsonToXml_param1")), //$NON-NLS-1$ //$NON-NLS-2$
+        	new FunctionParameter("json", DataTypeManager.DefaultDataTypes.CLOB, QueryPlugin.Util.getString("SystemSource.jsonToXml_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.jsonToXml_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+        functions.add(new FunctionMethod(SourceSystemFunctions.JSONTOXML, QueryPlugin.Util.getString("SystemSource.jsonToXml_description"), XML, XML_FUNCTION_CLASS, "jsonToXml", //$NON-NLS-1$ //$NON-NLS-2$  
+                new FunctionParameter[] { 
+        	new FunctionParameter("rootElementName", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.jsonToXml_param1")), //$NON-NLS-1$ //$NON-NLS-2$
+        	new FunctionParameter("json", DataTypeManager.DefaultDataTypes.BLOB, QueryPlugin.Util.getString("SystemSource.jsonToXml_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$ 
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.XML, QueryPlugin.Util.getString("SystemSource.jsonToXml_result")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     private void addXmlConcat() {

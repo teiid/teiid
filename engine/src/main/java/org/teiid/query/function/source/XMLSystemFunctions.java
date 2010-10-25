@@ -24,10 +24,14 @@ package org.teiid.query.function.source;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PushbackInputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
 import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Date;
@@ -36,6 +40,7 @@ import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.xml.XMLConstants;
@@ -48,6 +53,7 @@ import javax.xml.stream.XMLEventWriter;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
@@ -69,6 +75,9 @@ import net.sf.saxon.value.DateValue;
 import net.sf.saxon.value.DayTimeDurationValue;
 import net.sf.saxon.value.TimeValue;
 
+import org.json.simple.parser.ContentHandler;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.ClobImpl;
@@ -91,6 +100,135 @@ import org.teiid.translator.WSConnection.Util;
  */
 public class XMLSystemFunctions {
 	
+	private static final Charset UTF_32BE = Charset.forName("UTF-32BE"); //$NON-NLS-1$
+	private static final Charset UTF_16BE = Charset.forName("UTF-16BE"); //$NON-NLS-1$
+	private static final Charset UTF_32LE = Charset.forName("UTF-32LE"); //$NON-NLS-1$
+	private static final Charset UTF_16LE = Charset.forName("UTF-16LE"); //$NON-NLS-1$
+	private static final Charset UTF_8 = Charset.forName("UTF-8"); //$NON-NLS-1$
+
+	//TODO: this could be done fully streaming without holding the intermediate xml output
+	private static final class JsonToXmlContentHandler implements
+			ContentHandler {
+		private final XMLStreamWriter streamWriter;
+		private String currentName;
+		private LinkedList<Boolean> inArray = new LinkedList<Boolean>();
+
+		private JsonToXmlContentHandler(String rootName,
+				XMLStreamWriter streamWriter) {
+			this.streamWriter = streamWriter;
+			this.currentName = rootName;
+		}
+
+		@Override
+		public boolean startObjectEntry(String key)
+				throws org.json.simple.parser.ParseException, IOException {
+			currentName = key;
+			start();
+			return true;
+		}
+
+		@Override
+		public boolean startObject() throws org.json.simple.parser.ParseException,
+				IOException {
+			if (inArray.peek()) {
+				start();
+			}
+			inArray.push(false);
+			return true;
+		}
+
+		private void start()
+				throws IOException {
+			try {
+				streamWriter.writeStartElement(escapeName(currentName, true));
+			} catch (XMLStreamException e) {
+				throw new IOException(e);
+			}
+		}
+
+		@Override
+		public void startJSON() throws org.json.simple.parser.ParseException,
+				IOException {
+			try {
+				streamWriter.writeStartDocument();
+			} catch (XMLStreamException e) {
+				throw new IOException(e);
+			}
+			inArray.push(false);
+			start();
+		}
+
+		@Override
+		public boolean startArray() throws org.json.simple.parser.ParseException,
+				IOException {
+			inArray.push(true);
+			return true;
+		}
+
+		@Override
+		public boolean primitive(Object value)
+				throws org.json.simple.parser.ParseException, IOException {
+			if (inArray.peek()) {
+				start();
+			}
+			if (value != null) {
+				try {
+					streamWriter.writeCharacters(value.toString());
+				} catch (XMLStreamException e) {
+					throw new IOException(e);
+				}
+			}
+			if (inArray.peek()) {
+				end();
+			}
+			return true;
+		}
+
+		private void end()
+				throws IOException {
+			try {
+				streamWriter.writeEndElement();
+			} catch (XMLStreamException e) {
+				throw new IOException(e);
+			}
+		}
+
+		@Override
+		public boolean endObjectEntry()
+				throws org.json.simple.parser.ParseException, IOException {
+			end();
+			return true;
+		}
+
+		@Override
+		public boolean endObject() throws org.json.simple.parser.ParseException,
+				IOException {
+			inArray.pop();
+			if (inArray.peek()) {
+				end();
+			}
+			return true;
+		}
+
+		@Override
+		public void endJSON() throws org.json.simple.parser.ParseException,
+				IOException {
+			end();
+			try {
+				streamWriter.writeEndDocument();
+			} catch (XMLStreamException e) {
+				throw new IOException(e);
+			}
+		}
+
+		@Override
+		public boolean endArray() throws org.json.simple.parser.ParseException,
+				IOException {
+			inArray.pop();
+			return true;
+		}
+	}
+
 	private static final String P_OUTPUT_VALIDATE_STRUCTURE = "com.ctc.wstx.outputValidateStructure"; //$NON-NLS-1$
     
 	public static ClobType xslTransform(CommandContext context, Object xml, Object styleSheet) throws Exception {
@@ -495,6 +633,73 @@ public class XMLSystemFunctions {
 		CharsetUtils.toHex(cb, (byte)(chr >> 8));
 		CharsetUtils.toHex(cb, (byte)chr);
 		return cb.append("_").flip().toString();  //$NON-NLS-1$
+	}
+
+    public static SQLXML jsonToXml(CommandContext context, final String rootName, final Blob json) throws TeiidComponentException, TeiidProcessingException, SQLException, IOException {
+		InputStream is = json.getBinaryStream();
+		PushbackInputStream pStream = new PushbackInputStream(is, 4);
+		byte[] encoding = new byte[3];
+		int read = pStream.read(encoding);
+		pStream.unread(encoding, 0, read);
+		Charset charset = UTF_8;
+		if (read > 2) {
+			if (encoding[0] == 0) {
+				if (encoding[1] == 0) {
+					charset = UTF_32BE; 
+				} else {
+					charset = UTF_16BE;
+				}
+			} else if (encoding[1] == 0) {
+				if (encoding[2] == 0) {
+					charset = UTF_32LE; 
+				} else {
+					charset = UTF_16LE;
+				}
+			}
+		}
+		Reader r = new InputStreamReader(pStream, charset);
+		return jsonToXml(context, rootName, r);
+    }
+	
+    public static SQLXML jsonToXml(CommandContext context, final String rootName, final Clob json) throws TeiidComponentException, TeiidProcessingException, SQLException {
+		return jsonToXml(context, rootName, json.getCharacterStream());
+    }
+
+	private static SQLXML jsonToXml(CommandContext context,
+			final String rootName, final Reader r) throws TeiidComponentException,
+			TeiidProcessingException {
+		XMLType result = new XMLType(XMLUtil.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
+			
+			@Override
+			public void translate(Writer writer) throws TransformerException,
+					IOException {
+		    	try {
+			    	JSONParser parser = new JSONParser();
+					XMLOutputFactory factory = getOutputFactory();
+					final XMLStreamWriter streamWriter = factory.createXMLStreamWriter(writer);
+			    	
+					parser.parse(r, new JsonToXmlContentHandler(escapeName(rootName, true), streamWriter));
+		    		
+					streamWriter.flush(); //woodstox needs a flush rather than a close
+				} catch (XMLStreamException e) {
+					throw new TransformerException(e);
+				} catch (ParseException e) {
+					throw new TransformerException(e);
+				} finally {
+		    		try {
+	    				r.close();
+		    		} catch (IOException e) {
+		    			
+		    		}
+		    	}
+			}
+		}));
+		result.setType(Type.DOCUMENT);
+		return result;
+	}
+    
+    public static void main(String[] args) {
+		System.out.println(Charset.availableCharsets());
 	}
 	
 }
