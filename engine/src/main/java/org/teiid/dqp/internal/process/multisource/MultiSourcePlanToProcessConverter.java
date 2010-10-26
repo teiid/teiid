@@ -190,7 +190,7 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
             		
             		ProjectNode projectNode = new ProjectNode(getID());
             		
-            		Expression intSum = ResolverUtil.convertExpression(sumCount, DataTypeManager.DefaultDataTypes.STRING, metadata);
+            		Expression intSum = ResolverUtil.getConversion(sumCount, DataTypeManager.getDataTypeName(sumCount.getType()), DataTypeManager.DefaultDataTypes.INTEGER, false, metadata.getFunctionLibrary());
             		
             		Expression rowCount = new ExpressionSymbol("RowCount", intSum); //$NON-NLS-1$            		
             		outputElements = new ArrayList<Expression>(1);            		

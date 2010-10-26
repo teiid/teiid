@@ -249,5 +249,17 @@ public class TestMultiSourcePlanToProcessConverter {
         final ProcessorDataManager dataMgr = new MultiSourceDataManager();
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, FakeMetadataFactory.exampleMultiBindingVDB());
     }
+    
+    @Test public void testMultiUpdateAll() throws Exception {
+        final QueryMetadataInterface metadata = FakeMetadataFactory.exampleMultiBinding();
+        final String userSql = "update MultiModel.Phys set a = '1' where b = 'z'"; //$NON-NLS-1$
+        final String multiModel = "MultiModel"; //$NON-NLS-1$
+        final int sources = 3;
+        final List[] expected = new List[] { Arrays.asList(3)};
+        final MultiSourceDataManager dataMgr = new MultiSourceDataManager();
+        dataMgr.setMustRegisterCommands(true);
+        dataMgr.addData("UPDATE MultiModel.Phys SET a = '1' WHERE b = 'z'", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, FakeMetadataFactory.exampleMultiBindingVDB());
+    }
 
 }
