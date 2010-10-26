@@ -686,7 +686,11 @@ public class TestValidator {
         
     @Test public void testUpdate2() {
         helpValidate("UPDATE test.group SET e0=1, e0=2", new String[] {"e0"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
+    }  
+    
+    @Test public void testUpdateSubqueryCriteria() {
+        helpValidate("UPDATE vm1.g1 SET e1=1 WHERE exists (select * from vm1.g1)" , new String[] {"EXISTS (SELECT * FROM vm1.g1)"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
     
     @Test public void testUpdate3() throws Exception {
         QueryMetadataInterface metadata = exampleMetadata();

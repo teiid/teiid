@@ -34,6 +34,7 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.ExistsCriteria;
+import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
@@ -127,6 +128,11 @@ public class EvaluatableVisitor extends LanguageVisitor {
     
     public void visit(StoredProcedure proc){
 		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
+		for (SPParameter param : proc.getInputParameters()) {
+			if (!(param.getExpression() instanceof Constant)) {
+				evaluationNotPossible(EvaluationLevel.PROCESSING);
+			}
+		}
     }
     
     public void visit(ScalarSubquery obj){

@@ -348,33 +348,37 @@ public final class RuleCollapseSource implements OptimizerRule {
 
 	private void replaceCorrelatedReferences(List<SubqueryContainer> containers) {
 		for (SubqueryContainer container : containers) {
-		    RelationalPlan subqueryPlan = (RelationalPlan)container.getCommand().getProcessorPlan();
-		    if (subqueryPlan == null || !(subqueryPlan.getRootNode() instanceof AccessNode)) {
-		    	continue;
-		    }
-		    AccessNode child = (AccessNode)subqueryPlan.getRootNode();
-		    Command command = child.getCommand();
-		    final SymbolMap map = container.getCommand().getCorrelatedReferences();
-		    if (map != null) {
-		    	ExpressionMappingVisitor visitor = new ExpressionMappingVisitor(null) {
-		    		@Override
-		    		public Expression replaceExpression(
-		    				Expression element) {
-		    			if (element instanceof Reference) {
-		    				Reference ref = (Reference)element;
-		    				Expression replacement = map.getMappedExpression(ref.getExpression());
-		    				if (replacement != null) {
-		    					return replacement;
-		    				}
-		    			}
-		    			return element;
-		    		}
-		    	};
-		    	DeepPostOrderNavigator.doVisit(command, visitor);
-		    }
-		    command.setProcessorPlan(container.getCommand().getProcessorPlan());
-		    container.setCommand(command);
+		    replaceCorrelatedReferences(container);
 		}
+	}
+
+	public static void replaceCorrelatedReferences(SubqueryContainer container) {
+		RelationalPlan subqueryPlan = (RelationalPlan)container.getCommand().getProcessorPlan();
+		if (subqueryPlan == null || !(subqueryPlan.getRootNode() instanceof AccessNode)) {
+			return;
+		}
+		AccessNode child = (AccessNode)subqueryPlan.getRootNode();
+		Command command = child.getCommand();
+		final SymbolMap map = container.getCommand().getCorrelatedReferences();
+		if (map != null) {
+			ExpressionMappingVisitor visitor = new ExpressionMappingVisitor(null) {
+				@Override
+				public Expression replaceExpression(
+						Expression element) {
+					if (element instanceof Reference) {
+						Reference ref = (Reference)element;
+						Expression replacement = map.getMappedExpression(ref.getExpression());
+						if (replacement != null) {
+							return replacement;
+						}
+					}
+					return element;
+				}
+			};
+			DeepPostOrderNavigator.doVisit(command, visitor);
+		}
+		command.setProcessorPlan(container.getCommand().getProcessorPlan());
+		container.setCommand(command);
 	}
 
     private void processLimit(PlanNode node,

@@ -226,7 +226,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
             	return;
             }
             if (! CapabilitiesUtil.supportsScalarFunction(modelID, obj, metadata, capFinder)) {
-                markInvalid(obj, obj.isImplicit()?"":"(implicit) convert" + " Function not supported by source"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                markInvalid(obj, (obj.isImplicit()?"(implicit) convert":"") + " Function not supported by source"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             }
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e));
@@ -446,7 +446,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
      * @return
      * @throws TeiidComponentException
      */
-    static Object validateSubqueryPushdown(SubqueryContainer subqueryContainer, Object critNodeModelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord) throws TeiidComponentException {
+    public static Object validateSubqueryPushdown(SubqueryContainer subqueryContainer, Object critNodeModelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord) throws TeiidComponentException {
     	ProcessorPlan plan = subqueryContainer.getCommand().getProcessorPlan();
     	if (plan != null) {
 	        if(!(plan instanceof RelationalPlan)) {

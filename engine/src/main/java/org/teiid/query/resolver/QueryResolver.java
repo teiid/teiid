@@ -58,8 +58,10 @@ import org.teiid.query.sql.lang.FromClause;
 import org.teiid.query.sql.lang.GroupContext;
 import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 
 /**
@@ -291,5 +293,15 @@ public class QueryResolver {
         
         return Collections.EMPTY_MAP;
     }
+    
+	public static void resolveSubqueries(Command command,
+			TempMetadataAdapter metadata, AnalysisRecord analysis)
+			throws QueryResolverException, TeiidComponentException {
+		for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(command)) {
+            QueryResolver.setChildMetadata(container.getCommand(), command);
+            
+            QueryResolver.resolveCommand(container.getCommand(), Collections.EMPTY_MAP, metadata.getMetadata(), analysis);
+        }
+	}
 
 }

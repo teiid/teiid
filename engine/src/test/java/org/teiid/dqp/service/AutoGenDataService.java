@@ -35,11 +35,11 @@ import org.teiid.dqp.internal.datamgr.ConnectorWork;
 import org.teiid.dqp.internal.datamgr.ConnectorWorkItem;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
-import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.TranslatorException;
 
 
 /**
@@ -56,7 +56,7 @@ public class AutoGenDataService extends ConnectorManager{
     
     public AutoGenDataService() {
     	super("FakeConnector","FakeConnector"); //$NON-NLS-1$ //$NON-NLS-2$
-        caps = new BasicSourceCapabilities();
+        caps = TestOptimizer.getTypicalCapabilities();
     }
 
     public void setRows(int rows) {
