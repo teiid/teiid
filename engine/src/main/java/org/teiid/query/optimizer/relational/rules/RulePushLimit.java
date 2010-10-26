@@ -26,11 +26,16 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
+import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -47,7 +52,9 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
+import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.util.CommandContext;
+import org.teiid.translator.SourceSystemFunctions;
 
 
 /** 
@@ -116,18 +123,19 @@ public class RulePushLimit implements OptimizerRule {
             return false;
         }
         
-        switch (child.getType()) {
+        Expression parentLimit = (Expression)limitNode.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT);
+		Expression parentOffset = (Expression)limitNode.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT);
+		switch (child.getType()) {
             case NodeConstants.Types.TUPLE_LIMIT:
             {
+            	
                 //combine the limits
-                Expression minLimit = getMinValue((Expression)limitNode.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT), (Expression)child.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT)); 
-                Expression offSet = getSum((Expression)limitNode.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT), (Expression)child.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT), metadata.getFunctionLibrary()); 
+                Expression childLimit = (Expression)child.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT);
+				Expression childOffset = (Expression)child.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT);
+				
+				combineLimits(limitNode, metadata, parentLimit, parentOffset, childLimit, childOffset);
                 
                 NodeEditor.removeChildNode(limitNode, child);
-                
-                limitNode.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, minLimit);
-                limitNode.setProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT, offSet);
-                
                 limitNodes.remove(child);
                 
                 return canPushLimit(rootNode, limitNode, limitNodes, metadata, capFinder);
@@ -141,9 +149,7 @@ public class RulePushLimit implements OptimizerRule {
                 List<PlanNode> grandChildren = new LinkedList<PlanNode>(child.getChildren());
                 for (PlanNode grandChild : grandChildren) {
                     PlanNode newLimit = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
-                    Expression limit = (Expression)limitNode.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT);
-                    Expression offset = (Expression)limitNode.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT);
-                    newLimit.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, getSum(limit, offset, metadata.getFunctionLibrary()));
+                    newLimit.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, op(SourceSystemFunctions.ADD_OP, parentLimit, parentOffset, metadata.getFunctionLibrary()));
                     grandChild.addAsParent(newLimit);
                     limitNodes.add(newLimit);
                 }
@@ -171,6 +177,28 @@ public class RulePushLimit implements OptimizerRule {
             }
         }
     }
+
+	static void combineLimits(PlanNode limitNode,
+			QueryMetadataInterface metadata, Expression parentLimit,
+			Expression parentOffset, Expression childLimit,
+			Expression childOffset) {
+		Expression minLimit = null;
+		Expression offSet = null;
+		
+		if (childLimit == null) {
+			minLimit = parentLimit;
+			offSet = op(SourceSystemFunctions.ADD_OP, childOffset, parentOffset, metadata.getFunctionLibrary());
+		} else {
+			minLimit = getMinValue(parentLimit, op(SourceSystemFunctions.SUBTRACT_OP, childLimit, parentOffset, metadata.getFunctionLibrary())); 
+		    offSet = childOffset;
+		    if (offSet == null) {
+		    	offSet = parentOffset;
+		    }
+		}
+		
+		limitNode.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, minLimit);
+		limitNode.setProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT, offSet);
+	}
     
     static PlanNode raiseAccessOverLimit(PlanNode rootNode,
                                           PlanNode accessNode,
@@ -206,7 +234,7 @@ public class RulePushLimit implements OptimizerRule {
                 
                 // since we're pushing underneath the offset, we want enough rows to satisfy both the limit and the row offset
                 
-                pushedLimit.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, getSum(limit, offset, metadata.getFunctionLibrary())); 
+                pushedLimit.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, op(SourceSystemFunctions.ADD_OP, limit, offset, metadata.getFunctionLibrary())); 
                 
                 if (accessNode.getChildCount() == 0) {
                     accessNode.addFirstChild(pushedLimit);
@@ -221,11 +249,7 @@ public class RulePushLimit implements OptimizerRule {
         return RuleRaiseAccess.performRaise(rootNode, accessNode, parentNode);
     }
 
-    /**
-     * @param limitNode
-     * @param child
-     */
-    static Expression getSum(Expression expr1, Expression expr2, FunctionLibrary functionLibrary) {
+    static Expression op(String op, Expression expr1, Expression expr2, FunctionLibrary functionLibrary) {
         if (expr1 == null) {
             return expr2;
         }
@@ -233,15 +257,29 @@ public class RulePushLimit implements OptimizerRule {
             return expr1;
         }
         
-        Function newExpr = new Function("+", new Expression[] {expr1, expr2}); //$NON-NLS-1$
-        newExpr.setFunctionDescriptor(functionLibrary.findFunction("+", new Class[] {DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.INTEGER})); //$NON-NLS-1$
+        Function newExpr = new Function(op, new Expression[] {expr1, expr2});
+        newExpr.setFunctionDescriptor(functionLibrary.findFunction(op, new Class[] {DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.INTEGER}));
         newExpr.setType(newExpr.getFunctionDescriptor().getReturnType());
-        return newExpr;
+        return evaluateIfPossible(newExpr);
     }
+
+	private static Expression evaluateIfPossible(Expression newExpr) {
+		if (EvaluatableVisitor.isFullyEvaluatable(newExpr, true)) {
+        	try {
+				return new Constant(Evaluator.evaluate(newExpr), newExpr.getType());
+			} catch (TeiidException e) {
+				throw new TeiidRuntimeException(e, "Unexpected Exception"); //$NON-NLS-1$
+			}
+        }
+        return newExpr;
+	}
     
     /**
      * @param limitNode
      * @param child
+     * @throws TeiidComponentException 
+     * @throws BlockedException 
+     * @throws ExpressionEvaluationException 
      */
     static Expression getMinValue(Expression expr1, Expression expr2) {
         if (expr1 == null) {
@@ -254,7 +292,8 @@ public class RulePushLimit implements OptimizerRule {
         Criteria crit = new CompareCriteria(expr1, CompareCriteria.LT, expr2);
         SearchedCaseExpression sce = new SearchedCaseExpression(Arrays.asList(new Object[] {crit}), Arrays.asList(new Object[] {expr1}));
         sce.setElseExpression(expr2);
-        return sce;
+        sce.setType(expr1.getType());
+        return evaluateIfPossible(sce);
     }
     
     /**

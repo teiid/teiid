@@ -41,7 +41,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.trans.XPathException;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
@@ -110,6 +109,7 @@ import org.teiid.query.sql.util.ValueIterator;
 import org.teiid.query.sql.util.ValueIteratorSource;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression;
+import org.teiid.query.xquery.saxon.SaxonXQueryExpression.Result;
 import org.teiid.translator.WSConnection.Util;
 
 public class Evaluator {
@@ -761,13 +761,18 @@ public class Evaluator {
 		if (xmlQuery.getEmptyOnEmpty() != null)  {
 			emptyOnEmpty = xmlQuery.getEmptyOnEmpty();
 		}   
+		Result result = null;
 		try {
-			SequenceIterator iter = evaluateXQuery(xmlQuery.getXQueryExpression(), xmlQuery.getPassing(), tuple);
-			return xmlQuery.getXQueryExpression().createXMLType(iter, this.context.getBufferManager(), emptyOnEmpty);
+			result = evaluateXQuery(xmlQuery.getXQueryExpression(), xmlQuery.getPassing(), tuple);
+			return xmlQuery.getXQueryExpression().createXMLType(result.iter, this.context.getBufferManager(), emptyOnEmpty);
 		} catch (TeiidProcessingException e) {
 			throw new FunctionExecutionException(e, QueryPlugin.Util.getString("Evaluator.xmlquery", e.getMessage())); //$NON-NLS-1$
 		} catch (XPathException e) {
 			throw new FunctionExecutionException(e, QueryPlugin.Util.getString("Evaluator.xmlquery", e.getMessage())); //$NON-NLS-1$
+		} finally {
+			if (result != null) {
+				result.close();
+			}
 		}
 	}
 	
@@ -837,7 +842,7 @@ public class Evaluator {
 		   }
 	}
 	
-	public SequenceIterator evaluateXQuery(SaxonXQueryExpression xquery, List<DerivedColumn> cols, List<?> tuple) 
+	public Result evaluateXQuery(SaxonXQueryExpression xquery, List<DerivedColumn> cols, List<?> tuple) 
 	throws BlockedException, TeiidComponentException, TeiidProcessingException {
 		HashMap<String, Object> parameters = new HashMap<String, Object>();
 		Object contextItem = null;

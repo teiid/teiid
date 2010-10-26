@@ -71,13 +71,14 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
     public void resolveProceduralCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis) 
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 
-
         // Cast to known type
         Insert insert = (Insert) command;
         
-        //variables and values must be resolved separately to account for implicitly defined temp groups
-        resolveList(insert.getValues(), metadata, insert.getExternalGroupContexts(), null);
-        
+        if (insert.getValues() != null) {
+        	QueryResolver.resolveSubqueries(command, metadata, analysis);
+	        //variables and values must be resolved separately to account for implicitly defined temp groups
+	        resolveList(insert.getValues(), metadata, insert.getExternalGroupContexts(), null);
+    	}
         //resolve subquery if there
         if(insert.getQueryExpression() != null) {
         	QueryResolver.setChildMetadata(insert.getQueryExpression(), command);

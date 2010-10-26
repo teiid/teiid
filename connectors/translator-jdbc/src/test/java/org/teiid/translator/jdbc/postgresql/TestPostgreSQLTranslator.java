@@ -158,7 +158,7 @@ public class TestPostgreSQLTranslator {
     }
     @Test public void testConversion13() throws Exception {
         String input = "SELECT convert(convert(PART_WEIGHT, timestamp), string) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT to_char(cast(PARTS.PART_WEIGHT AS timestamp), 'YYYY-MM-DD HH24:MI:SS.UF') FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT to_char(cast(PARTS.PART_WEIGHT AS timestamp), 'YYYY-MM-DD HH24:MI:SS.US') FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 

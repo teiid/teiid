@@ -61,6 +61,7 @@ import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
 import org.teiid.query.optimizer.relational.rules.CriteriaCapabilityValidatorVisitor;
+import org.teiid.query.optimizer.relational.rules.RuleCollapseSource;
 import org.teiid.query.optimizer.relational.rules.RuleConstants;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.ProcessorPlan;
@@ -538,12 +539,6 @@ public class RelationalPlanner {
 	private void addNestedProcedure(PlanNode sourceNode,
 			ProcedureContainer container) throws TeiidComponentException,
 			QueryMetadataException, TeiidProcessingException {
-		//plan any subqueries in criteria/parameters/values
-		for (SubqueryContainer subqueryContainer : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(container)) {
-    		ProcessorPlan plan = QueryOptimizer.optimizePlan(subqueryContainer.getCommand(), metadata, null, capFinder, analysisRecord, context);
-    		subqueryContainer.getCommand().setProcessorPlan(plan);
-		}
-		
 		String cacheString = "transformation/" + container.getClass().getSimpleName(); //$NON-NLS-1$
 		Command c = (Command)metadata.getFromMetadataCache(container.getGroup().getMetadataID(), cacheString);
 		if (c == null) {
@@ -578,6 +573,20 @@ public class RelationalPlanner {
 			//skip the rewrite here, we'll do that in the optimizer
 			//so that we know what the determinism level is.
 			addNestedCommand(sourceNode, container.getGroup(), container, c, false);
+		}
+		//plan any subqueries in criteria/parameters/values
+		for (SubqueryContainer subqueryContainer : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(container)) {
+    		ProcessorPlan plan = QueryOptimizer.optimizePlan(subqueryContainer.getCommand(), metadata, null, capFinder, analysisRecord, context);
+    		subqueryContainer.getCommand().setProcessorPlan(plan);
+    		
+    		if (c == null) {
+				RuleCollapseSource.replaceCorrelatedReferences(subqueryContainer);
+			}
+		}
+		
+		if (c == null && !container.getGroup().isTempGroupSymbol() && 
+				!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(container, metadata.getModelID(container.getGroup().getMetadataID()), metadata, capFinder, analysisRecord)) {
+			throw new QueryPlannerException(QueryPlugin.Util.getString("RelationalPlanner.nonpushdown_command", container)); //$NON-NLS-1$
 		}
 	}
 

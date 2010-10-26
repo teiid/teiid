@@ -2329,9 +2329,12 @@ public class QueryRewriter {
         //After this method, no longer need to display named parameters
         storedProcedure.setDisplayNamedParameters(false);
         
-        for (Iterator i = storedProcedure.getInputParameters().iterator(); i.hasNext();) {
-            SPParameter param = (SPParameter)i.next();
-            param.setExpression(rewriteExpressionDirect(param.getExpression()));
+        for (SPParameter param : storedProcedure.getInputParameters()) {
+            if (!processing) {
+            	param.setExpression(rewriteExpressionDirect(param.getExpression()));
+            } else if (!(param.getExpression() instanceof Constant)) {
+            	param.setExpression(new Constant(this.evaluator.evaluate(param.getExpression(), null), param.getClassType()));
+            }
         }
         return storedProcedure;
     }

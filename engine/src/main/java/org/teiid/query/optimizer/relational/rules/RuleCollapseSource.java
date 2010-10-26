@@ -39,6 +39,7 @@ import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
+import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.processor.ProcessorPlan;
@@ -352,55 +353,55 @@ public final class RuleCollapseSource implements OptimizerRule {
 
 	private void replaceCorrelatedReferences(List<SubqueryContainer> containers) {
 		for (SubqueryContainer container : containers) {
-		    RelationalPlan subqueryPlan = (RelationalPlan)container.getCommand().getProcessorPlan();
-		    if (subqueryPlan == null || !(subqueryPlan.getRootNode() instanceof AccessNode)) {
-		    	continue;
-		    }
-		    AccessNode child = (AccessNode)subqueryPlan.getRootNode();
-		    Command command = child.getCommand();
-		    final SymbolMap map = container.getCommand().getCorrelatedReferences();
-		    if (map != null) {
-		    	ExpressionMappingVisitor visitor = new ExpressionMappingVisitor(null) {
-		    		@Override
-		    		public Expression replaceExpression(
-		    				Expression element) {
-		    			if (element instanceof Reference) {
-		    				Reference ref = (Reference)element;
-		    				Expression replacement = map.getMappedExpression(ref.getExpression());
-		    				if (replacement != null) {
-		    					return replacement;
-		    				}
-		    			}
-		    			return element;
-		    		}
-		    	};
-		    	DeepPostOrderNavigator.doVisit(command, visitor);
-		    }
-		    command.setProcessorPlan(container.getCommand().getProcessorPlan());
-		    container.setCommand(command);
+		    replaceCorrelatedReferences(container);
 		}
+	}
+
+	public static void replaceCorrelatedReferences(SubqueryContainer container) {
+		RelationalPlan subqueryPlan = (RelationalPlan)container.getCommand().getProcessorPlan();
+		if (subqueryPlan == null || !(subqueryPlan.getRootNode() instanceof AccessNode)) {
+			return;
+		}
+		AccessNode child = (AccessNode)subqueryPlan.getRootNode();
+		Command command = child.getCommand();
+		final SymbolMap map = container.getCommand().getCorrelatedReferences();
+		if (map != null) {
+			ExpressionMappingVisitor visitor = new ExpressionMappingVisitor(null) {
+				@Override
+				public Expression replaceExpression(
+						Expression element) {
+					if (element instanceof Reference) {
+						Reference ref = (Reference)element;
+						Expression replacement = map.getMappedExpression(ref.getExpression());
+						if (replacement != null) {
+							return replacement;
+						}
+					}
+					return element;
+				}
+			};
+			DeepPostOrderNavigator.doVisit(command, visitor);
+		}
+		command.setProcessorPlan(container.getCommand().getProcessorPlan());
+		container.setCommand(command);
 	}
 
     private void processLimit(PlanNode node,
                               QueryCommand query, QueryMetadataInterface metadata) {
+    	
         Expression limit = (Expression)node.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT);
-        if (limit != null) {
-            if (query.getLimit() != null) {
-                Expression oldlimit = query.getLimit().getRowLimit();
-                query.getLimit().setRowLimit(RulePushLimit.getMinValue(limit, oldlimit)); 
-            } else {
-                query.setLimit(new Limit(null, limit));
-            }
-        }
         Expression offset = (Expression)node.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT);
-        if (offset != null) {
-            if (query.getLimit() != null) {
-                Expression oldoffset = query.getLimit().getOffset();
-                query.getLimit().setOffset(RulePushLimit.getSum(offset, oldoffset, metadata.getFunctionLibrary())); 
-            } else {
-                query.setLimit(new Limit(offset, null));
-            }
+        
+        PlanNode limitNode = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
+        Expression childLimit = null;
+        Expression childOffset = null;
+        if (query.getLimit() != null) {
+        	childLimit = query.getLimit().getRowLimit();
+        	childOffset = query.getLimit().getOffset();
         }
+        RulePushLimit.combineLimits(limitNode, metadata, limit, offset, childLimit, childOffset);
+        
+        query.setLimit(new Limit((Expression)limitNode.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT), (Expression)limitNode.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT)));
     }
 
     /** 

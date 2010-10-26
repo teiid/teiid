@@ -181,7 +181,7 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
 	protected List<?> convertTimestampToString(Function function) {
 		LinkedList<Object> result = new LinkedList<Object>();
 		result.addAll(convertDateToString(function));
-		result.add(' ');
+		result.add('+');
 		result.addAll(convertTimeToString(function));
 		return result;
 	}

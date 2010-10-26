@@ -350,7 +350,7 @@ public class TestResolver {
      * @param expectedParameterExpressions
      * @since 4.3
      */
-    private void helpResolveExec(String sql, Object[] expectedParameterExpressions) {
+    private StoredProcedure helpResolveExec(String sql, Object[] expectedParameterExpressions) {
 
         StoredProcedure proc = (StoredProcedure)helpResolve(sql);
         
@@ -375,6 +375,8 @@ public class TestResolver {
                 assertEquals(expectedParameterExpressions[i], param.getExpression());
             }
         }
+        
+        return proc;
     }
         
     
@@ -1093,7 +1095,8 @@ public class TestResolver {
     /** test omitting a required parameter that has a default value */
     @Test public void testExecNamedParamsOmitRequiredParamWithDefaultValue() {
         Object[] expectedParameterExpressions = new Object[] {new Constant("xyz"), new Constant(new Integer(666)), new Constant("YYZ")};//$NON-NLS-1$ //$NON-NLS-2$
-        helpResolveExec("EXEC pm1.sq3b(\"in\" = 'xyz', in2 = 666)", expectedParameterExpressions);//$NON-NLS-1$
+        StoredProcedure sp = helpResolveExec("EXEC pm1.sq3b(\"in\" = 'xyz', in2 = 666)", expectedParameterExpressions);//$NON-NLS-1$
+        assertEquals("EXEC pm1.sq3b(\"in\" => 'xyz', in2 => 666)", sp.toString());
     }    
     
     @Test public void testExecNamedParamsOptionalParamWithDefaults() {

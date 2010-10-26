@@ -83,7 +83,6 @@ import org.teiid.query.processor.relational.JoinNode;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.QueryResolver;
-import org.teiid.query.resolver.util.BindVariableVisitor;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.SPParameter;
@@ -116,25 +115,16 @@ public class TestProcessor {
         }
     }
 
-	public static ProcessorPlan helpGetPlan(String sql, QueryMetadataInterface metadata) { 
-        return helpGetPlan(sql, metadata, null);
+	public static ProcessorPlan helpGetPlan(String sql, QueryMetadataInterface metadata) {
+		return helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder());
     }
-    
-    public static ProcessorPlan helpGetPlan(String sql, QueryMetadataInterface metadata, String[] bindings) { 
-        if(DEBUG) System.out.println("\n####################################\n" + sql);  //$NON-NLS-1$
+	
+	public static ProcessorPlan helpGetPlan(String sql, QueryMetadataInterface metadata, CapabilitiesFinder finder) { 
+		if(DEBUG) System.out.println("\n####################################\n" + sql);  //$NON-NLS-1$
 
         Command command = helpParse(sql);   
         
-        // attach bindings
-        if(bindings != null) { 
-            try { 
-                BindVariableVisitor.bindReferences(command, Arrays.asList(bindings), metadata);
-            } catch(Throwable e) {
-                throw new TeiidRuntimeException(e);
-            }
-        }
-        
-    	ProcessorPlan process = helpGetPlan(command, metadata);
+    	ProcessorPlan process = helpGetPlan(command, metadata, finder);
         
         return process;
     }
@@ -6232,11 +6222,11 @@ public class TestProcessor {
         String sql = "update vm1.g39 set e2=3"; //$NON-NLS-1$ 
  
         // Plan query 
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());        
+        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());        
 
         // Construct data manager with data 
         HardcodedDataManager dataManager = new HardcodedDataManager(); 
-        dataManager.addData("SELECT pm1.g1.e2 FROM pm1.g1", //$NON-NLS-1$ 
+        dataManager.addData("SELECT g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e2 = 3", //$NON-NLS-1$ 
                             new List[] { Arrays.asList(new Object[] { new Integer(3) } )});
         dataManager.addData("UPDATE pm1.g1 SET e2 = 3 WHERE pm1.g1.e2 = 3", //$NON-NLS-1$ 
                             new List[] { Arrays.asList(new Object[] { new Integer(1) } )});
@@ -7331,7 +7321,7 @@ public class TestProcessor {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData2(dataManager);
         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, new String[] {"SELECT pm1.g1.e1 FROM pm1.g1 LIMIT (5 + 1)"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, capFinder, new String[] {"SELECT pm1.g1.e1 FROM pm1.g1 LIMIT 6"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         helpProcess(plan, dataManager, expected);          
     }
     
@@ -7574,6 +7564,21 @@ public class TestProcessor {
 
         helpProcess(plan, hdm, expected);
     }
-       
+    
+    @Test public void testStoredProcedureSubqueryInput() {
+    	String sql = "exec pm1.sp2((select e2 from pm1.g1 order by e1 limit 1))"; //$NON-NLS-1$
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("b", 2),
+        };    
+    
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1", new List[] {Arrays.asList(1, "2"), Arrays.asList(3, "4")});
+        dataManager.addData("EXEC pm1.sp2(1)", new List[] {Arrays.asList("b", 2)});
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
     private static final boolean DEBUG = false;
 }

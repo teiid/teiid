@@ -817,6 +817,11 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
             stmt.setTimestamp(i,(java.sql.Timestamp)param, getDatabaseCalendar());
             return;
         }
+        //not all drivers handle the setObject call with BigDecimal correctly (namely jConnect 6.05)
+        if (TypeFacility.RUNTIME_TYPES.BIG_DECIMAL.equals(paramType)) {
+        	stmt.setBigDecimal(i, (BigDecimal)param);
+            return;
+        }
         //convert these the following to jdbc safe values
         if (TypeFacility.RUNTIME_TYPES.BIG_INTEGER.equals(paramType)) {
             param = new BigDecimal((BigInteger)param);
@@ -824,7 +829,8 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
             param = new Double(((Float)param).doubleValue());
         } else if (TypeFacility.RUNTIME_TYPES.CHAR.equals(paramType)) {
             param = ((Character)param).toString();
-        }
+        } 
+        
         stmt.setObject(i, param, type);
     }
     

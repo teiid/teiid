@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -59,7 +60,7 @@ public class TestPreparedStatementBatchedUpdate {
 		dataManager.addData("UPDATE pm1.g1 SET e1 = ?, e3 = ? WHERE pm1.g1.e2 = ?", new List[] {Arrays.asList(4)}); //$NON-NLS-1$
 		// Source capabilities must support batched updates
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.BULK_UPDATE, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
@@ -122,7 +123,7 @@ public class TestPreparedStatementBatchedUpdate {
 		
 		// Source capabilities must support batched updates
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.BATCHED_UPDATES, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
@@ -218,7 +219,7 @@ public class TestPreparedStatementBatchedUpdate {
 		
 		// Source capabilities must support batched updates
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.BATCHED_UPDATES, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
@@ -311,7 +312,7 @@ public class TestPreparedStatementBatchedUpdate {
 		
 		// Source capabilities must support batched updates
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.BATCHED_UPDATES, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
@@ -434,7 +435,7 @@ public class TestPreparedStatementBatchedUpdate {
 		
 		// Source capabilities must support batched updates
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.BATCHED_UPDATES, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         

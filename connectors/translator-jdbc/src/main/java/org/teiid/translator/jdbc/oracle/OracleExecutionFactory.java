@@ -150,11 +150,9 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 				//if column and type is date, just use date format
 				Expression ex = function.getParameters().get(0);
 				String format = TIMESTAMP_FORMAT; 
-				if (ex instanceof ColumnReference) {
-					if ("date".equals(((ColumnReference)ex).getMetadataObject().getNativeType())) { //$NON-NLS-1$
-						format = DATETIME_FORMAT; 
-					}
-				} else if (!(ex instanceof Function) && !(ex instanceof Literal)) {
+				if (ex instanceof ColumnReference && "date".equalsIgnoreCase(((ColumnReference)ex).getMetadataObject().getNativeType())) { //$NON-NLS-1$
+					format = DATETIME_FORMAT; 
+				} else if (!(ex instanceof Literal) && !(ex instanceof Function)) {
 					//this isn't needed in every case, but it's simpler than inspecting the expression more
 					ex = ConvertModifier.createConvertFunction(getLanguageFactory(), function.getParameters().get(0), TypeFacility.RUNTIME_NAMES.TIMESTAMP);
 				}

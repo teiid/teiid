@@ -33,6 +33,7 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.resolver.ProcedureContainerResolver;
+import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Delete;
@@ -58,7 +59,7 @@ public class DeleteResolver extends ProcedureContainerResolver {
         Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
         groups.add(delete.getGroup());
         ResolverVisitor.resolveLanguageObject(delete, groups, delete.getExternalGroupContexts(), metadata);
-
+        QueryResolver.resolveSubqueries(command, metadata, analysis);
     }
     
     /** 

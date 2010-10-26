@@ -945,7 +945,8 @@ public class SQLStringVisitor extends LanguageVisitor {
         append("("); //$NON-NLS-1$
         boolean first = true;
         for (SPParameter param : obj.getParameters()) {
-        	if (param.getParameterType() == SPParameter.RETURN_VALUE || param.getParameterType() == SPParameter.RESULT_SET || param.getExpression() == null) {
+        	if (param.isUsingDefault() || param.getParameterType() == SPParameter.RETURN_VALUE 
+        			|| param.getParameterType() == SPParameter.RESULT_SET || param.getExpression() == null) {
         		continue;
         	}
         	if (first) {

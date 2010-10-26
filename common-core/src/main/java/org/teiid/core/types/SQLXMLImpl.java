@@ -89,14 +89,17 @@ public class SQLXMLImpl extends BaseLob implements SQLXML {
     	if (cs != null) {
     		return cs;
     	}
+    	String enc = null;
     	try {
-			String enc = XMLType.getEncoding(this.getBinaryStream());
-			if (enc != null) {
-				setEncoding(enc);
-			}
+			enc = XMLType.getEncoding(this.getBinaryStream());
 		} catch (SQLException e) {
 		}
-    	return Streamable.CHARSET;
+		if (enc != null) {
+			setEncoding(enc);
+		} else {
+			super.setCharset(Streamable.CHARSET);
+		}
+    	return super.getCharset();
     }
     
     @SuppressWarnings("unchecked")

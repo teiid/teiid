@@ -22,6 +22,7 @@ import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.FakeMetadataObject;
 import org.teiid.query.unittest.FakeMetadataStore;
+import org.teiid.translator.SourceSystemFunctions;
 
 
 public class TestInsertProcessing {
@@ -33,6 +34,7 @@ public class TestInsertProcessing {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder(); 
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities(); 
         caps.setCapabilitySupport(Capability.BATCHED_UPDATES, true); 
+        caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$ 
 
         List pm1g1e = FakeMetadataFactory.createElements(pm1g1, 
@@ -155,8 +157,8 @@ public class TestInsertProcessing {
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder(); 
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities(); 
- 
-        caps.setCapabilitySupport(Capability.BULK_UPDATE, true); 
+        caps.setCapabilitySupport(Capability.BULK_UPDATE, true);
+        caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$ 
 
         List pm1g1e = FakeMetadataFactory.createElements(pm1g1, 
@@ -195,10 +197,9 @@ public class TestInsertProcessing {
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder(); 
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities(); 
- 
         caps.setCapabilitySupport(Capability.BULK_UPDATE, false); 
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$ 
-
+        caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
         List pm1g1e = FakeMetadataFactory.createElements(pm1g1, 
                                     new String[] { "e1", "e2" }, //$NON-NLS-1$ //$NON-NLS-2$ 
                                     new String[] { DataTypeManager.DefaultDataTypes.BIG_INTEGER, DataTypeManager.DefaultDataTypes.FLOAT});

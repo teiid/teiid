@@ -792,14 +792,20 @@ public class TestOptimizer {
 			new String[] { "UPDATE pm1.g1 SET pm1.g1.e1 = 'MyString', pm1.g1.e2 = 1 WHERE pm1.g1.e3 = TRUE"} ); //$NON-NLS-1$
   	}
   	
-    @Test public void testUpdate2() { 
+    @Test public void testUpdate2() throws Exception { 
+    	BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+    	bsc.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
+    	DefaultCapabilitiesFinder dcf = new DefaultCapabilitiesFinder(bsc);
         helpPlan("Update pm1.g1 Set pm1.g1.e1= LTRIM('MyString'), pm1.g1.e2= 1 where pm1.g1.e2= convert(pm1.g1.e4, integer)", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-			new String[] { "UPDATE pm1.g1 SET pm1.g1.e1 = 'MyString', pm1.g1.e2 = 1 WHERE pm1.g1.e2 = convert(pm1.g1.e4, integer)"} ); //$NON-NLS-1$
+			new String[] { "UPDATE pm1.g1 SET e1 = 'MyString', e2 = 1 WHERE pm1.g1.e2 = convert(pm1.g1.e4, integer)"}, dcf, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
     }
     
-    @Test public void testDelete() { 
+    @Test public void testDelete() throws Exception { 
+    	BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+    	bsc.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
+    	DefaultCapabilitiesFinder dcf = new DefaultCapabilitiesFinder(bsc);
     	helpPlan("Delete from pm1.g1 where pm1.g1.e1 = cast(pm1.g1.e2 AS string)", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-			new String[] { "DELETE FROM pm1.g1 WHERE pm1.g1.e1 = cast(pm1.g1.e2 AS string)"} ); //$NON-NLS-1$
+			new String[] { "DELETE FROM pm1.g1 WHERE pm1.g1.e1 = convert(pm1.g1.e2, string)"}, dcf, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
   	}
 
 	// ############################# TESTS ON EXAMPLE 1 ############################
@@ -4605,11 +4611,10 @@ public class TestOptimizer {
         checkNodeTypes(plan, FULL_PUSHDOWN);
     }
     
-    @Test public void testUpdateWithElement() {
+    @Test public void testUpdateWithElement() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);        
+        caps.setFunctionSupport(SourceSystemFunctions.ADD_OP, true);        
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         String sql = "UPDATE BQT1.SmallA SET IntKey = IntKey + 1"; //$NON-NLS-1$
@@ -4618,7 +4623,7 @@ public class TestOptimizer {
                                       FakeMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
                                       new String[] {"UPDATE BQT1.SmallA SET IntKey = (IntKey + 1)"}, //$NON-NLS-1$ 
-                                      SHOULD_SUCCEED );
+                                      ComparisonMode.EXACT_COMMAND_STRING );
 
         checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }            
@@ -6728,6 +6733,11 @@ public class TestOptimizer {
         ProcessorPlan plan = helpPlan("select pm2.g1.e1, x.e1 from pm2.g1, table(select * from pm2.g2 where pm2.g1.e1=pm2.g2.e1) x where pm2.g1.e2 IN (1, 2)", example1(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm2.g2 AS g_0 WHERE g_0.e1 = pm2.g1.e1", "SELECT g_0.e1 FROM pm2.g1 AS g_0 WHERE g_0.e2 IN (1, 2)" }, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {1}, new Class[] {NestedTableJoinStrategy.class});         
+    }
+    
+    @Test public void testUpdatePushdownFails() { 
+        helpPlan("update pm1.g1 set e1 = 1 where exists (select 1 from pm1.g2)", FakeMetadataFactory.example1Cached(), null, //$NON-NLS-1$
+			null, null, false); //$NON-NLS-1$
     }
 
 	public static final boolean DEBUG = false;

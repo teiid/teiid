@@ -106,7 +106,7 @@ public class VDBRepository implements Serializable{
         return new VDBKey(vdb.getName(), vdb.getVersion());
     } 	
 		
-	public VDBMetaData getVDB(String vdbName) throws VirtualDatabaseException {
+	public VDBMetaData getVDB(String vdbName) {
     	int latestVersion = 0;
         for (VDBKey key:this.vdbRepo.tailMap(new VDBKey(vdbName, 0)).keySet()) {
             if(!key.getName().equalsIgnoreCase(vdbName)) {
@@ -125,7 +125,7 @@ public class VDBRepository implements Serializable{
         	}
         }
         if(latestVersion == 0) {
-            throw new VirtualDatabaseException(RuntimePlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, "latest")); //$NON-NLS-1$ //$NON-NLS-2$ 
+            return null; 
         }
 
         return getVDB(vdbName, latestVersion);

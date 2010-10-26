@@ -82,6 +82,7 @@ import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.TableFunctionReference;
 import org.teiid.query.sql.lang.TextTable;
@@ -319,13 +320,15 @@ public class PlanToProcessConverter {
                         aNode.setShouldEvaluateExpressions(EvaluatableVisitor.needsProcessingEvaluation(command));
                     }
                     
-                    try {
-                        command = (Command)command.clone();
-                        boolean aliasGroups = modelID != null && CapabilitiesUtil.supportsGroupAliases(modelID, metadata, capFinder);
-                        boolean aliasColumns = modelID != null && CapabilitiesUtil.supports(Capability.QUERY_SELECT_EXPRESSION, modelID, metadata, capFinder);
-                        command.acceptVisitor(new AliasGenerator(aliasGroups, !aliasColumns));
-                    } catch (QueryMetadataException err) {
-                        throw new TeiidComponentException(err);
+                    if (command instanceof QueryCommand) {
+	                    try {
+	                        command = (Command)command.clone();
+	                        boolean aliasGroups = modelID != null && CapabilitiesUtil.supportsGroupAliases(modelID, metadata, capFinder);
+	                        boolean aliasColumns = modelID != null && CapabilitiesUtil.supports(Capability.QUERY_SELECT_EXPRESSION, modelID, metadata, capFinder);
+	                        command.acceptVisitor(new AliasGenerator(aliasGroups, !aliasColumns));
+	                    } catch (QueryMetadataException err) {
+	                        throw new TeiidComponentException(err);
+	                    }
                     }
                     aNode.setCommand(command);
                     aNode.setModelName(getRoutingName(node));

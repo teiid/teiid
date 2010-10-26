@@ -532,12 +532,10 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
             parameterMap = new TreeMap<Integer, Object>();
         }
         
-        Object val = null;
         if (serverCalendar != null && value instanceof java.util.Date) {
-            val = TimestampWithTimezone.create((java.util.Date)value, getDefaultCalendar().getTimeZone(), serverCalendar, value.getClass());
-        } else val = value;
-
-        parameterMap.put(parameterIndex, val);
+            value = TimestampWithTimezone.create((java.util.Date)value, getDefaultCalendar().getTimeZone(), serverCalendar, value.getClass());
+        }
+        parameterMap.put(parameterIndex, value);
     }
 
     /**

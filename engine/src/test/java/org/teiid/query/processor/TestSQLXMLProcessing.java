@@ -25,6 +25,8 @@ package org.teiid.query.processor;
 import static org.teiid.query.processor.TestProcessor.*;
 
 import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
@@ -347,6 +349,16 @@ public class TestSQLXMLProcessing {
         };    
     
         processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), Arrays.asList(blobFromFile("udf.xmi")));
+    }
+	
+	@Test public void testXmlParseBlobWithEncoding() throws Exception {
+    	String sql = "select xmlparse(document cast(? as blob)) x"; //$NON-NLS-1$
+    	
+        List[] expected = new List[] {
+        		Arrays.asList(ObjectConverterUtil.convertToString(new InputStreamReader(new FileInputStream(UnitTestUtil.getTestDataFile("encoding.xml")), Charset.forName("ISO-8859-1")))),
+        };    
+    
+        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), Arrays.asList(blobFromFile("encoding.xml")));
     }
 	
     @Test public void testXmlTableTypes() throws Exception {

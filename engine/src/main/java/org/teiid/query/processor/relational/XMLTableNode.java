@@ -50,6 +50,7 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
+import org.teiid.query.xquery.saxon.SaxonXQueryExpression.Result;
 
 /**
  * Handles xml table processing.
@@ -69,7 +70,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 	private XMLTable table;
 	private List<XMLColumn> projectedColumns;
 	
-	private SequenceIterator result;
+	private Result result;
 	private int rowCount = 0;
 	private Item item;
 	
@@ -130,7 +131,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode {
 			TeiidComponentException, TeiidProcessingException {
 		if (item == null) {
 			try {
-				item = result.next();
+				item = result.iter.next();
 			} catch (XPathException e) {
 				throw new TeiidProcessingException(e, QueryPlugin.Util.getString("XMLTableNode.error", e.getMessage())); //$NON-NLS-1$
 			}

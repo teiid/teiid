@@ -39,6 +39,7 @@ import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
@@ -195,8 +196,26 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	public void visit(Delete obj) {
     	validateNoXMLUpdates(obj);
         validateHasProjectedSymbols(obj);
-        validateGroupSupportsUpdate(obj.getGroup());
+        GroupSymbol group = obj.getGroup();
+        validateGroupSupportsUpdate(group);
+        Criteria crit = obj.getCriteria();
+        validateVirtualUpdate(group, crit);
     }
+
+	private void validateVirtualUpdate(GroupSymbol group,
+			Criteria crit) {
+		if (crit == null) {
+			return;
+		}
+		try {
+			if (getMetadata().isVirtualGroup(group.getMetadataID()) && 
+					!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(crit).isEmpty()) {
+				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.virtual_update_subquery"), crit); //$NON-NLS-1$
+			}
+		} catch (TeiidException e) {
+			handleException(e);
+		}
+	}
 
     public void visit(GroupBy obj) {
     	// Get list of all group by IDs
@@ -307,6 +326,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         validateHasProjectedSymbols(obj);
         validateGroupSupportsUpdate(obj.getGroup());
         validateUpdate(obj);
+        validateVirtualUpdate(obj.getGroup(), obj.getCriteria());
     }
 
     public void visit(Into obj) {
@@ -865,7 +885,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     
     protected void validateSetClauseList(SetClauseList list) {
     	Set<ElementSymbol> dups = new HashSet<ElementSymbol>();
-	    HashSet changeVars = new HashSet();
+	    HashSet<ElementSymbol> changeVars = new HashSet<ElementSymbol>();
 	    for (SetClause clause : list.getClauses()) {
 	    	ElementSymbol elementID = clause.getSymbol();
 	        if (!changeVars.add(elementID)) {

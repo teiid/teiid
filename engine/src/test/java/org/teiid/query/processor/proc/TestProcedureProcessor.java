@@ -2655,7 +2655,7 @@ public class TestProcedureProcessor {
         String userQuery = "EXEC TEIIDSP7(1)"; //$NON-NLS-1$
         HardcodedDataManager dataMgr = new HardcodedDataManager();
         ProcessorPlan plan = getProcedurePlan(userQuery, metadata);
-        dataMgr.addData("VARIABLES.x = EXEC spTest9(1)", new List[] {Arrays.asList(3)});
+        dataMgr.addData("x = EXEC spTest9(1)", new List[] {Arrays.asList(3)});
         dataMgr.addData("EXEC spTest11(3, null)", new List[] {Arrays.asList("1", 1, null), Arrays.asList(null, null, 4)});
         List[] expected = new List[] {Arrays.asList("34")};
         helpTestProcess(plan, expected, dataMgr, metadata);

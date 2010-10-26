@@ -39,6 +39,7 @@ import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.resolver.ProcedureContainerResolver;
+import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.VariableResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
@@ -69,6 +70,7 @@ public class UpdateResolver extends ProcedureContainerResolver implements Variab
         Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
         groups.add(update.getGroup());
         ResolverVisitor.resolveLanguageObject(update, groups, update.getExternalGroupContexts(), metadata);
+        QueryResolver.resolveSubqueries(command, metadata, analysis);
     }
     
     /** 

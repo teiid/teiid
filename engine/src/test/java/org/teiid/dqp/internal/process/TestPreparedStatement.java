@@ -381,7 +381,7 @@ public class TestPreparedStatement {
 		List<String> values = Arrays.asList("aa "); //$NON-NLS-1$
         FakeDataManager dataManager = new FakeDataManager();
         TestProcessor.sampleData2b(dataManager);
-		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, false, FakeMetadataFactory.example1VDB());
+		helpTestProcessing(preparedSql, values, expected, dataManager, TestOptimizer.getGenericFinder(), FakeMetadataFactory.example1Cached(), null, false, false, false, FakeMetadataFactory.example1VDB());
     }
     
     @Test(expected=QueryValidatorException.class) public void testLimitValidation() throws Exception {

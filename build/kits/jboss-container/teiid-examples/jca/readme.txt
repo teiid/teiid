@@ -1,8 +1,8 @@
-This folder contains the sample "-ds.xml" files that can be created for Teiid sources.
+This directory contains examples of data source configuration files for the following types of sources:
+    flat files
+    LDAP
+    SalesForce
+    Web Services (for ws-security see Admin Guide)
 
-JDBC: Please check "<jboss-as>/docs/examples/jca" directory for creating a -ds.xml file for any type of relational database. 
-Please note you can find samples for creating both "local" and "xa" data sources.
-
-Web Serivices with ws-security: Check out Admin guide for a sample with explanation on how to use it. 
-
-All the others types of sources, please find a example in this directory.
+JDBC Users: Please see the examples in the "<jboss-as>/docs/examples/jca" directory for creating data source configuration 
+files for any type of relational database. These examples demonstrate creating both "local" and "xa" data sources.

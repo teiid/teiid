@@ -657,10 +657,8 @@ public class LanguageBridgeFactory {
 			}
         }
         Class<?> returnType = null;
-        List parameters = sp.getParameters();
         List<Argument> translatedParameters = new ArrayList<Argument>();
-        for (Iterator i = parameters.iterator(); i.hasNext();) {
-        	SPParameter param = (SPParameter)i.next();
+        for (SPParameter param : sp.getParameters()) {
         	Direction direction = Direction.IN;
             switch(param.getParameterType()) {
                 case ParameterInfo.IN:    
@@ -676,13 +674,15 @@ public class LanguageBridgeFactory {
                     continue; //already part of the metadata
                 case ParameterInfo.RETURN_VALUE: 
                 	returnType = param.getClassType();
-                	break;
-                    
+                	continue;
             }
             
             ProcedureParameter metadataParam = metadataFactory.getParameter(param);
             //we can assume for now that all arguments will be literals, which may be multivalued
-            Literal value = (Literal)translate(param.getExpression());
+            Literal value = null;
+            if (direction != Direction.OUT) {
+            	value = (Literal)translate(param.getExpression());
+            }
             Argument arg = new Argument(direction, value, param.getClassType(), metadataParam);
             translatedParameters.add(arg);
         }
