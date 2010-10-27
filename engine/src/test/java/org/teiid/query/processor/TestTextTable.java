@@ -22,8 +22,11 @@
 
 package org.teiid.query.processor;
 
+import static org.teiid.query.optimizer.TestOptimizer.getTypicalCapabilities;
+import static org.teiid.query.optimizer.TestOptimizer.helpPlan;
 import static org.teiid.query.processor.TestProcessor.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -33,7 +36,12 @@ import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
+import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
+import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
 @SuppressWarnings({"unchecked", "nls"})
@@ -220,5 +228,32 @@ public class TestTextTable {
 	public static ClobType clobFromFile(final String file) {
 		return new ClobType(new ClobImpl(new InputStreamFactory.FileInputStreamFactory(UnitTestUtil.getTestDataFile(file)), -1));
 	}
+	
+    @Test public void testTextAgg() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        
+        BasicSourceCapabilities caps = getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, false);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$        
+        
+        ProcessorPlan plan = helpPlan("select convert(textagg(pm1.g1.e1, pm1.g1.e2 header order by e2), string) as x  from pm1.g1", metadata,  null, capFinder, //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", new List[] {Arrays.asList("z", 2), Arrays.asList("b", 1)});
+        hdm.setBlockOnce(true);
+                
+        String nl = System.getProperty("line.separator");
+        ArrayList list = new ArrayList();
+        list.add("e1,e2"+nl+"b,1"+nl+"z,2"+nl);
+        List[] expected = new List[] {
+        		list,
+        };    
+
+        helpProcess(plan, hdm, expected);    	
+    }
 	
 }

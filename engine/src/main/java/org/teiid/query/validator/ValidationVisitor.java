@@ -117,6 +117,7 @@ import org.teiid.query.sql.symbol.QueryString;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.TextLine;
 import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
@@ -1231,6 +1232,18 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     public void visit(XMLForest obj) {
     	validateDerivedColumnNames(obj, obj.getArgs());
     	for (DerivedColumn dc : obj.getArgs()) {
+			if (dc.getAlias() == null) {
+				continue;
+			}
+			validateQName(obj, dc.getAlias());
+			validateXMLContentTypes(dc.getExpression(), obj);
+		}
+    }
+    
+    @Override
+    public void visit(TextLine obj) {
+    	validateDerivedColumnNames(obj, obj.getExpressions());
+    	for (DerivedColumn dc : obj.getExpressions()) {
 			if (dc.getAlias() == null) {
 				continue;
 			}

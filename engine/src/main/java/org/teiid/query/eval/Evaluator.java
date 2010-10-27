@@ -98,6 +98,7 @@ import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.TextLine;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
 import org.teiid.query.sql.symbol.XMLNamespaces;
@@ -647,6 +648,8 @@ public class Evaluator {
 	       return evaluate((ScalarSubquery) expression, tuple);
 	   } else if (expression instanceof Criteria) {
 		   return evaluate((Criteria)expression, tuple);
+	   } else if (expression instanceof TextLine){
+		   return evaluateTextForest(tuple, (TextLine)expression);
 	   } else if (expression instanceof XMLElement){
 		   return evaluateXMLElement(tuple, (XMLElement)expression);
 	   } else if (expression instanceof XMLForest){
@@ -808,6 +811,13 @@ public class Evaluator {
 		}
 		InputStreamFactory isf = getInputStreamFactory(value);
 		return new ClobType(new ClobImpl(isf, -1));
+	}
+	
+	private Object evaluateTextForest(List<?> tuple, TextLine function) 	throws ExpressionEvaluationException, BlockedException, TeiidComponentException, FunctionExecutionException {
+		List<DerivedColumn> args = function.getExpressions();
+		Evaluator.NameValuePair<Object>[] nameValuePairs = getNameValuePairs(tuple, args, true);
+
+		return TextLine.evaluate(nameValuePairs, function.getDelimiter(), function.getQuote());
 	}
 
 	private Object evaluateXMLForest(List<?> tuple, XMLForest function)

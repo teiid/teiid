@@ -260,6 +260,7 @@ TOKEN : /* Reserved words */
 |   <SYSTEM_USER: "system_user">
 |   <TABLE: "table">
 |   <TEMPORARY: "temporary">
+|   <TEXTAGG: "textagg">
 |   <THEN: "then">
 |   <TIMEZONE_HOUR: "timezone_hour">
 |   <TIMEZONE_MINUTE: "timezone_minute">
@@ -1788,6 +1789,69 @@ AggregateSymbol xmlAgg(ParseInfo info) :
 	}
 }
 
+
+AggregateSymbol textAgg(ParseInfo info) :
+{
+	DerivedColumn expression = null;
+	Character delimiter = null;
+	Character quote = null;
+	Integer header = null;	
+	List<DerivedColumn> expressions = new ArrayList<DerivedColumn>();
+	OrderBy orderBy = null;
+}
+{
+	<TEXTAGG> <LPAREN>
+	expression = derivedColumn(info)
+	{
+		expressions.add(expression);
+	}
+	(<COMMA>
+		expression = derivedColumn(info)
+		{
+			expressions.add(expression);
+		}
+	)* 		
+	[
+	  LOOKAHEAD(<ID>, { "delimiter".equalsIgnoreCase(getToken(1).image) }) <ID>
+	  delimiter = charVal(info, "DELMITER")
+	]
+	[
+	  LOOKAHEAD(<ID>, { "quote".equalsIgnoreCase(getToken(1).image) })
+	  ( <ID> quote = charVal(info, "QUOTE") )
+	]
+	[
+	  LOOKAHEAD(<ID>, { "header".equalsIgnoreCase(getToken(1).image) }) <ID>
+	  [
+	  	header = intVal()
+	  ]
+	  {
+	  	if (header == null) {
+	  		header = 1;
+	  	}
+	  }
+	]	
+	[
+		orderBy = orderby(info)
+	]	
+	<RPAREN>
+	{
+		if(! info.aggregatesAllowed) {
+			throw new ParseException(QueryPlugin.Util.getString("SQLParser.Aggregate_only_top_level")); //$NON-NLS-1$
+		}
+			
+		TextLine tf = new TextLine();
+		tf.setDelimiter(delimiter);
+		tf.setQuote(quote);
+		tf.setIncludeHeader(header!=null);
+		tf.setExpressions(expressions);
+		
+		String name = generateFunctionName(info, "TEXTAGG");
+		AggregateSymbol agg = new AggregateSymbol(name, "TEXTAGG", false, tf);
+		agg.setOrderBy(orderBy);
+		return agg;		
+	}
+}
+
 AggregateSymbol aggregateSymbol(ParseInfo info) :
 {
 	String func = null;
@@ -3144,6 +3208,8 @@ Expression valueExpressionPrimary(ParseInfo info) :
 		|
 		(expression=xmlAgg(info))
 		|
+		(expression=textAgg(info))
+		|		
 		// Function
 		LOOKAHEAD(2) (expression=function(info))
 		|

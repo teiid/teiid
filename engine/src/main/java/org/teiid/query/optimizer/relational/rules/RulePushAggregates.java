@@ -741,7 +741,10 @@ public class RulePushAggregates implements
                 nestedAggregates.add(countAgg);
                 nestedAggregates.add(sumAgg);
                 nestedAggregates.add(sumSqAgg);
-            } else {
+            } else if (aggFunction == Type.TEXTAGG) {
+            	continue;
+            }
+            else {
                 //AGG(X) -> AGG(AGG(X))
                 newExpression = new AggregateSymbol("stagedAgg", aggFunction.name(), false, partitionAgg); //$NON-NLS-1$
                 nestedAggregates.add(partitionAgg);

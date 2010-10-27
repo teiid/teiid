@@ -22,7 +22,8 @@
 
 package org.teiid.query.processor.relational;
 
-import static org.teiid.query.analysis.AnalysisRecord.*;
+import static org.teiid.query.analysis.AnalysisRecord.PROP_GROUP_COLS;
+import static org.teiid.query.analysis.AnalysisRecord.PROP_SORT_MODE;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,6 +51,7 @@ import org.teiid.query.function.aggregate.Max;
 import org.teiid.query.function.aggregate.Min;
 import org.teiid.query.function.aggregate.StatsFunction;
 import org.teiid.query.function.aggregate.Sum;
+import org.teiid.query.function.aggregate.TextAgg;
 import org.teiid.query.function.aggregate.XMLAgg;
 import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.ProcessorDataManager;
@@ -60,6 +62,7 @@ import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.TextLine;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.util.CommandContext;
 
@@ -186,6 +189,9 @@ public class GroupingNode extends RelationalNode {
                 	case XMLAGG:
                 		functions[i] = new XMLAgg(context);
                 		break;
+                	case TEXTAGG:
+               			functions[i] = new TextAgg(context, (TextLine)ex);
+                		break;                		
                 	default:
                 		functions[i] = new StatsFunction(function);
                 	

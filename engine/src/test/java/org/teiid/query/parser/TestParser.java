@@ -22,7 +22,9 @@
 
 package org.teiid.query.parser;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
@@ -114,6 +116,7 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.TestCaseExpression;
 import org.teiid.query.sql.symbol.TestSearchedCaseExpression;
+import org.teiid.query.sql.symbol.TextLine;
 import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
@@ -6711,6 +6714,39 @@ public class TestParser {
         query.setSelect(new Select(Arrays.asList(as)));
         helpTest(sql, "SELECT XMLAGG(1 ORDER BY e2)", query);
     }
+    
+    @Test public void testTextAggWithOrderBy() throws Exception {
+    	List<DerivedColumn> expressions = new ArrayList<DerivedColumn>();
+    	expressions.add(new DerivedColumn("col1", new ElementSymbol("e1")));
+    	expressions.add(new DerivedColumn("col2", new ElementSymbol("e2")));
+                
+        TextLine tf = new TextLine();
+        tf.setExpressions(expressions);
+        tf.setDelimiter(new Character(','));
+        tf.setIncludeHeader(true);
+        
+        AggregateSymbol as = new AggregateSymbol("foo", Reserved.TEXTAGG, false, tf);
+        as.setOrderBy(new OrderBy(Arrays.asList(new ElementSymbol("e2"))));
+        
+        Query query = new Query();
+        query.setSelect(new Select(Arrays.asList(as)));
+        
+        String sql = "SELECT TextAgg(e1 as col1, e2 as col2 delimiter ',' header order by e2)"; //$NON-NLS-1$
+        helpTest(sql, "SELECT TEXTAGG(TEXTLINE(e1 AS col1, e2 AS col2 DELIMITER ',' HEADER) ORDER BY e2)", query);
+    }    
+    
+//    @Test public void testTextForrest() throws Exception {
+//    	List<DerivedColumn> expressions = new ArrayList<DerivedColumn>();
+//    	expressions.add(new DerivedColumn(null, new Constant(1)));
+//    	expressions.add(new DerivedColumn("col2", new ElementSymbol("e2")));
+//                
+//        TextForest tf = new TextForest();
+//        tf.setExpressions(expressions);
+//        tf.setIncludeHeader(true);
+//        
+//        String sql = "textforest(1, e2 as col2 HEADER)"; //$NON-NLS-1$
+//    	helpTestExpression(sql, "TEXTFOREST(1, e2 AS col2 HEADER)", tf);        
+//    }     
     
     @Test public void testNestedTable() throws Exception {
         String sql = "SELECT * from TABLE(exec foo()) as x"; //$NON-NLS-1$

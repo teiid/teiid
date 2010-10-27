@@ -65,6 +65,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.QueryString;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
+import org.teiid.query.sql.symbol.TextLine;
 import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
@@ -114,6 +115,11 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     @Override
     public void visit(XMLNamespaces obj) {
     	markInvalid(obj, "Pushdown of XMLNamespaces not allowed"); //$NON-NLS-1$
+    }
+    
+    @Override
+    public void visit(TextLine obj) {
+    	markInvalid(obj, "Pushdown of TextForest not allowed"); //$NON-NLS-1$
     }
     
     @Override

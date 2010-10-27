@@ -129,6 +129,7 @@ public abstract class LanguageVisitor {
     public void visit(XMLForest obj) {}
     public void visit(XMLNamespaces obj) {}
     public void visit(TextTable obj) {}
+    public void visit(TextLine obj) {}
     public void visit(XMLTable obj) {}
     public void visit(DerivedColumn obj) {}
     public void visit(XMLSerialize obj) {}

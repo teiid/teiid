@@ -60,6 +60,7 @@ public class AggregateSymbol extends ExpressionSymbol {
 		MIN,
 		MAX,
 		XMLAGG,
+		TEXTAGG,
 		ANY,
 		SOME,
 		EVERY,

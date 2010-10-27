@@ -42,7 +42,8 @@
     <LI><B>Improved clustering support</B> - see the Admin Guide chapter on clustering.
     <LI><B>IPv6 support</B> - Teiid can started using IPv6 bind address and can be used with JDBC connection.
     <LI><B>SESSION_ID</B> - A new system function "SESSION_ID" is added to the system function library.
-    <LI><B>Assignment Syntax Improvements<B> - Teiid's procedure syntax for assignments was clarified so that the assignment value must be a proper expression.  INSERT/UPDATE/DELETE update counts must be obtained from VARIABLES.ROWCOUNT, scalar values must be obtained via a scalar subquery.  
+    <LI><B>Assignment Syntax Improvements<B> - Teiid's procedure syntax for assignments was clarified so that the assignment value must be a proper expression.  INSERT/UPDATE/DELETE update counts must be obtained from VARIABLES.ROWCOUNT, scalar values must be obtained via a scalar subquery.
+    <LI><B>TEXTAGG</B> - SQL support for Text aggregation. Using this function expression values can be aggregated into a single line of text with delimiter and header, that can be optionally saved to a text file.   
     The parser will continue to accept the old syntax and convert the query into the proper form.      
 </UL>
 

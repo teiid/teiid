@@ -26,7 +26,6 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
@@ -79,7 +78,7 @@ public class XMLUtil {
 			return new OutputStreamWriter(fsos, Charset.forName(encoding));
 		}
 		
-		public OutputStream getOuputStream() {
+		public FileStoreOutputStream getOuputStream() {
 			return fsos;
 		}
 

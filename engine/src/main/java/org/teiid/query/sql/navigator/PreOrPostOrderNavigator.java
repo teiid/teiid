@@ -97,6 +97,7 @@ import org.teiid.query.sql.symbol.QueryString;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
+import org.teiid.query.sql.symbol.TextLine;
 import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
@@ -539,6 +540,13 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     	visitNode(obj.getValue());
         postVisitVisitor(obj);
     }
+    
+    @Override
+    public void visit(TextLine obj) {
+    	preVisitVisitor(obj);
+    	visitNodes(obj.getExpressions());
+        postVisitVisitor(obj);
+    }    
     
     @Override
     public void visit(XMLForest obj) {

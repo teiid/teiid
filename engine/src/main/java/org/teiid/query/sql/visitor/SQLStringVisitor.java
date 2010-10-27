@@ -116,6 +116,7 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.SelectSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.TextLine;
 import org.teiid.query.sql.symbol.XMLAttributes;
 import org.teiid.query.sql.symbol.XMLElement;
 import org.teiid.query.sql.symbol.XMLForest;
@@ -1591,6 +1592,32 @@ public class SQLStringVisitor extends LanguageVisitor {
         registerNodes(obj.getArgs(), 0);
         append(")"); //$NON-NLS-1$
     }
+    
+    @Override
+    public void visit( TextLine obj ) {
+        append("TEXTLINE"); //$NON-NLS-1$
+        append("("); //$NON-NLS-1$
+        registerNodes(obj.getExpressions(), 0);
+        
+        if (obj.getDelimiter() != null) {
+            append(SPACE);
+            append(NonReserved.DELIMITER);
+            append(SPACE);
+            visitNode(new Constant(obj.getDelimiter()));
+        }
+        if (obj.getQuote() != null) {
+            append(SPACE);
+            append(NonReserved.QUOTE);
+            append(SPACE);
+            visitNode(new Constant(obj.getQuote()));
+        }
+        if (obj.isIncludeHeader()) {
+            append(SPACE);
+            append(NonReserved.HEADER);
+        }
+        
+        append(")"); //$NON-NLS-1$
+    }    
 
     @Override
     public void visit( XMLNamespaces obj ) {
