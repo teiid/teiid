@@ -227,11 +227,20 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 		return list;
 	}	
 	
-    public void addError(String severity, String message) {
+    public ValidationError addError(String severity, String message) {
         if (this.errors == null) {
             this.errors = new ArrayList<ValidationError>();
         }
-        this.errors.add(new ValidationError(severity, message));
+        ValidationError ve = new ValidationError(severity, message);
+        this.errors.add(ve);
+        return ve;
+    }
+    
+    public boolean removeError(ValidationError remove) {
+    	if (this.errors == null) {
+    		return false;
+    	}
+    	return this.errors.remove(remove);
     }
     
     public void clearErrors() {
@@ -289,6 +298,28 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 
 		public void setPath(String path) {
 			this.path = path;
+		}		
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			ValidationError other = (ValidationError) obj;
+			if (severity == null) {
+				if (other.severity != null)
+					return false;
+			} else if (!severity.equals(other.severity))
+				return false;
+			if (value == null) {
+				if (other.value != null)
+					return false;
+			} else if (!value.equals(other.value))
+				return false;
+			return true;
 		}		
     }    
 }
