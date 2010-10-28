@@ -75,9 +75,6 @@ public class AdminFactory {
 			try {
 				return method.invoke(getTarget(), args);
 			} catch (InvocationTargetException e) {
-				if (ExceptionUtil.getExceptionOfType(e, CommunicationException.class) != null) {
-					this.admin = null;
-				}
 				throw e.getTargetException();
 			}
 		}
