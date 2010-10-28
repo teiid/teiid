@@ -22,6 +22,7 @@
 package org.teiid.deployers;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
@@ -42,7 +43,9 @@ public class SystemVDBDeployer {
 			if (url == null) {
 				throw new TeiidRuntimeException(RuntimeMetadataPlugin.Util.getString("system_vdb_not_found")); //$NON-NLS-1$
 			}
-			this.vdbRepository.setSystemStore(new IndexMetadataFactory(url).getMetadataStore(null));
+			// uri conversion is only to remove the spaces in URL, note this only with above kind situation  
+			URI uri = new URI(url.getProtocol(), url.getPath(), null);
+			this.vdbRepository.setSystemStore(new IndexMetadataFactory(uri.toURL()).getMetadataStore(null));
 		} catch (URISyntaxException e) {
 			throw new TeiidRuntimeException(e, RuntimePlugin.Util.getString("system_vdb_load_error")); //$NON-NLS-1$
 		} catch (IOException e) {
