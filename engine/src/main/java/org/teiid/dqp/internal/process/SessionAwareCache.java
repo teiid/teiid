@@ -173,6 +173,8 @@ public class SessionAwareCache<T> {
 	public void clearAll(){
 		this.localCache.clear();
 		this.distributedCache.clear();
+		this.totalRequests.set(0);
+		this.cacheHit.set(0);		
 	}	
 	
 	public void clearForVDB(String vdbName, int version) {

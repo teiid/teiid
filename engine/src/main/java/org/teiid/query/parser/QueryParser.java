@@ -26,6 +26,7 @@ import java.io.StringReader;
 
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.symbol.Expression;
@@ -123,6 +124,13 @@ public class QueryParser {
         }
 		return result;
 	}
+	
+	public CacheHint parseCacheHint(String sql) throws QueryParserException {
+        if(sql == null || sql.length() == 0) {
+            throw new QueryParserException(QueryPlugin.Util.getString("QueryParser.emptysql")); //$NON-NLS-1$
+        }        
+        return SQLParserUtil.getQueryCacheOption(sql);        
+	}	
 
     /**
      * Takes a SQL string representing an SQL criteria (i.e. just the WHERE
