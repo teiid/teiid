@@ -260,7 +260,6 @@ TOKEN : /* Reserved words */
 |   <SYSTEM_USER: "system_user">
 |   <TABLE: "table">
 |   <TEMPORARY: "temporary">
-|   <TEXTAGG: "textagg">
 |   <THEN: "then">
 |   <TIMEZONE_HOUR: "timezone_hour">
 |   <TIMEZONE_MINUTE: "timezone_minute">
@@ -1795,13 +1794,14 @@ AggregateSymbol textAgg(ParseInfo info) :
 	DerivedColumn expression = null;
 	Character delimiter = null;
 	Character quote = null;
-	Integer header = null;	
+	boolean header = false;	
 	List<DerivedColumn> expressions = new ArrayList<DerivedColumn>();
 	OrderBy orderBy = null;
+	String encoding = null;
 }
 {
-	<TEXTAGG> <LPAREN>
-	expression = derivedColumn(info)
+	nonReserved("TEXTAGG") <LPAREN>
+	<FOR> expression = derivedColumn(info)
 	{
 		expressions.add(expression);
 	}
@@ -1821,15 +1821,12 @@ AggregateSymbol textAgg(ParseInfo info) :
 	]
 	[
 	  LOOKAHEAD(<ID>, { "header".equalsIgnoreCase(getToken(1).image) }) <ID>
-	  [
-	  	header = intVal()
-	  ]
-	  {
-	  	if (header == null) {
-	  		header = 1;
-	  	}
-	  }
+	  { header = true; }
 	]	
+	[
+	  LOOKAHEAD(<ID>, { "encoding".equalsIgnoreCase(getToken(1).image) })
+	  ( <ID> encoding = id() )
+	]
 	[
 		orderBy = orderby(info)
 	]	
@@ -1842,9 +1839,9 @@ AggregateSymbol textAgg(ParseInfo info) :
 		TextLine tf = new TextLine();
 		tf.setDelimiter(delimiter);
 		tf.setQuote(quote);
-		tf.setIncludeHeader(header!=null);
+		tf.setIncludeHeader(header);
 		tf.setExpressions(expressions);
-		
+		tf.setEncoding(encoding);
 		String name = generateFunctionName(info, "TEXTAGG");
 		AggregateSymbol agg = new AggregateSymbol(name, "TEXTAGG", false, tf);
 		agg.setOrderBy(orderBy);
@@ -3199,6 +3196,8 @@ Expression valueExpressionPrimary(ParseInfo info) :
 			<RBRACE>
 		)
 		|
+		LOOKAHEAD(<ID> <LPAREN> <FOR>) (expression=textAgg(info))
+		|
 		// Aggregate function
 		LOOKAHEAD(<ID>, {matchesAny(getToken(1).image, "count", "min", "max", "sum", "avg", "every", "STDDEV_POP", "STDDEV_SAMP", "VAR_SAMP", "VAR_POP") != null}) (expression=aggregateSymbol(info))
 		|
@@ -3208,8 +3207,6 @@ Expression valueExpressionPrimary(ParseInfo info) :
 		|
 		(expression=xmlAgg(info))
 		|
-		(expression=textAgg(info))
-		|		
 		// Function
 		LOOKAHEAD(2) (expression=function(info))
 		|

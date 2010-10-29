@@ -21,23 +21,30 @@
  */
 package org.teiid.query.sql.symbol;
 
-import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
-import org.teiid.query.eval.Evaluator;
+import org.teiid.core.util.StringUtil;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
+/**
+ * Represents the only allowable expression for the textagg aggregate.
+ * This is a Teiid specific construct.
+ */
 public class TextLine implements Expression {
-	public static String nl = System.getProperty("line.separator"); //$NON-NLS-1$
+	public static final String nl = System.getProperty("line.separator"); //$NON-NLS-1$
 
-	private Character delimiter = null;
-	private Character quote = null;
+	private Character delimiter;
+	private Character quote;
 	private boolean includeHeader;
 	private List<DerivedColumn> expressions;
+	private String encoding;
 	
 	public Character getDelimiter() {
 		return delimiter;
@@ -45,6 +52,14 @@ public class TextLine implements Expression {
 
 	public void setDelimiter(Character delimiter) {
 		this.delimiter = delimiter;
+	}
+	
+	public String getEncoding() {
+		return encoding;
+	}
+	
+	public void setEncoding(String encoding) {
+		this.encoding = encoding;
 	}
 
 	public Character getQuote() {
@@ -73,7 +88,7 @@ public class TextLine implements Expression {
 	
 	@Override
 	public Class<?> getType() {
-		return DataTypeManager.DefaultDataClasses.CLOB;
+		return DataTypeManager.DefaultDataClasses.BLOB;
 	}
 
 	@Override
@@ -94,24 +109,11 @@ public class TextLine implements Expression {
 	@Override
 	public TextLine clone() {
 		TextLine clone = new TextLine();
-
-		if (this.expressions != null && !this.expressions.isEmpty()) {
-			List<DerivedColumn> list = new ArrayList<DerivedColumn>();
-			for (DerivedColumn expr:this.expressions) {
-				list.add(expr.clone());
-			}
-			clone.expressions = list;
-		}
-		
-		if (this.delimiter != null) {
-			clone.delimiter = new Character(this.delimiter);
-		}
-		
-		if (this.quote != null) {
-			clone.quote = new Character(this.quote);
-		}
-		
+		clone.expressions = LanguageObject.Util.deepClone(this.expressions, DerivedColumn.class);
+		clone.delimiter = this.delimiter;
+		clone.quote = this.quote;
 		clone.includeHeader = this.includeHeader;
+		clone.encoding = this.encoding;
 		return clone;
 	}
 
@@ -127,7 +129,8 @@ public class TextLine implements Expression {
 		return EquivalenceUtil.areEqual(this.expressions, other.expressions)
 			  && EquivalenceUtil.areEqual(this.delimiter, other.delimiter)
 			  && EquivalenceUtil.areEqual(this.quote, other.quote)
-			  && this.includeHeader == other.includeHeader;
+			  && this.includeHeader == other.includeHeader
+			  && EquivalenceUtil.areEqual(this.encoding, other.encoding);
 	}
 
 	@Override
@@ -140,57 +143,37 @@ public class TextLine implements Expression {
 		return SQLStringVisitor.getSQLString(this);
 	}	
 	
-	public static String evaluate(final Evaluator.NameValuePair[] values, Character delimeter, Character quote) {
-				
+	public static interface ValueExtractor<T> {
+		Object getValue(T t);
+	}
+	
+	public static <T> String evaluate(final List<T> values, ValueExtractor<T> valueExtractor, Character delimeter, Character quote) throws TransformationException {
 		if (delimeter == null) {
 			delimeter = new Character(',');
 		}
-				
+		String quoteStr = null;		
+		if (quote == null) {
+			quoteStr = "\""; //$NON-NLS-1$
+		} else {
+			quoteStr = String.valueOf(quote);
+		}
+		String doubleQuote = quoteStr + quoteStr;
 		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < values.length; i++) {
-			if (values[i].value != null) {
-				addQuote(quote, sb);
-				sb.append(values[i].value);
-				addQuote(quote, sb);
+		for (Iterator<T> iterator = values.iterator(); iterator.hasNext();) {
+			T t = iterator.next();
+			String text = DataTypeManager.transformValue(valueExtractor.getValue(t), DataTypeManager.DefaultDataClasses.STRING);
+			if (text == null) {
+				continue;
 			}
-			if (i < values.length-1) {
+			sb.append(quoteStr);
+			sb.append(StringUtil.replaceAll(text, quoteStr, doubleQuote));
+			sb.append(quoteStr);
+			if (iterator.hasNext()) {
 				sb.append(delimeter);
 			}			
-		}
-		sb.append(nl);
-		
-		return sb.toString();
-	}
-
-	public static String getHeader(List<DerivedColumn> args, Character delimeter, Character quote) {
-		
-		if (delimeter == null) {
-			delimeter = new Character(',');
-		}		
-		
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < args.size(); i++) {
-			DerivedColumn symbol = args.get(i);
-			String name = symbol.getAlias();
-			Expression ex = symbol.getExpression();
-			if (name == null && ex instanceof ElementSymbol) {
-				name = ((ElementSymbol)ex).getShortName();
-			}
-			addQuote(quote, sb);
-			sb.append(name);
-			addQuote(quote, sb);
-			
-			if (i < args.size()-1) {
-				sb.append(delimeter);
-			}
 		}
 		sb.append(nl);
 		return sb.toString();
 	}
 	
-	private static void addQuote(Character quote, StringBuilder sb) {
-		if (quote != null) {
-			sb.append(quote);
-		}
-	}
 }

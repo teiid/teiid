@@ -25,18 +25,21 @@ package org.teiid.query.function.aggregate;
 import java.io.IOException;
 import java.io.Writer;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 
-import javax.sql.rowset.serial.SerialClob;
+import javax.sql.rowset.serial.SerialBlob;
 
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.FileStore.FileStoreOutputStream;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.types.ClobImpl;
-import org.teiid.core.types.ClobType;
+import org.teiid.core.types.BlobImpl;
+import org.teiid.core.types.BlobType;
 import org.teiid.core.types.Streamable;
 import org.teiid.query.processor.xml.XMLUtil.FileStoreInputStreamFactory;
+import org.teiid.query.sql.symbol.DerivedColumn;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.TextLine;
 import org.teiid.query.util.CommandContext;
 
@@ -54,13 +57,20 @@ public class TextAgg extends AggregateFunction {
     	this.textLine = textLine;    	    	
 	}
 
-	private FileStoreInputStreamFactory buildResult(CommandContext context, TextLine textLine) throws TeiidProcessingException {
+	private FileStoreInputStreamFactory buildResult() throws TeiidProcessingException {
 		try {
 			FileStore fs = context.getBufferManager().createFileStore("textagg"); //$NON-NLS-1$
-			FileStoreInputStreamFactory fisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
+			FileStoreInputStreamFactory fisf = new FileStoreInputStreamFactory(fs, textLine.getEncoding()==null?Streamable.ENCODING:textLine.getEncoding());
 			Writer w = fisf.getWriter();
 			if (textLine.isIncludeHeader()) {
-				w.write(TextLine.getHeader(textLine.getExpressions(), textLine.getDelimiter(), textLine.getQuote()));
+				w.write(TextLine.evaluate(textLine.getExpressions(), new TextLine.ValueExtractor<DerivedColumn>() {
+					public Object getValue(DerivedColumn t) {
+						if (t.getAlias() == null && t.getExpression() instanceof ElementSymbol) {
+							return ((ElementSymbol)t.getExpression()).getShortName();
+						}
+						return t.getAlias();
+					}
+				}, textLine.getDelimiter(), textLine.getQuote()));
 			}
 			w.close();
 			return fisf;
@@ -81,7 +91,7 @@ public class TextAgg extends AggregateFunction {
     public void addInputDirect(Object input, List<?> tuple) throws TeiidComponentException, TeiidProcessingException {
     	try {
     		if (this.result == null) {
-    			this.result = buildResult(this.context, this.textLine);
+    			this.result = buildResult();
     		}
     		String in = (String)input;
     		Writer w = result.getWriter();
@@ -97,7 +107,7 @@ public class TextAgg extends AggregateFunction {
      */
     public Object getResult() throws TeiidProcessingException{
     	if (this.result == null) {
-    		this.result = buildResult(this.context, this.textLine);
+    		this.result = buildResult();
     	}
     	
     	try {
@@ -105,11 +115,9 @@ public class TextAgg extends AggregateFunction {
 			fs.close();
 		
 			if (fs.bytesWritten()) {
-				return new ClobType(new ClobImpl(result, -1));
+				return new BlobType(new BlobImpl(result));
 			}
-			// fun convert bytes to string to char array!!
-			String msg = new String(fs.getBuffer(),0, fs.getCount(), Streamable.ENCODING);
-			return new ClobType(new SerialClob(msg.toCharArray()));
+			return new BlobType(new SerialBlob(Arrays.copyOf(fs.getBuffer(), fs.getCount())));
 		} catch (IOException e) {
 			throw new TeiidProcessingException(e);
 		}  catch (SQLException e) {

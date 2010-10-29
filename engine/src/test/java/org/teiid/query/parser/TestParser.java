@@ -40,6 +40,7 @@ import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.query.sql.lang.BetweenCriteria;
@@ -6725,28 +6726,15 @@ public class TestParser {
         tf.setDelimiter(new Character(','));
         tf.setIncludeHeader(true);
         
-        AggregateSymbol as = new AggregateSymbol("foo", Reserved.TEXTAGG, false, tf);
+        AggregateSymbol as = new AggregateSymbol("foo", NonReserved.TEXTAGG, false, tf);
         as.setOrderBy(new OrderBy(Arrays.asList(new ElementSymbol("e2"))));
         
         Query query = new Query();
         query.setSelect(new Select(Arrays.asList(as)));
         
-        String sql = "SELECT TextAgg(e1 as col1, e2 as col2 delimiter ',' header order by e2)"; //$NON-NLS-1$
-        helpTest(sql, "SELECT TEXTAGG(TEXTLINE(e1 AS col1, e2 AS col2 DELIMITER ',' HEADER) ORDER BY e2)", query);
+        String sql = "SELECT TextAgg(FOR e1 as col1, e2 as col2 delimiter ',' header order by e2)"; //$NON-NLS-1$
+        helpTest(sql, "SELECT TEXTAGG(FOR e1 AS col1, e2 AS col2 DELIMITER ',' HEADER ORDER BY e2)", query);
     }    
-    
-//    @Test public void testTextForrest() throws Exception {
-//    	List<DerivedColumn> expressions = new ArrayList<DerivedColumn>();
-//    	expressions.add(new DerivedColumn(null, new Constant(1)));
-//    	expressions.add(new DerivedColumn("col2", new ElementSymbol("e2")));
-//                
-//        TextForest tf = new TextForest();
-//        tf.setExpressions(expressions);
-//        tf.setIncludeHeader(true);
-//        
-//        String sql = "textforest(1, e2 as col2 HEADER)"; //$NON-NLS-1$
-//    	helpTestExpression(sql, "TEXTFOREST(1, e2 AS col2 HEADER)", tf);        
-//    }     
     
     @Test public void testNestedTable() throws Exception {
         String sql = "SELECT * from TABLE(exec foo()) as x"; //$NON-NLS-1$

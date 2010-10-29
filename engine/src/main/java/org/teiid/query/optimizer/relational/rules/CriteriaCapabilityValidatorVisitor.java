@@ -119,7 +119,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     
     @Override
     public void visit(TextLine obj) {
-    	markInvalid(obj, "Pushdown of TextForest not allowed"); //$NON-NLS-1$
+    	markInvalid(obj, "Pushdown of TextLine not allowed"); //$NON-NLS-1$
     }
     
     @Override

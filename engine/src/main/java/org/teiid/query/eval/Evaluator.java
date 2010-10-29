@@ -30,6 +30,7 @@ import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -649,7 +650,7 @@ public class Evaluator {
 	   } else if (expression instanceof Criteria) {
 		   return evaluate((Criteria)expression, tuple);
 	   } else if (expression instanceof TextLine){
-		   return evaluateTextForest(tuple, (TextLine)expression);
+		   return evaluateTextLine(tuple, (TextLine)expression);
 	   } else if (expression instanceof XMLElement){
 		   return evaluateXMLElement(tuple, (XMLElement)expression);
 	   } else if (expression instanceof XMLForest){
@@ -813,11 +814,19 @@ public class Evaluator {
 		return new ClobType(new ClobImpl(isf, -1));
 	}
 	
-	private Object evaluateTextForest(List<?> tuple, TextLine function) 	throws ExpressionEvaluationException, BlockedException, TeiidComponentException, FunctionExecutionException {
+	private Object evaluateTextLine(List<?> tuple, TextLine function) throws ExpressionEvaluationException, BlockedException, TeiidComponentException, FunctionExecutionException {
 		List<DerivedColumn> args = function.getExpressions();
 		Evaluator.NameValuePair<Object>[] nameValuePairs = getNameValuePairs(tuple, args, true);
-
-		return TextLine.evaluate(nameValuePairs, function.getDelimiter(), function.getQuote());
+		
+		try {
+			return TextLine.evaluate(Arrays.asList(nameValuePairs), new TextLine.ValueExtractor<NameValuePair<Object>>() {
+				public Object getValue(NameValuePair<Object> t) {
+					return t.value;
+				}
+			}, function.getDelimiter(), function.getQuote());
+		} catch (TransformationException e) {
+			throw new ExpressionEvaluationException(e, e.getMessage());
+		}
 	}
 
 	private Object evaluateXMLForest(List<?> tuple, XMLForest function)

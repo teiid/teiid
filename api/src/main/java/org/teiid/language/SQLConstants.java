@@ -98,6 +98,9 @@ public class SQLConstants {
 		public static final String LAST = "LAST"; //$NON-NLS-1$
 		
 		public static final String KEY = "KEY"; //$NON-NLS-1$
+		
+		public static final String ENCODING = "ENCODING"; //$NON-NLS-1$
+		public static final String TEXTAGG = "TEXTAGG"; //$NON-NLS-1$
 	}
 	
 	public interface Reserved {
@@ -319,7 +322,6 @@ public class SQLConstants {
 	    public static final String SYSTEM_USER = "SYSTEM_USER"; //$NON-NLS-1$
 		public static final String TABLE = "TABLE"; //$NON-NLS-1$
 	    public static final String TEMPORARY = "TEMPORARY"; //$NON-NLS-1$
-	    public static final String TEXTAGG = "TEXTAGG"; //$NON-NLS-1$
 	    public static final String THEN = "THEN"; //$NON-NLS-1$
 	    public static final String TIME = "TIME"; //$NON-NLS-1$
 		public static final String TIMESTAMP = "TIMESTAMP"; //$NON-NLS-1$

@@ -42,7 +42,7 @@ public class TestMultipleModelIndexes {
 		assertEquals(1, names.size());
 		
 		//ensure that datatypes are set
-		Table t = (Table)tm.getGroupID(names.iterator().next());
+		Table t = tm.getGroupID(names.iterator().next());
 		assertNotNull(t.getColumns().get(0).getDatatype());
 	}
 	

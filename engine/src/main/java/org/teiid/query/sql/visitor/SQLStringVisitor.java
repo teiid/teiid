@@ -1595,8 +1595,8 @@ public class SQLStringVisitor extends LanguageVisitor {
     
     @Override
     public void visit( TextLine obj ) {
-        append("TEXTLINE"); //$NON-NLS-1$
-        append("("); //$NON-NLS-1$
+        append(FOR); 
+        append(SPACE);
         registerNodes(obj.getExpressions(), 0);
         
         if (obj.getDelimiter() != null) {
@@ -1615,8 +1615,12 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(SPACE);
             append(NonReserved.HEADER);
         }
-        
-        append(")"); //$NON-NLS-1$
+        if (obj.getEncoding() != null) {
+        	append(SPACE);
+            append(NonReserved.ENCODING);
+        	append(SPACE);
+        	outputDisplayName(obj.getEncoding());
+        }
     }    
 
     @Override

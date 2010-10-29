@@ -22,6 +22,7 @@
 
 package org.teiid.query.validator;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -124,6 +125,7 @@ import org.teiid.query.sql.symbol.XMLForest;
 import org.teiid.query.sql.symbol.XMLNamespaces;
 import org.teiid.query.sql.symbol.XMLParse;
 import org.teiid.query.sql.symbol.XMLQuery;
+import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.CommandCollectorVisitor;
@@ -1241,17 +1243,27 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
     
     @Override
-    public void visit(TextLine obj) {
-    	validateDerivedColumnNames(obj, obj.getExpressions());
-    	for (DerivedColumn dc : obj.getExpressions()) {
-			if (dc.getAlias() == null) {
-				continue;
-			}
-			validateQName(obj, dc.getAlias());
+    public void visit(AggregateSymbol obj) {
+    	if (obj.getAggregateFunction() != Type.TEXTAGG) {
+    		return;
+    	}
+    	TextLine tl = (TextLine)obj.getExpression();
+    	if (tl.isIncludeHeader()) {
+    		validateDerivedColumnNames(obj, tl.getExpressions());
+    	}
+    	for (DerivedColumn dc : tl.getExpressions()) {
 			validateXMLContentTypes(dc.getExpression(), obj);
 		}
+    	validateTextOptions(obj, tl.getDelimiter(), tl.getQuote());
+    	if (tl.getEncoding() != null) {
+    		try {
+    			Charset.forName(tl.getEncoding());
+    		} catch (IllegalArgumentException e) {
+    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.invalid_encoding", tl.getEncoding()), obj); //$NON-NLS-1$
+    		}
+    	}
     }
-
+    
 	private String[] validateQName(LanguageObject obj, String name) {
 		try {
 			return Name11Checker.getInstance().getQNameParts(name);
@@ -1401,31 +1413,34 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_width"), obj); //$NON-NLS-1$
     		}
     	} else {
-        	delimiter = obj.getDelimiter();
-    		if (delimiter == null) {
-    			delimiter = ',';
-    		}
+        	if (obj.getHeader() != null && obj.getHeader() < 0) {
+	    		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_negative"), obj); //$NON-NLS-1$
+	    	}
+    		delimiter = obj.getDelimiter();
+    		quote = obj.getQuote();
+			validateTextOptions(obj, delimiter, quote);
     	}
     	if (obj.getSkip() != null && obj.getSkip() < 0) {
     		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_negative"), obj); //$NON-NLS-1$
     	}
-		if (!widthSet) {
-	    	if (obj.getHeader() != null && obj.getHeader() < 0) {
-	    		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_negative"), obj); //$NON-NLS-1$
-	    	}
-	    	quote = obj.getQuote();
-			if (quote == null) {
-				quote = '"';
-			} 
-			if (EquivalenceUtil.areEqual(quote, delimiter)) {
-				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_delimiter"), obj); //$NON-NLS-1$
-			}
-			if (EquivalenceUtil.areEqual(quote, '\n') 
-					|| EquivalenceUtil.areEqual(delimiter, '\n')) {
-				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_newline"), obj); //$NON-NLS-1$
-			}
-		}
     }
+
+	private void validateTextOptions(LanguageObject obj, Character delimiter,
+			Character quote) {
+		if (quote == null) {
+			quote = '"';
+		} 
+		if (delimiter == null) {
+			delimiter = ',';
+		}
+		if (EquivalenceUtil.areEqual(quote, delimiter)) {
+			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_delimiter"), obj); //$NON-NLS-1$
+		}
+		if (EquivalenceUtil.areEqual(quote, '\n') 
+				|| EquivalenceUtil.areEqual(delimiter, '\n')) {
+			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_table_newline"), obj); //$NON-NLS-1$
+		}
+	}
     
     @Override
     public void visit(XMLParse obj) {

@@ -2083,5 +2083,13 @@ public class TestValidator {
     	models.add("pm1");
         helpValidate("insert into pm1.g1 select * from pm1.g1", new String[] {"pm1.g1"}, new MultiSourceMetadataWrapper(FakeMetadataFactory.example1(), models));  //$NON-NLS-1$
     }
+    
+    @Test public void testTextAggEncoding() throws Exception {
+    	helpValidate("select textagg(for e1 encoding abc) from pm1.g1", new String[] {"TEXTAGG(FOR e1 ENCODING abc)"}, FakeMetadataFactory.example1Cached());  //$NON-NLS-1$
+    }
+    
+    @Test public void testTextAggHeader() throws Exception {
+    	helpValidate("select textagg(for e1 || 1 HEADER) from pm1.g1", new String[] {"TEXTAGG(FOR (e1 || 1) HEADER)"}, FakeMetadataFactory.example1Cached());  //$NON-NLS-1$
+    }
 
 }

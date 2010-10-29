@@ -109,7 +109,7 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 			Object value = null;
 			if (isText) {
 				ClobImpl clob = new ClobImpl(isf, -1);
-				clob.setEncoding(encoding);
+				clob.setEncoding(encoding.name());
 				value = new ClobType(clob);
 			} else {
 				value = new BlobType(new BlobImpl(isf));
@@ -131,15 +131,15 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 	public static final String GETFILES = "getFiles"; //$NON-NLS-1$
 	public static final String SAVEFILE = "saveFile"; //$NON-NLS-1$
 	
-	private String encoding = Charset.defaultCharset().name();
+	private Charset encoding = Charset.defaultCharset();
 	
 	@TranslatorProperty(display="File Encoding",advanced=true)
 	public String getEncoding() {
-		return encoding;
+		return encoding.name();
 	}
 	
 	public void setEncoding(String encoding) {
-		this.encoding = encoding;
+		this.encoding = Charset.forName(encoding);
 	}
 	
 	//@Override
@@ -161,7 +161,7 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 						if (file instanceof SQLXML) {
 							is = ((SQLXML)file).getBinaryStream();
 						} else if (file instanceof Clob) {
-							is = new ReaderInputStream(((Clob)file).getCharacterStream(), Charset.forName(encoding));
+							is = new ReaderInputStream(((Clob)file).getCharacterStream(), encoding);
 						} else if (file instanceof Blob) {
 							is = ((Blob)file).getBinaryStream();
 						} else {
