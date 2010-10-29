@@ -28,7 +28,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Properties;
 
-import org.teiid.client.util.ExceptionUtil;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.JDBCPlugin;
 import org.teiid.net.CommunicationException;
@@ -75,9 +74,6 @@ public class AdminFactory {
 			try {
 				return method.invoke(getTarget(), args);
 			} catch (InvocationTargetException e) {
-				if (ExceptionUtil.getExceptionOfType(e, CommunicationException.class) != null) {
-					this.admin = null;
-				}
 				throw e.getTargetException();
 			}
 		}

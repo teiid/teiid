@@ -42,6 +42,7 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
 import org.teiid.core.util.FileUtils;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
@@ -284,19 +285,19 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	    	
 	    	if (!loaded) {
 	    		String msg = RuntimePlugin.Util.getString("model_metadata_loading", vdb.getName()+"-"+vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())); //$NON-NLS-1$ //$NON-NLS-2$
-	    		model.addError(ModelMetaData.ValidationError.Severity.ERROR.toString(), msg); 
+	    		final ValidationError addedError = model.addError(ModelMetaData.ValidationError.Severity.ERROR.toString(), msg); 
 	    		LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
 	    		threadPool.run(new Runnable() {
 					@Override
 					public void run() {
-						loadMetadata(vdb, model, cache, cacheFile, vdbStore, cmr);
+						loadMetadata(vdb, model, cache, cacheFile, vdbStore, cmr, addedError);
 					}
 	    		});
 	    	}
 		}
 	}	
     
-    private void loadMetadata(VDBMetaData vdb, ModelMetaData model, boolean cache, File cacheFile, MetadataStoreGroup vdbStore, ConnectorManagerRepository cmr) {
+    private void loadMetadata(VDBMetaData vdb, ModelMetaData model, boolean cache, File cacheFile, MetadataStoreGroup vdbStore, ConnectorManagerRepository cmr, ValidationError addedError) {
     	Exception exception = null;
     	
     	boolean loaded = false;
@@ -311,7 +312,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
     				this.serializer.saveAttachment(cacheFile, store);
     			}
     			vdbStore.addStore(store);
-    			model.clearErrors();
+    			model.removeError(addedError);
     			loaded = true;
     			break;
 			} catch (TranslatorException e) {
