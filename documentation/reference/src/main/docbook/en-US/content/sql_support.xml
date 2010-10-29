@@ -238,10 +238,12 @@
           <para>STDDEV_SAMP(x) – sample standar deviation (excluding null) logically equals SQRT(VAR_SAMP(x))</para>
         </listitem>
         <listitem>
-          <para>TEXTAGG((expression [as name], ... [DELIMITER char] [QUOTE char] [HEADER] 
-          <link linkend="orderby_clause">[ORDER BY ...]</link>) –  Text concatination of all expressions in a group (excluding null).
-          When DELIMITER is not specified, by default comma(,) is used as delimiter. Use QUOTE, to quote the each expression value with 
-          provided character. If HEADER is specified, the result contains the header row as first line. This aggregation returns a Clob. 
+          <para>TEXTAGG(FOR (expression [as name], ... [DELIMITER char] [QUOTE char] [HEADER] [ENCODING id]
+          <link linkend="orderby_clause">[ORDER BY ...]</link>) –  CSV text aggregation of all expressions in each row of a group.
+          When DELIMITER is not specified, by default comma(,) is used as delimiter. Double quotes(") is the default quote character.  
+          Use QUOTE to specify a differnt value.  All non-null values will be quoted. 
+          If HEADER is specified, the result contains the header row as the first line - the header line will be present even if there are no rows in a group. 
+          This aggregation returns a blob. 
           </para>
         </listitem>                
         <listitem>
