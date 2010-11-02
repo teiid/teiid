@@ -226,7 +226,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
             	return;
             }
             if (! CapabilitiesUtil.supportsScalarFunction(modelID, obj, metadata, capFinder)) {
-                markInvalid(obj, (obj.isImplicit()?"(implicit) convert":"") + " Function not supported by source"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                markInvalid(obj, (obj.isImplicit()?"(implicit) ":"") + obj.getName() + " function not supported by source"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             }
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e));

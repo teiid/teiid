@@ -22,13 +22,15 @@
 
 package org.teiid.query.optimizer;
 
+import static org.junit.Assert.*;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
+import org.teiid.metadata.Column;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
@@ -48,9 +50,8 @@ import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.FakeMetadataObject;
 
-
-
-public class TestDependentJoins extends TestCase {
+@SuppressWarnings("nls")
+public class TestDependentJoins {
     
     static void checkDependentGroups(ProcessorPlan plan, String[] groups) {
         if(! (plan instanceof RelationalPlan)) {
@@ -130,7 +131,7 @@ public class TestDependentJoins extends TestCase {
         }
     }
     
-    public void testOptionMakeDep1() throws Exception {
+    @Test public void testOptionMakeDep1() throws Exception {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
@@ -161,7 +162,7 @@ public class TestDependentJoins extends TestCase {
         });
     }
     
-    public void testOptionMakeDep2() throws Exception {
+    @Test public void testOptionMakeDep2() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
@@ -191,7 +192,7 @@ public class TestDependentJoins extends TestCase {
         });
     }
     
-    public void testDepJoinHintForceLeft() throws Exception {
+    @Test public void testDepJoinHintForceLeft() throws Exception {
     	ProcessorPlan plan = TestOptimizer.helpPlan("select * FROM vm1.g4 option makedep pm1.g1", TestOptimizer.example1(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g2 AS g_0" }, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -213,7 +214,7 @@ public class TestDependentJoins extends TestCase {
         checkDependentGroups(plan, new String[] {"pm1.g1"});                             //$NON-NLS-1$
     }
 
-    public void testDepJoinHintForceRight() throws Exception {
+    @Test public void testDepJoinHintForceRight() throws Exception {
         
         ProcessorPlan plan = TestOptimizer.helpPlan("select * FROM vm1.g4 option makedep pm1.g2", TestOptimizer.example1(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$ 
@@ -236,7 +237,7 @@ public class TestDependentJoins extends TestCase {
         checkDependentGroups(plan, new String[] {"pm1.g2"});                             //$NON-NLS-1$
     }
 
-	public void testDepJoinMultiGroupBaseline() throws Exception {
+	@Test public void testDepJoinMultiGroupBaseline() throws Exception {
         ProcessorPlan plan = TestOptimizer.helpPlan("select vm1.g4.*, pm1.g3.e1 FROM vm1.g4, pm1.g3 where pm1.g3.e1=vm1.g4.e1", TestOptimizer.example1(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1", //$NON-NLS-1$
                             "SELECT pm1.g2.e1 FROM pm1.g2", //$NON-NLS-1$
@@ -260,7 +261,7 @@ public class TestDependentJoins extends TestCase {
         checkDependentGroups(plan, new String[0]);                             
     }
 
-    public void testDepJoinMultiGroupForceOther() throws Exception {
+    @Test public void testDepJoinMultiGroupForceOther() throws Exception {
         ProcessorPlan plan = TestOptimizer.helpPlan("select vm1.g4.*, pm1.g3.e1 FROM vm1.g4, pm1.g3 where pm1.g3.e1=vm1.g4.e1 option makedep pm1.g2", TestOptimizer.example1(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm1.g3 AS g_0", "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -282,7 +283,7 @@ public class TestDependentJoins extends TestCase {
         checkDependentGroups(plan, new String[] {"pm1.g2"});                             //$NON-NLS-1$ 
     }
 
-    public void testDepJoinHintForceLeft_NotDep() throws Exception {
+    @Test public void testDepJoinHintForceLeft_NotDep() throws Exception {
         ProcessorPlan plan = TestOptimizer.helpPlan("select * FROM vm1.g4 option makedep pm1.g1 makenotdep pm1.g2", TestOptimizer.example1(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g2 AS g_0" }, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -305,7 +306,7 @@ public class TestDependentJoins extends TestCase {
         checkNotDependentGroups(plan, new String[] {"pm1.g2"});                             //$NON-NLS-1$
     }
 
-    public void testDepJoinHintForceRight_NotDep() throws Exception {
+    @Test public void testDepJoinHintForceRight_NotDep() throws Exception {
         ProcessorPlan plan = TestOptimizer.helpPlan("select * FROM vm1.g4 option makedep pm1.g2 makenotdep pm1.g1", TestOptimizer.example1(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -328,7 +329,7 @@ public class TestDependentJoins extends TestCase {
         checkNotDependentGroups(plan, new String[] {"pm1.g1"});                             //$NON-NLS-1$
     }
 
-    public void testDepJoinMultiGroupForceOther_NotDep() throws Exception {
+    @Test public void testDepJoinMultiGroupForceOther_NotDep() throws Exception {
         ProcessorPlan plan = TestOptimizer.helpPlan("select vm1.g4.*, pm1.g3.e1 FROM vm1.g4, pm1.g3 where pm1.g3.e1=vm1.g4.e1 option makedep pm1.g2 makenotdep pm1.g1, pm1.g3", TestOptimizer.example1(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm1.g3 AS g_0", "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -354,7 +355,7 @@ public class TestDependentJoins extends TestCase {
     /**
      * Test that access node with unsatisfied access pattern is made dependent
      */
-    public void testMakeDependentAccessPattern1() throws Exception {
+    @Test public void testMakeDependentAccessPattern1() throws Exception {
         ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1, pm4.g1 where pm1.g1.e1 = pm4.g1.e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm4.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
         checkDependentGroups(plan, new String[] {"pm4.g1"}); //$NON-NLS-1$
@@ -364,7 +365,7 @@ public class TestDependentJoins extends TestCase {
      * Test that access node with unsatisfied access pattern is made dependent
      * (Same query written slightly different way)
      */
-    public void testMakeDependentAccessPattern1a() throws Exception {
+    @Test public void testMakeDependentAccessPattern1a() throws Exception {
         ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm4.g1, pm1.g1 where pm4.g1.e1 = pm1.g1.e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm4.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
         checkDependentGroups(plan, new String[] {"pm4.g1"}); //$NON-NLS-1$
@@ -373,7 +374,7 @@ public class TestDependentJoins extends TestCase {
     /**
      * Test that access node with unsatisfied access pattern is made dependent
      */
-    public void testMakeDependentAccessPattern2() throws Exception {
+    @Test public void testMakeDependentAccessPattern2() throws Exception {
         ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1, pm4.g1 where pm4.g1.e2 = 1 and pm1.g1.e1 = pm4.g1.e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm4.g1 AS g_0 WHERE (g_0.e2 = 1) AND (g_0.e1 IN (<dependent values>))", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
         checkDependentGroups(plan, new String[] {"pm4.g1"}); //$NON-NLS-1$
@@ -383,7 +384,7 @@ public class TestDependentJoins extends TestCase {
      * Test that second access pattern of access node is chosen to make
      * dependent with
      */
-    public void testMakeDependentAccessPattern3() throws Exception {
+    @Test public void testMakeDependentAccessPattern3() throws Exception {
         ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1, pm4.g2 where pm1.g1.e1 = pm4.g2.e5", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e5 FROM pm4.g2 AS g_0 WHERE g_0.e5 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
         checkDependentGroups(plan, new String[] {"pm4.g2"}); //$NON-NLS-1$
@@ -394,7 +395,7 @@ public class TestDependentJoins extends TestCase {
      * be made dependent, but merge join is used since no access pattern 
      * needs to be fulfilled and there is no cost info available for either source
      */
-    public void testPushSelectAndMakeDependentAccessPattern1() throws Exception {
+    @Test public void testPushSelectAndMakeDependentAccessPattern1() throws Exception {
         ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1, pm4.g1 where pm4.g1.e1 = 'abc' and pm1.g1.e1 = 'abc' and pm1.g1.e2 = pm4.g1.e2", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'", "SELECT pm4.g1.e2 FROM pm4.g1 WHERE pm4.g1.e1 = 'abc'" }, TestOptimizer.getGenericFinder(false), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
         checkDependentGroups(plan, new String[0]); 
@@ -423,7 +424,7 @@ public class TestDependentJoins extends TestCase {
      * needs to be fulfilled and there is no cost info available for either source
      * (Same query written slightly different)
      */
-    public void testPushSelectAndMakeDependentAccessPattern1a() throws Exception {
+    @Test public void testPushSelectAndMakeDependentAccessPattern1a() throws Exception {
         ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm4.g1, pm1.g1 where pm4.g1.e2 = pm1.g1.e2 and pm4.g1.e1 = 'abc' and pm1.g1.e1 = 'abc'", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'", "SELECT pm4.g1.e2 FROM pm4.g1 WHERE pm4.g1.e1 = 'abc'" }, TestOptimizer.getGenericFinder(false), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
         checkDependentGroups(plan, new String[0]); 
@@ -450,7 +451,7 @@ public class TestDependentJoins extends TestCase {
      * Tests that it is enforced if an access node can't be made dependent
      * because of it's (already-satisfied) access pattern - merge join is used
      */
-    public void testPushSelectAndMakeDependentAccessPattern2() throws Exception {
+    @Test public void testPushSelectAndMakeDependentAccessPattern2() throws Exception {
         ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1, pm4.g1 where pm4.g1.e1 = 'abc' and pm1.g1.e2 = pm4.g1.e2", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1", "SELECT pm4.g1.e2 FROM pm4.g1 WHERE pm4.g1.e1 = 'abc'" }, TestOptimizer.getGenericFinder(false), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
         checkDependentGroups(plan, new String[0] ); 
@@ -474,7 +475,7 @@ public class TestDependentJoins extends TestCase {
     }
     
     /** Should use dependent join since one access node is "strong" */
-    public void testUseMergeJoin1() throws Exception {
+    @Test public void testUseMergeJoin1() throws Exception {
         // Create query
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2 WHERE pm1.g1.e1 = pm1.g2.e1";//$NON-NLS-1$
 
@@ -513,7 +514,7 @@ public class TestDependentJoins extends TestCase {
     }
 
     /** Should not use a dependent join since neither access node is "strong" */
-    public void testUseMergeJoin2() throws Exception {
+    @Test public void testUseMergeJoin2() throws Exception {
         // Create query
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2 WHERE pm1.g1.e1 = pm1.g2.e1";//$NON-NLS-1$
 
@@ -549,7 +550,7 @@ public class TestDependentJoins extends TestCase {
     }
     
     /** should have one dependent joins */
-    public void testMultiMergeJoin3() throws Exception {
+    @Test public void testMultiMergeJoin3() throws Exception {
         // Create query
         String sql = "SELECT pm1.g2.e1 FROM pm1.g3, pm1.g2, pm1.g1 WHERE pm1.g2.e1 = pm1.g3.e1 AND pm1.g1.e1 = pm1.g2.e1";//$NON-NLS-1$
 
@@ -591,7 +592,7 @@ public class TestDependentJoins extends TestCase {
         });         
     } 
     
-    public void testMultiMergeJoin2() throws Exception {
+    @Test public void testMultiMergeJoin2() throws Exception {
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2, pm1.g3 WHERE pm1.g1.e1 = pm1.g2.e1 AND pm1.g2.e1 = pm1.g3.e1";//$NON-NLS-1$
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -637,7 +638,7 @@ public class TestDependentJoins extends TestCase {
      * should be one merge join and one dependent join
      * Unlike the above tests, here the model pm1 supports ORDER BY.
      */
-    public void testMultiMergeJoin5_defect13448() throws Exception {
+    @Test public void testMultiMergeJoin5_defect13448() throws Exception {
         // Create query
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2, pm1.g3 WHERE pm1.g1.e1 = pm1.g2.e1 AND pm1.g1.e1 = pm1.g3.e1";//$NON-NLS-1$
 
@@ -681,7 +682,7 @@ public class TestDependentJoins extends TestCase {
         });         
     }
     
-    public void testMergeJoinVirtualGroups() throws Exception {
+    @Test public void testMergeJoinVirtualGroups() throws Exception {
         String sql = "SELECT vm1.g1.e1 FROM vm1.g1, vm1.g2a WHERE vm1.g1.e1 = vm1.g2a.e1";//$NON-NLS-1$
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -722,7 +723,7 @@ public class TestDependentJoins extends TestCase {
         });         
     }
     
-    public void testRLMCase2077() throws Exception {
+    @Test public void testRLMCase2077() throws Exception {
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
@@ -766,7 +767,7 @@ public class TestDependentJoins extends TestCase {
 
     }
 
-    public void testRLMCase2077_2() throws Exception {
+    @Test public void testRLMCase2077_2() throws Exception {
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
@@ -809,5 +810,47 @@ public class TestDependentJoins extends TestCase {
         });             
 
     }  
+    
+    @Test public void testCostingCleanup() throws Exception {
+        
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
+
+        TransformationMetadata metadata = FakeMetadataFactory.exampleBQT();
+        FakeMetadataFactory.setCardinality("bqt1.smalla", 3000, metadata); //$NON-NLS-1$
+        FakeMetadataFactory.setCardinality("bqt2.smalla", 10000, metadata); //$NON-NLS-1$
+        Column fmo = (Column)metadata.getElementID("bqt1.smalla.intnum");
+		fmo.setDistinctValues(1000);
+        ProcessorPlan plan = TestOptimizer.helpPlan(
+            "SELECT max(a.stringkey) from bqt1.smalla a, bqt2.smalla a2, bqt1.smalla a1 where a.intnum = a2.intnum and a1.stringnum = a2.stringnum and a.floatnum = a1.floatnum",  //$NON-NLS-1$
+            metadata,
+            null, capFinder,
+            new String[] {"SELECT g_1.stringnum AS c_0, g_0.intnum AS c_1, MAX(g_0.stringkey) AS c_2 FROM bqt1.smalla AS g_0, bqt1.smalla AS g_1 WHERE g_0.floatnum = g_1.floatnum GROUP BY g_1.stringnum, g_0.intnum ORDER BY c_0, c_1", "SELECT DISTINCT g_0.stringnum AS c_0, g_0.intnum AS c_1 FROM bqt2.smalla AS g_0 WHERE (g_0.stringnum IN (<dependent values>)) AND (g_0.intnum IN (<dependent values>)) ORDER BY c_0, c_1"},
+            TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING );
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            1,      // Access
+            1,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            1,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        });             
+
+    } 
 
 }
