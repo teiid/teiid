@@ -29,7 +29,6 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -199,9 +198,6 @@ public class DQPWorkContext implements Serializable {
 		if (this.policies == null) {
 	    	this.policies = new HashMap<String, DataPolicy>();
 	    	Set<String> userRoles = getUserRoles();
-	    	if (userRoles.isEmpty()) {
-	    		return this.policies;
-	    	}
 	    	
 	    	// get data roles from the VDB
 	    	for (DataPolicy policy : getVDB().getDataPolicies()) {
@@ -217,13 +213,7 @@ public class DQPWorkContext implements Serializable {
 		if (policy.isAnyAuthenticated()) {
 			return true;
 		}
-		List<String> roles = policy.getMappedRoleNames();
-		for (String role:roles) {
-			if (userRoles.contains(role)) {
-				return true;
-			}
-		}
-		return false;
+		return !Collections.disjoint(policy.getMappedRoleNames(), userRoles);
 	}    
 
 	private Set<String> getUserRoles() {
