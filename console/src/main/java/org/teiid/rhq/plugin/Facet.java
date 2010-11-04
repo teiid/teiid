@@ -351,9 +351,7 @@ public abstract class Facet implements
 			Map<String, ManagedProperty> managedProperties = managedComponent
 					.getProperties();
 
-			ProfileServiceUtil.convertConfigurationToManagedProperties(
-					managedProperties, resourceConfig, resourceContext
-							.getResourceType());
+			ProfileServiceUtil.convertConfigurationToManagedProperties(managedProperties, resourceConfig, resourceContext.getResourceType(), null);
 
 			try {
 				managementView.updateComponent(managedComponent);
@@ -758,11 +756,9 @@ public abstract class Facet implements
 		DeploymentTemplateInfo template;
 		try {
 			template = managementView.getTemplate(templateName);
-			Map<String, ManagedProperty> managedProperties = template
-					.getProperties();
+			Map<String, ManagedProperty> managedProperties = template.getProperties();
 
-			ProfileServiceUtil.convertConfigurationToManagedProperties(
-					managedProperties, resourceConfig, resourceType);
+			ProfileServiceUtil.convertConfigurationToManagedProperties(managedProperties, resourceConfig, resourceType, null);
 
 			LOG.debug("Applying template [" + templateName //$NON-NLS-1$
 					+ "] to create ManagedComponent of type [" + componentType //$NON-NLS-1$

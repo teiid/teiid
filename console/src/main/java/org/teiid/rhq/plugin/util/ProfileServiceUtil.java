@@ -407,37 +407,33 @@ public class ProfileServiceUtil {
 		return config;
 	}
 
-	public static void convertConfigurationToManagedProperties(
-			Map<String, ManagedProperty> managedProperties,
-			Configuration configuration, ResourceType resourceType) {
-		ConfigurationDefinition configDefinition = resourceType
-				.getResourceConfigurationDefinition();
+	public static void convertConfigurationToManagedProperties(Map<String, ManagedProperty> managedProperties, Configuration configuration, ResourceType resourceType, String prefix) {
+		ConfigurationDefinition configDefinition = resourceType.getResourceConfigurationDefinition();
 		for (ManagedProperty managedProperty : managedProperties.values()) {
 			String propertyName = managedProperty.getName();
-			PropertyDefinition propertyDefinition = configDefinition
-					.get(propertyName);
+			if (prefix != null) {
+				propertyName = prefix + "." + propertyName; //$NON-NLS-1$
+			}
+			PropertyDefinition propertyDefinition = configDefinition.get(propertyName);
 			if (propertyDefinition == null) {
 				// The managed property is not defined in the configuration
 				continue;
 			}
-			populateManagedPropertyFromProperty(managedProperty,
-					propertyDefinition, configuration);
+			populateManagedPropertyFromProperty(managedProperty,propertyDefinition, configuration);
 		}
 		return;
 	}
 
-	public static void populateManagedPropertyFromProperty(
-			ManagedProperty managedProperty,
-			PropertyDefinition propertyDefinition, Configuration configuration) {
+	public static void populateManagedPropertyFromProperty(ManagedProperty managedProperty, PropertyDefinition propertyDefinition, Configuration configuration) {
 		// If the ManagedProperty defines a default value, assume it's more
 		// definitive than any default value that may
 		// have been defined in the plugin descriptor, and update the
 		// PropertyDefinition to use that as its default
 		// value.
 		MetaValue defaultValue = managedProperty.getDefaultValue();
-		if (defaultValue != null)
-			updateDefaultValueOnPropertyDefinition(propertyDefinition,
-					defaultValue);
+		if (defaultValue != null) {
+			updateDefaultValueOnPropertyDefinition(propertyDefinition,defaultValue);
+		}
 		MetaValue metaValue = managedProperty.getValue();
 		PropertyAdapter propertyAdapter = null;
 		if (metaValue != null) {
@@ -445,24 +441,15 @@ public class ProfileServiceUtil {
 					+ metaValue.getMetaType() + " from Teiid property " //$NON-NLS-1$
 					+ propertyDefinition.getName() + " with definition " //$NON-NLS-1$
 					+ propertyDefinition + "..."); //$NON-NLS-1$
-			propertyAdapter = PropertyAdapterFactory
-					.getPropertyAdapter(metaValue);
+			propertyAdapter = PropertyAdapterFactory.getPropertyAdapter(metaValue);
 
-			propertyAdapter.populateMetaValueFromProperty(configuration
-					.getSimple(propertyDefinition.getName()), metaValue,
-					propertyDefinition);
+			propertyAdapter.populateMetaValueFromProperty(configuration.getSimple(propertyDefinition.getName()), metaValue, propertyDefinition);
 			managedProperty.setValue(metaValue);
 		} else {
 			MetaType metaType = managedProperty.getMetaType();
-			if (propertyAdapter == null)
-				propertyAdapter = PropertyAdapterFactory
-						.getPropertyAdapter(metaType);
-			LOG.trace("Converting property " + propertyDefinition.getName() //$NON-NLS-1$
-					+ " with definition " + propertyDefinition //$NON-NLS-1$
-					+ " to MetaValue of type " + metaType + "..."); //$NON-NLS-1$ //$NON-NLS-2$
-			metaValue = propertyAdapter.convertToMetaValue(configuration
-					.getSimple(propertyDefinition.getName()),
-					propertyDefinition, metaType);
+			propertyAdapter = PropertyAdapterFactory.getPropertyAdapter(metaType);
+			LOG.trace("Converting property " + propertyDefinition.getName() 	+ " with definition " + propertyDefinition 	+ " to MetaValue of type " + metaType + "..."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+			metaValue = propertyAdapter.convertToMetaValue(configuration.getSimple(propertyDefinition.getName()),propertyDefinition, metaType);
 			managedProperty.setValue(metaValue);
 		}
 
@@ -472,10 +459,8 @@ public class ProfileServiceUtil {
 			PropertyDefinition propertyDefinition,
 			@NotNull MetaValue defaultValue) {
 		if (!(propertyDefinition instanceof PropertyDefinitionSimple)) {
-			LOG
-					.debug("Cannot update default value on non-simple property definition " //$NON-NLS-1$
-							+ propertyDefinition
-							+ "(default value is " //$NON-NLS-1$
+			LOG.debug("Cannot update default value on non-simple property definition " //$NON-NLS-1$
+							+ propertyDefinition + "(default value is " //$NON-NLS-1$
 							+ defaultValue + ")."); //$NON-NLS-1$
 			return;
 		}
@@ -490,13 +475,11 @@ public class ProfileServiceUtil {
 		if (metaType.isSimple()) {
 			SimpleValue defaultSimpleValue = (SimpleValue) defaultValue;
 			Serializable value = defaultSimpleValue.getValue();
-			propertyDefinitionSimple.setDefaultValue((value != null) ? value
-					.toString() : null);
+			propertyDefinitionSimple.setDefaultValue((value != null) ? value.toString() : null);
 		} else { // defaultValueMetaType.isEnum()
 			EnumValue defaultEnumValue = (EnumValue) defaultValue;
 			Serializable value = defaultEnumValue.getValue();
-			propertyDefinitionSimple.setDefaultValue((value != null) ? value
-					.toString() : null);
+			propertyDefinitionSimple.setDefaultValue((value != null) ? value.toString() : null);
 		}
 	}
 
