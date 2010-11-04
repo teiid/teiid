@@ -385,6 +385,16 @@ public class RealMetadataFactory {
         
         createKey(KeyRecord.Type.Index, "idx", vGroup6, vElements6.subList(1, 2));
         
+        //non-covering index
+        QueryNode vTrans7 = new QueryNode("VGroup7", "SELECT '1', 'z' || substring(x, 2) as y, 1 as z FROM matsrc");         //$NON-NLS-1$ //$NON-NLS-2$
+        Table vGroup7 = createVirtualGroup("VGroup7", virtModel, vTrans7); //$NON-NLS-1$
+        vGroup7.setMaterialized(true);
+        List<Column> vElements7 = createElements(vGroup7,
+                                      new String[] { "x", "y", "z" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER});
+        
+        createKey(KeyRecord.Type.Primary, "pk", vGroup7, vElements7.subList(1, 2));
+        
         Schema sp = createVirtualModel("sp", metadataStore); //$NON-NLS-1$
         ColumnSet<Procedure> rs = createResultSet("sp1.vsprs1", new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         ProcedureParameter param = createParameter("param1", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
