@@ -1185,20 +1185,16 @@ public class TestQueryRewriter {
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
 	}
 	
-	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
+	// virtual group elements used in procedure (TRANSLATE CRITERIA)
     @Test public void testRewriteProcedure16() throws Exception {
-        String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g1.e2 from pm1.g1 where TRANSLATE CRITERIA;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
+        String procedure = exampleTranslateUpdate();
 
         String userQuery = "UPDATE vm1.g3 SET x='x' where e4= 1"; //$NON-NLS-1$
 
 		String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "BEGIN\n";		 //$NON-NLS-1$
 		rewritProc = rewritProc + "DECLARE integer var1;\n"; //$NON-NLS-1$
-		rewritProc = rewritProc + "SELECT pm1.g1.e2 FROM pm1.g1 WHERE e4 = 0.02;\n"; //$NON-NLS-1$
+		rewritProc = rewritProc + "UPDATE pm1.g1 SET e1 = 'x' WHERE e4 = 0.02;\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
@@ -1206,9 +1202,52 @@ public class TestQueryRewriter {
 
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
 	}
+    
+    @Test public void testRewriteNoUserCriteria() throws Exception {
+        String procedure = exampleTranslateUpdate();
+
+        String userQuery = "UPDATE vm1.g3 SET x='x'"; //$NON-NLS-1$
+
+		String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
+		rewritProc = rewritProc + "BEGIN\n";		 //$NON-NLS-1$
+		rewritProc = rewritProc + "DECLARE integer var1;\n"; //$NON-NLS-1$
+		rewritProc = rewritProc + "UPDATE pm1.g1 SET e1 = 'x' WHERE 1 = 1;\n"; //$NON-NLS-1$
+		rewritProc = rewritProc + "END"; //$NON-NLS-1$
+
+		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
+				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+
+        assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
+	}
+    
+    @Test public void testRewriteOrUserCriteria() throws Exception {
+        String procedure = exampleTranslateUpdate();
+
+        String userQuery = "UPDATE vm1.g3 SET x='x' where x = '1' or x = '2'"; //$NON-NLS-1$
+
+		String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
+		rewritProc = rewritProc + "BEGIN\n";		 //$NON-NLS-1$
+		rewritProc = rewritProc + "DECLARE integer var1;\n"; //$NON-NLS-1$
+		rewritProc = rewritProc + "UPDATE pm1.g1 SET e1 = 'x' WHERE (CONCAT(e1, 'm') = '1') OR (CONCAT(e1, 'm') = '2');\n"; //$NON-NLS-1$
+		rewritProc = rewritProc + "END"; //$NON-NLS-1$
+
+		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
+				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+
+        assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
+	}
+
+	private String exampleTranslateUpdate() {
+		String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
+        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
+        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
+        procedure = procedure + "update pm1.g1 set pm1.g1.e1 = inputs.x where TRANSLATE CRITERIA;\n"; //$NON-NLS-1$
+        procedure = procedure + "END\n";         //$NON-NLS-1$
+		return procedure;
+	}
 	
 	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
-    @Test public void testRewriteProcedure17() throws Exception {
+    @Test(expected=QueryValidatorException.class) public void testRewriteProcedure17() throws Exception {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
@@ -1217,16 +1256,8 @@ public class TestQueryRewriter {
 
         String userQuery = "UPDATE vm1.g3 SET x='x' where e4= 1"; //$NON-NLS-1$
 
-		String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
-		rewritProc = rewritProc + "BEGIN\n";		 //$NON-NLS-1$
-		rewritProc = rewritProc + "DECLARE integer var1;\n"; //$NON-NLS-1$
-		rewritProc = rewritProc + "SELECT pm1.g1.e2 FROM pm1.g1 WHERE "+FALSE_STR+";\n"; //$NON-NLS-1$ //$NON-NLS-2$
-		rewritProc = rewritProc + "END"; //$NON-NLS-1$
-
-		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
+		this.getRewritenProcedure(procedure, userQuery, 
 				FakeMetadataObject.Props.UPDATE_PROCEDURE);
-
-        assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
 	}
 	
 	// Bug 8212 elements in INPUT and CHANGING special groups are cese sensitive
@@ -1367,7 +1398,7 @@ public class TestQueryRewriter {
     }
     
 	// elements being set in updates are dropped if INPUT var is not available
-    @Test public void testRewriteProcedure24() throws Exception {
+    @Test(expected=QueryValidatorException.class) public void testRewriteProcedure24() throws Exception {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "UPDATE pm1.g1 SET e2=Input.e2 WHERE TRANSLATE LIKE CRITERIA ON (e1) WITH (e1=concat(pm1.g1.e1, '%'));\n"; //$NON-NLS-1$
@@ -1375,16 +1406,9 @@ public class TestQueryRewriter {
 
         String userQuery = "UPDATE vm1.g1 set E2=1 where e2 = 1 and e1 LIKE 'mnopxyz_'"; //$NON-NLS-1$
 
-		String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
-		rewritProc = rewritProc + "BEGIN\n"; //$NON-NLS-1$
-        rewritProc = rewritProc + "UPDATE pm1.g1 SET e2 = 1 WHERE concat(pm1.g1.e1, '%') LIKE 'mnopxyz_';\n"; //$NON-NLS-1$
-		rewritProc = rewritProc + "END"; //$NON-NLS-1$
-
-		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
+		this.getRewritenProcedure(procedure, userQuery, 
 				FakeMetadataObject.Props.UPDATE_PROCEDURE);
-
-        assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
-	}
+    }
 
 	// INPUT vars in insert statements replaced by default variable when user's inser ignores values
     @Test public void testRewriteProcedure25() throws Exception {
@@ -1429,7 +1453,7 @@ public class TestQueryRewriter {
 	}
 	
 	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
-	@Test public void testRewriteProcedure27() throws Exception {
+	@Test(expected=QueryValidatorException.class) public void testRewriteProcedure27() throws Exception {
 		String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
 		procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
@@ -1438,16 +1462,8 @@ public class TestQueryRewriter {
 
 		String userQuery = "UPDATE vm1.g1 SET e1='x' where e2 LIKE 'xyz'"; //$NON-NLS-1$
         
-		String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
-		rewritProc = rewritProc + "BEGIN\n";		 //$NON-NLS-1$
-		rewritProc = rewritProc + "DECLARE integer var1;\n"; //$NON-NLS-1$
-		rewritProc = rewritProc + "SELECT pm1.g1.e2 FROM pm1.g1, pm1.g2 WHERE "+FALSE_STR+";\n"; //$NON-NLS-1$ //$NON-NLS-2$
-		rewritProc = rewritProc + "END"; //$NON-NLS-1$
-
-		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
+		this.getRewritenProcedure(procedure, userQuery, 
 				FakeMetadataObject.Props.UPDATE_PROCEDURE);
-
-		assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
 	}
 
     /**

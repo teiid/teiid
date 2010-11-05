@@ -39,6 +39,8 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.parser.ParseInfo;
 import org.teiid.vdb.runtime.VDBKey;
@@ -117,7 +119,10 @@ public class SessionAwareCache<T> {
 		}
 		
 		if (result != null) {
+			LogManager.logTrace(LogConstants.CTX_DQP, "Cache hit for", id); //$NON-NLS-1$
 			cacheHit.getAndIncrement();
+		} else {
+			LogManager.logTrace(LogConstants.CTX_DQP, "Cache miss for", id); //$NON-NLS-1$
 		}
 		return result;
 	}
@@ -140,6 +145,7 @@ public class SessionAwareCache<T> {
 	public void put(CacheID id, int determinismLevel, T t, Long ttl){
 		if (determinismLevel >= FunctionMethod.SESSION_DETERMINISTIC) {
 			id.setSessionId(id.originalSessionId);
+			LogManager.logTrace(LogConstants.CTX_DQP, "Adding to session/local cache", id); //$NON-NLS-1$
 			this.localCache.put(id, t, ttl);
 		} 
 		else {
@@ -161,6 +167,7 @@ public class SessionAwareCache<T> {
 			}
 			
 			if (insert) {
+				LogManager.logTrace(LogConstants.CTX_DQP, "Adding to global/distributed cache", id); //$NON-NLS-1$
 				this.distributedCache.put(id, t, ttl);
 			}
 		}

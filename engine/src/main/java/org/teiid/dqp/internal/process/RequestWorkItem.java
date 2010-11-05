@@ -340,23 +340,29 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		boolean canUseCached = (requestMsg.useResultSetCache() || 
 				QueryParser.getQueryParser().parseCacheHint(requestMsg.getCommandString()) != null);
 		
-		if (rsCache != null && canUseCached) {			
-			ParseInfo pi = Request.createParseInfo(requestMsg);
-			cacheId = new CacheID(this.dqpWorkContext, pi, requestMsg.getCommandString());
-	    	cachable = cacheId.setParameters(requestMsg.getParameterValues());
-			if (cachable) {
-				CachedResults cr = rsCache.get(cacheId);
-				if (cr != null) {
-					this.resultsBuffer = cr.getResults();
-					this.analysisRecord = cr.getAnalysisRecord();
-					request.initMetadata();
-					this.originalCommand = cr.getCommand(requestMsg.getCommandString(), request.metadata, pi);
-					request.validateAccess(this.originalCommand);
-					this.doneProducingBatches();
-					return;
+		if (rsCache != null) {
+			if (!canUseCached) {
+				LogManager.logDetail(LogConstants.CTX_DQP, requestID, "No cache directive"); //$NON-NLS-1$
+			} else {
+				ParseInfo pi = Request.createParseInfo(requestMsg);
+				cacheId = new CacheID(this.dqpWorkContext, pi, requestMsg.getCommandString());
+		    	cachable = cacheId.setParameters(requestMsg.getParameterValues());
+				if (cachable) {
+					CachedResults cr = rsCache.get(cacheId);
+					if (cr != null) {
+						this.resultsBuffer = cr.getResults();
+						this.analysisRecord = cr.getAnalysisRecord();
+						request.initMetadata();
+						this.originalCommand = cr.getCommand(requestMsg.getCommandString(), request.metadata, pi);
+						request.validateAccess(this.originalCommand);
+						this.doneProducingBatches();
+						return;
+					} 
+				} else {
+					LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Parameters are not serializable - cache cannot be used for", cacheId); //$NON-NLS-1$
 				}
 			}
-		}
+		} 
 		request.processRequest();
 		originalCommand = request.userCommand;
         if (cachable && (requestMsg.useResultSetCache() || originalCommand.getCacheHint() != null) && rsCache != null && originalCommand.areResultsCachable()) {
@@ -365,6 +371,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		processor = request.processor;
 		resultsBuffer = processor.createTupleBuffer();
 		if (this.cid != null && originalCommand.getCacheHint() != null) {
+			LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Using cache hint", originalCommand.getCacheHint()); //$NON-NLS-1$
 			resultsBuffer.setPrefersMemory(originalCommand.getCacheHint().getPrefersMemory());
 		}
 		collector = new BatchCollector(processor, resultsBuffer) {
