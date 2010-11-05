@@ -41,6 +41,7 @@ import org.teiid.language.Select;
 import org.teiid.language.TableReference;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
@@ -185,7 +186,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 					results = connection.queryMore(results.getQueryLocator(), context.getBatchSize());
 				}
 				resultBatch = new ArrayList<List<Object>>();
-					
+				topResultIndex = 0;
 				for(SObject sObject : results.getRecords()) {
 					List<Object[]> result = getObjectData(sObject);
 					for(Iterator<Object[]> i = result.iterator(); i.hasNext(); ) {
@@ -291,6 +292,9 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	}
 
 	private void logFields(String sObjectName, List<Object> fields) throws TranslatorException {
+		if (!LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {
+			return;
+		}
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "SalesForce Object Name = " + sObjectName); //$NON-NLS-1$
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "FieldCount = " + fields.size()); //$NON-NLS-1$
 		for(int i = 0; i < fields.size(); i++) {

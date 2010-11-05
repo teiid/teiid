@@ -115,7 +115,6 @@ import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.PredicateCriteria.Negatable;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
-import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
@@ -543,31 +542,18 @@ public class QueryRewriter {
 		if (!(userCmd instanceof TranslatableProcedureContainer)) {
 			return FALSE_CRITERIA;
 		}
-
+		
 		Criteria userCriteria = ((TranslatableProcedureContainer)userCmd).getCriteria();
-
-		if(userCriteria == null) {
-			return FALSE_CRITERIA;
+		
+		if (userCriteria == null) {
+			return TRUE_CRITERIA;
 		}
 
 		// get the symbolmap between virtual elements and theie counterpart expressions
 		// from the virtual group's query transform
 		CriteriaTranslatorVisitor translateVisitor = new CriteriaTranslatorVisitor(procCommand.getSymbolMap());
 
-		// check if there is a CriteriaSelector specified to restrict
-		// parts of user's criteria to be translated
-		// get the CriteriaSelector, elements on the selector and the selector type
-		CriteriaSelector selector = transCrit.getSelector();
-		HasCriteria hasCrit = new HasCriteria(selector);
-
-		// base on the selector evaluate Has criteria, if false
-		// return a false criteria
-		Criteria result = rewriteCriteria(hasCrit);
-
-		if(result.equals(FALSE_CRITERIA)) {
-			return FALSE_CRITERIA;
-		}
-		translateVisitor.setCriteriaSelector(selector);
+		translateVisitor.setCriteriaSelector(transCrit.getSelector());
 		if(transCrit.hasTranslations()) {
 			translateVisitor.setTranslations(transCrit.getTranslations());
 		}
@@ -575,14 +561,12 @@ public class QueryRewriter {
 		// create a clone of user's criteria that is then translated
 		Criteria userClone = (Criteria) userCriteria.clone();
 
-		// CriteriaTranslatorVisitor visits the user's criteria
-        PreOrderNavigator.doVisit(userClone, translateVisitor);
+		translateVisitor.translate(userClone);
 
 		// translated criteria
-		translatedCriteria = translateVisitor.getTranslatedCriteria();
 		((TranslatableProcedureContainer)userCmd).addImplicitParameters(translateVisitor.getImplicitParams());
 		
-		translatedCriteria = rewriteCriteria(translatedCriteria);
+		translatedCriteria = rewriteCriteria(userClone);
 
 		// apply any implicit conversions
 		try {

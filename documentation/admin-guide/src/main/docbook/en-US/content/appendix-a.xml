@@ -37,6 +37,17 @@
         <para>The connectAsAdmin methods create a contextual connection to the AdminAPI of the Teiid Server.  The connect methods return an extension of the Groovy Sql object to be used for Sql calls to the Teiid Server.</para>
       </answer>
     </qandaentry>
+    
+    <qandaentry>
+      <question>
+        <para>What does "getAdmin()" call do? Why do I need it?</para>
+      </question>
+      <answer>
+        <para>"getAdmin()" returns this contextual connection object created when you executed "connectAsAdmin()" method.
+        This object implements the interface "org.teiid.adminapi.Admin" and AdminShell commands provided are 
+        wrappers around this API. Advanced users can use this API directly if the provided wrapper commands do not meet their needs.</para>
+      </answer>
+    </qandaentry>    
 
     <qandaentry>
       <question>

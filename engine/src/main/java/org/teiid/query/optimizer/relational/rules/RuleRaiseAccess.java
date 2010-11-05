@@ -489,6 +489,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
     }
     
     static PlanNode performRaise(PlanNode rootNode, PlanNode accessNode, PlanNode parentNode) {
+    	accessNode.removeProperty(NodeConstants.Info.EST_CARDINALITY);
         NodeEditor.removeChildNode(parentNode, accessNode);
         parentNode.addAsParent(accessNode);
         PlanNode grandparentNode = accessNode.getParent();

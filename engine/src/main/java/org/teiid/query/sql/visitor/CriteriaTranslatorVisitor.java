@@ -22,22 +22,23 @@
 
 package org.teiid.query.sql.visitor;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
+import org.teiid.api.exception.query.QueryValidatorException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.Assertion;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.lang.BetweenCriteria;
 import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.CompoundCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.IsNullCriteria;
 import org.teiid.query.sql.lang.MatchCriteria;
 import org.teiid.query.sql.lang.SetCriteria;
+import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.proc.CriteriaSelector;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -52,6 +53,101 @@ import org.teiid.query.sql.symbol.Reference;
  * of the elements those translations override any symbol mappings.</p>
  */
 public class CriteriaTranslatorVisitor extends ExpressionMappingVisitor {
+	
+	class CriteriaTranslatorNavigator extends PreOrderNavigator {
+
+		public CriteriaTranslatorNavigator() {
+			super(CriteriaTranslatorVisitor.this);
+		}
+		
+	    /**
+	     * <p> This method updates the <code>BetweenCriteria</code> object it receives as an
+	     * argument by replacing the virtual elements present in the expressions in the
+	     * function with translated expressions.</p>
+	     * @param obj The BetweenCriteria object to be updated with translated expressions
+	     */
+	    public void visit(BetweenCriteria obj) {
+	        if (!selectorContainsCriteriaElements(obj, CriteriaSelector.BETWEEN)) {
+	        	throw new TeiidRuntimeException(new QueryValidatorException(QueryPlugin.Util.getString("Translate.error", obj, selector))); //$NON-NLS-1$ 
+	        }
+	        super.visit(obj);
+	    }
+	    
+	    /**
+	     * <p> This method updates the <code>CompareCriteria</code> object it receives as an
+	     * argument by replacing the virtual elements present in the expressions in the
+	     * function with translated expressions.</p>
+	     * @param obj The CompareCriteria object to be updated with translated expressions
+	     */
+	    public void visit(CompareCriteria obj) {
+	        
+	        if (!selectorContainsCriteriaElements(obj, obj.getOperator())) {
+	        	throw new TeiidRuntimeException(new QueryValidatorException(QueryPlugin.Util.getString("Translate.error", obj, selector))); //$NON-NLS-1$ 
+	        }
+
+	        super.visit(obj);
+	    }
+
+	    /**
+	     * <p> This method updates the <code>IsNullCriteria</code> object it receives as an
+	     * argument by replacing the virtual elements present in the expressions in the
+	     * function with translated expressions.</p>
+	     * @param obj The IsNullCriteria object to be updated with translated expressions
+	     */
+	    public void visit(IsNullCriteria obj) {
+
+	        if (!selectorContainsCriteriaElements(obj, CriteriaSelector.IS_NULL)) {
+	        	throw new TeiidRuntimeException(new QueryValidatorException(QueryPlugin.Util.getString("Translate.error", obj, selector))); //$NON-NLS-1$ 
+	        }
+	        super.visit(obj);
+	    }
+
+	    /**
+	     * <p> This method updates the <code>MatchCriteria</code> object it receives as an
+	     * argument by replacing the virtual elements present in the expressions in the
+	     * function with translated expressions</p>
+	     * @param obj The SetCriteria object to be updated with translated expressions
+	     */
+	    public void visit(MatchCriteria obj) {
+	        
+	        if (!selectorContainsCriteriaElements(obj, CriteriaSelector.LIKE)) {
+	        	throw new TeiidRuntimeException(new QueryValidatorException(QueryPlugin.Util.getString("Translate.error", obj, selector))); //$NON-NLS-1$ 
+	        }
+
+	        super.visit(obj);
+	    }
+	    
+	    /**
+	     * <p> This method updates the <code>SetCriteria</code> object it receives as an
+	     * argument by replacing the virtual elements present in the expressions in the
+	     * function with translated expressions</p>
+	     * @param obj The SetCriteria object to be updated with translated expressions
+	     */
+	    public void visit(SetCriteria obj) {
+	        
+	        if (!selectorContainsCriteriaElements(obj, CriteriaSelector.IN)) {
+	        	throw new TeiidRuntimeException(new QueryValidatorException(QueryPlugin.Util.getString("Translate.error", obj, selector))); //$NON-NLS-1$
+	        }
+	        
+	        super.visit(obj);
+	    }
+
+	    /**
+	     * <p> This method updates the <code>SetCriteria</code> object it receives as an
+	     * argument by replacing the virtual elements present in the expressions in the
+	     * function with translated expressions</p>
+	     * @param obj The SetCriteria object to be updated with translated expressions
+	     */
+	    public void visit(DependentSetCriteria obj) {
+	        
+	        if (!selectorContainsCriteriaElements(obj, CriteriaSelector.IN)) {
+	        	throw new TeiidRuntimeException(new QueryValidatorException(QueryPlugin.Util.getString("Translate.error", obj, selector))); //$NON-NLS-1$
+	        }
+	        
+	        super.visit(obj);
+	    }
+		
+	}
 
 	// criteria selector specified on the TranslateCriteria obj
 	private CriteriaSelector selector;
@@ -59,9 +155,6 @@ public class CriteriaTranslatorVisitor extends ExpressionMappingVisitor {
 	// translation in for of CompareCriteria objs on the TranslateCriteria obj
 	private Collection translations;
 
-	// list of translated criteria
-	private List<Criteria> translatedCriteria = new ArrayList<Criteria>();
-	
 	private Map<ElementSymbol, Reference> implicitParams = new HashMap<ElementSymbol, Reference>();
 
     /**
@@ -99,101 +192,6 @@ public class CriteriaTranslatorVisitor extends ExpressionMappingVisitor {
      */
     public void setTranslations(Collection translations) {
     	this.translations = translations;
-    }
-
-    // ############### Visitor methods for language objects ##################
-
-    /**
-     * <p> This method updates the <code>BetweenCriteria</code> object it receives as an
-     * argument by replacing the virtual elements present in the expressions in the
-     * function with translated expressions.</p>
-     * @param obj The BetweenCriteria object to be updated with translated expressions
-     */
-    public void visit(BetweenCriteria obj) {
-        if (!selectorContainsCriteriaElements(obj, CriteriaSelector.BETWEEN)) {
-            return;
-        }
-        super.visit(obj);
-        translatedCriteria.add(obj);
-    }
-    
-    /**
-     * <p> This method updates the <code>CompareCriteria</code> object it receives as an
-     * argument by replacing the virtual elements present in the expressions in the
-     * function with translated expressions.</p>
-     * @param obj The CompareCriteria object to be updated with translated expressions
-     */
-    public void visit(CompareCriteria obj) {
-        
-        if (!selectorContainsCriteriaElements(obj, obj.getOperator())) {
-            return;
-        }
-
-        super.visit(obj);
-    	translatedCriteria.add(obj);
-    }
-
-    /**
-     * <p> This method updates the <code>IsNullCriteria</code> object it receives as an
-     * argument by replacing the virtual elements present in the expressions in the
-     * function with translated expressions.</p>
-     * @param obj The IsNullCriteria object to be updated with translated expressions
-     */
-    public void visit(IsNullCriteria obj) {
-
-        if (!selectorContainsCriteriaElements(obj, CriteriaSelector.IS_NULL)) {
-            return;
-        }
-        super.visit(obj);
-        translatedCriteria.add(obj);
-    }
-
-    /**
-     * <p> This method updates the <code>MatchCriteria</code> object it receives as an
-     * argument by replacing the virtual elements present in the expressions in the
-     * function with translated expressions</p>
-     * @param obj The SetCriteria object to be updated with translated expressions
-     */
-    public void visit(MatchCriteria obj) {
-        
-        if (!selectorContainsCriteriaElements(obj, CriteriaSelector.LIKE)) {
-            return;
-        }
-
-        super.visit(obj);
-    	translatedCriteria.add(obj);
-    }
-    
-    /**
-     * <p> This method updates the <code>SetCriteria</code> object it receives as an
-     * argument by replacing the virtual elements present in the expressions in the
-     * function with translated expressions</p>
-     * @param obj The SetCriteria object to be updated with translated expressions
-     */
-    public void visit(SetCriteria obj) {
-        
-        if (!selectorContainsCriteriaElements(obj, CriteriaSelector.IN)) {
-            return;
-        }
-        
-        super.visit(obj);
-    	translatedCriteria.add(obj);
-    }
-
-    /**
-     * <p> This method updates the <code>SetCriteria</code> object it receives as an
-     * argument by replacing the virtual elements present in the expressions in the
-     * function with translated expressions</p>
-     * @param obj The SetCriteria object to be updated with translated expressions
-     */
-    public void visit(DependentSetCriteria obj) {
-        
-        if (!selectorContainsCriteriaElements(obj, CriteriaSelector.IN)) {
-            return;
-        }
-        
-        super.visit(obj);
-        translatedCriteria.add(obj);
     }
 
     /* ############### Helper Methods ##################   */    
@@ -249,26 +247,17 @@ public class CriteriaTranslatorVisitor extends ExpressionMappingVisitor {
     	return super.replaceExpression(obj);
     }
 
-    /**
-     * <p>Gets the criteria translated by this visitor, differrent parts of the user's
-     * criteria are translated and they are combined as a <code>CompoundCriteria</code>
-     * using an AND operator. Returns a null if no part of the user's criteria could
-     * be translated.</p>
-     * @return The criteria after vistor completes translation of the criteria on the
-     * virtual group
-     */
-    public Criteria getTranslatedCriteria() {
-    	if(translatedCriteria.size() > 0) {
-    		if(translatedCriteria.size() == 1) {
-    			return translatedCriteria.get(0);
-    		}
-   			return new CompoundCriteria(CompoundCriteria.AND, translatedCriteria);
-    	}
-   		return null;
-    }
-    
     public Map<ElementSymbol, Reference> getImplicitParams() {
 		return implicitParams;
 	}
+    
+    public void translate(Criteria crit) throws QueryValidatorException {
+    	CriteriaTranslatorNavigator nav = new CriteriaTranslatorNavigator();
+    	try {
+    		crit.acceptVisitor(nav);
+    	} catch (TeiidRuntimeException e) {
+    		throw (QueryValidatorException)e.getCause();
+    	}
+    }
     
 }

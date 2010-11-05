@@ -145,5 +145,9 @@ public class TestMaterialization {
 		execute("SELECT * from vgroup6 where y in ('zne', 'zwo') order by y desc", Arrays.asList("two", "zwo"), Arrays.asList("one", "zne"));
 		execute("SELECT * from vgroup6 where y is null", Arrays.asList((String)null, (String)null));
 	}
+	
+	@Test public void testPrimaryKeyOnOtherColumn() throws Exception {
+		execute("SELECT * from vgroup7 where y is null", Arrays.asList("1", null, 1));
+	}
     
 }

@@ -489,7 +489,10 @@ public class TempTableDataManager implements ProcessorDataManager {
 				}
 			}
 			
+			List<ElementSymbol> variables = table.getColumns();
+			
 			if (ts == null) {
+				variables = allColumns;
 				//TODO: coordinate a distributed load
 				//TODO: order by primary key nulls first - then have an insert ordered optimization
 				String transformation = metadata.getVirtualPlan(group.getMetadataID()).getQuery();
@@ -510,7 +513,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			}
 			
 			//TODO: if this insert fails, it's unnecessary to do the undo processing
-			table.insert(ts, table.getColumns());
+			table.insert(ts, variables);
 			rowCount = table.getRowCount();
 			//TODO: could pre-process indexes to remove overlap
 			for (Object index : metadata.getIndexesInGroup(group.getMetadataID())) {

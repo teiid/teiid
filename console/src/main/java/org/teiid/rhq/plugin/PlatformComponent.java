@@ -58,9 +58,6 @@ import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.Platform;
 public class PlatformComponent extends Facet {
 	private final Log LOG = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 
-	String[] PLATFORM_SERVICES_NAMES = { "RuntimeEngineDeployer", //$NON-NLS-1$
-			"BufferService", "SessionService", "JdbcSocketConfiguration" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-
 	@Override
 	public void start(ResourceContext context) {
 		this.setComponentName(context.getPluginConfiguration().getSimpleValue(	"name", null)); //$NON-NLS-1$
@@ -167,18 +164,18 @@ public class PlatformComponent extends Facet {
 				PluginConstants.ComponentType.Platform.TEIID_TYPE,
 				PluginConstants.ComponentType.Platform.TEIID_SUB_TYPE);
 
-		ManagedComponent managedComponent = null;
 		report.setStatus(ConfigurationUpdateStatus.SUCCESS);
 		try {
 
 			managementView = getConnection().getManagementView();
-
-			for (String serviceName : PLATFORM_SERVICES_NAMES) {
-
-				managedComponent = managementView.getComponent(serviceName, componentType);
+			Set<ManagedComponent> allComponents = managementView.getComponentsForType(componentType);
+			
+			for (ManagedComponent managedComponent : allComponents) {
+				
 				Map<String, ManagedProperty> managedProperties = managedComponent.getProperties();
 
-				ProfileServiceUtil.convertConfigurationToManagedProperties(managedProperties, resourceConfig, resourceContext.getResourceType());
+				
+				ProfileServiceUtil.convertConfigurationToManagedProperties(managedProperties, resourceConfig, resourceContext.getResourceType(), managedComponent.getName());
 
 				try {
 					managementView.updateComponent(managedComponent);
@@ -234,10 +231,11 @@ public class PlatformComponent extends Facet {
 		} catch (Exception e) {
 			LOG.error("Exception getting components in Platform loadConfiguration(): "	+ e.getMessage()); //$NON-NLS-1$
 		}
-
+		
 		for (ManagedComponent mc : mcSet) {
 			Map<String, ManagedProperty> mcMap = mc.getProperties();
-			setProperties(mcMap, configuration);
+			String name = mc.getName();			
+			setProperties(name, mcMap, configuration);
 		}
 	}
 
@@ -245,12 +243,11 @@ public class PlatformComponent extends Facet {
 	 * @param mcMap
 	 * @param configuration
 	 */
-	private void setProperties(Map<String, ManagedProperty> mcMap,
-			Configuration configuration) {
+	private void setProperties(String compName, Map<String, ManagedProperty> mcMap, Configuration configuration) {
 		for (ManagedProperty mProp : mcMap.values()) {
 			try {
 				String value = ProfileServiceUtil.stringValue(mProp.getValue());
-				PropertySimple prop = new PropertySimple(mProp.getName(), value);
+				PropertySimple prop = new PropertySimple(compName+"."+mProp.getName(), value); //$NON-NLS-1$
 				configuration.put(prop);
 			} catch (Exception e) {
 				LOG.error("Exception setting properties in Platform loadConfiguration(): "	+ e.getMessage()); //$NON-NLS-1$

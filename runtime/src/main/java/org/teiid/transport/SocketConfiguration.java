@@ -26,6 +26,7 @@ import java.net.UnknownHostException;
 
 import org.jboss.managed.api.annotation.ManagementComponent;
 import org.jboss.managed.api.annotation.ManagementObject;
+import org.jboss.managed.api.annotation.ManagementObjectID;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.core.TeiidRuntimeException;
@@ -42,7 +43,17 @@ public class SocketConfiguration {
 	private SSLConfiguration sslConfiguration;
 	private boolean enabled;
 	private String hostName;
+	private String name;
 	
+	@ManagementProperty(description="Name of the configuration", readOnly=true)
+	@ManagementObjectID(type="socket")
+	public String getName() {
+		return name;
+	}
+	
+	public void setName(String name) {
+		this.name = name;
+	}
 	
 	public void setBindAddress(String addr) {
 		this.hostName = addr;
@@ -79,8 +90,8 @@ public class SocketConfiguration {
 		}
 	}
 
- 	@ManagementProperty(description="SSL enabled", readOnly=true)
-	public boolean isEnabled() {
+ 	@ManagementProperty(description="enabled")
+	public boolean getEnabled() {
 		return enabled;
 	}
 
@@ -88,22 +99,22 @@ public class SocketConfiguration {
 		this.enabled = enabled;
 	}
 
-	@ManagementProperty(description="SO_SNDBUF size, 0 indicates that system default should be used (default 0)",readOnly=true)
+	@ManagementProperty(description="SO_SNDBUF size, 0 indicates that system default should be used (default 0)")
 	public int getOutputBufferSize() {
 		return outputBufferSize;
 	}
 
-	@ManagementProperty(description="SO_RCVBUF size, 0 indicates that system default should be used (default 0)",readOnly=true)
+	@ManagementProperty(description="SO_RCVBUF size, 0 indicates that system default should be used (default 0)")
 	public int getInputBufferSize() {
 		return inputBufferSize;
 	}
 
-	@ManagementProperty(description="Max NIO threads",readOnly=true)
+	@ManagementProperty(description="Max NIO threads")
 	public int getMaxSocketThreads() {
 		return maxSocketThreads;
 	}
 
-	@ManagementProperty(description="Port Number",readOnly=true)
+	@ManagementProperty(description="Port Number")
 	public int getPortNumber() {
 		return portNumber;
 	}
@@ -126,7 +137,7 @@ public class SocketConfiguration {
 		}		
 	}
 	
-	@ManagementProperty(description="Host Name",readOnly=true)
+	@ManagementProperty(description="Host Name")
 	public String getHostName() {
 		resolveHostName();
 		return this.hostName;
@@ -134,5 +145,10 @@ public class SocketConfiguration {
 
 	public SSLConfiguration getSSLConfiguration() {
 		return sslConfiguration;
-	}	 	
+	}
+	
+	@ManagementProperty(description="SSL enabled")
+	public boolean getSslEnabled() {
+		return this.sslConfiguration != null && this.sslConfiguration.isSslEnabled();
+	}
 }

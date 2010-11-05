@@ -184,13 +184,11 @@ class JoinRegion {
         
         if (combined.size() < 2) {
             root = combined.values().iterator().next();
-            root.removeProperty(NodeConstants.Info.EST_CARDINALITY);
         } else {
             root = RulePlanJoins.createJoinNode();
         
             for (Map.Entry<PlanNode, PlanNode> entry : combined.entrySet()) {
                 PlanNode joinSourceRoot = entry.getValue();
-                joinSourceRoot.removeProperty(NodeConstants.Info.EST_CARDINALITY);
                 if (root.getChildCount() == 2) {
                     PlanNode parentJoin = RulePlanJoins.createJoinNode();
                     parentJoin.addFirstChild(root);
