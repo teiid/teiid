@@ -552,11 +552,14 @@ VARIABLES.ROWS_UPDATED = VARIABLES.ROWCOUNT;
         </section>
         <section>
           <title>TRANSLATE CRITERIA</title>
-          <para>You can use the TRANSLATE CRITERIA clause to convert the criteria from the user application’s SQL command into the form required to interact with the target source or view tables. The TRANSLATE CRITERIA statement uses the SELECT transformation to infer the column mapping. This clause evaluates to a translated criteria that is evaluated in the context of a command.</para>
+          <warning><para>TRANSLATE CRITERIA has been deprecated.  An alternative approach to update procedures will be introduced in a subsequent version.</para></warning>
+          <para>You can use the TRANSLATE CRITERIA clause to convert the criteria from the user application’s SQL command into the form required to interact with the target source or view tables. The TRANSLATE CRITERIA statement uses the SELECT transformation to infer the column mapping. This clause evaluates to a translated criteria that is evaluated in the context of a command.
+          You can use these mappings either to replace the default mappings generated from the SELECT transformation or to specify a reverse expression when a virtual column is defined by an expression.</para>
           <para>
             Usage:
             <synopsis>TRANSLATE [criteria operator] CRITERIA [ON (column list)] [WITH (mapping list)]</synopsis>
           </para>
+          <para>If there is no user criteria, then the translated criteria is always treated as TRUE.</para>
           <itemizedlist>
             <para>Syntax Rules</para>
             <listitem>
@@ -571,9 +574,16 @@ VARIABLES.ROWS_UPDATED = VARIABLES.ROWCOUNT;
               <para>The columns in a TRANSLATE CRITERIA ON clause always refer to view columns.
               </para>
             </listitem>
+            <listitem>
+              <para>The WITH clause always has items with form &lt;elem&gt; = &lt;expression&gt; where the left hand side must refer to a view column.
+              </para>
+            </listitem>
+            <listitem>
+              <para>If the WITH clause or a specific mapping is not specified, then a mapping is created based on the SELECT clause of the SELECT transformation (the view column gets mapped to expression in SELECT clause at same  position). 
+              </para>
+            </listitem>
           </itemizedlist>
-          <para>You can use these mappings either to replace the default mappings generated from the SELECT transformation or to specify a reverse expression when a virtual column is defined by an expression.</para>
-          <para>Some samples of the HAS TRANSLATE clause:</para>
+          <para>Some samples of TRANSLATE CRITERIA:</para>
           <informaltable>
             <tgroup cols="2">
               <colspec colwidth="1*"/>
@@ -600,18 +610,7 @@ VARIABLES.ROWS_UPDATED = VARIABLES.ROWCOUNT;
               </tbody>
             </tgroup>
           </informaltable>
-          <para>
-          The TRANSLATE CRITERIA, ON clause always refers to view columns.
-          The WITH clause always has items with form &lt;elem&gt; = &lt;expression&gt;, 
-          where the &lt;elem&gt; is a view column and the &lt;expression&gt; 
-          specifies what that view column should be
-          replaced with when TRANSLATE CRITERIA translates the view
-          criteria (from UPDATE or DELETE) into a physical criteria in
-          the command. By default, a mapping is created based on the
-          SELECT clause of the SELECT transformation (view column
-          gets mapped to expression in SELECT clause at same
-          position). 
-          </para>
+          <note><para>If a specific predicate type or column set is specified by TRANSALATE CRITERIA, but the user criteria has predicates that do not match, then an exception will be thrown.</para></note>
         </section>      
     </section>
     <section>
