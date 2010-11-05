@@ -681,7 +681,7 @@ public class DQPCore implements DQP {
 	public void start(DQPConfiguration config) {
 		this.processorTimeslice = config.getTimeSliceInMilli();
         this.maxFetchSize = config.getMaxRowsFetchSize();
-        this.useEntitlements = config.useDataRoles();
+        this.useEntitlements = config.getUseDataRoles();
         this.queryThreshold = config.getQueryThresholdInSecs();
         this.maxSourceRows = config.getMaxSourceRows();
         this.exceptionOnMaxSourceRows = config.isExceptionOnMaxSourceRows();

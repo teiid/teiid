@@ -827,7 +827,7 @@ public class NewCalculateCostUtil {
      */
     private static float getNDV(Collection<ElementSymbol> elements, PlanNode current, float cardinality, QueryMetadataInterface metadata) 
         throws QueryMetadataException, TeiidComponentException {
-        float result = 1;
+        float result = UNKNOWN_VALUE;
         
     	for (ElementSymbol elementSymbol : elements) {
             Object elemID = elementSymbol.getMetadataID();
@@ -843,9 +843,6 @@ public class NewCalculateCostUtil {
 		        			ndv = getNDV(ElementCollectorVisitor.getElements(expr, true), sourceNode.getFirstChild(), cardinality, metadata);
 	        			}
             		}
-            	}
-            	if (ndv == UNKNOWN_VALUE) {
-            		return UNKNOWN_VALUE;
             	}
             } else if (cardinality != UNKNOWN_VALUE) {
             	int groupCardinality = metadata.getCardinality(elementSymbol.getGroupSymbol().getMetadataID());

@@ -22,6 +22,13 @@
 
 package org.teiid.cache;
 
+import org.jboss.managed.api.annotation.ManagementComponent;
+import org.jboss.managed.api.annotation.ManagementObject;
+import org.jboss.managed.api.annotation.ManagementObjectID;
+import org.jboss.managed.api.annotation.ManagementProperties;
+import org.jboss.managed.api.annotation.ManagementProperty;
+
+@ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class CacheConfiguration {
 	
 	public static CacheConfiguration DEFAULT = new CacheConfiguration(Policy.LRU, 60*60, 100); // 1 hours with 100 nodes.
@@ -35,6 +42,7 @@ public class CacheConfiguration {
 	private int maxage;
 	private int maxEntries;
 	private boolean enabled = true;
+	private String name;
 	
 	public CacheConfiguration() {
 	}
@@ -48,7 +56,8 @@ public class CacheConfiguration {
 	public Policy getPolicy() {
 		return this.policy;
 	}
-	
+
+	@ManagementProperty(description="The maximum age of a result set cache entry in seconds. -1 indicates no max. (default 7200)")
 	public int getMaxAgeInSeconds(){
 		return maxage;
 	}
@@ -57,6 +66,7 @@ public class CacheConfiguration {
 		this.maxage = maxage;
 	}
 	
+	@ManagementProperty(description="The maximum number of result set cache entries. -1 indicates no limit. (default 1024)")
 	public int getMaxEntries() {
 		return this.maxEntries;
 	}
@@ -67,6 +77,16 @@ public class CacheConfiguration {
 
 	public void setType (String type) {
 		this.policy = Policy.valueOf(type);
+	}
+	
+	@ManagementProperty(description="Name of the configuration", readOnly=true)
+	@ManagementObjectID(type="cache")	
+	public String getName() {
+		return this.name;
+	}
+	
+	public void setName(String name) {
+		this.name = name;
 	}
 	
 	@Override

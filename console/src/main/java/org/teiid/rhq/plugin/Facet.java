@@ -351,9 +351,7 @@ public abstract class Facet implements
 			Map<String, ManagedProperty> managedProperties = managedComponent
 					.getProperties();
 
-			ProfileServiceUtil.convertConfigurationToManagedProperties(
-					managedProperties, resourceConfig, resourceContext
-							.getResourceType());
+			ProfileServiceUtil.convertConfigurationToManagedProperties(managedProperties, resourceConfig, resourceContext.getResourceType(), null);
 
 			try {
 				managementView.updateComponent(managedComponent);
@@ -398,23 +396,23 @@ public abstract class Facet implements
 
 		DeploymentManager deploymentManager = getConnection()
 				.getDeploymentManager();
-
-		log.debug("Stopping deployment [" + this.deploymentName + "]..."); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		log.debug("Stopping deployment [" + this.deploymentUrl + "]..."); //$NON-NLS-1$ //$NON-NLS-2$
 		DeploymentProgress progress = deploymentManager
-				.stop(this.deploymentName);
+				.stop(this.deploymentUrl);
 		DeploymentStatus stopStatus = DeploymentUtils.run(progress);
 		if (stopStatus.isFailed()) {
-			log.error("Failed to stop deployment '" + this.deploymentName //$NON-NLS-1$
+			log.error("Failed to stop deployment '" + this.deploymentUrl //$NON-NLS-1$
 					+ "'.", stopStatus.getFailure()); //$NON-NLS-1$
 			throw new Exception("Failed to stop deployment '" //$NON-NLS-1$
 					+ this.deploymentName + "' - cause: " //$NON-NLS-1$
 					+ stopStatus.getFailure());
 		}
-		log.debug("Removing deployment [" + this.deploymentName + "]..."); //$NON-NLS-1$ //$NON-NLS-2$
-		progress = deploymentManager.remove(this.deploymentName);
+		log.debug("Removing deployment [" + this.deploymentUrl + "]..."); //$NON-NLS-1$ //$NON-NLS-2$
+		progress = deploymentManager.remove(this.deploymentUrl);
 		DeploymentStatus removeStatus = DeploymentUtils.run(progress);
 		if (removeStatus.isFailed()) {
-			log.error("Failed to remove deployment '" + this.deploymentName //$NON-NLS-1$
+			log.error("Failed to remove deployment '" + this.deploymentUrl //$NON-NLS-1$
 					+ "'.", removeStatus.getFailure()); //$NON-NLS-1$
 			throw new Exception("Failed to remove deployment '" //$NON-NLS-1$
 					+ this.deploymentName + "' - cause: " //$NON-NLS-1$
@@ -758,11 +756,9 @@ public abstract class Facet implements
 		DeploymentTemplateInfo template;
 		try {
 			template = managementView.getTemplate(templateName);
-			Map<String, ManagedProperty> managedProperties = template
-					.getProperties();
+			Map<String, ManagedProperty> managedProperties = template.getProperties();
 
-			ProfileServiceUtil.convertConfigurationToManagedProperties(
-					managedProperties, resourceConfig, resourceType);
+			ProfileServiceUtil.convertConfigurationToManagedProperties(managedProperties, resourceConfig, resourceType, null);
 
 			LOG.debug("Applying template [" + templateName //$NON-NLS-1$
 					+ "] to create ManagedComponent of type [" + componentType //$NON-NLS-1$

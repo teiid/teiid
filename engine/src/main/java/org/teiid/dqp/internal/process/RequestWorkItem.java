@@ -60,6 +60,7 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.parser.ParseInfo;
+import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.sql.lang.Command;
@@ -333,19 +334,33 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 
 	protected void processNew() throws TeiidProcessingException, TeiidComponentException {
 		SessionAwareCache<CachedResults> rsCache = dqpCore.getRsCache();
-		ParseInfo pi = Request.createParseInfo(requestMsg);
-		CacheID cacheId = new CacheID(this.dqpWorkContext, pi, requestMsg.getCommandString());
-    	boolean cachable = cacheId.setParameters(requestMsg.getParameterValues());
-		if (rsCache != null && cachable) {
-			CachedResults cr = rsCache.get(cacheId);
-			if (cr != null && (requestMsg.useResultSetCache() || cr.getHint() != null)) {
-				this.resultsBuffer = cr.getResults();
-				this.analysisRecord = cr.getAnalysisRecord();
-				request.initMetadata();
-				this.originalCommand = cr.getCommand(requestMsg.getCommandString(), request.metadata, pi);
-				request.validateAccess(this.originalCommand);
-				this.doneProducingBatches();
-				return;
+				
+		boolean cachable = false;
+		CacheID cacheId = null;
+		boolean canUseCached = (requestMsg.useResultSetCache() || 
+				QueryParser.getQueryParser().parseCacheHint(requestMsg.getCommandString()) != null);
+		
+		if (rsCache != null) {
+			if (!canUseCached) {
+				LogManager.logDetail(LogConstants.CTX_DQP, requestID, "No cache directive"); //$NON-NLS-1$
+			} else {
+				ParseInfo pi = Request.createParseInfo(requestMsg);
+				cacheId = new CacheID(this.dqpWorkContext, pi, requestMsg.getCommandString());
+		    	cachable = cacheId.setParameters(requestMsg.getParameterValues());
+				if (cachable) {
+					CachedResults cr = rsCache.get(cacheId);
+					if (cr != null) {
+						this.resultsBuffer = cr.getResults();
+						this.analysisRecord = cr.getAnalysisRecord();
+						request.initMetadata();
+						this.originalCommand = cr.getCommand(requestMsg.getCommandString(), request.metadata, pi);
+						request.validateAccess(this.originalCommand);
+						this.doneProducingBatches();
+						return;
+					} 
+				} else {
+					LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Parameters are not serializable - cache cannot be used for", cacheId); //$NON-NLS-1$
+				}
 			}
 		}
 		request.processRequest();
@@ -356,6 +371,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		processor = request.processor;
 		resultsBuffer = processor.createTupleBuffer();
 		if (this.cid != null && originalCommand.getCacheHint() != null) {
+			LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Using cache hint", originalCommand.getCacheHint()); //$NON-NLS-1$
 			resultsBuffer.setPrefersMemory(originalCommand.getCacheHint().getPrefersMemory());
 		}
 		collector = new BatchCollector(processor, resultsBuffer) {

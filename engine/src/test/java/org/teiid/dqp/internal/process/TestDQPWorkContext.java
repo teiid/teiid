@@ -26,7 +26,9 @@ import java.util.Map;
 
 import org.mockito.Mockito;
 import org.teiid.adminapi.DataPolicy;
+import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.SessionMetadata;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.util.UnitTestUtil;
 
 import junit.framework.TestCase;
@@ -67,12 +69,27 @@ public class TestDQPWorkContext extends TestCase {
 	public void testClearPolicies() {
 		DQPWorkContext message = new DQPWorkContext();
 		message.setSession(Mockito.mock(SessionMetadata.class));
+		Mockito.stub(message.getSession().getVdb()).toReturn(new VDBMetaData());
 		Map<String, DataPolicy> map = message.getAllowedDataPolicies();
 		map.put("role", Mockito.mock(DataPolicy.class)); //$NON-NLS-1$
 		assertFalse(map.isEmpty());
 		
 		message.setSession(Mockito.mock(SessionMetadata.class));
+		Mockito.stub(message.getSession().getVdb()).toReturn(new VDBMetaData());
 		map = message.getAllowedDataPolicies();
 		assertTrue(map.isEmpty());
+	}
+	
+	public void testAnyAuthenticated() {
+		DQPWorkContext message = new DQPWorkContext();
+		message.setSession(Mockito.mock(SessionMetadata.class));
+		VDBMetaData vdb = new VDBMetaData();
+		DataPolicyMetadata dpm = new DataPolicyMetadata();
+		dpm.setAnyAuthenticated(true);
+		vdb.addDataPolicy(dpm);
+		Mockito.stub(message.getSession().getVdb()).toReturn(vdb);
+		
+		Map<String, DataPolicy> map = message.getAllowedDataPolicies();
+		assertEquals(1, map.size());
 	}
 }

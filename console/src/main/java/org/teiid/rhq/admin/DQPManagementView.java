@@ -64,10 +64,8 @@ import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.VDB;
 public class DQPManagementView implements PluginConstants {
 
 	private static ManagedComponent mc = null;
-	private static final Log LOG = LogFactory
-			.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
-	private static final MetaValueFactory metaValueFactory = MetaValueFactory
-			.getInstance();
+	private static final Log LOG = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
+	private static final MetaValueFactory metaValueFactory = MetaValueFactory.getInstance();
 
 	private static final String VDB_EXT = ".vdb"; //$NON-NLS-1$
 
@@ -83,13 +81,10 @@ public class DQPManagementView implements PluginConstants {
 		Object resultObject = new Object();
 
 		if (componentType.equals(PluginConstants.ComponentType.Platform.NAME)) {
-			resultObject = getPlatformMetric(connection, componentType, metric,
-					valueMap);
+			resultObject = getPlatformMetric(connection, componentType, metric,	valueMap);
 		} else if (componentType.equals(PluginConstants.ComponentType.VDB.NAME)) {
-			resultObject = getVdbMetric(connection, componentType, identifier,
-					metric, valueMap);
+			resultObject = getVdbMetric(connection, componentType, identifier,metric, valueMap);
 		}
-
 		return resultObject;
 	}
 
@@ -98,44 +93,33 @@ public class DQPManagementView implements PluginConstants {
 
 		Object resultObject = new Object();
 
-		if (metric
-				.equals(PluginConstants.ComponentType.Platform.Metrics.QUERY_COUNT)) {
+		if (metric.equals(PluginConstants.ComponentType.Platform.Metrics.QUERY_COUNT)) {
 			resultObject = new Double(getQueryCount(connection).doubleValue());
-		} else if (metric
-				.equals(PluginConstants.ComponentType.Platform.Metrics.SESSION_COUNT)) {
+		} else if (metric.equals(PluginConstants.ComponentType.Platform.Metrics.SESSION_COUNT)) {
 			resultObject = new Double(getSessionCount(connection).doubleValue());
-		} else if (metric
-				.equals(PluginConstants.ComponentType.Platform.Metrics.LONG_RUNNING_QUERIES)) {
+		} else if (metric.equals(PluginConstants.ComponentType.Platform.Metrics.LONG_RUNNING_QUERIES)) {
 			Collection<Request> longRunningQueries = new ArrayList<Request>();
-			getRequestCollectionValue(getLongRunningQueries(connection),
-					longRunningQueries);
+			getRequestCollectionValue(getLongRunningQueries(connection),	longRunningQueries);
 			resultObject = new Double(longRunningQueries.size());
-		} else if (metric
-				.equals(PluginConstants.ComponentType.Platform.Metrics.BUFFER_USAGE)) {
+		} else if (metric.equals(PluginConstants.ComponentType.Platform.Metrics.BUFFER_USAGE)) {
 			try {
-				resultObject = ProfileServiceUtil
-						.doubleValue(getUsedBufferSpace(connection));
+				resultObject = ProfileServiceUtil.doubleValue(getUsedBufferSpace(connection));
 			} catch (Exception e) {
 				final String msg = "Exception executing operation: " + Platform.Operations.GET_BUFFER_USAGE; //$NON-NLS-1$
 				LOG.error(msg, e);
 			}
-		} else if (metric.startsWith(Admin.Cache.PREPARED_PLAN_CACHE.toString()
-				+ ".") //$NON-NLS-1$
-				|| metric.startsWith(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE
-						.toString()
-						+ ".")) { //$NON-NLS-1$
+		} else if (metric.startsWith(Admin.Cache.PREPARED_PLAN_CACHE.toString() + ".") //$NON-NLS-1$
+				|| metric.startsWith(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE	.toString()+ ".")) { //$NON-NLS-1$
 			return getCacheProperty(connection, metric);
 		}
 		return resultObject;
 	}
 
-	private Object getCacheProperty(ProfileServiceConnection connection,
-			String metric) {
+	private Object getCacheProperty(ProfileServiceConnection connection,String metric) {
 		int dotIndex = metric.indexOf('.');
 		String cacheType = metric.substring(0, dotIndex);
 		String property = metric.substring(dotIndex + 1);
-		CompositeValueSupport mv = (CompositeValueSupport) getCacheStats(
-				connection, cacheType);
+		CompositeValueSupport mv = (CompositeValueSupport) getCacheStats(connection, cacheType);
 		MetaValue v = mv.get(property);
 		return ((SimpleValue) v).getValue();
 	}
@@ -146,27 +130,19 @@ public class DQPManagementView implements PluginConstants {
 
 		Object resultObject = new Object();
 
-		if (metric
-				.equals(PluginConstants.ComponentType.VDB.Metrics.ERROR_COUNT)) {
+		if (metric.equals(PluginConstants.ComponentType.VDB.Metrics.ERROR_COUNT)) {
 			// TODO remove version parameter after AdminAPI is changed
-			resultObject = getErrorCount(connection, (String) valueMap
-					.get(VDB.NAME));
-		} else if (metric
-				.equals(PluginConstants.ComponentType.VDB.Metrics.STATUS)) {
+			resultObject = getErrorCount(connection, (String) valueMap.get(VDB.NAME));
+		} else if (metric.equals(PluginConstants.ComponentType.VDB.Metrics.STATUS)) {
 			// TODO remove version parameter after AdminAPI is changed
-			resultObject = getVDBStatus(connection, (String) valueMap
-					.get(VDB.NAME));
-		} else if (metric
-				.equals(PluginConstants.ComponentType.VDB.Metrics.QUERY_COUNT)) {
+			resultObject = getVDBStatus(connection, (String) valueMap.get(VDB.NAME));
+		} else if (metric.equals(PluginConstants.ComponentType.VDB.Metrics.QUERY_COUNT)) {
 			resultObject = new Double(getQueryCount(connection).doubleValue());
-		} else if (metric
-				.equals(PluginConstants.ComponentType.VDB.Metrics.SESSION_COUNT)) {
+		} else if (metric.equals(PluginConstants.ComponentType.VDB.Metrics.SESSION_COUNT)) {
 			resultObject = new Double(getSessionCount(connection).doubleValue());
-		} else if (metric
-				.equals(PluginConstants.ComponentType.VDB.Metrics.LONG_RUNNING_QUERIES)) {
+		} else if (metric.equals(PluginConstants.ComponentType.VDB.Metrics.LONG_RUNNING_QUERIES)) {
 			Collection<Request> longRunningQueries = new ArrayList<Request>();
-			getRequestCollectionValue(getLongRunningQueries(connection),
-					longRunningQueries);
+			getRequestCollectionValue(getLongRunningQueries(connection),	longRunningQueries);
 			resultObject = new Double(longRunningQueries.size());
 		}
 		return resultObject;
@@ -179,14 +155,10 @@ public class DQPManagementView implements PluginConstants {
 	public void executeOperation(ProfileServiceConnection connection,
 			ExecutedResult operationResult, final Map<String, Object> valueMap) {
 
-		if (operationResult.getComponentType().equals(
-				PluginConstants.ComponentType.Platform.NAME)) {
-			executePlatformOperation(connection, operationResult,
-					operationResult.getOperationName(), valueMap);
-		} else if (operationResult.getComponentType().equals(
-				PluginConstants.ComponentType.VDB.NAME)) {
-			executeVdbOperation(connection, operationResult, operationResult
-					.getOperationName(), valueMap);
+		if (operationResult.getComponentType().equals(PluginConstants.ComponentType.Platform.NAME)) {
+			executePlatformOperation(connection, operationResult,	operationResult.getOperationName(), valueMap);
+		} else if (operationResult.getComponentType().equals(	PluginConstants.ComponentType.VDB.NAME)) {
+			executeVdbOperation(connection, operationResult, operationResult	.getOperationName(), valueMap);
 		}
 	}
 
@@ -199,50 +171,37 @@ public class DQPManagementView implements PluginConstants {
 
 		if (operationName.equals(Platform.Operations.GET_LONGRUNNINGQUERIES)) {
 			List<String> fieldNameList = operationResult.getFieldNameList();
-			getRequestCollectionValue(getLongRunningQueries(connection),
-					resultObject);
-			operationResult.setContent(createReportResultList(fieldNameList,
-					resultObject.iterator()));
+			getRequestCollectionValue(getLongRunningQueries(connection),	resultObject);
+			operationResult.setContent(createReportResultList(fieldNameList,	resultObject.iterator()));
 		} else if (operationName.equals(Platform.Operations.GET_SESSIONS)) {
 			List<String> fieldNameList = operationResult.getFieldNameList();
 			MetaValue sessionMetaValue = getSessions(connection);
-			getSessionCollectionValue(sessionMetaValue,
-					activeSessionsCollection);
-			operationResult.setContent(createReportResultList(fieldNameList,
-					activeSessionsCollection.iterator()));
+			getSessionCollectionValue(sessionMetaValue,activeSessionsCollection);
+			operationResult.setContent(createReportResultList(fieldNameList,	activeSessionsCollection.iterator()));
 		} else if (operationName.equals(Platform.Operations.GET_REQUESTS)) {
 			List<String> fieldNameList = operationResult.getFieldNameList();
 			MetaValue requestMetaValue = getRequests(connection);
 			getRequestCollectionValue(requestMetaValue, resultObject);
-			operationResult.setContent(createReportResultList(fieldNameList,
-					resultObject.iterator()));
+			operationResult.setContent(createReportResultList(fieldNameList,	resultObject.iterator()));
 		} else if (operationName.equals(Platform.Operations.GET_TRANSACTIONS)) {
 			List<String> fieldNameList = operationResult.getFieldNameList();
 			MetaValue transactionMetaValue = getTransactions(connection);
-			getTransactionCollectionValue(transactionMetaValue,
-					transactionsCollection);
-			operationResult.setContent(createReportResultList(fieldNameList,
-					resultObject.iterator()));
+			getTransactionCollectionValue(transactionMetaValue,transactionsCollection);
+			operationResult.setContent(createReportResultList(fieldNameList,	resultObject.iterator()));
 		} else if (operationName.equals(Platform.Operations.KILL_TRANSACTION)) {
-			Long sessionID = (Long) valueMap
-					.get(Operation.Value.TRANSACTION_ID);
-			MetaValue[] args = new MetaValue[] { metaValueFactory
-					.create(sessionID) };
+			Long sessionID = (Long) valueMap.get(Operation.Value.TRANSACTION_ID);
+			MetaValue[] args = new MetaValue[] { metaValueFactory	.create(sessionID) };
 			try {
-				executeManagedOperation(connection, getRuntimeEngineDeployer(
-						connection, mc), Platform.Operations.KILL_TRANSACTION,
-						args);
+				executeManagedOperation(connection, getRuntimeEngineDeployer(connection, mc), Platform.Operations.KILL_TRANSACTION, args);
 			} catch (Exception e) {
 				final String msg = "Exception executing operation: " + Platform.Operations.KILL_TRANSACTION; //$NON-NLS-1$
 				LOG.error(msg, e);
 			}
 		} else if (operationName.equals(Platform.Operations.KILL_SESSION)) {
 			Long sessionID = (Long) valueMap.get(Operation.Value.SESSION_ID);
-			MetaValue[] args = new MetaValue[] { metaValueFactory
-					.create(sessionID) };
+			MetaValue[] args = new MetaValue[] { metaValueFactory	.create(sessionID) };
 			try {
-				executeManagedOperation(connection, getRuntimeEngineDeployer(
-						connection, mc), Platform.Operations.KILL_SESSION, args);
+				executeManagedOperation(connection, getRuntimeEngineDeployer(connection, mc), Platform.Operations.KILL_SESSION, args);
 			} catch (Exception e) {
 				final String msg = "Exception executing operation: " + Platform.Operations.KILL_SESSION; //$NON-NLS-1$
 				LOG.error(msg, e);
@@ -254,25 +213,21 @@ public class DQPManagementView implements PluginConstants {
 					metaValueFactory.create(requestID),
 					metaValueFactory.create(sessionID) };
 			try {
-				executeManagedOperation(connection, getRuntimeEngineDeployer(
-						connection, mc), Platform.Operations.KILL_REQUEST, args);
+				executeManagedOperation(connection, getRuntimeEngineDeployer(connection, mc), Platform.Operations.KILL_REQUEST, args);
 			} catch (Exception e) {
 				final String msg = "Exception executing operation: " + Platform.Operations.KILL_REQUEST; //$NON-NLS-1$
 				LOG.error(msg, e);
 			}
 		} else if (operationName.equals(Platform.Operations.DEPLOY_VDB_BY_URL)) {
 			String vdbUrl = (String) valueMap.get(Operation.Value.VDB_URL);
-			String deployName = (String) valueMap
-					.get(Operation.Value.VDB_DEPLOY_NAME);
+			String deployName = (String) valueMap.get(Operation.Value.VDB_DEPLOY_NAME);
 			Object vdbVersion = valueMap.get(Operation.Value.VDB_VERSION);
 			// strip off vdb extension if user added it
 			if (deployName.endsWith(VDB_EXT)) {
-				deployName = deployName.substring(0, deployName
-						.lastIndexOf(VDB_EXT));
+				deployName = deployName.substring(0, deployName.lastIndexOf(VDB_EXT));
 			}
 			if (vdbVersion != null) {
-				deployName = deployName
-						+ "." + ((Integer) vdbVersion).toString() + VDB_EXT; //$NON-NLS-1$ 
+				deployName = deployName + "." + ((Integer) vdbVersion).toString() + VDB_EXT; //$NON-NLS-1$ 
 			}
 			// add vdb extension if there was no version
 			if (!deployName.endsWith(VDB_EXT)) {
@@ -281,8 +236,7 @@ public class DQPManagementView implements PluginConstants {
 
 			try {
 				URL url = new URL(vdbUrl);
-				DeploymentUtils.deployArchive(deployName, connection
-						.getDeploymentManager(), url, false);
+				DeploymentUtils.deployArchive(deployName, connection.getDeploymentManager(), url, false);
 			} catch (Exception e) {
 				final String msg = "Exception executing operation: " + Platform.Operations.DEPLOY_VDB_BY_URL; //$NON-NLS-1$
 				LOG.error(msg, e);
@@ -297,41 +251,30 @@ public class DQPManagementView implements PluginConstants {
 		Collection<ArrayList<String>> sqlResultsObject = new ArrayList<ArrayList<String>>();
 		Collection<Request> resultObject = new ArrayList<Request>();
 		Collection<Session> activeSessionsCollection = new ArrayList<Session>();
-		String vdbName = (String) valueMap
-				.get(PluginConstants.ComponentType.VDB.NAME);
-		String vdbVersion = (String) valueMap
-				.get(PluginConstants.ComponentType.VDB.VERSION);
+		String vdbName = (String) valueMap.get(PluginConstants.ComponentType.VDB.NAME);
+		String vdbVersion = (String) valueMap.get(PluginConstants.ComponentType.VDB.VERSION);
 
 		if (operationName.equals(VDB.Operations.GET_PROPERTIES)) {
 			List<String> fieldNameList = operationResult.getFieldNameList();
 			getProperties(connection, PluginConstants.ComponentType.VDB.NAME);
-			operationResult.setContent(createReportResultList(fieldNameList,
-					resultObject.iterator()));
+			operationResult.setContent(createReportResultList(fieldNameList,	resultObject.iterator()));
 		} else if (operationName.equals(VDB.Operations.GET_SESSIONS)) {
 			List<String> fieldNameList = operationResult.getFieldNameList();
 			MetaValue sessionMetaValue = getSessions(connection);
-			getSessionCollectionValueForVDB(sessionMetaValue,
-					activeSessionsCollection, vdbName);
-			operationResult.setContent(createReportResultList(fieldNameList,
-					activeSessionsCollection.iterator()));
+			getSessionCollectionValueForVDB(sessionMetaValue, activeSessionsCollection, vdbName);
+			operationResult.setContent(createReportResultList(fieldNameList,	activeSessionsCollection.iterator()));
 		} else if (operationName.equals(VDB.Operations.GET_REQUESTS)) {
 			List<String> fieldNameList = operationResult.getFieldNameList();
-			MetaValue requestMetaValue = getRequestsForVDB(connection, vdbName,
-					Integer.parseInt(vdbVersion));
+			MetaValue requestMetaValue = getRequestsForVDB(connection, vdbName,	Integer.parseInt(vdbVersion));
 			getRequestCollectionValue(requestMetaValue, resultObject);
-			operationResult.setContent(createReportResultList(fieldNameList,
-					resultObject.iterator()));
+			operationResult.setContent(createReportResultList(fieldNameList,	resultObject.iterator()));
 		} else if (operationName.equals(VDB.Operations.GET_MATVIEWS)) {
 			List<String> fieldNameList = operationResult.getFieldNameList();
-			MetaValue resultsMetaValue = executeMaterializedViewQuery(
-					connection, formatVdbName(vdbName), Integer
-							.parseInt(vdbVersion));
+			MetaValue resultsMetaValue = executeMaterializedViewQuery(	connection, formatVdbName(vdbName), Integer.parseInt(vdbVersion));
 			getResultsCollectionValue(resultsMetaValue, sqlResultsObject);
-			operationResult.setContent(createReportResultListForMatViewQuery(
-					fieldNameList, sqlResultsObject.iterator()));
+			operationResult.setContent(createReportResultListForMatViewQuery(fieldNameList, sqlResultsObject.iterator()));
 		} else if (operationName.equals(VDB.Operations.RELOAD_MATVIEW)) {
-			MetaValue resultsMetaValue = reloadMaterializedView(connection,
-					formatVdbName(vdbName), Integer.parseInt(vdbVersion),
+			MetaValue resultsMetaValue = reloadMaterializedView(connection,	formatVdbName(vdbName), Integer.parseInt(vdbVersion),
 					(String) valueMap.get(Operation.Value.MATVIEW_SCHEMA),
 					(String) valueMap.get(Operation.Value.MATVIEW_TABLE),
 					(Boolean) valueMap.get(Operation.Value.INVALIDATE_MATVIEW));
@@ -353,15 +296,13 @@ public class DQPManagementView implements PluginConstants {
 		return vdbName.substring(0, vdbName.indexOf(".")); //$NON-NLS-1$
 	}
 
-	public MetaValue getProperties(ProfileServiceConnection connection,
-			final String component) {
+	public MetaValue getProperties(ProfileServiceConnection connection,	final String component) {
 
 		MetaValue propertyValue = null;
 		MetaValue args = null;
 
 		try {
-			propertyValue = executeManagedOperation(connection,
-					getRuntimeEngineDeployer(connection, mc),
+			propertyValue = executeManagedOperation(connection,	getRuntimeEngineDeployer(connection, mc),
 					PluginConstants.Operation.GET_PROPERTIES, args);
 		} catch (Exception e) {
 			final String msg = "Exception executing operation: " + Platform.Operations.GET_PROPERTIES; //$NON-NLS-1$
@@ -378,10 +319,7 @@ public class DQPManagementView implements PluginConstants {
 		MetaValue args = null;
 
 		try {
-			requestsCollection = executeManagedOperation(connection,
-					getRuntimeEngineDeployer(connection, mc),
-
-					PluginConstants.Operation.GET_REQUESTS, args);
+			requestsCollection = executeManagedOperation(connection,	getRuntimeEngineDeployer(connection, mc),	PluginConstants.Operation.GET_REQUESTS, args);
 		} catch (Exception e) {
 			final String msg = "Exception executing operation: " + Platform.Operations.GET_REQUESTS; //$NON-NLS-1$
 			LOG.error(msg, e);
@@ -398,15 +336,11 @@ public class DQPManagementView implements PluginConstants {
 		MetaValue[] args = new MetaValue[] {
 				MetaValueFactory.getInstance().create(vdbName),
 				MetaValueFactory.getInstance().create(vdbVersion),
-				MetaValueFactory.getInstance().create(
-						Operation.Value.MAT_VIEW_QUERY),
-				MetaValueFactory.getInstance()
-						.create(Long.parseLong("9999999")) }; //$NON-NLS-1$
+				MetaValueFactory.getInstance().create(Operation.Value.MAT_VIEW_QUERY),	
+				MetaValueFactory.getInstance().create(Long.parseLong("9999999")) }; //$NON-NLS-1$
 
 		try {
-			resultsCollection = executeManagedOperation(connection,
-					getRuntimeEngineDeployer(connection, mc),
-					VDB.Operations.EXECUTE_QUERIES, args);
+			resultsCollection = executeManagedOperation(connection,	getRuntimeEngineDeployer(connection, mc),	VDB.Operations.EXECUTE_QUERIES, args);
 		} catch (Exception e) {
 			final String msg = "Exception executing operation: " + VDB.Operations.EXECUTE_QUERIES; //$NON-NLS-1$
 			LOG.error(msg, e);
@@ -429,12 +363,10 @@ public class DQPManagementView implements PluginConstants {
 				MetaValueFactory.getInstance().create(vdbName),
 				MetaValueFactory.getInstance().create(vdbVersion),
 				MetaValueFactory.getInstance().create(query),
-				MetaValueFactory.getInstance()
-						.create(Long.parseLong("9999999")) }; //$NON-NLS-1$
+				MetaValueFactory.getInstance().create(Long.parseLong("9999999")) }; //$NON-NLS-1$
 
 		try {
-			result = executeManagedOperation(connection,
-					getRuntimeEngineDeployer(connection, mc),
+			result = executeManagedOperation(connection,	getRuntimeEngineDeployer(connection, mc),
 					VDB.Operations.EXECUTE_QUERIES, args);
 		} catch (Exception e) {
 			final String msg = "Exception executing operation: " + VDB.Operations.RELOAD_MATVIEW; //$NON-NLS-1$
@@ -508,12 +440,10 @@ public class DQPManagementView implements PluginConstants {
 
 		ManagedComponent mcVdb = null;
 		try {
-			mcVdb = ProfileServiceUtil
-					.getManagedComponent(connection,
+			mcVdb = ProfileServiceUtil.getManagedComponent(connection,
 							new org.jboss.managed.api.ComponentType(
 									PluginConstants.ComponentType.VDB.TYPE,
-									PluginConstants.ComponentType.VDB.SUBTYPE),
-							vdbName);
+									PluginConstants.ComponentType.VDB.SUBTYPE),	vdbName);
 		} catch (NamingException e) {
 			final String msg = "NamingException in getVDBStatus(): " + e.getExplanation(); //$NON-NLS-1$
 			LOG.error(msg, e);
@@ -539,9 +469,8 @@ public class DQPManagementView implements PluginConstants {
 				try {
 					if (args.length == 1 && args[0] == null) {
 						return mo.invoke();
-					} else {
-						return mo.invoke(args);
 					}
+					return mo.invoke(args);
 				} catch (Exception e) {
 					final String msg = "Exception getting the AdminApi in " + operation; //$NON-NLS-1$
 					LOG.error(msg, e);
@@ -575,8 +504,7 @@ public class DQPManagementView implements PluginConstants {
 	 * @param mc
 	 * @return
 	 */
-	private static ManagedComponent getBufferService(
-			ProfileServiceConnection connection, ManagedComponent mc) {
+	private static ManagedComponent getBufferService(ProfileServiceConnection connection, ManagedComponent mc) {
 		try {
 			mc = ProfileServiceUtil.getBufferService(connection);
 		} catch (NamingException e) {
@@ -589,9 +517,7 @@ public class DQPManagementView implements PluginConstants {
 		return mc;
 	}
 
-	public static MetaValue getManagedProperty(
-			ProfileServiceConnection connection, ManagedComponent mc,
-			String property) throws Exception {
+	public static MetaValue getManagedProperty(ProfileServiceConnection connection, ManagedComponent mc, String property) throws Exception {
 
 		ManagedProperty managedProperty = null;
 		try {
@@ -619,7 +545,7 @@ public class DQPManagementView implements PluginConstants {
 
 		getRequestCollectionValue(requests, requestsCollection);
 
-		if (requestsCollection != null && !requestsCollection.isEmpty()) {
+		if (!requestsCollection.isEmpty()) {
 			count = requestsCollection.size();
 		}
 
@@ -639,17 +565,14 @@ public class DQPManagementView implements PluginConstants {
 	 * @return count
 	 * @throws Exception
 	 */
-	private int getErrorCount(ProfileServiceConnection connection,
-			String vdbName) {
+	private int getErrorCount(ProfileServiceConnection connection,String vdbName) {
 
 		ManagedComponent mcVdb = null;
 		try {
-			mcVdb = ProfileServiceUtil
-					.getManagedComponent(connection,
+			mcVdb = ProfileServiceUtil.getManagedComponent(connection,
 							new org.jboss.managed.api.ComponentType(
 									PluginConstants.ComponentType.VDB.TYPE,
-									PluginConstants.ComponentType.VDB.SUBTYPE),
-							vdbName);
+									PluginConstants.ComponentType.VDB.SUBTYPE),vdbName);
 		} catch (NamingException e) {
 			final String msg = "NamingException in getVDBStatus(): " + e.getExplanation(); //$NON-NLS-1$
 			LOG.error(msg, e);
@@ -661,14 +584,12 @@ public class DQPManagementView implements PluginConstants {
 		// Get models from VDB
 		int count = 0;
 		ManagedProperty property = mcVdb.getProperty("models"); //$NON-NLS-1$
-		CollectionValueSupport valueSupport = (CollectionValueSupport) property
-				.getValue();
+		CollectionValueSupport valueSupport = (CollectionValueSupport) property.getValue();
 		MetaValue[] metaValues = valueSupport.getElements();
 
 		for (MetaValue value : metaValues) {
 			GenericValueSupport genValueSupport = (GenericValueSupport) value;
-			ManagedObjectImpl managedObject = (ManagedObjectImpl) genValueSupport
-					.getValue();
+			ManagedObjectImpl managedObject = (ManagedObjectImpl) genValueSupport.getValue();
 
 			// Get any model errors/warnings
 			MetaValue errors = managedObject.getProperty("errors").getValue(); //$NON-NLS-1$
@@ -684,14 +605,10 @@ public class DQPManagementView implements PluginConstants {
 	protected MetaValue getCacheStats(ProfileServiceConnection connection,
 			String type) {
 		try {
-			return executeManagedOperation(connection,
-					getRuntimeEngineDeployer(connection, mc),
-					Platform.Operations.GET_CACHE_STATS, SimpleValueSupport
-							.wrap(type));
+			return executeManagedOperation(connection,getRuntimeEngineDeployer(connection, mc),
+					Platform.Operations.GET_CACHE_STATS, SimpleValueSupport.wrap(type));
 		} catch (Exception e) {
-			LOG
-					.error(
-							"Exception executing operation: " + Platform.Operations.GET_CACHE_STATS, e); //$NON-NLS-1$
+			LOG.error("Exception executing operation: " + Platform.Operations.GET_CACHE_STATS, e); //$NON-NLS-1$
 		}
 		return null;
 	}
@@ -729,61 +646,49 @@ public class DQPManagementView implements PluginConstants {
 		return usedBufferSpace;
 	}
 
-	private void getRequestCollectionValue(MetaValue pValue,
-			Collection<Request> list) {
+	private void getRequestCollectionValue(MetaValue pValue, Collection<Request> list) {
 		MetaType metaType = pValue.getMetaType();
 		if (metaType.isCollection()) {
-			for (MetaValue value : ((CollectionValueSupport) pValue)
-					.getElements()) {
+			for (MetaValue value : ((CollectionValueSupport) pValue).getElements()) {
 				if (value.getMetaType().isComposite()) {
 					RequestMetadataMapper rmm = new RequestMetadataMapper();
 					RequestMetadata request = rmm.unwrapMetaValue(value);
 					list.add(request);
 				} else {
-					throw new IllegalStateException(pValue
-							+ " is not a Composite type"); //$NON-NLS-1$
+					throw new IllegalStateException(pValue + " is not a Composite type"); //$NON-NLS-1$
 				}
 			}
 		}
 	}
 
-	private void getResultsCollectionValue(MetaValue pValue,
-			Collection<ArrayList<String>> list) {
+	private void getResultsCollectionValue(MetaValue pValue, Collection<ArrayList<String>> list) {
 		MetaType metaType = pValue.getMetaType();
 		if (metaType.isCollection()) {
-			for (MetaValue value : ((CollectionValueSupport) pValue)
-					.getElements()) {
+			for (MetaValue value : ((CollectionValueSupport) pValue).getElements()) {
 				if (value.getMetaType().isCollection()) {
-					ArrayList<String> row = (ArrayList<String>) MetaValueFactory
-							.getInstance().unwrap(value);
+					ArrayList<String> row = (ArrayList<String>) MetaValueFactory.getInstance().unwrap(value);
 					list.add(row);
 				}
 			}
 		}
 	}
 
-	private void getResultsCollectionValueForMatViewRefresh(MetaValue pValue,
-			Collection<ArrayList<String>> list) {
+	private void getResultsCollectionValueForMatViewRefresh(MetaValue pValue, Collection<ArrayList<String>> list) {
 		MetaType metaType = pValue.getMetaType();
 		for (MetaValue value : ((CollectionValueSupport) pValue).getElements()) {
 			if (value.getMetaType().isCollection()) {
-				ArrayList<String> row = (ArrayList<String>) MetaValueFactory
-						.getInstance().unwrap(value);
+				ArrayList<String> row = (ArrayList<String>) MetaValueFactory.getInstance().unwrap(value);
 				list.add(row);
 			}
 		}
-
 	}
 
-	public static <T> void getTransactionCollectionValue(MetaValue pValue,
-			Collection<Transaction> list) {
+	public static <T> void getTransactionCollectionValue(MetaValue pValue, Collection<Transaction> list) {
 		MetaType metaType = pValue.getMetaType();
 		if (metaType.isCollection()) {
-			for (MetaValue value : ((CollectionValueSupport) pValue)
-					.getElements()) {
+			for (MetaValue value : ((CollectionValueSupport) pValue).getElements()) {
 				if (value.getMetaType().isComposite()) {
-					Transaction transaction = (Transaction) MetaValueFactory
-							.getInstance().unwrap(value);
+					Transaction transaction = (Transaction) MetaValueFactory.getInstance().unwrap(value);
 					list.add(transaction);
 				} else {
 					throw new IllegalStateException(pValue
@@ -793,15 +698,12 @@ public class DQPManagementView implements PluginConstants {
 		}
 	}
 
-	public static <T> void getSessionCollectionValue(MetaValue pValue,
-			Collection<Session> list) {
+	public static <T> void getSessionCollectionValue(MetaValue pValue,Collection<Session> list) {
 		MetaType metaType = pValue.getMetaType();
 		if (metaType.isCollection()) {
-			for (MetaValue value : ((CollectionValueSupport) pValue)
-					.getElements()) {
+			for (MetaValue value : ((CollectionValueSupport) pValue).getElements()) {
 				if (value.getMetaType().isComposite()) {
-					Session Session = (Session) MetaValueFactory.getInstance()
-							.unwrap(value);
+					Session Session = (Session) MetaValueFactory.getInstance().unwrap(value);
 					list.add(Session);
 				} else {
 					throw new IllegalStateException(pValue
@@ -811,28 +713,23 @@ public class DQPManagementView implements PluginConstants {
 		}
 	}
 
-	public static <T> void getSessionCollectionValueForVDB(MetaValue pValue,
-			Collection<Session> list, String vdbName) {
+	public static <T> void getSessionCollectionValueForVDB(MetaValue pValue,Collection<Session> list, String vdbName) {
 		MetaType metaType = pValue.getMetaType();
 		if (metaType.isCollection()) {
-			for (MetaValue value : ((CollectionValueSupport) pValue)
-					.getElements()) {
+			for (MetaValue value : ((CollectionValueSupport) pValue).getElements()) {
 				if (value.getMetaType().isComposite()) {
-					Session session = (Session) MetaValueFactory.getInstance()
-							.unwrap(value);
+					Session session = (Session) MetaValueFactory.getInstance().unwrap(value);
 					if (session.getVDBName().equals(vdbName)) {
 						list.add(session);
 					}
 				} else {
-					throw new IllegalStateException(pValue
-							+ " is not a Composite type"); //$NON-NLS-1$
+					throw new IllegalStateException(pValue+ " is not a Composite type"); //$NON-NLS-1$
 				}
 			}
 		}
 	}
 
-	private Collection createReportResultList(List fieldNameList,
-			Iterator objectIter) {
+	private Collection createReportResultList(List fieldNameList, Iterator objectIter) {
 		Collection reportResultList = new ArrayList();
 
 		while (objectIter.hasNext()) {
@@ -858,16 +755,13 @@ public class DQPManagementView implements PluginConstants {
 		return reportResultList;
 	}
 
-	private Collection createReportResultListForMatViewQuery(
-			List fieldNameList, Iterator objectIter) {
+	private Collection createReportResultListForMatViewQuery(List fieldNameList, Iterator objectIter) {
 		Collection reportResultList = new ArrayList();
 
 		// Iterate through rows
 		while (objectIter.hasNext()) {
-			ArrayList<Object> columnValues = (ArrayList<Object>) objectIter
-					.next();
+			ArrayList<Object> columnValues = (ArrayList<Object>) objectIter.next();
 
-			Class cls = null;
 			try {
 				Iterator fieldIter = fieldNameList.iterator();
 				Map reportValueMap = new HashMap<String, Object>();

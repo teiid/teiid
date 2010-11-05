@@ -296,104 +296,112 @@
 			property="QUERY_SERVICE_RESULT_SET_CACHE.requestCount" description="Total number of requests made against cache" />
 
 		<resource-configuration>
-			<c:group name="teiidProperties" displayName="Runtime Engine Properties"
+			<c:group name="RuntimeEngineDeployer" displayName="Runtime Engine Properties (restart required before modifications take effect)"
 				hiddenByDefault="false">
-				<c:simple-property name="maxRowsFetchSize"
+				<c:simple-property name="RuntimeEngineDeployer.maxRowsFetchSize"
 					displayName="Max Rows Fetch Size"
 					description="The maximum number of result set cache entries. 0 indicates no limit. (default 1024)"
 					required="false" readOnly="false" />
-				<c:simple-property name="processName" displayName="Process Name"
-					description="Name that uniquely identifies this process" required="false"
-					readOnly="false" />
-				<c:simple-property name="maxThreads" displayName="Max Threads"
+				<c:simple-property name="RuntimeEngineDeployer.maxThreads" displayName="Max Threads"
 					description="Process pool maximum thread count. (default 64)"
-					required="false" readOnly="false" />
-				<c:simple-property name="timeSliceInMilli"
+					required="false" readOnly="false" />                    
+                <c:simple-property name="RuntimeEngineDeployer.maxActivePlans"
+                    displayName="Maximum Concurrent Active plans"
+                    description="Increase this value on highly concurrent systems - but ensure that the underlying pools can handle the increased load without timeouts.(default 20)"
+                    required="false" readOnly="false" />                    
+				<c:simple-property name="RuntimeEngineDeployer.timeSliceInMilli"
 					displayName="Time Slice In Milliseconds"
 					description="Query processor time slice, in milliseconds. (default 2000)"
 					required="false" readOnly="false" />
-				<c:simple-property name="lobChunkSizeInKB"
+				<c:simple-property name="RuntimeEngineDeployer.lobChunkSizeInKB"
 					displayName="Lob Chunk Size In KB"
 					description="The max lob chunk size in KB transferred to the client for xml, blobs, clobs (default 100KB)"
-					required="false" readOnly="false" />
-				<c:simple-property name="resultSetCacheEnabled"
-					displayName="Result Set Cache Enabled"
-					description="Denotes whether or not result set caching is enabled. (default true)"
-					required="false" readOnly="false" type="boolean" />
-				<c:simple-property name="resultSetCacheMaxEntries"
-					displayName="Result Set Cache Max Entries"
-					description="The maximum number of result set cache entries. -1 indicates no limit. (default 1024)"
-					required="false" readOnly="false" />
-				<c:simple-property name="resultSetCacheMaxEntryAge"
-					displayName="Result Set Cache Max Entry Age"
-					description="The maximum age of a result set cache entry in seconds. -1 indicates no max. (default 7200)"
-					required="false" readOnly="false" />
-				<c:simple-property name="preparedPlanCacheMaxCount"
+					required="false" readOnly="false" />				
+				<c:simple-property name="RuntimeEngineDeployer.preparedPlanCacheMaxCount"
 					displayName="Prepared Plan Cache Max Count"
 					description="The maximum number of query plans that are cached. Note: this is a memory based cache. (default 250)"
 					required="false" readOnly="false" />
-				<c:simple-property name="activeSessionsCount"
-					displayName="Active Session Count" description="Count of active sessions"
-					required="false" readOnly="false" />
-				<c:simple-property name="queryThresholdInSecs"
+				<c:simple-property name="RuntimeEngineDeployer.queryThresholdInSecs"
 					displayName="Long Running Query Threshold"
 					description="Length of time in seconds before a query is considered long running"
 					required="false" readOnly="false" />
+                <c:simple-property name="RuntimeEngineDeployer.useDataRoles"
+                    displayName="Data Roles Enabled"
+                    description="Turn on role checking of resources based on the roles defined in VDB (default true)"
+                    required="false" readOnly="false" />                    
 			</c:group>
-			<c:group name="bufferServiceProperties" displayName="Buffer Service Properties"
+            
+            <c:group name="ResultSetCacheConfig" displayName="ResultSet Cache Properties" hiddenByDefault="false">
+                <!-- the below property on  RuntimeEngineDeployer -->
+                <c:simple-property name="RuntimeEngineDeployer.resultSetCacheEnabled"
+                    displayName="Enabled"
+                    description="Denotes whether or not result set caching is enabled. (default true)"
+                    required="false" readOnly="false" type="boolean" />                                                    
+                <c:simple-property name="ResultSetCacheConfig.maxEntries"
+                    displayName="Max Entries"
+                    description="The maximum number of result set cache entries. -1 indicates no limit. (default 1024)"
+                    required="false" readOnly="false" />
+                <c:simple-property name="ResultSetCacheConfig.maxAgeInSeconds"
+                    displayName="Max Entry Age"
+                    description="The maximum age of a result set cache entry in seconds. -1 indicates no max. (default 7200)"
+                    required="false" readOnly="false" />            
+            </c:group>
+            
+			<c:group name="BufferService" displayName="Buffer Service Properties"
 				hiddenByDefault="false">
-				<c:simple-property name="maxBufferSpace"
+				<c:simple-property name="BufferService.maxBufferSpace"
 					displayName="Max Buffer Space"
 					description="Max file storage space, in MB, to be used for buffer files (default 50G)"
 					required="false" readOnly="false" />
-				<c:simple-property name="processorBatchSize"
+				<c:simple-property name="BufferService.processorBatchSize"
 					displayName="Processor Batch Size"
 					description="The max row count of a batch sent internally within the query processor. Should be &lt;= the connectorBatchSize. (default 512)"
 					required="false" readOnly="false" />
-				<c:simple-property name="connectorBatchSize"
+				<c:simple-property name="BufferService.connectorBatchSize"
 					displayName="Connector Batch Size"
 					description="The max row count of a batch from a connector. Should be even multiple of processorBatchSize. (default 1024)"
 					required="false" readOnly="false" />
-				<c:simple-property name="maxProcessingBatchesColumns"
+				<c:simple-property name="BufferService.maxProcessingBatchesColumns"
 					displayName="Max Processing Batches Columns"
 					description="The number of batch columns guarenteed to a processing operation.  Set this value lower if the workload typically processes larger numbers of concurrent queries with large intermediate results from operations such as sorting, grouping, etc. (default 128)"
 					required="false" readOnly="false" />
-				<c:simple-property name="maxFileSize" displayName="Max File Size"
+				<c:simple-property name="BufferService.maxFileSize" displayName="Max File Size"
 					description="Max file size for buffer files (default 2GB)"
 					required="false" readOnly="false" />
-				<c:simple-property name="maxReserveBatchColumns"
+				<c:simple-property name="BufferService.maxReserveBatchColumns"
 					displayName="Max Reserve Batch Columns"
 					description="The number of batch columns to allow in memory (default 16384).  This value should be set lower or higher depending on the available memory to Teiid in the VM.  16384 is considered a good default for a dedicated 32-bit VM running Teiid with a 1 gig heap."
 					required="false" readOnly="false" />
 			</c:group>
-			<c:group name="jdbcSocketConfigurationProperties"
-				displayName="Jdbc Socket Configuration Properties" hiddenByDefault="false">
-				<c:simple-property name="portNumber" displayName="Port Number"
+			<c:group name="JdbcSocketConfiguration"	displayName="Jdbc Socket Configuration Properties" hiddenByDefault="false">
+                <c:simple-property name="JdbcSocketConfiguration.enabled" displayName="Enable"
+                    description="Enable Socket based JDBC access" required="false" readOnly="false" />            
+                <c:simple-property name="JdbcSocketConfiguration.hostName" displayName="Host Name"
+                    description="Host Name" required="false" readOnly="false" />
+				<c:simple-property name="JdbcSocketConfiguration.portNumber" displayName="Port Number"
 					description="Port Number" required="false" readOnly="false" />
-				<c:simple-property name="sslEnabled" displayName="SSL Enabled"
-					description="SSL enabled" required="false" readOnly="false" type="boolean"
+				<c:simple-property name="JdbcSocketConfiguration.sslEnabled" displayName="SSL Enabled"
+					description="SSL enabled" required="false" readOnly="true" type="boolean"
 					default="true" />
-				<c:simple-property name="hostName" displayName="Host Name"
-					description="Host Name" required="false" readOnly="false" />
-				<c:simple-property name="maxSocketThreads"
+				<c:simple-property name="JdbcSocketConfiguration.maxSocketThreads"
 					displayName="Max Socket Threads" description="Max NIO threads"
 					required="false" readOnly="false" />
-				<c:simple-property name="inputBufferSize"
+				<c:simple-property name="JdbcSocketConfiguration.inputBufferSize"
 					displayName="Input Buffer Size"
 					description="SO_RCVBUF size, 0 indicates that system default should be used (default 0)"
 					required="false" readOnly="false" />
-				<c:simple-property name="outputBufferSize"
+				<c:simple-property name="JdbcSocketConfiguration.outputBufferSize"
 					displayName="Output Buffer Size"
 					description="SO_SNDBUF size, 0 indicates that system default should be used (default 0)"
 					required="false" readOnly="false" />
 			</c:group>
-			<c:group name="sessionServiceProperties" displayName="Session Service Properties"
+			<c:group name="SessionService" displayName="Session Service Properties"
 				hiddenByDefault="false">
-				<c:simple-property name="sessionExpirationTimeLimit"
+				<c:simple-property name="SessionService.sessionExpirationTimeLimit"
 					displayName="Session Expiration Time Limit"
 					description="Max allowed time before the session is terminated by the system, 0 indicates unlimited (default 0)"
 					required="false" readOnly="false" />
-				<c:simple-property name="sessionMaxLimit"
+				<c:simple-property name="SessionService.sessionMaxLimit"
 					displayName="Session Max Limit"
 					description="Maximum number of sessions allowed by the system (default 5000)"
 					required="false" readOnly="false" />
