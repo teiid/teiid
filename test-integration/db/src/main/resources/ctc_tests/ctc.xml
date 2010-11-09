@@ -143,6 +143,11 @@
 			   		 <map from="\" to="/"/>
 			   		<path location="${vdb.artifacts.dir}"/>
 				 </pathconvert>
+				 
+			<pathconvert targetos="unix" property="outpu_.dir" >
+			   		 <map from="\" to="/"/>
+			   		<path location="${output.dir}"/>
+				 </pathconvert>		 
 			
 			
 			  <java classname="org.teiid.test.client.TestClient" fork="true" >
@@ -153,6 +158,9 @@
 			        </fileset>
 			    </classpath>
 			    <jvmarg value="-Xmx1024m" />
+				<!--
+				<jvmarg value="-Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=y" />
+				-->
 			  	<jvmarg value="-Dconfig=${use.config.file}" />
 			  	<jvmarg value="-Dscenariofile=${scenario_file}" />
 			  	<jvmarg value="-Dqueryset.artifacts.dir=${queryset_artifacts_dir}" />
@@ -161,7 +169,7 @@
 				<jvmarg value="-Ddatasourceloc=${datasourceloc}" />
 				<jvmarg value="-Dserver.host.name=${server.host.name}" />   
 				<jvmarg value="-Dproj.dir=${proj_dir}" /> 
-			  	
+			  	<jvmarg value="-Doutput.dir=${output_dir}" />
 
 			</java>
 
@@ -185,6 +193,9 @@
                 </fileset>
             </classpath>
             <jvmarg value="-Xmx1024m" />
+			<!--
+			<jvmarg value="-Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=y" />
+			-->
            	<jvmarg value="-Dconfig=${use.config.file}" />
           	<jvmarg value="-Dscenariofile=${scenario.file}" />
           	<jvmarg value="-Dqueryset.artifacts.dir=${queryset.artifacts.dir}" />
@@ -193,6 +204,7 @@
 			<jvmarg value="-Ddatasourceloc=${datasourceloc}" />   
 			<jvmarg value="-Dserver.host.name=${server.host.name}" />   
           	<jvmarg value="-Dproj.dir=${proj_dir}" /> 
+			<jvmarg value="-Doutput.dir=${output.dir}" /> 
           	
       	  </java>
 		
