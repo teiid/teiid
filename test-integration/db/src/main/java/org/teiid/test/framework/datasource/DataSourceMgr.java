@@ -184,7 +184,7 @@ public class DataSourceMgr {
 
     private void loadDataSourceMappings() throws QueryTestFailedException {
 	if (ConfigPropertyLoader.getInstance().isDataStoreDisabled()) {
-	    TestLogger.log("DataStore usage has been disabled");
+	    TestLogger.logDebug("DataStore usage has been disabled");
 	    return;
 	}
 
@@ -192,9 +192,9 @@ public class DataSourceMgr {
 	
 	if (dsloc == null || dsloc.indexOf(UNASSIGNEDDSLOC) > -1) {
 	    dsloc = DEFAULT_DATASOURCES_LOC;
-	    TestLogger.log("Using default datasource loc: " +dsloc);
+	    TestLogger.logDebug("Using default datasource loc: " +dsloc);
 	} else {
-	    TestLogger.log("Using override for datasources loc: " + dsloc);
+	    TestLogger.logDebug("Using override for datasources loc: " + dsloc);
 	}
 	
 	File[] dirs = findAllChildDirectories(dsloc);
@@ -281,7 +281,7 @@ public class DataSourceMgr {
 
 	    DataSource ds = new DataSource(datasourcedir.getName(), "dsgroup", dsprops);
 	    datasources.put(ds.getName(), ds);
-	    TestLogger.log("Loaded datasource " + ds.getName());
+	    TestLogger.logDebug("Loaded datasource " + ds.getName());
 
 	}
 

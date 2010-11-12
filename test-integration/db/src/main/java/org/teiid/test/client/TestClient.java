@@ -195,9 +195,9 @@ public class TestClient  {
                      	    
                 	    // run test
                     	    try {
-                    		tc.runTransaction(userTxn);
+                    	    	tc.runTransaction(userTxn);
                     	    } catch (Throwable t) {
-                    		TestLogger.logInfo("Testcase run error: " + t.getLocalizedMessage());
+                    	    	t.printStackTrace();
                     	    }
         	             
                 	}

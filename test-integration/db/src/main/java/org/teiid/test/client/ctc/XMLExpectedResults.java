@@ -87,7 +87,7 @@ public class XMLExpectedResults implements ExpectedResults {
 	validateResultsMode(this.props);
 
     	
-    	TestLogger.logInfo("Expected results loc: " + this.results_dir_loc);
+    	TestLogger.logDebug("Expected results loc: " + this.results_dir_loc);
     }
     
     protected void validateResultsMode(Properties props) {
@@ -106,8 +106,12 @@ public class XMLExpectedResults implements ExpectedResults {
 	}
 	// otherwise use default of NONE
 
-	TestLogger.log("\nResults mode: " + resultMode); //$NON-NLS-1$
+	TestLogger.logDebug("\nResults mode: " + resultMode); //$NON-NLS-1$
 
+    }
+    
+    public boolean isExpectedResultsNeeded() {
+    	return (resultMode.equalsIgnoreCase(TestProperties.RESULT_MODES.COMPARE));
     }
 
 
@@ -773,7 +777,7 @@ public class XMLExpectedResults implements ExpectedResults {
 			String querySetIdentifier) throws QueryTestFailedException {
 		String resultFileName = queryIdentifier + ".xml"; //$NON-NLS-1$
 		File file = new File(results_dir_loc + "/" + querySetIdentifier, resultFileName);
-		if (!file.exists()) {
+		if (!file.exists() && this.isExpectedResultsNeeded()) {
 			throw new QueryTestFailedException("Query results file " + file.getAbsolutePath() + " cannot be found");
 		}
 		

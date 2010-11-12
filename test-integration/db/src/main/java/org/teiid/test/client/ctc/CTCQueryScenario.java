@@ -20,7 +20,6 @@
  */
 package org.teiid.test.client.ctc;
 
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.util.Properties;
 
@@ -123,7 +122,7 @@ public class CTCQueryScenario extends QueryScenario {
 
 	} else {
 	    // just create the error file for any failures
-	    if (tr.getStatus() == TestResult.RESULT_STATE.TEST_EXCEPTION) {
+	    if (tr.getStatus() == TestResult.RESULT_STATE.TEST_EXCEPTION && !getResultsMode().equalsIgnoreCase(TestProperties.RESULT_MODES.NONE)) {
 		try {
 		    this.getResultsGenerator().generateErrorFile(tr.getQuerySetID(),
 			    tr.getQueryID(), sql, resultSet, resultException,

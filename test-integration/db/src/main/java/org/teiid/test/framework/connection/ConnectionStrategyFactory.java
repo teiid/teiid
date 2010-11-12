@@ -38,15 +38,15 @@ public class ConnectionStrategyFactory {
         	        if (type.equalsIgnoreCase(ConfigPropertyNames.CONNECTION_TYPES.DRIVER_CONNECTION)) {
         	        	// pass in null to create new strategy
         	                strategy = new DriverConnection(props);
-        	                TestLogger.log("Created Driver Strategy");
+        	                TestLogger.logDebug("Created Driver Strategy");
         	        }
         	        else if (type.equalsIgnoreCase(ConfigPropertyNames.CONNECTION_TYPES.DATASOURCE_CONNECTION)) {
         	            strategy = new DataSourceConnection(props);
-        	            TestLogger.log("Created DataSource Strategy");
+        	            TestLogger.logDebug("Created DataSource Strategy");
         	        }
         	        else if (type.equalsIgnoreCase(ConfigPropertyNames.CONNECTION_TYPES.JNDI_CONNECTION)) {
         	            strategy = new JEEConnection(props);
-        	            TestLogger.log("Created JEE Strategy");
+        	            TestLogger.logDebug("Created JEE Strategy");
         	        }   
         	        
         	        if (strategy == null) {

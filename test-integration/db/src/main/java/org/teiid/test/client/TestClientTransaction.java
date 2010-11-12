@@ -106,7 +106,7 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
     @Override
     public void testCase() throws Exception {
 	TestLogger.logDebug("expected error: " + this.errorExpected);
-	TestLogger.logDebug("ID: " + query.geQuerySetID() + "-" + query.getQueryID());
+	TestLogger.logInfo("ID: " + query.geQuerySetID() + "  -  " + query.getQueryID());
         
 	QuerySQL[] queries = query.getQueries();
 	int l = queries.length;
@@ -165,20 +165,8 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 	rs = new TestResultStat(query.geQuerySetID(), query.getQueryID(), sql,
 		testStatus, beginTS, endTS, resultException, null);
 	
-	
-
-	System.out.println("ADD THE TEST RESULT");
-
 	this.testResultsSummary.addTestResult(query.geQuerySetID(), rs);
 
-//	
-//	try {
-//		System.out.println("HANDLE RESULT " + this.internalResultSet.isClosed());
-//	} catch (SQLException e) {
-//		// TODO Auto-generated catch block
-//		e.printStackTrace();
-//	}
-	
 	this.querySet.handleTestResult(rs, this.internalResultSet, this.updateCount, resultFromQuery, sql);
 
     }

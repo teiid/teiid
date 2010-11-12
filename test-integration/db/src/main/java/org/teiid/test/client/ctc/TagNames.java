@@ -46,6 +46,7 @@ public final class TagNames {
   private static final String DATA_ELE_TYPE_OBJECT = "object"; //$NON-NLS-1$
   private static final String DATA_ELE_TYPE_XML = "xml"; //$NON-NLS-1$
   private static final String DATA_ELE_TYPE_CLOB = "clob"; //$NON-NLS-1$
+  private static final String DATA_ELE_TYPE_BLOB = "blob"; //$NON-NLS-1$
 
     public static Map TYPE_MAP;
 
@@ -69,6 +70,7 @@ public final class TagNames {
         TYPE_MAP.put(DATA_ELE_TYPE_TIMESTAMP,   java.sql.Timestamp.class);
         TYPE_MAP.put(DATA_ELE_TYPE_XML,         java.lang.String.class);
         TYPE_MAP.put(DATA_ELE_TYPE_CLOB,        java.lang.String.class);
+        TYPE_MAP.put(DATA_ELE_TYPE_BLOB,        java.lang.String.class);
     }
 
 
