@@ -29,6 +29,7 @@
 		<include>org.apache.ant:ant-launcher</include>
       	<include>ant-contrib:cpptasks</include>
 		<include>ant-contrib:ant-contrib</include>
+		<include>xerces:xercesImpl</include>
       </includes>
 
     </dependencySet>
