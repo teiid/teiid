@@ -517,6 +517,10 @@ public class XMLExpectedResults implements ExpectedResults {
                                                            + (actualValue!=null?actualValue:"null")  + "]"); //$NON-NLS-1$
 
                 } 
+                
+                if (expectedValue == null && actualValue == null) {
+                	continue;
+                }
                 	
                 if (actualValue instanceof Blob || actualValue instanceof Clob || actualValue instanceof SQLXML) {
                     	 
