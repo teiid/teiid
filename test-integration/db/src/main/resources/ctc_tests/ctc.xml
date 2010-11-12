@@ -49,13 +49,13 @@
 		   		<path location="${proj.dir}"/>
 			 </pathconvert>
 		
-		<property name="root_output" value="${proj_dir}/bulk-query-tests" />
+		<property name="root_output" value="${output.dir}" />
 
 	</target>
 	
 	<target name="set.linux"
 		if="UnixOS">
-		<property name="root_output" value="${proj.dir}/bulk-query-tests" />
+		<property name="root_output" value="${output.dir}" />
 		<property name="proj_dir" value="${proj.dir}" />
 
 	</target>
@@ -144,9 +144,9 @@
 			   		<path location="${vdb.artifacts.dir}"/>
 				 </pathconvert>
 				 
-			<pathconvert targetos="unix" property="outpu_.dir" >
+			<pathconvert targetos="unix" property="root.output" >
 			   		 <map from="\" to="/"/>
-			   		<path location="${output.dir}"/>
+			   		<path location="${root_output}"/>
 				 </pathconvert>		 
 			
 			
@@ -169,7 +169,7 @@
 				<jvmarg value="-Ddatasourceloc=${datasourceloc}" />
 				<jvmarg value="-Dserver.host.name=${server.host.name}" />   
 				<jvmarg value="-Dproj.dir=${proj_dir}" /> 
-			  	<jvmarg value="-Doutput.dir=${output_dir}" />
+			  	<jvmarg value="-Doutput.dir=${root.output}" />
 
 			</java>
 
@@ -204,7 +204,7 @@
 			<jvmarg value="-Ddatasourceloc=${datasourceloc}" />   
 			<jvmarg value="-Dserver.host.name=${server.host.name}" />   
           	<jvmarg value="-Dproj.dir=${proj_dir}" /> 
-			<jvmarg value="-Doutput.dir=${output.dir}" /> 
+			<jvmarg value="-Doutput.dir=${root_output}" /> 
           	
       	  </java>
 		
