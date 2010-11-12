@@ -51,6 +51,7 @@
 		<include>org.jboss.teiid:teiid-common-core</include>
 		<include>org.jboss.teiid:teiid-adminshell</include>
 		<include>org.jboss.teiid:teiid-engine</include>
+		<include>org.jboss.teiid:teiid-client</include>
 		<include>log4j:log4j</include>
 		<include>junit:junit</include>
 		<include>jdom:jdom</include>
