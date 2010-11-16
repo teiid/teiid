@@ -99,6 +99,7 @@ public class TestOptimizer {
 
     public interface DependentJoin {}
     public interface DependentSelectNode {}
+    public interface SemiJoin {}
     public interface DependentProjectNode {}
     public interface DupRemoveNode {}
     public interface DupRemoveSortNode {}
@@ -391,6 +392,9 @@ public class TestOptimizer {
         Class<?> nodeType = relationalNode.getClass();
         if(nodeType.equals(JoinNode.class)) {
         	JoinStrategy strategy = ((JoinNode)relationalNode).getJoinStrategy();
+        	if (((JoinNode)relationalNode).getJoinType().isSemi()) {
+        		updateCounts(SemiJoin.class, counts, types);
+        	}
             if (strategy instanceof NestedLoopJoinStrategy) {
                 updateCounts(NestedLoopJoinStrategy.class, counts, types);
             } else if (strategy instanceof MergeJoinStrategy) {

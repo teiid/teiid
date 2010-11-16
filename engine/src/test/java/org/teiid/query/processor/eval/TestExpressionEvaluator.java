@@ -22,8 +22,7 @@
 
 package org.teiid.query.processor.eval;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -40,13 +39,14 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
-import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.resolver.TestFunctionResolving;
 import org.teiid.query.sql.lang.CollectionValueIterator;
+import org.teiid.query.sql.lang.IsNullCriteria;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.symbol.CaseExpression;
@@ -410,6 +410,26 @@ public class TestExpressionEvaluator {
     @Test public void testBigDecimalDivision() throws Exception {
     	Expression ex = TestFunctionResolving.getExpression("1/convert('3.0', bigdecimal)");
     	assertEquals(new BigDecimal("0.3333333333333333"), Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testIsNull() throws Exception {
+    	assertEquals(Boolean.TRUE, Evaluator.evaluate(new IsNullCriteria(new Constant(null, DataTypeManager.DefaultDataClasses.BOOLEAN))));
+    }
+    
+    @Test public void testIsNull1() throws Exception {
+    	assertEquals(Boolean.FALSE, Evaluator.evaluate(new IsNullCriteria(new Constant(Boolean.TRUE, DataTypeManager.DefaultDataClasses.BOOLEAN))));
+    }
+    
+    @Test public void testIsNull3() throws Exception {
+    	IsNullCriteria inc = new IsNullCriteria(new Constant(null, DataTypeManager.DefaultDataClasses.BOOLEAN));
+    	inc.setNegated(true);
+    	assertEquals(Boolean.FALSE, Evaluator.evaluate(inc));
+    }
+    
+    @Test public void testIsNull4() throws Exception {
+    	IsNullCriteria inc = new IsNullCriteria(new Constant(Boolean.TRUE, DataTypeManager.DefaultDataClasses.BOOLEAN));
+    	inc.setNegated(true);
+    	assertEquals(Boolean.TRUE, Evaluator.evaluate(inc));
     }
     
 }

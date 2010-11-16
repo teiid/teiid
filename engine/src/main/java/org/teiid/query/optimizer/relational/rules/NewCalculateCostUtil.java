@@ -774,7 +774,7 @@ public class NewCalculateCostUtil {
      * we are in the plan.
      * if a key column is used after a non 1-1 join or a union all, then it may be non-unique.
      */
-    private static boolean usesKey(Collection<? extends SingleElementSymbol> allElements, QueryMetadataInterface metadata)
+    public static boolean usesKey(Collection<? extends SingleElementSymbol> allElements, QueryMetadataInterface metadata)
         throws QueryMetadataException, TeiidComponentException {
     
         if(allElements == null || allElements.size() == 0) { 
@@ -784,10 +784,11 @@ public class NewCalculateCostUtil {
         // Sort elements into groups
         Map<GroupSymbol, List<Object>> groupMap = new HashMap<GroupSymbol, List<Object>>();
         for (SingleElementSymbol ses : allElements) {
-        	if (!(ses instanceof ElementSymbol)) {
+        	Expression ex = SymbolMap.getExpression(ses); 
+        	if (!(ex instanceof ElementSymbol)) {
         		continue;
         	}
-        	ElementSymbol element = (ElementSymbol)ses;
+        	ElementSymbol element = (ElementSymbol)ex;
             GroupSymbol group = element.getGroupSymbol();
             List<Object> elements = groupMap.get(group);
             if(elements == null) { 

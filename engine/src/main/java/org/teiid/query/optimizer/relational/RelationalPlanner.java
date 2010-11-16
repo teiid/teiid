@@ -63,6 +63,7 @@ import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
 import org.teiid.query.optimizer.relational.rules.CriteriaCapabilityValidatorVisitor;
 import org.teiid.query.optimizer.relational.rules.RuleCollapseSource;
 import org.teiid.query.optimizer.relational.rules.RuleConstants;
+import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.RelationalPlan;
@@ -212,7 +213,7 @@ public class RelationalPlanner {
         List<SingleElementSymbol> topCols = Util.deepClone(command.getProjectedSymbols(), SingleElementSymbol.class);
 
         // Build rule set based on hints
-        RuleStack rules = RelationalPlanner.buildRules(hints);
+        RuleStack rules = buildRules();
 
         // Run rule-based optimizer
         plan = executeRules(rules, plan);
@@ -281,17 +282,18 @@ public class RelationalPlanner {
             	localGroupSymbols = getGroupSymbols(node);
             }
             for (SubqueryContainer container : subqueryContainers) {
-                ArrayList<Reference> correlatedReferences = new ArrayList<Reference>(); 
-                Command subCommand = container.getCommand();
-                ProcessorPlan procPlan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
-                subCommand.setProcessorPlan(procPlan);
+                //a clone is needed here because the command could get modified during planning
+                Command subCommand = (Command)container.getCommand().clone(); 
+                ArrayList<Reference> correlatedReferences = new ArrayList<Reference>();
                 CorrelatedReferenceCollectorVisitor.collectReferences(subCommand, localGroupSymbols, correlatedReferences);
+                ProcessorPlan procPlan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
+                container.getCommand().setProcessorPlan(procPlan);
                 if (!correlatedReferences.isEmpty()) {
 	                SymbolMap map = new SymbolMap();
 	                for (Reference reference : correlatedReferences) {
 	    				map.addMapping(reference.getExpression(), reference.getExpression());
 	    			}
-	                subCommand.setCorrelatedReferences(map);
+	                container.getCommand().setCorrelatedReferences(map);
                 }
             }
             node.addGroups(GroupsUsedByElementsVisitor.getGroups(node.getCorrelatedReferenceElements()));
@@ -363,12 +365,17 @@ public class RelationalPlanner {
         return appliedHint;
     }
 
-    public static RuleStack buildRules(PlanHints hints) {
+    public RuleStack buildRules() {
         RuleStack rules = new RuleStack();
 
         rules.push(RuleConstants.COLLAPSE_SOURCE);
         
         rules.push(RuleConstants.PLAN_SORTS);
+        
+        //TODO: update plan sorts to take advantage or semi-join ordering
+        if (hints.hasJoin || hints.hasCriteria) {
+            rules.push(new RuleMergeCriteria(idGenerator, capFinder, analysisRecord, context, metadata));
+        }
 
         if(hints.hasJoin) {
             rules.push(RuleConstants.IMPLEMENT_JOIN_STRATEGY);
@@ -380,9 +387,6 @@ public class RelationalPlanner {
         
         if (hints.hasLimit) {
             rules.push(RuleConstants.PUSH_LIMIT);
-        }
-        if (hints.hasJoin || hints.hasCriteria) {
-            rules.push(RuleConstants.MERGE_CRITERIA);
         }
         if (hints.hasRelationalProc) {
             rules.push(RuleConstants.PLAN_PROCEDURES);
@@ -667,7 +671,7 @@ public class RelationalPlanner {
     		}
 
     		// Attach grouping node on top
-    		if(query.getGroupBy() != null || query.getHaving() != null || !AggregateSymbolCollectorVisitor.getAggregates(query.getSelect(), false).isEmpty()) {
+    		if(query.hasAggregates()) {
     			plan = attachGrouping(plan, query, hints);
     		}
 

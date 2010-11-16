@@ -2782,7 +2782,7 @@ AbstractSetCriteria setCrit(ParseInfo info, Expression expression) :
 ExistsCriteria existsCriteria(ParseInfo info) :
 {
     ExistsCriteria existsCrit = null;
-    Command subquery = null;
+    QueryCommand subquery = null;
 }
 {
 	<EXISTS>

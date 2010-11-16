@@ -487,7 +487,7 @@ public final class RuleCollapseSource implements OptimizerRule {
      * @param clause Clause to check recursively
      * @return True if tree has outer joins, false otherwise
      */
-    private boolean hasOuterJoins(FromClause clause) {
+    static boolean hasOuterJoins(FromClause clause) {
         if(clause instanceof UnaryFromClause || clause instanceof SubqueryFromClause) {
             return false;
         }

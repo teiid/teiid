@@ -37,12 +37,13 @@ import org.teiid.query.sql.symbol.Expression;
  * "EXISTS (Select EmployeeID FROM Employees WHERE EmployeeName = 'Smith')".
  */
 public class ExistsCriteria extends PredicateCriteria
-implements SubqueryContainer, ContextReference {
+implements SubqueryContainer<QueryCommand>, ContextReference {
 	
 	private static AtomicInteger ID = new AtomicInteger();
 
-    private Command command;
+    private QueryCommand command;
     private String id = "$ec/id" + ID.getAndIncrement(); //$NON-NLS-1$
+    private boolean shouldEvaluate;
 
     /**
      * Default constructor
@@ -51,9 +52,17 @@ implements SubqueryContainer, ContextReference {
         super();
     }
 
-    public ExistsCriteria(Command subqueryCommand){
+    public ExistsCriteria(QueryCommand subqueryCommand){
         this.command = subqueryCommand;
     }
+    
+    public boolean shouldEvaluate() {
+    	return shouldEvaluate;
+    }
+    
+    public void setShouldEvaluate(boolean shouldEvaluate) {
+		this.shouldEvaluate = shouldEvaluate;
+	}
     
     @Override
     public String getContextSymbol() {
@@ -65,11 +74,11 @@ implements SubqueryContainer, ContextReference {
     	return null;
     }
 
-    public Command getCommand() {
+    public QueryCommand getCommand() {
         return this.command;
     }
 
-    public void setCommand(Command subqueryCommand){
+    public void setCommand(QueryCommand subqueryCommand){
         this.command = subqueryCommand;
     }
 
@@ -115,12 +124,6 @@ implements SubqueryContainer, ContextReference {
      * @see java.lang.Object#clone()
      */
     public Object clone() {
-
-        Command copyCommand = null;
-        if(getCommand() != null) {
-            copyCommand = (Command) getCommand().clone();
-        }
-
-        return new ExistsCriteria(copyCommand);
+        return new ExistsCriteria((QueryCommand) this.command.clone());
     }
 }

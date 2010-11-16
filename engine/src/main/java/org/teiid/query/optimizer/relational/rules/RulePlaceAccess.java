@@ -233,7 +233,7 @@ public final class RulePlaceAccess implements
      * @param allUpperNames a set of all known groups in upper case
      * @return
      */
-    static GroupSymbol recontextSymbol(GroupSymbol oldSymbol,
+    public static GroupSymbol recontextSymbol(GroupSymbol oldSymbol,
                                               Set<String> allUpperNames) {
         // Create new unique name
         String oldName = oldSymbol.getName();

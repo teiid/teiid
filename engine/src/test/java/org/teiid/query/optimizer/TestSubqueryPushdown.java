@@ -31,11 +31,12 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.rewriter.TestQueryRewriter;
 import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.translator.SourceSystemFunctions;
 
-
+@SuppressWarnings("nls")
 public class TestSubqueryPushdown {
 
 	@Test public void testPushSubqueryBelowVirtual() throws Exception {
@@ -250,7 +251,7 @@ public class TestSubqueryPushdown {
     }   
     
     @Test public void testCorrelatedSubquery1() {
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (select e1 FROM pm2.g1 WHERE pm1.g1.e2 = pm2.g1.e2)", example1(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (select e1 FROM pm2.g1 WHERE pm1.g1.e2 = pm2.g1.e2)", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
             new String[] { "SELECT e1, pm1.g1.e2 FROM pm1.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -271,7 +272,7 @@ public class TestSubqueryPushdown {
     }
 
     @Test public void testCorrelatedSubquery2() {
-        ProcessorPlan plan = helpPlan("Select e1, (select e1 FROM pm2.g1 WHERE pm1.g1.e2 = pm2.g1.e2) from pm1.g1", example1(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1, (select e1 FROM pm2.g1 WHERE pm1.g1.e2 = pm2.g1.e2) from pm1.g1", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
             new String[] { "SELECT e1, pm1.g1.e2 FROM pm1.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -386,25 +387,25 @@ public class TestSubqueryPushdown {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (select max(e1) FROM pm1.g2)", example1(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (select max(e1) FROM pm1.g2)", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
             null, capFinder,
-            new String[] { "SELECT e1 FROM pm1.g1" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
+            new String[] { "SELECT e1 AS c_0 FROM pm1.g1 ORDER BY c_0" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
         checkNodeTypes(plan, new int[] {
             1,      // Access
             0,      // DependentAccess
-            1,      // DependentSelect
+            0,      // DependentSelect
             0,      // DependentProject
             0,      // DupRemove
             0,      // Grouping
             0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
+            1,      // MergeJoinStrategy
             0,      // Null
-            0,      // PlanExecution
+            1,      // PlanExecution
             1,      // Project
             0,      // Select
             0,      // Sort
             0       // UnionAll
-        }); 
+        });
     }
 
     /**
@@ -418,7 +419,7 @@ public class TestSubqueryPushdown {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", getTypicalCapabilities()); //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (select e1 FROM pm2.g1)", example1(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (select e1 FROM pm2.g1)", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
             null, capFinder,
             new String[] { "SELECT e1 FROM pm1.g1" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
         checkNodeTypes(plan, new int[] {
@@ -696,7 +697,7 @@ public class TestSubqueryPushdown {
      */
     @Test public void testProjectSubqueryPushdown() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        FakeMetadataFacade metadata = example1();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
@@ -714,7 +715,7 @@ public class TestSubqueryPushdown {
     }
     
     @Test public void testScalarSubquery2() {
-        ProcessorPlan plan = helpPlan("Select e1, (select e1 FROM pm2.g1 where pm1.g1.e1 = 'x') as X from pm1.g1", example1(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1, (select e1 FROM pm2.g1 where pm1.g1.e1 = 'x') as X from pm1.g1", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -738,15 +739,87 @@ public class TestSubqueryPushdown {
      * Technically this is not a full push-down, but the subquery will be evaluated prior to pushdown
      */
     @Test public void testCompareSubquery4() throws TeiidComponentException, TeiidProcessingException {
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 > (select e1 FROM pm2.g1 where e2 = 13)", example1(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 > (select e1 FROM pm2.g1 where e2 = 13)", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 > (SELECT g_0.e1 FROM pm2.g1 AS g_0 WHERE g_0.e2 = 13)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
     
     @Test public void testScalarSubquery1() throws TeiidComponentException, TeiidProcessingException {
-        ProcessorPlan plan = helpPlan("Select e1, (select e1 FROM pm2.g1 where e1 = 'x') from pm1.g1", example1(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1, (select e1 FROM pm2.g1 where e1 = 'x') from pm1.g1", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
             new String[] { "SELECT g_0.e1, (SELECT g_0.e1 FROM pm2.g1 AS g_0 WHERE g_0.e1 = 'x') FROM pm1.g1 AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }   
     
+    @Test public void testSubqueryRewriteToJoin() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.e1", FakeMetadataFactory.example4());
+    }
+    
+    @Test public void testSubqueryRewriteToJoin1() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in (select pm1.g1.e1 FROM pm1.g1)", "SELECT e1 FROM pm3.g1, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.e1", FakeMetadataFactory.example4());
+    }
+    
+    @Test public void testSubqueryRewriteToJoinWithOtherCriteria() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in (select pm1.g1.e1 FROM pm1.g1 where e2 < pm3.g1.e2)", "SELECT e1 FROM pm3.g1, (SELECT pm1.g1.e1, e2 FROM pm1.g1) AS X__1 WHERE (X__1.e2 < pm3.g1.e2) AND (pm3.g1.e1 = X__1.e1)", FakeMetadataFactory.example4());
+    }
+
+    @Test public void testSubqueryRewriteToJoinWithAggregate() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (select max(e2) FROM pm1.g1 where pm3.g1.e1 = e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS MAX, e1 FROM pm1.g1 GROUP BY e1) AS X__1 WHERE (pm3.g1.e2 < X__1.MAX) AND (pm3.g1.e1 = X__1.e1)", FakeMetadataFactory.example4());
+    }
+    
+    /**
+     * A join will not be used since the predicate cannot be applied after the grouping
+     * @throws Exception
+     */
+    @Test public void testSubqueryRewriteToJoinWithAggregate1() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (select max(e2) FROM pm1.g1 where pm3.g1.e1 = e1 and pm3.g1.e3 > e3)", "SELECT e1 FROM pm3.g1 WHERE pm3.g1.e2 < (SELECT MAX(e2) FROM pm1.g1 WHERE (e1 = pm3.g1.e1) AND (e3 < pm3.g1.e3))", FakeMetadataFactory.example4());
+    }
+    
+    @Test public void testSubqueryRewriteToJoinWithAggregate2() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (select max(e2) FROM pm1.g1 WHERE pm3.g1.e1 = e1 HAVING min(e3) < pm3.g1.e3)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS MAX, e1, MIN(e3) AS MIN FROM pm1.g1 GROUP BY e1) AS X__1 WHERE (X__1.MIN < pm3.g1.e3) AND (pm3.g1.e2 < X__1.MAX) AND (pm3.g1.e1 = X__1.e1)", FakeMetadataFactory.example4());
+    }
+
+    /**
+     * A join will not be used here because of the not
+     * @throws Exception
+     */
+    @Test public void testSubqueryRewriteNot() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 not in (select e2 FROM pm1.g1 where pm3.g1.e1 = e1)", "SELECT e1 FROM pm3.g1 WHERE pm3.g1.e2 NOT IN (SELECT e2 FROM pm1.g1 WHERE e1 = pm3.g1.e1)", FakeMetadataFactory.example4());
+    }
+
+    /**
+     * A join will not be used here because of the all
+     * @throws Exception
+     */
+    @Test public void testSubqueryRewriteAll() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 = all (select e2 FROM pm1.g1 where pm3.g1.e1 = e1)", "SELECT e1 FROM pm3.g1 WHERE pm3.g1.e2 = ALL (SELECT e2 FROM pm1.g1 WHERE e1 = pm3.g1.e1)", FakeMetadataFactory.example4());
+    }
+    
+    @Test public void testSubqueryExpressionJoin() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (Select max(e2) from pm2.g2 where e1 = pm3.g1.e1 having convert(min(e2), string) > pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS MAX, e1, MIN(e2) AS MIN FROM pm2.g2 GROUP BY e1) AS X__1 WHERE (convert(X__1.MIN, string) > pm3.g1.e1) AND (pm3.g1.e2 < X__1.MAX) AND (pm3.g1.e1 = X__1.e1)", FakeMetadataFactory.example4());
+    }
+
+    /**
+     * Must be handled as a semi-join
+     */
+    @Test public void testSemiJoin() {
+        ProcessorPlan plan = helpPlan("Select e1 from pm2.g2 where e2 in (select count(e2) FROM pm1.g2 group by e1 having e1 < pm2.g2.e3)", FakeMetadataFactory.example4(),  //$NON-NLS-1$
+            new String[] { "SELECT g_0.e2 AS c_0, g_0.e3 AS c_1, g_0.e1 AS c_2 FROM pm2.g2 AS g_0 ORDER BY c_0" }); //$NON-NLS-1$
+        checkNodeTypes(plan, new int[] {
+            1,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            1,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        }); 
+    } 
+ 
 }

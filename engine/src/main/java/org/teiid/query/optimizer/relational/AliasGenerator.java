@@ -332,6 +332,9 @@ public class AliasGenerator extends PreOrderNavigator {
     }
     
     public void visit(ExistsCriteria obj) {
+    	if (obj.shouldEvaluate()) {
+    		return;
+    	}
         visitor.createChildNamingContext(false);
         visitNode(obj.getCommand());
         visitor.removeChildNamingContext();

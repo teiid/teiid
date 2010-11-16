@@ -31,6 +31,7 @@ import org.teiid.common.buffer.TupleSource;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.util.Assertion;
 import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.BatchIterator;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
@@ -83,6 +84,7 @@ class SourceState {
         int[] indecies = new int[expressions.size()];
         for (int i = 0; i < expressions.size(); i++) {
             indecies[i] = elements.indexOf(expressions.get(i));
+            assert indecies[i] != -1;
         }
         return indecies;
     }

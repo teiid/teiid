@@ -328,7 +328,11 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         
         try {
 			if (validateSubqueryPushdown(crit, modelID, metadata, capFinder, analysisRecord) == null) {
-				markInvalid(crit.getCommand(), "Subquery cannot be pushed down"); //$NON-NLS-1$
+				if (crit.getCommand().getCorrelatedReferences() == null) {
+            		crit.setShouldEvaluate(true);
+            	} else {
+            		markInvalid(crit.getCommand(), "Subquery cannot be pushed down"); //$NON-NLS-1$
+            	}
 			}
 		} catch (TeiidComponentException e) {
 			handleException(e);

@@ -148,7 +148,11 @@ public class EvaluatableVisitor extends LanguageVisitor {
     }
     
     public void visit(ExistsCriteria obj) {
-		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
+    	if (obj.shouldEvaluate()) {
+    		evaluationNotPossible(EvaluationLevel.PROCESSING);
+    	} else {
+    		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
+    	}
     }        
 
     public void visit(SubquerySetCriteria obj) {

@@ -255,6 +255,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         NodeEditor.removeChildNode(critNode.getParent(), critNode);
         destination.addAsParent(critNode);
         if (groupSelects && destination == sourceNode) {
+        	//Help with the detection of composite keys in pushed criteria
         	RuleMergeCriteria.mergeChain(critNode, metadata);
         }
 	}

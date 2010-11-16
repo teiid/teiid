@@ -34,7 +34,6 @@ import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
-import org.teiid.query.optimizer.relational.PlanHints;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
@@ -88,8 +87,8 @@ public class TestRuleAccessPatternValidation {
     	RelationalPlanner p = new RelationalPlanner();
     	p.initialize(query, null, METADATA, FINDER, null, null);
     	PlanNode planNode = p.generatePlan(query);
-
-		final RuleStack rules = RelationalPlanner.buildRules(new PlanHints());
+    	RelationalPlanner planner = new RelationalPlanner();
+		final RuleStack rules = planner.buildRules();
 
 		PlanNode testPlan = helpExecuteRules(rules, planNode, METADATA, DEBUG);
 		

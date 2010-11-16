@@ -5452,6 +5452,7 @@ public class TestProcessor {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
@@ -5460,7 +5461,7 @@ public class TestProcessor {
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
         
         Set actualQueries = TestOptimizer.getAtomicQueries(plan);
-        String expectedSql = "SELECT SUM(X_1.c_1), X_1.c_0 FROM (SELECT CASE WHEN BQT1.SmallA.IntKey >= 5000 THEN '5000 +' ELSE '0-999' END AS c_0, BQT1.SmallA.IntKey AS c_1 FROM BQT1.SmallA) AS v_0 GROUP BY X_1.c_0"; //$NON-NLS-1$
+        String expectedSql = "SELECT SUM(v_0.c_1), v_0.c_0 FROM (SELECT CASE WHEN g_0.IntKey >= 5000 THEN '5000 +' ELSE '0-999' END AS c_0, g_0.IntKey AS c_1 FROM BQT1.SmallA AS g_0) AS v_0 GROUP BY v_0.c_0"; //$NON-NLS-1$
         assertEquals(1, actualQueries.size());        
         assertEquals(expectedSql, actualQueries.iterator().next().toString()); 
 

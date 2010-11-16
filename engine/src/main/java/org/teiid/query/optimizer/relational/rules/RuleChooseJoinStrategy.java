@@ -102,7 +102,28 @@ public class RuleChooseJoinStrategy implements OptimizerRule {
         
         List<Criteria> nonEquiJoinCriteria = new ArrayList<Criteria>();
         
-        for (Criteria theCrit : crits) {
+        separateCriteria(leftGroups, rightGroups, leftExpressions, rightExpressions, crits, nonEquiJoinCriteria);
+        if (!leftExpressions.isEmpty()) {
+            joinNode.setProperty(NodeConstants.Info.LEFT_EXPRESSIONS, createExpressionSymbols(leftExpressions));
+            joinNode.setProperty(NodeConstants.Info.RIGHT_EXPRESSIONS, createExpressionSymbols(rightExpressions));
+                        
+            //make use of the one side criteria
+            joinNode.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.MERGE);
+            joinNode.setProperty(NodeConstants.Info.NON_EQUI_JOIN_CRITERIA, nonEquiJoinCriteria);   
+        } else if (nonEquiJoinCriteria.isEmpty()) {
+        	joinNode.setProperty(NodeConstants.Info.JOIN_CRITERIA, nonEquiJoinCriteria);
+        	if (joinNode.getProperty(NodeConstants.Info.JOIN_TYPE) == JoinType.JOIN_INNER) {
+        		joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, JoinType.JOIN_CROSS);
+        	}
+        }
+    }
+
+	static void separateCriteria(Collection<GroupSymbol> leftGroups,
+			Collection<GroupSymbol> rightGroups,
+			List<Expression> leftExpressions,
+			List<Expression> rightExpressions, List<Criteria> crits,
+			List<Criteria> nonEquiJoinCriteria) {
+		for (Criteria theCrit : crits) {
             Set<GroupSymbol> critGroups =GroupsUsedByElementsVisitor.getGroups(theCrit);
 
             if (leftGroups.containsAll(critGroups) || rightGroups.containsAll(critGroups)) {
@@ -143,24 +164,11 @@ public class RuleChooseJoinStrategy implements OptimizerRule {
                 nonEquiJoinCriteria.add(theCrit);
             }
         }
-        if (!leftExpressions.isEmpty()) {
-            joinNode.setProperty(NodeConstants.Info.LEFT_EXPRESSIONS, createExpressionSymbols(leftExpressions));
-            joinNode.setProperty(NodeConstants.Info.RIGHT_EXPRESSIONS, createExpressionSymbols(rightExpressions));
-                        
-            //make use of the one side criteria
-            joinNode.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.MERGE);
-            joinNode.setProperty(NodeConstants.Info.NON_EQUI_JOIN_CRITERIA, nonEquiJoinCriteria);   
-        } else if (nonEquiJoinCriteria.isEmpty()) {
-        	joinNode.setProperty(NodeConstants.Info.JOIN_CRITERIA, nonEquiJoinCriteria);
-        	if (joinNode.getProperty(NodeConstants.Info.JOIN_TYPE) == JoinType.JOIN_INNER) {
-        		joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, JoinType.JOIN_CROSS);
-        	}
-        }
-    }
+	}
     
     private static AtomicInteger EXPRESSION_INDEX = new AtomicInteger(0);
     
-    private static List<SingleElementSymbol> createExpressionSymbols(List<Expression> expressions) {
+    static List<SingleElementSymbol> createExpressionSymbols(List<Expression> expressions) {
         HashMap<Expression, ExpressionSymbol> uniqueExpressions = new HashMap<Expression, ExpressionSymbol>();
         List<SingleElementSymbol> result = new ArrayList<SingleElementSymbol>();
         for (Expression expression : expressions) {

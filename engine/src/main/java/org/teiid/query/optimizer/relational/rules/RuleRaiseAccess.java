@@ -781,7 +781,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
     throws QueryMetadataException, TeiidComponentException {
 
         Object accessModelID = accessNode.getProperty(NodeConstants.Info.MODEL_ID);
-        if(accessModelID == null) {
+        if(accessModelID == null && accessNode.getGroups().size() > 0) {
             GroupSymbol group = accessNode.getGroups().iterator().next();
             if(metadata.isVirtualGroup(group.getMetadataID())) {
                 return null;

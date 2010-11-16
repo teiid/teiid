@@ -63,6 +63,10 @@ import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
+import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
+import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
+import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria.PlannedResult;
 import org.teiid.query.processor.relational.DependentValueSource;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
@@ -143,6 +147,7 @@ import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.util.ValueIterator;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
+import org.teiid.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
 import org.teiid.query.sql.visitor.CriteriaTranslatorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
@@ -604,15 +609,24 @@ public class QueryRewriter {
                 query.setCriteria(crit);
             } 
         }
+        
+        if (from != null) {
+        	writeSubqueriesAsJoins(query);
+        }
 
         query = rewriteGroupBy(query);
 
         // Rewrite having
         Criteria having = query.getHaving();
         if(having != null) {
-            query.setHaving(rewriteCriteria(having));
+            crit = rewriteCriteria(having);
+            if(crit == TRUE_CRITERIA) {
+                query.setHaving(null);
+            } else {
+                query.setHaving(crit);
+            } 
         }
-                
+        
         rewriteExpressions(query.getSelect());
 
         if (!query.getIsXML()) {
@@ -629,6 +643,66 @@ public class QueryRewriter {
         
         return query;
     }
+
+	private void writeSubqueriesAsJoins(Query query)
+			throws TeiidComponentException, QueryMetadataException,
+			QueryResolverException {
+		if (query.getCriteria() == null) {
+			return;
+		}
+		RuleMergeCriteria rmc = new RuleMergeCriteria(null, null, null, this.context, this.metadata);
+		List<Criteria> current = Criteria.separateCriteriaByAnd(query.getCriteria());
+		query.setCriteria(null);
+		List<GroupSymbol> groups = query.getFrom().getGroups();
+		HashSet<String> names = new HashSet<String>();
+		for (GroupSymbol gs : groups) {
+			names.add(gs.getCanonicalName());
+		}
+		for (Iterator<Criteria> crits = current.iterator(); crits.hasNext();) {
+			PlannedResult plannedResult = rmc.findSubquery(crits.next());
+			if (plannedResult.not || plannedResult.query == null || plannedResult.query.getProcessorPlan() != null) {
+				continue;
+			}
+			if (plannedResult.query.getCorrelatedReferences() == null) {
+				ArrayList<Reference> correlatedReferences = new ArrayList<Reference>();
+				CorrelatedReferenceCollectorVisitor.collectReferences(plannedResult.query, groups, correlatedReferences);
+				if (!correlatedReferences.isEmpty()) {
+		            SymbolMap map = new SymbolMap();
+		            for (Reference reference : correlatedReferences) {
+						map.addMapping(reference.getExpression(), reference.getExpression());
+					}
+		            plannedResult.query.setCorrelatedReferences(map);
+		        }	
+			}
+			if (!rmc.planQuery(groups, true, plannedResult)) {
+				continue;
+			}
+			if (query.getFrom().getGroups().size() != 1 || !NewCalculateCostUtil.usesKey(plannedResult.leftExpressions, metadata)) {
+				//TODO: check for grouping or distinct in the outer query
+				continue;
+			}
+			crits.remove();
+			
+			GroupSymbol viewName = RulePlaceAccess.recontextSymbol(new GroupSymbol("X"), names); //$NON-NLS-1$
+			Query q = createInlineViewQuery(viewName, plannedResult.query, metadata, plannedResult.query.getSelect().getProjectedSymbols());
+			
+			Iterator iter = q.getSelect().getProjectedSymbols().iterator();
+		    HashMap<Expression, SingleElementSymbol> expressionMap = new HashMap<Expression, SingleElementSymbol>();
+		    for (SingleElementSymbol symbol : (List<SingleElementSymbol>)plannedResult.query.getSelect().getProjectedSymbols()) {
+		        expressionMap.put(SymbolMap.getExpression(symbol), (SingleElementSymbol)iter.next());
+		    }
+			for (int i = 0; i < plannedResult.leftExpressions.size(); i++) {
+				plannedResult.nonEquiJoinCriteria.add(new CompareCriteria(SymbolMap.getExpression((Expression)plannedResult.leftExpressions.get(i)), CompareCriteria.EQ, (Expression)plannedResult.rightExpressions.get(i)));
+			}
+			Criteria mappedCriteria = Criteria.combineCriteria(plannedResult.nonEquiJoinCriteria);
+			ExpressionMappingVisitor.mapExpressions(mappedCriteria, expressionMap);
+			query.setCriteria(Criteria.combineCriteria(query.getCriteria(), mappedCriteria));
+		    query.getFrom().addClause((FromClause) q.getFrom().getClauses().get(0));
+		    query.getTemporaryMetadata().putAll(q.getTemporaryMetadata());
+			//transform the query into an inner join 
+		}
+		query.setCriteria(Criteria.combineCriteria(query.getCriteria(), Criteria.combineCriteria(current)));
+	}
 
 	/**
 	 * Converts a group by with expressions into a group by with only element symbols and an inline view
@@ -877,7 +951,7 @@ public class QueryRewriter {
 		}
     }
 
-	private Insert correctDatatypes(Insert insert) throws TeiidComponentException, TeiidProcessingException{
+	private Insert correctDatatypes(Insert insert) {
 		boolean needsView = false;
 		for (int i = 0; !needsView && i < insert.getVariables().size(); i++) {
 		    SingleElementSymbol ses = (SingleElementSymbol)insert.getVariables().get(i);
@@ -887,7 +961,7 @@ public class QueryRewriter {
 		}
 		if (needsView) {
 		    try {
-				insert.setQueryExpression(createInlineViewQuery(insert.getGroup(), insert.getQueryExpression(), metadata, insert.getVariables()));
+				insert.setQueryExpression(createInlineViewQuery(new GroupSymbol("X"), insert.getQueryExpression(), metadata, insert.getVariables())); //$NON-NLS-1$
 			} catch (TeiidException err) {
 	            throw new TeiidRuntimeException(err);
 	        }
@@ -1019,6 +1093,17 @@ public class QueryRewriter {
 		} else if(criteria instanceof TranslateCriteria) {
             criteria = rewriteCriteria((TranslateCriteria)criteria);
 		} else if (criteria instanceof ExistsCriteria) {
+			ExistsCriteria exists = (ExistsCriteria)criteria;
+			if (exists.getCommand().getProcessorPlan() == null && exists.getCommand() instanceof Query) {
+				Query query = (Query)exists.getCommand();
+				if (query.getLimit() == null && query.getProjectedSymbols().size() > 1) {
+					query.getSelect().clearSymbols();
+					query.getSelect().addSymbol(new ExpressionSymbol("x", new Constant(1))); //$NON-NLS-1$
+				}
+			}
+			if (exists.shouldEvaluate() && processing) {
+        		return getCriteria(evaluator.evaluate(exists, null));
+        	}
 		    rewriteSubqueryContainer((SubqueryContainer)criteria, true);
 		} else if (criteria instanceof SubquerySetCriteria) {
 		    SubquerySetCriteria sub = (SubquerySetCriteria)criteria;
@@ -1139,15 +1224,7 @@ public class QueryRewriter {
             try {
             	Boolean eval = evaluator.evaluateTVL(crit, Collections.emptyList());
                 
-                if (eval == null) {
-                    return UNKNOWN_CRITERIA;
-                }
-                
-                if(Boolean.TRUE.equals(eval)) {
-                    return TRUE_CRITERIA;
-                }
-                
-                return FALSE_CRITERIA;                
+                return getCriteria(eval);                
                 
             } catch(ExpressionEvaluationException e) {
                 throw new QueryValidatorException(e, "ERR.015.009.0001", QueryPlugin.Util.getString("ERR.015.009.0001", crit)); //$NON-NLS-1$ //$NON-NLS-2$
@@ -1156,6 +1233,18 @@ public class QueryRewriter {
         
         return crit;
     }
+
+	private Criteria getCriteria(Boolean eval) {
+		if (eval == null) {
+		    return UNKNOWN_CRITERIA;
+		}
+		
+		if(Boolean.TRUE.equals(eval)) {
+		    return TRUE_CRITERIA;
+		}
+		
+		return FALSE_CRITERIA;
+	}
 
 	private Criteria rewriteCriteria(NotCriteria criteria) throws TeiidComponentException, TeiidProcessingException{
 		Criteria innerCrit = criteria.getCriteria(); 
@@ -1448,7 +1537,7 @@ public class QueryRewriter {
      * @throws QueryValidatorException
      * @since 4.2
      */
-    private Criteria simplifyConvertFunction(CompareCriteria crit) throws TeiidComponentException, TeiidProcessingException{
+    private Criteria simplifyConvertFunction(CompareCriteria crit) {
         Function leftFunction = (Function) crit.getLeftExpression();
         Expression leftExpr = leftFunction.getArgs()[0];
         
@@ -1558,7 +1647,7 @@ public class QueryRewriter {
         return rewriteCriteria(crit);
     }
         
-    private Criteria simplifyParseFormatFunction(CompareCriteria crit) throws TeiidComponentException, TeiidProcessingException{
+    private Criteria simplifyParseFormatFunction(CompareCriteria crit) {
     	//TODO: this can be relaxed for order preserving operations
         if(!(crit.getOperator() == CompareCriteria.EQ || crit.getOperator() == CompareCriteria.NE)) {
         	return crit;
@@ -2342,7 +2431,7 @@ public class QueryRewriter {
 		return insert;
 	}
 
-    public static Query createInlineViewQuery(GroupSymbol group,
+    public static Query createInlineViewQuery(GroupSymbol inlineGroup,
                                                Command nested,
                                                QueryMetadataInterface metadata,
                                                List<SingleElementSymbol> actualSymbols) throws QueryMetadataException,
@@ -2352,7 +2441,6 @@ public class QueryRewriter {
         Select select = new Select();
         query.setSelect(select);
         From from = new From();
-        GroupSymbol inlineGroup = new GroupSymbol(group.getName().replace('.', '_') + "_1"); //$NON-NLS-1$
         from.addClause(new UnaryFromClause(inlineGroup)); 
         TempMetadataStore store = new TempMetadataStore();
         TempMetadataAdapter tma = new TempMetadataAdapter(metadata, store);

@@ -129,7 +129,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
      * @throws TeiidComponentException 
      * @throws QueryMetadataException 
      */
-    private static boolean insertSort(PlanNode childNode, List<SingleElementSymbol> expressions, PlanNode jnode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
+    static boolean insertSort(PlanNode childNode, List<SingleElementSymbol> expressions, PlanNode jnode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
     		boolean attemptPush) throws QueryMetadataException, TeiidComponentException {
         Set<SingleElementSymbol> orderSymbols = new LinkedHashSet<SingleElementSymbol>(expressions); 
 
