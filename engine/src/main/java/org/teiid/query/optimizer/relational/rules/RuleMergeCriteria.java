@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -430,7 +431,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		plannedResult.query = (Query)plannedResult.query.clone();
 
 		List<GroupSymbol> rightGroups = plannedResult.query.getFrom().getGroups();
-		Set<SingleElementSymbol> requiredExpressions = new HashSet<SingleElementSymbol>();
+		Set<SingleElementSymbol> requiredExpressions = new LinkedHashSet<SingleElementSymbol>();
 		final SymbolMap refs = plannedResult.query.getCorrelatedReferences();
 		boolean addGroupBy = false;
 		if (refs != null) {
@@ -476,14 +477,14 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		if (addGroupBy) {
 			plannedResult.query.setGroupBy(new GroupBy(plannedResult.rightExpressions));
 		}
-		
+		HashSet<SingleElementSymbol> projectedSymbols = new HashSet<SingleElementSymbol>(plannedResult.query.getProjectedSymbols());
 		for (SingleElementSymbol ses : requiredExpressions) {
-			if (plannedResult.query.getSelect().getProjectedSymbols().indexOf(ses) == -1) {
+			if (projectedSymbols.add(ses)) {
 				plannedResult.query.getSelect().addSymbol(ses);
 			}
 		}
 		for (SingleElementSymbol ses : (List<SingleElementSymbol>)plannedResult.rightExpressions) {
-			if (plannedResult.query.getSelect().getProjectedSymbols().indexOf(ses) == -1) {
+			if (projectedSymbols.add(ses)) {
 				plannedResult.query.getSelect().addSymbol(ses);
 			}
 		}
