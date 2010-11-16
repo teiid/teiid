@@ -221,14 +221,12 @@ public class XMLExpectedResults implements ExpectedResults {
 			    // Convert results to ResultsHolder
  			    actualResults = new ResultsHolder(TagNames.Elements.QUERY_RESULTS);
 		    		actualResults.setQueryID(expectedResults.getQueryID());
+		    		convertResults(resultSet, batchSize,   actualResults);
 
 		      		if (expectedResults.getRows().size() > 0) {
-         			    convertResults(resultSet, batchSize,   actualResults);
         			    compareResults(actualResults, expectedResults, eMsg, isOrdered);
 		      		} else if (actualResults.getRows() != null &&  actualResults.getRows().size() > 0) {
-			                throw new QueryTestFailedException(eMsg + "Expected results indicated no results, but actual shows " + actualResults.getRows().size() + " rows."); //$NON-NLS-1$
-	      		    
-		      		    
+			                throw new QueryTestFailedException(eMsg + "Expected results indicated no results, but actual shows " + actualResults.getRows().size() + " rows."); //$NON-NLS-1$	      		    		      		    
 		      		}
 
 			    // DEBUG:
