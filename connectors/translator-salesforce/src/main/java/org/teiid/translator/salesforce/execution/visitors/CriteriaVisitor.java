@@ -168,14 +168,16 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
     public void visit( In criteria ) {
         try {
             Expression lExpr = criteria.getLeftExpression();
-            String columnName = lExpr.toString();
-            if (columnElementsByName.containsKey(columnName)) {
-                Column column = columnElementsByName.get(columnName);
-                if (MULTIPICKLIST.equalsIgnoreCase(column.getNativeType()) || RESTRICTEDMULTISELECTPICKLIST.equalsIgnoreCase(column.getNativeType())) {
+            if (lExpr instanceof ColumnReference) {
+            	ColumnReference cr = (ColumnReference)lExpr;
+                Column column = cr.getMetadataObject();
+                if (column != null && (MULTIPICKLIST.equalsIgnoreCase(column.getNativeType()) || RESTRICTEDMULTISELECTPICKLIST.equalsIgnoreCase(column.getNativeType()))) {
                     appendMultiselectIn(column, criteria);
                 } else {
                     appendCriteria(criteria);
                 }
+            } else {
+            	appendCriteria(criteria);
             }
             setHasCriteria(true, isIdColumn(criteria.getLeftExpression()));
         } catch (TranslatorException e) {
@@ -378,9 +380,6 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         }
         List<Column> columnIds = table.getColumns();
         for (Column element : columnIds) {
-            String name = table.getName() + '.' + element.getNameInSource();
-            columnElementsByName.put(name, element);
-
             // influences queryAll behavior
             if (element.getNameInSource().equals("IsDeleted")) { //$NON-NLS-1$
                 String isDeleted = element.getDefaultValue();

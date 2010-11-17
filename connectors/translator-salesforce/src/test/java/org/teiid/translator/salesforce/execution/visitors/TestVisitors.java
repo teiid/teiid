@@ -76,7 +76,7 @@ public class TestVisitors {
         }
         
         // Create Contact group
-        Table contactTable = RealMetadataFactory.createPhysicalGroup("Contact", salesforceModel); //$NON-NLS-1$
+        Table contactTable = RealMetadataFactory.createPhysicalGroup("Contacts", salesforceModel); //$NON-NLS-1$
         contactTable.setNameInSource("Contact"); //$NON-NLS-1$
         contactTable.setProperty("Supports Query", Boolean.TRUE.toString()); //$NON-NLS-1$
         // Create Contact Columns
@@ -151,17 +151,24 @@ public class TestVisitors {
 	}
 	
 	@Test public void testJoin() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("SELECT Account.Name, Contact.Name FROM Contact LEFT OUTER JOIN Account ON Account.Id = Contact.AccountId"); //$NON-NLS-1$
+		Select command = (Select)translationUtility.parseCommand("SELECT Account.Name, Contacts.Name FROM Contacts LEFT OUTER JOIN Account ON Account.Id = Contacts.AccountId"); //$NON-NLS-1$
 		SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
 		visitor.visit(command);
 		assertEquals("SELECT Account.AccountName, Contact.ContactName FROM Contact", visitor.getQuery().toString().trim()); //$NON-NLS-1$
 	}
 	
 	@Test public void testJoin2() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("SELECT Account.Name, Contact.Name FROM Account LEFT OUTER JOIN Contact ON Account.Id = Contact.AccountId"); //$NON-NLS-1$
+		Select command = (Select)translationUtility.parseCommand("SELECT Account.Name, Contacts.Name FROM Account LEFT OUTER JOIN Contacts ON Account.Id = Contacts.AccountId"); //$NON-NLS-1$
 		SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
 		visitor.visit(command);
 		assertEquals("SELECT Account.AccountName, (SELECT Contact.ContactName FROM Contacts) FROM Account", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+	}
+	
+	@Test public void testInWithNameInSourceDifferent() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("SELECT Contacts.Name FROM Contacts WHERE Contacts.Name in ('x', 'y')"); //$NON-NLS-1$
+		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
+		visitor.visit(command);
+		assertEquals("SELECT Contact.ContactName FROM Contact WHERE ContactName IN('x','y')", visitor.getQuery().toString().trim()); //$NON-NLS-1$
 	}
 
 }
