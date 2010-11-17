@@ -660,7 +660,8 @@ public class QueryRewriter {
 		}
 		for (Iterator<Criteria> crits = current.iterator(); crits.hasNext();) {
 			PlannedResult plannedResult = rmc.findSubquery(crits.next());
-			if (plannedResult.not || plannedResult.query == null || plannedResult.query.getProcessorPlan() != null) {
+			if (plannedResult.not || plannedResult.query == null || plannedResult.query.getProcessorPlan() != null 
+					|| (plannedResult.query.getWith() != null && !plannedResult.query.getWith().isEmpty())) {
 				continue;
 			}
 			if (plannedResult.query.getCorrelatedReferences() == null) {

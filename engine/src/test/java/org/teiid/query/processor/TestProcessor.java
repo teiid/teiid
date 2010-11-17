@@ -7581,5 +7581,20 @@ public class TestProcessor {
         helpProcess(plan, dataManager, expected);
     }
     
+    @Test public void testInlineViewWith() {
+    	String sql = "select * from (with x as (select e1 from pm1.g1) select x.e1 from x order by e1 nulls last limit 1) y"; //$NON-NLS-1$
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("a"),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
     private static final boolean DEBUG = false;
 }

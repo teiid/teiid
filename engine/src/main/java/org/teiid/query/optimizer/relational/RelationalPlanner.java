@@ -838,6 +838,10 @@ public class RelationalPlanner {
         	if (queryCommand.getLimit() == null) {
         		queryCommand.setOrderBy(null);
         	}
+        	if (merge && queryCommand.getWith() != null && !queryCommand.getWith().isEmpty()) {
+        		//TODO: should recontext with and merge
+        		merge = false;
+        	}
         }
 		node.setProperty(NodeConstants.Info.NESTED_COMMAND, nestedCommand);
 
@@ -856,7 +860,7 @@ public class RelationalPlanner {
 			if (actualMetadata instanceof TempMetadataAdapter) {
 				actualMetadata = ((TempMetadataAdapter)metadata).getMetadata();
 			}
-			ProcessorPlan plan = QueryOptimizer.optimizePlan(toPlan, actualMetadata, null, capFinder, analysisRecord, context);
+			ProcessorPlan plan = QueryOptimizer.optimizePlan(toPlan, actualMetadata, idGenerator, capFinder, analysisRecord, context);
 		    node.setProperty(NodeConstants.Info.PROCESSOR_PLAN, plan);
 		}
 	}
