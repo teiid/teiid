@@ -22,7 +22,6 @@
 package org.teiid.rhq.plugin;
 
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
@@ -31,8 +30,8 @@ import org.jboss.managed.api.ComponentType;
 import org.jboss.managed.api.ManagedComponent;
 import org.jboss.managed.api.ManagedProperty;
 import org.jboss.metatype.api.types.MetaType;
+import org.jboss.metatype.api.values.MapCompositeValueSupport;
 import org.jboss.metatype.api.values.MetaValue;
-import org.jboss.metatype.api.values.MetaValueFactory;
 import org.rhq.core.domain.configuration.Configuration;
 import org.rhq.core.domain.configuration.PropertyList;
 import org.rhq.core.domain.configuration.PropertyMap;
@@ -115,17 +114,16 @@ public class TranslatorDiscoveryComponent implements ResourceDiscoveryComponent 
 
 
 	public static <T> void getTranslatorValues(MetaValue pValue,
-			PropertyMap map, PropertyList list) {
+			PropertyMap map, PropertyList list) throws Exception {
 		MetaType metaType = pValue.getMetaType();
-		Map<String, T> unwrappedvalue = null;
+		MapCompositeValueSupport unwrappedvalue = null;
 		if (metaType.isComposite()) {
-			unwrappedvalue = (Map<String, T>) MetaValueFactory.getInstance().unwrap(pValue);
+			unwrappedvalue = (MapCompositeValueSupport)pValue;
 
-			for (String key : unwrappedvalue.keySet()) {
+			for (String key : unwrappedvalue.getMetaType().keySet()) {
 				map = new PropertyMap("properties");//$NON-NLS-1$
 				map.put(new PropertySimple("name", key));//$NON-NLS-1$
-				map.put(new PropertySimple("value", unwrappedvalue.get(key)));//$NON-NLS-1$
-				//map.put(new PropertySimple("description", "Custom property"));
+				map.put(new PropertySimple("value", ProfileServiceUtil.stringValue((MetaValue)unwrappedvalue.get(key))));//$NON-NLS-1$
 				list.add(map);
 			}
 		} else {

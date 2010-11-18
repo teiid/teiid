@@ -47,7 +47,6 @@ import org.jboss.metatype.api.values.EnumValueSupport;
 import org.jboss.metatype.api.values.GenericValue;
 import org.jboss.metatype.api.values.GenericValueSupport;
 import org.jboss.metatype.api.values.MetaValue;
-import org.jboss.metatype.api.values.MetaValueFactory;
 import org.jboss.metatype.api.values.SimpleValue;
 import org.jboss.metatype.api.values.SimpleValueSupport;
 import org.mc4j.ems.connection.EmsConnection;
@@ -65,8 +64,6 @@ import org.rhq.core.domain.measurement.MeasurementScheduleRequest;
 import org.rhq.core.pluginapi.configuration.ConfigurationFacet;
 import org.rhq.core.pluginapi.configuration.ConfigurationUpdateReport;
 import org.rhq.core.pluginapi.inventory.CreateResourceReport;
-import org.rhq.core.pluginapi.inventory.InvalidPluginConfigurationException;
-import org.rhq.core.pluginapi.inventory.ResourceComponent;
 import org.rhq.core.pluginapi.inventory.ResourceContext;
 import org.rhq.plugins.jbossas5.connection.ProfileServiceConnection;
 import org.teiid.adminapi.impl.PropertyMetadata;
@@ -277,8 +274,7 @@ public class VDBComponent extends Facet {
 			managedComponent = managementView.getComponent(this.name,
 					componentType);
 			ManagedProperty mp = managedComponent.getProperty("models");//$NON-NLS-1$
-			List<ManagedObject> modelsMp = (List<ManagedObject>) MetaValueFactory
-					.getInstance().unwrap(mp.getValue());
+			List<ManagedObject> modelsMp = (List<ManagedObject>) mp.getValue();
 			modelsMetaValue = (CollectionValueSupport) managedComponent
 					.getProperty("models").getValue();
 			GenericValue[] models = (GenericValue[]) modelsMetaValue
@@ -320,9 +316,7 @@ public class VDBComponent extends Facet {
 					ManagedProperty sourceMappings = managedModel
 							.getProperty("sourceMappings");//$NON-NLS-1$
 					if (sourceMappings != null) {
-						List<ManagedObject> mappings = (List<ManagedObject>) MetaValueFactory
-								.getInstance()
-								.unwrap(sourceMappings.getValue());
+						List<ManagedObject> mappings = (List<ManagedObject>) sourceMappings.getValue();
 						for (ManagedObject mo : mappings) {
 							String sName = ProfileServiceUtil.getSimpleValue(
 									mo, "name", String.class);//$NON-NLS-1$
@@ -396,7 +390,12 @@ public class VDBComponent extends Facet {
 		configuration.put(new PropertySimple("url", vdbURL));
 		configuration.put(new PropertySimple("connectionType", connectionType));
 
-		getTranslators(mcVdb, configuration);
+		try {
+			getTranslators(mcVdb, configuration);
+		} catch (Exception e) {
+			final String msg = "Exception in loadResourceConfiguration(): " + e.getMessage(); //$NON-NLS-1$
+			LOG.error(msg, e);
+		}
 
 		getModels(mcVdb, configuration);
 
@@ -420,8 +419,6 @@ public class VDBComponent extends Facet {
 	private void getModels(ManagedComponent mcVdb, Configuration configuration) {
 		// Get models from VDB
 		ManagedProperty property = mcVdb.getProperty("models");
-		List<ManagedObject> models = (List<ManagedObject>) MetaValueFactory
-				.getInstance().unwrap(property.getValue());
 		CollectionValueSupport valueSupport = (CollectionValueSupport) property
 				.getValue();
 		MetaValue[] metaValues = valueSupport.getElements();
@@ -582,17 +579,15 @@ public class VDBComponent extends Facet {
 	/**
 	 * @param mcVdb
 	 * @param configuration
-	 * @throws Exception
+	 * @throws Exception 
 	 */
 	private void getTranslators(ManagedComponent mcVdb,
-			Configuration configuration) {
+			Configuration configuration) throws Exception {
 		// Get models from VDB
 		ManagedProperty property = mcVdb.getProperty("overrideTranslators");
 		if (property == null) {
 			return;
 		}
-		List<ManagedObject> translators = (List<ManagedObject>) MetaValueFactory
-				.getInstance().unwrap(property.getValue());
 		CollectionValueSupport valueSupport = (CollectionValueSupport) property
 				.getValue();
 		MetaValue[] metaValues = valueSupport.getElements();
@@ -612,11 +607,10 @@ public class VDBComponent extends Facet {
 			ManagedProperty properties = managedObject.getProperty("property");
 
 			if (properties != null) {
-				List<PropertyMetadata> props = (List<PropertyMetadata>) MetaValueFactory
-						.getInstance().unwrap(properties.getValue());
-				for (PropertyMetadata propertyMetaData : props) {
-					String propertyName = propertyMetaData.getName();
-					String propertyValue = propertyMetaData.getValue();
+				CollectionValueSupport props = (CollectionValueSupport) properties.getValue();
+				for (MetaValue propertyMetaData : props) {
+					String propertyName = ProfileServiceUtil.stringValue(((CompositeValueSupport)propertyMetaData).get("name"));
+					String propertyValue = ProfileServiceUtil.stringValue(((CompositeValueSupport)propertyMetaData).get("value"));
 					PropertyMap translatorMap = null;
 
 					translatorMap = new PropertyMap("translatorMap",

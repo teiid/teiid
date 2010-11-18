@@ -28,7 +28,6 @@ import org.jboss.metatype.api.types.MetaType;
 import org.jboss.metatype.api.types.PropertiesMetaType;
 import org.jboss.metatype.api.values.MetaValue;
 import org.rhq.core.domain.configuration.PropertySimple;
-import org.teiid.rhq.plugin.adapter.impl.PropertyListToArrayValueAdapter;
 import org.teiid.rhq.plugin.adapter.impl.PropertyListToCollectionValueAdapter;
 import org.teiid.rhq.plugin.adapter.impl.PropertyMapToCompositeValueSupportAdapter;
 import org.teiid.rhq.plugin.adapter.impl.PropertyMapToGenericValueAdapter;
@@ -84,10 +83,6 @@ public class PropertyAdapterFactory
         else if (metaType.isCollection())
         {
             propertyAdapter = new PropertyListToCollectionValueAdapter();
-        }
-        else if (metaType.isArray())
-        {
-            propertyAdapter = new PropertyListToArrayValueAdapter();
         }
         else if (metaType.isEnum())
         {

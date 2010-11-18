@@ -32,8 +32,8 @@ import org.jboss.managed.api.ComponentType;
 import org.jboss.managed.api.ManagedComponent;
 import org.jboss.managed.api.ManagedProperty;
 import org.jboss.metatype.api.types.MetaType;
+import org.jboss.metatype.api.values.MapCompositeValueSupport;
 import org.jboss.metatype.api.values.MetaValue;
-import org.jboss.metatype.api.values.MetaValueFactory;
 import org.mc4j.ems.connection.EmsConnection;
 import org.rhq.core.domain.configuration.Configuration;
 import org.rhq.core.domain.configuration.PropertyList;
@@ -140,7 +140,11 @@ public class TranslatorComponent extends Facet {
 
 		// First get translator specific properties
 		ManagedProperty translatorProps = translator.getProperty("property");
-		getTranslatorValues(translatorProps.getValue(), propMap, list);
+		try {
+			getTranslatorValues(translatorProps.getValue(), propMap, list);
+		} catch (Exception e) {
+			throw new RuntimeException(e.getMessage());
+		}
 
 		// Now get common properties
 		c.put(new PropertySimple("name", translatorName));
@@ -151,16 +155,16 @@ public class TranslatorComponent extends Facet {
 	}
 	
 	public static <T> void getTranslatorValues(MetaValue pValue,
-			PropertyMap map, PropertyList list) {
+			PropertyMap map, PropertyList list) throws Exception {
 		MetaType metaType = pValue.getMetaType();
-		Map<String, T> unwrappedvalue = null;
+		MapCompositeValueSupport unwrappedvalueMap = null;
 		if (metaType.isComposite()) {
-			unwrappedvalue = (Map<String, T>) MetaValueFactory	.getInstance().unwrap(pValue);
+			unwrappedvalueMap = (MapCompositeValueSupport) pValue;
 
-			for (String key : unwrappedvalue.keySet()) {
+			for (String key : unwrappedvalueMap.getMetaType().keySet()) {
 				map = new PropertyMap("property");
 				map.put(new PropertySimple("name", key));
-				map.put(new PropertySimple("value", unwrappedvalue.get(key)));
+				map.put(new PropertySimple("value", ProfileServiceUtil.stringValue((MetaValue)unwrappedvalueMap.get(key))));
 				map.put(new PropertySimple("description", "Custom property"));
 				list.add(map);
 			}
