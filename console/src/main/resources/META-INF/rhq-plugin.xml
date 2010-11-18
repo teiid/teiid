@@ -300,7 +300,7 @@
 				hiddenByDefault="false">
 				<c:simple-property name="RuntimeEngineDeployer.maxRowsFetchSize"
 					displayName="Max Rows Fetch Size"
-					description="The maximum number of result set cache entries. 0 indicates no limit. (default 1024)"
+					description="Maximum allowed fetch size, set via JDBC. User requested value ignored above this value. (default 20480)"
 					required="false" readOnly="false" />
 				<c:simple-property name="RuntimeEngineDeployer.maxThreads" displayName="Max Threads"
 					description="Process pool maximum thread count. (default 64)"
@@ -319,7 +319,7 @@
 					required="false" readOnly="false" />				
 				<c:simple-property name="RuntimeEngineDeployer.preparedPlanCacheMaxCount"
 					displayName="Prepared Plan Cache Max Count"
-					description="The maximum number of query plans that are cached. Note: this is a memory based cache. (default 250)"
+					description="The maximum number of query plans that are cached. Note: this is a memory based cache. (default 512)"
 					required="false" readOnly="false" />
 				<c:simple-property name="RuntimeEngineDeployer.queryThresholdInSecs"
 					displayName="Long Running Query Threshold"
