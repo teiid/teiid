@@ -179,6 +179,7 @@ public class PlatformComponent extends Facet {
 
 				try {
 					managementView.updateComponent(managedComponent);
+					managementView.load();
 				} catch (Exception e) {
 					LOG.error("Unable to update component [" //$NON-NLS-1$
 							+ managedComponent.getName() + "] of type " //$NON-NLS-1$
