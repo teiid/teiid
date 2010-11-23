@@ -365,14 +365,11 @@ public class AliasGenerator extends PreOrderNavigator {
 	                element = new AliasSymbol(element.getShortName(), (SingleElementSymbol)expr);
 	            } else if (expr instanceof ElementSymbol) {
 	            	element = (ElementSymbol)expr;
+	            	visitNode(element);
 	            }
 	            item.setSymbol(element);
 	            element.setOutputName(name);
             }
-            
-            if (!(element instanceof ElementSymbol)) {
-            	visitNode(element);
-            }            
         }
     }
     

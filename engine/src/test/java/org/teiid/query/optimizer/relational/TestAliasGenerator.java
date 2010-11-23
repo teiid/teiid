@@ -36,7 +36,6 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
 @SuppressWarnings("nls")
@@ -75,7 +74,7 @@ public class TestAliasGenerator {
         String expected = "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0"; //$NON-NLS-1$
         Query command = (Query)helpTest(sql, expected, true, false, FakeMetadataFactory.example1Cached());
         assertEquals(command.getOrderBy().getSortKeys().get(0).getName(), "e1"); //$NON-NLS-1$
-        assertEquals(((SingleElementSymbol)command.getProjectedSymbols().get(0)).getShortName(), "e1"); //$NON-NLS-1$
+        assertEquals(command.getProjectedSymbols().get(0).getShortName(), "e1"); //$NON-NLS-1$
     }
     
     @Test public void testInlineViewWithSubQuery() throws Exception {
@@ -87,7 +86,10 @@ public class TestAliasGenerator {
     @Test public void testInlineViewOrderBy() throws Exception {
         String sql = "select intnum from (select intnum from bqt1.smallb) b order by b.intnum"; //$NON-NLS-1$
         String expected = "SELECT v_0.c_0 FROM (SELECT g_0.intnum AS c_0 FROM bqt1.smallb AS g_0) AS v_0 ORDER BY c_0"; //$NON-NLS-1$
-        helpTest(sql, expected, true, false, FakeMetadataFactory.exampleBQTCached());
+        Command command = helpTest(sql, expected, true, false, FakeMetadataFactory.exampleBQTCached());
+        LanguageBridgeFactory lbf = new LanguageBridgeFactory(FakeMetadataFactory.exampleBQTCached());
+        org.teiid.language.Command c = lbf.translate(command);
+        assertEquals("SELECT v_0.c_0 FROM (SELECT g_0.IntNum AS c_0 FROM SmallB AS g_0) AS v_0 ORDER BY v_0.c_0", c.toString());
     }
     
     @Test public void testNestedInlineViewOrderBy() throws Exception {
