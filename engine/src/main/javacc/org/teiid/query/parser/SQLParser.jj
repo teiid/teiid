@@ -143,6 +143,7 @@ TOKEN : /* Reserved words */
 |   <DISCONNECT: "disconnect">
 |   <DISTINCT: "distinct">
 |   <DROP: "drop">
+|	<EACH: "each">
 |   <ELSE: "else">
 |   <END: "end">
 |   <ERROR: "error">
