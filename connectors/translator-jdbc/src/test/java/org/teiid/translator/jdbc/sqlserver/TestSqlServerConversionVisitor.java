@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.cdk.CommandBuilder;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Command;
@@ -167,6 +168,15 @@ public class TestSqlServerConversionVisitor {
         
         command = tu.parseCommand("select * from (select max(x) as max from bar) x"); //$NON-NLS-1$
         TranslationHelper.helpTestVisitor("SELECT x.max FROM (SELECT MAX(cast(bar.x as char(36))) AS max FROM bar) x", trans, command); //$NON-NLS-1$
+    }
+    
+    @Test public void testRowLimitWithInlineViewOrderBy() throws Exception {
+        String input = "select intkey from (select intkey from bqt1.smalla) as x order by intkey limit 100"; //$NON-NLS-1$
+        String output = "SELECT TOP 100 v_0.c_0 FROM (SELECT g_0.IntKey AS c_0 FROM SmallA g_0) v_0 ORDER BY v_0.c_0"; //$NON-NLS-1$
+               
+		CommandBuilder commandBuilder = new CommandBuilder(FakeMetadataFactory.exampleBQTCached());
+        Command obj = commandBuilder.getCommand(input, true, true);
+        TranslationHelper.helpTestVisitor(output, trans, obj);
     }
        
 }
