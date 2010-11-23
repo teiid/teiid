@@ -316,15 +316,20 @@ public class ExecResolver extends ProcedureContainerResolver {
     }
 
     /** 
+     * @throws QueryResolverException 
      * @see org.teiid.query.resolver.ProcedureContainerResolver#getPlan(org.teiid.query.metadata.QueryMetadataInterface, org.teiid.query.sql.symbol.GroupSymbol)
      */
     protected String getPlan(QueryMetadataInterface metadata,
                              GroupSymbol group) throws TeiidComponentException,
-                                               QueryMetadataException {
+                                               QueryMetadataException, QueryResolverException {
         StoredProcedureInfo storedProcedureInfo = metadata.getStoredProcedureInfoForProcedure(group.getCanonicalName());
         
         //if there is a query plan associated with the procedure, get it.
         QueryNode plan = storedProcedureInfo.getQueryPlan();
+        
+        if (plan.getQuery() == null) {
+            throw new QueryResolverException("ERR.015.008.0009", QueryPlugin.Util.getString("ERR.015.008.0009", group, "Stored Procedure")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        }
         
         return plan.getQuery();
     }

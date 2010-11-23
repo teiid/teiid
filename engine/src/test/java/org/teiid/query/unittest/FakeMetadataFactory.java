@@ -2750,9 +2750,9 @@ public class FakeMetadataFactory {
         obj.putProperty(FakeMetadataObject.Props.IS_VIRTUAL, model.getProperty(FakeMetadataObject.Props.IS_VIRTUAL));
         obj.putProperty(FakeMetadataObject.Props.PLAN, plan);
         obj.putProperty(FakeMetadataObject.Props.UPDATE, Boolean.TRUE);
-        if (updatePlan != null) {
-            obj.putProperty(FakeMetadataObject.Props.UPDATE_PROCEDURE, updatePlan);
-        }
+        obj.putProperty(FakeMetadataObject.Props.UPDATE_PROCEDURE, updatePlan);
+        obj.putProperty(FakeMetadataObject.Props.INSERT_PROCEDURE, "");
+        obj.putProperty(FakeMetadataObject.Props.DELETE_PROCEDURE, "");
         return obj;
     }
 		

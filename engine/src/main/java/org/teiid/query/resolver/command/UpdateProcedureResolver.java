@@ -123,7 +123,7 @@ public class UpdateProcedureResolver implements CommandResolver {
     /**
 	 * Get the command for the transformation query that defines this virtual group.
 	 */
-    private Command getQueryTransformCmd(GroupSymbol virtualGroup, QueryMetadataInterface metadata)
+    public static Command getQueryTransformCmd(GroupSymbol virtualGroup, QueryMetadataInterface metadata)
     throws QueryMetadataException, QueryResolverException, TeiidComponentException {
     	Command transformCmd = (Command)metadata.getFromMetadataCache(virtualGroup.getMetadataID(), "transformation/select"); //$NON-NLS-1$
     	if (transformCmd != null) {

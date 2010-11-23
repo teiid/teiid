@@ -136,6 +136,7 @@ import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.PredicateCollectorVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
+import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression;
 import org.teiid.translator.SourceSystemFunctions;
 
@@ -198,11 +199,12 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 
 	public void visit(Delete obj) {
     	validateNoXMLUpdates(obj);
-        validateHasProjectedSymbols(obj);
         GroupSymbol group = obj.getGroup();
         validateGroupSupportsUpdate(group);
-        Criteria crit = obj.getCriteria();
-        validateVirtualUpdate(group, crit);
+        if (obj.getUpdateInfo() == null || !obj.getUpdateInfo().isInherentDelete()) {
+            Criteria crit = obj.getCriteria();
+        	validateVirtualUpdate(group, crit);
+        }
     }
 
 	private void validateVirtualUpdate(GroupSymbol group,
@@ -252,12 +254,17 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 
     public void visit(Insert obj) {
         validateNoXMLUpdates(obj);
-        validateHasProjectedSymbols(obj);
         validateGroupSupportsUpdate(obj.getGroup());
         validateInsert(obj);
         
         if (obj.getQueryExpression() != null) {
         	validateMultisourceInsert(obj.getGroup());
+        }
+        if (obj.getUpdateInfo() != null && obj.getUpdateInfo().isInherentInsert()) {
+	        Collection<ElementSymbol> updateCols = obj.getVariables();
+	    	if (obj.getUpdateInfo().findUpdateMapping(updateCols, false) == null) {
+	    		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.nonUpdatable", updateCols), obj); //$NON-NLS-1$
+	    	}
         }
     }
 
@@ -326,10 +333,11 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     
     public void visit(Update obj) {
         validateNoXMLUpdates(obj);
-        validateHasProjectedSymbols(obj);
         validateGroupSupportsUpdate(obj.getGroup());
         validateUpdate(obj);
-        validateVirtualUpdate(obj.getGroup(), obj.getCriteria());
+        if (obj.getUpdateInfo() == null || !obj.getUpdateInfo().isInherentUpdate()) {
+        	validateVirtualUpdate(obj.getGroup(), obj.getCriteria());
+        }
     }
 
     public void visit(Into obj) {
@@ -902,12 +910,12 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     
     protected void validateUpdate(Update update) {
         try {
+            UpdateInfo info = update.getUpdateInfo();
+            boolean updatableView = info != null && info.isInherentUpdate();
+
             // list of elements that are being updated
 		    for (SetClause entry : update.getChangeList().getClauses()) {
         	    ElementSymbol elementID = entry.getSymbol();
-                if(elementID.isExternalReference()) {
-                    handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0058", SQLStringVisitor.getSQLString(elementID)), elementID); //$NON-NLS-1$
-                }
 
                 // Check that left side element is updatable
                 if(! getMetadata().elementSupports(elementID.getMetadataID(), SupportConstants.Element.UPDATE)) {
@@ -934,24 +942,23 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                     if(((Constant)value).isNull() && ! getMetadata().elementSupports(elementID.getMetadataID(), SupportConstants.Element.NULL)) {
                         handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0060", SQLStringVisitor.getSQLString(elementID)), elementID); //$NON-NLS-1$
                     }// end of if
-                } else if (!EvaluatableVisitor.willBecomeConstant(value)) {
+                } else if (!updatableView && getMetadata().isVirtualGroup(update.getGroup().getMetadataID()) && !EvaluatableVisitor.willBecomeConstant(value)) {
                     // If this is an update on a virtual group, verify that no elements are in the right side
-                    GroupSymbol group = update.getGroup();
-                    if(getMetadata().isVirtualGroup(group.getMetadataID())) {
-                        Collection elements = ElementCollectorVisitor.getElements(value, false);
-                        if(elements.size() > 0) {
-                            Iterator iter = elements.iterator();
-                            while(iter.hasNext()) {
-                                ElementSymbol element = (ElementSymbol) iter.next();
-                                if(! element.isExternalReference()) {
-                                    handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0061", SQLStringVisitor.getSQLString(value)), value); //$NON-NLS-1$
-                                }
-                            }
+                    Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(value, false);
+                    for (ElementSymbol element : elements) {
+                        if(! element.isExternalReference()) {
+                            handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0061", SQLStringVisitor.getSQLString(value)), value); //$NON-NLS-1$
                         }
                     }
                 } 
-		    }// end of while
-        } catch(TeiidComponentException e) {
+		    }
+            if (updatableView) {
+            	Set<ElementSymbol> updateCols = update.getChangeList().getClauseMap().keySet();
+            	if (info.findUpdateMapping(updateCols, false) == null) {
+            		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.nonUpdatable", updateCols), update); //$NON-NLS-1$
+            	}
+            }
+        } catch(TeiidException e) {
             handleException(e, update);
         }
         

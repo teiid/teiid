@@ -77,6 +77,7 @@ import org.teiid.query.sql.symbol.XMLSerialize;
 public class ExpressionMappingVisitor extends LanguageVisitor {
 
     private Map symbolMap;
+    private boolean clone;
 
     /**
      * Constructor for ExpressionMappingVisitor.
@@ -84,6 +85,11 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
      */
     public ExpressionMappingVisitor(Map symbolMap) {
         this.symbolMap = symbolMap;
+    }
+    
+    public ExpressionMappingVisitor(Map symbolMap, boolean clone) {
+        this.symbolMap = symbolMap;
+        this.clone = clone;
     }
         
     protected boolean createAliases() {
@@ -93,6 +99,14 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     public void visit(Select obj) {
         replaceSymbols(obj.getSymbols(), true);
     }
+    
+    public boolean isClone() {
+		return clone;
+	}
+    
+    public void setClone(boolean clone) {
+		this.clone = clone;
+	}
     
     @Override
     public void visit(DerivedColumn obj) {
@@ -287,7 +301,10 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     public Expression replaceExpression(Expression element) {
         Expression mapped = (Expression) this.symbolMap.get(element);
         if(mapped != null) {
-            return mapped;
+        	if (clone) {
+        		return (Expression)mapped.clone();
+        	}
+        	return mapped;
         }
         return element;    
     }

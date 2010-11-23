@@ -25,6 +25,7 @@ package org.teiid.query.optimizer.relational.rules;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -608,52 +609,46 @@ public final class RuleRaiseAccess implements OptimizerRule {
         		/*
         		 * Key joins must be left linear
         		 */
-        		if (sjc == SupportedJoinCriteria.KEY && children.get(1).getGroups().size() != 1) {
+        		if (sjc == SupportedJoinCriteria.KEY && children.get(0).getGroups().size() != 1) {
         			return null;
         		}
         		
 				if(crits != null && !crits.isEmpty()) {
-					List<Object> leftIds = null;
-					List<Object> rightIds = null;
-					GroupSymbol leftGroup = null;
 					for (Criteria crit : crits) {
 				        if (!isSupportedJoinCriteria(sjc, crit, accessModelID, metadata, capFinder, record)) {
 				        	return null;
 				        }
-			        	if (sjc != SupportedJoinCriteria.KEY) {
-			        		continue;
-			        	}
-			        	//key join
-			        	//TODO: this would be much simpler if we could rely on rulechoosejoinstrategy running first
-			        	if (leftIds == null) {
-			        		leftIds = new ArrayList<Object>();
-			        		rightIds = new ArrayList<Object>();
-			        	}
-			        	ElementSymbol leftSymbol = (ElementSymbol)((CompareCriteria)crit).getLeftExpression();
-			        	ElementSymbol rightSymbol = (ElementSymbol)((CompareCriteria)crit).getRightExpression();
-			        	if ((children.get(0).getGroups().contains(leftSymbol.getGroupSymbol()) && children.get(1).getGroups().contains(rightSymbol.getGroupSymbol()))
-			        			|| (children.get(1).getGroups().contains(leftSymbol.getGroupSymbol()) && children.get(0).getGroups().contains(rightSymbol.getGroupSymbol()))) {
-			        		boolean left = children.get(0).getGroups().contains(leftSymbol.getGroupSymbol());
-			        		if (leftGroup == null) {
-			        			leftGroup = left?leftSymbol.getGroupSymbol():rightSymbol.getGroupSymbol();
-			        		} else if (!leftGroup.equals(left?leftSymbol.getGroupSymbol():rightSymbol.getGroupSymbol())) {
-			        			return null;
-			        		}
-			        		if (left) {
-				        		leftIds.add(leftSymbol.getMetadataID());
-				        		rightIds.add(rightSymbol.getMetadataID());
-			        		} else {
-			        			rightIds.add(leftSymbol.getMetadataID());
-				        		leftIds.add(rightSymbol.getMetadataID());
-			        		}
-			        	} else {
-			        		return null;
-			        	}
 					}
-					if (leftIds != null &&
-							!matchesForeignKey(metadata, leftIds, rightIds,	leftGroup) 
-							&& !matchesForeignKey(metadata, rightIds, leftIds, children.get(1).getGroups().iterator().next())) {
-						return null;
+					if (sjc == SupportedJoinCriteria.KEY) {
+						LinkedList<Expression> leftExpressions = new LinkedList<Expression>();
+						LinkedList<Expression> rightExpressions = new LinkedList<Expression>();
+						RuleChooseJoinStrategy.separateCriteria(children.get(0).getGroups(), children.get(1).getGroups(), leftExpressions, rightExpressions, crits, new LinkedList<Criteria>());
+						ArrayList<Object> leftIds = new ArrayList<Object>(leftExpressions.size());
+						ArrayList<Object> rightIds = new ArrayList<Object>(rightExpressions.size());
+						for (Expression expr : leftExpressions) {
+							if (expr instanceof ElementSymbol) {
+								leftIds.add(((ElementSymbol) expr).getMetadataID());
+							}
+						}
+						GroupSymbol rightGroup = null;
+						for (Expression expr : rightExpressions) {
+							if (expr instanceof ElementSymbol) {
+								ElementSymbol es = (ElementSymbol) expr; 
+								if (rightGroup == null) {
+									rightGroup = es.getGroupSymbol();
+								} else if (!rightGroup.equals(es.getGroupSymbol())) {
+									return null;
+								}
+								rightIds.add(es.getMetadataID());
+							}
+						}
+						if (rightGroup == null) {
+							return null;
+						}
+						if (!matchesForeignKey(metadata, leftIds, rightIds,	children.get(0).getGroups().iterator().next(), true) 
+								&& !matchesForeignKey(metadata, rightIds, leftIds, rightGroup, true)) {
+							return null;
+						}
 					}
                 } else if (sjc != SupportedJoinCriteria.ANY) {
                 	return null; //cross join not supported
@@ -708,21 +703,18 @@ public final class RuleRaiseAccess implements OptimizerRule {
 		return true;
     }
 
-    /**
-     * TODO: gracefully handle too much criteria
-     */
-	private static boolean matchesForeignKey(QueryMetadataInterface metadata,
-			List<Object> leftIds, List<Object> rightIds, GroupSymbol leftGroup)
+	public static boolean matchesForeignKey(QueryMetadataInterface metadata,
+			Collection<Object> leftIds, Collection<Object> rightIds, GroupSymbol leftGroup, boolean exact)
 			throws TeiidComponentException, QueryMetadataException {
 		Collection fks = metadata.getForeignKeysInGroup(leftGroup.getMetadataID());
 		for (Object fk : fks) {
 			List fkColumns = metadata.getElementIDsInKey(fk);
-			if (!leftIds.containsAll(fkColumns) || leftIds.size() != fkColumns.size()) {
+			if ((exact && leftIds.size() != fkColumns.size()) || !leftIds.containsAll(fkColumns)) {
 				continue;
 			}
 			Object pk = metadata.getPrimaryKeyIDForForeignKeyID(fk);
 			List pkColumns = metadata.getElementIDsInKey(pk);
-			if (rightIds.containsAll(pkColumns) && rightIds.size() == pkColumns.size()) {
+			if ((!exact || rightIds.size() == pkColumns.size()) && rightIds.containsAll(pkColumns)) {
 				return true;
 			}
 		}

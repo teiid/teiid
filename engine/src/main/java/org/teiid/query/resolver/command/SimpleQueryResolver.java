@@ -139,7 +139,7 @@ public class SimpleQueryResolver implements CommandResolver {
 
 	static void resolveWith(TempMetadataAdapter metadata,
 			AnalysisRecord analysis, QueryCommand query) throws QueryResolverException, TeiidComponentException {
-		if (query.getWith() == null || query.getWith().isEmpty()) {
+		if (query.getWith() == null) {
 			return;
 		}
 		LinkedHashSet<GroupSymbol> discoveredGroups = new LinkedHashSet<GroupSymbol>();

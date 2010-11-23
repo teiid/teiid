@@ -224,7 +224,7 @@ public class QueryResolver {
     public static boolean isXMLQuery(Query query, QueryMetadataInterface metadata)
      throws TeiidComponentException, QueryMetadataException, QueryResolverException {
 
-        if (query.getWith() != null && !query.getWith().isEmpty()) {
+        if (query.getWith() != null) {
         	return false;
         }
 

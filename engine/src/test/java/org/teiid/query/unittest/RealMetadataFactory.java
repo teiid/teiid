@@ -31,6 +31,7 @@ import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnSet;
+import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
@@ -436,6 +437,17 @@ public class RealMetadataFactory {
 		default:
 			throw new AssertionError("TODO");
 		}
+		return key;
+	}
+	
+	public static ForeignKey createForeignKey(String name, Table group, List<Column> elements, KeyRecord primaryKey) {
+		ForeignKey key = new ForeignKey();
+		key.setName(name);
+		for (Column column : elements) {
+			key.addColumn(column);
+		}
+		key.setPrimaryKey(primaryKey);
+		group.getForeignKeys().add(key);
 		return key;
 	}
 

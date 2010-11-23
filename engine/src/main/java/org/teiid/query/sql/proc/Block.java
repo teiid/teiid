@@ -110,7 +110,7 @@ public class Block implements LanguageObject {
 	 * Deep clone statement to produce a new identical block.
 	 * @return Deep clone 
 	 */
-	public Object clone() {		
+	public Block clone() {		
 		Block copy = new Block();
 		for (Statement statement : statements) {
 			copy.addStatement((Statement)statement.clone());

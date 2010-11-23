@@ -68,6 +68,7 @@ import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
 import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria.PlannedResult;
 import org.teiid.query.processor.relational.DependentValueSource;
+import org.teiid.query.resolver.ProcedureContainerResolver;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
@@ -98,6 +99,7 @@ import org.teiid.query.sql.lang.MatchCriteria;
 import org.teiid.query.sql.lang.NotCriteria;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
+import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SPParameter;
@@ -118,7 +120,9 @@ import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.PredicateCriteria.Negatable;
+import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
+import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
@@ -155,6 +159,8 @@ import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.PredicateCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import org.teiid.query.util.CommandContext;
+import org.teiid.query.validator.UpdateValidator.UpdateInfo;
+import org.teiid.query.validator.UpdateValidator.UpdateMapping;
 import org.teiid.translator.SourceSystemFunctions;
 
 
@@ -661,7 +667,7 @@ public class QueryRewriter {
 		for (Iterator<Criteria> crits = current.iterator(); crits.hasNext();) {
 			PlannedResult plannedResult = rmc.findSubquery(crits.next());
 			if (plannedResult.not || plannedResult.query == null || plannedResult.query.getProcessorPlan() != null 
-					|| (plannedResult.query.getWith() != null && !plannedResult.query.getWith().isEmpty())) {
+					|| plannedResult.query.getWith() != null) {
 				continue;
 			}
 			if (plannedResult.query.getCorrelatedReferences() == null) {
@@ -678,8 +684,12 @@ public class QueryRewriter {
 			if (!rmc.planQuery(groups, true, plannedResult)) {
 				continue;
 			}
-			if (query.getFrom().getGroups().size() != 1 || !NewCalculateCostUtil.usesKey(plannedResult.leftExpressions, metadata)) {
-				//TODO: check for grouping or distinct in the outer query
+			HashSet<GroupSymbol> keyPreservingGroups = new HashSet<GroupSymbol>();
+			if (query.getFrom().getClauses().size() > 1) {
+				continue;
+			}
+			ResolverUtil.findKeyPreserinvg((FromClause)query.getFrom().getClauses().get(0), keyPreservingGroups, metadata);
+			if (!NewCalculateCostUtil.usesKey(plannedResult.leftExpressions, keyPreservingGroups, metadata)) {
 				continue;
 			}
 			crits.remove();
@@ -937,14 +947,14 @@ public class QueryRewriter {
      * @param query
      * @throws QueryValidatorException
      */
-    private Insert rewriteSelectInto(Query query) throws TeiidComponentException, TeiidProcessingException{
+    private Insert rewriteSelectInto(Query query) throws TeiidProcessingException{
         Into into = query.getInto();
         try {
             List<ElementSymbol> allIntoElements = Util.deepClone(ResolverUtil.resolveElementsInGroup(into.getGroup(), metadata), ElementSymbol.class);
             Insert insert = new Insert(into.getGroup(), allIntoElements, Collections.emptyList());
             query.setInto(null);
             insert.setQueryExpression(query);
-            return correctDatatypes(insert);
+            return rewriteInsert(correctDatatypes(insert));
         } catch (QueryMetadataException err) {
             throw new QueryValidatorException(err, err.getMessage());
         } catch (TeiidComponentException err) {
@@ -2414,7 +2424,24 @@ public class QueryRewriter {
     }
 
 	private Insert rewriteInsert(Insert insert) throws TeiidComponentException, TeiidProcessingException{
-        
+		UpdateInfo info = insert.getUpdateInfo();
+		if (info != null && info.isInherentInsert()) {
+			//pass through
+			UpdateMapping mapping = info.findUpdateMapping(insert.getVariables(), false);
+			if (mapping == null) {
+				throw new QueryValidatorException(QueryPlugin.Util.getString("ValidationVisitor.nonUpdatable", insert.getVariables())); //$NON-NLS-1$
+			}
+			Map<ElementSymbol, ElementSymbol> symbolMap = mapping.getUpdatableViewSymbols();
+			List<ElementSymbol> mappedSymbols = new ArrayList<ElementSymbol>(insert.getVariables().size());
+			for (ElementSymbol symbol : (List<ElementSymbol>)insert.getVariables()) {
+				mappedSymbols.add(symbolMap.get(symbol));
+			}
+			insert.setVariables(mappedSymbols);
+			insert.setGroup(mapping.getGroup().clone());
+			insert.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(insert.getGroup(), metadata));
+			return rewriteInsert(insert);
+		}
+
         if ( insert.getQueryExpression() != null ) {
         	insert.setQueryExpression((QueryCommand)rewriteCommand(insert.getQueryExpression(), true));
         	return correctDatatypes(insert);
@@ -2523,7 +2550,68 @@ public class QueryRewriter {
         }
     }
 
-	private Update rewriteUpdate(Update update) throws TeiidComponentException, TeiidProcessingException{
+	private Command rewriteUpdate(Update update) throws TeiidComponentException, TeiidProcessingException{
+		UpdateInfo info = update.getUpdateInfo();
+		if (info != null && info.isInherentUpdate()) {
+			UpdateMapping mapping = info.findUpdateMapping(update.getChangeList().getClauseMap().keySet(), false);
+			if (mapping == null) {
+				throw new QueryValidatorException(QueryPlugin.Util.getString("ValidationVisitor.nonUpdatable", update.getChangeList().getClauseMap().keySet())); //$NON-NLS-1$
+			}
+			Map<ElementSymbol, ElementSymbol> symbolMap = mapping.getUpdatableViewSymbols();
+			if (info.isSimple()) {
+				update.setGroup(mapping.getGroup().clone());
+				for (SetClause clause : update.getChangeList().getClauses()) {
+					clause.setSymbol(symbolMap.get(clause.getSymbol()));
+				}
+				//TODO: properly handle correlated references
+				DeepPostOrderNavigator.doVisit(update, new ExpressionMappingVisitor(symbolMap, true));
+				if (info.getViewDefinition().getCriteria() != null) {
+					update.setCriteria(Criteria.combineCriteria(update.getCriteria(), (Criteria)info.getViewDefinition().getCriteria().clone()));
+				}
+				//resolve
+				update.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(update.getGroup(), metadata));
+				return rewriteUpdate(update);
+			} 
+			Query query = (Query)info.getViewDefinition().clone();
+			query.setOrderBy(null);
+			SymbolMap expressionMapping = SymbolMap.createSymbolMap(update.getGroup(), query.getProjectedSymbols(), metadata);
+			
+			ArrayList<SingleElementSymbol> selectSymbols = new ArrayList<SingleElementSymbol>(update.getChangeList().getClauses().size());
+			int i = 0;
+			for (SetClause clause : update.getChangeList().getClauses()) {
+				Expression ex = clause.getValue();
+				SingleElementSymbol selectSymbol = null;
+				if (!EvaluatableVisitor.willBecomeConstant(ex)) {
+					if (!(ex instanceof SingleElementSymbol)) {
+						selectSymbol = new ExpressionSymbol("expr", ex); //$NON-NLS-1$
+					} else {
+						selectSymbol = (SingleElementSymbol)ex;
+					}
+					selectSymbols.add(new AliasSymbol("s_" +i, selectSymbol)); //$NON-NLS-1$
+					ex = new ElementSymbol("s_" +i); //$NON-NLS-1$
+				}
+				clause.setSymbol(symbolMap.get(clause.getSymbol()));
+				i++;
+			}
+			query.setSelect(new Select(selectSymbols));
+			ExpressionMappingVisitor emv = new ExpressionMappingVisitor(expressionMapping.asMap(), true);
+			PostOrderNavigator.doVisit(query.getSelect(), emv);
+			
+			Criteria crit = update.getCriteria();
+			if (crit != null) {
+				PostOrderNavigator.doVisit(crit, emv);
+				query.setCriteria(Criteria.combineCriteria(query.getCriteria(), crit));
+			}
+			
+			Update newUpdate = new Update();
+			newUpdate.setChangeList(update.getChangeList());
+			newUpdate.setGroup(mapping.getGroup().clone());
+			
+			List<Criteria> pkCriteria = createPkCriteria(mapping, query, i);
+			newUpdate.setCriteria(Criteria.combineCriteria(newUpdate.getCriteria(), new CompoundCriteria(pkCriteria)));
+			return createUpdateProcedure(update, query, newUpdate);
+		}
+		
 		if (commandType == Command.TYPE_UPDATE && variables != null) {
 	        SetClauseList newChangeList = new SetClauseList();
 	        for (SetClause entry : update.getChangeList().getClauses()) {
@@ -2548,6 +2636,44 @@ public class QueryRewriter {
 		}
 
 		return update;
+	}
+
+	private Command createUpdateProcedure(ProcedureContainer update, Query query,
+			ProcedureContainer newUpdate) throws QueryResolverException,
+			TeiidComponentException, TeiidProcessingException {
+		CreateUpdateProcedureCommand cupc = new CreateUpdateProcedureCommand();
+		Block parent = new Block();
+		Block b = new Block();
+		LoopStatement ls = new LoopStatement(b, query, "X"); //$NON-NLS-1$
+		parent.addStatement(ls);
+		b.addStatement(new CommandStatement(newUpdate));
+		AssignmentStatement as = new AssignmentStatement();
+		ElementSymbol rowsUpdate = new ElementSymbol(ProcedureReservedWords.VARIABLES+ElementSymbol.SEPARATOR+ProcedureReservedWords.ROWS_UPDATED);
+		as.setVariable(rowsUpdate);
+		as.setExpression(new Function("+", new Expression[] {rowsUpdate, new Constant(1)})); //$NON-NLS-1$
+		b.addStatement(as);
+		cupc.setBlock(parent);
+		cupc.setVirtualGroup(update.getGroup());
+		QueryResolver.resolveCommand(cupc, metadata);
+		return rewriteUpdateProcedure(cupc);
+	}
+
+	private List<Criteria> createPkCriteria(UpdateMapping mapping, Query query,
+			int i) throws TeiidComponentException, QueryMetadataException {
+		Object pk = metadata.getPrimaryKey(mapping.getGroup().getMetadataID());
+		if (pk == null) {
+			pk = metadata.getUniqueKeysInGroup(mapping.getGroup().getMetadataID()).iterator().next();
+		}
+		List<Object> ids = metadata.getElementIDsInKey(pk);
+		List<Criteria> pkCriteria = new ArrayList<Criteria>(ids.size());
+		for (Object object : ids) {
+			ElementSymbol es = new ElementSymbol(mapping.getCorrelatedName().getName() + ElementSymbol.SEPARATOR + SingleElementSymbol.getShortName(metadata.getFullName(object)));
+			query.getSelect().addSymbol(new AliasSymbol("s_" +i, es)); //$NON-NLS-1$
+			es = new ElementSymbol(mapping.getGroup().getName() + ElementSymbol.SEPARATOR + SingleElementSymbol.getShortName(metadata.getFullName(object)));
+			pkCriteria.add(new CompareCriteria(es, CompareCriteria.EQ, new ElementSymbol("X.s_" + i))); //$NON-NLS-1$
+			i++;
+		}
+		return pkCriteria;
 	}
 	
     /**
@@ -2582,7 +2708,42 @@ public class QueryRewriter {
         return true;
     }
 
-	private Delete rewriteDelete(Delete delete) throws TeiidComponentException, TeiidProcessingException{
+	private Command rewriteDelete(Delete delete) throws TeiidComponentException, TeiidProcessingException{
+		UpdateInfo info = delete.getUpdateInfo();
+		if (info != null && info.isInherentDelete()) {
+			UpdateMapping mapping = info.getDeleteTarget();
+			if (info.isSimple()) {
+				delete.setGroup(mapping.getGroup().clone());
+				//TODO: properly handle correlated references
+				DeepPostOrderNavigator.doVisit(delete, new ExpressionMappingVisitor(mapping.getUpdatableViewSymbols(), true));
+				delete.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(delete.getGroup(), metadata));
+				if (info.getViewDefinition().getCriteria() != null) {
+					delete.setCriteria(Criteria.combineCriteria(delete.getCriteria(), (Criteria)info.getViewDefinition().getCriteria().clone()));
+				}
+				return rewriteDelete(delete);
+			}
+			
+			Query query = (Query)info.getViewDefinition().clone();
+			query.setOrderBy(null);
+			SymbolMap expressionMapping = SymbolMap.createSymbolMap(delete.getGroup(), query.getProjectedSymbols(), metadata);
+			
+			query.setSelect(new Select());
+			ExpressionMappingVisitor emv = new ExpressionMappingVisitor(expressionMapping.asMap(), true);
+			PostOrderNavigator.doVisit(query.getSelect(), emv);
+			
+			Criteria crit = delete.getCriteria();
+			if (crit != null) {
+				PostOrderNavigator.doVisit(crit, emv);
+				query.setCriteria(Criteria.combineCriteria(query.getCriteria(), crit));
+			}
+			
+			Delete newUpdate = new Delete();
+			newUpdate.setGroup(mapping.getGroup().clone());
+			
+			List<Criteria> pkCriteria = createPkCriteria(mapping, query, 0);
+			newUpdate.setCriteria(Criteria.combineCriteria(newUpdate.getCriteria(), new CompoundCriteria(pkCriteria)));
+			return createUpdateProcedure(delete, query, newUpdate);
+		}
 		// Rewrite criteria
 		Criteria crit = delete.getCriteria();
 		if(crit != null) {

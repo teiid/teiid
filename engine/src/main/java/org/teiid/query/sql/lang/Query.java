@@ -453,7 +453,7 @@ public class Query extends QueryCommand {
     
     public boolean hasAggregates() {
     	return getGroupBy() != null 
-    	|| (getHaving() != null && AggregateSymbolCollectorVisitor.getAggregates(getHaving(), false).isEmpty()) 
+    	|| getHaving() != null 
     	|| !AggregateSymbolCollectorVisitor.getAggregates(getSelect(), false).isEmpty();
     }
 }  // END CLASS

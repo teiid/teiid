@@ -118,7 +118,7 @@ public class RuleChooseJoinStrategy implements OptimizerRule {
         }
     }
 
-	static void separateCriteria(Collection<GroupSymbol> leftGroups,
+	public static void separateCriteria(Collection<GroupSymbol> leftGroups,
 			Collection<GroupSymbol> rightGroups,
 			List<Expression> leftExpressions,
 			List<Expression> rightExpressions, List<Criteria> crits,

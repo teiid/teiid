@@ -23,6 +23,7 @@
 package org.teiid.query.resolver;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -39,6 +40,8 @@ import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.metadata.TempMetadataID.Type;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.report.ReportItem;
+import org.teiid.query.resolver.command.UpdateProcedureResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
@@ -47,6 +50,9 @@ import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.validator.UpdateValidator;
+import org.teiid.query.validator.ValidatorFailure;
+import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 
 
 public abstract class ProcedureContainerResolver implements CommandResolver {
@@ -127,7 +133,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
      */
     protected abstract String getPlan(QueryMetadataInterface metadata,
                            GroupSymbol group) throws TeiidComponentException,
-                                             QueryMetadataException;
+                                             QueryMetadataException, QueryResolverException;
         
     /**
      * Find all metadata defined by this command for it's children.  This metadata should be collected 
@@ -201,14 +207,42 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 			throws TeiidComponentException, QueryMetadataException,
 			QueryResolverException {
 		if(!procCommand.getGroup().isTempGroupSymbol() && metadata.isVirtualGroup(procCommand.getGroup().getMetadataID())) {
-            String plan = getPlan(metadata, procCommand.getGroup());
-            
-            if(plan == null) {
-                throw new QueryResolverException("ERR.015.008.0009", QueryPlugin.Util.getString("ERR.015.008.0009", procCommand.getGroup(), procCommand.getClass().getSimpleName())); //$NON-NLS-1$ //$NON-NLS-2$
-            }
-            return plan;
+            return getPlan(metadata, procCommand.getGroup());
         }
 		return null;
+	}
+	
+	public static UpdateInfo getUpdateInfo(GroupSymbol group, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException, QueryResolverException {
+		//if this is not inherently updatable, just return null
+		if(group.isTempGroupSymbol() || !metadata.isVirtualGroup(group.getMetadataID()) || (
+				metadata.getUpdatePlan(group.getMetadataID()) != null && 
+				metadata.getDeletePlan(group.getMetadataID()) != null && 
+				metadata.getInsertPlan(group.getMetadataID()) != null)) {
+			return null;
+		}
+    	UpdateInfo info = (UpdateInfo)metadata.getFromMetadataCache(group.getMetadataID(), "UpdateInfo"); //$NON-NLS-1$
+    	if (info == null) {
+    		
+            List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(group, metadata);
+
+    		UpdateValidator validator = new UpdateValidator(metadata, 
+    				metadata.getUpdatePlan(group.getMetadataID()) == null, 
+    				metadata.getDeletePlan(group.getMetadataID()) == null, 
+    				metadata.getInsertPlan(group.getMetadataID()) == null);
+    		validator.validate(UpdateProcedureResolver.getQueryTransformCmd(group, metadata), elements);
+    		info = validator.getUpdateInfo();
+    		for (ReportItem item : (Collection<ReportItem>)validator.getReport().getItems()) {
+				if (item instanceof ValidatorFailure) {
+					info.setValidationError(item.getMessage());
+					break;
+				}
+    		}
+    		metadata.addToMetadataCache(group.getMetadataID(), "UpdateInfo", info); //$NON-NLS-1$
+    	}
+    	if (info.getValidationError() != null) {
+    		throw new QueryResolverException(info.getValidationError());
+    	}
+    	return info;
 	}
     
     /** 
@@ -223,6 +257,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         // Resolve group so we can tell whether it is an update procedure
         GroupSymbol group = procCommand.getGroup();
         ResolverUtil.resolveGroup(group, metadata);
+        procCommand.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(group, metadata));
     }
 
 	public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List symbols) {

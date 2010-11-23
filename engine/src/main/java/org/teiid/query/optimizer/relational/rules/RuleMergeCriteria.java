@@ -49,6 +49,7 @@ import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
+import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.CompareCriteria;
@@ -535,8 +536,12 @@ public final class RuleMergeCriteria implements OptimizerRule {
 				}
 			}
 		}
-		//TODO: a better check for distinct
-		return distinct || (query.getFrom().getGroups().size() == 1 && NewCalculateCostUtil.usesKey(expressions, metadata));
+		if (distinct) {
+			return true;
+		}
+		HashSet<GroupSymbol> keyPreservingGroups = new HashSet<GroupSymbol>();
+		ResolverUtil.findKeyPreserinvg((FromClause)query.getFrom().getClauses().get(0), keyPreservingGroups, metadata);
+		return NewCalculateCostUtil.usesKey(expressions, keyPreservingGroups, metadata);			
 	}
 
 	private boolean hasCorrelatedReferences(LanguageObject object, SymbolMap correlatedReferences) {

@@ -26,12 +26,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
@@ -50,13 +53,20 @@ import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.optimizer.relational.rules.RuleChooseJoinStrategy;
+import org.teiid.query.optimizer.relational.rules.RuleRaiseAccess;
 import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.FromClause;
+import org.teiid.query.sql.lang.JoinPredicate;
+import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.Limit;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.SubqueryContainer;
+import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.symbol.AbstractCaseExpression;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
@@ -929,6 +939,82 @@ public class ResolverUtil {
 	    
 	    symbol.setOutputDefinition(definition);
 	    symbol.setOutputName(name);
+	}
+	
+	public static void findKeyPreserinvg(FromClause clause, Set<GroupSymbol> keyPreservingGroups, QueryMetadataInterface metadata)
+	throws TeiidComponentException, QueryMetadataException {
+		if (clause instanceof UnaryFromClause) {
+			UnaryFromClause ufc = (UnaryFromClause)clause;
+		    
+			if (!metadata.getUniqueKeysInGroup(ufc.getGroup().getMetadataID()).isEmpty()) {
+				keyPreservingGroups.add(ufc.getGroup());
+			}
+		} 
+		if (clause instanceof JoinPredicate) {
+			JoinPredicate jp = (JoinPredicate)clause;
+			if (jp.getJoinType() == JoinType.JOIN_CROSS || jp.getJoinType() == JoinType.JOIN_FULL_OUTER) {
+				return;
+			}
+			HashSet<GroupSymbol> leftPk = new HashSet<GroupSymbol>();
+			findKeyPreserinvg(jp.getLeftClause(), leftPk, metadata);
+			HashSet<GroupSymbol> rightPk = new HashSet<GroupSymbol>();
+			findKeyPreserinvg(jp.getRightClause(), rightPk, metadata);
+			
+			if (leftPk.isEmpty() && rightPk.isEmpty()) {
+				return;
+			}
+			
+			HashSet<GroupSymbol> leftGroups = new HashSet<GroupSymbol>();
+			HashSet<GroupSymbol> rightGroups = new HashSet<GroupSymbol>();
+			jp.getLeftClause().collectGroups(leftGroups);
+			jp.getRightClause().collectGroups(rightGroups);
+			
+			LinkedList<Expression> leftExpressions = new LinkedList<Expression>();
+			LinkedList<Expression> rightExpressions = new LinkedList<Expression>();
+			RuleChooseJoinStrategy.separateCriteria(leftGroups, rightGroups, leftExpressions, rightExpressions, jp.getJoinCriteria(), new LinkedList<Criteria>());
+		    
+			HashMap<List<GroupSymbol>, List<HashSet<Object>>> crits = new HashMap<List<GroupSymbol>, List<HashSet<Object>>>();
+			
+			for (int i = 0; i < leftExpressions.size(); i++) {
+				Expression lexpr = leftExpressions.get(i);
+				Expression rexpr = rightExpressions.get(i);
+				if (!(lexpr instanceof ElementSymbol) || !(rexpr instanceof ElementSymbol)) {
+					continue;
+				}
+				ElementSymbol les = (ElementSymbol)lexpr;
+				ElementSymbol res = (ElementSymbol)rexpr;
+				List<GroupSymbol> tbls = Arrays.asList(les.getGroupSymbol(), res.getGroupSymbol());
+				List<HashSet<Object>> ids = crits.get(tbls);
+				if (ids == null) {
+					ids = Arrays.asList(new HashSet<Object>(), new HashSet<Object>());
+					crits.put(tbls, ids);
+				}
+				ids.get(0).add(les.getMetadataID());
+				ids.get(1).add(res.getMetadataID());
+			}
+			if (!leftPk.isEmpty() && (jp.getJoinType() == JoinType.JOIN_INNER || jp.getJoinType() == JoinType.JOIN_LEFT_OUTER)) {
+				findKeyPreserving(keyPreservingGroups, leftPk, crits, true, metadata);
+			} 
+			if (!rightPk.isEmpty() && (jp.getJoinType() == JoinType.JOIN_INNER || jp.getJoinType() == JoinType.JOIN_RIGHT_OUTER)) {
+				findKeyPreserving(keyPreservingGroups, rightPk, crits, false, metadata);
+			}
+		}
+	}
+
+	static private void findKeyPreserving(Set<GroupSymbol> keyPreservingGroups,
+		HashSet<GroupSymbol> pk,
+		HashMap<List<GroupSymbol>, List<HashSet<Object>>> crits, boolean left, QueryMetadataInterface metadata)
+		throws TeiidComponentException, QueryMetadataException {
+		for (GroupSymbol gs : pk) {
+			for (Map.Entry<List<GroupSymbol>, List<HashSet<Object>>> entry : crits.entrySet()) {
+				if (!entry.getKey().get(left?0:1).equals(gs)) {
+					continue;
+				}
+				if (RuleRaiseAccess.matchesForeignKey(metadata, entry.getValue().get(left?0:1), entry.getValue().get(left?1:0), gs, false)) {
+					keyPreservingGroups.add(gs);
+				}
+			}
+		}
 	}
     
 }

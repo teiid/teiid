@@ -44,7 +44,7 @@ public class ElementSymbol extends SingleElementSymbol {
     
     private GroupSymbol groupSymbol;
     private Object metadataID;
-	private Class type;
+	private Class<?> type;
     private boolean isExternalReference = false;
         
     private DisplayMode displayMode = DisplayMode.OUTPUT_NAME;
@@ -160,7 +160,7 @@ public class ElementSymbol extends SingleElementSymbol {
 	 * Get the type of the symbol
 	 * @return Type of the symbol, may be null before resolution
 	 */
-	public Class getType() {
+	public Class<?> getType() {
 		return this.type;
 	}	
 	
@@ -168,7 +168,7 @@ public class ElementSymbol extends SingleElementSymbol {
 	 * Set the type of the symbol
 	 * @param type New type
 	 */
-	public void setType(Class type) {
+	public void setType(Class<?> type) {
 		this.type = type;
 	}	
 
@@ -192,7 +192,7 @@ public class ElementSymbol extends SingleElementSymbol {
 	public Object clone() {
 		ElementSymbol copy = new ElementSymbol(getName(), getCanonical());
 		if(getGroupSymbol() != null) { 
-			copy.setGroupSymbol((GroupSymbol) getGroupSymbol().clone());
+			copy.setGroupSymbol(getGroupSymbol().clone());
 		}
 		copy.setMetadataID(getMetadataID());
 		copy.setType(getType());

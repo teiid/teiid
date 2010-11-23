@@ -31,6 +31,7 @@ import java.util.List;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.symbol.Constant;
@@ -250,20 +251,15 @@ public class Insert extends ProcedureContainer {
 	public Object clone() {
 	    GroupSymbol copyGroup = null;
 	    if(group != null) { 
-	    	copyGroup = (GroupSymbol) group.clone();    
+	    	copyGroup = group.clone();    
 	    }
 	    
-	    List copyVars = new LinkedList();
-    	Iterator iter = getVariables().iterator();
-    	while(iter.hasNext()) { 
-    		ElementSymbol element = (ElementSymbol) iter.next();
-    		copyVars.add( element.clone() );    
-    	}    
+	    List<ElementSymbol> copyVars = LanguageObject.Util.deepClone(getVariables(), ElementSymbol.class);
 
         List copyVals = new LinkedList();
 
         if ( getValues() != null && getValues().size() > 0 ) {
-        	iter = getValues().iterator();
+        	Iterator iter = getValues().iterator();
         	while(iter.hasNext()) { 
         		Expression expression = (Expression) iter.next();
         		copyVals.add( expression.clone() );    

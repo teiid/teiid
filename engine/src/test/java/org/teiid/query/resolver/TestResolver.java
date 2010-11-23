@@ -2573,24 +2573,6 @@ public class TestResolver {
         helpResolveException(sql);
     }
                 
-    @Test public void testUpdateError() {
-        String userUpdateStr = "UPDATE vm1.g2 SET e1='x'"; //$NON-NLS-1$
-        
-        helpResolveException(userUpdateStr, metadata, "Error Code:ERR.015.008.0009 Message:Update is not allowed on the virtual group vm1.g2: no Update procedure was defined."); //$NON-NLS-1$
-    }
-    
-    @Test public void testInsertError() {
-        String userUpdateStr = "INSERT into vm1.g2 (e1) values ('x')"; //$NON-NLS-1$
-        
-        helpResolveException(userUpdateStr, metadata, "Error Code:ERR.015.008.0009 Message:Insert is not allowed on the virtual group vm1.g2: no Insert procedure was defined."); //$NON-NLS-1$
-    }
-    
-    @Test public void testDeleteError() {
-        String userUpdateStr = "DELETE from vm1.g2 where e1='x'"; //$NON-NLS-1$
-        
-        helpResolveException(userUpdateStr, metadata, "Error Code:ERR.015.008.0009 Message:Delete is not allowed on the virtual group vm1.g2: no Delete procedure was defined."); //$NON-NLS-1$
-    }
-    
     @Test public void testResolveXMLSelect() {
         String procedure = "CREATE VIRTUAL PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -3064,5 +3046,19 @@ public class TestResolver {
     @Test public void testWithNameMatchesFrom() {
     	helpResolve("with x as (TABLE pm1.g1) SELECT * from (TABLE x) x");
     }
+    
+	// variables cannot be used among insert elements
+    @Test(expected=QueryResolverException.class) public void testCreateUpdateProcedure23() throws Exception {
+        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
+        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
+        procedure = procedure + "Update pm1.g1 SET pm1.g1.e2 =1 , var1 = 2;\n"; //$NON-NLS-1$
+        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
+        procedure = procedure + "END\n"; //$NON-NLS-1$
+
+        String userQuery = "UPDATE vm1.g3 SET x='x' where e3= 1"; //$NON-NLS-1$
+
+        helpResolveUpdateProcedure(procedure, userQuery);
+	}
         
 }

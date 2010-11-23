@@ -178,7 +178,7 @@ public class Delete extends TranslatableProcedureContainer {
 	public Object clone() {
 	    GroupSymbol copyGroup = null;
 	    if(group != null) { 
-	    	copyGroup = (GroupSymbol) group.clone();    
+	    	copyGroup = group.clone();    
 	    }
 	    
 		Criteria copyCrit = null;

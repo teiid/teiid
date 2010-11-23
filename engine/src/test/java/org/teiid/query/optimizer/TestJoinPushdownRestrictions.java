@@ -87,6 +87,19 @@ public class TestJoinPushdownRestrictions {
         		new String[] {"SELECT g_0.e2, g_1.e2 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE g_0.e2 = g_1.e2"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$  
 	}
 	
+	@Test public void testKeyRestriction1() throws Exception {
+		String sql = "select a.e1, b.e1 from pm4.g1 a inner join pm4.g2 b on (a.e1 = b.e1 and a.e2 = b.e2) left outer join pm4.g1 c on (c.e1 = b.e1 and c.e2 = b.e2)"; //$NON-NLS-1$
+
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        caps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, SupportedJoinCriteria.KEY);
+        capFinder.addCapabilities("pm4", caps); //$NON-NLS-1$
+
+        TestOptimizer.helpPlan(sql, FakeMetadataFactory.example4(),  
+        		new String[] {"SELECT g_1.e1 AS c_0, g_1.e2 AS c_1, g_0.e1 AS c_2 FROM pm4.g1 AS g_0, pm4.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_0.e2 = g_1.e2) ORDER BY c_0, c_1", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm4.g1 AS g_0 ORDER BY c_0, c_1"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$   
+	}
+	
 	@Test public void testKeyPasses() throws Exception {
 		String sql = "select a.e1, b.e1 from pm4.g1 a, pm4.g2 b where a.e1 = b.e1 and a.e2 = b.e2"; //$NON-NLS-1$
 

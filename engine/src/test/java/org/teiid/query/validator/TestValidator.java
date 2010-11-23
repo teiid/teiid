@@ -693,25 +693,6 @@ public class TestValidator {
         helpValidate("UPDATE vm1.g1 SET e1=1 WHERE exists (select * from vm1.g1)" , new String[] {"EXISTS (SELECT * FROM vm1.g1)"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    @Test public void testUpdate3() throws Exception {
-        QueryMetadataInterface metadata = exampleMetadata();
-        
-        Command command = QueryParser.getQueryParser().parseCommand("UPDATE test.group SET p1=1"); //$NON-NLS-1$
-
-        // Create external metadata
-        GroupSymbol sqGroup = new GroupSymbol("pm1.sq5"); //$NON-NLS-1$
-        ArrayList sqParams = new ArrayList();
-        ElementSymbol in = new ElementSymbol("pm1.sq5.p1"); //$NON-NLS-1$
-        in.setType(DataTypeManager.DefaultDataClasses.STRING);
-        sqParams.add(in);
-        Map externalMetadata = new HashMap();
-        externalMetadata.put(sqGroup, sqParams);
-        
-        QueryResolver.resolveCommand(command, externalMetadata, metadata, AnalysisRecord.createNonRecordingRecord());
-                
-        helpRunValidator(command, new String[] {"p1"}, metadata); //$NON-NLS-1$
-    }
-
     @Test public void testUpdate4() throws Exception {
         QueryMetadataInterface metadata = exampleMetadata();
 
@@ -1281,36 +1262,6 @@ public class TestValidator {
         String userQuery = "UPDATE vm1.g3 SET x='x' where y= 1"; //$NON-NLS-1$
 
 		helpValidateProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
-	}
-
-	// variables cannot be used among insert elements
-    @Test public void testCreateUpdateProcedure23() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "Update pm1.g1 SET pm1.g1.e2 =1 , var1 = 2;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userQuery = "UPDATE vm1.g3 SET x='x' where e3= 1"; //$NON-NLS-1$
-
-		helpFailProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
-	}
-	
-	// variables cannot be used among insert elements
-    @Test public void testCreateUpdateProcedure24() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "Update pm1.g1 SET pm1.g1.e2 =1 , INPUT.x = 2;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userQuery = "UPDATE vm1.g3 SET x='x' where e3= 1"; //$NON-NLS-1$
-
-		helpFailProcedure(procedure, userQuery, 
 				FakeMetadataObject.Props.UPDATE_PROCEDURE);
 	}
 

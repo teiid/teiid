@@ -224,7 +224,7 @@ public class Update extends TranslatableProcedureContainer {
 		Update copy = new Update();
 		
 	    if(group != null) { 
-	        copy.setGroup((GroupSymbol) group.clone());
+	        copy.setGroup(group.clone());
 	    }
 	    
 	    copy.setChangeList((SetClauseList)this.changeList.clone());

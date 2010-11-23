@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.common.buffer.BufferManager;
@@ -776,7 +777,12 @@ public class NewCalculateCostUtil {
      */
     public static boolean usesKey(Collection<? extends SingleElementSymbol> allElements, QueryMetadataInterface metadata)
         throws QueryMetadataException, TeiidComponentException {
+    	return usesKey(allElements, null, metadata);
+    }
     
+    public static boolean usesKey(Collection<? extends SingleElementSymbol> allElements, Set<GroupSymbol> groups, QueryMetadataInterface metadata)
+    throws QueryMetadataException, TeiidComponentException {
+        
         if(allElements == null || allElements.size() == 0) { 
             return false;
         }    
@@ -790,6 +796,9 @@ public class NewCalculateCostUtil {
         	}
         	ElementSymbol element = (ElementSymbol)ex;
             GroupSymbol group = element.getGroupSymbol();
+            if (groups != null && !groups.contains(group)) {
+            	continue;
+            }
             List<Object> elements = groupMap.get(group);
             if(elements == null) { 
                 elements = new ArrayList<Object>();
@@ -818,7 +827,7 @@ public class NewCalculateCostUtil {
             }                                    
         }
         
-        return false;    
+        return false; 
     }
     
     /**

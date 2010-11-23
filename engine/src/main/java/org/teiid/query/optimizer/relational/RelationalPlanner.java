@@ -165,7 +165,7 @@ public class RelationalPlanner {
 		if (command instanceof QueryCommand) {
 			QueryCommand queryCommand = (QueryCommand)command;
 			final HashSet<String> names = new HashSet<String>();
-			if (queryCommand.getWith() != null && !queryCommand.getWith().isEmpty()) {
+			if (queryCommand.getWith() != null) {
 	        	withList = queryCommand.getWith();
 	        	for (WithQueryCommand with : queryCommand.getWith()) {
 	        		Command subCommand = with.getCommand();
@@ -838,7 +838,7 @@ public class RelationalPlanner {
         	if (queryCommand.getLimit() == null) {
         		queryCommand.setOrderBy(null);
         	}
-        	if (merge && queryCommand.getWith() != null && !queryCommand.getWith().isEmpty()) {
+        	if (merge && queryCommand.getWith() != null) {
         		//TODO: should recontext with and merge
         		merge = false;
         	}

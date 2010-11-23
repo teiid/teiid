@@ -27,6 +27,7 @@ import java.util.Iterator;
 
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.report.ActivityReport;
+import org.teiid.query.sql.LanguageObject;
 
 
 public class ValidatorReport extends ActivityReport {
@@ -73,5 +74,21 @@ public class ValidatorReport extends ActivityReport {
     public String toString() {
         return this.getFailureMessage();
     }
+    
+    public void handleValidationError(String message) {
+        this.addItem(new ValidatorFailure(message));
+    }
+
+    public void handleValidationError(String message, LanguageObject invalidObj) {
+        this.addItem(new ValidatorFailure(message, invalidObj));
+    }
+
+    public void handleValidationError(String message, Collection invalidObjs) {
+        this.addItem(new ValidatorFailure(message, invalidObjs));
+    }
+
+	public void handleValidationWarning(String message) {
+		this.addItem(new ValidatorWarning(message));
+	}
 
 }
