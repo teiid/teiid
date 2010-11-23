@@ -599,12 +599,12 @@
 								description="Name of the model" required="true" readOnly="true" />
 							<c:simple-property name="sourceName"
 								displayName="Source Name" description="Source name for this model"
-								required="false" readOnly="true" />
+								required="true" readOnly="true" />
 							<c:simple-property name="translatorName"
 								displayName="Translator Name" description="Name of the translator"
-								required="false" readOnly="true" />
+								required="true" readOnly="true" />
 							<c:simple-property name="jndiName" displayName="Connection JNDI Name"
-								description="JNDI name for this connection" required="false" />
+								description="JNDI name for this connection" required="true" />
 							<c:simple-property name="visibility"
 								displayName="Visible" description="Visibility of the model"
 								required="true" type="boolean" readOnly="true">
@@ -616,7 +616,7 @@
 						</c:map-property>
 					</c:list-property>
 
-					<c:list-property name="multiSourceModels"
+					<c:list-property name="multiSourceModels" readOnly="true"
 						description="The multi-source model sources for this VDB">
 						<c:map-property name="map" readOnly="false">
 							<c:simple-property name="name" displayName="Name"
@@ -626,9 +626,9 @@
 								readOnly="true" />
 							<c:simple-property name="translatorName"
 								displayName="Translator Name" description="Name of the translator"
-								required="true" />
+								readOnly="true" />
 							<c:simple-property name="jndiName" displayName="Connection JNDI Name"
-								description="JNDI name for this connection" required="false" />
+								description="JNDI name for this connection" required="true" />
 						</c:map-property>
 					</c:list-property>
 

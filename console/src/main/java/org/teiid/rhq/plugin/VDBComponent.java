@@ -66,7 +66,6 @@ import org.rhq.core.pluginapi.configuration.ConfigurationUpdateReport;
 import org.rhq.core.pluginapi.inventory.CreateResourceReport;
 import org.rhq.core.pluginapi.inventory.ResourceContext;
 import org.rhq.plugins.jbossas5.connection.ProfileServiceConnection;
-import org.teiid.adminapi.impl.PropertyMetadata;
 import org.teiid.rhq.admin.DQPManagementView;
 import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
@@ -121,12 +120,15 @@ public class VDBComponent extends Facet {
 			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(
 					Operation.Value.SESSION_ID).getLongValue());
 		} else if (name.equals(VDB.Operations.RELOAD_MATVIEW)) {
-			valueMap.put(Operation.Value.MATVIEW_SCHEMA, configuration.getSimple(
-					Operation.Value.MATVIEW_SCHEMA).getStringValue());
-			valueMap.put(Operation.Value.MATVIEW_TABLE, configuration.getSimple(
-					Operation.Value.MATVIEW_TABLE).getStringValue());
-			valueMap.put(Operation.Value.INVALIDATE_MATVIEW, configuration.getSimple(
-					Operation.Value.INVALIDATE_MATVIEW).getBooleanValue());
+			valueMap
+					.put(Operation.Value.MATVIEW_SCHEMA, configuration
+							.getSimple(Operation.Value.MATVIEW_SCHEMA)
+							.getStringValue());
+			valueMap.put(Operation.Value.MATVIEW_TABLE, configuration
+					.getSimple(Operation.Value.MATVIEW_TABLE).getStringValue());
+			valueMap.put(Operation.Value.INVALIDATE_MATVIEW, configuration
+					.getSimple(Operation.Value.INVALIDATE_MATVIEW)
+					.getBooleanValue());
 		}
 	}
 
@@ -273,8 +275,6 @@ public class VDBComponent extends Facet {
 			managementView = getConnection().getManagementView();
 			managedComponent = managementView.getComponent(this.name,
 					componentType);
-			ManagedProperty mp = managedComponent.getProperty("models");//$NON-NLS-1$
-			List<ManagedObject> modelsMp = (List<ManagedObject>) mp.getValue();
 			modelsMetaValue = (CollectionValueSupport) managedComponent
 					.getProperty("models").getValue();
 			GenericValue[] models = (GenericValue[]) modelsMetaValue
@@ -297,35 +297,53 @@ public class VDBComponent extends Facet {
 							.get("sourceName")).getStringValue(); //$NON-NLS-1$
 					if (sourceName.equals("See below"))
 						continue; // This is a multisource model which we will
-					// handle separately
+									// handle separately
 					String modelName = ((PropertySimple) model.get("name")) //$NON-NLS-1$
 							.getStringValue();
 					String dsName = ((PropertySimple) model.get("jndiName")) //$NON-NLS-1$
 							.getStringValue();
 
 					ManagedObject managedModel = null;
-					if (models != null && !modelsMp.isEmpty()) {
-						for (ManagedObject mo : modelsMp) {
+					if (models != null && models.length != 0) {
+						for (GenericValue genValue : models) {
+							ManagedObject mo = (ManagedObject) ((GenericValueSupport) genValue)
+									.getValue();
 							String name = ProfileServiceUtil.getSimpleValue(mo,
 									"name", String.class); //$NON-NLS-1$
 							if (modelName.equals(name)) {
 								managedModel = mo;
+								break;
 							}
 						}
 					}
-					ManagedProperty sourceMappings = managedModel
-							.getProperty("sourceMappings");//$NON-NLS-1$
-					if (sourceMappings != null) {
-						List<ManagedObject> mappings = (List<ManagedObject>) sourceMappings.getValue();
-						for (ManagedObject mo : mappings) {
-							String sName = ProfileServiceUtil.getSimpleValue(
-									mo, "name", String.class);//$NON-NLS-1$
-							if (sName.equals(sourceName)) {
-								// set the jndi name for the ds.
-								ManagedProperty jndiProperty = mo
-										.getProperty("connectionJndiName"); //$NON-NLS-1$
-								jndiProperty.setValue(ProfileServiceUtil.wrap(
-										SimpleMetaType.STRING, dsName));
+
+					ManagedProperty sourceMappings = null;
+					if (managedModel != null) {
+
+						sourceMappings = managedModel
+								.getProperty("sourceMappings");//$NON-NLS-1$
+
+						if (sourceMappings != null) {
+							CollectionValueSupport mappings = (CollectionValueSupport) sourceMappings
+									.getValue();
+							GenericValue[] mappingsArray = (GenericValue[]) mappings
+									.getElements();
+							for (GenericValue sourceGenValue : mappingsArray) {
+								ManagedObject sourceMo = (ManagedObject) ((GenericValueSupport) sourceGenValue)
+										.getValue();
+								String sName = ProfileServiceUtil
+										.getSimpleValue(sourceMo,
+												"name", String.class);//$NON-NLS-1$
+								if (sName.equals(sourceName)) {
+									// set the jndi name for the ds.
+									ManagedProperty jndiProperty = sourceMo
+											.getProperty("connectionJndiName"); //$NON-NLS-1$
+									jndiProperty
+											.setValue(ProfileServiceUtil.wrap(
+													SimpleMetaType.STRING,
+													dsName));
+									break;
+								}
 							}
 						}
 					}
@@ -608,10 +626,15 @@ public class VDBComponent extends Facet {
 			ManagedProperty properties = managedObject.getProperty("property");
 
 			if (properties != null) {
-				CollectionValueSupport props = (CollectionValueSupport) properties.getValue();
+				CollectionValueSupport props = (CollectionValueSupport) properties
+						.getValue();
 				for (MetaValue propertyMetaData : props) {
-					String propertyName = ProfileServiceUtil.stringValue(((CompositeValueSupport)propertyMetaData).get("name"));
-					String propertyValue = ProfileServiceUtil.stringValue(((CompositeValueSupport)propertyMetaData).get("value"));
+					String propertyName = ProfileServiceUtil
+							.stringValue(((CompositeValueSupport) propertyMetaData)
+									.get("name"));
+					String propertyValue = ProfileServiceUtil
+							.stringValue(((CompositeValueSupport) propertyMetaData)
+									.get("value"));
 					PropertyMap translatorMap = null;
 
 					translatorMap = new PropertyMap("translatorMap",
