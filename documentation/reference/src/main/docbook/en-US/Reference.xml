@@ -51,6 +51,7 @@
   <xi:include href="content/xml_queries.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="content/datatypes.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="content/scalar_functions.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="content/updatable_views.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="content/procedures.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="content/transaction_support.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="content/dataroles.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
