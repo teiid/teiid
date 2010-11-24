@@ -74,7 +74,8 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 			if (expression instanceof ColumnReference) {
 				Column element = ((ColumnReference) expression).getMetadataObject();
 				selectSymbolIndexToElement.put(index, element);
-				selectSymbolNameToIndex .put(element.getNameInSource(), index);
+				String qualifiedName = element.getParent().getNameInSource() + ':' + element.getNameInSource();
+				selectSymbolNameToIndex .put(qualifiedName, index);
 				String nameInSource = element.getNameInSource();
 				if (null == nameInSource || nameInSource.length() == 0) {
 					exceptions.add(new TranslatorException("name in source is null or empty for column "+ symbol.toString()));
@@ -180,6 +181,10 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 			result = selectSymbolIndexToElement.get(index);
 		} 
 		return result; 
+	}
+	
+	public Integer getSelectSymbolIndex(String name) {
+		return selectSymbolNameToIndex.get(name);
 	}
 	
 	/**
