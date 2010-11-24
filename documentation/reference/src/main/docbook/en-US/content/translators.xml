@@ -247,6 +247,16 @@
                 </listitem>
                 <listitem>
                     <para>
+                    <emphasis>modeshape</emphasis> - for use with Modeshape 2.2.1 or later. The PATH, NAME, LOCALNODENAME, DEPTH, and SCORE functions should be accessed as pseudo-columns, e.g. "nt:base"."jcr:path". 
+                    Teiid UFDs (prefixed by JCR_) are available for CONTIANS, ISCHILDNODE, ISDESCENDENT, ISSAMENODE, REFERENCE - see the JCRFunctions.xmi.  
+                    If a selector name is needed in a JCR function, you should use the pseudo-column "jcr:path", e.g. JCR_ISCHILDNODE(foo.jcr_path, 'x/y') would become ISCHILDNODE(foo, 'x/y') in the ModeShape query.
+                    An additional pseudo-column "mode:properties" should be imported by setting the ModeShape JDBC connection property teiidsupport=true.  
+                    The column "mode:properties" should be used by the JCR_REFERENCE and other 
+                    functions that expect a .* selector name, e.g. JCR_REFERENCE(nt_base.jcr_properties) would become REFERENCE("nt:base".*) in the ModeShape query.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
                     <emphasis>mysql</emphasis>/<emphasis>mysql5</emphasis> - for use with 
                     MySQL version 4.x and 5 or later respectively.  
                     </para>
