@@ -61,13 +61,13 @@ public class TestModeShapeSqlTranslator {
     	Schema modeshape = RealMetadataFactory.createPhysicalModel("modeshape", store);
     	Table nt_base = RealMetadataFactory.createPhysicalGroup("nt_base", modeshape);
     	nt_base.setNameInSource("\"nt:base\"");
-		List<Column> cols = RealMetadataFactory.createElements(nt_base, new String[] { "mode_path",
+		List<Column> cols = RealMetadataFactory.createElements(nt_base, new String[] { "jcr_path",
 				"mode_properties", "jcr_primaryType", "prop" }, new String[] {
 				TypeFacility.RUNTIME_NAMES.STRING,
 				TypeFacility.RUNTIME_NAMES.STRING,
 				TypeFacility.RUNTIME_NAMES.STRING,
 				TypeFacility.RUNTIME_NAMES.STRING });
-		cols.get(0).setNameInSource("\"mode:path\"");
+		cols.get(0).setNameInSource("\"jcr:path\"");
 		cols.get(1).setNameInSource("\"mode:properties\"");
 		cols.get(2).setNameInSource("\"jcr:primaryType\"");
     	return RealMetadataFactory.createTransformationMetadata(store, "modeshape");
@@ -81,7 +81,7 @@ public class TestModeShapeSqlTranslator {
 	@Test
 	public void testSelectAllFromBase() throws Exception {
 		String input = "select * from nt_base"; //$NON-NLS-1$
-		String output = "SELECT g_0.\"mode:path\", g_0.\"mode:properties\", g_0.\"jcr:primaryType\", g_0.prop FROM \"nt:base\" AS g_0"; //$NON-NLS-1$
+		String output = "SELECT g_0.\"jcr:path\", g_0.\"mode:properties\", g_0.\"jcr:primaryType\", g_0.prop FROM \"nt:base\" AS g_0"; //$NON-NLS-1$
 
 		helpTestVisitor(input, output);
 
@@ -90,7 +90,7 @@ public class TestModeShapeSqlTranslator {
 	@Test
 	public void testPredicate() throws Exception {
 
-		String input = "SELECT x.jcr_primaryType from nt_base inner join nt_base as x on jcr_issamenode(nt_base.mode_path, x.mode_path) = true where jcr_isdescendantnode(nt_base.mode_path, 'x/y/z') = true and jcr_reference(nt_base.mode_properties) = 'x'"; //$NON-NLS-1$
+		String input = "SELECT x.jcr_primaryType from nt_base inner join nt_base as x on jcr_issamenode(nt_base.jcr_path, x.jcr_path) = true where jcr_isdescendantnode(nt_base.jcr_path, 'x/y/z') = true and jcr_reference(nt_base.mode_properties) = 'x'"; //$NON-NLS-1$
 		String output = "SELECT g_1.\"jcr:primaryType\" FROM \"nt:base\" AS g_0 INNER JOIN \"nt:base\" AS g_1 ON issamenode(g_0, g_1) WHERE isdescendantnode(g_0, 'x/y/z') AND reference(g_0.*) = 'x'"; //$NON-NLS-1$
 
 		helpTestVisitor(input, output);
