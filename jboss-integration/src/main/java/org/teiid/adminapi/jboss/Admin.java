@@ -329,6 +329,17 @@ public class Admin implements org.teiid.adminapi.Admin, Serializable {
 	}
 	
 	@Override
+	public void clearCache(String cacheType, String vdbName, int version) throws AdminException{
+		try {
+			ManagedComponent mc = getView().getComponent(DQPNAME, DQPTYPE);	
+			ManagedUtil.executeOperation(mc, "clearCache", SimpleValueSupport.wrap(cacheType), //$NON-NLS-1$
+					SimpleValueSupport.wrap(vdbName), SimpleValueSupport.wrap(version));
+		} catch (Exception e) {
+			throw new AdminComponentException(e.getMessage(), e);
+		} 		
+	}
+	
+	@Override
 	public Collection<Transaction> getTransactions() throws AdminException {
 		try {
 			Collection<Transaction> txnList = new ArrayList<Transaction>();

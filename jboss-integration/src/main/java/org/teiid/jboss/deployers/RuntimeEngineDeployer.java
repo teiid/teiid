@@ -426,6 +426,12 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	}
 	
 	@Override
+	@ManagementOperation(description="Clear the caches in the system for a VDB", params={@ManagementParameter(name="cacheType",description="Type of Cache"), @ManagementParameter(name="vdbName",description="VDB Name"),@ManagementParameter(name="version",description="VDB Version")}, impact=Impact.ReadOnly)
+	public void clearCache(String cacheType, String vdbName, int version) {
+		this.dqpCore.clearCache(cacheType, vdbName, version);
+	}	
+	
+	@Override
 	@ManagementOperation(description="Get the cache statistics", impact=Impact.ReadOnly)
 	public CacheStatisticsMetadata getCacheStatistics(String cacheType) {
 		return this.dqpCore.getCacheStatistics(cacheType);

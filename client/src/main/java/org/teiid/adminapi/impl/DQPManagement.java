@@ -35,6 +35,7 @@ public interface DQPManagement {
     boolean cancelRequest(String sessionId, long requestId) throws AdminException;
     Collection<String> getCacheTypes();
     void clearCache(String cacheType);
+    void clearCache(String cacheType, String vdbName, int version);
     Collection<SessionMetadata> getActiveSessions() throws AdminException;
     int getActiveSessionsCount() throws AdminException;
     Collection<org.teiid.adminapi.Transaction> getTransactions();
