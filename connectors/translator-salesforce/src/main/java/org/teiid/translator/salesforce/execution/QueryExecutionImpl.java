@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.resource.ResourceException;
-import javax.xml.namespace.QName;
 
 import org.teiid.language.AggregateFunction;
 import org.teiid.language.Join;
@@ -56,11 +55,21 @@ import org.teiid.translator.salesforce.Util;
 import org.teiid.translator.salesforce.execution.visitors.JoinQueryVisitor;
 import org.teiid.translator.salesforce.execution.visitors.SelectVisitor;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
 
 public class QueryExecutionImpl implements ResultSetExecution {
+
+	private static final String SF_ID = "sf:Id";
+
+	private static final String SF_TYPE = "sf:type";
+
+	private static final String SF_S_OBJECT = "sf:sObject";
+
+	private static final String XSI_TYPE = "xsi:type";
 
 	private SalesforceConnection connection;
 
@@ -123,7 +132,6 @@ public class QueryExecutionImpl implements ResultSetExecution {
 				visitor.visitNode(query);
 				finalQuery = visitor.getQuery().trim();
 				LogManager.logDetail(LogConstants.CTX_CONNECTOR, getLogPreamble(), "Executing Query:", finalQuery); //$NON-NLS-1$
-				
 				results = connection.query(finalQuery, this.context.getBatchSize(), visitor.getQueryAll());
 			} else {
 				visitor = new SelectVisitor(metadata);
@@ -202,25 +210,75 @@ public class QueryExecutionImpl implements ResultSetExecution {
 			List<Object> topFields = sObject.getAny();
 			logAndMapFields(sObject.getType(), topFields);
 			List<Object[]> result = new ArrayList<Object[]>();
-			for(int i = 0; i < topFields.size(); i++) {
-				Element element = (Element) topFields.get(i);
-				QName qName = new QName(element.getNamespaceURI(), element.getLocalName());
-				if(null != qName) {
-					String type = qName.getLocalPart();
-					if(type.equals("sObject")) { //$NON-NLS-1$
-						//SObject parent = (SObject)element.;
-						//result.addAll(getObjectData(parent));
-					} else if(type.equals("QueryResult")) { //$NON-NLS-1$
-						//QueryResult subResult = (QueryResult)element.getValue();
-						//for(int resultIndex = 0; resultIndex < subResult.getSize(); resultIndex++) {
-						//	SObject subObject = subResult.getRecords().get(resultIndex);
-						//	result.addAll(getObjectData(subObject));
-						//}
-					}
+			if(visitor instanceof JoinQueryVisitor) {
+				for(int i = 0; i < topFields.size(); i++) {
+					Element element = (Element) topFields.get(i);
+					extactJoinResults(element, result);
 				}
 			}
 			return extractDataFromFields(sObject, topFields, result);
-			
+
+		}
+
+		private void extactJoinResults(Element node, List<Object[]> result) throws TranslatorException {
+			if(isSObject(node)) {
+				extractValuesFromElement(node, result);
+			} else {
+				NodeList children = node.getChildNodes();
+				if(null != children && children.getLength() > 0) {
+					for( int i = 0; i < children.getLength(); i++) {
+						Node item = children.item(i);
+						if(item instanceof Element) {
+							Element childElement = (Element)item;
+							if(isSObject(childElement)) {
+								extractValuesFromElement(childElement, result);
+							} else if(item.getChildNodes().getLength() > 0) {
+								extactJoinResults(childElement, result);
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		private List<Object[]> extractValuesFromElement(Element sObject,
+				List<Object[]> result) throws TranslatorException {
+			Element typeElement = (Element) sObject.getElementsByTagName(SF_TYPE).item(0);
+			String sObjectName = typeElement.getFirstChild().getNodeValue();
+			Object[] row = new Object[visitor.getSelectSymbolCount()];
+			for (int j = 0; j < visitor.getSelectSymbolCount(); j++) {
+				Column element = visitor.getSelectSymbolMetadata(j);
+				AbstractMetadataRecord parent = element.getParent();
+				Table table;
+				if(parent instanceof Table) {
+					table = (Table)parent;
+				} else {
+					parent = parent.getParent();
+					if(parent instanceof Table) {
+						table = (Table)parent;
+					} else {
+						throw new TranslatorException("Could not resolve Table for column " + element.getName()); //$NON-NLS-1$
+					}
+				}
+				if(table.getNameInSource().equals(sObjectName)) {
+					Integer index = visitor.getSelectSymbolIndex(sObjectName + ':' + element.getNameInSource());
+					// id gets dropped from the result if it is not the
+					// first field in the querystring. Add it back in.
+					if (null == index) {
+						if (element.getNameInSource().equalsIgnoreCase("id")) { //$NON-NLS-1$
+							setElementValueInColumn(j, sObject.getElementsByTagName(SF_ID), row);
+						} else {
+							throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.missing.field")+ element.getNameInSource()); //$NON-NLS-1$
+						}
+					} else {
+						Object cell;
+						cell = sObject.getElementsByTagName("sf:" + element.getNameInSource()).item(0);
+						setElementValueInColumn(j, cell, row);
+					}
+				}
+			}
+			result.add(row);
+			return result;
 		}
 
 		private List<Object[]> extractDataFromFields(SObject sObject,
@@ -260,6 +318,14 @@ public class QueryExecutionImpl implements ResultSetExecution {
 			return result;
 	}
 		
+	private void setElementValueInColumn(int columnIndex, Object value, Object[] row) {
+			if(value instanceof Element) {
+				row[columnIndex] = ((Element)value).getFirstChild().getNodeValue();
+			} else {
+				row[columnIndex] = value;
+			}
+	}
+
 	private void setValueInColumn(int columnIndex, Object value, List<Object[]> result) {
 		if(result.isEmpty()) {
 			Object[] row = new Object[visitor.getSelectSymbolCount()];
@@ -271,7 +337,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 			row[columnIndex] = value;
 		}	
 	}
-
+	
 	/**
 	 * Load the map of response field names to index.
 	 * @param fields
@@ -353,7 +419,11 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		}
 		return result;
 	}
-
+	
+	private boolean isSObject(Element element) {
+		String type = element.getAttribute(XSI_TYPE);
+		return type != null && type.equals(SF_S_OBJECT);	
+	}
 
 	private String getLogPreamble() {
 		if (null == logPreamble) {
