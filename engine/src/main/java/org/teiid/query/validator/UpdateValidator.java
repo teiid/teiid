@@ -35,7 +35,6 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.FromClause;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -233,9 +232,7 @@ public class UpdateValidator {
     	List<GroupSymbol> allGroups = query.getFrom().getGroups();
     	HashSet<GroupSymbol> keyPreservingGroups = new HashSet<GroupSymbol>();
     	
-    	if (query.getFrom().getClauses().size() == 1) {
-    		ResolverUtil.findKeyPreserinvg((FromClause)query.getFrom().getClauses().get(0), keyPreservingGroups, metadata);
-    	}
+		ResolverUtil.findKeyPreserved(query, keyPreservingGroups, metadata);
     	
 		for (GroupSymbol groupSymbol : keyPreservingGroups) {
 			setUpdateFlags(groupSymbol);

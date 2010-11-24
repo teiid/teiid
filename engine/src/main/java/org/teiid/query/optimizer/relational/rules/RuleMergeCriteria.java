@@ -540,7 +540,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 			return true;
 		}
 		HashSet<GroupSymbol> keyPreservingGroups = new HashSet<GroupSymbol>();
-		ResolverUtil.findKeyPreserinvg((FromClause)query.getFrom().getClauses().get(0), keyPreservingGroups, metadata);
+		ResolverUtil.findKeyPreserved(query, keyPreservingGroups, metadata);
 		return NewCalculateCostUtil.usesKey(expressions, keyPreservingGroups, metadata);			
 	}
 

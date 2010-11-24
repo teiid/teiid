@@ -50,7 +50,7 @@
 		
 		<para>A key-preserved table has a primary or unique key that would remain unique if it were projected into the result of the query.  
 		Note that it is not actually required for a view to reference the key columns in the SELECT clause.  
-		The query engine can detect a key preserved table by analyzing the join structure - which is currently required to be in ANSI join form.  
+		The query engine can detect a key preserved table by analyzing the join structure.  
 		The engine will ensure that a join of a key-preserved table must be against one of its foreign keys.</para>		
 	</section>
 	

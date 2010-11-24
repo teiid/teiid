@@ -230,6 +230,11 @@ public class TestUpdateValidator {
         helpTest("SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2",
             example1(), true);
     }
+    
+    @Test public void testCreateInsertCommand14(){
+        helpTest("SELECT pm1.g2.e1 FROM pm1.g1, pm1.g2 where g1.e1 = g2.e1",
+            example1(), false);
+    }
 
     @Test public void testCreateInsertCommand2_fail(){
         helpTest("SELECT CONCAT(pm1.g1.e1, convert(pm1.g2.e1, string)) as x FROM pm1.g1, pm1.g2",

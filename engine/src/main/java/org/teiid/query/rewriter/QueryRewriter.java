@@ -688,7 +688,7 @@ public class QueryRewriter {
 			if (query.getFrom().getClauses().size() > 1) {
 				continue;
 			}
-			ResolverUtil.findKeyPreserinvg((FromClause)query.getFrom().getClauses().get(0), keyPreservingGroups, metadata);
+			ResolverUtil.findKeyPreserved(query, keyPreservingGroups, metadata);
 			if (!NewCalculateCostUtil.usesKey(plannedResult.leftExpressions, keyPreservingGroups, metadata)) {
 				continue;
 			}

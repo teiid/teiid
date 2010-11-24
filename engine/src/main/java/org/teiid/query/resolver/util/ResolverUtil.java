@@ -56,6 +56,7 @@ import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.relational.rules.RuleChooseJoinStrategy;
 import org.teiid.query.optimizer.relational.rules.RuleRaiseAccess;
 import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.FromClause;
 import org.teiid.query.sql.lang.JoinPredicate;
@@ -941,7 +942,66 @@ public class ResolverUtil {
 	    symbol.setOutputName(name);
 	}
 	
-	public static void findKeyPreserinvg(FromClause clause, Set<GroupSymbol> keyPreservingGroups, QueryMetadataInterface metadata)
+	public static void findKeyPreserved(Query query, Set<GroupSymbol> keyPreservingGroups, QueryMetadataInterface metadata)
+	throws TeiidComponentException, QueryMetadataException {
+		if (query.getFrom() == null) {
+			return;
+		}
+		if (query.getFrom().getClauses().size() == 1) {
+			findKeyPreserved((FromClause)query.getFrom().getClauses().get(0), keyPreservingGroups, metadata);
+			return;
+		}
+		//non-ansi join
+		Set<GroupSymbol> groups = new HashSet<GroupSymbol>(query.getFrom().getGroups());
+		for (GroupSymbol groupSymbol : groups) {
+			if (metadata.getUniqueKeysInGroup(groupSymbol.getMetadataID()).isEmpty()) {
+				return;
+			}
+		}
+		LinkedList<Expression> leftExpressions = new LinkedList<Expression>();
+		LinkedList<Expression> rightExpressions = new LinkedList<Expression>();
+		for (Criteria crit : Criteria.separateCriteriaByAnd(query.getCriteria())) {
+			if (!(crit instanceof CompareCriteria)) {
+				continue;
+			}
+			CompareCriteria cc = (CompareCriteria)crit;
+			if (cc.getOperator() != CompareCriteria.EQ) {
+				continue;
+			}
+			if (cc.getLeftExpression() instanceof ElementSymbol && cc.getRightExpression() instanceof ElementSymbol) {
+				ElementSymbol left = (ElementSymbol)cc.getLeftExpression();
+				ElementSymbol right = (ElementSymbol)cc.getRightExpression();
+				int compare = left.getGroupSymbol().compareTo(right.getGroupSymbol());
+				if (compare > 0) {
+					leftExpressions.add(left);
+					rightExpressions.add(right);
+				} else if (compare != 0) {
+					leftExpressions.add(right);
+					rightExpressions.add(left);
+				}
+			}
+		}
+		HashMap<List<GroupSymbol>, List<HashSet<Object>>> crits = createGroupMap(leftExpressions, rightExpressions);
+		HashSet<GroupSymbol> tempSet = new HashSet<GroupSymbol>();
+		for (GroupSymbol group : groups) {
+			LinkedHashSet<GroupSymbol> visited = new LinkedHashSet<GroupSymbol>();
+			LinkedList<GroupSymbol> toVisit = new LinkedList<GroupSymbol>();
+			toVisit.add(group);
+			while (!toVisit.isEmpty()) {
+				GroupSymbol visiting = toVisit.removeLast();
+				if (!visited.add(visiting)) {
+					continue;
+				}
+				toVisit.addAll(findKeyPreserved(tempSet, Collections.singleton(visiting), crits, true, metadata, groups));
+				toVisit.addAll(findKeyPreserved(tempSet, Collections.singleton(visiting), crits, false, metadata, groups));
+			}
+			if (visited.containsAll(groups)) {
+				keyPreservingGroups.add(group);
+			}
+		}
+	}
+		
+	public static void findKeyPreserved(FromClause clause, Set<GroupSymbol> keyPreservingGroups, QueryMetadataInterface metadata)
 	throws TeiidComponentException, QueryMetadataException {
 		if (clause instanceof UnaryFromClause) {
 			UnaryFromClause ufc = (UnaryFromClause)clause;
@@ -956,9 +1016,9 @@ public class ResolverUtil {
 				return;
 			}
 			HashSet<GroupSymbol> leftPk = new HashSet<GroupSymbol>();
-			findKeyPreserinvg(jp.getLeftClause(), leftPk, metadata);
+			findKeyPreserved(jp.getLeftClause(), leftPk, metadata);
 			HashSet<GroupSymbol> rightPk = new HashSet<GroupSymbol>();
-			findKeyPreserinvg(jp.getRightClause(), rightPk, metadata);
+			findKeyPreserved(jp.getRightClause(), rightPk, metadata);
 			
 			if (leftPk.isEmpty() && rightPk.isEmpty()) {
 				return;
@@ -973,48 +1033,58 @@ public class ResolverUtil {
 			LinkedList<Expression> rightExpressions = new LinkedList<Expression>();
 			RuleChooseJoinStrategy.separateCriteria(leftGroups, rightGroups, leftExpressions, rightExpressions, jp.getJoinCriteria(), new LinkedList<Criteria>());
 		    
-			HashMap<List<GroupSymbol>, List<HashSet<Object>>> crits = new HashMap<List<GroupSymbol>, List<HashSet<Object>>>();
-			
-			for (int i = 0; i < leftExpressions.size(); i++) {
-				Expression lexpr = leftExpressions.get(i);
-				Expression rexpr = rightExpressions.get(i);
-				if (!(lexpr instanceof ElementSymbol) || !(rexpr instanceof ElementSymbol)) {
-					continue;
-				}
-				ElementSymbol les = (ElementSymbol)lexpr;
-				ElementSymbol res = (ElementSymbol)rexpr;
-				List<GroupSymbol> tbls = Arrays.asList(les.getGroupSymbol(), res.getGroupSymbol());
-				List<HashSet<Object>> ids = crits.get(tbls);
-				if (ids == null) {
-					ids = Arrays.asList(new HashSet<Object>(), new HashSet<Object>());
-					crits.put(tbls, ids);
-				}
-				ids.get(0).add(les.getMetadataID());
-				ids.get(1).add(res.getMetadataID());
-			}
+			HashMap<List<GroupSymbol>, List<HashSet<Object>>> crits = createGroupMap(leftExpressions, rightExpressions);
 			if (!leftPk.isEmpty() && (jp.getJoinType() == JoinType.JOIN_INNER || jp.getJoinType() == JoinType.JOIN_LEFT_OUTER)) {
-				findKeyPreserving(keyPreservingGroups, leftPk, crits, true, metadata);
+				findKeyPreserved(keyPreservingGroups, leftPk, crits, true, metadata, rightPk);
 			} 
 			if (!rightPk.isEmpty() && (jp.getJoinType() == JoinType.JOIN_INNER || jp.getJoinType() == JoinType.JOIN_RIGHT_OUTER)) {
-				findKeyPreserving(keyPreservingGroups, rightPk, crits, false, metadata);
+				findKeyPreserved(keyPreservingGroups, rightPk, crits, false, metadata, leftPk);
 			}
 		}
 	}
 
-	static private void findKeyPreserving(Set<GroupSymbol> keyPreservingGroups,
-		HashSet<GroupSymbol> pk,
-		HashMap<List<GroupSymbol>, List<HashSet<Object>>> crits, boolean left, QueryMetadataInterface metadata)
+	private static HashMap<List<GroupSymbol>, List<HashSet<Object>>> createGroupMap(
+			LinkedList<Expression> leftExpressions,
+			LinkedList<Expression> rightExpressions) {
+		HashMap<List<GroupSymbol>, List<HashSet<Object>>> crits = new HashMap<List<GroupSymbol>, List<HashSet<Object>>>();
+		
+		for (int i = 0; i < leftExpressions.size(); i++) {
+			Expression lexpr = leftExpressions.get(i);
+			Expression rexpr = rightExpressions.get(i);
+			if (!(lexpr instanceof ElementSymbol) || !(rexpr instanceof ElementSymbol)) {
+				continue;
+			}
+			ElementSymbol les = (ElementSymbol)lexpr;
+			ElementSymbol res = (ElementSymbol)rexpr;
+			List<GroupSymbol> tbls = Arrays.asList(les.getGroupSymbol(), res.getGroupSymbol());
+			List<HashSet<Object>> ids = crits.get(tbls);
+			if (ids == null) {
+				ids = Arrays.asList(new HashSet<Object>(), new HashSet<Object>());
+				crits.put(tbls, ids);
+			}
+			ids.get(0).add(les.getMetadataID());
+			ids.get(1).add(res.getMetadataID());
+		}
+		return crits;
+	}
+
+	static private HashSet<GroupSymbol> findKeyPreserved(Set<GroupSymbol> keyPreservingGroups,
+		Set<GroupSymbol> pk,
+		HashMap<List<GroupSymbol>, List<HashSet<Object>>> crits, boolean left, QueryMetadataInterface metadata, Set<GroupSymbol> otherGroups)
 		throws TeiidComponentException, QueryMetadataException {
+		HashSet<GroupSymbol> result = new HashSet<GroupSymbol>();
 		for (GroupSymbol gs : pk) {
 			for (Map.Entry<List<GroupSymbol>, List<HashSet<Object>>> entry : crits.entrySet()) {
-				if (!entry.getKey().get(left?0:1).equals(gs)) {
+				if (!entry.getKey().get(left?0:1).equals(gs) || !otherGroups.contains(entry.getKey().get(left?1:0))) {
 					continue;
 				}
 				if (RuleRaiseAccess.matchesForeignKey(metadata, entry.getValue().get(left?0:1), entry.getValue().get(left?1:0), gs, false)) {
 					keyPreservingGroups.add(gs);
+					result.add(entry.getKey().get(left?1:0));
 				}
 			}
 		}
+		return result;
 	}
     
 }
