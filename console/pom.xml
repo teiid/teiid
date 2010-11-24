@@ -160,34 +160,6 @@
 
 	<build>
 		<outputDirectory>target/classes</outputDirectory>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-dependency-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>copy</id>
-						<phase>clean</phase>
-						<goals>
-							<goal>copy</goal>
-						</goals>
-						<configuration>
-							<artifactItems>
-								<artifactItem>
-									<groupId>org.jboss.teiid</groupId>
-									<artifactId>teiid-client</artifactId>
-									<version>${project.version}</version>
-									<type>jar</type>
-									<overWrite>true</overWrite>
-								</artifactItem>
-							</artifactItems>
-							<outputDirectory>src/main/resources/lib</outputDirectory>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
@@ -195,7 +167,6 @@
 				<includes>
 					<include>**/*.xml</include>
 					<include>**/*.properties</include>
-					<include>**/teiid*client*.jar</include>
 				</includes>
 			</resource>
 		</resources>
