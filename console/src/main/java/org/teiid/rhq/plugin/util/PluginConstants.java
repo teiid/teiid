@@ -98,6 +98,7 @@ public interface PluginConstants {
 			public static interface Operations {
 
 				public final static String GET_QUERIES = "listQueries"; //$NON-NLS-1$	
+				public final static String CLEAR_CACHE = "clearCache"; //$NON-NLS-1$	
 				public final static String EXECUTE_QUERIES = "executeQuery"; //$NON-NLS-1$
 				public final static String GET_LONGRUNNINGQUERIES = "getLongRunningRequests"; //$NON-NLS-1$
 				public final static String KILL_REQUEST = "cancelRequest"; //$NON-NLS-1$
@@ -253,6 +254,7 @@ public interface PluginConstants {
 			public final static String MATVIEW_SCHEMA = "schema"; //$NON-NLS-1$
 			public final static String MATVIEW_TABLE = "table"; //$NON-NLS-1$
 			public final static String INVALIDATE_MATVIEW = "invalidate"; //$NON-NLS-1$
+			public final static String CACHE_TYPE = "cacheType"; //$NON-NLS-1$
 
 		}
 

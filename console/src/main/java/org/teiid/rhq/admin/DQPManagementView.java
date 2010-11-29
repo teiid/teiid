@@ -274,6 +274,20 @@ public class DQPManagementView implements PluginConstants {
 			MetaValue resultsMetaValue = executeMaterializedViewQuery(	connection, vdbName, Integer.parseInt(vdbVersion));
 			getResultsCollectionValue(resultsMetaValue, sqlResultsObject);
 			operationResult.setContent(createReportResultListForMatViewQuery(fieldNameList, sqlResultsObject.iterator()));
+		} else if (operationName.equals(VDB.Operations.CLEAR_CACHE)) {
+			
+			try {
+			executeClearCache(	connection, vdbName, Integer.parseInt(vdbVersion), 
+					(String) valueMap.get(Operation.Value.CACHE_TYPE));
+				
+			}catch(Exception e){
+				//Some failure during Clear Cache. Set message here since it has already been logged.
+				operationResult.setContent("failure - see log for details"); //$NON-NLS-1$
+			}
+
+			//If no exceptions, we assume the clear cache worked
+			operationResult.setContent("cache successfully cleared!"); //$NON-NLS-1$
+		
 		} else if (operationName.equals(VDB.Operations.RELOAD_MATVIEW)) {
 			MetaValue resultsMetaValue = reloadMaterializedView(connection,	vdbName, Integer.parseInt(vdbVersion),
 					(String) valueMap.get(Operation.Value.MATVIEW_SCHEMA),
@@ -330,6 +344,22 @@ public class DQPManagementView implements PluginConstants {
 
 	}
 
+	protected void executeClearCache(
+			ProfileServiceConnection connection, String vdbName, int vdbVersion, String cacheType) throws Exception {
+
+		MetaValue[] args = new MetaValue[] {SimpleValueSupport.wrap(cacheType),
+				SimpleValueSupport.wrap(vdbName),
+				SimpleValueSupport.wrap(vdbVersion) }; 
+
+		try {
+			executeManagedOperation(connection,	getRuntimeEngineDeployer(connection, mc),	VDB.Operations.CLEAR_CACHE, args);
+		} catch (Exception e) {
+			final String msg = "Exception executing operation: " + VDB.Operations.EXECUTE_QUERIES; //$NON-NLS-1$
+			LOG.error(msg, e);
+			throw e;
+		}
+	}
+	
 	protected MetaValue executeMaterializedViewQuery(
 			ProfileServiceConnection connection, String vdbName, int vdbVersion) {
 

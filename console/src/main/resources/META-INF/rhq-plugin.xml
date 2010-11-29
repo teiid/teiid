@@ -526,6 +526,25 @@
 						type="string" description="Result of refresh" />
 				</results>
 			</operation>
+			
+			<operation name="clearCache" displayName="Clear Cache"
+				description="Clears the cache for a given type for this VDB">
+				<parameters>
+					<c:simple-property displayName="Cache Type"
+						name="cacheType" type="string" required="true"
+						description="The cache type to clear" default="QUERY_SERVICE_RESULT_SET_CACHE">
+						<c:property-options>
+							<c:option value="QUERY_SERVICE_RESULT_SET_CACHE" default="true" name="Result Set" />
+							<c:option value="PREPARED_PLAN_CACHE" name="Prepared Plan" />
+						</c:property-options>
+					</c:simple-property>	
+				</parameters>
+
+				<results>
+					<c:simple-property displayName="Result" name="operationResult"
+						type="string" description="Result of clear cache" />
+				</results>
+			</operation>
 
 			<metric displayName="Status" defaultOn="true" dataType="trait"
 				displayType="summary" category="availability" property="status"

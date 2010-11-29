@@ -105,7 +105,7 @@ public class VDBComponent extends Facet {
 				null));
 		String version = VDB.VERSION;
 		valueMap.put(version, this.resourceConfiguration.getSimpleValue(
-				"version", null));
+				VDB.VERSION, null));
 
 		// Parameter logic for VDB Operations
 		if (name.equals(VDB.Operations.KILL_REQUEST)) {
@@ -113,6 +113,9 @@ public class VDBComponent extends Facet {
 					Operation.Value.REQUEST_ID).getLongValue());
 			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(
 					Operation.Value.SESSION_ID).getLongValue());
+		} else if (name.equals(VDB.Operations.CLEAR_CACHE)) {
+				valueMap.put(Operation.Value.CACHE_TYPE, configuration.getSimple(
+					Operation.Value.CACHE_TYPE).getStringValue());
 		} else if (name.equals(Platform.Operations.KILL_SESSION)) {
 			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(
 					Operation.Value.SESSION_ID).getLongValue());
