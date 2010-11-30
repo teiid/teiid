@@ -179,7 +179,6 @@ public class PlatformComponent extends Facet {
 
 				try {
 					managementView.updateComponent(managedComponent);
-					managementView.load();
 				} catch (Exception e) {
 					LOG.error("Unable to update component [" //$NON-NLS-1$
 							+ managedComponent.getName() + "] of type " //$NON-NLS-1$
@@ -193,6 +192,8 @@ public class PlatformComponent extends Facet {
 			report.setStatus(ConfigurationUpdateStatus.FAILURE);
 			report.setErrorMessageFromThrowable(e);
 		}
+		
+		managementView.load();
 
 	}
 
@@ -205,8 +206,8 @@ public class PlatformComponent extends Facet {
 	public Configuration loadResourceConfiguration() {
 
 		// Get plugin config
-		Configuration c = resourceContext.getPluginConfiguration();
-
+		Configuration c = resourceConfiguration;
+		
 		getProperties(c);
 
 		return c;

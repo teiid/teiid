@@ -90,8 +90,7 @@ public class PlatformDiscoveryComponent implements ResourceDiscoveryComponent {
 		);
 
 		Configuration configuration = detail.getPluginConfiguration();
-		configuration.put(new PropertySimple(
-				PluginConstants.Operation.Value.LONG_RUNNING_QUERY_LIMIT, 600));
+		configuration.put(new PropertySimple("displayPreviewVDBS", Boolean.FALSE));
 		detail.setPluginConfiguration(configuration);
 
 		// Add to return values
