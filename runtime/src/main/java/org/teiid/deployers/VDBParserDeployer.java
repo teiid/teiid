@@ -142,11 +142,20 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 			unit.addAttachment(IndexMetadataFactory.class, imf);
 							
 			// add the cached store.
-			File cacheFile = this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion()); //$NON-NLS-1$
+			File cacheFile = VDBDeployer.buildCachedVDBFileName(this.serializer, unit, vdb);
+			// check to see if the vdb has been modified when server is down; if it is then clear the old files
+			if (this.serializer.isStale(cacheFile, unit.getRoot().getLastModified())) {
+				this.serializer.removeAttachments(unit);
+				LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+unit.getRoot().getName()+" old cached metadata has been removed"); //$NON-NLS-1$ //$NON-NLS-2$				
+			}
 			MetadataStoreGroup stores = this.serializer.loadSafe(cacheFile, MetadataStoreGroup.class);
-			if (stores == null) {
+			if (stores == null) {				
+				// start to build the new metadata 
 				stores = new MetadataStoreGroup();
 				stores.addStore(imf.getMetadataStore(vdbRepository.getSystemStore().getDatatypes()));
+			}
+			else {
+				LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+unit.getRoot().getName()+" has being loaded from cached metadata"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			unit.addAttachment(MetadataStoreGroup.class, stores);				
 		}
