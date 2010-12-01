@@ -507,7 +507,7 @@ public class RelationalPlanner {
 			}
 		}
 		
-		if (c == null && !container.getGroup().isTempGroupSymbol() && 
+		if (c == null && !(container instanceof Insert) && !container.getGroup().isTempGroupSymbol() && 
 				!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(container, metadata.getModelID(container.getGroup().getMetadataID()), metadata, capFinder, analysisRecord)) {
 			throw new QueryPlannerException(QueryPlugin.Util.getString("RelationalPlanner.nonpushdown_command", container)); //$NON-NLS-1$
 		}
