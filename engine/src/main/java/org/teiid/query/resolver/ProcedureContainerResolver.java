@@ -32,6 +32,7 @@ import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.language.SQLConstants;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -45,9 +46,13 @@ import org.teiid.query.resolver.command.UpdateProcedureResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Delete;
 import org.teiid.query.sql.lang.GroupContext;
+import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.ProcedureContainer;
+import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
+import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.validator.UpdateValidator;
@@ -92,7 +97,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         
         QueryParser parser = QueryParser.getQueryParser();
         try {
-            subCommand = parser.parseCommand(plan);
+            subCommand = parser.parseUpdateProcedure(plan);
         } catch(QueryParserException e) {
             throw new QueryResolverException(e, "ERR.015.008.0045", QueryPlugin.Util.getString("ERR.015.008.0045", group)); //$NON-NLS-1$ //$NON-NLS-2$
         }
@@ -107,7 +112,26 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
             
             cupCommand.setVirtualGroup(procCommand.getGroup());
             cupCommand.setUserCommand(procCommand);
-        } 
+        } else if (subCommand instanceof TriggerAction) {
+        	TriggerAction ta = (TriggerAction)subCommand;
+        	ta.setView(procCommand.getGroup());
+        	TempMetadataAdapter tma = new TempMetadataAdapter(metadata, new TempMetadataStore());
+        	ta.setTemporaryMetadata(tma.getMetadataStore().getData());
+            GroupContext externalGroups = procCommand.getExternalGroupContexts();
+            
+            List<ElementSymbol> viewElements = ResolverUtil.resolveElementsInGroup(ta.getView(), metadata);
+            if (procCommand instanceof Update || procCommand instanceof Insert) {
+            	addChanging(tma.getMetadataStore(), externalGroups, viewElements);
+            	ProcedureContainerResolver.addScalarGroup(SQLConstants.Reserved.NEW, tma.getMetadataStore(), externalGroups, viewElements);
+            }
+            if (procCommand instanceof Update || procCommand instanceof Delete) {
+            	ProcedureContainerResolver.addScalarGroup(SQLConstants.Reserved.OLD, tma.getMetadataStore(), externalGroups, viewElements);
+            }
+            
+            new UpdateProcedureResolver().resolveBlock(new CreateUpdateProcedureCommand(), ta.getBlock(), externalGroups, tma, analysis);
+
+            return subCommand;
+        }
         
         //find the childMetadata using a clean metadata store
         TempMetadataStore childMetadata = new TempMetadataStore();
@@ -176,7 +200,13 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         addScalarGroup(ProcedureReservedWords.INPUTS, discoveredMetadata, externalGroups, inputElments);
 
         // Switch type to be boolean for all CHANGING variables
-        List<ElementSymbol> changingElements = new ArrayList<ElementSymbol>(elements.size());
+        addChanging(discoveredMetadata, externalGroups, elements);
+		return externalGroups;
+	}
+
+	private static void addChanging(TempMetadataStore discoveredMetadata,
+			GroupContext externalGroups, List<ElementSymbol> elements) {
+		List<ElementSymbol> changingElements = new ArrayList<ElementSymbol>(elements.size());
         for(int i=0; i<elements.size(); i++) {
             ElementSymbol virtualElmnt = elements.get(i);
             ElementSymbol changeElement = (ElementSymbol)virtualElmnt.clone();
@@ -185,7 +215,6 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         }
 
         addScalarGroup(ProcedureReservedWords.CHANGING, discoveredMetadata, externalGroups, changingElements);
-		return externalGroups;
 	}
         
     /** 

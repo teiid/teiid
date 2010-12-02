@@ -172,11 +172,11 @@ public class UpdateProcedureResolver implements CommandResolver {
         symbols.add(updateCount);
 
         ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, metadata.getMetadataStore(), externalGroups, symbols);         
-        resolveBlock(procCommand, procCommand.getBlock(), externalGroups, metadata, procCommand.isUpdateProcedure(), analysis);
+        resolveBlock(procCommand, procCommand.getBlock(), externalGroups, metadata, analysis);
     }
 
-	private void resolveBlock(CreateUpdateProcedureCommand command, Block block, GroupContext externalGroups, 
-                              TempMetadataAdapter metadata, boolean isUpdateProcedure, AnalysisRecord analysis)
+	public void resolveBlock(CreateUpdateProcedureCommand command, Block block, GroupContext externalGroups, 
+                              TempMetadataAdapter metadata, AnalysisRecord analysis)
         throws QueryResolverException, QueryMetadataException, TeiidComponentException {
         LogManager.logTrace(org.teiid.logging.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving block", block}); //$NON-NLS-1$
         
@@ -190,11 +190,11 @@ public class UpdateProcedureResolver implements CommandResolver {
         
         Iterator stmtIter = block.getStatements().iterator();
         while(stmtIter.hasNext()) {
-            resolveStatement(command, (Statement)stmtIter.next(), externalGroups, variables, metadata, isUpdateProcedure, analysis);
+            resolveStatement(command, (Statement)stmtIter.next(), externalGroups, variables, metadata, analysis);
         }
     }
 
-	private void resolveStatement(CreateUpdateProcedureCommand command, Statement statement, GroupContext externalGroups, GroupSymbol variables, TempMetadataAdapter metadata, boolean isUpdateProcedure, AnalysisRecord analysis)
+	private void resolveStatement(CreateUpdateProcedureCommand command, Statement statement, GroupContext externalGroups, GroupSymbol variables, TempMetadataAdapter metadata, AnalysisRecord analysis)
         throws QueryResolverException, QueryMetadataException, TeiidComponentException {
         LogManager.logTrace(org.teiid.logging.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving statement", statement}); //$NON-NLS-1$
 
@@ -206,9 +206,9 @@ public class UpdateProcedureResolver implements CommandResolver {
                 	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand(), analysis);
                 }
                 ResolverVisitor.resolveLanguageObject(ifCrit, null, externalGroups, metadata);
-            	resolveBlock(command, ifStmt.getIfBlock(), externalGroups, metadata, isUpdateProcedure, analysis);
+            	resolveBlock(command, ifStmt.getIfBlock(), externalGroups, metadata, analysis);
                 if(ifStmt.hasElseBlock()) {
-                    resolveBlock(command, ifStmt.getElseBlock(), externalGroups, metadata, isUpdateProcedure, analysis);
+                    resolveBlock(command, ifStmt.getElseBlock(), externalGroups, metadata, analysis);
                 }
                 break;
             case Statement.TYPE_COMMAND:
@@ -308,7 +308,7 @@ public class UpdateProcedureResolver implements CommandResolver {
                 	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand(), analysis);
                 }
                 ResolverVisitor.resolveLanguageObject(whileCrit, null, externalGroups, metadata);
-                resolveBlock(command, whileStmt.getBlock(), externalGroups, metadata, isUpdateProcedure, analysis);
+                resolveBlock(command, whileStmt.getBlock(), externalGroups, metadata, analysis);
                 break;
             case Statement.TYPE_LOOP:
                 LoopStatement loopStmt = (LoopStatement) statement;
@@ -334,7 +334,7 @@ public class UpdateProcedureResolver implements CommandResolver {
                 
                 ProcedureContainerResolver.addScalarGroup(groupName, store, externalGroups, symbols);
                 
-                resolveBlock(command, loopStmt.getBlock(), externalGroups, metadata, isUpdateProcedure, analysis);
+                resolveBlock(command, loopStmt.getBlock(), externalGroups, metadata, analysis);
                 break;
             case Statement.TYPE_BREAK:
             case Statement.TYPE_CONTINUE:

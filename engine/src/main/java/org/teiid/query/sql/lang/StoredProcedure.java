@@ -34,7 +34,6 @@ import java.util.TreeMap;
 
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.metadata.StoredProcedureInfo;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -62,9 +61,6 @@ public class StoredProcedure extends ProcedureContainer {
     private Object procedureID;
     private Object modelID;
     private String callableName;
-
-    //whether return a scalar value
-    private boolean returnsScalarValue;
 
     //stored procedure is treated as a group
     private GroupSymbol group;

@@ -452,6 +452,31 @@ Command command(ParseInfo info) :
 	}
 }
 
+Command updateProcedure(ParseInfo info) :
+{
+	Command command = null;
+}
+{
+	(command = createUpdateProcedure(info) |
+	 command = triggerAction(info))
+	<EOF>
+	{
+		return command;
+	}
+}
+
+TriggerAction triggerAction(ParseInfo info) :
+{
+	Block b = null;
+}
+{
+	<FOR> <EACH> <ROW>
+	b = block(info)
+	{
+		return new TriggerAction(b);
+	}
+}
+
 Command userCommand(ParseInfo info) :
 {
 	Command command = null;

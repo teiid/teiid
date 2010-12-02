@@ -23,7 +23,6 @@
 package org.teiid.query.sql.navigator;
 
 import java.util.Collection;
-import java.util.Iterator;
 
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
@@ -80,6 +79,7 @@ import org.teiid.query.sql.proc.IfStatement;
 import org.teiid.query.sql.proc.LoopStatement;
 import org.teiid.query.sql.proc.RaiseErrorStatement;
 import org.teiid.query.sql.proc.TranslateCriteria;
+import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
@@ -448,10 +448,9 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     public void visit(StoredProcedure obj) {
         preVisitVisitor(obj);
         
-        Collection params = obj.getParameters();
+        Collection<SPParameter> params = obj.getParameters();
         if(params != null && !params.isEmpty()) {
-            for(final Iterator iter = params.iterator(); iter.hasNext();) {
-                SPParameter parameter = (SPParameter) iter.next();
+        	for (SPParameter parameter : params) {
                 Expression expression = parameter.getExpression();
                 visitNode(expression);
             }
@@ -649,6 +648,13 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     	if (deep) {
     		visitNode(obj.getCommand());
     	}
+    	postVisitVisitor(obj);
+    }
+    
+    @Override
+    public void visit(TriggerAction obj) {
+    	preVisitVisitor(obj);
+    	visitNode(obj.getBlock());
     	postVisitVisitor(obj);
     }
     

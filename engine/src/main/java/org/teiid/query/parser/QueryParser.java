@@ -93,6 +93,18 @@ public class QueryParser {
 	    return parseCommand(sql, new ParseInfo());
 	}
 	
+	public Command parseUpdateProcedure(String sql) throws QueryParserException {
+		try{
+            Command result = getSqlParser(sql).updateProcedure(new ParseInfo());
+            result.setCacheHint(SQLParserUtil.getQueryCacheOption(sql));
+            return result;
+        } catch(ParseException pe) {
+            throw convertParserException(pe);
+        } catch(TokenMgrError tme) {
+            throw handleTokenMgrError(tme);
+        }
+	}
+	
 	/**
 	 * Takes a SQL string representing a Command and returns the object
 	 * representation.
@@ -120,7 +132,7 @@ public class QueryParser {
         	if(sql.startsWith(XML_OPEN_BRACKET) || sql.startsWith(XQUERY_DECLARE)) {
             	throw new QueryParserException(tme, QueryPlugin.Util.getString("QueryParser.xqueryCompilation", sql)); //$NON-NLS-1$
             }
-            handleTokenMgrError(tme);
+            throw handleTokenMgrError(tme);
         }
 		return result;
 	}
@@ -155,7 +167,7 @@ public class QueryParser {
             throw convertParserException(pe);
 
         } catch(TokenMgrError tme) {
-            handleTokenMgrError(tme);
+            throw handleTokenMgrError(tme);
         }
         return result;
     }
@@ -187,46 +199,37 @@ public class QueryParser {
             throw convertParserException(pe);
 
         } catch(TokenMgrError tme) {
-            handleTokenMgrError(tme);
+            throw handleTokenMgrError(tme);
         }
         return result;
     }
 
-    private void handleTokenMgrError(TokenMgrError tme) throws QueryParserException{
+    private QueryParserException handleTokenMgrError(TokenMgrError tme) {
 //            LogManager.logError( LogConstants.CTX_QUERY_PARSER, tme, new Object[] {"Exception parsing: ", sql} );
 
-        try {
-            // From TokenMgrError, here is format of lexical error:
-            //
-            // "Lexical error at line " + errorLine + ", column " + errorColumn +
-            // ".  Encountered: " + (EOFSeen ? "<EOF> " : ("\"" +
-            // addEscapes(String.valueOf(curChar)) + "\"") + " (" + (int)curChar + "), ") +
-            // "after : \"" + addEscapes(errorAfter) + "\""
+        // From TokenMgrError, here is format of lexical error:
+        //
+        // "Lexical error at line " + errorLine + ", column " + errorColumn +
+        // ".  Encountered: " + (EOFSeen ? "<EOF> " : ("\"" +
+        // addEscapes(String.valueOf(curChar)) + "\"") + " (" + (int)curChar + "), ") +
+        // "after : \"" + addEscapes(errorAfter) + "\""
 
-            String msg = tme.getMessage();
-            int index = msg.indexOf(LINE_MARKER);
+        String msg = tme.getMessage();
+        int index = msg.indexOf(LINE_MARKER);
+        if(index > 0) {
+            index += LINE_MARKER.length();
+            int lastIndex = msg.indexOf(",", index); //$NON-NLS-1$
+            
+            index = msg.indexOf(COL_MARKER, lastIndex);
             if(index > 0) {
-                index += LINE_MARKER.length();
-                int lastIndex = msg.indexOf(",", index); //$NON-NLS-1$
+                index += COL_MARKER.length();
+                lastIndex = msg.indexOf(".", index); //$NON-NLS-1$
                 
-                index = msg.indexOf(COL_MARKER, lastIndex);
-                if(index > 0) {
-                    index += COL_MARKER.length();
-                    lastIndex = msg.indexOf(".", index); //$NON-NLS-1$
-                    
-                    QueryParserException qpe = new QueryParserException(QueryPlugin.Util.getString("QueryParser.lexicalError", tme.getMessage())); //$NON-NLS-1$
-                    throw qpe;
-                }
-
+                return new QueryParserException(QueryPlugin.Util.getString("QueryParser.lexicalError", tme.getMessage())); //$NON-NLS-1$
             }
 
-        } catch(QueryParserException e) {
-            throw e;
-        } catch(Throwable e) {
-            throw new QueryParserException(e, e.getMessage());
         }
-
-        throw new QueryParserException(QueryPlugin.Util.getString("QueryParser.parsingError", tme.getMessage())); //$NON-NLS-1$
+        return new QueryParserException(QueryPlugin.Util.getString("QueryParser.parsingError", tme.getMessage())); //$NON-NLS-1$
     }
 
 }

@@ -93,9 +93,8 @@ public class UpdateResolver extends ProcedureContainerResolver implements Variab
     /** 
      * @see org.teiid.query.resolver.VariableResolver#getVariableValues(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.QueryMetadataInterface)
      */
-    public Map getVariableValues(Command command,
+    public Map<String, Expression> getVariableValues(Command command, boolean changingOnly,
                                  QueryMetadataInterface metadata) throws QueryMetadataException,
-                                                                 QueryResolverException,
                                                                  TeiidComponentException {
         Map result = new HashMap();
         
@@ -110,7 +109,9 @@ public class UpdateResolver extends ProcedureContainerResolver implements Variab
             String changingKey = ProcedureReservedWords.CHANGING + ElementSymbol.SEPARATOR + varName;
             String inputsKey = ProcedureReservedWords.INPUTS + ElementSymbol.SEPARATOR + varName;
             result.put(changingKey, new Constant(Boolean.TRUE));
-            result.put(inputsKey, entry.getValue());
+            if (!changingOnly) {
+            	result.put(inputsKey, entry.getValue());
+            }
             updateVars.add(leftSymbol);
         }
         

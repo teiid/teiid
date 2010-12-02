@@ -97,6 +97,7 @@ import org.teiid.query.sql.proc.LoopStatement;
 import org.teiid.query.sql.proc.RaiseErrorStatement;
 import org.teiid.query.sql.proc.Statement;
 import org.teiid.query.sql.proc.TranslateCriteria;
+import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
@@ -789,7 +790,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
 	private void addWithClause(QueryCommand obj) {
-		if (obj.getWith() != null && !obj.getWith().isEmpty()) {
+		if (obj.getWith() != null) {
     		append(WITH);
     		append(SPACE);
             registerNodes(obj.getWith(), 0);
@@ -1870,6 +1871,18 @@ public class SQLStringVisitor extends LanguageVisitor {
     @Override
     public void visit( ExpressionCriteria obj ) {
         visitNode(obj.getExpression());
+    }
+    
+    @Override
+    public void visit(TriggerAction obj) {
+    	append(FOR);
+        append(SPACE);
+        append(EACH);
+        append(SPACE);
+        append(ROW);
+        append("\n"); //$NON-NLS-1$
+        addTabs(0);
+    	visitNode(obj.getBlock());
     }
 
     public static String escapeSinglePart( String part ) {

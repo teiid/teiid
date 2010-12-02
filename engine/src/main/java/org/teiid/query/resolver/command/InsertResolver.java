@@ -243,16 +243,21 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
      * @throws QueryMetadataException 
      * @see org.teiid.query.resolver.CommandResolver#getVariableValues(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.QueryMetadataInterface)
      */
-    public Map getVariableValues(Command command,
+    public Map<String, Expression> getVariableValues(Command command, boolean changingOnly,
                                  QueryMetadataInterface metadata) throws QueryMetadataException, QueryResolverException, TeiidComponentException {
         
         Insert insert = (Insert) command;
         
-        Map result = new HashMap();
+        Map<String, Expression> result = new HashMap<String, Expression>();
         
         // iterate over the variables and values they should be the same number
         Iterator varIter = insert.getVariables().iterator();
-        Iterator valIter = insert.getValues().iterator();
+        Iterator valIter = null;
+        if (insert.getQueryExpression() != null) {
+        	valIter = insert.getQueryExpression().getProjectedSymbols().iterator();
+        } else {
+            valIter = insert.getValues().iterator();
+        }
         while (varIter.hasNext()) {
             ElementSymbol varSymbol = (ElementSymbol) varIter.next();
             
@@ -260,8 +265,10 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             String changingKey = ProcedureReservedWords.CHANGING + ElementSymbol.SEPARATOR + varName;
             String inputsKey = ProcedureReservedWords.INPUTS + ElementSymbol.SEPARATOR + varName;
             result.put(changingKey, new Constant(Boolean.TRUE));
-            Object value = valIter.next();
-            result.put(inputsKey, value);
+            if (!changingOnly) {
+	            Object value = valIter.next();
+	            result.put(inputsKey, (Expression)value);
+            }
         }
         
         Collection insertElmnts = ResolverUtil.resolveElementsInGroup(insert.getGroup(), metadata);
@@ -278,7 +285,9 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             String changingKey = ProcedureReservedWords.CHANGING + ElementSymbol.SEPARATOR + varName;
             String inputsKey = ProcedureReservedWords.INPUTS + ElementSymbol.SEPARATOR + varName;
             result.put(changingKey, new Constant(Boolean.FALSE));
-            result.put(inputsKey, value);
+            if (!changingOnly) {
+            	result.put(inputsKey, value);
+            }
         }
         
         return result;

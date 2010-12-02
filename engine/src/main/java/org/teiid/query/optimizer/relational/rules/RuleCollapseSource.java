@@ -70,7 +70,6 @@ import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
@@ -366,20 +365,7 @@ public final class RuleCollapseSource implements OptimizerRule {
 		Command command = child.getCommand();
 		final SymbolMap map = container.getCommand().getCorrelatedReferences();
 		if (map != null) {
-			ExpressionMappingVisitor visitor = new ExpressionMappingVisitor(null) {
-				@Override
-				public Expression replaceExpression(
-						Expression element) {
-					if (element instanceof Reference) {
-						Reference ref = (Reference)element;
-						Expression replacement = map.getMappedExpression(ref.getExpression());
-						if (replacement != null) {
-							return replacement;
-						}
-					}
-					return element;
-				}
-			};
+			ExpressionMappingVisitor visitor = new RuleMergeCriteria.ReferenceReplacementVisitor(map);
 			DeepPostOrderNavigator.doVisit(command, visitor);
 		}
 		command.setProcessorPlan(container.getCommand().getProcessorPlan());

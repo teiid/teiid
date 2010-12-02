@@ -353,7 +353,7 @@ public class TestProcessor {
     	
     public static void sampleData1(FakeDataManager dataMgr) {
         try { 
-        	FakeDataStore.sampleData1(dataMgr);
+        	FakeDataStore.sampleData1(dataMgr, FakeMetadataFactory.example1Cached());
         } catch(Throwable e) { 
         	throw new RuntimeException(e);
         }

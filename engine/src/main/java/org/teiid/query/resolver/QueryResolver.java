@@ -60,6 +60,7 @@ import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
@@ -287,12 +288,12 @@ public class QueryResolver {
         subCommand.setExternalGroupContexts(parentContext);
     }
     
-    public static Map getVariableValues(Command command, QueryMetadataInterface metadata) throws QueryMetadataException, QueryResolverException, TeiidComponentException {
+    public static Map<String, Expression> getVariableValues(Command command, boolean changingOnly, QueryMetadataInterface metadata) throws QueryMetadataException, QueryResolverException, TeiidComponentException {
         
         CommandResolver resolver = chooseResolver(command, metadata);
         
         if (resolver instanceof VariableResolver) {
-            return ((VariableResolver)resolver).getVariableValues(command, metadata);
+            return ((VariableResolver)resolver).getVariableValues(command, changingOnly, metadata);
         }
         
         return Collections.EMPTY_MAP;

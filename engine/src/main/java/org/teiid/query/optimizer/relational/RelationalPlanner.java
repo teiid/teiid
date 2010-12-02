@@ -52,6 +52,7 @@ import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.QueryOptimizer;
+import org.teiid.query.optimizer.TriggerActionPlanner;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
@@ -100,6 +101,7 @@ import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
+import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
@@ -518,16 +520,17 @@ public class RelationalPlanner {
         PlanNode sourceNode = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
         sourceNode.setProperty(NodeConstants.Info.ATOMIC_REQUEST, command);
         sourceNode.setProperty(NodeConstants.Info.VIRTUAL_COMMAND, command);
+        boolean usingTriggerAction = false;
         if (command instanceof ProcedureContainer) {
         	ProcedureContainer container = (ProcedureContainer)command;
-        	addNestedProcedure(sourceNode, container);
+        	usingTriggerAction = addNestedProcedure(sourceNode, container);
         }
         sourceNode.addGroups(groups);
 
         attachLast(projectNode, sourceNode);
 
         //for INTO query, attach source and project nodes
-        if(command instanceof Insert){
+        if(!usingTriggerAction && command instanceof Insert){
         	Insert insert = (Insert)command;
         	if (insert.getQueryExpression() != null) {
 	            PlanNode plan = generatePlan(insert.getQueryExpression());
@@ -540,7 +543,7 @@ public class RelationalPlanner {
         return projectNode;
 	}
 
-	private void addNestedProcedure(PlanNode sourceNode,
+	private boolean addNestedProcedure(PlanNode sourceNode,
 			ProcedureContainer container) throws TeiidComponentException,
 			QueryMetadataException, TeiidProcessingException {
 		String cacheString = "transformation/" + container.getClass().getSimpleName(); //$NON-NLS-1$
@@ -558,6 +561,12 @@ public class RelationalPlanner {
 			}
 		}
 		if (c != null) {
+			if (c instanceof TriggerAction) {
+				TriggerAction ta = (TriggerAction)c;
+				ProcessorPlan plan = new TriggerActionPlanner().optimize(container, ta, idGenerator, metadata, capFinder, analysisRecord, context);
+			    sourceNode.setProperty(NodeConstants.Info.PROCESSOR_PLAN, plan);
+			    return true;
+			}
 			if (c.getCacheHint() != null) {
 				if (container instanceof StoredProcedure) {
 					boolean noCache = isNoCacheGroup(metadata, ((StoredProcedure) container).getProcedureID(), option);
@@ -566,7 +575,7 @@ public class RelationalPlanner {
 							container.getGroup().setGlobalTable(true);
 							container.setCacheHint(c.getCacheHint());
 							recordAnnotation(analysisRecord, Annotation.CACHED_PROCEDURE, Priority.LOW, "SimpleQueryResolver.procedure_cache_used", container.getGroup()); //$NON-NLS-1$
-							return;
+							return false;
 						}
 						recordAnnotation(analysisRecord, Annotation.CACHED_PROCEDURE, Priority.MEDIUM, "SimpleQueryResolver.procedure_cache_not_usable", container.getGroup()); //$NON-NLS-1$
 					} else {
@@ -577,7 +586,11 @@ public class RelationalPlanner {
 			//skip the rewrite here, we'll do that in the optimizer
 			//so that we know what the determinism level is.
 			addNestedCommand(sourceNode, container.getGroup(), container, c, false);
+		} else if (!(container instanceof Insert) && !container.getGroup().isTempGroupSymbol() && 
+				!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(container, metadata.getModelID(container.getGroup().getMetadataID()), metadata, capFinder, analysisRecord)) {
+			throw new QueryPlannerException(QueryPlugin.Util.getString("RelationalPlanner.nonpushdown_command", container)); //$NON-NLS-1$
 		}
+		
 		//plan any subqueries in criteria/parameters/values
 		for (SubqueryContainer subqueryContainer : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(container)) {
     		ProcessorPlan plan = QueryOptimizer.optimizePlan(subqueryContainer.getCommand(), metadata, null, capFinder, analysisRecord, context);
@@ -587,11 +600,7 @@ public class RelationalPlanner {
 				RuleCollapseSource.replaceCorrelatedReferences(subqueryContainer);
 			}
 		}
-		
-		if (c == null && !(container instanceof Insert) && !container.getGroup().isTempGroupSymbol() && 
-				!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(container, metadata.getModelID(container.getGroup().getMetadataID()), metadata, capFinder, analysisRecord)) {
-			throw new QueryPlannerException(QueryPlugin.Util.getString("RelationalPlanner.nonpushdown_command", container)); //$NON-NLS-1$
-		}
+		return false;
 	}
 
     PlanNode createStoredProcedurePlan(StoredProcedure storedProc) throws QueryMetadataException, TeiidComponentException, TeiidProcessingException {

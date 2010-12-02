@@ -168,7 +168,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 
 			// create a new set of variables including vars
 			Map nameValueMap = createVariableValuesMap(localContext);
-            nameValueMap.putAll(QueryResolver.getVariableValues(parentProcCommand.getUserCommand(), metadata));
+            nameValueMap.putAll(QueryResolver.getVariableValues(parentProcCommand.getUserCommand(), false, metadata));
             ValidationVisitor visitor = new ValidationVisitor();
             visitor.setUpdateProc(parentProcCommand);
             Request.validateWithVisitor(visitor, metadata, command);

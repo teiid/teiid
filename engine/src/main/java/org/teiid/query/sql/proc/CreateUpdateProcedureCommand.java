@@ -154,7 +154,7 @@ public class CreateUpdateProcedureCommand extends Command {
 
         //Clone this class state
         if (this.block != null) {
-            copy.setBlock((Block)this.block.clone());
+            copy.setBlock(this.block.clone());
         }
         if (this.getSymbolMap() != null) {
             copy.setSymbolMap(new HashMap(this.getSymbolMap()));
@@ -164,7 +164,7 @@ public class CreateUpdateProcedureCommand extends Command {
             copy.setProjectedSymbols(new ArrayList(this.projectedSymbols));
         }
         if (this.virtualGroup != null) {
-        	copy.virtualGroup = (GroupSymbol)this.virtualGroup.clone();
+        	copy.virtualGroup = this.virtualGroup.clone();
         }
         this.copyMetadataState(copy);
 		return copy;

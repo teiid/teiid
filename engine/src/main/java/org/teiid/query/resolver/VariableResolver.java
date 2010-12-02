@@ -29,10 +29,11 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.symbol.Expression;
 
 
 public interface VariableResolver {
 
-    Map getVariableValues(Command command, QueryMetadataInterface metadata) throws QueryMetadataException, QueryResolverException, TeiidComponentException;
+    Map<String, Expression> getVariableValues(Command command, boolean changingOnly, QueryMetadataInterface metadata) throws QueryMetadataException, QueryResolverException, TeiidComponentException;
     
 }

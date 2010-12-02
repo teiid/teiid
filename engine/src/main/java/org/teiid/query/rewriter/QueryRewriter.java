@@ -133,6 +133,7 @@ import org.teiid.query.sql.proc.IfStatement;
 import org.teiid.query.sql.proc.LoopStatement;
 import org.teiid.query.sql.proc.Statement;
 import org.teiid.query.sql.proc.TranslateCriteria;
+import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
@@ -285,7 +286,10 @@ public class QueryRewriter {
                     subCommands.set(i, subCommand);
                 }
                 break;
-            	
+            case Command.TYPE_TRIGGER_ACTION:
+            	TriggerAction ta = (TriggerAction)command;
+            	ta.setBlock(rewriteBlock(ta.getBlock()));
+            	break;
 		}
         
         this.metadata = oldMetadata;
@@ -297,7 +301,7 @@ public class QueryRewriter {
 								 throws TeiidComponentException, TeiidProcessingException{
         Map oldVariables = variables;
     	if (command.getUserCommand() != null) {
-            variables = QueryResolver.getVariableValues(command.getUserCommand(), metadata);                        
+            variables = QueryResolver.getVariableValues(command.getUserCommand(), false, metadata);                        
             commandType = command.getUserCommand().getType();
     	}
 
@@ -2641,12 +2645,12 @@ public class QueryRewriter {
 	private Command createUpdateProcedure(ProcedureContainer update, Query query,
 			ProcedureContainer newUpdate) throws QueryResolverException,
 			TeiidComponentException, TeiidProcessingException {
+		Block b = new Block();
+		b.addStatement(new CommandStatement(newUpdate));
 		CreateUpdateProcedureCommand cupc = new CreateUpdateProcedureCommand();
 		Block parent = new Block();
-		Block b = new Block();
 		LoopStatement ls = new LoopStatement(b, query, "X"); //$NON-NLS-1$
 		parent.addStatement(ls);
-		b.addStatement(new CommandStatement(newUpdate));
 		AssignmentStatement as = new AssignmentStatement();
 		ElementSymbol rowsUpdate = new ElementSymbol(ProcedureReservedWords.VARIABLES+ElementSymbol.SEPARATOR+ProcedureReservedWords.ROWS_UPDATED);
 		as.setVariable(rowsUpdate);
@@ -2655,7 +2659,7 @@ public class QueryRewriter {
 		cupc.setBlock(parent);
 		cupc.setVirtualGroup(update.getGroup());
 		QueryResolver.resolveCommand(cupc, metadata);
-		return rewriteUpdateProcedure(cupc);
+		return rewrite(cupc, metadata, context);
 	}
 
 	private List<Criteria> createPkCriteria(UpdateMapping mapping, Query query,

@@ -101,6 +101,8 @@ public abstract class Command implements LanguageObject {
     public static final int TYPE_CREATE = 11;
     
     public static final int TYPE_DROP = 12;
+    
+    public static final int TYPE_TRIGGER_ACTION = 13;
 
     private static List<SingleElementSymbol> updateCommandSymbol;
     
