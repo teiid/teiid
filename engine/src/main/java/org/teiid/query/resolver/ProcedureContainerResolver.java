@@ -23,7 +23,6 @@
 package org.teiid.query.resolver;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -41,7 +40,6 @@ import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.metadata.TempMetadataID.Type;
 import org.teiid.query.parser.QueryParser;
-import org.teiid.query.report.ReportItem;
 import org.teiid.query.resolver.command.UpdateProcedureResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.ProcedureReservedWords;
@@ -56,7 +54,6 @@ import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.validator.UpdateValidator;
-import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 
 
@@ -236,7 +233,17 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 			throws TeiidComponentException, QueryMetadataException,
 			QueryResolverException {
 		if(!procCommand.getGroup().isTempGroupSymbol() && metadata.isVirtualGroup(procCommand.getGroup().getMetadataID())) {
-            return getPlan(metadata, procCommand.getGroup());
+            String plan = getPlan(metadata, procCommand.getGroup());
+            if (plan == null && !metadata.isProcedure(procCommand.getGroup().getMetadataID())) {
+            	UpdateInfo info = getUpdateInfo(procCommand.getGroup(), metadata);
+            	int type = procCommand.getType();
+        		if ((info.isDeleteValidationError() && type == Command.TYPE_DELETE) 
+        				|| (info.isUpdateValidationError() && type == Command.TYPE_UPDATE) 
+        				|| (info.isInsertValidationError() && type == Command.TYPE_INSERT)) {
+        			throw new QueryResolverException("ERR.015.008.0009", QueryPlugin.Util.getString("ERR.015.008.0009", procCommand.getGroup(), procCommand.getClass().getSimpleName())); //$NON-NLS-1$ //$NON-NLS-2$
+        		}
+            }
+            return plan;
         }
 		return null;
 	}
@@ -260,16 +267,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
     				metadata.getInsertPlan(group.getMetadataID()) == null);
     		validator.validate(UpdateProcedureResolver.getQueryTransformCmd(group, metadata), elements);
     		info = validator.getUpdateInfo();
-    		for (ReportItem item : (Collection<ReportItem>)validator.getReport().getItems()) {
-				if (item instanceof ValidatorFailure) {
-					info.setValidationError(item.getMessage());
-					break;
-				}
-    		}
     		metadata.addToMetadataCache(group.getMetadataID(), "UpdateInfo", info); //$NON-NLS-1$
-    	}
-    	if (info.getValidationError() != null) {
-    		throw new QueryResolverException(info.getValidationError());
     	}
     	return info;
 	}

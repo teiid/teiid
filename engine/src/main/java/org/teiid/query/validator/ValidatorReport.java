@@ -87,8 +87,4 @@ public class ValidatorReport extends ActivityReport {
         this.addItem(new ValidatorFailure(message, invalidObjs));
     }
 
-	public void handleValidationWarning(String message) {
-		this.addItem(new ValidatorWarning(message));
-	}
-
 }

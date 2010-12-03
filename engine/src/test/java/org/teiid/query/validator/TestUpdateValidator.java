@@ -24,7 +24,6 @@ package org.teiid.query.validator;
 
 import static org.junit.Assert.*;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -46,13 +45,13 @@ import org.teiid.metadata.KeyRecord.Type;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
-import org.teiid.query.report.ReportItem;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 
 @SuppressWarnings("nls")
 public class TestUpdateValidator {
@@ -66,15 +65,8 @@ public class TestUpdateValidator {
 			GroupSymbol gs = new GroupSymbol(vGroup);
 			ResolverUtil.resolveGroup(gs, md);
 			uv.validate(command, ResolverUtil.resolveElementsInGroup(gs, md));
-			boolean failed = false;
-			for (ReportItem item : (Collection<ReportItem>)uv.getReport().getItems()) {
-				if (item instanceof ValidatorFailure) {
-					failed = true;
-					if (!shouldFail) {
-						fail(item.toString());
-					}
-				}
-			}
+			UpdateInfo info = uv.getUpdateInfo();
+			boolean failed = info.isDeleteValidationError() || info.isInsertValidationError() || info.isUpdateValidationError();
 			if (!failed && shouldFail) {
 				fail("expeceted failures, but got none: " + uv.getReport());
 			}

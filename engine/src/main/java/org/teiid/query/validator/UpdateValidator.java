@@ -83,10 +83,12 @@ public class UpdateValidator {
 		private Map<String, UpdateMapping> updatableGroups = new HashMap<String, UpdateMapping>();
 		private boolean isSimple = true;
 		private UpdateMapping deleteTarget;
-		private String validationError;
 		private boolean inherentUpdate;
+		private boolean updateValidationError;
 		private boolean inherentDelete;
+		private boolean deleteValidationError;
 		private boolean inherentInsert;
+		private boolean insertValidationError;
 		private Query view;
 		
 		public boolean isSimple() {
@@ -99,14 +101,6 @@ public class UpdateValidator {
 		
 		public Map<String, UpdateMapping> getUpdatableGroups() {
 			return updatableGroups;
-		}
-		
-		public String getValidationError() {
-			return validationError;
-		}
-		
-		public void setValidationError(String validationError) {
-			this.validationError = validationError;
 		}
 		
 		public boolean isInherentDelete() {
@@ -134,6 +128,18 @@ public class UpdateValidator {
 			return view;
 		}
 		
+		public boolean isDeleteValidationError() {
+			return deleteValidationError;
+		}
+		
+		public boolean isInsertValidationError() {
+			return insertValidationError;
+		}
+		
+		public boolean isUpdateValidationError() {
+			return updateValidationError;
+		}
+		
 	}
 	
 	private QueryMetadataInterface metadata;
@@ -155,38 +161,45 @@ public class UpdateValidator {
 		return report;
 	}
 	
+	private void handleValidationError(String error, boolean update, boolean insert, boolean delete) {
+		report.handleValidationError(error);
+		updateInfo.updateValidationError |= update;
+		updateInfo.insertValidationError |= insert;
+		updateInfo.deleteValidationError |= delete;
+	}
+	
     public void validate(Command command, List<ElementSymbol> viewSymbols) throws QueryMetadataException, TeiidComponentException {
     	if (!(command instanceof Query)) {
-    		report.handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0001")); //$NON-NLS-1$
+    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0001"), true, true, true); //$NON-NLS-1$
     		return;
         }
     	
     	Query query = (Query)command;
 
     	if (query.getFrom() == null || query.getInto() != null) {
-    		report.handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0001")); //$NON-NLS-1$
+    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0001"), true, true, true); //$NON-NLS-1$
     		return;
     	}
     	
     	if (query.getWith() != null) {
-    		report.handleValidationWarning(QueryPlugin.Util.getString("ERR.015.012.0002")); //$NON-NLS-1$
+    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0002"), true, true, true); //$NON-NLS-1$
     		updateInfo.isSimple = false;
     	}
 
     	if (query.hasAggregates()) {
-    		report.handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0006")); //$NON-NLS-1$
+    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0006"), true, true, true); //$NON-NLS-1$
     		return;
     	}
     	
     	updateInfo.view = query;
     	
     	if (query.getLimit() != null) {
-    		report.handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0013")); //$NON-NLS-1$
+    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0013"), true, true, true); //$NON-NLS-1$
     		return;
     	}
     	
     	if (query.getSelect().isDistinct()) {
-    		report.handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0008")); //$NON-NLS-1$
+    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0008"), true, true, true); //$NON-NLS-1$
     		return;
     	} 
     	
@@ -221,12 +234,12 @@ public class UpdateValidator {
             } else {
             	//TODO: look for reversable widening conversions
             	
-                report.handleValidationWarning(QueryPlugin.Util.getString("ERR.015.012.0007", viewSymbols.get(i), symbol)); //$NON-NLS-1$
+                report.handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0007", viewSymbols.get(i), symbol)); //$NON-NLS-1$
             }
     	}
     	
     	if (query.getFrom().getClauses().size() > 1 || (!(query.getFrom().getClauses().get(0) instanceof UnaryFromClause))) {
-    		report.handleValidationWarning(QueryPlugin.Util.getString("ERR.015.012.0009", query.getFrom())); //$NON-NLS-1$
+    		report.handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0009", query.getFrom())); //$NON-NLS-1$
     		updateInfo.isSimple = false;
     	}
     	List<GroupSymbol> allGroups = query.getFrom().getGroups();
@@ -249,7 +262,7 @@ public class UpdateValidator {
 				if (info == null) {
 					continue; // not projected
 				}
-				report.handleValidationWarning(QueryPlugin.Util.getString("ERR.015.012.0004", groupSymbol)); //$NON-NLS-1$
+				report.handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0004", groupSymbol)); //$NON-NLS-1$
 			}
 		}
 
@@ -268,16 +281,16 @@ public class UpdateValidator {
     		insertable |= info.insertAllowed;
     	}
     	if ((this.updateInfo.inherentInsert && !insertable)) {
-    		report.handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0015")); //$NON-NLS-1$
+    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0015"), false, true, false); //$NON-NLS-1$
     	} 
     	if (this.updateInfo.inherentUpdate && !updatable) {
-    		report.handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0005")); //$NON-NLS-1$
+    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0005"), true, false, true); //$NON-NLS-1$
     	}
     	if (this.updateInfo.inherentDelete && this.updateInfo.deleteTarget == null) {
     		if (this.updateInfo.isSimple) {
     			this.updateInfo.deleteTarget = this.updateInfo.updatableGroups.values().iterator().next();
     		} else {
-    			report.handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0014")); //$NON-NLS-1$
+    			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0014"), false, false, true); //$NON-NLS-1$
     		}
     	}
     }
@@ -290,7 +303,7 @@ public class UpdateValidator {
 		}
 
 		if (!metadata.groupSupports(groupSymbol.getMetadataID(), SupportConstants.Group.UPDATE)) {
-			report.handleValidationWarning(QueryPlugin.Util.getString("ERR.015.012.0003", groupSymbol)); //$NON-NLS-1$
+			report.handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0003", groupSymbol)); //$NON-NLS-1$
 			return;
 		}
 
@@ -318,7 +331,7 @@ public class UpdateValidator {
 			return true;
 		}
 		if (this.updateInfo.inherentInsert) {
-			report.handleValidationWarning(QueryPlugin.Util.getString("ERR.015.012.0010", element, element.getGroupSymbol())); //$NON-NLS-1$
+			report.handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0010", element, element.getGroupSymbol())); //$NON-NLS-1$
 		}
 	    return false;
 	}
