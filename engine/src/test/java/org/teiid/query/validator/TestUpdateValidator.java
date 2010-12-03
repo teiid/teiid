@@ -61,7 +61,7 @@ public class TestUpdateValidator {
 			String vGroup = "gx";
 			Command command = createView(sql, md, vGroup);
 			
-			UpdateValidator uv = new UpdateValidator(md, true, true, true);
+			UpdateValidator uv = new UpdateValidator(md, null, null, null);
 			GroupSymbol gs = new GroupSymbol(vGroup);
 			ResolverUtil.resolveGroup(gs, md);
 			uv.validate(command, ResolverUtil.resolveElementsInGroup(gs, md));

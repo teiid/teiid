@@ -76,6 +76,7 @@ import org.teiid.query.sql.lang.NotCriteria;
 import org.teiid.query.sql.lang.Option;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
+import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SPParameter;
@@ -137,6 +138,7 @@ import org.teiid.query.sql.visitor.PredicateCollectorVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
+import org.teiid.query.validator.UpdateValidator.UpdateType;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression;
 import org.teiid.translator.SourceSystemFunctions;
 
@@ -201,24 +203,20 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	validateNoXMLUpdates(obj);
         GroupSymbol group = obj.getGroup();
         validateGroupSupportsUpdate(group);
-        if (obj.getUpdateInfo() == null || !obj.getUpdateInfo().isInherentDelete()) {
-            Criteria crit = obj.getCriteria();
-        	validateVirtualUpdate(group, crit);
-        }
+        Criteria crit = obj.getCriteria();
+    	validateVirtualUpdate(obj, crit);
     }
 
-	private void validateVirtualUpdate(GroupSymbol group,
+	private void validateVirtualUpdate(ProcedureContainer container, 
 			Criteria crit) {
-		if (crit == null) {
-			return;
+		if (crit == null || container.getUpdateInfo() == null) {
+			return; 
 		}
-		try {
-			if (getMetadata().isVirtualGroup(group.getMetadataID()) && 
-					!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(crit).isEmpty()) {
+		if ((container.getType() == Command.TYPE_UPDATE && container.getUpdateInfo().getUpdateType() == UpdateType.UPDATE_PROCEDURE) 
+				|| (container.getType() == Command.TYPE_DELETE && container.getUpdateInfo().getDeleteType() == UpdateType.UPDATE_PROCEDURE)) {
+			if (!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(crit).isEmpty()) {
 				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.virtual_update_subquery"), crit); //$NON-NLS-1$
 			}
-		} catch (TeiidException e) {
-			handleException(e);
 		}
 	}
 
@@ -335,9 +333,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         validateNoXMLUpdates(obj);
         validateGroupSupportsUpdate(obj.getGroup());
         validateUpdate(obj);
-        if (obj.getUpdateInfo() == null || !obj.getUpdateInfo().isInherentUpdate()) {
-        	validateVirtualUpdate(obj.getGroup(), obj.getCriteria());
-        }
+    	validateVirtualUpdate(obj, obj.getCriteria());
     }
 
     public void visit(Into obj) {
@@ -911,7 +907,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     protected void validateUpdate(Update update) {
         try {
             UpdateInfo info = update.getUpdateInfo();
-            boolean updatableView = info != null && info.isInherentUpdate();
 
             // list of elements that are being updated
 		    for (SetClause entry : update.getChangeList().getClauses()) {
@@ -942,7 +937,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                     if(((Constant)value).isNull() && ! getMetadata().elementSupports(elementID.getMetadataID(), SupportConstants.Element.NULL)) {
                         handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0060", SQLStringVisitor.getSQLString(elementID)), elementID); //$NON-NLS-1$
                     }// end of if
-                } else if (!updatableView && getMetadata().isVirtualGroup(update.getGroup().getMetadataID()) && !EvaluatableVisitor.willBecomeConstant(value)) {
+                } else if (info != null && info.getUpdateType() == UpdateType.UPDATE_PROCEDURE && getMetadata().isVirtualGroup(update.getGroup().getMetadataID()) && !EvaluatableVisitor.willBecomeConstant(value)) {
                     // If this is an update on a virtual group, verify that no elements are in the right side
                     Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(value, false);
                     for (ElementSymbol element : elements) {
@@ -952,7 +947,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                     }
                 } 
 		    }
-            if (updatableView) {
+            if (info != null && info.isInherentUpdate()) {
             	Set<ElementSymbol> updateCols = update.getChangeList().getClauseMap().keySet();
             	if (info.findUpdateMapping(updateCols, false) == null) {
             		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.nonUpdatable", updateCols), update); //$NON-NLS-1$

@@ -249,24 +249,23 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 	}
 	
 	public static UpdateInfo getUpdateInfo(GroupSymbol group, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException, QueryResolverException {
-		//if this is not inherently updatable, just return null
-		if(group.isTempGroupSymbol() || !metadata.isVirtualGroup(group.getMetadataID()) || (
-				metadata.getUpdatePlan(group.getMetadataID()) != null && 
-				metadata.getDeletePlan(group.getMetadataID()) != null && 
-				metadata.getInsertPlan(group.getMetadataID()) != null)) {
+		//if this is not a view, just return null
+		if(group.isTempGroupSymbol() || !metadata.isVirtualGroup(group.getMetadataID())) {
 			return null;
 		}
+		String updatePlan = metadata.getUpdatePlan(group.getMetadataID());
+		String deletePlan = metadata.getDeletePlan(group.getMetadataID());
+		String insertPlan = metadata.getInsertPlan(group.getMetadataID());
+
+		
     	UpdateInfo info = (UpdateInfo)metadata.getFromMetadataCache(group.getMetadataID(), "UpdateInfo"); //$NON-NLS-1$
     	if (info == null) {
-    		
             List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(group, metadata);
-
-    		UpdateValidator validator = new UpdateValidator(metadata, 
-    				metadata.getUpdatePlan(group.getMetadataID()) == null, 
-    				metadata.getDeletePlan(group.getMetadataID()) == null, 
-    				metadata.getInsertPlan(group.getMetadataID()) == null);
-    		validator.validate(UpdateProcedureResolver.getQueryTransformCmd(group, metadata), elements);
+    		UpdateValidator validator = new UpdateValidator(metadata, updatePlan, deletePlan, insertPlan);
     		info = validator.getUpdateInfo();
+    		if (info.isInherentDelete() || info.isInherentInsert() || info.isInherentUpdate()) {
+    			validator.validate(UpdateProcedureResolver.getQueryTransformCmd(group, metadata), elements);
+    		}
     		metadata.addToMetadataCache(group.getMetadataID(), "UpdateInfo", info); //$NON-NLS-1$
     	}
     	return info;

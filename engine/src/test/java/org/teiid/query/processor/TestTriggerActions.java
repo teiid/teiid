@@ -120,5 +120,26 @@ public class TestTriggerActions {
     	helpProcess(plan, context, dm, expected);
     	assertEquals("UPDATE pm1.g1 SET e2 = 5 WHERE e2 = 2", dm.getQueries().get(0));
 	}
+	
+	@Test public void testUpdateWithNonConstant() throws Exception {
+		TransformationMetadata metadata = TestUpdateValidator.example1();
+		TestUpdateValidator.createView("select 1 as x, 2 as y", metadata, "gx");
+		Table t = metadata.getMetadataStore().getSchemas().get("vm1").getTables().get("gx");
+		t.setDeletePlan("");
+		t.setUpdatePlan("FOR EACH ROW BEGIN update pm1.g1 set e2 = new.y where e2 = old.y; END");
+		t.setInsertPlan("");
+		
+		String sql = "update gx set y = x";
+		
+		FakeDataManager dm = new FakeDataManager();
+		FakeDataStore.addTable("pm1.g1", dm, metadata);
+		
+		CommandContext context = createCommandContext();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata, null), metadata, new DefaultCapabilitiesFinder(caps), context);
+        List[] expected = new List[] {Arrays.asList(1)};
+    	helpProcess(plan, context, dm, expected);
+    	assertEquals("UPDATE pm1.g1 SET e2 = 1 WHERE e2 = 2", dm.getQueries().get(0));
+	}
     
 }
