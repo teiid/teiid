@@ -22,7 +22,10 @@
 
 package org.teiid.dqp.internal.process;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 
@@ -30,8 +33,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.relational.ProjectNode;
@@ -62,7 +65,7 @@ public class TestPreparedPlanCache {
     	//No PreparedPlan at the begining
     	assertNull(cache.get(id));
     	//create one
-    	cache.put(id, FunctionMethod.SESSION_DETERMINISTIC, new PreparedPlan(), null);
+    	cache.put(id, Determinism.SESSION_DETERMINISTIC, new PreparedPlan(), null);
     	//should have one now
     	assertNotNull("Unable to get prepared plan from cache", cache.get(id)); //$NON-NLS-1$
     }
@@ -149,7 +152,7 @@ public class TestPreparedPlanCache {
 	    	CacheID id = new CacheID(session, pi, dummy.toString());
 
 	    	PreparedPlan pPlan = new PreparedPlan();
-    		cache.put(id, FunctionMethod.SESSION_DETERMINISTIC, pPlan, null);
+    		cache.put(id, Determinism.SESSION_DETERMINISTIC, pPlan, null);
     		pPlan.setCommand(dummy); 
     		pPlan.setPlan(new RelationalPlan(new ProjectNode(i)));
             AnalysisRecord analysisRecord = new AnalysisRecord(true, false);

@@ -12,18 +12,18 @@
   </diagram:DiagramContainer>
   <mmcore:AnnotationContainer xmi:uuid="mmuuid:c3c82dbf-1339-4354-b23d-7135aa430b21"/>
   <mmfunction:ScalarFunction xmi:uuid="mmuuid:ecf2b4a4-40fe-4cab-b84a-93a26c0560c7" name="JCR_ISCHILDNODE" category="JCR" pushDown="REQUIRED">
-    <inputParameters xmi:uuid="mmuuid:23fd3fce-de13-4b11-957d-a44c2ac6da43" name="path" type="string"/>
-    <inputParameters xmi:uuid="mmuuid:68bafab4-98f7-472d-81cb-38e6bf2aa096" name="path" type="string"/>
+    <inputParameters xmi:uuid="mmuuid:23fd3fce-de13-4b11-957d-a44c2ac6da43" name="path1" type="string"/>
+    <inputParameters xmi:uuid="mmuuid:68bafab4-98f7-472d-81cb-38e6bf2aa096" name="path2" type="string"/>
     <returnParameter xmi:uuid="mmuuid:151394ed-8654-4e9a-a081-f3bf02b71b2d" type="boolean"/>
   </mmfunction:ScalarFunction>
   <mmfunction:ScalarFunction xmi:uuid="mmuuid:6387763f-0397-4abc-a2ca-46c9c0f793bd" name="JCR_ISDESCENDANTNODE" category="JCR" pushDown="REQUIRED">
-    <inputParameters xmi:uuid="mmuuid:c3a1f10b-58a5-4c5b-a94f-bac009b31284" name="path" type="string"/>
-    <inputParameters xmi:uuid="mmuuid:403500a9-f48b-4603-8d92-2011944baa9d" name="path" type="string"/>
+    <inputParameters xmi:uuid="mmuuid:c3a1f10b-58a5-4c5b-a94f-bac009b31284" name="path1" type="string"/>
+    <inputParameters xmi:uuid="mmuuid:403500a9-f48b-4603-8d92-2011944baa9d" name="path2" type="string"/>
     <returnParameter xmi:uuid="mmuuid:ae90df19-106a-481d-b905-68a9c2493316" type="boolean"/>
   </mmfunction:ScalarFunction>
   <mmfunction:ScalarFunction xmi:uuid="mmuuid:4ecc9ba6-a383-4196-a261-1860cc3ee88c" name="JCR_ISSAMENODE" category="JCR" pushDown="REQUIRED">
-    <inputParameters xmi:uuid="mmuuid:94a8a68c-4744-4cdb-9ad8-23417e5aff56" name="path" type="string"/>
-    <inputParameters xmi:uuid="mmuuid:004473ae-2199-43d0-b4bd-fd996fa18b7b" name="path" type="string"/>
+    <inputParameters xmi:uuid="mmuuid:94a8a68c-4744-4cdb-9ad8-23417e5aff56" name="path1" type="string"/>
+    <inputParameters xmi:uuid="mmuuid:004473ae-2199-43d0-b4bd-fd996fa18b7b" name="path2" type="string"/>
     <returnParameter xmi:uuid="mmuuid:8ab20d78-fd6a-400a-9e03-70be996b4cc6" type="boolean"/>
   </mmfunction:ScalarFunction>
   <mmfunction:ScalarFunction xmi:uuid="mmuuid:a84444b6-79b4-45bc-97bf-745503dabc03" name="JCR_CONTAINS" category="JCR" pushDown="REQUIRED">

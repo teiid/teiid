@@ -22,11 +22,10 @@
 
 package org.teiid.query.function.metadata;
 
-import org.teiid.api.exception.query.FunctionMetadataException;
-import org.teiid.query.function.metadata.FunctionMetadataValidator;
-import org.teiid.query.function.metadata.FunctionMethod;
-
 import junit.framework.TestCase;
+
+import org.teiid.api.exception.query.FunctionMetadataException;
+import org.teiid.metadata.FunctionMethod.PushDown;
 
 
 public class TestFunctionMetadataValidator extends TestCase {
@@ -55,7 +54,7 @@ public class TestFunctionMetadataValidator extends TestCase {
 	    }	    
 	}	
 
-	public void helpTestValidateFunction(String className, String methodName, int pushdown) {
+	public void helpTestValidateFunction(String className, String methodName, PushDown pushdown) {
 	    try {
 	        FunctionMetadataValidator.validateInvocationMethod(className, methodName, pushdown);
 	    } catch(FunctionMetadataException e) {
@@ -63,7 +62,7 @@ public class TestFunctionMetadataValidator extends TestCase {
 	    }	    
 	}
 	
-	public void helpTestValidateFunctionFail(String className, String methodName, int pushdown) { 
+	public void helpTestValidateFunctionFail(String className, String methodName, PushDown pushdown) { 
 	    try {
 	        FunctionMetadataValidator.validateInvocationMethod(className, methodName, pushdown);
 	     	fail("Expected exception but did not get one"); //$NON-NLS-1$
@@ -102,63 +101,63 @@ public class TestFunctionMetadataValidator extends TestCase {
 	}
 	
 	public void testValidateFunction1() {
-	 	helpTestValidateFunction("a", "b", FunctionMethod.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
+	 	helpTestValidateFunction("a", "b", PushDown.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	public void testValidateFunction2() {
-	 	helpTestValidateFunction("a.b", "b", FunctionMethod.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
+	 	helpTestValidateFunction("a.b", "b", PushDown.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	public void testValidateFunction3() {
-	 	helpTestValidateFunction("a.b.c", "b", FunctionMethod.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
+	 	helpTestValidateFunction("a.b.c", "b", PushDown.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	public void testValidateFunction4() {
-	 	helpTestValidateFunction("a$1", "b", FunctionMethod.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
+	 	helpTestValidateFunction("a$1", "b", PushDown.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
     public void testValidateFunction5() {
-        helpTestValidateFunction(null, null, FunctionMethod.MUST_PUSHDOWN);    
+        helpTestValidateFunction(null, null, PushDown.MUST_PUSHDOWN);    
     }
 
 	public void testValidateFunctionFail1() {
-	 	helpTestValidateFunctionFail(null, null, FunctionMethod.CAN_PUSHDOWN);   
+	 	helpTestValidateFunctionFail(null, null, PushDown.CAN_PUSHDOWN);   
 	}
 
 	public void testValidateFunctionFail2() {
-	 	helpTestValidateFunctionFail(null, "a", FunctionMethod.CAN_PUSHDOWN);    //$NON-NLS-1$
+	 	helpTestValidateFunctionFail(null, "a", PushDown.CAN_PUSHDOWN);    //$NON-NLS-1$
 	}
 
 	public void testValidateFunctionFail3() {
-	 	helpTestValidateFunctionFail("a", null, FunctionMethod.CAN_PUSHDOWN);    //$NON-NLS-1$
+	 	helpTestValidateFunctionFail("a", null, PushDown.CAN_PUSHDOWN);    //$NON-NLS-1$
 	}
 
 	public void testValidateFunctionFail4() {
-	 	helpTestValidateFunctionFail("1", "b", FunctionMethod.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
+	 	helpTestValidateFunctionFail("1", "b", PushDown.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	public void testValidateFunctionFail5() {
-	 	helpTestValidateFunctionFail("a", "2", FunctionMethod.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
+	 	helpTestValidateFunctionFail("a", "2", PushDown.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	public void testValidateFunctionFail6() {
-	 	helpTestValidateFunctionFail("a@(", "b", FunctionMethod.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
+	 	helpTestValidateFunctionFail("a@(", "b", PushDown.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	public void testValidateFunctionFail7() {
-	 	helpTestValidateFunctionFail("a.b.", "b", FunctionMethod.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
+	 	helpTestValidateFunctionFail("a.b.", "b", PushDown.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	public void testValidateFunctionFail8() {
-	 	helpTestValidateFunctionFail("a", "b.c", FunctionMethod.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
+	 	helpTestValidateFunctionFail("a", "b.c", PushDown.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
     public void testValidateFunctionFail9() {
-        helpTestValidateFunctionFail("a", "b@", FunctionMethod.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestValidateFunctionFail("a", "b@", PushDown.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testValidateFunctionFail10() {
-        helpTestValidateFunctionFail(null, null, FunctionMethod.CAN_PUSHDOWN);    
-        helpTestValidateFunctionFail(null, null, FunctionMethod.CANNOT_PUSHDOWN);    
+        helpTestValidateFunctionFail(null, null, PushDown.CAN_PUSHDOWN);    
+        helpTestValidateFunctionFail(null, null, PushDown.CANNOT_PUSHDOWN);    
     }
 }

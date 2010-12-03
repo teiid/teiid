@@ -25,6 +25,7 @@ package org.teiid.dqp.internal.datamgr;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -104,6 +105,12 @@ public class CapabilitiesConverter {
             while(iter.hasNext()) {
                 String func = (String) iter.next();
                 tgtCaps.setFunctionSupport(func.toLowerCase(), true);
+            }
+        }
+        List<FunctionMethod> pushDowns = srcCaps.getPushDownFunctions();
+        if(pushDowns != null && pushDowns.size() > 0) {
+            for(FunctionMethod func:pushDowns) {
+                tgtCaps.setFunctionSupport(func.getName().toLowerCase(), true);
             }
         }
         

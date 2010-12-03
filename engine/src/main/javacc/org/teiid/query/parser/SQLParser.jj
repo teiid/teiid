@@ -3539,9 +3539,6 @@ Expression function(ParseInfo info) :
 		}
 	|   
 	(	funcName = id()
-		{ 
-			funcName = validateFunctionName(funcName);
-		}
 		<LPAREN>
 		[
 			expression = expression(info)

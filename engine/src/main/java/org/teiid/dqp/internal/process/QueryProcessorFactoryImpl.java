@@ -29,6 +29,7 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.QueryOptimizer;
@@ -82,7 +83,7 @@ public class QueryProcessorFactoryImpl implements QueryProcessor.ProcessorFactor
 	        
 	        AbstractValidationVisitor visitor = new ValidationVisitor();
 	        Request.validateWithVisitor(visitor, metadata, newCommand);
-	        int determinismLevel = copy.resetDeterminismLevel();
+	        Determinism determinismLevel = copy.resetDeterminismLevel();
 	        newCommand = QueryRewriter.rewrite(newCommand, metadata, copy);
 	        AnalysisRecord record = new AnalysisRecord(false, false);
 	        ProcessorPlan plan = QueryOptimizer.optimizePlan(newCommand, metadata, idGenerator, finder, record, copy);

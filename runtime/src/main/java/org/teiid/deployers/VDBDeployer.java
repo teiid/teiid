@@ -193,6 +193,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 
 				ConnectorManager cm = new ConnectorManager(name, model.getSourceConnectionJndiName(source));
 				cm.setExecutionFactory(ef);
+				cm.setModelName(model.getName());
 				cmr.addConnectorManager(source, cm);
 			}
 		}

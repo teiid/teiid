@@ -30,14 +30,14 @@ import javax.xml.bind.JAXBException;
 
 import org.jboss.managed.api.annotation.ManagementObject;
 import org.jboss.virtual.VirtualFile;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.query.function.metadata.FunctionMetadataReader;
-import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.runtime.RuntimePlugin;
 
 
 @ManagementObject
 public class UDFMetaData {
-	private Collection <FunctionMethod> methods = new ArrayList<FunctionMethod>();
+	private Collection<Collection <FunctionMethod>> methods = new ArrayList<Collection<FunctionMethod>>();
 	
 	private HashMap<String, VirtualFile> files = new HashMap<String, VirtualFile>();
 	
@@ -55,18 +55,22 @@ public class UDFMetaData {
 		}
 		VirtualFile file =this.files.get(name);
 		if (file != null) {
-			this.methods.addAll(FunctionMetadataReader.loadFunctionMethods(file.openStream()));
+			this.methods.add(FunctionMetadataReader.loadFunctionMethods(file.openStream()));
 		}
 		else {
 			throw new IOException(RuntimePlugin.Util.getString("udf_model_not_found", name)); //$NON-NLS-1$
 		}
 	}
 	
-	public Collection <FunctionMethod> getFunctions(){
+	public Collection<Collection <FunctionMethod>> getFunctions(){
 		return this.methods;
 	}
 	
 	public void addFunctions(Collection <FunctionMethod> funcs){
-		this.methods.addAll(funcs);
+		this.methods.add(funcs);
 	}
+	
+	public void addFunctions(UDFMetaData funcs){
+		this.methods.addAll(funcs.getFunctions());
+	}	
 }

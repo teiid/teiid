@@ -22,7 +22,12 @@
 
 package org.teiid.query.function;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -56,7 +61,7 @@ import org.teiid.core.util.Base64;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants.NonReserved;
-import org.teiid.query.function.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.query.util.CommandContext;
@@ -98,8 +103,8 @@ public class TestFunctionLibrary {
             public String getName() {
                 return fname;
             }
-            public int getPushdown() {
-                return FunctionMethod.CAN_PUSHDOWN;
+            public PushDown getPushdown() {
+                return PushDown.CAN_PUSHDOWN;
             }
             public Class[] getTypes() { 
                 return ftypes;

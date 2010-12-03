@@ -92,7 +92,7 @@ public class TestTransformationMetadata {
 		vdb.addModel(buildModel("x1"));
 		vdb.addModel(buildModel("y"));
 		
-		return new TransformationMetadata(vdb, cms, resources, null, FakeMetadataFactory.SFM.getSystemFunctions());
+		return new TransformationMetadata(vdb, cms, resources, FakeMetadataFactory.SFM.getSystemFunctions(), null);
 	}
 	
 	ModelMetaData buildModel(String name) {
@@ -125,7 +125,7 @@ public class TestTransformationMetadata {
 		model2.setVisible(true);
 		vdb.addModel(model2);		
 
-		TransformationMetadata tm = new TransformationMetadata(vdb, cms, null, null, FakeMetadataFactory.SFM.getSystemFunctions());
+		TransformationMetadata tm = new TransformationMetadata(vdb, cms, null, FakeMetadataFactory.SFM.getSystemFunctions(), null);
 		Collection result = tm.getGroupsForPartialName("y"); //$NON-NLS-1$
 		assertEquals(2, result.size());
 
@@ -133,7 +133,7 @@ public class TestTransformationMetadata {
 
 		model.setVisible(false);
 
-		tm = new TransformationMetadata(vdb, cms, null, null, FakeMetadataFactory.SFM.getSystemFunctions());
+		tm = new TransformationMetadata(vdb, cms, null, FakeMetadataFactory.SFM.getSystemFunctions(), null);
 		result = tm.getGroupsForPartialName("y"); //$NON-NLS-1$
 		assertEquals(1, result.size());
 	}

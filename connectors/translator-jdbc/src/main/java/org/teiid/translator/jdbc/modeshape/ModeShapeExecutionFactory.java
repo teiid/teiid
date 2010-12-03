@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Comparison;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
@@ -37,6 +38,8 @@ import org.teiid.language.Not;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionParameter;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
@@ -51,6 +54,13 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 @Translator(name="modeshape", description="A translator for the open source Modeshape JCR Repository")
 public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 	
+	private static final String JCR = "JCR"; //$NON-NLS-1$
+	private static final String JCR_REFERENCE = "JCR_REFERENCE";//$NON-NLS-1$
+	private static final String JCR_CONTAINS = "JCR_CONTAINS";//$NON-NLS-1$
+	private static final String JCR_ISSAMENODE = "JCR_ISSAMENODE";//$NON-NLS-1$
+	private static final String JCR_ISDESCENDANTNODE = "JCR_ISDESCENDANTNODE";//$NON-NLS-1$
+	private static final String JCR_ISCHILDNODE = "JCR_ISCHILDNODE";//$NON-NLS-1$
+	
 	public ModeShapeExecutionFactory() {
 		setDatabaseVersion("2.0"); //$NON-NLS-1$
 		setUseBindVariables(false);
@@ -63,11 +73,11 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 		registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("UpperCase")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LCASE,new AliasModifier("LowerCase")); //$NON-NLS-1$
         
-		registerFunctionModifier("JCR_ISCHILDNODE", new IdentifierFunctionModifier()); //$NON-NLS-1$
-		registerFunctionModifier("JCR_ISDESCENDANTNODE", new IdentifierFunctionModifier()); //$NON-NLS-1$
-		registerFunctionModifier("JCR_ISSAMENODE", new IdentifierFunctionModifier()); //$NON-NLS-1$
-		registerFunctionModifier("JCR_REFERENCE", new IdentifierFunctionModifier()); //$NON-NLS-1$
-		registerFunctionModifier("JCR_CONTAINS", new IdentifierFunctionModifier()); //$NON-NLS-1$
+		registerFunctionModifier(JCR_ISCHILDNODE, new IdentifierFunctionModifier()); 
+		registerFunctionModifier(JCR_ISDESCENDANTNODE, new IdentifierFunctionModifier()); 
+		registerFunctionModifier(JCR_ISSAMENODE, new IdentifierFunctionModifier()); 
+		registerFunctionModifier(JCR_REFERENCE, new IdentifierFunctionModifier()); 
+		registerFunctionModifier(JCR_CONTAINS, new IdentifierFunctionModifier());
 		
     	LogManager.logTrace(LogConstants.CTX_CONNECTOR, "ModeShape Translator Started"); //$NON-NLS-1$
      }    
@@ -99,13 +109,43 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 		supportedFunctions.add(SourceSystemFunctions.UCASE); 
 		supportedFunctions.add(SourceSystemFunctions.LCASE); 
 		supportedFunctions.add(SourceSystemFunctions.LENGTH);
-		supportedFunctions.add("JCR_ISCHILDNODE"); //$NON-NLS-1$
-		supportedFunctions.add("JCR_ISDESCENDANTNODE"); //$NON-NLS-1$
-		supportedFunctions.add("JCR_ISSAMENODE"); //$NON-NLS-1$
-		supportedFunctions.add("JCR_REFERENCE"); //$NON-NLS-1$
-		supportedFunctions.add("JCR_CONTAINS"); //$NON-NLS-1$
 		return supportedFunctions;
     }
+    
+    
+    @Override
+    public List<FunctionMethod> getPushDownFunctions(){
+    	List<FunctionMethod> pushdownFunctions = new ArrayList<FunctionMethod>();
+		pushdownFunctions.add(new FunctionMethod(JCR_ISCHILDNODE, JCR_ISCHILDNODE, JCR, 
+            new FunctionParameter[] {
+				new FunctionParameter("path1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("path2", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
+            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		pushdownFunctions.add(new FunctionMethod(JCR_ISDESCENDANTNODE, JCR_ISDESCENDANTNODE, JCR, 
+                new FunctionParameter[] {
+				new FunctionParameter("path1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("path2", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
+
+		pushdownFunctions.add(new FunctionMethod(JCR_ISSAMENODE, JCR_ISSAMENODE, JCR, 
+                new FunctionParameter[] {
+					new FunctionParameter("path1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("path2", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		pushdownFunctions.add(new FunctionMethod(JCR_CONTAINS, JCR_CONTAINS, JCR, 
+                new FunctionParameter[] {
+                    new FunctionParameter("selectorOrProperty", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("searchExpr", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		pushdownFunctions.add(new FunctionMethod(JCR_REFERENCE, JCR_REFERENCE, JCR, 
+                new FunctionParameter[] {
+                    new FunctionParameter("selectorOrProperty", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
+    	return pushdownFunctions;    	
+    }    
     
     @Override
     public List<?> translate(LanguageObject obj, ExecutionContext context) {

@@ -34,8 +34,9 @@ import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.util.CommandContext;
 
 
@@ -50,13 +51,13 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 	private static final boolean ALLOW_NAN_INFINITY = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.allowNanInfinity", false); //$NON-NLS-1$
 	
 	private String name;
-    private int pushdown;
+    private PushDown pushdown = PushDown.CAN_PUSHDOWN;
 	private Class[] types;
 	private Class returnType;	
 	private int hash;
     private boolean requiresContext;
     private boolean nullDependent;
-    private int deterministic;
+    private Determinism deterministic = Determinism.DETERMINISTIC;
     
     // This is transient as it would be useless to invoke this method in 
     // a different VM.  This function descriptor can be used to look up 
@@ -74,7 +75,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
      * @param invocationMethod Reflection method used to invoke the function
      * @param requiresContext during execution requires command context to be pushed into method as first argument
      */
-	FunctionDescriptor(String name, int pushdown, Class[] types, Class returnType, Method invocationMethod, boolean requiresContext, boolean nullDependent, int deterministic) {
+	FunctionDescriptor(String name, PushDown pushdown, Class[] types, Class returnType, Method invocationMethod, boolean requiresContext, boolean nullDependent, Determinism deterministic) {
 		Assertion.isNotNull(name);
 		Assertion.isNotNull(types);
 		Assertion.isNotNull(returnType);
@@ -99,11 +100,11 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 		return this.name;				
 	}
     
-    public int getPushdown() {
+    public PushDown getPushdown() {
         return this.pushdown;
     }
     
-    void setPushdown(int pushdown) {
+    void setPushdown(PushDown pushdown) {
         this.pushdown = pushdown;
     }
 	
@@ -192,11 +193,11 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         return nullDependent;
     }
     
-    public int getDeterministic() {
+    public Determinism getDeterministic() {
         return deterministic;
     }
 
-    void setDeterministic(int deterministic) {
+    void setDeterministic(Determinism deterministic) {
         this.deterministic = deterministic;
     }
     
@@ -238,7 +239,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         	throw new FunctionExecutionException("ERR.015.001.0002", QueryPlugin.Util.getString("ERR.015.001.0002", getName())); //$NON-NLS-1$ //$NON-NLS-2$
         }
         
-        if (getDeterministic() >= FunctionMethod.USER_DETERMINISTIC && values.length > 0 && values[0] instanceof CommandContext) {
+        if (getDeterministic().isRestrictiveThanOrEqual(Determinism.USER_DETERMINISTIC) && values.length > 0 && values[0] instanceof CommandContext) {
         	CommandContext cc = (CommandContext)values[0];
         	cc.setDeterminismLevel(getDeterministic());
         }

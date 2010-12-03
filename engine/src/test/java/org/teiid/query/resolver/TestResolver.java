@@ -56,10 +56,13 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionLibrary;
+import org.teiid.query.function.FunctionTree;
+import org.teiid.query.function.UDFSource;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.optimizer.FakeFunctionMetadataSource;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.util.BindVariableVisitor;
 import org.teiid.query.sql.LanguageObject;
@@ -1581,6 +1584,20 @@ public class TestResolver {
     	}
     }
     
+	@Test public void testNamespacedFunction() throws Exception {     
+		String sql = "SELECT namespace.func('e1')  FROM vm1.g1 "; //$NON-NLS-1$
+
+        FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree(new UDFSource(new FakeFunctionMetadataSource().getFunctionMethods())));
+        FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
+		
+		Query command = (Query) helpParse(sql);
+		QueryResolver.resolveCommand(command, metadata);
+		
+		command = (Query) helpParse("SELECT func('e1')  FROM vm1.g1 ");
+		QueryResolver.resolveCommand(command, metadata);  		
+		
+	}    
+    
     // special test for both sides are String
     @Test public void testSetCriteriaCastFromExpression_9657() {
         // parse
@@ -3078,5 +3095,4 @@ public class TestResolver {
 
         helpResolveUpdateProcedure(procedure, userQuery);
 	}
-        
 }

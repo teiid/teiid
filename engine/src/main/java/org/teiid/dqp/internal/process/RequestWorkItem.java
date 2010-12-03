@@ -56,9 +56,9 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.logging.CommandLogMessage.Event;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.BatchCollector;
@@ -385,12 +385,12 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					doneProducingBatches();
 				}
 				if (doneProducingBatches && cid != null) {
-			    	int determinismLevel = processor.getContext().getDeterminismLevel();
+			    	Determinism determinismLevel = processor.getContext().getDeterminismLevel();
 	            	CachedResults cr = new CachedResults();
 	            	cr.setCommand(originalCommand);
 	                cr.setAnalysisRecord(analysisRecord);
 	                cr.setResults(resultsBuffer);
-	                if (determinismLevel > FunctionMethod.SESSION_DETERMINISTIC) {
+	                if (determinismLevel.isRestrictiveThan(Determinism.SESSION_DETERMINISTIC)) {
 	    				LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.getString("RequestWorkItem.cache_nondeterministic", originalCommand)); //$NON-NLS-1$
 	    			}
 	                dqpCore.getRsCache().put(cid, determinismLevel, cr, originalCommand.getCacheHint() != null?originalCommand.getCacheHint().getTtl():null);

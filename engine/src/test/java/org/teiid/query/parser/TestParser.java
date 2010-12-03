@@ -6572,10 +6572,17 @@ public class TestParser {
         helpException(sql, "Parsing error: Invalid alias format: [a.x]"); //$NON-NLS-1$
     }
     
-    @Test public void testBadFunctionName() {
+    @Test public void testNameSpacedFunctionName() {
         String sql = "select a.x()"; //$NON-NLS-1$
         
-        helpException(sql, "Parsing error: Invalid function name: [a.x]"); //$NON-NLS-1$
+        Query query = new Query();
+        Select select = new Select();
+        Function func1 = new Function("a.x", new Expression[] { }); //$NON-NLS-1$
+        ExpressionSymbol exprSymbol = new ExpressionSymbol("expr", func1); //$NON-NLS-1$
+        select.addSymbol(exprSymbol);        
+        query.setSelect(select);
+        
+        helpTest(sql, "SELECT a.x()", query); //$NON-NLS-1$
     }
     
     @Test public void testUnionJoin() {

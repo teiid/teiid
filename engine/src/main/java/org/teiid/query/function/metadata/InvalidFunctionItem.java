@@ -22,6 +22,7 @@
 
 package org.teiid.query.function.metadata;
 
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.query.report.ReportItem;
 
 /**

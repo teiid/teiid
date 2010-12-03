@@ -24,7 +24,7 @@ package org.teiid.query.function;
 
 import java.util.Collection;
 
-import org.teiid.query.function.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionMethod;
 
 
 

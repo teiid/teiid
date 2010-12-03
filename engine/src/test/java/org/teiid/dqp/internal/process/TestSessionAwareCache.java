@@ -21,6 +21,11 @@
  */
 package org.teiid.dqp.internal.process;
 
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.times;
+
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.impl.SessionMetadata;
@@ -28,10 +33,8 @@ import org.teiid.cache.Cachable;
 import org.teiid.cache.Cache;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
-import org.teiid.query.function.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.parser.ParseInfo;
-import static org.mockito.Mockito.*;
-import static org.junit.Assert.*;
 
 
 @SuppressWarnings("nls")
@@ -47,7 +50,7 @@ public class TestSessionAwareCache {
 		Cachable result = Mockito.mock(Cachable.class);
 		
 		id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
-		cache.put(id, FunctionMethod.SESSION_DETERMINISTIC, result, null);
+		cache.put(id, Determinism.SESSION_DETERMINISTIC, result, null);
 		
 		// make sure that in the case of session specific; we do not call prepare
 		// as session is local only call for distributed
@@ -71,7 +74,7 @@ public class TestSessionAwareCache {
 		Mockito.stub(result.prepare((Cache)anyObject(), (BufferManager)anyObject())).toReturn(true);
 		Mockito.stub(result.restore((Cache)anyObject(), (BufferManager)anyObject())).toReturn(true);
 				
-		cache.put(id, FunctionMethod.USER_DETERMINISTIC, result, null);
+		cache.put(id, Determinism.USER_DETERMINISTIC, result, null);
 		
 		// make sure that in the case of session specific; we do not call prepare
 		// as session is local only call for distributed
@@ -97,7 +100,7 @@ public class TestSessionAwareCache {
 		Mockito.stub(result.prepare((Cache)anyObject(), (BufferManager)anyObject())).toReturn(true);
 		Mockito.stub(result.restore((Cache)anyObject(), (BufferManager)anyObject())).toReturn(true);		
 		
-		cache.put(id, FunctionMethod.VDB_DETERMINISTIC, result, null);
+		cache.put(id, Determinism.VDB_DETERMINISTIC, result, null);
 		
 		// make sure that in the case of session specific; we do not call prepare
 		// as session is local only call for distributed
@@ -124,7 +127,7 @@ public class TestSessionAwareCache {
 		Mockito.stub(result.restore((Cache)anyObject(), (BufferManager)anyObject())).toReturn(true);		
 		
 		id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
-		cache.put(id, FunctionMethod.VDB_DETERMINISTIC, result, null);
+		cache.put(id, Determinism.VDB_DETERMINISTIC, result, null);
 		
 		Object c = cache.get(id);
 		

@@ -41,7 +41,7 @@ import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.query.function.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.parser.ParseInfo;
 import org.teiid.vdb.runtime.VDBKey;
 
@@ -142,8 +142,8 @@ public class SessionAwareCache<T> {
 		return localCache.size() + distributedCache.size();
 	}
 	
-	public void put(CacheID id, int determinismLevel, T t, Long ttl){
-		if (determinismLevel >= FunctionMethod.SESSION_DETERMINISTIC) {
+	public void put(CacheID id, Determinism determinismLevel, T t, Long ttl){
+		if (determinismLevel.isRestrictiveThanOrEqual(Determinism.SESSION_DETERMINISTIC)) {
 			id.setSessionId(id.originalSessionId);
 			LogManager.logTrace(LogConstants.CTX_DQP, "Adding to session/local cache", id); //$NON-NLS-1$
 			this.localCache.put(id, t, ttl);
@@ -154,7 +154,7 @@ public class SessionAwareCache<T> {
 			
 			id.setSessionId(null);
 			
-			if (determinismLevel == FunctionMethod.USER_DETERMINISTIC) {
+			if (determinismLevel == Determinism.USER_DETERMINISTIC) {
 				id.setUserName(id.originalUserName);
 			}
 			else {

@@ -29,10 +29,13 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionParameter;
+import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.function.metadata.FunctionMetadataReader;
-import org.teiid.query.function.metadata.FunctionMethod;
-import org.teiid.query.function.metadata.FunctionParameter;
 
+@SuppressWarnings("nls")
 public class TestFunctionMetadataReader extends TestCase {
 
 	public void testLoadFunctionMethods() throws Exception {
@@ -46,8 +49,8 @@ public class TestFunctionMetadataReader extends TestCase {
 				assertEquals("MyFunctions", m.getCategory());
 				assertEquals("com.metamatrix.dqp.embedded.udf.MyFunctions", m.getInvocationClass());
 				assertEquals("getProperty", m.getInvocationMethod());
-				assertEquals(FunctionMethod.CAN_PUSHDOWN, m.getPushdown());
-				assertEquals(FunctionMethod.DETERMINISTIC, m.getDeterministic());
+				assertEquals(PushDown.CAN_PUSHDOWN, m.getPushdown());
+				assertEquals(Determinism.DETERMINISTIC, m.getDeterminism());
 				assertNull(m.getDescription());
 				
 				assertEquals(1, m.getInputParameterCount());
@@ -65,8 +68,8 @@ public class TestFunctionMetadataReader extends TestCase {
 				assertEquals("MyFunctions", m.getCategory());
 				assertEquals("com.metamatrix.dqp.embedded.udf.MyFunctions", m.getInvocationClass());
 				assertEquals("getPropertyNoArgs", m.getInvocationMethod());
-				assertEquals(FunctionMethod.CANNOT_PUSHDOWN, m.getPushdown());
-				assertEquals(FunctionMethod.DETERMINISTIC, m.getDeterministic());
+				assertEquals(PushDown.CANNOT_PUSHDOWN, m.getPushdown());
+				assertEquals(Determinism.DETERMINISTIC, m.getDeterminism());
 				assertNull(m.getDescription());
 				
 				assertEquals(0, m.getInputParameterCount());
@@ -79,8 +82,8 @@ public class TestFunctionMetadataReader extends TestCase {
 				assertEquals("MyFunctions", m.getCategory());
 				assertEquals("com.metamatrix.dqp.embedded.udf.MyFunctions", m.getInvocationClass());
 				assertEquals("getPropertyNoArgs", m.getInvocationMethod());
-				assertEquals(FunctionMethod.CAN_PUSHDOWN, m.getPushdown());
-				assertEquals(FunctionMethod.NONDETERMINISTIC, m.getDeterministic());
+				assertEquals(PushDown.CAN_PUSHDOWN, m.getPushdown());
+				assertEquals(Determinism.NONDETERMINISTIC, m.getDeterminism());
 				assertNull(m.getDescription());
 				
 				assertEquals(0, m.getInputParameterCount());

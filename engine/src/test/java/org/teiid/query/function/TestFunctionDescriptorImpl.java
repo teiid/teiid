@@ -28,7 +28,8 @@ import junit.framework.TestCase;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.query.function.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.metadata.FunctionMethod.PushDown;
 
 
 public class TestFunctionDescriptorImpl extends TestCase {
@@ -74,39 +75,39 @@ public class TestFunctionDescriptorImpl extends TestCase {
     }
     
     public void test1() throws Exception {
-        FunctionDescriptor f1 = new FunctionDescriptor("+", FunctionMethod.CAN_PUSHDOWN, //$NON-NLS-1$
+        FunctionDescriptor f1 = new FunctionDescriptor("+", PushDown.CAN_PUSHDOWN, //$NON-NLS-1$
             new Class[] { DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.INTEGER },
             DataTypeManager.DefaultDataClasses.INTEGER,
-            lookupMethod("com.metamatrix.query.function.FunctionMethods", "plus", 2) , false, true, FunctionMethod.DETERMINISTIC);    //$NON-NLS-1$ //$NON-NLS-2$
+            lookupMethod("com.metamatrix.query.function.FunctionMethods", "plus", 2) , false, true, Determinism.DETERMINISTIC);    //$NON-NLS-1$ //$NON-NLS-2$
             
         UnitTestUtil.helpTestEquivalence(0, f1, f1);             
     }
 
     public void test2() throws Exception  {
-        FunctionDescriptor f1 = new FunctionDescriptor("+", FunctionMethod.CAN_PUSHDOWN,//$NON-NLS-1$
+        FunctionDescriptor f1 = new FunctionDescriptor("+", PushDown.CAN_PUSHDOWN,//$NON-NLS-1$
             new Class[] { DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.INTEGER },
             DataTypeManager.DefaultDataClasses.INTEGER,
-            lookupMethod("com.metamatrix.query.function.FunctionMethods", "plus", 2), false, true, FunctionMethod.DETERMINISTIC ); //$NON-NLS-1$ //$NON-NLS-2$
+            lookupMethod("com.metamatrix.query.function.FunctionMethods", "plus", 2), false, true, Determinism.DETERMINISTIC ); //$NON-NLS-1$ //$NON-NLS-2$
 
-        FunctionDescriptor f2 = new FunctionDescriptor("+", FunctionMethod.CAN_PUSHDOWN,//$NON-NLS-1$
+        FunctionDescriptor f2 = new FunctionDescriptor("+", PushDown.CAN_PUSHDOWN,//$NON-NLS-1$
             new Class[] { DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.INTEGER },
             DataTypeManager.DefaultDataClasses.INTEGER,
-            lookupMethod("com.metamatrix.query.function.FunctionMethods", "plus", 2), false, true, FunctionMethod.DETERMINISTIC ); //$NON-NLS-1$ //$NON-NLS-2$
+            lookupMethod("com.metamatrix.query.function.FunctionMethods", "plus", 2), false, true, Determinism.DETERMINISTIC ); //$NON-NLS-1$ //$NON-NLS-2$
 
         UnitTestUtil.helpTestEquivalence(0, f1, f2);
     }
     
     public void test3() throws Exception  {
-        FunctionDescriptor f1 = new FunctionDescriptor("+", FunctionMethod.CAN_PUSHDOWN,//$NON-NLS-1$
+        FunctionDescriptor f1 = new FunctionDescriptor("+", PushDown.CAN_PUSHDOWN,//$NON-NLS-1$
             new Class[] { DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.INTEGER },
             DataTypeManager.DefaultDataClasses.INTEGER,
-            lookupMethod("com.metamatrix.query.function.FunctionMethods", "plus", 2), false, false, FunctionMethod.DETERMINISTIC ); //$NON-NLS-1$ //$NON-NLS-2$
+            lookupMethod("com.metamatrix.query.function.FunctionMethods", "plus", 2), false, false, Determinism.DETERMINISTIC ); //$NON-NLS-1$ //$NON-NLS-2$
 
         
-        FunctionDescriptor f2 = new FunctionDescriptor("+", FunctionMethod.CAN_PUSHDOWN,//$NON-NLS-1$
+        FunctionDescriptor f2 = new FunctionDescriptor("+", PushDown.CAN_PUSHDOWN,//$NON-NLS-1$
             new Class[] { DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.INTEGER },
             DataTypeManager.DefaultDataClasses.INTEGER,
-            lookupMethod("com.metamatrix.query.function.FunctionMethods", "plus", 2), false, true, FunctionMethod.DETERMINISTIC ); //$NON-NLS-1$ //$NON-NLS-2$
+            lookupMethod("com.metamatrix.query.function.FunctionMethods", "plus", 2), false, true, Determinism.DETERMINISTIC ); //$NON-NLS-1$ //$NON-NLS-2$
 
         assertNotSame("objects should not be equal", f1, f2); //$NON-NLS-1$
     }

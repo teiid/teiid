@@ -57,10 +57,10 @@ import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.SecurityFunctionEvaluator;
-import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempCapabilitiesFinder;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -383,7 +383,7 @@ public class Request {
         Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroups(command, true);
         for (GroupSymbol groupSymbol : groups) {
 			if (groupSymbol.isTempTable()) {
-				this.context.setDeterminismLevel(FunctionMethod.SESSION_DETERMINISTIC);
+				this.context.setDeterminismLevel(Determinism.SESSION_DETERMINISTIC);
 				break;
 			}
 		}

@@ -23,15 +23,19 @@
 package org.teiid.translator.salesforce;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.resource.cci.ConnectionFactory;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
@@ -51,6 +55,9 @@ import org.teiid.translator.salesforce.execution.UpdateExecutionImpl;
 @Translator(name="salesforce", description="A translator for Salesforce")
 public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFactory, SalesforceConnection> {
 
+	private static final String SALESFORCE = "salesforce"; //$NON-NLS-1$
+	private static final String EXCLUDES = "excludes";//$NON-NLS-1$
+	private static final String INCLUDES = "includes";//$NON-NLS-1$
 	private String connectorStateClass;
 	private boolean auditModelFields = false;	
 	
@@ -123,10 +130,24 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 
     @Override
     public List getSupportedFunctions() {
-        List<String> supportedFunctions = new ArrayList<String>();
-        supportedFunctions.add("includes"); //$NON-NLS-1$
-        supportedFunctions.add("excludes"); //$NON-NLS-1$
-        return supportedFunctions;
+        return Collections.EMPTY_LIST;
+    }
+    
+    @Override
+    public List<FunctionMethod> getPushDownFunctions(){
+    	List<FunctionMethod> pushdownFunctions = new ArrayList<FunctionMethod>();
+		pushdownFunctions.add(new FunctionMethod(INCLUDES, INCLUDES, SALESFORCE, 
+            new FunctionParameter[] {
+                new FunctionParameter("columnName", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("param", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
+            new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		pushdownFunctions.add(new FunctionMethod(EXCLUDES, EXCLUDES, SALESFORCE, 
+                new FunctionParameter[] {
+                    new FunctionParameter("columnName", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("param", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$    		
+    	return pushdownFunctions;    	
     }
 
     @Override

@@ -27,6 +27,9 @@ import java.util.Iterator;
 
 import org.teiid.api.exception.query.FunctionMetadataException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionParameter;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.report.ActivityReport;
 
@@ -209,8 +212,8 @@ public class FunctionMetadataValidator {
      * @param invocationMethod Invocation method to validate
      * @throws FunctionMetadataException Thrown if invocation method is not valid in some way
      */
-    public static final void validateInvocationMethod(String invocationClass, String invocationMethod, int pushdown) throws FunctionMetadataException {
-    	if (pushdown == FunctionMethod.CAN_PUSHDOWN || pushdown == FunctionMethod.CANNOT_PUSHDOWN) {
+    public static final void validateInvocationMethod(String invocationClass, String invocationMethod, PushDown pushdown) throws FunctionMetadataException {
+    	if (pushdown == PushDown.CAN_PUSHDOWN || pushdown == PushDown.CANNOT_PUSHDOWN) {
             validateIsNotNull(invocationClass, "Invocation class"); //$NON-NLS-1$
             validateIsNotNull(invocationMethod, "Invocation method"); //$NON-NLS-1$
             validateJavaIdentifier(invocationClass, "Invocation class", true); //$NON-NLS-1$

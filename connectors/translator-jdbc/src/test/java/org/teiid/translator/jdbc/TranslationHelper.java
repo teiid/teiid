@@ -36,8 +36,8 @@ import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.cdk.unittest.FakeTranslationFactory;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.language.Command;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.query.function.metadata.FunctionMetadataReader;
-import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 

@@ -27,6 +27,7 @@
 package org.teiid.dqp.internal.datamgr;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,6 +46,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.metadata.Datatype;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.QueryPlugin;
@@ -68,6 +70,7 @@ public class ConnectorManager  {
 
 	private String translatorName;
 	private String connectionName;
+	private String modelName;
 	
     // known requests
     private ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem> requestStates = new ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem>();
@@ -128,6 +131,10 @@ public class ConnectorManager  {
 		}
 		return factory.getMetadataStore();
 	}    
+    
+    public List<FunctionMethod> getPushDownFunctions(){
+    	return getExecutionFactory().getPushDownFunctions();
+    }
     
     public SourceCapabilities getCapabilities() throws TeiidComponentException {
     	if (cachedCapabilities != null) {
@@ -274,5 +281,13 @@ public class ConnectorManager  {
     
     public String getConnectionName() {
     	return this.connectionName;
+    }
+    
+    public void setModelName(String modelName) {
+    	this.modelName = modelName;
+    }
+    
+    public String getModelName() {
+    	return this.modelName;
     }
 }

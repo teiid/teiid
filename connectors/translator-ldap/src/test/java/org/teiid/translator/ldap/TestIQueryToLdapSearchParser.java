@@ -304,7 +304,7 @@ public class TestIQueryToLdapSearchParser extends TestCase {
         }
         
         // Create the facade from the store
-        return new TransformationMetadata(null, new CompositeMetadataStore(metadataStore), null, null, FakeMetadataFactory.SFM.getSystemFunctions());
+        return new TransformationMetadata(null, new CompositeMetadataStore(metadataStore), null, FakeMetadataFactory.SFM.getSystemFunctions(), null);
     }    
 }
 

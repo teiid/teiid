@@ -22,12 +22,10 @@
 
 package org.teiid.query.function.metadata;
 
-import org.teiid.core.util.UnitTestUtil;
-import org.teiid.query.function.metadata.FunctionCategoryConstants;
-import org.teiid.query.function.metadata.FunctionMethod;
-import org.teiid.query.function.metadata.FunctionParameter;
-
 import junit.framework.TestCase;
+
+import org.teiid.core.util.UnitTestUtil;
+import org.teiid.metadata.FunctionParameter;
 
 
 public class TestFunctionMethod extends TestCase {

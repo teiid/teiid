@@ -35,6 +35,7 @@ public class Schema extends AbstractMetadataRecord {
     
     private Map<String, Table> tables = new LinkedHashMap<String, Table>();
 	private Map<String, Procedure> procedures = new LinkedHashMap<String, Procedure>();
+	private Map<String, FunctionMethod> functions = new LinkedHashMap<String, FunctionMethod>();
 	
 	public void addTable(Table table) {
 		table.setParent(this);
@@ -45,6 +46,10 @@ public class Schema extends AbstractMetadataRecord {
 		procedure.setParent(this);
 		this.procedures.put(procedure.getName().toLowerCase(), procedure);
 	}
+	
+	public void addFunction(FunctionMethod function) {
+		this.functions.put(function.getName().toLowerCase(), function);
+	}	
 
 	/**
 	 * Get the tables defined in this schema
@@ -60,6 +65,14 @@ public class Schema extends AbstractMetadataRecord {
 	 */
 	public Map<String, Procedure> getProcedures() {
 		return procedures;
+	}
+	
+	/**
+	 * Get the functions defined in this schema
+	 * @return
+	 */
+	public Map<String, FunctionMethod> getFunctions() {
+		return functions;
 	}
 	
     public String getPrimaryMetamodelUri() {

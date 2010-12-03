@@ -11,6 +11,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import org.teiid.metadata.FunctionMethod;
+
 @XmlType
 @XmlRootElement(namespace="http://www.omg.org/XMI", name="XMI")
 public class FunctionMetadataReader {

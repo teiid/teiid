@@ -63,10 +63,10 @@ import org.teiid.core.types.XMLType;
 import org.teiid.core.types.XMLType.Type;
 import org.teiid.core.types.basic.StringToSQLXMLTransform;
 import org.teiid.core.util.EquivalenceUtil;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionLibrary;
-import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.sql.LanguageObject;
@@ -963,7 +963,7 @@ public class Evaluator {
 	    }            
 	    
 	    // Check for function we can't evaluate
-	    if(fd.getPushdown() == FunctionMethod.MUST_PUSHDOWN) {
+	    if(fd.getPushdown() == PushDown.MUST_PUSHDOWN) {
 	        throw new TeiidComponentException(QueryPlugin.Util.getString("ExpressionEvaluator.Must_push", fd.getName())); //$NON-NLS-1$
 	    }
 	

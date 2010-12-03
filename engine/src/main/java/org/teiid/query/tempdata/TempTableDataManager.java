@@ -57,10 +57,10 @@ import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.Evaluator;
-import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
@@ -277,7 +277,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 		option.setNoCache(true);
 		option.addNoCacheGroup(fullName);
 		proc.setOption(option);
-		int determinismLevel = context.resetDeterminismLevel();
+		Determinism determinismLevel = context.resetDeterminismLevel();
 		QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(proc.toString(), fullName.toUpperCase(), context);
 		qp.setNonBlocking(true);
 		BatchCollector bc = qp.createBatchCollector();
@@ -505,7 +505,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 					TupleBuffer tb = bc.collectTuples();
 					cr.setResults(tb);
 					touchTable(context, fullName, true);
-					this.distributedCache.put(cid, FunctionMethod.VDB_DETERMINISTIC, cr, info.getTtl());
+					this.distributedCache.put(cid, Determinism.VDB_DETERMINISTIC, cr, info.getTtl());
 					ts = tb.createIndexedTupleSource();
 				} else {
 					ts = new BatchCollector.BatchProducerTupleSource(qp);

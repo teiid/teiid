@@ -34,6 +34,7 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.core.id.IntegerIDFactory;
 import org.teiid.dqp.internal.process.PreparedPlan;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempCapabilitiesFinder;
@@ -111,7 +112,7 @@ public class QueryOptimizer {
 				String fullName = metadata.getFullName(cupc.getVirtualGroup().getMetadataID());
 				PreparedPlan pp = context.getPlan(fullName);
 				if (pp == null) {
-					int determinismLevel = context.resetDeterminismLevel();
+					Determinism determinismLevel = context.resetDeterminismLevel();
 					ProcessorPlan plan = planProcedure(command, metadata, idGenerator, capFinder, analysisRecord, context);
 					//note that this is not a full prepared plan.  It is not usable by user queries.
 					pp = new PreparedPlan();

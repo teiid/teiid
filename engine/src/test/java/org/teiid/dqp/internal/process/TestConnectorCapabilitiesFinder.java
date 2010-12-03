@@ -23,16 +23,22 @@
 package org.teiid.dqp.internal.process;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.dqp.internal.datamgr.CapabilitiesConverter;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
+import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionParameter;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
+import org.teiid.translator.ExecutionFactory;
 
 
 /**
@@ -77,4 +83,20 @@ public class TestConnectorCapabilitiesFinder extends TestCase {
         assertEquals("Did not get expected capabilities", true, actual.supportsFunction(functionName)); //$NON-NLS-1$
     }
 
+    
+    public void testPushdownFunctionSupport() throws Exception {
+    	ExecutionFactory<Object, Object> ef  = new ExecutionFactory<Object, Object>(){
+    	    public List<FunctionMethod> getPushDownFunctions(){
+    	    	ArrayList<FunctionMethod> list = new ArrayList<FunctionMethod>();
+    	    	list.add(new FunctionMethod("ns.func", "function", "misc",   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    	                new FunctionParameter[] {
+    	                new FunctionParameter("param", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
+    	                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "" ) )); //$NON-NLS-1$ //$NON-NLS-2$    	    	
+    	    	return list;
+    	    }    		
+    	};
+    	
+    	BasicSourceCapabilities bsc = CapabilitiesConverter.convertCapabilities(ef, "conn"); //$NON-NLS-1$
+        assertEquals("Did not get expected capabilities", true, bsc.supportsFunction("ns.func")); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 }

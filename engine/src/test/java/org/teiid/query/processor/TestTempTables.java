@@ -22,7 +22,8 @@
 
 package org.teiid.query.processor;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -36,7 +37,7 @@ import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.SessionAwareCache;
-import org.teiid.query.function.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
@@ -58,7 +59,7 @@ public class TestTempTables {
 		CommandContext cc = TestProcessor.createCommandContext();
 		cc.setTempTableStore(tempStore);
 		TestProcessor.doProcess(processorPlan, dataManager, expectedResults, cc);
-		assertTrue(cc.getDeterminismLevel() <= FunctionMethod.SESSION_DETERMINISTIC);
+		assertTrue(Determinism.SESSION_DETERMINISTIC.isRestrictiveThanOrEqual(cc.getDeterminismLevel()));
 	}
 
 	@Before public void setUp() {

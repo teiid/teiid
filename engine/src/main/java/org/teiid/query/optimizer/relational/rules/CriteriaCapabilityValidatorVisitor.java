@@ -27,9 +27,9 @@ import java.util.Collection;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -228,7 +228,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
             if (EvaluatableVisitor.willBecomeConstant(obj, true)) { 
                 return; 
             }
-            if(obj.getFunctionDescriptor().getPushdown() == FunctionMethod.CANNOT_PUSHDOWN) {
+            if(obj.getFunctionDescriptor().getPushdown() == PushDown.CANNOT_PUSHDOWN) {
             	markInvalid(obj, "Function metadata indicates it cannot be pusheddown."); //$NON-NLS-1$
             	return;
             }

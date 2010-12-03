@@ -49,6 +49,7 @@ import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
@@ -65,25 +66,17 @@ import org.teiid.translator.jdbc.LocateFunctionModifier;
 @Translator(name="oracle", description="A translator for Oracle 9i Database or later")
 public class OracleExecutionFactory extends JDBCExecutionFactory {
 
+	
 	private static final String TIME_FORMAT = "HH24:MI:SS"; //$NON-NLS-1$
 	private static final String DATE_FORMAT = "YYYY-MM-DD"; //$NON-NLS-1$
 	private static final String DATETIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT; //$NON-NLS-1$
 	private static final String TIMESTAMP_FORMAT = DATETIME_FORMAT + ".FF";  //$NON-NLS-1$
 
-	/*
-	 * Spatial Functions
-	 */
-	public static final String RELATE = "sdo_relate"; //$NON-NLS-1$
-	public static final String NEAREST_NEIGHBOR = "sdo_nn"; //$NON-NLS-1$
-	public static final String FILTER = "sdo_filter"; //$NON-NLS-1$
-	public static final String WITHIN_DISTANCE = "sdo_within_distance"; //$NON-NLS-1$
-	public static final String NEAREST_NEIGHBOR_DISTANCE = "sdo_nn_distance"; //$NON-NLS-1$
-
     public final static String HINT_PREFIX = "/*+"; //$NON-NLS-1$
     public final static String DUAL = "DUAL"; //$NON-NLS-1$
     public final static String ROWNUM = "ROWNUM"; //$NON-NLS-1$
     public final static String SEQUENCE = ":SEQUENCE="; //$NON-NLS-1$
-	
+    
     public void start() throws TranslatorException {
         super.start();
         
@@ -120,10 +113,10 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 		});
         
         //spatial functions
-        registerFunctionModifier(RELATE, new OracleSpatialFunctionModifier());
-        registerFunctionModifier(NEAREST_NEIGHBOR, new OracleSpatialFunctionModifier());
-        registerFunctionModifier(FILTER, new OracleSpatialFunctionModifier());
-        registerFunctionModifier(WITHIN_DISTANCE, new OracleSpatialFunctionModifier());
+        registerFunctionModifier(OracleSpatialFunctions.RELATE, new OracleSpatialFunctionModifier());
+        registerFunctionModifier(OracleSpatialFunctions.NEAREST_NEIGHBOR, new OracleSpatialFunctionModifier());
+        registerFunctionModifier(OracleSpatialFunctions.FILTER, new OracleSpatialFunctionModifier());
+        registerFunctionModifier(OracleSpatialFunctions.WITHIN_DISTANCE, new OracleSpatialFunctionModifier());
         
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
@@ -335,7 +328,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	        // If so, the ORDERED hint is added, if not, it isn't
 	        Collection<Function> col = CollectorVisitor.collectObjects(Function.class, command);
 	        for (Function func : col) {
-	            if (func.getName().equalsIgnoreCase(RELATE)) {
+	            if (func.getName().equalsIgnoreCase(OracleSpatialFunctions.RELATE)) {
 	                return comment + "/*+ ORDERED */ "; //$NON-NLS-1$
 	            }
 	        }
@@ -465,12 +458,12 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("NVL");      //$NON-NLS-1$ 
         supportedFunctions.add("COALESCE"); //$NON-NLS-1$
         
-        supportedFunctions.add(OracleExecutionFactory.RELATE);
-        supportedFunctions.add(OracleExecutionFactory.NEAREST_NEIGHBOR);
-        supportedFunctions.add(OracleExecutionFactory.FILTER);
-        supportedFunctions.add(OracleExecutionFactory.NEAREST_NEIGHBOR_DISTANCE);
-        supportedFunctions.add(OracleExecutionFactory.WITHIN_DISTANCE);
         return supportedFunctions;
+    }
+    
+    @Override
+    public List<FunctionMethod> getPushDownFunctions(){
+    	return OracleSpatialFunctions.getOracleSpatialFunctions();
     }
     
     @Override

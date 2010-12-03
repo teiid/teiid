@@ -29,13 +29,13 @@ import java.util.Collection;
 import org.teiid.cdk.CommandBuilder;
 import org.teiid.dqp.internal.datamgr.RuntimeMetadataImpl;
 import org.teiid.language.Command;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.index.VDBMetadataFactory;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.function.UDFSource;
-import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.metadata.BasicQueryMetadataWrapper;
 import org.teiid.query.metadata.QueryMetadataInterface;
 

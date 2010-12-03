@@ -36,9 +36,9 @@ import org.teiid.core.util.ArgCheck;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.SecurityFunctionEvaluator;
-import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.relational.PlanToProcessConverter;
 import org.teiid.query.parser.ParseInfo;
@@ -90,7 +90,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    
 	    private QueryProcessor.ProcessorFactory queryProcessorFactory;
 	        
-	    private int determinismLevel;
+	    private Determinism determinismLevel = Determinism.DETERMINISTIC;
 	    
 	    private Set<String> groups;
 	    
@@ -152,18 +152,18 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     	this.globalState = state;
     }
     
-    public int getDeterminismLevel() {
+    public Determinism getDeterminismLevel() {
 		return globalState.determinismLevel;
 	}
     
-    public int resetDeterminismLevel() {
-    	int result = globalState.determinismLevel;
-    	globalState.determinismLevel = 0;
+    public Determinism resetDeterminismLevel() {
+    	Determinism result = globalState.determinismLevel;
+    	globalState.determinismLevel = Determinism.DETERMINISTIC;
     	return result;
     }
     
-    public void setDeterminismLevel(int level) {
-    	globalState.determinismLevel = Math.max(globalState.determinismLevel, level);
+    public void setDeterminismLevel(Determinism level) {
+    	globalState.determinismLevel = Determinism.restrictiveOf(globalState.determinismLevel, level);
     }
     
     /**
@@ -485,16 +485,16 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     	PreparedPlan pp = this.globalState.planCache.get(id);
     	if (pp != null) {
     		if (id.getSessionId() != null) {
-    			setDeterminismLevel(FunctionMethod.USER_DETERMINISTIC);
+    			setDeterminismLevel(Determinism.USER_DETERMINISTIC);
     		} else if (id.getUserName() != null) {
-    			setDeterminismLevel(FunctionMethod.SESSION_DETERMINISTIC);
+    			setDeterminismLevel(Determinism.SESSION_DETERMINISTIC);
     		}
         	return pp;
     	}
     	return null;
     }
     
-    public void putPlan(String key, PreparedPlan plan, int determinismLevel) {
+    public void putPlan(String key, PreparedPlan plan, Determinism determinismLevel) {
     	if (this.globalState.planCache == null) {
     		return;
     	}

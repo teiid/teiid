@@ -32,8 +32,8 @@ import java.util.Set;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
@@ -350,7 +350,7 @@ public final class RuleMergeVirtual implements
             // TEIID-16: We do not want to merge a non-deterministic scalar function
             Collection<Function> functions = FunctionCollectorVisitor.getFunctions(symbol, true, true);
            	for (Function function : functions) {
-           		if ( function.getFunctionDescriptor().getDeterministic() >= FunctionMethod.NONDETERMINISTIC ) {
+           		if ( function.getFunctionDescriptor().getDeterministic().isRestrictiveThanOrEqual(Determinism.NONDETERMINISTIC )) {
            			return false;
            		}
             }

@@ -35,7 +35,7 @@ import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.query.function.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
@@ -473,7 +473,7 @@ class JoinRegion {
         Iterator functions = FunctionCollectorVisitor.getFunctions(expression, true).iterator();
         while (functions.hasNext()) {
             Function function = (Function)functions.next();
-            if (function.getFunctionDescriptor().getPushdown() == FunctionMethod.CANNOT_PUSHDOWN) {
+            if (function.getFunctionDescriptor().getPushdown() == PushDown.CANNOT_PUSHDOWN) {
                 return true;
             }
         }

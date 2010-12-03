@@ -276,4 +276,18 @@ public class MetadataFactory {
 			}
 		}
 	}
+	
+	/**
+	 * Add a function with the given name to the model.  
+	 * @param name
+	 * @return
+	 * @throws TranslatorException 
+	 */
+	public FunctionMethod addFunction(String name) throws TranslatorException {
+		FunctionMethod function = new FunctionMethod();
+		function.setName(name);
+		setUUID(function);
+		this.schema.addFunction(function);
+		return function;
+	}		
 }

@@ -102,17 +102,6 @@ public class SQLParserUtil {
 		return sb.toString();
 	}
 	
-    String validateFunctionName(String id) throws ParseException {
-    	int length = id.length();
-        for(int i=0; i<length; i++) { 
-            char c = id.charAt(i);
-            if(! (c == '_' || StringUtil.isLetterOrDigit(c))) { 
-                throw new ParseException(QueryPlugin.Util.getString("SQLParser.Invalid_func", id)); //$NON-NLS-1$   
-            }
-        }
-        return id;
-    }
-
     /**
      * Check if this is a valid string literal
      * @param id Possible string literal

@@ -160,7 +160,7 @@ public class TestSqlServerConversionVisitor {
         obj.setNativeType("uniqueidentifier"); //$NON-NLS-1$
         
         CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
-        QueryMetadataInterface metadata = new TransformationMetadata(null, store, null, null, FakeMetadataFactory.SFM.getSystemFunctions());
+        QueryMetadataInterface metadata = new TransformationMetadata(null, store, null, FakeMetadataFactory.SFM.getSystemFunctions(), null);
         
         TranslationUtility tu = new TranslationUtility(metadata);
         Command command = tu.parseCommand("select max(x) from bar"); //$NON-NLS-1$

@@ -38,10 +38,12 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.FileUtils;
 import org.teiid.core.util.LRUCache;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.query.function.FunctionTree;
 import org.teiid.query.function.SystemFunctionManager;
+import org.teiid.query.function.UDFSource;
 import org.teiid.query.function.metadata.FunctionMetadataReader;
-import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.TransformationMetadata;
 
@@ -85,7 +87,7 @@ public class VDBMetadataFactory {
 				methods = FunctionMetadataReader.loadFunctionMethods(udfFile.openStream());
 			}
 			SystemFunctionManager sfm = new SystemFunctionManager();
-			vdbmetadata = new TransformationMetadata(null, new CompositeMetadataStore(Arrays.asList(getSystem(), imf.getMetadataStore(getSystem().getDatatypes()))), imf.getEntriesPlusVisibilities(), methods, sfm.getSystemFunctions()); 
+			vdbmetadata = new TransformationMetadata(null, new CompositeMetadataStore(Arrays.asList(getSystem(), imf.getMetadataStore(getSystem().getDatatypes()))), imf.getEntriesPlusVisibilities(), sfm.getSystemFunctions(), new FunctionTree(new UDFSource(methods), true)); 
 			VDB_CACHE.put(vdbURL, vdbmetadata);
 			return vdbmetadata;
 		} catch (URISyntaxException e) {

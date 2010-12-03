@@ -32,6 +32,8 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnSet;
 import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
@@ -41,6 +43,8 @@ import org.teiid.metadata.Table;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ProcedureParameter.Type;
+import org.teiid.query.function.FunctionTree;
+import org.teiid.query.function.UDFSource;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -57,8 +61,7 @@ public class RealMetadataFactory {
     public static TransformationMetadata exampleBQTCached() {
         return CACHED_BQT;
     }
-    
-    public static TransformationMetadata exampleBQT() {
+    public static MetadataStore exampleBQTStore() {
     	MetadataStore metadataStore = new MetadataStore();
     	
         Schema bqt1 = createPhysicalModel("BQT1", metadataStore); //$NON-NLS-1$
@@ -264,21 +267,32 @@ public class RealMetadataFactory {
         Procedure vsp7 = createVirtualProcedure("TEIIDSP7", mmspTest1, Arrays.asList(vsp7p1), vspqn7); //$NON-NLS-1$
         vsp7.setResultSet(vsprs7);
         
-    	return createTransformationMetadata(metadataStore, "bqt"); 
+        // this is for the source added function
+        bqt1.addFunction(new FunctionMethod("reverse", "reverse", "misc", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+                new FunctionParameter[] {new FunctionParameter("columnName", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$    		
+        
+    	 return metadataStore;
     }
+    
+	public static TransformationMetadata exampleBQT() {
+		return createTransformationMetadata(exampleBQTStore(), "bqt");	
+	}
+    
 
-	public static TransformationMetadata createTransformationMetadata(
-			MetadataStore metadataStore, String vdbName) {
+	public static TransformationMetadata createTransformationMetadata(MetadataStore metadataStore, String vdbName) {
 		CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
     	VDBMetaData vdbMetaData = new VDBMetaData();
     	vdbMetaData.setName(vdbName); //$NON-NLS-1$
     	vdbMetaData.setVersion(1);
+    	List<FunctionTree> udfs = new ArrayList<FunctionTree>();
     	for (Schema schema : metadataStore.getSchemas().values()) {
 			vdbMetaData.addModel(FakeMetadataFactory.createModel(schema.getName(), schema.isPhysical()));
+			udfs.add(new FunctionTree(new UDFSource(schema.getFunctions().values()), true));
 		}
-    	return new TransformationMetadata(vdbMetaData, store, null, null, FakeMetadataFactory.SFM.getSystemFunctions());
+    	return new TransformationMetadata(vdbMetaData, store, null, FakeMetadataFactory.SFM.getSystemFunctions(), udfs.toArray(new FunctionTree[udfs.size()]));
 	}
-    
+	
     /** 
      * Metadata for Materialized Views
      * @return

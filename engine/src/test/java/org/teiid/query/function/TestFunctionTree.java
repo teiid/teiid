@@ -33,9 +33,11 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionParameter;
+import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
-import org.teiid.query.function.metadata.FunctionMethod;
-import org.teiid.query.function.metadata.FunctionParameter;
 import org.teiid.query.function.source.SystemSource;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
@@ -71,9 +73,9 @@ public class TestFunctionTree {
     
     @Test public void testLoadErrors() {
     	FunctionMethod method = new FunctionMethod(
-    			"dummy", null, null, FunctionMethod.CAN_PUSHDOWN, "nonexistentClass", "noMethod",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+    			"dummy", null, null, PushDown.CAN_PUSHDOWN, "nonexistentClass", "noMethod",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 	 	    	new FunctionParameter[0], 
-	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING)); //$NON-NLS-1$
+	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING), false, Determinism.DETERMINISTIC); //$NON-NLS-1$
     	
     	//allowed, since we're not validating the class
     	new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree(new UDFSource(Arrays.asList(method))));
@@ -133,12 +135,15 @@ public class TestFunctionTree {
     }
     
     @Test public void testNullCategory() {
-    	FunctionMetadataSource fms = Mockito.mock(FunctionMetadataSource.class);
-    	Mockito.stub(fms.getFunctionMethods()).toReturn(Arrays.asList(new FunctionMethod(
-    			"dummy", null, null, FunctionMethod.MUST_PUSHDOWN, "nonexistentClass", "noMethod",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+    	FunctionMethod method = new FunctionMethod(
+    			"dummy", null, null, PushDown.MUST_PUSHDOWN, "nonexistentClass", "noMethod",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 	 	    	new FunctionParameter[0], 
-	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING) //$NON-NLS-1$
-    	)));
+	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING), //$NON-NLS-1$
+	 	    	false, Determinism.DETERMINISTIC);
+    	
+    	Collection<org.teiid.metadata.FunctionMethod> list = Arrays.asList(method);
+    	FunctionMetadataSource fms = Mockito.mock(FunctionMetadataSource.class);
+    	Mockito.stub(fms.getFunctionMethods()).toReturn(list);
     	FunctionTree ft = new FunctionTree(fms);
     	assertEquals(1, ft.getFunctionForms(FunctionCategoryConstants.MISCELLANEOUS).size());
     }

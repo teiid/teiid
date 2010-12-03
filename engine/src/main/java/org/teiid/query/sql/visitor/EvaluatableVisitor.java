@@ -27,8 +27,9 @@ package org.teiid.query.sql.visitor;
 
 import java.util.TreeSet;
 
+import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.function.FunctionLibrary;
-import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
@@ -63,16 +64,16 @@ public class EvaluatableVisitor extends LanguageVisitor {
 
 	private TreeSet<EvaluationLevel> levels = new TreeSet<EvaluationLevel>();
 	private EvaluationLevel targetLevel;
-	private int determinismLevel;
+	private Determinism determinismLevel = Determinism.DETERMINISTIC;
 	private boolean hasCorrelatedReferences;
 	    
     public void visit(Function obj) {
         this.setDeterminismLevel(obj.getFunctionDescriptor().getDeterministic());
-        if (obj.getFunctionDescriptor().getPushdown() == FunctionMethod.MUST_PUSHDOWN) {
+        if (obj.getFunctionDescriptor().getPushdown() == PushDown.MUST_PUSHDOWN) {
             evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
         } else if (obj.getName().equalsIgnoreCase(FunctionLibrary.LOOKUP)
         		//TODO: if we had the context here we could plan better for non-prepared requests
-        		|| obj.getFunctionDescriptor().getDeterministic() >= FunctionMethod.COMMAND_DETERMINISTIC) {
+        		|| obj.getFunctionDescriptor().getDeterministic().isRestrictiveThanOrEqual(Determinism.COMMAND_DETERMINISTIC)) {
             evaluationNotPossible(EvaluationLevel.PROCESSING);
         }
     }
@@ -84,8 +85,8 @@ public class EvaluatableVisitor extends LanguageVisitor {
     	}
     }
     
-    private void setDeterminismLevel(int value) {
-    	determinismLevel = Math.max(determinismLevel, value);
+    private void setDeterminismLevel(Determinism value) {
+    	determinismLevel =  Determinism.restrictiveOf(determinismLevel, value);
     }
     
     private void evaluationNotPossible(EvaluationLevel newLevel) {
@@ -196,7 +197,7 @@ public class EvaluatableVisitor extends LanguageVisitor {
         EvaluatableVisitor visitor = new EvaluatableVisitor();
         visitor.targetLevel = EvaluationLevel.PROCESSING;
         PreOrderNavigator.doVisit(obj, visitor);
-        if (pushdown && (visitor.hasCorrelatedReferences || visitor.determinismLevel >= FunctionMethod.NONDETERMINISTIC)) {
+        if (pushdown && (visitor.hasCorrelatedReferences || visitor.determinismLevel.isRestrictiveThanOrEqual(Determinism.NONDETERMINISTIC))) {
         	return false;
         }
         return visitor.isEvaluationPossible();

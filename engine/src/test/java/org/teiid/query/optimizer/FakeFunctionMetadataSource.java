@@ -26,25 +26,32 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.teiid.metadata.FunctionParameter;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.function.FunctionMetadataSource;
 import org.teiid.query.function.metadata.FunctionMethod;
-import org.teiid.query.function.metadata.FunctionParameter;
 
 
 public class FakeFunctionMetadataSource implements FunctionMetadataSource {
 
     public Collection getFunctionMethods() {
         List methods = new ArrayList();
-        methods.add(new FunctionMethod("xyz", "", "misc", FunctionMethod.MUST_PUSHDOWN,  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        methods.add(new FunctionMethod("xyz", "", "misc", PushDown.MUST_PUSHDOWN,  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                                        FakeFunctionMetadataSource.class.getName(), "xyz", //$NON-NLS-1$
                                        new FunctionParameter[0],  
                                        new FunctionParameter("out", "integer"))); //$NON-NLS-1$ //$NON-NLS-2$
         
         FunctionParameter p1 = new FunctionParameter("astring", "string");  //$NON-NLS-1$  //$NON-NLS-2$
         FunctionParameter result = new FunctionParameter("trimstring", "string"); //$NON-NLS-1$  //$NON-NLS-2$
+
         FunctionMethod method = new FunctionMethod("MYRTRIM", "", "", FakeFunctionMetadataSource.class.getName(), "myrtrim", new FunctionParameter[] {p1}, result);  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        method.setPushdown(FunctionMethod.CAN_PUSHDOWN);
+        method.setPushdown(PushDown.CAN_PUSHDOWN);
         methods.add(method);
+        
+        FunctionMethod method2 = new FunctionMethod("misc.namespace.func", "", "", null, null, new FunctionParameter[] {p1}, result);  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        method2.setPushdown(PushDown.MUST_PUSHDOWN);
+        methods.add(method2);
+
         return methods;
     }
     

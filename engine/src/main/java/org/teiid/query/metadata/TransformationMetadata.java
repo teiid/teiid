@@ -65,8 +65,6 @@ import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionTree;
-import org.teiid.query.function.UDFSource;
-import org.teiid.query.function.metadata.FunctionMethod;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.mapping.xml.MappingLoader;
@@ -144,7 +142,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * TransformationMetadata constructor
      * @param context Object containing the info needed to lookup metadta.
      */
-    public TransformationMetadata(VDBMetaData vdbMetadata, final CompositeMetadataStore store, Map<String, Resource> vdbEntries, Collection <FunctionMethod> udfMethods, FunctionTree systemFunctions) {
+    public TransformationMetadata(VDBMetaData vdbMetadata, final CompositeMetadataStore store, Map<String, Resource> vdbEntries, FunctionTree systemFunctions, FunctionTree... udfFunctions) {
     	ArgCheck.isNotNull(store);
     	this.vdbMetaData = vdbMetadata;
         this.store = store;
@@ -153,10 +151,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         } else {
         	this.vdbEntries = vdbEntries;
         }
-        if (udfMethods == null) {
-        	udfMethods = Collections.emptyList();
-        }
-        this.functionLibrary = new FunctionLibrary(systemFunctions, new FunctionTree(new UDFSource(udfMethods), true));
+        this.functionLibrary = new FunctionLibrary(systemFunctions, udfFunctions);
     }
     
     //==================================================================================

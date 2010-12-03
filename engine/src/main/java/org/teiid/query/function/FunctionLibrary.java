@@ -32,8 +32,8 @@ import java.util.List;
 import org.teiid.api.exception.query.InvalidFunctionException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.query.function.metadata.FunctionMethod;
-import org.teiid.query.function.metadata.FunctionParameter;
+import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionParameter;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 
@@ -93,13 +93,13 @@ public class FunctionLibrary {
     private FunctionTree systemFunctions;
 
     // Function tree for user-defined functions
-    private FunctionTree userFunctions;
+    private FunctionTree[] userFunctions;
 
 	/**
 	 * Construct the function library.  This should be called only once by the
 	 * FunctionLibraryManager.
 	 */
-	public FunctionLibrary(FunctionTree systemFuncs, FunctionTree userFuncs) {
+	public FunctionLibrary(FunctionTree systemFuncs, FunctionTree... userFuncs) {
         systemFunctions = systemFuncs;
        	userFunctions = userFuncs;
 	}
@@ -112,7 +112,11 @@ public class FunctionLibrary {
         // Remove category duplicates
         HashSet categories = new HashSet();
         categories.addAll( systemFunctions.getCategories() );
-        categories.addAll( userFunctions.getCategories() );
+        if (this.userFunctions != null) {
+	        for (FunctionTree tree: this.userFunctions) {
+	        	categories.addAll(tree.getCategories());
+	        }
+        }
 
         // Sort alphabetically
         ArrayList categoryList = new ArrayList(categories);
@@ -128,7 +132,11 @@ public class FunctionLibrary {
     public List getFunctionForms(String category) {
         List forms = new ArrayList();
         forms.addAll(systemFunctions.getFunctionForms(category));
-        forms.addAll(userFunctions.getFunctionForms(category));
+        if (this.userFunctions != null) {
+	        for (FunctionTree tree: this.userFunctions) {
+	        	forms.addAll(tree.getFunctionForms(category));
+	        }
+        }
 
         // Sort alphabetically
         Collections.sort(forms);
@@ -143,8 +151,13 @@ public class FunctionLibrary {
      */
     public FunctionForm findFunctionForm(String name, int numArgs) {
         FunctionForm form = systemFunctions.findFunctionForm(name, numArgs);
-        if(form == null) {
-            form = userFunctions.findFunctionForm(name, numArgs);
+        if(form == null && this.userFunctions != null) {
+        	for (FunctionTree tree: this.userFunctions) {
+        		form = tree.findFunctionForm(name, numArgs);
+        		if (form != null) {
+        			break;
+        		}
+        	}
         }
         return form;
     }
@@ -162,8 +175,13 @@ public class FunctionLibrary {
         FunctionDescriptor descriptor = systemFunctions.getFunction(name, types);
 
         // If that fails, check the user defined functions
-        if(descriptor == null) {
-            descriptor = userFunctions.getFunction(name, types);
+        if(descriptor == null && this.userFunctions != null) {
+        	for (FunctionTree tree: this.userFunctions) {
+        		descriptor = tree.getFunction(name, types);
+        		if (descriptor != null) {
+        			break;
+        		}
+        	}
         }
 
         return descriptor;
@@ -195,8 +213,12 @@ public class FunctionLibrary {
 
         //First find existing functions with same name and same number of parameters
         final Collection<FunctionMethod> functionMethods = new LinkedList<FunctionMethod>();
-        functionMethods.addAll( this.systemFunctions.findFunctionMethods(name , types.length) );
-        functionMethods.addAll( this.userFunctions.findFunctionMethods(name , types.length) );
+        functionMethods.addAll( this.systemFunctions.findFunctionMethods(name, types.length) );
+        if (this.userFunctions != null) {
+	        for (FunctionTree tree: this.userFunctions) {
+	        	functionMethods.addAll( tree.findFunctionMethods(name, types.length) );
+	        }
+        }
         
         //Score each match, reject any where types can not be converted implicitly       
         //Score of current method (lower score means better match with less converts

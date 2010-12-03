@@ -20,11 +20,12 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.query.function.metadata;
+package org.teiid.metadata;
 
 import java.io.Serializable;
 
 import javax.xml.bind.annotation.XmlAttribute;
+
 
 /**
  * A function parameter defines the name and description of an input or output
@@ -35,6 +36,8 @@ import javax.xml.bind.annotation.XmlAttribute;
  * {@link org.teiid.core.types.DataTypeManager.DefaultDataTypes}.
  */
 public class FunctionParameter implements Serializable {
+	private static final long serialVersionUID = -4696050948395485266L;
+
 	public static final String OUTPUT_PARAMETER_NAME = "result"; //$NON-NLS-1$
 	
     private String name;  

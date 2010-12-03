@@ -23,6 +23,7 @@
 package org.teiid.translator;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -41,6 +42,7 @@ import org.teiid.language.Select;
 import org.teiid.language.SetQuery;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 
@@ -645,6 +647,10 @@ public class ExecutionFactory<F, C> {
      */        
     public List<String> getSupportedFunctions() {
     	return null;
+    }
+    
+    public List<FunctionMethod> getPushDownFunctions(){
+    	return Collections.EMPTY_LIST;
     }
     
     /**

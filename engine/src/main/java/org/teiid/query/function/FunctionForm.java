@@ -30,8 +30,8 @@ import java.util.List;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.language.SQLConstants.Reserved;
-import org.teiid.query.function.metadata.FunctionMethod;
-import org.teiid.query.function.metadata.FunctionParameter;
+import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionParameter;
 
 
 /**
@@ -41,8 +41,9 @@ import org.teiid.query.function.metadata.FunctionParameter;
  * function name and the names of the arguments.
  */
 public class FunctionForm implements Serializable, Comparable {
-
-    private String name;
+	private static final long serialVersionUID = 2411783099304320334L;
+	
+	private String name;
     private String description;
     private String category;
     private List inputParamNames;

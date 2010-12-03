@@ -96,7 +96,7 @@ public class TestVisitors {
             Column obj = contactCols.get(i);
             obj.setNameInSource(contactNameInSource[i]);
         }
-        return new TransformationMetadata(null, new CompositeMetadataStore(store), null, null, FakeMetadataFactory.SFM.getSystemFunctions());
+        return new TransformationMetadata(null, new CompositeMetadataStore(store), null, FakeMetadataFactory.SFM.getSystemFunctions(), null);
     }    
 
 	private static TranslationUtility translationUtility = new TranslationUtility(exampleSalesforce());
