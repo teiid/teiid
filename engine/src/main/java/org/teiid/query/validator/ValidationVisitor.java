@@ -949,7 +949,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 		    }
             if (info != null && info.isInherentUpdate()) {
             	Set<ElementSymbol> updateCols = update.getChangeList().getClauseMap().keySet();
-            	if (info.findUpdateMapping(updateCols, false) == null) {
+            	if (!info.hasValidUpdateMapping(updateCols)) {
             		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.nonUpdatable", updateCols), update); //$NON-NLS-1$
             	}
             }
@@ -1473,7 +1473,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	validateSubquery(obj);
     }
 
-    //TODO: it may be simplier to catch this in the parser
+    //TODO: it may be simpler to catch this in the parser
     private void validateSubquery(SubqueryContainer subQuery) {
     	if (subQuery.getCommand() instanceof Query && ((Query)subQuery.getCommand()).getInto() != null) {
         	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.subquery_insert"), subQuery.getCommand()); //$NON-NLS-1$

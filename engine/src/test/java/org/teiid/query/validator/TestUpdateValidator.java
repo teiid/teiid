@@ -55,8 +55,12 @@ import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 
 @SuppressWarnings("nls")
 public class TestUpdateValidator {
+
+	private UpdateValidator helpTest(String sql, TransformationMetadata md, boolean shouldFail) {
+		return helpTest(sql, md, shouldFail, shouldFail, shouldFail);
+	}
 	
-	private UpdateValidator helpTest(String sql, TransformationMetadata md, boolean shouldFail) { 	
+	private UpdateValidator helpTest(String sql, TransformationMetadata md, boolean failInsert, boolean failUpdate, boolean failDelete) { 	
 		try {
 			String vGroup = "gx";
 			Command command = createView(sql, md, vGroup);
@@ -66,10 +70,9 @@ public class TestUpdateValidator {
 			ResolverUtil.resolveGroup(gs, md);
 			uv.validate(command, ResolverUtil.resolveElementsInGroup(gs, md));
 			UpdateInfo info = uv.getUpdateInfo();
-			boolean failed = info.isDeleteValidationError() || info.isInsertValidationError() || info.isUpdateValidationError();
-			if (!failed && shouldFail) {
-				fail("expeceted failures, but got none: " + uv.getReport());
-			}
+			assertEquals(uv.getReport().getFailureMessage(), failInsert, info.isInsertValidationError());
+			assertEquals(uv.getReport().getFailureMessage(), failUpdate, info.isUpdateValidationError());
+			assertEquals(uv.getReport().getFailureMessage(), failDelete, info.isDeleteValidationError());
 			return uv;
 		} catch (TeiidException e) {
 			throw new RuntimeException(e);
@@ -288,37 +291,31 @@ public class TestUpdateValidator {
             example1(), true);
     }    
     
-    // Check that e3 is not required (it has a default value)
     @Test public void testRequiredElements1() {
         helpTest("SELECT e1, e2 FROM pm1.g3",
             example1(), false); //$NON-NLS-1$
     }
 
-    // Check that e2 is not required (it is auto-incremented)
     @Test public void testRequiredElements2() {
         helpTest("SELECT e1, e3 FROM pm1.g3",
             example1(), false); //$NON-NLS-1$
     }
 
-    // Check that e1 is required (it is not-nullable, not auto-incrementable, and has no default value)
     @Test public void testRequiredElements3() {
         helpTest("SELECT e2, e3 FROM pm1.g3",
-            example1(), true);
+            example1(), true, false, false);
     }
 
-    // Verify that elements that are not updateable are exlcluded from update and delete procedures
     @Test public void testNonUpdateableElements() {
         helpTest("select e1 as a, e2 from pm1.g1 where e4 > 5", 
                     example1(false), false); //$NON-NLS-1$
 	}
 	
-    // Verify that elements that are not updateable are exlcluded from update and delete procedures
     @Test public void testNonUpdateableElements2() {
         helpTest("SELECT e1, e2 FROM pm1.g1",
             example1(false), false); //$NON-NLS-1$
     }
     
-    // Verify that elements that are not updateable are exlcluded from update and delete procedures
     @Test public void testSelectDistinct() {
         helpTest("SELECT distinct e1, e2 FROM pm1.g1",
             example1(), true); //$NON-NLS-1$
@@ -332,6 +329,11 @@ public class TestUpdateValidator {
     @Test public void testAnsiJoin() {
         helpTest("SELECT g1.e1, x.e2 FROM pm1.g2 x inner join pm1.g1 on (x.e1 = g1.e1)",
             example1(), false); //$NON-NLS-1$
+    }
+    
+    @Test public void testUnionAll() {
+        helpTest("SELECT g1.e1, x.e2 FROM pm1.g2 x inner join pm1.g1 on (x.e1 = g1.e1) union all select pm1.g2.e1, pm1.g2.e2 from pm1.g2",
+            example1(), true, false, false); //$NON-NLS-1$
     }
 
 }

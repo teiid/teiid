@@ -22,6 +22,7 @@
 
 package org.teiid.query.processor;
 
+import static org.junit.Assert.*;
 import static org.teiid.query.processor.TestProcessor.*;
 
 import java.util.Arrays;
@@ -33,6 +34,7 @@ import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.rewriter.TestQueryRewriter;
+import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.TestUpdateValidator;
@@ -48,7 +50,7 @@ public class TestInherintlyUpdatableViews {
         helpTest(userSql, viewSql, expectedSql, null);	
 	}
 
-	private void helpTest(String userSql, String viewSql, String expectedSql, ProcessorDataManager dm)
+	private Command helpTest(String userSql, String viewSql, String expectedSql, ProcessorDataManager dm)
 			throws Exception {
 		TransformationMetadata metadata = TestUpdateValidator.example1();
         TestUpdateValidator.createView(viewSql, metadata, "gx");
@@ -62,6 +64,8 @@ public class TestInherintlyUpdatableViews {
 	        List[] expected = new List[] {Arrays.asList(1)};
         	helpProcess(plan, context, dm, expected);
         }
+        
+        return command;
 	}
 	
 	@Test public void testUpdatePassThroughWithAlias() throws Exception {
@@ -83,6 +87,14 @@ public class TestInherintlyUpdatableViews {
     	String viewSql = "select * from pm1.g1 where e3 < 5";
         String expectedSql = "INSERT INTO pm1.g1 (pm1.g1.e1) VALUES ('1')";
         helpTest(userSql, viewSql, expectedSql, null);
+	}
+	
+	@Test public void testDeleteUnion() throws Exception {
+		String userSql = "delete from vm1.gx where e4 is null"; //$NON-NLS-1$
+    	String viewSql = "select * from pm1.g1 where e3 < 5 union all select * from pm1.g2 where e1 > 1";
+        String expectedSql = "BatchedUpdate{D,D}";
+        BatchedUpdateCommand buc = (BatchedUpdateCommand)helpTest(userSql, viewSql, expectedSql, null);
+        assertEquals("DELETE FROM pm1.g2 WHERE (pm1.g2.e4 IS NULL) AND (e1 > '1')", buc.getUpdateCommands().get(1).toString());
 	}
 	
 	/**

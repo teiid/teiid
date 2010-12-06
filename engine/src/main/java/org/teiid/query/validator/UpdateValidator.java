@@ -25,6 +25,7 @@ package org.teiid.query.validator;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -38,6 +39,7 @@ import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.SetQuery.Operation;
@@ -109,6 +111,7 @@ public class UpdateValidator {
 		private UpdateType insertType;
 		private boolean insertValidationError;
 		private Query view;
+		private List<UpdateInfo> unionBranches = new LinkedList<UpdateInfo>();
 		
 		public boolean isSimple() {
 			return isSimple;
@@ -116,10 +119,6 @@ public class UpdateValidator {
 		
 		public UpdateMapping getDeleteTarget() {
 			return deleteTarget;
-		}
-		
-		public Map<String, UpdateMapping> getUpdatableGroups() {
-			return updatableGroups;
 		}
 		
 		public boolean isInherentDelete() {
@@ -142,8 +141,20 @@ public class UpdateValidator {
 			return deleteType;
 		}
 		
+		public boolean hasValidUpdateMapping(Collection<ElementSymbol> updateCols) {
+			if (findUpdateMapping(updateCols, false) == null) {
+				return false;
+			}
+			for (UpdateInfo info : this.unionBranches) {
+				if (info.findUpdateMapping(updateCols, false) == null) {
+					return false;
+				}
+			}
+			return true;
+		}
+		
 		public UpdateMapping findUpdateMapping(Collection<ElementSymbol> updateCols, boolean insert) {
-			for (UpdateMapping entry : getUpdatableGroups().values()) {
+			for (UpdateMapping entry : this.updatableGroups.values()) {
 				if (((insert && entry.insertAllowed) || (!insert && entry.updateAllowed)) && entry.updatableViewSymbols.keySet().containsAll(updateCols)) {
 					return entry;
 				}
@@ -165,6 +176,10 @@ public class UpdateValidator {
 		
 		public boolean isUpdateValidationError() {
 			return updateValidationError;
+		}
+		
+		public List<UpdateInfo> getUnionBranches() {
+			return unionBranches;
 		}
 		
 	}
@@ -218,12 +233,9 @@ public class UpdateValidator {
         		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0001"), true, true, true); //$NON-NLS-1$
         		return;
         	}
-        	//TOOD each branch should return it's own info?
-        	/*this.validate(setQuery.getLeftQuery(), viewSymbols);
-        	this.validate(setQuery.getRightQuery(), viewSymbols);
-        	if (!this.updateInfo.insertValidationError) {
-        		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0018"), false, true, false); //$NON-NLS-1$
-        	}*/
+        	validateBranch(viewSymbols, setQuery.getLeftQuery());
+        	validateBranch(viewSymbols, setQuery.getRightQuery());
+        	return;
     	}
     	
     	if (!(command instanceof Query)) {
@@ -351,6 +363,35 @@ public class UpdateValidator {
     		}
     	}
     }
+
+	private void validateBranch(List<ElementSymbol> viewSymbols,
+			QueryCommand query) throws QueryMetadataException,
+			TeiidComponentException {
+		if (!this.updateInfo.insertValidationError) {
+    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0018"), false, true, false); //$NON-NLS-1$
+    	}
+		if (!this.updateInfo.isInherentDelete() && !this.updateInfo.isInherentUpdate()) {
+			return; //don't bother
+		}
+		UpdateValidator uv = this;
+		if (this.updateInfo.view != null) {
+			uv = new UpdateValidator(metadata, null, null, null);
+			uv.updateInfo.deleteType = this.updateInfo.deleteType;
+			uv.updateInfo.insertType = this.updateInfo.insertType;
+			uv.updateInfo.updateType = this.updateInfo.updateType;
+		}
+		uv.validate(query, viewSymbols);
+		if (uv != this) {
+			UpdateInfo info = uv.getUpdateInfo();
+			this.updateInfo.deleteValidationError |= info.deleteValidationError;
+			this.updateInfo.updateValidationError |= info.updateValidationError;
+			if (info.view != null) {
+				this.updateInfo.unionBranches.add(info);
+			} else {
+				this.updateInfo.unionBranches.addAll(info.unionBranches);
+			}
+		}
+	}
     
     private void setUpdateFlags(GroupSymbol groupSymbol) throws QueryMetadataException, TeiidComponentException {
     	UpdateMapping info = updateInfo.updatableGroups.get(groupSymbol.getCanonicalName());

@@ -2557,63 +2557,15 @@ public class QueryRewriter {
 	private Command rewriteUpdate(Update update) throws TeiidComponentException, TeiidProcessingException{
 		UpdateInfo info = update.getUpdateInfo();
 		if (info != null && info.isInherentUpdate()) {
-			UpdateMapping mapping = info.findUpdateMapping(update.getChangeList().getClauseMap().keySet(), false);
-			if (mapping == null) {
-				throw new QueryValidatorException(QueryPlugin.Util.getString("ValidationVisitor.nonUpdatable", update.getChangeList().getClauseMap().keySet())); //$NON-NLS-1$
-			}
-			Map<ElementSymbol, ElementSymbol> symbolMap = mapping.getUpdatableViewSymbols();
-			if (info.isSimple()) {
-				update.setGroup(mapping.getGroup().clone());
-				for (SetClause clause : update.getChangeList().getClauses()) {
-					clause.setSymbol(symbolMap.get(clause.getSymbol()));
+			if (!info.getUnionBranches().isEmpty()) {
+				List<Command> batchedUpdates = new ArrayList<Command>(info.getUnionBranches().size() + 1);
+				for (UpdateInfo branchInfo : info.getUnionBranches()) {
+					batchedUpdates.add(createInherentUpdateProc((Update)update.clone(), branchInfo));
 				}
-				//TODO: properly handle correlated references
-				DeepPostOrderNavigator.doVisit(update, new ExpressionMappingVisitor(symbolMap, true));
-				if (info.getViewDefinition().getCriteria() != null) {
-					update.setCriteria(Criteria.combineCriteria(update.getCriteria(), (Criteria)info.getViewDefinition().getCriteria().clone()));
-				}
-				//resolve
-				update.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(update.getGroup(), metadata));
-				return rewriteUpdate(update);
-			} 
-			Query query = (Query)info.getViewDefinition().clone();
-			query.setOrderBy(null);
-			SymbolMap expressionMapping = SymbolMap.createSymbolMap(update.getGroup(), query.getProjectedSymbols(), metadata);
-			
-			ArrayList<SingleElementSymbol> selectSymbols = new ArrayList<SingleElementSymbol>(update.getChangeList().getClauses().size());
-			int i = 0;
-			for (SetClause clause : update.getChangeList().getClauses()) {
-				Expression ex = clause.getValue();
-				SingleElementSymbol selectSymbol = null;
-				if (!EvaluatableVisitor.willBecomeConstant(ex)) {
-					if (!(ex instanceof SingleElementSymbol)) {
-						selectSymbol = new ExpressionSymbol("expr", ex); //$NON-NLS-1$
-					} else {
-						selectSymbol = (SingleElementSymbol)ex;
-					}
-					selectSymbols.add(new AliasSymbol("s_" +i, selectSymbol)); //$NON-NLS-1$
-					ex = new ElementSymbol("s_" +i); //$NON-NLS-1$
-				}
-				clause.setSymbol(symbolMap.get(clause.getSymbol()));
-				i++;
+				batchedUpdates.add(0, createInherentUpdateProc(update, info));
+				return new BatchedUpdateCommand(batchedUpdates);
 			}
-			query.setSelect(new Select(selectSymbols));
-			ExpressionMappingVisitor emv = new ExpressionMappingVisitor(expressionMapping.asMap(), true);
-			PostOrderNavigator.doVisit(query.getSelect(), emv);
-			
-			Criteria crit = update.getCriteria();
-			if (crit != null) {
-				PostOrderNavigator.doVisit(crit, emv);
-				query.setCriteria(Criteria.combineCriteria(query.getCriteria(), crit));
-			}
-			
-			Update newUpdate = new Update();
-			newUpdate.setChangeList(update.getChangeList());
-			newUpdate.setGroup(mapping.getGroup().clone());
-			
-			List<Criteria> pkCriteria = createPkCriteria(mapping, query, i);
-			newUpdate.setCriteria(Criteria.combineCriteria(newUpdate.getCriteria(), new CompoundCriteria(pkCriteria)));
-			return createUpdateProcedure(update, query, newUpdate);
+			return createInherentUpdateProc(update, info);
 		}
 		
 		if (commandType == Command.TYPE_UPDATE && variables != null) {
@@ -2640,6 +2592,69 @@ public class QueryRewriter {
 		}
 
 		return update;
+	}
+
+	private Command createInherentUpdateProc(Update update, UpdateInfo info)
+			throws QueryValidatorException, QueryMetadataException,
+			TeiidComponentException, QueryResolverException,
+			TeiidProcessingException {
+		UpdateMapping mapping = info.findUpdateMapping(update.getChangeList().getClauseMap().keySet(), false);
+		if (mapping == null) {
+			throw new QueryValidatorException(QueryPlugin.Util.getString("ValidationVisitor.nonUpdatable", update.getChangeList().getClauseMap().keySet())); //$NON-NLS-1$
+		}
+		Map<ElementSymbol, ElementSymbol> symbolMap = mapping.getUpdatableViewSymbols();
+		if (info.isSimple()) {
+			update.setGroup(mapping.getGroup().clone());
+			for (SetClause clause : update.getChangeList().getClauses()) {
+				clause.setSymbol(symbolMap.get(clause.getSymbol()));
+			}
+			//TODO: properly handle correlated references
+			DeepPostOrderNavigator.doVisit(update, new ExpressionMappingVisitor(symbolMap, true));
+			if (info.getViewDefinition().getCriteria() != null) {
+				update.setCriteria(Criteria.combineCriteria(update.getCriteria(), (Criteria)info.getViewDefinition().getCriteria().clone()));
+			}
+			//resolve
+			update.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(update.getGroup(), metadata));
+			return rewriteUpdate(update);
+		} 
+		Query query = (Query)info.getViewDefinition().clone();
+		query.setOrderBy(null);
+		SymbolMap expressionMapping = SymbolMap.createSymbolMap(update.getGroup(), query.getProjectedSymbols(), metadata);
+		
+		ArrayList<SingleElementSymbol> selectSymbols = new ArrayList<SingleElementSymbol>(update.getChangeList().getClauses().size());
+		int i = 0;
+		for (SetClause clause : update.getChangeList().getClauses()) {
+			Expression ex = clause.getValue();
+			SingleElementSymbol selectSymbol = null;
+			if (!EvaluatableVisitor.willBecomeConstant(ex)) {
+				if (!(ex instanceof SingleElementSymbol)) {
+					selectSymbol = new ExpressionSymbol("expr", ex); //$NON-NLS-1$
+				} else {
+					selectSymbol = (SingleElementSymbol)ex;
+				}
+				selectSymbols.add(new AliasSymbol("s_" +i, selectSymbol)); //$NON-NLS-1$
+				ex = new ElementSymbol("s_" +i); //$NON-NLS-1$
+			}
+			clause.setSymbol(symbolMap.get(clause.getSymbol()));
+			i++;
+		}
+		query.setSelect(new Select(selectSymbols));
+		ExpressionMappingVisitor emv = new ExpressionMappingVisitor(expressionMapping.asMap(), true);
+		PostOrderNavigator.doVisit(query.getSelect(), emv);
+		
+		Criteria crit = update.getCriteria();
+		if (crit != null) {
+			PostOrderNavigator.doVisit(crit, emv);
+			query.setCriteria(Criteria.combineCriteria(query.getCriteria(), crit));
+		}
+		
+		Update newUpdate = new Update();
+		newUpdate.setChangeList(update.getChangeList());
+		newUpdate.setGroup(mapping.getGroup().clone());
+		
+		List<Criteria> pkCriteria = createPkCriteria(mapping, query, i);
+		newUpdate.setCriteria(Criteria.combineCriteria(newUpdate.getCriteria(), new CompoundCriteria(pkCriteria)));
+		return createUpdateProcedure(update, query, newUpdate);
 	}
 
 	private Command createUpdateProcedure(ProcedureContainer update, Query query,
@@ -2715,38 +2730,15 @@ public class QueryRewriter {
 	private Command rewriteDelete(Delete delete) throws TeiidComponentException, TeiidProcessingException{
 		UpdateInfo info = delete.getUpdateInfo();
 		if (info != null && info.isInherentDelete()) {
-			UpdateMapping mapping = info.getDeleteTarget();
-			if (info.isSimple()) {
-				delete.setGroup(mapping.getGroup().clone());
-				//TODO: properly handle correlated references
-				DeepPostOrderNavigator.doVisit(delete, new ExpressionMappingVisitor(mapping.getUpdatableViewSymbols(), true));
-				delete.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(delete.getGroup(), metadata));
-				if (info.getViewDefinition().getCriteria() != null) {
-					delete.setCriteria(Criteria.combineCriteria(delete.getCriteria(), (Criteria)info.getViewDefinition().getCriteria().clone()));
+			if (!info.getUnionBranches().isEmpty()) {
+				List<Command> batchedUpdates = new ArrayList<Command>(info.getUnionBranches().size() + 1);
+				for (UpdateInfo branchInfo : info.getUnionBranches()) {
+					batchedUpdates.add(createInherentDeleteProc((Delete)delete.clone(), branchInfo));
 				}
-				return rewriteDelete(delete);
+				batchedUpdates.add(0, createInherentDeleteProc(delete, info));
+				return new BatchedUpdateCommand(batchedUpdates);
 			}
-			
-			Query query = (Query)info.getViewDefinition().clone();
-			query.setOrderBy(null);
-			SymbolMap expressionMapping = SymbolMap.createSymbolMap(delete.getGroup(), query.getProjectedSymbols(), metadata);
-			
-			query.setSelect(new Select());
-			ExpressionMappingVisitor emv = new ExpressionMappingVisitor(expressionMapping.asMap(), true);
-			PostOrderNavigator.doVisit(query.getSelect(), emv);
-			
-			Criteria crit = delete.getCriteria();
-			if (crit != null) {
-				PostOrderNavigator.doVisit(crit, emv);
-				query.setCriteria(Criteria.combineCriteria(query.getCriteria(), crit));
-			}
-			
-			Delete newUpdate = new Delete();
-			newUpdate.setGroup(mapping.getGroup().clone());
-			
-			List<Criteria> pkCriteria = createPkCriteria(mapping, query, 0);
-			newUpdate.setCriteria(Criteria.combineCriteria(newUpdate.getCriteria(), new CompoundCriteria(pkCriteria)));
-			return createUpdateProcedure(delete, query, newUpdate);
+			return createInherentDeleteProc(delete, info);
 		}
 		// Rewrite criteria
 		Criteria crit = delete.getCriteria();
@@ -2755,6 +2747,43 @@ public class QueryRewriter {
 		}
 
 		return delete;
+	}
+
+	private Command createInherentDeleteProc(Delete delete, UpdateInfo info)
+			throws QueryMetadataException, TeiidComponentException,
+			QueryResolverException, TeiidProcessingException {
+		UpdateMapping mapping = info.getDeleteTarget();
+		if (info.isSimple()) {
+			delete.setGroup(mapping.getGroup().clone());
+			//TODO: properly handle correlated references
+			DeepPostOrderNavigator.doVisit(delete, new ExpressionMappingVisitor(mapping.getUpdatableViewSymbols(), true));
+			delete.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(delete.getGroup(), metadata));
+			if (info.getViewDefinition().getCriteria() != null) {
+				delete.setCriteria(Criteria.combineCriteria(delete.getCriteria(), (Criteria)info.getViewDefinition().getCriteria().clone()));
+			}
+			return rewriteDelete(delete);
+		}
+		
+		Query query = (Query)info.getViewDefinition().clone();
+		query.setOrderBy(null);
+		SymbolMap expressionMapping = SymbolMap.createSymbolMap(delete.getGroup(), query.getProjectedSymbols(), metadata);
+		
+		query.setSelect(new Select());
+		ExpressionMappingVisitor emv = new ExpressionMappingVisitor(expressionMapping.asMap(), true);
+		PostOrderNavigator.doVisit(query.getSelect(), emv);
+		
+		Criteria crit = delete.getCriteria();
+		if (crit != null) {
+			PostOrderNavigator.doVisit(crit, emv);
+			query.setCriteria(Criteria.combineCriteria(query.getCriteria(), crit));
+		}
+		
+		Delete newUpdate = new Delete();
+		newUpdate.setGroup(mapping.getGroup().clone());
+		
+		List<Criteria> pkCriteria = createPkCriteria(mapping, query, 0);
+		newUpdate.setCriteria(Criteria.combineCriteria(newUpdate.getCriteria(), new CompoundCriteria(pkCriteria)));
+		return createUpdateProcedure(delete, query, newUpdate);
 	}
     
     private Limit rewriteLimitClause(Limit limit) throws TeiidComponentException, TeiidProcessingException{
