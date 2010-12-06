@@ -300,11 +300,13 @@ public class QueryResolver {
     }
     
 	public static void resolveSubqueries(Command command,
-			TempMetadataAdapter metadata, AnalysisRecord analysis)
+			TempMetadataAdapter metadata, AnalysisRecord analysis, Collection<GroupSymbol> externalGroups)
 			throws QueryResolverException, TeiidComponentException {
 		for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(command)) {
             QueryResolver.setChildMetadata(container.getCommand(), command);
-            
+            if (externalGroups != null) {
+            	container.getCommand().pushNewResolvingContext(externalGroups);
+            }
             QueryResolver.resolveCommand(container.getCommand(), Collections.EMPTY_MAP, metadata.getMetadata(), analysis);
         }
 	}

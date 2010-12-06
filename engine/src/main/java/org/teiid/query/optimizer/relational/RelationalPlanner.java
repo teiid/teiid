@@ -79,6 +79,7 @@ import org.teiid.query.sql.LanguageObject.Util;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.Delete;
 import org.teiid.query.sql.lang.From;
 import org.teiid.query.sql.lang.FromClause;
 import org.teiid.query.sql.lang.GroupBy;
@@ -97,7 +98,9 @@ import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.TableFunctionReference;
+import org.teiid.query.sql.lang.TranslatableProcedureContainer;
 import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
@@ -586,9 +589,21 @@ public class RelationalPlanner {
 			//skip the rewrite here, we'll do that in the optimizer
 			//so that we know what the determinism level is.
 			addNestedCommand(sourceNode, container.getGroup(), container, c, false);
-		} else if (!(container instanceof Insert) && !container.getGroup().isTempGroupSymbol() && 
+		} else if (container instanceof TranslatableProcedureContainer && !container.getGroup().isTempGroupSymbol() && 
 				!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(container, metadata.getModelID(container.getGroup().getMetadataID()), metadata, capFinder, analysisRecord)) {
-			throw new QueryPlannerException(QueryPlugin.Util.getString("RelationalPlanner.nonpushdown_command", container)); //$NON-NLS-1$
+			if (metadata.getUniqueKeysInGroup(container.getGroup().getMetadataID()).isEmpty() 
+					|| !CapabilitiesUtil.supports(Capability.CRITERIA_COMPARE_EQ, metadata.getModelID(container.getGroup().getMetadataID()), metadata, capFinder)) {
+				throw new QueryPlannerException(QueryPlugin.Util.getString("RelationalPlanner.nonpushdown_command", container)); //$NON-NLS-1$
+			}
+			
+			//treat this as an update procedure
+			if (container instanceof Update) {
+				c = QueryRewriter.createUpdateProcedure((Update)container, metadata, context);
+			} else {
+				c = QueryRewriter.createDeleteProcedure((Delete)container, metadata, context);
+			}
+			addNestedCommand(sourceNode, container.getGroup(), container, c, false);
+			return false;
 		}
 		
 		//plan any subqueries in criteria/parameters/values

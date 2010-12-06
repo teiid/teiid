@@ -73,8 +73,8 @@ public class UpdateResolver extends ProcedureContainerResolver implements Variab
         for (SetClause clause : update.getChangeList().getClauses()) {
         	ResolverVisitor.resolveLanguageObject(clause.getSymbol(), groups, null, metadata);
 		}
+        QueryResolver.resolveSubqueries(command, metadata, analysis, groups);
         ResolverVisitor.resolveLanguageObject(update, groups, update.getExternalGroupContexts(), metadata);
-        QueryResolver.resolveSubqueries(command, metadata, analysis);
     }
     
     /** 

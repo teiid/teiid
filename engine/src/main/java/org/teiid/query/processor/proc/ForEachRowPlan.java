@@ -156,5 +156,10 @@ public class ForEachRowPlan extends ProcessorPlan {
 		this.queryProcessor = null;
 		this.tupleSource = null;
 	}
+	
+	@Override
+	public boolean requiresTransaction(boolean transactionalReads) {
+		return true;
+	}
 
 }

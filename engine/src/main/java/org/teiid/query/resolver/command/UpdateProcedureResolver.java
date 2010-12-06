@@ -103,6 +103,8 @@ public class UpdateProcedureResolver implements CommandResolver {
                      break;
 	        	 }
 	        }
+		} else if (!metadata.isVirtualGroup(virtualGroup.getMetadataID())) {
+			return;
 		}
 
         // If still haven't found virtual group, the external metadata is bad

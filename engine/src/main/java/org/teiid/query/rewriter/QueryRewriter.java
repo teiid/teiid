@@ -2560,12 +2560,12 @@ public class QueryRewriter {
 			if (!info.getUnionBranches().isEmpty()) {
 				List<Command> batchedUpdates = new ArrayList<Command>(info.getUnionBranches().size() + 1);
 				for (UpdateInfo branchInfo : info.getUnionBranches()) {
-					batchedUpdates.add(createInherentUpdateProc((Update)update.clone(), branchInfo));
+					batchedUpdates.add(rewriteInherentUpdate((Update)update.clone(), branchInfo));
 				}
-				batchedUpdates.add(0, createInherentUpdateProc(update, info));
+				batchedUpdates.add(0, rewriteInherentUpdate(update, info));
 				return new BatchedUpdateCommand(batchedUpdates);
 			}
-			return createInherentUpdateProc(update, info);
+			return rewriteInherentUpdate(update, info);
 		}
 		
 		if (commandType == Command.TYPE_UPDATE && variables != null) {
@@ -2594,7 +2594,7 @@ public class QueryRewriter {
 		return update;
 	}
 
-	private Command createInherentUpdateProc(Update update, UpdateInfo info)
+	private Command rewriteInherentUpdate(Update update, UpdateInfo info)
 			throws QueryValidatorException, QueryMetadataException,
 			TeiidComponentException, QueryResolverException,
 			TeiidProcessingException {
@@ -2621,6 +2621,24 @@ public class QueryRewriter {
 		query.setOrderBy(null);
 		SymbolMap expressionMapping = SymbolMap.createSymbolMap(update.getGroup(), query.getProjectedSymbols(), metadata);
 		
+		ArrayList<SingleElementSymbol> selectSymbols = mapChangeList(update, symbolMap);
+		query.setSelect(new Select(selectSymbols));
+		ExpressionMappingVisitor emv = new ExpressionMappingVisitor(expressionMapping.asMap(), true);
+		PostOrderNavigator.doVisit(query.getSelect(), emv);
+		
+		Criteria crit = update.getCriteria();
+		if (crit != null) {
+			PostOrderNavigator.doVisit(crit, emv);
+			query.setCriteria(Criteria.combineCriteria(query.getCriteria(), crit));
+		}
+		GroupSymbol group = mapping.getGroup();
+		String correlationName = mapping.getCorrelatedName().getName();
+		
+		return createUpdateProcedure(update, query, group, correlationName);
+	}
+
+	private ArrayList<SingleElementSymbol> mapChangeList(Update update,
+			Map<ElementSymbol, ElementSymbol> symbolMap) {
 		ArrayList<SingleElementSymbol> selectSymbols = new ArrayList<SingleElementSymbol>(update.getChangeList().getClauses().size());
 		int i = 0;
 		for (SetClause clause : update.getChangeList().getClauses()) {
@@ -2635,29 +2653,30 @@ public class QueryRewriter {
 				selectSymbols.add(new AliasSymbol("s_" +i, selectSymbol)); //$NON-NLS-1$
 				ex = new ElementSymbol("s_" +i); //$NON-NLS-1$
 			}
-			clause.setSymbol(symbolMap.get(clause.getSymbol()));
+			if (symbolMap != null) {
+				clause.setSymbol(symbolMap.get(clause.getSymbol()));
+			}
 			i++;
 		}
-		query.setSelect(new Select(selectSymbols));
-		ExpressionMappingVisitor emv = new ExpressionMappingVisitor(expressionMapping.asMap(), true);
-		PostOrderNavigator.doVisit(query.getSelect(), emv);
-		
-		Criteria crit = update.getCriteria();
-		if (crit != null) {
-			PostOrderNavigator.doVisit(crit, emv);
-			query.setCriteria(Criteria.combineCriteria(query.getCriteria(), crit));
-		}
-		
-		Update newUpdate = new Update();
-		newUpdate.setChangeList(update.getChangeList());
-		newUpdate.setGroup(mapping.getGroup().clone());
-		
-		List<Criteria> pkCriteria = createPkCriteria(mapping, query, i);
-		newUpdate.setCriteria(Criteria.combineCriteria(newUpdate.getCriteria(), new CompoundCriteria(pkCriteria)));
-		return createUpdateProcedure(update, query, newUpdate);
+		return selectSymbols;
 	}
 
-	private Command createUpdateProcedure(ProcedureContainer update, Query query,
+	private Command createUpdateProcedure(Update update, Query query,
+			GroupSymbol group, String correlationName)
+			throws TeiidComponentException, QueryMetadataException,
+			QueryResolverException, TeiidProcessingException {
+		Update newUpdate = new Update();
+		newUpdate.setChangeList(update.getChangeList());
+		newUpdate.setGroup(group.clone());
+		List<Criteria> pkCriteria = createPkCriteria(group, correlationName, query);
+		newUpdate.setCriteria(new CompoundCriteria(pkCriteria));
+		return asLoopProcedure(update.getGroup(), query, newUpdate);
+	}
+
+	/**
+	 * rewrite as loop on (query) as X begin newupdate; rows_updated = rows_updated + 1;
+	 */
+	private Command asLoopProcedure(GroupSymbol group, Query query,
 			ProcedureContainer newUpdate) throws QueryResolverException,
 			TeiidComponentException, TeiidProcessingException {
 		Block b = new Block();
@@ -2672,23 +2691,23 @@ public class QueryRewriter {
 		as.setExpression(new Function("+", new Expression[] {rowsUpdate, new Constant(1)})); //$NON-NLS-1$
 		b.addStatement(as);
 		cupc.setBlock(parent);
-		cupc.setVirtualGroup(update.getGroup());
+		cupc.setVirtualGroup(group);
 		QueryResolver.resolveCommand(cupc, metadata);
 		return rewrite(cupc, metadata, context);
 	}
 
-	private List<Criteria> createPkCriteria(UpdateMapping mapping, Query query,
-			int i) throws TeiidComponentException, QueryMetadataException {
-		Object pk = metadata.getPrimaryKey(mapping.getGroup().getMetadataID());
+	private List<Criteria> createPkCriteria(GroupSymbol group, String correlationName, Query query) throws TeiidComponentException, QueryMetadataException {
+		Object pk = metadata.getPrimaryKey(group.getMetadataID());
 		if (pk == null) {
-			pk = metadata.getUniqueKeysInGroup(mapping.getGroup().getMetadataID()).iterator().next();
+			pk = metadata.getUniqueKeysInGroup(group.getMetadataID()).iterator().next();
 		}
+		int i = query.getSelect().getSymbols().size();
 		List<Object> ids = metadata.getElementIDsInKey(pk);
 		List<Criteria> pkCriteria = new ArrayList<Criteria>(ids.size());
 		for (Object object : ids) {
-			ElementSymbol es = new ElementSymbol(mapping.getCorrelatedName().getName() + ElementSymbol.SEPARATOR + SingleElementSymbol.getShortName(metadata.getFullName(object)));
+			ElementSymbol es = new ElementSymbol(correlationName + ElementSymbol.SEPARATOR + SingleElementSymbol.getShortName(metadata.getFullName(object)));
 			query.getSelect().addSymbol(new AliasSymbol("s_" +i, es)); //$NON-NLS-1$
-			es = new ElementSymbol(mapping.getGroup().getName() + ElementSymbol.SEPARATOR + SingleElementSymbol.getShortName(metadata.getFullName(object)));
+			es = new ElementSymbol(group.getName() + ElementSymbol.SEPARATOR + SingleElementSymbol.getShortName(metadata.getFullName(object)));
 			pkCriteria.add(new CompareCriteria(es, CompareCriteria.EQ, new ElementSymbol("X.s_" + i))); //$NON-NLS-1$
 			i++;
 		}
@@ -2733,12 +2752,12 @@ public class QueryRewriter {
 			if (!info.getUnionBranches().isEmpty()) {
 				List<Command> batchedUpdates = new ArrayList<Command>(info.getUnionBranches().size() + 1);
 				for (UpdateInfo branchInfo : info.getUnionBranches()) {
-					batchedUpdates.add(createInherentDeleteProc((Delete)delete.clone(), branchInfo));
+					batchedUpdates.add(rewriteInherentDelete((Delete)delete.clone(), branchInfo));
 				}
-				batchedUpdates.add(0, createInherentDeleteProc(delete, info));
+				batchedUpdates.add(0, rewriteInherentDelete(delete, info));
 				return new BatchedUpdateCommand(batchedUpdates);
 			}
-			return createInherentDeleteProc(delete, info);
+			return rewriteInherentDelete(delete, info);
 		}
 		// Rewrite criteria
 		Criteria crit = delete.getCriteria();
@@ -2749,7 +2768,7 @@ public class QueryRewriter {
 		return delete;
 	}
 
-	private Command createInherentDeleteProc(Delete delete, UpdateInfo info)
+	private Command rewriteInherentDelete(Delete delete, UpdateInfo info)
 			throws QueryMetadataException, TeiidComponentException,
 			QueryResolverException, TeiidProcessingException {
 		UpdateMapping mapping = info.getDeleteTarget();
@@ -2770,20 +2789,41 @@ public class QueryRewriter {
 		
 		query.setSelect(new Select());
 		ExpressionMappingVisitor emv = new ExpressionMappingVisitor(expressionMapping.asMap(), true);
-		PostOrderNavigator.doVisit(query.getSelect(), emv);
 		
 		Criteria crit = delete.getCriteria();
 		if (crit != null) {
 			PostOrderNavigator.doVisit(crit, emv);
 			query.setCriteria(Criteria.combineCriteria(query.getCriteria(), crit));
 		}
-		
+		GroupSymbol group = mapping.getGroup();
+		String correlationName = mapping.getCorrelatedName().getName();
+		return createDeleteProcedure(delete, query, group, correlationName);
+	}
+	
+	public static Command createDeleteProcedure(Delete delete, QueryMetadataInterface metadata, CommandContext context) throws QueryResolverException, QueryMetadataException, TeiidComponentException, TeiidProcessingException {
+		QueryRewriter rewriter = new QueryRewriter(metadata, context, null);
+		Criteria crit = delete.getCriteria();
+		Query query = new Query(new Select(), new From(Arrays.asList(new UnaryFromClause(delete.getGroup()))), crit, null, null);
+		return rewriter.createDeleteProcedure(delete, query, delete.getGroup(), delete.getGroup().getName());
+	}
+	
+	public static Command createUpdateProcedure(Update update, QueryMetadataInterface metadata, CommandContext context) throws QueryResolverException, QueryMetadataException, TeiidComponentException, TeiidProcessingException {
+		QueryRewriter rewriter = new QueryRewriter(metadata, context, null);
+		Criteria crit = update.getCriteria();
+		ArrayList<SingleElementSymbol> selectSymbols = rewriter.mapChangeList(update, null);
+		Query query = new Query(new Select(selectSymbols), new From(Arrays.asList(new UnaryFromClause(update.getGroup()))), crit, null, null);
+		return rewriter.createUpdateProcedure(update, query, update.getGroup(), update.getGroup().getName());
+	}
+
+	private Command createDeleteProcedure(Delete delete, Query query,
+			GroupSymbol group, String correlationName)
+			throws TeiidComponentException, QueryMetadataException,
+			QueryResolverException, TeiidProcessingException {
 		Delete newUpdate = new Delete();
-		newUpdate.setGroup(mapping.getGroup().clone());
-		
-		List<Criteria> pkCriteria = createPkCriteria(mapping, query, 0);
-		newUpdate.setCriteria(Criteria.combineCriteria(newUpdate.getCriteria(), new CompoundCriteria(pkCriteria)));
-		return createUpdateProcedure(delete, query, newUpdate);
+		newUpdate.setGroup(group.clone());
+		List<Criteria> pkCriteria = createPkCriteria(group, correlationName, query);
+		newUpdate.setCriteria(new CompoundCriteria(pkCriteria));
+		return asLoopProcedure(delete.getGroup(), query, newUpdate);
 	}
     
     private Limit rewriteLimitClause(Limit limit) throws TeiidComponentException, TeiidProcessingException{

@@ -75,7 +75,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         Insert insert = (Insert) command;
         
         if (insert.getValues() != null) {
-        	QueryResolver.resolveSubqueries(command, metadata, analysis);
+        	QueryResolver.resolveSubqueries(command, metadata, analysis, null);
 	        //variables and values must be resolved separately to account for implicitly defined temp groups
 	        resolveList(insert.getValues(), metadata, insert.getExternalGroupContexts(), null);
     	}

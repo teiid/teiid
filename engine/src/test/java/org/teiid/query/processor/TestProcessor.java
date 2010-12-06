@@ -7596,5 +7596,35 @@ public class TestProcessor {
         helpProcess(plan, dataManager, expected);
     }
     
+    @Test public void testDeleteCompensation() {
+    	String sql = "delete from pm1.g1 where e1 = 'a' and e2 in (select e2 from pm1.g2)"; //$NON-NLS-1$
+    	
+        List[] expected = new List[] {
+        		Arrays.asList(3),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example4(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testUpdateCompensation() {
+    	String sql = "update pm1.g1 set e4 = null where e1 = 'a' and exists (select 1 from pm1.g2 where e2 = pm1.g1.e2)"; //$NON-NLS-1$
+    	
+        List[] expected = new List[] {
+        		Arrays.asList(3),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example4(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
     private static final boolean DEBUG = false;
 }
