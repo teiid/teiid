@@ -585,7 +585,7 @@ public class SQLStringVisitor extends LanguageVisitor {
                 outputDisplayName((String)iter.next());
 
                 if (iter.hasNext()) {
-                    append(", ");
+                    append(", ");//$NON-NLS-1$
                 }
             }
         }
@@ -602,7 +602,7 @@ public class SQLStringVisitor extends LanguageVisitor {
                 outputDisplayName((String)iter.next());
 
                 if (iter.hasNext()) {
-                    append(", ");
+                    append(", ");//$NON-NLS-1$
                 }
             }
         }
@@ -619,7 +619,7 @@ public class SQLStringVisitor extends LanguageVisitor {
                 outputDisplayName((String)iter.next());
 
                 if (iter.hasNext()) {
-                    append(", ");
+                    append(", ");//$NON-NLS-1$
                 }
             }
         } else if (obj.isNoCache()) {
@@ -1010,6 +1010,16 @@ public class SQLStringVisitor extends LanguageVisitor {
                 append(SPACE);
             }
             append(CacheHint.UPDATABLE);
+        }
+        if (obj.getScope() != null) {
+            if (!addParens) {
+                append(Tokens.LPAREN);
+                addParens = true;
+            } else {
+                append(SPACE);
+            }     
+            append(CacheHint.SCOPE);
+            append(obj.getScope());            
         }
         if (addParens) {
             append(Tokens.RPAREN);

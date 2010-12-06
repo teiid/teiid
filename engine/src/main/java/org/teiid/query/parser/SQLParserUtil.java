@@ -178,7 +178,7 @@ public class SQLParserUtil {
         return hint;
 	}
 	
-	private static Pattern CACHE_HINT = Pattern.compile("/\\*\\+?\\s*cache(\\(\\s*(pref_mem)?\\s*(ttl:\\d{1,19})?\\s*(updatable)?[^\\)]*\\))?[^\\*]*\\*\\/.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
+	private static Pattern CACHE_HINT = Pattern.compile("/\\*\\+?\\s*cache(\\(\\s*(pref_mem)?\\s*(ttl:\\d{1,19})?\\s*(updatable)?\\s*(scope:(session|vdb|user))?[^\\)]*\\))?[^\\*]*\\*\\/.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
     
 	static CacheHint getQueryCacheOption(String query) {
     	Matcher match = CACHE_HINT.matcher(query);
@@ -194,6 +194,11 @@ public class SQLParserUtil {
     		if (match.group(4) != null) {
     			hint.setUpdatable(true);
     		}
+    		String scope =  match.group(5);
+    		if (scope != null) {
+    			scope = scope.substring(6);
+    			hint.setScope(scope);
+    		}    		
     		return hint;
     	}
     	return null;

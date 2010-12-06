@@ -22,7 +22,7 @@
 
 package org.teiid.query.parser;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1051,6 +1051,25 @@ public class TestOptionsAndHints {
         query.setFrom(from);           
         query.setCacheHint(new CacheHint());
         TestParser.helpTest(sql, "/*+ cache */ SELECT * FROM t1", query);         //$NON-NLS-1$
+    }
+    
+    @Test public void testCacheScope() {
+        String sql = "/*+ cache(pref_mem scope:session) */ SELECT * FROM t1"; //$NON-NLS-1$
+        
+        Query query = new Query();
+        Select select = new Select();
+        select.addSymbol(new AllSymbol());
+        query.setSelect(select);
+        From from = new From();
+        UnaryFromClause ufc = new UnaryFromClause();
+        from.addClause(ufc);
+        ufc.setGroup(new GroupSymbol("t1")); //$NON-NLS-1$
+        query.setFrom(from);           
+        CacheHint hint = new CacheHint();
+        hint.setScope("session");
+        hint.setPrefersMemory(true);
+        query.setCacheHint(hint);
+        TestParser.helpTest(sql, "/*+ cache(pref_mem scope:session) */ SELECT * FROM t1", query);         //$NON-NLS-1$
     }
     
     @Test public void testCache1() {

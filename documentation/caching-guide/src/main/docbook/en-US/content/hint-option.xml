@@ -15,7 +15,7 @@
 	   		<listitem><para>Indicate that a virtual procedure should be cachable and set the cache entry memory preference or time to live.
 	   		</para></listitem>
 	   	</itemizedlist>
-	   	<para><synopsis>/*+ cache[([pref_mem] [ttl:n] [updatable])] */ sql ...</synopsis>
+	   	<para><synopsis>/*+ cache[([pref_mem] [ttl:n] [updatable])] [scope:(session|user|vdb)] */ sql ...</synopsis>
 	   	<itemizedlist>
 	   		<listitem><para>The cache hint should appear at the beginning of the SQL.  It will not have any affect on INSERT/UPDATE/DELETE statements or virtual update procedure definitions.</para></listitem>
 	   		<listitem><para><emphasis>pref_mem</emphasis> - if present indicates that the cached results should prefer to remain in memory.  They are not however required to be memory only.
@@ -24,6 +24,10 @@
 	   		</para></listitem>
 	   		<listitem><para><emphasis>updatable</emphasis> - if present indicates that the cached results can be updated.  This is currently only applicable to materialized views.
 	   		</para></listitem>
+            <listitem><para><emphasis>scope</emphasis> - if present indicates the override scope of query results. Using this flag, user can override the computed scope, to improve or force the results to cache.
+            There are three different cache scopes, session - cached only for current session, user - cached for any session by the current user, vdb - cached for any user connected to the same vdb. 
+            </para></listitem>
+            
 	 	</itemizedlist>
 	   	</para>
 	   	   	<section>

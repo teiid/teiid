@@ -390,6 +390,12 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	            	cr.setCommand(originalCommand);
 	                cr.setAnalysisRecord(analysisRecord);
 	                cr.setResults(resultsBuffer);
+	                
+					if (originalCommand.getCacheHint() != null && originalCommand.getCacheHint().getDeterminism() != null) {
+						determinismLevel = originalCommand.getCacheHint().getDeterminism();
+						LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Cache hint modified the query determinism from ",processor.getContext().getDeterminismLevel(), " to ", determinismLevel }); //$NON-NLS-1$ //$NON-NLS-2$
+					}		                
+	                
 	                if (determinismLevel.isRestrictiveThan(Determinism.SESSION_DETERMINISTIC)) {
 	    				LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.getString("RequestWorkItem.cache_nondeterministic", originalCommand)); //$NON-NLS-1$
 	    			}

@@ -25,6 +25,7 @@ package org.teiid.query.sql.lang;
 import java.io.Serializable;
 
 import org.teiid.core.util.EquivalenceUtil;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class CacheHint implements Serializable {
@@ -35,10 +36,16 @@ public class CacheHint implements Serializable {
 	public static final String TTL = "ttl:"; //$NON-NLS-1$
 	public static final String UPDATABLE = "updatable"; //$NON-NLS-1$
 	public static final String CACHE = "cache"; //$NON-NLS-1$
+	public static final String SCOPE = "scope:"; //$NON-NLS-1$
+	
+	private static final String SESSION = "session"; //$NON-NLS-1$
+	private static final String VDB = "vdb"; //$NON-NLS-1$
+	private static final String USER = "user"; //$NON-NLS-1$
 	
 	private boolean prefersMemory;
 	private boolean updatable;
 	private Long ttl;
+	private String scope;
 	
 	public CacheHint() {
 	}
@@ -79,6 +86,31 @@ public class CacheHint implements Serializable {
 		this.updatable = updatable;
 	}
 	
+	public Determinism getDeterminism() {
+		if (this.scope == null) {
+			return null;
+		}
+		
+		if (scope.equals(SESSION)) { 
+			return Determinism.SESSION_DETERMINISTIC;
+		}
+		else if (this.scope.equals(VDB)) {
+			return Determinism.VDB_DETERMINISTIC;
+		}
+		else if (this.scope.equals(USER)) { 
+			return  Determinism.USER_DETERMINISTIC;
+		}
+		return null;
+	}
+	
+	public String getScope() {
+		return this.scope;
+	}
+
+	public void setScope(String scope) {
+		this.scope = scope;
+	}
+	
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == this) {
@@ -90,7 +122,8 @@ public class CacheHint implements Serializable {
 		CacheHint other = (CacheHint)obj;
 		return this.prefersMemory == other.prefersMemory 
 		&& EquivalenceUtil.areEqual(this.ttl, other.ttl) 
-		&& this.updatable == other.updatable;
+		&& this.updatable == other.updatable
+		&& EquivalenceUtil.areEqual(this.scope, other.scope);
 	}
 
 }

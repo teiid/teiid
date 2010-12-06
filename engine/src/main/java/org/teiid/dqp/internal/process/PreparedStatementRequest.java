@@ -38,6 +38,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -140,7 +141,14 @@ public class PreparedStatementRequest extends Request {
 		        // Defect 13751: Clone the plan in its current state (i.e. before processing) so that it can be used for later queries
 		        prepPlan.setPlan(processPlan.clone());
 		        prepPlan.setAnalysisRecord(analysisRecord);
-		        this.prepPlanCache.put(id, this.context.getDeterminismLevel(), prepPlan, userCommand.getCacheHint() != null?userCommand.getCacheHint().getTtl():null);
+				
+		        Determinism hintDeterminismLevel = null;
+				if (userCommand.getCacheHint() != null && userCommand.getCacheHint().getDeterminism() != null) {
+					hintDeterminismLevel = userCommand.getCacheHint().getDeterminism();
+					LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Cache hint modified the query determinism from ",this.context.getDeterminismLevel(), " to ", hintDeterminismLevel }); //$NON-NLS-1$ //$NON-NLS-2$
+				}		        
+		        
+		        this.prepPlanCache.put(id, hintDeterminismLevel!= null?hintDeterminismLevel:this.context.getDeterminismLevel(), prepPlan, userCommand.getCacheHint() != null?userCommand.getCacheHint().getTtl():null);
         	}
         } else {
         	ProcessorPlan cachedPlan = prepPlan.getPlan();
