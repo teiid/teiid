@@ -143,7 +143,7 @@ public class SessionAwareCache<T> {
 	}
 	
 	public void put(CacheID id, Determinism determinismLevel, T t, Long ttl){
-		if (determinismLevel.isRestrictiveThanOrEqual(Determinism.SESSION_DETERMINISTIC)) {
+		if (determinismLevel.compareTo(Determinism.SESSION_DETERMINISTIC) <= 0) {
 			id.setSessionId(id.originalSessionId);
 			LogManager.logTrace(LogConstants.CTX_DQP, "Adding to session/local cache", id); //$NON-NLS-1$
 			this.localCache.put(id, t, ttl);

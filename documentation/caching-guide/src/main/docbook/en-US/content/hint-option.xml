@@ -24,8 +24,8 @@
 	   		</para></listitem>
 	   		<listitem><para><emphasis>updatable</emphasis> - if present indicates that the cached results can be updated.  This is currently only applicable to materialized views.
 	   		</para></listitem>
-            <listitem><para><emphasis>scope</emphasis> - if present indicates the override scope of query results. Using this flag, user can override the computed scope, to improve or force the results to cache.
-            There are three different cache scopes, session - cached only for current session, user - cached for any session by the current user, vdb - cached for any user connected to the same vdb. 
+            <listitem><para><emphasis>scope</emphasis> - if present indicates the override scope of query results. Using this flag, the user can override the computed scope.
+            There are three different cache scopes: session - cached only for current session, user - cached for any session by the current user, vdb - cached for any user connected to the same vdb. 
             </para></listitem>
             
 	 	</itemizedlist>

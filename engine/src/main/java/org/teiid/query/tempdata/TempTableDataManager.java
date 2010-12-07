@@ -285,12 +285,11 @@ public class TempTableDataManager implements ProcessorDataManager {
 		CachedResults cr = new CachedResults();
 		cr.setResults(tb);
 		cr.setHint(hint);
-		Determinism hintDeterminismLevel = null;
 		if (hint != null && hint.getDeterminism() != null) {
-			hintDeterminismLevel = hint.getDeterminism();
-			LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Cache hint modified the query determinism from ",determinismLevel, " to ", hintDeterminismLevel }); //$NON-NLS-1$ //$NON-NLS-2$
+			LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Cache hint modified the query determinism from ",determinismLevel, " to ", hint.getDeterminism() }); //$NON-NLS-1$ //$NON-NLS-2$
+			determinismLevel = hint.getDeterminism();
 		}
-		cache.put(cid, hintDeterminismLevel != null?hintDeterminismLevel:context.getDeterminismLevel(), cr, hint != null?hint.getTtl():null);
+		cache.put(cid, determinismLevel, cr, hint != null?hint.getTtl():null);
 		context.setDeterminismLevel(determinismLevel);
 		return tb.createIndexedTupleSource();
 	}

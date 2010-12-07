@@ -142,13 +142,13 @@ public class PreparedStatementRequest extends Request {
 		        prepPlan.setPlan(processPlan.clone());
 		        prepPlan.setAnalysisRecord(analysisRecord);
 				
-		        Determinism hintDeterminismLevel = null;
+		        Determinism determinismLevel = this.context.getDeterminismLevel();
 				if (userCommand.getCacheHint() != null && userCommand.getCacheHint().getDeterminism() != null) {
-					hintDeterminismLevel = userCommand.getCacheHint().getDeterminism();
-					LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Cache hint modified the query determinism from ",this.context.getDeterminismLevel(), " to ", hintDeterminismLevel }); //$NON-NLS-1$ //$NON-NLS-2$
+					LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Cache hint modified the query determinism from ",this.context.getDeterminismLevel(), " to ", determinismLevel }); //$NON-NLS-1$ //$NON-NLS-2$
+					determinismLevel = userCommand.getCacheHint().getDeterminism();
 				}		        
 		        
-		        this.prepPlanCache.put(id, hintDeterminismLevel!= null?hintDeterminismLevel:this.context.getDeterminismLevel(), prepPlan, userCommand.getCacheHint() != null?userCommand.getCacheHint().getTtl():null);
+		        this.prepPlanCache.put(id, determinismLevel, prepPlan, userCommand.getCacheHint() != null?userCommand.getCacheHint().getTtl():null);
         	}
         } else {
         	ProcessorPlan cachedPlan = prepPlan.getPlan();

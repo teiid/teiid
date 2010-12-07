@@ -239,7 +239,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         	throw new FunctionExecutionException("ERR.015.001.0002", QueryPlugin.Util.getString("ERR.015.001.0002", getName())); //$NON-NLS-1$ //$NON-NLS-2$
         }
         
-        if (getDeterministic().isRestrictiveThanOrEqual(Determinism.USER_DETERMINISTIC) && values.length > 0 && values[0] instanceof CommandContext) {
+        if (getDeterministic().compareTo(Determinism.USER_DETERMINISTIC) <= 0 && values.length > 0 && values[0] instanceof CommandContext) {
         	CommandContext cc = (CommandContext)values[0];
         	cc.setDeterminismLevel(getDeterministic());
         }

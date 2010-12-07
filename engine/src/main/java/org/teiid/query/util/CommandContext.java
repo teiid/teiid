@@ -163,7 +163,9 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     }
     
     public void setDeterminismLevel(Determinism level) {
-    	globalState.determinismLevel = Determinism.restrictiveOf(globalState.determinismLevel, level);
+    	if (globalState.determinismLevel == null || level.compareTo(globalState.determinismLevel) < 0) {
+    		globalState.determinismLevel = level;
+    	}
     }
     
     /**

@@ -59,7 +59,7 @@ public class TestTempTables {
 		CommandContext cc = TestProcessor.createCommandContext();
 		cc.setTempTableStore(tempStore);
 		TestProcessor.doProcess(processorPlan, dataManager, expectedResults, cc);
-		assertTrue(Determinism.SESSION_DETERMINISTIC.isRestrictiveThanOrEqual(cc.getDeterminismLevel()));
+		assertTrue(Determinism.SESSION_DETERMINISTIC.compareTo(cc.getDeterminismLevel()) <= 0);
 	}
 
 	@Before public void setUp() {

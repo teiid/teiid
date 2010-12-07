@@ -350,7 +350,7 @@ public final class RuleMergeVirtual implements
             // TEIID-16: We do not want to merge a non-deterministic scalar function
             Collection<Function> functions = FunctionCollectorVisitor.getFunctions(symbol, true, true);
            	for (Function function : functions) {
-           		if ( function.getFunctionDescriptor().getDeterministic().isRestrictiveThanOrEqual(Determinism.NONDETERMINISTIC )) {
+           		if ( function.getFunctionDescriptor().getDeterministic() == Determinism.NONDETERMINISTIC) {
            			return false;
            		}
             }

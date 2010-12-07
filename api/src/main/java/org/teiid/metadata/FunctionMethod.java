@@ -87,24 +87,12 @@ public class FunctionMethod extends AbstractMetadataRecord implements Serializab
      * processing time.
      */
     public enum Determinism{
-    	DETERMINISTIC(0),VDB_DETERMINISTIC(1),USER_DETERMINISTIC(2),SESSION_DETERMINISTIC(3),COMMAND_DETERMINISTIC(4),NONDETERMINISTIC(5);
-    	private int value;
-    	
-    	Determinism(int value){
-    		this.value = value;
-    	}
-    	
-    	public boolean isRestrictiveThan(Determinism that) {
-    		return this.value > that.value;
-    	}
-    	
-    	public boolean isRestrictiveThanOrEqual(Determinism that) {
-    		return this.value >= that.value;
-    	}    	
-    	
-    	public static Determinism restrictiveOf(Determinism scopeOne, Determinism scopeTwo) {
-    		return (scopeOne.value > scopeTwo.value)?scopeOne:scopeTwo;
-    	}
+    	NONDETERMINISTIC,
+    	COMMAND_DETERMINISTIC,
+    	SESSION_DETERMINISTIC,
+    	USER_DETERMINISTIC,
+    	VDB_DETERMINISTIC,
+    	DETERMINISTIC;
     }
     
 
