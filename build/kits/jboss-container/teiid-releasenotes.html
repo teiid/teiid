@@ -27,7 +27,11 @@
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <UL>
 	<LI><B>Subquery Optimization</B> - added rewrite to INNER JOIN for applicable WHERE clause subqueries. Also added cost based SEMI and ANTI-SEMI join handling for applicable non-pushed WHERE and HAVING subqueries.
-	<LI><B>Updatable Views</B> - added support to perform simple pass-through and more complicated updates through views by default.
+	<LI><B>Updatable Views</B>
+	    <UL>
+	        <LI>Added support to perform simple pass-through and more complicated updates through views by default.
+	        <LI>Added support for "FOR EACH ROW" update procedure handling (similar to INSTEAD OF triggers in other DBMS's), which should be used instead of the deprecated TRANSLATE criteria approach.
+	    </UL>                     
 	<LI><B>UDF</B> - new API objects added to teiid-api to support user defined functions that are capable of pushdown to source.	
 </UL>
 

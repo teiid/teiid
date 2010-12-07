@@ -13,7 +13,7 @@
 	
 	<itemizedlist>
 		<listitem>
-			<para>A set operation (INTERSECT, EXCEPT, UNION, UNION ALL)</para>
+			<para>A set operation (INTERSECT, EXCEPT, UNION).</para>
 		</listitem>
 		<listitem>
 			<para>SELECT DISTINCT</para>
@@ -25,6 +25,9 @@
 			<para>A LIMIT clause</para>
 		</listitem>
 	</itemizedlist>
+	
+	<para>A UNION ALL can define an inherently updatable view only if each of the UNION branches is itself inherently updatable.  
+	A view defined by a UNION ALL though does not support inherent INSERTs.</para>
 	
 	<para>Any view column that is not mapped directly to a column is not updatable and cannot be targeted by an UPDATE set
 	 clause or be an INSERT column.</para>
