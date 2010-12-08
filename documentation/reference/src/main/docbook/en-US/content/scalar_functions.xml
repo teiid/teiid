@@ -1072,6 +1072,18 @@
               <para>x in {string}</para>
             </entry>
           </row>
+          <row>
+            <entry>
+              <para>UNESCAPE(x)</para>
+            </entry>
+            <entry>
+              <para>Unescaped version of x.  Possible escape sequences are \b - backspace, \t - tab, \n - line feed, \f - form feed, \r - carriage return.  \uXXXX, where X is a hex value, can be used to specify any unicode character.  \XXX, where X is an octal digit, can be used to specify an octal byte value.  
+              If any other character appears after an escape character, that character will appear in the output and the escape character will be ignored.</para>
+            </entry>
+            <entry>
+              <para>x in {string}</para>
+            </entry>
+          </row>
         </tbody>
       </tgroup>
     </informaltable>

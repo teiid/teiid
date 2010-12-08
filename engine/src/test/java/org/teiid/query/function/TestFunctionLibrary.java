@@ -1407,4 +1407,8 @@ public class TestFunctionLibrary {
 		helpInvokeMethod("to_bytes", new Class[] {DefaultDataClasses.CLOB, DefaultDataClasses.STRING}, new Object[] { new ClobType(new SerialClob("a".toCharArray())), "BASE64" }, null); //$NON-NLS-1$
 	}
 	
+	@Test() public void testunescape() throws Exception {
+		assertEquals("\r\t", helpInvokeMethod("unescape", new Class[] {DefaultDataClasses.STRING}, new Object[] { "\r\\\t" }, null)); //$NON-NLS-1$
+	}
+	
 }

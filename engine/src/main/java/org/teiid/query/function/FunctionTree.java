@@ -329,7 +329,7 @@ public class FunctionTree {
             inputTypes.add(0, CommandContext.class);
         }
 
-        FunctionDescriptor descriptor = new FunctionDescriptor(method.getName(), method.getPushdown(), types, outputType, invocationMethod, requiresContext, method.isNullOnNull(), method.getDeterminism());
+        FunctionDescriptor descriptor = new FunctionDescriptor(method.getName(), method.getPushdown(), types, outputType, invocationMethod, requiresContext, !method.isNullOnNull(), method.getDeterminism());
         // Store this path in the function tree
         
         int index = -1;

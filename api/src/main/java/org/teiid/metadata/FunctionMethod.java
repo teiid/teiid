@@ -22,7 +22,6 @@
 
 package org.teiid.metadata;
 
-import java.io.Serializable;
 import java.util.Arrays;
 
 import javax.xml.bind.annotation.XmlAttribute;
@@ -55,7 +54,7 @@ import org.teiid.core.util.HashCodeUtil;
  *
  * @see FunctionParameter
  */
-public class FunctionMethod extends AbstractMetadataRecord implements Serializable {
+public class FunctionMethod extends AbstractMetadataRecord {
 	private static final long serialVersionUID = -8039086494296455152L;
 
 	private static final String NOT_ALLOWED = "NOT_ALLOWED"; //$NON-NLS-1$
@@ -101,7 +100,7 @@ public class FunctionMethod extends AbstractMetadataRecord implements Serializab
     private PushDown pushdown = PushDown.CAN_PUSHDOWN;
     private String invocationClass;
     private String invocationMethod;
-    private boolean nullDependent;
+    private boolean nullOnNull;
     
     private Determinism determinism = Determinism.DETERMINISTIC;
         
@@ -439,14 +438,14 @@ public class FunctionMethod extends AbstractMetadataRecord implements Serializab
     }
 
     /**
-     * Returns true if the function can produce a non-null output from a null parameter
+     * Returns true if the function returns null on any null input
      */
     public boolean isNullOnNull() {
-        return this.nullDependent;
+        return this.nullOnNull;
     }
     
-    public void setNullOnNull(boolean nullSafe) {
-        this.nullDependent = nullSafe;
+    public void setNullOnNull(boolean nullOnNull) {
+        this.nullOnNull = nullOnNull;
     }
 
     public Determinism getDeterminism() {

@@ -45,23 +45,7 @@ public class FunctionMethod extends org.teiid.metadata.FunctionMethod {
     public FunctionMethod(String name, String description, String category, 
         String invocationClass, String invocationMethod, 
         FunctionParameter[] inputParams, FunctionParameter outputParam) {
-        this(name, description, category, invocationClass, invocationMethod, inputParams, outputParam, Determinism.DETERMINISTIC);
-    }
-    
-    /**
-     * Construct a function method with default pushdown and null dependent attributes.
-     * @param name Function name
-     * @param description Function description
-     * @param category Function category
-     * @param invocationClass Invocation class
-     * @param invocationMethod Invocation method
-     * @param inputParams Input parameters
-     * @param outputParam Output parameter (return parameter)
-     */
-    public FunctionMethod(String name, String description, String category, 
-        String invocationClass, String invocationMethod, 
-        FunctionParameter[] inputParams, FunctionParameter outputParam, Determinism deterministic) {
-        super(name, description, category, PushDown.CAN_PUSHDOWN, invocationClass, invocationMethod, inputParams, outputParam, false, deterministic);
+        super(name, description, category, PushDown.CAN_PUSHDOWN, invocationClass, invocationMethod, inputParams, outputParam, true, Determinism.DETERMINISTIC);
     }
 
     /**
@@ -77,12 +61,8 @@ public class FunctionMethod extends org.teiid.metadata.FunctionMethod {
     public FunctionMethod(String name, String description, String category, 
         PushDown pushdown, String invocationClass, String invocationMethod, 
         FunctionParameter[] inputParams, FunctionParameter outputParam) {
-        super(name, description, category, pushdown, invocationClass, invocationMethod, inputParams, outputParam, true,Determinism.NONDETERMINISTIC);
+        super(name, description, category, pushdown, invocationClass, invocationMethod, inputParams, outputParam, false,Determinism.NONDETERMINISTIC);
     }
-    
-    public FunctionMethod(String name, String description, String category, FunctionParameter[] inputParams, FunctionParameter outputParam) {
-    	super(name, description, category, PushDown.MUST_PUSHDOWN, null, null, inputParams, outputParam, false, Determinism.DETERMINISTIC);
-    } 
     
     public FunctionMethod(String name,
             String description,
@@ -94,6 +74,6 @@ public class FunctionMethod extends org.teiid.metadata.FunctionMethod {
             FunctionParameter outputParam,
             boolean nullDependent,
             Determinism deterministic) {
-    	super(name, description, category, pushdown, invocationClass, invocationMethod, inputParams, outputParam, nullDependent, deterministic);
+    	super(name, description, category, pushdown, invocationClass, invocationMethod, inputParams, outputParam, !nullDependent, deterministic);
     }
 }

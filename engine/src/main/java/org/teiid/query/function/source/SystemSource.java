@@ -191,9 +191,19 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         	}
         	addTypedCoalesceFunction(type);
         }
+        
+        addUnescape();
     }
 
-    private void addSecurityFunctions() {
+    private void addUnescape() {
+    	functions.add(new FunctionMethod("unescape", QueryPlugin.Util.getString("SystemSource.unescape_desc"), STRING, PushDown.CANNOT_PUSHDOWN, FUNCTION_CLASS, "unescape", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                new FunctionParameter[] { 
+                    new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.unescape_param1"))}, //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.unescape_result")), false, Determinism.DETERMINISTIC ) );       //$NON-NLS-1$ //$NON-NLS-2$
+
+	}
+
+	private void addSecurityFunctions() {
         functions.add(new FunctionMethod("hasRole", QueryPlugin.Util.getString("SystemSource.hasRole_description"), SECURITY, PushDown.CANNOT_PUSHDOWN, SECURITY_FUNCTION_CLASS, "hasRole", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                                         new FunctionParameter[] { 
                                             new FunctionParameter("roleType", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.hasRole_param1")), //$NON-NLS-1$ //$NON-NLS-2$
@@ -263,13 +273,16 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         // With Seed
         FunctionMethod rand = new FunctionMethod(SourceSystemFunctions.RAND, QueryPlugin.Util.getString("SystemSource.Rand_desc"), NUMERIC, FUNCTION_CLASS, "rand", //$NON-NLS-1$ //$NON-NLS-2$ 
                                           new FunctionParameter[] {new FunctionParameter("seed", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Rand_arg")) }, //$NON-NLS-1$ //$NON-NLS-2$
-                                          new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Rand_result_desc")), Determinism.NONDETERMINISTIC );                 //$NON-NLS-1$ //$NON-NLS-2$
-        rand.setNullOnNull(true);
+                                          new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Rand_result_desc")) );                 //$NON-NLS-1$ //$NON-NLS-2$
+        rand.setNullOnNull(false);
+        rand.setDeterminism(Determinism.NONDETERMINISTIC);
         functions.add(rand);
         // Without Seed
-        functions.add( new FunctionMethod(SourceSystemFunctions.RAND, QueryPlugin.Util.getString("SystemSource.Rand_desc"), NUMERIC, FUNCTION_CLASS, "rand", //$NON-NLS-1$ //$NON-NLS-2$ 
+        rand = new FunctionMethod(SourceSystemFunctions.RAND, QueryPlugin.Util.getString("SystemSource.Rand_desc"), NUMERIC, FUNCTION_CLASS, "rand", //$NON-NLS-1$ //$NON-NLS-2$ 
                                           new FunctionParameter[] {}, 
-                                          new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Rand_result_desc")), Determinism.NONDETERMINISTIC ) ); //$NON-NLS-1$ //$NON-NLS-2$                
+                                          new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Rand_result_desc")) ); //$NON-NLS-1$ //$NON-NLS-2$
+        rand.setDeterminism(Determinism.NONDETERMINISTIC);
+        functions.add(rand);
     }
 
 	private void addDoubleFunction(String name, String description) {
@@ -374,10 +387,11 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
      * evaluation.
      */
     private void addConstantDateFunction(String name, String description, String methodName, String returnType) {
-        functions.add(
-            new FunctionMethod(name, description, DATETIME, FUNCTION_CLASS, methodName,
+        FunctionMethod method = new FunctionMethod(name, description, DATETIME, FUNCTION_CLASS, methodName,
                 new FunctionParameter[] {},
-                new FunctionParameter("result", returnType, description), Determinism.COMMAND_DETERMINISTIC ) );                 //$NON-NLS-1$
+                new FunctionParameter("result", returnType, description));                 //$NON-NLS-1$
+        method.setDeterminism(Determinism.COMMAND_DETERMINISTIC);
+        functions.add(method);
     }
 
     private void addDateFunction(String name, String methodName, String dateDesc, String timestampDesc, String returnType) {
@@ -539,7 +553,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
                     new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Locate_arg2")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("index", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Locate_arg3")) }, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Locate_result")) );                 //$NON-NLS-1$ //$NON-NLS-2$
-        func.setNullOnNull(true);
+        func.setNullOnNull(false);
         functions.add(func);
         functions.add(
             new FunctionMethod(SourceSystemFunctions.LOCATE, QueryPlugin.Util.getString("SystemSource.Locate2_desc"), STRING, FUNCTION_CLASS, "locate", //$NON-NLS-1$ //$NON-NLS-2$ 
@@ -826,7 +840,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
                     new FunctionParameter("value", valueType, QueryPlugin.Util.getString("SystemSource.Nvl_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("valueIfNull", valueType, QueryPlugin.Util.getString("SystemSource.Nvl_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", valueType, QueryPlugin.Util.getString("SystemSource.Nvl_result")) ); //$NON-NLS-1$ //$NON-NLS-2$
-        nvl.setNullOnNull(true);
+        nvl.setNullOnNull(false);
         functions.add(nvl); 
     }
 
@@ -837,7 +851,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 					new FunctionParameter("value", valueType, QueryPlugin.Util.getString("SystemSource.Ifnull_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
 					new FunctionParameter("valueIfNull", valueType, QueryPlugin.Util.getString("SystemSource.Ifnull_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
 				new FunctionParameter("result", valueType, QueryPlugin.Util.getString("SystemSource.Ifnull_result")) ); //$NON-NLS-1$ //$NON-NLS-2$
-        nvl.setNullOnNull(true);
+        nvl.setNullOnNull(false);
         functions.add(nvl); 
 	}
 			
