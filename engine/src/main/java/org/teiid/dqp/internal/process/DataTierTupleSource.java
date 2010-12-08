@@ -211,7 +211,7 @@ public class DataTierTupleSource implements TupleSource {
 	    				results = getResults();
 	    			}
     			} catch (TranslatorException e) {
-    				exceptionOccurred(e, true);
+    				results = exceptionOccurred(e, true);
     			} catch (DataNotAvailableException e) {
     				dtm.scheduleWork(new Runnable() {
     					@Override
@@ -352,7 +352,7 @@ public class DataTierTupleSource implements TupleSource {
     	}
     }
 
-    void exceptionOccurred(TranslatorException exception, boolean removeState) throws TeiidComponentException, TeiidProcessingException {
+    AtomicResultsMessage exceptionOccurred(TranslatorException exception, boolean removeState) throws TeiidComponentException, TeiidProcessingException {
     	if (removeState) {
 			fullyCloseSource();
 		}
@@ -360,16 +360,15 @@ public class DataTierTupleSource implements TupleSource {
 			AtomicResultsMessage emptyResults = new AtomicResultsMessage(new List[0], null);
 			emptyResults.setWarnings(Arrays.asList((Exception)exception));
 			emptyResults.setFinalRow(this.rowsProcessed);
-			receiveResults(emptyResults);
-		} else {
-    		if (exception.getCause() instanceof TeiidComponentException) {
-    			throw (TeiidComponentException)exception.getCause();
-    		}
-    		if (exception.getCause() instanceof TeiidProcessingException) {
-    			throw (TeiidProcessingException)exception.getCause();
-    		}
-    		throw new TeiidProcessingException(exception);
-		}	
+			return emptyResults;
+		} 
+		if (exception.getCause() instanceof TeiidComponentException) {
+			throw (TeiidComponentException)exception.getCause();
+		}
+		if (exception.getCause() instanceof TeiidProcessingException) {
+			throw (TeiidProcessingException)exception.getCause();
+		}
+		throw new TeiidProcessingException(exception);
 	}
 
 	void receiveResults(AtomicResultsMessage response) {
