@@ -25,6 +25,7 @@ package org.teiid.dqp.internal.process;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -48,7 +49,9 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.resolver.util.ResolverUtil;
+import org.teiid.query.sql.lang.Create;
 import org.teiid.query.sql.lang.Delete;
+import org.teiid.query.sql.lang.Drop;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.Into;
 import org.teiid.query.sql.lang.Query;
@@ -66,6 +69,8 @@ import org.teiid.query.validator.AbstractValidationVisitor;
 public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     
 	public enum Context {
+		CREATE,
+		DROP,
 		QUERY,
 		INSERT,
 		UPDATE,
@@ -75,13 +80,68 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     
     private HashMap<String, DataPolicy> allowedPolicies;
     private String userName;
+    private boolean allowCreateTemporaryTablesDefault = true;
 
     public AuthorizationValidationVisitor(HashMap<String, DataPolicy> policies, String user) {
         this.allowedPolicies = policies;
         this.userName = user;
     }
+    
+    public void setAllowCreateTemporaryTablesDefault(
+			boolean allowCreateTemporaryTablesDefault) {
+		this.allowCreateTemporaryTablesDefault = allowCreateTemporaryTablesDefault;
+	}
 
     // ############### Visitor methods for language objects ##################
+    
+    @Override
+    public void visit(Create obj) {
+    	Set<String> resources = Collections.singleton(obj.getTable().getName());
+    	Collection<GroupSymbol> symbols = Arrays.asList(obj.getTable());
+    	validateTemp(resources, symbols, Context.CREATE);
+    }
+
+	private void validateTemp(Set<String> resources,
+			Collection<GroupSymbol> symbols, Context context) {
+		logRequest(resources, context);
+        
+    	boolean allowed = false;
+    	for(DataPolicy p:this.allowedPolicies.values()) {
+			DataPolicyMetadata policy = (DataPolicyMetadata)p;
+			
+			if (policy.isAllowCreateTemporaryTables() == null) {
+				if (allowCreateTemporaryTablesDefault) {
+					allowed = true;
+					break;
+				}
+			} else if (policy.isAllowCreateTemporaryTables()) {
+				allowed = true;
+				break;
+			}
+		}
+    	
+    	logResult(resources, context, allowed);
+    	if (!allowed) {
+		    handleValidationError(
+			        QueryPlugin.Util.getString("ERR.018.005.0095", userName, "CREATE_TEMPORARY_TABLES"), //$NON-NLS-1$                   
+			        symbols);
+    	}
+	}
+
+	private void logRequest(Set<String> resources, Context context) {
+		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
+	        // Audit - request
+	    	AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-request", this.userName, resources.toArray(new String[resources.size()])); //$NON-NLS-1$
+	    	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
+        }
+	}
+    
+    @Override
+    public void visit(Drop obj) {
+    	Set<String> resources = Collections.singleton(obj.getTable().getName());
+    	Collection<GroupSymbol> symbols = Arrays.asList(obj.getTable());
+    	validateTemp(resources, symbols, Context.CREATE);
+    }
     
     public void visit(Delete obj) {
     	validateEntitlements(obj);
@@ -206,16 +266,6 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         validateEntitlements(Arrays.asList(obj.getGroup()), DataPolicy.PermissionType.READ, Context.STORED_PROCEDURE);
     }
 
-    private String getActionLabel(DataPolicy.PermissionType actionCode) {
-        switch(actionCode) {
-            case READ:    return "Read"; //$NON-NLS-1$
-            case CREATE:  return "Create"; //$NON-NLS-1$
-            case UPDATE:  return "Update"; //$NON-NLS-1$
-            case DELETE:  return "Delete"; //$NON-NLS-1$
-            default:    return "UNKNOWN"; //$NON-NLS-1$
-        }
-    }
-
     /**
      * Check that the user is entitled to access all data elements in the command.
      *
@@ -256,33 +306,28 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         }
 
         if (!nameToSymbolMap.isEmpty()) {
-            Collection<String> inaccessibleResources = getInaccessibleResources(actionCode, nameToSymbolMap.keySet(), auditContext);
-            if(inaccessibleResources.size() > 0) {                              
-            	List<Symbol> inaccessibleSymbols = new ArrayList<Symbol>(inaccessibleResources.size());
-            	for (String name : inaccessibleResources) {
-                    inaccessibleSymbols.add(nameToSymbolMap.get(name));
-                }
-                
-                // CASE 2362 - do not include the names of the elements for which the user
-                // is not authorized in the exception message
-                
-                handleValidationError(
-                    QueryPlugin.Util.getString("ERR.018.005.0095", userName, getActionLabel(actionCode)), //$NON-NLS-1$                    
-                    inaccessibleSymbols);
-            }
+			Collection<String> inaccessibleResources = getInaccessibleResources(actionCode, nameToSymbolMap.keySet(), auditContext);
+			if(inaccessibleResources.size() > 0) {                              
+				List<Symbol> inaccessibleSymbols = new ArrayList<Symbol>(inaccessibleResources.size());
+				for (String name : inaccessibleResources) {
+			        inaccessibleSymbols.add(nameToSymbolMap.get(name));
+			    }
+			    
+			    // CASE 2362 - do not include the names of the elements for which the user
+			    // is not authorized in the exception message
+			    
+			    handleValidationError(
+			        QueryPlugin.Util.getString("ERR.018.005.0095", userName, actionCode), //$NON-NLS-1$                    
+			        inaccessibleSymbols);
+			}
         }
-
-    }
+	}
 
     /**
      * Out of resources specified, return the subset for which the specified not have authorization to access.
      */
     public Set<String> getInaccessibleResources(DataPolicy.PermissionType action, Set<String> resources, Context context) {
-        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
-	        // Audit - request
-	    	AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-request", this.userName, resources.toArray(new String[resources.size()])); //$NON-NLS-1$
-	    	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
-        }
+        logRequest(resources, context);
         
         HashSet<String> results = new HashSet<String>(resources);
         
@@ -301,8 +346,14 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 			}
 		}
 
+		logResult(resources, context, results.isEmpty());
+        return results;
+    }
+
+	private void logResult(Set<String> resources, Context context,
+			boolean granted) {
 		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
-	        if (results.isEmpty()) {
+	        if (granted) {
 	        	AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-granted all", this.userName, resources.toArray(new String[resources.size()])); //$NON-NLS-1$
 	        	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
 	        } else {
@@ -310,6 +361,5 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 	        	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
 	        }
 		}
-        return results;
-    }    
+	}    
 }

@@ -32,7 +32,8 @@
 	        <LI>Added support to perform simple pass-through and more complicated updates through views by default.
 	        <LI>Added support for "FOR EACH ROW" update procedure handling (similar to INSTEAD OF triggers in other DBMS's), which should be used instead of the deprecated TRANSLATE criteria approach.
 	    </UL>                     
-	<LI><B>UDF</B> - new API objects added to teiid-api to support user defined functions that are capable of pushdown to source.	
+	<LI><B>UDF</B> - new API objects added to teiid-api to support user defined functions that are capable of pushdown to source.
+	<LI><B>Unescape Function</B> - a new system function, unescape, was added to handle common \ escaping in strings including octal, hex/unicode, \b, \r, \n, \f, and \t.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -84,6 +85,13 @@
 <h2><a name="Configuration">Configuration Issues</a></h2>
 
 See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
+
+<h4>from 7.2</h4>
+<ul>
+  <LI>Temporary tables can now be restricted by data roles.  Use the data-role attribute allow-create-temporary-tables to explicitly enable or disable the usage of temporary tables.  
+There is also a allowCreateTemporaryTablesByDefault property in the teiid-jboss-beans.xml to control whether usage is allowed by default.  For compatibility with prior 7.x releases, the default is to allow
+temporary table access.  	
+</ul>
 
 <h4>from 7.1</h4>
 <ul>

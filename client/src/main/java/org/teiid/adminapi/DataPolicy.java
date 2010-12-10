@@ -51,7 +51,17 @@ public interface DataPolicy {
 	 */
 	List<String> getMappedRoleNames();
 	
+	/**
+	 * If the policy applies to any authenticated user
+	 * @return
+	 */
 	boolean isAnyAuthenticated();
+	
+	/**
+	 * If the policy allows for temporary table usage
+	 * @return
+	 */
+	Boolean isAllowCreateTemporaryTables();
 	
 	interface DataPermission {
 		/**

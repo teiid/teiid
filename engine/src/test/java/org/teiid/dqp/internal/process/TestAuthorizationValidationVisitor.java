@@ -51,7 +51,7 @@ import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
 
-
+@SuppressWarnings("nls")
 public class TestAuthorizationValidationVisitor {
 
     public static final String CONN_ID = "connID"; //$NON-NLS-1$
@@ -142,7 +142,7 @@ public class TestAuthorizationValidationVisitor {
         // pm3.g2
         svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm3.g2.e1")); //$NON-NLS-1$
         svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm3.g2.e2")); //$NON-NLS-1$
-        
+        svc.setAllowCreateTemporaryTables(false);
         return svc;
     }
 
@@ -174,6 +174,13 @@ public class TestAuthorizationValidationVisitor {
         } else if(expectedInaccesible.length > 0) {
             fail("Expected inaccessible objects, but got none.");                 //$NON-NLS-1$
         }
+    }
+    
+    @Test public void testTemp() throws Exception {
+    	//allowed by default
+    	helpTest(exampleAuthSvc1(), "create local temporary table x (y string)", FakeMetadataFactory.example1Cached(), new String[] {}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
+    	//explicitly denied
+        helpTest(exampleAuthSvc2(), "create local temporary table x (y string)", FakeMetadataFactory.example1Cached(), new String[] {"x"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ 
     }
     
     @Test public void testEverythingAccessible() throws Exception {

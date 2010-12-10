@@ -50,6 +50,7 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
 		registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day_of_month")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new AliasModifier("day_of_week")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new AliasModifier("day_of_year")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.UNESCAPE, new AliasModifier("stringdecode")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier(SourceSystemFunctions.MOD, getLanguageFactory()));
 		//TODO: this behavior is configurable in h2 starting with 1.1.119
 		registerFunctionModifier(SourceSystemFunctions.CONCAT, new ConcatFunctionModifier(getLanguageFactory()));
@@ -139,6 +140,7 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.RTRIM);
         supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
         supportedFunctions.add(SourceSystemFunctions.UCASE);
+        supportedFunctions.add(SourceSystemFunctions.UNESCAPE);
         
         supportedFunctions.add(SourceSystemFunctions.DAYNAME);
         supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);

@@ -54,6 +54,8 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
     protected String description;
 	@XmlAttribute(name = "any-authenticated")
 	protected boolean anyAuthenticated;
+	@XmlAttribute(name = "allow-create-temporary-tables")
+	protected Boolean allowCreateTemporaryTables;
 
     @XmlElement(name = "permission")
     protected PermissionMap permissions = new PermissionMap(new KeyBuilder<PermissionMetaData>() {
@@ -254,6 +256,13 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         }
 	}
 
+    public Boolean isAllowCreateTemporaryTables() {
+		return allowCreateTemporaryTables;
+	}
+    
+    public void setAllowCreateTemporaryTables(Boolean allowCreateTemporaryTables) {
+		this.allowCreateTemporaryTables = allowCreateTemporaryTables;
+	}
 
     @Override
     @ManagementProperty(description="Indicates if the role is mapped to any authenticated user.")
@@ -264,4 +273,5 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
     public void setAnyAuthenticated(boolean anyAuthenticated) {
 		this.anyAuthenticated = anyAuthenticated;
 	}
+    
 }

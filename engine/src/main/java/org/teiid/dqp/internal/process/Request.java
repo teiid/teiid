@@ -134,6 +134,7 @@ public class Request {
 	private TempTableStore globalTables;
 	private SessionAwareCache<PreparedPlan> planCache;
 	private boolean resultSetCacheEnabled = true;
+	private boolean allowCreateTemporaryTablesByDefault;
 
     void initialize(RequestMessage requestMsg,
                               BufferManager bufferManager,
@@ -167,6 +168,11 @@ public class Request {
 	
 	public void setResultSetCacheEnabled(boolean resultSetCacheEnabled) {
 		this.resultSetCacheEnabled = resultSetCacheEnabled;
+	}
+	
+	public void setAllowCreateTemporaryTablesByDefault(
+			boolean allowCreateTemporaryTablesByDefault) {
+		this.allowCreateTemporaryTablesByDefault = allowCreateTemporaryTablesByDefault;
 	}
     
 	/**
@@ -460,6 +466,7 @@ public class Request {
 	protected void validateAccess(Command command) throws QueryValidatorException, TeiidComponentException {
 		if (useEntitlements) {
 			AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(this.workContext.getAllowedDataPolicies(), this.workContext.getUserName());
+			visitor.setAllowCreateTemporaryTablesDefault(this.allowCreateTemporaryTablesByDefault);
 			validateWithVisitor(visitor, this.metadata, command);
 		}
 	}

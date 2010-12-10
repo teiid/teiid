@@ -59,6 +59,7 @@ public class SourceSystemFunctions {
 	public static final String TO_BYTES = "to_bytes"; //$NON-NLS-1$
 	public static final String TO_CHARS = "to_chars"; //$NON-NLS-1$
 	public static final String UCASE = "ucase"; //$NON-NLS-1$
+	public static final String UNESCAPE = "unescape"; //$NON-NLS-1$
 	
 	//numeric
 	public static final String ABS = "abs"; //$NON-NLS-1$

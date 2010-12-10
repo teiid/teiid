@@ -184,9 +184,6 @@ public class DQPCore implements DQP {
 	
 	private ThreadReuseExecutor processWorkerPool;
     
-    private int maxFetchSize = DQPConfiguration.DEFAULT_FETCH_SIZE;
-    private int queryThreshold = DQPConfiguration.DEFAULT_QUERY_THRESHOLD;
-    
     // Resources
     private BufferManager bufferManager;
     private ProcessorDataManager dataTierMgr;
@@ -195,17 +192,12 @@ public class DQPCore implements DQP {
     private TransactionService transactionService;
     private BufferService bufferService;
     
-    // Query worker pool for processing plans
-    private int processorTimeslice = DQPConfiguration.DEFAULT_PROCESSOR_TIMESLICE;
-    
-    private int maxSourceRows = DQPConfiguration.DEFAULT_MAX_SOURCE_ROWS;
-    private boolean exceptionOnMaxSourceRows = true;
+    private DQPConfiguration config = new DQPConfiguration();
     
     private int chunkSize = Streamable.STREAMING_BATCH_SIZE_IN_BYTES;
     
 	private Map<RequestID, RequestWorkItem> requests = new ConcurrentHashMap<RequestID, RequestWorkItem>();			
 	private Map<String, ClientState> clientState = new ConcurrentHashMap<String, ClientState>();
-    private boolean useEntitlements = false;
     
     private int maxActivePlans = DQPConfiguration.DEFAULT_MAX_ACTIVE_PLANS;
     private int currentlyActivePlans;
@@ -258,7 +250,7 @@ public class DQPCore implements DQP {
     } 
     
     public List<RequestMetadata> getLongRunningRequests(){
-    	return buildRequestInfos(requests.keySet(), this.queryThreshold);
+    	return buildRequestInfos(requests.keySet(), this.config.getQueryThresholdInSecs());
     }
 
     private List<RequestMetadata> buildRequestInfos(Collection<RequestID> ids, int longRunningQueryThreshold) {
@@ -331,7 +323,7 @@ public class DQPCore implements DQP {
 	public ResultsFuture<ResultsMessage> executeRequest(long reqID,RequestMessage requestMsg) {
     	DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		RequestID requestID = workContext.getRequestID(reqID);
-		requestMsg.setFetchSize(Math.min(requestMsg.getFetchSize(), maxFetchSize));
+		requestMsg.setFetchSize(Math.min(requestMsg.getFetchSize(), this.config.getMaxRowsFetchSize()));
 		Request request = null;
 	    if ( requestMsg.isPreparedStatement() || requestMsg.isCallableStatement()) {
 	    	request = new PreparedStatementRequest(prepPlanCache);
@@ -341,8 +333,9 @@ public class DQPCore implements DQP {
 	    ClientState state = this.getClientState(workContext.getSessionId(), true);
 	    request.initialize(requestMsg, bufferManager,
 				dataTierMgr, transactionService, state.sessionTables,
-				workContext, this.useEntitlements, this.prepPlanCache);
+				workContext, this.config.getUseDataRoles(), this.prepPlanCache);
 		request.setResultSetCacheEnabled(this.rsCache != null);
+		request.setAllowCreateTemporaryTablesByDefault(this.config.isAllowCreateTemporaryTablesByDefault());
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
         RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
     	logMMCommand(workItem, Event.NEW, null); 
@@ -368,7 +361,7 @@ public class DQPCore implements DQP {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
 		RequestWorkItem workItem = getRequestWorkItem(workContext.getRequestID(reqID));
-		workItem.requestMore(batchFirst, batchFirst + Math.min(fetchSize, maxFetchSize) - 1, resultsFuture.getResultsReceiver());
+		workItem.requestMore(batchFirst, batchFirst + Math.min(fetchSize, this.config.getMaxRowsFetchSize()) - 1, resultsFuture.getResultsReceiver());
 		return resultsFuture;
 	}
 
@@ -671,7 +664,7 @@ public class DQPCore implements DQP {
 	}
 	
 	int getProcessorTimeSlice() {
-		return this.processorTimeslice;
+		return this.config.getTimeSliceInMilli();
 	}	
 	
 	int getChunkSize() {
@@ -679,12 +672,7 @@ public class DQPCore implements DQP {
 	}
 	
 	public void start(DQPConfiguration config) {
-		this.processorTimeslice = config.getTimeSliceInMilli();
-        this.maxFetchSize = config.getMaxRowsFetchSize();
-        this.useEntitlements = config.getUseDataRoles();
-        this.queryThreshold = config.getQueryThresholdInSecs();
-        this.maxSourceRows = config.getMaxSourceRows();
-        this.exceptionOnMaxSourceRows = config.isExceptionOnMaxSourceRows();
+		this.config = config;
         
         this.chunkSize = config.getLobChunkSizeInKB() * 1024;
 
@@ -853,11 +841,11 @@ public class DQPCore implements DQP {
 	}
 	
 	public boolean isExceptionOnMaxSourceRows() {
-		return exceptionOnMaxSourceRows;
+		return this.config.isExceptionOnMaxSourceRows();
 	}
 	
 	public int getMaxSourceRows() {
-		return maxSourceRows;
+		return this.config.getMaxSourceRows();
 	}
 	
 	public void setCacheFactory(CacheFactory factory) {

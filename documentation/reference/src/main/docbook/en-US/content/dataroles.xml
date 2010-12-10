@@ -147,7 +147,9 @@
    
    <para>The "mapped-role-name" defines the container JAAS roles that are assigned the data role.  For assigning roles to your users in the JBoss AS, 
    check out the instructions for the selected Login Module. Check the "Admin Guide" for configuring Login Modules.  You may also choose to allow any
-   authenticated user to have a data role by setting the any-authenticated attribute value to true on data-role element.</para> 
+   authenticated user to have a data role by setting the any-authenticated attribute value to true on data-role element.</para>
+   
+   <para>The "allow-create-temporary-tables" data-role boolean attribute is used to explicitly enable or disable temporary table usage for the role.  If it is left unspecified, then the value will be determined by the configuration setting allowCreateTemporaryTablesByDefault located in the &jboss-beans; file in the <code>RuntimeEngineDeployer</code> section.</para> 
    
 	</section>
 	<section>

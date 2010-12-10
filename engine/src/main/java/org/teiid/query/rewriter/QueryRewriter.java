@@ -969,7 +969,7 @@ public class QueryRewriter {
 	private Insert correctDatatypes(Insert insert) {
 		boolean needsView = false;
 		for (int i = 0; !needsView && i < insert.getVariables().size(); i++) {
-		    SingleElementSymbol ses = (SingleElementSymbol)insert.getVariables().get(i);
+		    SingleElementSymbol ses = insert.getVariables().get(i);
 		    if (ses.getType() != insert.getQueryExpression().getProjectedSymbols().get(i).getType()) {
 		        needsView = true;
 		    }
@@ -2466,7 +2466,7 @@ public class QueryRewriter {
     public static Query createInlineViewQuery(GroupSymbol inlineGroup,
                                                Command nested,
                                                QueryMetadataInterface metadata,
-                                               List<SingleElementSymbol> actualSymbols) throws QueryMetadataException,
+                                               List<? extends SingleElementSymbol> actualSymbols) throws QueryMetadataException,
                                                                   QueryResolverException,
                                                                   TeiidComponentException {
         Query query = new Query();
@@ -2488,7 +2488,7 @@ public class QueryRewriter {
             actualTypes.add(ses.getType());
         }
         List<SingleElementSymbol> selectSymbols = SetQuery.getTypedProjectedSymbols(ResolverUtil.resolveElementsInGroup(inlineGroup, tma), actualTypes, tma);
-        Iterator<SingleElementSymbol> iter = actualSymbols.iterator();
+        Iterator<? extends SingleElementSymbol> iter = actualSymbols.iterator();
         for (SingleElementSymbol ses : selectSymbols) {
         	ses = (SingleElementSymbol)ses.clone();
         	SingleElementSymbol actual = iter.next();

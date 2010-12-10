@@ -196,7 +196,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     }
 
     private void addUnescape() {
-    	functions.add(new FunctionMethod("unescape", QueryPlugin.Util.getString("SystemSource.unescape_desc"), STRING, PushDown.CANNOT_PUSHDOWN, FUNCTION_CLASS, "unescape", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    	functions.add(new FunctionMethod(SourceSystemFunctions.UNESCAPE, QueryPlugin.Util.getString("SystemSource.unescape_desc"), STRING, PushDown.CANNOT_PUSHDOWN, FUNCTION_CLASS, SourceSystemFunctions.UNESCAPE, //$NON-NLS-1$ 
                 new FunctionParameter[] { 
                     new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.unescape_param1"))}, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.unescape_result")), false, Determinism.DETERMINISTIC ) );       //$NON-NLS-1$ //$NON-NLS-2$

@@ -23,7 +23,6 @@
 package org.teiid.query.sql.lang;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -81,7 +80,7 @@ public class Insert extends ProcedureContainer {
      * @param variables List of ElementSymbols that represent columns for the values, null implies all columns
      * @param values List of Expression values to be inserted
      */
-    public Insert(GroupSymbol group, List variables, List values) {
+    public Insert(GroupSymbol group, List<ElementSymbol> variables, List values) {
         this.group = group;
         this.variables = variables;
         this.values = values;
@@ -121,7 +120,7 @@ public class Insert extends ProcedureContainer {
      * Return an ordered List of variables, may be null if no columns were specified
      * @return List of {@link org.teiid.query.sql.symbol.ElementSymbol}
      */
-    public List getVariables() {
+    public List<ElementSymbol> getVariables() {
         return variables;
     }
 
@@ -137,7 +136,7 @@ public class Insert extends ProcedureContainer {
      * Add a collection of variables to end of list
      * @param vars Variables to add to the list - collection of ElementSymbol
      */
-    public void addVariables(Collection vars) {
+    public void addVariables(Collection<ElementSymbol> vars) {
         variables.addAll(vars);
     }
 
@@ -256,14 +255,10 @@ public class Insert extends ProcedureContainer {
 	    
 	    List<ElementSymbol> copyVars = LanguageObject.Util.deepClone(getVariables(), ElementSymbol.class);
 
-        List copyVals = new LinkedList();
+        List<Expression> copyVals = null;
 
-        if ( getValues() != null && getValues().size() > 0 ) {
-        	Iterator iter = getValues().iterator();
-        	while(iter.hasNext()) { 
-        		Expression expression = (Expression) iter.next();
-        		copyVals.add( expression.clone() );    
-        	}    
+        if ( getValues() != null) {
+        	copyVals = LanguageObject.Util.deepClone(getValues(), Expression.class);    
         }
         
 	    Insert copy = new Insert(copyGroup, copyVars, copyVals);
@@ -280,7 +275,7 @@ public class Insert extends ProcedureContainer {
 	 * single column.
 	 * @return Ordered list of SingleElementSymbol
 	 */
-	public List getProjectedSymbols(){
+	public List<SingleElementSymbol> getProjectedSymbols(){
         return Command.getUpdateCommandSymbol();
 	}
 	
