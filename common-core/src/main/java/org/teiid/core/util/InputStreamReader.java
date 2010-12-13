@@ -90,7 +90,7 @@ public class InputStreamReader extends Reader {
 	    		}
 	    		done = true;
 	    	}
-	    	if (bb.remaining() != 0) {
+	    	if (bb.position() != read) {
 	    		bb.compact();
 	    	} else {
 	    		bb.clear();
