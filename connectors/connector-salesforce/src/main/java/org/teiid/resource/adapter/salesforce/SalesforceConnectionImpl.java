@@ -94,7 +94,9 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			sfSoap = null;
 			sfService = null;
 			co = new CallOptions();
-			co.setClient("RedHat/Teiid/"); //$NON-NLS-1$
+			// This value identifies Teiid as a SF certified solution.
+			// It was provided by SF and should not be changed.
+			co.setClient("RedHat/MetaMatrix/"); //$NON-NLS-1$
 			
 			if(url == null) {
 				throw new ResourceException("SalesForce URL is not specified, please provide a valid URL"); //$NON-NLS-1$
