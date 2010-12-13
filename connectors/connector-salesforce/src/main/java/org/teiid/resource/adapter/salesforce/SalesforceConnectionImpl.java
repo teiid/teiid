@@ -72,8 +72,8 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	
 	PackageVersionHeader pvHeader = partnerFactory.createPackageVersionHeader();
 	
-	public SalesforceConnectionImpl(String username, String password, URL url, long pingInterval, int timeout) throws ResourceException {
-		login(username, password, url, timeout);
+	public SalesforceConnectionImpl(String username, String password, URL url) throws ResourceException {
+		login(username, password, url);
 	}
 	
 	String getUserName() throws ResourceException {
@@ -88,24 +88,24 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		return sfSoap;
 	}
 	
-	private void login(String username, String password, URL url, int timeout) throws ResourceException {
+	private void login(String username, String password, URL url) throws ResourceException {
 		if (!isValid()) {
 			LoginResult loginResult = null;
 			sfSoap = null;
 			sfService = null;
 			co = new CallOptions();
+			// This value identifies Teiid as a SF certified solution.
+			// It was provided by SF and should not be changed.
 			co.setClient("RedHat/MetaMatrix/"); //$NON-NLS-1$
+			
+			if(url == null) {
+				throw new ResourceException("SalesForce URL is not specified, please provide a valid URL"); //$NON-NLS-1$
+			}
 
 			try {
-				/*
-				if(null != url) {
-					sfService = new SforceService(url);
-					sfSoap = sfService.getSoap();
-				} else {
-					*/
-					sfService = new SforceService();
-					sfSoap = sfService.getSoap();
-				//}
+				sfService = new SforceService();
+				sfSoap = sfService.getSoap();
+				((BindingProvider)sfSoap).getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, url.toExternalForm());
 				loginResult = sfSoap.login(username, password);
 			} catch (LoginFault e) {
 				throw new ResourceException(e.getCause().getMessage());
@@ -377,4 +377,9 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	public void close() throws ResourceException {
 		
 	}
+	
+	@Override
+	public boolean isAlive() {
+		return isValid();
+	}	
 }

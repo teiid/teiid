@@ -35,28 +35,19 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 	private static final long serialVersionUID = 5298591275313314698L;
 	
 	private String username;
-	private String connectorStateClass;
 	private String password;
 	private URL URL;
-	private long sourceConnectionTestInterval = -1;
-	private int sourceConnectionTimeout = -1;
-	private boolean auditModelFields = false;
 	
 	public String getUsername() {
 		return username;
 	}
 	public void setUsername(String username) {
 		if (username.trim().length() == 0) {
-			throw new TeiidRuntimeException("Name can not be null");
+			throw new TeiidRuntimeException("Name can not be null"); //$NON-NLS-1$
 		}
 		this.username = username;
 	}
-	public String getConnectorStateClass() {
-		return this.connectorStateClass;
-	}
-	public void setConnectorStateClass(String connectorStateClass) {
-		this.connectorStateClass = connectorStateClass;
-	}
+
 	public String getPassword() {
 		return this.password;
 	}
@@ -71,35 +62,18 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 		try {
 			this.URL = new URL(uRL);
 		} catch (MalformedURLException e) {
-			throw new TeiidRuntimeException("URL Supplied is not valid URL"+ e.getMessage());
+			throw new TeiidRuntimeException("URL Supplied is not valid URL"+ e.getMessage());//$NON-NLS-1$
 		}
 	}
-	
-	public long getSourceConnectionTestInterval() {
-		return sourceConnectionTestInterval;
-	}
-	public void setSourceConnectionTestInterval(Long sourceConnectionTestInterval) {
-		this.sourceConnectionTestInterval = sourceConnectionTestInterval.longValue();
-	}
-	public int getSourceConnectionTimeout() {
-		return sourceConnectionTimeout;
-	}
-	public void setSourceConnectionTimeout(Integer sourceConnectionTimeout) {
-		this.sourceConnectionTimeout = sourceConnectionTimeout.intValue();
-	}
-	public void setModelAuditFields(Boolean modelAuditFields) {
-		this.auditModelFields = modelAuditFields.booleanValue();
-	}
-	public boolean isModelAuditFields() {
-		return this.auditModelFields;
-	}	
 	
 	@Override
 	public BasicConnectionFactory createConnectionFactory() throws ResourceException {
 		return new BasicConnectionFactory() {
+			private static final long serialVersionUID = 5028356110047329135L;
+
 			@Override
 			public SalesforceConnectionImpl getConnection() throws ResourceException {
-				return new SalesforceConnectionImpl(getUsername(), getPassword(), getURL(), getSourceConnectionTestInterval(), getSourceConnectionTimeout());
+				return new SalesforceConnectionImpl(getUsername(), getPassword(), getURL());
 			}
 		};
 	}

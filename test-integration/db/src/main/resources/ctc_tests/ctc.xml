@@ -49,13 +49,13 @@
 		   		<path location="${proj.dir}"/>
 			 </pathconvert>
 		
-		<property name="root_output" value="${proj_dir}/bulk-query-tests" />
+		<property name="root_output" value="${output.dir}" />
 
 	</target>
 	
 	<target name="set.linux"
 		if="UnixOS">
-		<property name="root_output" value="${proj.dir}/bulk-query-tests" />
+		<property name="root_output" value="${output.dir}" />
 		<property name="proj_dir" value="${proj.dir}" />
 
 	</target>
@@ -143,6 +143,11 @@
 			   		 <map from="\" to="/"/>
 			   		<path location="${vdb.artifacts.dir}"/>
 				 </pathconvert>
+				 
+			<pathconvert targetos="unix" property="root.output" >
+			   		 <map from="\" to="/"/>
+			   		<path location="${root_output}"/>
+				 </pathconvert>		 
 			
 			
 			  <java classname="org.teiid.test.client.TestClient" fork="true" >
@@ -153,6 +158,9 @@
 			        </fileset>
 			    </classpath>
 			    <jvmarg value="-Xmx1024m" />
+				<!--
+				<jvmarg value="-Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=y" />
+				-->
 			  	<jvmarg value="-Dconfig=${use.config.file}" />
 			  	<jvmarg value="-Dscenariofile=${scenario_file}" />
 			  	<jvmarg value="-Dqueryset.artifacts.dir=${queryset_artifacts_dir}" />
@@ -161,7 +169,7 @@
 				<jvmarg value="-Ddatasourceloc=${datasourceloc}" />
 				<jvmarg value="-Dserver.host.name=${server.host.name}" />   
 				<jvmarg value="-Dproj.dir=${proj_dir}" /> 
-			  	
+			  	<jvmarg value="-Doutput.dir=${root.output}" />
 
 			</java>
 
@@ -185,6 +193,9 @@
                 </fileset>
             </classpath>
             <jvmarg value="-Xmx1024m" />
+			<!--
+			<jvmarg value="-Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=y" />
+			-->
            	<jvmarg value="-Dconfig=${use.config.file}" />
           	<jvmarg value="-Dscenariofile=${scenario.file}" />
           	<jvmarg value="-Dqueryset.artifacts.dir=${queryset.artifacts.dir}" />
@@ -193,6 +204,7 @@
 			<jvmarg value="-Ddatasourceloc=${datasourceloc}" />   
 			<jvmarg value="-Dserver.host.name=${server.host.name}" />   
           	<jvmarg value="-Dproj.dir=${proj_dir}" /> 
+			<jvmarg value="-Doutput.dir=${root_output}" /> 
           	
       	  </java>
 		

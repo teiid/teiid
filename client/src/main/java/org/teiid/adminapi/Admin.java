@@ -168,6 +168,16 @@ public interface Admin {
      * @throws AdminException  
      */
     void clearCache(String cacheType) throws AdminException;
+    
+    /**
+     * Clear the cache of the given VDB for provided cache type
+     * @param cacheType Cache Type
+     * No wild cards currently supported, must be explicit
+     * @param vdbName - Name of the VDB
+     * @param vdbVersion - VDB version
+     * @throws AdminException  
+     */
+    void clearCache(String cacheType, String vdbName, int vdbVersion) throws AdminException;    
 
     
     /**

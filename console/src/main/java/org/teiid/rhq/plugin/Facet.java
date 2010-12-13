@@ -224,7 +224,11 @@ public abstract class Facet implements
 			final ExecutedResult result, final Map<String, Object> valueMap) {
 		DQPManagementView dqp = new DQPManagementView();
 
-		dqp.executeOperation(connection, result, valueMap);
+		try {
+			dqp.executeOperation(connection, result, valueMap);
+		} catch (Exception e) {
+			new RuntimeException(e);
+		}
 
 	}
 

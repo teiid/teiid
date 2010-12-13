@@ -28,6 +28,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.managed.api.ComponentType;
 import org.jboss.managed.api.ManagedComponent;
+import org.jboss.managed.plugins.ManagedObjectImpl;
+import org.jboss.metatype.api.values.CollectionValueSupport;
+import org.jboss.metatype.api.values.GenericValueSupport;
+import org.jboss.metatype.api.values.MetaValue;
 import org.rhq.core.domain.configuration.Configuration;
 import org.rhq.core.domain.configuration.PropertySimple;
 import org.rhq.core.pluginapi.inventory.DiscoveredResourceDetails;
@@ -58,9 +62,35 @@ public class VDBDiscoveryComponent implements ResourceDiscoveryComponent {
 				.getManagedComponents(connection, new ComponentType(
 						PluginConstants.ComponentType.VDB.TYPE,
 						PluginConstants.ComponentType.VDB.SUBTYPE));
-
+		
+		PropertySimple displayPreviewVdbs = ((PlatformComponent)discoveryContext.getParentResourceComponent()).getResourceConfiguration().getSimple("displayPreviewVDBS");
+		
 		for (ManagedComponent mcVdb : vdbs) {
 
+			boolean skipVdb = false;
+			if (!displayPreviewVdbs.getBooleanValue()){
+				MetaValue[] propsArray = ((CollectionValueSupport)mcVdb.getProperty("JAXBProperties").getValue()).getElements();
+				String isPreview = "false";
+				
+				for (MetaValue propertyMetaData : propsArray) {
+					GenericValueSupport genValueSupport = (GenericValueSupport) propertyMetaData;
+					ManagedObjectImpl managedObject = (ManagedObjectImpl) genValueSupport
+							.getValue();
+	
+					String propertyName = ProfileServiceUtil.getSimpleValue(
+							managedObject, "name", String.class);
+					if (propertyName.equals("preview")){
+						isPreview =ProfileServiceUtil.getSimpleValue(
+								managedObject, "value", String.class);
+						if (Boolean.valueOf(isPreview)) skipVdb=true;
+						break;
+					}
+				}	
+			}
+				
+			//If this is a Preview VDB and displayPreviewVdbs is false, skip this VDB
+			if (skipVdb) continue;
+				
 			String vdbKey = (String)mcVdb.getName();
 			String vdbName = vdbKey;
 			String fullName = ProfileServiceUtil.getSimpleValue(mcVdb, "fullName",

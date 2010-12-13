@@ -157,7 +157,6 @@ import org.teiid.query.sql.visitor.CriteriaTranslatorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
-import org.teiid.query.sql.visitor.PredicateCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
@@ -480,9 +479,7 @@ public class QueryRewriter {
 		}
 
 		// collect all predicate criteria present on the user's criteria
-    	Iterator criteriaIter = PredicateCollectorVisitor.getPredicates(userCrit).iterator();
-    	while(criteriaIter.hasNext()) {
-    		Criteria predicateCriteria = (Criteria) criteriaIter.next();
+		for (Criteria predicateCriteria : Criteria.separateCriteriaByAnd(userCrit)) {
     		// atleast one of the hasElemnets should be on this predicate else
     		// proceed to the next predicate
 			Collection<ElementSymbol> predElmnts = ElementCollectorVisitor.getElements(predicateCriteria, true);
@@ -576,7 +573,7 @@ public class QueryRewriter {
 		// create a clone of user's criteria that is then translated
 		Criteria userClone = (Criteria) userCriteria.clone();
 
-		translateVisitor.translate(userClone);
+		userClone = translateVisitor.translate(userClone);
 
 		// translated criteria
 		((TranslatableProcedureContainer)userCmd).addImplicitParameters(translateVisitor.getImplicitParams());
@@ -2437,7 +2434,7 @@ public class QueryRewriter {
 			}
 			Map<ElementSymbol, ElementSymbol> symbolMap = mapping.getUpdatableViewSymbols();
 			List<ElementSymbol> mappedSymbols = new ArrayList<ElementSymbol>(insert.getVariables().size());
-			for (ElementSymbol symbol : (List<ElementSymbol>)insert.getVariables()) {
+			for (ElementSymbol symbol : insert.getVariables()) {
 				mappedSymbols.add(symbolMap.get(symbol));
 			}
 			insert.setVariables(mappedSymbols);

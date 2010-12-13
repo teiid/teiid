@@ -689,10 +689,6 @@ public class TestValidator {
         helpValidate("UPDATE test.group SET e0=1, e0=2", new String[] {"e0"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
     }  
     
-    @Test public void testUpdateSubqueryCriteria() {
-        helpValidate("UPDATE vm1.g1 SET e1=1 WHERE exists (select * from vm1.g1)" , new String[] {"EXISTS (SELECT * FROM vm1.g1)"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
     @Test public void testUpdate4() throws Exception {
         QueryMetadataInterface metadata = exampleMetadata();
 
@@ -1307,20 +1303,6 @@ public class TestValidator {
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
 
 		helpValidateProcedure(procedure, userQuery, 
-				FakeMetadataObject.Props.UPDATE_PROCEDURE);
-	}
-    
-    @Test public void testCreateUpdateProcedure28() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "Select pm1.g2.e2 from pm1.g2 where TRANSLATE CRITERIA;\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1 or y = 2"; //$NON-NLS-1$
-
-		helpFailProcedure(procedure, userQuery, 
 				FakeMetadataObject.Props.UPDATE_PROCEDURE);
 	}
 

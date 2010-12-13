@@ -28,6 +28,7 @@ import org.teiid.adminapi.Session;
 import org.teiid.adminapi.Transaction;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
+import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.core.util.UnitTestUtil;
 
 @Ignore
@@ -42,7 +43,7 @@ public class TestConnectorBindings extends BaseConnection {
 		//if (!Bootstrap.getInstance().isStarted()) Bootstrap.getInstance().bootstrap();
 		ds = new ServerDatasourceConnection();
 		//admin = AdminProvider.getRemote( "jnp://localhost:1099", "javaduke", "anotherduke");	
-		admin = AdminFactory.getInstance().createAdmin("admin", "admin".toCharArray(), "mm://localhost:31443"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		admin = AdminFactory.getInstance().createAdmin("admin", "admin".toCharArray(), "mms://127.0.0.1:31443"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		
 		installVDB();
 	}
@@ -80,6 +81,22 @@ public class TestConnectorBindings extends BaseConnection {
 		admin.deleteVDB("TransactionsRevisited", 1); //$NON-NLS-1$
 		
 		assertNull(admin.getVDB("TransactionsRevisited", 1)); //$NON-NLS-1$
+	}
+	
+	@Test
+	public void testChangeConnectionType() throws Exception {
+		VDB vdb = admin.getVDB("TransactionsRevisited", 1);
+		assertNotNull(vdb); //$NON-NLS-1$
+		
+		ConnectionType ct = vdb.getConnectionType();
+		assertEquals(ConnectionType.BY_VERSION, ct);
+		
+		admin.changeVDBConnectionType("TransactionsRevisited", 1, ConnectionType.ANY);
+		
+		vdb = admin.getVDB("TransactionsRevisited", 1);
+		
+		ct = vdb.getConnectionType();
+		assertEquals(ConnectionType.ANY, ct);		
 	}
 
 	@Test public void testGetVDB() throws Exception {

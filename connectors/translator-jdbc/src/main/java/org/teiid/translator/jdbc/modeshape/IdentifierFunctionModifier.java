@@ -62,7 +62,7 @@ public class IdentifierFunctionModifier extends FunctionModifier {
     				if ("\"mode:properties\"".equalsIgnoreCase(c.getNameInSource())) { //$NON-NLS-1$
     					dotAll = true;
     					useSelector = true;
-    				} else if ("\"mode:path\"".equalsIgnoreCase(c.getNameInSource())) { //$NON-NLS-1$
+    				} else if ("\"jcr:path\"".equalsIgnoreCase(c.getNameInSource())) { //$NON-NLS-1$
     					useSelector = true;
     				}
     			}

@@ -43,7 +43,6 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.util.CommandContext;
-import org.teiid.translator.TranslatorException;
 
 public class TestDataTierManager {
     
@@ -125,8 +124,16 @@ public class TestDataTierManager {
     
     @Test public void testPartialResults() throws Exception {
     	helpSetup(1);
-    	info.exceptionOccurred(new TranslatorException(), true);
-    	assertNull(info.nextTuple());
+    	connectorManager.throwExceptionOnExecute = true;
+    	for (int i = 0; i < 10; i++) {
+	    	try {
+	    		assertNull(info.nextTuple());
+	    		return;
+	    	} catch (BlockedException e) {
+	    		Thread.sleep(50);
+	    	}
+    	}
+    	fail();
     }
     
     @Test public void testNoRowsException() throws Exception {

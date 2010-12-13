@@ -613,6 +613,7 @@ END]]></programlisting>
 	        variables without using a lot of conditional logic.</para>
 	        <section>
 	          <title>HAS CRITERIA</title>
+	          <warning><para>HAS CRITERIA has been deprecated.  An alternative approach to update procedures will be introduced in a subsequent version.</para></warning>
 	          <para>You can use the HAS CRITERIA clause to check whether the user’s command has a particular kind of criteria on a particular set of attributes. This clause evaluates to either true or false. You can use it anywhere you can use a criteria within a procedure.</para>
 	          <para>
 	            Usage:
@@ -633,6 +634,7 @@ END]]></programlisting>
 	              </para>
 	            </listitem>
 	          </itemizedlist>
+	          <para>Each unoptimized conjunct of the user criteria is evaluated against the criteria selector.  If any conjunct matches then HAS CRITERIA evaluates to TRUE.  The use of OR or NOT will prevent contained predicates from matching the criteria selector.</para>
 	          <para>Some samples of the HAS CRITERIA clause:</para>
 	          <informaltable>
 	            <tgroup cols="2">
@@ -668,7 +670,7 @@ END]]></programlisting>
 	        </section>
 	        <section>
 	          <title>TRANSLATE CRITERIA</title>
-	          <warning><para>TRANSLATE CRITERIA.  An alternative approach to update procedures will be introduced in a subsequent version.</para></warning>
+	          <warning><para>TRANSLATE CRITERIA has been deprecated.  An alternative approach to update procedures will be introduced in a subsequent version.</para></warning>
 	          <para>You can use the TRANSLATE CRITERIA clause to convert the criteria from the user application’s SQL command into the form required to interact with the target source or view tables. The TRANSLATE CRITERIA statement uses the SELECT transformation to infer the column mapping. This clause evaluates to a translated criteria that is evaluated in the context of a command.
 	          You can use these mappings either to replace the default mappings generated from the SELECT transformation or to specify a reverse expression when a virtual column is defined by an expression.</para>
 	          <para>
@@ -699,7 +701,8 @@ END]]></programlisting>
 	              </para>
 	            </listitem>
 	          </itemizedlist>
-	          <para>Some samples of TRANSLATE CRITERIA:</para>
+	          <para>Each unoptimized conjunct of the user criteria is translated using the criteria selector.  If a conjunct does not match the selector, it will not be translated - which effectively treats the conjunct as TRUE.  The use of OR or NOT will prevent contained predicates from matching the criteria selector.</para>
+              <para>Some samples of TRANSLATE CRITERIA:</para>
 	          <informaltable>
 	            <tgroup cols="2">
 	              <colspec colwidth="1*"/>
@@ -726,7 +729,6 @@ END]]></programlisting>
 	              </tbody>
 	            </tgroup>
 	          </informaltable>
-	          <note><para>If a specific predicate type or column set is specified by TRANSALATE CRITERIA, but the user criteria has predicates that do not match, then an exception will be thrown.</para></note>
 	        </section>      
 	    </section>
     </section>

@@ -1246,8 +1246,7 @@ public class TestQueryRewriter {
 		return procedure;
 	}
 	
-	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
-    @Test(expected=QueryValidatorException.class) public void testRewriteProcedure17() throws Exception {
+    @Test public void testRewriteProcedure17() throws Exception {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
@@ -1397,8 +1396,7 @@ public class TestQueryRewriter {
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
     }
     
-	// elements being set in updates are dropped if INPUT var is not available
-    @Test(expected=QueryValidatorException.class) public void testRewriteProcedure24() throws Exception {
+    @Test public void testRewriteProcedure24() throws Exception {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "UPDATE pm1.g1 SET e2=Input.e2 WHERE TRANSLATE LIKE CRITERIA ON (e1) WITH (e1=concat(pm1.g1.e1, '%'));\n"; //$NON-NLS-1$
@@ -1452,8 +1450,7 @@ public class TestQueryRewriter {
 		assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
 	}
 	
-	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
-	@Test(expected=QueryValidatorException.class) public void testRewriteProcedure27() throws Exception {
+	@Test public void testRewriteProcedure27() throws Exception {
 		String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
 		procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$

@@ -194,6 +194,9 @@ public class TestCommSockets {
 	}
 
 	@Test public void testSSLConnectWithNonSSLServer() throws Exception {
+		//first make a non-ssl connection to ensure that it's not reused
+		SocketServerConnection conn = helpEstablishConnection(false);
+		conn.close();
 		try {
 			helpEstablishConnection(true);
 			fail("exception expected"); //$NON-NLS-1$
@@ -207,12 +210,19 @@ public class TestCommSockets {
 		config.setMode(SSLConfiguration.ENABLED);
 		config.setAuthenticationMode(SSLConfiguration.ANONYMOUS);
 		Properties p = new Properties();
+		p.setProperty("org.teiid.sockets.soTimeout", "100");
 		helpEstablishConnection(true, config, p);
 		SocketServerConnection conn = helpEstablishConnection(true, config, p);
 		conn.close();
+		
+		try {
+			helpEstablishConnection(false, config, p);
+		} catch (CommunicationException e) {
+			
+		}
 	}
 	
-	@Test(expected=CommunicationException.class) public void testNonSSLConnectWithSSLServer() throws Exception {
+	@Test(expected=CommunicationException.class) public void testNonAnonSSLConnectWithSSLServer() throws Exception {
 		SSLConfiguration config = new SSLConfiguration();
 		config.setMode(SSLConfiguration.ENABLED);
 		config.setAuthenticationMode(SSLConfiguration.ANONYMOUS);

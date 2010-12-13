@@ -76,7 +76,6 @@ import org.teiid.query.sql.lang.NotCriteria;
 import org.teiid.query.sql.lang.Option;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
-import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SPParameter;
@@ -134,6 +133,7 @@ import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
+import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.sql.visitor.PredicateCollectorVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
@@ -203,22 +203,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	validateNoXMLUpdates(obj);
         GroupSymbol group = obj.getGroup();
         validateGroupSupportsUpdate(group);
-        Criteria crit = obj.getCriteria();
-    	validateVirtualUpdate(obj, crit);
     }
-
-	private void validateVirtualUpdate(ProcedureContainer container, 
-			Criteria crit) {
-		if (crit == null || container.getUpdateInfo() == null) {
-			return; 
-		}
-		if ((container.getType() == Command.TYPE_UPDATE && container.getUpdateInfo().getUpdateType() == UpdateType.UPDATE_PROCEDURE) 
-				|| (container.getType() == Command.TYPE_DELETE && container.getUpdateInfo().getDeleteType() == UpdateType.UPDATE_PROCEDURE)) {
-			if (!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(crit).isEmpty()) {
-				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.virtual_update_subquery"), crit); //$NON-NLS-1$
-			}
-		}
-	}
 
     public void visit(GroupBy obj) {
     	// Get list of all group by IDs
@@ -333,7 +318,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         validateNoXMLUpdates(obj);
         validateGroupSupportsUpdate(obj.getGroup());
         validateUpdate(obj);
-    	validateVirtualUpdate(obj, obj.getCriteria());
     }
 
     public void visit(Into obj) {
@@ -620,16 +604,10 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 		}
 
     	Collection transleElmnts = ElementCollectorVisitor.getElements(obj, true);
-    	Collection groups = GroupCollectorVisitor.getGroups(this.currentCommand, true);
+    	Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroups(this.currentCommand, true);
 		int selectType = obj.getSelector().getSelectorType();
 
-		Collection predicates = PredicateCollectorVisitor.getPredicates(userCrit);
-		if (predicates.size() != Criteria.separateCriteriaByAnd(userCrit).size()) {
-			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.translated_or"), userCrit); //$NON-NLS-1$
-		}
-		Iterator critIter = predicates.iterator();
-		while(critIter.hasNext()) {
-			Criteria predCrit = (Criteria) critIter.next();
+		for (Criteria predCrit : Criteria.separateCriteriaByAnd(userCrit)) {
 			if(selectType != CriteriaSelector.NO_TYPE) {
 				if(predCrit instanceof CompareCriteria) {
 					CompareCriteria ccCrit = (CompareCriteria) predCrit;
@@ -664,16 +642,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 						handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0022", criteriaElement), criteriaElement); //$NON-NLS-1$
 		    		}
 
-		    		Iterator mapElmntIter = ElementCollectorVisitor.getElements(mappedExpr, true).iterator();
-			    	boolean groupMatch = false;
-			    	while(mapElmntIter.hasNext()) {
-				    	ElementSymbol mapElement = (ElementSymbol) mapElmntIter.next();
-				    	GroupSymbol mapGrp = mapElement.getGroupSymbol();
-				    	if(groups.contains(mapGrp)) {
-				    		groupMatch = true;
-				    	}
-			    	}
-			    	if(!groupMatch) {
+		    		if (!groups.containsAll(GroupsUsedByElementsVisitor.getGroups(mappedExpr))) {
 						handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0023", criteriaElement), criteriaElement); //$NON-NLS-1$
 			    	}
 				}
@@ -1473,7 +1442,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	validateSubquery(obj);
     }
 
-    //TODO: it may be simpler to catch this in the parser
+    //TODO: it may be simplier to catch this in the parser
     private void validateSubquery(SubqueryContainer subQuery) {
     	if (subQuery.getCommand() instanceof Query && ((Query)subQuery.getCommand()).getInto() != null) {
         	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.subquery_insert"), subQuery.getCommand()); //$NON-NLS-1$

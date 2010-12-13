@@ -87,7 +87,7 @@ public class XMLExpectedResults implements ExpectedResults {
 	validateResultsMode(this.props);
 
     	
-    	TestLogger.logInfo("Expected results loc: " + this.results_dir_loc);
+    	TestLogger.logDebug("Expected results loc: " + this.results_dir_loc);
     }
     
     protected void validateResultsMode(Properties props) {
@@ -106,8 +106,12 @@ public class XMLExpectedResults implements ExpectedResults {
 	}
 	// otherwise use default of NONE
 
-	TestLogger.log("\nResults mode: " + resultMode); //$NON-NLS-1$
+	TestLogger.logDebug("\nResults mode: " + resultMode); //$NON-NLS-1$
 
+    }
+    
+    public boolean isExpectedResultsNeeded() {
+    	return (resultMode.equalsIgnoreCase(TestProperties.RESULT_MODES.COMPARE));
     }
 
 
@@ -217,14 +221,12 @@ public class XMLExpectedResults implements ExpectedResults {
 			    // Convert results to ResultsHolder
  			    actualResults = new ResultsHolder(TagNames.Elements.QUERY_RESULTS);
 		    		actualResults.setQueryID(expectedResults.getQueryID());
+		    		convertResults(resultSet, batchSize,   actualResults);
 
 		      		if (expectedResults.getRows().size() > 0) {
-         			    convertResults(resultSet, batchSize,   actualResults);
         			    compareResults(actualResults, expectedResults, eMsg, isOrdered);
 		      		} else if (actualResults.getRows() != null &&  actualResults.getRows().size() > 0) {
-			                throw new QueryTestFailedException(eMsg + "Expected results indicated no results, but actual shows " + actualResults.getRows().size() + " rows."); //$NON-NLS-1$
-	      		    
-		      		    
+			                throw new QueryTestFailedException(eMsg + "Expected results indicated no results, but actual shows " + actualResults.getRows().size() + " rows."); //$NON-NLS-1$	      		    		      		    
 		      		}
 
 			    // DEBUG:
@@ -513,6 +515,10 @@ public class XMLExpectedResults implements ExpectedResults {
                                                            + (actualValue!=null?actualValue:"null")  + "]"); //$NON-NLS-1$
 
                 } 
+                
+                if (expectedValue == null && actualValue == null) {
+                	continue;
+                }
                 	
                 if (actualValue instanceof Blob || actualValue instanceof Clob || actualValue instanceof SQLXML) {
                     	 
@@ -773,7 +779,7 @@ public class XMLExpectedResults implements ExpectedResults {
 			String querySetIdentifier) throws QueryTestFailedException {
 		String resultFileName = queryIdentifier + ".xml"; //$NON-NLS-1$
 		File file = new File(results_dir_loc + "/" + querySetIdentifier, resultFileName);
-		if (!file.exists()) {
+		if (!file.exists() && this.isExpectedResultsNeeded()) {
 			throw new QueryTestFailedException("Query results file " + file.getAbsolutePath() + " cannot be found");
 		}
 		

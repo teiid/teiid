@@ -89,8 +89,12 @@ public class InputStreamReader extends Reader {
 	    			cr.throwException();
 	    		}
 	    		done = true;
-	    	} 
-			bb.clear();
+	    	}
+	    	if (bb.position() != read) {
+	    		bb.compact();
+	    	} else {
+	    		bb.clear();
+	    	}
     		cb.flip();
 		}
 		len = Math.min(len, cb.remaining());

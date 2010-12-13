@@ -113,11 +113,11 @@ public class HostInfo {
         if (portNumber != hostInfo.getPortNumber()) {
         	return false;
         }
-        if (inetAddress != null && hostInfo.inetAddress != null) {
-        	return inetAddress.equals(hostInfo.inetAddress);
-        }
         if (ssl != hostInfo.ssl) {
         	return false;
+        }
+        if (inetAddress != null && hostInfo.inetAddress != null) {
+        	return inetAddress.equals(hostInfo.inetAddress);
         }
         return hostName.equals(hostInfo.getHostName());
     }

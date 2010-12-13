@@ -43,7 +43,6 @@ import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
-import org.teiid.core.util.FileUtils;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
@@ -237,7 +236,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		deployment.setRemoved(true);
 		
 		try {
-			deleteMetadataStore((VFSDeploymentUnit)unit, deployment);
+			deleteMetadataStore((VFSDeploymentUnit)unit);
 		} catch (IOException e) {
 			LogManager.logWarning(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_delete_failed", e.getMessage())); //$NON-NLS-1$
 		}
@@ -250,18 +249,17 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	}		
 	
 	private void saveMetadataStore(VFSDeploymentUnit unit, VDBMetaData vdb, MetadataStoreGroup store) throws IOException {
-		File cacheFileName = this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion()); //$NON-NLS-1$
+		File cacheFileName = buildCachedVDBFileName(this.serializer, unit, vdb);
 		if (!cacheFileName.exists()) {
 			this.serializer.saveAttachment(cacheFileName,store);
-		}
+			LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+unit.getRoot().getName()+" metadata has been cached to "+ cacheFileName); //$NON-NLS-1$ //$NON-NLS-2$
+		}		
 	}
 	
-	private void deleteMetadataStore(VFSDeploymentUnit unit, VDBMetaData vdb) throws IOException {
+	private void deleteMetadataStore(VFSDeploymentUnit unit) throws IOException {
 		if (!unit.getRoot().exists() || !shutdownListener.isShutdownInProgress()) {
-			File cacheFileName = this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion()); //$NON-NLS-1$
-			if (cacheFileName.exists()) {
-				FileUtils.removeDirectoryAndChildren(cacheFileName.getParentFile());
-			}
+			this.serializer.removeAttachments(unit);
+			LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+unit.getRoot().getName()+" metadata removed"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 	
@@ -274,7 +272,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	    	}
 			    	
 	    	final boolean cache = "cached".equalsIgnoreCase(vdb.getPropertyValue("UseConnectorMetadata")); //$NON-NLS-1$ //$NON-NLS-2$
-	    	final File cacheFile = buildCachedFileName(unit, vdb, model.getName());
+	    	final File cacheFile = buildCachedModelFileName(unit, vdb, model.getName());
 	    	boolean loaded = false;
 	    	if (cache) {
 				MetadataStore store = this.serializer.loadSafe(cacheFile, MetadataStore.class);
@@ -347,9 +345,13 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
     	}
     }
     
-	private File buildCachedFileName(VFSDeploymentUnit unit, VDBMetaData vdb, String modelName) {
+	private File buildCachedModelFileName(VFSDeploymentUnit unit, VDBMetaData vdb, String modelName) {
 		return this.serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion()+"_"+modelName); //$NON-NLS-1$ //$NON-NLS-2$
 	}    
+	
+	static File buildCachedVDBFileName(ObjectSerializer serializer, VFSDeploymentUnit unit, VDBMetaData vdb) {
+		return serializer.getAttachmentPath(unit, vdb.getName()+"_"+vdb.getVersion()); //$NON-NLS-1$
+	} 	
 	
 	public void setTranslatorRepository(TranslatorRepository repo) {
 		this.translatorRepository = repo;

@@ -43,11 +43,13 @@ import org.jboss.deployers.spi.management.deploy.DeploymentStatus;
 import org.jboss.managed.api.ManagedCommon;
 import org.jboss.managed.api.ManagedOperation;
 import org.jboss.managed.api.ManagedProperty;
+import org.jboss.metatype.api.types.EnumMetaType;
 import org.jboss.metatype.api.types.MapCompositeMetaType;
 import org.jboss.metatype.api.types.MetaType;
 import org.jboss.metatype.api.types.SimpleMetaType;
 import org.jboss.metatype.api.values.CollectionValue;
 import org.jboss.metatype.api.values.EnumValue;
+import org.jboss.metatype.api.values.EnumValueSupport;
 import org.jboss.metatype.api.values.MapCompositeValueSupport;
 import org.jboss.metatype.api.values.MetaValue;
 import org.jboss.metatype.api.values.PropertiesMetaValue;
@@ -163,6 +165,10 @@ public class ManagedUtil {
 				 }
 			 }
 		 }
+	}
+	
+	public static EnumValue wrap(EnumMetaType type, String value) {
+		return new EnumValueSupport(type, value);
 	}
 	
 	public static SimpleValue wrap(MetaType type, String value) {

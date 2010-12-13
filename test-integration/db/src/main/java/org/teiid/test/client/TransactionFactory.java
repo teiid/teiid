@@ -74,7 +74,7 @@ public class TransactionFactory {
         } 
         
        
-        TestLogger.log("====  Create Transaction-Option: " + type);
+        TestLogger.logDebug("====  Create Transaction-Option: " + type);
         
         if (type.equalsIgnoreCase(TRANSACTION_TYPES.LOCAL_TRANSACTION)) {
         	transacton = new LocalTransaction();

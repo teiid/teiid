@@ -14,7 +14,7 @@
 #	-	SCENARIODIR	-	directory location where the scenario files found and determine which query sets and vdbs to use, 
 #	-	DATASOURCEDIR	-	root directory location to find the various datasources to use
 #	-	CONFIGFILE	-	specify the configuration file to use (override ctc-test.properties)
-
+#	-	OUTPUTDIR -    optional, can set the location the reports and generated files will be writtent o
 ######################################################
 #	DEBUGGING OPTION
 #
@@ -84,6 +84,15 @@ ANT_ARGS="${ANT_ARGS} -Dqueryset.artifacts.dir=${QUERYSETDIR}"
 #ANT_ARGS="${ANT_ARGS} -Dvdb.artifacts.dir=${vdb.artifacts.dir}"
 ANT_ARGS="${ANT_ARGS} -Dproj.dir=${PRGDIR}"
 
+if [ -z "${OUTPUTDIR}" ] 
+	then
+	
+	OUTPUTDIR=${PRGDIR}
+
+fi
+
+ANT_ARGS="${ANT_ARGS} -Doutput.dir=${OUTPUTDIR}"
+
 # default to the ip address used to start the server
 SVRNAME="0.0.0.0"
 
@@ -132,6 +141,8 @@ if [ ! -x "${PRGDIR}/log" ]; then
     echo "Create ${PRGDIR}/log directory"
 	mkdir "${PRGDIR}"/log
 fi
+
+#JAVA_OPTS="$JAVA_OPTS -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=y"
 
 if [ -n "${JAVA_OPTS}" ]; then
 	ANT_OPTS="${JAVA_OPTS} $ANT_OPTS "

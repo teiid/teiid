@@ -30,7 +30,7 @@ public abstract class TransactionContainer {
 		".");
 
 	try {
-	    detail("Start transaction test: " + test.getTestName());
+	    debug("Start transaction test: " + test.getTestName());
 
 	    try {
 
@@ -50,7 +50,7 @@ public abstract class TransactionContainer {
 
 	    runTest(test);
 
-	    detail("Completed transaction test: " + test.getTestName());
+	    debug("Completed transaction test: " + test.getTestName());
 
 	} finally {
 	    debug("	test.cleanup");

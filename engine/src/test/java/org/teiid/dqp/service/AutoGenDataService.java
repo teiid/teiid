@@ -70,9 +70,6 @@ public class AutoGenDataService extends ConnectorManager{
     @Override
     public ConnectorWork registerRequest(AtomicRequestMessage message)
     		throws TeiidComponentException {
-    	if (throwExceptionOnExecute) {
-    		throw new TeiidComponentException("Connector Exception"); //$NON-NLS-1$
-    	}
         List projectedSymbols = (message.getCommand()).getProjectedSymbols();               
         List[] results = createResults(projectedSymbols);
                 
@@ -87,6 +84,9 @@ public class AutoGenDataService extends ConnectorManager{
 			
 			@Override
 			public AtomicResultsMessage execute() throws TranslatorException {
+				if (throwExceptionOnExecute) {
+		    		throw new TranslatorException("Connector Exception"); //$NON-NLS-1$
+		    	}
 				if (dataNotAvailable > -1) {
 					int delay = dataNotAvailable;
 					dataNotAvailable = -1;

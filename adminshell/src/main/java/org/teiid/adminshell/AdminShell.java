@@ -141,6 +141,14 @@ public class AdminShell {
 			@Doc(text = "cache type") String cacheType) throws AdminException {
 		getAdmin().clearCache(cacheType);
 	}
+	
+	@Doc(text = "Clear the given cache for a VDB")
+	public static void clearCache(
+			@Doc(text = "cache type") String cacheType, @Doc(text = "vdb name") String vdbName, 
+			@Doc(text = "vdb version") int vdbVersion			
+			) throws AdminException {
+		getAdmin().clearCache(cacheType, vdbName, vdbVersion);
+	}	
 
 	@Doc(text = "Delete a VDB")
 	public static void deleteVDB(

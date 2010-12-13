@@ -75,6 +75,17 @@ public interface ExpectedResults {
 	
 	
 	/**
+	 * @see TestProperties#RESULT_MODES
+	 * 
+	 * Return true if the expected results file is needed in the test.  Either
+	 * for comparison or generation.   It will return false when
+	 * the option <code>TestProperties.RESULT_MODES.NONE</code>
+	 * @return
+	 */
+	boolean isExpectedResultsNeeded();
+	
+	
+	/**
 	 * Indicates if a query expects to have an <code>Exception</code> to be thrown when the
 	 * query is executed.
 	 * @param queryidentifier

@@ -64,7 +64,6 @@ public class JBossCacheFactory implements CacheFactory, Serializable{
 			
 			Node cacheRoot = this.cacheStore.getRoot().addChild(Fqn.fromString("Teiid")); //$NON-NLS-1$
 			Node node = cacheRoot.addChild(Fqn.fromString(type.location()));
-			node.put(ExpirationAlgorithmConfig.EXPIRATION_KEY, Long.MAX_VALUE);
 			node.setResident(true);
 			
 			Region cacheRegion = this.cacheStore.getRegion(node.getFqn(), true);

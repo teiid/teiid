@@ -80,6 +80,10 @@ public class ObjectSerializer {
 		}
 	}
 	
+	public boolean isStale(File cacheFile, long timeAfter) {
+		return (cacheFile.exists() && timeAfter > cacheFile.lastModified());
+	}
+	
 	public void removeAttachments(VFSDeploymentUnit vf) {
 		String dirName = baseDirectory(vf);
 		FileUtils.removeDirectoryAndChildren(new File(dirName));

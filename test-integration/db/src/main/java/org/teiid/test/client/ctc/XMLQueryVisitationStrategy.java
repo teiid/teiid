@@ -534,7 +534,7 @@ public class XMLQueryVisitationStrategy {
      */
     private Object consumeMsg(Element cellElement) throws JDOMException {
 
-        Object cellObject = null;
+        Object cellObject = null;;
         String cellName = cellElement.getName();
 
         if ( cellName.equalsIgnoreCase(TagNames.Elements.BOOLEAN) ) {
@@ -567,6 +567,8 @@ public class XMLQueryVisitationStrategy {
             cellObject = consumeMsg((Short) cellObject, cellElement);
         } else if ( cellName.equalsIgnoreCase(TagNames.Elements.OBJECT) ) {
             cellObject = consumeMsg((String) cellObject, cellElement);
+        } else {
+        	cellObject = consumeMsg(cellObject, cellElement);
         }
 
         return cellObject;
@@ -890,6 +892,89 @@ public class XMLQueryVisitationStrategy {
                                     " element: " + cellElement.getTextTrim(), e); //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-1$ //$NON-NLS-1$ //$NON-NLS-1$
         }
         return result;
+    }
+    
+    
+    /**
+     * Consume an XML message and update the specified Byte instance.
+     * <br>
+     * @param object the instance that is to be updated with the XML message data.
+     * @param cellElement the XML element that contains the data
+     * @return the updated instance.
+     * @exception JDOMException if there is an error consuming the message.
+     */
+    @SuppressWarnings("unused")
+	private Object consumeMsg(Object object, Element cellElement) throws JDOMException {
+
+//        // -----------------------
+//        // Process the element ...
+//        // -----------------------
+//        Byte result;
+//        try {
+//            result = new Byte(cellElement.getTextTrim());
+//        } catch ( NumberFormatException e ) {
+//            throw new JDOMException("Unable to parse the value for " + cellElement.getName() + //$NON-NLS-1$
+//                                    " element: " + cellElement.getTextTrim(), e); //$NON-NLS-1$
+//        }
+//        return result;
+        
+    	return cellElement.getText();
+        // ----------------------
+        // Create the Object element ...
+        // ----------------------
+//        Element objectElement = new Element(TagNames.Elements.OBJECT);
+//        
+//        String result = null;
+//        if (object instanceof Blob || object instanceof Clob || object instanceof SQLXML) {
+//       	 
+//        	if (object instanceof Clob){
+//        		Clob c = (Clob)object;
+//        		try {
+//        			result = ObjectConverterUtil.convertToString(c.getAsciiStream());
+//					
+//				} catch (Throwable e) {
+//					// TODO Auto-generated catch block
+//					throw new SQLException(e);
+//				}
+//        	} else if (object instanceof Blob){
+//            		Blob b = (Blob)object;
+//            		try {
+//            			result = ObjectConverterUtil.convertToString(b.getBinaryStream());
+//						
+//					} catch (Throwable e) {
+//						// TODO Auto-generated catch block
+//						throw new SQLException(e);
+//					}
+//            } else if (object instanceof SQLXML){
+//            	SQLXML s = (SQLXML)object;
+//        		try {
+//        			result = ObjectConverterUtil.convertToString(s.getBinaryStream());
+//					
+//				} catch (Throwable e) {
+//					// TODO Auto-generated catch block
+//					throw new SQLException(e);
+//				}
+//            } 
+//        } else {
+//        	result = object.toString();
+//        }
+//        
+// //       System.out.println("ProductObject (before encoding): " + object.toString() );
+// //       try {
+//            objectElement.setText(result);
+//            	//	URLEncoder.encode(object.toString(), "UTF-8"));
+// //       } catch (UnsupportedEncodingException e) {
+//            // UTF-8 is supported natively by all jvms
+// //       }
+////        System.out.println("ProductObject (after encoding): " + objectElement.getText() );
+//
+//        
+//        if ( parent != null ) {
+//            objectElement = parent.addContent(objectElement);
+//        }
+//
+//        return objectElement;
+
     }
 
     /**
@@ -1242,8 +1327,7 @@ public class XMLQueryVisitationStrategy {
      */
     private Element produceObject(Object object, Element parent) throws JDOMException, SQLException {
 
-    	System.out.println("PRODUCT OBJECT");
-        // ----------------------
+         // ----------------------
         // Create the Object element ...
         // ----------------------
         Element objectElement = new Element(TagNames.Elements.OBJECT);
@@ -1283,14 +1367,7 @@ public class XMLQueryVisitationStrategy {
         	result = object.toString();
         }
         
- //       System.out.println("ProductObject (before encoding): " + object.toString() );
- //       try {
-            objectElement.setText(result);
-            	//	URLEncoder.encode(object.toString(), "UTF-8"));
- //       } catch (UnsupportedEncodingException e) {
-            // UTF-8 is supported natively by all jvms
- //       }
-//        System.out.println("ProductObject (after encoding): " + objectElement.getText() );
+         objectElement.setText(result);
 
         
         if ( parent != null ) {
