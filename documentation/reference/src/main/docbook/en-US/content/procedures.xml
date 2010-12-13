@@ -513,6 +513,7 @@ VARIABLES.ROWS_UPDATED = UPDATE FOO SET X = 1 WHERE TRANSLATE CRITERIA;
               </para>
             </listitem>
           </itemizedlist>
+          <para>Each unoptimized conjunct of the user criteria is evaluated against the criteria selector.  If any conjunct matches then HAS CRITERIA evaluates to TRUE.  The use of OR or NOT will prevent contained predicates from matching the criteria selector.</para>
           <para>Some samples of the HAS CRITERIA clause:</para>
           <informaltable>
             <tgroup cols="2">
@@ -579,6 +580,7 @@ VARIABLES.ROWS_UPDATED = UPDATE FOO SET X = 1 WHERE TRANSLATE CRITERIA;
               </para>
             </listitem>
           </itemizedlist>
+          <para>Each unoptimized conjunct of the user criteria is translated using the criteria selector.  If a conjunct does not match the selector, it will not be translated - which effectively treats the conjunct as TRUE.  The use of OR or NOT will prevent contained predicates from matching the criteria selector.</para>
           <para>Some samples of TRANSLATE CRITERIA:</para>
           <informaltable>
             <tgroup cols="2">
@@ -606,7 +608,6 @@ VARIABLES.ROWS_UPDATED = UPDATE FOO SET X = 1 WHERE TRANSLATE CRITERIA;
               </tbody>
             </tgroup>
           </informaltable>
-          <note><para>If a specific predicate type or column set is specified by TRANSALATE CRITERIA, but the user criteria has predicates that do not match, then an exception will be thrown.</para></note>
         </section>      
     </section>
     <section>

@@ -39,7 +39,6 @@ import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
@@ -127,6 +126,7 @@ import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
+import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.sql.visitor.PredicateCollectorVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
@@ -195,24 +195,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         validateHasProjectedSymbols(obj);
         GroupSymbol group = obj.getGroup();
         validateGroupSupportsUpdate(group);
-        Criteria crit = obj.getCriteria();
-        validateVirtualUpdate(group, crit);
     }
-
-	private void validateVirtualUpdate(GroupSymbol group,
-			Criteria crit) {
-		if (crit == null) {
-			return;
-		}
-		try {
-			if (getMetadata().isVirtualGroup(group.getMetadataID()) && 
-					!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(crit).isEmpty()) {
-				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.virtual_update_subquery"), crit); //$NON-NLS-1$
-			}
-		} catch (TeiidException e) {
-			handleException(e);
-		}
-	}
 
     public void visit(GroupBy obj) {
     	// Get list of all group by IDs
@@ -319,7 +302,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         validateHasProjectedSymbols(obj);
         validateGroupSupportsUpdate(obj.getGroup());
         validateUpdate(obj);
-        validateVirtualUpdate(obj.getGroup(), obj.getCriteria());
     }
 
     public void visit(Into obj) {
@@ -585,16 +567,10 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 		}
 
     	Collection transleElmnts = ElementCollectorVisitor.getElements(obj, true);
-    	Collection groups = GroupCollectorVisitor.getGroups(this.currentCommand, true);
+    	Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroups(this.currentCommand, true);
 		int selectType = obj.getSelector().getSelectorType();
 
-		Collection predicates = PredicateCollectorVisitor.getPredicates(userCrit);
-		if (predicates.size() != Criteria.separateCriteriaByAnd(userCrit).size()) {
-			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.translated_or"), userCrit); //$NON-NLS-1$
-		}
-		Iterator critIter = predicates.iterator();
-		while(critIter.hasNext()) {
-			Criteria predCrit = (Criteria) critIter.next();
+		for (Criteria predCrit : Criteria.separateCriteriaByAnd(userCrit)) {
 			if(selectType != CriteriaSelector.NO_TYPE) {
 				if(predCrit instanceof CompareCriteria) {
 					CompareCriteria ccCrit = (CompareCriteria) predCrit;
@@ -629,16 +605,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 						handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0022", criteriaElement), criteriaElement); //$NON-NLS-1$
 		    		}
 
-		    		Iterator mapElmntIter = ElementCollectorVisitor.getElements(mappedExpr, true).iterator();
-			    	boolean groupMatch = false;
-			    	while(mapElmntIter.hasNext()) {
-				    	ElementSymbol mapElement = (ElementSymbol) mapElmntIter.next();
-				    	GroupSymbol mapGrp = mapElement.getGroupSymbol();
-				    	if(groups.contains(mapGrp)) {
-				    		groupMatch = true;
-				    	}
-			    	}
-			    	if(!groupMatch) {
+		    		if (!groups.containsAll(GroupsUsedByElementsVisitor.getGroups(mappedExpr))) {
 						handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0023", criteriaElement), criteriaElement); //$NON-NLS-1$
 			    	}
 				}
