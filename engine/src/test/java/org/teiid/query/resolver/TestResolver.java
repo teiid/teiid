@@ -3049,4 +3049,8 @@ public class TestResolver {
         assertEquals("A.ret", resolvedQuery.getProjectedSymbols().get(0).getName());
     }
     
+    @Test public void testOrderByAggregatesError() throws Exception {
+    	helpResolveException("select count(*) from pm1.g1 order by e1");
+    }
+    
 }

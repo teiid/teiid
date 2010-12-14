@@ -34,6 +34,7 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 
 /**
  * A representation of a data query.  A query consists of various parts,
@@ -446,4 +447,11 @@ public class Query extends QueryCommand {
     public boolean returnsResultSet() {
     	return into == null;
     }
+    
+    public boolean hasAggregates() {
+    	return getGroupBy() != null 
+    	|| getHaving() != null 
+    	|| !AggregateSymbolCollectorVisitor.getAggregates(getSelect(), false).isEmpty();
+    }
+
 }  // END CLASS
