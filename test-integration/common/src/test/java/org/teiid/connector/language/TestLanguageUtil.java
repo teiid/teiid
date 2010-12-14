@@ -85,18 +85,18 @@ public class TestLanguageUtil extends TestCase {
     }
 
     public void testSeparateCrit_nestedAND() throws Exception {
-        helpTestSeparateByAnd("((intkey = 1 AND intkey = 2) AND (intkey = 3) AND (intkey = 4))",  //$NON-NLS-1$
+        helpTestSeparateByAnd("((intkey = 1 AND intnum = 2) AND (stringnum = '3') AND (stringkey = '4'))",  //$NON-NLS-1$
             new String[] { "SmallA.IntKey = 1", //$NON-NLS-1$
-                "SmallA.IntKey = 2",  //$NON-NLS-1$
-                "SmallA.IntKey = 3", //$NON-NLS-1$
-                "SmallA.IntKey = 4" }); //$NON-NLS-1$ 
+                "SmallA.IntNum = 2",  //$NON-NLS-1$
+                "SmallA.StringNum = '3'", //$NON-NLS-1$
+                "SmallA.StringKey = '4'" }); //$NON-NLS-1$ 
     }
 
     public void testSeparateCrit_NOT() throws Exception {
-        helpTestSeparateByAnd("((NOT (intkey = 1 AND intkey = 2)) AND (intkey = 3) AND (intkey = 4))",  //$NON-NLS-1$
-            new String[] { "SmallA.IntKey <> 1 OR SmallA.IntKey <> 2", //$NON-NLS-1$
-                "SmallA.IntKey = 3", //$NON-NLS-1$
-                "SmallA.IntKey = 4" }); //$NON-NLS-1$        
+        helpTestSeparateByAnd("(NOT (intkey = 1 AND intnum = 2) AND (stringnum = '3') AND (stringkey = '4'))",  //$NON-NLS-1$
+            new String[] { "SmallA.IntKey <> 1 OR SmallA.IntNum <> 2", //$NON-NLS-1$
+                "SmallA.StringNum = '3'", //$NON-NLS-1$
+                "SmallA.StringKey = '4'" }); //$NON-NLS-1$        
     }
 
     public void helpTestCombineCriteria(String primaryStr, String additionalStr, String expected) throws Exception {
@@ -128,11 +128,11 @@ public class TestLanguageUtil extends TestCase {
     }
 
     public void testCombineCrit_primaryPredicate() throws Exception {
-        helpTestCombineCriteria("intkey = 1", "intkey = 2 AND intkey = 3", "SmallA.IntKey = 1 AND SmallA.IntKey = 2 AND SmallA.IntKey = 3"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTestCombineCriteria("intkey = 1", "intnum = 2 AND stringkey = '3'", "SmallA.IntKey = 1 AND SmallA.IntNum = 2 AND SmallA.StringKey = '3'"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testCombineCrit_additionalPredicate() throws Exception {
-        helpTestCombineCriteria("intkey = 1 AND intkey = 2", "intkey = 3", "SmallA.IntKey = 1 AND SmallA.IntKey = 2 AND SmallA.IntKey = 3"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTestCombineCriteria("intkey = 1 AND intnum = 2", "stringkey = '3'", "SmallA.IntKey = 1 AND SmallA.IntNum = 2 AND SmallA.StringKey = '3'"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
     
 }

@@ -698,11 +698,11 @@ public class TestQueryRewriter {
     }
  
     @Test public void testRewriteAnd6() { 
-        helpTestRewriteCriteria("(1 = 1) AND (5 = 5) AND (pm1.g1.e1 = 'x') and (pm1.g1.e1 = 'y')", "(pm1.g1.e1 = 'x') AND (pm1.g1.e1 = 'y')");             //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("(1 = 1) AND (5 = 5) AND (pm1.g1.e1 = 'x')", "(pm1.g1.e1 = 'x')");             //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testRewriteAnd7() {
-        helpTestRewriteCriteria("(pm1.g1.e1 = 'x') AND (pm1.g1.e1 = 'y')", "(pm1.g1.e1 = 'x') AND (pm1.g1.e1 = 'y')");     //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("(pm1.g1.e1 = 'x') AND (lower(pm1.g1.e1) = 'y')", "(pm1.g1.e1 = 'x') AND (lcase(pm1.g1.e1) = 'y')");     //$NON-NLS-1$ //$NON-NLS-2$
     }
         
     @Test public void testRewriteMixed1() {
@@ -1931,7 +1931,7 @@ public class TestQueryRewriter {
     }
     
     @Test public void testRewriteXMLCriteriaCases5630And5640() {
-        helpTestRewriteCommand("select * from xmltest.doc1 where node1 = null", "SELECT * FROM xmltest.doc1 WHERE null <> null"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCommand("select * from xmltest.doc1 where node1 = null", "SELECT * FROM xmltest.doc1 WHERE node1 = null"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testRewriteCorrelatedSubqueryInHaving() {
@@ -2317,6 +2317,47 @@ public class TestQueryRewriter {
     
     @Test public void testRewriteExpressionCriteria() throws Exception {
     	helpTestRewriteCriteria("pm1.g1.e3", "pm1.g1.e3 = true");
+    }
+    
+    @Test public void testRewritePredicateOptimization() throws Exception {
+    	helpTestRewriteCriteria("pm1.g1.e2 in (1, 2, 3) and pm1.g1.e2 in (2, 3, 4)", "pm1.g1.e2 in (2, 3)");
+    }
+    
+    @Test public void testRewritePredicateOptimization1() throws Exception {
+    	helpTestRewriteCriteria("pm1.g1.e2 < 5 and pm1.g1.e2 = 2", "pm1.g1.e2 = 2");
+    }
+    
+    @Test public void testRewritePredicateOptimization2() throws Exception {
+    	helpTestRewriteCriteria("pm1.g1.e2 < 5 and pm1.g1.e2 = 6", "1 = 0");
+    }
+    
+    @Test public void testRewritePredicateOptimization2a() throws Exception {
+    	helpTestRewriteCriteria("pm1.g1.e2 < 5 and pm1.g1.e2 = 2", "pm1.g1.e2 = 2");
+    }
+
+    @Test public void testRewritePredicateOptimization3() throws Exception {
+    	helpTestRewriteCriteria("pm1.g1.e2 in (1, 2) and pm1.g1.e2 = 6", "1 = 0");
+    }
+    
+    @Test public void testRewritePredicateOptimization4() throws Exception {
+    	helpTestRewriteCriteria("pm1.g1.e2 in (1, 2) and pm1.g1.e2 is null", "1 = 0");
+    }
+    
+    @Test public void testRewritePredicateOptimization5() throws Exception {
+    	helpTestRewriteCriteria("pm1.g1.e2 <> 5 and pm1.g1.e2 in (2, 3, 5)", "pm1.g1.e2 in (2, 3)");
+    }
+    
+    @Test public void testRewritePredicateOptimization6() throws Exception {
+    	helpTestRewriteCriteria("pm1.g1.e2 = 5 and pm1.g1.e2 in (5, 6)", "pm1.g1.e2 = 5");
+    }
+    
+    @Test public void testRewritePredicateOptimization6a() throws Exception {
+    	helpTestRewriteCriteria("pm1.g1.e2 in (5, 6) and pm1.g1.e2 = 5", "pm1.g1.e2 = 5");
+    }
+
+    @Ignore("TODO")
+    @Test public void testRewritePredicateOptimization7() throws Exception {
+    	helpTestRewriteCriteria("pm1.g1.e2 > 5 and pm1.g1.e2 < 2", "1 = 0");
     }
 
 }

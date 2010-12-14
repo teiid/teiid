@@ -666,13 +666,13 @@ public class TestCalculateCostUtil {
     
     //ensures that the ordering of criteria does not effect the costing calculation
     @Test public void testCompoundCriteriaEstimate4() throws Exception {
-        String crit = "US.accounts.account = 10 and US.accounts.account = US.accounts.customer and US.accounts.account < 100"; //$NON-NLS-1$
+        String crit = "US.accounts.account = 10 and US.accounts.account = US.accounts.customer and US.accounts.customer < 100"; //$NON-NLS-1$
         
-        helpTestEstimateCost(crit, 1000, 213, TestVirtualDepJoin.exampleVirtualDepJoin());
+        helpTestEstimateCost(crit, 1000, 64, TestVirtualDepJoin.exampleVirtualDepJoin());
         
-        String crit1 = "US.accounts.account = US.accounts.customer and US.accounts.account < 100 and US.accounts.account = 10"; //$NON-NLS-1$
+        String crit1 = "US.accounts.account = US.accounts.customer and US.accounts.customer < 100 and US.accounts.account = 10"; //$NON-NLS-1$
         
-        helpTestEstimateCost(crit1, 1000, 213, TestVirtualDepJoin.exampleVirtualDepJoin());
+        helpTestEstimateCost(crit1, 1000, 64, TestVirtualDepJoin.exampleVirtualDepJoin());
     }
     
     @Test public void testCompoundCriteriaEstimate5() throws Exception {

@@ -297,6 +297,11 @@ public class Evaluator {
 		}
 
 		// Compare two non-null values using specified operator
+		return compare(criteria, leftValue, rightValue);
+	}
+
+	public static Boolean compare(CompareCriteria criteria, Object leftValue,
+			Object rightValue) throws ExpressionEvaluationException {
 		switch(criteria.getOperator()) {
 			case CompareCriteria.EQ:
 				return Boolean.valueOf(compareValues(leftValue, rightValue) == 0);
@@ -315,7 +320,7 @@ public class Evaluator {
 		}
 	}
 
-    private final int compareValues(Object leftValue, Object rightValue) {
+    private static final int compareValues(Object leftValue, Object rightValue) {
     	assert leftValue instanceof Comparable<?>;
     	assert rightValue instanceof Comparable<?>;
     	if (leftValue == rightValue) {
