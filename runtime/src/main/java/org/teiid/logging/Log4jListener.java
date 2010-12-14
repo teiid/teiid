@@ -71,8 +71,9 @@ public class Log4jListener implements org.teiid.logging.Logger {
     	case MessageLevel.INFO:
     		return Level.INFO;
     	case MessageLevel.DETAIL:
-    	case MessageLevel.TRACE:
     		return Level.DEBUG;
+    	case MessageLevel.TRACE:
+    		return Level.TRACE;
     	case MessageLevel.NONE:
     		return Level.OFF;
     	}
