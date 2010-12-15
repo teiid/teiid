@@ -459,10 +459,6 @@ public class TransactionServerImpl implements TransactionService {
         return transactions.getOrCreateTransactionContext(threadId);
     }
 
-    public void closeTransactionContext(TransactionContext tc) {
-    	transactions.removeTransactionContext(tc);
-    }
-    
     /**
      * Request level transaction
      */
@@ -494,7 +490,7 @@ public class TransactionServerImpl implements TransactionService {
     }
 
     public void cancelTransactions(String threadId, boolean requestOnly) throws XATransactionException {
-        TransactionContext tc = transactions.getTransactionContext(threadId);
+    	TransactionContext tc = requestOnly?transactions.getTransactionContext(threadId):transactions.removeTransactionContext(threadId);
         
         if (tc == null || tc.getTransactionType() == TransactionContext.Scope.NONE 
         		|| (requestOnly && tc.getTransactionType() != TransactionContext.Scope.REQUEST)) {

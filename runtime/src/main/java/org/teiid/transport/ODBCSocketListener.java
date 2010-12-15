@@ -33,8 +33,9 @@ import org.teiid.odbc.ODBCServerRemote;
 public class ODBCSocketListener extends SocketListener {
 	private ODBCServerRemote.AuthenticationType authType = ODBCServerRemote.AuthenticationType.CLEARTEXT;
 	
-	public ODBCSocketListener(SocketConfiguration config, ClientServiceRegistryImpl csr, StorageManager storageManager, int portOffset) {
-		super(config, csr, storageManager, portOffset);
+	public ODBCSocketListener(SocketConfiguration config, StorageManager storageManager, int portOffset) {
+		//the clientserviceregistry isn't actually used by ODBC 
+		super(config, new ClientServiceRegistryImpl(ClientServiceRegistry.Type.ODBC), storageManager, portOffset);
 	}
 
 	@Override

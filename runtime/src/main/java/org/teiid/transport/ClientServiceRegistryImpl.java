@@ -31,7 +31,7 @@ import org.teiid.security.SecurityHelper;
 
 
 public class ClientServiceRegistryImpl implements ClientServiceRegistry {
-
+	
 	public static class ClientService {
 		private Object instance;
 		private String loggingContext;
@@ -57,6 +57,15 @@ public class ClientServiceRegistryImpl implements ClientServiceRegistry {
 	
     private HashMap<String, ClientService> clientServices = new HashMap<String, ClientService>();
     private SecurityHelper securityHelper;
+    private Type type = Type.JDBC;
+    
+    public ClientServiceRegistryImpl() {
+    	
+    }
+    
+    public ClientServiceRegistryImpl(Type type) {
+    	this.type = type;
+	}
 
     public <T> T getClientService(Class<T> iface) throws ComponentNotFoundException {
     	ClientService cs = getClientService(iface.getName());
@@ -66,7 +75,7 @@ public class ClientServiceRegistryImpl implements ClientServiceRegistry {
 	public ClientService getClientService(String iface) throws ComponentNotFoundException {
 		ClientService cs = clientServices.get(iface);
 		if (cs == null) {
-			throw new ComponentNotFoundException(RuntimePlugin.Util.getString("ServerWorkItem.Component_Not_Found", iface)); //$NON-NLS-1$
+			throw new ComponentNotFoundException(RuntimePlugin.Util.getString("ServerWorkItem.Component_Not_Found", type, iface)); //$NON-NLS-1$
 		}
 		return cs;
 	}

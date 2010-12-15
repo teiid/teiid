@@ -47,8 +47,6 @@ public interface TransactionService {
 
     TransactionContext getOrCreateTransactionContext(String threadId);
     
-    void closeTransactionContext(TransactionContext tc);
-    
     void suspend(TransactionContext context) throws XATransactionException;
     
     void resume(TransactionContext context) throws XATransactionException;

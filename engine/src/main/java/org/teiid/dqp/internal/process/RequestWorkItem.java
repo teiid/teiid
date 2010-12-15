@@ -269,9 +269,6 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					suspend();
 				}
 			}
-			else if (this.transactionState == TransactionState.NONE && this.transactionContext != null) {
-				this.transactionService.closeTransactionContext(this.transactionContext);
-			}
 			sendResultsIfNeeded(null);
 		} else {
 			moreWork(false); // If the timeslice expired, then the processor can probably produce more batches.

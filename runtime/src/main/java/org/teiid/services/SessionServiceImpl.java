@@ -103,7 +103,7 @@ public class SessionServiceImpl implements SessionService {
     				closeSession(info.getSessionId());
     			}
 			} catch (Exception e) {
-				LogManager.logDetail(LogConstants.CTX_SECURITY, e, "error running session monitor, unable to monitor: " + info.getSessionId()); //$NON-NLS-1$
+				LogManager.logDetail(LogConstants.CTX_SECURITY, e, "error running session monitor, unable to monitor:", info.getSessionId()); //$NON-NLS-1$
 			}
 		}
 	}
@@ -192,7 +192,7 @@ public class SessionServiceImpl implements SessionService {
         newSession.setLoginContext(loginContext);
         newSession.setSecurityContext(securityContext);
         newSession.setVdb(vdb);
-        LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", userName, "\" - created SessionID \"", "" + newSession.getSessionToken().getSessionID(), "\"" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", userName, "\" - created SessionID \"", newSession.getSessionToken().getSessionID(), "\"" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         this.sessionCache.put(newSession.getSessionId(), newSession);
         return newSession;
 	}
@@ -279,7 +279,7 @@ public class SessionServiceImpl implements SessionService {
 		SessionMetadata info = getSessionInfo(sessionID);
 		info.setLastPingTime(System.currentTimeMillis());
 		this.sessionCache.put(sessionID, info);
-		LogManager.logDetail(LogConstants.CTX_SECURITY, "Keep-alive ping received for session:"+sessionID); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_SECURITY, "Keep-alive ping received for session:", sessionID); //$NON-NLS-1$
 	}
 
 	@Override
