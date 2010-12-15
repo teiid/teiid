@@ -176,7 +176,7 @@
                                     <para>integer</para>
                                 </entry>
                                 <entry>
-                                    <para>Unique ID</para>
+                                    <para>Unique ID (see note below)</para>
                                 </entry>
                             </row>                            
 							<row>
@@ -269,7 +269,7 @@
                                     <para>integer</para>
                                 </entry>
                                 <entry>
-                                    <para>Unique ID</para>
+                                    <para>Unique ID (see note below)</para>
                                 </entry>
                             </row>                             
 						</tbody>
@@ -397,7 +397,7 @@
                                     <para>integer</para>
                                 </entry>
                                 <entry>
-                                    <para>Unique ID</para>
+                                    <para>Unique ID (see note below)</para>
                                 </entry>
                             </row>                             
 							<row>
@@ -915,7 +915,7 @@
                                     <para>integer</para>
                                 </entry>
                                 <entry>
-                                    <para>Unique ID</para>
+                                    <para>Unique ID (see note below)</para>
                                 </entry>
                             </row>                             
 							<row>
@@ -1074,7 +1074,7 @@
                                     <para>integer</para>
                                 </entry>
                                 <entry>
-                                    <para>Unique ID</para>
+                                    <para>Unique ID (see note below)</para>
                                 </entry>
                             </row>                             
 						</tbody>
@@ -1199,7 +1199,7 @@
                                     <para>integer</para>
                                 </entry>
                                 <entry>
-                                    <para>Unique ID</para>
+                                    <para>Unique ID (see note below)</para>
                                 </entry>
                             </row>                             
 							<row>
@@ -1317,7 +1317,7 @@
                                     <para>integer</para>
                                 </entry>
                                 <entry>
-                                    <para>Unique ID</para>
+                                    <para>Unique ID (see note below)</para>
                                 </entry>
                             </row>                             
 							<row>
@@ -1710,7 +1710,7 @@
                                     <para>integer</para>
                                 </entry>
                                 <entry>
-                                    <para>Unique ID</para>
+                                    <para>Unique ID (see note below)</para>
                                 </entry>
                             </row>                             
 							<row>
@@ -1751,6 +1751,12 @@
 				</informaltable>
 			</section>
 		</section>
+        <warning>
+		  <para>OID column is is guranteed to be unique only for given version of the VDB. If the VDB is updated and a different version of
+          the VDB is deployed, these IDs are not guranteed to be unique across both versions of VDB. UID is unique across different versions
+          only if the VDB is generated from Designer and metadata from old models are used(i.e. no re-importing from sources). 
+          UID column in a Dynamic VDB behaves same as OID column.</para>
+	  </warning>
 	</section>
 	<section id="system_procedures">
 		<title>System Procedures</title>
