@@ -459,6 +459,10 @@ public class TransactionServerImpl implements TransactionService {
         return transactions.getOrCreateTransactionContext(threadId);
     }
 
+    public void closeTransactionContext(TransactionContext tc) {
+    	transactions.removeTransactionContext(tc);
+    }
+    
     /**
      * Request level transaction
      */

@@ -488,6 +488,7 @@ public class DQPCore implements DQP {
 	                LogManager.logWarning(LogConstants.CTX_DQP, err, "Failed to cancel " + reqId); //$NON-NLS-1$
 				}
 	        }
+	        this.clientState.remove(sessionId);
         }
         
         try {

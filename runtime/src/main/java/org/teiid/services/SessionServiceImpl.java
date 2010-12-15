@@ -279,6 +279,7 @@ public class SessionServiceImpl implements SessionService {
 		SessionMetadata info = getSessionInfo(sessionID);
 		info.setLastPingTime(System.currentTimeMillis());
 		this.sessionCache.put(sessionID, info);
+		LogManager.logDetail(LogConstants.CTX_SECURITY, "Keep-alive ping received for session:"+sessionID); //$NON-NLS-1$
 	}
 
 	@Override
