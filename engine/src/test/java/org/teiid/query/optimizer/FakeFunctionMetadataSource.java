@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.Datatype;
 import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.function.FunctionMetadataSource;
@@ -34,8 +36,8 @@ import org.teiid.query.function.metadata.FunctionMethod;
 
 public class FakeFunctionMetadataSource implements FunctionMetadataSource {
 
-    public Collection getFunctionMethods() {
-        List methods = new ArrayList();
+    public Collection<org.teiid.metadata.FunctionMethod> getFunctionMethods() {
+        List<org.teiid.metadata.FunctionMethod> methods = new ArrayList<org.teiid.metadata.FunctionMethod>();
         methods.add(new FunctionMethod("xyz", "", "misc", PushDown.MUST_PUSHDOWN,  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                                        FakeFunctionMetadataSource.class.getName(), "xyz", //$NON-NLS-1$
                                        new FunctionParameter[0],  
@@ -51,6 +53,10 @@ public class FakeFunctionMetadataSource implements FunctionMetadataSource {
         FunctionMethod method2 = new FunctionMethod("misc.namespace.func", "", "", null, null, new FunctionParameter[] {p1}, result);  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         method2.setPushdown(PushDown.MUST_PUSHDOWN);
         methods.add(method2);
+        
+        FunctionMethod method3 = new FunctionMethod("parsedate_", "", "", null, null, new FunctionParameter[] {p1}, new FunctionParameter("", DataTypeManager.DefaultDataTypes.DATE));  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        method3.setPushdown(PushDown.MUST_PUSHDOWN);
+        methods.add(method3);
 
         return methods;
     }

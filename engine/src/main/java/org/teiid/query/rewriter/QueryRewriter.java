@@ -185,6 +185,11 @@ public class QueryRewriter {
     	ALIASED_FUNCTIONS.put("chr", SourceSystemFunctions.CHAR); //$NON-NLS-1$
     }
     
+    private static final Set<String> PARSE_FORMAT_TYPES = new HashSet<String>(Arrays.asList(DataTypeManager.DefaultDataTypes.TIME, 
+    		DataTypeManager.DefaultDataTypes.DATE, DataTypeManager.DefaultDataTypes.TIMESTAMP, DataTypeManager.DefaultDataTypes.BIG_DECIMAL, 
+    		DataTypeManager.DefaultDataTypes.BIG_INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.LONG, 
+    		DataTypeManager.DefaultDataTypes.FLOAT, DataTypeManager.DefaultDataTypes.DOUBLE));
+    
     private QueryMetadataInterface metadata;
     private CommandContext context;
     private CreateUpdateProcedureCommand procCommand;
@@ -1779,9 +1784,15 @@ public class QueryRewriter {
         String inverseFunction = null;
         if(funcName.startsWith("parse")) { //$NON-NLS-1$
             String type = funcName.substring(5);
+            if (!PARSE_FORMAT_TYPES.contains(type)) {
+                return crit;
+            }
             inverseFunction = "format" + type; //$NON-NLS-1$
         } else if(funcName.startsWith("format")) { //$NON-NLS-1$
             String type = funcName.substring(6);
+            if (!PARSE_FORMAT_TYPES.contains(type)) {
+                return crit;
+            }
             inverseFunction = "parse" + type; //$NON-NLS-1$
             isFormat = true;
         } else {

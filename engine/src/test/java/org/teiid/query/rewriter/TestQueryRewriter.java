@@ -39,16 +39,19 @@ import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.TimestampWithTimezone;
+import org.teiid.query.function.FunctionLibrary;
+import org.teiid.query.function.FunctionTree;
+import org.teiid.query.function.UDFSource;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.optimizer.FakeFunctionMetadataSource;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverVisitor;
-import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.CompoundCriteria;
@@ -2359,5 +2362,12 @@ public class TestQueryRewriter {
     @Test public void testRewritePredicateOptimization7() throws Exception {
     	helpTestRewriteCriteria("pm1.g1.e2 > 5 and pm1.g1.e2 < 2", "1 = 0");
     }
+    
+	@Test public void testUDFParse() throws Exception {     
+        FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree(new UDFSource(new FakeFunctionMetadataSource().getFunctionMethods())));
+        FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
+		String sql = "parsedate_(pm1.g1.e1) = {d'2001-01-01'}";
+        helpTestRewriteCriteria(sql, parseCriteria(sql, metadata), metadata);  		
+	} 
 
 }
