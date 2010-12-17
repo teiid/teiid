@@ -117,6 +117,7 @@ public final class NodeConstants {
 
         // Source node properties
         SYMBOL_MAP,         // SymbolMap
+        PARTITION_INFO,		// Map<ElementSymbol, List<Set<Constant>>>
         VIRTUAL_COMMAND,    // Command
         MAKE_DEP,           // ??? List of Groups ???
         PROCESSOR_PLAN,     // ProcessorPlan for non-relational sub plan
@@ -133,7 +134,7 @@ public final class NodeConstants {
         OUTPUT_COLS,        // List <SingleElementSymbol>
 
         // Plan Node Cost Estimate Constants
-        EST_SET_SIZE,        // Integer represents the estimated set size this node would produce for a sibling node as the indenpendent node in a dependent join scenario
+        EST_SET_SIZE,        // Integer represents the estimated set size this node would produce for a sibling node as the independent node in a dependent join scenario
         EST_DEP_CARDINALITY, // Float value that represents the estimated cardinality (amount of rows) produced by this node as the dependent node in a dependent join scenario
         EST_DEP_JOIN_COST,   // Float value that represents the estimated cost of a dependent join (the join strategy for this could be Nested Loop or Merge)
         EST_JOIN_COST,       // Float value that represents the estimated cost of a merge join (the join strategy for this could be Nested Loop or Merge)

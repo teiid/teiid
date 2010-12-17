@@ -983,20 +983,27 @@ public class ResolverUtil {
 		}
 		HashMap<List<GroupSymbol>, List<HashSet<Object>>> crits = createGroupMap(leftExpressions, rightExpressions);
 		HashSet<GroupSymbol> tempSet = new HashSet<GroupSymbol>();
+		HashSet<GroupSymbol> nonKeyPreserved = new HashSet<GroupSymbol>();
 		for (GroupSymbol group : groups) {
 			LinkedHashSet<GroupSymbol> visited = new LinkedHashSet<GroupSymbol>();
 			LinkedList<GroupSymbol> toVisit = new LinkedList<GroupSymbol>();
 			toVisit.add(group);
 			while (!toVisit.isEmpty()) {
 				GroupSymbol visiting = toVisit.removeLast();
-				if (!visited.add(visiting)) {
+				if (!visited.add(visiting) || nonKeyPreserved.contains(visiting)) {
 					continue;
+				}
+				if (keyPreservingGroups.contains(visiting)) {
+					visited.addAll(groups);
+					break;
 				}
 				toVisit.addAll(findKeyPreserved(tempSet, Collections.singleton(visiting), crits, true, metadata, groups));
 				toVisit.addAll(findKeyPreserved(tempSet, Collections.singleton(visiting), crits, false, metadata, groups));
 			}
 			if (visited.containsAll(groups)) {
 				keyPreservingGroups.add(group);
+			} else {
+				nonKeyPreserved.add(group);
 			}
 		}
 	}

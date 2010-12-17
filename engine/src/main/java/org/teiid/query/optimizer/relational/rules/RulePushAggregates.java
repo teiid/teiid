@@ -320,22 +320,11 @@ public class RulePushAggregates implements
 				updateSymbolName(projectCols, i, virtualElem, projectedSymbol);
 			}
 		}
-    	PlanNode intermediateView = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
-    	unionSource.addAsParent(intermediateView);
+		GroupSymbol group = new GroupSymbol("X"); //$NON-NLS-1$
+        
+		PlanNode intermediateView = createView(group, virtualElements, unionSource, metadata);
+    	SymbolMap symbolMap = (SymbolMap)intermediateView.getProperty(Info.SYMBOL_MAP);
     	unionSource = intermediateView;
-    	TempMetadataStore store = new TempMetadataStore();
-        TempMetadataAdapter tma = new TempMetadataAdapter(metadata, store);
-        GroupSymbol group = new GroupSymbol("X"); //$NON-NLS-1$
-        try {
-			group.setMetadataID(ResolverUtil.addTempGroup(tma, group, virtualElements, false));
-		} catch (QueryResolverException e) {
-			throw new TeiidComponentException(e);
-		}
-    	intermediateView.addGroup(group);
-    	List<ElementSymbol> projectedSymbols = ResolverUtil.resolveElementsInGroup(group, metadata);
-    	SymbolMap symbolMap = SymbolMap.createSymbolMap(projectedSymbols, 
-				(List<Expression>)NodeEditor.findNodePreOrder(unionSource, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS));
-    	intermediateView.setProperty(NodeConstants.Info.SYMBOL_MAP, symbolMap);
     	
         Set<SingleElementSymbol> newGroupingExpressions = Collections.emptySet();
         if (groupingExpressions != null) {
@@ -345,9 +334,9 @@ public class RulePushAggregates implements
 			}
         }
 
-        List<SingleElementSymbol> projectedViewSymbols = Util.deepClone(projectedSymbols, SingleElementSymbol.class);
+        List<SingleElementSymbol> projectedViewSymbols = Util.deepClone(symbolMap.getKeys(), SingleElementSymbol.class);
 
-        SymbolMap viewMapping = SymbolMap.createSymbolMap(NodeEditor.findParent(unionSource, NodeConstants.Types.SOURCE).getGroups().iterator().next(), projectedSymbols, metadata);
+        SymbolMap viewMapping = SymbolMap.createSymbolMap(NodeEditor.findParent(unionSource, NodeConstants.Types.SOURCE).getGroups().iterator().next(), projectedViewSymbols, metadata);
         for (AggregateSymbol agg : aggregates) {
         	agg = (AggregateSymbol)agg.clone();
         	ExpressionMappingVisitor.mapExpressions(agg, viewMapping.asMap());
@@ -391,6 +380,24 @@ public class RulePushAggregates implements
         	}
         }
     }
+	
+	static PlanNode createView(GroupSymbol group, List<? extends SingleElementSymbol> virtualElements, PlanNode child, QueryMetadataInterface metadata) throws TeiidComponentException {
+		PlanNode intermediateView = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
+    	TempMetadataStore store = new TempMetadataStore();
+        TempMetadataAdapter tma = new TempMetadataAdapter(metadata, store);
+        try {
+			group.setMetadataID(ResolverUtil.addTempGroup(tma, group, virtualElements, false));
+		} catch (QueryResolverException e) {
+			throw new TeiidComponentException(e);
+		}
+    	intermediateView.addGroup(group);
+    	List<ElementSymbol> projectedSymbols = ResolverUtil.resolveElementsInGroup(group, metadata);
+    	SymbolMap symbolMap = SymbolMap.createSymbolMap(projectedSymbols, 
+				(List<Expression>)NodeEditor.findNodePreOrder(child, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS));
+    	intermediateView.setProperty(NodeConstants.Info.SYMBOL_MAP, symbolMap);
+    	child.addAsParent(intermediateView);
+    	return intermediateView;
+	}
 
 	private void updateSymbolName(List<SingleElementSymbol> projectCols, int i,
 			ElementSymbol virtualElem, SingleElementSymbol projectedSymbol) {

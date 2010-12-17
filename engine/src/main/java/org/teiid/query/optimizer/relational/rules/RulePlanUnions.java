@@ -23,7 +23,6 @@
 package org.teiid.query.optimizer.relational.rules;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -80,7 +79,7 @@ public class RulePlanUnions implements OptimizerRule {
                                                                       TeiidComponentException {
         //look for all union branches and their sources
         for (PlanNode unionNode : NodeEditor.findAllNodes(plan, NodeConstants.Types.SET_OP, NodeConstants.Types.SET_OP | NodeConstants.Types.ACCESS)) {
-            List accessNodes = NodeEditor.findAllNodes(unionNode, NodeConstants.Types.ACCESS);
+            List<PlanNode> accessNodes = NodeEditor.findAllNodes(unionNode, NodeConstants.Types.ACCESS);
             
             Object id = getModelId(metadata, accessNodes, capabilitiesFinder);
             
@@ -89,12 +88,13 @@ public class RulePlanUnions implements OptimizerRule {
                 continue;
             }
             
-            //a linked hasmap is used so that the first entry is logically the first branch
-            Map sourceNodes = new LinkedHashMap();
+            //a linked hashmap is used so that the first entry is logically the first branch
+            Map<Object, List<PlanNode>> sourceNodes = new LinkedHashMap<Object, List<PlanNode>>();
             
-            boolean all = Boolean.TRUE.equals(unionNode.getProperty(NodeConstants.Info.USE_ALL));
+            boolean all = unionNode.hasBooleanProperty(NodeConstants.Info.USE_ALL);
+            Operation op = (Operation)unionNode.getProperty(NodeConstants.Info.SET_OPERATION);
             
-            collectUnionSources(metadata, capabilitiesFinder, unionNode, sourceNodes, all, (Operation)unionNode.getProperty(NodeConstants.Info.SET_OPERATION));
+            collectUnionSources(metadata, capabilitiesFinder, unionNode, sourceNodes, all, op);
             
             if (sourceNodes.size() == 1) {
                 continue;
@@ -103,25 +103,23 @@ public class RulePlanUnions implements OptimizerRule {
             //rebuild unions based upon the source map
             boolean shouldRebuild = false;
             
-            for (Iterator j = sourceNodes.entrySet().iterator(); j.hasNext();) {
-                Map.Entry entry = (Map.Entry)j.next();
-                
-                if (entry.getKey() != null && ((List)entry.getValue()).size() > 1) {
-                    shouldRebuild = true;
-                    break;
-                }
+            for (Map.Entry<Object, List<PlanNode>> entry : sourceNodes.entrySet()) {
+                if (entry.getKey() != null 
+                		&& entry.getValue().size() > 1 
+            			&& CapabilitiesUtil.supportsSetOp(entry.getKey(), (Operation)unionNode.getProperty(NodeConstants.Info.SET_OPERATION), metadata, capabilitiesFinder)) {
+            		shouldRebuild = true;
+            		break;
+            	}
             }
             
             if (!shouldRebuild) {
                 continue;
             }
             
-            List sourceUnions = new LinkedList();
+            List<PlanNode> sourceUnions = new LinkedList<PlanNode>();
             
-            for (Iterator j = sourceNodes.entrySet().iterator(); j.hasNext();) {
-                Map.Entry entry = (Map.Entry)j.next();
-                
-                List sources = (List)entry.getValue();
+            for (Map.Entry<Object, List<PlanNode>> entry : sourceNodes.entrySet()) {
+                List<PlanNode> sources = entry.getValue();
                 
                 sourceUnions.add(buildUnionTree(unionNode, sources));
             }
@@ -133,14 +131,12 @@ public class RulePlanUnions implements OptimizerRule {
         }
     }
 
-    private PlanNode buildUnionTree(PlanNode rootUnionNode,
-                                List sources) {
+    static PlanNode buildUnionTree(PlanNode rootUnionNode,
+                                List<PlanNode> sources) {
         
         PlanNode root = null;
         
-        for (Iterator k = sources.iterator(); k.hasNext();) {
-            PlanNode source = (PlanNode)k.next();
-            
+        for (PlanNode source : sources) {
             if (root == null) {
                 root = source;
             } else {
@@ -149,8 +145,6 @@ public class RulePlanUnions implements OptimizerRule {
                 union.setProperty(NodeConstants.Info.USE_ALL, rootUnionNode.getProperty(NodeConstants.Info.USE_ALL));
                 union.addLastChild(root);
                 union.addLastChild(source);
-                union.addGroups(root.getGroups());
-                union.addGroups(source.getGroups());
                 root = union;
             }
         }
@@ -164,7 +158,7 @@ public class RulePlanUnions implements OptimizerRule {
     private void collectUnionSources(QueryMetadataInterface metadata,
                                      CapabilitiesFinder capabilitiesFinder,
                                      PlanNode unionNode,
-                                     Map sourceNodes,
+                                     Map<Object, List<PlanNode>> sourceNodes,
                                      boolean all, Operation setOp) throws QueryMetadataException,
                                                  TeiidComponentException {
         for (PlanNode child : unionNode.getChildren()) {
@@ -174,7 +168,7 @@ public class RulePlanUnions implements OptimizerRule {
             		child.setProperty(NodeConstants.Info.USE_ALL, Boolean.TRUE);
             	}
                 if ((!all || child.hasBooleanProperty(NodeConstants.Info.USE_ALL)) && setOp.equals(child.getProperty(NodeConstants.Info.SET_OPERATION)) && setOp != Operation.EXCEPT) { //keep collecting sources
-                    List accessNodes = NodeEditor.findAllNodes(child, NodeConstants.Types.ACCESS);
+                    List<PlanNode> accessNodes = NodeEditor.findAllNodes(child, NodeConstants.Types.ACCESS);
                     
                     Object id = getModelId(metadata, accessNodes, capabilitiesFinder);
                     
@@ -187,21 +181,13 @@ public class RulePlanUnions implements OptimizerRule {
                     optimizeUnions(child, metadata, capabilitiesFinder);
                 }
             } else {  //this must be a source, see if it has a consistent access node
-                List accessNodes = NodeEditor.findAllNodes(child, NodeConstants.Types.ACCESS);
+                List<PlanNode> accessNodes = NodeEditor.findAllNodes(child, NodeConstants.Types.ACCESS);
                 
                 Object id = getModelId(metadata, accessNodes, capabilitiesFinder);
                 
-                //don't bother optimizing sources that don't support unions
-                boolean supportsUnions = true;
-                
-                if (id != null && !CapabilitiesUtil.supportsSetOp(id, (Operation)unionNode.getProperty(NodeConstants.Info.SET_OPERATION), metadata, capabilitiesFinder)) {
-                    supportsUnions = false;
-                    id = null;
-                }
-                
                 buildModelMap(metadata, capabilitiesFinder, sourceNodes, child, id);
 
-                if (id == null && supportsUnions) {
+                if (id == null) {
                     //recursively optimize below this point
                     optimizeUnions(child, metadata, capabilitiesFinder);
                 }
@@ -210,12 +196,11 @@ public class RulePlanUnions implements OptimizerRule {
     }
 
     private Object getModelId(QueryMetadataInterface metadata,
-                            List accessNodes, CapabilitiesFinder capFinder) throws QueryMetadataException,
+                            List<PlanNode> accessNodes, CapabilitiesFinder capFinder) throws QueryMetadataException,
                                              TeiidComponentException {
         Object modelID = null;
         
-        for (Iterator k = accessNodes.iterator(); k.hasNext();) {
-            PlanNode accessNode = (PlanNode)k.next();
+        for (PlanNode accessNode : accessNodes) {
         
             Object accessModelID = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
             
@@ -249,23 +234,24 @@ public class RulePlanUnions implements OptimizerRule {
      */
     static void buildModelMap(QueryMetadataInterface metadata,
                                    CapabilitiesFinder capFinder,
-                                   Map accessMap,
+                                   Map<Object, List<PlanNode>> accessMap,
                                    PlanNode node,
                                    Object accessModelID) throws QueryMetadataException,
                                                         TeiidComponentException {
-        List accessNodes = null;
-        
-        for (Iterator i = accessMap.entrySet().iterator(); i.hasNext();) {
-            Map.Entry entry = (Map.Entry)i.next();
-            if (accessModelID == entry.getKey() || CapabilitiesUtil.isSameConnector(accessModelID, entry.getKey(), metadata, capFinder)) {
-                accessNodes = (List)entry.getValue();
-                break;
-            }
-        }
+        List<PlanNode> accessNodes = accessMap.get(accessModelID);
         
         if (accessNodes == null) {
-            accessNodes = new ArrayList();
-            accessMap.put(accessModelID, accessNodes);
+	        for (Map.Entry<Object, List<PlanNode>> entry : accessMap.entrySet() ) {
+	            if (accessModelID == entry.getKey() || CapabilitiesUtil.isSameConnector(accessModelID, entry.getKey(), metadata, capFinder)) {
+	                accessNodes = entry.getValue();
+	                break;
+	            }
+	        }
+	        
+	        if (accessNodes == null) {
+	            accessNodes = new ArrayList<PlanNode>();
+	            accessMap.put(accessModelID, accessNodes);
+	        }
         }
         accessNodes.add(node);
     }

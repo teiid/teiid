@@ -1240,10 +1240,14 @@ public class QueryRewriter {
 	                    		exprMap.put(sc.getExpression(), converted);
 	                    	} else if (crit instanceof SetCriteria) {
 	                    		SetCriteria sc1 = (SetCriteria)crit;
+	                    		newCrits.remove(sc1);
 	                    		sc1.getValues().retainAll(sc.getValues());
 	                    		if (sc1.getValues().isEmpty()) {
 	                    			return FALSE_CRITERIA;
 	                    		}
+	                    		//TODO: single value as compare criteria
+	                    		newCrits.add(sc1);
+	                    		exprMap.put(sc1.getExpression(), sc1);
 	                    		continue;
 	                    	} else {
 	                    		CompareCriteria cc = (CompareCriteria)crit;
@@ -1252,12 +1256,12 @@ public class QueryRewriter {
 										exprIter.remove();
 									}
 								}
-	                    		//TODO: single value as compare criteria
 	                    		if (sc.getValues().isEmpty()) {
 	                    			return FALSE_CRITERIA;
 	                    		}
 	                    		if (cc.getOperator() != CompareCriteria.EQ) {
 		                    		newCrits.remove(cc);
+		                    		//TODO: single value as compare criteria
 		                    		exprMap.put(sc.getExpression(), sc);
 	                    		} else {
 	                    			continue;
@@ -1293,6 +1297,7 @@ public class QueryRewriter {
 	                        		exprMap.put(cc.getLeftExpression(), cc);
 	                    		} else if (modified) {
 	                    			newCrits.add(sc);
+	                    			exprMap.put(sc.getExpression(), sc);
 		                    		continue;
 	                    		}
 	                    	} else {

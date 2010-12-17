@@ -106,6 +106,8 @@ import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.symbol.AllSymbol;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.SelectSymbol;
@@ -426,6 +428,10 @@ public class RelationalPlanner {
         }
         if(hints.hasCriteria) {
             rules.push(RuleConstants.PUSH_SELECT_CRITERIA);
+        }
+        if (hints.hasJoin && hints.hasSetQuery) {
+            rules.push(RuleConstants.DECOMPOSE_JOIN);
+            rules.push(RuleConstants.MERGE_VIRTUAL);
         }
         if (hints.hasJoin && hints.hasOptionalJoin) {
             rules.push(RuleConstants.REMOVE_OPTIONAL_JOINS);
@@ -878,7 +884,12 @@ public class RelationalPlanner {
 		    PlanNode childRoot = generatePlan(nestedCommand);
 		    node.addFirstChild(childRoot);
 			List<SingleElementSymbol> projectCols = nestedCommand.getProjectedSymbols();
-			node.setProperty(NodeConstants.Info.SYMBOL_MAP, SymbolMap.createSymbolMap(group, projectCols, metadata));
+			SymbolMap map = SymbolMap.createSymbolMap(group, projectCols, metadata);
+			node.setProperty(NodeConstants.Info.SYMBOL_MAP, map);
+			if (nestedCommand instanceof SetQuery) {
+				Map<ElementSymbol, List<Set<Constant>>> partitionInfo = PartitionAnalyzer.extractPartionInfo((SetQuery)nestedCommand, map.getKeys());
+				node.setProperty(NodeConstants.Info.PARTITION_INFO, partitionInfo);
+			}
 		} else {
 			QueryMetadataInterface actualMetadata = metadata;
 			if (actualMetadata instanceof TempMetadataAdapter) {

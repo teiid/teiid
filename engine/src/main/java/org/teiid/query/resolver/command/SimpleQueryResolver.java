@@ -155,12 +155,12 @@ public class SimpleQueryResolver implements CommandResolver {
             }
 
             if (!discoveredGroups.add(obj.getGroupSymbol())) {
-            	throw new QueryResolverException("Duplicate WITH clause item name {0}");
+            	throw new QueryResolverException(QueryPlugin.Util.getString("SimpleQueryResolver.duplicate_with", obj.getGroupSymbol())); //$NON-NLS-1$
             }
             List<? extends SingleElementSymbol> projectedSymbols = obj.getCommand().getProjectedSymbols();
             if (obj.getColumns() != null && !obj.getColumns().isEmpty()) {
             	if (obj.getColumns().size() != projectedSymbols.size()) {
-            		throw new QueryResolverException("The number of WITH clause columns for item {0} do not match the query expression");
+            		throw new QueryResolverException(QueryPlugin.Util.getString("SimpleQueryResolver.mismatched_with_columns", obj.getGroupSymbol())); //$NON-NLS-1$
             	}
             	Iterator<ElementSymbol> iter = obj.getColumns().iterator();
             	for (SingleElementSymbol singleElementSymbol : projectedSymbols) {
@@ -460,7 +460,7 @@ public class SimpleQueryResolver implements CommandResolver {
 			storedProcedureCommand.setProcedureRelational(true);
 			storedProcedureCommand.setProcedureName(fullName);
 			
-			List metadataParams = storedProcedureInfo.getParameters();
+			List<SPParameter> metadataParams = storedProcedureInfo.getParameters();
 			
 			Query procQuery = new Query();
 			From from = new From();
@@ -474,8 +474,7 @@ public class SimpleQueryResolver implements CommandResolver {
 			
 			int paramIndex = 1;
 			
-			for(Iterator paramIter = metadataParams.iterator(); paramIter.hasNext();){
-			    SPParameter metadataParameter  = (SPParameter)paramIter.next();
+			for (SPParameter metadataParameter : metadataParams) {
 			    SPParameter clonedParam = (SPParameter)metadataParameter.clone();
 			    if (clonedParam.getParameterType()==ParameterInfo.IN || metadataParameter.getParameterType()==ParameterInfo.INOUT) {
 			        ElementSymbol paramSymbol = clonedParam.getParameterSymbol();
@@ -499,12 +498,11 @@ public class SimpleQueryResolver implements CommandResolver {
 			
 			QueryResolver.resolveCommand(procQuery, Collections.EMPTY_MAP, metadata.getMetadata(), analysis);
 			
-			List projectedSymbols = procQuery.getProjectedSymbols();
+			List<SingleElementSymbol> projectedSymbols = procQuery.getProjectedSymbols();
 			
 			HashSet<String> foundNames = new HashSet<String>();
 			
-			for (Iterator i = projectedSymbols.iterator(); i.hasNext();) {
-			    SingleElementSymbol ses = (SingleElementSymbol)i.next();
+			for (SingleElementSymbol ses : projectedSymbols) {
 			    if (!foundNames.add(ses.getShortCanonicalName())) {
 			        throw new QueryResolverException(QueryPlugin.Util.getString("SimpleQueryResolver.Proc_Relational_Name_conflict", fullName)); //$NON-NLS-1$                            
 			    }

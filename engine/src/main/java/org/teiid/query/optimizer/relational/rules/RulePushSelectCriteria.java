@@ -523,7 +523,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         return false;
 	}
 
-	void collectUnionChildren(PlanNode unionNode, LinkedList<PlanNode> unionChildren) {
+	static void collectUnionChildren(PlanNode unionNode, List<PlanNode> unionChildren) {
 	    for (PlanNode child : unionNode.getChildren()) {
 	        if(child.getType() == NodeConstants.Types.SET_OP) {
 	            collectUnionChildren(child, unionChildren);
