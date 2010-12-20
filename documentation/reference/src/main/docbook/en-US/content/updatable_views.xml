@@ -27,7 +27,8 @@
 	</itemizedlist>
 	
 	<para>A UNION ALL can define an inherently updatable view only if each of the UNION branches is itself inherently updatable.  
-	A view defined by a UNION ALL though does not support inherent INSERTs.</para>
+	A view defined by a UNION ALL can support inherent INSERTs if it is a <xref linkend="partitioned_union"/> and 
+	the INSERT specifies values that belong to a single partition.</para>
 	
 	<para>Any view column that is not mapped directly to a column is not updatable and cannot be targeted by an UPDATE set
 	 clause or be an INSERT column.</para>

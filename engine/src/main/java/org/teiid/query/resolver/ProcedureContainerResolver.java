@@ -235,20 +235,16 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 		if(!procCommand.getGroup().isTempGroupSymbol() && metadata.isVirtualGroup(procCommand.getGroup().getMetadataID())) {
             String plan = getPlan(metadata, procCommand.getGroup());
             if (plan == null && !metadata.isProcedure(procCommand.getGroup().getMetadataID())) {
-            	UpdateInfo info = getUpdateInfo(procCommand.getGroup(), metadata);
             	int type = procCommand.getType();
-        		if ((info.isDeleteValidationError() && type == Command.TYPE_DELETE) 
-        				|| (info.isUpdateValidationError() && type == Command.TYPE_UPDATE) 
-        				|| (info.isInsertValidationError() && type == Command.TYPE_INSERT)) {
-        			throw new QueryResolverException("ERR.015.008.0009", QueryPlugin.Util.getString("ERR.015.008.0009", procCommand.getGroup(), procCommand.getClass().getSimpleName())); //$NON-NLS-1$ //$NON-NLS-2$
-        		}
+            	//force validation
+            	getUpdateInfo(procCommand.getGroup(), metadata, type);
             }
             return plan;
         }
 		return null;
 	}
 	
-	public static UpdateInfo getUpdateInfo(GroupSymbol group, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException, QueryResolverException {
+	public static UpdateInfo getUpdateInfo(GroupSymbol group, QueryMetadataInterface metadata, int type) throws QueryMetadataException, TeiidComponentException, QueryResolverException {
 		//if this is not a view, just return null
 		if(group.isTempGroupSymbol() || !metadata.isVirtualGroup(group.getMetadataID())) {
 			return null;
@@ -268,6 +264,18 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
     		}
     		metadata.addToMetadataCache(group.getMetadataID(), "UpdateInfo", info); //$NON-NLS-1$
     	}
+    	
+    	if ((info.isDeleteValidationError() && type == Command.TYPE_DELETE) 
+				|| (info.isUpdateValidationError() && type == Command.TYPE_UPDATE) 
+				|| (info.isInsertValidationError() && type == Command.TYPE_INSERT)) {
+    		String name = "Delete"; //$NON-NLS-1$
+    		if (type == Command.TYPE_UPDATE) {
+    			name = "Update"; //$NON-NLS-1$
+    		} else if (type == Command.TYPE_INSERT) {
+    			name = "Insert"; //$NON-NLS-1$
+    		}
+			throw new QueryResolverException("ERR.015.008.0009", QueryPlugin.Util.getString("ERR.015.008.0009", group, name)); //$NON-NLS-1$ //$NON-NLS-2$
+		}
     	return info;
 	}
     
@@ -283,7 +291,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         // Resolve group so we can tell whether it is an update procedure
         GroupSymbol group = procCommand.getGroup();
         ResolverUtil.resolveGroup(group, metadata);
-        procCommand.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(group, metadata));
+        procCommand.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(group, metadata, procCommand.getType()));
     }
 
 	public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List symbols) {

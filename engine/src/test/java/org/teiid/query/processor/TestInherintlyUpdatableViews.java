@@ -131,5 +131,16 @@ public class TestInherintlyUpdatableViews {
 		helpTest(userSql, viewSql, "CREATE PROCEDURE\nBEGIN\nLOOP ON (SELECT pm1.g2.e2 AS s_0 FROM pm1.g1 INNER JOIN pm1.g2 ON g1.e1 = g2.e1 WHERE pm1.g2.e2 < 10) AS X\nBEGIN\nDELETE FROM pm1.g2 WHERE pm1.g2.e2 = X.s_0;\nVARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\nEND\nEND",
 				dm);
 	}
+	
+	/**
+	 * Here we should use the partitioning
+	 * @throws Exception
+	 */
+	@Test public void testInsertPartitionedUnion() throws Exception {
+		String userSql = "insert into vm1.gx (e1, e2) values (1, 2)"; //$NON-NLS-1$
+    	String viewSql = "select 1 as e1, e2 from pm1.g1 union all select 2 as e1, e2 from pm1.g2";
+        String expectedSql = "INSERT INTO pm1.g1 (e2) VALUES (2)";
+        helpTest(userSql, viewSql, expectedSql, null);	
+	}
 
 }

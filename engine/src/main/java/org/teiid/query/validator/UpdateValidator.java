@@ -22,27 +22,31 @@
 
 package org.teiid.query.validator;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
+import org.teiid.query.optimizer.relational.PartitionAnalyzer;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.UnaryFromClause;
-import org.teiid.query.sql.lang.SetQuery.Operation;
+import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -54,6 +58,8 @@ import org.teiid.query.sql.util.SymbolMap;
  * the virtual group is always a <code>Query</code>. This object visits various parts of
  * this <code>Query</code> and verifies if the virtual group definition will allows it to be
  * updated.</p>
+ * 
+ * TODO: add insert support based upon partitioning
  */
 public class UpdateValidator {
 	
@@ -111,8 +117,13 @@ public class UpdateValidator {
 		private UpdateType insertType;
 		private boolean insertValidationError;
 		private Query view;
+		private Map<ElementSymbol, List<Set<Constant>>> partitionInfo;
 		private List<UpdateInfo> unionBranches = new LinkedList<UpdateInfo>();
 		
+		public Map<ElementSymbol, List<Set<Constant>>> getPartitionInfo() {
+			return partitionInfo;
+		}
+		 
 		public boolean isSimple() {
 			return isSimple;
 		}
@@ -154,12 +165,65 @@ public class UpdateValidator {
 		}
 		
 		public UpdateMapping findUpdateMapping(Collection<ElementSymbol> updateCols, boolean insert) {
+			if (updateCols.isEmpty() && this.updatableGroups.size() > 1) {
+				return null;
+			}
 			for (UpdateMapping entry : this.updatableGroups.values()) {
 				if (((insert && entry.insertAllowed) || (!insert && entry.updateAllowed)) && entry.updatableViewSymbols.keySet().containsAll(updateCols)) {
 					return entry;
 				}
 			}
 			return null;
+		}
+		
+		public UpdateMapping findInsertUpdateMapping(Insert insert, boolean rewrite) throws QueryValidatorException {
+			if (getUnionBranches().isEmpty()) {
+				return findUpdateMapping(insert.getVariables(), true);	
+			}
+			if (insert.getQueryExpression() != null) {
+				//TODO: this could be done in a loop, see about adding a validation
+				throw new QueryValidatorException(QueryPlugin.Util.getString("ValidationVisitor.insert_qe_partition", insert.getGroup())); //$NON-NLS-1$
+			}
+			int partition = -1;
+			List<ElementSymbol> filteredColumns = new LinkedList<ElementSymbol>();
+			for (Map.Entry<ElementSymbol, List<Set<Constant>>> entry : partitionInfo.entrySet()) {
+				int index = insert.getVariables().indexOf(entry.getKey());
+				if (index == -1) {
+					continue;
+				}
+				Expression value = (Expression)insert.getValues().get(index);
+				if (!(value instanceof Constant)) {
+					continue;
+				}
+				for (int i = 0; i < entry.getValue().size(); i++) {
+					if (entry.getValue().get(i).contains(value)) {
+						if (entry.getValue().get(i).size() == 1) {
+							filteredColumns.add(entry.getKey());
+						}
+						if (partition == -1) {
+							partition = i;
+						} else if (partition != i) {
+							throw new QueryValidatorException(QueryPlugin.Util.getString("ValidationVisitor.insert_no_partition", insert.getGroup(), insert.getVariables())); //$NON-NLS-1$
+						}
+					}
+				}
+			}
+			if (partition == -1) {
+				throw new QueryValidatorException(QueryPlugin.Util.getString("ValidationVisitor.insert_no_partition", insert.getGroup(), insert.getVariables())); //$NON-NLS-1$
+			}
+			UpdateInfo info = this;
+			if (partition > 0) {
+				info = info.getUnionBranches().get(partition - 1);
+			}
+			List<ElementSymbol> variables = rewrite?insert.getVariables():new ArrayList<ElementSymbol>(insert.getVariables());
+			for (ElementSymbol elementSymbol : filteredColumns) {
+				int index = insert.getVariables().indexOf(elementSymbol);
+				variables.remove(index);
+				if (rewrite) {
+					insert.getValues().remove(index);
+				}
+			}
+			return info.findUpdateMapping(variables, true);
 		}
 		
 		public Query getViewDefinition() {
@@ -229,15 +293,43 @@ public class UpdateValidator {
         		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0013"), true, true, true); //$NON-NLS-1$
         		return;
         	}
-        	if (setQuery.getOperation() != Operation.UNION || !setQuery.isAll()) {
-        		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0001"), true, true, true); //$NON-NLS-1$
-        		return;
+    		LinkedList<Query> queries = new LinkedList<Query>();
+    		if (!PartitionAnalyzer.extractQueries((SetQuery)command, queries)) {
+    			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0001"), true, true, true); //$NON-NLS-1$
+        		return;    			
+    		}
+        	Map<ElementSymbol, List<Set<Constant>>> partitions = PartitionAnalyzer.extractPartionInfo((SetQuery)command, viewSymbols);
+        	this.updateInfo.partitionInfo = partitions;
+        	if (partitions.isEmpty()) {
+        		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0018"), false, true, false); //$NON-NLS-1$
         	}
-        	validateBranch(viewSymbols, setQuery.getLeftQuery());
-        	validateBranch(viewSymbols, setQuery.getRightQuery());
+        	boolean first = true;
+        	for (Query query : queries) {
+        		UpdateInfo ui = this.updateInfo;
+        		if (!first) {
+	        		this.updateInfo = new UpdateInfo();
+	        		this.updateInfo.deleteType = ui.deleteType;
+	        		this.updateInfo.insertType = ui.insertType;
+	        		this.updateInfo.updateType = ui.updateType;
+        		}
+            	internalValidate(query, viewSymbols);
+        		//accumulate the errors on the first branch - will be checked at resolve time
+        		ui.deleteValidationError |= this.updateInfo.deleteValidationError;
+        		ui.updateValidationError |= this.updateInfo.updateValidationError;
+        		ui.insertValidationError |= this.updateInfo.insertValidationError;
+        		if (!first) {
+        			ui.unionBranches.add(this.updateInfo);
+        			this.updateInfo = ui;
+        		} else {
+        			first = false;
+        		}
+			}
         	return;
     	}
-    	
+    	internalValidate(command, viewSymbols);
+    }
+	
+    private void internalValidate(Command command, List<ElementSymbol> viewSymbols) throws QueryMetadataException, TeiidComponentException {
     	if (!(command instanceof Query)) {
     		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0001"), true, true, true); //$NON-NLS-1$
     		return;
@@ -251,7 +343,7 @@ public class UpdateValidator {
     	}
     	
     	if (query.getWith() != null) {
-    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0002"), true, true, true); //$NON-NLS-1$
+    		report.handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0002")); //$NON-NLS-1$
     		updateInfo.isSimple = false;
     	}
 
@@ -364,35 +456,6 @@ public class UpdateValidator {
     	}
     }
 
-	private void validateBranch(List<ElementSymbol> viewSymbols,
-			QueryCommand query) throws QueryMetadataException,
-			TeiidComponentException {
-		if (!this.updateInfo.insertValidationError) {
-    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0018"), false, true, false); //$NON-NLS-1$
-    	}
-		if (!this.updateInfo.isInherentDelete() && !this.updateInfo.isInherentUpdate()) {
-			return; //don't bother
-		}
-		UpdateValidator uv = this;
-		if (this.updateInfo.view != null) {
-			uv = new UpdateValidator(metadata, null, null, null);
-			uv.updateInfo.deleteType = this.updateInfo.deleteType;
-			uv.updateInfo.insertType = this.updateInfo.insertType;
-			uv.updateInfo.updateType = this.updateInfo.updateType;
-		}
-		uv.validate(query, viewSymbols);
-		if (uv != this) {
-			UpdateInfo info = uv.getUpdateInfo();
-			this.updateInfo.deleteValidationError |= info.deleteValidationError;
-			this.updateInfo.updateValidationError |= info.updateValidationError;
-			if (info.view != null) {
-				this.updateInfo.unionBranches.add(info);
-			} else {
-				this.updateInfo.unionBranches.addAll(info.unionBranches);
-			}
-		}
-	}
-    
     private void setUpdateFlags(GroupSymbol groupSymbol) throws QueryMetadataException, TeiidComponentException {
     	UpdateMapping info = updateInfo.updatableGroups.get(groupSymbol.getCanonicalName());
 

@@ -2547,8 +2547,8 @@ public class QueryRewriter {
 	private Insert rewriteInsert(Insert insert) throws TeiidComponentException, TeiidProcessingException{
 		UpdateInfo info = insert.getUpdateInfo();
 		if (info != null && info.isInherentInsert()) {
-			//pass through
-			UpdateMapping mapping = info.findUpdateMapping(insert.getVariables(), false);
+			//TODO: update error messages
+			UpdateMapping mapping = info.findInsertUpdateMapping(insert, true);
 			if (mapping == null) {
 				throw new QueryValidatorException(QueryPlugin.Util.getString("ValidationVisitor.nonUpdatable", insert.getVariables())); //$NON-NLS-1$
 			}
@@ -2559,7 +2559,7 @@ public class QueryRewriter {
 			}
 			insert.setVariables(mappedSymbols);
 			insert.setGroup(mapping.getGroup().clone());
-			insert.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(insert.getGroup(), metadata));
+			insert.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(insert.getGroup(), metadata, Command.TYPE_INSERT));
 			return rewriteInsert(insert);
 		}
 
@@ -2731,7 +2731,7 @@ public class QueryRewriter {
 				update.setCriteria(Criteria.combineCriteria(update.getCriteria(), (Criteria)info.getViewDefinition().getCriteria().clone()));
 			}
 			//resolve
-			update.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(update.getGroup(), metadata));
+			update.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(update.getGroup(), metadata, Command.TYPE_UPDATE));
 			return rewriteUpdate(update);
 		} 
 		Query query = (Query)info.getViewDefinition().clone();
@@ -2893,7 +2893,7 @@ public class QueryRewriter {
 			delete.setGroup(mapping.getGroup().clone());
 			//TODO: properly handle correlated references
 			DeepPostOrderNavigator.doVisit(delete, new ExpressionMappingVisitor(mapping.getUpdatableViewSymbols(), true));
-			delete.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(delete.getGroup(), metadata));
+			delete.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(delete.getGroup(), metadata, Command.TYPE_DELETE));
 			if (info.getViewDefinition().getCriteria() != null) {
 				delete.setCriteria(Criteria.combineCriteria(delete.getCriteria(), (Criteria)info.getViewDefinition().getCriteria().clone()));
 			}

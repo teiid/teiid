@@ -887,6 +887,7 @@ public class RelationalPlanner {
 			SymbolMap map = SymbolMap.createSymbolMap(group, projectCols, metadata);
 			node.setProperty(NodeConstants.Info.SYMBOL_MAP, map);
 			if (nestedCommand instanceof SetQuery) {
+				//TODO: should cache for views
 				Map<ElementSymbol, List<Set<Constant>>> partitionInfo = PartitionAnalyzer.extractPartionInfo((SetQuery)nestedCommand, map.getKeys());
 				node.setProperty(NodeConstants.Info.PARTITION_INFO, partitionInfo);
 			}

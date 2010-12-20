@@ -244,10 +244,13 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         	validateMultisourceInsert(obj.getGroup());
         }
         if (obj.getUpdateInfo() != null && obj.getUpdateInfo().isInherentInsert()) {
-	        Collection<ElementSymbol> updateCols = obj.getVariables();
-	    	if (obj.getUpdateInfo().findUpdateMapping(updateCols, false) == null) {
-	    		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.nonUpdatable", updateCols), obj); //$NON-NLS-1$
-	    	}
+        	try {
+				if (obj.getUpdateInfo().findInsertUpdateMapping(obj, false) == null) {
+					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.nonUpdatable", obj.getVariables()), obj); //$NON-NLS-1$
+				}
+			} catch (QueryValidatorException e) {
+				handleValidationError(e.getMessage(), obj);
+			}
         }
     }
 

@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
-[
-	<!ENTITY access_pattern "<link linkend='access_patterns'>access patterns</link>">
-]>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="federated_planning">
   <title>Federated Planning</title>
   <para>Teiid at its core is a federated relational query
@@ -173,7 +170,7 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
         data retrieved from the second source and the number of join
         comparisons that must be performed.</para>
       <para> The conditions when a dependent join is used are determined
-        by the query planner based on &access_pattern;, hints, and
+        by the query planner based on <xref linkend='access_patterns'/>, hints, and
         costing information.</para>
       <para>
         Teiid supports the MAKEDEP and MAKENOTDEP hints. Theses are
@@ -181,7 +178,7 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
         <link linkend="option_clause">OPTION clause</link>
         or directly in the
         <link linkend="from_clause">FROM clause</link>
-        . As long as all &access_patterns; can be met, the MAKEDEP and
+        . As long as all <xref linkend='access_patterns'/> can be met, the MAKEDEP and
         MAKENOTDEP hints override any use of costing information.
       </para>
       <tip>
@@ -247,6 +244,18 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
 		  and whose rows under go a distinct operation will automatically be
 		  treated as an optional join and does not require a hint.</para>
       </tip>
+    </section>
+    <section id="partitioned_union">
+      <title>Partitioned Union</title>
+      <para>Union partitioning is inferred from the transformation/inline view. If one (or more) of the UNION columns is defined by constants and/or has WHERE clause IN predicates containing only constants 
+      that make each branch mutually exclusive, then the UNION is considered partitioned.  
+      UNION ALL must be used and the UNION cannot have a LIMIT, WITH, or ORDER BY clause (although individual branches may use LIMIT, WITH, or ORDER BY).
+      Partitioning values should not be null.    
+      For example the view definition "select 1 as x, y from foo union all select z, a from foo1 where z in (2, 3)" would be considered partitioned on column x, 
+      since the first branch can only be the value 1 and the second branch can only be the values 2 or 3.   
+      Note that more advanced or explicit partition could be considered in the future.  
+      The concept of a partitioned union is used for performing partition-wise joins and in <xref linkend="updatable_views"/>.
+	</para>
     </section>
     <section id="standard_relational_techniques">
       <title>Standard Relational Techniques</title>
@@ -697,7 +706,7 @@ System.out.println(queryPlan);</programlisting>
             gets pushed to the source.  Later rules focus on either pushing stuff
             under the access or pulling the access node up the tree to move more
             work down to the data sources.  This rule is also responsible for
-            placing &access_patterns;.</para>
+            placing <xref linkend='access_patterns'/>.</para>
             </listitem>
             <listitem>
           <para>RulePushSelectCriteria - pushes select criteria down through
@@ -813,9 +822,9 @@ System.out.println(queryPlan);</programlisting>
         <listitem>
         <para>RulePlanJoins – this rule attempts to find an optimal
           ordering of the joins performed in the plan, while ensuring that
-          &access_patterns; dependencies are met.  This rule has three main
+          <xref linkend='access_patterns'/> dependencies are met.  This rule has three main
           steps.  First it must determine an ordering of joins that satisfy
-          the &access_patterns; present.  Second it will heuristically create
+          the access patterns present.  Second it will heuristically create
           joins that can be pushed to the source (if a set of joins are pushed
           to the source, we will not attempt to create an optimal ordering
           within that set.  More than likely it will be sent to the source in
@@ -913,6 +922,11 @@ System.out.println(queryPlan);</programlisting>
           than the default strategy, which is a nested loop join.  Ideally the
           choice of a hash join would also be evaluated here.  Also costing
           should be used to determine the strategy cost.  </para>
+        </listitem>
+        <listitem>
+        <para>RuleDecomposeJoin - this rule perfomrs a partition-wise join optimization on joins of <xref linkend="partitioned_union"/>.  
+        The decision to decompose is based upon detecting that each side of the join is a partitioned union (note that non-ansi joins of more than 2 tables may cause the optimization to not detect the appropriate join). 
+        The rule currently only looks for situations where at most 1 partition matches from each side.</para>
         </listitem>
             <listitem>
         <para>RuleCollapseSource - this rule removes all nodes below an

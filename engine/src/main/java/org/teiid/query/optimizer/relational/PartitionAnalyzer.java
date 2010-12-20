@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
@@ -92,10 +93,10 @@ public class PartitionAnalyzer {
 		return partitions;
 	}
 	
-	private static boolean extractQueries(QueryCommand queryCommand, List<Query> result) {
+	public static boolean extractQueries(QueryCommand queryCommand, List<Query> result) {
 		if (queryCommand instanceof SetQuery) {
 			SetQuery sq = (SetQuery)queryCommand;
-			if (sq.isAll() && sq.getOperation() == Operation.UNION && sq.getOrderBy() == null && sq.getLimit() == null) {
+			if (sq.isAll() && sq.getOperation() == Operation.UNION && sq.getOrderBy() == null && sq.getLimit() == null && sq.getWith() == null) {
 				if (!extractQueries(sq.getLeftQuery(), result)) {
 					return false;
 				}
@@ -136,7 +137,9 @@ public class PartitionAnalyzer {
 		Map<ElementSymbol, Set<Constant>> result = new HashMap<ElementSymbol, Set<Constant>>();
 		for (int i = 0; i < projected.size(); i++) {
 			Expression ex = SymbolMap.getExpression(projected.get(i));
-			
+			if (DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(ex.getType()))) {
+				continue;
+			}
 			if (ex instanceof Constant) {
 				result.put(projectedSymbols.get(i), Collections.singleton((Constant)ex));
 			} else {

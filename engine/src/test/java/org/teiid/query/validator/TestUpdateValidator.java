@@ -160,19 +160,19 @@ public class TestUpdateValidator {
         Table vm1g5 = RealMetadataFactory.createVirtualGroup("g5", vm1, vm1g5n1); //$NON-NLS-1$
 
 		// Create virtual elements
-		List<Column> vm1g1e = RealMetadataFactory.createElements(vm1g1, 
+		RealMetadataFactory.createElements(vm1g1, 
 			new String[] { "a", "e2"}, //$NON-NLS-1$ //$NON-NLS-2$
 			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER});
-		List<Column> vm1g2e = RealMetadataFactory.createElements(vm1g2, 
+		RealMetadataFactory.createElements(vm1g2, 
 			new String[] { "e1", "e2","e3", "e4"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-        List<Column> vm1g3e = RealMetadataFactory.createElements(vm1g3, 
+        RealMetadataFactory.createElements(vm1g3, 
             new String[] { "e1", "e2"}, //$NON-NLS-1$ //$NON-NLS-2$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER,  });
-        List<Column> vm1g4e = RealMetadataFactory.createElements(vm1g4, 
+        RealMetadataFactory.createElements(vm1g4, 
             new String[] { "e1", "e3"}, //$NON-NLS-1$ //$NON-NLS-2$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.BOOLEAN });
-        List<Column> vm1g5e = RealMetadataFactory.createElements(vm1g5, 
+        RealMetadataFactory.createElements(vm1g5, 
             new String[] { "e2","e3"}, //$NON-NLS-1$ //$NON-NLS-2$
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN });
 
@@ -334,6 +334,11 @@ public class TestUpdateValidator {
     @Test public void testUnionAll() {
         helpTest("SELECT g1.e1, x.e2 FROM pm1.g2 x inner join pm1.g1 on (x.e1 = g1.e1) union all select pm1.g2.e1, pm1.g2.e2 from pm1.g2",
             example1(), true, false, false); //$NON-NLS-1$
+    }
+    
+    @Test public void testParitionedUnionAll() {
+        helpTest("SELECT g1.e1, x.e2 FROM pm1.g2 x inner join pm1.g1 on (x.e1 = g1.e1) where x.e2 in (1, 2) union all select pm1.g2.e1, pm1.g2.e2 from pm1.g2 where pm1.g2.e2 in (3, 4)",
+            example1(), false, false, false); //$NON-NLS-1$
     }
 
 }
