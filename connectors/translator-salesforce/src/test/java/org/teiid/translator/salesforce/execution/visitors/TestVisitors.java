@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Select;
@@ -40,10 +41,14 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.salesforce.Constants;
+import org.teiid.translator.salesforce.SalesforceConnection;
+import org.teiid.translator.salesforce.execution.QueryExecutionImpl;
 import org.teiid.translator.salesforce.execution.visitors.JoinQueryVisitor;
 import org.teiid.translator.salesforce.execution.visitors.SelectVisitor;
 
-
+@SuppressWarnings("nls")
 public class TestVisitors {
 
     public static QueryMetadataInterface exampleSalesforce() { 
@@ -52,9 +57,10 @@ public class TestVisitors {
         Schema salesforceModel = RealMetadataFactory.createPhysicalModel("SalesforceModel", store); //$NON-NLS-1$
        
         // Create Account group
-        Table accounTable = RealMetadataFactory.createPhysicalGroup("Account", salesforceModel); //$NON-NLS-1$
-        accounTable.setNameInSource("Account"); //$NON-NLS-1$
-        accounTable.setProperty("Supports Query", Boolean.TRUE.toString()); //$NON-NLS-1$
+        Table accountTable = RealMetadataFactory.createPhysicalGroup("Account", salesforceModel); //$NON-NLS-1$
+        accountTable.setNameInSource("Account"); //$NON-NLS-1$
+        accountTable.setProperty("Supports Query", Boolean.TRUE.toString()); //$NON-NLS-1$
+        accountTable.setProperty(Constants.SUPPORTS_RETRIEVE, Boolean.TRUE.toString());
         // Create Account Columns
         String[] acctNames = new String[] {
             "ID", "Name", "Stuff", "Industry"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
@@ -63,7 +69,7 @@ public class TestVisitors {
             DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING
         };
         
-        List<Column> acctCols = RealMetadataFactory.createElements(accounTable, acctNames, acctTypes);
+        List<Column> acctCols = RealMetadataFactory.createElements(accountTable, acctNames, acctTypes);
         acctCols.get(2).setNativeType("multipicklist"); //$NON-NLS-1$
         acctCols.get(2).setSearchType(SearchType.Like_Only);
         // Set name in source on each column
@@ -169,6 +175,14 @@ public class TestVisitors {
 		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
 		visitor.visit(command);
 		assertEquals("SELECT Contact.ContactName FROM Contact WHERE ContactName IN('x','y')", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+	}
+	
+	@Test public void testIDCriteria() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("select id, name from Account where id = 'bar'"); //$NON-NLS-1$
+		SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
+		QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, translationUtility.createRuntimeMetadata(), Mockito.mock(ExecutionContext.class));
+		qei.execute();
+		Mockito.verify(sfc).retrieve("Account.id, Account.AccountName", "Account", Arrays.asList("bar"));
 	}
 
 }
