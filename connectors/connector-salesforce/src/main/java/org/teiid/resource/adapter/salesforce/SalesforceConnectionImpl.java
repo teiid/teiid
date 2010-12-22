@@ -80,7 +80,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			try {
 				return sfSoap.getUserInfo(sh).getUserName();
 			} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
-				throw new ResourceException(e.getMessage());
+				throw new ResourceException(e);
 			}
 	}
 	
@@ -108,11 +108,11 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 				((BindingProvider)sfSoap).getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, url.toExternalForm());
 				loginResult = sfSoap.login(username, password);
 			} catch (LoginFault e) {
-				throw new ResourceException(e.getCause().getMessage());
+				throw new ResourceException(e);
 			} catch (InvalidIdFault e) {
-				throw new ResourceException(e.getCause().getMessage());
+				throw new ResourceException(e);
 			} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
-				throw new ResourceException(e.getCause().getMessage());
+				throw new ResourceException(e);
 			}
 			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Login was successful for username " + username); //$NON-NLS-1$
 
@@ -130,7 +130,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			try {
 				sfSoap.getUserInfo(sh);
 			} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
-				throw new ResourceException(e.getMessage());
+				throw new ResourceException(e);
 			}
 		}
 	}
@@ -171,17 +171,17 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 				qr = sfSoap.query(queryString, sh);
 			}
 		} catch (InvalidFieldFault e) {
-			throw new ResourceException(e.getMessage(), e);
+			throw new ResourceException(e);
 		} catch (MalformedQueryFault e) {
-			throw new ResourceException(e.getMessage(), e);
+			throw new ResourceException(e);
 		} catch (com.sforce.soap.partner.InvalidSObjectFault e) {
-			throw new ResourceException(e.getMessage(), e);
+			throw new ResourceException(e);
 		} catch (InvalidIdFault e) {
-			throw new ResourceException(e.getMessage(), e);
+			throw new ResourceException(e);
 		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
-			throw new ResourceException(e.getMessage(), e);
+			throw new ResourceException(e);
 		} catch (com.sforce.soap.partner.InvalidQueryLocatorFault e) {
-			throw new ResourceException(e.getMessage(), e);
+			throw new ResourceException(e);
 		}
 		return qr;
 	}
@@ -192,11 +192,11 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		try {
 			return sfSoap.queryMore(queryLocator, sh);
 		} catch (InvalidFieldFault e) {
-			throw new ResourceException(e.getMessage(), e);
+			throw new ResourceException(e);
 		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
-			throw new ResourceException(e.getMessage(), e);
+			throw new ResourceException(e);
 		} catch (com.sforce.soap.partner.InvalidQueryLocatorFault e) {
-			throw new ResourceException(e.getMessage(), e);
+			throw new ResourceException(e);
 		}
 		
 	}
@@ -206,7 +206,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		try {
 			results = sfSoap.delete(Arrays.asList(ids), sh);
 		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
-			throw new ResourceException(e.getMessage(), e);
+			throw new ResourceException(e);
 		}
 		
 		boolean allGood = true;
@@ -244,13 +244,13 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		try {
 			result = sfSoap.create(objects, sh);
 		} catch (InvalidFieldFault e) {
-			throw new ResourceException(e.getMessage(), e);
+			throw new ResourceException(e);
 		} catch (com.sforce.soap.partner.InvalidSObjectFault e) {
-			throw new ResourceException(e.getMessage(), e);
+			throw new ResourceException(e);
 		} catch (InvalidIdFault e) {
-			throw new ResourceException(e.getMessage(), e);
+			throw new ResourceException(e);
 		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
-			throw new ResourceException(e.getMessage(), e);
+			throw new ResourceException(e);
 		}
 		return analyzeResult(result);
 	}
@@ -269,13 +269,13 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			try {
 				result = sfSoap.update(params, sh);
 			} catch (InvalidFieldFault e) {
-				throw new ResourceException(e.getMessage(),e);
+				throw new ResourceException(e);
 			} catch (com.sforce.soap.partner.InvalidSObjectFault e) {
-				throw new ResourceException(e.getMessage(),e);
+				throw new ResourceException(e);
 			} catch (InvalidIdFault e) {
-				throw new ResourceException(e.getMessage(),e);
+				throw new ResourceException(e);
 			} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
-				throw new ResourceException(e.getMessage(),e);
+				throw new ResourceException(e);
 			}
 		return analyzeResult(result);
 	}
@@ -294,9 +294,9 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			try {
 				updated = sfSoap.getUpdated(objectType, startDate, endDate, sh);
 			} catch (com.sforce.soap.partner.InvalidSObjectFault e) {
-				throw new ResourceException(e.getMessage(), e);
+				throw new ResourceException(e);
 			} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
-				throw new ResourceException(e.getMessage(), e);
+				throw new ResourceException(e);
 			}
 			UpdatedResult result = new UpdatedResult(); 
 			result.setLatestDateCovered(updated.getLatestDateCovered().toGregorianCalendar());
@@ -310,9 +310,9 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			try {
 				deleted = sfSoap.getDeleted(objectName, startCalendar, endCalendar, sh);
 			} catch (com.sforce.soap.partner.InvalidSObjectFault e) {
-				throw new ResourceException(e.getMessage(), e);
+				throw new ResourceException(e);
 			} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
-				throw new ResourceException(e.getMessage(), e);
+				throw new ResourceException(e);
 			}
 			DeletedResult result = new DeletedResult();
 			result.setLatestDateCovered(deleted.getLatestDateCovered().toGregorianCalendar());
@@ -338,17 +338,18 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			QueryResult result = new QueryResult();
 			result.getRecords().addAll(objects);
 			result.setSize(objects.size());
+			result.setDone(true);
 			return result;			
 		} catch (InvalidFieldFault e) {
-			throw new ResourceException(e.getMessage(),e);
+			throw new ResourceException(e);
 		} catch (MalformedQueryFault e) {
-			throw new ResourceException(e.getMessage(), e);
+			throw new ResourceException(e);
 		} catch (com.sforce.soap.partner.InvalidSObjectFault e) {
-			throw new ResourceException(e.getMessage(), e);
+			throw new ResourceException(e);
 		} catch (InvalidIdFault e) {
-			throw new ResourceException(e.getMessage(), e);
+			throw new ResourceException(e);
 		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
-			throw new ResourceException(e.getMessage(),e);
+			throw new ResourceException(e);
 		}
 		
 	}
@@ -357,9 +358,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		try {
 			return sfSoap.describeGlobal(sh);
 		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
-			ResourceException ce = new ResourceException(e.getCause().getMessage());
-			ce.initCause(e.getCause());
-			throw ce;
+			throw new ResourceException(e);
 		}
 	}
 
@@ -367,9 +366,9 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		try {
 			return sfSoap.describeSObject(objectName, sh);
 		} catch (com.sforce.soap.partner.InvalidSObjectFault e) {
-			throw new ResourceException(e.getMessage(), e);
+			throw new ResourceException(e);
 		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
-			throw new ResourceException(e.getMessage(), e);
+			throw new ResourceException(e);
 		}
 	}
 
