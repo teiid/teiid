@@ -23,7 +23,6 @@
 package org.teiid.query.optimizer.relational.rules;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -39,6 +38,7 @@ import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Delete;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 
@@ -102,11 +102,8 @@ public final class RuleAccessPatternValidation implements OptimizerRule {
         List accessPatterns = (List)node.getProperty(NodeConstants.Info.ACCESS_PATTERNS);
         
         if (criteria != null) {
-            List crits = Criteria.separateCriteriaByAnd(criteria);
-            
-            for(Iterator i = crits.iterator(); i.hasNext();) {
-                Criteria crit = (Criteria)i.next();
-                Collection elements = ElementCollectorVisitor.getElements(crit, true);
+            for(Criteria crit : Criteria.separateCriteriaByAnd(criteria)) {
+                Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(crit, true);
                 
                 if (RulePushSelectCriteria.satisfyAccessPatterns(accessPatterns, elements)) {
                     return;

@@ -51,7 +51,6 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -87,49 +86,45 @@ public class RuleDecomposeJoin implements OptimizerRule {
 			throws QueryPlannerException, QueryMetadataException,
 			TeiidComponentException {
 		
-		for (PlanNode unionNode : NodeEditor.findAllNodes(plan, NodeConstants.Types.SET_OP, NodeConstants.Types.SET_OP | NodeConstants.Types.ACCESS)) {
-			plan = decomposeJoin(unionNode, plan, metadata, context);
+		for (PlanNode joinNode : NodeEditor.findAllNodes(plan, NodeConstants.Types.JOIN, NodeConstants.Types.ACCESS)) {
+			plan = decomposeJoin(joinNode, plan, metadata, context);
 		}
 		
 		return plan;
 	}
 	
-	public PlanNode decomposeJoin(PlanNode unionNode, PlanNode root, QueryMetadataInterface metadata, CommandContext context) throws TeiidComponentException, QueryPlannerException {
-        Operation op = (Operation)unionNode.getProperty(NodeConstants.Info.SET_OPERATION);
-        
-		if (op != Operation.UNION
-				|| unionNode.getParent() == null 
-				|| unionNode.getParent().getType() != NodeConstants.Types.SOURCE 
-				|| unionNode.getParent().getParent().getType() != NodeConstants.Types.JOIN) {
-			return root;
-		}
-		
-		PlanNode joinNode = unionNode.getParent().getParent();
-		
+	public PlanNode decomposeJoin(PlanNode joinNode, PlanNode root, QueryMetadataInterface metadata, CommandContext context) throws TeiidComponentException, QueryPlannerException {
 		//TODO: should be done based upon join region to allow more than a 2-way non-ansi join
-		
 		JoinType joinType = (JoinType)joinNode.getProperty(Info.JOIN_TYPE);
 		if (joinType != JoinType.JOIN_INNER) {
 			return root;
 		}
+
+		PlanNode left = joinNode.getFirstChild();
+		if (left.getType() != NodeConstants.Types.SOURCE) {
+			return root;
+		}
 		
-		Map<ElementSymbol, List<Set<Constant>>> partitionInfo = (Map<ElementSymbol, List<Set<Constant>>>)unionNode.getParent().getProperty(Info.PARTITION_INFO);
+		Map<ElementSymbol, List<Set<Constant>>> partitionInfo = (Map<ElementSymbol, List<Set<Constant>>>)left.getProperty(Info.PARTITION_INFO);
 		
 		if (partitionInfo == null) {
 			return root;
 		}
-		
-		boolean left = unionNode == unionNode.getParent().getFirstChild();
-		
-		PlanNode otherSide = left?joinNode.getLastChild():joinNode.getFirstChild();
-		
-		if (otherSide.getType() != NodeConstants.Types.SOURCE) {
+
+		PlanNode unionNode = left.getFirstChild();
+		if (unionNode.getType() != NodeConstants.Types.SET_OP) {
 			return root;
 		}
 		
-		Map<ElementSymbol, List<Set<Constant>>> partitionInfoOther = (Map<ElementSymbol, List<Set<Constant>>>)otherSide.getProperty(Info.PARTITION_INFO);
+		PlanNode right = joinNode.getLastChild();
 		
-		if (partitionInfoOther == null) {
+		if (right.getType() != NodeConstants.Types.SOURCE) {
+			return root;
+		}
+		
+		Map<ElementSymbol, List<Set<Constant>>> rightPartionInfo = (Map<ElementSymbol, List<Set<Constant>>>)right.getProperty(Info.PARTITION_INFO);
+		
+		if (rightPartionInfo == null) {
 			return root;
 		}
 		
@@ -137,20 +132,20 @@ public class RuleDecomposeJoin implements OptimizerRule {
 		
 		List<Expression> expr = new ArrayList<Expression>();
 		List<Expression> exprOther = new ArrayList<Expression>();
-		RuleChooseJoinStrategy.separateCriteria(unionNode.getParent().getGroups(), otherSide.getGroups(), expr, exprOther, criteria, new LinkedList<Criteria>());
+		RuleChooseJoinStrategy.separateCriteria(unionNode.getParent().getGroups(), right.getGroups(), expr, exprOther, criteria, new LinkedList<Criteria>());
 		
 		if (expr.isEmpty()) {
 			return root; //no equi-join
 		}
 		
-		List<int[]> matches = findMatches(partitionInfo, partitionInfoOther, expr, exprOther);
+		List<int[]> matches = findMatches(partitionInfo, rightPartionInfo, expr, exprOther);
 		
 		if (matches == null) {
 			return root; //no non-overlapping partitions
 		}
 
 		int branchSize = partitionInfo.values().iterator().next().size();
-		int otherBranchSize = partitionInfoOther.values().iterator().next().size();
+		int otherBranchSize = rightPartionInfo.values().iterator().next().size();
 		
 		if (matches.isEmpty()) {
 			//no matches mean that we can just insert a null node (false criteria) and be done with it
@@ -161,6 +156,7 @@ public class RuleDecomposeJoin implements OptimizerRule {
 		}
 		
 		List<PlanNode> branches = new ArrayList<PlanNode>();
+		//TODO: find union children from RulePushAggregates
 		RulePushSelectCriteria.collectUnionChildren(unionNode, branches);
 		
 		if (branches.size() != branchSize) {
@@ -168,20 +164,20 @@ public class RuleDecomposeJoin implements OptimizerRule {
 		}
 		
 		List<PlanNode> otherBranches = new ArrayList<PlanNode>();
-		RulePushSelectCriteria.collectUnionChildren(otherSide.getFirstChild(), otherBranches);
+		RulePushSelectCriteria.collectUnionChildren(right.getFirstChild(), otherBranches);
 		
 		if (otherBranches.size() != otherBranchSize) {
 			return root; //sanity check 
 		}
 
-		PlanNode newUnion = buildUnion(unionNode, otherSide, criteria, matches, branches, otherBranches);
-		PlanNode view = rebuild(unionNode, metadata, context, joinNode, otherSide, newUnion);
+		PlanNode newUnion = buildUnion(unionNode, right, criteria, matches, branches, otherBranches);
+		PlanNode view = rebuild(left.getGroups().iterator().next(), joinNode, newUnion, metadata, context, left, right);
 
 		SymbolMap symbolmap = (SymbolMap)view.getProperty(Info.SYMBOL_MAP);
 		HashMap<ElementSymbol, List<Set<Constant>>> newPartitionInfo = new LinkedHashMap<ElementSymbol, List<Set<Constant>>>();
 		for (int[] match : matches) {
 			updatePartitionInfo(partitionInfo, matches, symbolmap, newPartitionInfo, 0, match[0]);
-			updatePartitionInfo(partitionInfoOther, matches, symbolmap, newPartitionInfo, partitionInfo.size(), match[1]);
+			updatePartitionInfo(rightPartionInfo, matches, symbolmap, newPartitionInfo, partitionInfo.size(), match[1]);
 		}
 		view.setProperty(Info.PARTITION_INFO, newPartitionInfo);
 	
@@ -207,9 +203,8 @@ public class RuleDecomposeJoin implements OptimizerRule {
 	/**
 	 * Add the new union back in under a view 
 	 */
-	private PlanNode rebuild(PlanNode unionNode,
-			QueryMetadataInterface metadata, CommandContext context,
-			PlanNode joinNode, PlanNode otherSide, PlanNode newUnion)
+	static PlanNode rebuild(GroupSymbol group, PlanNode toReplace, PlanNode newUnion, QueryMetadataInterface metadata, CommandContext context,
+			PlanNode... toMap)
 			throws TeiidComponentException, QueryPlannerException,
 			QueryMetadataException {
 		Set<String> groups = context.getGroups();
@@ -218,7 +213,6 @@ public class RuleDecomposeJoin implements OptimizerRule {
         	context.setGroups(groups);
         }
 		
-		GroupSymbol group = unionNode.getParent().getGroups().iterator().next();
 		group = RulePlaceAccess.recontextSymbol(group, groups);
 		
 		PlanNode projectNode = NodeEditor.findNodePreOrder(newUnion, NodeConstants.Types.PROJECT);
@@ -228,15 +222,12 @@ public class RuleDecomposeJoin implements OptimizerRule {
 		
 		SymbolMap newSymbolMap = (SymbolMap)view.getProperty(Info.SYMBOL_MAP);
 		
-		HashMap<ElementSymbol, ElementSymbol> inverseMap = new HashMap<ElementSymbol, ElementSymbol>();
-		List<ElementSymbol> viewSymbols = newSymbolMap.getKeys();
-		for (int i = 0; i < projectedSymbols.size(); i++) {
-			inverseMap.put((ElementSymbol)SymbolMap.getExpression(projectedSymbols.get(i)), viewSymbols.get(i));
+		Map<Expression, ElementSymbol> inverseMap = newSymbolMap.inserseMapping();
+		toReplace.getParent().replaceChild(toReplace, view);
+		Set<GroupSymbol> newGroups = Collections.singleton(group);
+		for (PlanNode node : toMap) {
+			FrameUtil.convertFrame(view, node.getGroups().iterator().next(), newGroups, inverseMap, metadata);
 		}
-		joinNode.getParent().replaceChild(joinNode, view);
-		
-		FrameUtil.convertFrame(view, unionNode.getParent().getGroups().iterator().next(), Collections.singleton(group), inverseMap, metadata);
-		FrameUtil.convertFrame(view, otherSide.getGroups().iterator().next(), Collections.singleton(group), inverseMap, metadata);
 		
 		return view;
 	}
@@ -302,14 +293,12 @@ public class RuleDecomposeJoin implements OptimizerRule {
 		for (int i = 0; i < matches.size(); i++) {
 			int[] is = matches.get(i);
 			PlanNode branch = branches.get(is[0]);
-			PlanNode branchSource = createSource(unionNode, symbolMap);
+			PlanNode branchSource = createSource(unionNode.getParent().getGroups().iterator().next(), branch, symbolMap);
 			
 			PlanNode otherBranch = otherBranches.get(is[1]);
-			PlanNode otherBranchSource = createSource(otherSide.getFirstChild(), otherSymbolMap);
+			PlanNode otherBranchSource = createSource(otherSide.getGroups().iterator().next(), otherBranch, otherSymbolMap);
 			
 			PlanNode newJoinNode = NodeFactory.getNewNode(NodeConstants.Types.JOIN);
-			branchSource.addFirstChild(branch);
-			otherBranchSource.addFirstChild(otherBranch);
 			newJoinNode.addLastChild(branchSource);
 			newJoinNode.addLastChild(otherBranchSource);
 			
@@ -337,11 +326,12 @@ public class RuleDecomposeJoin implements OptimizerRule {
 		return newUnion;
 	}
 
-	private PlanNode createSource(PlanNode unionNode, SymbolMap symbolMap) {
+	static PlanNode createSource(GroupSymbol group, PlanNode unionNode, SymbolMap symbolMap) {
 		PlanNode branchSource = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
-		branchSource.addGroups(unionNode.getParent().getGroups());
+		branchSource.addGroup(group);
 		PlanNode projectNode = NodeEditor.findNodePreOrder(unionNode, NodeConstants.Types.PROJECT);
 		branchSource.setProperty(Info.SYMBOL_MAP, SymbolMap.createSymbolMap(symbolMap.getKeys(), (List<? extends SingleElementSymbol>)projectNode.getProperty(Info.PROJECT_COLS)));
+		unionNode.addAsParent(branchSource);
 		return branchSource;
 	}
 

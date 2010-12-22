@@ -35,8 +35,8 @@
 	<LI><B>UDF</B> - new API objects added to teiid-api to support user defined functions that are capable of pushdown to source.
 	<LI><B>Unescape Function</B> - a new system function, unescape, was added to handle common \ escaping in strings including octal, hex/unicode, \b, \r, \n, \f, and \t.
 	<LI><B>Predicate Optimization</B> - expanded optimizations for detecting always false conditions when using IS NULL, IN, or comparison predicates with literal values.
-	<LI><B>Partition-wise Joins</B> - Views defined by partitioned unions (union alls where each branch has a projected literal or an IN predicate that makes its values mutually exclusive from the other branches) can 
-	be joined against other partitioned unions and the optimizer will reorganize the join of unions into a union of joins.
+	<LI><B>Partition-wise Optimizations</B> - Views defined by partitioned unions (union alls where each branch has a projected literal or an IN predicate that makes its values mutually exclusive from the other branches) can 
+	be used in aggregation or joins and the optimizer will take advantage of the partitioning information.  For example, when a partitioned union is joined against another partitioned union, the optimizer will reorganize the join of unions into a union of joins.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

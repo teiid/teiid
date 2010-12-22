@@ -24,6 +24,7 @@ package org.teiid.query.sql.util;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -57,6 +58,14 @@ public class SymbolMap {
 			clonedMap.addMapping((ElementSymbol)entry.getKey().clone(), (Expression)entry.getValue().clone());
 		}
     	return clonedMap;
+    }
+    
+    public Map<Expression, ElementSymbol> inserseMapping() {
+    	HashMap<Expression, ElementSymbol> inverseMap = new HashMap<Expression, ElementSymbol>();
+		for (Map.Entry<ElementSymbol, Expression> entry : this.map.entrySet()) {
+			inverseMap.put(entry.getValue(), entry.getKey());
+		}
+		return inverseMap;
     }
     
     /**

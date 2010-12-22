@@ -168,7 +168,7 @@ public class RuleChooseJoinStrategy implements OptimizerRule {
     
     private static AtomicInteger EXPRESSION_INDEX = new AtomicInteger(0);
     
-    public static List<SingleElementSymbol> createExpressionSymbols(List<Expression> expressions) {
+    public static List<SingleElementSymbol> createExpressionSymbols(List<? extends Expression> expressions) {
         HashMap<Expression, ExpressionSymbol> uniqueExpressions = new HashMap<Expression, ExpressionSymbol>();
         List<SingleElementSymbol> result = new ArrayList<SingleElementSymbol>();
         for (Expression expression : expressions) {

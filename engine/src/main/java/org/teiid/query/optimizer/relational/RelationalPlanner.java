@@ -69,6 +69,7 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
+import org.teiid.query.resolver.ProcedureContainerResolver;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.BindVariableVisitor;
 import org.teiid.query.resolver.util.ResolverUtil;
@@ -120,6 +121,7 @@ import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.ValidationVisitor;
+import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 
 
 /**
@@ -777,6 +779,10 @@ public class RelationalPlanner {
             }
             node.addGroup(group);
             if (nestedCommand != null) {
+            	UpdateInfo info = ProcedureContainerResolver.getUpdateInfo(group, metadata);
+            	if (info != null && info.getPartitionInfo() != null && !info.getPartitionInfo().isEmpty()) {
+            		node.setProperty(NodeConstants.Info.PARTITION_INFO, info.getPartitionInfo());
+            	}
             	addNestedCommand(node, group, nestedCommand, nestedCommand, true);
             }
             parent.addLastChild(node);
@@ -816,6 +822,12 @@ public class RelationalPlanner {
             }
             node.addGroup(group);
             addNestedCommand(node, group, nestedCommand, nestedCommand, true);
+			if (nestedCommand instanceof SetQuery) {
+				Map<ElementSymbol, List<Set<Constant>>> partitionInfo = PartitionAnalyzer.extractPartionInfo((SetQuery)nestedCommand, ResolverUtil.resolveElementsInGroup(group, metadata));
+				if (!partitionInfo.isEmpty()) {
+					node.setProperty(NodeConstants.Info.PARTITION_INFO, partitionInfo);
+				}
+			}
             hints.hasVirtualGroups = true;
             parent.addLastChild(node);
         } else if (clause instanceof TableFunctionReference) {
@@ -886,11 +898,6 @@ public class RelationalPlanner {
 			List<SingleElementSymbol> projectCols = nestedCommand.getProjectedSymbols();
 			SymbolMap map = SymbolMap.createSymbolMap(group, projectCols, metadata);
 			node.setProperty(NodeConstants.Info.SYMBOL_MAP, map);
-			if (nestedCommand instanceof SetQuery) {
-				//TODO: should cache for views
-				Map<ElementSymbol, List<Set<Constant>>> partitionInfo = PartitionAnalyzer.extractPartionInfo((SetQuery)nestedCommand, map.getKeys());
-				node.setProperty(NodeConstants.Info.PARTITION_INFO, partitionInfo);
-			}
 		} else {
 			QueryMetadataInterface actualMetadata = metadata;
 			if (actualMetadata instanceof TempMetadataAdapter) {

@@ -448,7 +448,7 @@ public class UpdateValidator {
     		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0005"), true, false, true); //$NON-NLS-1$
     	}
     	if (this.updateInfo.deleteType == UpdateType.INHERENT && this.updateInfo.deleteTarget == null) {
-    		if (this.updateInfo.isSimple) {
+    		if (this.updateInfo.isSimple && updatable) {
     			this.updateInfo.deleteTarget = this.updateInfo.updatableGroups.values().iterator().next();
     		} else {
     			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0014"), false, false, true); //$NON-NLS-1$

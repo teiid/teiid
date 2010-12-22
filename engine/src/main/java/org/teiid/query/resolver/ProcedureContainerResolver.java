@@ -245,25 +245,11 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 	}
 	
 	public static UpdateInfo getUpdateInfo(GroupSymbol group, QueryMetadataInterface metadata, int type) throws QueryMetadataException, TeiidComponentException, QueryResolverException {
-		//if this is not a view, just return null
-		if(group.isTempGroupSymbol() || !metadata.isVirtualGroup(group.getMetadataID())) {
+		UpdateInfo info = getUpdateInfo(group, metadata);
+		
+		if (info == null) {
 			return null;
 		}
-		String updatePlan = metadata.getUpdatePlan(group.getMetadataID());
-		String deletePlan = metadata.getDeletePlan(group.getMetadataID());
-		String insertPlan = metadata.getInsertPlan(group.getMetadataID());
-
-		
-    	UpdateInfo info = (UpdateInfo)metadata.getFromMetadataCache(group.getMetadataID(), "UpdateInfo"); //$NON-NLS-1$
-    	if (info == null) {
-            List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(group, metadata);
-    		UpdateValidator validator = new UpdateValidator(metadata, updatePlan, deletePlan, insertPlan);
-    		info = validator.getUpdateInfo();
-    		if (info.isInherentDelete() || info.isInherentInsert() || info.isInherentUpdate()) {
-    			validator.validate(UpdateProcedureResolver.getQueryTransformCmd(group, metadata), elements);
-    		}
-    		metadata.addToMetadataCache(group.getMetadataID(), "UpdateInfo", info); //$NON-NLS-1$
-    	}
     	
     	if ((info.isDeleteValidationError() && type == Command.TYPE_DELETE) 
 				|| (info.isUpdateValidationError() && type == Command.TYPE_UPDATE) 
@@ -277,6 +263,30 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 			throw new QueryResolverException("ERR.015.008.0009", QueryPlugin.Util.getString("ERR.015.008.0009", group, name)); //$NON-NLS-1$ //$NON-NLS-2$
 		}
     	return info;
+	}
+
+	public static UpdateInfo getUpdateInfo(GroupSymbol group,
+			QueryMetadataInterface metadata) throws TeiidComponentException,
+			QueryMetadataException, QueryResolverException {
+		//if this is not a view, just return null
+		if(group.isTempGroupSymbol() || !metadata.isVirtualGroup(group.getMetadataID()) || !metadata.isVirtualModel(metadata.getModelID(group.getMetadataID()))) {
+			return null;
+		}
+		String updatePlan = metadata.getUpdatePlan(group.getMetadataID());
+		String deletePlan = metadata.getDeletePlan(group.getMetadataID());
+		String insertPlan = metadata.getInsertPlan(group.getMetadataID());
+
+    	UpdateInfo info = (UpdateInfo)metadata.getFromMetadataCache(group.getMetadataID(), "UpdateInfo"); //$NON-NLS-1$
+    	if (info == null) {
+            List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(group, metadata);
+    		UpdateValidator validator = new UpdateValidator(metadata, updatePlan, deletePlan, insertPlan);
+    		info = validator.getUpdateInfo();
+    		if (info.isInherentDelete() || info.isInherentInsert() || info.isInherentUpdate()) {
+    			validator.validate(UpdateProcedureResolver.getQueryTransformCmd(group, metadata), elements);
+    		}
+    		metadata.addToMetadataCache(group.getMetadataID(), "UpdateInfo", info); //$NON-NLS-1$
+    	}
+		return info;
 	}
     
     /** 

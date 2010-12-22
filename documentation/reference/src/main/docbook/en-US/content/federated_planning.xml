@@ -38,8 +38,7 @@
           These rules may trigger in turn trigger the execution of more
           rules. Within several rules, Teiid also takes advantage of
           costing information. The logical plan optimization steps can
-          be seen by using the
-          <link linkend="option_clause">OPTION DEBUG</link>
+          be seen by using <link linkend="show_plan">SHOWPLAN DEBUG</link>
           clause and are described in the
           <link linkend="query_planner">query planner</link>
           section.
@@ -208,7 +207,7 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
         especially helpful when querying through large intermediate view
         layers.</para>
     </section>
-    <section>
+    <section id="aggregate_pushdown">
       <title>Partial Aggregate Pushdown</title>
       <para> Partial aggregate pushdown allows for grouping operations
         above multi-source joins and unions to be decomposed so that some of the
@@ -254,7 +253,7 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
       For example the view definition "select 1 as x, y from foo union all select z, a from foo1 where z in (2, 3)" would be considered partitioned on column x, 
       since the first branch can only be the value 1 and the second branch can only be the values 2 or 3.   
       Note that more advanced or explicit partition could be considered in the future.  
-      The concept of a partitioned union is used for performing partition-wise joins and in <xref linkend="updatable_views"/>.
+      The concept of a partitioned union is used for performing partition-wise joins, in <xref linkend="updatable_views"/>, and <xref linkend="aggregate_pushdown"/>.
 	</para>
     </section>
     <section id="standard_relational_techniques">
@@ -316,7 +315,7 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
       engine for executing a command submitted by a user or application.
       The purpose of the query plan is to execute the user's query in as
       efficient a way as possible.</para>
-    <section>
+    <section id="show_plan">
       <title>Getting a Query Plan</title>
       <para> You can get a query plan any time you execute a command.
         The SQL options available are as follows:</para>
