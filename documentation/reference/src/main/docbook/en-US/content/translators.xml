@@ -1009,6 +1009,40 @@ Account.Contacts) FROM Account]]></programlisting>
                 </section>
             </section>
         </section>
+        <section>
+            <title>Delegate Translator</title>
+            <para>
+            The Delegate translator, known by the type name <emphasis>delegate</emphasis>, 
+            provides way to delegate all the translator calls to yet another translator whoose name is supplied. This does not provide
+            any functionality on its own, other than delegation. This translator can be used to intercept the calls to the user
+            supplied translator and modify them as they see fit. Another advantage of this translator is, user is not required to
+            package their translator as precribed in JAR file as shown in the developer's guide, all user need to do 
+            is to make sure the supplied class is availble in classpath that is used by 'delegate' translator.
+            </para>
+            
+            <table>
+                <title>Execution Properties</title>
+                <tgroup cols="3">
+                    <colspec colwidth="3*" />
+                    <colspec colwidth="6*" />
+                    <colspec colwidth="2*" />
+                    <thead>
+                        <row>
+                            <entry>Name</entry>
+                            <entry>Description</entry>
+                            <entry>Default</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>delegateClassName</entry>
+                            <entry>User defined ExcutionFactory class name, to be delegated to</entry>
+                            <entry></entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>        
+        </section>        
     </section>
     
     <section id="dynamic_vdbs">
