@@ -230,5 +230,29 @@ public class TestUnionPlanning {
         });                                    
     }
     
-    
+    @Test public void testUnionPartitionedWithMerge() throws Exception {
+    	//"select max(intnum) from (select * from (SELECT IntKey, intnum FROM BQT1.SmallA where intkey in (1, 2) UNION ALL SELECT intkey, intnum FROM BQT2.SmallA where intkey in (3, 4)) A where intkey in (1, 2, 3, 4) UNION ALL select intkey, intnum from bqt2.smallb where intkey in 6) B group by intkey"
+        ProcessorPlan plan = TestOptimizer.helpPlan("select * from (select * from (SELECT IntKey, intnum FROM BQT1.SmallA UNION ALL SELECT intkey, intnum FROM BQT2.SmallA) A where intkey in (1, 2, 3, 4) UNION ALL select intkey, intnum from bqt2.smallb where intkey in (6)) B inner join (SELECT IntKey, intnum FROM BQT1.SmallA where intkey in (1, 2) UNION ALL SELECT intkey, intnum FROM BQT2.SmallA where intkey in (5, 6)) C on b.intkey = c.intkey", FakeMetadataFactory.exampleBQTCached(), null, TestInlineView.getInliveViewCapabilitiesFinder(),//$NON-NLS-1$
+            new String[] { "SELECT g_0.intkey, g_0.intnum FROM BQT2.SmallA AS g_0 WHERE g_0.intkey IN (1, 2)",
+        	"SELECT g_0.IntKey, g_0.intnum FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey IN (1, 2)",
+        	"SELECT g_1.IntKey, g_1.IntNum, g_0.intkey, g_0.intnum FROM bqt2.smallb AS g_0, BQT2.SmallA AS g_1 WHERE (g_0.intkey = g_1.IntKey) AND (g_0.intkey = 6) AND (g_1.IntKey = 6)",
+        	"SELECT g_0.IntKey AS c_0, g_0.IntNum AS c_1 FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey IN (1, 2) ORDER BY c_0" }, ComparisonMode.EXACT_COMMAND_STRING); 
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            4,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            2       // UnionAll
+        });                                    
+    }    
 }

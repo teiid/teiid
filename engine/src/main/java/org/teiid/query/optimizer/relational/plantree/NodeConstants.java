@@ -117,7 +117,7 @@ public final class NodeConstants {
 
         // Source node properties
         SYMBOL_MAP,         // SymbolMap
-        PARTITION_INFO,		// Map<ElementSymbol, List<Set<Constant>>>
+        PARTITION_INFO,		// Map<ElementSymbol, List<Set<Constant>>> - it will only be consistent in the initial stages of planning
         VIRTUAL_COMMAND,    // Command
         MAKE_DEP,           // ??? List of Groups ???
         PROCESSOR_PLAN,     // ProcessorPlan for non-relational sub plan

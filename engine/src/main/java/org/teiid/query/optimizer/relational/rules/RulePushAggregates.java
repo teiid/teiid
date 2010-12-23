@@ -272,7 +272,7 @@ public class RulePushAggregates implements
 			LinkedList<PlanNode> unionChildren, SymbolMap parentMap, CommandContext context, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
 		// remove the group node
 		groupNode.getParent().replaceChild(groupNode, groupNode.getFirstChild());
-		GroupSymbol group = sourceNode.getGroups().iterator().next();
+		GroupSymbol group = sourceNode.getGroups().iterator().next().clone();
 
 		boolean first = true;
 		List<SingleElementSymbol> symbols = null;
@@ -306,11 +306,11 @@ public class RulePushAggregates implements
 	        	}
 		    }
 		}
-		
-		SymbolMap symbolMap = createSymbolMap(group, symbols, sourceNode, metadata);
+		GroupSymbol modifiedGroup = group.clone();
+		SymbolMap symbolMap = createSymbolMap(modifiedGroup, symbols, sourceNode, metadata);
 		sourceNode.setProperty(Info.SYMBOL_MAP, symbolMap);
 		
-		FrameUtil.convertFrame(sourceNode, group, Collections.singleton(group), symbolMap.inserseMapping(), metadata);
+		FrameUtil.convertFrame(sourceNode, group, Collections.singleton(modifiedGroup), symbolMap.inserseMapping(), metadata);
 	}
 
 	private boolean canPushGroupByToUnionChild(QueryMetadataInterface metadata,

@@ -41,6 +41,7 @@ import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
@@ -68,10 +69,10 @@ public final class RuleMergeVirtual implements
                             CommandContext context) throws QueryPlannerException,
                                                    QueryMetadataException,
                                                    TeiidComponentException {
-
+    	boolean beforeDecomposeJoin = rules.contains(RuleConstants.DECOMPOSE_JOIN);
         for (PlanNode sourceNode : NodeEditor.findAllNodes(plan, NodeConstants.Types.SOURCE)) {
             if (sourceNode.getChildCount() > 0) {
-                plan = doMerge(sourceNode, plan, metadata);
+                plan = doMerge(sourceNode, plan, beforeDecomposeJoin, metadata);
             }
         }
 
@@ -79,7 +80,7 @@ public final class RuleMergeVirtual implements
     }
 
     static PlanNode doMerge(PlanNode frame,
-                            PlanNode root,
+                            PlanNode root, boolean beforeDecomposeJoin,
                             QueryMetadataInterface metadata) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
 
         GroupSymbol virtualGroup = frame.getGroups().iterator().next();
@@ -149,6 +150,13 @@ public final class RuleMergeVirtual implements
             || NodeEditor.findNodePreOrder(frame.getFirstChild(), NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE
                                                                                              | NodeConstants.Types.JOIN) != null
             || NodeEditor.findAllNodes(frame.getFirstChild(), NodeConstants.Types.SOURCE, NodeConstants.Types.SOURCE).isEmpty()) {
+        	
+            PlanNode parentSource = NodeEditor.findParent(parentProject, NodeConstants.Types.SOURCE);
+            if (beforeDecomposeJoin && parentSource != null && parentSource.hasProperty(Info.PARTITION_INFO) 
+            		&& !NodeEditor.findAllNodes(frame.getFirstChild(), NodeConstants.Types.SET_OP, NodeConstants.Types.SOURCE).isEmpty()) {
+            	return root; //don't bother to merge until after
+            }
+
             return checkForSimpleProjection(frame, root, parentProject, metadata);
         }
 

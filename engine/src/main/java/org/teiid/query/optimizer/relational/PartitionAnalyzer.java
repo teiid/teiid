@@ -23,6 +23,7 @@
 package org.teiid.query.optimizer.relational;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,6 +36,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
@@ -114,8 +116,20 @@ public class PartitionAnalyzer {
 	private static Map<ElementSymbol, Set<Constant>> extractPartitionInfo(Query query, List<ElementSymbol> projectedSymbols) {
 		List<SingleElementSymbol> projected = query.getSelect().getProjectedSymbols();
 		List<Criteria> crits = Criteria.separateCriteriaByAnd(query.getCriteria());
-		Map<Expression, TreeSet<Constant>> inMap = new HashMap<Expression, TreeSet<Constant>>();
+		Map<Expression, Set<Constant>> inMap = new HashMap<Expression, Set<Constant>>();
 		for (Criteria criteria : crits) {
+			if (criteria instanceof CompareCriteria) {
+				CompareCriteria cc = (CompareCriteria)criteria;
+				if (cc.getOperator() != CompareCriteria.EQ) {
+					continue;
+				}
+				if (cc.getLeftExpression() instanceof Constant) {
+					inMap.put(cc.getRightExpression(), new TreeSet<Constant>(Arrays.asList((Constant)cc.getLeftExpression())));
+				} else if (cc.getRightExpression() instanceof Constant) {
+					inMap.put(cc.getLeftExpression(), new TreeSet<Constant>(Arrays.asList((Constant)cc.getRightExpression())));
+				}
+				continue;
+			}
 			if (!(criteria instanceof SetCriteria)) {
 				continue;
 			}
@@ -143,7 +157,7 @@ public class PartitionAnalyzer {
 			if (ex instanceof Constant) {
 				result.put(projectedSymbols.get(i), Collections.singleton((Constant)ex));
 			} else {
-				TreeSet<Constant> values = inMap.get(ex);
+				Set<Constant> values = inMap.get(ex);
 				if (values != null) {
 					result.put(projectedSymbols.get(i), values);
 				}
