@@ -38,6 +38,7 @@
 	<LI><B>Partition-wise Optimizations</B> - Views defined by partitioned unions (union alls where each branch has a projected literal or an IN predicate that makes its values mutually exclusive from the other branches) can 
 	be used in aggregation or joins and the optimizer will take advantage of the partitioning information.  For example, when a partitioned union is joined against another partitioned union, the optimizer will reorganize the join of unions into a union of joins.
 	<LI><B>Delegate Translator</B> - A new translator added that is capable of delegating all the calls to another configured translator.
+	<LI><B>JDBC Reauthentication</B> - Teiid connections (defined by the org.teiid.jdbc.TeiidConnection interface) now support the changeUser method to reauthenticate a given connection.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

@@ -58,6 +58,7 @@ import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
 import org.teiid.core.util.SqlUtil;
 import org.teiid.net.CommunicationException;
+import org.teiid.net.ConnectionException;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.SocketServerConnection;
@@ -65,7 +66,7 @@ import org.teiid.net.socket.SocketServerConnection;
 /**
  * Teiid's Connection implementation.
  */
-public class ConnectionImpl extends WrapperImpl implements Connection {
+public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
 
 	public static final int DEFAULT_ISOLATION = Connection.TRANSACTION_READ_COMMITTED;
@@ -110,8 +111,10 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
     private String debugLog;
     // the last query annotations
     private Collection<Annotation> annotations;
+    private Properties connectionProps;
         
-    public ConnectionImpl(ServerConnection serverConn, Properties info, String url) {        
+    public ConnectionImpl(ServerConnection serverConn, Properties info, String url) { 
+    	this.connectionProps = info;
     	this.serverConn = serverConn;
         this.url = url;
         this.dqp = serverConn.getService(DQP.class);
@@ -944,6 +947,46 @@ public class ConnectionImpl extends WrapperImpl implements Connection {
 
 	public void setTypeMap(Map<String, Class<?>> map) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
+	}
+	
+	@Override
+	public void changeUser(String userName, String newPassword)
+			throws SQLException {
+		//TODO: recycleConnection();
+		Object oldName = null;
+		Object oldPassword = null;
+		if (userName != null) {
+			oldName = this.connectionProps.put(TeiidURL.CONNECTION.USER_NAME, userName);
+		} else {
+			oldName = this.connectionProps.remove(TeiidURL.CONNECTION.USER_NAME);
+		}
+		if (newPassword != null) {
+			oldPassword = this.connectionProps.put(TeiidURL.CONNECTION.PASSWORD, newPassword);
+		} else {
+			oldPassword = this.connectionProps.remove(TeiidURL.CONNECTION.PASSWORD);
+		}
+		boolean success = false;
+		try {
+			this.serverConn.authenticate();
+			success = true;
+		} catch (ConnectionException e) {
+			throw TeiidSQLException.create(e);
+		} catch (CommunicationException e) {
+			throw TeiidSQLException.create(e);
+		} finally {
+			if (!success) {
+				if (oldName != null) {
+					this.connectionProps.put(TeiidURL.CONNECTION.USER_NAME, oldName);
+				} else {
+					this.connectionProps.remove(TeiidURL.CONNECTION.USER_NAME);
+				}
+				if (oldPassword != null) {
+					this.connectionProps.put(TeiidURL.CONNECTION.PASSWORD, oldPassword);
+				} else {
+					this.connectionProps.remove(TeiidURL.CONNECTION.PASSWORD);
+				}
+			}
+		}
 	}
 
 }

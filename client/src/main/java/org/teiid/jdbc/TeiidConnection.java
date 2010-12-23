@@ -20,26 +20,24 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.net;
+package org.teiid.jdbc;
 
-import org.teiid.client.security.LogonResult;
+import java.sql.Connection;
+import java.sql.SQLException;
 
-public interface ServerConnection {
-	
-	public static final int PING_INTERVAL = 120000;
+/**
+ * Optional methods supported by Teiid Connections.
+ */
+public interface TeiidConnection extends Connection {
 
-	<T> T getService(Class<T> iface);
-	
-	void close();
-	
-	boolean isOpen(long msToTest);
-	
-	LogonResult getLogonResult();
-	
-	boolean isSameInstance(ServerConnection conn) throws CommunicationException;
-	
-	void cleanUp();
-	
-	void authenticate() throws ConnectionException, CommunicationException;
-	
+	/**
+	 * Re-authenticate with the given username and password.  If the re-authentication
+	 * fails the connection will remain under the current user.
+	 * 
+	 * @param userName
+     *            the username to authenticate with
+   	 * @param newPassword
+   	 *            the password to authenticate with
+	 */
+	public void changeUser(String userName, String newPassword) throws SQLException;
 }

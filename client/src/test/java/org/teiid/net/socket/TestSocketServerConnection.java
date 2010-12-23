@@ -54,8 +54,8 @@ import org.teiid.net.TeiidURL;
 /**
  * <code>TestCase</case> for <code>SocketServerConnection</code>
  * @see SocketServerConnection
- * @since Westport
  */
+@SuppressWarnings("nls")
 public class TestSocketServerConnection {
 	
 	private static final class FakeILogon implements ILogon {
@@ -83,7 +83,7 @@ public class TestSocketServerConnection {
 				Properties connectionProperties)
 				throws LogonException,
 				TeiidComponentException {
-			return new LogonResult(new SessionToken(1, "fooUser"), "foo", 1, "fake"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			return new LogonResult(new SessionToken(1, connectionProperties.getProperty(TeiidURL.CONNECTION.USER_NAME, "fooUser")), "foo", 1, "fake"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 
 		@Override
@@ -151,6 +151,15 @@ public class TestSocketServerConnection {
 		assertEquals(String.valueOf(1), connection.getLogonResult().getSessionID()); 
 	}
 	
+	@Test public void testChangeUser() throws Exception {
+		Properties p = new Properties();
+		SocketServerConnection connection = createConnection(null, p);
+		assertEquals("fooUser", connection.getLogonResult().getUserName()); 
+		p.setProperty(TeiidURL.CONNECTION.USER_NAME, "newUser");
+		connection.authenticate();
+		assertEquals("newUser", connection.getLogonResult().getUserName());
+	}
+	
 	/**
 	 * Since the original instance is still open, this will be a transparent retry
 	 */
@@ -177,12 +186,15 @@ public class TestSocketServerConnection {
 	}
 
 	private SocketServerConnection createConnection(final Throwable throwException) throws CommunicationException, ConnectionException {
-		return createConnection(throwException, new HostInfo("0.0.0.2", 1)); //$NON-NLS-1$
+		return createConnection(throwException, new Properties());
 	}
 	
-	private SocketServerConnection createConnection(final Throwable t, final HostInfo hostInfo)
+	private SocketServerConnection createConnection(final Throwable throwException, Properties p) throws CommunicationException, ConnectionException {
+		return createConnection(throwException, new HostInfo("0.0.0.2", 1), p); //$NON-NLS-1$
+	}
+	
+	private SocketServerConnection createConnection(final Throwable t, final HostInfo hostInfo, Properties p)
 			throws CommunicationException, ConnectionException {
-		Properties p = new Properties();
 		ServerDiscovery discovery = new UrlServerDiscovery(new TeiidURL(hostInfo.getHostName(), hostInfo.getPortNumber(), false));
 		SocketServerInstanceFactory instanceFactory = new SocketServerInstanceFactory() {
 			FakeILogon logon = new FakeILogon(t);
@@ -194,6 +206,7 @@ public class TestSocketServerConnection {
 				Mockito.stub(instance.getCryptor()).toReturn(new NullCryptor());
 				Mockito.stub(instance.getHostInfo()).toReturn(hostInfo);
 				Mockito.stub(instance.getService(ILogon.class)).toReturn(logon);
+				Mockito.stub(instance.getServerVersion()).toReturn("7.3");
 				if (t != null) {
 					try {
 						Mockito.doAnswer(new Answer<Void>() {
@@ -231,8 +244,8 @@ public class TestSocketServerConnection {
 	}
 	
 	@Test public void testIsSameInstance() throws Exception {
-		SocketServerConnection conn = createConnection(null, new HostInfo("0.0.0.0", 1)); //$NON-NLS-1$
-		SocketServerConnection conn1 = createConnection(null, new HostInfo("0.0.0.1", 1)); //$NON-NLS-1$
+		SocketServerConnection conn = createConnection(null, new HostInfo("0.0.0.0", 1), new Properties()); //$NON-NLS-1$
+		SocketServerConnection conn1 = createConnection(null, new HostInfo("0.0.0.1", 1), new Properties()); //$NON-NLS-1$
 		
 		assertFalse(conn.isSameInstance(conn1));
 		assertTrue(conn.isSameInstance(conn));

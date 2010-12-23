@@ -59,7 +59,8 @@ public class LogonImpl implements ILogon {
 
 	public LogonResult logon(Properties connProps) throws LogonException,
 			ComponentNotFoundException {
-		
+		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
+		SessionToken oldToken = workContext.getSessionToken();
         String applicationName = connProps.getProperty(TeiidURL.CONNECTION.APP_NAME);
         // user may be null if using trustedToken to log on
         String user = connProps.getProperty(TeiidURL.CONNECTION.USER_NAME, CoreConstants.DEFAULT_ANON_USERNAME);
@@ -76,6 +77,12 @@ public class LogonImpl implements ILogon {
 	        updateDQPContext(sessionInfo);
 	        if (DQPWorkContext.getWorkContext().getClientAddress() == null) {
 				sessionInfo.setEmbedded(true);
+	        }
+	        if (oldToken != null) {
+	        	try {
+					this.service.closeSession(oldToken.getSessionID());
+				} catch (InvalidSessionException e) {
+				}
 	        }
 			return new LogonResult(sessionInfo.getSessionToken(), sessionInfo.getVDBName(), sessionInfo.getVDBVersion(), clusterName);
 		} catch (LoginException e) {

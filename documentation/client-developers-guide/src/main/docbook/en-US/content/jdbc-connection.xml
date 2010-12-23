@@ -536,5 +536,10 @@
         	<para>Your customized server discovery class will then need to be referenced by the discoveryStategy connection/DataSource property by its full class name.</para>
         </section>
     </section>
-    
+    <section>
+    	<title>Reauthentication</title>
+    	<para>Teiid connections (defined by the <code>org.teiid.jdbc.TeiidConnection</code> interface) support the changeUser method to reauthenticate a given connection.  
+    	If the reauthentication is successful the current connection my be used with the given identity.  
+    	Existing statements/result sets are still available for use under the old identity.  See the JBossAS issue <ulink url="https://issues.jboss.org/browse/JBAS-1429">JBAS-1429</ulink> for more on using reauthentication support with JCA.</para>
+    </section>
 </chapter>

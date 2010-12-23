@@ -140,7 +140,7 @@ public class TestCommSockets {
 		SSLConfiguration config = new SSLConfiguration();
 		config.setMode(SSLConfiguration.DISABLED);
 		SocketServerConnection conn = helpEstablishConnection(false, config, new Properties());
-		assertTrue(conn.selectServerInstance().getCryptor() instanceof NullCryptor);
+		assertTrue(conn.selectServerInstance(false).getCryptor() instanceof NullCryptor);
 		conn.close();
 	}
 

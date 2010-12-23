@@ -91,7 +91,7 @@ public class SocketServerConnection implements ServerConnection {
 		this.logon = this.getService(ILogon.class);
 		this.failOver = Boolean.valueOf(connProps.getProperty(TeiidURL.CONNECTION.AUTO_FAILOVER)).booleanValue();
 		this.failOver |= Boolean.valueOf(connProps.getProperty(TeiidURL.CONNECTION.ADMIN)).booleanValue();
-		selectServerInstance();
+		selectServerInstance(false);
 	}
 	
 	/**
@@ -100,7 +100,7 @@ public class SocketServerConnection implements ServerConnection {
 	 * TODO: put more information on hostinfo as to process response time, last successful connect, etc.
 	 * @throws ConnectionException 
 	 */
-	public synchronized SocketServerInstance selectServerInstance()
+	public synchronized SocketServerInstance selectServerInstance(boolean logoff)
 			throws CommunicationException, ConnectionException {
 		if (closed) {
 			throw new CommunicationException(JDBCPlugin.Util.getString("SocketServerConnection.closed")); //$NON-NLS-1$ 
@@ -124,9 +124,7 @@ public class SocketServerConnection implements ServerConnection {
 				ILogon newLogon = connect(hostInfo);
 				if (this.logonResult == null) {
 			        try {
-			            this.logonResult = newLogon.logon(connProps);
-			            this.logonResults.put(this.serverInstance.getHostInfo(), this.logonResult);
-			            this.connectionFactory.connected(this.serverInstance, this.logonResult.getSessionToken());
+			            logon(newLogon, logoff);
 						this.serverDiscovery.connectionSuccessful(hostInfo);
 			            if (discoverHosts) {
 				            List<HostInfo> updatedHosts = this.serverDiscovery.getKnownHosts(logonResult, this.serverInstance);
@@ -166,6 +164,23 @@ public class SocketServerConnection implements ServerConnection {
 		throw new CommunicationException(JDBCPlugin.Util.getString("SocketServerInstancePool.No_valid_host_available", hostCopy.toString())); //$NON-NLS-1$
 	}
 
+	private void logon(ILogon newLogon, boolean logoff) throws LogonException,
+			TeiidComponentException, CommunicationException {
+		LogonResult newResult = newLogon.logon(connProps);
+		SocketServerInstance instance = this.serverInstance;
+		if (logoff) {
+			if ("7.3".compareTo(this.serverInstance.getServerVersion()) <= 0) { //$NON-NLS-1$
+				//just remove the current instance - the server has already logged off the current user
+				LogonResult old = this.logonResults.remove(this.serverInstance.getHostInfo());
+				this.connectionFactory.disconnected(this.serverInstance, old.getSessionToken());
+			}
+			logoffAll();
+		}
+		this.logonResult = newResult;
+		this.logonResults.put(instance.getHostInfo(), this.logonResult);
+		this.connectionFactory.connected(instance, this.logonResult.getSessionToken());
+	}
+
 	private ILogon connect(HostInfo hostInfo) throws CommunicationException,
 			IOException {
 		hostInfo.setSsl(secure);
@@ -189,7 +204,7 @@ public class SocketServerConnection implements ServerConnection {
 			protected SocketServerInstance getInstance() throws CommunicationException {
 				if (failOver && System.currentTimeMillis() - lastPing > pingFailOverInterval) {
 					try {
-						ResultsFuture<?> future = selectServerInstance().getService(ILogon.class).ping();
+						ResultsFuture<?> future = selectServerInstance(false).getService(ILogon.class).ping();
 						future.get();
 					} catch (SingleInstanceCommunicationException e) {
 						closeServerInstance();
@@ -204,7 +219,7 @@ public class SocketServerConnection implements ServerConnection {
 				}
 				lastPing = System.currentTimeMillis();
 				try {
-					return selectServerInstance();
+					return selectServerInstance(false);
 				} catch (ConnectionException e) {
 					throw new CommunicationException(e);
 				}
@@ -234,6 +249,13 @@ public class SocketServerConnection implements ServerConnection {
 			logoff();
 		}
 		
+		logoffAll();
+		
+		this.closed = true;
+		this.serverDiscovery.shutdown();
+	}
+
+	private void logoffAll() {
 		for (Map.Entry<HostInfo, LogonResult> logonEntry : logonResults.entrySet()) {
 			try {
 				connect(logonEntry.getKey());
@@ -242,9 +264,6 @@ public class SocketServerConnection implements ServerConnection {
 				
 			}
 		}
-		
-		this.closed = true;
-		this.serverDiscovery.shutdown();
 	}
 
 	private void logoff() {
@@ -299,7 +318,7 @@ public class SocketServerConnection implements ServerConnection {
 			return false;
 		}
 		try {
-			return selectServerInstance().getHostInfo().equals(((SocketServerConnection)otherService).selectServerInstance().getHostInfo());
+			return selectServerInstance(false).getHostInfo().equals(((SocketServerConnection)otherService).selectServerInstance(false).getHostInfo());
 		} catch (ConnectionException e) {
 			throw new CommunicationException(e);
 		}
@@ -315,5 +334,22 @@ public class SocketServerConnection implements ServerConnection {
 	
 	public void setFailOverPingInterval(int pingFailOverInterval) {
 		this.pingFailOverInterval = pingFailOverInterval;
+	}
+	
+	@Override
+	public void authenticate() throws ConnectionException,
+			CommunicationException {
+		if (this.serverInstance == null) {
+			selectServerInstance(true); //this will trigger a logon with the new credentials
+		} else {
+			ILogon logonInstance = this.serverInstance.getService(ILogon.class);
+			try {
+				this.logon(logonInstance, true);
+			} catch (LogonException e) {
+				throw new ConnectionException(e);
+			} catch (TeiidComponentException e) {
+				throw new CommunicationException(e);
+			}
+		}
 	}
 }

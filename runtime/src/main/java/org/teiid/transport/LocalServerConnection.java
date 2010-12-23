@@ -62,7 +62,7 @@ public class LocalServerConnection implements ServerConnection {
 		this.connectionProperties = connectionProperties;
 		this.csr = getClientServiceRegistry();
 		workContext.setSecurityHelper(csr.getSecurityHelper());
-		authenticate(connectionProperties);
+		authenticate();
 		passthrough = Boolean.valueOf(connectionProperties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$
 	}
 
@@ -75,9 +75,9 @@ public class LocalServerConnection implements ServerConnection {
 		}
 	}
 	
-	public synchronized void authenticate(Properties connProps) throws ConnectionException, CommunicationException {
+	public synchronized void authenticate() throws ConnectionException, CommunicationException {
         try {
-        	this.result = this.getService(ILogon.class).logon(connProps);
+        	this.result = this.getService(ILogon.class).logon(this.connectionProperties);
         } catch (LogonException e) {
             // Propagate the original message as it contains the message we want
             // to give to the user
@@ -101,8 +101,7 @@ public class LocalServerConnection implements ServerConnection {
 					if (passthrough && !arg1.getDeclaringClass().equals(ILogon.class)) {
 						// check to make sure the current security context same as logged one
 						if (!csr.getSecurityHelper().sameSubject(workContext.getSession().getSecurityDomain(), workContext.getSession().getSecurityContext(), workContext.getSubject())) {
-							logoff();
-							authenticate(connectionProperties);
+							authenticate();
 						}
 					}
 					
