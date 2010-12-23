@@ -558,6 +558,7 @@ public class DQPCore implements DQP {
 	private void clearResultSetCache(String vdbName, int version) {
 		//clear cache in server
 		if(rsCache != null){
+			LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.getString("DQPCore.clearing_resultset_cache", vdbName, version)); //$NON-NLS-1$
 			rsCache.clearForVDB(vdbName, version);
 		}
 	}

@@ -32,10 +32,12 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.cache.Cache;
 import org.teiid.cache.DefaultCache;
 import org.teiid.common.buffer.BatchManager;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
@@ -69,6 +71,11 @@ public class TestCachedResults {
 					return batch;
 				}
 			};
+		}
+
+		@Override
+		public FileStore createStorage(String prefix) {
+			return Mockito.mock(FileStore.class);
 		}
 	}
 	

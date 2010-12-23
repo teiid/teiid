@@ -30,6 +30,7 @@ import java.util.List;
 import javax.sql.rowset.serial.SerialClob;
 
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
@@ -60,6 +61,11 @@ public class TestTupleBuffer {
 					return batch;
 				}
 			};
+		}
+
+		@Override
+		public FileStore createStorage(String prefix) {
+			return Mockito.mock(FileStore.class);
 		}
 	}
 

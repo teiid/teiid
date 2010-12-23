@@ -38,4 +38,5 @@ public interface BatchManager {
 	
 	void remove();
 	
+	FileStore createStorage(String prefix);
 }

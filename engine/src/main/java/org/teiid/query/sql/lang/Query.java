@@ -431,7 +431,7 @@ public class Query extends QueryCommand {
 
 	public static boolean areResultsCachable(Collection<? extends SingleElementSymbol> projectedSymbols) {
 		for (SingleElementSymbol projectedSymbol : projectedSymbols) {
-			if(DataTypeManager.isLOB(projectedSymbol.getType()) || projectedSymbol.getType() == DataTypeManager.DefaultDataClasses.OBJECT) {
+			if(projectedSymbol.getType() == DataTypeManager.DefaultDataClasses.OBJECT) {
 				return false;
 			}
 		}

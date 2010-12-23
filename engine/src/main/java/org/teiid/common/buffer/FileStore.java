@@ -202,28 +202,47 @@ public abstract class FileStore {
 	
 	protected abstract void removeDirect();
 	
-	public InputStream createInputStream(final long start) {
+	public InputStream createInputStream(final long start, final long length) {
 		return new InputStream() {
 			private long offset = start;
+			private long streamLength = length;
 			
 			@Override
 			public int read() throws IOException {
-				throw new UnsupportedOperationException("buffered reading must be used"); //$NON-NLS-1$
+				byte[] buffer = new byte[1];
+				int read = read(buffer, 0, 1);
+				if (read == -1) {
+					return -1;
+				}
+				return buffer[0];
 			}
 			
 			@Override
 			public int read(byte[] b, int off, int len) throws IOException {
 				try {
-					int bytes = FileStore.this.read(offset, b, off, len);
-					if (bytes != -1) {
-						this.offset += bytes;
+					if (this.streamLength != -1 && len > this.streamLength) {
+						len = (int)this.streamLength;
 					}
-					return bytes;
+					if (this.streamLength == -1 || this.streamLength > 0) {
+						int bytes = FileStore.this.read(offset, b, off, len);
+						if (bytes != -1) {
+							this.offset += bytes;
+							if (this.streamLength != -1) {
+								this.streamLength -= bytes;
+							}
+						}
+						return bytes;
+					}
+					return -1;
 				} catch (TeiidComponentException e) {
 					throw new IOException(e);
 				}
 			}
 		};
+	}
+	
+	public InputStream createInputStream(final long start) {
+		return createInputStream(start, -1);
 	}
 	
 	public OutputStream createOutputStream() {

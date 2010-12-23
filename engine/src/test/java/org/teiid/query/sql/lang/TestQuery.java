@@ -135,21 +135,21 @@ public class TestQuery extends TestCase {
         select.addSymbol(column);        
         query.setSelect(select);        
         query.setFrom(from);
-        assertTrue(!query.areResultsCachable());
+        assertTrue(query.areResultsCachable());
         select = new Select();
         column = new ElementSymbol("y");//$NON-NLS-1$
         column.setType(ClobType.class);
         select.addSymbol(column);        
         query.setSelect(select);        
         query.setFrom(from);
-        assertTrue(!query.areResultsCachable());
+        assertTrue(query.areResultsCachable());
         select = new Select();
         column = new ElementSymbol("y");//$NON-NLS-1$
         column.setType(XMLType.class);
         select.addSymbol(column);        
         query.setSelect(select);        
         query.setFrom(from);
-        assertTrue(!query.areResultsCachable());        
+        assertTrue(query.areResultsCachable());        
     }
     
     public void testClone2() {    

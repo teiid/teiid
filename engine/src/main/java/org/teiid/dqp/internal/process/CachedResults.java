@@ -63,6 +63,7 @@ public class CachedResults implements Serializable, Cachable {
 	private int batchSize;
 	private String uuid;
 	private int rowCount;
+	private boolean hasLobs;
 	
 	public String getId() {
 		return this.uuid;
@@ -86,6 +87,7 @@ public class CachedResults implements Serializable, Cachable {
 		this.types = TupleBuffer.getTypeNames(results.getSchema());
 		this.rowCount = results.getRowCount();
 		this.uuid = results.getId();
+		this.hasLobs = results.isLobs();
 	}
 	
 	public void setCommand(Command command) {
@@ -120,6 +122,9 @@ public class CachedResults implements Serializable, Cachable {
 	public synchronized boolean restore(Cache cache, BufferManager bufferManager) {
 		try {
 			if (this.results == null) {
+				if (this.hasLobs) {
+					return false;
+				}
 				List<ElementSymbol> schema = new ArrayList<ElementSymbol>(types.length);
 				for (String type : types) {
 					ElementSymbol es = new ElementSymbol("x"); //$NON-NLS-1$

@@ -25,6 +25,8 @@ package org.teiid.common.buffer.impl;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.util.Arrays;
 import java.util.Map;
@@ -36,6 +38,7 @@ import org.teiid.common.buffer.FileStore.FileStoreOutputStream;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.UnitTestUtil;
 
+@SuppressWarnings("nls")
 public class TestFileStorageManager {
 		
 	public FileStorageManager getStorageManager(Integer maxFileSize, Integer openFiles, String dir) throws TeiidComponentException {
@@ -111,4 +114,37 @@ public class TestFileStorageManager {
         assertTrue(Arrays.equals(bytes, bytesRead));
 	}
     
+	
+    @Test public void testWritingMultipleFiles() throws Exception {
+    	FileStorageManager sm = getStorageManager(1024, null, null); 
+        String tsID = "0";     //$NON-NLS-1$
+        // Add one batch
+        FileStore store = sm.createFileStore(tsID);
+        String contentOrig = new String("some file content this will stored in same tmp file with another");
+        OutputStream out = store.createOutputStream();
+        out.write(contentOrig.getBytes(), 0, contentOrig.getBytes().length);
+        out.close();
+
+        out = store.createOutputStream();
+        long start = store.getLength();
+        byte[] bytesOrig = new byte[2048];
+        r.nextBytes(bytesOrig);
+        out.write(bytesOrig, 0, 2048);
+        
+        byte[] readContent = new byte[2048];
+        InputStream in = store.createInputStream(0, contentOrig.getBytes().length);        
+    	int c = in.read(readContent, 0, 3000);
+       	assertEquals(contentOrig, new String(readContent, 0, c));       	
+       	c = in.read(readContent, 0, 3000);
+       	assertEquals(-1, c);
+       	in.close();
+        
+        in = store.createInputStream(start, 2048);
+        c = in.read(readContent, 0, 3000);
+        assertTrue(Arrays.equals(bytesOrig, readContent));
+       	c = in.read(readContent, 0, 3000);
+       	assertEquals(-1, c);
+       	in.close();        
+    }	
+	
 }

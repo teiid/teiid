@@ -296,6 +296,14 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					resultsBuffer.remove();
 				}
 				
+				try {
+					if (cid != null && this.resultsBuffer.isLobs()) {
+						this.resultsBuffer.persistLobs();
+					}
+				} catch (TeiidComponentException e) {
+					LogManager.logDetail(LogConstants.CTX_DQP, QueryPlugin.Util.getString("failed_to_cache")); //$NON-NLS-1$
+				}
+				
 				for (DataTierTupleSource connectorRequest : this.connectorInfo.values()) {
 					connectorRequest.fullyCloseSource();
 			    }
@@ -377,7 +385,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		collector = new BatchCollector(processor, resultsBuffer) {
 			protected void flushBatchDirect(TupleBatch batch, boolean add) throws TeiidComponentException,TeiidProcessingException {
 				boolean added = false;
-				if (cid != null || resultsBuffer.isLobs()) {
+				if (cid != null) {
 					super.flushBatchDirect(batch, add);
 					added = true;
 				}
@@ -391,7 +399,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	                cr.setAnalysisRecord(analysisRecord);
 	                cr.setResults(resultsBuffer);
 	                
-					if (originalCommand.getCacheHint() != null && originalCommand.getCacheHint().getDeterminism() != null) {
+	                if (originalCommand.getCacheHint() != null && originalCommand.getCacheHint().getDeterminism() != null) {
 						determinismLevel = originalCommand.getCacheHint().getDeterminism();
 						LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Cache hint modified the query determinism from ",processor.getContext().getDeterminismLevel(), " to ", determinismLevel }); //$NON-NLS-1$ //$NON-NLS-2$
 					}		                

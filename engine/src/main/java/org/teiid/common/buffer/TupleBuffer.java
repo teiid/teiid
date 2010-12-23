@@ -77,6 +77,7 @@ public class TupleBuffer {
 	private LobManager lobManager;
 	private int[] lobIndexes;
 	private String uuid;
+	private FileStore lobStore;
 	
 	public TupleBuffer(BatchManager manager, String id, List<?> schema, int[] lobIndexes, int batchSize) {
 		this.manager = manager;
@@ -86,6 +87,8 @@ public class TupleBuffer {
 		this.lobIndexes = lobIndexes;
 		if (this.lobIndexes != null) {
 			this.lobManager = new LobManager();
+			this.lobStore = this.manager.createStorage("_lobs"); //$NON-NLS-1$
+			this.lobStore.setCleanupReference(this);
 		}
 		this.batchSize = batchSize;		
 	}
@@ -153,6 +156,13 @@ public class TupleBuffer {
 			batch.remove();
 		}
 		this.batches.clear();
+	}
+	
+	public void persistLobs() throws TeiidComponentException {
+		if (this.lobManager != null) {
+			saveBatch(true, true);
+			this.lobManager.persist(this.lobStore);
+		}
 	}
 	
 	/**

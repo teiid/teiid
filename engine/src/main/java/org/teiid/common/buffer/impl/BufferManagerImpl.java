@@ -33,6 +33,7 @@ import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -60,6 +61,7 @@ import org.teiid.common.buffer.BatchManager.ManagedBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.Streamable;
 import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -103,6 +105,10 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			this.store = createFileStore(id);
 			this.store.setCleanupReference(this);
 			this.lobIndexes = lobIndexes;
+		}
+		
+		public FileStore createStorage(String prefix) {
+			return createFileStore(id+prefix);
 		}
 
 		@Override
@@ -312,6 +318,10 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 						if (lobManager != null) {
 							for (List<?> tuple : batch.getTuples()) {
 								lobManager.updateReferences(batchManager.lobIndexes, tuple);
+								Collection<Streamable<?>> lobs = lobManager.getLobReferences();
+								for(Streamable<?> lob: lobs) {
+						            lobManager.persist(lob.getReferenceStreamId(), batchManager.store);
+								}
 							}
 						}
 						synchronized (batchManager.store) {

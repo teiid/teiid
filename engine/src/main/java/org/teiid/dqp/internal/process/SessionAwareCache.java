@@ -253,7 +253,7 @@ public class SessionAwareCache<T> {
 					}
 					
 					Class<?> type = DataTypeManager.determineDataTypeClass(obj);
-					if (DataTypeManager.isLOB(type) || type == DataTypeManager.DefaultDataClasses.OBJECT) {
+					if (type == DataTypeManager.DefaultDataClasses.OBJECT) {
 						return false;
 					}
 					this.parameters.add((Serializable)obj);
