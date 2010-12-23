@@ -28,8 +28,10 @@ import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.LanguageFactory;
 import org.teiid.language.QueryExpression;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.DelegatingExecutionFactory;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
@@ -49,77 +51,81 @@ import org.teiid.translator.UpdateExecution;
  * <pre>
  * {@code
     <translator type="delegate" name="my-translator" description="custom translator">
-        <property value="delegateClassName" name="name of class that implements custom execution factory"/>
+        <property value="delegateName" name="name of the delegate instance"/>
     </translator>
    }
  * </pre>
  *  
  */
 @Translator(name="delegate", description="A translator that acts as delegator to the another translator")
-public class DelegateExecutionFactory<F, C> extends ExecutionFactory {
+public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C> implements DelegatingExecutionFactory<F, C> {
 
-	private String delegateClassName;
-	private ExecutionFactory delegate;
+	private String delegateName;
+	private ExecutionFactory<F, C> delegate;
 	
-	@TranslatorProperty(display="Delegatee class name", required = true)
-	public String getDelegateClassName() {
-		return this.delegateClassName;
-	}
-	
-	public void setDelegateClassName(String delegateName) {
-		this.delegateClassName = delegateName;
-	}
-
 	/**
 	 * For testing only
 	 */
-	ExecutionFactory getDelegatee() {
+	ExecutionFactory<F, C> getDelegate() {
 		return this.delegate;
+	}
+	
+	public void setDelegate(ExecutionFactory<F, C> delegate) {
+		this.delegate = delegate;
+	}
+	
+	@TranslatorProperty(display="Delegate name", required = true)
+	public String getDelegateName() {
+		return this.delegateName;
+	}
+	
+	public void setDelegateName(String delegateName) {
+		this.delegateName = delegateName;
 	}
 	
 	@Override
 	public void start() throws TranslatorException {
-		this.delegate = getInstance(ExecutionFactory.class, this.delegateClassName,null, null);
 		this.delegate.start();
 	}
+	
 	@Override
 	public boolean areLobsUsableAfterClose() {
 		return delegate.areLobsUsableAfterClose();
 	}
 	@Override
-	public void closeConnection(Object connection, Object factory) {
+	public void closeConnection(C connection, F factory) {
 		delegate.closeConnection(connection, factory);
 	}
 	@Override
 	public Execution createExecution(Command command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
-			Object connection) throws TranslatorException {
+			C connection) throws TranslatorException {
 		return delegate.createExecution(command, executionContext, metadata,
 				connection);
 	}
 	@Override
 	public ProcedureExecution createProcedureExecution(Call command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
-			Object connection) throws TranslatorException {
+			C connection) throws TranslatorException {
 		return delegate.createProcedureExecution(command, executionContext,
 				metadata, connection);
 	}
 	@Override
 	public ResultSetExecution createResultSetExecution(QueryExpression command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
-			Object connection) throws TranslatorException {
+			C connection) throws TranslatorException {
 		return delegate.createResultSetExecution(command, executionContext,
 				metadata, connection);
 	}
 	@Override
 	public UpdateExecution createUpdateExecution(Command command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
-			Object connection) throws TranslatorException {
+			C connection) throws TranslatorException {
 		return delegate.createUpdateExecution(command, executionContext,
 				metadata, connection);
 	}
 	@Override
-	public Object getConnection(Object factory) throws TranslatorException {
+	public C getConnection(F factory) throws TranslatorException {
 		return delegate.getConnection(factory);
 	}
 	@Override
@@ -139,16 +145,16 @@ public class DelegateExecutionFactory<F, C> extends ExecutionFactory {
 		return delegate.getMaxInCriteriaSize();
 	}
 	@Override
-	public void getMetadata(MetadataFactory metadataFactory, Object conn)
+	public void getMetadata(MetadataFactory metadataFactory, C conn)
 			throws TranslatorException {
 		delegate.getMetadata(metadataFactory, conn);
 	}
 	@Override
-	public List getPushDownFunctions() {
+	public List<FunctionMethod> getPushDownFunctions() {
 		return delegate.getPushDownFunctions();
 	}
 	@Override
-	public List getSupportedFunctions() {
+	public List<String> getSupportedFunctions() {
 		return delegate.getSupportedFunctions();
 	}
 	@Override

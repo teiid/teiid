@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -52,6 +53,7 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.index.IndexMetadataFactory;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.runtime.RuntimePlugin;
+import org.teiid.translator.DelegatingExecutionFactory;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
@@ -176,26 +178,40 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 				}
 
 				String name = model.getSourceTranslatorName(source);
-				Translator translator = repo.getTranslatorMetaData(name);
-				if (translator == null) {
-					translator = this.translatorRepository.getTranslatorMetaData(name);
-				}
-				if (translator == null) {
-					throw new DeploymentException(RuntimePlugin.Util.getString("translator_not_found", deployment.getName(), deployment.getVersion(), name)); //$NON-NLS-1$
-				}
-			
-				ExecutionFactory<Object, Object> ef = map.get(translator);
-				if ( ef == null) {
-					ef = TranslatorUtil.buildExecutionFactory(translator);
-					map.put(translator, ef);
-				}
-
 				ConnectorManager cm = new ConnectorManager(name, model.getSourceConnectionJndiName(source));
+				ExecutionFactory<Object, Object> ef = getExecutionFactory(name, repo, deployment, map, new HashSet<String>());
 				cm.setExecutionFactory(ef);
 				cm.setModelName(model.getName());
 				cmr.addConnectorManager(source, cm);
 			}
 		}
+	}
+	
+	private ExecutionFactory<Object, Object> getExecutionFactory(String name, TranslatorRepository repo, VDBMetaData deployment, IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map, HashSet<String> building) throws DeploymentException {
+		if (!building.add(name)) {
+			throw new DeploymentException(RuntimePlugin.Util.getString("recursive_delegation", deployment.getName(), deployment.getVersion(), building)); //$NON-NLS-1$
+		}
+		Translator translator = repo.getTranslatorMetaData(name);
+		if (translator == null) {
+			translator = this.translatorRepository.getTranslatorMetaData(name);
+		}
+		if (translator == null) {
+			throw new DeploymentException(RuntimePlugin.Util.getString("translator_not_found", deployment.getName(), deployment.getVersion(), name)); //$NON-NLS-1$
+		}
+		ExecutionFactory<Object, Object> ef = map.get(translator);
+		if ( ef == null) {
+			ef = TranslatorUtil.buildExecutionFactory(translator);
+			if (ef instanceof DelegatingExecutionFactory) {
+				DelegatingExecutionFactory delegator = (DelegatingExecutionFactory)ef;
+				String delegateName = delegator.getDelegateName();
+				if (delegateName != null) {
+					ExecutionFactory<Object, Object> delegate = getExecutionFactory(delegateName, repo, deployment, map, building);
+					((DelegatingExecutionFactory) ef).setDelegate(delegate);
+				}
+			}
+			map.put(translator, ef);
+		}
+		return ef;
 	}
 
 	private boolean validateSources(ConnectorManagerRepository cmr, VDBMetaData deployment) {

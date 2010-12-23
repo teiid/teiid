@@ -19,37 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.delegate;
 
-import java.sql.Connection;
+package org.teiid.translator;
 
-import javax.sql.DataSource;
+public interface DelegatingExecutionFactory<F, C> {
 
-import org.teiid.language.Command;
-import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.Execution;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.TranslatorException;
-
-public class Delegatee extends ExecutionFactory<DataSource, Connection>{
-	public boolean connectionInvoked = false;
-	public boolean executionInvoked = false;
-
-	@Override
-	public Connection getConnection(DataSource factory)
-			throws TranslatorException {
-		connectionInvoked  = true;
-		return null;
-	}
-
-	@Override
-	public Execution createExecution(Command command,
-			ExecutionContext executionContext, RuntimeMetadata metadata,
-			Connection connection) throws TranslatorException {
-		executionInvoked = true;
-		return null;
-	}
-
+	String getDelegateName();
 	
+	void setDelegate(ExecutionFactory<F, C> delegate);
 }
