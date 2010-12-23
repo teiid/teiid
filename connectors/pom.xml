@@ -80,6 +80,7 @@
     <module>translator-loopback</module>
     <module>translator-file</module>
     <module>translator-salesforce</module>
+    <module>translator-delegate</module>
     
     <module>connector-file</module>
     <module>connector-salesforce</module>
