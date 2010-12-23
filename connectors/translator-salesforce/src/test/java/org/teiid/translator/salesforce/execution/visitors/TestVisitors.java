@@ -25,6 +25,7 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -45,8 +46,6 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.salesforce.Constants;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.execution.QueryExecutionImpl;
-import org.teiid.translator.salesforce.execution.visitors.JoinQueryVisitor;
-import org.teiid.translator.salesforce.execution.visitors.SelectVisitor;
 
 @SuppressWarnings("nls")
 public class TestVisitors {
@@ -87,16 +86,16 @@ public class TestVisitors {
         contactTable.setProperty("Supports Query", Boolean.TRUE.toString()); //$NON-NLS-1$
         // Create Contact Columns
         String[] elemNames = new String[] {
-            "ContactID", "Name", "AccountId"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            "ContactID", "Name", "AccountId", "InitialContact"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         };
         String[] elemTypes = new String[] {  
-            DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING 
+            DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.TIMESTAMP 
         };
         
         List<Column> contactCols = RealMetadataFactory.createElements(contactTable, elemNames, elemTypes);
         // Set name in source on each column
         String[] contactNameInSource = new String[] {
-           "id", "ContactName", "accountid"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+           "id", "ContactName", "accountid", "InitialContact"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         };
         for(int i=0; i<2; i++) {
             Column obj = contactCols.get(i);
@@ -183,6 +182,18 @@ public class TestVisitors {
 		QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, translationUtility.createRuntimeMetadata(), Mockito.mock(ExecutionContext.class));
 		qei.execute();
 		Mockito.verify(sfc).retrieve("Account.id, Account.AccountName", "Account", Arrays.asList("bar"));
+	}
+	
+	@Test public void testDateTimeFormating() throws Exception {
+		TimeZone.setDefault(TimeZone.getTimeZone("GMT-06:00"));
+		try {
+			Select command = (Select)translationUtility.parseCommand("select name from contacts where initialcontact = {ts'2003-03-11 11:42:10.5'}"); //$NON-NLS-1$
+			SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
+			visitor.visit(command);
+			assertEquals("SELECT Contact.ContactName FROM Contact WHERE Contact.InitialContact = 2003-03-11T11:42:10.500-06:00", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+		} finally {
+			TimeZone.setDefault(null);
+		}
 	}
 
 }
