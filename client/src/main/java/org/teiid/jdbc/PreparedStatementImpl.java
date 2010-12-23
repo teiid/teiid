@@ -300,6 +300,10 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
      * @throws SQLException if parameter type/datatype do not match
      */
     public void setBlob (int parameterIndex, Blob x) throws SQLException {
+		if (x == null) {
+			this.setObject(parameterIndex, null);
+			return;
+		}
         setObject(parameterIndex, x);
     }
 
@@ -345,6 +349,10 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
      * @throws SQLException if parameter type/datatype do not match.
      */
     public void setClob (int parameterIndex, Clob x) throws SQLException {
+		if (x == null) {
+			this.setObject(parameterIndex, null);
+			return;
+		}
         setObject(parameterIndex, x);
     }
 
@@ -697,6 +705,10 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
 
 	public void setBlob(int parameterIndex, final InputStream inputStream)
 			throws SQLException {
+		if (inputStream == null) {
+			this.setObject(parameterIndex, null);
+			return;
+		}
 		this.setObject(parameterIndex, new BlobImpl(new InputStreamFactory() {
 			@Override
 			public InputStream getInputStream() throws IOException {
@@ -720,6 +732,10 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
 	}
 
 	public void setClob(int parameterIndex, final Reader reader) throws SQLException {
+		if (reader == null) {
+			this.setObject(parameterIndex, null);
+			return;
+		}
 		this.setObject(parameterIndex, new ClobImpl(new InputStreamFactory() {
 			
 			@Override

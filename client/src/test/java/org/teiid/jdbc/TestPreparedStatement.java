@@ -24,6 +24,7 @@ package org.teiid.jdbc;
 
 import static org.junit.Assert.*;
 
+import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -210,6 +211,11 @@ public class TestPreparedStatement {
 		assertEquals("MMPreparedStatement.ParameterValuesList does not match", expectedParameterValues, statement.getParameterValuesList()); //$NON-NLS-1$
 	}
 
+	@Test public void testSetBlob() throws Exception {
+		PreparedStatementImpl stmt = getMMPreparedStatement("delete from table where col=?"); //$NON-NLS-1$
+		stmt.setBlob(1, (Blob)null);
+	}	
+	
 	/**
 	 * Test the <code>addBatch()</code> method of <code>MMPreparedStatement</code> 
 	 * using a batch with an empty parameter value list.  The test will verify 
