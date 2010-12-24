@@ -25,8 +25,10 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Select;
@@ -40,10 +42,12 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.RealMetadataFactory;
-import org.teiid.translator.salesforce.execution.visitors.JoinQueryVisitor;
-import org.teiid.translator.salesforce.execution.visitors.SelectVisitor;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.salesforce.Constants;
+import org.teiid.translator.salesforce.SalesforceConnection;
+import org.teiid.translator.salesforce.execution.QueryExecutionImpl;
 
-
+@SuppressWarnings("nls")
 public class TestVisitors {
 
     public static QueryMetadataInterface exampleSalesforce() { 
@@ -52,9 +56,10 @@ public class TestVisitors {
         Schema salesforceModel = RealMetadataFactory.createPhysicalModel("SalesforceModel", store); //$NON-NLS-1$
        
         // Create Account group
-        Table accounTable = RealMetadataFactory.createPhysicalGroup("Account", salesforceModel); //$NON-NLS-1$
-        accounTable.setNameInSource("Account"); //$NON-NLS-1$
-        accounTable.setProperty("Supports Query", Boolean.TRUE.toString()); //$NON-NLS-1$
+        Table accountTable = RealMetadataFactory.createPhysicalGroup("Account", salesforceModel); //$NON-NLS-1$
+        accountTable.setNameInSource("Account"); //$NON-NLS-1$
+        accountTable.setProperty("Supports Query", Boolean.TRUE.toString()); //$NON-NLS-1$
+        accountTable.setProperty(Constants.SUPPORTS_RETRIEVE, Boolean.TRUE.toString());
         // Create Account Columns
         String[] acctNames = new String[] {
             "ID", "Name", "Stuff", "Industry"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
@@ -63,7 +68,7 @@ public class TestVisitors {
             DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING
         };
         
-        List<Column> acctCols = RealMetadataFactory.createElements(accounTable, acctNames, acctTypes);
+        List<Column> acctCols = RealMetadataFactory.createElements(accountTable, acctNames, acctTypes);
         acctCols.get(2).setNativeType("multipicklist"); //$NON-NLS-1$
         acctCols.get(2).setSearchType(SearchType.Like_Only);
         // Set name in source on each column
@@ -81,16 +86,16 @@ public class TestVisitors {
         contactTable.setProperty("Supports Query", Boolean.TRUE.toString()); //$NON-NLS-1$
         // Create Contact Columns
         String[] elemNames = new String[] {
-            "ContactID", "Name", "AccountId"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            "ContactID", "Name", "AccountId", "InitialContact"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         };
         String[] elemTypes = new String[] {  
-            DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING 
+            DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.TIMESTAMP 
         };
         
         List<Column> contactCols = RealMetadataFactory.createElements(contactTable, elemNames, elemTypes);
         // Set name in source on each column
         String[] contactNameInSource = new String[] {
-           "id", "ContactName", "accountid"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+           "id", "ContactName", "accountid", "InitialContact"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         };
         for(int i=0; i<2; i++) {
             Column obj = contactCols.get(i);
@@ -169,6 +174,26 @@ public class TestVisitors {
 		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
 		visitor.visit(command);
 		assertEquals("SELECT Contact.ContactName FROM Contact WHERE ContactName IN('x','y')", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+	}
+	
+	@Test public void testIDCriteria() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("select id, name from Account where id = 'bar'"); //$NON-NLS-1$
+		SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
+		QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, translationUtility.createRuntimeMetadata(), Mockito.mock(ExecutionContext.class));
+		qei.execute();
+		Mockito.verify(sfc).retrieve("Account.id, Account.AccountName", "Account", Arrays.asList("bar"));
+	}
+	
+	@Test public void testDateTimeFormating() throws Exception {
+		TimeZone.setDefault(TimeZone.getTimeZone("GMT-06:00"));
+		try {
+			Select command = (Select)translationUtility.parseCommand("select name from contacts where initialcontact = {ts'2003-03-11 11:42:10.5'}"); //$NON-NLS-1$
+			SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
+			visitor.visit(command);
+			assertEquals("SELECT Contact.ContactName FROM Contact WHERE Contact.InitialContact = 2003-03-11T11:42:10.500-06:00", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+		} finally {
+			TimeZone.setDefault(null);
+		}
 	}
 
 }

@@ -210,6 +210,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 								try {
 									logon.assertIdentity(session);
 									logon.ping();
+									log.log(Level.FINER, "issueing ping for session:", session); //$NON-NLS-1$
 								} catch (InvalidSessionException e) {
 								}
 							}
@@ -219,6 +220,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 								sessionStrings.add(session.getSessionID());
 							}
 							logon.ping(sessionStrings);
+							log.log(Level.FINER, "issueing ping for sessions:", sessionStrings); //$NON-NLS-1$
 						}
 					} catch (Exception e) {
 						log.log(Level.WARNING, "Error performing keep-alive ping", e); //$NON-NLS-1$

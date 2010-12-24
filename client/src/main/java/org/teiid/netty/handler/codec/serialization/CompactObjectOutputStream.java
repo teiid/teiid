@@ -65,6 +65,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.BaseLob;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
@@ -182,40 +183,63 @@ public class CompactObjectOutputStream extends ObjectOutputStream {
         
     @Override
     protected Object replaceObject(Object obj) throws IOException {
-    	if (obj instanceof Serializable) {
+    	if (obj instanceof BaseLob) {
+    		try {
+		    	if (obj instanceof SQLXMLImpl) {
+					streams.add(((SQLXMLImpl)obj).getBinaryStream());
+		    		StreamFactoryReference sfr = new SQLXMLImpl();
+		    		references.add(sfr);
+		    		return sfr;
+		    	} else if (obj instanceof ClobImpl) {
+		    		streams.add(new ReaderInputStream(((ClobImpl)obj).getCharacterStream(), Charset.forName(Streamable.ENCODING)));
+		    		StreamFactoryReference sfr = new ClobImpl();
+		    		references.add(sfr);
+		    		return sfr;
+		    	} else if (obj instanceof BlobImpl) {
+		    		streams.add(((Blob)obj).getBinaryStream());
+		    		StreamFactoryReference sfr = new BlobImpl();
+		    		references.add(sfr);
+		    		return sfr;
+		    	}
+    		} catch (SQLException e) {
+    			throw new IOException(e);
+    		}
+    	}
+    	else if (obj instanceof Serializable) {
     		return obj;
     	}
-		try {
-	    	if (obj instanceof Reader) {
-	    		streams.add(new ReaderInputStream((Reader)obj, Charset.forName(Streamable.ENCODING)));
-	    		StreamFactoryReference sfr = new SerializableReader();
-	    		references.add(sfr);
-	    		return sfr;
-	    	} else if (obj instanceof InputStream) {
-	    		streams.add((InputStream)obj);
-	    		StreamFactoryReference sfr = new SerializableInputStream();
-	    		references.add(sfr);
-	    		return sfr;
-	    	} else if (obj instanceof SQLXML) {
-				streams.add(((SQLXML)obj).getBinaryStream());
-	    		StreamFactoryReference sfr = new SQLXMLImpl();
-	    		references.add(sfr);
-	    		return sfr;
-	    	} else if (obj instanceof Clob) {
-	    		//TODO: see if this is a ClobImpl and grab the underlying stream
-	    		streams.add(new ReaderInputStream(((Clob)obj).getCharacterStream(), Charset.forName(Streamable.ENCODING)));
-	    		StreamFactoryReference sfr = new ClobImpl();
-	    		references.add(sfr);
-	    		return sfr;
-	    	} else if (obj instanceof Blob) {
-	    		streams.add(((Blob)obj).getBinaryStream());
-	    		StreamFactoryReference sfr = new BlobImpl();
-	    		references.add(sfr);
-	    		return sfr;
-	    	}
-		} catch (SQLException e) {
-			throw new IOException(e);
-		}
+    	else {
+			try {
+		    	if (obj instanceof Reader) {
+		    		streams.add(new ReaderInputStream((Reader)obj, Charset.forName(Streamable.ENCODING)));
+		    		StreamFactoryReference sfr = new SerializableReader();
+		    		references.add(sfr);
+		    		return sfr;
+		    	} else if (obj instanceof InputStream) {
+		    		streams.add((InputStream)obj);
+		    		StreamFactoryReference sfr = new SerializableInputStream();
+		    		references.add(sfr);
+		    		return sfr;
+		    	} else if (obj instanceof SQLXML) {
+					streams.add(((SQLXML)obj).getBinaryStream());
+		    		StreamFactoryReference sfr = new SQLXMLImpl();
+		    		references.add(sfr);
+		    		return sfr;
+		    	} else if (obj instanceof Clob) {
+		    		streams.add(new ReaderInputStream(((Clob)obj).getCharacterStream(), Charset.forName(Streamable.ENCODING)));
+		    		StreamFactoryReference sfr = new ClobImpl();
+		    		references.add(sfr);
+		    		return sfr;
+		    	} else if (obj instanceof Blob) {
+		    		streams.add(((Blob)obj).getBinaryStream());
+		    		StreamFactoryReference sfr = new BlobImpl();
+		    		references.add(sfr);
+		    		return sfr;
+		    	}
+			} catch (SQLException e) {
+				throw new IOException(e);
+			}
+    	}
     	return super.replaceObject(obj);
     }
     

@@ -161,24 +161,30 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 				}
     		}
     	}
-    	/*
-    	 * having only a single clientserviceregistry means that the admin and jdbc ports are functionally equivalent.
-    	 * this is an undocuemented feature.  Designer integration relies on this to use the same port
-    	 * for admin and preview logic.
-    	 */
+    	
     	this.csr.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
-    	this.csr.registerClientService(DQP.class, proxyService(DQP.class, this.dqpCore, LogConstants.CTX_DQP), LogConstants.CTX_DQP);
-    	this.csr.registerClientService(Admin.class, proxyService(Admin.class, admin, LogConstants.CTX_ADMIN_API), LogConstants.CTX_ADMIN_API);
+    	DQP dqpProxy = proxyService(DQP.class, this.dqpCore, LogConstants.CTX_DQP);
+    	this.csr.registerClientService(DQP.class, dqpProxy, LogConstants.CTX_DQP);
+    	Admin adminProxy = proxyService(Admin.class, admin, LogConstants.CTX_ADMIN_API);
+    	this.csr.registerClientService(Admin.class, adminProxy, LogConstants.CTX_ADMIN_API);
+    	
+    	ClientServiceRegistryImpl jdbcCsr = new ClientServiceRegistryImpl();
+    	jdbcCsr.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
+    	jdbcCsr.registerClientService(DQP.class, dqpProxy, LogConstants.CTX_DQP);
     	
     	if (this.jdbcSocketConfiguration.getEnabled()) {
-	    	this.jdbcSocket = new SocketListener(this.jdbcSocketConfiguration, csr, this.dqpCore.getBufferManager(), offset);
+	    	this.jdbcSocket = new SocketListener(this.jdbcSocketConfiguration, jdbcCsr, this.dqpCore.getBufferManager(), offset);
 	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_enabled","Teiid JDBC = ",(this.jdbcSocketConfiguration.getSSLConfiguration().isSslEnabled()?"mms://":"mm://")+this.jdbcSocketConfiguration.getHostAddress().getHostName()+":"+(this.jdbcSocketConfiguration.getPortNumber()+offset))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     	} else {
     		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_not_enabled", "jdbc connections")); //$NON-NLS-1$ //$NON-NLS-2$
     	}
     	
+    	ClientServiceRegistryImpl adminCsr = new ClientServiceRegistryImpl(Type.Admin);
+    	adminCsr.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
+    	adminCsr.registerClientService(Admin.class, adminProxy, LogConstants.CTX_ADMIN_API);
+    	
     	if (this.adminSocketConfiguration.getEnabled()) {
-	    	this.adminSocket = new SocketListener(this.adminSocketConfiguration, csr, this.dqpCore.getBufferManager(), offset);
+	    	this.adminSocket = new SocketListener(this.adminSocketConfiguration, adminCsr, this.dqpCore.getBufferManager(), offset);
 	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_enabled","Teiid Admin", (this.adminSocketConfiguration.getSSLConfiguration().isSslEnabled()?"mms://":"mm://")+this.adminSocketConfiguration.getHostAddress().getHostName()+":"+(this.adminSocketConfiguration.getPortNumber()+offset))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     	} else {
     		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("socket_not_enabled", "admin connections")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -186,7 +192,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	
     	if (this.odbcSocketConfiguration.getEnabled()) {
     		this.vdbRepository.odbcEnabled();
-	    	this.odbcSocket = new ODBCSocketListener(this.odbcSocketConfiguration, csr, this.dqpCore.getBufferManager(), offset);
+	    	this.odbcSocket = new ODBCSocketListener(this.odbcSocketConfiguration, this.dqpCore.getBufferManager(), offset);
 	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("odbc_enabled","Teiid ODBC - SSL=", (this.odbcSocketConfiguration.getSSLConfiguration().isSslEnabled()?"ON":"OFF")+" Host = "+this.odbcSocketConfiguration.getHostAddress().getHostName()+" Port = "+(this.odbcSocketConfiguration.getPortNumber()+offset))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
     	} else {
     		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("odbc_not_enabled")); //$NON-NLS-1$

@@ -23,6 +23,7 @@ package org.teiid.translator.salesforce.execution.visitors;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -102,6 +103,9 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
             addCompareCriteria(criteriaList, criteria);
             boolean isAcceptableID = (Operator.EQ == criteria.getOperator() && isIdColumn(criteria.getLeftExpression()));
             setHasCriteria(true, isAcceptableID);
+            if (isAcceptableID) {
+            	this.idInCriteria = new In(criteria.getLeftExpression(), Arrays.asList(criteria.getRightExpression()), false);
+            }
         } catch (TranslatorException e) {
             exceptions.add(e);
         }

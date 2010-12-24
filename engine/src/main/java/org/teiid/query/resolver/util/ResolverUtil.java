@@ -324,7 +324,6 @@ public class ResolverUtil {
 	 *            allowed to be in ORDER BY
 	 * @param metadata
 	 *            QueryMetadataInterface
-	 * @param isSimpleQuery
 	 */
     public static void resolveOrderBy(OrderBy orderBy, QueryCommand command, QueryMetadataInterface metadata)
         throws QueryResolverException, QueryMetadataException, TeiidComponentException {
@@ -336,7 +335,7 @@ public class ResolverUtil {
         
         if (command instanceof Query) {
         	Query query = (Query)command;
-        	isSimpleQuery = !query.getSelect().isDistinct() && query.getGroupBy() == null;
+        	isSimpleQuery = !query.getSelect().isDistinct() && !query.hasAggregates();
         	if (query.getFrom() != null) {
         		fromClauseGroups = query.getFrom().getGroups();
         	}

@@ -472,7 +472,7 @@ public class DQPCore implements DQP {
     public void terminateSession(String sessionId) {
         // sometimes there will not be any atomic requests pending, in that
         // situation we still need to clear the master request from our map
-        ClientState state = getClientState(sessionId, false);
+        ClientState state = this.clientState.remove(sessionId);
         if (state != null) {
 	        for (RequestID reqId : state.getRequests()) {
 	            try {

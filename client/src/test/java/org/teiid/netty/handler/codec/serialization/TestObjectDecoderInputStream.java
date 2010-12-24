@@ -28,11 +28,17 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.net.SocketTimeoutException;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.Streamable;
+import org.teiid.core.util.ReaderInputStream;
 
 import static org.junit.Assert.*;
 
@@ -76,4 +82,23 @@ public class TestObjectDecoderInputStream {
 		assertEquals(testValue, ObjectDecoderInputStream.getIntFromBytes(baos.toByteArray()));
 	}
 	
+	
+	@Test public void testReplaceObject() throws Exception {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ObjectEncoderOutputStream out = new ObjectEncoderOutputStream(new DataOutputStream(baos), 512);
+		
+		ClobImpl clob = new ClobImpl(new InputStreamFactory() {
+			@Override
+			public InputStream getInputStream() throws IOException {
+				return new ReaderInputStream(new StringReader("Clob contents"),  Charset.forName(Streamable.ENCODING)); //$NON-NLS-1$
+			}
+			
+		}, -1);
+		
+		out.writeObject(clob);
+		
+		ObjectDecoderInputStream in = new ObjectDecoderInputStream(new DataInputStream(new ByteArrayInputStream(baos.toByteArray())), Thread.currentThread().getContextClassLoader(), 1024);
+		Object result = in.readObject();
+		assertTrue(result instanceof ClobImpl);
+	}	
 }

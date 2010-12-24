@@ -490,7 +490,7 @@ public class TransactionServerImpl implements TransactionService {
     }
 
     public void cancelTransactions(String threadId, boolean requestOnly) throws XATransactionException {
-        TransactionContext tc = transactions.getTransactionContext(threadId);
+    	TransactionContext tc = requestOnly?transactions.getTransactionContext(threadId):transactions.removeTransactionContext(threadId);
         
         if (tc == null || tc.getTransactionType() == TransactionContext.Scope.NONE 
         		|| (requestOnly && tc.getTransactionType() != TransactionContext.Scope.REQUEST)) {

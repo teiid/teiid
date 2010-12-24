@@ -204,7 +204,10 @@ public class TestDQPCore {
         }
 
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
+        assertNotNull(core.getClientState(String.valueOf(sessionid), false));
         ResultsMessage results = message.get(5000, TimeUnit.MILLISECONDS);
+        core.terminateSession(String.valueOf(sessionid));
+        assertNull(core.getClientState(String.valueOf(sessionid), false));
         if (results.getException() != null) {
         	throw results.getException();
         }

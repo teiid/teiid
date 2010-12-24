@@ -3070,6 +3070,10 @@ public class TestResolver {
         assertEquals("A.ret", resolvedQuery.getProjectedSymbols().get(0).getName());
     }
     
+    @Test public void testOrderByAggregatesError() throws Exception {
+    	helpResolveException("select count(*) from pm1.g1 order by e1");
+    }
+    
     @Test public void testWithDuplidateName() {
     	helpResolveException("with x as (TABLE pm1.g1), x as (TABLE pm1.g2) SELECT * from x");
     }
