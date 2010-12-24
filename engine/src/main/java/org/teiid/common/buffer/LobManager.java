@@ -141,7 +141,7 @@ public class LobManager {
 			};
 			InputStream is = isf.getInputStream();
 			OutputStream fsos = store.createOutputStream();
-			ObjectConverterUtil.write(fsos, is, bytes, -1);
+			length = ObjectConverterUtil.write(fsos, is, bytes, -1);
 		} catch (IOException e) {
 			throw new TeiidComponentException(e);
 		}

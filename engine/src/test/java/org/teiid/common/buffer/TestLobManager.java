@@ -21,10 +21,8 @@
  */
 package org.teiid.common.buffer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -39,6 +37,7 @@ import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.Streamable;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReaderInputStream;
 
 @SuppressWarnings("nls")
@@ -79,20 +78,8 @@ public class TestLobManager {
 		lob = lobManager.getLobReference(blob.getReferenceStreamId());
 		assertTrue(lob.getClass().isAssignableFrom(BlobType.class));
 		BlobType blobRead = (BlobType)lob;
-		assertTrue(Arrays.equals(read(blob.getBinaryStream()), read(blobRead.getBinaryStream())));
+		assertTrue(Arrays.equals(ObjectConverterUtil.convertToByteArray(blob.getBinaryStream()), ObjectConverterUtil.convertToByteArray(blobRead.getBinaryStream())));
 		
 	}
 	
-	private byte[] read(InputStream in) throws Exception {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		byte[] bytes = new byte[100];
-		while (true) {
-			int c = in.read(bytes, 0, 100);
-			if (c == -1) {
-				break;
-			}
-			out.write(c);
-		}
-		return out.toByteArray();
-	}
 }
