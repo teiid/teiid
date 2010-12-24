@@ -95,7 +95,7 @@ public class ObjectConverterUtil {
         return out.toByteArray();
     }
     
-    public static void write(final OutputStream out, final InputStream is, byte[] l_buffer, int length) throws IOException {
+    public static int write(final OutputStream out, final InputStream is, byte[] l_buffer, int length) throws IOException {
     	int writen = 0;
         try {
 	        int l_nbytes = 0;  // Number of bytes read
@@ -107,6 +107,7 @@ public class ObjectConverterUtil {
 	        	out.write(l_buffer,0,l_nbytes); 
 	        	writen += l_nbytes;
 	        }
+	        return writen;
         } finally {
         	try {
         		is.close();
