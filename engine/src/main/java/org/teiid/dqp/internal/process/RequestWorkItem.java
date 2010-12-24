@@ -294,14 +294,12 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				rowcount = resultsBuffer.getRowCount();
 				if (this.cid == null || !this.doneProducingBatches) {
 					resultsBuffer.remove();
-				}
-				
-				try {
-					if (cid != null && this.resultsBuffer.isLobs()) {
+				} else {
+					try {
 						this.resultsBuffer.persistLobs();
+					} catch (TeiidComponentException e) {
+						LogManager.logDetail(LogConstants.CTX_DQP, QueryPlugin.Util.getString("failed_to_cache")); //$NON-NLS-1$
 					}
-				} catch (TeiidComponentException e) {
-					LogManager.logDetail(LogConstants.CTX_DQP, QueryPlugin.Util.getString("failed_to_cache")); //$NON-NLS-1$
 				}
 				
 				for (DataTierTupleSource connectorRequest : this.connectorInfo.values()) {

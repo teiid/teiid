@@ -39,6 +39,7 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.plan.Annotation;
 import org.teiid.client.plan.Annotation.Priority;
+import org.teiid.common.buffer.LobManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
@@ -582,7 +583,7 @@ public class RelationalPlanner {
 				if (container instanceof StoredProcedure) {
 					boolean noCache = isNoCacheGroup(metadata, ((StoredProcedure) container).getProcedureID(), option);
 					if (!noCache) {
-						if (container.areResultsCachable() && Query.areResultsCachable(container.getProcedureParameters().keySet()) && context.isResultSetCacheEnabled()) {
+						if (context.isResultSetCacheEnabled() && container.areResultsCachable() && LobManager.getLobIndexes(new ArrayList<ElementSymbol>(container.getProcedureParameters().keySet())) == null) {
 							container.getGroup().setGlobalTable(true);
 							container.setCacheHint(c.getCacheHint());
 							recordAnnotation(analysisRecord, Annotation.CACHED_PROCEDURE, Priority.LOW, "SimpleQueryResolver.procedure_cache_used", container.getGroup()); //$NON-NLS-1$

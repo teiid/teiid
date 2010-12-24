@@ -83,6 +83,10 @@ public abstract class InputStreamFactory implements Source {
     	return null;
     }
     
+    public boolean isPersistent() {
+    	return false;
+    }
+    
     public static class FileInputStreamFactory extends InputStreamFactory {
     	
     	private File f;
@@ -100,6 +104,11 @@ public abstract class InputStreamFactory implements Source {
     	@Override
     	public InputStream getInputStream() throws IOException {
     		return new BufferedInputStream(new FileInputStream(f));
+    	}
+    	
+    	@Override
+    	public boolean isPersistent() {
+    		return true;
     	}
     	
     }

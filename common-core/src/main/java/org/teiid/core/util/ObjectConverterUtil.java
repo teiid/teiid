@@ -95,10 +95,9 @@ public class ObjectConverterUtil {
         return out.toByteArray();
     }
     
-    public static void write(final OutputStream out, final InputStream is, int length) throws IOException {
+    public static void write(final OutputStream out, final InputStream is, byte[] l_buffer, int length) throws IOException {
     	int writen = 0;
         try {
-	        byte[] l_buffer = new byte[DEFAULT_READING_SIZE]; // buffer holding bytes to be transferred
 	        int l_nbytes = 0;  // Number of bytes read
 	        while ((l_nbytes = is.read(l_buffer)) != -1) {
 	        	if (length != -1 && writen > length - l_nbytes) {
@@ -115,6 +114,10 @@ public class ObjectConverterUtil {
         		out.close();
         	}
         }
+    }
+    
+    public static void write(final OutputStream out, final InputStream is, int length) throws IOException {
+    	write(out, is, new byte[DEFAULT_READING_SIZE], length); // buffer holding bytes to be transferred
     }
     
     public static void write(final Writer out, final Reader is, int length) throws IOException {

@@ -86,6 +86,11 @@ public class XMLUtil {
 		public void free() throws IOException {
 			lobBuffer.remove();
 		}
+		
+		@Override
+		public boolean isPersistent() {
+			return true;
+		}
 	}
 
     /**

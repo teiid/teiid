@@ -22,7 +22,6 @@
 
 package org.teiid.common.buffer;
 
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -30,14 +29,13 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.types.BaseLob;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
@@ -47,8 +45,8 @@ import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.types.XMLType;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.processor.xml.XMLUtil.FileStoreInputStreamFactory;
 import org.teiid.query.sql.symbol.Expression;
 
 /**
@@ -56,9 +54,7 @@ import org.teiid.query.sql.symbol.Expression;
  * TODO: for temp tables we may need to have a copy by value management strategy
  */
 public class LobManager {
-	private static final int IO_BUFFER_SIZE = 1 << 14;
 	private Map<String, Streamable<?>> lobReferences = new ConcurrentHashMap<String, Streamable<?>>();
-	private Map<String, Streamable<?>> lobFilestores = new ConcurrentHashMap<String, Streamable<?>>();
 
 	public void updateReferences(int[] lobIndexes, List<?> tuple)
 			throws TeiidComponentException {
@@ -78,26 +74,13 @@ public class LobManager {
 	}
 	
     public Streamable<?> getLobReference(String id) throws TeiidComponentException {
-    	Streamable<?> lob = null;
-    	if (this.lobReferences != null) {
-    		lob = this.lobReferences.get(id);
-    	}
-    	
-    	if (lob == null) {
-			lob = this.lobFilestores.get(id);
-    	}
-    	
+    	Streamable<?> lob = this.lobReferences.get(id);
     	if (lob == null) {
     		throw new TeiidComponentException(QueryPlugin.Util.getString("ProcessWorker.wrongdata")); //$NON-NLS-1$
     	}
     	return lob;
     }
         
-    public void clear() {
-    	this.lobReferences.clear();
-    	this.lobFilestores.clear();
-    }
-    
     public static int[] getLobIndexes(List expressions) {
     	if (expressions == null) {
     		return null;
@@ -116,54 +99,33 @@ public class LobManager {
 	    return Arrays.copyOf(result, resultIndex);
     }
 
-    public Collection<Streamable<?>> getLobReferences(){
-    	return lobReferences.values();
-    }
-    
 	public void persist(FileStore lobStore) throws TeiidComponentException {
-		ArrayList<Streamable<?>> lobs = new ArrayList<Streamable<?>>(this.lobReferences.values());
-		for (Streamable<?> lob:lobs) {
-			persist(lob.getReferenceStreamId(), lobStore);
+		// stream the contents of lob into file store.
+		byte[] bytes = new byte[102400]; // 100k
+
+		for (Map.Entry<String, Streamable<?>> entry : this.lobReferences.entrySet()) {
+			entry.setValue(persistLob(entry.getValue(), lobStore, bytes));
 		}
 	}    
     
-	public Streamable<?> persist(String id, FileStore fs) throws TeiidComponentException {
-		Streamable<?> persistedLob = this.lobFilestores.get(id);
-		if (persistedLob == null) {
-			Streamable<?> lobReference =  this.lobReferences.get(id);
-			if (lobReference == null) {
-	    		throw new TeiidComponentException(QueryPlugin.Util.getString("ProcessWorker.wrongdata")); //$NON-NLS-1$
-	    	}
-	    	
-	    	persistedLob = persistLob(lobReference, fs);
-			synchronized (this) {
-				this.lobFilestores.put(id, persistedLob);
-				this.lobReferences.remove(id);		
-			}
-		}
-		return persistedLob;
-	}
-	
-	private Streamable<?> persistLob(final Streamable<?> lob, final FileStore store) throws TeiidComponentException {
-		long offset = store.getLength();
-		int length = 0;
-		Streamable<?> persistedLob;
+	private Streamable<?> persistLob(final Streamable<?> lob, final FileStore store, byte[] bytes) throws TeiidComponentException {
 		
-		// if this is XML and already saved to disk just return
-		if (lob.getReference() instanceof SQLXMLImpl) {
+		// if this is already saved to disk just return
+		if (lob.getReference() instanceof BaseLob) {
 			try {
-				SQLXMLImpl xml = (SQLXMLImpl)lob.getReference();
-				InputStreamFactory isf = xml.getStreamFactory();
-				if (isf instanceof FileStoreInputStreamFactory) {
+				BaseLob baseLob = (BaseLob)lob.getReference();
+				InputStreamFactory isf = baseLob.getStreamFactory();
+				if (isf.isPersistent()) {
 					return lob;
 				}
 			} catch (SQLException e) {
 				// go through regular persistence.
 			}
 		}
+		long offset = store.getLength();
+		int length = 0;
+		Streamable<?> persistedLob;
 					
-		// stream the contents of lob into file store.
-		byte[] bytes = new byte[102400]; // 100k
 		try {
 			InputStreamFactory isf = new InputStreamFactory() {
 				@Override
@@ -178,20 +140,11 @@ public class LobManager {
 				}					
 			};
 			InputStream is = isf.getInputStream();
-			OutputStream fsos = new BufferedOutputStream(store.createOutputStream(), IO_BUFFER_SIZE);
-			while(true) {
-				int read = is.read(bytes, 0, 102400);
-				if (read == -1) {
-					break;
-				}
-				length += read;
-				fsos.write(bytes, 0, read);
-			}
-			fsos.close();
-			is.close();
+			OutputStream fsos = store.createOutputStream();
+			ObjectConverterUtil.write(fsos, is, bytes, -1);
 		} catch (IOException e) {
 			throw new TeiidComponentException(e);
-		}		
+		}
 		
 		// re-construct the new lobs based on the file store
 		final long lobOffset = offset;
@@ -200,6 +153,11 @@ public class LobManager {
 			@Override
 			public InputStream getInputStream() throws IOException {
 				return store.createInputStream(lobOffset, lobLength);
+			}
+			
+			@Override
+			public boolean isPersistent() {
+				return true;
 			}
 		};			
 		

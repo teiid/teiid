@@ -160,7 +160,6 @@ public class TupleBuffer {
 	
 	public void persistLobs() throws TeiidComponentException {
 		if (this.lobManager != null) {
-			saveBatch(true, true);
 			this.lobManager.persist(this.lobStore);
 		}
 	}
@@ -236,6 +235,9 @@ public class TupleBuffer {
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
 	            LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Removing TupleBuffer:", this.tupleSourceID); //$NON-NLS-1$
 	        }
+			if (this.lobStore != null) {
+				this.lobStore.remove();
+			}
 			this.batchBuffer = null;
 			purge();
 			this.manager.remove();
