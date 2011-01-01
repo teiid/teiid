@@ -122,7 +122,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		}
 		StringBuffer result = new StringBuffer();
 		result.append(SELECT).append(SPACE);
-		addSelectSymbols(table.getNameInSource(), result);
+		addSelectSymbols(result);
 		result.append(SPACE);
 		result.append(FROM).append(SPACE);
 		result.append(table.getNameInSource()).append(SPACE);
@@ -133,7 +133,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		return result.toString();
 	}
 
-	protected void addSelectSymbols(String tableNameInSource, StringBuffer result) throws TranslatorException {
+	private void addSelectSymbols(StringBuffer result) throws TranslatorException {
 		boolean firstTime = true;
 		for (DerivedColumn symbol : selectSymbols) {
 			if (!firstTime) {
@@ -204,7 +204,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	public String getRetrieveFieldList() throws TranslatorException {
 		assertRetrieveValidated();
 		StringBuffer result = new StringBuffer();
-		addSelectSymbols(table.getNameInSource(), result);
+		addSelectSymbols(result);
 		return result.toString();
 	}
 
