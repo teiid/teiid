@@ -116,9 +116,6 @@ clearCache("QUERY_SERVICE_RESULT_SET_CACHE")
 		<title>Limitations</title>
 		<itemizedlist>
 			<listitem>
-				<para>Non-XML document model results, BLOBs, CLOBs, and OBJECT typed values cannot be cached.</para>
-			</listitem>
-			<listitem>
 				<para>XML, BLOB, CLOB, and OBJECT type cannot be used as part of the cache key for prepared statement of procedure cache keys.</para>
 			</listitem>
 			<listitem>
