@@ -67,6 +67,7 @@ import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -472,13 +473,22 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		plannedResult.rightExpressions = RuleChooseJoinStrategy.createExpressionSymbols(plannedResult.rightExpressions);
 		
 		if (requireDistinct && !addGroupBy && !isDistinct(plannedResult.query, plannedResult.rightExpressions, metadata)) {
-			return false;
+			if (!requiredExpressions.isEmpty()) {
+				return false;
+			}
+			plannedResult.query.getSelect().setDistinct(true);
 		}
 
 		if (addGroupBy) {
 			plannedResult.query.setGroupBy(new GroupBy(plannedResult.rightExpressions));
 		}
-		HashSet<SingleElementSymbol> projectedSymbols = new HashSet<SingleElementSymbol>(plannedResult.query.getProjectedSymbols());
+		HashSet<SingleElementSymbol> projectedSymbols = new HashSet<SingleElementSymbol>();
+		for (SingleElementSymbol ses : plannedResult.query.getProjectedSymbols()) {
+			if (ses instanceof AliasSymbol) {
+				ses = ((AliasSymbol)ses).getSymbol();
+			}
+			projectedSymbols.add(ses);
+		}
 		for (SingleElementSymbol ses : requiredExpressions) {
 			if (projectedSymbols.add(ses)) {
 				plannedResult.query.getSelect().addSymbol(ses);

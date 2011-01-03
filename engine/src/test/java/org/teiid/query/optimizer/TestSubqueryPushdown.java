@@ -755,7 +755,18 @@ public class TestSubqueryPushdown {
     }
     
     @Test public void testSubqueryRewriteToJoin1() throws Exception {
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in (select pm1.g1.e1 FROM pm1.g1)", "SELECT e1 FROM pm3.g1, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.e1", FakeMetadataFactory.example4());
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in (select pm1.g1.e1 as x FROM pm1.g1)", "SELECT e1 FROM pm3.g1, (SELECT pm1.g1.e1 AS x FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.x", FakeMetadataFactory.example4());
+    }
+    
+    @Test public void testSubqueryRewriteToJoin2() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in (select pm1.g1.e1 || 1 FROM pm1.g1)", "SELECT e1 FROM pm3.g1, (SELECT DISTINCT concat(pm1.g1.e1, '1') AS EXPR FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.EXPR", FakeMetadataFactory.example4());
+    }
+    
+    /**
+     * Even though this situation is essentially the same as above, we don't yet handle it
+     */
+    @Test public void testSubqueryRewriteToJoin3() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where exists (select pm1.g1.e2 FROM pm1.g1 WHERE pm3.g1.e1 = pm1.g1.e1 || 1)", "SELECT e1 FROM pm3.g1 WHERE EXISTS (SELECT pm1.g1.e2 FROM pm1.g1 WHERE concat(pm1.g1.e1, '1') = pm3.g1.e1)", FakeMetadataFactory.example4());
     }
     
     @Test public void testSubqueryRewriteToJoinWithOtherCriteria() throws Exception {
