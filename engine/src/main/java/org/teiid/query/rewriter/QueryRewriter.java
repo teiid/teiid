@@ -414,7 +414,7 @@ public class QueryRewriter {
      * @throws QueryValidatorException
      */
     private void rewriteSubqueryContainer(SubqueryContainer container, boolean removeOrderBy) throws TeiidComponentException, TeiidProcessingException{
-        if (rewriteSubcommands && container.getCommand() != null && container.getCommand().getProcessorPlan() == null) {
+        if (rewriteSubcommands && container.getCommand() != null && (container.getCommand().getProcessorPlan() == null || processing)) {
         	container.setCommand(rewriteCommand(container.getCommand(), removeOrderBy));
         }
     }

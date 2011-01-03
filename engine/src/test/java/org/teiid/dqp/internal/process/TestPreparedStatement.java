@@ -49,12 +49,13 @@ import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.FakeDataManager;
+import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
-
+@SuppressWarnings("nls")
 public class TestPreparedStatement {
 	
 	private static final int SESSION_ID = 6;
@@ -416,6 +417,25 @@ public class TestPreparedStatement {
         FakeDataManager dataManager = new FakeDataManager();
         TestProcessor.sampleData1(dataManager);
 		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, false,FakeMetadataFactory.example1VDB());
+    }
+    
+    @Test public void testWithSubqueryPushdown() throws Exception {
+    	String preparedSql = "SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e2 IN (SELECT pm1.g2.e2 FROM pm1.g2 WHERE pm1.g2.e1 = ?)"; //$NON-NLS-1$
+                
+        List[] expected = new List[] { 
+            Arrays.asList("a"),
+        };    
+    
+		List values = Arrays.asList("a"); //$NON-NLS-1$
+		
+		QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
+        HardcodedDataManager dataManager = new HardcodedDataManager(metadata);
+        dataManager.addData("SELECT g_0.e1 FROM g1 AS g_0 WHERE g_0.e2 IN (SELECT g_1.e2 FROM g2 AS g_1 WHERE g_1.e1 = 'a')", new List[] {Arrays.asList("a")});
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+	    caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
+        
+		helpTestProcessing(preparedSql, values, expected, dataManager, new DefaultCapabilitiesFinder(caps), metadata, null, false, false, false, FakeMetadataFactory.example1VDB());
     }
     
 }
