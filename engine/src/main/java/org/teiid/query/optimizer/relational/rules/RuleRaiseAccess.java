@@ -569,7 +569,9 @@ public final class RuleRaiseAccess implements OptimizerRule {
     	Object modelID = null;
         Set<Object> groupIDs = new HashSet<Object>();
         int groupCount = 0;
-        
+		LinkedList<CompareCriteria> thetaCriteria = new LinkedList<CompareCriteria>();
+		SupportedJoinCriteria sjc = null;
+
 		for (PlanNode childNode : children) {
 			if(childNode.getType() != NodeConstants.Types.ACCESS 
 					|| childNode.hasCollectionProperty(NodeConstants.Info.ACCESS_PATTERNS)) {
@@ -604,7 +606,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
         		if (!CapabilitiesUtil.supportsJoin(accessModelID, type, metadata, capFinder)) {
 				   return null;
         		}
-        		SupportedJoinCriteria sjc = CapabilitiesUtil.getSupportedJoinCriteria(accessModelID, metadata, capFinder);
+        		sjc = CapabilitiesUtil.getSupportedJoinCriteria(accessModelID, metadata, capFinder);
 				
         		/*
         		 * Key joins must be left linear
@@ -616,7 +618,16 @@ public final class RuleRaiseAccess implements OptimizerRule {
 				if(crits != null && !crits.isEmpty()) {
 					for (Criteria crit : crits) {
 				        if (!isSupportedJoinCriteria(sjc, crit, accessModelID, metadata, capFinder, record)) {
+				        	if (crit instanceof CompareCriteria) {
+				    			CompareCriteria cc = (CompareCriteria) crit;
+				    			if (cc.isOptional()) {
+				    				cc.setOptional(true);
+				    				continue;
+				    			}
+				    		}
 				        	return null;
+				        } else if (crit instanceof CompareCriteria) {
+				        	thetaCriteria.add((CompareCriteria)crit);
 				        }
 					}
 					if (sjc == SupportedJoinCriteria.KEY) {
@@ -649,7 +660,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
 								&& !matchesForeignKey(metadata, rightIds, leftIds, rightGroup, true)) {
 							return null;
 						}
-					}
+					} 
                 } else if (sjc != SupportedJoinCriteria.ANY) {
                 	return null; //cross join not supported
                 }
@@ -665,6 +676,21 @@ public final class RuleRaiseAccess implements OptimizerRule {
 		
 		if (maxGroups != -1 && maxGroups < groupCount) {
 		    return null;
+		}
+		
+		if (sjc == SupportedJoinCriteria.KEY) {
+			for (CompareCriteria criteria : thetaCriteria) {
+				criteria.setOptional(false);
+			}
+		} else {
+			//TODO: this should be done in a less arbitrary way, and what about composite keys?
+			boolean hasCriteria = false;
+			for (CompareCriteria criteria : thetaCriteria) {
+				if (criteria.getIsOptional() == null || (!hasCriteria && criteria.getIsOptional())) {
+					criteria.setOptional(false);
+				}
+				hasCriteria = true;
+			}
 		}
 		
 		return modelID;

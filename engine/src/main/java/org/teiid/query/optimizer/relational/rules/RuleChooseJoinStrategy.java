@@ -25,6 +25,7 @@ package org.teiid.query.optimizer.relational.rules;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -100,6 +101,13 @@ public class RuleChooseJoinStrategy implements OptimizerRule {
         // no more than one group on each side
         List<Criteria> crits = (List<Criteria>) joinNode.getProperty(NodeConstants.Info.JOIN_CRITERIA);
         
+        filterOptionalCriteria(crits);
+        
+        if (crits.isEmpty() && jtype == JoinType.JOIN_INNER) {
+    		joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, JoinType.JOIN_CROSS);
+    		return;
+    	}
+        
         List<Criteria> nonEquiJoinCriteria = new ArrayList<Criteria>();
         
         separateCriteria(leftGroups, rightGroups, leftExpressions, rightExpressions, crits, nonEquiJoinCriteria);
@@ -142,10 +150,6 @@ public class RuleChooseJoinStrategy implements OptimizerRule {
                 continue;
             }
             
-            if (crit.isOptional()) {
-            	continue;
-            }
-            
             Expression leftExpr = crit.getLeftExpression();
             Expression rightExpr = crit.getRightExpression();
                         
@@ -186,6 +190,18 @@ public class RuleChooseJoinStrategy implements OptimizerRule {
         }
         return result;
     }
+    
+	static void filterOptionalCriteria(List<Criteria> crits) {
+		for (Iterator<Criteria> iter = crits.iterator(); iter.hasNext();) {
+			Criteria crit = iter.next();
+			if (crit instanceof CompareCriteria) {
+				CompareCriteria cc = (CompareCriteria) crit;
+				if (cc.isOptional()) {
+					iter.remove();
+				}
+			}
+		}
+	}
 
     public String toString() {
         return "ChooseJoinStrategy"; //$NON-NLS-1$

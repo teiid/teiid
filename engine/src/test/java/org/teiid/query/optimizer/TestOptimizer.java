@@ -5803,8 +5803,8 @@ public class TestOptimizer {
 
         ProcessorPlan plan = helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), 
                                       new String[] { 
-                                          "SELECT g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey <> 1",  //$NON-NLS-1$ 
-                                          "SELECT g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey = 1" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+                                          "SELECT g_0.intkey FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey <> 1",  //$NON-NLS-1$ 
+                                          "SELECT g_0.intkey FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey = 1" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
 
         checkNodeTypes(plan, new int[] {
                                         2,      // Access

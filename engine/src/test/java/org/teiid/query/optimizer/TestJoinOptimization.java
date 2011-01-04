@@ -51,7 +51,7 @@ import org.teiid.query.unittest.FakeMetadataObject;
 import org.teiid.query.unittest.FakeMetadataStore;
 import org.teiid.translator.SourceSystemFunctions;
 
-
+@SuppressWarnings("nls")
 public class TestJoinOptimization {
     
     /**
@@ -260,13 +260,13 @@ public class TestJoinOptimization {
     }
     
     /**
-     * The intkey criteria should not be copied above to bqt1.smalla since the criteria is comming from the inner side in the join below 
+     * The intkey criteria should not be copied above to bqt1.smalla since the criteria is coming from the inner side in the join below 
      */
     @Test public void testInvalidCopyCriteria() {
         String sql = "select bqt1.smalla.intkey from bqt1.smalla inner join (select bqt3.smalla.intkey from bqt2.smalla left outer join bqt3.smalla on bqt2.smalla.intkey = bqt3.smalla.intkey and bqt3.smalla.intkey = 1) foo on bqt1.smalla.intkey = foo.intkey"; //$NON-NLS-1$
 
         // Plan query
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.intkey FROM bqt3.smalla AS g_0 WHERE g_0.intkey = 1", "SELECT g_0.intkey FROM bqt2.smalla AS g_0", "SELECT g_0.intkey AS c_0 FROM bqt1.smalla AS g_0 ORDER BY c_0"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.intkey FROM bqt3.smalla AS g_0 WHERE g_0.intkey = 1", "SELECT g_0.IntKey FROM bqt2.smalla AS g_0", "SELECT g_0.intkey AS c_0 FROM bqt1.smalla AS g_0 ORDER BY c_0"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             3,      // Access
@@ -293,7 +293,7 @@ public class TestJoinOptimization {
         String sql = "select bqt1.smalla.intkey from bqt1.smalla left outer join (select bqt3.smalla.intkey from bqt3.smalla where bqt3.smalla.intkey = 1) foo on bqt1.smalla.intkey = foo.intkey"; //$NON-NLS-1$
 
         // Plan query
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.intkey FROM bqt3.smalla AS g_0 WHERE g_0.intkey = 1", "SELECT g_0.intkey FROM bqt1.smalla AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.IntKey FROM bqt3.smalla AS g_0 WHERE g_0.intkey = 1", "SELECT g_0.intkey FROM bqt1.smalla AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -550,7 +550,7 @@ public class TestJoinOptimization {
     }
     
     /**
-     * non-depenent criteria on each side of a full outer creates an inner join  
+     * non-dependent criteria on each side of a full outer creates an inner join  
      */
     @Test public void testOuterToInnerJoinConversion4() {
     	QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
@@ -997,6 +997,32 @@ public class TestJoinOptimization {
             0,      // PlanExecution
             1,      // Project
             1,      // Select
+            0,      // Sort
+            0       // UnionAll
+        });
+    }
+    
+    @Test public void testTransitiveJoinCondition() {
+        String sql = "select b.intkey from bqt1.smalla a, bqt2.smallb b, bqt2.smalla b1 where a.intkey = b.intkey and a.intkey = b1.intkey"; //$NON-NLS-1$
+        
+        // Plan query
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), new String[] {
+        	"SELECT g_1.intkey AS c_0, g_0.intkey AS c_1 FROM bqt2.smallb AS g_0, bqt2.smalla AS g_1 WHERE g_1.intkey = g_0.intkey ORDER BY c_0, c_1", 
+        	"SELECT g_0.intkey AS c_0 FROM bqt1.smalla AS g_0 ORDER BY c_0"}); 
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // Join
+            1,      // MergeJoin
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
             0,      // Sort
             0       // UnionAll
         });

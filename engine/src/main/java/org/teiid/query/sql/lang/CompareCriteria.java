@@ -46,7 +46,7 @@ public class CompareCriteria extends AbstractCompareCriteria implements Negatabl
 
 	/** The right-hand expression. */
 	private Expression rightExpression;
-	private boolean isOptional;
+	private Boolean isOptional = Boolean.FALSE;
     
     /**
      * Constructs a default instance of this class.
@@ -103,7 +103,7 @@ public class CompareCriteria extends AbstractCompareCriteria implements Negatabl
      * to correctly process a join
      * @param isOptional
      */
-    public void setOptional(boolean isOptional) {
+    public void setOptional(Boolean isOptional) {
 		this.isOptional = isOptional;
 	}
     
@@ -113,6 +113,10 @@ public class CompareCriteria extends AbstractCompareCriteria implements Negatabl
      * @return
      */
     public boolean isOptional() {
+		return isOptional == null || isOptional;
+	}
+    
+    public Boolean getIsOptional() {
 		return isOptional;
 	}
 

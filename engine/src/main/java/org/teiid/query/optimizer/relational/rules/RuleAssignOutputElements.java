@@ -433,11 +433,9 @@ public final class RuleAssignOutputElements implements OptimizerRule {
                 AggregateSymbolCollectorVisitor.getAggregates(selectCriteria, requiredSymbols, requiredSymbols);
 				break;
 			case NodeConstants.Types.JOIN:
-				List crits = (List) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
+				List<Criteria> crits = (List) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
 				if(crits != null) {
-					Iterator critIter = crits.iterator();
-					while(critIter.hasNext()) {
-						Criteria joinCriteria = (Criteria) critIter.next();
+					for (Criteria joinCriteria : crits) {
 						AggregateSymbolCollectorVisitor.getAggregates(joinCriteria, requiredSymbols, requiredSymbols);
 					}
 				}

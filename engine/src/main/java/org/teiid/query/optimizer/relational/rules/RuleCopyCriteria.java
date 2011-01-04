@@ -50,6 +50,7 @@ import org.teiid.query.sql.lang.IsNullCriteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.util.CommandContext;
 
@@ -80,8 +81,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
 	public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context) 
 		throws QueryPlannerException, TeiidComponentException {
 
-        //do an initial check to see if an execution will be necessary
-	    List<PlanNode> critNodes = NodeEditor.findAllNodes(plan, NodeConstants.Types.SELECT);
+	    List<PlanNode> critNodes = NodeEditor.findAllNodes(plan, NodeConstants.Types.SELECT | NodeConstants.Types.JOIN);
         boolean shouldRun = false;
         for (PlanNode critNode : critNodes) {
             if (!critNode.hasBooleanProperty(NodeConstants.Info.IS_COPIED)) {
@@ -121,9 +121,9 @@ public final class RuleCopyCriteria implements OptimizerRule {
      * @return true if the copy was successful
      */
     private boolean copyCriteria(Criteria crit,
-                                 Map tgtMap,
-                                 List joinCriteria,
-                                 Set combinedCriteria,
+                                 Map<Expression, Expression> tgtMap,
+                                 List<Criteria> joinCriteria,
+                                 Set<Criteria> combinedCriteria,
                                  boolean checkForGroupReduction,
                                  QueryMetadataInterface metadata) {
         int startGroups = GroupsUsedByElementsVisitor.getGroups(crit).size();
@@ -166,7 +166,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
      * @param node
      * @return true if criteria has been created
      */
-    private boolean tryToCopy(PlanNode node, Set[] criteriaInfo, QueryMetadataInterface metadata) {
+    private boolean tryToCopy(PlanNode node, Set<Criteria>[] criteriaInfo, QueryMetadataInterface metadata) {
         boolean changedTree = false;
         
         if (node == null) {
@@ -181,16 +181,16 @@ public final class RuleCopyCriteria implements OptimizerRule {
                 return visitChildern(node, criteriaInfo, changedTree, metadata);
             }
             
-            Set[] leftChildCriteria = new Set[2];
-            Set[] rightChildCriteria = new Set[2];
+            Set<Criteria>[] leftChildCriteria = new Set[2];
+            Set<Criteria>[] rightChildCriteria = new Set[2];
             
             changedTree |= tryToCopy(node.getFirstChild(), leftChildCriteria, metadata);
             changedTree |= tryToCopy(node.getLastChild(), rightChildCriteria, metadata);
 
-            List joinCrits = (List) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
-            Set combinedCriteria = null;
+            List<Criteria> joinCrits = (List<Criteria>) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
+            Set<Criteria> combinedCriteria = null;
             if (joinCrits != null) {
-                combinedCriteria = new HashSet(joinCrits); 
+                combinedCriteria = new HashSet<Criteria>(joinCrits); 
                 combinedCriteria.addAll(leftChildCriteria[1]);
                 combinedCriteria.addAll(rightChildCriteria[1]);
             }
@@ -208,19 +208,19 @@ public final class RuleCopyCriteria implements OptimizerRule {
                 return changedTree;
             }
             
-            Set toCopy = criteriaInfo[0];
-            Set allCriteria = criteriaInfo[1];
+            Set<Criteria> toCopy = criteriaInfo[0];
+            Set<Criteria> allCriteria = criteriaInfo[1];
             
             if (!toCopy.isEmpty()) {
-                Map srcToTgt = buildElementMap(joinCrits);
+                Map<Expression, Expression> srcToTgt = buildElementMap(joinCrits);
     
-                List newJoinCrits = new LinkedList();
+                List<Criteria> newJoinCrits = new LinkedList<Criteria>();
     
-                changedTree = createCriteriaFromSelectCriteria(changedTree, combinedCriteria, toCopy, srcToTgt, newJoinCrits, metadata);
+                changedTree |= createCriteria(false, toCopy, combinedCriteria, srcToTgt, newJoinCrits, metadata);
                 
                 srcToTgt = buildElementMap(allCriteria);
                             
-                changedTree = createCriteriaFromJoinCriteria(changedTree, joinCrits, combinedCriteria, srcToTgt, newJoinCrits, metadata);
+                changedTree |= createCriteria(true, joinCrits, combinedCriteria, srcToTgt, newJoinCrits, metadata);
                 
                 joinCrits.addAll(newJoinCrits);
             }
@@ -232,6 +232,11 @@ public final class RuleCopyCriteria implements OptimizerRule {
             } else if (jt == JoinType.JOIN_LEFT_OUTER) {
                 criteriaInfo[0].removeAll(rightChildCriteria[0]);
                 criteriaInfo[1].removeAll(rightChildCriteria[1]);
+            } else if (node.getSubqueryContainers().isEmpty()) {
+            	if (!node.hasBooleanProperty(NodeConstants.Info.IS_COPIED)) {
+                    toCopy.addAll(joinCrits);
+                }
+                allCriteria.addAll(joinCrits);
             }
             
             return changedTree;
@@ -257,8 +262,8 @@ public final class RuleCopyCriteria implements OptimizerRule {
             case NodeConstants.Types.PROJECT: 
             {
                 if (criteriaInfo[0] == null) {
-                    criteriaInfo[0] = new HashSet();
-                    criteriaInfo[1] = new HashSet();
+                    criteriaInfo[0] = new HashSet<Criteria>();
+                    criteriaInfo[1] = new HashSet<Criteria>();
                 } else {
                     criteriaInfo[0].clear();
                     criteriaInfo[1].clear();
@@ -271,76 +276,44 @@ public final class RuleCopyCriteria implements OptimizerRule {
         return changedTree;
     }
 
-    /** 
-     * @param changedTree
-     * @param joinCrits
-     * @param combinedCriteria
-     * @param srcToTgt
-     * @param newJoinCrits
-     * @return
-     */
-    private boolean createCriteriaFromJoinCriteria(boolean changedTree,
-                                                   List joinCrits,
-                                                   Set combinedCriteria,
-                                                   Map srcToTgt,
-                                                   List newJoinCrits,
+    private boolean createCriteria(boolean copyingJoinCriteria, Collection<Criteria> toCopy,
+                                                   Set<Criteria> combinedCriteria,
+                                                   Map<Expression, Expression> srcToTgt,
+                                                   List<Criteria> newJoinCrits,
                                                    QueryMetadataInterface metadata) {
-        if (srcToTgt.size() == 0) {
+        boolean changedTree = false;
+    	if (srcToTgt.size() == 0) {
             return changedTree;
         }
-        Iterator i = joinCrits.iterator();
+        Iterator<Criteria> i = toCopy.iterator();
         while (i.hasNext()) {
-            Criteria crit = (Criteria)i.next();
+            Criteria crit = i.next();
             
-            if (copyCriteria(crit, srcToTgt, newJoinCrits, combinedCriteria, true, metadata)) {
+            if (copyCriteria(crit, srcToTgt, newJoinCrits, combinedCriteria, copyingJoinCriteria, metadata)) {
             	changedTree = true;
+            	if (!copyingJoinCriteria) {
+            		crit = newJoinCrits.get(newJoinCrits.size() - 1);
+            	}
+            	//TODO more criteria can be "optional"
             	if (crit instanceof CompareCriteria) {
             		CompareCriteria cc = (CompareCriteria)crit;
-            		if (cc.getLeftExpression() instanceof ElementSymbol && cc.getRightExpression() instanceof ElementSymbol) {
+            		//if (cc.getLeftExpression() instanceof ElementSymbol && cc.getRightExpression() instanceof ElementSymbol) {
             			//don't remove theta criteria, just mark it as optional
-            			cc.setOptional(true);
+        				cc.setOptional(copyingJoinCriteria?null:true);
             			continue;
-            		}
+            		//}
             	}
-                i.remove();
+            	if (copyingJoinCriteria) {
+            		i.remove();
+            	}
             }
         }
         return changedTree;
     }
 
-    /** 
-     * @param changedTree
-     * @param combinedCriteria
-     * @param toCopy
-     * @param srcToTgt
-     * @param newJoinCrits
-     * @return
-     */
-    private boolean createCriteriaFromSelectCriteria(boolean changedTree,
-                                                     Set combinedCriteria,
-                                                     Set toCopy,
-                                                     Map srcToTgt,
-                                                     List newJoinCrits,
-                                                     QueryMetadataInterface metadata) {
-        if (srcToTgt.size() == 0) {
-            return changedTree;
-        }
-        Iterator i = toCopy.iterator();
-        while (i.hasNext()) {
-            Criteria crit = (Criteria)i.next();
-            changedTree |= copyCriteria(crit, srcToTgt, newJoinCrits, combinedCriteria, false, metadata);            
-        }
-        return changedTree;
-    }
-
-    /** 
-     * @param node
-     * @param toCopy
-     * @param allCriteria
-     */
     private void visitSelectNode(PlanNode node,
-                                 Set toCopy,
-                                 Set allCriteria) {
+                                 Set<Criteria> toCopy,
+                                 Set<Criteria> allCriteria) {
         //First examine criteria in critNode for suitability
         Criteria crit = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
         if(node.getGroups().size() == 1) {
@@ -355,13 +328,13 @@ public final class RuleCopyCriteria implements OptimizerRule {
     }
 
     private boolean visitChildern(PlanNode node,
-                                  Set[] criteriaInfo,
+                                  Set<Criteria>[] criteriaInfo,
                                   boolean changedTree,
                                   QueryMetadataInterface metadata) {
         if (node.getChildCount() > 0) {
-            List children = node.getChildren();
+            List<PlanNode> children = node.getChildren();
             for (int i = 0; i < children.size(); i++) {
-                PlanNode childNode = (PlanNode)children.get(i);
+                PlanNode childNode = children.get(i);
                 changedTree |= tryToCopy(childNode, i==0?criteriaInfo:new Set[2], metadata);
             }
         }
@@ -374,16 +347,14 @@ public final class RuleCopyCriteria implements OptimizerRule {
      * @param crits
      * @return
      */
-    Map buildElementMap(Collection crits) {
-        Map srcToTgt = null;
-        Iterator critIter = crits.iterator();
-        while(critIter.hasNext()) { 
-            Criteria theCrit = (Criteria) critIter.next();
+    Map<Expression, Expression> buildElementMap(Collection<Criteria> crits) {
+        Map<Expression, Expression> srcToTgt = null;
+        for (Criteria theCrit : crits) {
             if (theCrit instanceof IsNullCriteria) {
             	IsNullCriteria isNull = (IsNullCriteria)theCrit;
             	if (!isNull.isNegated() && isNull.getExpression() instanceof ElementSymbol) {
             		if (srcToTgt == null) {
-            			srcToTgt = new HashMap();
+            			srcToTgt = new HashMap<Expression, Expression>();
             		}
             		srcToTgt.put(isNull.getExpression(), new Constant(null, isNull.getExpression().getType()));
             	}
@@ -395,14 +366,14 @@ public final class RuleCopyCriteria implements OptimizerRule {
             CompareCriteria crit = (CompareCriteria) theCrit;
             if (crit.getOperator() == CompareCriteria.EQ) {
                 if (srcToTgt == null) {
-                    srcToTgt = new HashMap();
+                    srcToTgt = new HashMap<Expression, Expression>();
             	}
                 srcToTgt.put(crit.getLeftExpression(), crit.getRightExpression());
                 srcToTgt.put(crit.getRightExpression(), crit.getLeftExpression());
             }
         }
         if (srcToTgt == null) {
-            return Collections.EMPTY_MAP;
+            return Collections.emptyMap();
         }
         return srcToTgt;
     }
