@@ -45,7 +45,7 @@ public class TransactionMetadataMapper extends MetaMapper<TransactionMetadata> {
 	
 	static {
 		metaType = new MutableCompositeMetaType(TransactionMetadata.class.getName(), "The Transaction domain meta data"); //$NON-NLS-1$
-		metaType.addItem(ASSOCIATED_SESSION, ASSOCIATED_SESSION, SimpleMetaType.LONG_PRIMITIVE);
+		metaType.addItem(ASSOCIATED_SESSION, ASSOCIATED_SESSION, SimpleMetaType.STRING);
 		metaType.addItem(CREATED_TIME, CREATED_TIME, SimpleMetaType.LONG_PRIMITIVE);
 		metaType.addItem(SCOPE, SCOPE, SimpleMetaType.STRING);
 		metaType.addItem(XID, XID, SimpleMetaType.STRING);
@@ -89,7 +89,7 @@ public class TransactionMetadataMapper extends MetaMapper<TransactionMetadata> {
 			CompositeValue compositeValue = (CompositeValue) metaValue;
 			
 			TransactionMetadata transaction = new TransactionMetadata();
-			transaction.setAssociatedSession((Long) metaValueFactory.unwrap(compositeValue.get(ASSOCIATED_SESSION)));
+			transaction.setAssociatedSession((String) metaValueFactory.unwrap(compositeValue.get(ASSOCIATED_SESSION)));
 			transaction.setCreatedTime((Long) metaValueFactory.unwrap(compositeValue.get(CREATED_TIME)));
 			transaction.setScope((String) metaValueFactory.unwrap(compositeValue.get(SCOPE)));
 			transaction.setId((String) metaValueFactory.unwrap(compositeValue.get("id"))); //$NON-NLS-1$

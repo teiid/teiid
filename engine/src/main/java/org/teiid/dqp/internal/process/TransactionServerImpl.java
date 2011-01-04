@@ -517,7 +517,7 @@ public class TransactionServerImpl implements TransactionService {
 				continue;
 			}
 			TransactionMetadata txnImpl = new TransactionMetadata();
-			txnImpl.setAssociatedSession(Long.parseLong(transactionContext.getThreadId()));
+			txnImpl.setAssociatedSession(transactionContext.getThreadId());
 			txnImpl.setCreatedTime(transactionContext.getCreationTime());
 			txnImpl.setScope(transactionContext.getTransactionType().toString());
 			txnImpl.setId(transactionContext.getTransactionId());
