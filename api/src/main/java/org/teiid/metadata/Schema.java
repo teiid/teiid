@@ -38,7 +38,9 @@ public class Schema extends AbstractMetadataRecord {
 	
 	public void addTable(Table table) {
 		table.setParent(this);
-		this.tables.put(table.getName().toLowerCase(), table);
+		if (this.tables.put(table.getName().toLowerCase(), table) != null) {
+			throw new AssertionError("Duplicate Table " + table.getName()); //$NON-NLS-1$
+		}
 	}
 	
 	public void addProcedure(Procedure procedure) {

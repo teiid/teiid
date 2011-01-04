@@ -42,8 +42,16 @@ public class TestMultipleModelIndexes {
 		assertEquals(1, names.size());
 		
 		//ensure that datatypes are set
-		Table t = (Table)tm.getGroupID(names.iterator().next());
+		Table t = tm.getGroupID(names.iterator().next());
 		assertNotNull(t.getColumns().get(0).getDatatype());
+	}
+	
+	@Test public void testSchemaLoad() throws Exception {
+		TransformationMetadata tm = VDBMetadataFactory.getVDBMetadata(UnitTestUtil.getTestDataPath() + "/Test.vdb");
+		
+		//ensure that datatypes are set
+		Table t = tm.getGroupID("Northwind.Northwind.dbo.Employees");
+		assertFalse(t.isVirtual());
 	}
 	
 }
