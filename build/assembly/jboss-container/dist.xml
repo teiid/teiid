@@ -184,7 +184,6 @@
             <include>org.jboss.teiid.connectors:translator-ldap</include>
             <include>org.jboss.teiid.connectors:translator-salesforce</include>
             <include>org.jboss.teiid.connectors:translator-ws</include>
-            <include>org.jboss.teiid.connectors:translator-delegate</include>
         </includes>
 
         <binaries>        

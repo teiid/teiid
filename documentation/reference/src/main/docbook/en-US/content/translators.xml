@@ -1010,12 +1010,11 @@ Account.Contacts) FROM Account]]></programlisting>
             </section>
         </section>
         <section>
-            <title>Delegate Translator</title>
+            <title>Delegating Translators</title>
             <para>
-            The Delegate translator, known by the type name <emphasis>delegate</emphasis>, 
-            provides way to delegate all the translator calls to yet another translator whoose name is supplied. This does not provide
-            any functionality on its own, other than delegation. This translator can be used a base class to intercept the calls to the user
-            supplied translator and modify them as they see fit.
+            You may create a delegating translator by extending the <code>org.teiid.translator.BaseDelegatingExecutionFactory</code>.
+            Once your classes are then packaged as a custom translator, you will be able to wire another translator instance into your delegating translator at runtime in order to intercept
+            all of the calls to the delegate.  This base class does not provide any functionality on its own, other than delegation.
             </para>
             
             <table>
@@ -1034,7 +1033,7 @@ Account.Contacts) FROM Account]]></programlisting>
                     <tbody>
                         <row>
                             <entry>delegateName</entry>
-                            <entry>Translator instance to delegate to</entry>
+                            <entry>Translator instance name to delegate to</entry>
                             <entry></entry>
                         </row>
                     </tbody>

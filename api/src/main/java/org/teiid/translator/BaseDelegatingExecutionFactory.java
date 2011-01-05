@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.delegate;
+package org.teiid.translator;
 
 import java.util.List;
 
@@ -31,23 +31,11 @@ import org.teiid.language.QueryExpression;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.DelegatingExecutionFactory;
-import org.teiid.translator.Execution;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.ProcedureExecution;
-import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TranslatorProperty;
-import org.teiid.translator.TypeFacility;
-import org.teiid.translator.UpdateExecution;
 
 /**
  * Delegate translator. User can define a {@link ExecutionFactory} of their own and have this translator 
- * delegate all the calls to that class. This will help user to avoid packing their translator in the required
- * jar packaging and lets the user intercept the calls for their needs. Please note that your 'vdb.xml' file contains
- * the following xml fragment to configure this translator to delegate calls to custom translator.
+ * delegate all the calls to that class. Please note that your 'vdb.xml' file will contain
+ * an xml fragment like the following to configure a delegating translator.
  * <pre>
  * {@code
     <translator type="delegate" name="my-translator" description="custom translator">
@@ -57,7 +45,6 @@ import org.teiid.translator.UpdateExecution;
  * </pre>
  *  
  */
-@Translator(name="delegate", description="A translator that acts as delegator to the another translator")
 public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C> implements DelegatingExecutionFactory<F, C> {
 
 	private String delegateName;

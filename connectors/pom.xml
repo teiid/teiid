@@ -76,20 +76,15 @@
   <modules>
     <module>translator-jdbc</module>
     <module>translator-ldap</module>
-    
     <module>translator-loopback</module>
     <module>translator-file</module>
     <module>translator-salesforce</module>
-    <module>translator-delegate</module>
-    
     <module>connector-file</module>
     <module>connector-salesforce</module>
     <module>connector-ldap</module>
     <module>salesforce-api</module>
     <module>connector-ws</module>
-
     <module>sandbox</module>
-    
     <module>translator-ws</module>
   </modules>
 </project>
