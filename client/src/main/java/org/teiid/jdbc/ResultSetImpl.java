@@ -381,7 +381,9 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 	private Batch getCurrentBatch(ResultsMessage currentResultMsg) {
 		this.updatedPlanDescription = currentResultMsg.getPlanDescription();
 		boolean isLast = currentResultMsg.getResults().length == 0 || currentResultMsg.getFinalRow() == currentResultMsg.getLastRow();
-		return new Batch(currentResultMsg.getResults(), currentResultMsg.getFirstRow(), currentResultMsg.getLastRow(), isLast);
+		Batch result = new Batch(currentResultMsg.getResults(), currentResultMsg.getFirstRow(), currentResultMsg.getLastRow(), isLast);
+		result.setLastRow(currentResultMsg.getFinalRow());
+		return result;
 	}
     
 	protected int getFinalRowNumber() {

@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
@@ -42,6 +43,7 @@ public class TestBatchResults {
 
 		private int totalRows = 50;
 		private boolean throwException;
+		private boolean useLastRow;
 		List<Integer> batchCalls = new ArrayList<Integer>();
 		
 		public MockBatchFetcher() {
@@ -51,7 +53,11 @@ public class TestBatchResults {
 		public MockBatchFetcher(int totalRows) {
 			this.totalRows = totalRows;
 		}
-
+		
+		public void setUseLastRow(boolean useLastRow) {
+			this.useLastRow = useLastRow;
+		}
+		
 		public Batch requestBatch(int beginRow) throws SQLException {
 			batchCalls.add(beginRow);
 			if (throwException) {
@@ -73,7 +79,11 @@ public class TestBatchResults {
 	            endRow = totalRows;
 	            isLast = true;
 	        }
-			return new Batch(createBatch(beginRow, endRow), beginRow, endRow, isLast);
+			Batch batch = new Batch(createBatch(beginRow, endRow), beginRow, endRow, isLast);
+			if (useLastRow) {
+				batch.setLastRow(totalRows);
+			}
+			return batch;
 		}
 
 		public void throwException() {
@@ -305,6 +315,18 @@ public class TestBatchResults {
         assertEquals(batchResults.getCurrentRow(), expectedResult);
         
         assertFalse(batchResults.absolute(-100));
+    }
+    
+    @Test public void testAbsoluteWithLastRow() throws Exception{
+    	Batch batch = new Batch(createBatch(1, 10), 1, 10, false);
+    	batch.setLastRow(50);
+    	MockBatchFetcher mbf = new MockBatchFetcher();
+    	mbf.setUseLastRow(true);
+    	BatchResults batchResults = new BatchResults(mbf, batch, BatchResults.DEFAULT_SAVED_BATCHES);
+        assertTrue(batchResults.absolute(41));
+        assertEquals(Arrays.asList(41), batchResults.getCurrentRow());
+        //check to ensure that we skipped all the other batches
+        assertEquals(Arrays.asList(41), mbf.batchCalls);
     }
         
     @Test public void testCurrentRowNumber() throws Exception {

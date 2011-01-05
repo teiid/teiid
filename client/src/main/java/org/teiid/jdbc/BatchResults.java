@@ -43,13 +43,25 @@ public class BatchResults {
 	    private int beginRow;
 	    private int endRow;
 	    private boolean isLast;
+	    private int lastRow = -1;
 	    
 	    Batch(List[] batch, int beginRow, int endRow, boolean isLast){
 	        this.batch = batch;
 	        this.beginRow = beginRow;
 	        this.endRow = endRow;
 	        this.isLast = isLast;
+	        if (isLast) {
+	        	this.lastRow = endRow;
+	        }
 	    }
+	    
+	    int getLastRow() {
+			return lastRow;
+		}
+	    
+	    void setLastRow(int lastRow) {
+			this.lastRow = lastRow;
+		}
 	    
 	    int getLength() {
 	        return batch.length;
@@ -219,10 +231,12 @@ public class BatchResults {
 
 	private void setBatch(Batch batch) {
 		Assertion.assertTrue(batch.getLength() != 0 || batch.isLast());
-		if (batch.isLast()) {
-            this.lastRowNumber = batch.getEndRow();
+		if (batch.getLastRow() != -1) {
+            this.lastRowNumber = batch.getLastRow();
+            this.highestRowNumber = batch.getLastRow();
+        } else {
+        	highestRowNumber = Math.max(batch.getEndRow(), highestRowNumber);
         }
-        highestRowNumber = Math.max(batch.getEndRow(), highestRowNumber); 
         this.batches.add(0, batch);
 	}
 
