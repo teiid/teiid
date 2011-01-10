@@ -52,7 +52,8 @@ import org.teiid.translator.salesforce.execution.UpdateExecutionImpl;
 public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFactory, SalesforceConnection> {
 
 	private String connectorStateClass;
-	private boolean auditModelFields = false;	
+	private boolean auditModelFields = false;
+	private int maxInSize = 300;
 	
 	public SalesForceExecutionFactory() {
 	    // http://jira.jboss.org/jira/browse/JBEDSP-306
@@ -117,9 +118,14 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 	}	
 	
 	@Override
+	@TranslatorProperty(display="Max number of IN predicate entries", advanced=true)
     public int getMaxInCriteriaSize() {
-        return 700;
+        return maxInSize;
     }
+	
+	public void setMaxInCriteriaSize(int maxInSize) {
+		this.maxInSize = maxInSize;
+	}
 
     @Override
     public List getSupportedFunctions() {
