@@ -17,7 +17,7 @@
     <para>
       For a Java application to connect to a JDBC source, it needs a URL, user-id, and password. To
       connect to your VDB all you need is a URL and any additional optional properties that you would like to set.
-       Teiid defaults to allowing the "admin" as user with password as "teiid".  Additional user accounts can be added.
+       Teiid defaults to allowing the "user" as user with password as "user".  Additional user accounts can be added.
         A JDBC connection can be obtained through the Teiid driver
       <code>"org.teiid.jdbc.TeiidDriver"</code>
       with the URL syntax of
@@ -44,7 +44,7 @@
     
     Connection connection;
     try{
-        connection = DriverManager.getConnection(url, "admin", "teiid");
+        connection = DriverManager.getConnection(url, "user", "user");
         Statement statement = connection.createStatement();
         ResultSet results = statement.executeQuery(sql);
         while(results.next()) {
@@ -70,8 +70,8 @@
       connection to the VDB and issuing the query exactly same as in the above example</para>
       <programlisting><![CDATA[TeiidDataSource ds = new TeiidDataSource(); 
 ds.setDatabaseName("Portfolio");
-ds.setUser("admin");
-ds.setPassword("teiid");
+ds.setUser("user");
+ds.setPassword("user");
 
 Connection connection = ds.getConnection();
 ...]]></programlisting>
