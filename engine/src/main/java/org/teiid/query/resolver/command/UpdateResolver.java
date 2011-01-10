@@ -35,7 +35,6 @@ import java.util.Map.Entry;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.resolver.ProcedureContainerResolver;
@@ -59,9 +58,9 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 public class UpdateResolver extends ProcedureContainerResolver implements VariableResolver {
 
     /** 
-     * @see org.teiid.query.resolver.ProcedureContainerResolver#resolveProceduralCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter, org.teiid.query.analysis.AnalysisRecord)
+     * @see org.teiid.query.resolver.ProcedureContainerResolver#resolveProceduralCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter)
      */
-    public void resolveProceduralCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis) 
+    public void resolveProceduralCommand(Command command, TempMetadataAdapter metadata) 
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 
         //Cast to known type
@@ -73,7 +72,7 @@ public class UpdateResolver extends ProcedureContainerResolver implements Variab
         for (SetClause clause : update.getChangeList().getClauses()) {
         	ResolverVisitor.resolveLanguageObject(clause.getSymbol(), groups, null, metadata);
 		}
-        QueryResolver.resolveSubqueries(command, metadata, analysis, groups);
+        QueryResolver.resolveSubqueries(command, metadata, groups);
         ResolverVisitor.resolveLanguageObject(update, groups, update.getExternalGroupContexts(), metadata);
     }
     

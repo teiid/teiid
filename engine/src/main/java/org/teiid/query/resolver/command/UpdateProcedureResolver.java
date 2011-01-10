@@ -25,27 +25,24 @@ package org.teiid.query.resolver.command;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import org.teiid.api.exception.query.QueryMetadataException;
-import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.api.exception.query.UnresolvedSymbolDescription;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.language.SQLConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
-import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.CommandResolver;
 import org.teiid.query.resolver.ProcedureContainerResolver;
 import org.teiid.query.resolver.QueryResolver;
@@ -69,10 +66,12 @@ import org.teiid.query.sql.proc.ExpressionStatement;
 import org.teiid.query.sql.proc.IfStatement;
 import org.teiid.query.sql.proc.LoopStatement;
 import org.teiid.query.sql.proc.Statement;
+import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
@@ -89,9 +88,7 @@ public class UpdateProcedureResolver implements CommandResolver {
 
 		// not set by user command resolver in case of modeler
 		if(virtualGroup == null) {
-	        Iterator groupIter = procCommand.getAllExternalGroups().iterator();
-	        while(groupIter.hasNext()) {
-	        	GroupSymbol groupSymbol = (GroupSymbol) groupIter.next();
+			for (GroupSymbol groupSymbol : procCommand.getAllExternalGroups()) {
 	        	String groupName = groupSymbol.getName();
 	        	if(!groupName.equalsIgnoreCase(ProcedureReservedWords.INPUT) &&
 	        		!groupName.equalsIgnoreCase(ProcedureReservedWords.INPUTS) &&
@@ -127,35 +124,31 @@ public class UpdateProcedureResolver implements CommandResolver {
 	 */
     public static Command getQueryTransformCmd(GroupSymbol virtualGroup, QueryMetadataInterface metadata)
     throws QueryMetadataException, QueryResolverException, TeiidComponentException {
-    	Command transformCmd = (Command)metadata.getFromMetadataCache(virtualGroup.getMetadataID(), "transformation/select"); //$NON-NLS-1$
-    	if (transformCmd != null) {
-    		return transformCmd;
-    	}
-    	QueryNode queryNode = metadata.getVirtualPlan(virtualGroup.getMetadataID());
-    	String transformQuery = queryNode.getQuery();
-        try {
-            transformCmd = QueryParser.getQueryParser().parseCommand(transformQuery);
-        } catch(QueryParserException e) {
-            throw new QueryResolverException(e, "ERR.015.008.0013", QueryPlugin.Util.getString("ERR.015.008.0013", virtualGroup)); //$NON-NLS-1$ //$NON-NLS-2$
-        }
-
-        QueryResolver.resolveCommand(transformCmd, metadata);
-
-        return transformCmd;
+    	try {
+			return QueryResolver.resolveView(virtualGroup, metadata.getVirtualPlan(virtualGroup.getMetadataID()), SQLConstants.Reserved.SELECT, metadata);
+		} catch (QueryValidatorException e) {
+			throw new QueryResolverException(e, e.getMessage());
+		}
     }
 
     /**
-     * @see org.teiid.query.resolver.CommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, TempMetadataAdapter, AnalysisRecord, boolean)
+     * @see org.teiid.query.resolver.CommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, TempMetadataAdapter, boolean)
      */
-    public void resolveCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals)
+    public void resolveCommand(Command command, TempMetadataAdapter metadata, boolean resolveNullLiterals)
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
+    	
+    	if (command instanceof TriggerAction) {
+    		TriggerAction ta = (TriggerAction)command;
+            resolveBlock(new CreateUpdateProcedureCommand(), ta.getBlock(), ta.getExternalGroupContexts(), metadata);
+    		return;
+    	}
 
         CreateUpdateProcedureCommand procCommand = (CreateUpdateProcedureCommand) command;
 
         //by creating a new group context here it means that variables will resolve with a higher precedence than input/changing
         GroupContext externalGroups = command.getExternalGroupContexts();
         
-        List symbols = new LinkedList();
+        List<ElementSymbol> symbols = new LinkedList<ElementSymbol>();
         
         // virtual group elements in HAS and TRANSLATE criteria have to be resolved
         if(procCommand.isUpdateProcedure()){
@@ -174,11 +167,11 @@ public class UpdateProcedureResolver implements CommandResolver {
         symbols.add(updateCount);
 
         ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, metadata.getMetadataStore(), externalGroups, symbols);         
-        resolveBlock(procCommand, procCommand.getBlock(), externalGroups, metadata, analysis);
+        resolveBlock(procCommand, procCommand.getBlock(), externalGroups, metadata);
     }
 
 	public void resolveBlock(CreateUpdateProcedureCommand command, Block block, GroupContext externalGroups, 
-                              TempMetadataAdapter metadata, AnalysisRecord analysis)
+                              TempMetadataAdapter metadata)
         throws QueryResolverException, QueryMetadataException, TeiidComponentException {
         LogManager.logTrace(org.teiid.logging.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving block", block}); //$NON-NLS-1$
         
@@ -190,13 +183,12 @@ public class UpdateProcedureResolver implements CommandResolver {
         //create a new variables group for this block
         GroupSymbol variables = ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, store, externalGroups, new LinkedList());
         
-        Iterator stmtIter = block.getStatements().iterator();
-        while(stmtIter.hasNext()) {
-            resolveStatement(command, (Statement)stmtIter.next(), externalGroups, variables, metadata, analysis);
+        for (Statement statement : block.getStatements()) {
+            resolveStatement(command, statement, externalGroups, variables, metadata);
         }
     }
 
-	private void resolveStatement(CreateUpdateProcedureCommand command, Statement statement, GroupContext externalGroups, GroupSymbol variables, TempMetadataAdapter metadata, AnalysisRecord analysis)
+	private void resolveStatement(CreateUpdateProcedureCommand command, Statement statement, GroupContext externalGroups, GroupSymbol variables, TempMetadataAdapter metadata)
         throws QueryResolverException, QueryMetadataException, TeiidComponentException {
         LogManager.logTrace(org.teiid.logging.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving statement", statement}); //$NON-NLS-1$
 
@@ -205,19 +197,19 @@ public class UpdateProcedureResolver implements CommandResolver {
                 IfStatement ifStmt = (IfStatement) statement;
                 Criteria ifCrit = ifStmt.getCondition();
                 for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(ifCrit)) {
-                	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand(), analysis);
+                	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand());
                 }
                 ResolverVisitor.resolveLanguageObject(ifCrit, null, externalGroups, metadata);
-            	resolveBlock(command, ifStmt.getIfBlock(), externalGroups, metadata, analysis);
+            	resolveBlock(command, ifStmt.getIfBlock(), externalGroups, metadata);
                 if(ifStmt.hasElseBlock()) {
-                    resolveBlock(command, ifStmt.getElseBlock(), externalGroups, metadata, analysis);
+                    resolveBlock(command, ifStmt.getElseBlock(), externalGroups, metadata);
                 }
                 break;
             case Statement.TYPE_COMMAND:
                 CommandStatement cmdStmt = (CommandStatement) statement;
                 Command subCommand = cmdStmt.getCommand();
                 
-                TempMetadataStore discoveredMetadata = resolveEmbeddedCommand(metadata, externalGroups, subCommand, analysis);
+                TempMetadataStore discoveredMetadata = resolveEmbeddedCommand(metadata, externalGroups, subCommand);
                 
                 if (subCommand instanceof StoredProcedure) {
                 	StoredProcedure sp = (StoredProcedure)subCommand;
@@ -274,7 +266,7 @@ public class UpdateProcedureResolver implements CommandResolver {
             	if (exprStmt.getExpression() != null) {
                     Expression expr = exprStmt.getExpression();
                     for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr)) {
-                    	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand(), analysis);
+                    	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand());
                     }
                     ResolverVisitor.resolveLanguageObject(expr, null, externalGroups, metadata);
             	}
@@ -307,10 +299,10 @@ public class UpdateProcedureResolver implements CommandResolver {
                 WhileStatement whileStmt = (WhileStatement) statement;
                 Criteria whileCrit = whileStmt.getCondition();
                 for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(whileCrit)) {
-                	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand(), analysis);
+                	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand());
                 }
                 ResolverVisitor.resolveLanguageObject(whileCrit, null, externalGroups, metadata);
-                resolveBlock(command, whileStmt.getBlock(), externalGroups, metadata, analysis);
+                resolveBlock(command, whileStmt.getBlock(), externalGroups, metadata);
                 break;
             case Statement.TYPE_LOOP:
                 LoopStatement loopStmt = (LoopStatement) statement;
@@ -326,8 +318,8 @@ public class UpdateProcedureResolver implements CommandResolver {
 	        		throw new QueryResolverException(errorMsg);
 	        	}
                 Command cmd = loopStmt.getCommand();
-                resolveEmbeddedCommand(metadata, externalGroups, cmd, analysis);
-                List symbols = cmd.getProjectedSymbols();
+                resolveEmbeddedCommand(metadata, externalGroups, cmd);
+                List<SingleElementSymbol> symbols = cmd.getProjectedSymbols();
                 
                 //add the loop cursor group into its own context
                 TempMetadataStore store = new TempMetadataStore(new HashMap(metadata.getMetadataStore().getData()));
@@ -336,7 +328,7 @@ public class UpdateProcedureResolver implements CommandResolver {
                 
                 ProcedureContainerResolver.addScalarGroup(groupName, store, externalGroups, symbols);
                 
-                resolveBlock(command, loopStmt.getBlock(), externalGroups, metadata, analysis);
+                resolveBlock(command, loopStmt.getBlock(), externalGroups, metadata);
                 break;
             case Statement.TYPE_BREAK:
             case Statement.TYPE_CONTINUE:
@@ -347,11 +339,11 @@ public class UpdateProcedureResolver implements CommandResolver {
     }
 
     private TempMetadataStore resolveEmbeddedCommand(TempMetadataAdapter metadata, GroupContext groupContext,
-                                Command cmd, AnalysisRecord analysis) throws TeiidComponentException,
+                                Command cmd) throws TeiidComponentException,
                                             QueryResolverException {
         QueryResolver.setChildMetadata(cmd, metadata.getMetadataStore().getData(), groupContext);
         
-        return QueryResolver.resolveCommand(cmd, Collections.EMPTY_MAP, metadata.getMetadata(), analysis);
+        return QueryResolver.resolveCommand(cmd, metadata.getMetadata());
     }
         
     private void collectDeclareVariable(DeclareStatement obj, GroupSymbol variables, TempMetadataAdapter metadata, GroupContext externalGroups) throws QueryResolverException, TeiidComponentException {

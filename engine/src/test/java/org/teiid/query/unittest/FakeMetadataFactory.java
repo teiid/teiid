@@ -1856,7 +1856,7 @@ public class FakeMetadataFactory {
 		QueryNode vm1g2n1 = new QueryNode("vm1.g2", "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1g2 = createUpdatableVirtualGroup("vm1.g2", vm1, vm1g2n1); //$NON-NLS-1$
 
-		QueryNode vm1g3n1 = new QueryNode("vm1.g3", "SELECT CONCAT(e1, 'm') as x, (e2 +1) as y, Count(*) as e3, e4*50 as e4 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm1g3n1 = new QueryNode("vm1.g3", "SELECT CONCAT(e1, 'm') as x, (e2 +1) as y, 1 as e3, e4*50 as e4 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1g3 = createUpdatableVirtualGroup("vm1.g3", vm1, vm1g3n1); //$NON-NLS-1$
 
 		QueryNode vm1g4n1 = new QueryNode("vm1.g4", "SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$

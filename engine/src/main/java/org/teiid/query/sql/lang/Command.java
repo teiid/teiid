@@ -165,7 +165,7 @@ public abstract class Command implements LanguageObject {
         getExternalGroupContexts().addGroup(group);
     }
     
-    public void addExternalGroupsToContext(Collection groups) {
+    public void addExternalGroupsToContext(Collection<GroupSymbol> groups) {
         getExternalGroupContexts().getGroups().addAll(groups);
     }
 
@@ -177,8 +177,8 @@ public abstract class Command implements LanguageObject {
         }
     }
     
-    public void pushNewResolvingContext(Collection groups) {
-        externalGroups = new GroupContext(externalGroups, new LinkedList(groups));
+    public void pushNewResolvingContext(Collection<GroupSymbol> groups) {
+        externalGroups = new GroupContext(externalGroups, new LinkedList<GroupSymbol>(groups));
     }
 
     public GroupContext getExternalGroupContexts() {
@@ -188,9 +188,9 @@ public abstract class Command implements LanguageObject {
         return this.externalGroups;
     }
     
-    public List getAllExternalGroups() {
+    public List<GroupSymbol> getAllExternalGroups() {
         if (externalGroups == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
         
         return externalGroups.getAllGroups();

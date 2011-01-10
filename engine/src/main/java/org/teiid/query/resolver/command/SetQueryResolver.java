@@ -23,7 +23,6 @@
 package org.teiid.query.resolver.command;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -33,7 +32,6 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.resolver.CommandResolver;
@@ -50,19 +48,19 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
 public class SetQueryResolver implements CommandResolver {
 
     /**
-     * @see org.teiid.query.resolver.CommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, TempMetadataAdapter, AnalysisRecord, boolean)
+     * @see org.teiid.query.resolver.CommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, TempMetadataAdapter, boolean)
      */
-    public void resolveCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals)
+    public void resolveCommand(Command command, TempMetadataAdapter metadata, boolean resolveNullLiterals)
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 
         SetQuery setQuery = (SetQuery) command;
         
-        SimpleQueryResolver.resolveWith(metadata, analysis, setQuery);
+        SimpleQueryResolver.resolveWith(metadata, setQuery);
         
         QueryCommand firstCommand = setQuery.getLeftQuery();
         
         QueryResolver.setChildMetadata(firstCommand, setQuery);
-        QueryResolver.resolveCommand(firstCommand, Collections.EMPTY_MAP, metadata.getMetadata(), analysis, false);
+        QueryResolver.resolveCommand(firstCommand, metadata.getMetadata(), false);
 
         List firstProject = firstCommand.getProjectedSymbols();
         List<Class<?>> firstProjectTypes = new ArrayList<Class<?>>();
@@ -74,7 +72,7 @@ public class SetQueryResolver implements CommandResolver {
         QueryCommand rightCommand = setQuery.getRightQuery();
         
         QueryResolver.setChildMetadata(rightCommand, setQuery);
-        QueryResolver.resolveCommand(rightCommand, Collections.EMPTY_MAP, metadata.getMetadata(), analysis, false);
+        QueryResolver.resolveCommand(rightCommand, metadata.getMetadata(), false);
 
         if (firstProject.size() != rightCommand.getProjectedSymbols().size()) {
             throw new QueryResolverException(QueryPlugin.Util.getString("ERR.015.012.0035", setQuery.getOperation())); //$NON-NLS-1$

@@ -32,7 +32,6 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.resolver.CommandResolver;
@@ -50,9 +49,9 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
 public class DynamicCommandResolver implements CommandResolver {
 
     /** 
-     * @see org.teiid.query.resolver.CommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, TempMetadataAdapter, AnalysisRecord, boolean)
+     * @see org.teiid.query.resolver.CommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, TempMetadataAdapter, boolean)
      */
-    public void resolveCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals) 
+    public void resolveCommand(Command command, TempMetadataAdapter metadata, boolean resolveNullLiterals) 
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 
         DynamicCommand dynamicCmd = (DynamicCommand)command;

@@ -162,7 +162,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		QueryOptions qo = partnerFactory.createQueryOptions();
 		qo.setBatchSize(batchSize);
 		try {
-			if(queryAll) {
+			if(queryAll != null && queryAll) {
 				qr = sfSoap.queryAll(queryString, sh);
 			} else {
 				MruHeader mruHeader = partnerFactory.createMruHeader();

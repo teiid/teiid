@@ -22,7 +22,6 @@
 
 package org.teiid.dqp.internal.process;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -43,7 +42,6 @@ import org.teiid.dqp.internal.process.DQPCore.ClientState;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.dqp.message.RequestID;
-import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -213,7 +211,7 @@ public class MetaDataProcessor {
             command = plan.getCommand();
         } else {
         	command = QueryParser.getQueryParser().parseCommand(sql, info);
-            QueryResolver.resolveCommand(command, Collections.EMPTY_MAP, this.metadata, AnalysisRecord.createNonRecordingRecord());                        
+            QueryResolver.resolveCommand(command, this.metadata);                        
         }
         return getMetadataForCommand(command);            
     }

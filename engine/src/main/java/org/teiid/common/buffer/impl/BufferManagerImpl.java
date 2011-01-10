@@ -65,6 +65,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.processor.relational.ListNestedSortComparator;
+import org.teiid.query.sql.symbol.Expression;
 
 
 /**
@@ -582,7 +583,41 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	
 	@Override
 	public int getSchemaSize(List elements) {
-		return elements.size();
+		int total = 0;
+		//we make a assumption that the average column size under 64bits is approximately 128bytes
+		//this includes alignment, row/array, and reference overhead
+		for (Object element : elements) {
+			Class<?> type = ((Expression)element).getType();
+			if (type == DataTypeManager.DefaultDataClasses.STRING) {
+				total += 256; //assumes an "average" string length of approximately 100 chars
+			} else if (type == DataTypeManager.DefaultDataClasses.DATE 
+					|| type == DataTypeManager.DefaultDataClasses.TIME 
+					|| type == DataTypeManager.DefaultDataClasses.TIMESTAMP) {
+				total += 32;
+			} else if (type == DataTypeManager.DefaultDataClasses.LONG 
+					|| type	 == DataTypeManager.DefaultDataClasses.DOUBLE) {
+				total += 20;
+			} else if (type == DataTypeManager.DefaultDataClasses.INTEGER 
+					|| type == DataTypeManager.DefaultDataClasses.FLOAT) {
+				total += 14;
+			} else if (type == DataTypeManager.DefaultDataClasses.CHAR 
+					|| type == DataTypeManager.DefaultDataClasses.SHORT) {
+				total += 10;
+			} else if (type == DataTypeManager.DefaultDataClasses.BOOLEAN 
+					|| type == DataTypeManager.DefaultDataClasses.BYTE
+					|| type == DataTypeManager.DefaultDataClasses.NULL) {
+				//even if value caching is turned off we don't bother counting 
+				//the additional references that may exist to boolean and byte values
+				total += 8;
+			} else if (type == DataTypeManager.DefaultDataClasses.OBJECT) {
+				total += 1024;
+			} else {
+				total += 512; //assumes buffer overhead in the case of lobs
+				//however the account for lobs is misleading as the lob
+				//references are not actually removed from memory
+			}
+		}
+		return Math.max(1, total/128);
 	}
 	
     public void setMaxReserveBatchColumns(int maxReserve) {

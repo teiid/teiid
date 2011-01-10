@@ -56,56 +56,6 @@ public class SqlUtil {
         return PATTERN.matcher(sql).matches();
     }
     
-    /**
-     * Simple method which normalizes a SQL string by replacing CR characters, new line characters and Tab characters with spaces,
-     * then trimming the string to remove unneeded spaces.
-     * 
-     * @param inputSqlString
-     * @return
-     * @since 5.0
-     */
-    public static String normalize(String inputSqlString) {
-        String normalizedString = inputSqlString;
-        if (inputSqlString != null && inputSqlString.length() > 0) {
-            if (  inputSqlString.indexOf(NL_CHAR) > -1 || 
-                  inputSqlString.indexOf(CR_CHAR) > -1 || 
-                  inputSqlString.indexOf(TAB_CHAR) > -1 ||
-                  inputSqlString.indexOf(StringUtil.Constants.DBL_SPACE) > -1) {
-                normalizedString = normalizedString.replace(NL_CHAR, SPACE_CHAR);
-                normalizedString = normalizedString.replace(CR_CHAR, SPACE_CHAR);
-                normalizedString = normalizedString.replace(TAB_CHAR, SPACE_CHAR);
-                normalizedString = StringUtil.replaceAll(normalizedString,
-                                                         StringUtil.Constants.DBL_SPACE,
-                                                         StringUtil.Constants.SPACE);
-                
-            }
-            normalizedString = StringUtil.collapseWhitespace(normalizedString);
-        }
-        return normalizedString;
-    }
-    
-    /**
-     * determine if the supplied sql Strings are different
-     * @param newSql the new SQL String
-     * @param oldSql the old SQL String
-     * @return 'true' if strings differ, 'false' if same
-     */
-    public static boolean stringsAreDifferent(String newSql, String oldSql) {
-        boolean isDifferent = true;
-        if(newSql==null) {
-            if(oldSql==null) {
-                isDifferent = false;
-            }
-        } else if(oldSql!=null) {
-            String normalizedNewSql = normalize(newSql);
-            String normalizedOldSql = normalize(oldSql);
-            if(normalizedNewSql.equals(normalizedOldSql)) {
-                isDifferent=false;
-            }
-        }
-        return isDifferent;
-    }
-    
     public static SQLException createFeatureNotSupportedException() {
     	return new SQLFeatureNotSupportedException();
     }    

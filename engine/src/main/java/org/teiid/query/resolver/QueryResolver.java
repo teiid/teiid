@@ -25,19 +25,24 @@ package org.teiid.query.resolver;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.dqp.internal.process.Request;
 import org.teiid.logging.LogManager;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.command.BatchedUpdateResolver;
 import org.teiid.query.resolver.command.DeleteResolver;
 import org.teiid.query.resolver.command.DynamicCommandResolver;
@@ -49,6 +54,7 @@ import org.teiid.query.resolver.command.TempTableResolver;
 import org.teiid.query.resolver.command.UpdateProcedureResolver;
 import org.teiid.query.resolver.command.UpdateResolver;
 import org.teiid.query.resolver.command.XMLQueryResolver;
+import org.teiid.query.resolver.util.BindVariableVisitor;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.lang.Command;
@@ -60,9 +66,11 @@ import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
+import org.teiid.query.validator.ValidationVisitor;
 
 
 /**
@@ -91,67 +99,34 @@ public class QueryResolver {
     	return cr.expandCommand(proc, metadata, analysisRecord);
     }
 
-    /**
-     * This implements an algorithm to resolve all the symbols created by the parser into real metadata IDs
-     * @param command Command the SQL command we are running (Select, Update, Insert, Delete)
-     * @param metadata QueryMetadataInterface the metadata
-     * @param analysis The analysis record which can be used to add anotations and debug information.
-     */
-     public static void resolveCommand(Command command, QueryMetadataInterface metadata, AnalysisRecord analysis)
-         throws QueryResolverException, TeiidComponentException {
+	/**
+	 * This implements an algorithm to resolve all the symbols created by the
+	 * parser into real metadata IDs
+	 * 
+	 * @param command
+	 *            Command the SQL command we are running (Select, Update,
+	 *            Insert, Delete)
+	 * @param metadata
+	 *            QueryMetadataInterface the metadata
+	 * @return 
+	 */
+	public static TempMetadataStore resolveCommand(Command command,
+			QueryMetadataInterface metadata) throws QueryResolverException,
+			TeiidComponentException {
 
-         resolveCommand(command, Collections.EMPTY_MAP, metadata, analysis);
-     }
+		return resolveCommand(command, metadata, true);
+	}
 
-     /**
-      * This implements an algorithm to resolve all the symbols created by the parser into real metadata IDs
-      * @param command Command the SQL command we are running (Select, Update, Insert, Delete)
-      * @param metadata QueryMetadataInterface the metadata
-      */
-      public static void resolveCommand(Command command, QueryMetadataInterface metadata)
-          throws QueryResolverException, TeiidComponentException {
-
-          resolveCommand(command, Collections.EMPTY_MAP, metadata, AnalysisRecord.createNonRecordingRecord());
-      }
-
-   /**
-    * This implements an algorithm to resolve all the symbols created by the parser into real metadata IDs
- * @param externalMetadata Map of GroupSymbol to a List of ElementSymbol that identifies
-    * valid external groups that can be resolved against. Any elements resolved against external
-    * groups will be treated as variables
- * @param metadata QueryMetadataInterface the metadata
- * @param analysis The analysis record which can be used to add anotations and debug information.
- * @param command Command the SQL command we are running (Select, Update, Insert, Delete)
-    */
-    public static TempMetadataStore resolveCommand(Command currentCommand, Map externalMetadata, QueryMetadataInterface metadata, 
-                                                     AnalysisRecord analysis)
-                       throws QueryResolverException, TeiidComponentException {
-        return resolveCommand(currentCommand, externalMetadata, metadata, analysis, true);
-    }
-      
-    public static TempMetadataStore resolveCommand(Command currentCommand, Map externalMetadata, QueryMetadataInterface metadata, 
-                                      AnalysisRecord analysis, boolean resolveNullLiterals)
+    public static TempMetadataStore resolveCommand(Command currentCommand, QueryMetadataInterface metadata, boolean resolveNullLiterals)
         throws QueryResolverException, TeiidComponentException {
 
 		LogManager.logTrace(org.teiid.logging.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving command", currentCommand}); //$NON-NLS-1$
         
         TempMetadataAdapter resolverMetadata = null;
         try {
-            TempMetadataStore rootExternalStore = new TempMetadataStore();
-            if(externalMetadata != null) {
-                for(Iterator iter = externalMetadata.entrySet().iterator(); iter.hasNext();) {
-                    Map.Entry entry = (Map.Entry)iter.next();
-                    GroupSymbol group = (GroupSymbol) entry.getKey();
-                    List elements = (List) entry.getValue();
-                    rootExternalStore.addTempGroup(group.getName(), elements);
-                    currentCommand.addExternalGroupToContext(group);
-                }
-            } 
             Map tempMetadata = currentCommand.getTemporaryMetadata();
             if(tempMetadata == null) {
-                currentCommand.setTemporaryMetadata(new HashMap(rootExternalStore.getData()));
-            } else {
-                tempMetadata.putAll(rootExternalStore.getData());
+                currentCommand.setTemporaryMetadata(new HashMap());
             }
             
             TempMetadataStore discoveredMetadata = new TempMetadataStore(currentCommand.getTemporaryMetadata());
@@ -159,12 +134,11 @@ public class QueryResolver {
             resolverMetadata = new TempMetadataAdapter(metadata, discoveredMetadata);
             
             // Resolve external groups for command
-            Collection externalGroups = currentCommand.getAllExternalGroups();
-            Iterator extIter = externalGroups.iterator();
-            while(extIter.hasNext()) {
-                GroupSymbol extGroup = (GroupSymbol) extIter.next();
+            Collection<GroupSymbol> externalGroups = currentCommand.getAllExternalGroups();
+            for (GroupSymbol extGroup : externalGroups) {
                 Object metadataID = extGroup.getMetadataID();
                 //make sure that the group is resolved and that it is pointing to the appropriate temp group
+                //TODO: this is mainly for XML resolving since it sends external groups in unresolved
                 if (metadataID == null || (!(extGroup.getMetadataID() instanceof TempMetadataID) && discoveredMetadata.getTempGroupID(extGroup.getName()) != null)) {
                     metadataID = resolverMetadata.getGroupID(extGroup.getName());
                     extGroup.setMetadataID(metadataID);
@@ -174,7 +148,7 @@ public class QueryResolver {
             CommandResolver resolver = chooseResolver(currentCommand, resolverMetadata);
 
             // Resolve this command
-            resolver.resolveCommand(currentCommand, resolverMetadata, analysis, resolveNullLiterals);            
+            resolver.resolveCommand(currentCommand, resolverMetadata, resolveNullLiterals);            
         } catch(QueryMetadataException e) {
             throw new QueryResolverException(e, e.getMessage());
         }
@@ -207,6 +181,7 @@ public class QueryResolver {
             case Command.TYPE_UPDATE:               return UPDATE_RESOLVER;
             case Command.TYPE_DELETE:               return DELETE_RESOLVER;
             case Command.TYPE_STORED_PROCEDURE:     return EXEC_RESOLVER;
+            case Command.TYPE_TRIGGER_ACTION:		return UPDATE_PROCEDURE_RESOLVER;
             case Command.TYPE_UPDATE_PROCEDURE:     return UPDATE_PROCEDURE_RESOLVER;
             case Command.TYPE_BATCHED_UPDATE:       return BATCHED_UPDATE_RESOLVER;
             case Command.TYPE_DYNAMIC:              return DYNAMIC_COMMAND_RESOLVER;
@@ -300,14 +275,60 @@ public class QueryResolver {
     }
     
 	public static void resolveSubqueries(Command command,
-			TempMetadataAdapter metadata, AnalysisRecord analysis, Collection<GroupSymbol> externalGroups)
+			TempMetadataAdapter metadata, Collection<GroupSymbol> externalGroups)
 			throws QueryResolverException, TeiidComponentException {
 		for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(command)) {
             QueryResolver.setChildMetadata(container.getCommand(), command);
             if (externalGroups != null) {
             	container.getCommand().pushNewResolvingContext(externalGroups);
             }
-            QueryResolver.resolveCommand(container.getCommand(), Collections.EMPTY_MAP, metadata.getMetadata(), analysis);
+            QueryResolver.resolveCommand(container.getCommand(), metadata.getMetadata());
+        }
+	}
+	
+	public static Command resolveView(GroupSymbol virtualGroup, QueryNode qnode,
+			String cacheString, QueryMetadataInterface qmi) throws TeiidComponentException,
+			QueryMetadataException, QueryResolverException,
+			QueryValidatorException {
+		Command result = (Command)qmi.getFromMetadataCache(virtualGroup.getMetadataID(), "transformation/" + cacheString); //$NON-NLS-1$
+        if (result != null) {
+        	result = (Command)result.clone();
+        } else {
+        	result = qnode.getCommand();
+            
+            if (result == null) {
+                try {
+                	result = QueryParser.getQueryParser().parseCommand(qnode.getQuery());
+                } catch(QueryParserException e) {
+                    throw new QueryResolverException(e, "ERR.015.008.0011", QueryPlugin.Util.getString("ERR.015.008.0011", qnode.getGroupName())); //$NON-NLS-1$ //$NON-NLS-2$
+                }
+                
+                //Handle bindings and references
+                List bindings = qnode.getBindings();
+                if (bindings != null){
+                    BindVariableVisitor.bindReferences(result, bindings, qmi);
+                }
+            }
+	        QueryResolver.resolveCommand(result, qmi);
+	        Request.validateWithVisitor(new ValidationVisitor(), qmi, result);
+	        qmi.addToMetadataCache(virtualGroup.getMetadataID(), "transformation/" + cacheString, result.clone()); //$NON-NLS-1$
+        }
+		return result;
+	}
+	
+	public static void buildExternalGroups(Map<GroupSymbol, List<ElementSymbol>> externalMetadata, Command currentCommand) {
+		TempMetadataStore rootExternalStore = new TempMetadataStore();
+		for(Map.Entry<GroupSymbol, List<ElementSymbol>> entry : externalMetadata.entrySet()) {
+		    GroupSymbol group = entry.getKey();
+		    List<ElementSymbol> elements = entry.getValue();
+		    rootExternalStore.addTempGroup(group.getName(), elements);
+		    currentCommand.addExternalGroupToContext(group);
+		}
+		Map tempMetadata = currentCommand.getTemporaryMetadata();
+        if(tempMetadata == null) {
+        	currentCommand.setTemporaryMetadata(rootExternalStore.getData());
+        } else {
+            tempMetadata.putAll(rootExternalStore.getData());
         }
 	}
 

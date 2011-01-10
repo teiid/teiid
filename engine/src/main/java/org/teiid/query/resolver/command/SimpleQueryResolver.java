@@ -42,7 +42,6 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.StoredProcedureInfo;
 import org.teiid.query.metadata.SupportConstants;
@@ -92,17 +91,17 @@ public class SimpleQueryResolver implements CommandResolver {
     private static final String ALL_IN_GROUP_SUFFIX = ".*"; //$NON-NLS-1$
 
     /** 
-     * @see org.teiid.query.resolver.CommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter, org.teiid.query.analysis.AnalysisRecord, boolean)
+     * @see org.teiid.query.resolver.CommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter, boolean)
      */
-    public void resolveCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals)
+    public void resolveCommand(Command command, TempMetadataAdapter metadata, boolean resolveNullLiterals)
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 
     	Query query = (Query) command;
     	
-    	resolveWith(metadata, analysis, query);
+    	resolveWith(metadata, query);
         
         try {
-            QueryResolverVisitor qrv = new QueryResolverVisitor(query, metadata, analysis);
+            QueryResolverVisitor qrv = new QueryResolverVisitor(query, metadata);
             qrv.visit(query);
             ResolverVisitor visitor = (ResolverVisitor)qrv.getVisitor();
 			visitor.throwException(true);
@@ -138,7 +137,7 @@ public class SimpleQueryResolver implements CommandResolver {
     }
 
 	static void resolveWith(TempMetadataAdapter metadata,
-			AnalysisRecord analysis, QueryCommand query) throws QueryResolverException, TeiidComponentException {
+			QueryCommand query) throws QueryResolverException, TeiidComponentException {
 		if (query.getWith() == null) {
 			return;
 		}
@@ -149,7 +148,7 @@ public class SimpleQueryResolver implements CommandResolver {
             QueryResolver.setChildMetadata(queryExpression, query);
             
             try {
-                QueryResolver.resolveCommand(queryExpression, Collections.EMPTY_MAP, metadata.getMetadata(), analysis, false);
+                QueryResolver.resolveCommand(queryExpression, metadata.getMetadata(), false);
             } catch (TeiidException err) {
                 throw new TeiidRuntimeException(err);
             }
@@ -211,16 +210,14 @@ public class SimpleQueryResolver implements CommandResolver {
         private List<GroupSymbol> implicitGroups = new LinkedList<GroupSymbol>();
         private TempMetadataAdapter metadata;
         private Query query;
-        private AnalysisRecord analysis;
         private boolean allowImplicit = true;
         
-        public QueryResolverVisitor(Query query, TempMetadataAdapter metadata, AnalysisRecord record) {
+        public QueryResolverVisitor(Query query, TempMetadataAdapter metadata) {
             super(new ResolverVisitor(metadata, null, query.getExternalGroupContexts()));
             ResolverVisitor visitor = (ResolverVisitor)getVisitor();
             visitor.setGroups(currentGroups);
             this.query = query;
             this.metadata = metadata;
-            this.analysis = record;
         }
         
         protected void postVisitVisitor(LanguageObject obj) {
@@ -260,7 +257,7 @@ public class SimpleQueryResolver implements CommandResolver {
             command.pushNewResolvingContext(externalGroups);
             
             try {
-                QueryResolver.resolveCommand(command, Collections.EMPTY_MAP, metadata.getMetadata(), analysis, false);
+                QueryResolver.resolveCommand(command, metadata.getMetadata(), false);
             } catch (TeiidException err) {
                 throw new TeiidRuntimeException(err);
             }
@@ -496,7 +493,7 @@ public class SimpleQueryResolver implements CommandResolver {
 			    }
 			}
 			
-			QueryResolver.resolveCommand(procQuery, Collections.EMPTY_MAP, metadata.getMetadata(), analysis);
+			QueryResolver.resolveCommand(procQuery, metadata.getMetadata());
 			
 			List<SingleElementSymbol> projectedSymbols = procQuery.getProjectedSymbols();
 			

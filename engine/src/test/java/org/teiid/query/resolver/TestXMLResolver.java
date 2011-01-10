@@ -399,8 +399,8 @@ public class TestXMLResolver extends TestCase {
         sqParams.add(in);
         Map externalMetadata = new HashMap();
         externalMetadata.put(sqGroup, sqParams);
-        
-        QueryResolver.resolveCommand(command, externalMetadata, FakeMetadataFactory.example1Cached(), AnalysisRecord.createNonRecordingRecord());
+        QueryResolver.buildExternalGroups(externalMetadata, command);
+        QueryResolver.resolveCommand(command, FakeMetadataFactory.example1Cached());
     
         // Verify results        
         Collection vars = TestResolver.getVariables(command);
@@ -443,7 +443,7 @@ public class TestXMLResolver extends TestCase {
         expected.setOperator(CompareCriteria.EQ);
         expected.setRightExpression(new Constant("yyz")); //$NON-NLS-1$
     
-        Query query = (Query) TestResolver.helpResolve(QueryParser.getQueryParser().parseCommand("select \"xml\" from xmltest.doc1 where node1 = 'yyz'"), FakeMetadataFactory.example1Cached(), null); //$NON-NLS-1$
+        Query query = (Query) TestResolver.helpResolve(QueryParser.getQueryParser().parseCommand("select \"xml\" from xmltest.doc1 where node1 = 'yyz'"), FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
         Criteria actual = query.getCriteria();
         assertEquals("Did not match expected criteria", expected, actual);     //$NON-NLS-1$
     } 

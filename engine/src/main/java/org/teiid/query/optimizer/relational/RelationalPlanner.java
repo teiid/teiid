@@ -25,7 +25,6 @@ package org.teiid.query.optimizer.relational;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,7 +32,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
-import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
@@ -66,13 +64,11 @@ import org.teiid.query.optimizer.relational.rules.CriteriaCapabilityValidatorVis
 import org.teiid.query.optimizer.relational.rules.RuleCollapseSource;
 import org.teiid.query.optimizer.relational.rules.RuleConstants;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
-import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.resolver.ProcedureContainerResolver;
 import org.teiid.query.resolver.QueryResolver;
-import org.teiid.query.resolver.util.BindVariableVisitor;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
@@ -1095,7 +1091,7 @@ public class RelationalPlanner {
             qnode = metadata.getVirtualPlan(metadataID);            
         }
 
-        Command result = getCommand(virtualGroup, qnode, cacheString, metadata, analysisRecord);   
+        Command result = QueryResolver.resolveView(virtualGroup, qnode, cacheString, metadata);   
         return QueryRewriter.rewrite(result, metadata, context);
     }
     
@@ -1136,7 +1132,7 @@ public class RelationalPlanner {
 					for (Object index : indexes) {
 						id.addIndex(resolveIndex(metadata, id, index));
 					}
-					Command c = getCommand(table, metadata.getVirtualPlan(table.getMetadataID()), SQLConstants.Reserved.SELECT, metadata, analysisRecord);
+					Command c = QueryResolver.resolveView(table, metadata.getVirtualPlan(table.getMetadataID()), SQLConstants.Reserved.SELECT, metadata);
 					CacheHint hint = c.getCacheHint();
 					if (hint != null) {
 						recordAnnotation(analysisRecord, Annotation.MATERIALIZED_VIEW, Priority.LOW, "SimpleQueryResolver.cache_hint_used", table, matTableName, id.getCacheHint()); //$NON-NLS-1$
@@ -1160,36 +1156,6 @@ public class RelationalPlanner {
 			primaryKey.add(id.getElements().get(pos));
 		}
 		return primaryKey;
-	}
-
-	private static Command getCommand(GroupSymbol virtualGroup, QueryNode qnode,
-			String cacheString, QueryMetadataInterface qmi, AnalysisRecord analysisRecord) throws TeiidComponentException,
-			QueryMetadataException, QueryResolverException,
-			QueryValidatorException {
-		Command result = (Command)qmi.getFromMetadataCache(virtualGroup.getMetadataID(), "transformation/" + cacheString); //$NON-NLS-1$
-        if (result != null) {
-        	result = (Command)result.clone();
-        } else {
-        	result = qnode.getCommand();
-            
-            if (result == null) {
-                try {
-                	result = QueryParser.getQueryParser().parseCommand(qnode.getQuery());
-                } catch(QueryParserException e) {
-                    throw new QueryResolverException(e, "ERR.015.008.0011", QueryPlugin.Util.getString("ERR.015.008.0011", qnode.getGroupName())); //$NON-NLS-1$ //$NON-NLS-2$
-                }
-                
-                //Handle bindings and references
-                List bindings = qnode.getBindings();
-                if (bindings != null){
-                    BindVariableVisitor.bindReferences(result, bindings, qmi);
-                }
-            }
-	        QueryResolver.resolveCommand(result, Collections.EMPTY_MAP, qmi, analysisRecord);
-	        Request.validateWithVisitor(new ValidationVisitor(), qmi, result);
-	        qmi.addToMetadataCache(virtualGroup.getMetadataID(), "transformation/" + cacheString, result.clone()); //$NON-NLS-1$
-        }
-		return result;
 	}
 
     public static boolean isNoCacheGroup(QueryMetadataInterface metadata,

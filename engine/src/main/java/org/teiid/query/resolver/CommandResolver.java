@@ -25,7 +25,6 @@ package org.teiid.query.resolver;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.sql.lang.Command;
 
@@ -40,14 +39,13 @@ public interface CommandResolver {
      * Resolve the command using the metadata.  
      * @param command The command to resolve
      * @param metadata Metadata
-     * @param analysis
      * @param resolveNullLiterals true if the resolver should consider replacing null literals with more appropriate types 
      * @return the TempMetadataStore containing the metadata defined by this command
      * @throws QueryMetadataException If there is a metadata problem
      * @throws QueryResolverException If the query cannot be resolved
      * @throws TeiidComponentException If there is an internal error     
      */        
-    void resolveCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals)
+    void resolveCommand(Command command, TempMetadataAdapter metadata, boolean resolveNullLiterals)
     throws QueryMetadataException, QueryResolverException, TeiidComponentException;
     
 }

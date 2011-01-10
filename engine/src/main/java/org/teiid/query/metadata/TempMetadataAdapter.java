@@ -180,9 +180,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
             if (tempID.getType() != null) {
                 return DataTypeManager.getDataTypeName( tempID.getType() );
             } 
-            // If type is null, check element ID stored in temp group store.
-            TempMetadataID storedTempID = this.tempStore.getTempElementID(tempID.getID());
-            return DataTypeManager.getDataTypeName( storedTempID.getType() );
+            throw new AssertionError("No type set for element " + elementID); //$NON-NLS-1$
         }
 		return this.actualMetadata.getElementType(elementID);
 	}

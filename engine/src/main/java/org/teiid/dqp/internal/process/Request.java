@@ -280,7 +280,7 @@ public class Request {
         }
     	//ensure that the user command is distinct from the processing command
         //rewrite and planning may alter options, symbols, etc.
-    	QueryResolver.resolveCommand(command, metadata, analysisRecord);
+    	QueryResolver.resolveCommand(command, metadata);
     	
     	this.userCommand = (Command)command.clone();
     }

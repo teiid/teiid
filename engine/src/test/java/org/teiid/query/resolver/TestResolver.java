@@ -167,7 +167,7 @@ public class TestResolver {
 	}
     
     public static Command helpResolve(String sql, QueryMetadataInterface queryMetadata, AnalysisRecord analysis){
-        return helpResolve(helpParse(sql), queryMetadata, analysis);
+        return helpResolve(helpParse(sql), queryMetadata);
     }
     
 	private Command helpResolve(String sql) { 
@@ -175,13 +175,13 @@ public class TestResolver {
 	}
 	
     private Command helpResolve(Command command) {    
-        return helpResolve(command, this.metadata, AnalysisRecord.createNonRecordingRecord());  
+        return helpResolve(command, this.metadata);  
     }	
 
-	static Command helpResolve(Command command, QueryMetadataInterface queryMetadataInterface, AnalysisRecord analysis) {		
+	static Command helpResolve(Command command, QueryMetadataInterface queryMetadataInterface) {		
         // resolve
         try { 
-            QueryResolver.resolveCommand(command, queryMetadataInterface, analysis);
+            QueryResolver.resolveCommand(command, queryMetadataInterface);
         } catch(TeiidException e) {
             throw new RuntimeException(e);
         } 
@@ -985,8 +985,8 @@ public class TestResolver {
         sqParams.add(in);
         Map externalMetadata = new HashMap();
         externalMetadata.put(sqGroup, sqParams);
-        
-        QueryResolver.resolveCommand(command, externalMetadata, metadata, AnalysisRecord.createNonRecordingRecord());
+        QueryResolver.buildExternalGroups(externalMetadata, command);
+        QueryResolver.resolveCommand(command, metadata);
 
         // Verify results        
         helpCheckFrom((Query)command, new String[] { "pm1.g1" });         //$NON-NLS-1$
@@ -1005,8 +1005,8 @@ public class TestResolver {
         sqParams.add(in);
         Map externalMetadata = new HashMap();
         externalMetadata.put(sqGroup, sqParams);
-                    
-        QueryResolver.resolveCommand(command, externalMetadata, metadata, AnalysisRecord.createNonRecordingRecord());
+        QueryResolver.buildExternalGroups(externalMetadata, command);            
+        QueryResolver.resolveCommand(command, metadata);
 
         // Verify results        
         helpCheckFrom((Query)command, new String[] { "pm1.g1" });         //$NON-NLS-1$
@@ -1025,8 +1025,8 @@ public class TestResolver {
         sqParams.add(in);
         Map externalMetadata = new HashMap();
         externalMetadata.put(sqGroup, sqParams);
-
-        QueryResolver.resolveCommand(command, externalMetadata, metadata, AnalysisRecord.createNonRecordingRecord());
+        QueryResolver.buildExternalGroups(externalMetadata, command);
+        QueryResolver.resolveCommand(command, metadata);
 
         // Verify results
         Collection vars = getVariables(command);
@@ -1047,7 +1047,7 @@ public class TestResolver {
             Map externalMetadata = new HashMap();
             externalMetadata.put(sqGroup, sqParams);
 
-            QueryResolver.resolveCommand(command, externalMetadata, metadata, AnalysisRecord.createNonRecordingRecord());
+            QueryResolver.resolveCommand(command, metadata);
             
             fail("Expected exception on invalid variable pm1.sq2.in"); //$NON-NLS-1$
         } catch(QueryResolverException e) {
@@ -1966,7 +1966,7 @@ public class TestResolver {
  
     @Test public void testDefect10809(){
         String sql = "select * from LOB_TESTING_ONE where CLOB_COLUMN LIKE '%fff%'"; //$NON-NLS-1$
-        helpResolve(helpParse(sql), FakeMetadataFactory.exampleBQTCached(), AnalysisRecord.createNonRecordingRecord());
+        helpResolve(helpParse(sql), FakeMetadataFactory.exampleBQTCached());
     }
     
     @Test public void testNonAutoConversionOfLiteralIntegerToShort() throws Exception {       
@@ -2080,7 +2080,7 @@ public class TestResolver {
         helpResolve(
             helpParse("SELECT myModel.myTable.myColumn AS myColumn from myModel.myTable UNION " + //$NON-NLS-1$
                 "SELECT convert(null, string) AS myColumn From myModel2.mySchema.myTable2"),  //$NON-NLS-1$
-            example_12968(), AnalysisRecord.createNonRecordingRecord());
+            example_12968());
     }
 
 
@@ -2216,7 +2216,7 @@ public class TestResolver {
         String userSql = "SELECT null as x"; //$NON-NLS-1$
         Query query = (Query)helpParse(userSql);
         
-        QueryResolver.resolveCommand(query, FakeMetadataFactory.exampleBQTCached(), AnalysisRecord.createNonRecordingRecord());
+        QueryResolver.resolveCommand(query, FakeMetadataFactory.exampleBQTCached());
         
         // Check type of resolved null constant
         SingleElementSymbol symbol = (SingleElementSymbol) query.getSelect().getSymbols().get(0);
@@ -2233,7 +2233,7 @@ public class TestResolver {
     	inputSetElements.add(inputSetElement);
     	externalMetadata.put(inputSet, inputSetElements);
         Query command = (Query)helpParse(sql);
-        QueryResolver.resolveCommand(command, externalMetadata, metadata, AnalysisRecord.createNonRecordingRecord());
+        QueryResolver.resolveCommand(command, metadata);
         Collection groups = GroupCollectorVisitor.getGroups(command, false);
         assertFalse(groups.contains(inputSet));
     }
@@ -2251,7 +2251,8 @@ public class TestResolver {
     	param.setType(String.class);
     	procPrarms.add(param);
     	externalMetadata.put(procGroup, procPrarms);
-        QueryResolver.resolveCommand(command, externalMetadata, metadata, AnalysisRecord.createNonRecordingRecord());
+    	QueryResolver.buildExternalGroups(externalMetadata, command);
+        QueryResolver.resolveCommand(command, metadata);
         CreateUpdateProcedureCommand proc = (CreateUpdateProcedureCommand)command;
         Query query = (Query)proc.getSubCommands().get(0);
         ElementSymbol inElement = (ElementSymbol)((CompareCriteria)query.getCriteria()).getLeftExpression();
@@ -2521,7 +2522,8 @@ public class TestResolver {
         param.setType(DataTypeManager.DefaultDataClasses.STRING);
         procPrarms.add(param);
         externalMetadata.put(proc, procPrarms);
-        QueryResolver.resolveCommand(command, externalMetadata, metadata, AnalysisRecord.createNonRecordingRecord());
+        QueryResolver.buildExternalGroups(externalMetadata, command);
+        QueryResolver.resolveCommand(command, metadata);
     }
         
     @Test public void testBatchedUpdateResolver() throws Exception {

@@ -23,7 +23,6 @@
 package org.teiid.dqp.internal.process;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 import junit.framework.TestCase;
 
@@ -36,7 +35,6 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
 import org.teiid.dqp.service.AutoGenDataService;
-import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.FakeDataManager;
@@ -75,7 +73,7 @@ public class TestRequest extends TestCase {
         
         Request request = new Request();
         Command command = QueryParser.getQueryParser().parseCommand(QUERY);
-        QueryResolver.resolveCommand(command, Collections.EMPTY_MAP, metadata, AnalysisRecord.createNonRecordingRecord());
+        QueryResolver.resolveCommand(command, metadata);
         
         RequestMessage message = new RequestMessage();
         DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, FakeMetadataFactory.example1VDB());

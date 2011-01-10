@@ -33,7 +33,6 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.StringUtil;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.resolver.CommandResolver;
@@ -63,9 +62,9 @@ import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 public class XMLQueryResolver implements CommandResolver {
 
     /**
-     * @see org.teiid.query.resolver.CommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, TempMetadataAdapter, AnalysisRecord, boolean)
+     * @see org.teiid.query.resolver.CommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, TempMetadataAdapter, boolean)
      */
-	public void resolveCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals)
+	public void resolveCommand(Command command, TempMetadataAdapter metadata, boolean resolveNullLiterals)
 		throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 
 		Query query = (Query) command;
@@ -96,7 +95,7 @@ public class XMLQueryResolver implements CommandResolver {
             
             QueryResolver.setChildMetadata(subCommand, command);
             
-            QueryResolver.resolveCommand(subCommand, Collections.EMPTY_MAP, metadata.getMetadata(), analysis);
+            QueryResolver.resolveCommand(subCommand, metadata.getMetadata());
         }
         
 		if(crit != null) {

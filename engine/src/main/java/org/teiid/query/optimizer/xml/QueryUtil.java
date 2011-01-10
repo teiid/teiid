@@ -37,7 +37,6 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -101,7 +100,7 @@ public class QueryUtil {
         throws TeiidComponentException, QueryPlannerException {
         // Run resolver
         try {
-            QueryResolver.resolveCommand(query, Collections.EMPTY_MAP, metadata, AnalysisRecord.createNonRecordingRecord());
+            QueryResolver.resolveCommand(query, metadata);
         } catch(QueryResolverException e) {
             throw new QueryPlannerException(e, e.getMessage());
         }

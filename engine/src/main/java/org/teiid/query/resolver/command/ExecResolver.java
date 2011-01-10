@@ -23,10 +23,8 @@
 package org.teiid.query.resolver.command;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -36,7 +34,6 @@ import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.StoredProcedureInfo;
@@ -239,9 +236,7 @@ public class ExecResolver extends ProcedureContainerResolver {
 
         // Look through parameters to find input elements - these become child metadata
         List<ElementSymbol> tempElements = new ArrayList<ElementSymbol>();
-        Iterator iter = storedProcedureCommand.getParameters().iterator();
-        while(iter.hasNext()) {
-            SPParameter param = (SPParameter) iter.next();
+        for (SPParameter param : storedProcedureCommand.getParameters()) {
             if(param.getParameterType() == ParameterInfo.IN || param.getParameterType() == ParameterInfo.INOUT) {
                 ElementSymbol symbol = param.getParameterSymbol();
                 tempElements.add(symbol);
@@ -254,57 +249,52 @@ public class ExecResolver extends ProcedureContainerResolver {
     }
 
     /** 
-     * @see org.teiid.query.resolver.ProcedureContainerResolver#resolveProceduralCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter, org.teiid.query.analysis.AnalysisRecord)
+     * @see org.teiid.query.resolver.ProcedureContainerResolver#resolveProceduralCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter)
      */
-    public void resolveProceduralCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis) 
+    public void resolveProceduralCommand(Command command, TempMetadataAdapter metadata) 
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 
         findCommandMetadata(command, metadata.getMetadataStore(), metadata);
         
         //Resolve expressions on input parameters
         StoredProcedure storedProcedureCommand = (StoredProcedure) command;
-        List params = storedProcedureCommand.getParameters();
-        if(params.size() > 0) {
-            GroupContext externalGroups = storedProcedureCommand.getExternalGroupContexts();
-            Iterator paramIter = params.iterator();
-            while(paramIter.hasNext()) {
-                SPParameter param = (SPParameter) paramIter.next();
-                Expression expr = param.getExpression();
-                if(expr == null) {
-                	continue;
-                }
-                for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr)) {
-                    QueryResolver.setChildMetadata(container.getCommand(), command);
-                    
-                    QueryResolver.resolveCommand(container.getCommand(), Collections.EMPTY_MAP, metadata.getMetadata(), analysis);
-                }
-                ResolverVisitor.resolveLanguageObject(expr, null, externalGroups, metadata);
-                Class paramType = param.getClassType();
-
-                ResolverUtil.setDesiredType(expr, paramType, storedProcedureCommand);
+        GroupContext externalGroups = storedProcedureCommand.getExternalGroupContexts();
+        for (SPParameter param : storedProcedureCommand.getParameters()) {
+            Expression expr = param.getExpression();
+            if(expr == null) {
+            	continue;
+            }
+            for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr)) {
+                QueryResolver.setChildMetadata(container.getCommand(), command);
                 
-                // Compare type of parameter expression against parameter type
-                // and add implicit conversion if necessary
-                Class exprType = expr.getType();
-                if(paramType == null || exprType == null) {
-                    throw new QueryResolverException("ERR.015.008.0061", QueryPlugin.Util.getString("ERR.015.008.0061", storedProcedureCommand.getProcedureName(), param.getName())); //$NON-NLS-1$ //$NON-NLS-2$
-                }
-                String tgtType = DataTypeManager.getDataTypeName(paramType);
-                String srcType = DataTypeManager.getDataTypeName(exprType);
-                Expression result = null;
-                                
-                if (param.getParameterType() == SPParameter.RETURN_VALUE || param.getParameterType() == SPParameter.OUT) {
-                	if (!ResolverUtil.canImplicitlyConvert(tgtType, srcType)) {
-                		throw new QueryResolverException(QueryPlugin.Util.getString("ExecResolver.out_type_mismatch", param.getParameterSymbol(), tgtType, srcType)); //$NON-NLS-1$
-                	}
-                } else {
-	                try {
-	                    result = ResolverUtil.convertExpression(expr, tgtType, metadata);
-	                } catch (QueryResolverException e) {
-	                    throw new QueryResolverException(e, QueryPlugin.Util.getString("ExecResolver.Param_convert_fail", new Object[] { srcType, tgtType}));                                     //$NON-NLS-1$
-	                }                                                       
-	                param.setExpression(result);
-                }
+                QueryResolver.resolveCommand(container.getCommand(), metadata.getMetadata());
+            }
+            ResolverVisitor.resolveLanguageObject(expr, null, externalGroups, metadata);
+            Class<?> paramType = param.getClassType();
+
+            ResolverUtil.setDesiredType(expr, paramType, storedProcedureCommand);
+            
+            // Compare type of parameter expression against parameter type
+            // and add implicit conversion if necessary
+            Class<?> exprType = expr.getType();
+            if(paramType == null || exprType == null) {
+                throw new QueryResolverException("ERR.015.008.0061", QueryPlugin.Util.getString("ERR.015.008.0061", storedProcedureCommand.getProcedureName(), param.getName())); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+            String tgtType = DataTypeManager.getDataTypeName(paramType);
+            String srcType = DataTypeManager.getDataTypeName(exprType);
+            Expression result = null;
+                            
+            if (param.getParameterType() == SPParameter.RETURN_VALUE || param.getParameterType() == SPParameter.OUT) {
+            	if (!ResolverUtil.canImplicitlyConvert(tgtType, srcType)) {
+            		throw new QueryResolverException(QueryPlugin.Util.getString("ExecResolver.out_type_mismatch", param.getParameterSymbol(), tgtType, srcType)); //$NON-NLS-1$
+            	}
+            } else {
+                try {
+                    result = ResolverUtil.convertExpression(expr, tgtType, metadata);
+                } catch (QueryResolverException e) {
+                    throw new QueryResolverException(e, QueryPlugin.Util.getString("ExecResolver.Param_convert_fail", new Object[] { srcType, tgtType}));                                     //$NON-NLS-1$
+                }                                                       
+                param.setExpression(result);
             }
         }
     }

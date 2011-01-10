@@ -22,13 +22,11 @@
 
 package org.teiid.query.resolver.command;
 
-import java.util.Collections;
 import java.util.Iterator;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.resolver.CommandResolver;
 import org.teiid.query.resolver.QueryResolver;
@@ -42,7 +40,7 @@ import org.teiid.query.sql.lang.Command;
  */
 public class BatchedUpdateResolver implements CommandResolver {
     
-    public void resolveCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals) 
+    public void resolveCommand(Command command, TempMetadataAdapter metadata, boolean resolveNullLiterals) 
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 
         BatchedUpdateCommand batchedUpdateCommand = (BatchedUpdateCommand) command;
@@ -50,7 +48,7 @@ public class BatchedUpdateResolver implements CommandResolver {
         for (Iterator i = batchedUpdateCommand.getSubCommands().iterator(); i.hasNext();) {
             Command subCommand = (Command)i.next();
             QueryResolver.setChildMetadata(subCommand, command);
-            QueryResolver.resolveCommand(subCommand, Collections.EMPTY_MAP, metadata.getMetadata(), analysis);
+            QueryResolver.resolveCommand(subCommand, metadata.getMetadata());
         }
     }
 

@@ -476,44 +476,18 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         
         validateAssignment(obj, obj.getVariable());
     }
-
-    public void visit(IfStatement obj) {
-    	Criteria criteria = obj.getCondition();
-
-    	validatorCriteriaStatement(obj, criteria);
-    }
     
-    public void visit(WhileStatement obj) {
-        Criteria criteria = obj.getCondition();
-
-        validatorCriteriaStatement(obj, criteria);
-    }
-
-    /** 
-     * @param obj
-     * @param criteria
-     */
-    private void validatorCriteriaStatement(LanguageObject obj,
-                                            Criteria criteria) {
-        Iterator criteriaIter = PredicateCollectorVisitor.getPredicates(criteria).iterator();
-    	while(criteriaIter.hasNext()) {
-    		Criteria predicateCriteria = (Criteria) criteriaIter.next();
-    		Iterator elmntIter = ElementCollectorVisitor.getElements(predicateCriteria, true).iterator();
-    		if(predicateCriteria instanceof TranslateCriteria) {
-				handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0019"), obj); //$NON-NLS-1$
-    		} else if(!(predicateCriteria instanceof HasCriteria)) {
-    			while(elmntIter.hasNext()) {
-    				ElementSymbol element = (ElementSymbol) elmntIter.next();
-    				if(!element.isExternalReference()) {
-						handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0020"), obj); //$NON-NLS-1$
-    				}
-    			}
-    		}
+    @Override
+    public void visit(HasCriteria obj) {
+    	if (this.updateProc == null || !this.updateProc.isUpdateProcedure()) {
+			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0019"), obj); //$NON-NLS-1$
     	}
     }
-
+    
     public void visit(TranslateCriteria obj) {
-
+    	if (this.updateProc == null || !this.updateProc.isUpdateProcedure()) {
+			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0019"), obj); //$NON-NLS-1$
+    	}
 		if(obj.hasTranslations()) {
 			Collection selectElmnts = null;
 			if(obj.getSelector().hasElements()) {
@@ -522,9 +496,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 			Iterator critIter = obj.getTranslations().iterator();
 			while(critIter.hasNext()) {
 				CompareCriteria transCrit = (CompareCriteria) critIter.next();
-				Collection leftElmnts = ElementCollectorVisitor.getElements(transCrit.getLeftExpression(), true);
+				Collection<ElementSymbol> leftElmnts = ElementCollectorVisitor.getElements(transCrit.getLeftExpression(), true);
 				// there is always only one element
-				ElementSymbol leftExpr = (ElementSymbol)leftElmnts.iterator().next();
+				ElementSymbol leftExpr = leftElmnts.iterator().next();
 
 				if(selectElmnts != null && !selectElmnts.contains(leftExpr)) {
 					handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0021"), leftExpr); //$NON-NLS-1$
@@ -581,7 +555,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	 */
     protected void validateTranslateCriteria(TranslateCriteria obj) {
     	if(this.currentCommand == null) {
-    		return;
+	    	return;
     	}
     	Map symbolMap = this.updateProc.getSymbolMap();
 		Command userCommand = this.updateProc.getUserCommand();

@@ -23,7 +23,6 @@
 package org.teiid.query.resolver;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -60,8 +59,7 @@ import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 public abstract class ProcedureContainerResolver implements CommandResolver {
 
     public abstract void resolveProceduralCommand(Command command,
-                                                  TempMetadataAdapter metadata,
-                                                  AnalysisRecord analysis) throws QueryMetadataException,
+                                                  TempMetadataAdapter metadata) throws QueryMetadataException,
                                                                           QueryResolverException,
                                                                           TeiidComponentException;
     
@@ -114,8 +112,8 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         	ta.setView(procCommand.getGroup());
         	TempMetadataAdapter tma = new TempMetadataAdapter(metadata, new TempMetadataStore());
         	ta.setTemporaryMetadata(tma.getMetadataStore().getData());
-            GroupContext externalGroups = procCommand.getExternalGroupContexts();
-            
+            GroupContext externalGroups = ta.getExternalGroupContexts();
+            //TODO: it seems easier to just inline the handling here rather than have each of the resolvers check for trigger actions
             List<ElementSymbol> viewElements = ResolverUtil.resolveElementsInGroup(ta.getView(), metadata);
             if (procCommand instanceof Update || procCommand instanceof Insert) {
             	addChanging(tma.getMetadataStore(), externalGroups, viewElements);
@@ -124,10 +122,9 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
             if (procCommand instanceof Update || procCommand instanceof Delete) {
             	ProcedureContainerResolver.addScalarGroup(SQLConstants.Reserved.OLD, tma.getMetadataStore(), externalGroups, viewElements);
             }
-            
-            new UpdateProcedureResolver().resolveBlock(new CreateUpdateProcedureCommand(), ta.getBlock(), externalGroups, tma, analysis);
-
-            return subCommand;
+            QueryResolver.setChildMetadata(subCommand, tma.getMetadataStore().getData(), externalGroups);
+            QueryResolver.resolveCommand(subCommand, metadata);
+            return ta;
         }
         
         //find the childMetadata using a clean metadata store
@@ -138,7 +135,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         
         QueryResolver.setChildMetadata(subCommand, childMetadata.getData(), externalGroups);
         
-        QueryResolver.resolveCommand(subCommand, Collections.EMPTY_MAP, metadata, analysis);
+        QueryResolver.resolveCommand(subCommand, metadata);
         
         return subCommand;
     }
@@ -215,16 +212,16 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 	}
         
     /** 
-     * @see org.teiid.query.resolver.CommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter, org.teiid.query.analysis.AnalysisRecord, boolean)
+     * @see org.teiid.query.resolver.CommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter, boolean)
      */
-    public void resolveCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis, boolean resolveNullLiterals) 
+    public void resolveCommand(Command command, TempMetadataAdapter metadata, boolean resolveNullLiterals) 
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
         
         ProcedureContainer procCommand = (ProcedureContainer)command;
         
         resolveGroup(metadata, procCommand);
         
-        resolveProceduralCommand(procCommand, metadata, analysis);
+        resolveProceduralCommand(procCommand, metadata);
         
         getPlan(metadata, procCommand);
     }

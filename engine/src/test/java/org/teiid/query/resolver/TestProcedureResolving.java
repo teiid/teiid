@@ -36,7 +36,6 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -844,8 +843,9 @@ public class TestProcedureResolving {
         Command procCommand = QueryParser.getQueryParser().parseCommand(procedure);
 		GroupSymbol virtualGroup = new GroupSymbol("vm1.g1"); //$NON-NLS-1$
 		virtualGroup.setMetadataID(metadata.getGroupID("vm1.g1")); //$NON-NLS-1$
-		Map externalMetadata = getProcedureExternalMetadata(virtualGroup, metadata);        	
-        QueryResolver.resolveCommand(procCommand, externalMetadata, metadata, AnalysisRecord.createNonRecordingRecord());
+		Map externalMetadata = getProcedureExternalMetadata(virtualGroup, metadata);
+		QueryResolver.buildExternalGroups(externalMetadata, procCommand);
+        QueryResolver.resolveCommand(procCommand, metadata);
     }
     
 	// special variable CHANGING compared against integer no implicit conversion available
@@ -881,8 +881,9 @@ public class TestProcedureResolving {
 		GroupSymbol virtualGroup = new GroupSymbol("vm1.g1"); //$NON-NLS-1$
 		virtualGroup.setMetadataID(metadata.getGroupID("vm1.g1")); //$NON-NLS-1$
 		
-    	Map externalMetadata = getProcedureExternalMetadata(virtualGroup, metadata);        	
-        QueryResolver.resolveCommand(procCommand, externalMetadata, metadata, AnalysisRecord.createNonRecordingRecord());
+    	Map externalMetadata = getProcedureExternalMetadata(virtualGroup, metadata);        
+    	QueryResolver.buildExternalGroups(externalMetadata, procCommand);
+        QueryResolver.resolveCommand(procCommand, metadata);
     }
     
 	// special variable CHANGING compared against integer no implicit conversion available
@@ -899,8 +900,9 @@ public class TestProcedureResolving {
 		GroupSymbol virtualGroup = new GroupSymbol("vm1.g1"); //$NON-NLS-1$
 		virtualGroup.setMetadataID(metadata.getGroupID("vm1.g1")); //$NON-NLS-1$
 
-		Map externalMetadata = getProcedureExternalMetadata(virtualGroup, metadata);        	
-        QueryResolver.resolveCommand(procCommand, externalMetadata, metadata, AnalysisRecord.createNonRecordingRecord());
+		Map externalMetadata = getProcedureExternalMetadata(virtualGroup, metadata);  
+		QueryResolver.buildExternalGroups(externalMetadata, procCommand);
+        QueryResolver.resolveCommand(procCommand, metadata);
     }
 
 	// TranslateCriteria on criteria of the if statement

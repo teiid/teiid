@@ -111,6 +111,9 @@ public class SessionServiceImpl implements SessionService {
 	@Override
 	public void closeSession(String sessionID) throws InvalidSessionException {
 		LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"closeSession", sessionID}); //$NON-NLS-1$
+		if (sessionID == null) {
+			throw new InvalidSessionException(RuntimePlugin.Util.getString("SessionServiceImpl.invalid_session", sessionID)); //$NON-NLS-1$
+		}
 		SessionMetadata info = this.sessionCache.remove(sessionID);
 		if (info == null) {
 			throw new InvalidSessionException(RuntimePlugin.Util.getString("SessionServiceImpl.invalid_session", sessionID)); //$NON-NLS-1$

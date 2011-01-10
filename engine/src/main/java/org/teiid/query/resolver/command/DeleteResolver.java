@@ -28,7 +28,6 @@ import java.util.Set;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
@@ -48,9 +47,9 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 public class DeleteResolver extends ProcedureContainerResolver {
 
     /** 
-     * @see org.teiid.query.resolver.ProcedureContainerResolver#resolveProceduralCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter, org.teiid.query.analysis.AnalysisRecord)
+     * @see org.teiid.query.resolver.ProcedureContainerResolver#resolveProceduralCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter)
      */
-    public void resolveProceduralCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis) 
+    public void resolveProceduralCommand(Command command, TempMetadataAdapter metadata) 
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 
         //Cast to known type
@@ -58,7 +57,7 @@ public class DeleteResolver extends ProcedureContainerResolver {
 
         Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
         groups.add(delete.getGroup());
-        QueryResolver.resolveSubqueries(command, metadata, analysis, groups);
+        QueryResolver.resolveSubqueries(command, metadata, groups);
         ResolverVisitor.resolveLanguageObject(delete, groups, delete.getExternalGroupContexts(), metadata);
     }
     

@@ -24,7 +24,6 @@ package org.teiid.query.resolver.command;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -38,7 +37,6 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.resolver.ProcedureContainerResolver;
@@ -66,16 +64,16 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
 
     /**
      * Resolve an INSERT.  Need to resolve elements, constants, types, etc.
-     * @see org.teiid.query.resolver.ProcedureContainerResolver#resolveProceduralCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter, org.teiid.query.analysis.AnalysisRecord)
+     * @see org.teiid.query.resolver.ProcedureContainerResolver#resolveProceduralCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter)
      */
-    public void resolveProceduralCommand(Command command, TempMetadataAdapter metadata, AnalysisRecord analysis) 
+    public void resolveProceduralCommand(Command command, TempMetadataAdapter metadata) 
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 
         // Cast to known type
         Insert insert = (Insert) command;
         
         if (insert.getValues() != null) {
-        	QueryResolver.resolveSubqueries(command, metadata, analysis, null);
+        	QueryResolver.resolveSubqueries(command, metadata, null);
 	        //variables and values must be resolved separately to account for implicitly defined temp groups
 	        resolveList(insert.getValues(), metadata, insert.getExternalGroupContexts(), null);
     	}
@@ -83,7 +81,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         if(insert.getQueryExpression() != null) {
         	QueryResolver.setChildMetadata(insert.getQueryExpression(), command);
             
-            QueryResolver.resolveCommand(insert.getQueryExpression(), Collections.EMPTY_MAP, metadata.getMetadata(), analysis, false);
+            QueryResolver.resolveCommand(insert.getQueryExpression(), metadata.getMetadata(), false);
         }
 
         Set<GroupSymbol> groups = new HashSet<GroupSymbol>();

@@ -28,7 +28,7 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
@@ -55,9 +55,8 @@ public class TestElementSymbolOptimizer extends TestCase {
     
     public Command helpResolve(String sql, QueryMetadataInterface metadata, Map externalMetadata) throws QueryParserException, QueryResolverException, TeiidComponentException {
         Command command = QueryParser.getQueryParser().parseCommand(sql);
-
-        final boolean USE_METADATA_COMMANDS = true;
-        QueryResolver.resolveCommand(command, externalMetadata, metadata, AnalysisRecord.createNonRecordingRecord());
+        QueryResolver.buildExternalGroups(externalMetadata, command);
+        QueryResolver.resolveCommand(command, metadata);
         
         return command;      
     }
@@ -69,7 +68,7 @@ public class TestElementSymbolOptimizer extends TestCase {
     
     
     public void helpTestOptimize(String sql, QueryMetadataInterface metadata, String expected, Map externalMetadata) throws QueryMetadataException, TeiidComponentException, QueryParserException, QueryResolverException {
-        Command command = helpResolve(sql, metadata, externalMetadata);
+    	Command command = helpResolve(sql, metadata, externalMetadata);
         ElementSymbolOptimizer.optimizeElements(command, metadata);
         String actual = command.toString();
             
@@ -153,40 +152,6 @@ public class TestElementSymbolOptimizer extends TestCase {
                             "EXEC pm1.vsp7(5)"); //$NON-NLS-1$
     }
 
-    public void testStoredQueryTransform() throws Exception {
-        
-        // Set up external metadata - stored query pm1.sq3 with
-        // params in and in2
-        Map externalMetadata = new HashMap();
-        GroupSymbol gs = new GroupSymbol("pm1.sq3"); //$NON-NLS-1$
-        List elements = new ArrayList(2);
-        elements.add(new ElementSymbol("pm1.sq3.in")); //$NON-NLS-1$
-        elements.add(new ElementSymbol("pm1.sq3.in2")); //$NON-NLS-1$
-        externalMetadata.put(gs, elements);
-        
-        helpTestOptimize("SELECT pm1.g6.in, pm1.g6.in3 FROM pm1.g6 WHERE pm1.g6.in=pm1.sq3.in AND pm1.g6.in3=pm1.sq3.in2",  //$NON-NLS-1$
-                            FakeMetadataFactory.example1Cached(),  
-                            "SELECT pm1.g6.\"in\", in3 FROM pm1.g6 WHERE (pm1.g6.\"in\" = pm1.sq3.\"in\") AND (in3 = in2)", //$NON-NLS-1$
-                            externalMetadata); 
-    }
-    
-    /** Test stored query whose transformation is another stored query */
-    public void testStoredQueryTransform2() throws Exception {
-        // Set up external metadata - stored query pm1.sq3 with
-        // params in and in2
-        Map externalMetadata = new HashMap();
-        GroupSymbol gs = new GroupSymbol("pm1.sq3"); //$NON-NLS-1$
-        List elements = new ArrayList(2);
-        elements.add(new ElementSymbol("pm1.sq3.in")); //$NON-NLS-1$
-        elements.add(new ElementSymbol("pm1.sq3.in2")); //$NON-NLS-1$
-        externalMetadata.put(gs, elements);
-        
-        helpTestOptimize("EXEC pm1.sq2(pm1.sq3.in)",  //$NON-NLS-1$
-                            FakeMetadataFactory.example1Cached(),  
-                            "EXEC pm1.sq2(\"in\")", //$NON-NLS-1$
-                            externalMetadata);         
-    }
-
     public void testStoredQuerySubquery() throws Exception {
         helpTestOptimize("select x.e1 from (EXEC pm1.sq1()) as x",  //$NON-NLS-1$
                             FakeMetadataFactory.example1Cached(), 
@@ -205,8 +170,9 @@ public class TestElementSymbolOptimizer extends TestCase {
         // params in and in2
         Map externalMetadata = new HashMap();
         GroupSymbol gs = new GroupSymbol("SYSTEM.DESCRIBE"); //$NON-NLS-1$
-        List elements = new ArrayList(2);
+        List<ElementSymbol> elements = new ArrayList<ElementSymbol>(2);
         elements.add(new ElementSymbol("SYSTEM.DESCRIBE.entity")); //$NON-NLS-1$
+        elements.get(0).setType(DataTypeManager.DefaultDataClasses.STRING);
         externalMetadata.put(gs, elements);
         
         

@@ -22,7 +22,6 @@
 
 package org.teiid.dqp.internal.process;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -36,7 +35,6 @@ import org.teiid.client.metadata.ResultsMetadataConstants;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
 import org.teiid.dqp.message.RequestID;
-import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
@@ -55,7 +53,7 @@ public class TestMetaDataProcessor extends TestCase {
     public Map[] helpGetMetadata(String sql, QueryMetadataInterface metadata, VDBMetaData vdb) throws Exception {
         // Prepare sql 
         Command command = QueryParser.getQueryParser().parseCommand(sql);
-        QueryResolver.resolveCommand(command, Collections.EMPTY_MAP, metadata, AnalysisRecord.createNonRecordingRecord());
+        QueryResolver.resolveCommand(command, metadata);
         
         // Create components
         SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>();
