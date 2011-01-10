@@ -142,7 +142,8 @@ public class RulePushLimit implements OptimizerRule {
             }
             case NodeConstants.Types.SET_OP:
             {
-                if (!SetQuery.Operation.UNION.equals(child.getProperty(NodeConstants.Info.SET_OPERATION))) {
+                if (!SetQuery.Operation.UNION.equals(child.getProperty(NodeConstants.Info.SET_OPERATION)) 
+                		|| !child.hasBooleanProperty(NodeConstants.Info.USE_ALL)) {
                     return false;
                 }                                
                 //distribute the limit
@@ -166,8 +167,6 @@ public class RulePushLimit implements OptimizerRule {
                 return child.getProperty(NodeConstants.Info.INTO_GROUP) == null;
             }
             case NodeConstants.Types.SOURCE:
-            case NodeConstants.Types.SELECT:
-            case NodeConstants.Types.DUP_REMOVE:
             {
                 return true;
             }
@@ -208,12 +207,6 @@ public class RulePushLimit implements OptimizerRule {
                                                               TeiidComponentException {
         Object modelID = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
         if (modelID == null) {
-            return null;
-        }
-        
-        List<PlanNode> setops = NodeEditor.findAllNodes(accessNode, NodeConstants.Types.SET_OP, NodeConstants.Types.SOURCE);
-        
-        if (!setops.isEmpty()) {
             return null;
         }
         

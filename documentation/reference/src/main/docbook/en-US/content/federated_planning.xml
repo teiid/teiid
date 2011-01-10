@@ -785,12 +785,12 @@ System.out.println(queryPlan);</programlisting>
           be true regardless of which version of Teiid is used.</para>
         </listitem>
         <listitem>
-        <para>RulePushNonJoinCriteria – this rule will push criteria out of
+        <para>RulePushNonJoinCriteria - this rule will push criteria out of
           an on clause if it is not necessary for the correctness of the join.
         </para>
         </listitem>
         <listitem>
-        <para>RuleRaiseNull – this rule will raise null nodes to their
+        <para>RuleRaiseNull - this rule will raise null nodes to their
           highest possible point.  Raising a null node removes the need to
           consider any part of the old plan that was below the null node.
         </para>
@@ -806,12 +806,12 @@ System.out.println(queryPlan);</programlisting>
           together.</para>
         </listitem>
         <listitem>
-        <para>RuleRemoveOptionalJoins – removes optional join nodes form
+        <para>RuleRemoveOptionalJoins - removes optional join nodes form
           the plan tree as soon as possible so that planning will be more
           optimal.</para>
         </listitem>
         <listitem>
-        <para>RulePlanJoins – this rule attempts to find an optimal
+        <para>RulePlanJoins - this rule attempts to find an optimal
           ordering of the joins performed in the plan, while ensuring that
           &access_patterns; dependencies are met.  This rule has three main
           steps.  First it must determine an ordering of joins that satisfy
@@ -908,7 +908,7 @@ System.out.println(queryPlan);</programlisting>
           retrieved from B, thus greatly speeding the overall query.</para>
         </listitem>
             <listitem>
-        <para>RuleChooseJoinStrategy – Determines the base join strategy.
+        <para>RuleChooseJoinStrategy - Determines the base join strategy.
            Currently this is a decision as to whether to use a merge join rather
           than the default strategy, which is a nested loop join.  Ideally the
           choice of a hash join would also be evaluated here.  Also costing
@@ -932,8 +932,11 @@ System.out.println(queryPlan);</programlisting>
           model option.</para>
         </listitem>
             <listitem>
-        <para>RuleAccessPatternValidation – validates that all access
+        <para>RuleAccessPatternValidation - validates that all access
           patterns have been satisfied.</para>
+        </listitem>
+        <listitem>
+        <para>RulePushLimit - pushes limit and offset information as far as possible in the plan.</para>
         </listitem>
         </itemizedlist>
        </section>

@@ -56,11 +56,7 @@ import org.teiid.query.unittest.FakeMetadataStore;
 
 import junit.framework.TestCase;
 
-
-
-/** 
- * @since 4.3
- */
+@SuppressWarnings("nls")
 public class TestLimit extends TestCase {
 
     private static final int[] FULL_PUSHDOWN = new int[] {
@@ -460,47 +456,13 @@ public class TestLimit extends TestCase {
     public void testLimitNotPushedWithUnion() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
         // pm1 model supports order by
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         String sql = "SELECT * FROM pm1.g1 UNION SELECT * FROM PM1.g2 LIMIT 100";//$NON-NLS-1$
         String[] expectedSql = new String[] {
-            "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 UNION SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM PM1.g2" //$NON-NLS-1$
-            };
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
-                                                    null, capFinder, expectedSql, true);  
-
-        TestOptimizer.checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            1,      // Limit
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            0,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        }, NODE_TYPES);
-    }
-    
-    public void testLimitPushedWithUnion() {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
-        // pm1 model supports order by
-        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-
-        String sql = "SELECT * FROM pm1.g1 UNION SELECT * FROM PM1.g2 LIMIT 100";//$NON-NLS-1$
-        String[] expectedSql = new String[] {
-            "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM PM1.g2 LIMIT 100", "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 LIMIT 100" //$NON-NLS-1$ //$NON-NLS-2$
+            "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1", "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM PM1.g2" //$NON-NLS-1$
             };
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, true);  
@@ -524,6 +486,72 @@ public class TestLimit extends TestCase {
         }, NODE_TYPES);
     }
     
+    public void testLimitNotPushedWithDupRemove() {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        // pm1 model supports order by
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+
+        String sql = "SELECT distinct * FROM pm1.g1 LIMIT 100";//$NON-NLS-1$
+        String[] expectedSql = new String[] {
+            "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1" //$NON-NLS-1$
+            };
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+                                                    null, capFinder, expectedSql, true);  
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            1,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            1,      // DupRemove
+            0,      // Grouping
+            1,      // Limit
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            0,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        }, NODE_TYPES);
+    }
+    
+    public void testLimitPushedWithUnionAll() {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        // pm1 model supports order by
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+
+        String sql = "SELECT * FROM pm1.g1 UNION ALL SELECT * FROM PM1.g2 LIMIT 100";//$NON-NLS-1$
+        String[] expectedSql = new String[] {
+            "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM PM1.g2 LIMIT 100", "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 LIMIT 100" //$NON-NLS-1$ //$NON-NLS-2$
+            };
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), 
+                                                    null, capFinder, expectedSql, true);  
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            1,      // Limit
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            0,      // Project
+            0,      // Select
+            0,      // Sort
+            1       // UnionAll
+        }, NODE_TYPES);
+    }
+    
     public void testLimitWithOffsetPushedWithUnion() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
@@ -533,7 +561,7 @@ public class TestLimit extends TestCase {
         // pm1 model supports order by
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        String sql = "SELECT * FROM pm1.g1 UNION SELECT * FROM PM1.g2 LIMIT 50, 100";//$NON-NLS-1$
+        String sql = "SELECT * FROM pm1.g1 UNION ALL SELECT * FROM PM1.g2 LIMIT 50, 100";//$NON-NLS-1$
         String[] expectedSql = new String[] {
             "SELECT PM1.g2.e1 AS c_0, PM1.g2.e2 AS c_1, PM1.g2.e3 AS c_2, PM1.g2.e4 AS c_3 FROM PM1.g2 LIMIT 150", "SELECT pm1.g1.e1 AS c_0, pm1.g1.e2 AS c_1, pm1.g1.e3 AS c_2, pm1.g1.e4 AS c_3 FROM pm1.g1 LIMIT 150" //$NON-NLS-1$ //$NON-NLS-2$
             };
@@ -545,7 +573,7 @@ public class TestLimit extends TestCase {
             0,      // DependentAccess
             0,      // DependentSelect
             0,      // DependentProject
-            1,      // DupRemove
+            0,      // DupRemove
             0,      // Grouping
             1,      // Limit
             0,      // NestedLoopJoinStrategy
