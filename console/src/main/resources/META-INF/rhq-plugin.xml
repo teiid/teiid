@@ -713,7 +713,7 @@
 
 		<service name="Translators" description="Teiid Translators"
 			class="TranslatorComponent" discovery="TranslatorDiscoveryComponent"
-			createDeletePolicy="both" creationDataType="configuration">
+			createDeletePolicy="neither" creationDataType="configuration">
 
 			<resource-configuration>
 				<c:simple-property name="name" displayName="Name"
