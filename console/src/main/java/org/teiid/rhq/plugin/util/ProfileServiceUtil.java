@@ -286,7 +286,31 @@ public class ProfileServiceUtil {
 				SimpleValue simple = (SimpleValue) v1;
 				return Double.valueOf(simple.getValue().toString());
 			}
-			throw new Exception("Failed to convert value to boolean value"); //$NON-NLS-1$
+			throw new Exception("Failed to convert value to double value"); //$NON-NLS-1$
+		}
+		return null;
+	}
+	
+	public static Long longValue(MetaValue v1) throws Exception {
+		if (v1 != null) {
+			MetaType type = v1.getMetaType();
+			if (type instanceof SimpleMetaType) {
+				SimpleValue simple = (SimpleValue) v1;
+				return Long.valueOf(simple.getValue().toString());
+			}
+			throw new Exception("Failed to convert value to long value"); //$NON-NLS-1$
+		}
+		return null;
+	}
+	
+	public static Integer integerValue(MetaValue v1) throws Exception {
+		if (v1 != null) {
+			MetaType type = v1.getMetaType();
+			if (type instanceof SimpleMetaType) {
+				SimpleValue simple = (SimpleValue) v1;
+				return Integer.valueOf(simple.getValue().toString());
+			}
+			throw new Exception("Failed to convert value to integer value"); //$NON-NLS-1$
 		}
 		return null;
 	}
@@ -310,6 +334,24 @@ public class ProfileServiceUtil {
 		return null;
 	}
 
+	public static <T> T getSimpleValue(MetaValue prop,
+			Class<T> expectedType) {
+		if (prop != null) {
+			MetaType metaType = prop.getMetaType();
+			if (metaType.isSimple()) {
+				SimpleValue simpleValue = (SimpleValue) prop;
+				return expectedType.cast((simpleValue != null) ? simpleValue
+						.getValue() : null);
+			} else if (metaType.isEnum()) {
+				EnumValue enumValue = (EnumValue) prop;
+				return expectedType.cast((enumValue != null) ? enumValue
+						.getValue() : null);
+			}
+			throw new IllegalStateException(prop + " is not a simple type"); //$NON-NLS-1$
+		}
+		return null;
+	}
+	
 	public static <T> T getSimpleValue(ManagedCommon mc, String prop,
 			Class<T> expectedType) {
 		ManagedProperty mp = mc.getProperty(prop);

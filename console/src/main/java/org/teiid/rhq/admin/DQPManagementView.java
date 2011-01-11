@@ -40,6 +40,7 @@ import org.jboss.managed.api.ManagedProperty;
 import org.jboss.managed.plugins.ManagedObjectImpl;
 import org.jboss.metatype.api.types.MetaType;
 import org.jboss.metatype.api.values.CollectionValueSupport;
+import org.jboss.metatype.api.values.CompositeValue;
 import org.jboss.metatype.api.values.CompositeValueSupport;
 import org.jboss.metatype.api.values.GenericValueSupport;
 import org.jboss.metatype.api.values.MetaValue;
@@ -47,15 +48,12 @@ import org.jboss.metatype.api.values.SimpleValue;
 import org.jboss.metatype.api.values.SimpleValueSupport;
 import org.rhq.plugins.jbossas5.connection.ProfileServiceConnection;
 import org.teiid.adminapi.Admin;
-import org.teiid.adminapi.Request;
-import org.teiid.adminapi.Session;
-import org.teiid.adminapi.Transaction;
+import org.teiid.adminapi.Request.ProcessingState;
 import org.teiid.adminapi.VDB.Status;
-import org.teiid.adminapi.impl.RequestMetadata;
-import org.teiid.adminapi.impl.RequestMetadataMapper;
-import org.teiid.adminapi.impl.SessionMetadataMapper;
-import org.teiid.adminapi.impl.TransactionMetadataMapper;
 import org.teiid.rhq.plugin.objects.ExecutedResult;
+import org.teiid.rhq.plugin.objects.RequestMetadata;
+import org.teiid.rhq.plugin.objects.SessionMetadata;
+import org.teiid.rhq.plugin.objects.TransactionMetadata;
 import org.teiid.rhq.plugin.util.DeploymentUtils;
 import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
@@ -68,7 +66,32 @@ public class DQPManagementView implements PluginConstants {
 	private static final Log LOG = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 
 	private static final String VDB_EXT = ".vdb"; //$NON-NLS-1$
+	
+	//Session metadata fields
+	private static final String SECURITY_DOMAIN = "securityDomain"; //$NON-NLS-1$
+	private static final String VDB_VERSION = "VDBVersion"; //$NON-NLS-1$
+	private static final String VDB_NAME = "VDBName"; //$NON-NLS-1$
+	private static final String USER_NAME = "userName"; //$NON-NLS-1$
+	private static final String SESSION_ID = "sessionId"; //$NON-NLS-1$
+	private static final String LAST_PING_TIME = "lastPingTime"; //$NON-NLS-1$
+	private static final String IP_ADDRESS = "IPAddress"; //$NON-NLS-1$
+	private static final String CLIENT_HOST_NAME = "clientHostName"; //$NON-NLS-1$
+	private static final String CREATED_TIME = "createdTime"; //$NON-NLS-1$
+	private static final String APPLICATION_NAME = "applicationName"; //$NON-NLS-1$
 
+	//Request metadata fields
+	private static final String TRANSACTION_ID = "transactionId"; //$NON-NLS-1$
+	private static final String NODE_ID = "nodeId"; //$NON-NLS-1$
+	private static final String SOURCE_REQUEST = "sourceRequest"; //$NON-NLS-1$
+	private static final String COMMAND = "command"; //$NON-NLS-1$
+	private static final String START_TIME = "startTime"; //$NON-NLS-1$
+	private static final String EXECUTION_ID = "executionId"; //$NON-NLS-1$
+	private static final String STATE = "processingState"; //$NON-NLS-1$
+	
+	//Transaction metadata fields
+	private static final String SCOPE = "scope"; //$NON-NLS-1$
+	private static final String ASSOCIATED_SESSION = "associatedSession"; //$NON-NLS-1$
+	
 	public DQPManagementView() {
 	}
 
@@ -77,7 +100,7 @@ public class DQPManagementView implements PluginConstants {
 	 */
 	public Object getMetric(ProfileServiceConnection connection,
 			String componentType, String identifier, String metric,
-			Map<String, Object> valueMap) {
+			Map<String, Object> valueMap) throws Exception {
 		Object resultObject = new Object();
 
 		if (componentType.equals(PluginConstants.ComponentType.Platform.NAME)) {
@@ -89,7 +112,7 @@ public class DQPManagementView implements PluginConstants {
 	}
 
 	private Object getPlatformMetric(ProfileServiceConnection connection,
-			String componentType, String metric, Map<String, Object> valueMap) {
+			String componentType, String metric, Map<String, Object> valueMap) throws Exception {
 
 		Object resultObject = new Object();
 
@@ -98,7 +121,7 @@ public class DQPManagementView implements PluginConstants {
 		} else if (metric.equals(PluginConstants.ComponentType.Platform.Metrics.SESSION_COUNT)) {
 			resultObject = new Double(getSessionCount(connection).doubleValue());
 		} else if (metric.equals(PluginConstants.ComponentType.Platform.Metrics.LONG_RUNNING_QUERIES)) {
-			Collection<Request> longRunningQueries = new ArrayList<Request>();
+			Collection<RequestMetadata> longRunningQueries = new ArrayList<RequestMetadata>();
 			getRequestCollectionValue(getLongRunningQueries(connection),	longRunningQueries);
 			resultObject = new Double(longRunningQueries.size());
 		} else if (metric.equals(PluginConstants.ComponentType.Platform.Metrics.BUFFER_USAGE)) {
@@ -126,7 +149,7 @@ public class DQPManagementView implements PluginConstants {
 
 	private Object getVdbMetric(ProfileServiceConnection connection,
 			String componentType, String identifier, String metric,
-			Map<String, Object> valueMap) {
+			Map<String, Object> valueMap) throws Exception {
 
 		Object resultObject = new Object();
 
@@ -141,7 +164,7 @@ public class DQPManagementView implements PluginConstants {
 		} else if (metric.equals(PluginConstants.ComponentType.VDB.Metrics.SESSION_COUNT)) {
 			resultObject = new Double(getSessionCount(connection).doubleValue());
 		} else if (metric.equals(PluginConstants.ComponentType.VDB.Metrics.LONG_RUNNING_QUERIES)) {
-			Collection<Request> longRunningQueries = new ArrayList<Request>();
+			Collection<RequestMetadata> longRunningQueries = new ArrayList<RequestMetadata>();
 			getRequestCollectionValue(getLongRunningQueries(connection),	longRunningQueries);
 			resultObject = new Double(longRunningQueries.size());
 		}
@@ -164,10 +187,10 @@ public class DQPManagementView implements PluginConstants {
 
 	private void executePlatformOperation(ProfileServiceConnection connection,
 			ExecutedResult operationResult, final String operationName,
-			final Map<String, Object> valueMap) {
-		Collection<Request> resultObject = new ArrayList<Request>();
-		Collection<Session> activeSessionsCollection = new ArrayList<Session>();
-		Collection<Transaction> transactionsCollection = new ArrayList<Transaction>();
+			final Map<String, Object> valueMap) throws Exception {
+		Collection<RequestMetadata> resultObject = new ArrayList<RequestMetadata>();
+		Collection<SessionMetadata> activeSessionsCollection = new ArrayList<SessionMetadata>();
+		Collection<TransactionMetadata> transactionsCollection = new ArrayList<TransactionMetadata>();
 
 		if (operationName.equals(Platform.Operations.GET_LONGRUNNINGQUERIES)) {
 			List<String> fieldNameList = operationResult.getFieldNameList();
@@ -249,8 +272,8 @@ public class DQPManagementView implements PluginConstants {
 			ExecutedResult operationResult, final String operationName,
 			final Map<String, Object> valueMap) throws Exception {
 		Collection<ArrayList<String>> sqlResultsObject = new ArrayList<ArrayList<String>>();
-		Collection<Request> resultObject = new ArrayList<Request>();
-		Collection<Session> activeSessionsCollection = new ArrayList<Session>();
+		Collection<RequestMetadata> resultObject = new ArrayList<RequestMetadata>();
+		Collection<SessionMetadata> activeSessionsCollection = new ArrayList<SessionMetadata>();
 		String vdbName = (String) valueMap.get(PluginConstants.ComponentType.VDB.NAME);
 		vdbName = formatVdbName(vdbName);
 		String vdbVersion = (String) valueMap.get(PluginConstants.ComponentType.VDB.VERSION);
@@ -565,12 +588,12 @@ public class DQPManagementView implements PluginConstants {
 		throw new Exception("No property found with given name =" + property); //$NON-NLS-1$
 	}
 
-	private Integer getQueryCount(ProfileServiceConnection connection) {
+	private Integer getQueryCount(ProfileServiceConnection connection) throws Exception {
 
 		Integer count = new Integer(0);
 
 		MetaValue requests = null;
-		Collection<Request> requestsCollection = new ArrayList<Request>();
+		Collection<RequestMetadata> requestsCollection = new ArrayList<RequestMetadata>();
 
 		requests = getRequests(connection);
 
@@ -583,9 +606,9 @@ public class DQPManagementView implements PluginConstants {
 		return count;
 	}
 
-	private Integer getSessionCount(ProfileServiceConnection connection) {
+	private Integer getSessionCount(ProfileServiceConnection connection) throws Exception {
 
-		Collection<Session> activeSessionsCollection = new ArrayList<Session>();
+		Collection<SessionMetadata> activeSessionsCollection = new ArrayList<SessionMetadata>();
 		MetaValue sessionMetaValue = getSessions(connection);
 		getSessionCollectionValue(sessionMetaValue, activeSessionsCollection);
 		return activeSessionsCollection.size();
@@ -677,13 +700,12 @@ public class DQPManagementView implements PluginConstants {
 		return usedBufferSpace;
 	}
 
-	private void getRequestCollectionValue(MetaValue pValue, Collection<Request> list) {
+	private void getRequestCollectionValue(MetaValue pValue, Collection<RequestMetadata> list) throws Exception {
 		MetaType metaType = pValue.getMetaType();
 		if (metaType.isCollection()) {
 			for (MetaValue value : ((CollectionValueSupport) pValue).getElements()) {
 				if (value.getMetaType().isComposite()) {
-					RequestMetadataMapper rmm = new RequestMetadataMapper(); 
-					RequestMetadata request = rmm.unwrapMetaValue(value);
+					RequestMetadata request = unwrapRequestMetaValue(value);
 					list.add(request);
 				} else {
 					throw new IllegalStateException(pValue + " is not a Composite type"); //$NON-NLS-1$
@@ -722,13 +744,12 @@ public class DQPManagementView implements PluginConstants {
 		}
 	}
 
-	public static <T> void getTransactionCollectionValue(MetaValue pValue, Collection<Transaction> list) {
+	public <T> void getTransactionCollectionValue(MetaValue pValue, Collection<TransactionMetadata> list) throws Exception {
 		MetaType metaType = pValue.getMetaType();
 		if (metaType.isCollection()) {
 			for (MetaValue value : ((CollectionValueSupport) pValue).getElements()) {
 				if (value.getMetaType().isComposite()) {
-					TransactionMetadataMapper tmm = new TransactionMetadataMapper(); 
-					Transaction transaction = tmm.unwrapMetaValue(value);
+					TransactionMetadata transaction = unwrapTransactionMetaValue(value);
 					list.add(transaction);
 				} else {
 					throw new IllegalStateException(pValue
@@ -738,13 +759,12 @@ public class DQPManagementView implements PluginConstants {
 		}
 	}
 
-	public static <T> void getSessionCollectionValue(MetaValue pValue,Collection<Session> list) {
+	public <T> void getSessionCollectionValue(MetaValue pValue,Collection<SessionMetadata> list) throws Exception {
 		MetaType metaType = pValue.getMetaType();
 		if (metaType.isCollection()) {
 			for (MetaValue value : ((CollectionValueSupport) pValue).getElements()) {
 				if (value.getMetaType().isComposite()) {
-					SessionMetadataMapper rmm = new SessionMetadataMapper(); 
-					Session session = rmm.unwrapMetaValue(value);
+					SessionMetadata session = unwrapSessionMetaValue(value);
 					list.add(session);
 				} else {
 					throw new IllegalStateException(pValue
@@ -754,14 +774,13 @@ public class DQPManagementView implements PluginConstants {
 		}
 	}
 
-	public static <T> void getSessionCollectionValueForVDB(MetaValue pValue,Collection<Session> list, String vdbName) throws Exception {
+	public <T> void getSessionCollectionValueForVDB(MetaValue pValue,Collection<SessionMetadata> list, String vdbName) throws Exception {
 		MetaType metaType = pValue.getMetaType();
 		if (metaType.isCollection()) {
 			for (MetaValue value : ((CollectionValueSupport) pValue).getElements()) {
 				if (value.getMetaType().isComposite()) {
 					if (ProfileServiceUtil.stringValue(((CompositeValueSupport)value).get("VDBName")).equals(vdbName)) { //$NON-NLS-1$
-						SessionMetadataMapper rmm = new SessionMetadataMapper(); 
-						Session session = rmm.unwrapMetaValue(value);
+						SessionMetadata session = unwrapSessionMetaValue(value);
 						list.add(session);
 					}
 				} else {
@@ -819,5 +838,66 @@ public class DQPManagementView implements PluginConstants {
 		}
 		return reportResultList;
 	}
+	
+	public SessionMetadata unwrapSessionMetaValue(MetaValue metaValue) throws Exception {
+		if (metaValue == null)
+			return null;
 
+		if (metaValue instanceof CompositeValue) {
+			CompositeValueSupport compositeValue = (CompositeValueSupport) metaValue;
+			
+			SessionMetadata session = new SessionMetadata();
+			session.setApplicationName((String) ProfileServiceUtil.stringValue(compositeValue.get(APPLICATION_NAME)));
+			session.setCreatedTime((Long) ProfileServiceUtil.longValue(compositeValue.get(CREATED_TIME)));
+			session.setClientHostName((String) ProfileServiceUtil.stringValue(compositeValue.get(CLIENT_HOST_NAME)));
+			session.setIPAddress((String) ProfileServiceUtil.stringValue(compositeValue.get(IP_ADDRESS)));
+			session.setLastPingTime((Long) ProfileServiceUtil.longValue(compositeValue.get(LAST_PING_TIME)));
+			session.setSessionId((String) ProfileServiceUtil.stringValue(compositeValue.get(SESSION_ID)));
+			session.setUserName((String) ProfileServiceUtil.stringValue(compositeValue.get(USER_NAME)));
+			session.setVDBName((String) ProfileServiceUtil.stringValue(compositeValue.get(VDB_NAME)));
+			session.setVDBVersion((Integer) ProfileServiceUtil.integerValue(compositeValue.get(VDB_VERSION)));
+			session.setSecurityDomain((String) ProfileServiceUtil.stringValue(compositeValue.get(SECURITY_DOMAIN)));
+			return session;
+		}
+		throw new IllegalStateException("Unable to unwrap session " + metaValue); //$NON-NLS-1$
+	}
+
+	public RequestMetadata unwrapRequestMetaValue(MetaValue metaValue) throws Exception {
+		if (metaValue == null)
+			return null;
+
+		if (metaValue instanceof CompositeValue) {
+			CompositeValue compositeValue = (CompositeValue) metaValue;
+			
+			RequestMetadata request = new RequestMetadata();
+			request.setExecutionId((Long) ProfileServiceUtil.longValue(compositeValue.get(EXECUTION_ID)));
+			request.setSessionId((String) ProfileServiceUtil.stringValue(compositeValue.get(SESSION_ID)));
+			request.setStartTime((Long) ProfileServiceUtil.longValue(compositeValue.get(START_TIME)));
+			request.setCommand((String) ProfileServiceUtil.stringValue(compositeValue.get(COMMAND)));
+			request.setSourceRequest((Boolean) ProfileServiceUtil.booleanValue(compositeValue.get(SOURCE_REQUEST)));
+			request.setNodeId((Integer) ProfileServiceUtil.integerValue(compositeValue.get(NODE_ID)));
+			request.setTransactionId((String) ProfileServiceUtil.stringValue(compositeValue.get(TRANSACTION_ID)));
+			request.setState((ProcessingState) ProfileServiceUtil.getSimpleValue(compositeValue.get(STATE), ProcessingState.class));
+			return request;
+		}
+		throw new IllegalStateException("Unable to unwrap RequestMetadata " + metaValue); //$NON-NLS-1$
+	}
+	
+	public TransactionMetadata unwrapTransactionMetaValue(MetaValue metaValue) throws Exception {
+		if (metaValue == null)
+			return null;
+
+		if (metaValue instanceof CompositeValue) {
+			CompositeValue compositeValue = (CompositeValue) metaValue;
+			
+			TransactionMetadata transaction = new TransactionMetadata();
+			transaction.setAssociatedSession((String) ProfileServiceUtil.stringValue(compositeValue.get(ASSOCIATED_SESSION)));
+			transaction.setCreatedTime((Long) ProfileServiceUtil.longValue(compositeValue.get(CREATED_TIME)));
+			transaction.setScope((String) (String) ProfileServiceUtil.stringValue(compositeValue.get(SCOPE)));
+			transaction.setId((String) (String) ProfileServiceUtil.stringValue(compositeValue.get("id"))); //$NON-NLS-1$
+			return transaction;
+		}
+		throw new IllegalStateException("Unable to unwrap TransactionMetadata " + metaValue); //$NON-NLS-1$
+	}
+	
 }
