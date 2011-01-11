@@ -159,13 +159,10 @@
 			description="Deploy a VDB using a URL">
 			<parameters>
 				<c:simple-property displayName="VDB URL" name="vdbUrl"
-					type="file" required="true" description="The URL of the VDB to deploy" />
+					type="file" required="true" description="The URL of the VDB's source file" />
 				<c:simple-property displayName="VDB Deploy File Name"
 					name="vdbDeployName" type="string" required="true"
 					description="The deployment file name to use. Must match the VDB Name you are deploying." />
-				<c:simple-property displayName="VDB Version" name="vdbVersion"
-					type="integer" required="false"
-					description="The version to use for the deployed VDB (leave blank for overwrite of version one)" />
 			</parameters>
 		</operation>
 

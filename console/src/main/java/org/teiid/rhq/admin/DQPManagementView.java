@@ -244,15 +244,8 @@ public class DQPManagementView implements PluginConstants {
 		} else if (operationName.equals(Platform.Operations.DEPLOY_VDB_BY_URL)) {
 			String vdbUrl = (String) valueMap.get(Operation.Value.VDB_URL);
 			String deployName = (String) valueMap.get(Operation.Value.VDB_DEPLOY_NAME);
-			Object vdbVersion = valueMap.get(Operation.Value.VDB_VERSION);
-			// strip off vdb extension if user added it
-			if (deployName.endsWith(VDB_EXT)) {
-				deployName = deployName.substring(0, deployName.lastIndexOf(VDB_EXT));
-			}
-			if (vdbVersion != null) {
-				deployName = deployName + "." + ((Integer) vdbVersion).toString() + VDB_EXT; //$NON-NLS-1$ 
-			}
-			// add vdb extension if there was no version
+		
+			// add vdb extension if missing
 			if (!deployName.endsWith(VDB_EXT)) {
 				deployName = deployName + VDB_EXT;
 			}
