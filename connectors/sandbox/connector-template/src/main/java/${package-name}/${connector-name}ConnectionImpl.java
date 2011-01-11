@@ -11,19 +11,16 @@ import org.teiid.connector.language.ICommand;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 /**
- * Connection to the resource.
+ * Connection to the resource. You must define ${connector-name}Connection interface, that 
+ * extends the "javax.resource.cci.Connection"
  */
-public class ${connector-name}Connection extends BasicConnection {
+public class ${connector-name}ConnectionImpl extends BasicConnection implements ${connector-name}Connection {
 
     private ${connector-name}ManagedConnectionFactory config;
 
-    public ${connector-name}Connection(${connector-name}ManagedConnectionFactory env) {
+    public ${connector-name}ConnectionImpl(${connector-name}ManagedConnectionFactory env) {
         this.config = env;
-    }
-    
-    @Override
-    public Execution createExecution(ICommand command, ExecutionContext executionContext, RuntimeMetadata metadata) throws ConnectorException {
-        return new ${connector-name}Execution(command, config, metadata);
+        // todo: connect to your source here
     }
     
     @Override
