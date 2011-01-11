@@ -169,6 +169,13 @@ public class TestVisitors {
 		assertEquals("SELECT Account.AccountName, (SELECT Contact.ContactName FROM Contacts) FROM Account", visitor.getQuery().toString().trim()); //$NON-NLS-1$
 	}
 	
+	@Test public void testJoin3() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("SELECT Contacts.Name FROM Account LEFT OUTER JOIN Contacts ON Account.Id = Contacts.AccountId"); //$NON-NLS-1$
+		SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
+		visitor.visit(command);
+		assertEquals("SELECT (SELECT Contact.ContactName FROM Contacts) FROM Account", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+	}
+	
 	@Test public void testInWithNameInSourceDifferent() throws Exception {
 		Select command = (Select)translationUtility.parseCommand("SELECT Contacts.Name FROM Contacts WHERE Contacts.Name in ('x', 'y')"); //$NON-NLS-1$
 		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());

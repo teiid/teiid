@@ -30,7 +30,7 @@ public interface Transaction extends AdminObject {
 	 * May be null for an unassociated Global transaction.
 	 * @return
 	 */
-	long getAssociatedSession();
+	String getAssociatedSession();
 	
 	/**
 	 * Get the scope for the transaction.  Will be one of GLOBAL, LOCAL, or REQUEST

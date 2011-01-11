@@ -110,12 +110,12 @@ public class JoinQueryVisitor extends SelectVisitor {
 		}
 		StringBuffer select = new StringBuffer();
 		select.append(SELECT).append(SPACE);
-		addSelectSymbols(leftTableInJoin.getNameInSource(), select);
-		select.append(COMMA).append(SPACE).append(OPEN);
+		addSelect(leftTableInJoin.getNameInSource(), select, true);
+		select.append(OPEN);
 		
 		StringBuffer subselect = new StringBuffer();
 		subselect.append(SELECT).append(SPACE);
-		addSelectSymbols(rightTableInJoin.getNameInSource(), subselect);
+		addSelect(rightTableInJoin.getNameInSource(), subselect, false);
 		subselect.append(SPACE);
 		subselect.append(FROM).append(SPACE);
 		subselect.append(rightTableInJoin.getNameInSource()).append('s');
@@ -133,7 +133,7 @@ public class JoinQueryVisitor extends SelectVisitor {
 		return childTable.equals(leftTableInJoin);
 	}
 
-	protected void addSelectSymbols(String tableNameInSource, StringBuffer result) throws TranslatorException {
+	void addSelect(String tableNameInSource, StringBuffer result, boolean addComma) {
 		boolean firstTime = true;
 		for (DerivedColumn symbol : selectSymbols) {
 			Expression expression = symbol.getExpression();
@@ -143,22 +143,29 @@ public class JoinQueryVisitor extends SelectVisitor {
 				if(!isParentToChildJoin() && tableNameInSource.equals(tableName) ||
 						isParentToChildJoin()) {
 					if (!firstTime) {
-						result.append(", ");
+						result.append(", "); //$NON-NLS-1$						
 					} else {
 						firstTime = false;
 					}
 					result.append(tableName);
 					result.append('.');
 					result.append(element.getNameInSource());
+				} else {
+					continue;
 				}
 			} else if (expression instanceof AggregateFunction) {
 				if (!firstTime) {
-					result.append(", ");
+					result.append(", "); //$NON-NLS-1$
 				} else {
 					firstTime = false;
 				}
 				result.append("count()"); //$NON-NLS-1$
+			} else {
+				throw new AssertionError("Unknown select symbol type" + symbol); //$NON-NLS-1$
 			}
+		}
+		if (!firstTime && addComma) {
+			result.append(", "); //$NON-NLS-1$
 		}
 	}
 

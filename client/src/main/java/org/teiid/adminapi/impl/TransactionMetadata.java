@@ -33,18 +33,18 @@ import org.teiid.adminapi.Transaction;
 public class TransactionMetadata extends AdminObjectImpl implements Transaction {
 
 	private static final long serialVersionUID = -8588785315218789068L;
-	private long associatedSession;
+	private String associatedSession;
 	private String scope;
 	private String id;
 	private long createdTime;
 
 	@Override
 	@ManagementProperty(description="Session ID", readOnly=true)
-	public long getAssociatedSession() {
+	public String getAssociatedSession() {
 		return associatedSession;
 	}
 
-	public void setAssociatedSession(long associatedSession) {
+	public void setAssociatedSession(String associatedSession) {
 		this.associatedSession = associatedSession;
 	}
 

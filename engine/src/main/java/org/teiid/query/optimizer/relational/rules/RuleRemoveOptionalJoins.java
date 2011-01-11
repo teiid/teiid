@@ -263,9 +263,7 @@ public class RuleRemoveOptionalJoins implements
 					return areAggregatesCardinalityDependent(aggs);
 				}
 				case NodeConstants.Types.TUPLE_LIMIT: {
-					if (FrameUtil.isOrderedLimit(parent)) {
-						return true;
-					}
+					return true;
 				}
 				//we assmue that projects of non-deterministic expressions do not matter
 			}

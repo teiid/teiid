@@ -603,7 +603,7 @@ public class IndexMetadataFactory {
      * recordType|pathInModel|UUID|nameInSource|parentObjectID|
      * @param name The partially/fully qualified name for which
      * the pattern match string is to be constructed.
-     * @return The pattern match string of the form: recordType|*name|* 
+     * @return The pattern match string of the form: recordType|name|* 
      */
     private String getMatchPattern(final char recordType, final String name) {
         ArgCheck.isNotNull(name);
@@ -611,8 +611,7 @@ public class IndexMetadataFactory {
         // construct the pattern string
         String patternStr = "" //$NON-NLS-1$
                           + recordType
-                          + IndexConstants.RECORD_STRING.RECORD_DELIMITER
-                          + IndexConstants.RECORD_STRING.MATCH_CHAR;
+                          + IndexConstants.RECORD_STRING.RECORD_DELIMITER;
         if(name != null) {
             patternStr =  patternStr + name.trim().toUpperCase()
                           + IndexConstants.RECORD_STRING.RECORD_DELIMITER

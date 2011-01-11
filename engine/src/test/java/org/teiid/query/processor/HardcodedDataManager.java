@@ -31,6 +31,8 @@ import java.util.Set;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.dqp.internal.datamgr.LanguageBridgeFactory;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.util.CommandContext;
 
@@ -55,8 +57,15 @@ public class HardcodedDataManager implements
     // Collect all commands run against this class
     private List<Command> commandHistory = new ArrayList<Command>(); // Commands
     
+    private LanguageBridgeFactory lbf;
+    
     public HardcodedDataManager() {
     	this(true);
+    }
+    
+    public HardcodedDataManager(QueryMetadataInterface metadata) {
+    	this(true);
+    	this.lbf = new LanguageBridgeFactory(metadata);
     }
     
     public HardcodedDataManager(boolean mustRegisterCommands) {
@@ -123,10 +132,17 @@ public class HardcodedDataManager implements
         
         List projectedSymbols = command.getProjectedSymbols();
 
-        List[] rows = data.get(command.toString());
+        String commandString = null;
+        if (lbf == null) {
+        	commandString = command.toString();
+        } else {
+        	commandString = lbf.translate(command).toString();
+        }
+        
+        List[] rows = data.get(commandString);
         if(rows == null) {
             if (mustRegisterCommands) {
-                throw new TeiidComponentException("Unknown command: " + command.toString());  //$NON-NLS-1$
+                throw new TeiidComponentException("Unknown command: " + commandString);  //$NON-NLS-1$
             }
             // Create one row of nulls
             rows = new List[1];

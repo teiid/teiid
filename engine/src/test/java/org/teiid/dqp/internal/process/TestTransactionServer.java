@@ -45,8 +45,8 @@ public class TestTransactionServer {
     private TransactionManager tm;
 	private javax.transaction.Transaction txn;
     
-    private static final String THREAD1 = "1"; //$NON-NLS-1$
-    private static final String THREAD2 = "2"; //$NON-NLS-1$
+    private static final String THREAD1 = "abc1"; //$NON-NLS-1$
+    private static final String THREAD2 = "abc2"; //$NON-NLS-1$
 
     private static final XidImpl XID1 = new XidImpl(0, new byte[] {
         1
@@ -167,7 +167,7 @@ public class TestTransactionServer {
         try {
             server.commit(THREAD1);
         } catch (XATransactionException e) {
-            assertEquals("No transaction found for client 1.", e.getMessage()); //$NON-NLS-1$
+            assertEquals("No transaction found for client abc1.", e.getMessage()); //$NON-NLS-1$
         }
     }
 
@@ -187,7 +187,7 @@ public class TestTransactionServer {
         try {
             server.rollback(THREAD1);
         } catch (XATransactionException e) {
-            assertEquals("No transaction found for client 1.", e.getMessage()); //$NON-NLS-1$
+            assertEquals("No transaction found for client abc1.", e.getMessage()); //$NON-NLS-1$
         }
     }
 
@@ -225,7 +225,7 @@ public class TestTransactionServer {
             server.start(THREAD2, XID1, XAResource.TMRESUME, 100,false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("Cannot resume, transaction Teiid-Xid global:1 branch:null format:0 was not suspended by client 2.", ex.getMessage()); //$NON-NLS-1$
+            assertEquals("Cannot resume, transaction Teiid-Xid global:1 branch:null format:0 was not suspended by client abc2.", ex.getMessage()); //$NON-NLS-1$
         }
     }
 
@@ -273,7 +273,7 @@ public class TestTransactionServer {
         assertEquals(1, server.getTransactions().size());
         
         Transaction t = server.getTransactions().iterator().next();
-        assertEquals(Long.parseLong(THREAD1), t.getAssociatedSession());
+        assertEquals(THREAD1, t.getAssociatedSession());
         assertNotNull(t.getId());
     }
     

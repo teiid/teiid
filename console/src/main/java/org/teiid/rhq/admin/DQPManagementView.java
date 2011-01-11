@@ -250,7 +250,7 @@ public class DQPManagementView implements PluginConstants {
 			final Map<String, Object> valueMap) throws Exception {
 		Collection<ArrayList<String>> sqlResultsObject = new ArrayList<ArrayList<String>>();
 		Collection<Request> resultObject = new ArrayList<Request>();
-		Collection<MetaValue> activeSessionsCollection = new ArrayList<MetaValue>();
+		Collection<Session> activeSessionsCollection = new ArrayList<Session>();
 		String vdbName = (String) valueMap.get(PluginConstants.ComponentType.VDB.NAME);
 		vdbName = formatVdbName(vdbName);
 		String vdbVersion = (String) valueMap.get(PluginConstants.ComponentType.VDB.VERSION);
@@ -308,7 +308,7 @@ public class DQPManagementView implements PluginConstants {
 
 	private String formatVdbName(String vdbName) {
 
-		return vdbName.substring(0, vdbName.indexOf(".")); //$NON-NLS-1$
+		return vdbName.substring(0, vdbName.lastIndexOf(".")); //$NON-NLS-1$
 	}
 
 	public MetaValue getProperties(ProfileServiceConnection connection,	final String component) {
@@ -754,13 +754,15 @@ public class DQPManagementView implements PluginConstants {
 		}
 	}
 
-	public static <T> void getSessionCollectionValueForVDB(MetaValue pValue,Collection<MetaValue> list, String vdbName) throws Exception {
+	public static <T> void getSessionCollectionValueForVDB(MetaValue pValue,Collection<Session> list, String vdbName) throws Exception {
 		MetaType metaType = pValue.getMetaType();
 		if (metaType.isCollection()) {
 			for (MetaValue value : ((CollectionValueSupport) pValue).getElements()) {
 				if (value.getMetaType().isComposite()) {
 					if (ProfileServiceUtil.stringValue(((CompositeValueSupport)value).get("VDBName")).equals(vdbName)) { //$NON-NLS-1$
-						list.add(value);
+						SessionMetadataMapper rmm = new SessionMetadataMapper(); 
+						Session session = rmm.unwrapMetaValue(value);
+						list.add(session);
 					}
 				} else {
 					throw new IllegalStateException(pValue+ " is not a Composite type"); //$NON-NLS-1$

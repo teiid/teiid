@@ -63,14 +63,16 @@ import com.sforce.soap.partner.sobject.SObject;
 
 public class QueryExecutionImpl implements ResultSetExecution {
 
-	private static final String SF_ID = "sf:Id";
+	private static final String SF_ID = "sf:Id"; //$NON-NLS-1$
 
-	private static final String SF_TYPE = "sf:type";
+	private static final String SF_TYPE = "sf:type"; //$NON-NLS-1$
 
-	private static final String SF_S_OBJECT = "sf:sObject";
+	private static final String SF_S_OBJECT = "sf:sObject"; //$NON-NLS-1$
 
-	private static final String XSI_TYPE = "xsi:type";
-
+	private static final String XSI_TYPE = "xsi:type"; //$NON-NLS-1$
+	
+	private static final String XSI_NIL = "xsi:nil"; //$NON-NLS-1$
+	
 	private SalesforceConnection connection;
 
 	private RuntimeMetadata metadata;
@@ -272,7 +274,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 						}
 					} else {
 						Object cell;
-						cell = sObject.getElementsByTagName("sf:" + element.getNameInSource()).item(0);
+						cell = sObject.getElementsByTagName("sf:" + element.getNameInSource()).item(0); //$NON-NLS-1$
 						setElementValueInColumn(j, cell, row);
 					}
 				}
@@ -320,7 +322,14 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		
 	private void setElementValueInColumn(int columnIndex, Object value, Object[] row) {
 			if(value instanceof Element) {
-				row[columnIndex] = ((Element)value).getFirstChild().getNodeValue();
+				Element element = (Element)value;
+				if (!Boolean.parseBoolean(element.getAttribute(XSI_NIL))) {
+					if (element.getFirstChild() != null) {
+						row[columnIndex] = element.getFirstChild().getNodeValue();
+					} else {
+						row[columnIndex] = ""; //$NON-NLS-1$
+					}
+				}
 			} else {
 				row[columnIndex] = value;
 			}
