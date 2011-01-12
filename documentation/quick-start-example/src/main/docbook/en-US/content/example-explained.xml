@@ -69,7 +69,7 @@
     </programlisting>
     <para>This starts the Derby in network mode. Now, start another terminal and we will use Derby''s 'ij' tool 
     (like SQL*PLus for Oracle) to create the schema, using the "customer-schema.sql" file in
-      "examples/portfolio" directory</para>
+      "examples/dynamicvdb-portfolio" directory</para>
     <programlisting><![CDATA[export DERBY_HOME=`pwd`
 ./bin/ij /path/to/customer-schema.sql]]>        
     </programlisting>
@@ -107,7 +107,7 @@ CREATE TABLE HOLDINGS
         <para>Data File: Each data file contains column information for the table. The
           column information is typically defined on line 1 as header line in the file, and all the following lines
           contain the actual rows of data. Each single line corresponds to single row. A portion of the sample file
-          is shown below. The complete sample file is "examples/portfolio/marketdata-price.txt".</para>
+          is shown below. The complete sample file is "examples/dynamicvdb-portfolio/marketdata-price.txt".</para>
         <programlisting><![CDATA[
            SYMBOL,PRICE
            IBM,83.46

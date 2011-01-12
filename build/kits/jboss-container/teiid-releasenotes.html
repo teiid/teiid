@@ -47,9 +47,12 @@
   <li>TRANSLATE/HAS CRITERIA has been deprecated.  An alternative approach to update procedures will be introduced in a subsequent version.
   <li>Support for named parameter syntax using param=value has been deprecated, since it is ambiguous with a comparison predicate boolean value expression.  param<b>=></b>value should be used instead.  
 </ul>
-<h4>from 7.1</h4>
+<h4>from 7.2</h4>
 <ul>
   <li>The default JDBC credentials are user/user - not admin/teiid
+</ul>
+<h4>from 7.1</h4>
+<ul>
   <li>Subqueries are no longer allowed to be SELECT INTO.
   <li>INSERT/UPDATE/DELETE cannot be used to create implicit return cursors in non-update virtual procedures.  You can instead use "UPDATE ...; SELECT VARIABLES.ROWCOUNT;".  
   <li>The SYSADMIN schema was created to hold procedures and tables that should not be generally accessible.  SYS and pg_catalog are now always accessible - permissions do not apply to these schemas.  The SYS.getBinaryVDBResource, SYS.getCharacterVDBResource, and SYS.getVDBResourcePaths have been replaced with the

@@ -84,7 +84,7 @@ Connection connection = ds.getConnection();
   To execute this demonstration, follow these steps:</para> 
   <orderedlist numeration="arabic">
     <listitem><para>Ensure Derby is running</para></listitem>
-    <listitem><para>Change to the ${jboss-install}/server/profile/teiid-examples/portfolio directory</para></listitem>
+    <listitem><para>Change to the ${jboss-install}/server/profile/teiid-examples/simpleclient directory</para></listitem>
     <listitem><para>Execute the run script (either for Linux or Windows)</para></listitem>
   </orderedlist>
     <para>Depending on the VDB you deployed, see the relevant README file for example queries.  If you are using a graphical client, such

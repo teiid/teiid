@@ -19,11 +19,12 @@
         familiar with creating data sources or connection factories in JBoss AS, then this is exactly the same operation. 
         </para>
         
-        <para>For this example we need to create three (2) different data sources. You would first need to create a data source to Derby, 
-        then to File source. See or copy the following</para>
-        <programlisting><![CDATA[${teiid-examples}/portfolio/portfolio-ds.xml
-${teiid-examples}/portfolio/marketdata-file-ds.xml]]> </programlisting>  
-        <para>files into "${jboss-install}/server/{profile}/deploy" directory.</para>
+        <para>Access to Derby first requires that the the Derby client jar (${derby-install}/lib/derbyclient.jar) be placed in the ${jboss-install}/server/{profile}/lib directory.</para>
+        
+        <para>See or copy the following:</para>
+        <programlisting><![CDATA[${teiid-examples}/dynamicvdb-portfolio/portfolio-ds.xml
+${teiid-examples}/dynamicvdb-portfolio/marketdata-file-ds.xml]]> </programlisting>  
+        <para>files into "${jboss-install}/server/{profile}/deploy" directory to create the Derby and File data sources respectively.</para>
       </listitem>      
       <listitem>
         <para>The above data sources provide the data to your VDB. Now to deploy your VDBl place your VDB file (either the dynamicvdb-portfolio/portfolio-vdb.xml file or the full .vdb file) in a the "${jboss-install}/server/{profile}/deploy" directory. 

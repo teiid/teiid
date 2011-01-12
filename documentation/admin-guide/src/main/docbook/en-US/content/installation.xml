@@ -154,7 +154,7 @@ jboss.bind.address=&lt;bind address&gt;
     <section>
         <title>teiid-examples</title>
         <para>This directory contains some examples of how Teiid can be used. Contains artifacts 
-        need by the Getting Started Guide. Also contains some sample XML files to define the connectors.</para>
+        need by the Quick Start Example. Also contains some sample XML files to define the connectors.</para>
     </section>
 
     <section>

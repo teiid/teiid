@@ -31,6 +31,7 @@ import org.teiid.jdbc.TeiidStatement;
 
 @SuppressWarnings("nls")
 public class JDBCClient {
+	
 	public static void main(String[] args) throws Exception {
 		if (args.length < 4) {
 			System.out.println("usage: JDBCClient <host> <port> <vdb> <sql-command>");
@@ -50,14 +51,14 @@ public class JDBCClient {
 		String url = "jdbc:teiid:"+vdb+"@mm://"+host+":"+port+";showplan=on"; //note showplan setting
 		Class.forName("org.teiid.jdbc.TeiidDriver");
 		
-		return DriverManager.getConnection(url,"admin", "teiid");		
+		return DriverManager.getConnection(url,"user", "user");		
 	}
 	
 	static Connection getDataSourceConnection(String host, String port, String vdb) throws Exception {
 		TeiidDataSource ds = new TeiidDataSource();
 		ds.setDatabaseName(vdb);
-		ds.setUser("admin");
-		ds.setPassword("teiid");
+		ds.setUser("user");
+		ds.setPassword("user");
 		ds.setServerName(host);
 		ds.setPortNumber(Integer.valueOf(port));
 		

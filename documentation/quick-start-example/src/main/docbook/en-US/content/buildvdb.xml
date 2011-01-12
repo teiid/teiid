@@ -7,7 +7,7 @@
   for this example purpose we will use the a dynamic VDB. If you would like to use the 
   Designer to build your VDB, check out the Designer examples. If you need to build any view layers using your source, 
   you must use Designer based approach to building the VDB. A sample Designer based VDB is 
-  available in the "teiid-examples/portfolio/PortfolioModel" directory.</para>
+  available in the "teiid-examples/dynamicvdb-portfolio/PortfolioModel" directory.</para>
   
   <section id="dynamic_vdb">
       <title>Building Dynamic VDB</title>
