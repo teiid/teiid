@@ -262,6 +262,12 @@ public class TestTempTables {
 		execute("create local temporary table x (e1 string, e2 integer, primary key (e1, e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
 		execute("select * from x where e1 in ('a', 'b') order by e1 desc", new List[0]); //$NON-NLS-1$
 	}
+	
+	@Test public void testCountStar() throws Exception {
+		sampleTable();
+		execute("select count(*) a from x", new List[] {Arrays.asList(4)});
+		execute("select count(*) a from x where e2 = 1 order by a", new List[] {Arrays.asList(2)});
+	}
 
 	private void sampleTable() throws Exception {
 		execute("create local temporary table x (e1 string, e2 integer, primary key (e1, e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$

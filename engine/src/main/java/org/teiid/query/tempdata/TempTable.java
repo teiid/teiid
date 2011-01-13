@@ -23,6 +23,7 @@
 package org.teiid.query.tempdata;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -59,6 +60,7 @@ import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.SetClauseList;
+import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
@@ -312,6 +314,21 @@ class TempTable {
 	}
 
 	public TupleSource createTupleSource(final List<? extends SingleElementSymbol> projectedCols, final Criteria condition, OrderBy orderBy) throws TeiidComponentException, TeiidProcessingException {
+		//special handling for count(*)
+		boolean agg = false;
+		for (SingleElementSymbol singleElementSymbol : projectedCols) {
+			if (singleElementSymbol instanceof AggregateSymbol) {
+				agg = true;
+				break;
+			}
+		}
+		if (agg) {
+			if (condition == null) {
+				int count = this.getRowCount();
+				return new CollectionTupleSource(Arrays.asList(Collections.nCopies(projectedCols.size(), count)).iterator());
+			}
+			orderBy = null;
+		}
 		IndexInfo primary = new IndexInfo(this, projectedCols, condition, orderBy, true);
 		IndexInfo ii = primary;
 		if (indexTables != null && (condition != null || orderBy != null) && ii.valueSet.size() != 1) {
@@ -328,15 +345,15 @@ class TempTable {
 			}
 			LogManager.logDetail(LogConstants.CTX_DQP, "Choose index", ii.table, "covering:", ii.coveredCriteria,"ordering:", ii.ordering); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			if (ii.covering) {
-				return ii.table.createTupleSource(projectedCols, condition, orderBy, ii);
+				return ii.table.createTupleSource(projectedCols, condition, orderBy, ii, agg);
 			}
 			List<ElementSymbol> pkColumns = this.columns.subList(0, this.tree.getKeyLength());
 			if (ii.ordering != null) {
 				//use order and join
 				primary.valueTs = ii.table.createTupleSource(pkColumns, 
-						Criteria.combineCriteria(ii.coveredCriteria), orderBy, ii);
+						Criteria.combineCriteria(ii.coveredCriteria), orderBy, ii, agg);
 				primary.ordering = null;
-				return createTupleSource(projectedCols, Criteria.combineCriteria(ii.nonCoveredCriteria), null, primary);
+				return createTupleSource(projectedCols, Criteria.combineCriteria(ii.nonCoveredCriteria), null, primary, agg);
 			} 
 			//order by pk to localize lookup costs, then join
 			OrderBy pkOrderBy = new OrderBy();
@@ -344,18 +361,18 @@ class TempTable {
 				pkOrderBy.addVariable(elementSymbol);
 			}
 			primary.valueTs = ii.table.createTupleSource(pkColumns, 
-					Criteria.combineCriteria(ii.coveredCriteria), pkOrderBy, ii);
-			return createTupleSource(projectedCols, Criteria.combineCriteria(ii.nonCoveredCriteria), orderBy, primary);
+					Criteria.combineCriteria(ii.coveredCriteria), pkOrderBy, ii, agg);
+			return createTupleSource(projectedCols, Criteria.combineCriteria(ii.nonCoveredCriteria), orderBy, primary, agg);
 		}
-		return createTupleSource(projectedCols, condition, orderBy, ii);
+		return createTupleSource(projectedCols, condition, orderBy, ii, agg);
 	}
 
 	private TupleSource createTupleSource(
 			final List<? extends SingleElementSymbol> projectedCols,
-			final Criteria condition, OrderBy orderBy, IndexInfo ii)
+			final Criteria condition, OrderBy orderBy, IndexInfo ii, boolean agg)
 			throws TeiidComponentException, TeiidProcessingException {
 		TupleBrowser browser = ii.createTupleBrowser();
-		TupleSource ts = new QueryTupleSource(browser, columnMap, projectedCols, condition);
+		TupleSource ts = new QueryTupleSource(browser, columnMap, agg?getColumns():projectedCols, condition);
 		
 		boolean usingQueryTupleSource = false;
 		try {
@@ -363,6 +380,12 @@ class TempTable {
 			if (ii.ordering == null && orderBy != null) {
 				SortUtility sort = new SortUtility(ts, orderBy.getOrderByItems(), Mode.SORT, bm, sessionID, projectedCols);
 				tb = sort.sort();
+			} else if (agg) {
+				int count = 0;
+				while (ts.nextTuple() != null) {
+					count++;
+				}
+				return new CollectionTupleSource(Arrays.asList(Collections.nCopies(projectedCols.size(), count)).iterator());
 			} else if (updatable) {
 				tb = bm.createTupleBuffer(projectedCols, sessionID, TupleSourceType.PROCESSOR);
 				List<?> next = null;
