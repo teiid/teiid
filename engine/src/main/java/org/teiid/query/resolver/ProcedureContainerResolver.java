@@ -306,6 +306,9 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 	    externalGroups.addGroup(variables);
 	    TempMetadataID tid = metadata.addTempGroup(name, symbols);
 	    tid.setMetadataType(Type.SCALAR);
+	    for (TempMetadataID cid : tid.getElements()) {
+			cid.setMetadataType(Type.SCALAR);
+		}
 	    variables.setMetadataID(tid);
 	    return variables;
 	}

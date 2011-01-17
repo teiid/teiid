@@ -21,6 +21,8 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.proc.*;
 import org.teiid.query.sql.symbol.*;
+import org.teiid.metadata.*;
+import org.teiid.metadata.BaseColumn.NullType;
 
 /** 
  * <p>The SQLParser is a JavaCC-generated parser that reads a SQL string and produces a 
@@ -525,8 +527,8 @@ Command createTempTable(ParseInfo info) :
 {
 	Create create = new Create();
 	String table = null;
-	List columns = null;
 	String pkId = null;
+	Column col = null;
 }
 {
 	<CREATE> <LOCAL> <TEMPORARY> <TABLE> 
@@ -535,10 +537,16 @@ Command createTempTable(ParseInfo info) :
 	{
 		create.setTable(new GroupSymbol(table));
 	}
-	columns = createElementsWithTypes(info)
-	{
-		create.setColumns(columns);
-	}
+    col = tableElement(info)
+    {
+      create.getColumns().add(col);
+    }
+    (LOOKAHEAD(2) <COMMA>
+      col = tableElement(info)
+      {
+        create.getColumns().add(col);
+      }
+    )*	
 	[<COMMA> <PRIMARY> nonReserved("KEY") <LPAREN>
 	  pkId = id()
 	  {
@@ -555,6 +563,36 @@ Command createTempTable(ParseInfo info) :
 	{
 		return create;
 	}
+}
+
+Column tableElement(ParseInfo info) :
+{
+	String element = null;
+	String type = null;
+	boolean autoIncrement = false;
+	boolean notNull = false;
+}
+{
+	 element = id()
+	 (
+	  type = dataTypeString()
+	  |
+	  nonReserved("SERIAL")
+	  {
+	    type = "INTEGER";
+	    autoIncrement = true;
+	    notNull = true;
+	  }
+	 )
+	 [<NOT> <NULL> { notNull = true; }]
+	 {
+	    Column c = new Column();
+	    c.setName(validateElementName(element));
+	    c.setRuntimeType(type);
+	    c.setAutoIncremented(autoIncrement);
+	    c.setNullType(notNull?NullType.No_Nulls:NullType.Nullable);
+	    return c;
+	 }
 }
 
 /**
@@ -3769,13 +3807,7 @@ Constant idExpression() :
 	}
 }
 
-
-/**
- * Parse a data type name - used only in conversion.
- * @return Data type parsed into a constant string object
- * @throws ParseException if parsing failed
- */
-Constant dataType() : 
+String dataTypeString() : 
 {
 	Token typeToken = null;
 }
@@ -3809,7 +3841,19 @@ Constant dataType() :
 	)
 	
 	{
-		return new Constant(typeToken.image);
+		return typeToken.image;
+	}
+}
+
+
+Constant dataType() : 
+{
+	String type = null;
+}
+{
+	type = dataTypeString()	
+	{
+		return new Constant(type);
 	}
 }
 

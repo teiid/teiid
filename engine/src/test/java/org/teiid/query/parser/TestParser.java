@@ -6492,7 +6492,7 @@ public class TestParser {
         column = new ElementSymbol("c2");//$NON-NLS-1$
         column.setType(DataTypeManager.DefaultDataClasses.BYTE);
         columns.add(column);
-        create.setColumns(columns);
+        create.setElementSymbolsAsColumns(columns);
         helpTest("Create local TEMPORARY table tempTable (c1 boolean, c2 byte)", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean, c2 byte)", create); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
@@ -6506,7 +6506,7 @@ public class TestParser {
         column = new ElementSymbol("c2");//$NON-NLS-1$
         column.setType(DataTypeManager.DefaultDataClasses.BYTE);
         columns.add(column);
-        create.setColumns(columns);
+        create.setElementSymbolsAsColumns(columns);
         helpTest("Create local TEMPORARY table tempTable(c1 boolean, c2 byte)", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean, c2 byte)", create); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
@@ -6536,7 +6536,7 @@ public class TestParser {
         column = new ElementSymbol("c2");//$NON-NLS-1$
         column.setType(DataTypeManager.DefaultDataClasses.BYTE);
         columns.add(column);
-        create.setColumns(columns);
+        create.setElementSymbolsAsColumns(columns);
         create.getPrimaryKey().add(column);
         helpTest("Create local TEMPORARY table tempTable(c1 boolean, c2 byte, primary key (c2))", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean, c2 byte, PRIMARY KEY(c2))", create); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -6678,8 +6678,8 @@ public class TestParser {
         column = new ElementSymbol("c5");//$NON-NLS-1$
         column.setType(DataTypeManager.DefaultDataClasses.BIG_DECIMAL);
         columns.add(column);
-        create.setColumns(columns);
-        helpTest("Create local TEMPORARY table tempTable (c1 varchar, c2 tinyint, c3 smallint, c4 real, c5 decimal)", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 string, c2 byte, c3 short, c4 float, c5 bigdecimal)", create); //$NON-NLS-1$ 
+        create.setElementSymbolsAsColumns(columns);
+        helpTest("Create local TEMPORARY table tempTable (c1 varchar, c2 tinyint, c3 smallint, c4 real, c5 decimal)", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 varchar, c2 tinyint, c3 smallint, c4 real, c5 decimal)", create); //$NON-NLS-1$ 
     }
     
     @Test public void testXmlElement() throws Exception {

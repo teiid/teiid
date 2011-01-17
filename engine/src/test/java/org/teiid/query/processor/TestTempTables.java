@@ -57,6 +57,7 @@ public class TestTempTables {
 	
 	private void execute(ProcessorPlan processorPlan, List[] expectedResults) throws Exception {
 		CommandContext cc = TestProcessor.createCommandContext();
+		cc.setMetadata(metadata);
 		cc.setTempTableStore(tempStore);
 		TestProcessor.doProcess(processorPlan, dataManager, expectedResults, cc);
 		assertTrue(Determinism.SESSION_DETERMINISTIC.compareTo(cc.getDeterminismLevel()) <= 0);
@@ -267,6 +268,23 @@ public class TestTempTables {
 		sampleTable();
 		execute("select count(*) a from x", new List[] {Arrays.asList(4)});
 		execute("select count(*) a from x where e2 = 1 order by a", new List[] {Arrays.asList(2)});
+	}
+	
+	@Test public void testAutoIncrement() throws Exception {
+		execute("create local temporary table x (e1 serial, e2 integer, primary key (e1))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		execute("insert into x (e2) values (1)", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		execute("insert into x (e2) values (3)", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		execute("select * from x", new List[] {Arrays.asList(1, 1), Arrays.asList(2, 3)});
+	}
+	
+	@Test(expected=TeiidProcessingException.class) public void testNotNull() throws Exception {
+		execute("create local temporary table x (e1 serial, e2 integer not null, primary key (e1))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		execute("insert into x (e1, e2) values ((select null), 1)", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+	}
+	
+	@Test(expected=TeiidProcessingException.class) public void testNotNull1() throws Exception {
+		execute("create local temporary table x (e1 serial, e2 integer not null, primary key (e1))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		execute("insert into x (e2) values ((select null))", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 	}
 
 	private void sampleTable() throws Exception {

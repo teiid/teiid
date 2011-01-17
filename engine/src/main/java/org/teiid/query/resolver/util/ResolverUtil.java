@@ -595,10 +595,9 @@ public class ResolverUtil {
 
     public static TempMetadataID addTempGroup(TempMetadataAdapter metadata,
                                     GroupSymbol symbol,
-                                    List symbols, boolean tempTable) throws QueryResolverException {
+                                    List<? extends SingleElementSymbol> symbols, boolean tempTable) throws QueryResolverException {
         HashSet<String> names = new HashSet<String>();
-        for (Iterator i = symbols.iterator(); i.hasNext();) {
-            SingleElementSymbol ses = (SingleElementSymbol)i.next();
+        for (SingleElementSymbol ses : symbols) {
             if (!names.add(ses.getShortCanonicalName())) {
                 throw new QueryResolverException(QueryPlugin.Util.getString("ResolverUtil.duplicateName", symbol, ses.getShortName())); //$NON-NLS-1$
             }
@@ -613,7 +612,7 @@ public class ResolverUtil {
     
     public static TempMetadataID addTempTable(TempMetadataAdapter metadata,
                                      GroupSymbol symbol,
-                                     List symbols) throws QueryResolverException {
+                                     List<? extends SingleElementSymbol> symbols) throws QueryResolverException {
         return addTempGroup(metadata, symbol, symbols, true);
     }
 

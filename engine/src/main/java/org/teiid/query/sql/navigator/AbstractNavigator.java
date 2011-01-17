@@ -23,7 +23,6 @@
 package org.teiid.query.sql.navigator;
 
 import java.util.Collection;
-import java.util.Iterator;
 
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
@@ -63,15 +62,15 @@ public class AbstractNavigator extends LanguageVisitor {
         }
     }
     
-    protected void visitNodes(Collection nodes) {
+    protected void visitNodes(Collection<? extends LanguageObject> nodes) {
         if(this.visitor.shouldAbort()) {
             return;
         }
         
         if (nodes != null && nodes.size() > 0) {
-            for (Iterator i = nodes.iterator(); i.hasNext();) {
-                visitNode((LanguageObject)i.next());
-            }
+        	for (LanguageObject languageObject : nodes) {
+				visitNode(languageObject);
+			}
         }
     }
 

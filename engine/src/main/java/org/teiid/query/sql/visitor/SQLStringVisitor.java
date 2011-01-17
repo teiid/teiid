@@ -34,6 +34,8 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SQLConstants.Tokens;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.AtomicCriteria;
@@ -379,14 +381,23 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(SPACE);
 
         // Columns clause
-        List<ElementSymbol> columns = obj.getColumns();
+        List<Column> columns = obj.getColumns();
         append("("); //$NON-NLS-1$
-        Iterator<ElementSymbol> iter = columns.iterator();
+        Iterator<Column> iter = columns.iterator();
         while (iter.hasNext()) {
-            ElementSymbol element = iter.next();
-            outputShortName(element);
+            Column element = iter.next();
+            outputDisplayName(element.getName());
             append(SPACE);
-            append(DataTypeManager.getDataTypeName(element.getType()));
+            if (element.isAutoIncremented()) {
+            	append(NonReserved.SERIAL);
+            } else {
+	            append(element.getRuntimeType());
+	            if (element.getNullType() == NullType.No_Nulls) {
+	            	append(NOT);
+	            	append(SPACE);
+	            	append(NULL);
+	            }
+            }
             if (iter.hasNext()) {
                 append(", "); //$NON-NLS-1$
             }
@@ -397,10 +408,10 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(" "); //$NON-NLS-1$
             append(NonReserved.KEY);
             append(Tokens.LPAREN);
-            iter = obj.getPrimaryKey().iterator();
-            while (iter.hasNext()) {
-                outputShortName(iter.next());
-                if (iter.hasNext()) {
+            Iterator<ElementSymbol> pkiter = obj.getPrimaryKey().iterator();
+            while (pkiter.hasNext()) {
+                outputShortName(pkiter.next());
+                if (pkiter.hasNext()) {
                     append(", "); //$NON-NLS-1$
                 }
             }

@@ -460,7 +460,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 		Create create = new Create();
 		create.setTable(group);
 		List<ElementSymbol> allColumns = ResolverUtil.resolveElementsInGroup(group, metadata); 
-		create.setColumns(allColumns);
+		create.setElementSymbolsAsColumns(allColumns);
 		Object pk = metadata.getPrimaryKey(group.getMetadataID());
 		if (pk != null) {
 			List<ElementSymbol> pkColumns = resolveIndex(metadata, allColumns, pk);

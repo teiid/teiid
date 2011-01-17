@@ -131,7 +131,7 @@ public class RelationalPlan extends ProcessorPlan {
 	        		ProcessorPlan plan = withCommand.getCommand().getProcessorPlan();
 					withProcessor = new QueryProcessor(plan, getContext(), this.root.getBufferManager(), this.root.getDataManager());
 					Create create = new Create();
-					create.setColumns(withCommand.getColumns());
+					create.setElementSymbolsAsColumns(withCommand.getColumns());
 					create.setTable(withCommand.getGroupSymbol());
 					this.root.getDataManager().registerRequest(getContext(), create, TempMetadataAdapter.TEMP_MODEL.getID(), null, 0);
     			}

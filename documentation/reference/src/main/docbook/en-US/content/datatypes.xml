@@ -65,8 +65,8 @@
             <entry>SMALLINT</entry>
           </row>
           <row>
-            <entry>integer</entry>
-            <entry>numeric, integral type, signed 32-bit</entry>
+            <entry>integer or serial</entry>
+            <entry>numeric, integral type, signed 32-bit.  The serial type also implies not null and has an auto-incrementing value that starts at 1.  serial types are not automatically UNIQUE.</entry>
             <entry>java.lang.Integer</entry>
             <entry>INTEGER</entry>
             <entry>INTEGER</entry>

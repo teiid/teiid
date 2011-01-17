@@ -31,7 +31,8 @@
 	    <UL>
 	        <LI>Added support to perform simple pass-through and more complicated updates through views by default.
 	        <LI>Added support for "FOR EACH ROW" update procedure handling (similar to INSTEAD OF triggers in other DBMS's), which should be used instead of the deprecated TRANSLATE criteria approach.
-	    </UL>                     
+	    </UL>
+	<LI><B>Temp table enhancements</B> - added support for the SERIAL datatype, which is a not null INTEGER that auto-increments, and the ability to specify a column as NOT NULL.                     
 	<LI><B>UDF</B> - new API objects added to teiid-api to support user defined functions that are capable of pushdown to source.
 	<LI><B>Unescape Function</B> - a new system function, unescape, was added to handle common \ escaping in strings including octal, hex/unicode, \b, \r, \n, \f, and \t.
 	<LI><B>Predicate Optimization</B> - expanded optimizations for detecting always false conditions when using IS NULL, IN, or comparison predicates with literal values.

@@ -282,7 +282,7 @@ public class QueryResolver {
             if (externalGroups != null) {
             	container.getCommand().pushNewResolvingContext(externalGroups);
             }
-            QueryResolver.resolveCommand(container.getCommand(), metadata.getMetadata());
+            QueryResolver.resolveCommand(container.getCommand(), metadata.getMetadata(), false);
         }
 	}
 	

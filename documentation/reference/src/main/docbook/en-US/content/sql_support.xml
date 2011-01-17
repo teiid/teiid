@@ -665,7 +665,7 @@
       <para>Creation syntax:
       </para>
       <listitem>
-        <para>Explicit: CREATE LOCAL TEMPORARY TABLE x (column type, ... [PRIMARY KEY (column, ...)])
+        <para>Explicit: CREATE LOCAL TEMPORARY TABLE x (column type [NOT NULL], ... [PRIMARY KEY (column, ...)])
         </para>
       </listitem>
       <listitem>
@@ -679,6 +679,9 @@
         </para>
         <para>If #x doesn't exist, it will be defined using the target column names (in not supplied, the column names will match the derived column names from the query), and the types from the query derived columns. 
         </para>
+      </listitem>
+      <listitem>
+      	<para>Use the SERIAL data type to specify a NOT NULL and auto-incrementing INTEGER column.  The starting value of a SERIAL column is 1.</para>
       </listitem>
     </itemizedlist>
     <itemizedlist>

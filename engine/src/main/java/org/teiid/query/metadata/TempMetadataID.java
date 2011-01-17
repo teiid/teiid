@@ -44,6 +44,7 @@ import org.teiid.query.sql.lang.CacheHint;
  */
 public class TempMetadataID implements Serializable {
     
+	private static final long serialVersionUID = -1879211827339120135L;
 	private static final int LOCAL_CACHE_SIZE = 8;
 	
 	static class TableData {
@@ -75,6 +76,8 @@ public class TempMetadataID implements Serializable {
 	//Column metadata
     private int position;
     private Class<?> type;     // type of this element, only for element
+    private boolean autoIncrement;
+    private boolean notNull;
     
     /**
      * Constructor for group form of metadata ID.
@@ -330,6 +333,22 @@ public class TempMetadataID implements Serializable {
 			return DUMMY_DATA;
 		}
 		return data;
+	}
+
+	public boolean isAutoIncrement() {
+		return autoIncrement;
+	}
+	
+	public void setAutoIncrement(boolean autoIncrement) {
+		this.autoIncrement = autoIncrement;
+	}
+
+	public boolean isNotNull() {
+		return notNull;
+	}
+	
+	public void setNotNull(boolean notNull) {
+		this.notNull = notNull;
 	}
 		
 }

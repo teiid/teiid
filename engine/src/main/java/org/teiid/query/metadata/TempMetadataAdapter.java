@@ -337,6 +337,13 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
                 case SupportConstants.Element.SEARCHABLE_LIKE:   return true;
                 case SupportConstants.Element.SEARCHABLE_COMPARE:return true;
                 case SupportConstants.Element.SELECT:            return true;
+                case SupportConstants.Element.NULL: {
+                	if (id.isNotNull()) {
+                		return false;
+                	}
+                	break;
+                }
+                case SupportConstants.Element.AUTO_INCREMENT:	 return id.isAutoIncrement();
             }
             
             // If this is a temp table column or real metadata is unknown, return hard-coded values

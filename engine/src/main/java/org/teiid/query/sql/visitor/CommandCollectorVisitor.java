@@ -30,7 +30,6 @@ import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.ExistsCriteria;
-import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubqueryFromClause;
@@ -124,7 +123,7 @@ public class CommandCollectorVisitor extends LanguageVisitor {
      */
     public static final List<Command> getCommands(Command command) {
         CommandCollectorVisitor visitor = new CommandCollectorVisitor();
-        final boolean visitCommands = command instanceof SetQuery || command instanceof Insert;
+        final boolean visitCommands = command instanceof SetQuery;
         PreOrderNavigator navigator = new PreOrderNavigator(visitor) {
 
         	@Override

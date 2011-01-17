@@ -25,8 +25,10 @@ package org.teiid.query.tempdata;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -94,7 +96,12 @@ class TempTable {
 				}
 				for (int i = 0; i < indexes.length; i++) {
 					if (indexes[i] == -1) {
-						newTuple.add(null);
+						AtomicInteger sequence = sequences.get(i);
+						if (sequence != null) {
+							newTuple.add(sequence.getAndIncrement());
+						} else {
+							newTuple.add(null);
+						}
 					} else {
 						newTuple.add(tuple.get(indexes[i]));
 					}
@@ -105,6 +112,11 @@ class TempTable {
 				tuple.add(0, rowId.getAndIncrement());
 			}
 			currentTuple = tuple;
+			for (int i : notNull) {
+				if (tuple.get(i) == null) {
+					throw new TeiidProcessingException(QueryPlugin.Util.getString("TempTable.not_null", columns.get(i)));
+				}
+			}
 			insertTuple(tuple, addRowId);
 		}
 
@@ -266,11 +278,16 @@ class TempTable {
 	private int keyBatchSize;
 	private int leafBatchSize;
 	private Map columnMap;
+	
+	private List<Integer> notNull = new LinkedList<Integer>();
+	private Map<Integer, AtomicInteger> sequences;
 
 	TempTable(TempMetadataID tid, BufferManager bm, List<ElementSymbol> columns, int primaryKeyLength, String sessionID) {
 		this.tid = tid;
 		this.bm = bm;
+		int startIndex = 0;
 		if (primaryKeyLength == 0) {
+			startIndex = 1;
             ElementSymbol id = new ElementSymbol("rowId"); //$NON-NLS-1$
     		id.setType(DataTypeManager.DefaultDataClasses.INTEGER);
     		columns.add(0, id);
@@ -281,6 +298,24 @@ class TempTable {
         }
 		this.columnMap = RelationalNode.createLookupMap(columns);
 		this.columns = columns;
+		if (!tid.getElements().isEmpty()) {
+			//not relevant for indexes
+			for (int i = startIndex; i < columns.size(); i++) {
+				TempMetadataID col = tid.getElements().get(i - startIndex);
+				if (col.isAutoIncrement()) {
+					if (this.sequences == null) {
+						this.sequences = new HashMap<Integer, AtomicInteger>();
+					}
+					sequences.put(i, new AtomicInteger(1));
+				}
+				if (col.isNotNull()) {
+					notNull.add(i);
+				}
+			}
+		}
+		if (this.sequences == null) {
+			this.sequences = Collections.emptyMap();
+		}
 		this.sessionID = sessionID;
 		this.keyBatchSize = bm.getSchemaSize(columns);
 		this.leafBatchSize = bm.getSchemaSize(columns.subList(0, primaryKeyLength));

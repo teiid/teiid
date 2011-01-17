@@ -153,14 +153,14 @@ public class TempTableStore {
     }
 
     TempTable addTempTable(String tempTableName, Create create, BufferManager buffer, boolean add) {
-    	List<ElementSymbol> columns = create.getColumns();
+    	List<ElementSymbol> columns = create.getColumnSymbols();
     	TempMetadataID id = tempMetadataStore.getTempGroupID(tempTableName);
     	if (id == null) {
 	        //add metadata
 	    	id = tempMetadataStore.addTempGroup(tempTableName, columns, false, true);
-	        TempTableResolver.addPrimaryKey(create, id);
+	        TempTableResolver.addAdditionalMetadata(create, id);
     	}
-    	columns = new ArrayList<ElementSymbol>(create.getColumns());
+    	columns = new ArrayList<ElementSymbol>(create.getColumnSymbols());
         if (!create.getPrimaryKey().isEmpty()) {
     		//reorder the columns to put the key in front
     		List<ElementSymbol> primaryKey = create.getPrimaryKey();
@@ -228,7 +228,7 @@ public class TempTableStore {
         }
         Create create = new Create();
         create.setTable(new GroupSymbol(tempTableID));
-        create.setColumns(columns);
+        create.setElementSymbolsAsColumns(columns);
         return addTempTable(tempTableID, create, buffer, true);       
     }
     

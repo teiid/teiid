@@ -99,6 +99,8 @@ public class SQLConstants {
 		
 		public static final String KEY = "KEY"; //$NON-NLS-1$
 		
+		public static final String SERIAL = "SERIAL"; //$NON-NLS-1$
+		
 		public static final String ENCODING = "ENCODING"; //$NON-NLS-1$
 		public static final String TEXTAGG = "TEXTAGG"; //$NON-NLS-1$
 	}

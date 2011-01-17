@@ -30,6 +30,8 @@ import java.util.Set;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
@@ -77,24 +79,34 @@ public class TempTableResolver implements CommandResolver {
             //if we get here then either the group does not exist or has already been defined as a temp table
             //if it has been defined as a temp table, that's ok we'll use this as the new definition and throw an
             //exception at runtime if the user has not dropped the previous table yet
-            TempMetadataID tempTable = ResolverUtil.addTempTable(metadata, group, create.getColumns());
+            TempMetadataID tempTable = ResolverUtil.addTempTable(metadata, group, create.getColumnSymbols());
             ResolverUtil.resolveGroup(create.getTable(), metadata);
             Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
             groups.add(create.getTable());
             ResolverVisitor.resolveLanguageObject(command, groups, metadata);
-            addPrimaryKey(create, tempTable);
+            addAdditionalMetadata(create, tempTable);
         } else if(command.getType() == Command.TYPE_DROP) {
             ResolverUtil.resolveGroup(((Drop)command).getTable(), metadata);
         }
     }
 
-	public static void addPrimaryKey(Create create, TempMetadataID tempTable) {
+	public static void addAdditionalMetadata(Create create, TempMetadataID tempTable) {
 		if (!create.getPrimaryKey().isEmpty()) {
 			ArrayList<TempMetadataID> primaryKey = new ArrayList<TempMetadataID>(create.getPrimaryKey().size());
 			for (ElementSymbol symbol : create.getPrimaryKey()) {
 				primaryKey.add((TempMetadataID) symbol.getMetadataID());
 			}
 			tempTable.setPrimaryKey(primaryKey);
+		}
+		for (int i = 0; i < create.getColumns().size(); i++) {
+			Column column = create.getColumns().get(i);
+			TempMetadataID tid = tempTable.getElements().get(i);
+			if (column.isAutoIncremented()) {
+				tid.setAutoIncrement(true);
+			}
+			if (column.getNullType() == NullType.No_Nulls) {
+				tid.setNotNull(true);
+			}
 		}
 	}
 

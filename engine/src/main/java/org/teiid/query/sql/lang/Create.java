@@ -25,8 +25,10 @@ package org.teiid.query.sql.lang;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
-import org.teiid.core.util.HashCodeUtil;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -40,10 +42,9 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 public class Create extends Command {
     /** Identifies the table to be created. */
     private GroupSymbol table;
-    
-    private List<ElementSymbol> columns = new ArrayList<ElementSymbol>();
-    
     private List<ElementSymbol> primaryKey = new ArrayList<ElementSymbol>();
+    private List<Column> columns = new ArrayList<Column>();
+    private List<ElementSymbol> columnSymbols;
     
     public GroupSymbol getTable() {
         return table;
@@ -53,12 +54,28 @@ public class Create extends Command {
         this.table = table;
     }
     
-    public List<ElementSymbol> getColumns() {
+    public List<Column> getColumns() {
         return columns;
     }
     
     public List<ElementSymbol> getPrimaryKey() {
 		return primaryKey;
+	}
+    
+    /**
+     * Derived ElementSymbol list.  Do not modify without also modifying the columns.
+     * @return
+     */
+    public List<ElementSymbol> getColumnSymbols() {
+    	if (columnSymbols == null) {
+    		columnSymbols = new ArrayList<ElementSymbol>(columns.size());
+    		for (Column column : columns) {
+				ElementSymbol es = new ElementSymbol(column.getName());
+				es.setType(DataTypeManager.getDataTypeClass(column.getRuntimeType()));
+				columnSymbols.add(es);
+			}
+    	}
+		return columnSymbols;
 	}
     
     /** 
@@ -75,9 +92,17 @@ public class Create extends Command {
      */
     public Object clone() {  
         Create copy = new Create();      
-        GroupSymbol copyTable = (GroupSymbol) table.clone();    
+        GroupSymbol copyTable = table.clone();    
         copy.setTable(copyTable);
-        copy.setColumns(LanguageObject.Util.deepClone(columns, ElementSymbol.class));
+        copy.columns = new ArrayList<Column>(columns.size());
+        for (Column column : columns) {
+			Column copyColumn = new Column();
+			copyColumn.setName(column.getName());
+			copyColumn.setRuntimeType(column.getRuntimeType());
+			copyColumn.setAutoIncremented(column.isAutoIncremented());
+			copyColumn.setNullType(column.getNullType());
+			copy.columns.add(copyColumn);
+		}
         copy.primaryKey = LanguageObject.Util.deepClone(primaryKey, ElementSymbol.class);
         copyMetadataState(copy);
         return copy;
@@ -107,15 +132,19 @@ public class Create extends Command {
         visitor.visit(this);
     }
 
-    public void setColumns(List<ElementSymbol> columns) {
-        this.columns = columns;
+    public void setElementSymbolsAsColumns(List<ElementSymbol> columns) {
+    	this.columns.clear();
+    	for (ElementSymbol elementSymbol : columns) {
+    		Column c = new Column();
+    		c.setName(elementSymbol.getName());
+    		c.setRuntimeType(DataTypeManager.getDataTypeName(elementSymbol.getType()));
+    		c.setNullType(NullType.Nullable);
+    		this.columns.add(c);
+		}
     }
     
     public int hashCode() {
-        int myHash = 0;
-        myHash = HashCodeUtil.hashCode(myHash, this.table);
-        myHash = HashCodeUtil.hashCode(myHash, this.columns);
-        return myHash;
+        return this.table.hashCode();
     }
     
     public String toString() {
@@ -135,8 +164,22 @@ public class Create extends Command {
 
         Create other = (Create) obj;
         
+        if (other.columns.size() != this.columns.size()) {
+        	return false;
+        }
+        
+        for (int i = 0; i < this.columns.size(); i++) {
+        	Column c = this.columns.get(i);
+        	Column o = other.columns.get(i);
+        	if (!c.getName().equalsIgnoreCase(o.getName()) 
+        		|| DataTypeManager.getDataTypeClass(c.getRuntimeType().toLowerCase()) != DataTypeManager.getDataTypeClass(o.getRuntimeType().toLowerCase())
+        		|| c.isAutoIncremented() != o.isAutoIncremented()
+        		|| c.getNullType() != o.getNullType()) {
+        		return false;
+        	}
+		}
+        
         return EquivalenceUtil.areEqual(getTable(), other.getTable()) &&
-               EquivalenceUtil.areEqual(getColumns(), other.getColumns()) &&
                EquivalenceUtil.areEqual(getPrimaryKey(), other.getPrimaryKey());
     }
 }

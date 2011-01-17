@@ -25,7 +25,6 @@ package org.teiid.query.metadata;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -71,7 +70,7 @@ public class TempMetadataStore implements Serializable {
      * Get all temp group and element metadata
      * @param data Map of upper case group name to group TempMetadataID object
      */
-    public Map getData() {
+    public Map<String, TempMetadataID> getData() {
         return this.tempGroups;
     }
    
@@ -107,7 +106,7 @@ public class TempMetadataStore implements Serializable {
         // Add the temporary group
         String tempName = tempGroup.toUpperCase();
         
-        List elementIDs = new ArrayList(tempSymbols.size());
+        List<TempMetadataID> elementIDs = new ArrayList<TempMetadataID>(tempSymbols.size());
         
         for (SingleElementSymbol symbol : tempSymbols) {
             TempMetadataID elementID = createElementSymbol(tempName, symbol, isTempTable);
@@ -178,23 +177,6 @@ public class TempMetadataStore implements Serializable {
     }
     
     /**
-     * Add a bunch of temp groups all at once.  This map should contain temp
-     * group names (Strings) as keys and the TempMetadataID for the group as the 
-     * value.
-     * @param tempGroupMap (tempGroupName (String) --> TempMetadataID)
-     */
-    public void addTempGroups(Map tempGroupMap) {
-        if(tempGroupMap != null && tempGroupMap.size() > 0) {
-            Iterator keyIter = tempGroupMap.keySet().iterator();
-            while(keyIter.hasNext()) {
-                String tempGroupName = (String) keyIter.next();
-                TempMetadataID groupID = (TempMetadataID) tempGroupMap.get(tempGroupName);
-                this.tempGroups.put(tempGroupName, groupID);
-            }    
-        }
-    }
-    
-    /**
      * Get temporary group ID based on group name
      * @param tempGroup Group name
      * @return Metadata ID or null if not found
@@ -217,9 +199,7 @@ public class TempMetadataStore implements Serializable {
             
         TempMetadataID groupID = tempGroups.get(groupName.toUpperCase());
         if(groupID != null) {
-            Iterator elementIter = groupID.getElements().iterator();
-            while(elementIter.hasNext()) { 
-                TempMetadataID elementID = (TempMetadataID) elementIter.next();
+        	for (TempMetadataID elementID : groupID.getElements()) {
                 if(elementID.getID().equalsIgnoreCase(tempElement)) { 
                     return elementID;
                 }

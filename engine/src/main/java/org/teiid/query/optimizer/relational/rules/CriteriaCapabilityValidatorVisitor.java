@@ -57,7 +57,7 @@ import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
-import org.teiid.query.sql.navigator.PreOrderNavigator;
+import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.CaseExpression;
 import org.teiid.query.sql.symbol.Function;
@@ -498,12 +498,12 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 			QueryCommand queryCommand) throws TeiidComponentException {
 		// Check that query in access node is for the same model as current node
 		try {                
-		    Collection subQueryGroups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(queryCommand, false);
+		    Collection<GroupSymbol> subQueryGroups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(queryCommand, false);
 		    if(subQueryGroups.size() == 0) {
 		        // No FROM?
 		        return null;
 		    }
-		    GroupSymbol subQueryGroup = (GroupSymbol)subQueryGroups.iterator().next();
+		    GroupSymbol subQueryGroup = subQueryGroups.iterator().next();
 
 		    Object modelID = subQueryGroup.getModelMetadataId();
 		    if (modelID == null) {
@@ -583,7 +583,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         }
         
         CriteriaCapabilityValidatorVisitor visitor = new CriteriaCapabilityValidatorVisitor(modelID, metadata, capFinder, caps);
-        PreOrderNavigator.doVisit(obj, visitor);
+        PostOrderNavigator.doVisit(obj, visitor);
         
         if(visitor.getException() != null) {
             throw visitor.getException();

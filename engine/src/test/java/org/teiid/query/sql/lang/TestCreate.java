@@ -52,7 +52,7 @@ public class TestCreate extends TestCase {
         elements.add(new ElementSymbol("a")); //$NON-NLS-1$
         elements.add(new ElementSymbol("b")); //$NON-NLS-1$
 
-	    create.setColumns(elements);
+	    create.setElementSymbolsAsColumns(elements);
 	    return create;	
 	}
 
@@ -64,7 +64,7 @@ public class TestCreate extends TestCase {
         elements.add(new ElementSymbol("a")); //$NON-NLS-1$
         elements.add(new ElementSymbol("b")); //$NON-NLS-1$
 
-        create.setColumns(elements);
+        create.setElementSymbolsAsColumns(elements);
         return create;  	}
 			
 	// ################################## ACTUAL TESTS ################################
