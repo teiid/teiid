@@ -73,6 +73,8 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
         TranslatedCommand translatedComm = translateCommand(command);
 
         String sql = translatedComm.getSql();
+        
+        LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Source sql", sql); //$NON-NLS-1$
 
         try {
 

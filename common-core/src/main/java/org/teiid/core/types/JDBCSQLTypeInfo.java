@@ -91,7 +91,7 @@ public final class JDBCSQLTypeInfo {
     static {
         addTypeMapping(STRING, STRING_CLASS, Types.VARCHAR, Types.LONGVARCHAR, Types.CHAR);
         addTypeMapping(CHAR, CHAR_CLASS, Types.CHAR, false);
-        addTypeMapping(BOOLEAN, BOOLEAN_CLASS, Types.BIT);
+        addTypeMapping(BOOLEAN, BOOLEAN_CLASS, Types.BIT, Types.BOOLEAN);
         addTypeMapping(TIME, TIME_CLASS, Types.TIME);
         addTypeMapping(DATE, DATE_CLASS, Types.DATE);
         addTypeMapping(TIMESTAMP, TIMESTAMP_CLASS, Types.TIMESTAMP);
