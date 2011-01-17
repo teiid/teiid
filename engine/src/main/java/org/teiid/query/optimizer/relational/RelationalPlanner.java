@@ -92,11 +92,13 @@ import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.TableFunctionReference;
+import org.teiid.query.sql.lang.TranslatableProcedureContainer;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.symbol.AllSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SelectSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
@@ -499,7 +501,19 @@ public class RelationalPlanner {
 		}
 		//plan any subqueries in criteria/parameters/values
 		for (SubqueryContainer subqueryContainer : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(container)) {
-    		ProcessorPlan plan = QueryOptimizer.optimizePlan(subqueryContainer.getCommand(), metadata, null, capFinder, analysisRecord, context);
+			if (c == null && container.getGroup().isTempTable()) {
+				if (subqueryContainer.getCommand().getCorrelatedReferences() == null) {
+					if (subqueryContainer instanceof ScalarSubquery) {
+						((ScalarSubquery) subqueryContainer).setShouldEvaluate(true);
+					} else {
+						throw new QueryPlannerException(QueryPlugin.Util.getString("RelationalPlanner.nonpushdown_command", container)); //$NON-NLS-1$
+					}
+				} else {
+					throw new QueryPlannerException(QueryPlugin.Util.getString("RelationalPlanner.nonpushdown_command", container)); //$NON-NLS-1$
+				}
+    		}
+			
+			ProcessorPlan plan = QueryOptimizer.optimizePlan(subqueryContainer.getCommand(), metadata, null, capFinder, analysisRecord, context);
     		subqueryContainer.getCommand().setProcessorPlan(plan);
     		
     		if (c == null) {
@@ -507,7 +521,7 @@ public class RelationalPlanner {
 			}
 		}
 		
-		if (c == null && !(container instanceof Insert) && !container.getGroup().isTempGroupSymbol() && 
+		if (c == null && container instanceof TranslatableProcedureContainer && !container.getGroup().isTempTable() && 
 				!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(container, metadata.getModelID(container.getGroup().getMetadataID()), metadata, capFinder, analysisRecord)) {
 			throw new QueryPlannerException(QueryPlugin.Util.getString("RelationalPlanner.nonpushdown_command", container)); //$NON-NLS-1$
 		}

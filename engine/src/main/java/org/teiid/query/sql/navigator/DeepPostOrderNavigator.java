@@ -25,6 +25,7 @@ package org.teiid.query.sql.navigator;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.ExistsCriteria;
+import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
@@ -61,6 +62,16 @@ public class DeepPostOrderNavigator extends PostOrderNavigator {
     public void visit(SubquerySetCriteria obj) {
         visitNode(obj.getCommand());
         visitNode(obj.getExpression());
+        visitVisitor(obj);
+    }
+    public void visit(Insert obj) {
+        visitNode(obj.getGroup());
+        visitNodes(obj.getVariables());
+        visitNodes(obj.getValues());
+        if(obj.getQueryExpression()!=null) {
+        	visitNode(obj.getQueryExpression());
+        }
+        visitNode(obj.getOption());
         visitVisitor(obj);
     }
     

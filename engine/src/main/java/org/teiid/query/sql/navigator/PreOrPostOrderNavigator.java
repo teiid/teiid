@@ -295,9 +295,6 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
         visitNode(obj.getGroup());
         visitNodes(obj.getVariables());
         visitNodes(obj.getValues());
-        if(obj.getQueryExpression()!=null) {
-        	visitNode(obj.getQueryExpression());
-        }
         visitNode(obj.getOption());
         postVisitVisitor(obj);
     }

@@ -56,7 +56,7 @@ import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
-import org.teiid.query.sql.navigator.PreOrderNavigator;
+import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.CaseExpression;
 import org.teiid.query.sql.symbol.Function;
@@ -550,7 +550,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         }
         
         CriteriaCapabilityValidatorVisitor visitor = new CriteriaCapabilityValidatorVisitor(modelID, metadata, capFinder, caps);
-        PreOrderNavigator.doVisit(obj, visitor);
+        PostOrderNavigator.doVisit(obj, visitor);
         
         if(visitor.getException() != null) {
             throw visitor.getException();
