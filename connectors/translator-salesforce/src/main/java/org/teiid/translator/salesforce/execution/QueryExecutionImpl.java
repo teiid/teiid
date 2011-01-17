@@ -288,18 +288,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 			Map<String,Integer> fieldToIndexMap = sObjectToResponseField.get(sObject.getType());
 			for (int j = 0; j < visitor.getSelectSymbolCount(); j++) {
 				Column element = visitor.getSelectSymbolMetadata(j);
-				AbstractMetadataRecord parent = element.getParent();
-				Table table;
-				if(parent instanceof Table) {
-					table = (Table)parent;
-				} else {
-					parent = parent.getParent();
-					if(parent instanceof Table) {
-						table = (Table)parent;
-					} else {
-						throw new TranslatorException("Could not resolve Table for column " + element.getName()); //$NON-NLS-1$
-					}
-				}
+				Table table = (Table)element.getParent();
 				if(table.getNameInSource().equals(sObject.getType())) {
 					Integer index = fieldToIndexMap.get(element.getNameInSource());
 					// id gets dropped from the result if it is not the
