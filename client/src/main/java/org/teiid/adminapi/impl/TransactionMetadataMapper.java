@@ -36,7 +36,7 @@ import org.jboss.metatype.plugins.types.MutableCompositeMetaType;
 import org.jboss.metatype.spi.values.MetaMapper;
 
 public class TransactionMetadataMapper extends MetaMapper<TransactionMetadata> {
-	private static final String XID = "xid"; //$NON-NLS-1$
+	private static final String ID = "id"; //$NON-NLS-1$
 	private static final String SCOPE = "scope"; //$NON-NLS-1$
 	private static final String CREATED_TIME = "createdTime"; //$NON-NLS-1$
 	private static final String ASSOCIATED_SESSION = "associatedSession"; //$NON-NLS-1$
@@ -48,7 +48,7 @@ public class TransactionMetadataMapper extends MetaMapper<TransactionMetadata> {
 		metaType.addItem(ASSOCIATED_SESSION, ASSOCIATED_SESSION, SimpleMetaType.STRING);
 		metaType.addItem(CREATED_TIME, CREATED_TIME, SimpleMetaType.LONG_PRIMITIVE);
 		metaType.addItem(SCOPE, SCOPE, SimpleMetaType.STRING);
-		metaType.addItem(XID, XID, SimpleMetaType.STRING);
+		metaType.addItem(ID, ID, SimpleMetaType.STRING);
 		metaType.freeze();
 	}
 	
@@ -73,7 +73,7 @@ public class TransactionMetadataMapper extends MetaMapper<TransactionMetadata> {
 			transaction.set(ASSOCIATED_SESSION, SimpleValueSupport.wrap(object.getAssociatedSession()));
 			transaction.set(CREATED_TIME, SimpleValueSupport.wrap(object.getCreatedTime()));
 			transaction.set(SCOPE, SimpleValueSupport.wrap(object.getScope()));
-			transaction.set("id", SimpleValueSupport.wrap(object.getId())); //$NON-NLS-1$
+			transaction.set(ID, SimpleValueSupport.wrap(object.getId()));
 			
 			return transaction;
 		}
@@ -92,7 +92,7 @@ public class TransactionMetadataMapper extends MetaMapper<TransactionMetadata> {
 			transaction.setAssociatedSession((String) metaValueFactory.unwrap(compositeValue.get(ASSOCIATED_SESSION)));
 			transaction.setCreatedTime((Long) metaValueFactory.unwrap(compositeValue.get(CREATED_TIME)));
 			transaction.setScope((String) metaValueFactory.unwrap(compositeValue.get(SCOPE)));
-			transaction.setId((String) metaValueFactory.unwrap(compositeValue.get("id"))); //$NON-NLS-1$
+			transaction.setId((String) metaValueFactory.unwrap(compositeValue.get(ID)));
 			return transaction;
 		}
 		throw new IllegalStateException("Unable to unwrap TransactionMetadata " + metaValue); //$NON-NLS-1$
