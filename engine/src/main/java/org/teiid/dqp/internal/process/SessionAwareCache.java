@@ -74,7 +74,7 @@ public class SessionAwareCache<T> {
 	SessionAwareCache (final CacheFactory cacheFactory, final Cache.Type type, final CacheConfiguration config){
 		this.maxSize = config.getMaxEntries();
 		if(this.maxSize < 0){
-			this.maxSize = DEFAULT_MAX_SIZE_TOTAL;
+			this.maxSize = Integer.MAX_VALUE;
 		}		
 		this.localCache = new DefaultCache<CacheID, T>("local", maxSize, config.getMaxAgeInSeconds()*1000); //$NON-NLS-1$
 		

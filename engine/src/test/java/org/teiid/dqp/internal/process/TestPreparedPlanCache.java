@@ -128,13 +128,11 @@ public class TestPreparedPlanCache {
         assertEquals(0, cache.getTotalCacheEntries());        
     }
     
-    // set init size to negative number, which should default to 100 (default)
+    // set init size to negative number, which should default to max
     @Test public void testNegativeSizeCacheUsesDefault() {
-        SessionAwareCache<PreparedPlan> negativeSizedCache = new SessionAwareCache<PreparedPlan>(-1000);
-        SessionAwareCache<PreparedPlan> defaultSizedCache = new SessionAwareCache<PreparedPlan>();
+        SessionAwareCache<PreparedPlan> negativeSizedCache = new SessionAwareCache<PreparedPlan>(-1);
         
-        assertEquals(defaultSizedCache.getSpaceAllowed(), negativeSizedCache.getSpaceAllowed());
-        assertEquals(SessionAwareCache.DEFAULT_MAX_SIZE_TOTAL, negativeSizedCache.getSpaceAllowed());                       
+        assertEquals(Integer.MAX_VALUE, negativeSizedCache.getSpaceAllowed());                       
     }
     
     //====Help methods====//
