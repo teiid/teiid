@@ -51,6 +51,7 @@
 <h4>from 7.2</h4>
 <ul>
   <li>The default JDBC credentials are user/user - not admin/teiid
+  <li>Unordered limits are no longer pushed through conditions, dup removal, or UNION not all.  This prevents the possibility of getting less results than the logical intent of the limit.  
 </ul>
 <h4>from 7.1</h4>
 <ul>

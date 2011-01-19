@@ -23,7 +23,6 @@ package org.teiid.odbc;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -36,6 +35,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.teiid.jdbc.ConnectionImpl;
+import org.teiid.jdbc.TeiidDriver;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.runtime.RuntimePlugin;
@@ -169,7 +169,12 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	@Override
 	public void logon(String databaseName, String user, String password) {
 		try {
-			this.connection =  (ConnectionImpl)DriverManager.getConnection("jdbc:teiid:"+databaseName+";ApplicationName=ODBC", user, password); //$NON-NLS-1$ //$NON-NLS-2$
+			 java.util.Properties info = new java.util.Properties();
+			String url = "jdbc:teiid:"+databaseName+";ApplicationName=ODBC"; //$NON-NLS-1$ //$NON-NLS-2$
+			TeiidDriver driver = new TeiidDriver();
+			info.put("user", user); //$NON-NLS-1$
+			info.put("password", password); //$NON-NLS-1$
+			this.connection =  (ConnectionImpl)driver.connect(url, info);
 			int hash = this.connection.getConnectionId().hashCode();
 			this.client.authenticationSucess(hash, hash);
 			sync();

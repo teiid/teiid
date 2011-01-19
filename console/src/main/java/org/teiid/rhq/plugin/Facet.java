@@ -80,6 +80,8 @@ import org.rhq.core.util.exception.ThrowableUtil;
 import org.rhq.plugins.jbossas5.ProfileServiceComponent;
 import org.rhq.plugins.jbossas5.connection.ProfileServiceConnection;
 import org.teiid.rhq.admin.DQPManagementView;
+import org.teiid.rhq.plugin.deployer.Deployer;
+import org.teiid.rhq.plugin.deployer.RemoteDeployer;
 import org.teiid.rhq.plugin.objects.ExecutedOperationResultImpl;
 import org.teiid.rhq.plugin.objects.ExecutedResult;
 import org.teiid.rhq.plugin.util.DeploymentUtils;
@@ -792,44 +794,15 @@ public abstract class Facet implements
 
 	protected void createContentBasedResource(
 			CreateResourceReport createResourceReport) {
-
-		ResourcePackageDetails details = createResourceReport
-				.getPackageDetails();
-		PackageDetailsKey key = details.getKey();
-		// This is the full path to a temporary file which was written by the UI
-		// layer.
-		String archivePath = key.getName();
-
-		try {
-			File archiveFile = new File(archivePath);
-
-			if (!DeploymentUtils.hasCorrectExtension(archiveFile.getName(),
-					resourceContext.getResourceType())) {
-				createResourceReport.setStatus(CreateResourceStatus.FAILURE);
-				createResourceReport
-						.setErrorMessage("Incorrect extension specified on filename [" //$NON-NLS-1$
-								+ archivePath + "]"); //$NON-NLS-1$
-
-			}
-
-			DeploymentManager deploymentManager = getConnection()
-					.getDeploymentManager();
-			DeploymentUtils
-					.deployArchive(deploymentManager, archiveFile, false);
-
-			deploymentName = archivePath;
-			createResourceReport.setResourceName(archivePath);
-			createResourceReport.setResourceKey(archivePath);
-			createResourceReport.setStatus(CreateResourceStatus.SUCCESS);
-
-		} catch (Throwable t) {
-			log.error("Error deploying application for report: " //$NON-NLS-1$
-					+ createResourceReport, t);
-			createResourceReport.setStatus(CreateResourceStatus.FAILURE);
-			createResourceReport.setException(t);
-		}
+		
+		getDeployer().deploy(createResourceReport, createResourceReport.getResourceType());
 
 	}
+	
+    private Deployer getDeployer() {
+        ProfileServiceConnection profileServiceConnection = getConnection();
+        return new RemoteDeployer(profileServiceConnection, this.resourceContext);
+    }
 
 	private static String getResourceName(Configuration pluginConfig,
 			Configuration resourceConfig) {

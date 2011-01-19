@@ -78,9 +78,12 @@ public class JBossCache<K, V> implements Cache<K, V> {
 	@Override
 	public V remove(K key) {
 		Node<K, V> node = getRootNode();
-		Node child = node.getChild(getFqn(key));
+		Fqn<String> fqn = getFqn(key);
+		Node child = node.getChild(fqn);
 		if (child != null) {
-			return (V)child.remove(key);
+			V value = (V)child.remove(key);
+			node.removeChild(fqn);
+			return value;
 		}
 		return null;
 	}
@@ -88,7 +91,14 @@ public class JBossCache<K, V> implements Cache<K, V> {
 	@Override
 	public int size() {
 		Node<K, V> node = getRootNode();
-		return node.getChildren().size();
+		int size = 0;
+		Set<Node<K,V>> nodes = new HashSet<Node<K, V>>(node.getChildren());
+		for (Node<K, V> child : nodes) {
+			if (!child.getData().isEmpty()) {
+				size++;
+			}
+		}
+		return size;
 	}
 	
 	@Override

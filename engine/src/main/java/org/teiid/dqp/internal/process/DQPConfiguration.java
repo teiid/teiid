@@ -97,7 +97,7 @@ public class DQPConfiguration{
 		this.lobChunkSizeInKB = lobChunkSizeInKB;
 	}
 
-	@ManagementProperty(description="The maximum number of query plans that are cached. Note: this is a memory based cache. (default 250)")
+	@ManagementProperty(description="The maximum number of query plans that are cached. Note: this is a memory based cache. (default 512)")
 	public int getPreparedPlanCacheMaxCount() {
 		return this.preparedPlanCacheMaxCount;
 	}

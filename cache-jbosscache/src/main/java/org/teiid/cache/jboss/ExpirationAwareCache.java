@@ -21,6 +21,9 @@
  */
 package org.teiid.cache.jboss;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.jboss.cache.Cache;
 import org.jboss.cache.Fqn;
 import org.jboss.cache.Node;
@@ -47,4 +50,20 @@ public class ExpirationAwareCache<K, V> extends JBossCache<K, V> {
 		child.put(ExpirationAlgorithmConfig.EXPIRATION_KEY, future);
 		return (V)child.put(key, value);
 	}
+	
+	@Override
+	public Set<K> keys() {
+		HashSet keys = new HashSet();
+		Node<K, V> node = getRootNode();
+		Set<Node<K, V>> children = node.getChildren();
+		for (Node<K, V> child:children) {
+			for (K key:child.getData().keySet()) {
+				if ((key instanceof String) && (key.equals(ExpirationAlgorithmConfig.EXPIRATION_KEY))) {
+					continue;
+				}
+				keys.add(key);
+			}
+		}
+		return keys;
+	}	
 }
