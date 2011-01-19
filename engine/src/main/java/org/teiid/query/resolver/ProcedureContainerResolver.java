@@ -30,6 +30,7 @@ import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -54,6 +55,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.validator.UpdateValidator;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
+import org.teiid.query.validator.UpdateValidator.UpdateType;
 
 
 public abstract class ProcedureContainerResolver implements CommandResolver {
@@ -276,14 +278,24 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
     	UpdateInfo info = (UpdateInfo)metadata.getFromMetadataCache(group.getMetadataID(), "UpdateInfo"); //$NON-NLS-1$
     	if (info == null) {
             List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(group, metadata);
-    		UpdateValidator validator = new UpdateValidator(metadata, updatePlan, deletePlan, insertPlan);
+    		UpdateValidator validator = new UpdateValidator(metadata, determineType(insertPlan), determineType(updatePlan), determineType(deletePlan));
     		info = validator.getUpdateInfo();
-    		if (info.isInherentDelete() || info.isInherentInsert() || info.isInherentUpdate()) {
-    			validator.validate(UpdateProcedureResolver.getQueryTransformCmd(group, metadata), elements);
-    		}
+			validator.validate(UpdateProcedureResolver.getQueryTransformCmd(group, metadata), elements);
     		metadata.addToMetadataCache(group.getMetadataID(), "UpdateInfo", info); //$NON-NLS-1$
     	}
 		return info;
+	}
+	
+	private static UpdateType determineType(String plan) {
+		UpdateType type = UpdateType.INHERENT;
+		if (plan != null) {
+			if (StringUtil.startsWithIgnoreCase(plan, SQLConstants.Reserved.CREATE)) {
+				type = UpdateType.UPDATE_PROCEDURE;
+			} else {
+				type = UpdateType.INSTEAD_OF;
+			}
+		}
+		return type;
 	}
     
     /** 

@@ -23,7 +23,6 @@
 package org.teiid.query.function.metadata;
 
 import java.util.Collection;
-import java.util.Iterator;
 
 import org.teiid.api.exception.query.FunctionMetadataException;
 import org.teiid.core.types.DataTypeManager;
@@ -56,11 +55,9 @@ public class FunctionMetadataValidator {
 	 * @param methods Collection of {@link FunctionMethod} objects
 	 * @param report Report to store validation errors
 	 */
-	public static final void validateFunctionMethods(Collection methods, ActivityReport report) {
+	public static final void validateFunctionMethods(Collection<FunctionMethod> methods, ActivityReport report) {
 	    if(methods != null) {
-	    	Iterator methodIter = methods.iterator();
-	    	while(methodIter.hasNext()) {
-	    		FunctionMethod method = (FunctionMethod) methodIter.next();
+	    	for (FunctionMethod method : methods) {
 	    		validateFunctionMethod(method, report);
 	    	}
 	    }

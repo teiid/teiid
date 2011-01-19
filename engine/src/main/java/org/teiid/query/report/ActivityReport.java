@@ -25,16 +25,15 @@ package org.teiid.query.report;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 
-import org.teiid.query.QueryPlugin;
+import org.teiid.core.util.Assertion;
 
 
 /**
  * A report holds the output of some activity.  The report collects information during the activity, such
  * as failures or successes.
  */
-public class ActivityReport implements Serializable {
+public class ActivityReport<R extends ReportItem> implements Serializable {
 
 	/**
 	 * Type of report
@@ -44,12 +43,7 @@ public class ActivityReport implements Serializable {
 	/**
 	 * Holder for report items.  Holds collection of {@link ReportItem}s.
 	 */
-	private Collection items = new ArrayList();
-
-	/**
-	 * Holder for report item types.  Holds collection of {@link java.lang.String}s.
-	 */
-	private Collection types = new ArrayList();
+	private Collection<R> items = new ArrayList<R>();
 
     /**
      * Construct new report of given type
@@ -71,77 +65,28 @@ public class ActivityReport implements Serializable {
 	 * Add a new item to the report.
 	 * @param item Item being added
 	 */
-	public void addItem(ReportItem item) {
-		if(item == null) {
-	    	throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.007.0001")); //$NON-NLS-1$
-	    }
-
+	public void addItem(R item) {
+		Assertion.isNotNull(item);
 	    this.items.add(item);
-	    this.types.add(item.getType());
 	}
 
     /**
      * Add a new collection of items to the report.
      * @param items Items being added
      */
-    public void addItems(Collection items) {
-        if(items == null) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.007.0001")); //$NON-NLS-1$
-        }
-
-        Iterator iter = items.iterator();
-        while(iter.hasNext()) {
-            addItem((ReportItem)iter.next());
+    public void addItems(Collection<R> items) {
+    	Assertion.isNotNull(items);
+    	for (R r : items) {
+            addItem(r);
         }
     }
 
 	public boolean hasItems() {
 	    return (this.items.size() > 0);
 	}
-
-	public Collection getItems() {
+	
+	public Collection<R> getItems() {
 		return items;
 	}
 
-	public Collection getItemsByType(String type) {
-	    Collection typedItems = new ArrayList();
-
-		Iterator iter = this.items.iterator();
-		while(iter.hasNext()) {
-			ReportItem item = (ReportItem) iter.next();
-			if(item.getType().equals(type)) {
-			    typedItems.add(item);
-			}
-		}
-
-		return typedItems;
-	}
-
-	public Collection getItemTypes() {
-	    return types;
-	}
-
-    public String toString() {
-       StringBuffer str = new StringBuffer();
-       str.append(getReportType());
-       str.append("\n"); //$NON-NLS-1$
-
-       Iterator typeIter = getItemTypes().iterator();
-       while (typeIter.hasNext()) {
-        	String type = (String) typeIter.next();
-        	str.append(type);
-        	str.append(" items:\n"); //$NON-NLS-1$
-
-        	Collection typeItems = getItemsByType(type);
-			Iterator itemIter = typeItems.iterator();
-			while(itemIter.hasNext()) {
-				ReportItem item = (ReportItem) itemIter.next();
-				str.append("\t"); //$NON-NLS-1$
-				str.append(item.toString());
-				str.append("\n"); //$NON-NLS-1$
-			}
-        }
-
-       return str.toString();
-    }
 }

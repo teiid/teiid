@@ -34,8 +34,6 @@ import java.util.Set;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.util.StringUtil;
-import org.teiid.language.SQLConstants;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
@@ -249,28 +247,20 @@ public class UpdateValidator {
 	}
 	
 	private QueryMetadataInterface metadata;
-	private ValidatorReport report = new ValidatorReport();
 	private UpdateInfo updateInfo = new UpdateInfo();
-
-	public UpdateValidator(QueryMetadataInterface qmi, String updatePlan, String deletePlan, String insertPlan) {
-		this.metadata = qmi;
-		this.updateInfo.deleteType = determineType(deletePlan);
-		this.updateInfo.insertType = determineType(insertPlan);
-		this.updateInfo.updateType = determineType(updatePlan);
-	}
-
-	private UpdateType determineType(String plan) {
-		UpdateType type = UpdateType.INHERENT;
-		if (plan != null) {
-			if (StringUtil.startsWithIgnoreCase(plan, SQLConstants.Reserved.CREATE)) {
-				type = UpdateType.UPDATE_PROCEDURE;
-			} else {
-				type = UpdateType.INSTEAD_OF;
-			}
-		}
-		return type;
-	}
 	
+	private ValidatorReport report = new ValidatorReport();
+	private ValidatorReport insertReport = new ValidatorReport();
+	private ValidatorReport updateReport = new ValidatorReport();
+	private ValidatorReport deleteReport = new ValidatorReport();
+	
+	public UpdateValidator(QueryMetadataInterface qmi, UpdateType insertType, UpdateType updateType, UpdateType deleteType) {
+		this.metadata = qmi;
+		this.updateInfo.deleteType = deleteType;
+		this.updateInfo.insertType = insertType;
+		this.updateInfo.updateType = updateType;
+	}
+		
 	public UpdateInfo getUpdateInfo() {
 		return updateInfo;
 	}
@@ -279,14 +269,41 @@ public class UpdateValidator {
 		return report;
 	}
 	
+	public ValidatorReport getDeleteReport() {
+		return deleteReport;
+	}
+	
+	public ValidatorReport getInsertReport() {
+		return insertReport;
+	}
+	
+	public ValidatorReport getUpdateReport() {
+		return updateReport;
+	}
+	
 	private void handleValidationError(String error, boolean update, boolean insert, boolean delete) {
-		report.handleValidationError(error);
+		if (update && insert && delete) {
+			report.handleValidationError(error);
+		} else {
+			if (update) {
+				updateReport.handleValidationError(error);
+			}
+			if (insert) {
+				insertReport.handleValidationError(error);
+			}
+			if (delete) {
+				deleteReport.handleValidationError(error);
+			}
+		}
 		updateInfo.updateValidationError |= update;
 		updateInfo.insertValidationError |= insert;
 		updateInfo.deleteValidationError |= delete;
 	}
 	
     public void validate(Command command, List<ElementSymbol> viewSymbols) throws QueryMetadataException, TeiidComponentException {
+    	if (this.updateInfo.deleteType != UpdateType.INHERENT && this.updateInfo.updateType != UpdateType.INHERENT && this.updateInfo.insertType != UpdateType.INHERENT) {
+    		return;
+    	}
     	if (command instanceof SetQuery) {
     		SetQuery setQuery = (SetQuery)command;
         	if (setQuery.getLimit() != null) {
@@ -327,6 +344,15 @@ public class UpdateValidator {
         	return;
     	}
     	internalValidate(command, viewSymbols);
+    	if (this.updateInfo.deleteType != UpdateType.INHERENT) {
+    		this.deleteReport.getItems().clear();
+    	}
+    	if (this.updateInfo.updateType != UpdateType.INHERENT) {
+    		this.updateReport.getItems().clear();
+    	}
+    	if (this.updateInfo.insertType != UpdateType.INHERENT) {
+    		this.insertReport.getItems().clear();
+    	}
     }
 	
     private void internalValidate(Command command, List<ElementSymbol> viewSymbols) throws QueryMetadataException, TeiidComponentException {
@@ -343,7 +369,9 @@ public class UpdateValidator {
     	}
     	
     	if (query.getWith() != null) {
-    		report.handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0002")); //$NON-NLS-1$
+    		String warning = QueryPlugin.Util.getString("ERR.015.012.0002"); //$NON-NLS-1$
+    		updateReport.handleValidationWarning(warning);
+    		deleteReport.handleValidationWarning(warning); 
     		updateInfo.isSimple = false;
     	}
 
@@ -395,12 +423,12 @@ public class UpdateValidator {
             } else {
             	//TODO: look for reversable widening conversions
             	
-                report.handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0007", viewSymbols.get(i), symbol)); //$NON-NLS-1$
+                report.handleValidationWarning(QueryPlugin.Util.getString("ERR.015.012.0007", viewSymbols.get(i), symbol)); //$NON-NLS-1$
             }
     	}
     	
     	if (query.getFrom().getClauses().size() > 1 || (!(query.getFrom().getClauses().get(0) instanceof UnaryFromClause))) {
-    		report.handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0009", query.getFrom())); //$NON-NLS-1$
+    		report.handleValidationWarning(QueryPlugin.Util.getString("ERR.015.012.0009", query.getFrom())); //$NON-NLS-1$
     		updateInfo.isSimple = false;
     	}
     	List<GroupSymbol> allGroups = query.getFrom().getGroups();
@@ -423,7 +451,9 @@ public class UpdateValidator {
 				if (info == null) {
 					continue; // not projected
 				}
-				report.handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0004", groupSymbol)); //$NON-NLS-1$
+	    		String warning = QueryPlugin.Util.getString("ERR.015.012.0004"); //$NON-NLS-1$
+	    		updateReport.handleValidationWarning(warning);
+	    		deleteReport.handleValidationWarning(warning); 
 			}
 		}
 
@@ -464,7 +494,7 @@ public class UpdateValidator {
 		}
 
 		if (!metadata.groupSupports(groupSymbol.getMetadataID(), SupportConstants.Group.UPDATE)) {
-			report.handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0003", groupSymbol)); //$NON-NLS-1$
+			report.handleValidationWarning(QueryPlugin.Util.getString("ERR.015.012.0003", groupSymbol)); //$NON-NLS-1$
 			return;
 		}
 
@@ -492,7 +522,7 @@ public class UpdateValidator {
 			return true;
 		}
 		if (this.updateInfo.insertType == UpdateType.INHERENT) {
-			report.handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0010", element, element.getGroupSymbol())); //$NON-NLS-1$
+			insertReport.handleValidationWarning(QueryPlugin.Util.getString("ERR.015.012.0010", element, element.getGroupSymbol())); //$NON-NLS-1$
 		}
 	    return false;
 	}

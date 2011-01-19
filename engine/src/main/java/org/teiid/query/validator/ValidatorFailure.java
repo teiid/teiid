@@ -28,11 +28,17 @@ import org.teiid.query.report.ReportItem;
 import org.teiid.query.sql.LanguageObject;
 
 public class ValidatorFailure extends ReportItem {
+	
+	public enum Status {
+		ERROR,
+		WARNING
+	}
 
 	public static final String VALIDATOR_FAILURE = "ValidatorFailure"; //$NON-NLS-1$
 
     // Don't want to pass this around, so make it transient
-    private transient Collection invalidObjects;  
+    private transient Collection<LanguageObject> invalidObjects;  
+    private Status status = Status.ERROR;
         
     public ValidatorFailure(String description) { 
         super(VALIDATOR_FAILURE);
@@ -42,15 +48,23 @@ public class ValidatorFailure extends ReportItem {
     public ValidatorFailure(String description, LanguageObject object) {
         super(VALIDATOR_FAILURE);
         setMessage(description);
-        this.invalidObjects = new ArrayList(1);
+        this.invalidObjects = new ArrayList<LanguageObject>(1);
         this.invalidObjects.add(object);
     }
 
-    public ValidatorFailure(String description, Collection objects) { 
+    public ValidatorFailure(String description, Collection<? extends LanguageObject> objects) { 
         super(VALIDATOR_FAILURE);
         setMessage(description);
-        this.invalidObjects = new ArrayList(objects);
+        this.invalidObjects = new ArrayList<LanguageObject>(objects);
     }
+    
+    public void setStatus(Status status) {
+		this.status = status;
+	}
+    
+    public Status getStatus() {
+		return status;
+	}
     
     /** 
      * Get count of invalid objects.
@@ -67,7 +81,7 @@ public class ValidatorFailure extends ReportItem {
      * Get the objects that failed validation.  The collection may be null.
      * @return Invalid objects, may be null
      */
-    public Collection getInvalidObjects() { 
+    public Collection<LanguageObject> getInvalidObjects() { 
         return this.invalidObjects;
     } 
     

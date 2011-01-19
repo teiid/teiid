@@ -28,9 +28,10 @@ import java.util.Iterator;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.report.ActivityReport;
 import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.validator.ValidatorFailure.Status;
 
 
-public class ValidatorReport extends ActivityReport {
+public class ValidatorReport extends ActivityReport<ValidatorFailure> {
 
 	public static final String VALIDATOR_REPORT = "Validator Report"; //$NON-NLS-1$
 
@@ -38,10 +39,8 @@ public class ValidatorReport extends ActivityReport {
         super(VALIDATOR_REPORT);
     }
 
-    public void collectInvalidObjects(Collection invalidObjects) {
-        Iterator iter = getItemsByType(ValidatorFailure.VALIDATOR_FAILURE).iterator();
-        while(iter.hasNext()) {
-            ValidatorFailure failure = (ValidatorFailure) iter.next();
+    public void collectInvalidObjects(Collection<LanguageObject> invalidObjects) {
+    	for (ValidatorFailure failure : getItems()) {
             if(failure.getInvalidObjectCount() > 0) {
                 invalidObjects.addAll(failure.getInvalidObjects());
             }
@@ -49,7 +48,7 @@ public class ValidatorReport extends ActivityReport {
     }
 
     public String getFailureMessage() {
-        Collection failures = getItemsByType(ValidatorFailure.VALIDATOR_FAILURE);
+    	Collection<ValidatorFailure> failures = getItems();
         if(failures.size() == 0) {
             return QueryPlugin.Util.getString("ERR.015.012.0064"); //$NON-NLS-1$
         } else if(failures.size() == 1) {
@@ -58,14 +57,12 @@ public class ValidatorReport extends ActivityReport {
             StringBuffer err = new StringBuffer();
             err.append(QueryPlugin.Util.getString("ERR.015.012.0063")); //$NON-NLS-1$
 
-            Iterator iter = failures.iterator();
-            ValidatorFailure failure = (ValidatorFailure) iter.next();
-            err.append(failure);
-
+            Iterator<ValidatorFailure> iter = failures.iterator();
             while(iter.hasNext()) {
-                failure = (ValidatorFailure) iter.next();
-                err.append(", "); //$NON-NLS-1$
-                err.append(failure);
+                err.append(iter.next());
+                if (iter.hasNext()) {
+                	err.append(", "); //$NON-NLS-1$
+                }
             }
             return err.toString();
         }
@@ -73,6 +70,12 @@ public class ValidatorReport extends ActivityReport {
 
     public String toString() {
         return this.getFailureMessage();
+    }
+    
+    public void handleValidationWarning(String message) {
+    	ValidatorFailure vf = new ValidatorFailure(message);
+    	vf.setStatus(Status.WARNING);
+        this.addItem(vf);
     }
     
     public void handleValidationError(String message) {
@@ -83,7 +86,7 @@ public class ValidatorReport extends ActivityReport {
         this.addItem(new ValidatorFailure(message, invalidObj));
     }
 
-    public void handleValidationError(String message, Collection invalidObjs) {
+    public void handleValidationError(String message, Collection<? extends LanguageObject> invalidObjs) {
         this.addItem(new ValidatorFailure(message, invalidObjs));
     }
 

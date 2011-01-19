@@ -52,6 +52,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
+import org.teiid.query.validator.UpdateValidator.UpdateType;
 
 @SuppressWarnings("nls")
 public class TestUpdateValidator {
@@ -65,7 +66,7 @@ public class TestUpdateValidator {
 			String vGroup = "gx";
 			Command command = createView(sql, md, vGroup);
 			
-			UpdateValidator uv = new UpdateValidator(md, null, null, null);
+			UpdateValidator uv = new UpdateValidator(md, UpdateType.INHERENT, UpdateType.INHERENT, UpdateType.INHERENT);
 			GroupSymbol gs = new GroupSymbol(vGroup);
 			ResolverUtil.resolveGroup(gs, md);
 			uv.validate(command, ResolverUtil.resolveElementsInGroup(gs, md));
