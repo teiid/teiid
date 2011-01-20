@@ -512,7 +512,7 @@
 			</operation>
 
 			<operation name="reloadMaterializedView" displayName="Refresh a Materialized View"
-				description="Refresh a given any Materialized View for this VDB">
+				description="Refresh a given Materialized View for this VDB">
 				<parameters>
 					<c:simple-property displayName="Materialized View Schema"
 						name="schema" type="string" required="true"
