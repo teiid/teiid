@@ -49,14 +49,14 @@ public class ProcedureExecutionParentImpl implements ProcedureExecution, Procedu
 
 	@Override
 	public void execute() throws TranslatorException {
-		if(getCommand().getProcedureName().endsWith("getUpdated")) {
+		if("GetUpdated".equalsIgnoreCase(getCommand().getMetadataObject().getNameInSource())) { //$NON-NLS-1$
 			execution = new GetUpdatedExecutionImpl(this);
-			execution.execute(this);
-		}
-		else if(getCommand().getProcedureName().endsWith("getDeleted")) {
+		} else if("GetDeleted".equalsIgnoreCase(getCommand().getMetadataObject().getNameInSource())) { //$NON-NLS-1$
 			execution = new GetDeletedExecutionImpl(this);
-			execution.execute(this);
+		} else {
+			throw new AssertionError("Unknown procedure " + getCommand().getProcedureName() + " with name in source " + getCommand().getMetadataObject().getNameInSource()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
+		execution.execute(this);
 	}
 
 	public void setCommand(Call command) {
