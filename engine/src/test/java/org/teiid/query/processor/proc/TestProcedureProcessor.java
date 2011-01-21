@@ -2697,5 +2697,41 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
+    @Test public void testReturnParamWithNoResultSetVirtual() throws Exception {
+        String sql = "EXEC TEIIDSP8(51)";     //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.exampleBQTCached();
+        ProcessorPlan plan = getProcedurePlan(sql, metadata);
+
+        // Set up data
+        FakeDataManager dataMgr = new FakeDataManager();
+  
+        // Create expected results
+        List[] expected = new List[] { Arrays.asList(51) }; //$NON-NLS-1$
+        helpTestProcess(plan, expected, dataMgr, metadata);
+    }
+    
+    @Test(expected=QueryProcessingException.class) public void testParamsWithResultSetVirtualNotNull() throws Exception {
+        String sql = "{? = call TEIIDSP9(51)}";     //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.exampleBQTCached();
+        ProcessorPlan plan = getProcedurePlan(sql, metadata);
+
+        FakeDataManager dataMgr = new FakeDataManager();
+  
+        helpTestProcess(plan, null, dataMgr, metadata);
+    }
+
+    @Test public void testParamsWithResultSetVirtual() throws Exception {
+        String sql = "{? = call TEIIDSP9(1)}";     //$NON-NLS-1$
+        TransformationMetadata metadata = RealMetadataFactory.exampleBQTCached();
+        ProcessorPlan plan = getProcedurePlan(sql, metadata);
+
+        FakeDataManager dataMgr = new FakeDataManager();
+  
+        List[] expected = new List[] { Arrays.asList("hello", null, null), 
+        		Arrays.asList(null, 1, 10) }; //$NON-NLS-1$
+
+        helpTestProcess(plan, expected, dataMgr, metadata);
+    }
+
     private static final boolean DEBUG = false;
 }

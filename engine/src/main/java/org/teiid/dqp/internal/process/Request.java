@@ -323,7 +323,7 @@ public class Request {
         // Validate with visitor
         ValidatorReport report = Validator.validate(command, metadata, visitor);
         if (report.hasItems()) {
-            ValidatorFailure firstFailure = (ValidatorFailure) report.getItems().iterator().next();
+            ValidatorFailure firstFailure = report.getItems().iterator().next();
             throw new QueryValidatorException(firstFailure.getMessage());
         }
     }

@@ -442,10 +442,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 
     public void visit(CreateUpdateProcedureCommand obj) {
         if(!obj.isUpdateProcedure()){
-        	//Every virtual procedure should have at least one query.
-        	if(CommandCollectorVisitor.getCommands(obj).isEmpty()){
-        		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.Procedure_should_have_query"), obj); //$NON-NLS-1$
-        	}
         	
             //check that the procedure does not contain references to itself
             if (GroupCollectorVisitor.getGroups(obj,true).contains(obj.getVirtualGroup())) {

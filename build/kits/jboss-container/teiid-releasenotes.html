@@ -26,21 +26,7 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <UL>
-	<LI><B>Subquery Optimization</B> - added rewrite to INNER JOIN for applicable WHERE clause subqueries. Also added cost based SEMI and ANTI-SEMI join handling for applicable non-pushed WHERE and HAVING subqueries.
-	<LI><B>Updatable Views</B>
-	    <UL>
-	        <LI>Added support to perform simple pass-through and more complicated updates through views by default.
-	        <LI>Added support for "FOR EACH ROW" update procedure handling (similar to INSTEAD OF triggers in other DBMS's), which should be used instead of the deprecated TRANSLATE criteria approach.
-	    </UL>
-	<LI><B>Temp table enhancements</B> - added support for the SERIAL datatype, which is a not null INTEGER that auto-increments, and the ability to specify a column as NOT NULL.                     
-	<LI><B>UDF</B> - new API objects added to teiid-api to support user defined functions that are capable of pushdown to source.
-	<LI><B>Unescape Function</B> - a new system function, unescape, was added to handle common \ escaping in strings including octal, hex/unicode, \b, \r, \n, \f, and \t.
-	<LI><B>Predicate Optimization</B> - expanded optimizations for detecting always false conditions when using IS NULL, IN, or comparison predicates with literal values.
-	<LI><B>Partition-wise Optimizations</B> - Views defined by partitioned unions (union alls where each branch has a projected literal or an IN predicate that makes its values mutually exclusive from the other branches) can 
-	be used in aggregation or joins and the optimizer will take advantage of the partitioning information.  For example, when a partitioned union is joined against another partitioned union, the optimizer will reorganize the join of unions into a union of joins.
-	<LI><B>Delegate Translator</B> - A new translator base class was added that is capable of delegating all the calls to another configured translator.
-	<LI><B>JDBC Reauthentication</B> - Teiid connections (defined by the org.teiid.jdbc.TeiidConnection interface) now support the changeUser method to reauthenticate a given connection.
-	<LI><B>Lob Caching</B> - Lobs are allowed to cache to disk as part of ResultSet caching. Distributed lob caching is not allowed. 
+	<LI><B>Virtual procedure out params</B> - virtual procedures can now have RETURN/OUT/INOUT parameters to return values.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

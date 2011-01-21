@@ -40,6 +40,7 @@ import org.teiid.language.SQLConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
@@ -181,7 +182,7 @@ public class UpdateProcedureResolver implements CommandResolver {
         externalGroups = new GroupContext(externalGroups, null);
         
         //create a new variables group for this block
-        GroupSymbol variables = ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, store, externalGroups, new LinkedList());
+        GroupSymbol variables = ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, store, externalGroups, new LinkedList<SingleElementSymbol>());
         
         for (Statement statement : block.getStatements()) {
             resolveStatement(command, statement, externalGroups, variables, metadata);
@@ -218,9 +219,17 @@ public class UpdateProcedureResolver implements CommandResolver {
                 			continue;
                 		}
             			switch (param.getParameterType()) {
-        	            case ParameterInfo.INOUT:
         	            case ParameterInfo.OUT:
         	            case ParameterInfo.RETURN_VALUE:
+        	            	if (param.getExpression() instanceof ElementSymbol && !metadata.elementSupports(((ElementSymbol)param.getExpression()).getMetadataID(), SupportConstants.Element.UPDATE)) {
+        	                    throw new QueryResolverException(QueryPlugin.Util.getString("UpdateProcedureResolver.only_variables", param.getExpression())); //$NON-NLS-1$
+        	            	}
+        	            	sp.setCallableStatement(true);
+        	            	break;
+        	            case ParameterInfo.INOUT:
+        	            	if (param.getExpression() instanceof ElementSymbol && !metadata.elementSupports(((ElementSymbol)param.getExpression()).getMetadataID(), SupportConstants.Element.UPDATE)) {
+        	            		continue;
+        	            	}
         	            	sp.setCallableStatement(true);
         	            	break;
         	            }
@@ -277,7 +286,7 @@ public class UpdateProcedureResolver implements CommandResolver {
                 } else if (statement.getType() == Statement.TYPE_ASSIGNMENT) {
                 	AssignmentStatement assStmt = (AssignmentStatement)statement;
                     ResolverVisitor.resolveLanguageObject(assStmt.getVariable(), null, externalGroups, metadata);
-                    if (statement.getType() == Statement.TYPE_ASSIGNMENT && !assStmt.getVariable().getGroupSymbol().getCanonicalName().equals(ProcedureReservedWords.VARIABLES)) {
+                    if (!metadata.elementSupports(assStmt.getVariable().getMetadataID(), SupportConstants.Element.UPDATE)) {
                         throw new QueryResolverException(QueryPlugin.Util.getString("UpdateProcedureResolver.only_variables", assStmt.getVariable())); //$NON-NLS-1$
                     }
                     //don't allow variable assignments to be external
@@ -326,7 +335,7 @@ public class UpdateProcedureResolver implements CommandResolver {
                 metadata = new TempMetadataAdapter(metadata.getMetadata(), store);
                 externalGroups = new GroupContext(externalGroups, null);
                 
-                ProcedureContainerResolver.addScalarGroup(groupName, store, externalGroups, symbols);
+                ProcedureContainerResolver.addScalarGroup(groupName, store, externalGroups, symbols, false);
                 
                 resolveBlock(command, loopStmt.getBlock(), externalGroups, metadata);
                 break;
@@ -375,7 +384,9 @@ public class UpdateProcedureResolver implements CommandResolver {
         }
         variable.setType(DataTypeManager.getDataTypeClass(typeName));
         variable.setGroupSymbol(variables);
-        variable.setMetadataID(new TempMetadataID(variable.getName(), variable.getType()));
+        TempMetadataID id = new TempMetadataID(variable.getName(), variable.getType());
+        id.setUpdatable(true);
+        variable.setMetadataID(id);
         //TODO: this will cause the variables group to loose it's cache of resolved symbols
         metadata.getMetadataStore().addElementToTempGroup(ProcedureReservedWords.VARIABLES, (ElementSymbol)variable.clone());
     }

@@ -23,6 +23,8 @@
 package org.teiid.query.optimizer;
 
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -50,6 +52,7 @@ import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.TranslatableProcedureContainer;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
@@ -129,6 +132,24 @@ public class QueryOptimizer {
 	        	LinkedHashMap<ElementSymbol, Expression> params = container.getProcedureParameters();
 	        	if (container instanceof StoredProcedure) {
 	        		plan.setRequiresTransaction(container.getUpdateCount() > 0);
+	        		StoredProcedure sp = (StoredProcedure)container;
+	        		if (sp.returnParameters()) {
+	        			List<ElementSymbol> outParams = new LinkedList<ElementSymbol>();
+	        			for (SPParameter param : sp.getParameters()) {
+							if (param.getParameterType() == SPParameter.RETURN_VALUE) {
+								outParams.add(param.getParameterSymbol());
+							}
+						}
+	        			for (SPParameter param : sp.getParameters()) {
+							if (param.getParameterType() == SPParameter.INOUT || 
+									param.getParameterType() == SPParameter.OUT) {
+								outParams.add(param.getParameterSymbol());
+							}
+						}
+	        			if (outParams.size() > 0) {
+	        				plan.setOutParams(outParams);
+	        			}
+	        		}
 	        	}
 	            plan.setParams(params);
 	            plan.setMetadata(metadata);

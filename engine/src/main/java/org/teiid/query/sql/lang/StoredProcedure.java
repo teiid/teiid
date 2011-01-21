@@ -397,13 +397,10 @@ public class StoredProcedure extends ProcedureContainer {
 	 * @since 5.0
 	 */
 	public LinkedHashMap<ElementSymbol, Expression> getProcedureParameters() {
-	    
 		LinkedHashMap<ElementSymbol, Expression> map = new LinkedHashMap<ElementSymbol, Expression>();
-	    for (Iterator iter = this.getInputParameters().iterator(); iter.hasNext();) {
-	        
-	        SPParameter element = (SPParameter)iter.next();
+	    for (SPParameter element : this.getInputParameters()) {
 	        map.put(element.getParameterSymbol(), element.getExpression());            
-	   } // for
+	    } // for
 	    
 	    return map;
 	}

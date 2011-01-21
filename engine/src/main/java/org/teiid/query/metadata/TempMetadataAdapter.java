@@ -340,10 +340,15 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
                 case SupportConstants.Element.NULL: {
                 	if (id.isNotNull()) {
                 		return false;
+                	} 
+                	if (id.isTempTable()) {
+                		return true;
                 	}
                 	break;
                 }
                 case SupportConstants.Element.AUTO_INCREMENT:	 return id.isAutoIncrement();
+                case SupportConstants.Element.UPDATE:			 return id.isTempTable() || id.isUpdatable();
+                
             }
             
             // If this is a temp table column or real metadata is unknown, return hard-coded values
@@ -351,7 +356,6 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
             if(elementID == null || id.isTempTable()) {
                 switch(supportConstant) {
                     case SupportConstants.Element.NULL:              return true;
-                    case SupportConstants.Element.UPDATE:            return true;
                     case SupportConstants.Element.SIGNED:            return true;
                 }
                 

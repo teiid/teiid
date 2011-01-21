@@ -25,10 +25,10 @@ package org.teiid.query.processor.proc;
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
@@ -94,9 +95,10 @@ public class ProcedurePlan extends ProcessorPlan {
     // Temp state for final results
     private TupleSource finalTupleSource;
     private int beginBatch = 1;
-    private List batchRows;
+    private List<Object> batchRows;
     private boolean lastBatch = false;
     private LinkedHashMap<ElementSymbol, Expression> params;
+    private List<ElementSymbol> outParams;
     private Map<ElementSymbol, Reference> implicitParams;
     private QueryMetadataInterface metadata;
 
@@ -117,7 +119,7 @@ public class ProcedurePlan extends ProcessorPlan {
     
     private TempTableStore tempTableStore;
     
-    private LinkedList tempContext = new LinkedList();
+    private LinkedList<Set<String>> tempContext = new LinkedList<Set<String>>();
 	private SubqueryAwareEvaluator evaluator;
 	
     // Stack of programs, with current program on top
@@ -186,6 +188,11 @@ public class ProcedurePlan extends ProcessorPlan {
 
     public void open() throws TeiidProcessingException, TeiidComponentException {
     	if (!this.evaluatedParams) {
+    		if (this.outParams != null) {
+    			for (ElementSymbol param : this.outParams) {
+					setParameterValue(param, getCurrentVariableContext(), null);
+				}
+    		}
     		if (this.params != null) { 
 		        for (Map.Entry<ElementSymbol, Expression> entry : this.params.entrySet()) {
 		            ElementSymbol param = entry.getKey();
@@ -195,9 +202,7 @@ public class ProcedurePlan extends ProcessorPlan {
 		            Object value = this.evaluateExpression(expr);
 		
 		            //check constraint
-		            if (value == null && !metadata.elementSupports(param.getMetadataID(), SupportConstants.Element.NULL)) {
-		                throw new QueryValidatorException(QueryPlugin.Util.getString("ProcedurePlan.nonNullableParam", expr)); //$NON-NLS-1$
-		            }
+		            checkNotNull(param, value);
 		            setParameterValue(param, context, value);
 		        }
     		}
@@ -213,6 +218,14 @@ public class ProcedurePlan extends ProcessorPlan {
     	}
     	this.evaluatedParams = true;
     }
+
+	private void checkNotNull(ElementSymbol param, Object value)
+			throws TeiidComponentException, QueryMetadataException,
+			QueryValidatorException {
+		if (value == null && !metadata.elementSupports(param.getMetadataID(), SupportConstants.Element.NULL)) {
+		    throw new QueryValidatorException(QueryPlugin.Util.getString("ProcedurePlan.nonNullableParam", param)); //$NON-NLS-1$
+		}
+	}
 
 	protected void setParameterValue(ElementSymbol param,
 			VariableContext context, Object value) {
@@ -245,11 +258,22 @@ public class ProcedurePlan extends ProcessorPlan {
             // May throw BlockedException and exit here
             List tuple = this.finalTupleSource.nextTuple();
             if(tuple == null) {
+            	if (outParams != null) {
+            		VariableContext vc = getCurrentVariableContext();
+            		List<Object> paramTuple = Arrays.asList(new Object[this.getOutputElements().size()]);
+            		int i = this.getOutputElements().size() - this.outParams.size();
+            		for (ElementSymbol param : outParams) {
+            			Object value = vc.getValue(param);
+            			checkNotNull(param, value);
+						paramTuple.set(i++, value);
+					}
+            		addBatchRow(paramTuple, true);
+            	}
                 terminateBatches();
                 done = true;
                 break;
             }
-            addBatchRow(tuple);
+            addBatchRow(tuple, false);
         }
 
         return pullBatch();
@@ -340,15 +364,23 @@ public class ProcedurePlan extends ProcessorPlan {
         plan.setUpdateProcedure(this.isUpdateProcedure());
         plan.setOutputElements(this.getOutputElements());
         plan.setParams(params);
+        plan.setOutParams(outParams);
         plan.setImplicitParams(implicitParams);
         plan.setMetadata(metadata);
         plan.requiresTransaction = requiresTransaction;
         return plan;
     }
 
-    private void addBatchRow(List row) {
+	private void addBatchRow(List<?> row, boolean last) {
         if(this.batchRows == null) {
-            this.batchRows = new ArrayList(this.batchSize);
+            this.batchRows = new ArrayList<Object>(this.batchSize/4);
+        }
+        if (!last && this.outParams != null) {
+        	List<Object> newRow = Arrays.asList(new Object[row.size() + this.outParams.size()]);
+        	for (int i = 0; i < row.size(); i++) {
+				newRow.set(i, row.get(i));
+			}
+        	row = newRow;
         }
         this.batchRows.add(row);
     }
@@ -389,6 +421,10 @@ public class ProcedurePlan extends ProcessorPlan {
     public void setMetadata( QueryMetadataInterface metadata ) {
         this.metadata = metadata;
     }
+    
+    public void setOutParams(List<ElementSymbol> outParams) {
+		this.outParams = outParams;
+	}
 
     public void setParams( LinkedHashMap<ElementSymbol, Expression> params ) {
         this.params = params;
@@ -456,9 +492,9 @@ public class ProcedurePlan extends ProcessorPlan {
             	//process assignments
             	Assertion.assertTrue(this.currentState.currentRow != null);
             	for (Map.Entry<ElementSymbol, ElementSymbol> entry : procAssignments.entrySet()) {
-            		if (entry.getValue() == null) {
-            			continue;
-            		}
+            		if (entry.getValue() == null || !metadata.elementSupports(entry.getValue().getMetadataID(), SupportConstants.Element.UPDATE)) {
+	            		continue;
+	            	}
             		int index = this.currentState.processor.getOutputElements().indexOf(entry.getKey());
             		getCurrentVariableContext().setValue(entry.getValue(), DataTypeManager.transformValue(this.currentState.currentRow.get(index), entry.getValue().getType()));
 				}
@@ -489,15 +525,15 @@ public class ProcedurePlan extends ProcessorPlan {
         if (this.currentVarContext.getParentContext() != null) {
         	this.currentVarContext = this.currentVarContext.getParentContext();
         }
-        Set current = getTempContext();
+        Set<String> current = getTempContext();
 
-        Set tempTables = getLocalTempTables();
+        Set<String> tempTables = getLocalTempTables();
 
         tempTables.addAll(current);
         
         if (program != originalProgram) {
-	        for (Iterator i = tempTables.iterator(); i.hasNext();) {
-	            this.tempTableStore.removeTempTableByName((String)i.next());
+        	for (String table : tempTables) {
+	            this.tempTableStore.removeTempTableByName(table);
 	        }
         }
         this.tempContext.removeLast();
@@ -510,12 +546,12 @@ public class ProcedurePlan extends ProcessorPlan {
         context.setParentContext(this.currentVarContext);
         this.currentVarContext = context;
         
-        Set current = getTempContext();
+        Set<String> current = getTempContext();
         
-        Set tempTables = getLocalTempTables();
+        Set<String> tempTables = getLocalTempTables();
         
         current.addAll(tempTables);
-        this.tempContext.add(new HashSet());
+        this.tempContext.add(new HashSet<String>());
     }
     
     public void incrementProgramCounter() throws TeiidComponentException {
@@ -531,21 +567,21 @@ public class ProcedurePlan extends ProcessorPlan {
     /** 
      * @return
      */
-    private Set getLocalTempTables() {
-        Set tempTables = this.tempTableStore.getAllTempTables();
+    private Set<String> getLocalTempTables() {
+        Set<String> tempTables = this.tempTableStore.getAllTempTables();
         
         //determine what was created in this scope
         for (int i = 0; i < tempContext.size() - 1; i++) {
-            tempTables.removeAll((Set)tempContext.get(i));
+            tempTables.removeAll(tempContext.get(i));
         }
         return tempTables;
     }
 
-    public Set getTempContext() {
+    public Set<String> getTempContext() {
         if (this.tempContext.isEmpty()) {
-            tempContext.addLast(new HashSet());
+            tempContext.addLast(new HashSet<String>());
         }
-        return (Set)this.tempContext.getLast();
+        return this.tempContext.getLast();
     }
 
     public List getCurrentRow(String rsName) throws TeiidComponentException {

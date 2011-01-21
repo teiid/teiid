@@ -305,8 +305,9 @@ END</synopsis>
         expected result set and parameters of the procedure.</para>      
     </section>
     <section>
-      <title>Procedure Input Parameters</title>
-      <para>Virtual procedures can take zero or more input parameters. Each input has the following information that is used during runtime processing: </para>
+      <title>Procedure Parameters</title>
+      <para>Virtual procedures can take zero or more IN/INOUT parameters and may also have any number of OUT parameters and an optional RETURN parameter.
+       Each input has the following information that is used during runtime processing: </para>
       <itemizedlist>
         <listitem>
           <para>Name - The name of the input parameter</para>
@@ -321,16 +322,20 @@ END</synopsis>
           <para>Nullable - NO_NULLS, NULLABLE, NULLABLE_UNKNOWN; parameter is optional if nullable, and is not required to be listed when using named parameter syntax</para>
         </listitem>
       </itemizedlist>
-      <para>You reference an input to a virtual procedure by using the fully-qualified name of the param (or less if unambiguous). For example, MySchema.MyProc.Param1.
+      <para>You reference a parameter in a virtual procedure by using the fully-qualified name of the param (or less if unambiguous). For example, MySchema.MyProc.Param1.
       </para>
       <example>
-        <title>Example of Referencing an Input Parameter for 'GetBalance' Procedure</title>
+        <title>Example of Referencing an Input Parameter and Assigning an Out Parameter for 'GetBalance' Procedure</title>
         <programlisting>
 CREATE VIRTUAL PROCEDURE 
 BEGIN 
+  MySchema.GetBalance.RetVal = UPPER(MySchema.GetBalance.AcctID);
   SELECT Balance FROM MySchema.Accts WHERE MySchema.Accts.AccountID = MySchema.GetBalance.AcctID; 
 END</programlisting>
       </example>
+      <para>If an INOUT parameter is not assigned any value in a procedure it will remain the value it was assigned for input.  
+      Any OUT/RETURN parameter not assigned a value will remain the as the default NULL value.  
+      The INOUT/OUT/RETURN output values are validated against the NOT NULL metadata of the parameter.</para>
     </section>
     <section>
       <title>Example Virtual Procedures</title>

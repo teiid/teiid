@@ -585,7 +585,7 @@ public class TestProcedureRelational {
             TestProcessor.doProcess(plan, dataManager, expected, TestProcessor.createCommandContext()); 
             fail("QueryPlannerException was expected.");  //$NON-NLS-1$
         } catch (QueryValidatorException e) {
-        	assertEquals("The procedure parameter is not nullable, but is set to null: pm1.vsp26.param2",e.getMessage());  //$NON-NLS-1$
+        	assertEquals("The procedure parameter pm1.vsp26.param2 is not nullable, but is set to null.",e.getMessage());  //$NON-NLS-1$
         }
     }
     

@@ -235,15 +235,18 @@ public class ExecResolver extends ProcedureContainerResolver {
         GroupContext context = new GroupContext();
 
         // Look through parameters to find input elements - these become child metadata
-        List<ElementSymbol> tempElements = new ArrayList<ElementSymbol>();
+        List<ElementSymbol> tempElements = new ArrayList<ElementSymbol>(storedProcedureCommand.getParameters().size());
+        boolean[] updatable = new boolean[storedProcedureCommand.getParameters().size()];
+        int i = 0;
         for (SPParameter param : storedProcedureCommand.getParameters()) {
-            if(param.getParameterType() == ParameterInfo.IN || param.getParameterType() == ParameterInfo.INOUT) {
+            if(param.getParameterType() != ParameterInfo.RESULT_SET) {
                 ElementSymbol symbol = param.getParameterSymbol();
                 tempElements.add(symbol);
+                updatable[i++] = param.getParameterType() != ParameterInfo.IN;  
             }
         }
 
-        ProcedureContainerResolver.addScalarGroup(procName, discoveredMetadata, context, tempElements);
+        ProcedureContainerResolver.addScalarGroup(procName, discoveredMetadata, context, tempElements, updatable);
         
         return context;
     }
@@ -264,7 +267,7 @@ public class ExecResolver extends ProcedureContainerResolver {
             if(expr == null) {
             	continue;
             }
-            for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr)) {
+            for (SubqueryContainer<?> container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr)) {
                 QueryResolver.setChildMetadata(container.getCommand(), command);
                 
                 QueryResolver.resolveCommand(container.getCommand(), metadata.getMetadata());

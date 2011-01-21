@@ -1674,7 +1674,7 @@ public class TestValidator {
         // Validate
         ValidatorReport report = Validator.validate(command, metadata); 
         // Validate
-        assertEquals(1, report.getItems().size());  	
+        assertEquals(0, report.getItems().size());  	
     }
 	
     @Test public void testDefect21389() throws Exception{        

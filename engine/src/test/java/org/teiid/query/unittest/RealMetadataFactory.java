@@ -267,6 +267,20 @@ public class RealMetadataFactory {
         Procedure vsp7 = createVirtualProcedure("TEIIDSP7", mmspTest1, Arrays.asList(vsp7p1), vspqn7); //$NON-NLS-1$
         vsp7.setResultSet(vsprs7);
         
+        ProcedureParameter vsp8p1 = createParameter("r", ParameterInfo.RETURN_VALUE, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        ProcedureParameter vsp8p2 = createParameter("p1", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        QueryNode vspqn8 = new QueryNode("TEIIDSP8", "CREATE VIRTUAL PROCEDURE BEGIN r = p1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        createVirtualProcedure("TEIIDSP8", mmspTest1, Arrays.asList(vsp8p1, vsp8p2), vspqn8); //$NON-NLS-1$
+
+        ColumnSet<Procedure> vsprs9 = createResultSet("TEIIDSP9.vsprs1", new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
+        ProcedureParameter vsp9p1 = createParameter("r", ParameterInfo.RETURN_VALUE, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        vsp9p1.setNullType(NullType.No_Nulls);
+        ProcedureParameter vsp9p2 = createParameter("p1", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        ProcedureParameter vsp9p3 = createParameter("p2", ParameterInfo.OUT, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        QueryNode vspqn9 = new QueryNode("TEIIDSP9", "CREATE VIRTUAL PROCEDURE BEGIN if (p1 = 1) begin\n r = 1; end\n p2 = 10; select 'hello'; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        Procedure vsp9 = createVirtualProcedure("TEIIDSP9", mmspTest1, Arrays.asList(vsp9p1, vsp9p2, vsp9p3), vspqn9); //$NON-NLS-1$
+        vsp9.setResultSet(vsprs9);
+        
         // this is for the source added function
         bqt1.addFunction(new FunctionMethod("reverse", "reverse", "misc", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
                 new FunctionParameter[] {new FunctionParameter("columnName", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$

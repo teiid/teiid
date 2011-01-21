@@ -23,6 +23,7 @@
 package org.teiid.query.resolver;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -53,6 +54,7 @@ import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.validator.UpdateValidator;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 import org.teiid.query.validator.UpdateValidator.UpdateType;
@@ -119,10 +121,10 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
             List<ElementSymbol> viewElements = ResolverUtil.resolveElementsInGroup(ta.getView(), metadata);
             if (procCommand instanceof Update || procCommand instanceof Insert) {
             	addChanging(tma.getMetadataStore(), externalGroups, viewElements);
-            	ProcedureContainerResolver.addScalarGroup(SQLConstants.Reserved.NEW, tma.getMetadataStore(), externalGroups, viewElements);
+            	ProcedureContainerResolver.addScalarGroup(SQLConstants.Reserved.NEW, tma.getMetadataStore(), externalGroups, viewElements, false);
             }
             if (procCommand instanceof Update || procCommand instanceof Delete) {
-            	ProcedureContainerResolver.addScalarGroup(SQLConstants.Reserved.OLD, tma.getMetadataStore(), externalGroups, viewElements);
+            	ProcedureContainerResolver.addScalarGroup(SQLConstants.Reserved.OLD, tma.getMetadataStore(), externalGroups, viewElements, false);
             }
             QueryResolver.setChildMetadata(subCommand, tma.getMetadataStore().getData(), externalGroups);
             QueryResolver.resolveCommand(subCommand, metadata);
@@ -192,8 +194,8 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
             inputElments.add(inputElement);
         }
 
-        addScalarGroup(ProcedureReservedWords.INPUT, discoveredMetadata, externalGroups, inputElments);
-        addScalarGroup(ProcedureReservedWords.INPUTS, discoveredMetadata, externalGroups, inputElments);
+        addScalarGroup(ProcedureReservedWords.INPUT, discoveredMetadata, externalGroups, inputElments, false);
+        addScalarGroup(ProcedureReservedWords.INPUTS, discoveredMetadata, externalGroups, inputElments, false);
 
         // Switch type to be boolean for all CHANGING variables
         addChanging(discoveredMetadata, externalGroups, elements);
@@ -210,7 +212,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
             changingElements.add(changeElement);
         }
 
-        addScalarGroup(ProcedureReservedWords.CHANGING, discoveredMetadata, externalGroups, changingElements);
+        addScalarGroup(ProcedureReservedWords.CHANGING, discoveredMetadata, externalGroups, changingElements, false);
 	}
         
     /** 
@@ -313,13 +315,27 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         procCommand.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(group, metadata, procCommand.getType()));
     }
 
-	public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List symbols) {
+    public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List<? extends SingleElementSymbol> symbols) {
+    	return addScalarGroup(name, metadata, externalGroups, symbols, true);
+    }
+    
+	public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List<? extends SingleElementSymbol> symbols, boolean updatable) {
+		boolean[] updateArray = new boolean[symbols.size()];
+		if (updatable) {
+			Arrays.fill(updateArray, true);
+		}
+		return addScalarGroup(name, metadata, externalGroups, symbols, updateArray);
+	}
+	
+	public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List<? extends SingleElementSymbol> symbols, boolean[] updatable) {
 		GroupSymbol variables = new GroupSymbol(name);
 	    externalGroups.addGroup(variables);
 	    TempMetadataID tid = metadata.addTempGroup(name, symbols);
 	    tid.setMetadataType(Type.SCALAR);
+	    int i = 0;
 	    for (TempMetadataID cid : tid.getElements()) {
 			cid.setMetadataType(Type.SCALAR);
+			cid.setUpdatable(updatable[i++]);
 		}
 	    variables.setMetadataID(tid);
 	    return variables;

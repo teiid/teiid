@@ -78,6 +78,7 @@ public class TempMetadataID implements Serializable {
     private Class<?> type;     // type of this element, only for element
     private boolean autoIncrement;
     private boolean notNull;
+    private boolean updatable;
     
     /**
      * Constructor for group form of metadata ID.
@@ -273,6 +274,10 @@ public class TempMetadataID implements Serializable {
 	public void setMetadataType(Type metadataType) {
 		this.metadataType = metadataType;
 	}
+	
+	public Type getMetadataType() {
+		return metadataType;
+	}
 
 	public List<TempMetadataID> getPrimaryKey() {
 		return getTableData().primaryKey;
@@ -349,6 +354,14 @@ public class TempMetadataID implements Serializable {
 	
 	public void setNotNull(boolean notNull) {
 		this.notNull = notNull;
+	}
+	
+	public void setUpdatable(boolean updatable) {
+		this.updatable = updatable;
+	}
+	
+	public boolean isUpdatable() {
+		return updatable;
 	}
 		
 }

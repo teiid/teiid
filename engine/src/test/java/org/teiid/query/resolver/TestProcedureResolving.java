@@ -1319,7 +1319,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
         helpFailUpdateProcedure(procedure, userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE, "Element symbol \"INPUTS.e1\" cannot be assigned a value.  Only declared VARIABLES can be assigned values."); //$NON-NLS-1$
+                                     FakeMetadataObject.Props.UPDATE_PROCEDURE);
     }
     
     // validating CHANGING element assigned
@@ -1334,7 +1334,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
         helpFailUpdateProcedure(procedure, userUpdateStr,
-                                     FakeMetadataObject.Props.UPDATE_PROCEDURE, "Element symbol \"CHANGING.e1\" cannot be assigned a value.  Only declared VARIABLES can be assigned values."); //$NON-NLS-1$
+                                     FakeMetadataObject.Props.UPDATE_PROCEDURE);
     }
     
     // variables cannot be used among insert elements
