@@ -572,12 +572,13 @@ public class RealMetadataFactory {
      * @param name Name of procedure, must match model name
      * @param model Metadata object for the model
      * @param params List of FakeMetadataObject that are the parameters for the procedure
-     * @param callableName Callable name of procedure, usually same as procedure name
+     * @param nameInSource Callable name of procedure, usually same as procedure name
      * @return Metadata object for stored procedure
      */
-    public static Procedure createStoredProcedure(String name, Schema model, List<ProcedureParameter> params, String callableName) {
+    public static Procedure createStoredProcedure(String name, Schema model, List<ProcedureParameter> params, String nameInSource) {
     	Procedure proc = new Procedure();
     	proc.setName(name);
+    	proc.setNameInSource(nameInSource);
     	if (params != null) {
     		int index = 1;
 	    	for (ProcedureParameter procedureParameter : params) {
