@@ -46,7 +46,9 @@ public class Schema extends AbstractMetadataRecord {
 	
 	public void addProcedure(Procedure procedure) {
 		procedure.setParent(this);
-		this.procedures.put(procedure.getName().toLowerCase(), procedure);
+		if (this.procedures.put(procedure.getName().toLowerCase(), procedure) != null) {
+			throw new AssertionError("Duplicate Procedure " + procedure.getName()); //$NON-NLS-1$
+		}
 	}
 	
 	public void addFunction(FunctionMethod function) {

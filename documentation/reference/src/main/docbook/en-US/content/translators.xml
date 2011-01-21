@@ -423,6 +423,11 @@
                         <entry>false will override the default and direct Teiid to create source queries using unquoted identifiers.</entry>
                         <entry>true</entry>
                     </row>
+                    <row>
+                        <entry>useProcedureSpecificName</entry>
+                        <entry>true will allow the import of overloaded procedures (which will normally result in a duplicate procedure error) by using the unique procedure specific name as the Teiid name.  This option will only work with JDBC 4.0 compatable drivers that report specific names.</entry>
+                        <entry>false</entry>
+                    </row>
                 </tbody>
             </tgroup>
         </table>

@@ -82,6 +82,7 @@ public class JDBCMetdataProcessor {
 	private boolean importApproximateIndexes = true;
 	private boolean widenUnsingedTypes = true;
 	private boolean quoteNameInSource = true;
+	private boolean useProcedureSpecificName;
 	//TODO add an option to not fully qualify name in source
 	
 	private Set<String> unsignedTypes = new HashSet<String>();
@@ -129,13 +130,18 @@ public class JDBCMetdataProcessor {
 			DatabaseMetaData metadata) throws SQLException, TranslatorException {
 		LogManager.logDetail("JDBCMetadataProcessor - Importing procedures"); //$NON-NLS-1$
 		ResultSet procedures = metadata.getProcedures(catalog, schemaPattern, procedureNamePattern);
+		int rsColumns = procedures.getMetaData().getColumnCount();
 		while (procedures.next()) {
 			String procedureCatalog = procedures.getString(1);
 			String procedureSchema = procedures.getString(2);
 			String procedureName = procedures.getString(3);
+			String nameInSource = procedureName;
+			if (useProcedureSpecificName && rsColumns >= 9) {
+				procedureName = procedures.getString(9);
+			}
 			String fullProcedureName = getFullyQualifiedName(procedureCatalog, procedureSchema, procedureName);
 			Procedure procedure = metadataFactory.addProcedure(useFullSchemaName?fullProcedureName:procedureName);
-			procedure.setNameInSource(getFullyQualifiedName(procedureCatalog, procedureSchema, procedureName, true));
+			procedure.setNameInSource(getFullyQualifiedName(procedureCatalog, procedureSchema, nameInSource, true));
 			ResultSet columns = metadata.getProcedureColumns(catalog, procedureSchema, procedureName, null);
 			while (columns.next()) {
 				String columnName = columns.getString(4);
@@ -429,6 +435,10 @@ public class JDBCMetdataProcessor {
 
 	public void setSchemaPattern(String schema) {
 		this.schemaPattern = schema;
+	}
+	
+	public void setUseProcedureSpecificName(boolean useProcedureSpecificName) {
+		this.useProcedureSpecificName = useProcedureSpecificName;
 	}
 	
 }
