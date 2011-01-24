@@ -242,5 +242,23 @@ public class TestDB2SqlTranslator {
             input, 
             output, TRANSLATOR);
     }
+    
+    @Test public void testSubstring() throws Exception {
+        String input = "SELECT substring(STRINGNUM, 2, 10) FROM BQT1.SMALLA"; //$NON-NLS-1$
+        String output = "SELECT substr(SmallA.StringNum, 2, CASE WHEN 10 <= (length(SmallA.StringNum) - (2 + 1)) THEN 10 ELSE (length(SmallA.StringNum) - (2 + 1)) END) FROM SmallA";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }
+    
+    @Test public void testSubstring1() throws Exception {
+        String input = "SELECT substring(STRINGNUM, 2, intnum) FROM BQT1.SMALLA"; //$NON-NLS-1$
+        String output = "SELECT substr(SmallA.StringNum, 2, CASE WHEN SmallA.IntNum < 0 THEN NULL WHEN SmallA.IntNum <= (length(SmallA.StringNum) - (2 + 1)) THEN SmallA.IntNum ELSE (length(SmallA.StringNum) - (2 + 1)) END) FROM SmallA";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }
 
 }

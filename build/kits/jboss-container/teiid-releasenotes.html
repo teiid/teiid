@@ -123,6 +123,7 @@ temporary table access.
 
 <h2><a name="Other">Other Issues</a></h2>
 <ul>
+    <li>TEIID-1281 - Negative start indexing is not supported by DB2 and Derby databases.  Usage of the Teiid SUBSTRING against these sources should not use negative start values.
     <li>TEIID-1008 - Most versions of Oracle and MySQL do not support deeply nested correlated references.  There is currently no workaround for this issue.
 	<li>For compatibility with the 7.0 release if a stored procedure parameter list begins with identifier=, then it will be parsed as a named parameter invocation even if the intent was to use a comparison predicate 
 	as the first parameter value.  The workaround is to use nesting parens, e.g. call proc((identifier=value), ...), which clarifies that this is positional value.  This workaround will not be needed in later releases.  
