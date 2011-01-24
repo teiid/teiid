@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<datasources>
+  <local-tx-datasource>
+    <jndi-name>mondrianDS</jndi-name>
+    <!-- note here that you need to also create datasource for source, this is for mondrian as source for teiid -->
+    <connection-url>jdbc:mondrian:Provider=Mondrian;DataSource=java:foodmart;Catalog=${jboss.server.home.dir}/deploy/mondrian.war/WEB-INF/queries/FoodMart.xml;</connection-url>
+    <driver-class>mondrian.olap4j.MondrianOlap4jDriver</driver-class>
+    <user-name>user</user-name>
+    <password>password</password>
+     <min-pool-size>5</min-pool-size>
+     <max-pool-size>20</max-pool-size>
+  </local-tx-datasource>    
+</datasources>

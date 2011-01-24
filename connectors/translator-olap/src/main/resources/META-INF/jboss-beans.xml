@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment xmlns="urn:jboss:bean-deployer:2.0">
+    <!-- OLAP -->
+    <bean name="translator-olap-template" class="org.teiid.templates.TranslatorDeploymentTemplate">
+        <property name="info"><inject bean="translator-olap" /> </property>
+        <property name="managedObjectFactory"> <inject bean="ManagedObjectFactory" /> </property>
+    </bean>
+    
+    <bean name="translator-olap" class="org.teiid.templates.TranslatorTemplateInfo">
+        <constructor factoryMethod="createTemplateInfo">
+            <factory bean="TranslatorDeploymentTemplateInfoFactory" />
+            <parameter class="java.lang.Class">org.teiid.templates.TranslatorTemplateInfo</parameter>
+            <parameter class="java.lang.Class">org.teiid.translator.olap.OlapExecutionFactory</parameter>
+            <parameter class="java.lang.String">translator-olap</parameter>
+            <parameter class="java.lang.String">olap</parameter>
+        </constructor>
+    </bean>     
+</deployment>
