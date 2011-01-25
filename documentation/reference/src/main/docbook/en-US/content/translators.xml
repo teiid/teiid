@@ -1014,6 +1014,68 @@ Account.Contacts) FROM Account]]></programlisting>
                 </section>
             </section>
         </section>
+        
+        <section>
+            <title>OLAP Translator</title>
+            <para>
+            The OLAP Services translator, known by the type name <emphasis>olap</emphasis>, 
+            exposes stored procedures for calling analysis sevices backed by a OLAP server using MDX query lanaguage. Given the MDX
+            query, this translator executes the query and returns the results in XML format.
+            It will commonly be used with the <link linkend="xmltable">XMLTABLE</link> table functions to use XML formated data.
+            </para>
+            <para>
+            Since the Cube metadata exposed by the OLAP servers and relational database metadata are so different, there is no single 
+            way to map the metadata from one to other. It is best that OLAP system be queried using its own native MDX language
+            through Teiid abstraction layers than introducing a custom Teiid based MDX like extensions for querying. To build MDX 
+            queries dynamically use Teiid's abstraction layer define your target schema in relational terms and use Teiid's procedural 
+            langaugage to build a query.
+            </para>
+                
+            <section>
+                <title>Usage</title>
+                <para>
+                The olap translator exposes one low level procedure for accessing olap services.  
+                </para>
+
+                <section>
+                    <title>InvokeMDX Procedure</title>
+                    <para>
+                    <methodname>invokeMdx</methodname> returns the XML contents of results in tabular form. 
+                    </para>
+                    <programlisting>Procedure invokeMdx(mdx in STRING) returns SQLXML</programlisting>
+        
+                    <para>
+                    mdx parameter indicates the query in its original form that is to be executed on the OLAP server.
+                    </para>
+                    <para>
+                    The results of the query will be returned in SQLXML form that in the format as shown below.
+                    <programlisting role="XML" language="XML"><![CDATA[
+    <?xml version="1.0" encoding="UTF-8"?>
+    <resultset>
+        <row>
+            <Promotion_Media>All Media</Promotion_Media>
+            <Product>All Products</Product>
+            <Unit_Sales>266773.0</Unit_Sales>
+            <Store_Cost>225627.2336</Store_Cost>
+            <Store_Sales>565238.13</Store_Sales>
+        </row>
+    </resultset>                    
+                    ]]></programlisting>           
+                    From the above XML result, the first two columns in the row were the members from the row axis and the 
+                    last three columns are the measures from the cube from column axis. Currently the resultset only supports
+                    2 dimentional cube.          
+                    </para>
+                    
+                    <para>
+                    This translator requires a data source to be configured to the OLAP cube using OLAP4J JDBC driver. Two sample
+                    -ds.xml files provided for accessing OLAP servers in teiid-examples section. One is Mondrian specific, when Mondrian server is deloyed
+                    in the same JBoss AS as Teiid (mondrian-ds.xml). To access any other OLAP servers using XMLA interface, 
+                    the data source for them can be created using them example template olap-xmla-ds.xml
+                    </para>
+                </section>
+            </section>
+        </section>        
+        
         <section>
             <title>Delegating Translators</title>
             <para>

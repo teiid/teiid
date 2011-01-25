@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<datasources>
+
+   <!-- olap4j.jar is required for this. Download from http://www.olap4j.org/ and place in the JBoss AS profile's "lib" directory -->
+  <no-tx-datasource>
+    <jndi-name>xmlaDS</jndi-name>
+    <!-- note here that you need to also create datasource for source, this is for mondrian as source for teiid -->
+    <connection-url>jdbc:xmla:Server=http://127.0.0.1:8080/mondrian/xmla;Provider=Mondrian;DataSource=java:foodmart;Catalog=FoodMart;</connection-url>
+    <driver-class>org.olap4j.driver.xmla.XmlaOlap4jDriver</driver-class>
+    <transaction-isolation>-1</transaction-isolation>
+    <user-name>user</user-name>
+    <password>password</password>
+     <min-pool-size>5</min-pool-size>
+     <max-pool-size>20</max-pool-size>
+  </no-tx-datasource>    
+  
+</datasources>

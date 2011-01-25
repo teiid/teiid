@@ -48,7 +48,6 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
 
-@SuppressWarnings("nls")
 public class OlapQueryExecution implements ProcedureExecution {
 
 	protected Command command;
@@ -130,7 +129,7 @@ public class OlapQueryExecution implements ProcedureExecution {
 			this.rows = rowAxis.iterator();
 			if (this.rows.hasNext()) {
 				this.nextRow = this.rows.next();
-				this.buffer = "<resultset>".toCharArray();
+				this.buffer = "<resultset>".toCharArray(); //$NON-NLS-1$
 			}
     	}
     	
@@ -141,7 +140,7 @@ public class OlapQueryExecution implements ProcedureExecution {
     		
     		StringBuilder sb = new StringBuilder();
 			CellSetAxis cols = cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal());
-			sb.append("<row>");
+			sb.append("<row>"); //$NON-NLS-1$
 
 			// add in rows axis
 			List<Member> members = nextRow.getMembers();
@@ -150,7 +149,7 @@ public class OlapQueryExecution implements ProcedureExecution {
 				columnName = columnName.replace(' ', '_');
 				sb.append('<').append(columnName).append('>');
 				sb.append(member.getName());
-				sb.append("</").append(columnName).append('>');
+				sb.append("</").append(columnName).append('>'); //$NON-NLS-1$
 			}
 
 			// add col axis
@@ -160,9 +159,9 @@ public class OlapQueryExecution implements ProcedureExecution {
 				columnName = columnName.replace(' ', '_');
 				sb.append('<').append(columnName).append('>');
 				sb.append(cell.getValue());
-				sb.append("</").append(columnName).append('>');
+				sb.append("</").append(columnName).append('>'); //$NON-NLS-1$
 			}				
-			sb.append("</row>");
+			sb.append("</row>");//$NON-NLS-1$
 			
 			// advance the cursor to next row.
 			if (this.rows.hasNext()) {
@@ -185,7 +184,7 @@ public class OlapQueryExecution implements ProcedureExecution {
 				String next = readNextRow();
 				if (next == null) {
 					if (!this.closed) {
-						this.buffer = "</resultset>".toCharArray();
+						this.buffer = "</resultset>".toCharArray();//$NON-NLS-1$
 						this.closed = true;
 					}
 					else {
