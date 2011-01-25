@@ -49,7 +49,7 @@ public class SubstringFunctionModifier extends AliasModifier {
 		if (function.getParameters().size() != 3) {
 			return null;
 		}
-		//case when length < 0 then null when length < LENGTH(string) - start + 1 then exp else LENGTH(string) - start + 1
+		//case when length > LENGTH(string) - start + 1 then LENGTH(string) - start + 1 case when length > 0 then length end
 		Expression length = function.getParameters().get(2);
 		List<SearchedWhenClause> clauses = new ArrayList<SearchedWhenClause>(2);
 		Boolean isNegative = null;
@@ -60,13 +60,6 @@ public class SubstringFunctionModifier extends AliasModifier {
 				isNegative = value < 0;
 			}
 		}
-		if (isNegative == null) {
-			clauses.add(new SearchedWhenClause(new Comparison(length, new Literal(0, TypeFacility.RUNTIME_TYPES.INTEGER), Operator.LT), new Literal(null, TypeFacility.RUNTIME_TYPES.INTEGER)));
-		} else if (isNegative) {
-			//TODO: could be done in the rewriter
-			function.getParameters().set(2, null);
-			return null;
-		} 
 		Expression maxLength = new Function(
 				SourceSystemFunctions.SUBTRACT_OP,
 				Arrays.asList(new Function(
@@ -74,15 +67,25 @@ public class SubstringFunctionModifier extends AliasModifier {
 								Arrays.asList(function.getParameters().get(0)),
 								TypeFacility.RUNTIME_TYPES.INTEGER),
 							new Function(
-								SourceSystemFunctions.ADD_OP,
+								SourceSystemFunctions.SUBTRACT_OP,
 								Arrays.asList(
 										function.getParameters().get(1),
 										new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER)),
 							    TypeFacility.RUNTIME_TYPES.INTEGER)),
 				TypeFacility.RUNTIME_TYPES.INTEGER);
-		clauses.add(new SearchedWhenClause(new Comparison(length, maxLength, Operator.LE), length));
+		clauses.add(new SearchedWhenClause(new Comparison(length, maxLength, Operator.GT), maxLength));
+		Expression defaultExpr = null;
+		if (isNegative == null) {
+			clauses.add(new SearchedWhenClause(new Comparison(length, new Literal(0, TypeFacility.RUNTIME_TYPES.INTEGER), Operator.GT), length));
+		} else if (isNegative) {
+			//TODO: could be done in the rewriter
+			function.getParameters().set(2, null);
+			return null;
+		} else {
+			defaultExpr = length;
+		}
 		SearchedCase sc = new SearchedCase(clauses, 
-				maxLength, TypeFacility.RUNTIME_TYPES.INTEGER);
+				defaultExpr, TypeFacility.RUNTIME_TYPES.INTEGER);
 		function.getParameters().set(2, sc);
 		return null;
 	}
