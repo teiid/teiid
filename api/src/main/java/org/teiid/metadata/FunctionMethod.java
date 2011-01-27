@@ -22,7 +22,9 @@
 
 package org.teiid.metadata;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
@@ -103,8 +105,9 @@ public class FunctionMethod extends AbstractMetadataRecord {
     private boolean nullOnNull;
     
     private Determinism determinism = Determinism.DETERMINISTIC;
-        
-    private FunctionParameter[] inputParameters;
+    
+    @XmlElement(name="inputParameters")
+    protected List<FunctionParameter> inParameters = new ArrayList<FunctionParameter>();
     private FunctionParameter outputParameter;
     
     protected FunctionMethod() {
@@ -131,7 +134,9 @@ public class FunctionMethod extends AbstractMetadataRecord {
         setPushdown(pushdown);
         setInvocationClass(invocationClass);
         setInvocationMethod(invocationMethod);
-        setInputParameters(inputParams);
+        if (inputParams != null) {
+        	setInputParameters(Arrays.asList(inputParams));
+        }
         setOutputParameter(outputParam); 
         setNullOnNull(nullOnNull);
         setDeterminism(deterministic);
@@ -269,27 +274,28 @@ public class FunctionMethod extends AbstractMetadataRecord {
      * @return Number of input parameters
      */
     public int getInputParameterCount() {
-        if(this.inputParameters == null) { 
+        if(this.inParameters == null) { 
             return 0;
         }
-        return this.inputParameters.length;
+        return this.inParameters.size();
     }
     
     /**
      * Get input parameters
      * @return Array of input parameters, may be null if 0 parameters
      */
-    @XmlElement
-    public FunctionParameter[] getInputParameters() { 
-        return this.inputParameters;
+    
+    public List<FunctionParameter> getInputParameters() { 
+        return this.inParameters;
     }
     
     /**
      * Set input parameters.
      * @param params Input parameters
      */
-    public void setInputParameters(FunctionParameter[] params) { 
-        this.inputParameters = params;
+    public void setInputParameters(List<FunctionParameter> params) { 
+        this.inParameters.clear();
+        this.inParameters.addAll(params);
     }
     
     /**
@@ -322,8 +328,8 @@ public class FunctionMethod extends AbstractMetadataRecord {
      */
     public int hashCode() { 
         int hash = HashCodeUtil.hashCode(0, super.getName());
-        if(inputParameters != null) { 
-            hash = HashCodeUtil.hashCode(hash, Arrays.hashCode(inputParameters));
+        if(inParameters != null) { 
+            hash = HashCodeUtil.hashCode(hash, inParameters.hashCode());
         }             
         return hash;
     }
@@ -356,16 +362,16 @@ public class FunctionMethod extends AbstractMetadataRecord {
             }
             
             // Compare types of parameters
-            FunctionParameter[] thisInputs = this.getInputParameters();
-            if(thisInputs != null && thisInputs.length > 0) { 
+            List<FunctionParameter> thisInputs = this.getInputParameters();
+            if(thisInputs != null && thisInputs.size() > 0) { 
                 // If thisInputs is not null and >0 and other parameter
                 // count matched this parameter count, otherInputs MUST be 
                 // non null to have more than one parameter - so we don't 
                 // need to check it here.
-                FunctionParameter[] otherInputs = other.getInputParameters();
+                List<FunctionParameter> otherInputs = other.getInputParameters();
                 
-                for(int i=0; i<thisInputs.length; i++) { 
-                    boolean paramMatch = compareWithNull(thisInputs[i], otherInputs[i]);
+                for(int i=0; i<thisInputs.size(); i++) { 
+                    boolean paramMatch = compareWithNull(thisInputs.get(i), otherInputs.get(i));
                     if(! paramMatch) { 
                         return false;
                     }    
@@ -412,15 +418,15 @@ public class FunctionMethod extends AbstractMetadataRecord {
         
         // Print parameters
         str.append("("); //$NON-NLS-1$
-        if(inputParameters != null) { 
-            for(int i=0; i<inputParameters.length; i++) {
-                if(inputParameters[i] != null) { 
-                    str.append(inputParameters[i].toString());                   
+        if(inParameters != null) { 
+            for(int i=0; i<inParameters.size(); i++) {
+                if(inParameters.get(i) != null) { 
+                    str.append(inParameters.get(i).toString());                   
                 } else {
                     str.append("<unknown>"); //$NON-NLS-1$
                 }
                 
-                if(i < (inputParameters.length-1)) { 
+                if(i < (inParameters.size()-1)) { 
                     str.append(", "); //$NON-NLS-1$
                 }
             }    
@@ -462,8 +468,8 @@ public class FunctionMethod extends AbstractMetadataRecord {
     }
     
     public boolean isVarArgs() {
-    	if (this.inputParameters != null && this.inputParameters.length > 0) {
-    		return inputParameters[inputParameters.length - 1].isVarArg();
+    	if (this.inParameters != null && this.inParameters.size() > 0) {
+    		return inParameters.get(inParameters.size() - 1).isVarArg();
     	}
     	return false;
     }

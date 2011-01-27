@@ -228,7 +228,7 @@ public class FunctionLibrary {
                 
         for (FunctionMethod nextMethod : functionMethods) {
             int currentScore = 0; 
-            final FunctionParameter[] methodTypes = nextMethod.getInputParameters();
+            final List<FunctionParameter> methodTypes = nextMethod.getInputParameters();
             //Holder for current signature with converts where required
             FunctionDescriptor[] currentSignature = new FunctionDescriptor[types.length];
             
@@ -237,7 +237,7 @@ public class FunctionLibrary {
             int i = 0;
             for(; i < types.length; i++) {
             	//treat all varags as the same type
-                final String tmpTypeName = methodTypes[Math.min(i, methodTypes.length - 1)].getType();
+                final String tmpTypeName = methodTypes.get(Math.min(i, methodTypes.size() - 1)).getType();
                 Class<?> targetType = DataTypeManager.getDataTypeClass(tmpTypeName);
 
                 Class<?> sourceType = types[i];

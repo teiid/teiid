@@ -23,6 +23,7 @@
 package org.teiid.query.function.metadata;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.teiid.api.exception.query.FunctionMetadataException;
 import org.teiid.core.types.DataTypeManager;
@@ -90,10 +91,10 @@ public class FunctionMetadataValidator {
 	        validateInvocationMethod(method.getInvocationClass(), method.getInvocationMethod(), method.getPushdown());
 
 	        // Validate input parameters
-	        FunctionParameter[] params = method.getInputParameters();
-	        if(params != null) {
-	            for(int i=0; i<params.length; i++) {
-	                validateFunctionParameter(params[i]);
+	       List<FunctionParameter> params = method.getInputParameters();
+	        if(params != null && !params.isEmpty()) {
+	            for(int i=0; i<params.size(); i++) {
+	                validateFunctionParameter(params.get(i));
 	            }
 	        }
 

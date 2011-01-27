@@ -54,7 +54,7 @@ public class TestFunctionMetadataReader extends TestCase {
 				assertNull(m.getDescription());
 				
 				assertEquals(1, m.getInputParameterCount());
-				FunctionParameter in = m.getInputParameters()[0];
+				FunctionParameter in = m.getInputParameters().get(0);
 				assertEquals("prop", in.getName());
 				assertEquals("string", in.getType());
 				assertNull(in.getDescription());
