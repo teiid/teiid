@@ -28,6 +28,7 @@ import static org.mockito.Mockito.*;
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
+import org.junit.After;
 import org.junit.Test;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.security.InvalidSessionException;
@@ -58,6 +59,15 @@ public class TestFailover {
 	private SocketServerConnectionFactory sscf;
 	private InetSocketAddress addr = new InetSocketAddress(0);
 	private int logonAttempts;
+	
+	@After public void tearDown() {
+		if (this.listener != null) {
+			this.listener.stop();
+		}
+		if (this.listener1 != null) {
+			this.listener1.stop();
+		}
+	}
 
 	private SocketServerConnection helpEstablishConnection(boolean clientSecure, SSLConfiguration config, Properties socketConfig) throws CommunicationException,
 			ConnectionException {
@@ -121,6 +131,7 @@ public class TestFailover {
 		//bring the first back up
 		listener = createListener(new InetSocketAddress(addr.getAddress(), listener.getPort()), config);
 		assertTrue(conn.isOpen(1000));
+		assertEquals(3, logonAttempts);
 		conn.close();
 	}
 	
