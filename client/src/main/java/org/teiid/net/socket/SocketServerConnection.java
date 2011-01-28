@@ -282,6 +282,7 @@ public class SocketServerConnection implements ServerConnection {
 		this.logonResults.remove(this.serverInstance.getHostInfo());
 		if (this.logonResult != null) {
 			this.connectionFactory.disconnected(this.serverInstance, this.logonResult.getSessionToken());
+			this.logonResult = null;
 		}
 	}
 	
