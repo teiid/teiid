@@ -51,6 +51,10 @@ import org.teiid.vdb.runtime.VDBKey;
  */
 public class SessionAwareCache<T> {
 	public static final int DEFAULT_MAX_SIZE_TOTAL = 512;
+	public enum Type {
+		RESULTSET,
+		PREPAREDPLAN;
+	}
 
 	private Cache<CacheID, T> localCache;
 	private Cache<CacheID, T> distributedCache;
@@ -68,23 +72,24 @@ public class SessionAwareCache<T> {
 	}
 	
 	SessionAwareCache(int maxSize){
-		this(new DefaultCacheFactory(), Cache.Type.RESULTSET, new CacheConfiguration(Policy.LRU, 60, maxSize));
+		this(new DefaultCacheFactory(), Type.RESULTSET, new CacheConfiguration(Policy.LRU, 60, maxSize, "default")); //$NON-NLS-1$
 	}
 	
-	SessionAwareCache (final CacheFactory cacheFactory, final Cache.Type type, final CacheConfiguration config){
+	SessionAwareCache (final CacheFactory cacheFactory, final Type type, final CacheConfiguration config){
 		this.maxSize = config.getMaxEntries();
 		if(this.maxSize < 0){
 			this.maxSize = Integer.MAX_VALUE;
 		}		
 		this.localCache = new DefaultCache<CacheID, T>("local", maxSize, config.getMaxAgeInSeconds()*1000); //$NON-NLS-1$
 		
-		if (type == Cache.Type.PREPAREDPLAN) {
+		if (type == Type.PREPAREDPLAN) {
 			this.distributedCache = localCache;
 		}
 		else {
-			this.distributedCache = cacheFactory.get(type, config);
-			if (type == Cache.Type.RESULTSET) {
-				this.tupleBatchCache = cacheFactory.get(Cache.Type.RESULTSET_BATCHES, config);
+			String location = config.getLocation()+"/"+type.name(); //$NON-NLS-1$
+			this.distributedCache = cacheFactory.get(location, config);
+			if (type == Type.RESULTSET) {
+				this.tupleBatchCache = cacheFactory.get(location+"/batches", config); //$NON-NLS-1$
 			}
 			else {
 				this.tupleBatchCache = this.distributedCache;

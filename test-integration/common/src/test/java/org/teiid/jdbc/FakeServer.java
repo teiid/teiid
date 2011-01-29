@@ -87,7 +87,7 @@ public class FakeServer extends ClientServiceRegistryImpl {
         });
         
         DQPConfiguration config = new DQPConfiguration();
-        config.setResultsetCacheConfig(new CacheConfiguration(Policy.LRU, 60, 250));
+        config.setResultsetCacheConfig(new CacheConfiguration(Policy.LRU, 60, 250, "resultsetcache")); //$NON-NLS-1$
         this.dqp.setCacheFactory(new DefaultCacheFactory());
         this.dqp.start(config);
         this.sessionService.setDqp(this.dqp);

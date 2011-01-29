@@ -23,18 +23,19 @@ package org.teiid.cache;
 
 import java.io.Serializable;
 
-import org.teiid.cache.Cache.Type;
+import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.core.TeiidRuntimeException;
 
 
 public class DefaultCacheFactory implements CacheFactory, Serializable {
 	private static final long serialVersionUID = -5541424157695857527L;
+	private static CacheConfiguration DEFAULT = new CacheConfiguration(Policy.LRU, 60*60, 100, "default"); // 1 hours with 100 nodes. //$NON-NLS-1$
 	
 	DefaultCache cacheRoot;
 	private volatile boolean destroyed = false;
 	
 	public DefaultCacheFactory() {
-		this(CacheConfiguration.DEFAULT);
+		this(DEFAULT);
 	}
 		
 	public DefaultCacheFactory(CacheConfiguration config) {
@@ -47,9 +48,9 @@ public class DefaultCacheFactory implements CacheFactory, Serializable {
 	}
 
 	@Override
-	public <K, V> Cache<K, V> get(Type type, CacheConfiguration config) {
+	public <K, V> Cache<K, V> get(String location, CacheConfiguration config) {
 		if (!destroyed) {
-			return cacheRoot.addChild(type.location());
+			return cacheRoot.addChild(location);
 		}
 		throw new TeiidRuntimeException("Cache system has been shutdown"); //$NON-NLS-1$
 	}

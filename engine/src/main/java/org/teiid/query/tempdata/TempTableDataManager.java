@@ -153,8 +153,8 @@ public class TempTableDataManager implements ProcessorDataManager {
         this.cache = cache;
         this.distributedCache = distibutedCache;
         if (distibutedCache != null) {
-	        CacheConfiguration cc = new CacheConfiguration(Policy.LRU, -1, -1);
-	        tables = cacheFactory.get(Cache.Type.MATTABLES, cc);
+	        CacheConfiguration cc = new CacheConfiguration(Policy.LRU, -1, -1, "MaterializationUpdates"); //$NON-NLS-1$
+	        tables = cacheFactory.get(cc.getLocation(), cc);
         }
     }
     
