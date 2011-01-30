@@ -39,6 +39,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.teiid.jdbc.TeiidSQLException;
+
 
 
 /** 
@@ -73,8 +75,22 @@ public class TestResultSetUtil {
     
     public static void printThrowable(Throwable t, String sql, PrintStream out) {
       out.println(sql);
+      
+      Throwable answer = t;
+      if (t instanceof TeiidSQLException) {
+    	  TeiidSQLException sqle = (TeiidSQLException) t;
+    	  SQLException se = sqle.getNextException();
+    	  if (se != null) {
+    		  SQLException s = null;
+	    	  while( (s = se.getNextException()) != null) {
+	    		  se = s;
+	    	  }
+	    	  
+	    	  answer = se;
+    	  } 
+      }
         
-      out.print(t.getClass().getName() + " : " + t.getMessage()); //$NON-NLS-1$
+      out.print(t.getClass().getName() + " : " + answer.getMessage()); //$NON-NLS-1$
         	
     }
     
