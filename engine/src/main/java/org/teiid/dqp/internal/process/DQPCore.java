@@ -44,7 +44,6 @@ import org.teiid.adminapi.Request.ThreadState;
 import org.teiid.adminapi.impl.CacheStatisticsMetadata;
 import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
-import org.teiid.cache.Cache;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
 import org.teiid.cache.CacheConfiguration.Policy;
@@ -683,24 +682,23 @@ public class DQPCore implements DQP {
         //result set cache
         CacheConfiguration rsCacheConfig = config.getResultsetCacheConfig();
         if (rsCacheConfig != null && rsCacheConfig.isEnabled()) {
-			this.rsCache = new SessionAwareCache<CachedResults>(this.cacheFactory, Cache.Type.RESULTSET, rsCacheConfig);
+			this.rsCache = new SessionAwareCache<CachedResults>(this.cacheFactory, SessionAwareCache.Type.RESULTSET, rsCacheConfig);
 			this.rsCache.setBufferManager(this.bufferManager);
         }
 
         //prepared plan cache
-        prepPlanCache = new SessionAwareCache<PreparedPlan>(this.cacheFactory, Cache.Type.PREPAREDPLAN,  new CacheConfiguration(Policy.LRU, 60*60*8, config.getPreparedPlanCacheMaxCount()));
+        prepPlanCache = new SessionAwareCache<PreparedPlan>(this.cacheFactory, SessionAwareCache.Type.PREPAREDPLAN,  new CacheConfiguration(Policy.LRU, 60*60*8, config.getPreparedPlanCacheMaxCount(), "PreparedCache")); //$NON-NLS-1$
         prepPlanCache.setBufferManager(this.bufferManager);
 		
         
         this.processWorkerPool = new ThreadReuseExecutor(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, config.getMaxThreads());
         
         if (cacheFactory.isReplicated()) {
-        	matTables = new SessionAwareCache<CachedResults>(this.cacheFactory, Cache.Type.RESULTSET, new CacheConfiguration(Policy.LRU, -1, -1));
+        	matTables = new SessionAwareCache<CachedResults>(this.cacheFactory, SessionAwareCache.Type.RESULTSET, new CacheConfiguration(Policy.LRU, -1, -1, "MaterilizationTables")); //$NON-NLS-1$
         	matTables.setBufferManager(this.bufferManager);
         }
         
-        dataTierMgr = new TempTableDataManager(new DataTierManagerImpl(this,
-                                            this.bufferService), this.bufferManager, this.processWorkerPool, this.rsCache, matTables, this.cacheFactory); 
+        dataTierMgr = new TempTableDataManager(new DataTierManagerImpl(this,this.bufferService), this.bufferManager, this.processWorkerPool, this.rsCache, this.matTables, this.cacheFactory); 
 	}
 	
 	public void setBufferService(BufferService service) {

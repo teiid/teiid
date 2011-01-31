@@ -67,38 +67,40 @@ public class VDBStatusChecker {
 			if (vdb.getStatus() == VDB.Status.ACTIVE || vdb.isPreview()) {
 				continue;
 			}
-			ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
-			
-			for (Model m:vdb.getModels()) {
-				ModelMetaData model = (ModelMetaData)m;
-				if (model.getErrors().isEmpty()) {
-					continue;
+			synchronized (vdb) {
+				ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
+				
+				for (Model m:vdb.getModels()) {
+					ModelMetaData model = (ModelMetaData)m;
+					if (model.getErrors().isEmpty()) {
+						continue;
+					}
+	
+					String sourceName = getSourceName(resourceName, model, translator);
+					if (sourceName != null) {
+						ConnectorManager cm = cmr.getConnectorManager(sourceName);
+						model.clearErrors();
+						String status = cm.getStausMessage();
+						if (status != null && status.length() > 0) {
+							model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), status);
+							LogManager.logInfo(LogConstants.CTX_RUNTIME, status);					
+						}					
+					}
 				}
-
-				String sourceName = getSourceName(resourceName, model, translator);
-				if (sourceName != null) {
-					ConnectorManager cm = cmr.getConnectorManager(sourceName);
-					model.clearErrors();
-					String status = cm.getStausMessage();
-					if (status != null && status.length() > 0) {
-						model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), status);
-						LogManager.logInfo(LogConstants.CTX_RUNTIME, status);					
-					}					
+	
+				boolean valid = true;
+				for (Model m:vdb.getModels()) {
+					ModelMetaData model = (ModelMetaData)m;
+					if (!model.getErrors().isEmpty()) {
+						valid = false;
+						break;
+					}
 				}
-			}
-
-			boolean valid = true;
-			for (Model m:vdb.getModels()) {
-				ModelMetaData model = (ModelMetaData)m;
-				if (!model.getErrors().isEmpty()) {
-					valid = false;
-					break;
+				
+				if (valid) {
+					vdb.setStatus(VDB.Status.ACTIVE);
+					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_activated",vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
 				}
-			}
-			
-			if (valid) {
-				vdb.setStatus(VDB.Status.ACTIVE);
-				LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_activated",vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
 			}
 		}
 	}
@@ -108,25 +110,26 @@ public class VDBStatusChecker {
 			if (vdb.isPreview()) {
 				continue;
 			}
-			
-			for (Model m:vdb.getModels()) {
-				ModelMetaData model = (ModelMetaData)m;
-				
-				String sourceName = getSourceName(resourceName, model, translator);
-				if (sourceName != null) {
-					vdb.setStatus(VDB.Status.INACTIVE);
-					String msg = null;
-					if (translator) {
-						msg = RuntimePlugin.Util.getString("translator_not_found", vdb.getName(), vdb.getVersion(), model.getSourceTranslatorName(sourceName)); //$NON-NLS-1$
+			synchronized (vdb) {
+				for (Model m:vdb.getModels()) {
+					ModelMetaData model = (ModelMetaData)m;
+					
+					String sourceName = getSourceName(resourceName, model, translator);
+					if (sourceName != null) {
+						vdb.setStatus(VDB.Status.INACTIVE);
+						String msg = null;
+						if (translator) {
+							msg = RuntimePlugin.Util.getString("translator_not_found", vdb.getName(), vdb.getVersion(), model.getSourceTranslatorName(sourceName)); //$NON-NLS-1$
+						}
+						else {
+							msg = RuntimePlugin.Util.getString("datasource_not_found", vdb.getName(), vdb.getVersion(), model.getSourceTranslatorName(sourceName)); //$NON-NLS-1$
+						}
+						model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
+						LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);					
+						LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_inactivated",vdb.getName(), vdb.getVersion())); //$NON-NLS-1$							
 					}
-					else {
-						msg = RuntimePlugin.Util.getString("datasource_not_found", vdb.getName(), vdb.getVersion(), model.getSourceTranslatorName(sourceName)); //$NON-NLS-1$
-					}
-					model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
-					LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);					
-					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_inactivated",vdb.getName(), vdb.getVersion())); //$NON-NLS-1$							
 				}
-			}			
+			}
 		}
 	}
 

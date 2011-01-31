@@ -24,7 +24,6 @@ package org.teiid.translator.salesforce.execution;
 
 import static org.junit.Assert.*;
 
-import java.math.BigDecimal;
 import java.util.Arrays;
 
 import javax.xml.datatype.XMLGregorianCalendar;

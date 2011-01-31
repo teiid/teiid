@@ -10,7 +10,7 @@
 <P><A HREF="http://www.teiid.org/"><IMG SRC="https://www.jboss.org/dms/teiid/images/teiid-banner.png" NAME="graphics1" ALT="Teiid" ALIGN=BOTTOM WIDTH=800></A>
 
 <H1>Teiid ${project.version} Release Notes</H1>
-<P>Teiid ${project.version} adds performance and integration features. 
+<P>Teiid ${project.version} adds updatable view, performance, and integration features. 
 
 <H2>Overview</H2>
 <UL>
@@ -175,7 +175,147 @@ The following components have been updated:
 
 <h2><a name="Details">Detailed Release Notes</a></h2>
         Detailed Release Notes - Teiid - Version ${project.version}
-    
+
+<h2>        Bug
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-89'>TEIID-89</a>] -         Data roles should account for the ability to create temp tables
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1350'>TEIID-1350</a>] -         Teiid 7.2 in JBoss EAP cluster (with clustered cache on) will not deploy VDBs
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1357'>TEIID-1357</a>] -         Provide an example of an ODBC ds file to be used with a JDBC-ODBC bridge connection 
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1360'>TEIID-1360</a>] -         with clause not processed in views
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1361'>TEIID-1361</a>] -         Salesforce IN predicate handling
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1362'>TEIID-1362</a>] -         salesforce push down queries won&#39;t get resolved correctly
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1370'>TEIID-1370</a>] -         Error Code:107 Message:&#39;The column prefix &#39;custsale&#39; does not match with a table name or alias name used in the query - But query is valid
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1372'>TEIID-1372</a>] -         Change the default Teiid user from &quot;admin&quot; to something else
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1373'>TEIID-1373</a>] -         Document that &#39;OID&#39; column in the system tables is not durable across different versions of the same VDB.
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1381'>TEIID-1381</a>] -         pushdown validation not accurate for all update
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1387'>TEIID-1387</a>] -         Restrict access of default port 31000 to JDBC and 31443 to Admin connections
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1390'>TEIID-1390</a>] -         Partial multi-byte char values misread in InputStreamReader
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1391'>TEIID-1391</a>] -         Changes to the use of SSL when connecting with the Teiid Driver are ignored after a successful connection
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1395'>TEIID-1395</a>] -         XMLPARSE error message references XMLSERIALIZE
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1396'>TEIID-1396</a>] -         XML_PLAN output to server log too verbose for DEBUG level logging
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1399'>TEIID-1399</a>] -         Adding ORDER BY to SELECT COUNT(*) FROM ... returns org.teiid.core.TeiidProcessingException: null to client - Needs clearer message
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1401'>TEIID-1401</a>] -         QueryRewriter issue with certain UDFs
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1402'>TEIID-1402</a>] -         SELECTing data from salesforce with a WHERE condition which includes ID results in a NPE
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1404'>TEIID-1404</a>] -         The teiid runtime jar overrides commons logging configuration
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1406'>TEIID-1406</a>] -         Salesforce connector does not parse {ts&#39;2003-03-11 11:42:10.5&#39;} - gets mismatched character &#39; &#39; expecting &#39;:&#39;
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1407'>TEIID-1407</a>] -         Client code fails while inserting &quot;lobs&quot; in few situations
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1408'>TEIID-1408</a>] -         SalesForce.com - Unable to get managed connection - java.lang.NullPointerException
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1410'>TEIID-1410</a>] -         MALFORMED Query when trying to execute a query with OUTER JOINs which only contains elements from JOINed source
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1411'>TEIID-1411</a>] -         Incorrect IN behavior when using a SELECT clause as IN values
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1414'>TEIID-1414</a>] -         Execution of a Prepared Statement may receive LanguageBridgeFactory AssertionError
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1416'>TEIID-1416</a>] -         Admin console shows no information about sessions
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1418'>TEIID-1418</a>] -         Metadata loaded incorrectly
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1420'>TEIID-1420</a>] -         Adminshell getTransactions() fails - exception = org.teiid.adminapi.AdminComponentException:
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1422'>TEIID-1422</a>] -         Limit pushing can result in inconsistent xml results
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1426'>TEIID-1426</a>] -         NPE when SELECTing NULL columns from JOINed tables
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1427'>TEIID-1427</a>] -         Class not found in Teiid JON agent
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1428'>TEIID-1428</a>] -         ODBC connection fails if the TeiidDriver is not registered.
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1434'>TEIID-1434</a>] -         Example dynamicvdb-portfolio  customer-schema.sql   INSERT INTO HOLDINGS has PRODUCT_ID references that don&#39;t exist in PRODUCT table causing sql to fail
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1435'>TEIID-1435</a>] -         SQL type boolean imported as object for dynamic vdbs
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1439'>TEIID-1439</a>] -         Adminshell/API - sequence of datasource creation/VDB deployment and queries results in deployment error
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1441'>TEIID-1441</a>] -         java.lang.NullPointerException - on queries involving lookup (temp table cache does not have buffermanager set on it)
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1442'>TEIID-1442</a>] -         clearCache(&quot;QUERY_SERVICE_RESULT_SET_CACHE&quot;) - in ER7 - totalEntries is not reset to zero
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1443'>TEIID-1443</a>] -         SalesForce connector execution of procedure fails with NPE
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1444'>TEIID-1444</a>] -         Jopr Plugin has description for refreshing Materialized Views that&#39;s awkward: &quot;Refresh a given any Materialized View for this VDB&quot;
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1445'>TEIID-1445</a>] -         ConcurrentModificationException during the startup of the Server
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1446'>TEIID-1446</a>] -         Error during startup when CXF is installed
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1451'>TEIID-1451</a>] -         Teiid does not handle failover correctly
+</li>
+</ul>
+            
+<h2>        Feature Request
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-146'>TEIID-146</a>] -         Translate Criteria enhancement
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-192'>TEIID-192</a>] -         Add the ability to switch the identity on connections
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-211'>TEIID-211</a>] -         subquery optimization
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-229'>TEIID-229</a>] -         Support update of the view column using a column
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-231'>TEIID-231</a>] -         Ability to support Connector Level UDF functions in the System
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1227'>TEIID-1227</a>] -         Lob values should be cachable
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1253'>TEIID-1253</a>] -         Allow for cache scope to be set in the cache hint
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1267'>TEIID-1267</a>] -         Add support for non-pushdown subquery evaluation on update statements
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1330'>TEIID-1330</a>] -         API request:  Delegating Translator
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1338'>TEIID-1338</a>] -         Add transitive join conditions across sources
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1349'>TEIID-1349</a>] -         Better default update procedure handling
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1351'>TEIID-1351</a>] -         Replace translate criteria
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1376'>TEIID-1376</a>] -         Add support for pushing joins through a union
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1385'>TEIID-1385</a>] -         Add a way to support escaped strings
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1389'>TEIID-1389</a>] -         Add additional detection for conflicting criteria to help optimize query plan
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1412'>TEIID-1412</a>] -         Teiid should take care of salesforce query limits by itself
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1421'>TEIID-1421</a>] -         Support better scrolling of cached results
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1433'>TEIID-1433</a>] -         Temp tables should support count(*)
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1440'>TEIID-1440</a>] -         Add support for not null and auto increment for temp table columns
+</li>
+</ul>
+            
+<h2>        Quality Risk
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1368'>TEIID-1368</a>] -         &quot;Each&quot; should be a parser keyword
+</li>
+</ul>
+                        
+
 <h2><a name="Documentation">Documentation and Help</a></h2>
 
 The <a href="http://www.jboss.org/teiid/">Teiid community project</a> is hosted on jboss.org.

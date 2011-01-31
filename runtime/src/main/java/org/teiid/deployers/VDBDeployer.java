@@ -150,20 +150,22 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		} catch (IOException e1) {
 			LogManager.logWarning(LogConstants.CTX_RUNTIME, e1, RuntimePlugin.Util.getString("vdb_save_failed", deployment.getName()+"."+deployment.getVersion())); //$NON-NLS-1$ //$NON-NLS-2$			
 		}
-				
-		boolean valid = true;
-		if (!preview) {
-			valid = validateSources(cmr, deployment);
 			
-			// Check if the VDB is fully configured.
-			if (valid) {
+		boolean valid = true;
+		synchronized (deployment) {
+			if (!preview) {
+				valid = validateSources(cmr, deployment);
+				
+				// Check if the VDB is fully configured.
+				if (valid) {
+					deployment.setStatus(VDB.Status.ACTIVE);
+				} else {
+					deployment.setStatus(VDB.Status.INACTIVE);
+				}			
+			}
+			else {
 				deployment.setStatus(VDB.Status.ACTIVE);
-			} else {
-				deployment.setStatus(VDB.Status.INACTIVE);
-			}			
-		}
-		else {
-			deployment.setStatus(VDB.Status.ACTIVE);
+			}
 		}
 		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_deployed",deployment, valid?"active":"inactive")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
@@ -341,7 +343,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 			}
     	}
     	
-    	synchronized (this) {
+    	synchronized (vdb) {
 	    	if (!loaded) {
 	    		vdb.setStatus(VDB.Status.INACTIVE);
 	    		String msg = RuntimePlugin.Util.getString("failed_to_retrive_metadata", vdb.getName()+"-"+vdb.getVersion(), model.getName()); //$NON-NLS-1$ //$NON-NLS-2$

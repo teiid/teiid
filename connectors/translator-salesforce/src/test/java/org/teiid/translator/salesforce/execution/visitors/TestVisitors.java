@@ -106,6 +106,7 @@ public class TestVisitors {
             Column obj = contactCols.get(i);
             obj.setNameInSource(contactNameInSource[i]);
         }
+        
         List<ProcedureParameter> params = new LinkedList<ProcedureParameter>();
         params.add(RealMetadataFactory.createParameter("type", SPParameter.IN, TypeFacility.RUNTIME_NAMES.STRING));
         params.add(RealMetadataFactory.createParameter("start", SPParameter.IN, TypeFacility.RUNTIME_NAMES.TIMESTAMP));

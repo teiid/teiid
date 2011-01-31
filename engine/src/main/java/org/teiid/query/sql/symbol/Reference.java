@@ -179,10 +179,11 @@ public class Reference implements Expression, ContextReference {
     		return false;
     	}
     	//metadata hack
-    	if (!(this.expression.getMetadataID() instanceof TempMetadataID)) {
+    	if (this.expression.getGroupSymbol() == null || !(this.expression.getGroupSymbol().getMetadataID() instanceof TempMetadataID)) {
     		return true;
     	}
-    	TempMetadataID tid = (TempMetadataID)this.expression.getMetadataID();
+    	
+    	TempMetadataID tid = (TempMetadataID)this.expression.getGroupSymbol().getMetadataID();
     	return !tid.isScalarGroup();
     }
     
