@@ -2675,7 +2675,8 @@ public class TestProcedureProcessor {
         StringBuffer procedure = new StringBuffer("CREATE VIRTUAL PROCEDURE \n"); //$NON-NLS-1$
         procedure.append("BEGIN\n"); //$NON-NLS-1$
         procedure.append("create local temporary table x (y string);\n"); //$NON-NLS-1$
-        procedure.append("update x set y = in1 || 'foo';\n"); //$NON-NLS-1$
+        procedure.append("declare string s = 'foo';\n"); //$NON-NLS-1$
+        procedure.append("update x set y = in1 || s;\n"); //$NON-NLS-1$
         procedure.append("update pm1.g1 set e1 = lookup('pm1.g1', 'e1', 'e2', in1);\n"); //$NON-NLS-1$
         procedure.append("exec pm1.sq2(in1 || 'foo');\n"); //$NON-NLS-1$
         procedure.append("END"); //$NON-NLS-1$

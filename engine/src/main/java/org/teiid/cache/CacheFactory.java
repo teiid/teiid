@@ -30,7 +30,7 @@ public interface CacheFactory {
 	 * @param config configuration setup for the cache
 	 * @return
 	 */
-	<K,V> Cache<K, V> get(Cache.Type type, CacheConfiguration config);
+	<K,V> Cache<K, V> get(String location, CacheConfiguration config);
 
 	/**
 	 * Destroy the cache factory and any caches underneath.

@@ -30,9 +30,7 @@ import org.jboss.managed.api.annotation.ManagementProperty;
 
 @ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class CacheConfiguration {
-	
-	public static CacheConfiguration DEFAULT = new CacheConfiguration(Policy.LRU, 60*60, 100); // 1 hours with 100 nodes.
-		
+			
 	public enum Policy {
 		LRU,  // Least Recently Used
 		EXPIRATION
@@ -43,14 +41,16 @@ public class CacheConfiguration {
 	private int maxEntries;
 	private boolean enabled = true;
 	private String name;
-	
+	private String location;
+
 	public CacheConfiguration() {
 	}
 	
-	public CacheConfiguration(Policy policy, int maxAgeInSeconds, int maxNodes) {
+	public CacheConfiguration(Policy policy, int maxAgeInSeconds, int maxNodes, String location) {
 		this.policy = policy;
 		this.maxage = maxAgeInSeconds;
 		this.maxEntries = maxNodes;
+		this.location = location;
 	}
 	
 	public Policy getPolicy() {
@@ -88,6 +88,15 @@ public class CacheConfiguration {
 	public void setName(String name) {
 		this.name = name;
 	}
+	
+	@ManagementProperty(description="location prefix in cache", readOnly=true)
+	public String getLocation() {
+		return location;
+	}
+
+	public void setLocation(String location) {
+		this.location = location;
+	}	
 	
 	@Override
 	public int hashCode() {

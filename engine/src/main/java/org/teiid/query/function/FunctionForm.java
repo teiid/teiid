@@ -66,17 +66,17 @@ public class FunctionForm implements Serializable, Comparable {
         this.category = method.getCategory().toUpperCase();
         
         // Get input parameter stuff
-        FunctionParameter[] inputParams = method.getInputParameters();
+        List<FunctionParameter> inputParams = method.getInputParameters();
         if(inputParams == null) { 
             inputParamNames = new ArrayList(0);
             inputParamDescs = new ArrayList(0);
         } else {
-            inputParamNames = new ArrayList(inputParams.length);
-            inputParamDescs = new ArrayList(inputParams.length);
+            inputParamNames = new ArrayList(inputParams.size());
+            inputParamDescs = new ArrayList(inputParams.size());
             
-            for(int i=0; i<inputParams.length; i++) { 
-                inputParamNames.add(inputParams[i].getName().toUpperCase());
-                inputParamDescs.add(inputParams[i].getDescription());
+            for(int i=0; i<inputParams.size(); i++) { 
+                inputParamNames.add(inputParams.get(i).getName().toUpperCase());
+                inputParamDescs.add(inputParams.get(i).getDescription());
             }
         }
         

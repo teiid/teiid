@@ -28,6 +28,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -387,7 +388,9 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         throws SQLException {
         checkStatement();
         resetExecutionState();
-        
+        if (logger.isLoggable(Level.FINER)) {
+			logger.finer("Executing: requestID " + getCurrentRequestID() + " commands: " + Arrays.toString(commands) + " expecting: " + resultsMode); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		}
         if (commands.length == 1) {
         	Matcher match = SET_STATEMENT.matcher(commands[0]);
         	if (match.matches()) {
@@ -406,6 +409,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         	}
         	match = TRANSACTION_STATEMENT.matcher(commands[0]);
         	if (match.matches()) {
+    			logger.finer("Executing as transaction statement"); //$NON-NLS-1$
         		if (resultsMode == ResultsMode.RESULTSET) {
         			throw new TeiidSQLException(JDBCPlugin.Util.getString("StatementImpl.set_result_set")); //$NON-NLS-1$
         		}
@@ -422,6 +426,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         	}
         	match = SHOW_STATEMENT.matcher(commands[0]);
         	if (match.matches()) {
+    			logger.finer("Executing as show statement"); //$NON-NLS-1$
         		if (resultsMode == ResultsMode.UPDATECOUNT) {
         			throw new TeiidSQLException(JDBCPlugin.Util.getString("StatementImpl.show_update_count")); //$NON-NLS-1$
         		}
@@ -503,7 +508,9 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
             for (int i = 0; i < results.length; i++) {
             	updateCounts[i] = (Integer)results[i].get(0);
             }
-            
+            if (logger.isLoggable(Level.FINER)) {
+            	logger.fine(JDBCPlugin.Util.getString("Recieved update counts: " + Arrays.toString(updateCounts))); //$NON-NLS-1$
+            }
             // In update scenarios close the statement implicitly
             try {
 				getDQP().closeRequest(getCurrentRequestID());

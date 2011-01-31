@@ -48,6 +48,7 @@ import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.teiid.client.ResultsMessage;
@@ -146,6 +147,9 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 			rmetadata = new FilteredResultsMetadata(rmetadata, resultColumns);
 		}
 		this.fetchSize = statement.getFetchSize();
+		if (logger.isLoggable(Level.FINER)) {
+			logger.finer("Creating ResultSet requestID: " + requestID + " beginRow: " + resultsMsg.getFirstRow() + " resultsColumns: " + resultColumns + " parameters: " + parameters); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		}
 	}
 	
 	public void setMaxFieldSize(int maxFieldSize) {
@@ -356,7 +360,9 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
     }
     
     public Batch requestBatch(int beginRow) throws SQLException{
-    	logger.fine("CursorResultsImpl.requestBatch] thread name: " + Thread.currentThread().getName() + " requestID: " + requestID + " beginRow: " + beginRow ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    	if (logger.isLoggable(Level.FINER)) {
+    		logger.finer("requestBatch requestID: " + requestID + " beginRow: " + beginRow ); //$NON-NLS-1$ //$NON-NLS-2$
+    	}
     	checkClosed();
         try {
         	ResultsFuture<ResultsMessage> results = statement.getDQP().processCursorRequest(requestID, beginRow, fetchSize);
@@ -365,6 +371,11 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
         		timeoutSeconds = Integer.MAX_VALUE;
         	}
         	ResultsMessage currentResultMsg = results.get(timeoutSeconds, TimeUnit.SECONDS);
+        	
+            if (currentResultMsg.getException() != null) {
+                throw TeiidSQLException.create(currentResultMsg.getException());
+            }
+
     		this.accumulateWarnings(currentResultMsg);
     		return getCurrentBatch(currentResultMsg);
         } catch (TeiidProcessingException e) {

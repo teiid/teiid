@@ -138,6 +138,9 @@ public class JDBCMetdataProcessor {
 			String nameInSource = procedureName;
 			if (useProcedureSpecificName && rsColumns >= 9) {
 				procedureName = procedures.getString(9);
+				if (procedureName == null) {
+					procedureName = nameInSource;
+				}
 			}
 			String fullProcedureName = getFullyQualifiedName(procedureCatalog, procedureSchema, procedureName);
 			Procedure procedure = metadataFactory.addProcedure(useFullSchemaName?fullProcedureName:procedureName);

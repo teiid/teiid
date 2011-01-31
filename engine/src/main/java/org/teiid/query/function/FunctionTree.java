@@ -263,11 +263,11 @@ public class FunctionTree {
         String methodName = method.getName();
 
         // Get input types for path
-        FunctionParameter[] inputParams = method.getInputParameters();
+        List<FunctionParameter> inputParams = method.getInputParameters();
         List<Class> inputTypes = new LinkedList<Class>();
         if(inputParams != null) {
-            for(int i=0; i<inputParams.length; i++) {
-                String typeName = inputParams[i].getType();
+            for(int i=0; i<inputParams.size(); i++) {
+                String typeName = inputParams.get(i).getType();
                 inputTypes.add(DataTypeManager.getDataTypeClass(typeName));
             }
         }

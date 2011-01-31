@@ -146,7 +146,7 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 			// check to see if the vdb has been modified when server is down; if it is then clear the old files
 			if (this.serializer.isStale(cacheFile, unit.getRoot().getLastModified())) {
 				this.serializer.removeAttachments(unit);
-				LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+unit.getRoot().getName()+" old cached metadata has been removed"); //$NON-NLS-1$ //$NON-NLS-2$				
+				LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB", unit.getRoot().getName(), "old cached metadata has been removed"); //$NON-NLS-1$ //$NON-NLS-2$				
 			}
 			MetadataStoreGroup stores = this.serializer.loadSafe(cacheFile, MetadataStoreGroup.class);
 			if (stores == null) {				
@@ -155,7 +155,7 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 				stores.addStore(imf.getMetadataStore(vdbRepository.getSystemStore().getDatatypes()));
 			}
 			else {
-				LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+unit.getRoot().getName()+" has being loaded from cached metadata"); //$NON-NLS-1$ //$NON-NLS-2$
+				LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB", unit.getRoot().getName(), "was loaded from cached metadata"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			unit.addAttachment(MetadataStoreGroup.class, stores);				
 		}
@@ -176,7 +176,7 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 			unit.addAttachment(UDFMetaData.class, udf);
 		}
 				
-		LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+unit.getRoot().getName()+" has been parsed."); //$NON-NLS-1$ //$NON-NLS-2$
+		LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB", unit.getRoot().getName(), "has been parsed."); //$NON-NLS-1$ //$NON-NLS-2$
 		return vdb;
 	}
 	

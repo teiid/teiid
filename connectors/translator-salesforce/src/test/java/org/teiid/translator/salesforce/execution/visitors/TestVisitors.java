@@ -24,6 +24,7 @@ package org.teiid.translator.salesforce.execution.visitors;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -34,15 +35,19 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Select;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.salesforce.Constants;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.execution.QueryExecutionImpl;
@@ -101,6 +106,16 @@ public class TestVisitors {
             Column obj = contactCols.get(i);
             obj.setNameInSource(contactNameInSource[i]);
         }
+
+        
+        List<ProcedureParameter> params = new LinkedList<ProcedureParameter>();
+        params.add(RealMetadataFactory.createParameter("type", SPParameter.IN, TypeFacility.RUNTIME_NAMES.STRING));
+        params.add(RealMetadataFactory.createParameter("start", SPParameter.IN, TypeFacility.RUNTIME_NAMES.TIMESTAMP));
+        params.add(RealMetadataFactory.createParameter("end", SPParameter.IN, TypeFacility.RUNTIME_NAMES.TIMESTAMP));
+        
+        Procedure getUpdated = RealMetadataFactory.createStoredProcedure("GetUpdated", salesforceModel, params, "GetUpdated");
+        getUpdated.setResultSet(RealMetadataFactory.createResultSet("rs", new String[] {"updated"}, new String[] {TypeFacility.RUNTIME_NAMES.STRING}));
+        
         return new TransformationMetadata(null, new CompositeMetadataStore(store), null, FakeMetadataFactory.SFM.getSystemFunctions(), null);
     }    
 

@@ -31,7 +31,6 @@ import org.teiid.cache.Cache;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
 import org.teiid.cache.DefaultCacheFactory;
-import org.teiid.cache.Cache.Type;
 import org.teiid.core.TeiidRuntimeException;
 
 public class ClusterableCacheFactory implements CacheFactory, Serializable {
@@ -42,7 +41,7 @@ public class ClusterableCacheFactory implements CacheFactory, Serializable {
 	private String cacheManagerName;
 	
 	@Override
-	public <K, V> Cache<K, V> get(Type type, CacheConfiguration config) {
+	public <K, V> Cache<K, V> get(String location, CacheConfiguration config) {
 		if (this.delegate == null) {
 			Object cacheManager = getClusteredCache();
 			if (cacheManager == null) {
@@ -56,7 +55,7 @@ public class ClusterableCacheFactory implements CacheFactory, Serializable {
 				}
 			}
 		}
-		return delegate.get(type, config);
+		return delegate.get(location, config);
 	}
 
 	public void setResultsetCacheName(String name) {

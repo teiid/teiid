@@ -214,7 +214,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 		this.errors = errors;
 	}	
 	
-	public List<ValidationError> getValidationErrors(ValidationError.Severity severity){
+	public synchronized List<ValidationError> getValidationErrors(ValidationError.Severity severity){
 		if (this.errors == null) {
 			return Collections.emptyList();
 		}
@@ -227,7 +227,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 		return list;
 	}	
 	
-    public ValidationError addError(String severity, String message) {
+    public synchronized ValidationError addError(String severity, String message) {
         if (this.errors == null) {
             this.errors = new ArrayList<ValidationError>();
         }
@@ -236,14 +236,14 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
         return ve;
     }
     
-    public boolean removeError(ValidationError remove) {
+    public synchronized boolean removeError(ValidationError remove) {
     	if (this.errors == null) {
     		return false;
     	}
     	return this.errors.remove(remove);
     }
     
-    public void clearErrors() {
+    public synchronized void clearErrors() {
     	this.errors.clear();
     }
 	

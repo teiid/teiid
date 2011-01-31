@@ -36,7 +36,6 @@ import org.jboss.cache.eviction.RemoveOnEvictActionPolicy;
 import org.teiid.cache.Cache;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
-import org.teiid.cache.Cache.Type;
 import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.core.TeiidRuntimeException;
 
@@ -55,7 +54,7 @@ public class JBossCacheFactory implements CacheFactory, Serializable{
 	/**
 	 * {@inheritDoc}
 	 */
-	public Cache get(Type type, CacheConfiguration config) {
+	public Cache get(String location, CacheConfiguration config) {
 		if (!destroyed) {
 			
 			if (!this.cacheStore.getCacheStatus().allowInvocations()) {
@@ -63,7 +62,7 @@ public class JBossCacheFactory implements CacheFactory, Serializable{
 			}
 			
 			Node cacheRoot = this.cacheStore.getRoot().addChild(Fqn.fromString("Teiid")); //$NON-NLS-1$
-			Node node = cacheRoot.addChild(Fqn.fromString(type.location()));
+			Node node = cacheRoot.addChild(Fqn.fromString(location));
 			node.setResident(true);
 			
 			Region cacheRegion = this.cacheStore.getRegion(node.getFqn(), true);

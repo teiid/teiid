@@ -45,6 +45,16 @@ public class TestFunctionMethod extends TestCase {
         UnitTestUtil.helpTestEquivalence(0, m1, m1);
     }
     
+    public void testEquivalence11() {
+        FunctionParameter pout = new FunctionParameter("out", "string"); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        FunctionMethod m1 = new FunctionMethod("length", "", FunctionCategoryConstants.STRING, //$NON-NLS-1$ //$NON-NLS-2$
+            "com.metamatrix.query.function.FunctionMethods", "length",  //$NON-NLS-1$ //$NON-NLS-2$
+            null, pout );    
+            
+        UnitTestUtil.helpTestEquivalence(0, m1, m1);
+    }    
+    
     public void testEquivalence2() {
         FunctionParameter p1 = new FunctionParameter("in", "string"); //$NON-NLS-1$ //$NON-NLS-2$
         FunctionParameter pout = new FunctionParameter("out", "string"); //$NON-NLS-1$ //$NON-NLS-2$
