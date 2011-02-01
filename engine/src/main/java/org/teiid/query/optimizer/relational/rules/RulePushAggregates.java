@@ -530,8 +530,11 @@ public class RulePushAggregates implements
                                CapabilitiesFinder capFinder) throws TeiidComponentException,
                                                             QueryMetadataException, QueryPlannerException {
 
-        Map<PlanNode, List<AggregateSymbol>> aggregateMap = createNodeMapping(groupNode, allAggregates);
-        Map<PlanNode, List<SingleElementSymbol>> groupingMap = createNodeMapping(groupNode, groupingExpressions);
+        Map<PlanNode, List<AggregateSymbol>> aggregateMap = createNodeMapping(groupNode, allAggregates, true);
+        if (aggregateMap == null) {
+        	return;
+        }
+        Map<PlanNode, List<SingleElementSymbol>> groupingMap = createNodeMapping(groupNode, groupingExpressions, false);
 
         Set<PlanNode> possibleTargetNodes = new HashSet<PlanNode>(aggregateMap.keySet());
         possibleTargetNodes.addAll(groupingMap.keySet());
@@ -707,26 +710,25 @@ public class RulePushAggregates implements
     }
 
     private <T extends SingleElementSymbol> Map<PlanNode, List<T>> createNodeMapping(PlanNode groupNode,
-                                                                       Collection<T> expressions) {
+                                                                       Collection<T> expressions, boolean aggs) {
         Map<PlanNode, List<T>> result = new HashMap<PlanNode, List<T>>();
         if (expressions == null) {
             return result;
         }
         for (T aggregateSymbol : expressions) {
-            if (aggregateSymbol instanceof AggregateSymbol) {
-                AggregateSymbol partitionAgg = (AggregateSymbol)aggregateSymbol;
-                if (partitionAgg.isDistinct()) {
-                    continue; //currently we cann't consider distinct aggs
-                }
-            }
-            
+        	if (aggs && ((AggregateSymbol)aggregateSymbol).getExpression() == null) {
+        		return null; //count(*) is not yet handled.  a general approach would be count(*) => count(r.col) * count(l.col), but the logic here assumes a simpler initial mapping
+        	}
             Set<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(aggregateSymbol);
             if (groups.isEmpty()) {
-                continue;
+            	continue;
             }
             PlanNode originatingNode = FrameUtil.findOriginatingNode(groupNode, groups);
             if (originatingNode == null) {
-                continue;
+            	if (aggs) {
+            		return null;  //should never happen
+            	}
+            	continue;
             }
 
             PlanNode parentAccess = NodeEditor.findParent(originatingNode, NodeConstants.Types.ACCESS, NodeConstants.Types.GROUP);
@@ -739,7 +741,17 @@ public class RulePushAggregates implements
             }
 
             if (originatingNode.getParent() == groupNode) {
+            	//anything logically applied after the join and is
+            	//dependent upon the cardinality prevents us from optimizing.
+            	if (aggs && RuleRemoveOptionalJoins.isCardinalityDependent((AggregateSymbol)aggregateSymbol)) {
+            		return null;
+            	}
                 continue;
+            }
+            
+            if (aggs && ((AggregateSymbol)aggregateSymbol).isDistinct()) {
+            	//TODO: support distinct
+            	continue;
             }
 
             List<T> symbols = result.get(originatingNode);
