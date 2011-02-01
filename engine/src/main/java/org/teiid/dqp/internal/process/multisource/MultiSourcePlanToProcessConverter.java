@@ -23,11 +23,14 @@
 package org.teiid.dqp.internal.process.multisource;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
@@ -36,6 +39,7 @@ import org.teiid.core.id.IDGenerator;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -53,10 +57,16 @@ import org.teiid.query.processor.relational.UnionAllNode;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Insert;
+import org.teiid.query.sql.lang.SPParameter;
+import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.util.CommandContext;
 
 
@@ -120,6 +130,12 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
         ModelMetaData model = vdb.getModel(modelName);
         List<AccessNode> accessNodes = new ArrayList<AccessNode>();
         
+        boolean hasOutParams = false;
+        if (accessNode.getCommand() instanceof StoredProcedure) {
+        	StoredProcedure sp = (StoredProcedure)accessNode.getCommand();
+        	hasOutParams = sp.returnParameters() && sp.getProjectedSymbols().size() > sp.getResultSetColumns().size();
+        }
+        
         for(String sourceName:model.getSourceNames()) {
             
             // Create a new cloned version of the access node and set it's model name to be the bindingUUID
@@ -130,13 +146,12 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
             // Modify the command to pull the instance column and evaluate the criteria
             Command command = (Command)instanceNode.getCommand().clone();
             
-            // Replace all multi-source elements with the source name
-            DeepPreOrderNavigator.doVisit(command, new MultiSourceElementReplacementVisitor(sourceName));
-
-            if (!RelationalNodeUtil.shouldExecute(command, false)) {
-                continue;
-            }
+            command = rewriteCommand(sourceName, command);
             
+            if (command == null) {
+            	continue;
+            }
+
             // Rewrite the command now that criteria may have been simplified
             try {
                 command = QueryRewriter.rewrite(command, metadata, null);                    
@@ -151,10 +166,21 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
                                 
             accessNodes.add(instanceNode);
         }
+        
+        if (hasOutParams && accessNodes.size() != 1) {
+        	throw new QueryPlannerException(QueryPlugin.Util.getString("MultiSource.out_procedure", accessNode.getCommand())); //$NON-NLS-1$
+        }
 
         switch(accessNodes.size()) {
             case 0: 
             {
+                if (RelationalNodeUtil.isUpdate(accessNode.getCommand())) {
+                	//should return a 0 update count
+                	ProjectNode pnode = new ProjectNode(getID());
+                	pnode.setElements(accessNode.getElements());
+                	pnode.setSelectSymbols(Arrays.asList(new ExpressionSymbol("x", new Constant(0)))); //$NON-NLS-1$
+                	return pnode;
+                }
                 // Replace existing access node with a NullNode
                 NullNode nullNode = new NullNode(getID());
                 nullNode.setElements(accessNode.getElements());
@@ -205,5 +231,51 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
             }
         }
     }
+
+	private Command rewriteCommand(String sourceName, Command command) throws ExpressionEvaluationException, TeiidComponentException {
+		if (command instanceof StoredProcedure) {
+			StoredProcedure obj = (StoredProcedure)command;
+			for (Iterator<SPParameter> params = obj.getMapOfParameters().values().iterator(); params.hasNext();) {
+				SPParameter param = params.next();
+				if (param.getParameterType() != SPParameter.IN) {
+					continue;
+				}
+				String shortName = SingleElementSymbol.getShortName(param.getName());        
+			    if(shortName.equalsIgnoreCase(MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME)) {
+		        	Constant source = (Constant)param.getExpression();
+		    		params.remove();
+		    		if (param.isUsingDefault() && source.isNull()) {
+		    			continue;
+		    		}
+		        	if (!source.getValue().equals(sourceName)) {
+		        		return null;
+		        	}
+		        }
+			}
+		} if (command instanceof Insert) {
+			Insert obj = (Insert)command;
+			for (int i = 0; i < obj.getVariables().size(); i++) {
+				ElementSymbol elem = obj.getVariables().get(i);
+		        Object metadataID = elem.getMetadataID();            
+		        if(metadataID instanceof MultiSourceElement) {
+		        	Constant source = (Constant)obj.getValues().get(i);
+		    		obj.getVariables().remove(i);
+		    		obj.getValues().remove(i);
+		        	if (!source.getValue().equals(sourceName)) {
+		        		return null;
+		        	}
+		        }
+			}
+		} else {
+		    // Replace all multi-source elements with the source name
+		    DeepPreOrderNavigator.doVisit(command, new MultiSourceElementReplacementVisitor(sourceName));
+		}
+		
+		if (!RelationalNodeUtil.shouldExecute(command, false)) {
+            return null;
+        }
+		
+		return command;
+	}
 
 }

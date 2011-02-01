@@ -2029,5 +2029,11 @@ public class TestValidator {
     @Test public void testTextAggHeader() throws Exception {
     	helpValidate("select textagg(for e1 || 1 HEADER) from pm1.g1", new String[] {"TEXTAGG(FOR (e1 || 1) HEADER)"}, FakeMetadataFactory.example1Cached());  //$NON-NLS-1$
     }
+    
+    @Test public void testMultiSourceProcValue() throws Exception {  
+    	Set<String> models = new HashSet<String>();
+    	models.add("MultiModel");
+        helpValidate("exec MultiModel.proc('a', (select 1))", new String[] {"MultiModel.proc.source_name"}, new MultiSourceMetadataWrapper(FakeMetadataFactory.exampleMultiBinding(), models));  //$NON-NLS-1$
+    }
 
 }

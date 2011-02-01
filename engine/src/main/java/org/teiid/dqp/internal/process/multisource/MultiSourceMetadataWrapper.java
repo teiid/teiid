@@ -337,8 +337,20 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	}
 	
 	@Override
-	public boolean isMultiSourceElement(Object elementId) {
-		return elementId instanceof MultiSourceElement;
+	public boolean isMultiSourceElement(Object elementId) throws QueryMetadataException, TeiidComponentException {
+		if (elementId instanceof MultiSourceElement) {
+			return true;
+		}
+		Object gid = getGroupIDForElementID(elementId);
+		if (isProcedure(gid)) {
+			Object modelID = this.getModelID(gid);
+	        String modelName = this.getFullName(modelID);
+	        if(multiSourceModels.contains(modelName)) {
+				String shortName = getShortElementName(getFullName(elementId));        
+		        return shortName.equalsIgnoreCase(MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME);
+	        }
+		}
+		return false;
 	}
 
 }

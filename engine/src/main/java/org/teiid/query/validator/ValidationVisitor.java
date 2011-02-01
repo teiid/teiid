@@ -126,7 +126,6 @@ import org.teiid.query.sql.symbol.XMLQuery;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
-import org.teiid.query.sql.visitor.CommandCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
@@ -417,6 +416,31 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 				}
 			}
     	}
+    }
+    
+    @Override
+    public void visit(StoredProcedure obj) {
+		for (SPParameter param : obj.getInputParameters()) {
+			try {
+				if (!(param.getExpression() instanceof Constant) && getMetadata().isMultiSourceElement(param.getMetadataID())) {
+	            	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.multisource_constant", param.getParameterSymbol()), param.getParameterSymbol()); //$NON-NLS-1$
+	            	continue;
+	            }
+                if (EvaluatableVisitor.isFullyEvaluatable(param.getExpression(), true)) {
+	                try {
+	                    // If nextValue is an expression, evaluate it before checking for null
+	                    Object evaluatedValue = Evaluator.evaluate(param.getExpression());
+	                    if(evaluatedValue == null && ! getMetadata().elementSupports(param.getMetadataID(), SupportConstants.Element.NULL)) {
+	                        handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0055", param.getParameterSymbol()), param.getParameterSymbol()); //$NON-NLS-1$
+	                    }
+	                } catch(ExpressionEvaluationException e) {
+	                    //ignore for now, we don't have the context which could be the problem
+	                }
+	            }
+            } catch (TeiidComponentException e) {
+            	handleException(e);
+            }
+		}
     }
 
 	private void validateAssignment(LanguageObject obj,
@@ -790,14 +814,12 @@ public class ValidationVisitor extends AbstractValidationVisitor {
             }
 
             // Get elements in the group.
-    		Collection insertElmnts = new LinkedList(ResolverUtil.resolveElementsInGroup(insertGroup, getMetadata()));
+    		Collection<ElementSymbol> insertElmnts = new LinkedList<ElementSymbol>(ResolverUtil.resolveElementsInGroup(insertGroup, getMetadata()));
 
     		// remove all elements specified in insert to get the ignored elements
     		insertElmnts.removeAll(vars);
 
-			Iterator ignoreIter = insertElmnts.iterator();
-			while(ignoreIter.hasNext()) {
-	            ElementSymbol nextElmnt = (ElementSymbol) ignoreIter.next();
+    		for (ElementSymbol nextElmnt : insertElmnts) {
 				if(!getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.DEFAULT_VALUE) &&
 					!getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.NULL) &&
                     !getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT) &&
@@ -812,12 +834,17 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                 Expression nextValue = (Expression) valIter.next();
                 ElementSymbol nextVar = (ElementSymbol) varIter.next();
 
+                if (!(nextValue instanceof Constant) && getMetadata().isMultiSourceElement(nextVar.getMetadataID())) {
+                	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.multisource_constant", nextVar), nextVar); //$NON-NLS-1$
+                	continue;
+                }
+                
                 if (EvaluatableVisitor.isFullyEvaluatable(nextValue, true)) {
                     try {
                         // If nextValue is an expression, evaluate it before checking for null
                         Object evaluatedValue = Evaluator.evaluate(nextValue);
                         if(evaluatedValue == null && ! getMetadata().elementSupports(nextVar.getMetadataID(), SupportConstants.Element.NULL)) {
-                            handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0055", SQLStringVisitor.getSQLString(nextVar)), nextVar); //$NON-NLS-1$
+                            handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0055", nextVar), nextVar); //$NON-NLS-1$
                         }
                     } catch(ExpressionEvaluationException e) {
                         //ignore for now, we don't have the context which could be the problem

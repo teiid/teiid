@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/custom.dtd">
+%CustomDTD;
+]>
+<chapter id="multisource">
+	<title>Multi-source models</title>
+	<para>Multi-source models can be used to quickly access data in multiple sources with homogeneous metadata.  
+	Since all sources utilize the same physical metadata, this feature is most appropriate for accessing the same source type with multiple instances.
+	<para>A model is marked as supporting multi-source by setting the property supports-multi-source-bindings to true.  
+	With supports-multi-source-bindings set to true, 1 or more uniquely named source elements can be added to the model.  
+	See <xref linkend="dynamic_vdbs"/> for a full template of the vdb.xml.</para>
+	A physical table in a multi-source model is effectively treated as a view that is a 
+	union all of the actual physical table from each of the configured sources.  These tables tables are implicitly partitioned on a string pseudo-column "source_name".  
+	The "source_name" column will be available to your use queries for a multi-source model regardless of whether it is explicitly part of the metadata.  
+	The source_name column value for a particular row is the source name used to obtain that row.        
+	More complex partitioning scenarios, such as heterogeneous sources or list partitioning will require the use of a <xref linkend="partitioned_union"/></para>
+	<para>In some scenarios, the source_name column can be manually added to the physical metadata in the Designer tool so that virtual layer logic can be multi-source aware.  
+	It is important to understand that a column or IN procedure parameter named source_name will always be treated as the explicit form of the multi-source source_name column
+	 and will no longer be treated as an actual physical column or procedure parameter.</para>
+    <section>
+    	<title>Multi-source SELECTs</title>
+    	<para>A multi-source SELECT may use the source_name column anywhere a column reference is allowed.  As a final stage of planning, a source query will be generated against each source and each instance of the source_name column replaced by the appropriate value.
+    	If the resulting query still needs executed, it is sent to the source.  If the WHERE clause evaluates to always false, then the query is pruned from the result.  All results are then unioned together and returned as the full result.
+    	</para>
+    </section>
+    <section>
+    	<title>Multi-source INSERTs</title>
+    	<para>A multi-source INSERT may use the source_name column as an insert target column to specify which source should be targeted by the INSERT.  Only a INSERT using the VALUES clause is supported and the source_name column value must be a literal.  
+    	If the source_name column is not part of the INSERT column, then the INSERT will be issued against every source.  The sum of the update counts will be returned as the resultant update count.</para>
+    </section>
+    <section>
+    	<title>Multi-source UPDATEs</title>
+    	<para>A multi-source delete functions just like SELECT, however it is not possible to use the source_name column as a target column in the change set.   Any other usage of the source_name column will be the appropriate value for each source.  
+    	If the WHERE clause evaluates to always false, then no update will be issued to the source.  The sum of the update counts will be returned as the resultant update count.</para>	
+    </section>
+    <section>
+    	<title>Multi-source DELETEs</title>
+    	<para>A multi-source delete functions just like SELECT.  Any usage of the source_name column will be the appropriate value for each source.  
+    	If the WHERE clause evaluates to always false, then no delete will be issued to the source.  The sum of the update counts will be returned as the resultant update count.</para>
+    </section>
+    <section>
+    	<title>Multi-source Stored Procedures</title>
+    	<para>A physical stored procedures requires the manual addition of a string source_name parameter to allow for specifying which source the procedure is executed on.
+    	If the source_name parameter is not added or if named parameters are used and the source_name parameter is allowed to default to a null value, then the procedure will be executed on
+    	each source and the results unioned together.</para>
+    	<para>It is not possible to execute procedures that required to return IN/OUT, OUT, or RETURN parameters values on more than 1 source at a time.</para>
+    </section>
+    <section>
+    	<title>Additional Concerns</title>
+    	<para>When running under a transaction of in a mode that detects the need for a transation and multiple updates are performed, an attempt will be made to enlist each source in the same XA transaction.</para>
+    </section>
+</chapter>

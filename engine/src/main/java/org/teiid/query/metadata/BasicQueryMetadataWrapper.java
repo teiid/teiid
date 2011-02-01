@@ -380,7 +380,7 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 	}
 	
 	@Override
-	public boolean isMultiSourceElement(Object elementId) {
+	public boolean isMultiSourceElement(Object elementId) throws QueryMetadataException, TeiidComponentException {
 		return actualMetadata.isMultiSourceElement(elementId);
 	}
 

@@ -28,6 +28,7 @@
 <UL>
 	<LI><B>Virtual procedure out params</B> - virtual procedures can now have RETURN/OUT/INOUT parameters to return values.
 	<LI><B>OLAP</B> - OLAP translator is now part of Teiid kit using OLAP4J
+	<LI><B>Multi-source procedures</B> - multi-source handling was expanded to cover stored procedure execution.  See the Reference for more.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -35,6 +36,13 @@
   <li>TRANSLATE/HAS CRITERIA has been deprecated.  An alternative approach to update procedures will be introduced in a subsequent version.
   <li>Support for named parameter syntax using param=value has been deprecated, since it is ambiguous with a comparison predicate boolean value expression.  param<b>=></b>value should be used instead.  
 </ul>
+
+<h4>from 7.3</h4>
+<ul>
+  <li>The use of an IN procedure parameter with the name "source_name" in a multi-source model, will now be treated the parameter that controls which source
+  the procedure will execute against. 
+</ul>
+
 <h4>from 7.2</h4>
 <ul>
   <li>The default JDBC credentials are user/user - not admin/teiid

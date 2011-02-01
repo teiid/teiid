@@ -163,6 +163,10 @@ public class StoredProcedure extends ProcedureContainer {
         List<SPParameter> listOfParameters = new ArrayList<SPParameter>(mapOfParameters.values());
         return listOfParameters;
     }
+    
+    public Map<Integer, SPParameter> getMapOfParameters() {
+		return mapOfParameters;
+	}
 
     public SPParameter getParameter(int index){
         return mapOfParameters.get(new Integer(index));

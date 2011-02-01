@@ -56,6 +56,7 @@
   <xi:include href="content/transaction_support.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="content/dataroles.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="content/system_schema.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="content/multisource.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="content/translators.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="content/federated_planning.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="content/architecture.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />

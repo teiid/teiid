@@ -26,7 +26,6 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -57,8 +56,6 @@ import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
-
-
 /** 
  * It's important here that the MultiSourceCapabilityFinder is used since some capabilities 
  * will never be pushed to the source
@@ -76,10 +73,9 @@ public class TestMultiSourcePlanToProcessConverter {
         public TupleSource registerRequest(CommandContext context, Command command, String modelName, String connectorBindingId, int nodeID) throws org.teiid.core.TeiidComponentException {
         	assertNotNull(connectorBindingId);
         	
-        	Collection elements = ElementCollectorVisitor.getElements(command, true, true);
+        	Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(command, true, true);
             
-            for (Iterator i = elements.iterator(); i.hasNext();) {
-                ElementSymbol symbol = (ElementSymbol)i.next();
+        	for (ElementSymbol symbol : elements) {
                 if (symbol.getMetadataID() instanceof MultiSourceElement) {
                     fail("Query Contains a MultiSourceElement -- MultiSource expansion did not happen"); //$NON-NLS-1$
                 }
@@ -259,6 +255,65 @@ public class TestMultiSourcePlanToProcessConverter {
         final MultiSourceDataManager dataMgr = new MultiSourceDataManager();
         dataMgr.setMustRegisterCommands(true);
         dataMgr.addData("UPDATE MultiModel.Phys SET a = '1' WHERE b = 'z'", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, FakeMetadataFactory.exampleMultiBindingVDB());
+    }
+    
+    @Test public void testInsertMatching() throws Exception {
+        final QueryMetadataInterface metadata = FakeMetadataFactory.exampleMultiBinding();
+        final String userSql = "INSERT INTO MultiModel.Phys(a, SOURCE_NAME) VALUES ('a', 'a')"; //$NON-NLS-1$
+        final String multiModel = "MultiModel"; //$NON-NLS-1$
+        final int sources = 3;
+        final List[] expected = new List[] { Arrays.asList(1)};
+        final MultiSourceDataManager dataMgr = new MultiSourceDataManager();
+        dataMgr.setMustRegisterCommands(true);
+        dataMgr.addData("INSERT INTO MultiModel.Phys (a) VALUES ('a')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, FakeMetadataFactory.exampleMultiBindingVDB());
+    }
+    
+    @Test public void testInsertNotMatching() throws Exception {
+        final QueryMetadataInterface metadata = FakeMetadataFactory.exampleMultiBinding();
+        final String userSql = "INSERT INTO MultiModel.Phys(a, SOURCE_NAME) VALUES ('a', 'x')"; //$NON-NLS-1$
+        final String multiModel = "MultiModel"; //$NON-NLS-1$
+        final int sources = 3;
+        final List[] expected = new List[] { Arrays.asList(0)};
+        final MultiSourceDataManager dataMgr = new MultiSourceDataManager();
+        dataMgr.setMustRegisterCommands(true);
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, FakeMetadataFactory.exampleMultiBindingVDB());
+    }
+    
+    @Test public void testInsertAll() throws Exception {
+    	final QueryMetadataInterface metadata = FakeMetadataFactory.exampleMultiBinding();
+        final String userSql = "INSERT INTO MultiModel.Phys(a) VALUES ('a')"; //$NON-NLS-1$
+        final String multiModel = "MultiModel"; //$NON-NLS-1$
+        final int sources = 3;
+        final List[] expected = new List[] { Arrays.asList(3)};
+        final MultiSourceDataManager dataMgr = new MultiSourceDataManager();
+        dataMgr.setMustRegisterCommands(true);
+        dataMgr.addData("INSERT INTO MultiModel.Phys (a) VALUES ('a')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, FakeMetadataFactory.exampleMultiBindingVDB());
+    }
+    
+    @Test public void testProcedure() throws Exception {
+    	final QueryMetadataInterface metadata = FakeMetadataFactory.exampleMultiBinding();
+        final String userSql = "exec MultiModel.proc('b', 'a')"; //$NON-NLS-1$
+        final String multiModel = "MultiModel"; //$NON-NLS-1$
+        final int sources = 3;
+        final List[] expected = new List[] { Arrays.asList(1)};
+        final MultiSourceDataManager dataMgr = new MultiSourceDataManager();
+        dataMgr.setMustRegisterCommands(true);
+        dataMgr.addData("EXEC MultiModel.proc('b')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, FakeMetadataFactory.exampleMultiBindingVDB());
+    }
+    
+    @Test public void testProcedureAll() throws Exception {
+    	final QueryMetadataInterface metadata = FakeMetadataFactory.exampleMultiBinding();
+        final String userSql = "exec MultiModel.proc(\"in\"=>'b')"; //$NON-NLS-1$
+        final String multiModel = "MultiModel"; //$NON-NLS-1$
+        final int sources = 3;
+        final List[] expected = new List[] { Arrays.asList(1), Arrays.asList(1), Arrays.asList(1)};
+        final MultiSourceDataManager dataMgr = new MultiSourceDataManager();
+        dataMgr.setMustRegisterCommands(true);
+        dataMgr.addData("EXEC MultiModel.proc('b')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, FakeMetadataFactory.exampleMultiBindingVDB());
     }
 

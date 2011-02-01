@@ -23,11 +23,6 @@
 package org.teiid.dqp.internal.process.multisource;
 
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.query.rewriter.QueryRewriter;
-import org.teiid.query.sql.lang.From;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -56,28 +51,4 @@ public class MultiSourceElementReplacementVisitor extends ExpressionMappingVisit
         return expr;
     }
     
-    public void visit(Insert obj) {
-    	for (int i = 0; i < obj.getVariables().size(); i++) {
-    		Expression expr = (Expression)obj.getVariables().get(i);
-            if(expr instanceof ElementSymbol) {
-                ElementSymbol elem = (ElementSymbol) expr;
-                Object metadataID = elem.getMetadataID();            
-                if(metadataID instanceof MultiSourceElement) {
-                	Constant source = (Constant)obj.getValues().get(i);
-            		obj.getVariables().remove(i);
-            		obj.getValues().remove(i);
-                	if (!source.getValue().equals(this.bindingName)) {
-	                	Select select = new Select(obj.getVariables());
-	                    From from = new From();
-	                    from.addGroup(obj.getGroup());	                    
-	                    Query query = new Query();
-	                    query.setSelect(select);
-	                    query.setFrom(from);
-	                    query.setCriteria(QueryRewriter.FALSE_CRITERIA);
-	                    obj.setQueryExpression(query);                		
-                	}
-                }
-            }
-    	}
-    }    
 }

@@ -2321,6 +2321,15 @@ public class FakeMetadataFactory {
         QueryNode sq2n1 = new QueryNode("pm1.sq1", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
                                         + "execute string 'SELECT a, b FROM MultiModel.Phys where SOURCE_NAME = Virt.sq1.in'; END"); //$NON-NLS-1$ 
         FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("Virt.sq1", virtModel, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
+
+        FakeMetadataObject rs3 = FakeMetadataFactory.createResultSet("MultiModel.rs1", virtModel, new String[] { "a", "b" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        FakeMetadataObject rs3p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs3);  //$NON-NLS-1$
+        FakeMetadataObject rs3p2 = FakeMetadataFactory.createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
+        FakeMetadataObject rs3p3 = FakeMetadataFactory.createParameter("source_name", 3, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
+        rs3p3.putProperty(FakeMetadataObject.Props.NULL, Boolean.TRUE);
+        FakeMetadataObject sq2 = FakeMetadataFactory.createStoredProcedure("MultiModel.proc", physModel, Arrays.asList(new FakeMetadataObject[] { rs3p1, rs3p2, rs3p3 }), "MultiModel.proc");
+        rs3p2.putProperty(FakeMetadataObject.Props.GROUP, sq2);
+        rs3p3.putProperty(FakeMetadataObject.Props.GROUP, sq2);
         
         FakeMetadataStore store = new FakeMetadataStore();
         store.addObject(virtModel);
@@ -2332,6 +2341,8 @@ public class FakeMetadataFactory {
         
         store.addObject(rs2);
         store.addObject(sq1);
+        store.addObject(rs3);
+        store.addObject(sq2);
         
         return new FakeMetadataFacade(store);
     }
