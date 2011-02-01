@@ -41,6 +41,7 @@ import java.util.concurrent.TimeoutException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Matchers;
+import org.mockito.Mockito;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
@@ -696,6 +697,19 @@ public class TestAllResultsImpl {
 			assertTrue(rs.previous());
 		}
 	}
+    
+    @Test(expected=TeiidSQLException.class) public void testResultsMessageException() throws Exception {
+        ResultsMessage resultsMsg = exampleMessage(exampleResults1(1), new String[] { "IntNum" }, new String[] { JDBCSQLTypeInfo.INTEGER }); //$NON-NLS-1$
+        resultsMsg.setFinalRow(-1);
+        ResultsMessage next = new ResultsMessage();
+        next.setException(new Throwable());
+        ResultsFuture<ResultsMessage> rf = new ResultsFuture<ResultsMessage>();
+        rf.getResultsReceiver().receiveResults(next);
+        Mockito.stub(statement.getDQP().processCursorRequest(0, 2, 0)).toReturn(rf);
+        ResultSetImpl cs = new ResultSetImpl(resultsMsg, statement, null, 2);
+        cs.next();
+        cs.next();
+    }
 	
 	static ResultSetImpl helpTestBatching(StatementImpl statement, int fetchSize, int batchLength,
 			int totalLength) throws InterruptedException, ExecutionException,
