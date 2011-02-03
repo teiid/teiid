@@ -40,7 +40,8 @@
 <h4>from 7.3</h4>
 <ul>
   <li>The use of an IN procedure parameter with the name "source_name" in a multi-source model, will now be treated the parameter that controls which source
-  the procedure will execute against. 
+  the procedure will execute against.
+  <li>Dynamic VDB functions injected via ExecutionFactory.getPushdownFunctions are now scoped to the SYS schema and have a fully qualified name that includes their source type.  For example, instead of oracle_model.relate - which was only valid against the oracle_model source, there is now the SYS.oracle_sdo.relate function that is valid for all Oracle sources.  Any fully-qualified reference to these functions will need updated. 
 </ul>
 
 <h4>from 7.2</h4>
@@ -189,9 +190,8 @@ Documentation and help may be obtained from the local distribution under <a href
 <h2><a name="Licenses">Licenses</a></h2>
 
 <p>Teiid is licensed under the <a href="LICENSE-lgpl-2.1.txt">LGPL</a>. The
-license texts for Teiid and the thirdparty components it uses may be found in the teiid-docs/licenses
-directory of the distribution. <a href="teiid-docs/licenses">Browse
-Licenses</a>
+license texts for Teiid and the thirdparty components it uses may be found in the <a href="teiid-docs/licenses">teiid-docs/licenses</a>
+directory of the distribution. 
 
 </p>
 

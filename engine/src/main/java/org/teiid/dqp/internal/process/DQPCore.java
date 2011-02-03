@@ -694,7 +694,7 @@ public class DQPCore implements DQP {
         this.processWorkerPool = new ThreadReuseExecutor(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, config.getMaxThreads());
         
         if (cacheFactory.isReplicated()) {
-        	matTables = new SessionAwareCache<CachedResults>(this.cacheFactory, SessionAwareCache.Type.RESULTSET, new CacheConfiguration(Policy.LRU, -1, -1, "MaterilizationTables")); //$NON-NLS-1$
+        	matTables = new SessionAwareCache<CachedResults>(this.cacheFactory, SessionAwareCache.Type.RESULTSET, new CacheConfiguration(Policy.EXPIRATION, -1, -1, "MaterilizationTables")); //$NON-NLS-1$
         	matTables.setBufferManager(this.bufferManager);
         }
         

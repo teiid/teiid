@@ -29,6 +29,7 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 
 
@@ -109,7 +110,8 @@ public class FunctionMethod extends AbstractMetadataRecord {
     @XmlElement(name="inputParameters")
     protected List<FunctionParameter> inParameters = new ArrayList<FunctionParameter>();
     private FunctionParameter outputParameter;
-    
+    private Schema parent;
+        
     protected FunctionMethod() {
     }
        
@@ -371,7 +373,7 @@ public class FunctionMethod extends AbstractMetadataRecord {
                 List<FunctionParameter> otherInputs = other.getInputParameters();
                 
                 for(int i=0; i<thisInputs.size(); i++) { 
-                    boolean paramMatch = compareWithNull(thisInputs.get(i), otherInputs.get(i));
+                    boolean paramMatch = EquivalenceUtil.areEqual(thisInputs.get(i), otherInputs.get(i));
                     if(! paramMatch) { 
                         return false;
                     }    
@@ -383,26 +385,6 @@ public class FunctionMethod extends AbstractMetadataRecord {
         } 
         return false;
     }    
-    
-    /**
-     * Compare two objects that may or may not be null and consider null==null
-     * as true.
-     * @param o1 Object 1
-     * @param o2 Object 2
-     * @return True if o1 and o2 are null or if they both aren't and they are equal
-     */
-    private boolean compareWithNull(Object o1, Object o2) {
-        if(o1 == null) { 
-            if(o2 == null) { 
-                return true;
-            }
-            return false;
-        }
-        if(o2 == null) { 
-            return false;
-        }
-        return o1.equals(o2);
-    }
     
     /**
      * Return string version for debugging purposes
@@ -473,5 +455,13 @@ public class FunctionMethod extends AbstractMetadataRecord {
     	}
     	return false;
     }
-     
+    
+    public void setParent(Schema parent) {
+		this.parent = parent;
+	}
+
+    @Override
+    public Schema getParent() {
+    	return parent;
+    }
 }

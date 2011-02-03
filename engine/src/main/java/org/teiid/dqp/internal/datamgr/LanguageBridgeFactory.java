@@ -495,12 +495,22 @@ public class LanguageBridgeFactory {
     org.teiid.language.Function translate(Function function) {
         Expression [] args = function.getArgs();
         List<org.teiid.language.Expression> params = new ArrayList<org.teiid.language.Expression>(args.length);
-        if (args != null) {
-            for (int i = 0; i < args.length; i++) {
-                params.add(translate(args[i]));
-            }
+        for (int i = 0; i < args.length; i++) {
+            params.add(translate(args[i]));
         }
-        return new org.teiid.language.Function(function.getName(), params, function.getType());
+        String name = function.getName();
+        if (function.getFunctionDescriptor() != null) {
+        	name = function.getFunctionDescriptor().getName();
+        }
+        name = SingleElementSymbol.getShortName(name);
+
+        //if there is any ambiguity in the function name it will be up to the translator logic to check the 
+        //metadata
+        org.teiid.language.Function result = new org.teiid.language.Function(name, params, function.getType());
+        if (function.getFunctionDescriptor() != null) {
+        	result.setMetadataObject(function.getFunctionDescriptor().getMethod());
+        }
+        return result;
     }
 
     SearchedCase translate(SearchedCaseExpression expr) {
@@ -515,7 +525,7 @@ public class LanguageBridgeFactory {
 
 
     org.teiid.language.Expression translate(ScalarSubquery ss) {
-        return new org.teiid.language.ScalarSubquery(translate((QueryCommand)ss.getCommand()));
+        return new org.teiid.language.ScalarSubquery(translate(ss.getCommand()));
     }
 
     org.teiid.language.Expression translate(SingleElementSymbol symbol) {
@@ -562,11 +572,12 @@ public class LanguageBridgeFactory {
 
     /* Insert */
     org.teiid.language.Insert translate(Insert insert) {
-        List elements = insert.getVariables();
+        List<ElementSymbol> elements = insert.getVariables();
         List<ColumnReference> translatedElements = new ArrayList<ColumnReference>();
-        for (Iterator i = elements.iterator(); i.hasNext();) {
-            translatedElements.add(translate((ElementSymbol)i.next()));
-        }
+
+        for (ElementSymbol elementSymbol : elements) {
+            translatedElements.add(translate(elementSymbol));
+		}
         
         InsertValueSource valueSource = null;
         if (insert.getQueryExpression() != null) {

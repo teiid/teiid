@@ -83,11 +83,14 @@ public class VDBMetadataFactory {
 			IndexMetadataFactory imf = loadMetadata(vdbURL);
 			
 			Collection <FunctionMethod> methods = null;
+			Collection<FunctionTree> trees = null;
 			if (udfFile != null) {
+				String schema = FileUtils.getFilenameWithoutExtension(udfFile.getPath());
 				methods = FunctionMetadataReader.loadFunctionMethods(udfFile.openStream());
+				trees = Arrays.asList(new FunctionTree(schema, new UDFSource(methods), true));
 			}
 			SystemFunctionManager sfm = new SystemFunctionManager();
-			vdbmetadata = new TransformationMetadata(null, new CompositeMetadataStore(Arrays.asList(getSystem(), imf.getMetadataStore(getSystem().getDatatypes()))), imf.getEntriesPlusVisibilities(), sfm.getSystemFunctions(), new FunctionTree(new UDFSource(methods), true)); 
+			vdbmetadata = new TransformationMetadata(null, new CompositeMetadataStore(Arrays.asList(getSystem(), imf.getMetadataStore(getSystem().getDatatypes()))), imf.getEntriesPlusVisibilities(), sfm.getSystemFunctions(), trees); 
 			VDB_CACHE.put(vdbURL, vdbmetadata);
 			return vdbmetadata;
 		} catch (URISyntaxException e) {

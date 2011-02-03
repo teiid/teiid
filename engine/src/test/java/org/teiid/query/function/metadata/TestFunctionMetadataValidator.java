@@ -92,12 +92,8 @@ public class TestFunctionMetadataValidator extends TestCase {
 	    helpTestValidateNameFail(null);
 	}
 	
-	public void testValidateNameFail2() {
-	    helpTestValidateNameFail("123"); //$NON-NLS-1$
-	}
-
 	public void testValidateNameFail3() {
-	    helpTestValidateNameFail("a b"); //$NON-NLS-1$
+	    helpTestValidateNameFail("a.b"); //$NON-NLS-1$
 	}
 	
 	public void testValidateFunction1() {

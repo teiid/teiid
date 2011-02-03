@@ -168,7 +168,7 @@ public class VDBParserDeployer extends BaseMultipleVFSParsingDeployer<VDBMetaDat
 					if (path == null) {
 						throw new DeploymentException(RuntimePlugin.Util.getString("invalid_udf_file", model.getName())); //$NON-NLS-1$
 					}
-					udf.buildFunctionModelFile(path);
+					udf.buildFunctionModelFile(model.getName(), path);
 				}
 			}		
 			

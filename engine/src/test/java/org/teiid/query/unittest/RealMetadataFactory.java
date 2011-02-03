@@ -302,9 +302,11 @@ public class RealMetadataFactory {
     	List<FunctionTree> udfs = new ArrayList<FunctionTree>();
     	for (Schema schema : metadataStore.getSchemas().values()) {
 			vdbMetaData.addModel(FakeMetadataFactory.createModel(schema.getName(), schema.isPhysical()));
-			udfs.add(new FunctionTree(new UDFSource(schema.getFunctions().values()), true));
+			if (!schema.getFunctions().isEmpty()) {
+				udfs.add(new FunctionTree(schema.getName(), new UDFSource(schema.getFunctions().values()), true));
+			}
 		}
-    	return new TransformationMetadata(vdbMetaData, store, null, FakeMetadataFactory.SFM.getSystemFunctions(), udfs.toArray(new FunctionTree[udfs.size()]));
+    	return new TransformationMetadata(vdbMetaData, store, null, FakeMetadataFactory.SFM.getSystemFunctions(), udfs);
 	}
 	
     /** 

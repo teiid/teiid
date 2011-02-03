@@ -40,7 +40,7 @@ import org.teiid.metadata.FunctionParameter;
  * information and instead differentiates function signatures based on their
  * function name and the names of the arguments.
  */
-public class FunctionForm implements Serializable, Comparable {
+public class FunctionForm implements Serializable, Comparable<FunctionForm> {
 	private static final long serialVersionUID = 2411783099304320334L;
 	
 	private String name;
@@ -245,42 +245,32 @@ public class FunctionForm implements Serializable, Comparable {
      * @param obj Other object
      * @return 1 if other > this, 0 if other == this, -1 if other < this
      */
-    public int compareTo(Object obj) {
-        if(obj == this) { 
-            return 0;
-        } else if(obj == null) { 
-            // Should never happen, but sort nulls low
-            return -1;
-        } else {
-            // may throw ClassCastException - this is expected for compareTo()
-            FunctionForm other = (FunctionForm) obj;
+    public int compareTo(FunctionForm other) {
+        int compare = this.getName().compareTo( other.getName() );
+        if(compare != 0) { 
+            return compare;
+        }
             
-            int compare = this.getName().compareTo( other.getName() );
+        // Look further into arg names to compare as names are ==
+        List otherArgs = other.getArgNames();
+        List myArgs = this.getArgNames();
+        
+        // Compare # of args first
+        if(myArgs.size() < otherArgs.size()) { 
+            return -1;
+        } else if(myArgs.size() > otherArgs.size()) { 
+            return 1;
+        } // else continue    
+
+        // Same # of args
+        for(int i=0; i < myArgs.size(); i++) { 
+            compare = ((String)myArgs.get(i)).compareTo( ((String)otherArgs.get(i)) );
             if(compare != 0) { 
                 return compare;
             }
-                
-            // Look further into arg names to compare as names are ==
-            List otherArgs = other.getArgNames();
-            List myArgs = this.getArgNames();
-            
-            // Compare # of args first
-            if(myArgs.size() < otherArgs.size()) { 
-                return -1;
-            } else if(myArgs.size() > otherArgs.size()) { 
-                return 1;
-            } // else continue    
-
-            // Same # of args
-            for(int i=0; i < myArgs.size(); i++) { 
-                compare = ((String)myArgs.get(i)).compareTo( ((String)otherArgs.get(i)) );
-                if(compare != 0) { 
-                    return compare;
-                }
-            }
-            
-            // Same
-            return 0;                
         }
+        
+        // Same
+        return 0;                
     }
 }

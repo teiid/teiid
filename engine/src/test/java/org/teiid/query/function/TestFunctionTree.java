@@ -50,7 +50,7 @@ public class TestFunctionTree {
      */
     @Test public void testWalkTree() {
         SystemSource source = new SystemSource(false);
-        FunctionTree ft = new FunctionTree(source);
+        FunctionTree ft = new FunctionTree("foo", source);
         
         Collection<String> categories = ft.getCategories();
         for (String category : categories) {
@@ -78,11 +78,11 @@ public class TestFunctionTree {
 	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING), false, Determinism.DETERMINISTIC); //$NON-NLS-1$
     	
     	//allowed, since we're not validating the class
-    	new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree(new UDFSource(Arrays.asList(method))));
+    	new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method))));
     	
     	//should fail, no class
     	try {
-    		new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree(new UDFSource(Arrays.asList(method)), true));
+    		new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
     		fail();
     	} catch (TeiidRuntimeException e) {
     		
@@ -92,7 +92,7 @@ public class TestFunctionTree {
     	
     	//should fail, no method
     	try {
-    		new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree(new UDFSource(Arrays.asList(method)), true));
+    		new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
     		fail();
     	} catch (TeiidRuntimeException e) {
     		
@@ -102,7 +102,7 @@ public class TestFunctionTree {
     	
     	//should fail, not void
     	try {
-    		new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree(new UDFSource(Arrays.asList(method)), true));
+    		new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
     		fail();
     	} catch (TeiidRuntimeException e) {
     		
@@ -112,7 +112,7 @@ public class TestFunctionTree {
     	
     	//should fail, not public
     	try {
-    		new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree(new UDFSource(Arrays.asList(method)), true));
+    		new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
     		fail();
     	} catch (TeiidRuntimeException e) {
     		
@@ -122,7 +122,7 @@ public class TestFunctionTree {
     	
     	//should fail, not static
     	try {
-    		new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree(new UDFSource(Arrays.asList(method)), true));
+    		new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
     		fail();
     	} catch (TeiidRuntimeException e) {
     		
@@ -131,7 +131,7 @@ public class TestFunctionTree {
     	method.setInvocationMethod("y");
     	
     	//valid!
-    	new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree(new UDFSource(Arrays.asList(method)), true));
+    	new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
     }
     
     @Test public void testNullCategory() {
@@ -144,7 +144,7 @@ public class TestFunctionTree {
     	Collection<org.teiid.metadata.FunctionMethod> list = Arrays.asList(method);
     	FunctionMetadataSource fms = Mockito.mock(FunctionMetadataSource.class);
     	Mockito.stub(fms.getFunctionMethods()).toReturn(list);
-    	FunctionTree ft = new FunctionTree(fms);
+    	FunctionTree ft = new FunctionTree("foo", fms);
     	assertEquals(1, ft.getFunctionForms(FunctionCategoryConstants.MISCELLANEOUS).size());
     }
 	

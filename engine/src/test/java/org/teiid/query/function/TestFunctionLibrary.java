@@ -22,12 +22,7 @@
 
 package org.teiid.query.function;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -38,7 +33,6 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -84,7 +78,7 @@ public class TestFunctionLibrary {
 	private static final Class<Date> T_DATE = DataTypeManager.DefaultDataClasses.DATE;
 	private static final Class<Timestamp> T_TIMESTAMP = DataTypeManager.DefaultDataClasses.TIMESTAMP;
 	
-	private FunctionLibrary library = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree(new UDFSource(Collections.EMPTY_LIST)));
+	private FunctionLibrary library = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions());
 
 	@Before public void setUp() { 
 		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$ 

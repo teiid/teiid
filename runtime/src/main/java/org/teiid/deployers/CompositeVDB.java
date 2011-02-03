@@ -25,15 +25,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.core.CoreConstants;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
-import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
@@ -100,8 +101,8 @@ public class CompositeVDB {
 	private TransformationMetadata buildTransformationMetaData(VDBMetaData vdb, LinkedHashMap<String, Resource> visibilityMap, MetadataStoreGroup stores, UDFMetaData udf, FunctionTree systemFunctions) {
 		Collection <FunctionTree> udfs = new ArrayList<FunctionTree>();
 		if (udf != null) {			
-			for (Collection<FunctionMethod> methods:udf.getFunctions()) {
-				udfs.add(new FunctionTree(new UDFSource(methods), true));
+			for (Map.Entry<String, Collection<FunctionMethod>> entry : udf.getFunctions().entrySet()) {
+				udfs.add(new FunctionTree(entry.getKey(), new UDFSource(entry.getValue()), true));
 			}
 		}
 		
@@ -110,7 +111,7 @@ public class CompositeVDB {
 			compositeStore.addMetadataStore(s);
 		}
 		
-		TransformationMetadata metadata =  new TransformationMetadata(vdb, compositeStore, visibilityMap, systemFunctions, udfs.toArray(new FunctionTree[udfs.size()]));
+		TransformationMetadata metadata =  new TransformationMetadata(vdb, compositeStore, visibilityMap, systemFunctions, udfs);
 				
 		return metadata;
 	}	
@@ -161,28 +162,23 @@ public class CompositeVDB {
 			mergedUDF.addFunctions(this.udf);
 		}
 		if (this.stores != null) {
+			//schema scoped source functions - this is only a dynamic vdb concept
 			for(MetadataStore store:this.stores.getStores()) {
 				for (Schema schema:store.getSchemas().values()) {
 					Collection<FunctionMethod> funcs = schema.getFunctions().values();
-					for(FunctionMethod func:funcs) {
-						func.setNameInSource(func.getName());
-						func.setName(schema.getName() + AbstractMetadataRecord.NAME_DELIM_CHAR + func.getName());						
-					}					
-					mergedUDF.addFunctions(funcs);
+					mergedUDF.addFunctions(schema.getName(), funcs);
 				}
 			}
 		}
 		if (this.cmr != null) {
+			//system scoped common source functions
 			for (ConnectorManager cm:this.cmr.getConnectorManagers().values()) {
 				List<FunctionMethod> funcs = cm.getPushDownFunctions();
-				for(FunctionMethod func:funcs) {
-					func.setNameInSource(cm.getTranslatorName()+ AbstractMetadataRecord.NAME_DELIM_CHAR + func.getName());
-					func.setName(cm.getModelName() + AbstractMetadataRecord.NAME_DELIM_CHAR + func.getName());					
-				}
-				mergedUDF.addFunctions(funcs);
+				mergedUDF.addFunctions(CoreConstants.SYSTEM_MODEL, funcs);
 			}
 		}
 		if (this.children != null) {
+			//udf model functions - also scoped to the model
 			for (CompositeVDB child:this.children.values()) {
 				UDFMetaData funcs = child.getUDF();
 				if (funcs != null) {

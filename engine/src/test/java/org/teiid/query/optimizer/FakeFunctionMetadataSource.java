@@ -27,7 +27,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.metadata.Datatype;
 import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.function.FunctionMetadataSource;

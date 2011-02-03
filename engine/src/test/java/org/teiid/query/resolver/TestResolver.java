@@ -22,13 +22,7 @@
 
 package org.teiid.query.resolver;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -57,7 +51,6 @@ import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionTree;
-import org.teiid.query.function.UDFSource;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
@@ -1587,7 +1580,7 @@ public class TestResolver {
 	@Test public void testNamespacedFunction() throws Exception {     
 		String sql = "SELECT namespace.func('e1')  FROM vm1.g1 "; //$NON-NLS-1$
 
-        FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree(new UDFSource(new FakeFunctionMetadataSource().getFunctionMethods())));
+        FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new FakeFunctionMetadataSource()));
         FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
 		
 		Query command = (Query) helpParse(sql);

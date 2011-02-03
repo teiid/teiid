@@ -116,7 +116,7 @@ public class TestCompositeVDB {
 	
 	@Test
 	public void testTranslatorDefinedFunction() throws Exception {
-		helpResolve("SELECT bqt1.echo(BQT1.SmallA.INTKEY) FROM BQT1.SmallA");
+		helpResolve("SELECT SYS.echo(BQT1.SmallA.INTKEY) FROM BQT1.SmallA");
 	}
 	
 	@Test
@@ -126,7 +126,7 @@ public class TestCompositeVDB {
 	
 	@Test
 	public void testFullyQualifiedDuplicate() throws Exception {
-		helpResolve("SELECT bqt1.duplicate_func(BQT1.SmallA.STRINGKEY) FROM BQT1.SmallA");
+		helpResolve("SELECT SYS.duplicate_func(BQT1.SmallA.STRINGKEY) FROM BQT1.SmallA");
 	}	
 	
 	@Test

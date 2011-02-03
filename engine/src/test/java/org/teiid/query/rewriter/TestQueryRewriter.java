@@ -46,7 +46,6 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionTree;
-import org.teiid.query.function.UDFSource;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.FakeFunctionMetadataSource;
 import org.teiid.query.parser.QueryParser;
@@ -2364,7 +2363,7 @@ public class TestQueryRewriter {
     }
     
 	@Test public void testUDFParse() throws Exception {     
-        FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree(new UDFSource(new FakeFunctionMetadataSource().getFunctionMethods())));
+        FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new FakeFunctionMetadataSource()));
         FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
 		String sql = "parsedate_(pm1.g1.e1) = {d'2001-01-01'}";
         helpTestRewriteCriteria(sql, parseCriteria(sql, metadata), metadata);  		

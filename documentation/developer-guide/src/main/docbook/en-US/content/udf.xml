@@ -8,7 +8,7 @@
 		creating a UDF.</para>
 	<section id="define_udf">
 		<title>UDF Definition</title>
-		<para>The FunctionDefinition.xmi file provides metadata to the
+		<para>A FunctionDefinition.xmi file provides metadata to the
 			query engine on User Defined Functions. See the Designer Documentation for more on creating a Function Definition Model.</para>
 		<itemizedlist>
 			<para>The following are used to define a UDF.</para>
@@ -19,24 +19,20 @@
 					mind:
 					<itemizedlist>
 						<listitem>
-							<para>You cannot use a reserved word, which includes
-								existing Teiid System function names.  You cannot
-								overload existing Teiid System functions.</para>
+							<para>You cannot overload existing Teiid System functions.</para>
 						</listitem>
 						<listitem>
 							<para>The function name must be unique among user-defined
-								functions for the number of arguments.  You can use the
+								functions in its model for the number of arguments.  You can use the
 								same function name for different numbers of types of
 								arguments.  Hence, you can overload your user-defined
 								functions.</para>
 						</listitem>
 						<listitem>
-							<para>The function name can only contain letters,
-								numbers, and the underscore (_).  Your function name must
-								start with a letter.</para>
+							<para>The function name cannot contain the '.' character.</para>
 						</listitem>
 						<listitem>
-							<para>The function name cannot exceed 128 characters.
+							<para>The function name cannot exceed 255 characters.
                 </para>
 						</listitem>
 					</itemizedlist>
@@ -224,5 +220,19 @@ public class TempConv
 			Once a user-defined function model (FunctionDefinitions.xmi) has been
 			created in in the Designer Tool, it can be added to the VDB for use
 			by Teiid.</para>
+	</section>
+	<section>
+		<title>User Defined Functions in Dynamic VDBs</title>
+		<para>Dynamic VDBs do not use Designer generated artifacts, such as a FunctionDefinition.xmi file.  
+		Even with that limitation dynamic vdbs may still utilize UDFs through custom coding.  
+		The <code>ExecutionFactory.getMetadata</code> call allows for the definition of metadata via a <code>MetadataFactory.</code>
+		Use the <code>MetadataFactory.addFunction</code> to add function for use only by that translator instance.
+		Functions added directly to the source schema are specific to that schema - their fully qualified name will include the schema and the function can not be pushed to a different source.	
+		</para>	
+		<para>The <code>ExecutionFactory.getPushdownFunctions</code> method can be used to describe functions that are valid against all instances of a given translator type.  The function names are expected to be
+		prefixed by the translator type, or some other logical grouping, e.g. salesforce.includes.  The full name of the function once imported into the system will qualified by the SYS schema, e.g. SYS.salesforce.includes.
+		</para>
+		<para>Any funcitons added via these mechanisms do not need to be declared in <code>ExecutionFactory.getSupportedFunctions.</code>  Any of the additional handling, such as adding a <code>FunctionModifier</code>, covered above is also applicable here.  All pushdown functions will have function name set to only the simple name.  Schema or other qualification will be removed.  
+		Handling, such as function modifiers, can check the function metadata if there is the potential for an ambiguity.</para>
 	</section>
 </chapter>

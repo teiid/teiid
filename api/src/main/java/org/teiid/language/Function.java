@@ -26,16 +26,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.language.visitor.LanguageObjectVisitor;
+import org.teiid.metadata.FunctionMethod;
 
 /**
  * Represents a function.  A function has a name and 0..n 
  * Expressions that are parameters.  
  */
-public class Function extends BaseLanguageObject implements Expression {
+public class Function extends BaseLanguageObject implements Expression, MetadataReference<FunctionMethod> {
 
     private String name;
     private List<Expression> parameters;
     private Class<?> type;
+    private FunctionMethod metadataObject;
     
     public Function(String name, List<? extends Expression> params, Class<?> type) {
         this.name = name;
@@ -46,6 +48,15 @@ public class Function extends BaseLanguageObject implements Expression {
         }
         this.type = type;
     }
+    
+    @Override
+    public FunctionMethod getMetadataObject() {
+    	return metadataObject;
+    }
+    
+    public void setMetadataObject(FunctionMethod metadataObject) {
+		this.metadataObject = metadataObject;
+	}
     
     /**
      * Get name of the function

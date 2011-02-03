@@ -36,11 +36,11 @@ public class UDFSource implements FunctionMetadataSource {
     	this.methods = methods;
     }    
     
-    public Collection getFunctionMethods() {
+    public Collection<FunctionMethod> getFunctionMethods() {
         return this.methods;
     }
 
-    public Class getInvocationClass(String className) throws ClassNotFoundException {
+    public Class<?> getInvocationClass(String className) throws ClassNotFoundException {
         return Class.forName(className);
     }
 }

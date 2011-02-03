@@ -25,7 +25,10 @@ package org.teiid.query.optimizer.relational.rules;
 import java.util.ArrayList;
 import java.util.List;
 
+import junit.framework.TestCase;
+
 import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -33,7 +36,7 @@ import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
-import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
+import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.symbol.AggregateSymbol;
@@ -45,8 +48,6 @@ import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.FakeMetadataObject;
-
-import junit.framework.TestCase;
 
 
 /**
@@ -369,7 +370,7 @@ public class TestCapabilitiesUtil extends TestCase {
         helpTestSupportsAggregateFunction(caps, aggregate, true); 
     }    
 
-    public void helpTestSupportsScalar(SourceCapabilities caps, Function function, boolean expectedValue) throws QueryMetadataException, TeiidComponentException {
+    public void helpTestSupportsScalar(SourceCapabilities caps, Function function, boolean expectedValue) throws QueryMetadataException, TeiidComponentException, QueryResolverException {
         // Set up metadata
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
@@ -377,7 +378,7 @@ public class TestCapabilitiesUtil extends TestCase {
         // Set up capabilities
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
         finder.addCapabilities("pm1", caps); //$NON-NLS-1$
-
+        ResolverVisitor.resolveLanguageObject(function, metadata);
         // Test capabilities util
         boolean actual = CapabilitiesUtil.supportsScalarFunction(modelID, function, metadata, finder);
         assertEquals("Got wrong answer for supports", expectedValue, actual); //$NON-NLS-1$
@@ -387,7 +388,7 @@ public class TestCapabilitiesUtil extends TestCase {
     public void testSupportsScalar1() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
 
-        Function func = new Function("+", new Expression[] { new ElementSymbol("x"), new ElementSymbol("y") }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        Function func = new Function("+", new Expression[] { new Constant(1), new Constant(2) }); //$NON-NLS-1$
         helpTestSupportsScalar(caps, func, false);        
     }    
 
@@ -407,14 +408,6 @@ public class TestCapabilitiesUtil extends TestCase {
 
         Function func = new Function("NOW", new Expression[] { }); //$NON-NLS-1$
         helpTestSupportsScalar(caps, func, true);        
-    }    
-
-    // Test where function is unknown
-    public void testSupportsScalar5() throws Exception {        
-        BasicSourceCapabilities caps = new BasicSourceCapabilities();
-
-        Function func = new Function("sasquatch", new Expression[] { }); //$NON-NLS-1$
-        helpTestSupportsScalar(caps, func, false);        
     }    
 
     public void testSupportsDistinct1() throws Exception {        

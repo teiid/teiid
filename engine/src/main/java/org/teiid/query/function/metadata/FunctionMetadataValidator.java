@@ -253,26 +253,9 @@ public class FunctionMetadataValidator {
      * @throws FunctionMetadataException Thrown when string uses characters not in allowed character sets
      */
 	private static final void validateNameCharacters(String name, String strName) throws FunctionMetadataException {
-	    // First check first character
-		if(name.length() > 0) {
-		    // Check special cases
-		    if(name.equals("+") || name.equals("-") || name.equals("*") || name.equals("/") || name.equals("||")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-		        return;
-		    }
-
-			char firstChar = name.charAt(0);
-			if(! Character.isLetter(firstChar)) {
-			 	throw new FunctionMetadataException("ERR.015.001.0056", QueryPlugin.Util.getString("ERR.015.001.0056",strName, new Character(firstChar))); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-
-			// Then check the rest of the characters
-			for(int i=1; i<name.length(); i++) {
-				char ch = name.charAt(i);
-				if(! (Character.isLetterOrDigit(ch) || ch == '_')) {
-				 	throw new FunctionMetadataException("ERR.015.001.0057", QueryPlugin.Util.getString("ERR.015.001.0057",strName, new Character(ch))); //$NON-NLS-1$ //$NON-NLS-2$
-				}
-			}
-	    }
+		if (name.indexOf('.') > 0) {
+			throw new FunctionMetadataException("ERR.015.001.0057", QueryPlugin.Util.getString("ERR.015.001.0057",strName, '.')); //$NON-NLS-1$ //$NON-NLS-2$
+		}
 	}
 
     /**

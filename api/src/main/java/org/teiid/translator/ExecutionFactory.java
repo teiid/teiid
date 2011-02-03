@@ -650,7 +650,7 @@ public class ExecutionFactory<F, C> {
     }
     
     public List<FunctionMethod> getPushDownFunctions(){
-    	return Collections.EMPTY_LIST;
+    	return Collections.emptyList();
     }
     
     /**

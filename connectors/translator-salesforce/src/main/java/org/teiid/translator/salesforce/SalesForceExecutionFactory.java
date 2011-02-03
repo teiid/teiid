@@ -142,13 +142,13 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
     @Override
     public List<FunctionMethod> getPushDownFunctions(){
     	List<FunctionMethod> pushdownFunctions = new ArrayList<FunctionMethod>();
-		pushdownFunctions.add(new FunctionMethod(INCLUDES, INCLUDES, SALESFORCE, 
+		pushdownFunctions.add(new FunctionMethod(SALESFORCE + '.' +INCLUDES, INCLUDES, SALESFORCE, 
             new FunctionParameter[] {
                 new FunctionParameter("columnName", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("param", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
             new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		pushdownFunctions.add(new FunctionMethod(EXCLUDES, EXCLUDES, SALESFORCE, 
+		pushdownFunctions.add(new FunctionMethod(SALESFORCE + '.' + EXCLUDES, EXCLUDES, SALESFORCE, 
                 new FunctionParameter[] {
                     new FunctionParameter("columnName", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("param", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$

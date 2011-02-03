@@ -52,7 +52,10 @@ public class Schema extends AbstractMetadataRecord {
 	}
 	
 	public void addFunction(FunctionMethod function) {
-		this.functions.put(function.getName().toLowerCase(), function);
+		function.setParent(this);
+		if (this.functions.put(function.getName().toLowerCase(), function) != null) {
+			throw new AssertionError("Duplicate function " + function.getName()); //$NON-NLS-1$
+		}
 	}	
 
 	/**

@@ -31,33 +31,27 @@ import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
-import org.teiid.core.util.Assertion;
-import org.teiid.core.util.HashCodeUtil;
 import org.teiid.core.util.PropertiesUtils;
-import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.util.CommandContext;
 
 
 /**
  * The FunctionDescriptor describes a particular function instance enough
- * that the function library can retrieve a function instance based on the 
- * descriptor.
+ * to invoke the function.
  */
 public class FunctionDescriptor implements Serializable, Cloneable {
 	private static final long serialVersionUID = 5374103983118037242L;
 
 	private static final boolean ALLOW_NAN_INFINITY = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.allowNanInfinity", false); //$NON-NLS-1$
 	
-	private String name;
-    private PushDown pushdown = PushDown.CAN_PUSHDOWN;
-	private Class[] types;
-	private Class returnType;	
-	private int hash;
+	private Class<?>[] types;
+	private Class<?> returnType;	
     private boolean requiresContext;
-    private boolean nullDependent;
-    private Determinism deterministic = Determinism.DETERMINISTIC;
+    private FunctionMethod method;
     
     // This is transient as it would be useless to invoke this method in 
     // a different VM.  This function descriptor can be used to look up 
@@ -67,52 +61,29 @@ public class FunctionDescriptor implements Serializable, Cloneable {
     FunctionDescriptor() {
     }
     
-    /** 
-     * Construct a function descriptor with all the info
-     * @param name Name of function
-     * @param types Types of the arguments
-     * @param returnType Type of the return 
-     * @param invocationMethod Reflection method used to invoke the function
-     * @param requiresContext during execution requires command context to be pushed into method as first argument
-     */
-	FunctionDescriptor(String name, PushDown pushdown, Class[] types, Class returnType, Method invocationMethod, boolean requiresContext, boolean nullDependent, Determinism deterministic) {
-		Assertion.isNotNull(name);
-		Assertion.isNotNull(types);
-		Assertion.isNotNull(returnType);
-		
-		this.name = name;
-        this.pushdown = pushdown;
+	FunctionDescriptor(FunctionMethod method, Class<?>[] types,
+			Class<?> outputType, Method invocationMethod,
+			boolean requiresContext) {
 		this.types = types;
-		this.returnType = returnType;
+		this.returnType = outputType;
         this.invocationMethod = invocationMethod;
         this.requiresContext = requiresContext;
-        this.nullDependent = nullDependent;
-        this.deterministic = deterministic;
-		
-		// Compute hash code
-		hash = HashCodeUtil.hashCode(0, name);
-		for(int i=0; i<types.length; i++) {
-			hash = HashCodeUtil.hashCode(hash, types[i]);
-		}
+        this.method = method;
 	}
 
 	public String getName() {
-		return this.name;				
+		return this.method.getName();				
 	}
     
     public PushDown getPushdown() {
-        return this.pushdown;
+        return this.method.getPushdown();
     }
     
-    void setPushdown(PushDown pushdown) {
-        this.pushdown = pushdown;
-    }
-	
-	public Class[] getTypes() {
+	public Class<?>[] getTypes() {
 		return this.types;
 	}
 	
-	public Class getReturnType() {
+	public Class<?> getReturnType() {
 		return this.returnType;
 	}		
 	
@@ -124,51 +95,8 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         return this.requiresContext;
     }
     
-	public int hashCode() { 
-		return this.hash;
-	}
-	
-	public boolean equals(Object obj) {
-		if(obj == this) {
-			return true;
-		}
-		
-		if(obj == null || !(obj instanceof FunctionDescriptor)) {
-			return false;			
-		}	
-		FunctionDescriptor other = (FunctionDescriptor) obj;
-		
-		// Compare names
-		if(! this.getName().equals(other.getName())) {
-			return false;
-		}
-        
-        // Compare arg types
-		Class[] thisTypes = this.getTypes();
-		Class[] otherTypes = other.getTypes();
-		if(thisTypes.length != otherTypes.length) {
-			return false;
-		}
-		for(int i=0; i<thisTypes.length; i++) { 
-			if(! thisTypes[i].equals(otherTypes[i])) {
-				return false;
-			}
-		}
-        
-        if (this.nullDependent != other.isNullDependent()) {
-            return false;
-        }
-        
-        if (this.deterministic != other.deterministic) {
-            return false;
-        }
-		 
-		// Must be a match
-		return true;
-	}
-	
 	public String toString() {
-		StringBuffer str = new StringBuffer(this.name);
+		StringBuffer str = new StringBuffer(this.method.getName());
 		str.append("("); //$NON-NLS-1$
 		for(int i=0; i<types.length; i++) {
 			if(types[i] != null) { 
@@ -190,17 +118,13 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 	}
 
     public boolean isNullDependent() {
-        return nullDependent;
+        return !this.method.isNullOnNull();
     }
     
     public Determinism getDeterministic() {
-        return deterministic;
+        return this.method.getDeterminism();
     }
 
-    void setDeterministic(Determinism deterministic) {
-        this.deterministic = deterministic;
-    }
-    
     public Object clone() {
         try {
             return super.clone();
@@ -208,11 +132,14 @@ public class FunctionDescriptor implements Serializable, Cloneable {
             throw new TeiidRuntimeException(e);
         }
     }
+    
+    public FunctionMethod getMethod() {
+		return method;
+	}
 
-    void setReturnType(Class returnType) {
+    void setReturnType(Class<?> returnType) {
         this.returnType = returnType;
     }
-    
     
 	/**
 	 * Invoke the function described in the function descriptor, using the

@@ -116,31 +116,31 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
     @Override
     public List<FunctionMethod> getPushDownFunctions(){
     	List<FunctionMethod> pushdownFunctions = new ArrayList<FunctionMethod>();
-		pushdownFunctions.add(new FunctionMethod(JCR_ISCHILDNODE, JCR_ISCHILDNODE, JCR, 
+		pushdownFunctions.add(new FunctionMethod(JCR + '.' + JCR_ISCHILDNODE, JCR_ISCHILDNODE, JCR, 
             new FunctionParameter[] {
 				new FunctionParameter("path1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("path2", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
             new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		pushdownFunctions.add(new FunctionMethod(JCR_ISDESCENDANTNODE, JCR_ISDESCENDANTNODE, JCR, 
+		pushdownFunctions.add(new FunctionMethod(JCR + '.' + JCR_ISDESCENDANTNODE, JCR_ISDESCENDANTNODE, JCR, 
                 new FunctionParameter[] {
 				new FunctionParameter("path1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("path2", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
 
-		pushdownFunctions.add(new FunctionMethod(JCR_ISSAMENODE, JCR_ISSAMENODE, JCR, 
+		pushdownFunctions.add(new FunctionMethod(JCR + '.' + JCR_ISSAMENODE, JCR_ISSAMENODE, JCR, 
                 new FunctionParameter[] {
 					new FunctionParameter("path1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("path2", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		pushdownFunctions.add(new FunctionMethod(JCR_CONTAINS, JCR_CONTAINS, JCR, 
+		pushdownFunctions.add(new FunctionMethod(JCR + '.' + JCR_CONTAINS, JCR_CONTAINS, JCR, 
                 new FunctionParameter[] {
                     new FunctionParameter("selectorOrProperty", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("searchExpr", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		pushdownFunctions.add(new FunctionMethod(JCR_REFERENCE, JCR_REFERENCE, JCR, 
+		pushdownFunctions.add(new FunctionMethod(JCR + '.' + JCR_REFERENCE, JCR_REFERENCE, JCR, 
                 new FunctionParameter[] {
                     new FunctionParameter("selectorOrProperty", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$

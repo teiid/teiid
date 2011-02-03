@@ -104,7 +104,7 @@ public class TranslationUtility {
 			@Override
 			public FunctionLibrary getFunctionLibrary() {
 				SystemFunctionManager sfm = new SystemFunctionManager();
-				return new FunctionLibrary(sfm.getSystemFunctions(), new FunctionTree(new UDFSource(methods)));
+				return new FunctionLibrary(sfm.getSystemFunctions(), new FunctionTree("foo", new UDFSource(methods)));  //$NON-NLS-1$
 			}
 		};
 	}

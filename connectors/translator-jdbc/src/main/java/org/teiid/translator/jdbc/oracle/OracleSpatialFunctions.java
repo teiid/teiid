@@ -38,42 +38,42 @@ public class OracleSpatialFunctions {
 	public static final String FILTER = "sdo_filter"; //$NON-NLS-1$
 	public static final String WITHIN_DISTANCE = "sdo_within_distance"; //$NON-NLS-1$
 	public static final String NEAREST_NEIGHBOR_DISTANCE = "sdo_nn_distance"; //$NON-NLS-1$
-	private static final String ORACLE_SDO = "Oracle-SDO"; //$NON-NLS-1$
+	public static final String ORACLE_SDO = "Oracle-SDO"; //$NON-NLS-1$
 	
 
     public static List<FunctionMethod> getOracleSpatialFunctions(){
     	    	
     	List<FunctionMethod> spatialFuncs = new ArrayList<FunctionMethod>();
     	
-    	spatialFuncs.add(new FunctionMethod(RELATE, RELATE, ORACLE_SDO,   
+    	spatialFuncs.add(new FunctionMethod(ORACLE_SDO + '.' + RELATE, RELATE, ORACLE_SDO,   
                 new FunctionParameter[] {
                     new FunctionParameter("GEOM1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("GEOM2", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("PARAMS", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
 
-    	spatialFuncs.add(new FunctionMethod(RELATE, RELATE, ORACLE_SDO, 
+    	spatialFuncs.add(new FunctionMethod(ORACLE_SDO + '.' + RELATE, RELATE, ORACLE_SDO, 
                 new FunctionParameter[] {
                     new FunctionParameter("GEOM1", DataTypeManager.DefaultDataTypes.OBJECT, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("GEOM2", DataTypeManager.DefaultDataTypes.OBJECT, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("PARAMS", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
     	
-    	spatialFuncs.add(new FunctionMethod(RELATE, RELATE, ORACLE_SDO,  
+    	spatialFuncs.add(new FunctionMethod(ORACLE_SDO + '.' + RELATE, RELATE, ORACLE_SDO,  
                 new FunctionParameter[] {
                     new FunctionParameter("GEOM1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("GEOM2", DataTypeManager.DefaultDataTypes.OBJECT, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("PARAMS", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
 
-    	spatialFuncs.add(new FunctionMethod(RELATE, RELATE, ORACLE_SDO, 
+    	spatialFuncs.add(new FunctionMethod(ORACLE_SDO + '.' + RELATE, RELATE, ORACLE_SDO, 
                 new FunctionParameter[] {
                     new FunctionParameter("GEOM1", DataTypeManager.DefaultDataTypes.OBJECT, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("GEOM2", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("PARAMS", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
     	
-    	spatialFuncs.add(new FunctionMethod(NEAREST_NEIGHBOR, NEAREST_NEIGHBOR, ORACLE_SDO,   
+    	spatialFuncs.add(new FunctionMethod(ORACLE_SDO + '.' + NEAREST_NEIGHBOR, NEAREST_NEIGHBOR, ORACLE_SDO,   
                 new FunctionParameter[] {
                     new FunctionParameter("GEOM1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("GEOM2", DataTypeManager.DefaultDataTypes.OBJECT, ""), //$NON-NLS-1$ //$NON-NLS-2$
@@ -81,63 +81,63 @@ public class OracleSpatialFunctions {
                     new FunctionParameter("NUMBER", DataTypeManager.DefaultDataTypes.INTEGER, "") }, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
     	
-    	spatialFuncs.add(new FunctionMethod(NEAREST_NEIGHBOR, NEAREST_NEIGHBOR, ORACLE_SDO,  
+    	spatialFuncs.add(new FunctionMethod(ORACLE_SDO + '.' + NEAREST_NEIGHBOR, NEAREST_NEIGHBOR, ORACLE_SDO,  
                 new FunctionParameter[] {
                     new FunctionParameter("GEOM1", DataTypeManager.DefaultDataTypes.OBJECT, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("GEOM2", DataTypeManager.DefaultDataTypes.OBJECT, ""), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("PARAMS", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("NUMBER", DataTypeManager.DefaultDataTypes.INTEGER, "") }, //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$    	
-
-    	spatialFuncs.add(new FunctionMethod(NEAREST_NEIGHBOR, NEAREST_NEIGHBOR, ORACLE_SDO,  
-                new FunctionParameter[] {
-                    new FunctionParameter("GEOM1", DataTypeManager.DefaultDataTypes.OBJECT, ""), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("GEOM2", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("PARAMS", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("NUMBER", DataTypeManager.DefaultDataTypes.INTEGER, "") }, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$    	
+
+    	spatialFuncs.add(new FunctionMethod(ORACLE_SDO + '.' + NEAREST_NEIGHBOR, NEAREST_NEIGHBOR, ORACLE_SDO,  
+                new FunctionParameter[] {
+                    new FunctionParameter("GEOM1", DataTypeManager.DefaultDataTypes.OBJECT, ""), //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("GEOM2", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("PARAMS", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("NUMBER", DataTypeManager.DefaultDataTypes.INTEGER, "") }, //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$    	
     	
-    	spatialFuncs.add(new FunctionMethod(NEAREST_NEIGHBOR_DISTANCE, NEAREST_NEIGHBOR_DISTANCE, ORACLE_SDO,  
+    	spatialFuncs.add(new FunctionMethod(ORACLE_SDO + '.' + NEAREST_NEIGHBOR_DISTANCE, NEAREST_NEIGHBOR_DISTANCE, ORACLE_SDO,  
                 new FunctionParameter[] {
                     new FunctionParameter("NUMBER", DataTypeManager.DefaultDataTypes.INTEGER, "") }, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$  
     	    	
-    	spatialFuncs.add(new FunctionMethod(WITHIN_DISTANCE, WITHIN_DISTANCE, ORACLE_SDO, 
+    	spatialFuncs.add(new FunctionMethod(ORACLE_SDO + '.' + WITHIN_DISTANCE, WITHIN_DISTANCE, ORACLE_SDO, 
                 new FunctionParameter[] {
                     new FunctionParameter("GEOM1", DataTypeManager.DefaultDataTypes.OBJECT, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("GEOM2", DataTypeManager.DefaultDataTypes.OBJECT, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("PARAMS", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
     	
-    	spatialFuncs.add(new FunctionMethod(WITHIN_DISTANCE, WITHIN_DISTANCE, ORACLE_SDO,   
+    	spatialFuncs.add(new FunctionMethod(ORACLE_SDO + '.' + WITHIN_DISTANCE, WITHIN_DISTANCE, ORACLE_SDO,   
                 new FunctionParameter[] {
                     new FunctionParameter("GEOM1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("GEOM2", DataTypeManager.DefaultDataTypes.OBJECT, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("PARAMS", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$    	
     	
-    	spatialFuncs.add(new FunctionMethod(WITHIN_DISTANCE, WITHIN_DISTANCE, ORACLE_SDO,  
+    	spatialFuncs.add(new FunctionMethod(ORACLE_SDO + '.' + WITHIN_DISTANCE, WITHIN_DISTANCE, ORACLE_SDO,  
                 new FunctionParameter[] {
                     new FunctionParameter("GEOM1", DataTypeManager.DefaultDataTypes.OBJECT, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("GEOM2", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("PARAMS", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
     	
-    	spatialFuncs.add(new FunctionMethod(FILTER, FILTER, ORACLE_SDO,   
+    	spatialFuncs.add(new FunctionMethod(ORACLE_SDO + '.' + FILTER, FILTER, ORACLE_SDO,   
                 new FunctionParameter[] {
                     new FunctionParameter("GEOM1", DataTypeManager.DefaultDataTypes.OBJECT, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("GEOM2", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("PARAMS", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
     	
-    	spatialFuncs.add(new FunctionMethod(FILTER, FILTER, ORACLE_SDO,  
+    	spatialFuncs.add(new FunctionMethod(ORACLE_SDO + '.' + FILTER, FILTER, ORACLE_SDO,  
                 new FunctionParameter[] {
                     new FunctionParameter("GEOM1", DataTypeManager.DefaultDataTypes.OBJECT, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("GEOM2", DataTypeManager.DefaultDataTypes.OBJECT, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("PARAMS", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$    
     	
-    	spatialFuncs.add(new FunctionMethod(FILTER, FILTER, ORACLE_SDO,   
+    	spatialFuncs.add(new FunctionMethod(ORACLE_SDO + '.' + FILTER, FILTER, ORACLE_SDO,   
                 new FunctionParameter[] {
                     new FunctionParameter("GEOM1", DataTypeManager.DefaultDataTypes.STRING, ""), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("GEOM2", DataTypeManager.DefaultDataTypes.OBJECT, ""), //$NON-NLS-1$ //$NON-NLS-2$

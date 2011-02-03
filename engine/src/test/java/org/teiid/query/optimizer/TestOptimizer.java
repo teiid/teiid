@@ -22,11 +22,7 @@
 
 package org.teiid.query.optimizer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,7 +42,6 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionTree;
-import org.teiid.query.function.UDFSource;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -4265,7 +4260,7 @@ public class TestOptimizer {
         caps.setFunctionSupport("xyz", true);         //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree(new UDFSource(new FakeFunctionMetadataSource().getFunctionMethods())));
+        FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new FakeFunctionMetadataSource()));
         FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
         
          

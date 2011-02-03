@@ -2221,11 +2221,19 @@ public class QueryRewriter {
 		//rewrite alias functions
 		String functionLowerName = function.getName().toLowerCase();
 		String actualName =ALIASED_FUNCTIONS.get(functionLowerName);
+		FunctionLibrary funcLibrary = this.metadata.getFunctionLibrary();
+
 		if (actualName != null) {
 			function.setName(actualName);
+			Expression[] args = function.getArgs();
+		    Class<?>[] types = new Class[args.length];
+		    for(int i=0; i<args.length; i++) {
+		        types[i] = args[i].getType();
+		    }
+			FunctionDescriptor descriptor = funcLibrary.findFunction(actualName, types);
+			function.setFunctionDescriptor(descriptor);
 		}
 		
-		FunctionLibrary funcLibrary = this.metadata.getFunctionLibrary();
 		Integer code = FUNCTION_MAP.get(functionLowerName);
 		if (code != null) {
 			switch (code) {

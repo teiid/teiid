@@ -30,6 +30,7 @@ import java.util.List;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.Schema;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -206,12 +207,20 @@ public class CapabilitiesUtil {
         if (metadata.isVirtualModel(modelID)){
             return false;
         }
+        
+        //capabilities check is only valid for non-schema scoped functions
+        //technically the other functions are scoped to SYS, but that's 
+        //not formally part of their metadata yet
+        Schema schema = function.getFunctionDescriptor().getMethod().getParent();
+        if (schema == null) {
+            // Find capabilities
+            SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
 
-        // Find capabilities
-        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-
-        if (!caps.supportsFunction(function.getName().toLowerCase())) {
-            return false;
+            if (!caps.supportsFunction(function.getFunctionDescriptor().getName().toLowerCase())) {
+                return false;
+            }
+        } else if (!schema.getFullName().equalsIgnoreCase(metadata.getFullName(modelID))) {
+        	return false; //not the right schema
         }
         
         //special check to ensure that special conversions are not pushed down (this can be removed after we support type based function pushdown)            

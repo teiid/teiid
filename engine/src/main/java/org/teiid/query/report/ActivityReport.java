@@ -88,5 +88,10 @@ public class ActivityReport<R extends ReportItem> implements Serializable {
 	public Collection<R> getItems() {
 		return items;
 	}
+	
+	@Override
+	public String toString() {
+		return reportType + " " + getItems(); //$NON-NLS-1$
+	}
 
 }

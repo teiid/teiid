@@ -22,8 +22,8 @@
 package org.teiid.query.function;
 
 import java.util.Collection;
-import java.util.Collections;
 
+import org.teiid.core.CoreConstants;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionMetadataValidator;
 import org.teiid.query.function.source.SystemSource;
@@ -47,13 +47,13 @@ public class SystemFunctionManager {
 			    // Should never happen as SystemSourcTe doesn't change
 			    System.err.println(QueryPlugin.Util.getString("ERR.015.001.0005", report)); //$NON-NLS-1$
 			}
-			systemFunctionTree = new FunctionTree(systemSource, true);
+			systemFunctionTree = new FunctionTree(CoreConstants.SYSTEM_MODEL, systemSource, true);
     	}
     	return systemFunctionTree;
     }
     
     public FunctionLibrary getSystemFunctionLibrary() {
-    	return new FunctionLibrary(getSystemFunctions(), new FunctionTree(new UDFSource(Collections.EMPTY_LIST)));
+    	return new FunctionLibrary(getSystemFunctions());
     }
     
     /**

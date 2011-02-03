@@ -91,7 +91,7 @@ public class TestModeShapeSqlTranslator {
 	public void testPredicate() throws Exception {
 
 		String input = "SELECT x.jcr_primaryType from nt_base inner join nt_base as x on jcr_issamenode(nt_base.jcr_path, x.jcr_path) = true where jcr_isdescendantnode(nt_base.jcr_path, 'x/y/z') = true and jcr_reference(nt_base.mode_properties) = 'x'"; //$NON-NLS-1$
-		String output = "SELECT g_1.\"jcr:primaryType\" FROM \"nt:base\" AS g_0 INNER JOIN \"nt:base\" AS g_1 ON issamenode(g_0, g_1) WHERE isdescendantnode(g_0, 'x/y/z') AND reference(g_0.*) = 'x'"; //$NON-NLS-1$
+		String output = "SELECT g_1.\"jcr:primaryType\" FROM \"nt:base\" AS g_0 INNER JOIN \"nt:base\" AS g_1 ON ISSAMENODE(g_0, g_1) WHERE ISDESCENDANTNODE(g_0, 'x/y/z') AND REFERENCE(g_0.*) = 'x'"; //$NON-NLS-1$
 
 		helpTestVisitor(input, output);
 

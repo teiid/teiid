@@ -25,20 +25,26 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.xml.bind.JAXBException;
 
 import org.jboss.managed.api.annotation.ManagementObject;
 import org.jboss.virtual.VirtualFile;
+import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.metadata.FunctionMethod;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionMetadataReader;
+import org.teiid.query.function.metadata.FunctionMetadataValidator;
+import org.teiid.query.report.ActivityReport;
+import org.teiid.query.report.ReportItem;
 import org.teiid.runtime.RuntimePlugin;
 
 
 @ManagementObject
 public class UDFMetaData {
-	private Collection<Collection <FunctionMethod>> methods = new ArrayList<Collection<FunctionMethod>>();
-	
+	private HashMap<String, Collection <FunctionMethod>> methods = new HashMap<String, Collection<FunctionMethod>>();
 	private HashMap<String, VirtualFile> files = new HashMap<String, VirtualFile>();
 	
 	public void addModelFile(VirtualFile file) {
@@ -46,31 +52,45 @@ public class UDFMetaData {
 	}
 	
 	
-	void buildFunctionModelFile(String name) throws IOException, JAXBException {
+	void buildFunctionModelFile(String name, String path) throws IOException, JAXBException, QueryMetadataException {
 		for (String f:files.keySet()) {
-			if (f.endsWith(name)) {
-				name = f;
+			if (f.endsWith(path)) {
+				path = f;
 				break;
 			}
 		}
-		VirtualFile file =this.files.get(name);
-		if (file != null) {
-			this.methods.add(FunctionMetadataReader.loadFunctionMethods(file.openStream()));
-		}
-		else {
+		VirtualFile file =this.files.get(path);
+		if (file == null) {
 			throw new IOException(RuntimePlugin.Util.getString("udf_model_not_found", name)); //$NON-NLS-1$
 		}
+		List<FunctionMethod> udfMethods = FunctionMetadataReader.loadFunctionMethods(file.openStream());
+		ActivityReport<ReportItem> report = new ActivityReport<ReportItem>("UDF load"); //$NON-NLS-1$
+		FunctionMetadataValidator.validateFunctionMethods(udfMethods,report);
+		if(report.hasItems()) {
+		    throw new QueryMetadataException(QueryPlugin.Util.getString("ERR.015.001.0005", report)); //$NON-NLS-1$
+		}
+		this.methods.put(name, udfMethods);
 	}
 	
-	public Collection<Collection <FunctionMethod>> getFunctions(){
+	public Map<String, Collection <FunctionMethod>> getFunctions(){
 		return this.methods;
 	}
 	
-	public void addFunctions(Collection <FunctionMethod> funcs){
-		this.methods.add(funcs);
+	public void addFunctions(String name, Collection <FunctionMethod> funcs){
+		if (funcs.isEmpty()) {
+			return;
+		}
+		Collection <FunctionMethod> old = this.methods.put(name, funcs);
+		if (old != null) {
+			ArrayList<FunctionMethod> combined = new ArrayList<FunctionMethod>(old);
+			combined.addAll(funcs);
+			this.methods.put(name, combined);
+		}
 	}
 	
 	public void addFunctions(UDFMetaData funcs){
-		this.methods.addAll(funcs.getFunctions());
+		for (Map.Entry<String, Collection<FunctionMethod>> entry : funcs.getFunctions().entrySet()) {
+			addFunctions(entry.getKey(), entry.getValue());
+		}
 	}	
 }

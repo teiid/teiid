@@ -25,9 +25,9 @@ package org.teiid.query.function;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TreeSet;
 
 import org.teiid.api.exception.query.InvalidFunctionException;
 import org.teiid.api.exception.query.QueryResolverException;
@@ -108,9 +108,9 @@ public class FunctionLibrary {
      * Get all function categories, sorted in alphabetical order
      * @return List of function category names, sorted in alphabetical order
      */
-    public List getFunctionCategories() {
+    public List<String> getFunctionCategories() {
         // Remove category duplicates
-        HashSet categories = new HashSet();
+        TreeSet<String> categories = new TreeSet<String>();
         categories.addAll( systemFunctions.getCategories() );
         if (this.userFunctions != null) {
 	        for (FunctionTree tree: this.userFunctions) {
@@ -118,9 +118,7 @@ public class FunctionLibrary {
 	        }
         }
 
-        // Sort alphabetically
-        ArrayList categoryList = new ArrayList(categories);
-        Collections.sort(categoryList);
+        ArrayList<String> categoryList = new ArrayList<String>(categories);
         return categoryList;
     }
 
@@ -129,8 +127,8 @@ public class FunctionLibrary {
      * @param category Category name
      * @return List of {@link FunctionForm}s in a category
      */
-    public List getFunctionForms(String category) {
-        List forms = new ArrayList();
+    public List<FunctionForm> getFunctionForms(String category) {
+        List<FunctionForm> forms = new ArrayList<FunctionForm>();
         forms.addAll(systemFunctions.getFunctionForms(category));
         if (this.userFunctions != null) {
 	        for (FunctionTree tree: this.userFunctions) {
@@ -170,7 +168,7 @@ public class FunctionLibrary {
      * @param types Array of classes representing the types
      * @return Descriptor if found, null if not found
 	 */
-	public FunctionDescriptor findFunction(String name, Class[] types) {
+	public FunctionDescriptor findFunction(String name, Class<?>[] types) {
         // First look in system functions
         FunctionDescriptor descriptor = systemFunctions.getFunction(name, types);
 
@@ -323,7 +321,7 @@ public class FunctionLibrary {
      * @param targetType The target type class
      * @return A CONVERT function descriptor or null if not possible
      */
-    public FunctionDescriptor findTypedConversionFunction(Class sourceType, Class targetType) {
+    public FunctionDescriptor findTypedConversionFunction(Class<?> sourceType, Class<?> targetType) {
         FunctionDescriptor fd = findFunction(CONVERT, new Class[] {sourceType, DataTypeManager.DefaultDataClasses.STRING});
         if (fd != null) {
             return copyFunctionChangeReturnType(fd, targetType);
@@ -337,7 +335,7 @@ public class FunctionLibrary {
 	 * @param returnType The return type to apply to the copied FunctionDescriptor.
 	 * @return The copy of FunctionDescriptor.
 	 */
-    public FunctionDescriptor copyFunctionChangeReturnType(FunctionDescriptor fd, Class returnType) {
+    public FunctionDescriptor copyFunctionChangeReturnType(FunctionDescriptor fd, Class<?> returnType) {
         if(fd != null) {
         	FunctionDescriptor fdImpl = fd;
             FunctionDescriptor copy = (FunctionDescriptor)fdImpl.clone();

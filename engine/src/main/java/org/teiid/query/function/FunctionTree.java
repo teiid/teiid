@@ -29,15 +29,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.util.Assertion;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -75,54 +74,31 @@ public class FunctionTree {
 	 */
     private Map treeRoot = new HashMap();
     private boolean validateClass;
-
+    
     /**
      * Construct a new tree with the given source of function metadata.
      * @param source The metadata source
      */
-    public FunctionTree(FunctionMetadataSource source) {
-    	this(source, false);
+    public FunctionTree(String name, FunctionMetadataSource source) {
+    	this(name, source, false);
     }
     
     /**
      * Construct a new tree with the given source of function metadata.
      * @param source The metadata source
      */
-    public FunctionTree(FunctionMetadataSource source, boolean validateClass) {
+    public FunctionTree(String name, FunctionMetadataSource source, boolean validateClass) {
         // Load data structures
     	this.validateClass = validateClass;
-        addSource(source);
-    }
 
-    /**
-     * Add all functions from a metadata source to the data structures.
-     * @param source The source of the functions
-     */
-    private void addSource(FunctionMetadataSource source) {
-        if(source == null) {
-            return;
-        }
-
-        Collection functions = source.getFunctionMethods();
-        if(functions != null) {
-            Iterator functionIter = functions.iterator();
-            while(functionIter.hasNext()) {
-                Object functionObj = functionIter.next();
-                if(! (functionObj instanceof FunctionMethod)) {
-                    Assertion.failed(QueryPlugin.Util.getString("ERR.015.001.0045", functionObj.getClass().getName())); //$NON-NLS-1$
-                }
-                FunctionMethod method = (FunctionMethod) functionObj;
-
-				if (!containsIndistinguishableFunction(method)){
-                    // Store method metadata for retrieval
-                    addMetadata(method);
-
-                    // Add to tree
-                    addFunction(source, method);
-				} else {
-                    LogManager.logWarning(LogConstants.CTX_FUNCTION_TREE, QueryPlugin.Util.getString("ERR.015.001.0046", new Object[]{method})); //$NON-NLS-1$
-				}
-            }
+        Collection<FunctionMethod> functions = source.getFunctionMethods();
+    	for (FunctionMethod method : functions) {
+			if (!containsIndistinguishableFunction(method)){
+                // Add to tree
+                addFunction(name, source, method);
+			} else if (!CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(name)) {
+                LogManager.logWarning(LogConstants.CTX_FUNCTION_TREE, QueryPlugin.Util.getString("ERR.015.001.0046", new Object[]{method})); //$NON-NLS-1$
+			}
         }
     }
 
@@ -141,51 +117,6 @@ public class FunctionTree {
 	private boolean containsIndistinguishableFunction(FunctionMethod method){
         return allFunctions.contains(method);
 	}
-
-    /**
-     * Store the method in the function metadata.
-     * @param method The function metadata for a particular method signature
-     */
-    private void addMetadata(FunctionMethod method) {
-    	String categoryKey = method.getCategory();
-    	if (categoryKey == null) {
-    		method.setCategory(FunctionCategoryConstants.MISCELLANEOUS);
-    		categoryKey = FunctionCategoryConstants.MISCELLANEOUS;
-    	}
-    	categoryKey = categoryKey.toUpperCase();
-        String nameKey = method.getName().toUpperCase();
-        
-        // Look up function map (create if necessary)
-        Set<String> functions = categories.get(categoryKey);
-        if (functions == null) {
-            functions = new HashSet<String>();
-            categories.put(categoryKey, functions);
-        }
-
-        int index = -1;
-        while (true){
-	        // Look up function in function map
-	        functions.add(nameKey);
-	
-	        // Add method to list by function name
-	        List<FunctionMethod> knownMethods = functionsByName.get(nameKey);
-	        if(knownMethods == null) {
-	            knownMethods = new ArrayList<FunctionMethod>();
-	            functionsByName.put(nameKey, knownMethods);
-	        }
-	        knownMethods.add(method);
-	        
-	        // if the function is "." delimited, then add all possible forms
-	        index = nameKey.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR, index+1);
-	        if (index != -1) {
-	        	nameKey = nameKey.substring(index+1);
-	        }
-	        else {
-	        	break;
-	        }
-        } 
-        allFunctions.add(method);
-    }
 
     /**
      * Get collection of category names.
@@ -258,28 +189,94 @@ public class FunctionTree {
      * @param source The function metadata source, which knows how to obtain the invocation class
      * @param method The function metadata for a particular method signature
      */
-    private void addFunction(FunctionMetadataSource source, FunctionMethod method) {
+    private void addFunction(String schema, FunctionMetadataSource source, FunctionMethod method) {
+    	String categoryKey = method.getCategory();
+    	if (categoryKey == null) {
+    		method.setCategory(FunctionCategoryConstants.MISCELLANEOUS);
+    		categoryKey = FunctionCategoryConstants.MISCELLANEOUS;
+    	}
+    	categoryKey = categoryKey.toUpperCase();
+        
+        // Look up function map (create if necessary)
+        Set<String> functions = categories.get(categoryKey);
+        if (functions == null) {
+            functions = new HashSet<String>();
+            categories.put(categoryKey, functions);
+        }
+        
         // Get method name
-        String methodName = method.getName();
+        String methodName = schema + AbstractMetadataRecord.NAME_DELIM_CHAR + method.getName();
 
         // Get input types for path
         List<FunctionParameter> inputParams = method.getInputParameters();
-        List<Class> inputTypes = new LinkedList<Class>();
+        List<Class<?>> inputTypes = new LinkedList<Class<?>>();
         if(inputParams != null) {
             for(int i=0; i<inputParams.size(); i++) {
                 String typeName = inputParams.get(i).getType();
                 inputTypes.add(DataTypeManager.getDataTypeClass(typeName));
             }
         }
-        Class[] types = inputTypes.toArray(new Class[inputTypes.size()]);
+        Class<?>[] types = inputTypes.toArray(new Class[inputTypes.size()]);
 
         if (method.isVarArgs()) {
         	inputTypes.set(inputTypes.size() - 1, Array.newInstance(inputTypes.get(inputTypes.size() - 1), 0).getClass());
         }
 
-        // Get return type
+        FunctionDescriptor descriptor = createFunctionDescriptor(source, method, inputTypes, types);
+        // Store this path in the function tree
+        
+        int index = -1;
+        while(true) {
+            String nameKey = methodName.toUpperCase();
+
+	        // Look up function in function map
+	        functions.add(nameKey);
+	
+	        // Add method to list by function name
+	        List<FunctionMethod> knownMethods = functionsByName.get(nameKey);
+	        if(knownMethods == null) {
+	            knownMethods = new ArrayList<FunctionMethod>();
+	            functionsByName.put(nameKey, knownMethods);
+	        }
+	        knownMethods.add(method);
+
+        	Map node = treeRoot;
+	        Object[] path = buildPath(methodName, types);
+	        for(int pathIndex = 0; pathIndex < path.length; pathIndex++) {
+	            Object pathPart = path[pathIndex];
+	            Map children = (Map) node.get(pathPart);
+	            if(children == null) {
+	                children = new HashMap();
+	                node.put(pathPart, children);
+	            }
+	            if (method.isVarArgs() && pathIndex == path.length - 1) {
+	        		node.put(DESCRIPTOR_KEY, descriptor);
+	            }
+	            node = children;
+	        }
+	
+	        if (method.isVarArgs()) {
+	        	node.put(types[types.length - 1], node);
+	        }
+	        // Store the leaf descriptor in the tree
+	        node.put(DESCRIPTOR_KEY, descriptor);
+	        
+	        index = methodName.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR, index+1);
+	        if (index == -1) {
+	        	break;
+	        }
+	        methodName = methodName.substring(index+1);
+        }
+        
+        allFunctions.add(method);
+    }
+
+	private FunctionDescriptor createFunctionDescriptor(
+			FunctionMetadataSource source, FunctionMethod method,
+			List<Class<?>> inputTypes, Class<?>[] types) {
+		// Get return type
         FunctionParameter outputParam = method.getOutputParameter();
-        Class outputType = null;
+        Class<?> outputType = null;
         if(outputParam != null) {
             outputType = DataTypeManager.getDataTypeClass(outputParam.getType());
         }
@@ -329,39 +326,8 @@ public class FunctionTree {
             inputTypes.add(0, CommandContext.class);
         }
 
-        FunctionDescriptor descriptor = new FunctionDescriptor(method.getName(), method.getPushdown(), types, outputType, invocationMethod, requiresContext, !method.isNullOnNull(), method.getDeterminism());
-        // Store this path in the function tree
-        
-        int index = -1;
-        while(true) {
-        	Map node = treeRoot;
-	        Object[] path = buildPath(methodName, types);
-	        for(int pathIndex = 0; pathIndex < path.length; pathIndex++) {
-	            Object pathPart = path[pathIndex];
-	            Map children = (Map) node.get(pathPart);
-	            if(children == null) {
-	                children = new HashMap();
-	                node.put(pathPart, children);
-	            }
-	            if (method.isVarArgs() && pathIndex == path.length - 1) {
-	        		node.put(DESCRIPTOR_KEY, descriptor);
-	            }
-	            node = children;
-	        }
-	
-	        if (method.isVarArgs()) {
-	        	node.put(types[types.length - 1], node);
-	        }
-	        // Store the leaf descriptor in the tree
-	        node.put(DESCRIPTOR_KEY, descriptor);
-	        
-	        index = methodName.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR, index+1);
-	        if (index == -1) {
-	        	break;
-	        }
-	        methodName = methodName.substring(index+1);
-        }
-    }
+        return new FunctionDescriptor(method, types, outputType, invocationMethod, requiresContext);
+	}
     
     /**
      * Look up a function descriptor by signature in the tree.  If none is
@@ -370,7 +336,7 @@ public class FunctionTree {
      * @param argTypes Types of each argument in the function
      * @return Descriptor which can be used to invoke the function
      */
-    FunctionDescriptor getFunction(String name, Class[] argTypes) {
+    FunctionDescriptor getFunction(String name, Class<?>[] argTypes) {
         // Build search path
         Object[] path = buildPath(name, argTypes);
 
@@ -399,7 +365,7 @@ public class FunctionTree {
      * @param argTypes Types of each arguments
      * @return Path in function storage tree
      */
-    private Object[] buildPath(String name, Class[] argTypes) {
+    private Object[] buildPath(String name, Class<?>[] argTypes) {
         Object[] path = new Object[argTypes.length + 1];
         path[0] = name.toUpperCase();
         System.arraycopy(argTypes, 0, path, 1, argTypes.length);

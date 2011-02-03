@@ -142,7 +142,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * TransformationMetadata constructor
      * @param context Object containing the info needed to lookup metadta.
      */
-    public TransformationMetadata(VDBMetaData vdbMetadata, final CompositeMetadataStore store, Map<String, Resource> vdbEntries, FunctionTree systemFunctions, FunctionTree... udfFunctions) {
+    public TransformationMetadata(VDBMetaData vdbMetadata, final CompositeMetadataStore store, Map<String, Resource> vdbEntries, FunctionTree systemFunctions, Collection<FunctionTree> functionTrees) {
     	ArgCheck.isNotNull(store);
     	this.vdbMetaData = vdbMetadata;
         this.store = store;
@@ -151,7 +151,11 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         } else {
         	this.vdbEntries = vdbEntries;
         }
-        this.functionLibrary = new FunctionLibrary(systemFunctions, udfFunctions);
+        if (functionTrees == null) {
+        	this.functionLibrary = new FunctionLibrary(systemFunctions);
+        } else {
+            this.functionLibrary = new FunctionLibrary(systemFunctions, functionTrees.toArray(new FunctionTree[functionTrees.size()]));
+        }
     }
     
     //==================================================================================

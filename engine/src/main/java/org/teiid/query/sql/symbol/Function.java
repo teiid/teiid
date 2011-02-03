@@ -192,12 +192,16 @@ public class Function implements Expression {
 			return true;
 		} 
 		
-		if(obj == null || ! (obj instanceof Function)) { 
+		if(! (obj instanceof Function)) { 
 			return false;			
 		}
 		
 		Function other = (Function) obj;
-		if(! other.getName().equalsIgnoreCase(getName())) { 
+		if (this.descriptor != null && other.descriptor != null) {
+			if (!this.descriptor.getMethod().getFullName().equals(other.descriptor.getMethod().getFullName())) {
+				return false;
+			}
+		} else if(! other.getName().equalsIgnoreCase(getName())) { 
 			return false;
 		}	
 		
