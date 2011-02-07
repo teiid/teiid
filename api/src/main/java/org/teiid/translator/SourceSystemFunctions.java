@@ -145,5 +145,7 @@ public class SourceSystemFunctions {
 	public static final String XMLPI = "xmlpi"; //$NON-NLS-1$
 	
 	public static final String JSONTOXML = "jsontoxml"; //$NON-NLS-1$
+	
+	public static final String UUID = "uuid"; //$NON-NLS-1$
 
 }

@@ -2074,6 +2074,17 @@
         <para>The two argument form is provided for backwards compatibility. roleType is a string and must be 'data'</para>
     </section>
   </section>
+  <section>
+    <title>Miscellaneous Functions</title>
+    <para>Other functions.</para>
+    <section>
+    	<title>uuid</title>
+    	<para>Retuns a universally unique identifier.</para>
+    	<para><synopsis>uuid()</synopsis></para>
+        <para>the return type is string.</para>
+        <para>Generates a type 4 (pseudo randomly generated) UUID using a cryptographically strong random number generator.  The format is XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX where each X is a hex digit.</para>
+    </section>
+  </section>
   <section id="nondeterministic_functions">
   	<title>Nondeterministic Function Handling</title>
 	<para>Teiid categorizes functions by varying degrees of determinism.

@@ -1405,4 +1405,8 @@ public class TestFunctionLibrary {
 		assertEquals("\r\t", helpInvokeMethod("unescape", new Class[] {DefaultDataClasses.STRING}, new Object[] { "\r\\\t" }, null)); //$NON-NLS-1$
 	}
 	
+	@Test() public void testUuid() throws Exception {
+		assertNotNull(helpInvokeMethod("uuid", new Class[] {}, new Object[] {}, null)); //$NON-NLS-1$
+	}
+	
 }

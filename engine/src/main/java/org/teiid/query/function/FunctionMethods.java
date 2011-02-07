@@ -41,6 +41,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Properties;
 import java.util.TimeZone;
+import java.util.UUID;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
@@ -1375,4 +1376,8 @@ public final class FunctionMethods {
 		return i;
 	}
     
+	public static String uuid() {
+		return UUID.randomUUID().toString();
+	}
+	
 }

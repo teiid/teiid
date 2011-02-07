@@ -193,6 +193,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         }
         
         addUnescape();
+        addUuidFunction();
     }
 
     private void addUnescape() {
@@ -281,6 +282,14 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         rand = new FunctionMethod(SourceSystemFunctions.RAND, QueryPlugin.Util.getString("SystemSource.Rand_desc"), NUMERIC, FUNCTION_CLASS, "rand", //$NON-NLS-1$ //$NON-NLS-2$ 
                                           new FunctionParameter[] {}, 
                                           new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Rand_result_desc")) ); //$NON-NLS-1$ //$NON-NLS-2$
+        rand.setDeterminism(Determinism.NONDETERMINISTIC);
+        functions.add(rand);
+    }
+    
+    private void addUuidFunction() {
+        FunctionMethod rand = new FunctionMethod(SourceSystemFunctions.UUID, QueryPlugin.Util.getString("SystemSource.uuid_desc"), MISCELLANEOUS, FUNCTION_CLASS, "uuid", //$NON-NLS-1$ //$NON-NLS-2$ 
+                                          new FunctionParameter[] {},
+                                          new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.uuid_result_desc")) );                 //$NON-NLS-1$ //$NON-NLS-2$
         rand.setDeterminism(Determinism.NONDETERMINISTIC);
         functions.add(rand);
     }

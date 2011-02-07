@@ -138,6 +138,14 @@ public class TeiidDialect extends Dialect {
         registerFunction("modifytimezone", new StandardSQLFunction("modifytimezone", Hibernate.TIMESTAMP)); //$NON-NLS-1$ //$NON-NLS-2$
 
         registerFunction("convert", new StandardSQLFunction("convert")); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        registerFunction("to_bytes", new StandardSQLFunction("to_bytes", Hibernate.BLOB)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("to_chars", new StandardSQLFunction("to_chars", Hibernate.CLOB)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("from_unittime", new StandardSQLFunction("from_unittime", Hibernate.TIMESTAMP)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("session_id", new StandardSQLFunction("session_id", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        registerFunction("uuid", new StandardSQLFunction("uuid", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("unescape", new StandardSQLFunction("unescape", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public boolean dropConstraints() {
@@ -242,6 +250,11 @@ public class TeiidDialect extends Dialect {
 
 	public String getForUpdateString(String aliases) {
 		return ""; //$NON-NLS-1$
+	}
+	
+	@Override
+	public String getSelectGUIDString() {
+		return "select uuid()"; //$NON-NLS-1$
 	}
    
 }
