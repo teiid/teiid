@@ -89,7 +89,7 @@ public final class JDBCSQLTypeInfo {
     private static Map<String, String> CLASSNAME_TO_NAME = new HashMap<String, String>();
     
     static {
-        addTypeMapping(STRING, STRING_CLASS, Types.VARCHAR, Types.LONGVARCHAR, Types.CHAR);
+        addTypeMapping(STRING, STRING_CLASS, Types.VARCHAR, Types.CHAR);
         addTypeMapping(CHAR, CHAR_CLASS, Types.CHAR, false);
         addTypeMapping(BOOLEAN, BOOLEAN_CLASS, Types.BIT, Types.BOOLEAN);
         addTypeMapping(TIME, TIME_CLASS, Types.TIME);
@@ -104,7 +104,7 @@ public final class JDBCSQLTypeInfo {
         addTypeMapping(SHORT, SHORT_CLASS, Types.SMALLINT);
         addTypeMapping(LONG, LONG_CLASS, Types.BIGINT);
         addTypeMapping(OBJECT, OBJECT_CLASS, Types.JAVA_OBJECT);
-        addTypeMapping(CLOB, CLOB_CLASS, Types.CLOB);
+        addTypeMapping(CLOB, CLOB_CLASS, Types.CLOB, Types.LONGVARCHAR);
         addTypeMapping(BLOB, BLOB_CLASS, Types.BLOB, Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY);
         
         addTypeMapping(NULL, null, Types.NULL);
