@@ -89,7 +89,7 @@ public final class JDBCSQLTypeInfo {
     private static Map<String, String> CLASSNAME_TO_NAME = new HashMap<String, String>();
     
     static {
-        addTypeMapping(STRING, STRING_CLASS, Types.VARCHAR, Types.CHAR);
+        addTypeMapping(STRING, STRING_CLASS, Types.VARCHAR, Types.CHAR, Types.NVARCHAR, Types.NCHAR);
         addTypeMapping(CHAR, CHAR_CLASS, Types.CHAR, false);
         addTypeMapping(BOOLEAN, BOOLEAN_CLASS, Types.BIT, Types.BOOLEAN);
         addTypeMapping(TIME, TIME_CLASS, Types.TIME);
@@ -104,16 +104,12 @@ public final class JDBCSQLTypeInfo {
         addTypeMapping(SHORT, SHORT_CLASS, Types.SMALLINT);
         addTypeMapping(LONG, LONG_CLASS, Types.BIGINT);
         addTypeMapping(OBJECT, OBJECT_CLASS, Types.JAVA_OBJECT);
-        addTypeMapping(CLOB, CLOB_CLASS, Types.CLOB, Types.LONGVARCHAR);
+        addTypeMapping(CLOB, CLOB_CLASS, Types.CLOB, Types.LONGVARCHAR, Types.LONGNVARCHAR, Types.NCLOB);
         addTypeMapping(BLOB, BLOB_CLASS, Types.BLOB, Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY);
         
         addTypeMapping(NULL, null, Types.NULL);
         
         addTypeMapping(XML, XML_CLASS, Types.SQLXML);
-		TYPE_TO_NAME_MAP.put(Types.NVARCHAR, STRING);
-        TYPE_TO_NAME_MAP.put(Types.LONGNVARCHAR, STRING);
-		TYPE_TO_NAME_MAP.put(Types.NCHAR, CHAR);
-		TYPE_TO_NAME_MAP.put(Types.NCLOB, CLOB);
     }
 
 	private static void addTypeMapping(String typeName, String javaClass, int sqlType, int ... secondaryTypes) {
