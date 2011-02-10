@@ -133,6 +133,8 @@ public class SourceSystemFunctions {
 	public static final String IFNULL = "ifnull"; //$NON-NLS-1$
 	public static final String COALESCE = "coalesce"; //$NON-NLS-1$
 	public static final String NULLIF = "nullif"; //$NON-NLS-1$
+	public static final String ARRAY_GET = "array_get"; //$NON-NLS-1$
+	public static final String ARRAY_LENGTH = "array_length"; //$NON-NLS-1$
 	
 	//conversion functions
 	public static final String CONVERT = "convert"; //$NON-NLS-1$

@@ -57,8 +57,7 @@ public class OlapExecutionFactory extends ExecutionFactory<DataSource, Connectio
 		ProcedureParameter param = metadataFactory.addProcedureParameter("request", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("The MDX query to execute"); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
-		
-		metadataFactory.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.XML, Type.ReturnValue, p); //$NON-NLS-1$		
+		metadataFactory.addProcedureResultSetColumn("tuple", TypeFacility.RUNTIME_NAMES.OBJECT, p); //$NON-NLS-1$		
 	}
     
     @Override

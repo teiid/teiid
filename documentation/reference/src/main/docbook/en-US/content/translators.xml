@@ -1019,16 +1019,14 @@ Account.Contacts) FROM Account]]></programlisting>
             <title>OLAP Translator</title>
             <para>
             The OLAP Services translator, known by the type name <emphasis>olap</emphasis>, 
-            exposes stored procedures for calling analysis sevices backed by a OLAP server using MDX query lanaguage. Given the MDX
-            query, this translator executes the query and returns the results in XML format.
-            It will commonly be used with the <link linkend="xmltable">XMLTABLE</link> table functions to use XML formated data.
+            exposes stored procedures for calling analysis sevices backed by a OLAP server using MDX query lanaguage. 
+            This translator exposes a stored procedure, invokeMDX, that returns a result set containing tuple array values for a given MDX query.
+            invokeMDX will commonly be used with the <link linkend="arraytable">ARRAYTABLE</link> table function to extract the results.
             </para>
             <para>
             Since the Cube metadata exposed by the OLAP servers and relational database metadata are so different, there is no single 
-            way to map the metadata from one to other. It is best that OLAP system be queried using its own native MDX language
-            through Teiid abstraction layers than introducing a custom Teiid based MDX like extensions for querying. To build MDX 
-            queries dynamically use Teiid's abstraction layer define your target schema in relational terms and use Teiid's procedural 
-            langaugage to build a query.
+            way to map the metadata from one to other. It is best to query OLAP system using its own native MDX language
+            through. MDX queries my be defined statically or built dynamically in Teiid's abstraction layers.
             </para>
                 
             <section>
@@ -1040,32 +1038,17 @@ Account.Contacts) FROM Account]]></programlisting>
                 <section>
                     <title>InvokeMDX Procedure</title>
                     <para>
-                    <methodname>invokeMdx</methodname> returns the XML contents of results in tabular form. 
+                    <methodname>invokeMdx</methodname> returns a resultset of the tuples as array values. 
                     </para>
-                    <programlisting>Procedure invokeMdx(mdx in STRING) returns SQLXML</programlisting>
+                    <programlisting>Procedure invokeMdx(mdx in STRING) returns resultset (tuple object)</programlisting>
         
                     <para>
-                    mdx parameter indicates the query in its original form that is to be executed on the OLAP server.
+                    The mdx parameter is a MDX query to be executed on the OLAP server.
                     </para>
                     <para>
-                    The results of the query will be returned in SQLXML form that in the format as shown below.
-                    <programlisting role="XML" language="XML"><![CDATA[
-    <?xml version="1.0" encoding="UTF-8"?>
-    <resultset>
-        <row>
-            <Promotion_Media>All Media</Promotion_Media>
-            <Product>All Products</Product>
-            <Unit_Sales>266773.0</Unit_Sales>
-            <Store_Cost>225627.2336</Store_Cost>
-            <Store_Sales>565238.13</Store_Sales>
-        </row>
-    </resultset>                    
-                    ]]></programlisting>           
-                    From the above XML result, the first two columns in the row were the members from the row axis and the 
-                    last three columns are the measures from the cube from column axis. Currently the resultset only supports
-                    2 dimentional cube.          
+                    The results of the query will be returned such that each row on the row axis will be packed into an array value that will first contain each hierarcy member name on the row axis then each measure value from the column axis.
                     </para>
-                    
+                    <note><para>Currently the resultset only supports 2 dimentional cube.</para></note>
                     <para>
                     This translator requires a data source to be configured to the OLAP cube using OLAP4J JDBC driver. Two sample
                     -ds.xml files provided for accessing OLAP servers in teiid-examples section. One is Mondrian specific, when Mondrian server is deloyed

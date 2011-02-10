@@ -1092,7 +1092,7 @@ DynamicCommand dynamicCommand(ParseInfo info) :
 	GroupSymbol group = null;
 	int updateCount = 0;
 	Token updateToken = null;
-	List elements = null;
+	List<TableFunctionReference.ProjectedColumn> elements = null;
 	SetClauseList using = null;
 	DynamicCommand dcStmt = new DynamicCommand();
 	SetClauseList setClauseList = null;
@@ -1114,7 +1114,11 @@ DynamicCommand dynamicCommand(ParseInfo info) :
      ]
      {
          dcStmt.setIntoGroup(group);
-         dcStmt.setAsColumns(elements);
+         List<ElementSymbol> symbols = new ArrayList(elements.size());
+         for (TableFunctionReference.ProjectedColumn col : elements) {
+         	symbols.add(col.getSymbol());
+         }
+         dcStmt.setAsColumns(symbols);
          dcStmt.setAsClauseSet(true);
      }
 	]
@@ -1174,27 +1178,25 @@ SetClauseList setClauseList(boolean shortName, ParseInfo info) :
  * Create elements with datatypes
  * @throws ParseException if parsing failed
  */
-List createElementsWithTypes(ParseInfo info) :
+List<TableFunctionReference.ProjectedColumn> createElementsWithTypes(ParseInfo info) :
 {
 	String element = null;
-	Constant type = null;
-	List elements = new ArrayList();
+	String type = null;
+	List<TableFunctionReference.ProjectedColumn> elements = new ArrayList<TableFunctionReference.ProjectedColumn>();
 }
 {
 	 element = id()
-	 type = dataType()
+	 type = dataTypeString()
 	 {
-	    ElementSymbol symbol = new ElementSymbol(validateElementName(element));
-	    symbol.setType(DataTypeManager.getDataTypeClass(type.getValue().toString()));
+	    TableFunctionReference.ProjectedColumn symbol = new TableFunctionReference.ProjectedColumn(validateElementName(element), type);
 		elements.add(symbol);
 	 }
 	 (LOOKAHEAD(2) <COMMA>
 		element = id()
-		type = dataType()
+		type = dataTypeString()
 		{
-			symbol = new ElementSymbol(validateElementName(element));
-		    symbol.setType(DataTypeManager.getDataTypeClass(type.getValue().toString()));
-		    elements.add(symbol);
+	      symbol = new TableFunctionReference.ProjectedColumn(validateElementName(element), type);
+		  elements.add(symbol);
 		}
 	 )*
 	 {
@@ -2087,6 +2089,8 @@ FromClause tablePrimary(ParseInfo info) :
 {
 	(	LOOKAHEAD(<ID> <LPAREN>, { "texttable".equalsIgnoreCase(getToken(1).image) }) clause = textTable(info)
 	    |
+	    LOOKAHEAD(<ID> <LPAREN>, { "arraytable".equalsIgnoreCase(getToken(1).image) }) clause = arrayTable(info)
+	    |
 	    clause = xmlTable(info)
 	    |
 	    clause = unaryFromClause(info)
@@ -2148,6 +2152,27 @@ String nonReserved(String... expected) :
 		}
 		throw new ParseException(QueryPlugin.Util.getString("SQLParser.expected_non_reserved", Arrays.toString(expected), t.image));
 	}
+}
+
+ArrayTable arrayTable(ParseInfo info) :
+{
+	Expression array = null;
+	List<TableFunctionReference.ProjectedColumn> columns;
+	String aliasID = null;
+}
+{
+ 	<ID> <LPAREN> array = expression(info)
+ 	nonReserved("COLUMNS")
+ 	columns = createElementsWithTypes(info) 
+ 	<RPAREN>
+ 	[<AS>] aliasID=id()
+ 	{
+ 		ArrayTable result = new ArrayTable();
+ 		result.setArrayValue(array);
+ 		result.setColumns(columns);
+ 		result.setName(validateAlias(aliasID));
+ 		return result;
+ 	}
 }
 
 TextTable textTable(ParseInfo info) :

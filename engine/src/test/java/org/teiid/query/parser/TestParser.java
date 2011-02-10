@@ -43,6 +43,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SortSpecification.NullOrdering;
+import org.teiid.query.sql.lang.ArrayTable;
 import org.teiid.query.sql.lang.BetweenCriteria;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.CompareCriteria;
@@ -78,6 +79,7 @@ import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
+import org.teiid.query.sql.lang.TableFunctionReference;
 import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
@@ -6856,6 +6858,21 @@ public class TestParser {
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("X"))));
         query.setFrom(from);
     	helpTest("TABLE X", "SELECT * FROM X", query);
+    }
+    
+    @Test public void testArrayTable() throws Exception {
+    	String sql = "SELECT * from arraytable(null columns x string, y date) as x"; //$NON-NLS-1$
+        Query query = new Query();
+        query.setSelect(new Select(Arrays.asList(new AllSymbol())));
+        ArrayTable tt = new ArrayTable();
+        tt.setArrayValue(new Constant(null, DataTypeManager.DefaultDataClasses.OBJECT));
+        List<TableFunctionReference.ProjectedColumn> columns = new ArrayList<TableFunctionReference.ProjectedColumn>();
+        columns.add(new TableFunctionReference.ProjectedColumn("x", "string"));
+        columns.add(new TableFunctionReference.ProjectedColumn("y", "date"));
+        tt.setColumns(columns);
+        tt.setName("x");
+        query.setFrom(new From(Arrays.asList(tt)));
+        helpTest(sql, "SELECT * FROM ARRAYTABLE(null COLUMNS x string, y date) AS x", query);
     }
 
 }

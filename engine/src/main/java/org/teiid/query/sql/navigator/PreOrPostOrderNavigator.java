@@ -26,6 +26,7 @@ import java.util.Collection;
 
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.lang.ArrayTable;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.BetweenCriteria;
 import org.teiid.query.sql.lang.CompareCriteria;
@@ -656,6 +657,14 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     	preVisitVisitor(obj);
     	visitNode(obj.getBlock());
     	postVisitVisitor(obj);
+    }
+    
+    @Override
+    public void visit(ArrayTable obj) {
+        preVisitVisitor(obj);
+        visitNode(obj.getArrayValue());
+        visitNode(obj.getGroupSymbol());
+        postVisitVisitor(obj);
     }
     
     public static void doVisit(LanguageObject object, LanguageVisitor visitor, boolean order) {

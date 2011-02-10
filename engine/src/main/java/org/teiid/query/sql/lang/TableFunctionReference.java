@@ -80,10 +80,11 @@ public abstract class TableFunctionReference extends FromClause {
 			return symbol.hashCode();
 		}
 		
-		public void copy(ProjectedColumn copy) {
+		public ProjectedColumn copyTo(ProjectedColumn copy) {
 			copy.name = this.name;
 			copy.type = this.type;
 			copy.symbol = (ElementSymbol)this.symbol.clone();
+			return copy;
 		}
 		
 	}

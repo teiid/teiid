@@ -799,6 +799,7 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
         <listitem><para>FROM table1 left outer join <link linkend="optional_join">/*+ optional */</link> table2 ON join-criteria</para></listitem>
         <listitem><para>FROM <link linkend="texttable">TEXTTABLE...</link></para></listitem>
         <listitem><para>FROM <link linkend="xmltable">XMLTABLE...</link></para></listitem>
+        <listitem><para>FROM <link linkend="arraytable">ARRAYTABLE...</link></para></listitem>
       </itemizedlist> 
       <note>
         <title>DEP Hints</title>
@@ -966,6 +967,41 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
 		</itemizedlist>		
 	  </section>
     </section>
+    	  <section id="arraytable">
+		<title>ARRAYTABLE</title>
+		<para>The ARRAYTABLE funciton processes an array input to produce tabular ouptut.  
+			The function itself defines what columns it projects.  
+		    The ARRAYTABLE function is implicitly a nested table and may be correlated to preceeding FROM clause entries.
+      	</para>
+      	<para>
+        Usage:
+        	<synopsis label="Usage">ARRAYTABLE(expression COLUMNS &lt;COLUMN&gt;, ...) AS name</synopsis>
+        	<synopsis label="Usage">COLUMN := name datatype</synopsis> 
+      	</para>
+      	<itemizedlist>
+        	<para>Parameters</para>
+        <listitem>
+          <para>expression - the array to process, which should be a java.sql.Array or java array value.
+          </para>
+        </listitem>
+      	</itemizedlist>
+      	<itemizedlist>
+        <para>Syntax Rules:
+        </para>
+        <listitem>
+          <para>The columns names must be not contain duplicates.
+          </para>
+        </listitem>
+        </itemizedlist>
+      	<itemizedlist>
+        	<para>Examples</para>
+        	<listitem>
+		        <para>As a nested table: <programlisting>select x.* from (call source.invokeMDX('some query')) r, arraytable(r.tuple COLUMNS first string, second bigdecimal) x</programlisting>
+				</para>		
+        	</listitem>
+		</itemizedlist>
+		<para>ARRAYTABLE is effectively a shortcut for using the <xref linkend="array_get"/> function in a nested table.  For example "ARRAYGET(val COLUMNS col1 string, col2 integer) AS X" is the same as "TABLE(SELECT cast(array_get(val, 1) AS string) AS col1, cast(array_get(val, 2) AS integer) AS col2) AS X".</para>		
+	  </section>
     <section id="where_clause">
       <title>WHERE Clause</title>
       <para>

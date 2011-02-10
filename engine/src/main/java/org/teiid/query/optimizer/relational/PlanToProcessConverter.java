@@ -24,7 +24,6 @@ package org.teiid.query.optimizer.relational;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -50,6 +49,7 @@ import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
 import org.teiid.query.optimizer.relational.rules.FrameUtil;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.AccessNode;
+import org.teiid.query.processor.relational.ArrayTableNode;
 import org.teiid.query.processor.relational.DependentAccessNode;
 import org.teiid.query.processor.relational.DependentProcedureAccessNode;
 import org.teiid.query.processor.relational.DependentProcedureExecutionNode;
@@ -76,6 +76,7 @@ import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.resolver.util.ResolverUtil;
+import org.teiid.query.sql.lang.ArrayTable;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Insert;
@@ -406,6 +407,14 @@ public class PlanToProcessConverter {
 					updateGroupName(node, tt);
 					ttn.setTable(tt);
 					processNode = ttn;
+					break;
+				}
+				if (source instanceof ArrayTable) {
+					ArrayTableNode atn = new ArrayTableNode(getID());
+					ArrayTable at = (ArrayTable)source;
+					updateGroupName(node, at);
+					atn.setTable(at);
+					processNode = atn;
 					break;
 				}
 				return null;

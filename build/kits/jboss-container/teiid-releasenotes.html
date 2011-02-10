@@ -29,7 +29,13 @@
 	<LI><B>Virtual procedure out params</B> - virtual procedures can now have RETURN/OUT/INOUT parameters to return values.
 	<LI><B>OLAP</B> - OLAP translator is now part of Teiid kit using OLAP4J
 	<LI><B>Multi-source procedures</B> - multi-source handling was expanded to cover stored procedure execution.  See the Reference for more.
-	<LI><B>UUID function</B> - was added to generate type 4 UUIDs and the Hibernate dialect was updated to support the GUIDGenerator.
+	<LI><B>Function Support</B> - additional system functions were made available. 
+	    <UL>
+	       <LI><B>uuid</B> was added to generate type 4 UUIDs and the Hibernate dialect was updated to support the GUIDGenerator.
+	       <LI><B>array_get</B> was added to extract values from java.sql.Array or java array values.
+	       <LI><B>array_length</B> was added to get the length of java.sql.Array or java array values.
+	    </UL>
+	<LI><B>ARRAYTABLE</B> - the ARRAYTABLE table function was added to simplify array value extraction into a tabular format.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

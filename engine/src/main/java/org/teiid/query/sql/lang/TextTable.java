@@ -70,7 +70,7 @@ public class TextTable extends TableFunctionReference {
 		public TextColumn clone() {
 			TextColumn clone = new TextColumn();
 			clone.width = this.width;
-			this.copy(clone);
+			this.copyTo(clone);
 			return clone;
 		}
 	}

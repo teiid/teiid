@@ -194,14 +194,30 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         
         addUnescape();
         addUuidFunction();
+        addArrayGet();
+        addArrayLength();
     }
 
-    private void addUnescape() {
+    private void addArrayLength() {
+    	functions.add(new FunctionMethod(SourceSystemFunctions.ARRAY_LENGTH, QueryPlugin.Util.getString("SystemSource.array_length_desc"), MISCELLANEOUS, PushDown.CAN_PUSHDOWN, FUNCTION_CLASS, SourceSystemFunctions.ARRAY_LENGTH, //$NON-NLS-1$ 
+                new FunctionParameter[] { 
+                    new FunctionParameter("array", DataTypeManager.DefaultDataTypes.OBJECT, QueryPlugin.Util.getString("SystemSource.array_param1"))}, //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.array_length_result")), false, Determinism.DETERMINISTIC ) );       //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
+	private void addArrayGet() {
+    	functions.add(new FunctionMethod(SourceSystemFunctions.ARRAY_GET, QueryPlugin.Util.getString("SystemSource.array_get_desc"), MISCELLANEOUS, PushDown.CAN_PUSHDOWN, FUNCTION_CLASS, SourceSystemFunctions.ARRAY_GET, //$NON-NLS-1$ 
+                new FunctionParameter[] { 
+                    new FunctionParameter("array", DataTypeManager.DefaultDataTypes.OBJECT, QueryPlugin.Util.getString("SystemSource.array_param1")), //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("index", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.array_get_param2"))}, //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.OBJECT, QueryPlugin.Util.getString("SystemSource.array_get_result")), false, Determinism.DETERMINISTIC ) );       //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
+	private void addUnescape() {
     	functions.add(new FunctionMethod(SourceSystemFunctions.UNESCAPE, QueryPlugin.Util.getString("SystemSource.unescape_desc"), STRING, PushDown.CANNOT_PUSHDOWN, FUNCTION_CLASS, SourceSystemFunctions.UNESCAPE, //$NON-NLS-1$ 
                 new FunctionParameter[] { 
                     new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.unescape_param1"))}, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.unescape_result")), false, Determinism.DETERMINISTIC ) );       //$NON-NLS-1$ //$NON-NLS-2$
-
 	}
 
 	private void addSecurityFunctions() {

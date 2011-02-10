@@ -90,7 +90,7 @@ public class XMLTable extends TableFunctionReference {
 		@Override
 		public XMLColumn clone() {
 			XMLColumn clone = new XMLColumn();
-			super.copy(clone);
+			super.copyTo(clone);
 			clone.ordinal = this.ordinal;
 			clone.path = this.path;
 			if (this.defaultExpression != null) {

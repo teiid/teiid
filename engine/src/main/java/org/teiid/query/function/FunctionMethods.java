@@ -25,12 +25,14 @@ package org.teiid.query.function;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.nio.charset.Charset;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -1378,6 +1380,30 @@ public final class FunctionMethods {
     
 	public static String uuid() {
 		return UUID.randomUUID().toString();
+	}
+	
+	public static Object array_get(Object array, int index) throws FunctionExecutionException, SQLException {
+		try {
+			if (array.getClass().isArray()) {
+				return Array.get(array, index - 1);
+			}
+			if (array instanceof java.sql.Array) {
+				return Array.get(((java.sql.Array)array).getArray(index, 1), 0);
+			}
+		} catch (ArrayIndexOutOfBoundsException e) {
+			throw new FunctionExecutionException(QueryPlugin.Util.getString("FunctionMethods.array_index", index)); //$NON-NLS-1$
+		}
+		throw new FunctionExecutionException(QueryPlugin.Util.getString("FunctionMethods.not_array_value", array.getClass())); //$NON-NLS-1$
+	}
+	
+	public static int array_length(Object array) throws FunctionExecutionException, SQLException {
+		if (array.getClass().isArray()) {
+			return Array.getLength(array);
+		}
+		if (array instanceof java.sql.Array) {
+			return Array.getLength(((java.sql.Array)array).getArray());
+		}
+		throw new FunctionExecutionException(QueryPlugin.Util.getString("FunctionMethods.not_array_value", array.getClass())); //$NON-NLS-1$
 	}
 	
 }

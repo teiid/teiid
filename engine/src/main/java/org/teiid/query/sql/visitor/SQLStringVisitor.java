@@ -38,6 +38,7 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.lang.ArrayTable;
 import org.teiid.query.sql.lang.AtomicCriteria;
 import org.teiid.query.sql.lang.BetweenCriteria;
 import org.teiid.query.sql.lang.CacheHint;
@@ -83,6 +84,7 @@ import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.lang.XMLTable;
+import org.teiid.query.sql.lang.TableFunctionReference.ProjectedColumn;
 import org.teiid.query.sql.lang.TextTable.TextColumn;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.proc.AssignmentStatement;
@@ -1904,6 +1906,31 @@ public class SQLStringVisitor extends LanguageVisitor {
         append("\n"); //$NON-NLS-1$
         addTabs(0);
     	visitNode(obj.getBlock());
+    }
+    
+    @Override
+    public void visit(ArrayTable obj) {
+    	append("ARRAYTABLE("); //$NON-NLS-1$
+        visitNode(obj.getArrayValue());
+        append(SPACE);
+        append(NonReserved.COLUMNS);
+
+        for (Iterator<ProjectedColumn> cols = obj.getColumns().iterator(); cols.hasNext();) {
+        	ProjectedColumn col = cols.next();
+            append(SPACE);
+            outputDisplayName(col.getName());
+            append(SPACE);
+            append(col.getType());
+            if (cols.hasNext()) {
+                append(","); //$NON-NLS-1$
+            }
+        }
+        
+        append(")");//$NON-NLS-1$
+        append(SPACE);
+        append(AS);
+        append(SPACE);
+        outputDisplayName(obj.getName());
     }
 
     public static String escapeSinglePart( String part ) {

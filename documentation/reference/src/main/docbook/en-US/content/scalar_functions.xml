@@ -42,7 +42,7 @@
 						</entry>
 						<entry>
 							<para>x in {integer, long, float, double, biginteger,
-								bigdecimal}, return type is same as x <footnote>The precision and scale of non-bigdecimal arithmetic function functions results matches that of Java.  The results of bigdecimal operations match Java, except for division, which uses a preferred scale of max(16, dividend.scale + divisor.precision + 1), which then has trailing zeros removed by setting the scale to max(dividend.scale, normalized scale)</footnote></para>
+								bigdecimal}, return type is same as x <footnote><para>The precision and scale of non-bigdecimal arithmetic function functions results matches that of Java.  The results of bigdecimal operations match Java, except for division, which uses a preferred scale of max(16, dividend.scale + divisor.precision + 1), which then has trailing zeros removed by setting the scale to max(dividend.scale, normalized scale)</para></footnote></para>
 						</entry>
 					</row>
 					<row>
@@ -2077,6 +2077,20 @@
   <section>
     <title>Miscellaneous Functions</title>
     <para>Other functions.</para>
+    <section id="array_get">
+    	<title>array_get</title>
+    	<para>Retuns the object value at a given array index.</para>
+    	<para><synopsis>array_get(array, index)</synopsis></para>
+        <para>array is the object type, index must be an integer, and the return type is object.</para>
+        <para>1-based indexing is used.  The actual array value should be a java.sql.Array or java array type.  An exception will be thrown if the array value is the wrong type of the index is out of bounds.</para>
+    </section>
+    <section>
+    	<title>array_length</title>
+    	<para>Returns the length for a given array</para>
+    	<para><synopsis>array_length(array)</synopsis></para>
+        <para>array is the object type, and the return type is integer.</para>
+        <para>The actual array value should be a java.sql.Array or java array type.  An exception will be thrown if the array value is the wrong type.</para>
+    </section>
     <section>
     	<title>uuid</title>
     	<para>Retuns a universally unique identifier.</para>

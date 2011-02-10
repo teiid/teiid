@@ -52,6 +52,7 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.lang.ArrayTable;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.ExistsCriteria;
 import org.teiid.query.sql.lang.From;
@@ -342,6 +343,13 @@ public class SimpleQueryResolver implements CommandResolver {
 					break;
 				}
 			}
+        }
+        
+        @Override
+        public void visit(ArrayTable obj) {
+        	LinkedHashSet<GroupSymbol> saved = preTableFunctionReference(obj);
+        	visitNode(obj.getArrayValue());
+			postTableFunctionReference(obj, saved);
         }
         
         @Override

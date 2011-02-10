@@ -33,7 +33,6 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Properties;
 import java.util.TimeZone;
 
@@ -90,9 +89,9 @@ public class TestFunctionLibrary {
 	
 	// ################################## TEST HELPERS ################################
 	
-    private FunctionDescriptor helpCreateDescriptor(String name, Class[] types) { 
+    private FunctionDescriptor helpCreateDescriptor(String name, Class<?>[] types) { 
         final String fname = name;
-        final Class[] ftypes = types;
+        final Class<?>[] ftypes = types;
         return new FunctionDescriptor() {
             public String getName() {
                 return fname;
@@ -100,10 +99,10 @@ public class TestFunctionLibrary {
             public PushDown getPushdown() {
                 return PushDown.CAN_PUSHDOWN;
             }
-            public Class[] getTypes() { 
+            public Class<?>[] getTypes() { 
                 return ftypes;
             }
-            public Class getReturnType() { 
+            public Class<?> getReturnType() { 
                 return null;
             }
             
@@ -132,19 +131,19 @@ public class TestFunctionLibrary {
         };
     }
     
-	private void helpFindFunction(String fname, Class[] types, FunctionDescriptor expected) {
+	private void helpFindFunction(String fname, Class<?>[] types, FunctionDescriptor expected) {
 		FunctionDescriptor actual =  library.findFunction(fname, types);
 	
         assertEquals("Function names do not match: ", expected.getName().toLowerCase(), actual.getName().toLowerCase());             //$NON-NLS-1$
         assertEquals("Arg lengths do not match: ", expected.getTypes().length, actual.getTypes().length); //$NON-NLS-1$
 	}
 
-	private void helpFindFunctionFail(String fname, Class[] types) {
+	private void helpFindFunctionFail(String fname, Class<?>[] types) {
 		FunctionDescriptor actual =  library.findFunction(fname, types);
 		assertNull("Function was found but should not have been: " + actual, actual); //$NON-NLS-1$
 	}
     
-	private void helpFindConversions(String fname, Class[] types, FunctionDescriptor[] expected) {
+	private void helpFindConversions(String fname, Class<?>[] types, FunctionDescriptor[] expected) {
 
 		FunctionDescriptor[] actual = library.determineNecessaryConversions(fname, null, types, false);
 		
@@ -190,17 +189,17 @@ public class TestFunctionLibrary {
         } 
 	}
     
-    private void helpInvokeMethod(String fname, Class[] types, Object[] inputs, CommandContext context, Object expectedOutput) throws FunctionExecutionException {
+    private void helpInvokeMethod(String fname, Class<?>[] types, Object[] inputs, CommandContext context, Object expectedOutput) throws FunctionExecutionException {
     	Object actualOutput = helpInvokeMethod(fname, types, inputs, context);
         assertEquals("Actual function output not equal to expected: ", expectedOutput, actualOutput); //$NON-NLS-1$
     }
 
-	private Object helpInvokeMethod(String fname, Class[] types,
+	private Object helpInvokeMethod(String fname, Class<?>[] types,
 			Object[] inputs, CommandContext context)
 			throws FunctionExecutionException {
 		if (types == null) {
             // Build type signature
-            types = new Class[inputs.length];
+            types = new Class<?>[inputs.length];
             for(int i=0; i<inputs.length; i++) { 
                 types[i] = DataTypeManager.determineDataTypeClass(inputs[i]);   
             }        
@@ -241,167 +240,167 @@ public class TestFunctionLibrary {
 	// ################################## ACTUAL TESTS ################################
 	
 	@Test public void testFindFunction1() { 
-		helpFindFunction("convert", new Class[] { T_INTEGER, T_STRING }, //$NON-NLS-1$
-            helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { T_INTEGER, T_STRING }) );
+		helpFindFunction("convert", new Class<?>[] { T_INTEGER, T_STRING }, //$NON-NLS-1$
+            helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { T_INTEGER, T_STRING }) );
 	}
 	
 	@Test public void testFindFunction2() { 
-		helpFindFunction("cast", new Class[] { T_INTEGER, T_STRING }, //$NON-NLS-1$
-            helpCreateDescriptor(FunctionLibrary.CAST, new Class[] { T_INTEGER, T_STRING }) );
+		helpFindFunction("cast", new Class<?>[] { T_INTEGER, T_STRING }, //$NON-NLS-1$
+            helpCreateDescriptor(FunctionLibrary.CAST, new Class<?>[] { T_INTEGER, T_STRING }) );
 	}
 	
     @Test public void testFindFunction3() {
-        helpFindFunction("curdate", new Class[0], //$NON-NLS-1$
-        	helpCreateDescriptor("curdate", new Class[0])); //$NON-NLS-1$
+        helpFindFunction("curdate", new Class<?>[0], //$NON-NLS-1$
+        	helpCreateDescriptor("curdate", new Class<?>[0])); //$NON-NLS-1$
     }
    
     @Test public void testFindFunction4() {
-        helpFindFunctionFail("curdate", new Class[] { T_INTEGER }); //$NON-NLS-1$
+        helpFindFunctionFail("curdate", new Class<?>[] { T_INTEGER }); //$NON-NLS-1$
     }
     
     @Test public void testFindFunction5() {
-        helpFindFunction("+", new Class[] { T_INTEGER, T_INTEGER }, //$NON-NLS-1$
-        	helpCreateDescriptor("+", new Class[] { T_INTEGER, T_INTEGER }) ); //$NON-NLS-1$
+        helpFindFunction("+", new Class<?>[] { T_INTEGER, T_INTEGER }, //$NON-NLS-1$
+        	helpCreateDescriptor("+", new Class<?>[] { T_INTEGER, T_INTEGER }) ); //$NON-NLS-1$
     }
     
     @Test public void testFindFunction6() {
-        helpFindFunctionFail("+", new Class[] {T_INTEGER, T_FLOAT}); //$NON-NLS-1$
+        helpFindFunctionFail("+", new Class<?>[] {T_INTEGER, T_FLOAT}); //$NON-NLS-1$
     }
     
     @Test public void testFindFunction7() {
-        helpFindFunctionFail("+", new Class[] {T_INTEGER, T_FLOAT, T_INTEGER}); //$NON-NLS-1$
+        helpFindFunctionFail("+", new Class<?>[] {T_INTEGER, T_FLOAT, T_INTEGER}); //$NON-NLS-1$
     }
     
     @Test public void testFindFunction8() {
-        helpFindFunctionFail("+", new Class[] {T_INTEGER}); //$NON-NLS-1$
+        helpFindFunctionFail("+", new Class<?>[] {T_INTEGER}); //$NON-NLS-1$
     }
     
     @Test public void testFindFunction9() {        
-		helpFindFunctionFail("+", new Class[] {T_INTEGER, T_NULL });     //$NON-NLS-1$
+		helpFindFunctionFail("+", new Class<?>[] {T_INTEGER, T_NULL });     //$NON-NLS-1$
     }
 
     @Test public void testFindFunction10() {
-        helpFindFunction("substring", new Class[] { T_STRING, T_INTEGER, T_INTEGER }, //$NON-NLS-1$
-            helpCreateDescriptor("substring", new Class[] { T_STRING, T_INTEGER, T_INTEGER }) ); //$NON-NLS-1$
+        helpFindFunction("substring", new Class<?>[] { T_STRING, T_INTEGER, T_INTEGER }, //$NON-NLS-1$
+            helpCreateDescriptor("substring", new Class<?>[] { T_STRING, T_INTEGER, T_INTEGER }) ); //$NON-NLS-1$
     }
 
     @Test public void testFindFunction11() {
-        helpFindFunction("substring", new Class[] { T_STRING, T_INTEGER }, //$NON-NLS-1$
-            helpCreateDescriptor("substring", new Class[] { T_STRING, T_INTEGER }) ); //$NON-NLS-1$
+        helpFindFunction("substring", new Class<?>[] { T_STRING, T_INTEGER }, //$NON-NLS-1$
+            helpCreateDescriptor("substring", new Class<?>[] { T_STRING, T_INTEGER }) ); //$NON-NLS-1$
     }
 
     @Test public void testFindFunction12() {
-        helpFindFunction("context", new Class[] { T_STRING, T_INTEGER }, //$NON-NLS-1$
-            helpCreateDescriptor("context", new Class[] { T_STRING, T_INTEGER }) ); //$NON-NLS-1$
+        helpFindFunction("context", new Class<?>[] { T_STRING, T_INTEGER }, //$NON-NLS-1$
+            helpCreateDescriptor("context", new Class<?>[] { T_STRING, T_INTEGER }) ); //$NON-NLS-1$
     }
 
     @Test public void testFindFunction12a() {
-        helpFindFunction("rowlimit", new Class[] { T_STRING }, //$NON-NLS-1$
-            helpCreateDescriptor("rowlimit", new Class[] { T_STRING }) ); //$NON-NLS-1$
+        helpFindFunction("rowlimit", new Class<?>[] { T_STRING }, //$NON-NLS-1$
+            helpCreateDescriptor("rowlimit", new Class<?>[] { T_STRING }) ); //$NON-NLS-1$
     }
 
     @Test public void testFindFunction12b() {
-        helpFindFunction("rowlimitexception", new Class[] { T_STRING }, //$NON-NLS-1$
-            helpCreateDescriptor("rowlimitexception", new Class[] { T_STRING }) ); //$NON-NLS-1$
+        helpFindFunction("rowlimitexception", new Class<?>[] { T_STRING }, //$NON-NLS-1$
+            helpCreateDescriptor("rowlimitexception", new Class<?>[] { T_STRING }) ); //$NON-NLS-1$
     }
     
 	@Test public void testFind0ArgConversion1() { 	
 		helpFindConversions(
-			"curdate", new Class[] {}, //$NON-NLS-1$
+			"curdate", new Class<?>[] {}, //$NON-NLS-1$
 			new FunctionDescriptor[0] );
 	}
 
 	@Test public void testFind0ArgConversion2() { 	
 		helpFindConversions(
-			"curdate", new Class[] { T_INTEGER }, //$NON-NLS-1$
+			"curdate", new Class<?>[] { T_INTEGER }, //$NON-NLS-1$
 			null );
 	}
 
 	@Test public void testFind1ArgConversion1() { 	
 		helpFindConversions(
-			"length", new Class[] { T_STRING }, //$NON-NLS-1$
+			"length", new Class<?>[] { T_STRING }, //$NON-NLS-1$
 			new FunctionDescriptor[1] );
 	}
 
 	@Test public void testFind1ArgConversion2() { 	
 		helpFindConversions(
-			"length", new Class[] { T_INTEGER }, //$NON-NLS-1$
+			"length", new Class<?>[] { T_INTEGER }, //$NON-NLS-1$
 			new FunctionDescriptor[] {
-			    helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { T_INTEGER, T_STRING })
+			    helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { T_INTEGER, T_STRING })
 			} );
 	}
 
 	@Test public void testFind1ArgConversion3() { 	
 		helpFindConversions(
-			"length", new Class[] { DataTypeManager.DefaultDataClasses.TIMESTAMP }, //$NON-NLS-1$
+			"length", new Class<?>[] { DataTypeManager.DefaultDataClasses.TIMESTAMP }, //$NON-NLS-1$
 			new FunctionDescriptor[] {
-			    helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { DataTypeManager.DefaultDataClasses.TIMESTAMP, T_STRING })
+			    helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { DataTypeManager.DefaultDataClasses.TIMESTAMP, T_STRING })
 			} );
 	}
 
 	@Test public void testFind2ArgConversion1() { 	
 		helpFindConversions(
-			"+", new Class[] { T_INTEGER, T_INTEGER }, //$NON-NLS-1$
+			"+", new Class<?>[] { T_INTEGER, T_INTEGER }, //$NON-NLS-1$
 			new FunctionDescriptor[2] );
 	}
 
 	@Test public void testFind2ArgConversion2() { 	
 		helpFindConversions(
-			"+", new Class[] { T_INTEGER, T_FLOAT }, //$NON-NLS-1$
+			"+", new Class<?>[] { T_INTEGER, T_FLOAT }, //$NON-NLS-1$
 			new FunctionDescriptor[] { 
-                helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { T_INTEGER, T_STRING }), 
-                helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { T_FLOAT, T_STRING }) } );
+                helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { T_INTEGER, T_STRING }), 
+                helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { T_FLOAT, T_STRING }) } );
 	}
 
 	@Test public void testFind2ArgConversion3() { 	
 		helpFindConversions(
-			"+", new Class[] { T_FLOAT, T_INTEGER }, //$NON-NLS-1$
+			"+", new Class<?>[] { T_FLOAT, T_INTEGER }, //$NON-NLS-1$
 			new FunctionDescriptor[] { 
-				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { T_FLOAT, T_STRING }), 
-                helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { T_INTEGER, T_STRING }) } );
+				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { T_FLOAT, T_STRING }), 
+                helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { T_INTEGER, T_STRING }) } );
 	}
 
 	@Test public void testFind2ArgConversion4() { 	
 		helpFindConversions(
-			"+", new Class[] { T_STRING, T_FLOAT }, //$NON-NLS-1$
+			"+", new Class<?>[] { T_STRING, T_FLOAT }, //$NON-NLS-1$
 			null );
 	}
 
 	@Test public void testFind2ArgConversion5() { 	
 		helpFindConversions(
-			"+", new Class[] { T_NULL, T_NULL }, //$NON-NLS-1$
+			"+", new Class<?>[] { T_NULL, T_NULL }, //$NON-NLS-1$
 			new FunctionDescriptor[] { 
-			    helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { T_NULL, T_STRING }), 
-                helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { T_NULL, T_STRING }) } );
+			    helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { T_NULL, T_STRING }), 
+                helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { T_NULL, T_STRING }) } );
 	}
 
 	@Test public void testFind2ArgConversion6() { 	
 		helpFindConversions(
-			"+", new Class[] { T_NULL, T_INTEGER }, //$NON-NLS-1$
+			"+", new Class<?>[] { T_NULL, T_INTEGER }, //$NON-NLS-1$
 			new FunctionDescriptor[] { 
-			    helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { T_NULL, T_STRING }), 
+			    helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { T_NULL, T_STRING }), 
 				null } );
 	}
 
 	@Test public void testFind2ArgConversion7() { 	
 		helpFindConversions(
-			"+", new Class[] { T_INTEGER, T_NULL }, //$NON-NLS-1$
+			"+", new Class<?>[] { T_INTEGER, T_NULL }, //$NON-NLS-1$
 			new FunctionDescriptor[] { 
 			    null, 
-			    helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { T_NULL, T_STRING }) } );
+			    helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { T_NULL, T_STRING }) } );
 	}
 
 	@Test public void testFind3ArgConversion1() { 	
 		helpFindConversions(
-			"substring", new Class[] { T_STRING, T_INTEGER, T_INTEGER }, //$NON-NLS-1$
+			"substring", new Class<?>[] { T_STRING, T_INTEGER, T_INTEGER }, //$NON-NLS-1$
 			new FunctionDescriptor[3] );
 	}
 
 	@Test public void testFind3ArgConversion2() { 	
 		helpFindConversions(
-			"substring", new Class[] { T_INTEGER, T_INTEGER, T_INTEGER }, //$NON-NLS-1$
+			"substring", new Class<?>[] { T_INTEGER, T_INTEGER, T_INTEGER }, //$NON-NLS-1$
 			new FunctionDescriptor[] {
-				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { T_INTEGER, T_STRING }),
+				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { T_INTEGER, T_STRING }),
 				null,
 				null    
 			} );
@@ -409,45 +408,45 @@ public class TestFunctionLibrary {
 
 	@Test public void testFind3ArgConversion3() { 	
 		helpFindConversions(
-			"substring", new Class[] { T_INTEGER, T_INTEGER, DataTypeManager.DefaultDataClasses.SHORT }, //$NON-NLS-1$
+			"substring", new Class<?>[] { T_INTEGER, T_INTEGER, DataTypeManager.DefaultDataClasses.SHORT }, //$NON-NLS-1$
 			new FunctionDescriptor[] {
-				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { T_INTEGER, T_STRING }),
+				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { T_INTEGER, T_STRING }),
 				null,
-				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { DataTypeManager.DefaultDataClasses.SHORT, T_STRING })    
+				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { DataTypeManager.DefaultDataClasses.SHORT, T_STRING })    
 			} );
 	}
 
 	@Test public void testFind3ArgConversion4() { 	
 		helpFindConversions(
-			"substring", new Class[] { T_STRING, T_INTEGER, DataTypeManager.DefaultDataClasses.TIMESTAMP }, //$NON-NLS-1$
+			"substring", new Class<?>[] { T_STRING, T_INTEGER, DataTypeManager.DefaultDataClasses.TIMESTAMP }, //$NON-NLS-1$
 			null );
 	}
 
 	@Test public void testFind3ArgConversion5() { 	
 		helpFindConversions(
-			"substring", new Class[] { T_STRING, DataTypeManager.DefaultDataClasses.SHORT, DataTypeManager.DefaultDataClasses.SHORT }, //$NON-NLS-1$
+			"substring", new Class<?>[] { T_STRING, DataTypeManager.DefaultDataClasses.SHORT, DataTypeManager.DefaultDataClasses.SHORT }, //$NON-NLS-1$
 			new FunctionDescriptor[] {
 			    null,
-				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { DataTypeManager.DefaultDataClasses.SHORT, T_STRING }),    
-				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { DataTypeManager.DefaultDataClasses.SHORT, T_STRING })    
+				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { DataTypeManager.DefaultDataClasses.SHORT, T_STRING }),    
+				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { DataTypeManager.DefaultDataClasses.SHORT, T_STRING })    
 			} );
 	}
 
 	@Test public void testFind3ArgConversion6() { 	
 		helpFindConversions(
-			"substring", new Class[] { T_INTEGER, DataTypeManager.DefaultDataClasses.SHORT, DataTypeManager.DefaultDataClasses.SHORT }, //$NON-NLS-1$
+			"substring", new Class<?>[] { T_INTEGER, DataTypeManager.DefaultDataClasses.SHORT, DataTypeManager.DefaultDataClasses.SHORT }, //$NON-NLS-1$
 			new FunctionDescriptor[] {
-				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { DataTypeManager.DefaultDataClasses.INTEGER, T_STRING }),    
-				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { DataTypeManager.DefaultDataClasses.SHORT, T_STRING }),    
-				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { DataTypeManager.DefaultDataClasses.SHORT, T_STRING })    
+				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { DataTypeManager.DefaultDataClasses.INTEGER, T_STRING }),    
+				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { DataTypeManager.DefaultDataClasses.SHORT, T_STRING }),    
+				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { DataTypeManager.DefaultDataClasses.SHORT, T_STRING })    
 			} );
 	}
 
 	@Test public void testFind3ArgConversion7() { 	
 		helpFindConversions(
-			"substring", new Class[] { T_NULL, T_INTEGER, T_INTEGER }, //$NON-NLS-1$
+			"substring", new Class<?>[] { T_NULL, T_INTEGER, T_INTEGER }, //$NON-NLS-1$
 			new FunctionDescriptor[] {
-				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { T_NULL, T_STRING }),    
+				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { T_NULL, T_STRING }),    
 				null,
 				null }
 			);
@@ -455,36 +454,32 @@ public class TestFunctionLibrary {
 
 	@Test public void testFind3ArgConversion8() { 	
 		helpFindConversions(
-			"substring", new Class[] { T_NULL, T_NULL, T_INTEGER }, //$NON-NLS-1$
+			"substring", new Class<?>[] { T_NULL, T_NULL, T_INTEGER }, //$NON-NLS-1$
 			new FunctionDescriptor[] {
-				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { T_NULL, T_STRING }),    
-				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { T_NULL, T_STRING }),    
+				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { T_NULL, T_STRING }),    
+				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { T_NULL, T_STRING }),    
 				null }
 			);
 	}
 
 	@Test public void testFind3ArgConversion9() { 	
 		helpFindConversions(
-			"substring", new Class[] { T_NULL, T_NULL, T_NULL }, //$NON-NLS-1$
+			"substring", new Class<?>[] { T_NULL, T_NULL, T_NULL }, //$NON-NLS-1$
 			new FunctionDescriptor[] {
-				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { T_NULL, T_STRING }),    
-				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { T_NULL, T_STRING }),    
-				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { T_NULL, T_STRING }) }
+				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { T_NULL, T_STRING }),    
+				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { T_NULL, T_STRING }),    
+				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class<?>[] { T_NULL, T_STRING }) }
 			);
 	}
 
     // Walk through all functions by metadata 
     @Test public void testEnumerateForms() {
-        Collection categories = library.getFunctionCategories();
-        Iterator catIter = categories.iterator();
-        while(catIter.hasNext()) { 
-            String category = (String) catIter.next();
+        Collection<String> categories = library.getFunctionCategories();
+        for (String category : categories) {
             //System.out.println("Category: " + category);
             
-            Collection functions = library.getFunctionForms(category);
-            Iterator functionIter = functions.iterator();
-            while(functionIter.hasNext()) { 
-                FunctionForm form = (FunctionForm) functionIter.next();
+            Collection<FunctionForm> functions = library.getFunctionForms(category);
+            for (FunctionForm form : functions) {
                 //System.out.println("\tFunction: " + form.getDisplayString());                
                 
                 // Lookup this form
@@ -739,38 +734,38 @@ public class TestFunctionLibrary {
     }
     
 	@Test public void testFindFunction13() { 
-		helpFindFunction("formatTime", new Class[] { T_TIME, T_STRING }, //$NON-NLS-1$
-			helpCreateDescriptor("formatTime", new Class[] { T_TIME, T_STRING }) ); //$NON-NLS-1$
+		helpFindFunction("formatTime", new Class<?>[] { T_TIME, T_STRING }, //$NON-NLS-1$
+			helpCreateDescriptor("formatTime", new Class<?>[] { T_TIME, T_STRING }) ); //$NON-NLS-1$
 	}
 	
 	@Test public void testFindFunction14() { 
-		helpFindFunction("formatDate", new Class[] { T_DATE, T_STRING }, //$NON-NLS-1$
-			helpCreateDescriptor("formatDate", new Class[] { T_DATE, T_STRING }) ); //$NON-NLS-1$
+		helpFindFunction("formatDate", new Class<?>[] { T_DATE, T_STRING }, //$NON-NLS-1$
+			helpCreateDescriptor("formatDate", new Class<?>[] { T_DATE, T_STRING }) ); //$NON-NLS-1$
 	}
 	
 	@Test public void testFindFunction15() { 
-		helpFindFunction("formatTimestamp", new Class[] { T_TIMESTAMP, T_STRING }, //$NON-NLS-1$
-			helpCreateDescriptor("formatTimestamp", new Class[] { T_TIMESTAMP, T_STRING }) ); //$NON-NLS-1$
+		helpFindFunction("formatTimestamp", new Class<?>[] { T_TIMESTAMP, T_STRING }, //$NON-NLS-1$
+			helpCreateDescriptor("formatTimestamp", new Class<?>[] { T_TIMESTAMP, T_STRING }) ); //$NON-NLS-1$
 	}
 	
 	@Test public void testFindFunction16() { 
-		helpFindFunction("parseTime", new Class[] { T_STRING, T_STRING }, //$NON-NLS-1$
-			helpCreateDescriptor("parseTime", new Class[] { T_STRING, T_STRING }) ); //$NON-NLS-1$
+		helpFindFunction("parseTime", new Class<?>[] { T_STRING, T_STRING }, //$NON-NLS-1$
+			helpCreateDescriptor("parseTime", new Class<?>[] { T_STRING, T_STRING }) ); //$NON-NLS-1$
 	}
 	
 	@Test public void testFindFunction17() { 
-		helpFindFunction("parseDate", new Class[] { T_STRING, T_STRING }, //$NON-NLS-1$
-			helpCreateDescriptor("parseDate", new Class[] { T_STRING, T_STRING }) ); //$NON-NLS-1$
+		helpFindFunction("parseDate", new Class<?>[] { T_STRING, T_STRING }, //$NON-NLS-1$
+			helpCreateDescriptor("parseDate", new Class<?>[] { T_STRING, T_STRING }) ); //$NON-NLS-1$
 	}
 	
 	@Test public void testFindFunction18() { 
-		helpFindFunction("parseTimestamp", new Class[] { T_STRING, T_STRING }, //$NON-NLS-1$
-				helpCreateDescriptor("parseTimestamp", new Class[] { T_STRING, T_STRING }) ); //$NON-NLS-1$
+		helpFindFunction("parseTimestamp", new Class<?>[] { T_STRING, T_STRING }, //$NON-NLS-1$
+				helpCreateDescriptor("parseTimestamp", new Class<?>[] { T_STRING, T_STRING }) ); //$NON-NLS-1$
 	}
 	
     @Test public void testFindFunction19() {
-        helpFindFunction("env", new Class[] {T_STRING}, //$NON-NLS-1$
-                         helpCreateDescriptor("env", new Class[] {T_STRING})); //$NON-NLS-1$
+        helpFindFunction("env", new Class<?>[] {T_STRING}, //$NON-NLS-1$
+                         helpCreateDescriptor("env", new Class<?>[] {T_STRING})); //$NON-NLS-1$
     }
 
 	@Test public void testInvokeFormatTimestamp1() {
@@ -798,62 +793,62 @@ public class TestFunctionLibrary {
 	}
 
 	@Test public void testFindFormatInteger() { 
-		helpFindFunction("formatInteger", new Class[] { T_INTEGER, T_STRING }, //$NON-NLS-1$
-			helpCreateDescriptor("formatInteger", new Class[] { T_INTEGER, T_STRING}) ); //$NON-NLS-1$
+		helpFindFunction("formatInteger", new Class<?>[] { T_INTEGER, T_STRING }, //$NON-NLS-1$
+			helpCreateDescriptor("formatInteger", new Class<?>[] { T_INTEGER, T_STRING}) ); //$NON-NLS-1$
 	}
 	
 	@Test public void testFindFormatFloat() { 
-		helpFindFunction("formatFloat", new Class[] { T_FLOAT, T_STRING }, //$NON-NLS-1$
-			helpCreateDescriptor("formatFloat", new Class[] { T_FLOAT, T_STRING}) ); //$NON-NLS-1$
+		helpFindFunction("formatFloat", new Class<?>[] { T_FLOAT, T_STRING }, //$NON-NLS-1$
+			helpCreateDescriptor("formatFloat", new Class<?>[] { T_FLOAT, T_STRING}) ); //$NON-NLS-1$
 	}
 
 	@Test public void testFindFormatDouble() { 
-		helpFindFunction("formatDouble", new Class[] { T_DOUBLE, T_STRING }, //$NON-NLS-1$
-			helpCreateDescriptor("formatDouble", new Class[] { T_DOUBLE, T_STRING}) ); //$NON-NLS-1$
+		helpFindFunction("formatDouble", new Class<?>[] { T_DOUBLE, T_STRING }, //$NON-NLS-1$
+			helpCreateDescriptor("formatDouble", new Class<?>[] { T_DOUBLE, T_STRING}) ); //$NON-NLS-1$
 	}
 		
 	@Test public void testFindFormatLong() { 
-		helpFindFunction("formatLong", new Class[] { T_LONG, T_STRING }, //$NON-NLS-1$
-			helpCreateDescriptor("formatLong", new Class[] { T_LONG, T_STRING}) ); //$NON-NLS-1$
+		helpFindFunction("formatLong", new Class<?>[] { T_LONG, T_STRING }, //$NON-NLS-1$
+			helpCreateDescriptor("formatLong", new Class<?>[] { T_LONG, T_STRING}) ); //$NON-NLS-1$
 	}
 	
 	@Test public void testFindFormatBigInteger() { 
-		helpFindFunction("formatBigInteger", new Class[] { T_BIG_INTEGER, T_STRING }, //$NON-NLS-1$
-			helpCreateDescriptor("formatBigInteger", new Class[] { T_BIG_INTEGER, T_STRING}) ); //$NON-NLS-1$
+		helpFindFunction("formatBigInteger", new Class<?>[] { T_BIG_INTEGER, T_STRING }, //$NON-NLS-1$
+			helpCreateDescriptor("formatBigInteger", new Class<?>[] { T_BIG_INTEGER, T_STRING}) ); //$NON-NLS-1$
 	}
 
 	@Test public void testFindFormatBigDecimal() { 
-		helpFindFunction("formatBigDecimal", new Class[] { T_BIG_DECIMAL, T_STRING }, //$NON-NLS-1$
-			helpCreateDescriptor("formatBigDecimal", new Class[] { T_BIG_DECIMAL, T_STRING}) ); //$NON-NLS-1$
+		helpFindFunction("formatBigDecimal", new Class<?>[] { T_BIG_DECIMAL, T_STRING }, //$NON-NLS-1$
+			helpCreateDescriptor("formatBigDecimal", new Class<?>[] { T_BIG_DECIMAL, T_STRING}) ); //$NON-NLS-1$
 	}
 			
 	@Test public void testFindParseInteger() { 
-		helpFindFunction("parseInteger", new Class[] { T_STRING, T_STRING }, //$NON-NLS-1$
-			helpCreateDescriptor("parseInteger", new Class[] { T_STRING, T_STRING}) ); //$NON-NLS-1$
+		helpFindFunction("parseInteger", new Class<?>[] { T_STRING, T_STRING }, //$NON-NLS-1$
+			helpCreateDescriptor("parseInteger", new Class<?>[] { T_STRING, T_STRING}) ); //$NON-NLS-1$
 	}
 	
 	@Test public void testFindParseLong() { 
-		helpFindFunction("parseLong", new Class[] { T_STRING, T_STRING }, //$NON-NLS-1$
-			helpCreateDescriptor("parseLong", new Class[] { T_STRING, T_STRING}) ); //$NON-NLS-1$
+		helpFindFunction("parseLong", new Class<?>[] { T_STRING, T_STRING }, //$NON-NLS-1$
+			helpCreateDescriptor("parseLong", new Class<?>[] { T_STRING, T_STRING}) ); //$NON-NLS-1$
 	}
 
 	@Test public void testFindParseDouble() { 
-		helpFindFunction("parseDouble", new Class[] { T_STRING, T_STRING }, //$NON-NLS-1$
-			helpCreateDescriptor("parseDouble", new Class[] { T_STRING, T_STRING}) ); //$NON-NLS-1$
+		helpFindFunction("parseDouble", new Class<?>[] { T_STRING, T_STRING }, //$NON-NLS-1$
+			helpCreateDescriptor("parseDouble", new Class<?>[] { T_STRING, T_STRING}) ); //$NON-NLS-1$
 	}	
 	@Test public void testFindParseFloat() { 
-		helpFindFunction("parseFloat", new Class[] { T_STRING, T_STRING }, //$NON-NLS-1$
-			helpCreateDescriptor("parseFloat", new Class[] { T_STRING, T_STRING}) ); //$NON-NLS-1$
+		helpFindFunction("parseFloat", new Class<?>[] { T_STRING, T_STRING }, //$NON-NLS-1$
+			helpCreateDescriptor("parseFloat", new Class<?>[] { T_STRING, T_STRING}) ); //$NON-NLS-1$
 	}
 	
 	@Test public void testFindParseBigInteger() { 
-		helpFindFunction("parseBigInteger", new Class[] { T_STRING, T_STRING }, //$NON-NLS-1$
-			helpCreateDescriptor("parseBigInteger", new Class[] { T_STRING, T_STRING}) ); //$NON-NLS-1$
+		helpFindFunction("parseBigInteger", new Class<?>[] { T_STRING, T_STRING }, //$NON-NLS-1$
+			helpCreateDescriptor("parseBigInteger", new Class<?>[] { T_STRING, T_STRING}) ); //$NON-NLS-1$
 	}
 
 	@Test public void testFindParseBigDecimal() { 
-		helpFindFunction("parseBigDecimal", new Class[] { T_STRING, T_STRING }, //$NON-NLS-1$
-			helpCreateDescriptor("parseBigDecimal", new Class[] { T_STRING, T_STRING}) ); //$NON-NLS-1$
+		helpFindFunction("parseBigDecimal", new Class<?>[] { T_STRING, T_STRING }, //$NON-NLS-1$
+			helpCreateDescriptor("parseBigDecimal", new Class<?>[] { T_STRING, T_STRING}) ); //$NON-NLS-1$
 	}	
 			
 	@Test public void testInvokeParseInteger() {
@@ -1195,13 +1190,13 @@ public class TestFunctionLibrary {
     @Test public void testInvokeRand() throws Exception {
         helpInvokeMethod("rand", new Object[] {new Integer(100)}, new Double(0.7220096548596434)); //$NON-NLS-1$ 
         // this does not actually fail but returns a result
-        assertNotNull(helpInvokeMethod("rand", new Class[] {Integer.class}, new Object[] {null}, null)); //$NON-NLS-1$
+        assertNotNull(helpInvokeMethod("rand", new Class<?>[] {Integer.class}, new Object[] {null}, null)); //$NON-NLS-1$
     }
     
     @Test public void testInvokeUser() throws Exception {
         CommandContext c = new CommandContext();
         c.setUserName("foodude"); //$NON-NLS-1$
-        helpInvokeMethod("user", new Class[] {}, new Object[] {}, c, "foodude"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpInvokeMethod("user", new Class<?>[] {}, new Object[] {}, c, "foodude"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testInvokeEnv() throws Exception {
@@ -1209,26 +1204,26 @@ public class TestFunctionLibrary {
         Properties props = new Properties();
         props.setProperty("env_test", "env_value"); //$NON-NLS-1$ //$NON-NLS-2$
         c.setEnvironmentProperties(props);
-        helpInvokeMethod("env", new Class[] {String.class}, new Object[] {"env_test"}, c, "env_value"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$        
-        helpInvokeMethod("env", new Class[] {String.class}, new Object[] {null}, c, null); //$NON-NLS-1$ 
+        helpInvokeMethod("env", new Class<?>[] {String.class}, new Object[] {"env_test"}, c, "env_value"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$        
+        helpInvokeMethod("env", new Class<?>[] {String.class}, new Object[] {null}, c, null); //$NON-NLS-1$ 
     }
     
     @Test public void testInvokeCommandPayload() throws Exception {
         CommandContext c = new CommandContext();        
         c.setCommandPayload("payload_too heavy"); //$NON-NLS-1$
-        helpInvokeMethod("commandpayload", new Class[] {}, new Object[] {}, c, "payload_too heavy"); //$NON-NLS-1$ //$NON-NLS-2$ 
-        helpInvokeMethod("commandpayload", new Class[] {String.class}, new Object[] {null}, c, null); //$NON-NLS-1$ 
+        helpInvokeMethod("commandpayload", new Class<?>[] {}, new Object[] {}, c, "payload_too heavy"); //$NON-NLS-1$ //$NON-NLS-2$ 
+        helpInvokeMethod("commandpayload", new Class<?>[] {String.class}, new Object[] {null}, c, null); //$NON-NLS-1$ 
         Properties props = new Properties();
         props.setProperty("payload", "payload_too heavy"); //$NON-NLS-1$ //$NON-NLS-2$
         c.setCommandPayload(props);
-        helpInvokeMethod("commandpayload", new Class[] {String.class}, new Object[] {"payload"}, c, "payload_too heavy"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpInvokeMethod("commandpayload", new Class<?>[] {String.class}, new Object[] {"payload"}, c, "payload_too heavy"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }    
     
     @Test public void testNullDependent() {
-        FunctionDescriptor actual = library.findFunction("concat2", new Class[] {String.class, String.class}); //$NON-NLS-1$
+        FunctionDescriptor actual = library.findFunction("concat2", new Class<?>[] {String.class, String.class}); //$NON-NLS-1$
         assertTrue(actual.isNullDependent());
         
-        actual = library.findFunction("concat", new Class[] {String.class, String.class}); //$NON-NLS-1$
+        actual = library.findFunction("concat", new Class<?>[] {String.class, String.class}); //$NON-NLS-1$
         assertFalse(actual.isNullDependent());
     }
     
@@ -1331,17 +1326,17 @@ public class TestFunctionLibrary {
     }
     
     @Test public void testInvokeNull() throws Exception {
-        helpInvokeMethod(SourceSystemFunctions.LTRIM, new Class[] {DataTypeManager.DefaultDataClasses.STRING}, new Object[] { null }, null, null);  
+        helpInvokeMethod(SourceSystemFunctions.LTRIM, new Class<?>[] {DataTypeManager.DefaultDataClasses.STRING}, new Object[] { null }, null, null);  
     }
     
     @Test public void testInvokeNull1() throws Exception {
-        helpInvokeMethod(SourceSystemFunctions.CONCAT, new Class[] {DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING}, new Object[] { null, String.valueOf(1) }, null, null);  
+        helpInvokeMethod(SourceSystemFunctions.CONCAT, new Class<?>[] {DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING}, new Object[] { null, String.valueOf(1) }, null, null);  
     }  
     
 	@Test public void testInvokeXslTransform() throws Exception {
         CommandContext c = new CommandContext();
         c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
-        ClobType result = (ClobType)helpInvokeMethod("xsltransform", new Class[] {DataTypeManager.DefaultDataClasses.XML, DataTypeManager.DefaultDataClasses.XML}, 
+        ClobType result = (ClobType)helpInvokeMethod("xsltransform", new Class<?>[] {DataTypeManager.DefaultDataClasses.XML, DataTypeManager.DefaultDataClasses.XML}, 
         		new Object[] {DataTypeManager.transformValue("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs>", DataTypeManager.DefaultDataClasses.XML), 
         		DataTypeManager.transformValue("<?xml version=\"1.0\" encoding=\"UTF-8\"?><xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"><xsl:template match=\"@*|node()\"><xsl:copy><xsl:apply-templates select=\"@*|node()\"/></xsl:copy></xsl:template><xsl:template match=\"Quantity\"/></xsl:stylesheet>", DataTypeManager.DefaultDataClasses.XML)}, c);
         
@@ -1352,7 +1347,7 @@ public class TestFunctionLibrary {
 	@Test public void testInvokeXmlConcat() throws Exception {
         CommandContext c = new CommandContext();
         c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
-        XMLType result = (XMLType)helpInvokeMethod("xmlconcat", new Class[] {DataTypeManager.DefaultDataClasses.XML, DataTypeManager.DefaultDataClasses.XML}, 
+        XMLType result = (XMLType)helpInvokeMethod("xmlconcat", new Class<?>[] {DataTypeManager.DefaultDataClasses.XML, DataTypeManager.DefaultDataClasses.XML}, 
         		new Object[] {DataTypeManager.transformValue("<bar/>", DataTypeManager.DefaultDataClasses.XML), DataTypeManager.transformValue("<Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs>", DataTypeManager.DefaultDataClasses.XML)}, c);
         
         String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
@@ -1362,7 +1357,7 @@ public class TestFunctionLibrary {
 	@Test public void testInvokeXmlComment() throws Exception {
         CommandContext c = new CommandContext();
         c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
-        XMLType result = (XMLType)helpInvokeMethod("xmlcomment", new Class[] {DataTypeManager.DefaultDataClasses.STRING}, 
+        XMLType result = (XMLType)helpInvokeMethod("xmlcomment", new Class<?>[] {DataTypeManager.DefaultDataClasses.STRING}, 
         		new Object[] {"comment"}, c);
         
         String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
@@ -1370,43 +1365,47 @@ public class TestFunctionLibrary {
     }
 	
 	@Test public void testToChars() throws Exception {
-		Clob result = (Clob)helpInvokeMethod("to_chars", new Class[] {DefaultDataClasses.BLOB, DefaultDataClasses.STRING}, new Object[] { new BlobType(new SerialBlob("hello world".getBytes("ASCII"))), "ASCII" }, null); //$NON-NLS-1$
+		Clob result = (Clob)helpInvokeMethod("to_chars", new Class<?>[] {DefaultDataClasses.BLOB, DefaultDataClasses.STRING}, new Object[] { new BlobType(new SerialBlob("hello world".getBytes("ASCII"))), "ASCII" }, null); //$NON-NLS-1$
 		String string = result.getSubString(1, (int)result.length());
 		assertEquals("hello world", string);
 	}
 	
 	@Test public void testToBytes() throws Exception {
-		Blob result = (Blob)helpInvokeMethod("to_bytes", new Class[] {DefaultDataClasses.CLOB, DefaultDataClasses.STRING}, new Object[] { new ClobType(new SerialClob("hello world".toCharArray())), "UTF32" }, null); //$NON-NLS-1$
+		Blob result = (Blob)helpInvokeMethod("to_bytes", new Class<?>[] {DefaultDataClasses.CLOB, DefaultDataClasses.STRING}, new Object[] { new ClobType(new SerialClob("hello world".toCharArray())), "UTF32" }, null); //$NON-NLS-1$
 		assertEquals(44, result.length()); //4 bytes / char
 	}
 	
 	@Test public void testToChars1() throws Exception {
-		Clob result = (Clob)helpInvokeMethod("to_chars", new Class[] {DefaultDataClasses.BLOB, DefaultDataClasses.STRING}, new Object[] { new BlobType(new SerialBlob("hello world".getBytes("ASCII"))), "BASE64" }, null); //$NON-NLS-1$
+		Clob result = (Clob)helpInvokeMethod("to_chars", new Class<?>[] {DefaultDataClasses.BLOB, DefaultDataClasses.STRING}, new Object[] { new BlobType(new SerialBlob("hello world".getBytes("ASCII"))), "BASE64" }, null); //$NON-NLS-1$
 		String string = result.getSubString(1, (int)result.length());
 		assertEquals("hello world", new String(Base64.decode(string), "ASCII"));
 	}
 	
 	@Test public void testToChars2() throws Exception {
-		Clob result = (Clob)helpInvokeMethod("to_chars", new Class[] {DefaultDataClasses.BLOB, DefaultDataClasses.STRING}, new Object[] { new BlobType(new SerialBlob("hello world".getBytes("ASCII"))), "HEX" }, null); //$NON-NLS-1$
+		Clob result = (Clob)helpInvokeMethod("to_chars", new Class<?>[] {DefaultDataClasses.BLOB, DefaultDataClasses.STRING}, new Object[] { new BlobType(new SerialBlob("hello world".getBytes("ASCII"))), "HEX" }, null); //$NON-NLS-1$
 		String string = result.getSubString(1, (int)result.length());
 		assertEquals("68656C6C6F20776F726C64", string);
 	}
 	
 	@Test public void testToBytes2() throws Exception {
-		Blob result = (Blob)helpInvokeMethod("to_bytes", new Class[] {DefaultDataClasses.CLOB, DefaultDataClasses.STRING}, new Object[] { new ClobType(new SerialClob("68656C6C6F20776F726C64".toCharArray())), "HEX" }, null); //$NON-NLS-1$
+		Blob result = (Blob)helpInvokeMethod("to_bytes", new Class<?>[] {DefaultDataClasses.CLOB, DefaultDataClasses.STRING}, new Object[] { new ClobType(new SerialClob("68656C6C6F20776F726C64".toCharArray())), "HEX" }, null); //$NON-NLS-1$
 		assertEquals("hello world", new String(ObjectConverterUtil.convertToCharArray(result.getBinaryStream(), -1, "ASCII")));
 	}
 	
 	@Test(expected=FunctionExecutionException.class) public void testToBytes3() throws Exception {
-		helpInvokeMethod("to_bytes", new Class[] {DefaultDataClasses.CLOB, DefaultDataClasses.STRING}, new Object[] { new ClobType(new SerialClob("a".toCharArray())), "BASE64" }, null); //$NON-NLS-1$
+		helpInvokeMethod("to_bytes", new Class<?>[] {DefaultDataClasses.CLOB, DefaultDataClasses.STRING}, new Object[] { new ClobType(new SerialClob("a".toCharArray())), "BASE64" }, null); //$NON-NLS-1$
 	}
 	
-	@Test() public void testunescape() throws Exception {
-		assertEquals("\r\t", helpInvokeMethod("unescape", new Class[] {DefaultDataClasses.STRING}, new Object[] { "\r\\\t" }, null)); //$NON-NLS-1$
+	@Test() public void testUnescape() throws Exception {
+		assertEquals("\r\t", helpInvokeMethod("unescape", new Class<?>[] {DefaultDataClasses.STRING}, new Object[] { "\r\\\t" }, null)); //$NON-NLS-1$
 	}
 	
 	@Test() public void testUuid() throws Exception {
-		assertNotNull(helpInvokeMethod("uuid", new Class[] {}, new Object[] {}, null)); //$NON-NLS-1$
+		assertNotNull(helpInvokeMethod("uuid", new Class<?>[] {}, new Object[] {}, null)); //$NON-NLS-1$
+	}
+	
+	@Test() public void testArrayGet() throws Exception {
+		assertEquals(1, helpInvokeMethod("array_get", new Class<?>[] {DefaultDataClasses.OBJECT, DefaultDataClasses.INTEGER}, new Object[] {new Object[] {1}, 1}, null)); //$NON-NLS-1$
 	}
 	
 }

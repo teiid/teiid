@@ -76,6 +76,7 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.LanguageObject.Util;
 import org.teiid.query.sql.lang.AbstractSetCriteria;
+import org.teiid.query.sql.lang.ArrayTable;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.BetweenCriteria;
 import org.teiid.query.sql.lang.Command;
@@ -1039,6 +1040,9 @@ public class QueryRewriter {
         	XMLTable xt = (XMLTable)clause;
         	xt.rewriteDefaultColumn();
         	rewriteExpressions(clause);
+        } else if (clause instanceof ArrayTable) {
+        	ArrayTable at = (ArrayTable)clause;
+        	at.setArrayValue(rewriteExpressionDirect(at.getArrayValue()));
         }
         return clause;
 	}

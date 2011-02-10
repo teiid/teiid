@@ -139,4 +139,5 @@ public abstract class LanguageVisitor {
     public void visit(ExpressionCriteria obj) {}
     public void visit(WithQueryCommand obj) {}
     public void visit(TriggerAction obj) {}
+    public void visit(ArrayTable obj) {}
 }

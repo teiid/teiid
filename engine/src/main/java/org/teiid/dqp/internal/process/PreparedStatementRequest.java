@@ -100,7 +100,7 @@ public class PreparedStatementRequest extends Request {
 		if (!proc.isCallableStatement()) {
 			return;
 		}
-		List values = requestMsg.getParameterValues();
+		List<?> values = requestMsg.getParameterValues();
 		List<SPParameter> spParams = proc.getParameters();
 		proc.clearParameters();
 		int inParameterCount = values.size();

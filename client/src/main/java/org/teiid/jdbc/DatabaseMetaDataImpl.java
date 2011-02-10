@@ -89,7 +89,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         "PARSETIMESTAMP, QUARTER, SECOND, TIMESTAMPADD, TIMESTAMPDIFF, WEEK, YEAR"; //$NON-NLS-1$
     // constant value giving the names of system functions supported
     final static String SYSTEM_FUNCTIONS =
-        "CAST, COALESCE, CONVERT, DECODESTRING, DECODEINTEGER, IFNULL, NULLIF, NVL, LOOKUP"; //$NON-NLS-1$
+        "CAST, COALESCE, CONVERT, DECODESTRING, DECODEINTEGER, IFNULL, NULLIF, NVL, LOOKUP, UUID, UNESCAPE, ARRAY_GET, ARRAY_LENGTH"; //$NON-NLS-1$
     // constant value giving max length of a catalog name
     private final static int MAX_CATALOG_NAME_LENGTH = 255;
     // constant value giving max length of a procedure name

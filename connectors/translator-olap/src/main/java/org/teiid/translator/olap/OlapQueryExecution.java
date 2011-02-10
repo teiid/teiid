@@ -21,15 +21,10 @@
  */
 package org.teiid.translator.olap;
 
-import java.io.IOException;
-import java.io.Reader;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
-
-import javax.xml.transform.Source;
-import javax.xml.transform.stream.StreamSource;
 
 import org.olap4j.Axis;
 import org.olap4j.Cell;
@@ -48,6 +43,9 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
 
+/**
+ * Executes the given MDX and packs the results into an array
+ */
 public class OlapQueryExecution implements ProcedureExecution {
 
 	protected Command command;
@@ -55,8 +53,10 @@ public class OlapQueryExecution implements ProcedureExecution {
     protected ExecutionContext context;
     protected OlapExecutionFactory executionFactory;
     private OlapStatement stmt;
-    private Source returnValue;
-
+    private CellSet cellSet;
+    private CellSetAxis cols;
+    private int colWidth;
+    private ListIterator<Position> iterator;
     
 	public OlapQueryExecution(Command command, OlapConnection connection, ExecutionContext context, OlapExecutionFactory executionFactory) {
 		this.command = command;
@@ -71,12 +71,13 @@ public class OlapQueryExecution implements ProcedureExecution {
 			Call procedure = (Call) this.command;
 			List<Argument> arguments = procedure.getArguments();
 			String mdxQuery = (String) arguments.get(0).getArgumentValue().getValue();
-			OlapStatement stmt = this.connection.createStatement();
+			stmt = this.connection.createStatement();
 			
-			CellSet cellSet = stmt.executeOlapQuery(mdxQuery);
-			this.returnValue = new StreamSource(new MdxResultsReader(cellSet));
-			
-
+			cellSet = stmt.executeOlapQuery(mdxQuery);
+			CellSetAxis rows = this.cellSet.getAxes().get(Axis.ROWS.axisOrdinal());
+			iterator = rows.iterator();
+			cols = cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal());
+	    	colWidth = rows.getAxisMetaData().getHierarchies().size() + this.cols.getPositions().size();
 		} catch (SQLException e) {
 			throw new TranslatorException(e);
 		} 
@@ -85,8 +86,9 @@ public class OlapQueryExecution implements ProcedureExecution {
 	@Override
 	public void cancel() throws TranslatorException {
 		try {
-			if (this.stmt != null) {
-				this.stmt.cancel();
+			OlapStatement olapStatement = this.stmt;
+			if (olapStatement != null) {
+				olapStatement.cancel();
 			}
 		} catch (SQLException e) {
 			throw new TranslatorException(e);
@@ -94,7 +96,7 @@ public class OlapQueryExecution implements ProcedureExecution {
 	}
 
 	@Override
-	public synchronized void close() {
+	public void close() {
 		try {
 			if (this.stmt != null) {
 				this.stmt.close();
@@ -107,100 +109,30 @@ public class OlapQueryExecution implements ProcedureExecution {
 	
     @Override
     public List<?> next() throws TranslatorException {
-    	return null;
+    	if (!iterator.hasNext()) {
+    		return null;
+    	}
+    	Position nextRow = iterator.next();
+    	Object[] result = new Object[colWidth];
+    	int i = 0;
+    	// add in rows axis
+		List<Member> members = nextRow.getMembers();
+		for (Member member:members) {
+			String columnName = member.getHierarchy().getName();
+			result[i++] = columnName;
+		}
+
+		// add col axis
+		for (Position colPos : cols) {
+			Cell cell = cellSet.getCell(colPos, nextRow);
+			result[i++] = cell.getValue();
+		}			
+		return Arrays.asList(result);
     }  
     
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
-        return Arrays.asList(this.returnValue);
+        return null;
     }
     
-    static class MdxResultsReader extends Reader {
-    	private CellSet cellSet;
-    	private ListIterator<Position> rows;
-    	private Position nextRow;
-    	private boolean closed = false; 
-    	private char[] buffer;
-    	private int index = 0;
-    	
-    	public MdxResultsReader(CellSet cellSet) {
-    		this.cellSet = cellSet;
-			CellSetAxis rowAxis = cellSet.getAxes().get(Axis.ROWS.axisOrdinal());
-			this.rows = rowAxis.iterator();
-			if (this.rows.hasNext()) {
-				this.nextRow = this.rows.next();
-				this.buffer = "<resultset>".toCharArray(); //$NON-NLS-1$
-			}
-    	}
-    	
-    	private String readNextRow() {
-    		if (this.nextRow == null) {
-    			return null;
-    		}
-    		
-    		StringBuilder sb = new StringBuilder();
-			CellSetAxis cols = cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal());
-			sb.append("<row>"); //$NON-NLS-1$
-
-			// add in rows axis
-			List<Member> members = nextRow.getMembers();
-			for (Member member:members) {
-				String columnName = member.getHierarchy().getName();
-				columnName = columnName.replace(' ', '_');
-				sb.append('<').append(columnName).append('>');
-				sb.append(member.getName());
-				sb.append("</").append(columnName).append('>'); //$NON-NLS-1$
-			}
-
-			// add col axis
-			for (Position colPos : cols) {
-				Cell cell = cellSet.getCell(colPos, nextRow);
-				String columnName = colPos.getMembers().get(0).getName();
-				columnName = columnName.replace(' ', '_');
-				sb.append('<').append(columnName).append('>');
-				sb.append(cell.getValue());
-				sb.append("</").append(columnName).append('>'); //$NON-NLS-1$
-			}				
-			sb.append("</row>");//$NON-NLS-1$
-			
-			// advance the cursor to next row.
-			if (this.rows.hasNext()) {
-				this.nextRow = this.rows.next();
-			}
-			else {
-				this.nextRow = null;
-			}
-			return sb.toString();
-    	}
-    	
-		@Override
-		public void close() throws IOException {
-		}
-
-		@Override
-		public int read(char[] cbuf, int off, int len) throws IOException {
-			int availble = this.buffer.length - this.index;
-			if (availble == 0) {
-				String next = readNextRow();
-				if (next == null) {
-					if (!this.closed) {
-						this.buffer = "</resultset>".toCharArray();//$NON-NLS-1$
-						this.closed = true;
-					}
-					else {
-						return -1;
-					}
-				}
-				else {
-					this.buffer = next.toCharArray();
-				}
-				this.index = 0;
-				availble = this.buffer.length;
-			}
-			len = (availble > len) ? len : availble;
-			System.arraycopy(this.buffer, this.index, cbuf, off, len);
-			this.index = this.index + len;
-			return len;
-		}
-    }
 }

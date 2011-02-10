@@ -146,6 +146,9 @@ public class TeiidDialect extends Dialect {
         
         registerFunction("uuid", new StandardSQLFunction("uuid", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("unescape", new StandardSQLFunction("unescape", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        registerFunction("array_get", new StandardSQLFunction("uuid", Hibernate.OBJECT)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("array_length", new StandardSQLFunction("unescape", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public boolean dropConstraints() {
