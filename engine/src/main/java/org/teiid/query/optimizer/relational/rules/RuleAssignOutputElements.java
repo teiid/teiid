@@ -123,15 +123,6 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 
 	    int nodeType = root.getType();
         
-        //fix no output elements if possible
-        if(outputElements.isEmpty() && (nodeType == NodeConstants.Types.ACCESS || nodeType == NodeConstants.Types.SOURCE)) {
-            PlanNode groupSource = FrameUtil.findJoinSourceNode(root);
-            ElementSymbol symbol = selectOutputElement(groupSource.getGroups(), metadata);
-            if (symbol != null) {//can be null for procedures
-                outputElements.add(symbol);
-            }
-        }
-        
 		// Update this node's output columns based on parent's columns
 		root.setProperty(NodeConstants.Info.OUTPUT_COLS, outputElements);
         
@@ -153,11 +144,21 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		    		//add missing sort columns
 			    	OrderBy elements = (OrderBy) root.getProperty(NodeConstants.Info.SORT_ORDER);
 			    	outputElements = new ArrayList<SingleElementSymbol>(outputElements);
+			    	boolean hasUnrelated = false;
 			    	for (OrderByItem item : elements.getOrderByItems()) {
-						if (!outputElements.contains(item.getSymbol())) {
-							outputElements.add(item.getSymbol());
+			    		if (item.getExpressionPosition() == -1) {
+			    			int index = outputElements.indexOf(item.getSymbol());
+			    			if (index != -1) {
+			    				item.setExpressionPosition(index);
+			    			} else {
+			    				hasUnrelated = true;
+			    				outputElements.add(item.getSymbol());
+			    			}
 						}
 					}
+			    	if (!hasUnrelated) {
+			    		root.setProperty(NodeConstants.Info.UNRELATED_SORT, false);
+			    	}
 		    	}
 		        assignOutputElements(root.getLastChild(), outputElements, metadata, capFinder, rules, analysisRecord, context);
 		        break;
@@ -165,24 +166,6 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		        outputElements = (List<SingleElementSymbol>)determineSourceOutput(root, outputElements, metadata, capFinder);
 	            root.setProperty(NodeConstants.Info.OUTPUT_COLS, outputElements);
 	            List<SingleElementSymbol> childElements = filterVirtualElements(root, outputElements, metadata);
-	            SymbolMap symbolMap = (SymbolMap)root.getProperty(NodeConstants.Info.SYMBOL_MAP);
-	            int size = symbolMap.asMap().size();
-	            symbolMap.asUpdatableMap().keySet().retainAll(outputElements);
-	            //if we have removed projected symbols, then we need to update the sort columns
-	            if (size > outputElements.size()) {
-	            	PlanNode sortNode = NodeEditor.findNodePreOrder(root, NodeConstants.Types.SORT, NodeConstants.Types.PROJECT);
-	            	if (sortNode != null && !sortNode.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT)) {
-		            	List<Expression> symbolOrder = symbolMap.getValues();
-	            		OrderBy elements = (OrderBy) sortNode.getProperty(NodeConstants.Info.SORT_ORDER);
-	            		for (OrderByItem item : elements.getOrderByItems()) {
-							int position = symbolOrder.indexOf(SymbolMap.getExpression(item.getSymbol()));
-							item.setExpressionPosition(position);
-							if (position == -1) {
-								sortNode.setProperty(NodeConstants.Info.UNRELATED_SORT, true);
-							}
-						}
-	            	}
-	            }
 	            assignOutputElements(root.getFirstChild(), childElements, metadata, capFinder, rules, analysisRecord, context);
 		        break;
 		    }
@@ -202,7 +185,29 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		                execute(intoRoot.getFirstChild(), metadata, capFinder, rules, analysisRecord, context);
 		                return;
 		            }
-	            	root.setProperty(NodeConstants.Info.PROJECT_COLS, outputElements);
+	            	List<SingleElementSymbol> projectCols = outputElements;
+	            	boolean modifiedProject = false;
+	            	PlanNode sortNode = NodeEditor.findParent(root, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
+	            	if (sortNode != null && sortNode.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT)) {
+	            		//if this is the initial rule run, remove unrelated order before changing the project cols
+			            if (rules.contains(RuleConstants.ASSIGN_OUTPUT_ELEMENTS)) {
+		            		OrderBy elements = (OrderBy) sortNode.getProperty(NodeConstants.Info.SORT_ORDER);
+		            		projectCols = new ArrayList<SingleElementSymbol>(projectCols);
+		            		for (OrderByItem item : elements.getOrderByItems()) {
+		            			if (item.getExpressionPosition() == -1) {
+		            				projectCols.remove(item.getSymbol());
+		            			}
+		            		}
+	            		} else {
+	            			modifiedProject = true;
+	            		}
+		            }
+		            root.setProperty(NodeConstants.Info.PROJECT_COLS, projectCols);
+	            	if (modifiedProject) {
+		            	root.getGroups().clear();
+		            	root.addGroups(GroupsUsedByElementsVisitor.getGroups(projectCols));
+		            	root.addGroups(GroupsUsedByElementsVisitor.getGroups(root.getCorrelatedReferenceElements()));
+	            	}
 		    	}
 	            
 	            List<SingleElementSymbol> requiredInput = collectRequiredInputSymbols(root);
@@ -292,33 +297,6 @@ public final class RuleAssignOutputElements implements OptimizerRule {
     }
     
     /**
-     * Find a selectable element in the specified groups.  This is a helper for fixing
-     * the "no elements" case.
-     *
-     * @param groups Bunch of groups
-     * @param metadata Metadata implementation
-     * @throws QueryPlannerException
-     */
-    private ElementSymbol selectOutputElement(Collection<GroupSymbol> groups, QueryMetadataInterface metadata)
-        throws QueryMetadataException, TeiidComponentException {
-
-        // Find a group with selectable elements and pick the first one
-        for (GroupSymbol group : groups) {
-            List<ElementSymbol> elements = (List<ElementSymbol>)ResolverUtil.resolveElementsInGroup(group, metadata);
-            
-            for (ElementSymbol element : elements) {
-                if(metadata.elementSupports(element.getMetadataID(), SupportConstants.Element.SELECT)) {
-                    element = (ElementSymbol)element.clone();
-                    element.setGroupSymbol(group);
-                    return element;
-                }
-            }
-        }
-        
-        return null;
-    }
-
-    /**
      * <p>This method looks at a source node, which defines a virtual group, and filters the
      * virtual elements defined by the group down into just the output elements needed
      * by that source node.  This means, for instance, that the PROJECT node at the top
@@ -347,11 +325,27 @@ public final class RuleAssignOutputElements implements OptimizerRule {
         Arrays.fill(filteredIndex, -1);
         
         SymbolMap symbolMap = (SymbolMap)sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
-        List originalOrder = symbolMap.getKeys();
+        
+        List<ElementSymbol> originalOrder = symbolMap.getKeys();
+        
+        boolean updateGroups = outputColumns.size() != originalOrder.size();
+        boolean[] seenIndex = new boolean[outputColumns.size()];
         
         for (int i = 0; i < outputColumns.size(); i++) {
             Expression expr = outputColumns.get(i);
             filteredIndex[i] = originalOrder.indexOf(expr);
+            if (!updateGroups) {
+            	seenIndex[filteredIndex[i]] = true;
+            }
+        }
+        
+        if (!updateGroups) {
+        	for (boolean b : seenIndex) {
+				if (!b) {
+					updateGroups = true;
+					break;
+				}
+			}
         }
         
         List<SingleElementSymbol> newCols = null;
@@ -365,6 +359,49 @@ public final class RuleAssignOutputElements implements OptimizerRule {
             }
             
             projectNode.setProperty(NodeConstants.Info.PROJECT_COLS, newCols);
+            if (updateGroups) {
+	            projectNode.getGroups().clear();
+	            projectNode.addGroups(GroupsUsedByElementsVisitor.getGroups(newCols));
+	            projectNode.addGroups(GroupsUsedByElementsVisitor.getGroups(projectNode.getCorrelatedReferenceElements()));
+            }
+        }
+        
+        if (!updateGroups) {
+        	for (int i : filteredIndex) {
+				if (i != filteredIndex[i]) {
+					updateGroups = true;
+					break;
+				}
+			}
+        }
+        
+        if (updateGroups) {
+        	SymbolMap newMap = new SymbolMap();
+            List<Expression> originalExpressionOrder = symbolMap.getValues();
+
+        	for (int i = 0; i < filteredIndex.length; i++) {
+        		newMap.addMapping(originalOrder.get(filteredIndex[i]), originalExpressionOrder.get(filteredIndex[i]));
+			}
+            PlanNode sortNode = NodeEditor.findNodePreOrder(sourceNode, NodeConstants.Types.SORT, NodeConstants.Types.PROJECT);
+        	if (sortNode != null) {
+        		OrderBy elements = (OrderBy) sortNode.getProperty(NodeConstants.Info.SORT_ORDER);
+        		for (OrderByItem item : elements.getOrderByItems()) {
+        			if (item.getExpressionPosition() == -1) {
+        				continue;
+        			}
+        			item.setExpressionPosition(-1);
+        			for (int i = 0; i < filteredIndex.length; i++) {
+        				if (item.getExpressionPosition() == filteredIndex[i]) {
+        					item.setExpressionPosition(i);
+        					break;
+        				}
+        			}
+					if (item.getExpressionPosition() == -1) {
+						sortNode.setProperty(NodeConstants.Info.UNRELATED_SORT, true);
+					}
+				}
+        	}
+        	sourceNode.setProperty(NodeConstants.Info.SYMBOL_MAP, newMap);
         }
 
 		// Create output columns for virtual group project

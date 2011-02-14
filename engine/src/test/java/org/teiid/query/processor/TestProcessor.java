@@ -6213,8 +6213,8 @@ public class TestProcessor {
 
         // Construct data manager with data 
         HardcodedDataManager dataManager = new HardcodedDataManager(); 
-        dataManager.addData("SELECT g_0.a FROM p1.t AS g_0",  //$NON-NLS-1$
-                            new List[] { Arrays.asList(new Object[] { new Integer(1) })});
+        dataManager.addData("SELECT 1 AS c_0 FROM p1.t AS g_1 UNION ALL SELECT 1 AS c_0 FROM p1.t AS g_0",  //$NON-NLS-1$
+                            new List[] { Arrays.asList(1), Arrays.asList(1)});
         helpProcess(plan, dataManager, expected); 
     }
     

@@ -407,7 +407,9 @@ public class RulePushAggregates implements
 
         List<SingleElementSymbol> projectedViewSymbols = Util.deepClone(symbolMap.getKeys(), SingleElementSymbol.class);
 
-        SymbolMap viewMapping = SymbolMap.createSymbolMap(NodeEditor.findParent(unionSource, NodeConstants.Types.SOURCE).getGroups().iterator().next(), projectedViewSymbols, metadata);
+        PlanNode parent = NodeEditor.findParent(unionSource, NodeConstants.Types.SOURCE);
+        SymbolMap parentMap = (SymbolMap) parent.getProperty(NodeConstants.Info.SYMBOL_MAP);
+        SymbolMap viewMapping = SymbolMap.createSymbolMap(parentMap.getKeys(), projectedViewSymbols);
         for (AggregateSymbol agg : aggregates) {
         	agg = (AggregateSymbol)agg.clone();
         	ExpressionMappingVisitor.mapExpressions(agg, viewMapping.asMap());

@@ -949,8 +949,8 @@ public class TestOptimizer {
     /** defect #4997 */
     @Test public void testCountStarNoRows() { 
         ProcessorPlan plan = helpPlan("select count(*) from vm1.u4", example1(), //$NON-NLS-1$
-            new String[] { "SELECT e1 FROM pm1.g2",  //$NON-NLS-1$
-                            "SELECT e1 FROM pm1.g1" } ); //$NON-NLS-1$
+            new String[] { "SELECT 1 FROM pm1.g2",  //$NON-NLS-1$
+                            "SELECT 1 FROM pm1.g1" } ); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             2,      // Access
             0,      // DependentAccess
@@ -962,7 +962,7 @@ public class TestOptimizer {
             0,      // MergeJoinStrategy
             0,      // Null
             0,      // PlanExecution
-            2,      // Project
+            1,      // Project
             0,      // Select
             0,      // Sort
             1       // UnionAll
@@ -971,7 +971,7 @@ public class TestOptimizer {
 
     @Test public void testPushingCriteriaWithCopy() { 
     	ProcessorPlan plan = helpPlan("select vm1.u1.e1 from vm1.u1, pm1.g1 where vm1.u1.e1='abc' and vm1.u1.e1=pm1.g1.e1", example1(), //$NON-NLS-1$
-			new String[] { "SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'", //$NON-NLS-1$
+			new String[] { "SELECT 1 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'", //$NON-NLS-1$
                             "SELECT pm1.g3.e1, pm1.g3.e2, pm1.g3.e3, pm1.g3.e4 FROM pm1.g3 WHERE pm1.g3.e1 = 'abc'", //$NON-NLS-1$
 							"SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'", //$NON-NLS-1$
 							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
@@ -1057,17 +1057,17 @@ public class TestOptimizer {
 
     @Test public void testDefect5282_1() {
         helpPlan("select * FROM vm1.a4 WHERE vm1.a4.count > 0", example1(), //$NON-NLS-1$
-            new String[] { "SELECT pm1.g1.e1 FROM pm1.g1" } );     //$NON-NLS-1$
+            new String[] { "SELECT 1 FROM pm1.g1" } );     //$NON-NLS-1$
     }
 
     @Test public void testDefect5282_2() {
         helpPlan("select count(*) FROM vm1.a4", example1(), //$NON-NLS-1$
-            new String[] { "SELECT pm1.g1.e1 FROM pm1.g1" } );     //$NON-NLS-1$
+            new String[] { "SELECT 1 FROM pm1.g1" } );     //$NON-NLS-1$
     }
 
     @Test public void testDefect5282_3() {
         helpPlan("select * FROM vm1.a5 WHERE vm1.a5.count > 0", example1(), //$NON-NLS-1$
-            new String[] { "SELECT pm1.g1.e1 FROM pm1.g1" } );     //$NON-NLS-1$
+            new String[] { "SELECT 1 FROM pm1.g1" } );     //$NON-NLS-1$
     }
     
     @Test public void testDepJoinHintBaseline() throws Exception {
@@ -1100,8 +1100,8 @@ public class TestOptimizer {
 
     @Test public void testDefect6425_2() {
         helpPlan("select count(*) from vm1.u9", example1(), //$NON-NLS-1$
-            new String[] { "SELECT e1 FROM pm1.g1", //$NON-NLS-1$
-                            "SELECT e1 FROM pm1.g2" } );     //$NON-NLS-1$
+            new String[] { "SELECT 1 FROM pm1.g1", //$NON-NLS-1$
+                            "SELECT 1 FROM pm1.g2" } );     //$NON-NLS-1$
     }
     
     @Test public void testPushMatchCritWithReference() {
@@ -2714,7 +2714,7 @@ public class TestOptimizer {
      */
     @Test public void testCrossJoinNoElementCriteriaOptimization2() {
         ProcessorPlan plan = helpPlan("select Y.e1, Y.e2 FROM vm1.g1 X, vm1.g1 Y where {b'true'} = {b'true'}", example1(),  //$NON-NLS-1$
-            new String[]{"SELECT g1__1.e1 FROM pm1.g1 AS g1__1", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}); //$NON-NLS-1$ //$NON-NLS-2$
+            new String[]{"SELECT 1 FROM pm1.g1 AS g1__1", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}); //$NON-NLS-1$ //$NON-NLS-2$
         checkNodeTypes(plan, new int[] {
             2,      // Access
             0,      // DependentAccess
@@ -2738,7 +2738,7 @@ public class TestOptimizer {
      */
     @Test public void testCrossJoinNoElementCriteriaOptimization3() {
         ProcessorPlan plan = helpPlan("select Y.e1, Y.e2 FROM vm1.g1 X, vm1.g1 Y where {b'true'} in (select e3 FROM vm1.g1)", example1(),  //$NON-NLS-1$
-            new String[]{"SELECT g1__1.e1 FROM pm1.g1 AS g1__1", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}); //$NON-NLS-1$ //$NON-NLS-2$
+            new String[]{"SELECT 1 FROM pm1.g1 AS g1__1", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}); //$NON-NLS-1$ //$NON-NLS-2$
         checkNodeTypes(plan, new int[] {
             2,      // Access
             0,      // DependentAccess
@@ -2768,7 +2768,7 @@ public class TestOptimizer {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
         ProcessorPlan plan = helpPlan("select Y.e1, Y.e2 FROM vm1.g1 X, vm1.g1 Y where {b'true'} in (select e3 FROM vm1.g1)", example1(), null, capFinder,  //$NON-NLS-1$
-            new String[]{"SELECT g1__1.e1 FROM pm1.g1 AS g1__1 WHERE TRUE IN (SELECT pm1.g1.e3 FROM pm1.g1)", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}, true); //$NON-NLS-1$ //$NON-NLS-2$
+            new String[]{"SELECT 1 FROM pm1.g1 AS g1__1 WHERE TRUE IN (SELECT pm1.g1.e3 FROM pm1.g1)", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}, true); //$NON-NLS-1$ //$NON-NLS-2$
         checkNodeTypes(plan, new int[] {
             2,      // Access
             0,      // DependentAccess
@@ -4488,7 +4488,7 @@ public class TestOptimizer {
         ProcessorPlan plan = helpPlan(sql,  
                                       FakeMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
-                                      new String[] {"SELECT '' AS y FROM BQT1.SmallA AS a UNION ALL SELECT '' FROM bqt1.smallb AS b"}, //$NON-NLS-1$ 
+                                      new String[] {"SELECT 1 AS c_0 FROM BQT1.SmallA AS a UNION ALL SELECT 1 AS c_0 FROM bqt1.smallb AS b"}, //$NON-NLS-1$ 
                                       SHOULD_SUCCEED );
 
         checkNodeTypes(plan, new int[] {
@@ -6409,7 +6409,7 @@ public class TestOptimizer {
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         
         helpPlan("select pm2.g1.e1 FROM pm2.g1 CROSS JOIN pm2.g2", example1(), null, capFinder, //$NON-NLS-1$
-            new String[] { "SELECT pm2.g1.e1 FROM pm2.g1", "SELECT pm2.g2.e1 FROM pm2.g2"}, true ); //$NON-NLS-1$ //$NON-NLS-2$
+            new String[] { "SELECT pm2.g1.e1 FROM pm2.g1", "SELECT 1 FROM pm2.g2"}, true ); //$NON-NLS-1$ //$NON-NLS-2$
                
     }
     
@@ -6430,7 +6430,7 @@ public class TestOptimizer {
         String sql = "select count(*) from (select intkey from bqt1.smalla union all select intkey from bqt1.smallb) as a"; //$NON-NLS-1$
         
         ProcessorPlan plan = helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), null, capFinder, 
-                                      new String[] {"SELECT COUNT(*) FROM (SELECT intkey FROM bqt1.smalla UNION ALL SELECT intkey FROM bqt1.smallb) AS a"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ 
+                                      new String[] {"SELECT COUNT(*) FROM (SELECT 1 FROM bqt1.smalla UNION ALL SELECT 1 FROM bqt1.smallb) AS a"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ 
         
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }

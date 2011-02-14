@@ -22,14 +22,13 @@
 
 package org.teiid.query.optimizer;
 
+import org.junit.Test;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.unittest.FakeMetadataFactory;
-
-import junit.framework.TestCase;
 
 
 /**
@@ -38,9 +37,9 @@ import junit.framework.TestCase;
  * 
  * Later we can add a connector binding property to support non-select expressions in group by.
  */
-public class TestExpressionsInGroupBy extends TestCase {
+public class TestExpressionsInGroupBy {
 
-    public void testCase1565() throws Exception {
+    @Test public void testCase1565() throws Exception {
         // Create query
         String sql = "SELECT x, COUNT(*) FROM (SELECT convert(TimestampValue, date) AS x FROM bqt1.smalla) as y GROUP BY x"; //$NON-NLS-1$
 
@@ -64,7 +63,7 @@ public class TestExpressionsInGroupBy extends TestCase {
     }   
     
     // Merge across multiple virtual groups - should be same outcome as testCase1565
-    public void testCase1565_2() throws Exception {
+    @Test public void testCase1565_2() throws Exception {
         // Create query
         String sql = "SELECT x, COUNT(*) FROM (SELECT convert(TimestampValue, date) AS x FROM (SELECT TimestampValue from bqt1.smalla) as z) as y GROUP BY x"; //$NON-NLS-1$
 
@@ -88,7 +87,7 @@ public class TestExpressionsInGroupBy extends TestCase {
     }   
     
     // Merge across multiple virtual groups above the physical
-    public void testCase1565_3() throws Exception {
+    @Test public void testCase1565_3() throws Exception {
         String sql = "SELECT x, COUNT(*) FROM (SELECT convert(TimestampValue, date) AS x FROM (SELECT TimestampValue from bqt1.smalla) as z) as y GROUP BY x"; //$NON-NLS-1$
 
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), 
@@ -115,7 +114,7 @@ public class TestExpressionsInGroupBy extends TestCase {
     }           
 
     // Test what happens when not all the functions in the virtual SELECT can be pushed
-    public void testCase1565_4() throws Exception {
+    @Test public void testCase1565_4() throws Exception {
         // Create query
         String sql = "SELECT x, y FROM (SELECT convert(TimestampValue, date) as x, length(stringkey) as y from bqt1.smalla) as z GROUP BY x, y"; //$NON-NLS-1$
 
@@ -153,7 +152,7 @@ public class TestExpressionsInGroupBy extends TestCase {
     }       
     
     // Test nested functions
-    public void testCase1565_5() throws Exception {
+    @Test public void testCase1565_5() throws Exception {
         // Create query
         String sql = "SELECT x, COUNT(*) FROM (SELECT convert(intkey + 5, string) AS x FROM bqt1.smalla) as y GROUP BY x"; //$NON-NLS-1$
 
@@ -191,7 +190,7 @@ public class TestExpressionsInGroupBy extends TestCase {
     }     
     
     // SELECT SUM(x) FROM (SELECT IntKey+1 AS x FROM BQT1.SmallA) AS g
-    public void testAggregateNoGroupByWithNestedFunction() {
+    @Test public void testAggregateNoGroupByWithNestedFunction() {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT SUM(x) FROM (SELECT IntKey+1 AS x FROM BQT1.SmallA) AS g", FakeMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
             new String[] { "SELECT IntKey FROM BQT1.SmallA"  }); //$NON-NLS-1$
 
@@ -216,7 +215,7 @@ public class TestExpressionsInGroupBy extends TestCase {
     /**
      * Without inline view support the agg is not pushed down
      */
-    public void testFunctionInGroupBy() {
+    @Test public void testFunctionInGroupBy() {
         String sql = "SELECT sum (IntKey), case when IntKey>=5000 then '5000 +' else '0-999' end " + //$NON-NLS-1$
             "FROM BQT1.SmallA GROUP BY case when IntKey>=5000 then '5000 +' else '0-999' end"; //$NON-NLS-1$
 
@@ -261,7 +260,7 @@ public class TestExpressionsInGroupBy extends TestCase {
      * 
      * @since 4.2
      */
-    public void testFunctionInGroupByCantPush() {
+    @Test public void testFunctionInGroupByCantPush() {
         String sql = "SELECT sum (IntKey), case when IntKey>=5000 then '5000 +' else '0-999' end " + //$NON-NLS-1$
             "FROM BQT1.SmallA GROUP BY case when IntKey>=5000 then '5000 +' else '0-999' end"; //$NON-NLS-1$
 
@@ -305,7 +304,7 @@ public class TestExpressionsInGroupBy extends TestCase {
      * 
      * @since 4.2
      */
-    public void testFunctionInGroupByHavingCantPush() {
+    @Test public void testFunctionInGroupByHavingCantPush() {
         String sql = "SELECT sum (IntKey), case when IntKey>=5000 then '5000 +' else '0-999' end " + //$NON-NLS-1$
             "FROM BQT1.SmallA GROUP BY case when IntKey>=5000 then '5000 +' else '0-999' end " + //$NON-NLS-1$
             "HAVING case when IntKey>=5000 then '5000 +' else '0-999' end = '5000 +'"; //$NON-NLS-1$
@@ -349,7 +348,7 @@ public class TestExpressionsInGroupBy extends TestCase {
      * 
      * @since 4.2
      */
-    public void testFunctionInGroupByCantPushRewritten() {
+    @Test public void testFunctionInGroupByCantPushRewritten() {
         String sql = "SELECT SUM(IntKey), c FROM (SELECT IntKey, case when IntKey>=5000 then '5000 +' else '0-999' end AS c FROM BQT1.SmallA) AS temp GROUP BY c"; //$NON-NLS-1$
 
         // Plan query
@@ -386,7 +385,7 @@ public class TestExpressionsInGroupBy extends TestCase {
                                     });        
     }
     
-    public void testFunctionOfAggregateCantPush2() {
+    @Test public void testFunctionOfAggregateCantPush2() {
         String sql = "SELECT SUM(length(StringKey || 'x')) + 1 AS x FROM BQT1.SmallA GROUP BY StringKey || 'x' HAVING space(MAX(length((StringKey || 'x') || 'y'))) = '   '"; //$NON-NLS-1$
 
         // Plan query
@@ -419,7 +418,7 @@ public class TestExpressionsInGroupBy extends TestCase {
     }
     
     
-    public void testDontPushGroupByUnsupportedFunction() throws Exception {
+    @Test public void testDontPushGroupByUnsupportedFunction() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);

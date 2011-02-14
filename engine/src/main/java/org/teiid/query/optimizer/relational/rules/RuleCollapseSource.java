@@ -23,6 +23,7 @@
 package org.teiid.query.optimizer.relational.rules;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,6 +34,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.OptimizerRule;
@@ -68,7 +70,10 @@ import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
@@ -234,8 +239,44 @@ public final class RuleCollapseSource implements OptimizerRule {
 		if (!CapabilitiesUtil.useAnsiJoin(RuleRaiseAccess.getModelIDFromAccess(accessRoot, metadata), metadata, capFinder)) {
 			simplifyFromClause(query);
         }
+		if (columns.isEmpty()) {
+        	if (CapabilitiesUtil.supports(Capability.QUERY_SELECT_EXPRESSION, RuleRaiseAccess.getModelIDFromAccess(accessRoot, metadata), metadata, capFinder)) {
+        		select.addSymbol(new ExpressionSymbol("dummy", new Constant(1))); //$NON-NLS-1$
+        	} else {
+        		//TODO: need to ensure the type is consistent  
+        		//- should be rare as the source would typically support select expression if it supports union
+        		select.addSymbol(selectOutputElement(query.getFrom().getGroups(), metadata));
+        	}
+        }
 		return query;
 	}		
+	
+    /**
+     * Find a selectable element in the specified groups.  This is a helper for fixing
+     * the "no elements" case.
+     *
+     * @param groups Bunch of groups
+     * @param metadata Metadata implementation
+     * @throws QueryPlannerException
+     */
+    private ElementSymbol selectOutputElement(Collection<GroupSymbol> groups, QueryMetadataInterface metadata)
+        throws QueryMetadataException, TeiidComponentException {
+
+        // Find a group with selectable elements and pick the first one
+        for (GroupSymbol group : groups) {
+            List<ElementSymbol> elements = (List<ElementSymbol>)ResolverUtil.resolveElementsInGroup(group, metadata);
+            
+            for (ElementSymbol element : elements) {
+                if(metadata.elementSupports(element.getMetadataID(), SupportConstants.Element.SELECT)) {
+                    element = (ElementSymbol)element.clone();
+                    element.setGroupSymbol(group);
+                    return element;
+                }
+            }
+        }
+        
+        return null;
+    }
 
     void buildQuery(PlanNode accessRoot, PlanNode node, Query query, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
         

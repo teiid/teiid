@@ -48,7 +48,7 @@ import org.teiid.query.sql.symbol.Function;
  */
 public class FunctionCollectorVisitor extends LanguageVisitor {
 
-    private Collection functions;
+    private Collection<Function> functions;
     
     private String functionName;
 
@@ -58,7 +58,7 @@ public class FunctionCollectorVisitor extends LanguageVisitor {
      * @param elements Collection to use for elements
      * @throws IllegalArgumentException If elements is null
      */
-	public FunctionCollectorVisitor(Collection functions) {
+	public FunctionCollectorVisitor(Collection<Function> functions) {
         this(functions, null);
 	}
 
@@ -68,7 +68,7 @@ public class FunctionCollectorVisitor extends LanguageVisitor {
      * @param elements Collection to use for elements
      * @throws IllegalArgumentException If elements is null
      */
-    public FunctionCollectorVisitor(Collection functions, String functionName) {
+    public FunctionCollectorVisitor(Collection<Function> functions, String functionName) {
         if(functions == null) {
             throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0022")); //$NON-NLS-1$
         }
@@ -81,7 +81,7 @@ public class FunctionCollectorVisitor extends LanguageVisitor {
      * after the visitor has been run on the language object tree.
      * @return Collection of {@link org.teiid.query.sql.symbol.ElementSymbol}
      */
-    public Collection getFunctions() {
+    public Collection<Function> getFunctions() {
         return this.functions;
     }
 
@@ -101,7 +101,7 @@ public class FunctionCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      * @param elements Collection to collect elements in
      */
-    public static final void getFunctions(LanguageObject obj, Collection functions) {
+    public static final void getFunctions(LanguageObject obj, Collection<Function> functions) {
         getFunctions(obj, functions, false);
     }
     
@@ -110,7 +110,7 @@ public class FunctionCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      * @param elements Collection to collect elements in
      */
-    public static final void getFunctions(LanguageObject obj, Collection functions, boolean deep) {
+    public static final void getFunctions(LanguageObject obj, Collection<Function> functions, boolean deep) {
         FunctionCollectorVisitor visitor = new FunctionCollectorVisitor(functions);
         if (!deep) {
             PreOrderNavigator.doVisit(obj, visitor);
@@ -127,16 +127,16 @@ public class FunctionCollectorVisitor extends LanguageVisitor {
      * @param removeDuplicates True to remove duplicates
      * @return Collection of {@link org.teiid.query.sql.symbol.ElementSymbol}
      */
-    public static final Collection getFunctions(LanguageObject obj, boolean removeDuplicates) {
+    public static final Collection<Function> getFunctions(LanguageObject obj, boolean removeDuplicates) {
         return getFunctions(obj, removeDuplicates, false);
     }
 
-    public static final Collection getFunctions(LanguageObject obj, boolean removeDuplicates, boolean deep) {
-        Collection functions = null;
+    public static final Collection<Function> getFunctions(LanguageObject obj, boolean removeDuplicates, boolean deep) {
+        Collection<Function> functions = null;
         if(removeDuplicates) {
-            functions = new HashSet();
+            functions = new HashSet<Function>();
         } else {
-            functions = new ArrayList();
+            functions = new ArrayList<Function>();
         }
         getFunctions(obj, functions, deep);
         return functions;

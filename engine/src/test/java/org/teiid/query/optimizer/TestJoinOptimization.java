@@ -154,7 +154,7 @@ public class TestJoinOptimization {
                                                     metadata, 
                                                     null, 
                                                     capFinder, 
-                                                    new String[] {"SELECT bqt1.smalla.intkey FROM bqt1.smalla", "SELECT BQT2.SmallA.IntKey FROM bqt2.smalla"}, true ); //$NON-NLS-1$  //$NON-NLS-2$
+                                                    new String[] {"SELECT bqt1.smalla.intkey FROM bqt1.smalla", "SELECT 1 FROM bqt2.smalla"}, true ); //$NON-NLS-1$  //$NON-NLS-2$
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -266,7 +266,7 @@ public class TestJoinOptimization {
         String sql = "select bqt1.smalla.intkey from bqt1.smalla inner join (select bqt3.smalla.intkey from bqt2.smalla left outer join bqt3.smalla on bqt2.smalla.intkey = bqt3.smalla.intkey and bqt3.smalla.intkey = 1) foo on bqt1.smalla.intkey = foo.intkey"; //$NON-NLS-1$
 
         // Plan query
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.intkey FROM bqt3.smalla AS g_0 WHERE g_0.intkey = 1", "SELECT g_0.IntKey FROM bqt2.smalla AS g_0", "SELECT g_0.intkey AS c_0 FROM bqt1.smalla AS g_0 ORDER BY c_0"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.intkey FROM bqt3.smalla AS g_0 WHERE g_0.intkey = 1", "SELECT 1 FROM bqt2.smalla AS g_0", "SELECT g_0.intkey AS c_0 FROM bqt1.smalla AS g_0 ORDER BY c_0"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             3,      // Access
@@ -293,7 +293,7 @@ public class TestJoinOptimization {
         String sql = "select bqt1.smalla.intkey from bqt1.smalla left outer join (select bqt3.smalla.intkey from bqt3.smalla where bqt3.smalla.intkey = 1) foo on bqt1.smalla.intkey = foo.intkey"; //$NON-NLS-1$
 
         // Plan query
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.IntKey FROM bqt3.smalla AS g_0 WHERE g_0.intkey = 1", "SELECT g_0.intkey FROM bqt1.smalla AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), new String[] {"SELECT 1 FROM bqt3.smalla AS g_0 WHERE g_0.intkey = 1", "SELECT g_0.intkey FROM bqt1.smalla AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access

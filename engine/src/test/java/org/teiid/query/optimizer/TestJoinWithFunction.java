@@ -130,8 +130,8 @@ public class TestJoinWithFunction extends TestCase {
 		String leftQuery = "SELECT pm1.g1.e1 as ID, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4, RAND() AS RandomLeft " //$NON-NLS-1$
 				+ "FROM pm1.g1"; //$NON-NLS-1$
 		// source query for other side of a JOIN
-		String rightQuery = "SELECT pm2.g2.e1 as ID, pm2.g2.e2, pm2.g2.e3, pm2.g2.e4 " //$NON-NLS-1$
-				+ "FROM pm2.g2"; //$NON-NLS-1$
+		String rightQuery = "SELECT pm1.g2.e1 as ID, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 " //$NON-NLS-1$
+				+ "FROM pm1.g2"; //$NON-NLS-1$
 
 		// User Command
 		/*
@@ -147,7 +147,7 @@ public class TestJoinWithFunction extends TestCase {
 		// The user command should result in two atomic commands
 		String[] expected = new String[] {
 				"SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM pm1.g1 AS g_0",  //$NON-NLS-1$
-				"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm2.g2 AS g_0 ORDER BY c_0",  //$NON-NLS-1$
+				"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM pm1.g2 AS g_0 ORDER BY c_0",  //$NON-NLS-1$
 		};
 
 		// create a plan and assert our atomic queries
@@ -168,6 +168,39 @@ public class TestJoinWithFunction extends TestCase {
 				0, // Sort
 				0 // UnionAll
 		});
+	}
+	
+	/**
+	 * Note that we detect the lower rand is not used 
+	 */
+	public void testNonDeterministicPreJoin1() throws Exception {
+		// source query for one side of a JOIN
+		String leftQuery = "SELECT pm1.g1.e1 as ID, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4, RAND() AS RandomLeft " //$NON-NLS-1$
+				+ "FROM pm1.g1"; //$NON-NLS-1$
+		// source query for other side of a JOIN
+		String rightQuery = "SELECT pm1.g2.e1 as ID, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 " //$NON-NLS-1$
+				+ "FROM pm1.g2"; //$NON-NLS-1$
+
+		// User Command
+		/*
+		 * Return everything from the JOIN. TopRandom is the use of RAND() on
+		 * the user command while RandomLeft is the use of RAND() within a
+		 * source node.
+		 */
+		String sql = "SELECT l.ID, l.e2, l.e3, l.e4, r.ID, r.e2, r.e3, r.e4 " + //$NON-NLS-1$
+				"FROM (" + leftQuery + ") AS l, " + //$NON-NLS-1$ //$NON-NLS-2$
+				"(" + rightQuery + ") AS r " + //$NON-NLS-1$ //$NON-NLS-2$
+				"WHERE l.ID = r.ID"; //$NON-NLS-1$
+
+		// The user command should result in two atomic commands
+		String[] expected = new String[] {
+				"SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4, g_1.e1, g_1.e2, g_1.e3, g_1.e4 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE g_0.e1 = g_1.e1",  //$NON-NLS-1$
+		};
+
+		// create a plan and assert our atomic queries
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, TestOptimizer.example1(), expected, 
+        		ComparisonMode.EXACT_COMMAND_STRING);
+		TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
 	}
 
 	/**

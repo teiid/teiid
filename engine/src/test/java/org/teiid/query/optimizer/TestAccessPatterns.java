@@ -213,7 +213,7 @@ public class TestAccessPatterns {
 
     @Test public void testPushingCriteriaThroughFrameAccessPattern0() {
         TestOptimizer.helpPlan("select * from vm1.g9 where vm1.g9.e1='abc'", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] { "SELECT pm4.g1.e1 FROM pm4.g1 WHERE pm4.g1.e1 = 'abc'", //$NON-NLS-1$
+            new String[] { "SELECT 1 FROM pm4.g1 WHERE pm4.g1.e1 = 'abc'", //$NON-NLS-1$
                             "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
     }
 
@@ -232,7 +232,7 @@ public class TestAccessPatterns {
 
     @Test public void testPushingCriteriaThroughFrameAccessPattern3() {
         TestOptimizer.helpPlan("select * from vm1.g1, vm1.g9 where vm1.g1.e1='abc' and vm1.g1.e1=vm1.g9.e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] {"SELECT pm4.g1.e1 FROM pm4.g1 WHERE pm4.g1.e1 = 'abc'", //$NON-NLS-1$
+            new String[] {"SELECT 1 FROM pm4.g1 WHERE pm4.g1.e1 = 'abc'", //$NON-NLS-1$
                           "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'", //$NON-NLS-1$
                           "SELECT g1__1.e1, g1__1.e2, g1__1.e3, g1__1.e4 FROM pm1.g1 AS g1__1 WHERE g1__1.e1 = 'abc'"} ); //$NON-NLS-1$
     }

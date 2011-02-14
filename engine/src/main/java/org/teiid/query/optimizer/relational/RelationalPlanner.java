@@ -437,6 +437,10 @@ public class RelationalPlanner {
         if (hints.hasJoin && hints.hasOptionalJoin) {
             rules.push(RuleConstants.REMOVE_OPTIONAL_JOINS);
         }
+        if (hints.hasVirtualGroups || (hints.hasJoin && hints.hasOptionalJoin)) {
+        	//do initial filtering to make merging and optional join logic easier
+            rules.push(RuleConstants.ASSIGN_OUTPUT_ELEMENTS);
+        }
         rules.push(RuleConstants.PLACE_ACCESS);
         return rules;
     }

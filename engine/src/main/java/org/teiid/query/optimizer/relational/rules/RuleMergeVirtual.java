@@ -341,7 +341,6 @@ public final class RuleMergeVirtual implements
             }
         }
 
-        //TODO: in each of the cases below, check to see if the offending projected symbol is actually used in the upper frame
         List<ElementSymbol> virtualElements = symbolMap.getKeys();
         for (int i = 0; i < selectSymbols.size(); i++) {
         	SingleElementSymbol symbol = selectSymbols.get(i);
