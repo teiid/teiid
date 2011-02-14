@@ -56,13 +56,14 @@ public interface ODBCServerRemote {
 
 	void flush();
 
+	void functionCall(int oid);
+	
+	void sslRequest();
+	
 	//  unimplemented frontend messages
 	//	CopyData (F & B)
 	//	CopyDone (F & B)
 	//	CopyFail (F)
-	//	Flush (F)
-	//	FunctionCall (F)
-	//	SSLRequest (F)
 }
 
 

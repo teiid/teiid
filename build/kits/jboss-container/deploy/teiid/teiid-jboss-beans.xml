@@ -110,6 +110,8 @@
         <property name="maxSourceRows">-1</property>
 		<!-- Indicates if an exception should be thrown if the specified value for Maximum Source Rows is exceeded; only up to the maximum rows will be consumed. -->        
         <property name="exceptionOnMaxSourceRows">true</property>
+        <!-- Maximum size of lob allowed through ODBC connection in bytes (default 5MB) -->
+        <property name="maxODBCLobSizeAllowed">5242880</property>
     </bean>
 
     <!-- JDBC Socket connection properties (SSL see below) -->

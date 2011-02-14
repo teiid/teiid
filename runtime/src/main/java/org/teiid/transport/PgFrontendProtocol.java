@@ -47,6 +47,15 @@ import org.teiid.odbc.ODBCServerRemote;
 @SuppressWarnings("nls")
 public class PgFrontendProtocol extends FrameDecoder {
 
+	private static final int LO_CREAT =	957;
+	private static final int LO_OPEN = 952;
+	private static final int LO_CLOSE = 953;
+	private static final int LO_READ = 954;
+	private static final int LO_WRITE = 955;
+	private static final int LO_LSEEK = 956;
+	private static final int LO_TELL = 958;
+	private static final int LO_UNLINK = 964;
+	
 	private int maxObjectSize;
 	private Byte messageType;
 	private Integer dataLength;
@@ -148,7 +157,9 @@ public class PgFrontendProtocol extends FrameDecoder {
         case 'C':
         	return buildClose(data);
         case 'H':
-        	return buildFlush();        	       
+        	return buildFlush();
+        case 'F':
+        	return buildFunctionCall(data);        	               	
         default:
         	return buildError();
         }
@@ -178,6 +189,13 @@ public class PgFrontendProtocol extends FrameDecoder {
        
         int version = data.readInt();
         props.setProperty("version", Integer.toString(version));
+        
+        // SSL Request
+        if (version == 80877103) {
+        	this.initialized = false;
+        	this.odbcProxy.sslRequest();
+        	return message;
+        }
         
         trace("StartupMessage");
         trace(" version " + version + " (" + (version >> 16) + "." + (version & 0xff) + ")");
@@ -235,7 +253,7 @@ public class PgFrontendProtocol extends FrameDecoder {
         }
         
         int paramCount = data.readShort();
-        Object[] params = new String[paramCount];
+        Object[] params = new Object[paramCount];
         for (int i = 0; i < paramCount; i++) {
             int paramLen = data.readInt();
             byte[] paramdata = createByteArray(paramLen);
@@ -299,7 +317,7 @@ public class PgFrontendProtocol extends FrameDecoder {
         return message;
 	}	
 	
-	private byte[] createByteArray(int length) throws StreamCorruptedException{
+	static byte[] createByteArray(int length) throws StreamCorruptedException{
 		try {
 			return new byte[length];
 		} catch(OutOfMemoryError e) {
@@ -321,6 +339,66 @@ public class PgFrontendProtocol extends FrameDecoder {
 		}
 		return message;
 	}	
+	
+	/**
+	 * LO functions are always binary, so I am ignoring the formats, return types. The below is not used
+	 * leaving for future if ever LO is revisited
+	 */
+	@SuppressWarnings("unused")
+	private Object buildFunctionCall(NullTerminatedStringDataInputStream data) throws IOException {
+		int funcID = data.readInt();
+		
+		// read data types of arguments 
+		int formatCount = data.readShort();
+		int[] formatTypes = new int[formatCount];
+		for (int i = 0; i< formatCount; i++) {
+			formatTypes[i] = data.readShort();
+		}
+		
+		// arguments	
+		data.readShort(); // ignore the param count; we know them by functions supported.
+		int oid = readInt(data);
+		switch(funcID) {
+		case LO_CREAT:
+			break;
+		case LO_OPEN:
+			int mode = readInt(data);
+			break;
+		case LO_CLOSE:
+			break;			
+		case LO_READ:
+			int length = readInt(data);
+			break;
+		case LO_WRITE:
+			byte[] contents = readByteArray(data);
+			break;
+		case LO_LSEEK:
+			int offset = readInt(data);
+			int where = readInt(data);
+			break;
+		case LO_TELL:
+			break;
+		case LO_UNLINK:			
+			break;		
+		}
+		this.odbcProxy.functionCall(oid);
+		return message;
+	}	
+	
+	private int readInt(NullTerminatedStringDataInputStream data) throws IOException {
+		data.readInt(); // ignore this this is length always 4
+		return data.readInt();
+	}
+	
+	private byte[] readByteArray(NullTerminatedStringDataInputStream data) throws IOException {
+		int length = data.readInt();
+		if (length == -1 || length == 0) {
+			return null;
+		}
+		byte[] content = createByteArray(length);
+		data.read(content, 0, length);
+		return content;
+	}
 	
 	static class NullTerminatedStringDataInputStream extends DataInputStream{
 		private String encoding;

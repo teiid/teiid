@@ -51,6 +51,7 @@ public class DQPConfiguration{
 	private int maxSourceRows = -1;
 	private int maxActivePlans = DEFAULT_MAX_ACTIVE_PLANS;
 	private CacheConfiguration resultsetCacheConfig;
+	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
 
 	@ManagementProperty(description="Max active plans (default 20).  Increase this value, and max threads, on highly concurrent systems - but ensure that the underlying pools can handle the increased load without timeouts.")
 	public int getMaxActivePlans() {
@@ -184,5 +185,14 @@ public class DQPConfiguration{
 
 	public void setMaxSourceRows(int maxSourceRows) {
 		this.maxSourceRows = maxSourceRows;
+	}
+	
+	@ManagementProperty(description="Maximum Lob Size allowed over ODBC (default 5MB)")
+	public int getMaxODBCLobSizeAllowed() {
+		return this.maxODBCLobSizeAllowed;
+	}
+	
+	public void setMaxODBCLobSizeAllowed(int lobSize) {
+		this.maxODBCLobSizeAllowed = lobSize;
 	}
 }

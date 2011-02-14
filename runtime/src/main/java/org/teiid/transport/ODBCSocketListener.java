@@ -32,10 +32,12 @@ import org.teiid.odbc.ODBCServerRemote;
 
 public class ODBCSocketListener extends SocketListener {
 	private ODBCServerRemote.AuthenticationType authType = ODBCServerRemote.AuthenticationType.CLEARTEXT;
+	private int maxLobSize;
 	
-	public ODBCSocketListener(SocketConfiguration config, StorageManager storageManager, int portOffset) {
+	public ODBCSocketListener(SocketConfiguration config, StorageManager storageManager, int portOffset, int maxLobSize) {
 		//the clientserviceregistry isn't actually used by ODBC 
 		super(config, new ClientServiceRegistryImpl(ClientServiceRegistry.Type.ODBC), storageManager, portOffset);
+		this.maxLobSize = maxLobSize;
 	}
 
 	@Override
@@ -49,7 +51,7 @@ public class ODBCSocketListener extends SocketListener {
 			        pipeline.addLast("ssl", new SslHandler(engine)); //$NON-NLS-1$
 			    }
 			    pipeline.addLast("odbcFrontendProtocol", new PgFrontendProtocol(1 << 20)); //$NON-NLS-1$
-			    pipeline.addLast("odbcBackendProtocol", new PgBackendProtocol()); //$NON-NLS-1$
+			    pipeline.addLast("odbcBackendProtocol", new PgBackendProtocol(maxLobSize)); //$NON-NLS-1$
 			    pipeline.addLast("handler", this); //$NON-NLS-1$
 			    return pipeline;
 			}			

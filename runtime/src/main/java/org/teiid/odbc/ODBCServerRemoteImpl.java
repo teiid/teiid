@@ -571,7 +571,18 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	public void flush() {
 		this.client.flush();
 	}
-
+	
+	@Override
+	public void functionCall(int oid) {
+		this.client.errorOccurred(RuntimePlugin.Util.getString("lo_not_supported")); //$NON-NLS-1$
+		sync();
+	}
+	
+	@Override
+	public void sslRequest() {
+		this.client.sslDenied();
+	}
+	
     /**
      * Represents a PostgreSQL Prepared object.
      */

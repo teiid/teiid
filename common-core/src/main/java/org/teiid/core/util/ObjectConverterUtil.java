@@ -90,16 +90,32 @@ public class ObjectConverterUtil {
      * @throws IOException if a problem occurred reading the stream.
      */
     public static byte[] convertToByteArray(final InputStream is, int length) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        write(out, is, length);
-        return out.toByteArray();
+    	return convertToByteArray(is, length, true);
     }
     
+    public static byte[] convertToByteArray(final InputStream is, int length, boolean close) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        write(out, is, length, close);
+        out.close();
+        return out.toByteArray();    	
+    }
+
     public static int write(final OutputStream out, final InputStream is, byte[] l_buffer, int length) throws IOException {
+        return write(out, is, l_buffer, length, true);
+    }
+    
+    public static int write(final OutputStream out, final InputStream is, byte[] l_buffer, int length, boolean close) throws IOException {
     	int writen = 0;
         try {
 	        int l_nbytes = 0;  // Number of bytes read
-	        while ((l_nbytes = is.read(l_buffer)) != -1) {
+	        int readLength = length;
+	        if (length == -1) {
+	        	readLength = l_buffer.length;
+	        }
+	        else {
+	        	readLength = Math.min(length, l_buffer.length);
+	        }
+	        while ((l_nbytes = is.read(l_buffer, 0, readLength)) != -1) {
 	        	if (length != -1 && writen > length - l_nbytes) {
 		        	out.write(l_buffer, 0, writen + l_nbytes - length); 
 		        	break;
@@ -109,16 +125,22 @@ public class ObjectConverterUtil {
 	        }
 	        return writen;
         } finally {
-        	try {
-        		is.close();
-        	} finally {
-        		out.close();
+        	if (close) {
+	        	try {
+	       			is.close();
+	        	} finally {
+	        		out.close();
+	        	}
         	}
         }
     }
+
+    public static int write(final OutputStream out, final InputStream is, int length) throws IOException {
+       return write(out, is, length, true);    	
+    }    
     
-    public static void write(final OutputStream out, final InputStream is, int length) throws IOException {
-    	write(out, is, new byte[DEFAULT_READING_SIZE], length); // buffer holding bytes to be transferred
+    public static int write(final OutputStream out, final InputStream is, int length, boolean close) throws IOException {
+    	return write(out, is, new byte[DEFAULT_READING_SIZE], length, close); // buffer holding bytes to be transferred
     }
     
     public static void write(final Writer out, final Reader is, int length) throws IOException {

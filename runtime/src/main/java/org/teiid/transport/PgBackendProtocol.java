@@ -27,10 +27,13 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
+import java.sql.Blob;
+import java.sql.Clob;
 import java.sql.ParameterMetaData;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.SQLXML;
 import java.sql.Types;
 import java.util.Properties;
 
@@ -41,6 +44,8 @@ import org.jboss.netty.channel.ChannelEvent;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.MessageEvent;
+import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.ReaderInputStream;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
@@ -64,15 +69,16 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
     private static final int PG_TYPE_INT2 = 21;
     private static final int PG_TYPE_INT4 = 23;
     private static final int PG_TYPE_TEXT = 25;
-    private static final int PG_TYPE_OID = 26;
+    //private static final int PG_TYPE_OID = 26;
     private static final int PG_TYPE_FLOAT4 = 700;
     private static final int PG_TYPE_FLOAT8 = 701;
     private static final int PG_TYPE_UNKNOWN = 705;
-    private static final int PG_TYPE_TEXTARRAY = 1009;
+    //private static final int PG_TYPE_TEXTARRAY = 1009;
     private static final int PG_TYPE_DATE = 1082;
     private static final int PG_TYPE_TIME = 1083;
     private static final int PG_TYPE_TIMESTAMP_NO_TMZONE = 1114;
     private static final int PG_TYPE_NUMERIC = 1700;
+    //private static final int PG_TYPE_LO = 14939;
     
     private DataOutputStream dataOut;
     private ByteArrayOutputStream outBuffer;
@@ -82,6 +88,11 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
     private ReflectionHelper clientProxy = new ReflectionHelper(ODBCClientRemote.class);
     private ChannelHandlerContext ctx;
     private MessageEvent message;
+    private int maxLobSize = (2*1024*1024); // 2 MB
+    
+    public PgBackendProtocol(int maxLobSize) {
+    	this.maxLobSize = maxLobSize;
+    }
     
 	@Override
 	public void handleDownstream(ChannelHandlerContext ctx, ChannelEvent evt) throws Exception {
@@ -210,7 +221,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 					if (paramType != null && paramType[i] != 0) {
 						type = paramType[i];
 					} else {
-						type = PG_TYPE_VARCHAR;
+						type = convertType(meta.getParameterType(i+1));
 					}
 					writeInt(type);
 				}
@@ -244,8 +255,13 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
             		ResultSetMetaData meta = rs.getMetaData();
             		sendRowDescription(meta);
             	}
+            	int columns = rs.getMetaData().getColumnCount();
+            	int[] types = new int[columns];
+            	for(int i = 0; i < columns; i++) {
+            		types[i] = rs.getMetaData().getColumnType(i+1);
+            	}
                 while (rs.next()) {
-                    sendDataRow(rs);
+                    sendDataRow(rs, columns, types);
                 }
                 sendCommandComplete(sql, 0);
 			} catch (SQLException e) {
@@ -331,27 +347,81 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		sendMessage();
 	}
 
-	private void sendDataRow(ResultSet rs) throws SQLException, IOException {
-		int columns = rs.getMetaData().getColumnCount();
-		String[] values = new String[columns];
-		for (int i = 0; i < columns; i++) {
-			values[i] = rs.getString(i + 1);
-		}
+	private void sendDataRow(ResultSet rs, int columns, int[] types) throws SQLException, IOException {
 		startMessage('D');
 		writeShort(columns);
-		for (String s : values) {
-			if (s == null) {
+		for (int i = 0; i < columns; i++) {
+			byte[] bytes = getContent(rs, types[i], i+1);			
+			if (bytes == null) {
 				writeInt(-1);
 			} else {
-				// TODO write Binary data
-				byte[] d2 = s.getBytes(this.encoding);
-				writeInt(d2.length);
-				write(d2);
+				writeInt(bytes.length);
+				write(bytes);
 			}
 		}
 		sendMessage();
 	}
 
+	private byte[] getContent(ResultSet rs, int type, int column) throws SQLException, TeiidSQLException, IOException {
+		byte[] bytes = null;
+		switch (type) {
+		    case Types.BOOLEAN:
+		    case Types.VARCHAR:       
+		    case Types.CHAR:
+		    case Types.SMALLINT:
+		    case Types.INTEGER:
+		    case Types.BIGINT:
+		    case Types.NUMERIC:
+		    case Types.DECIMAL:
+		    case Types.FLOAT:
+		    case Types.REAL:
+		    case Types.DOUBLE:
+		    case Types.TIME:
+		    case Types.DATE:
+		    case Types.TIMESTAMP:
+		    	String value = rs.getString(column);
+		    	if (value != null) {
+		    		bytes = value.getBytes(this.encoding);
+		    	}
+		    	break;
+		    
+		    case Types.LONGVARCHAR:
+		    case Types.CLOB:    
+		    	Clob clob = rs.getClob(column);
+		    	if (clob != null) {
+		    		bytes = ObjectConverterUtil.convertToByteArray(new ReaderInputStream(clob.getCharacterStream(), this.encoding), this.maxLobSize);
+		    	}		        	
+		    	break;
+		    	
+		    case Types.SQLXML:  
+		    	SQLXML xml = rs.getSQLXML(column);
+		    	if (xml != null) {
+		    		bytes = ObjectConverterUtil.convertToByteArray(new ReaderInputStream(xml.getCharacterStream(), this.encoding), this.maxLobSize);		    		
+		    	}		        	
+		    	break;
+		    	
+		    case Types.BINARY:
+		    case Types.VARBINARY:		        	
+		    case Types.LONGVARBINARY:
+		    case Types.BLOB:
+		    	Blob blob = rs.getBlob(column);
+		    	if (blob != null) {
+		    		bytes = toHex(ObjectConverterUtil.convertToByteArray(blob.getBinaryStream(), this.maxLobSize));
+		    	}
+		    	break;
+		    default:
+		    	throw new TeiidSQLException("unknown datatype failed to convert"); 
+		}
+		return bytes;
+	}
+	
+	@Override
+	public void sslDenied() {
+		ChannelBuffer buffer = ChannelBuffers.directBuffer(1);
+		buffer.writeByte('N');
+		Channels.write(this.ctx, this.message.getFuture(), buffer, this.message.getRemoteAddress());		
+	}
+	
 	private void sendErrorResponse(Throwable t) throws IOException {
 		trace(t.getMessage());
 		SQLException e = TeiidSQLException.create(t);
@@ -496,6 +566,35 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		writeString(value);
 		sendMessage();
 	}
+	
+	@Override
+	public void functionCallResponse(byte[] data) {
+		try {
+			startMessage('V');
+			if (data == null) {
+				writeInt(-1);
+			}
+			else {
+				writeInt(data.length);
+				write(data);
+			}
+			sendMessage();
+		} catch (IOException e) {
+			terminate(e);
+		}		
+	}
+	
+	@Override
+	public void functionCallResponse(int data) {
+		try {
+			startMessage('V');
+			writeInt(4);
+			writeInt(data);
+			sendMessage();
+		} catch (IOException e) {
+			terminate(e);
+		}		
+	}
 
 	private void writeString(String s) throws IOException {
 		write(s.getBytes(this.encoding));
@@ -543,26 +642,30 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		LogManager.logTrace(LogConstants.CTX_ODBC, msg);
 	}
 	
+	/**
+	 * Types.ARRAY is not supported
+	 */
     private static int convertType(final int type) {
         switch (type) {
         case Types.BOOLEAN:
-            return PG_TYPE_BOOL;
+            return PG_TYPE_BOOL;        
         case Types.VARCHAR:
-            return PG_TYPE_VARCHAR;
-        case Types.CLOB:
-            return PG_TYPE_TEXT;
+            return PG_TYPE_VARCHAR;        
         case Types.CHAR:
-            return PG_TYPE_BPCHAR;
+            return PG_TYPE_BPCHAR;        
+        case Types.TINYINT:
         case Types.SMALLINT:
-            return PG_TYPE_INT2;
+            return PG_TYPE_INT2;            
         case Types.INTEGER:
-            return PG_TYPE_INT4;
+            return PG_TYPE_INT4;            
         case Types.BIGINT:
-            return PG_TYPE_INT8;
+            return PG_TYPE_INT8;            
+        case Types.NUMERIC:
         case Types.DECIMAL:
-            return PG_TYPE_NUMERIC;
+            return PG_TYPE_NUMERIC;        
+        case Types.FLOAT:
         case Types.REAL:
-            return PG_TYPE_FLOAT4;
+            return PG_TYPE_FLOAT4;            
         case Types.DOUBLE:
             return PG_TYPE_FLOAT8;
         case Types.TIME:
@@ -571,14 +674,44 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
             return PG_TYPE_DATE;
         case Types.TIMESTAMP:
             return PG_TYPE_TIMESTAMP_NO_TMZONE;
-        case Types.VARBINARY:
-            return PG_TYPE_BYTEA;
-        case Types.BLOB:
-            return PG_TYPE_OID;
-        case Types.ARRAY:
-            return PG_TYPE_TEXTARRAY;
+            
+        case Types.BLOB:            
+        case Types.BINARY:
+        case Types.VARBINARY:  
+        case Types.LONGVARBINARY:
+        	return PG_TYPE_BYTEA;
+        	
+        case Types.LONGVARCHAR:
+        case Types.CLOB:            
+        	return PG_TYPE_TEXT;
+        
+        case Types.SQLXML:        	
+            return PG_TYPE_TEXT;
+            
         default:
             return PG_TYPE_UNKNOWN;
         }
     }
+    
+	private static final byte[] hexChars = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e','f' };
+	
+	/**
+	 * When sending the byteA content to client convert into Hex before sending the content.
+	 * @param b
+	 * @return
+	 * @throws IOException
+	 */
+	static byte[] toHex(byte[] b) throws IOException {
+		byte[] hexbytes = PgFrontendProtocol.createByteArray((2 * b.length)+2);
+		hexbytes[0] = '\\';
+		hexbytes[1] = 'x';
+			
+		for (int i = 0; i < b.length; i++) {
+			int index = (i*2)+2;
+			int v = b[i] & 0xff;
+			hexbytes[index] = hexChars[v >> 4];
+			hexbytes[index+1] = hexChars[v & 0xf];
+		}
+		return hexbytes;
+	}      
 }

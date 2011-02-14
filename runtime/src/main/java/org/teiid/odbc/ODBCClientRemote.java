@@ -79,6 +79,12 @@ public interface ODBCClientRemote {
 
 	void flush();
 	
+	// FunctionCallResponse (B)
+	void functionCallResponse(byte[] data);
+	void functionCallResponse(int data);
+	
+	void sslDenied();
+	
 	// unimplemented backend messages
 	
 	//	AuthenticationKerberosV5 (B)
@@ -94,8 +100,6 @@ public interface ODBCClientRemote {
 	//	CopyDone (F & B)
 	//	CopyInResponse (B)
 	//	CopyOutResponse (B)
-	
-	//	FunctionCallResponse (B)
 	
 	//	NoticeResponse (B)
 	//	NotificationResponse (B)
