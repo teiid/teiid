@@ -61,6 +61,16 @@ public class TestTransformationMetadata {
 			assertEquals("Procedure 'y' is ambiguous, use the fully qualified name instead", e.getMessage()); //$NON-NLS-1$
 		}
 	}
+	
+	@Test public void testProcVisibility() throws Exception {
+		TransformationMetadata tm = exampleTransformationMetadata();
+		VDBMetaData vdb = tm.getVdbMetaData();
+		vdb.getModel("x").setVisible(false);
+		StoredProcedureInfo spi = tm.getStoredProcedureInfoForProcedure("y"); //$NON-NLS-1$
+		assertEquals("x1.y", spi.getProcedureCallableName());
+		spi = tm.getStoredProcedureInfoForProcedure("x.y"); //$NON-NLS-1$
+		assertEquals("x.y", spi.getProcedureCallableName());
+	}
 
 	private TransformationMetadata exampleTransformationMetadata()
 			throws TranslatorException {

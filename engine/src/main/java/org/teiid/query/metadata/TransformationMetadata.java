@@ -352,7 +352,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         
         for (StoredProcedureInfo storedProcedureInfo : results) {
         	Schema schema = (Schema)storedProcedureInfo.getModelID();
-	        if(vdbMetaData == null || vdbMetaData.isVisible(schema.getName())){
+	        if(fullyQualifiedProcedureName.equalsIgnoreCase(storedProcedureInfo.getProcedureCallableName()) || vdbMetaData == null || vdbMetaData.isVisible(schema.getName())){
 	        	if (result != null) {
 	    			throw new QueryMetadataException(QueryPlugin.Util.getString("ambiguous_procedure", fullyQualifiedProcedureName)); //$NON-NLS-1$
 	    		}
@@ -742,6 +742,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     	}
     	return vdbMetaData.getVersion();
     }
+    
+    public VDBMetaData getVdbMetaData() {
+		return vdbMetaData;
+	}
     
     /**
      * @see org.teiid.query.metadata.QueryMetadataInterface#getXMLTempGroups(java.lang.Object)
