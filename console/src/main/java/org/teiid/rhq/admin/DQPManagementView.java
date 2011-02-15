@@ -212,7 +212,7 @@ public class DQPManagementView implements PluginConstants {
 			getTransactionCollectionValue(transactionMetaValue,transactionsCollection);
 			operationResult.setContent(createReportResultList(fieldNameList,	resultObject.iterator()));
 		} else if (operationName.equals(Platform.Operations.KILL_TRANSACTION)) {
-			Long sessionID = (Long) valueMap.get(Operation.Value.TRANSACTION_ID);
+			String sessionID = (String) valueMap.get(Operation.Value.TRANSACTION_ID);
 			MetaValue[] args = new MetaValue[] { SimpleValueSupport.wrap(sessionID) };
 			try {
 				executeManagedOperation(connection, getRuntimeEngineDeployer(connection, mc), Platform.Operations.KILL_TRANSACTION, args);
@@ -221,7 +221,7 @@ public class DQPManagementView implements PluginConstants {
 				LOG.error(msg, e);
 			}
 		} else if (operationName.equals(Platform.Operations.KILL_SESSION)) {
-			Long sessionID = (Long) valueMap.get(Operation.Value.SESSION_ID);
+			String sessionID = (String) valueMap.get(Operation.Value.SESSION_ID);
 			MetaValue[] args = new MetaValue[] { SimpleValueSupport.wrap(sessionID) };
 			try {
 				executeManagedOperation(connection, getRuntimeEngineDeployer(connection, mc), Platform.Operations.KILL_SESSION, args);
@@ -231,7 +231,7 @@ public class DQPManagementView implements PluginConstants {
 			}
 		} else if (operationName.equals(Platform.Operations.KILL_REQUEST)) {
 			Long requestID = (Long) valueMap.get(Operation.Value.REQUEST_ID);
-			Long sessionID = (Long) valueMap.get(Operation.Value.SESSION_ID);
+			String sessionID = (String) valueMap.get(Operation.Value.SESSION_ID);
 			MetaValue[] args = new MetaValue[] {
 					SimpleValueSupport.wrap(requestID),
 					SimpleValueSupport.wrap(sessionID) };
@@ -886,8 +886,8 @@ public class DQPManagementView implements PluginConstants {
 			TransactionMetadata transaction = new TransactionMetadata();
 			transaction.setAssociatedSession((String) ProfileServiceUtil.stringValue(compositeValue.get(ASSOCIATED_SESSION)));
 			transaction.setCreatedTime((Long) ProfileServiceUtil.longValue(compositeValue.get(CREATED_TIME)));
-			transaction.setScope((String) (String) ProfileServiceUtil.stringValue(compositeValue.get(SCOPE)));
-			transaction.setId((String) (String) ProfileServiceUtil.stringValue(compositeValue.get("id"))); //$NON-NLS-1$
+			transaction.setScope((String) ProfileServiceUtil.stringValue(compositeValue.get(SCOPE)));
+			transaction.setId((String) ProfileServiceUtil.stringValue(compositeValue.get("id"))); //$NON-NLS-1$
 			return transaction;
 		}
 		throw new IllegalStateException("Unable to unwrap TransactionMetadata " + metaValue); //$NON-NLS-1$
