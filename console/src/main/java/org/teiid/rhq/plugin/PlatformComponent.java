@@ -96,11 +96,11 @@ public class PlatformComponent extends Facet {
 		// Parameter logic for System Operations
 		if (name.equals(Platform.Operations.KILL_REQUEST)) {
 			valueMap.put(Operation.Value.REQUEST_ID, configuration.getSimple(Operation.Value.REQUEST_ID).getLongValue());
-			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(Operation.Value.SESSION_ID).getLongValue());
+			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(Operation.Value.SESSION_ID).getStringValue());
 		} else if (name.equals(Platform.Operations.KILL_REQUEST)) {
-			valueMap.put(Operation.Value.TRANSACTION_ID, configuration.getSimple(Operation.Value.TRANSACTION_ID).getLongValue());
+			valueMap.put(Operation.Value.TRANSACTION_ID, configuration.getSimple(Operation.Value.TRANSACTION_ID).getStringValue());
 		} else if (name.equals(Platform.Operations.KILL_SESSION)) {
-			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(Operation.Value.SESSION_ID).getLongValue());
+			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(Operation.Value.SESSION_ID).getStringValue());
 		} else if (name.equals(Platform.Operations.DEPLOY_VDB_BY_URL)) {
 			valueMap.put(Operation.Value.VDB_URL, configuration.getSimple(Operation.Value.VDB_URL).getStringValue());
 			valueMap.put(Operation.Value.VDB_DEPLOY_NAME, configuration.getSimple(Operation.Value.VDB_DEPLOY_NAME).getStringValue());

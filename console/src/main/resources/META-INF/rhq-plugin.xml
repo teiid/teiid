@@ -171,7 +171,7 @@
 			description="Terminate a specified session">
 			<parameters>
 				<c:simple-property displayName="SessionID" name="sessionID"
-					type="long" required="true" description="The ID of the session to terminate" />
+					type="string" required="true" description="The ID of the session to terminate" />
 			</parameters>
 		</operation>
 
@@ -213,7 +213,7 @@
 			description="Terminate the processing of a query and its source queries">
 			<parameters>
 				<c:simple-property displayName="Session ID" name="sessionID"
-					type="long" required="true"
+					type="string" required="true"
 					description="The ID of the session that the request to cancel is associated with" />
 				<c:simple-property displayName="Request ID" name="requestID"
 					type="long" required="true" description="The ID of the request to cancel" />
@@ -247,7 +247,7 @@
 			description="Terminate a specified transaction">
 			<parameters>
 				<c:simple-property displayName="Transaction ID"
-					name="transactionID" type="long" required="true"
+					name="transactionID" type="string" required="true"
 					description="The ID of the transaction to terminate" />
 			</parameters>
 		</operation>
