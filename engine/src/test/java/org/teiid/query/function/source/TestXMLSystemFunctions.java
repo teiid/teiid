@@ -218,6 +218,12 @@ public class TestXMLSystemFunctions {
 		helpTestJson(json, "Person", expected);
 	}
 	
+	@Test public void testJsonToXml2() throws Exception {
+		String json = "{ \"firstName\": null }"; 
+		String expected = "<?xml version=\"1.0\" ?><Person><firstName xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:nil=\"true\"></firstName></Person>";
+		helpTestJson(json, "Person", expected);
+	}
+	
 	@BeforeClass static public void setUpOnce() {
 		TimeZone.setDefault(TimeZone.getTimeZone("GMT-6:00"));
 	}

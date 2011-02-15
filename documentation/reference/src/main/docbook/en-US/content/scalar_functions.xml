@@ -1948,6 +1948,9 @@
         	<listitem>
         		<para>Unless an array value is the root, it will not be enclosed in an additional element.</para>
         	</listitem>
+        	<listitem>
+        		<para>Null values will be represented by an empty element with the attribute xsi:nil="true"</para>
+        	</listitem>
         </itemizedlist> 
         </para>
         <example>

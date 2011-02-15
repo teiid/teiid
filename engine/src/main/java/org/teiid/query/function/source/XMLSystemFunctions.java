@@ -171,12 +171,15 @@ public class XMLSystemFunctions {
 			if (inArray.peek()) {
 				start();
 			}
-			if (value != null) {
-				try {
+			try {
+				if (value != null) {
 					streamWriter.writeCharacters(value.toString());
-				} catch (XMLStreamException e) {
-					throw new IOException(e);
+				} else {
+					streamWriter.writeNamespace("xsi", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI); //$NON-NLS-1$
+					streamWriter.writeAttribute("xsi", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "nil", "true"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				}
+			} catch (XMLStreamException e) {
+				throw new IOException(e);
 			}
 			if (inArray.peek()) {
 				end();
