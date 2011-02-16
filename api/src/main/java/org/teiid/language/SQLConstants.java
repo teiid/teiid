@@ -23,8 +23,9 @@
 package org.teiid.language;
 
 import java.lang.reflect.Field;
-import java.util.Set;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * SQL Constants for Teiid.
@@ -400,23 +401,42 @@ public class SQLConstants {
     /**
  	 * Set of CAPITALIZED reserved words for checking whether a string is a reserved word.
  	 */
-    private static final Set<String> RESERVED_WORDS = new HashSet<String>();
+    private static final Set<String> RESERVED_WORDS = extractFieldNames(SQLConstants.Reserved.class);
+    private static final Set<String> NON_RESERVED_WORDS = extractFieldNames(SQLConstants.NonReserved.class);
 
-    // Initialize RESERVED_WORDS set - This is a poor man's enum.  To much legacy code expects the constants to be Strings.
- 	static {
- 		Field[] fields = SQLConstants.Reserved.class.getDeclaredFields();
+    /**
+     * @throws AssertionError
+     */
+    private static Set<String> extractFieldNames(Class<?> clazz) throws AssertionError {
+        HashSet<String> result = new HashSet<String>();
+        Field[] fields = clazz.getDeclaredFields();
  		for (Field field : fields) {
  			if (field.getType() == String.class) {
 				try {
-					if (!RESERVED_WORDS.add((String)field.get(null))) {
+					if (!result.add((String)field.get(null))) {
 						throw new AssertionError("Duplicate value for " + field.getName()); //$NON-NLS-1$
 					}
 				} catch (Exception e) {
 				}
  			}
  		}
- 	}
-
+ 		return Collections.unmodifiableSet(result);
+    }
+    
+    /**
+     * @return nonReservedWords
+     */
+    public static Set<String> getNonReservedWords() {
+        return NON_RESERVED_WORDS;
+    }
+    
+    /**
+     * @return reservedWords
+     */
+    public static Set<String> getReservedWords() {
+        return RESERVED_WORDS;
+    }
+    
  	/** Can't construct */
  	private SQLConstants() {}   
 
