@@ -558,7 +558,7 @@
 				displayType="summary" category="availability" property="errorCount"
 				description="Whether or not errors exist for this VDB" />
 
-			<content name="vdb" displayName="VDB Archive" category="deployable"
+			<content name="vdb" displayName="VDB File" category="deployable"
 				isCreationType="true">
 			</content>
 

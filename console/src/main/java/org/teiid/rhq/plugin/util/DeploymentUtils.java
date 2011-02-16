@@ -46,9 +46,16 @@ public class DeploymentUtils {
         int lastPeriod = archiveFileName.lastIndexOf("."); //$NON-NLS-1$
         String extension = (lastPeriod != -1) ? archiveFileName.substring(lastPeriod + 1) : null;
         // Use File.equals() to compare the extensions so case-sensitivity is correct for this platform.
-        return (extension != null && new File(extension).equals(new File(expectedExtension)));
+        return (extension != null && new File(extension).equals(new File(expectedExtension))) || isDynamicVDB(archiveFileName);
     }
 
+    private static boolean isDynamicVDB(String archiveFileName) {
+        String dynamicFile = "-vdb.xml"; //$NON-NLS-1$
+        if (archiveFileName.length()<8) return false;
+        String fileEnding = archiveFileName.substring(archiveFileName.length()-8);
+        return (new File(dynamicFile).equals(new File(fileEnding)));
+    }
+    
     /**
      * Deploys (i.e. distributes then starts) the specified archive file.
      *
