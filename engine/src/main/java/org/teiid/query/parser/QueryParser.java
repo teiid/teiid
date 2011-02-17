@@ -114,14 +114,26 @@ public class QueryParser {
 	 * @throws QueryParserException if parsing fails
 	 * @throws IllegalArgumentException if sql is null
 	 */
-	public Command parseCommand(String sql, ParseInfo parseInfo) throws QueryParserException {
+    public Command parseCommand(String sql, ParseInfo parseInfo) throws QueryParserException {
+        return parseCommand(sql, parseInfo, false);
+    }
+    
+    public Command parseDesignerCommand(String sql) throws QueryParserException {
+        return parseCommand(sql, new ParseInfo(), true);
+    }
+
+	public Command parseCommand(String sql, ParseInfo parseInfo, boolean designerCommands) throws QueryParserException {
         if(sql == null || sql.length() == 0) {
             throw new QueryParserException(QueryPlugin.Util.getString("QueryParser.emptysql")); //$NON-NLS-1$
         }
         
     	Command result = null;
         try{
-            result = getSqlParser(sql).command(parseInfo);
+            if (designerCommands) {
+                result = getSqlParser(sql).designerCommand(parseInfo);
+            } else {
+                result = getSqlParser(sql).command(parseInfo);
+            }
             result.setCacheHint(SQLParserUtil.getQueryCacheOption(sql));
         } catch(ParseException pe) {
         	if(sql.startsWith(XML_OPEN_BRACKET) || sql.startsWith(XQUERY_DECLARE)) {

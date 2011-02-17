@@ -454,6 +454,21 @@ Command command(ParseInfo info) :
 	}
 }
 
+Command designerCommand(ParseInfo info) :
+{
+	Command command = null;
+}
+{
+	 (LOOKAHEAD(2) command = updateProcedure(info) |
+	  command = userCommand(info)	  
+	)
+	[<SEMICOLON>]
+	<EOF>
+	{
+		return command;
+	}
+}
+
 Command updateProcedure(ParseInfo info) :
 {
 	Command command = null;
