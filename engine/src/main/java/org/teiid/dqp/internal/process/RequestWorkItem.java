@@ -204,7 +204,13 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
                 	while (cause.getCause() != null && cause.getCause() != cause) {
                 		cause = cause.getCause();
                 	}
-                	StackTraceElement elem = cause.getStackTrace()[0];
+                	StackTraceElement[] elems = cause.getStackTrace();
+                	Object elem = null;
+                	if (elems.length > 0) {
+                		elem = cause.getStackTrace()[0];
+                	} else {
+                		elem = cause.getMessage();
+                	}
                     LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.getString("ProcessWorker.processing_error", e.getMessage(), requestID, e.getClass().getName(), elem)); //$NON-NLS-1$
                 }else {
                     LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("ProcessWorker.error", requestID)); //$NON-NLS-1$

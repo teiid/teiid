@@ -274,7 +274,9 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     public void closeDirect() {
         super.closeDirect();
         joinStrategy.close();
-    	this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, null);
+        if (this.getContext() != null) {
+        	this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, null);
+        }
     }
 
     public JoinType getJoinType() {
