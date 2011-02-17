@@ -22,13 +22,14 @@
 
 package org.teiid.query.processor;
 
-import static org.teiid.query.optimizer.TestOptimizer.getTypicalCapabilities;
-import static org.teiid.query.optimizer.TestOptimizer.helpPlan;
+import static org.teiid.query.optimizer.TestOptimizer.*;
 import static org.teiid.query.processor.TestProcessor.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import javax.sql.rowset.serial.SerialClob;
 
 import org.junit.Test;
 import org.teiid.core.TeiidProcessingException;
@@ -62,7 +63,7 @@ public class TestTextTable {
     }
 	
 	@Test public void testTextTableFixed() throws Exception {
-    	String sql = "select count(*) from texttable(? COLUMNS compkey string width 77, CDM_ID string width 14, CURRENCY string width 9, \"START\" string width 31, MATURITY string width 38, AMOUNT double width 13, RECORDSOURCE string width 13, SUMMIT_ID string width 25, RATE double width 21, SPREAD double width 9, DESK string width 13) x"; //$NON-NLS-1$
+    	String sql = "select count(*) from texttable(? COLUMNS compkey string width 78, CDM_ID string width 14, CURRENCY string width 9, \"START\" string width 31, MATURITY string width 38, AMOUNT double width 13, RECORDSOURCE string width 13, SUMMIT_ID string width 25, RATE double width 21, SPREAD double width 9, DESK string width 13) x"; //$NON-NLS-1$
     	
         List[] expected = new List[] {
         		Arrays.asList(52),
@@ -254,6 +255,16 @@ public class TestTextTable {
         };    
 
         helpProcess(plan, hdm, expected);    	
+    }
+    
+	@Test(expected=TeiidProcessingException.class) public void testTextTableInvalidData() throws Exception {
+    	String sql = "select count(*) from texttable(? COLUMNS PARTNAME string) x"; //$NON-NLS-1$
+    	
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        char[] data = new char[5000];
+        processPreparedStatement(sql, null, dataManager, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), Arrays.asList(new ClobType(new SerialClob(data))));
     }
 	
 }

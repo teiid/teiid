@@ -51,8 +51,7 @@ import org.teiid.query.util.CommandContext;
 /**
  * Handles text file processing.
  * 
- * TODO: unix style escape handling \t \n, etc. 
- * TODO: parse using something more memory safe than strings
+ * TODO: unix style escape handling \t \n, etc. - see also the unescape function
  * TODO: allow for escaping with fixed parsing
  * TODO: allow for fixed parsing without new lines
  * TODO: allow for a configurable line terminator
@@ -75,6 +74,9 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	private int textLine = 0;
 	private Map<String, Integer> nameIndexes;
 	private String systemId;
+
+	private boolean cr;
+	private boolean eof;
 	
 	public TextTableNode(int nodeID) {
 		super(nodeID);
@@ -110,6 +112,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				noQuote = table.isEscape();
 				quote = table.getQuote();
 			}
+			lineWidth = table.getColumns().size() * DataTypeManager.MAX_STRING_LENGTH;
 		}
         Map elementMap = createLookupMap(table.getProjectedSymbols());
         this.projectionIndexes = getProjectionIndexes(elementMap, getElements());
@@ -133,6 +136,8 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		}
 		this.nameIndexes = null;
 		this.textLine = 0;
+		this.cr = false;
+		this.eof = false;
 	}
 	
 	public void setTable(TextTable table) {
@@ -161,7 +166,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		}
 		
 		while (!isBatchFull()) {
-			String line = readLine();
+			String line = readLine(lineWidth, table.isFixedWidth());
 			
 			if (line == null) {
 				terminateBatches();
@@ -194,21 +199,62 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		return pullBatch();
 	}
 
-	private String readLine() throws TeiidProcessingException {
-		while (true) {
-			try {
-				String line = reader.readLine();
-				if (line != null) {
-					textLine++;
-					if (line.length() == 0) {
-						continue;
-					}
-				}
-				return line;
-			} catch (IOException e) {
-				throw new TeiidProcessingException(e);
-			}
+	private String readLine(int maxLength, boolean exact) throws TeiidProcessingException {
+		if (eof) {
+			return null;
 		}
+		StringBuilder sb = new StringBuilder(exact ? maxLength : (maxLength >> 4));
+		try {
+			while (true) {
+				char c = readChar();
+				if (c == '\n') {
+					if (sb.length() == 0) {
+						if (eof) {
+							return null;
+						}
+						continue; //skip empty lines
+					}
+				    if (exact && sb.length() < lineWidth) {
+				    	throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.invalid_width", sb.length(), lineWidth, textLine, systemId)); //$NON-NLS-1$
+				    }
+					return sb.toString();
+			    }
+			    sb.append(c);
+			    if (sb.length() > maxLength) {
+			    	if (exact) {
+			    		//we're not forcing them to fully specify the line, so just drop the rest
+			    		//TODO: there should be a max read length
+			    		while ((c = readChar()) != '\n') {
+			    			
+			    		}
+			    		return sb.toString();
+			    	}
+			    	throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.line_too_long", textLine+1, systemId, maxLength)); //$NON-NLS-1$	
+			    }
+			}
+		} catch (IOException e) {
+			throw new TeiidProcessingException(e);
+		}
+	}
+	
+	private char readChar() throws IOException {
+		int c = reader.read();
+	    if (cr) {
+			if (c == '\n') {
+			    c = reader.read();
+			}
+			cr = false;
+	    }
+	    switch (c) {
+	    case '\r':
+			cr = true;
+	    case -1:
+	    	eof = true;
+	    case '\n':		
+			textLine++;
+			return '\n';
+	    }
+	    return (char)c;
 	}
 
 	private void initReader() throws ExpressionEvaluationException,
@@ -245,7 +291,8 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		}
 		while (textLine < skip) {
 			boolean isHeader = textLine == header;
-			String line = readLine();
+			//if we don't need a header, then we could just scan, but for now we'll enforce a max length
+			String line = readLine(Math.min(lineWidth, DataTypeManager.MAX_STRING_LENGTH), false);
 			if (line == null) { //just return an empty batch
 				reset();
 				return;
@@ -289,9 +336,13 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		while (true) {
 			if (line == null) {
 				if (escaped) {
-					builder.append('\n'); //allow for escaped new lines
+					//allow for escaped new lines
+					if (cr) {
+						builder.append('\r'); 
+					}
+					builder.append('\n'); 
 					escaped = false;
-					line = readLine();
+					line = readLine(lineWidth, false);
 					continue;
 				} 
 				if (!qualified) {
@@ -299,7 +350,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 					addValue(result, wasQualified, builder.toString());
 					return result;
 				} 
-				line = readLine();
+				line = readLine(lineWidth, false);
 				if (line == null) {
 					throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.unclosed", systemId)); //$NON-NLS-1$
 				}
@@ -368,11 +419,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		result.add(val);
 	}
 
-	private List<String> parseFixedWidth(String line)
-			throws TeiidProcessingException {
-		if (line.length() < lineWidth) {
-			throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.invalid_width", line.length(), lineWidth, textLine, systemId)); //$NON-NLS-1$
-		}
+	private List<String> parseFixedWidth(String line) {
 		ArrayList<String> result = new ArrayList<String>();
 		int beginIndex = 0;
 		for (TextColumn col : table.getColumns()) {
