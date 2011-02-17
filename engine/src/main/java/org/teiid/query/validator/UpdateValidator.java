@@ -56,8 +56,6 @@ import org.teiid.query.sql.util.SymbolMap;
  * the virtual group is always a <code>Query</code>. This object visits various parts of
  * this <code>Query</code> and verifies if the virtual group definition will allows it to be
  * updated.</p>
- * 
- * TODO: add insert support based upon partitioning
  */
 public class UpdateValidator {
 	
@@ -428,7 +426,9 @@ public class UpdateValidator {
     	}
     	
     	if (query.getFrom().getClauses().size() > 1 || (!(query.getFrom().getClauses().get(0) instanceof UnaryFromClause))) {
-    		report.handleValidationWarning(QueryPlugin.Util.getString("ERR.015.012.0009", query.getFrom())); //$NON-NLS-1$
+    	    String warning = QueryPlugin.Util.getString("ERR.015.012.0009", query.getFrom());
+    		updateReport.handleValidationWarning(warning); //$NON-NLS-1$
+    		deleteReport.handleValidationWarning(warning); //$NON-NLS-1$
     		updateInfo.isSimple = false;
     	}
     	List<GroupSymbol> allGroups = query.getFrom().getGroups();
@@ -445,15 +445,14 @@ public class UpdateValidator {
 			if (!allGroups.isEmpty()) {
 				setUpdateFlags(allGroups.iterator().next());
 			}
-		} else if (this.updateInfo.updateType == UpdateType.INHERENT || this.updateInfo.deleteType == UpdateType.INHERENT) {
+		} else {
 			for (GroupSymbol groupSymbol : allGroups) {
 				UpdateMapping info = updateInfo.updatableGroups.get(groupSymbol.getCanonicalName());
 				if (info == null) {
 					continue; // not projected
 				}
-	    		String warning = QueryPlugin.Util.getString("ERR.015.012.0004"); //$NON-NLS-1$
-	    		updateReport.handleValidationWarning(warning);
-	    		deleteReport.handleValidationWarning(warning); 
+	    		String warning = QueryPlugin.Util.getString("ERR.015.012.0004", info.correlatedName); //$NON-NLS-1$
+	    		report.handleValidationWarning(warning);
 			}
 		}
 
@@ -475,7 +474,7 @@ public class UpdateValidator {
     		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0015"), false, true, false); //$NON-NLS-1$
     	} 
     	if (this.updateInfo.updateType == UpdateType.INHERENT && !updatable) {
-    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0005"), true, false, true); //$NON-NLS-1$
+    		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0005"), true, false, false); //$NON-NLS-1$
     	}
     	if (this.updateInfo.deleteType == UpdateType.INHERENT && this.updateInfo.deleteTarget == null) {
     		if (this.updateInfo.isSimple && updatable) {
