@@ -63,10 +63,23 @@ public class TestTextTable {
     }
 	
 	@Test public void testTextTableFixed() throws Exception {
-    	String sql = "select count(*) from texttable(? COLUMNS compkey string width 78, CDM_ID string width 14, CURRENCY string width 9, \"START\" string width 31, MATURITY string width 38, AMOUNT double width 13, RECORDSOURCE string width 13, SUMMIT_ID string width 25, RATE double width 21, SPREAD double width 9, DESK string width 13) x"; //$NON-NLS-1$
+    	String sql = "select max(compkey), max(cdm_id), max(currency), max(\"start\"), max(maturity), max(amount), count(*) from texttable(? COLUMNS compkey string width 76, CDM_ID string width 14, CURRENCY string width 9, \"START\" string width 31, MATURITY string width 31, AMOUNT double width 21, RECORDSOURCE string width 13, SUMMIT_ID string width 15, RATE double width 20, SPREAD double width 20, DESK string width 14) x"; //$NON-NLS-1$
     	
         List[] expected = new List[] {
-        		Arrays.asList(52),
+        		Arrays.asList("000369USD05/20/200405/20/2007", "000369", "USD", "12/18/2000", "12/19/2005", 6.7209685146E8, 52),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), Arrays.asList(clobFromFile("text/cdm_dos.txt")));
+    }
+	
+	@Test public void testTextTableFixedPartial() throws Exception {
+    	String sql = "select max(length(compkey)) from texttable(? COLUMNS compkey string width 76) x"; //$NON-NLS-1$
+    	
+        List[] expected = new List[] {
+        		Arrays.asList(30),
         };    
     
         FakeDataManager dataManager = new FakeDataManager();

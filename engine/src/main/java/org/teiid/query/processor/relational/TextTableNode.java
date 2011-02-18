@@ -204,57 +204,58 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 			return null;
 		}
 		StringBuilder sb = new StringBuilder(exact ? maxLength : (maxLength >> 4));
-		try {
-			while (true) {
-				char c = readChar();
-				if (c == '\n') {
-					if (sb.length() == 0) {
-						if (eof) {
-							return null;
-						}
-						continue; //skip empty lines
+		while (true) {
+			char c = readChar();
+			if (c == '\n') {
+				if (sb.length() == 0) {
+					if (eof) {
+						return null;
 					}
-				    if (exact && sb.length() < lineWidth) {
-				    	throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.invalid_width", sb.length(), lineWidth, textLine, systemId)); //$NON-NLS-1$
-				    }
-					return sb.toString();
+					continue; //skip empty lines
+				}
+			    if (exact && sb.length() < lineWidth) {
+			    	throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.invalid_width", sb.length(), lineWidth, textLine, systemId)); //$NON-NLS-1$
 			    }
-			    sb.append(c);
-			    if (sb.length() > maxLength) {
-			    	if (exact) {
-			    		//we're not forcing them to fully specify the line, so just drop the rest
-			    		//TODO: there should be a max read length
-			    		while ((c = readChar()) != '\n') {
-			    			
-			    		}
-			    		return sb.toString();
-			    	}
-			    	throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.line_too_long", textLine+1, systemId, maxLength)); //$NON-NLS-1$	
-			    }
-			}
-		} catch (IOException e) {
-			throw new TeiidProcessingException(e);
+				return sb.toString();
+		    }
+		    sb.append(c);
+		    if (sb.length() > maxLength) {
+		    	if (exact) {
+		    		sb.deleteCharAt(sb.length() - 1);
+		    		//we're not forcing them to fully specify the line, so just drop the rest
+		    		//TODO: there should be a max read length
+		    		while (readChar() != '\n') {
+		    			
+		    		}
+		    		return sb.toString();
+		    	}
+		    	throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.line_too_long", textLine+1, systemId, maxLength)); //$NON-NLS-1$	
+		    }
 		}
 	}
 	
-	private char readChar() throws IOException {
-		int c = reader.read();
-	    if (cr) {
-			if (c == '\n') {
-			    c = reader.read();
-			}
-			cr = false;
-	    }
-	    switch (c) {
-	    case '\r':
-			cr = true;
-	    case -1:
-	    	eof = true;
-	    case '\n':		
-			textLine++;
-			return '\n';
-	    }
-	    return (char)c;
+	private char readChar() throws TeiidProcessingException {
+		try {
+			int c = reader.read();
+		    if (cr) {
+				if (c == '\n') {
+				    c = reader.read();
+				}
+				cr = false;
+		    }
+		    switch (c) {
+		    case '\r':
+				cr = true;
+		    case -1:
+		    	eof = true;
+		    case '\n':		
+				textLine++;
+				return '\n';
+		    }
+		    return (char)c;
+		} catch (IOException e) {
+			throw new TeiidProcessingException(e);
+		}
 	}
 
 	private void initReader() throws ExpressionEvaluationException,
@@ -291,14 +292,17 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		}
 		while (textLine < skip) {
 			boolean isHeader = textLine == header;
-			//if we don't need a header, then we could just scan, but for now we'll enforce a max length
-			String line = readLine(Math.min(lineWidth, DataTypeManager.MAX_STRING_LENGTH), false);
-			if (line == null) { //just return an empty batch
-				reset();
-				return;
-			}
 			if (isHeader) {
+				String line = readLine(lineWidth, false);
+				if (line == null) { //just return an empty batch
+					reset();
+					return;
+				}
 				processHeader(parseLine(line));
+			} else {
+				while (readChar() != '\n') {
+	    			
+	    		}
 			}
 		}
 	}
