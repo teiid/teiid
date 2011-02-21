@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<datasources>
+    <xa-datasource>
+        <jndi-name>ingresDS</jndi-name>
+
+        <xa-datasource-class>com.ingres.jdbc.IngresXADataSource</xa-datasource-class>
+        <xa-datasource-property name="DatabaseName">{database}</xa-datasource-property>
+        <xa-datasource-property name="PortNumber">21071</xa-datasource-property>
+        <xa-datasource-property name="ServerName">localhost</xa-datasource-property>
+        <xa-datasource-property name="timeZone">GMT</xa-datasource-property>
+        <user-name>user</user-name>
+        <password>password</password>
+
+        <transaction-isolation>TRANSACTION_READ_COMMITTED</transaction-isolation>
+
+        <max-pool-size>5</max-pool-size>
+        <min-pool-size>1</min-pool-size>
+
+        <blocking-timeout-millis>2000</blocking-timeout-millis>
+        <idle-timeout-minutes>2</idle-timeout-minutes>
+        <track-connection-by-tx>true</track-connection-by-tx>
+        <no-tx-separate-pools>true</no-tx-separate-pools>
+    </xa-datasource>     
+</datasources>

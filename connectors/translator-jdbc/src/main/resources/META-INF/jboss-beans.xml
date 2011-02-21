@@ -288,4 +288,20 @@
             <parameter class="java.lang.String">Modeshape</parameter>
         </constructor>
     </bean>    
+    
+    <!-- Ingres -->
+    <bean name="translator-ingres-template" class="org.teiid.templates.TranslatorDeploymentTemplate">
+        <property name="info"><inject bean="translator-ingres" /> </property>
+        <property name="managedObjectFactory"> <inject bean="ManagedObjectFactory" /> </property>
+    </bean>
+
+    <bean name="translator-ingres" class="org.teiid.templates.TranslatorTemplateInfo">
+        <constructor factoryMethod="createTemplateInfo">
+            <factory bean="TranslatorDeploymentTemplateInfoFactory" />
+            <parameter class="java.lang.Class">org.teiid.templates.TranslatorTemplateInfo</parameter>
+            <parameter class="java.lang.Class">org.teiid.translator.jdbc.ingres.IngresExecutionFactory</parameter>
+            <parameter class="java.lang.String">translator-ingres</parameter>
+            <parameter class="java.lang.String">Ingres</parameter>
+        </constructor>
+    </bean>     
 </deployment>
