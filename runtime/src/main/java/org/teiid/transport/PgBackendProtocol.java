@@ -150,7 +150,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 			// application_name was not reported by releases before 9.0.)
 			
 			sendParameterStatus("client_encoding", this.encoding.name());
-			sendParameterStatus("DateStyle", this.props.getProperty("DateStyle"));
+			sendParameterStatus("DateStyle", this.props.getProperty("DateStyle", "ISO"));
 			sendParameterStatus("integer_datetimes", "off");
 			sendParameterStatus("is_superuser", "off");
 			sendParameterStatus("server_encoding", "SQL_ASCII");
@@ -206,7 +206,9 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	}
 	
 	public void setEncoding(Charset value) {
-		this.encoding = value;
+		if (value != null) {
+			this.encoding = value;
+		}
 	}
 
 	@Override
