@@ -46,6 +46,7 @@ public class MetadataFactory {
 	private Map<String, Datatype> dataTypes;
 	private Properties importProperties;
 	private MetadataStore store = new MetadataStore();
+	private boolean autoCorrectColumnNames = true;
 	
 	public MetadataFactory(String modelName, Map<String, Datatype> dataTypes, Properties importProperties) {
 		this.dataTypes = dataTypes;
@@ -92,7 +93,10 @@ public class MetadataFactory {
 	 * @throws TranslatorException
 	 */
 	public Column addColumn(String name, String type, ColumnSet<?> table) throws TranslatorException {
-		if (name.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR) != -1) {
+		if (autoCorrectColumnNames) {
+			name.replace(AbstractMetadataRecord.NAME_DELIM_CHAR, '_');
+		} else if (name.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR) != -1) {
+			//TODO: for now this is not used
 			throw new TranslatorException(DataPlugin.Util.getString("MetadataFactory.invalid_name", name)); //$NON-NLS-1$
 		}
 		Column column = new Column();

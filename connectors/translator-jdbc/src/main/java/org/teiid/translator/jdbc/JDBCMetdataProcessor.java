@@ -156,12 +156,14 @@ public class JDBCMetdataProcessor {
 					continue; //there's a good chance this won't work
 				}
 				BaseColumn record = null;
+				int precision = columns.getInt(8);
+				String runtimeType = getRuntimeType(sqlType, typeName, precision);
 				if (columnType == DatabaseMetaData.procedureColumnResult) {
-					Column column = metadataFactory.addProcedureResultSetColumn(columnName, TypeFacility.getDataTypeNameFromSQLType(sqlType), procedure);
+					Column column = metadataFactory.addProcedureResultSetColumn(columnName, runtimeType, procedure);
 					record = column;
 					column.setNativeType(typeName);
 				} else {
-					record = metadataFactory.addProcedureParameter(columnName, TypeFacility.getDataTypeNameFromSQLType(sqlType), Type.values()[columnType], procedure);
+					record = metadataFactory.addProcedureParameter(columnName, runtimeType, Type.values()[columnType], procedure);
 				}
 				record.setPrecision(columns.getInt(8));
 				record.setLength(columns.getInt(9));
@@ -236,22 +238,52 @@ public class JDBCMetdataProcessor {
 			String columnName = columns.getString(4);
 			int type = columns.getInt(5);
 			String typeName = columns.getString(6);
-			type = checkForUnsigned(type, typeName);
+			int columnLength = columns.getInt(7);
+			String runtimeType = getRuntimeType(type, typeName, columnLength);
 			//note that the resultset is already ordered by position, so we can rely on just adding columns in order
-			Column column = metadataFactory.addColumn(columnName, TypeFacility.getDataTypeNameFromSQLType(type), tableInfo.table);
+			Column column = metadataFactory.addColumn(columnName, runtimeType, tableInfo.table);
 			column.setNameInSource(quoteName(columnName));
-			column.setNativeType(columns.getString(6));
+			column.setPrecision(columnLength);
+			column.setNativeType(typeName);
 			column.setRadix(columns.getInt(10));
 			column.setNullType(NullType.values()[columns.getShort(11)]);
 			column.setUpdatable(true);
 			String remarks = columns.getString(12);
 			column.setAnnotation(remarks);
+			String defaultValue = columns.getString(13);
+			column.setDefaultValue(defaultValue);
+			if (defaultValue != null && type == Types.BIT && TypeFacility.RUNTIME_NAMES.BOOLEAN.equals(runtimeType)) {
+				//try to determine a usable boolean value
+                if(defaultValue.length() == 1) {
+                    int charIntVal = defaultValue.charAt(0);
+                    // Set boolean FALse for incoming 0, TRUE for 1
+                    if(charIntVal==0) {
+                        column.setDefaultValue(Boolean.FALSE.toString());
+                    } else if(charIntVal==1) {
+                        column.setDefaultValue(Boolean.TRUE.toString());
+                    }
+				} else { //SQLServer quotes bit values
+                    String trimedDefault = defaultValue.trim();
+                    if (defaultValue.startsWith("(") && defaultValue.endsWith(")")) {
+                        trimedDefault = defaultValue.substring(1, defaultValue.length() - 1);
+                    }
+                    column.setDefaultValue(trimedDefault);
+                }
+			}
 			column.setCharOctetLength(columns.getInt(16));
 			if (rsColumns >= 23) {
 				column.setAutoIncremented("YES".equalsIgnoreCase(columns.getString(23))); //$NON-NLS-1$
 			}
 		}
 		columns.close();
+	}
+
+	private String getRuntimeType(int type, String typeName, int precision) {
+		if (type == Types.BIT && precision > 1) {
+			type = Types.BINARY;
+		}
+		type = checkForUnsigned(type, typeName);
+		return TypeFacility.getDataTypeNameFromSQLType(type);
 	}
 	
 	private String quoteName(String name) {
@@ -318,7 +350,8 @@ public class JDBCMetdataProcessor {
 					String fullTableName = getFullyQualifiedName(tableCatalog, tableSchema, tableName);
 					pkTable = tableMap.get(fullTableName);
 					if (pkTable == null) {
-						throw new TranslatorException(JDBCPlugin.Util.getString("JDBCMetadataProcessor.cannot_find_primary", fullTableName)); //$NON-NLS-1$
+						//throw new TranslatorException(JDBCPlugin.Util.getString("JDBCMetadataProcessor.cannot_find_primary", fullTableName)); //$NON-NLS-1$
+						continue; //just drop the foreign key, the user probably didn't import the other table
 					}
 					fkName = fks.getString(12);
 					if (fkName == null) {
