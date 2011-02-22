@@ -60,7 +60,7 @@
 			Constraints or other database features cannot be added to internal materialization tables.</para>
 			</listitem>
 			<listitem><para>The data volume is large.  Internal materialization (and temp tables in general) have memory overhead for each page.  
-			A rough guideline is that no more than 100 million rows should in all materializated tables across all VDBs for every 1 gigabyte of heap.</para>
+			A rough guideline is that there can be 100 million rows in all materializated tables across all VDBs for every gigabyte of heap.</para>
 			</listitem>
 		</itemizedlist>
 		</para>

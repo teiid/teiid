@@ -1048,7 +1048,7 @@ Account.Contacts) FROM Account]]></programlisting>
                     <para>
                     The results of the query will be returned such that each row on the row axis will be packed into an array value that will first contain each hierarcy member name on the row axis then each measure value from the column axis.
                     </para>
-                    <note><para>Currently the resultset only supports 2 dimentional cube.</para></note>
+                    <note><para>The use of <xref linkend="dataroles"/> should be considered to prevent arbitrary MDX from being submitted to the invokeMDX procedure.</para></note>
                     <para>
                     This translator requires a data source to be configured to the OLAP cube using OLAP4J JDBC driver. Two sample
                     -ds.xml files provided for accessing OLAP servers in teiid-examples section. One is Mondrian specific, when Mondrian server is deloyed
