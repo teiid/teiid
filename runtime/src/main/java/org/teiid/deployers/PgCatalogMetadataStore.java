@@ -145,7 +145,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"st.oid as attrelid, " + //$NON-NLS-1$
 				"t1.Name as attname, " + //$NON-NLS-1$
 				"pt.oid as atttypid," + //$NON-NLS-1$
-				"convert(t1.Length, short) as attlen, " + //$NON-NLS-1$
+				"pt.typlen as attlen, " + //$NON-NLS-1$
 				"convert(t1.Position, short) as attnum, " + //$NON-NLS-1$
 				"t1.Length as atttypmod, " + //$NON-NLS-1$
 				"false as attnotnull, " + //$NON-NLS-1$
