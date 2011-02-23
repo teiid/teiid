@@ -369,7 +369,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 			"   union " + //$NON-NLS-1$
 			"SELECT 20 as oid,  'long' as typname,  (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(8, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid  FROM (SELECT 1) X" + //$NON-NLS-1$
 			"   union " + //$NON-NLS-1$
-			"SELECT 23 as oid,  'int' as typname,   (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(4, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid  FROM (SELECT 1) X" + //$NON-NLS-1$
+			"SELECT 23 as oid,  'integer' as typname,   (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(4, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid  FROM (SELECT 1) X" + //$NON-NLS-1$
 			"   union " + //$NON-NLS-1$
 			"SELECT 26 as oid,  'oid' as typname,  (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typname,    convert(4, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid  FROM (SELECT 1) X" + //$NON-NLS-1$
 			"   union " + //$NON-NLS-1$

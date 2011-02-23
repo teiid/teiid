@@ -34,6 +34,7 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.teiid.core.util.ApplicationInfo;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.logging.LogConstants;
@@ -300,7 +301,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		// set client_encoding to 'WIN1252'
 		if (sql != null) {
 			// selects are coming with "select\t" so using a space after "select" does not always work
-			if (sql.startsWith("select") || sql.startsWith("SELECT")) { //$NON-NLS-1$ //$NON-NLS-2$
+			String sqlLower = sql.toLowerCase();
+			if (sqlLower.startsWith("select")) { //$NON-NLS-1$
 				modified = sql.replace('\n', ' ');
 											
 				Matcher m = null;
@@ -320,6 +322,15 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 					modified = "SELECT PKTABLE_CAT, PKTABLE_SCHEM, PKTABLE_NAME, PKCOLUMN_NAME, FKTABLE_CAT, FKTABLE_SCHEM, "+//$NON-NLS-1$
 								"FKTABLE_NAME, FKCOLUMN_NAME, KEY_SEQ, UPDATE_RULE, DELETE_RULE, FK_NAME, PK_NAME, DEFERRABILITY "+//$NON-NLS-1$
 								"FROM SYS.ReferenceKeyColumns WHERE PKTABLE_NAME LIKE '"+m.group(14)+"' and PKTABLE_SCHEM LIKE '"+m.group(15)+"'";//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				}
+				else if (modified.equalsIgnoreCase("select version()")) { //$NON-NLS-1$
+					modified = "SELECT 'Teiid "+ApplicationInfo.getInstance().getReleaseNumber()+"'"; //$NON-NLS-1$ //$NON-NLS-2$
+				}
+				else if (modified.startsWith("SELECT name FROM master..sysdatabases")) { //$NON-NLS-1$
+					modified = "SELECT 'Teiid'"; //$NON-NLS-1$
+				}
+				else if (modified.equalsIgnoreCase("select db_name() dbname")) { //$NON-NLS-1$
+					modified = "SELECT current_database()"; //$NON-NLS-1$
 				}
 				else {
 					modified = modified.replaceAll("E'", "'"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -342,8 +353,11 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				if (m.matches()) {
 					if (m.group(2).equalsIgnoreCase("client_encoding")) { //$NON-NLS-1$
 						this.client.setEncoding(PGCharsetConverter.getCharset(m.group(4)));
-						modified = "SELECT 'SET'"; //$NON-NLS-1$
 					}
+					else {
+						this.props.setProperty(m.group(2), m.group(4));
+					}
+					modified = "SELECT 'SET'"; //$NON-NLS-1$
 				}
 				else if (modified.equalsIgnoreCase("BEGIN")) { //$NON-NLS-1$
 					try {
