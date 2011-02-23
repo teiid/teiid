@@ -286,6 +286,11 @@
                 </listitem>
                 <listitem>
                     <para>
+                    <emphasis>sqlserver</emphasis> - for use with SQL Server 2000 or later.  A SQL Server JDBC driver version 2.0 or later (or compatible e.g. JTDS 1.2 or later) should be used.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
                     <emphasis>sybase</emphasis> - for use with Sybase version 12.5 or later.
                     </para>
                 </listitem>
