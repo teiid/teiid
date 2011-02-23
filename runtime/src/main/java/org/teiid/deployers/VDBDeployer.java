@@ -43,7 +43,6 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
@@ -323,7 +322,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
      */
     private Boolean loadMetadata(VDBMetaData vdb, ModelMetaData model, boolean cache, File cacheFile, MetadataStoreGroup vdbStore, ConnectorManagerRepository cmr) {
 		String msg = RuntimePlugin.Util.getString("model_metadata_loading", vdb.getName()+"-"+vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())); //$NON-NLS-1$ //$NON-NLS-2$
-		final ValidationError addedError = model.addError(ModelMetaData.ValidationError.Severity.ERROR.toString(), msg); 
+		model.addError(ModelMetaData.ValidationError.Severity.ERROR.toString(), msg); 
 		LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
 
     	String exceptionMessage = null;
@@ -342,7 +341,6 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
     				this.serializer.saveAttachment(cacheFile, store);
     			}
     			vdbStore.addStore(store);
-    			model.removeError(addedError);
     			loaded = true;
     			break;
 			} catch (TranslatorException e) {
@@ -366,10 +364,13 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		    		model.addError(ModelMetaData.ValidationError.Severity.ERROR.toString(), exceptionMessage);     		
 		    	}
 		    	LogManager.logWarning(LogConstants.CTX_RUNTIME, failed_msg);
-	    	} else if (vdb.isValid()) {
-    			this.vdbRepository.updateVDB(vdb.getName(), vdb.getVersion());
-				vdb.setStatus(VDB.Status.ACTIVE);
-				LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_activated",vdb.getName(), vdb.getVersion())); //$NON-NLS-1$    			
+	    	} else {
+	    		model.clearErrors();
+	    		if (vdb.isValid()) {
+	    			this.vdbRepository.updateVDB(vdb.getName(), vdb.getVersion());
+					vdb.setStatus(VDB.Status.ACTIVE);
+					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_activated",vdb.getName(), vdb.getVersion())); //$NON-NLS-1$    			
+	    		}
 	    	}
     	}
     	

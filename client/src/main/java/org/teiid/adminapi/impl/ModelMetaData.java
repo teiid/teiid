@@ -25,6 +25,7 @@ package org.teiid.adminapi.impl;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -52,6 +53,7 @@ import org.teiid.adminapi.impl.ModelMetaData.ValidationError.Severity;
 @ManagementObject(properties=ManagementProperties.EXPLICIT)
 public class ModelMetaData extends AdminObjectImpl implements Model {
 	
+	private static final int DEFAULT_ERROR_HISTORY = 10;
 	private static final String SUPPORTS_MULTI_SOURCE_BINDINGS_KEY = "supports-multi-source-bindings"; //$NON-NLS-1$
 	private static final long serialVersionUID = 3714234763056162230L;
 		
@@ -229,10 +231,13 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	
     public synchronized ValidationError addError(String severity, String message) {
         if (this.errors == null) {
-            this.errors = new ArrayList<ValidationError>();
+            this.errors = new LinkedList<ValidationError>();
         }
         ValidationError ve = new ValidationError(severity, message);
         this.errors.add(ve);
+        if (this.errors.size() > DEFAULT_ERROR_HISTORY) {
+        	this.errors.remove(0);
+        }
         return ve;
     }
     

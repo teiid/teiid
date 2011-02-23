@@ -84,7 +84,6 @@ public class VDBStatusChecker {
 					String sourceName = getSourceName(resourceName, model, translator);
 					if (sourceName != null) {
 						ConnectorManager cm = cmr.getConnectorManager(sourceName);
-						model.clearErrors();
 						String status = cm.getStausMessage();
 						if (status != null && status.length() > 0) {
 							model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), status);
@@ -94,6 +93,8 @@ public class VDBStatusChecker {
 							Runnable r = model.removeAttachment(Runnable.class);
 							if (r != null) {
 								runnables.add(r);
+							} else {
+								model.clearErrors();
 							}
 						}
 					}
