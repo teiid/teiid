@@ -110,6 +110,24 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         //specific to 8.2 client or later
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new EscapeSyntaxModifier());
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new EscapeSyntaxModifier());
+        
+        registerFunctionModifier(SourceSystemFunctions.ARRAY_GET, new FunctionModifier() {
+			
+			@Override
+			public List<?> translate(Function function) {
+				return Arrays.asList(function.getParameters().get(0), '[', function.getParameters().get(1), ']');
+			}
+		});
+        registerFunctionModifier(SourceSystemFunctions.ARRAY_LENGTH, new FunctionModifier() {
+			
+			@Override
+			public List<?> translate(Function function) {
+				if (function.getParameters().size() == 1) {
+					function.getParameters().add(new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER));
+				}
+				return null;
+			}
+		});
                 
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
@@ -427,6 +445,8 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 //        supportedFunctions.add("USER"); //$NON-NLS-1$                   // no ()
 //        supportedFunctions.add("VERSION"); //$NON-NLS-1$
 //        
+        supportedFunctions.add(SourceSystemFunctions.ARRAY_GET);
+        supportedFunctions.add(SourceSystemFunctions.ARRAY_LENGTH);
         return supportedFunctions;
     }
     

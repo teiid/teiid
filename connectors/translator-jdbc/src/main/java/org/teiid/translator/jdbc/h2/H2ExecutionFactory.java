@@ -165,6 +165,8 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.CONVERT);
         supportedFunctions.add(SourceSystemFunctions.IFNULL);
         supportedFunctions.add(SourceSystemFunctions.COALESCE);
+        supportedFunctions.add(SourceSystemFunctions.ARRAY_GET);
+        supportedFunctions.add(SourceSystemFunctions.ARRAY_LENGTH);
         return supportedFunctions;
     }
 	
