@@ -41,38 +41,31 @@ import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 
-@Translator(name="ingres", description="A translator for Ingres Database")
+@Translator(name="ingres", description="A translator for Ingres Databases")
 public class IngresExecutionFactory extends JDBCExecutionFactory {
-
-	private static final String INGRES = "ingres"; //$NON-NLS-1$ 
+	
+	private static final String INGRES = "ingres"; //$NON-NLS-1$
+	protected ConvertModifier convert = new ConvertModifier();
 	
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
-		ConvertModifier convert = new ConvertModifier();
-		convert.addTypeMapping("bit", FunctionModifier.BYTE); //$NON-NLS-1$
-		convert.addTypeMapping("boolean", FunctionModifier.BOOLEAN); //$NON-NLS-1$
-		convert.addTypeMapping("tinyint", FunctionModifier.BYTE); //$NON-NLS-1$
+		convert.addTypeMapping("tinyint", FunctionModifier.BOOLEAN, FunctionModifier.BYTE); //$NON-NLS-1$
 		convert.addTypeMapping("smallint", FunctionModifier.SHORT); //$NON-NLS-1$
 		convert.addTypeMapping("integer", FunctionModifier.INTEGER); //$NON-NLS-1$
 		convert.addTypeMapping("bigint", FunctionModifier.LONG); //$NON-NLS-1$
 		convert.addTypeMapping("real", FunctionModifier.FLOAT); //$NON-NLS-1$
 		convert.addTypeMapping("float", FunctionModifier.DOUBLE); //$NON-NLS-1$
-		convert.addTypeMapping("decimal(15,0)", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
-		convert.addTypeMapping("decimal(38,0)", FunctionModifier.BIGINTEGER); //$NON-NLS-1$
+		convert.addTypeMapping("decimal(38,19)", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
+		convert.addTypeMapping("decimal(15,0)", FunctionModifier.BIGINTEGER); //$NON-NLS-1$
 		convert.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
 		convert.addTypeMapping("time with time zone", FunctionModifier.TIME); //$NON-NLS-1$
 		convert.addTypeMapping("timestamp with time zone", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
 		convert.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
-		convert.addTypeMapping("varchar($1)", FunctionModifier.STRING); //$NON-NLS-1$
-		convert.addTypeMapping("long varchar", FunctionModifier.STRING); //$NON-NLS-1$
+		convert.addTypeMapping("varchar(4000)", FunctionModifier.STRING); //$NON-NLS-1$
 		convert.addTypeMapping("blob", FunctionModifier.BLOB); //$NON-NLS-1$
 		convert.addTypeMapping("clob", FunctionModifier.CLOB); //$NON-NLS-1$
-		convert.addTypeMapping("byte($1)", FunctionModifier.OBJECT); //$NON-NLS-1$
-		convert.addTypeMapping("long byte", FunctionModifier.OBJECT); //$NON-NLS-1$
-		convert.addTypeMapping("varbyte($1)", FunctionModifier.OBJECT); //$NON-NLS-1$
-		convert.addTypeMapping("ansidate", FunctionModifier.DATE); //$NON-NLS-1$
-		convert.addTypeMapping("timestamp(9) with time zone", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+		convert.addNumericBooleanConversions();
 		registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);		
 	}
 	
@@ -272,4 +265,5 @@ public class IngresExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsInlineViews() {
         return true;
     } 
+    
 }

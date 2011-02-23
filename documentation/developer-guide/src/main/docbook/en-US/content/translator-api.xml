@@ -268,7 +268,7 @@ public void setFoo(String value)
         
 		<section>
 			<title>Bulk Execution</title>
-			<para>	Non batched <code>Insert, Update, Delete</code>
+			<para>Non batched <code>Insert, Update, Delete</code>
 				commands may have <code>Literal</code> values marked as multiValued if the
 				capabilities shows support for BulkUpdate. Commands with
 				multiValued <code>Literal</code>s represent multiple executions of the same

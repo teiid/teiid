@@ -237,6 +237,16 @@
                 </listitem>
                 <listitem>
                     <para>
+                    <emphasis>ingres</emphasis> - for use with Ingres 2006 or later.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>ingres93</emphasis> - for use with Ingres 9.3 or later.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
                     <emphasis>informix</emphasis> - for use with any version.
                     </para>
                 </listitem>
@@ -303,12 +313,7 @@
                     <para>
                     <emphasis>teradata</emphasis> - for use with Teradata V2R5.1 or later.
                     </para>
-                </listitem>
-                <listitem>
-                    <para>
-                    <emphasis>ingres</emphasis> - for use with Ingres Database 9.2 or later.
-                    </para>
-                </listitem>                
+                </listitem> 
             </itemizedlist>
             
             <table>

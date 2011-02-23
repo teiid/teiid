@@ -27,19 +27,21 @@ package org.teiid.translator.jdbc.teiid;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
-import org.teiid.translator.ExecutionFactory.NullOrder;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
-
 
 /** 
  * @since 4.3
  */
-@Translator(name="teiid", description="A translator for Teiid Virtual Database")
+@Translator(name="teiid", description="A translator for Teiid 7.0 or later")
 public class TeiidExecutionFactory extends JDBCExecutionFactory {
 	
 	public static final String SEVEN_0 = "7.0"; //$NON-NLS-1$
 	public static final String SEVEN_1 = "7.1"; //$NON-NLS-1$
+	public static final String SEVEN_2 = "7.2"; //$NON-NLS-1$
+	public static final String SEVEN_3 = "7.3"; //$NON-NLS-1$
+	public static final String SEVEN_4 = "7.4"; //$NON-NLS-1$
 	
 	public TeiidExecutionFactory() {
 		setDatabaseVersion(SEVEN_0);
@@ -139,6 +141,17 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("FROM_UNIXTIME"); //$NON-NLS-1$
         supportedFunctions.add("NULLIF"); //$NON-NLS-1$
         supportedFunctions.add("COALESCE"); //$NON-NLS-1$
+        
+        if (getDatabaseVersion().compareTo(SEVEN_3) >= 0) {
+        	supportedFunctions.add(SourceSystemFunctions.UNESCAPE);
+        	
+            if (getDatabaseVersion().compareTo(SEVEN_4) >= 0) {
+            	supportedFunctions.add(SourceSystemFunctions.UUID);
+            	supportedFunctions.add(SourceSystemFunctions.ARRAY_GET);
+            	supportedFunctions.add(SourceSystemFunctions.ARRAY_LENGTH);
+            }
+        }
+        
         return supportedFunctions;
     }
     
@@ -177,5 +190,15 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     @Override
     public NullOrder getDefaultNullOrder() {
     	return NullOrder.UNKNOWN;
+    }
+    
+    @Override
+    public boolean supportsBulkUpdate() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsCommonTableExpressions() {
+    	return getDatabaseVersion().compareTo(SEVEN_2) >= 0;
     }
 }

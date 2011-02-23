@@ -787,11 +787,16 @@ public class ExecutionFactory<F, C> {
     /**
      * Indicates if LOBs are usable after the execution is closed.
      * @return true if LOBs can be used after close
+     * @since 7.2
      */
     public boolean areLobsUsableAfterClose() {
     	return false;
     }
     
+    /**
+     * @return true if the WITH clause is supported
+     * @since 7.2
+     */
     public boolean supportsCommonTableExpressions() {
     	return false;
     }
