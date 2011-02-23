@@ -293,7 +293,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		while (textLine < skip) {
 			boolean isHeader = textLine == header;
 			if (isHeader) {
-				String line = readLine(lineWidth, false);
+				String line = readLine(DataTypeManager.MAX_STRING_LENGTH * 16, false);
 				if (line == null) { //just return an empty batch
 					reset();
 					return;
@@ -309,6 +309,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 
 	private void processHeader(List<String> line) throws TeiidProcessingException {
 		nameIndexes = new HashMap<String, Integer>();
+		this.lineWidth = DataTypeManager.MAX_STRING_LENGTH * line.size();
 		for (String string : line) {
 			if (string == null) {
 				continue;
