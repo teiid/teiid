@@ -536,4 +536,13 @@ public class TestPostgreSQLTranslator {
                 TRANSLATOR);
     }
     
+    @Test public void testArrayFunctions() throws Exception {
+        String input = "SELECT array_get(objectvalue, 3), array_length(objectvalue) FROM BQT1.SMALLA"; //$NON-NLS-1$
+        String output = "SELECT SmallA.ObjectValue[3], array_length(SmallA.ObjectValue, 1) FROM SmallA";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }
+    
 }
