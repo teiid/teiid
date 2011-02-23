@@ -301,28 +301,41 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 	    	}
 	    	
 	    	if (!loaded) {
-	    		String msg = RuntimePlugin.Util.getString("model_metadata_loading", vdb.getName()+"-"+vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())); //$NON-NLS-1$ //$NON-NLS-2$
-	    		final ValidationError addedError = model.addError(ModelMetaData.ValidationError.Severity.ERROR.toString(), msg); 
-	    		LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
 	    		threadPool.run(new Runnable() {
 					@Override
 					public void run() {
-						loadMetadata(vdb, model, cache, cacheFile, vdbStore, cmr, addedError);
+						Boolean loadStatus = loadMetadata(vdb, model, cache, cacheFile, vdbStore, cmr);
+						//if (loadStatus == null) {
+							//TODO: a source is up, but we failed.  should we retry or poll?
+						//} 
+						if (loadStatus == null || !loadStatus) {
+							//defer the load to the status checker if/when a source is available/redeployed
+							model.addAttchment(Runnable.class, this);
+						}	    				
 					}
 	    		});
 	    	}
 		}
 	}	
     
-    private void loadMetadata(VDBMetaData vdb, ModelMetaData model, boolean cache, File cacheFile, MetadataStoreGroup vdbStore, ConnectorManagerRepository cmr, ValidationError addedError) {
-    	Exception exception = null;
-    	
-    	boolean loaded = false;
+    /**
+     * @return true if loaded, null if not loaded - but a cm is available, else false
+     */
+    private Boolean loadMetadata(VDBMetaData vdb, ModelMetaData model, boolean cache, File cacheFile, MetadataStoreGroup vdbStore, ConnectorManagerRepository cmr) {
+		String msg = RuntimePlugin.Util.getString("model_metadata_loading", vdb.getName()+"-"+vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())); //$NON-NLS-1$ //$NON-NLS-2$
+		final ValidationError addedError = model.addError(ModelMetaData.ValidationError.Severity.ERROR.toString(), msg); 
+		LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
+
+    	String exceptionMessage = null;
+    	Boolean loaded = false;
     	for (String sourceName: model.getSourceNames()) {
     		ConnectorManager cm = cmr.getConnectorManager(sourceName);
-    		if (cm == null) {
-    			continue;
-    		}
+    		String status = cm.getStausMessage();
+			if (status != null && status.length() > 0) {
+				exceptionMessage = status;
+				continue;
+			}
+			loaded = null;
     		try {
     			MetadataStore store = cm.getMetadata(model.getName(), this.vdbRepository.getBuiltinDatatypes(), model.getProperties());
     			if (cache) {
@@ -333,34 +346,34 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
     			loaded = true;
     			break;
 			} catch (TranslatorException e) {
-				if (exception == null) {
-					exception = e;
+				//TODO: we aren't effectively differentiating the type of load error - connectivity vs. metadata
+				if (exceptionMessage == null) {
+					exceptionMessage = e.getMessage();
 				}
 			} catch (IOException e) {
-				if (exception == null) {
-					exception = e;
+				if (exceptionMessage == null) {
+					exceptionMessage = e.getMessage();
 				}				
 			}
     	}
     	
     	synchronized (vdb) {
-	    	if (!loaded) {
+	    	if (loaded == null || !loaded) {
 	    		vdb.setStatus(VDB.Status.INACTIVE);
-	    		String msg = RuntimePlugin.Util.getString("failed_to_retrive_metadata", vdb.getName()+"-"+vdb.getVersion(), model.getName()); //$NON-NLS-1$ //$NON-NLS-2$
-		    	model.addError(ModelMetaData.ValidationError.Severity.ERROR.toString(), msg); 
-		    	if (exception != null) {
-		    		model.addError(ModelMetaData.ValidationError.Severity.ERROR.toString(), exception.getMessage());     		
+	    		String failed_msg = RuntimePlugin.Util.getString(loaded==null?"failed_to_retrive_metadata":"nosources_to_retrive_metadata", vdb.getName()+"-"+vdb.getVersion(), model.getName()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		    	model.addError(ModelMetaData.ValidationError.Severity.ERROR.toString(), failed_msg); 
+		    	if (exceptionMessage != null) {
+		    		model.addError(ModelMetaData.ValidationError.Severity.ERROR.toString(), exceptionMessage);     		
 		    	}
-		    	LogManager.logWarning(LogConstants.CTX_RUNTIME, msg);
-	    	}
-	    	else {
-	    		if (vdb.isValid()) {
-	    			this.vdbRepository.updateVDB(vdb.getName(), vdb.getVersion());
-					vdb.setStatus(VDB.Status.ACTIVE);
-					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_activated",vdb.getName(), vdb.getVersion())); //$NON-NLS-1$    			
-	    		}
+		    	LogManager.logWarning(LogConstants.CTX_RUNTIME, failed_msg);
+	    	} else if (vdb.isValid()) {
+    			this.vdbRepository.updateVDB(vdb.getName(), vdb.getVersion());
+				vdb.setStatus(VDB.Status.ACTIVE);
+				LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("vdb_activated",vdb.getName(), vdb.getVersion())); //$NON-NLS-1$    			
 	    	}
     	}
+    	
+    	return loaded;
     }
     
 	private File buildCachedModelFileName(VFSDeploymentUnit unit, VDBMetaData vdb, String modelName) {

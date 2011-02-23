@@ -62,14 +62,14 @@ public interface Model extends AdminObject {
     Type getModelType();
 
     /** 
-     * Determine whether this model can support more than one connector binding.
+     * Determine whether this model can support more than one source.
      * 
-     * @return <code>true</code> if this model supports multi-source bindings
+     * @return <code>true</code> if this model supports multiple sources
      */
     boolean isSupportsMultiSourceBindings();
     
     /**
-     * Associated Source Names for the Models (Connector Bindings)
+     * Associated Source Names for the Models
      * @return String
      */
     List<String> getSourceNames();
