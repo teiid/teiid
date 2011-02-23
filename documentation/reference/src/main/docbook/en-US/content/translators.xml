@@ -304,6 +304,11 @@
                     <emphasis>teradata</emphasis> - for use with Teradata V2R5.1 or later.
                     </para>
                 </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>ingres</emphasis> - for use with Ingres Database 9.2 or later.
+                    </para>
+                </listitem>                
             </itemizedlist>
             
             <table>
