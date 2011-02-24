@@ -210,6 +210,12 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				this.lobManager = new LobManager();
 			}
 		}
+		
+		@Override
+		public void setPrefersMemory(boolean prefers) {
+			this.softCache = prefers;
+			//TODO: could recreate the reference
+		}
 
 		private void addToCache(boolean update) {
 			synchronized (activeBatches) {

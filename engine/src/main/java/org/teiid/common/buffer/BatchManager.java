@@ -32,6 +32,8 @@ public interface BatchManager {
 		
 		void remove();
 		
+		void setPrefersMemory(boolean prefers);
+		
 	}
 	
 	ManagedBatch createManagedBatch(TupleBatch batch, boolean softCache) throws TeiidComponentException;

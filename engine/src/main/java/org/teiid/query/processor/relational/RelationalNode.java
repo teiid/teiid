@@ -34,6 +34,7 @@ import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
+import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
@@ -595,6 +596,21 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 			this.processingState = new ProcessingState();
 		}
 		return processingState;
+	}
+	
+	public boolean hasFinalBuffer() {
+		return false;
+	}
+	
+	/**
+     * return the final tuple buffer or null if not available
+     * @return
+	 * @throws TeiidProcessingException 
+	 * @throws TeiidComponentException 
+	 * @throws BlockedException 
+     */
+	public TupleBuffer getFinalBuffer() throws BlockedException, TeiidComponentException, TeiidProcessingException {
+		return null;
 	}
 	
 }

@@ -39,7 +39,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 
 public class TestTupleBuffer {
 
-	private final class FakeBatchManager implements BatchManager {
+	public static final class FakeBatchManager implements BatchManager {
 		@Override
 		public void remove() {
 			
@@ -59,6 +59,11 @@ public class TestTupleBuffer {
 				public TupleBatch getBatch(boolean cache, String[] types)
 						throws TeiidComponentException {
 					return batch;
+				}
+
+				@Override
+				public void setPrefersMemory(boolean prefers) {
+					
 				}
 			};
 		}

@@ -29,6 +29,7 @@ import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
+import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.language.SQLConstants;
@@ -284,6 +285,17 @@ public class RelationalPlan extends ProcessorPlan {
 			}
 		}
 		return false;
+    }
+    
+    
+    @Override
+    public TupleBuffer getFinalBuffer() throws BlockedException, TeiidComponentException, TeiidProcessingException {
+    	return root.getFinalBuffer();
+    }
+    
+    @Override
+    public boolean hasFinalBuffer() {
+    	return root.hasFinalBuffer();
     }
 	
 }

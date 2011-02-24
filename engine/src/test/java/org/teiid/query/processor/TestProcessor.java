@@ -233,6 +233,7 @@ public class TestProcessor {
         if (context.getGlobalTableStore() == null) {
         	context.setGlobalTableStore(new TempTableStore("SYSTEM"));
         }
+        context.setBufferManager(bufferMgr);
         if (!(dataManager instanceof TempTableDataManager)) {
     	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
     	    cache.setBufferManager(bufferMgr);

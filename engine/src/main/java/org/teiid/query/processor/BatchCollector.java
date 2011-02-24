@@ -26,11 +26,15 @@ import java.util.List;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.util.Assertion;
+import org.teiid.query.util.CommandContext;
 
 
 public class BatchCollector {
@@ -51,6 +55,17 @@ public class BatchCollector {
 	     * @return List of SingleElementSymbol
 	     */
 	    List getOutputElements();
+	    
+	    /**
+	     * return the final tuple buffer or null if not available
+	     * @return
+	     * @throws TeiidProcessingException 
+	     * @throws TeiidComponentException 
+	     * @throws BlockedException 
+	     */
+	    TupleBuffer getFinalBuffer() throws BlockedException, TeiidComponentException, TeiidProcessingException;
+	    
+	    boolean hasFinalBuffer();
 	}
 	
 	public static class BatchProducerTupleSource implements TupleSource {
@@ -103,17 +118,33 @@ public class BatchCollector {
 
     private boolean done = false;
     private TupleBuffer buffer;
+    private boolean forwardOnly;
     
-    public BatchCollector(BatchProducer sourceNode, TupleBuffer buffer) {
+    public BatchCollector(BatchProducer sourceNode, BufferManager bm, CommandContext context, boolean fowardOnly) throws TeiidComponentException {
         this.sourceNode = sourceNode;
-        this.buffer = buffer;
+        if (!this.sourceNode.hasFinalBuffer()) {
+            this.buffer = bm.createTupleBuffer(sourceNode.getOutputElements(), context.getConnectionID(), TupleSourceType.PROCESSOR);
+            this.buffer.setForwardOnly(fowardOnly);
+        }
     }
 
     public TupleBuffer collectTuples() throws TeiidComponentException, TeiidProcessingException {
         TupleBatch batch = null;
     	while(!done) {
-            batch = sourceNode.nextBatch();
-
+    		if (this.sourceNode.hasFinalBuffer()) {
+	    		if (this.buffer == null) {
+	    			TupleBuffer finalBuffer = this.sourceNode.getFinalBuffer();
+	    			Assertion.isNotNull(finalBuffer);
+					this.buffer = finalBuffer;
+	    		}
+	    		if (this.buffer.isFinal()) {
+					this.buffer.setForwardOnly(forwardOnly);
+					done = true;
+					break;
+				}
+    		}
+    		batch = sourceNode.nextBatch();
+            
             flushBatch(batch);
 
             // Check for termination condition
@@ -142,10 +173,15 @@ public class BatchCollector {
     
     @SuppressWarnings("unused")
 	protected void flushBatchDirect(TupleBatch batch, boolean add) throws TeiidComponentException, TeiidProcessingException {
-    	buffer.addTupleBatch(batch, add);
+    	if (!this.sourceNode.hasFinalBuffer()) {
+    		buffer.addTupleBatch(batch, add);
+    	}
     }
     
     public int getRowCount() {
+    	if (buffer == null) {
+    		return 0;
+    	}
         return buffer.getRowCount();
     }
     

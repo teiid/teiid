@@ -31,7 +31,6 @@ import org.teiid.common.buffer.TupleSource;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.util.Assertion;
 import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.BatchIterator;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
@@ -163,7 +162,7 @@ class SourceState {
         		throw new AssertionError("cannot buffer the source"); //$NON-NLS-1$
         	}
         	if (collector == null) {
-                collector = new BatchCollector(source, createSourceTupleBuffer());
+                collector = new BatchCollector(source, source.getBufferManager(), source.getContext(), false);
             }
             this.buffer = collector.collectTuples();
         }

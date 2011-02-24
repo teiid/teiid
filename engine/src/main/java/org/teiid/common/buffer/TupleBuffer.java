@@ -28,6 +28,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.teiid.common.buffer.BatchManager.ManagedBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Streamable;
@@ -355,6 +356,9 @@ public class TupleBuffer {
 	
 	public void setPrefersMemory(boolean prefersMemory) {
 		this.prefersMemory = prefersMemory;
+		for (ManagedBatch batch : this.batches.values()) {
+			batch.setPrefersMemory(prefersMemory);
+		}
 	}
 	
 	public boolean isPrefersMemory() {

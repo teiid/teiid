@@ -47,6 +47,7 @@ public class SortNode extends RelationalNode {
     private int phase = SORT;
     private TupleBuffer output;
     private TupleSource outputTs;
+    private boolean usingOutput;
 
     private static final int SORT = 2;
     private static final int OUTPUT = 3;
@@ -61,6 +62,7 @@ public class SortNode extends RelationalNode {
         phase = SORT;
         output = null;
         outputTs = null;
+        usingOutput = false;
     }
 
 	public void setSortElements(List<OrderByItem> items) {
@@ -103,7 +105,7 @@ public class SortNode extends RelationalNode {
     private TupleBatch outputPhase() throws BlockedException, TeiidComponentException, TeiidProcessingException {
 		if (!this.output.isFinal()) {
 			this.phase = SORT;
-		} else {
+		} else if (!usingOutput) {
 			this.output.setForwardOnly(true);
 		}
 		List<?> tuple = null;
@@ -127,10 +129,10 @@ public class SortNode extends RelationalNode {
 
     public void closeDirect() {
         if(this.output != null) {
-            this.output.remove();
-            this.output = null;
-            this.outputTs = null;
+    		this.output.remove();
+        	this.output = null;
         }
+        this.outputTs = null;
     }
 
 	protected void getNodeString(StringBuffer str) {
@@ -164,6 +166,25 @@ public class SortNode extends RelationalNode {
         props.addProperty(PROP_SORT_MODE, this.mode.toString());
         
         return props;
+    }
+    
+    @Override
+    public TupleBuffer getFinalBuffer() throws BlockedException, TeiidComponentException, TeiidProcessingException {
+    	if (this.output == null) {
+    		sortPhase();
+    	}
+    	usingOutput = true;
+    	TupleBuffer result = this.output;
+    	if (this.output.isFinal()) {
+        	this.output = null;
+    		close();
+    	}
+    	return result;
+    }
+    
+    @Override
+    public boolean hasFinalBuffer() {
+    	return this.getElements().size() == this.getChildren()[0].getElements().size();
     }
     
 }

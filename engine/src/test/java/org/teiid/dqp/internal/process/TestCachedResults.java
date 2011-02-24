@@ -21,8 +21,7 @@
  */
 package org.teiid.dqp.internal.process;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -32,15 +31,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.teiid.cache.Cache;
 import org.teiid.cache.DefaultCache;
-import org.teiid.common.buffer.BatchManager;
 import org.teiid.common.buffer.BufferManager;
-import org.teiid.common.buffer.FileStore;
-import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
-import org.teiid.core.TeiidComponentException;
+import org.teiid.common.buffer.TestTupleBuffer.FakeBatchManager;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.service.FakeBufferService;
 import org.teiid.query.sql.lang.Query;
@@ -49,35 +44,6 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 
 public class TestCachedResults {
 
-	private final class FakeBatchManager implements BatchManager {
-		@Override
-		public void remove() {
-			
-		}
-
-		@Override
-		public ManagedBatch createManagedBatch(final TupleBatch batch, boolean softCache)
-				throws TeiidComponentException {
-			return new ManagedBatch() {
-				
-				@Override
-				public void remove() {
-					
-				}
-				
-				@Override
-				public TupleBatch getBatch(boolean cache, String[] types)
-						throws TeiidComponentException {
-					return batch;
-				}
-			};
-		}
-
-		@Override
-		public FileStore createStorage(String prefix) {
-			return Mockito.mock(FileStore.class);
-		}
-	}
 	
 	@Test
 	public void testCaching() throws Exception {

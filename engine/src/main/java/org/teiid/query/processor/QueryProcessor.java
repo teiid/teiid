@@ -29,7 +29,6 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.BufferManager.BufferReserveMode;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
@@ -123,18 +122,7 @@ public class QueryProcessor implements BatchProducer {
 	    TupleBatch result = null;
 		
 	    try {
-	    	// initialize if necessary
-			if(!initialized) {
-				reserved = this.bufferMgr.reserveBuffers(this.bufferMgr.getSchemaSize(this.getOutputElements()), BufferReserveMode.FORCE);
-				this.processPlan.initialize(context, this.dataMgr, bufferMgr);
-				initialized = true;
-			} 
-			if (!open) {
-				// Open the top node for reading
-				processPlan.open();
-				open = true;
-			}
-	
+	    	init(); 
 			long currentTime = System.currentTimeMillis();
 			Assertion.assertTrue(!processorClosed);
 			
@@ -180,6 +168,21 @@ public class QueryProcessor implements BatchProducer {
 		return result;
 	}
 
+	private void init() throws TeiidComponentException, TeiidProcessingException {
+		// initialize if necessary
+		if(!initialized) {
+			reserved = this.bufferMgr.reserveBuffers(this.bufferMgr.getSchemaSize(this.getOutputElements()), BufferReserveMode.FORCE);
+			this.processPlan.initialize(context, this.dataMgr, bufferMgr);
+			initialized = true;
+		}
+		
+		if (!open) {
+			// Open the top node for reading
+			processPlan.open();
+			open = true;
+		}
+	}
+
 	                   
     /**
      * Close processing and clean everything up.  Should only be called by the same thread that called process.
@@ -217,15 +220,46 @@ public class QueryProcessor implements BatchProducer {
         this.requestCanceled = true;
     }
     
-    public TupleBuffer createTupleBuffer() throws TeiidComponentException {
-    	return this.bufferMgr.createTupleBuffer(this.processPlan.getOutputElements(), context.getConnectionID(), TupleSourceType.PROCESSOR);
-    }
-    
 	public BatchCollector createBatchCollector() throws TeiidComponentException {
-		return new BatchCollector(this, createTupleBuffer());
+		return new BatchCollector(this, this.bufferMgr, this.context, false);
 	}
 	
 	public void setNonBlocking(boolean nonBlocking) {
 		this.context.setNonBlocking(nonBlocking);
+	}
+
+	@Override
+	public TupleBuffer getFinalBuffer() throws BlockedException, TeiidComponentException, TeiidProcessingException {
+		while (true) {
+	    	long wait = DEFAULT_WAIT;
+	    	try {
+	    		init();
+	    		return this.processPlan.getFinalBuffer();
+	    	} catch (BlockedException e) {
+	    		if (!this.context.isNonBlocking()) {
+	    			throw e;
+	    		}
+	    	} catch (TeiidComponentException e) {
+	    		closeProcessing();
+	    		throw e;
+	    	} catch (TeiidProcessingException e) {
+	    		closeProcessing();
+	    		throw e;
+	    	}
+    		try {
+                Thread.sleep(wait);
+            } catch (InterruptedException err) {
+                throw new TeiidComponentException(err);
+            }
+	    }
+	}
+
+	@Override
+	public boolean hasFinalBuffer() {
+		return this.processPlan.hasFinalBuffer();
+	}
+	
+	public BufferManager getBufferManager() {
+		return bufferMgr;
 	}
 }

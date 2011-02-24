@@ -222,6 +222,25 @@ public class TestDQPCore {
         }
     }
     
+    @Test public void testBufferReuse() throws Exception {
+    	//the sql should return 100 rows
+        String sql = "SELECT A.IntKey FROM BQT1.SmallA as A, BQT1.SmallA as B ORDER BY A.IntKey"; //$NON-NLS-1$
+        String userName = "1"; //$NON-NLS-1$
+        String sessionid = "1"; //$NON-NLS-1$
+        
+        RequestMessage reqMsg = exampleRequestMessage(sql);
+        reqMsg.setCursorType(ResultSet.TYPE_FORWARD_ONLY);
+        DQPWorkContext.getWorkContext().getSession().setSessionId(sessionid);
+        DQPWorkContext.getWorkContext().getSession().setUserName(userName);
+        ((BufferManagerImpl)core.getBufferManager()).setProcessorBatchSize(2);
+        Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
+        ResultsMessage rm = message.get(5000, TimeUnit.MILLISECONDS);
+        assertNull(rm.getException());
+        assertEquals(2, rm.getResults().length);
+        RequestWorkItem item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
+        assertEquals(100, item.resultsBuffer.getRowCount());
+    }
+    
 	public void helpTestVisibilityFails(String sql) throws Exception {
         RequestMessage reqMsg = exampleRequestMessage(sql); 
         reqMsg.setTxnAutoWrapMode(RequestMessage.TXN_WRAP_OFF);

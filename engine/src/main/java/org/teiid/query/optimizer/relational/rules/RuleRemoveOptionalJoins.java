@@ -22,7 +22,6 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -40,14 +39,10 @@ import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.util.CommandContext;
 
@@ -75,12 +70,12 @@ public class RuleRemoveOptionalJoins implements
     			continue;
     		}
     		Set<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups((Collection<? extends LanguageObject>)planNode.getProperty(NodeConstants.Info.OUTPUT_COLS));
-    		List<PlanNode> removed = removeJoin(groups, planNode, planNode.getFirstChild(), metadata);
+    		List<PlanNode> removed = removeJoin(groups, planNode, planNode.getFirstChild());
     		if (removed != null) {
     			removedNodes.addAll(removed);
     			continue;
     		}
-    		removed = removeJoin(groups, planNode, planNode.getLastChild(), metadata);
+    		removed = removeJoin(groups, planNode, planNode.getLastChild());
     		if (removed != null) {
     			removedNodes.addAll(removed);
     		}
@@ -94,7 +89,7 @@ public class RuleRemoveOptionalJoins implements
      * @throws TeiidComponentException 
      * @throws QueryMetadataException 
      */ 
-    private List<PlanNode> removeJoin(Set<GroupSymbol> groups, PlanNode joinNode, PlanNode optionalNode, QueryMetadataInterface metadata) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
+    private List<PlanNode> removeJoin(Set<GroupSymbol> groups, PlanNode joinNode, PlanNode optionalNode) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
         if (!Collections.disjoint(optionalNode.getGroups(), groups)) {
         	return null;
         }
@@ -109,16 +104,6 @@ public class RuleRemoveOptionalJoins implements
 		PlanNode parentNode = joinNode.getParent();
 		joinNode.removeChild(optionalNode);
 		NodeEditor.removeChildNode(parentNode, joinNode);
-
-		// correct the parent nodes that may be using optional elements
-		/*for (GroupSymbol optionalGroup : optionalNode.getGroups()) {
-			List<ElementSymbol> optionalElements = ResolverUtil.resolveElementsInGroup(optionalGroup, metadata);
-			List<Constant> replacements = new ArrayList<Constant>(optionalElements.size());
-			for (ElementSymbol elementSymbol : optionalElements) {
-				replacements.add(new Constant(null, elementSymbol.getType()));
-			}
-			FrameUtil.convertFrame(parentNode, optionalGroup, null, SymbolMap.createSymbolMap(optionalElements, replacements).asMap(), metadata);
-		}*/
 
 		return NodeEditor.findAllNodes(optionalNode, NodeConstants.Types.JOIN);
     }

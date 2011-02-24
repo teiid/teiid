@@ -31,9 +31,10 @@ import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
+import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
 import org.teiid.query.util.CommandContext;
@@ -158,6 +159,21 @@ public abstract class ProcessorPlan implements Cloneable, BatchProducer {
         PlanNode props = new PlanNode(this.getClass().getSimpleName());
         props.addProperty(PROP_OUTPUT_COLS, AnalysisRecord.getOutputColumnProperties(getOutputElements()));
         return props;
+    }
+ 
+    /**
+     * return the final tuple buffer or null if not available
+     * @return
+     * @throws TeiidProcessingException 
+     * @throws TeiidComponentException 
+     * @throws BlockedException 
+     */
+    public TupleBuffer getFinalBuffer() throws BlockedException, TeiidComponentException, TeiidProcessingException {
+    	return null;
+    }
+    
+    public boolean hasFinalBuffer() {
+    	return false;
     }
     
 }

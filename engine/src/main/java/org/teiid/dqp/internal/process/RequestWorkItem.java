@@ -41,6 +41,7 @@ import org.teiid.client.xa.XATransactionException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
@@ -253,35 +254,32 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		if (!doneProducingBatches) {
 			this.processor.getContext().setTimeSliceEnd(System.currentTimeMillis() + this.processorTimeslice);
 			sendResultsIfNeeded(null);
-			collector.collectTuples();
-		}
-		if (doneProducingBatches) {
-			if (this.transactionState == TransactionState.ACTIVE) {
-				/*
-				 * TEIID-14 if we are done producing batches, then proactively close transactional 
-				 * executions even ones that were intentionally kept alive. this may 
-				 * break the read of a lob from a transactional source under a transaction 
-				 * if the source does not support holding the clob open after commit
-				 */
-	        	for (DataTierTupleSource connectorRequest : this.connectorInfo.values()) {
-	        		if (connectorRequest.isTransactional()) {
-	        			connectorRequest.fullyCloseSource();
-	        		}
-	            }
-				this.transactionState = TransactionState.DONE;
-				if (transactionContext.getTransactionType() == TransactionContext.Scope.REQUEST) {
-					this.transactionService.commit(transactionContext);
-				} else {
-					suspend();
-				}
-			}
-			sendResultsIfNeeded(null);
-		} else {
-			moreWork(false); // If the timeslice expired, then the processor can probably produce more batches.
-			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-				LogManager.logDetail(LogConstants.CTX_DQP, "############# PW EXITING on " + requestID + " - reenqueueing for more processing ###########"); //$NON-NLS-1$ //$NON-NLS-2$
+			this.resultsBuffer = collector.collectTuples();
+			if (!doneProducingBatches) {
+				doneProducingBatches();
+				addToCache();
 			}
 		}
+		if (this.transactionState == TransactionState.ACTIVE) {
+			/*
+			 * TEIID-14 if we are done producing batches, then proactively close transactional 
+			 * executions even ones that were intentionally kept alive. this may 
+			 * break the read of a lob from a transactional source under a transaction 
+			 * if the source does not support holding the clob open after commit
+			 */
+        	for (DataTierTupleSource connectorRequest : this.connectorInfo.values()) {
+        		if (connectorRequest.isTransactional()) {
+        			connectorRequest.fullyCloseSource();
+        		}
+            }
+			this.transactionState = TransactionState.DONE;
+			if (transactionContext.getTransactionType() == TransactionContext.Scope.REQUEST) {
+				this.transactionService.commit(transactionContext);
+			} else {
+				suspend();
+			}
+		}
+		sendResultsIfNeeded(null);
 	}
 
 	/**
@@ -381,13 +379,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         	this.cid = cacheId;
         }
 		processor = request.processor;
-		resultsBuffer = processor.createTupleBuffer();
-		if (this.cid != null && originalCommand.getCacheHint() != null) {
-			LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Using cache hint", originalCommand.getCacheHint()); //$NON-NLS-1$
-			resultsBuffer.setPrefersMemory(originalCommand.getCacheHint().getPrefersMemory());
-		}
-		collector = new BatchCollector(processor, resultsBuffer) {
+		collector = new BatchCollector(processor, processor.getBufferManager(), this.request.context, isForwardOnly()) {
 			protected void flushBatchDirect(TupleBatch batch, boolean add) throws TeiidComponentException,TeiidProcessingException {
+				resultsBuffer = getTupleBuffer();
 				boolean added = false;
 				if (cid != null) {
 					super.flushBatchDirect(batch, add);
@@ -396,28 +390,12 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				if (batch.getTerminationFlag()) {
 					doneProducingBatches();
 				}
-				if (doneProducingBatches && cid != null) {
-			    	Determinism determinismLevel = processor.getContext().getDeterminismLevel();
-	            	CachedResults cr = new CachedResults();
-	            	cr.setCommand(originalCommand);
-	                cr.setAnalysisRecord(analysisRecord);
-	                cr.setResults(resultsBuffer);
-	                
-	                if (originalCommand.getCacheHint() != null && originalCommand.getCacheHint().getDeterminism() != null) {
-						determinismLevel = originalCommand.getCacheHint().getDeterminism();
-						LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Cache hint modified the query determinism from ",processor.getContext().getDeterminismLevel(), " to ", determinismLevel }); //$NON-NLS-1$ //$NON-NLS-2$
-					}		                
-	                
-	                if (determinismLevel.compareTo(Determinism.SESSION_DETERMINISTIC) <= 0) {
-	    				LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.getString("RequestWorkItem.cache_nondeterministic", originalCommand)); //$NON-NLS-1$
-	    			}
-	                dqpCore.getRsCache().put(cid, determinismLevel, cr, originalCommand.getCacheHint() != null?originalCommand.getCacheHint().getTtl():null);
-			    }
+				addToCache();
 				add = sendResultsIfNeeded(batch);
 				if (!added) {
 					super.flushBatchDirect(batch, add);
 					//restrict the buffer size for forward only results
-					if (add 
+					if (add && !processor.hasFinalBuffer()
 							&& !batch.getTerminationFlag() 
 							&& this.getTupleBuffer().getManagedRowCount() >= 20 * this.getTupleBuffer().getBatchSize()) {
 						//requestMore will trigger more processing
@@ -426,8 +404,11 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				}
 			}
 		};
-		resultsBuffer = collector.getTupleBuffer();
-		resultsBuffer.setForwardOnly(isForwardOnly());
+		this.resultsBuffer = collector.getTupleBuffer();
+		if (this.resultsBuffer == null) {
+			//This is just a dummy result it will get replaced by collector source
+	    	resultsBuffer = this.processor.getBufferManager().createTupleBuffer(this.originalCommand.getProjectedSymbols(), this.request.context.getConnectionID(), TupleSourceType.FINAL);
+		}
 		analysisRecord = request.analysisRecord;
 		analysisRecord.setQueryPlan(processor.getProcessorPlan().getDescriptionProperties());
 		transactionContext = request.transactionContext;
@@ -441,6 +422,30 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		}
 	    this.returnsUpdateCount = request.returnsUpdateCount;
 		request = null;
+	}
+	
+	private void addToCache() {
+		if (!doneProducingBatches || cid == null) {
+			return;
+		}
+    	Determinism determinismLevel = processor.getContext().getDeterminismLevel();
+    	CachedResults cr = new CachedResults();
+    	cr.setCommand(originalCommand);
+        cr.setAnalysisRecord(analysisRecord);
+        cr.setResults(resultsBuffer);
+        if (originalCommand.getCacheHint() != null) {
+        	LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Using cache hint", originalCommand.getCacheHint()); //$NON-NLS-1$
+			resultsBuffer.setPrefersMemory(originalCommand.getCacheHint().getPrefersMemory());
+        	if (originalCommand.getCacheHint().getDeterminism() != null) {
+				determinismLevel = originalCommand.getCacheHint().getDeterminism();
+				LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Cache hint modified the query determinism from ",processor.getContext().getDeterminismLevel(), " to ", determinismLevel }); //$NON-NLS-1$ //$NON-NLS-2$
+        	}		                
+        }            		
+        
+        if (determinismLevel.compareTo(Determinism.SESSION_DETERMINISTIC) <= 0) {
+			LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.getString("RequestWorkItem.cache_nondeterministic", originalCommand)); //$NON-NLS-1$
+		}
+        dqpCore.getRsCache().put(cid, determinismLevel, cr, originalCommand.getCacheHint() != null?originalCommand.getCacheHint().getTtl():null);
 	}
 
 	/**
