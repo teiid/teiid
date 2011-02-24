@@ -245,6 +245,24 @@ public class TupleBuffer {
 		}
 	}
 	
+	/**
+	 * Returns the total number of rows contained in managed batches
+	 * @return
+	 */
+	public int getManagedRowCount() {
+		if (!this.batches.isEmpty()) {
+			int start = this.batches.firstKey();
+			return rowCount - start + 1;
+		} else if (this.batchBuffer != null) {
+			return this.batchBuffer.size();
+		} 
+		return 0;
+	}
+	
+	/**
+	 * Returns the last row number
+	 * @return
+	 */
 	public int getRowCount() {
 		return rowCount;
 	}

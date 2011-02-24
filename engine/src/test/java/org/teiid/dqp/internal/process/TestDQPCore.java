@@ -38,8 +38,10 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
+import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
+import org.teiid.dqp.internal.process.AbstractWorkItem.ThreadState;
 import org.teiid.dqp.service.AutoGenDataService;
 import org.teiid.dqp.service.FakeBufferService;
 import org.teiid.query.unittest.FakeMetadataFactory;
@@ -181,6 +183,44 @@ public class TestDQPCore {
 	@Test public void testCancel() throws Exception {
 		assertFalse(this.core.cancelRequest(1L));
 	}
+	
+    @Test public void testBufferLimit() throws Exception {
+    	//the sql should return 100 rows
+        String sql = "SELECT A.IntKey FROM BQT1.SmallA as A, BQT1.SmallA as B"; //$NON-NLS-1$
+        String userName = "1"; //$NON-NLS-1$
+        String sessionid = "1"; //$NON-NLS-1$
+        
+        RequestMessage reqMsg = exampleRequestMessage(sql);
+        reqMsg.setCursorType(ResultSet.TYPE_FORWARD_ONLY);
+        DQPWorkContext.getWorkContext().getSession().setSessionId(sessionid);
+        DQPWorkContext.getWorkContext().getSession().setUserName(userName);
+        ((BufferManagerImpl)core.getBufferManager()).setProcessorBatchSize(2);
+        Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
+        ResultsMessage rm = message.get(5000, TimeUnit.MILLISECONDS);
+        assertNull(rm.getException());
+        assertEquals(2, rm.getResults().length);
+        RequestWorkItem item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
+
+        message = core.processCursorRequest(reqMsg.getExecutionId(), 3, 2);
+        rm = message.get(5000, TimeUnit.MILLISECONDS);
+        assertNull(rm.getException());
+        assertEquals(2, rm.getResults().length);
+        //ensure that we are idle
+        for (int i = 0; i < 10 && item.getThreadState() != ThreadState.IDLE; i++) {
+        	Thread.sleep(100);
+        }
+        assertEquals(ThreadState.IDLE, item.getThreadState());
+        assertEquals(46, item.resultsBuffer.getRowCount());
+        //pull the rest of the results
+        for (int j = 0; j < 48; j++) {
+            item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
+
+	        message = core.processCursorRequest(reqMsg.getExecutionId(), j * 2 + 5, 2);
+	        rm = message.get(5000, TimeUnit.MILLISECONDS);
+	        assertNull(rm.getException());
+	        assertEquals(2, rm.getResults().length);
+        }
+    }
     
 	public void helpTestVisibilityFails(String sql) throws Exception {
         RequestMessage reqMsg = exampleRequestMessage(sql); 

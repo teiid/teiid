@@ -416,6 +416,13 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				add = sendResultsIfNeeded(batch);
 				if (!added) {
 					super.flushBatchDirect(batch, add);
+					//restrict the buffer size for forward only results
+					if (add 
+							&& !batch.getTerminationFlag() 
+							&& this.getTupleBuffer().getManagedRowCount() >= 20 * this.getTupleBuffer().getBatchSize()) {
+						//requestMore will trigger more processing
+						throw BlockedException.INSTANCE;
+					}
 				}
 			}
 		};
