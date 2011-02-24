@@ -29,6 +29,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -291,7 +292,12 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 		
 		updateConnectionProperties(connectionProperties);
 		
-		TeiidURL url = new TeiidURL(connectionProperties.getProperty(TeiidURL.CONNECTION.SERVER_URL));
+		TeiidURL url;
+		try {
+			url = new TeiidURL(connectionProperties.getProperty(TeiidURL.CONNECTION.SERVER_URL));
+		} catch (MalformedURLException e1) {
+			throw new ConnectionException(e1);
+		}
 		
 		String discoveryStrategyName = connectionProperties.getProperty(TeiidURL.CONNECTION.DISCOVERY_STRATEGY, URL);
 

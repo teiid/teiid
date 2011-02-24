@@ -27,6 +27,7 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
+import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
@@ -35,6 +36,8 @@ import java.util.logging.Logger;
 
 import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.jdbc.JDBCURL.ConnectionType;
+import org.teiid.net.TeiidURL;
 
 
 /**
@@ -79,14 +82,21 @@ public class TeiidDriver implements Driver {
     }
 
     public Connection connect(String url, Properties info) throws SQLException {
-
-    	if (EmbeddedProfile.acceptsURL(url)) {
+    	ConnectionType conn = JDBCURL.acceptsUrl(url);
+    	if (conn == null) {
+    		return null;
+    	}
+        if(info == null) {
+        	// create a properties obj if it is null
+            info = new Properties();
+        } else {
+        	//don't modify the original
+            info = PropertiesUtils.clone(info);
+        }
+    	if (conn == ConnectionType.Embedded) {
     		return EmbeddedProfile.connect(url, info);
     	}
-    	else if (SocketProfile.acceptsURL(url)) {
-    		return SocketProfile.connect(url, info);
-    	}
-    	return null;
+		return SocketProfile.connect(url, info);
     }
     
     /**
@@ -99,21 +109,13 @@ public class TeiidDriver implements Driver {
      * @throws SQLException, should never occur
      */
     public boolean acceptsURL(String url) throws SQLException {
-    	return EmbeddedProfile.acceptsURL(url) || SocketProfile.acceptsURL(url);
+    	return JDBCURL.acceptsUrl(url) != null;
     }
 
-    /**
-     * Get's the driver's major version number. Initially this should be 1.
-     * @return major version number of the driver.
-     */
     public int getMajorVersion() {
         return ApplicationInfo.getInstance().getMajorReleaseVersion();
     }
 
-    /**
-     * Get's the driver's minor version number. Initially this should be 0.
-     * @return major version number of the driver.
-     */
     public int getMinorVersion() {
         return ApplicationInfo.getInstance().getMinorReleaseVersion();
     }
@@ -132,11 +134,7 @@ public class TeiidDriver implements Driver {
         // construct list of driverPropertyInfo objects
         List<DriverPropertyInfo> driverProps = new LinkedList<DriverPropertyInfo>();
 
-        if (EmbeddedProfile.acceptsURL(url)) {
-        	EmbeddedProfile.parseURL(url, info);
-        } else if (SocketProfile.acceptsURL(url)) {
-        	SocketProfile.parseURL(url, info);
-        }
+        parseURL(url, info);
 
         for (String property: JDBCURL.KNOWN_PROPERTIES) {
         	DriverPropertyInfo dpi = new DriverPropertyInfo(property, info.getProperty(property));
@@ -152,6 +150,48 @@ public class TeiidDriver implements Driver {
         // copy the elements from the list to the array
         return driverProps.toArray(propInfo);
     }    
+    
+    /**
+     * This method parses the URL and adds properties to the the properties object.
+     * These include required and any optional properties specified in the URL.
+     * @param The URL needed to be parsed.
+     * @param The properties object which is to be updated with properties in the URL.
+     * @throws SQLException if the URL is not in the expected format.
+     */
+    protected static void parseURL(String url, Properties info) throws SQLException {
+        if(url == null) {
+            String msg = JDBCPlugin.Util.getString("MMDriver.urlFormat"); //$NON-NLS-1$
+            throw new TeiidSQLException(msg);
+        }
+        try {
+            JDBCURL jdbcURL = new JDBCURL(url);
+            info.setProperty(BaseDataSource.VDB_NAME, jdbcURL.getVDBName());
+            if (jdbcURL.getConnectionURL() != null) {
+            	info.setProperty(TeiidURL.CONNECTION.SERVER_URL, jdbcURL.getConnectionURL());
+            }
+            Properties optionalParams = jdbcURL.getProperties();
+            JDBCURL.normalizeProperties(info);
+            Enumeration keys = optionalParams.keys();
+            while (keys.hasMoreElements()) {
+                String propName = (String)keys.nextElement();
+                // Don't let the URL properties override the passed-in Properties object.
+                if (!info.containsKey(propName)) {
+                    info.setProperty(propName, optionalParams.getProperty(propName));
+                }
+            }
+            // add the property only if it is new because they could have
+            // already been specified either through url or otherwise.
+            if(!info.containsKey(BaseDataSource.VDB_VERSION) && jdbcURL.getVDBVersion() != null) {
+                info.setProperty(BaseDataSource.VDB_VERSION, jdbcURL.getVDBVersion());
+            }
+            if(!info.containsKey(BaseDataSource.APP_NAME)) {
+                info.setProperty(BaseDataSource.APP_NAME, BaseDataSource.DEFAULT_APP_NAME);
+            }
+
+        } catch(IllegalArgumentException iae) {
+            throw new TeiidSQLException(JDBCPlugin.Util.getString("MMDriver.urlFormat")); //$NON-NLS-1$
+        }  
+    }
     
     /**
      * This method returns true if the driver passes jdbc compliance tests.

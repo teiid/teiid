@@ -22,9 +22,7 @@
 
 package org.teiid.jdbc;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 
 import java.sql.DriverPropertyInfo;
 import java.util.Properties;
@@ -40,12 +38,12 @@ public class TestTeiidDriver {
     	assertTrue(drv.acceptsURL("jdbc:teiid:vdb@mm://localhost:12345")); //$NON-NLS-1$
     	assertTrue(drv.acceptsURL("jdbc:teiid:vdb@mm://localhost:12345;user=foo;password=bar")); //$NON-NLS-1$
     	assertTrue(drv.acceptsURL("jdbc:teiid:vdb")); //$NON-NLS-1$
-    	assertFalse(drv.acceptsURL("jdbc:teiid:vdb@/foo/blah/deploy.properties")); //$NON-NLS-1$
+    	assertTrue(drv.acceptsURL("jdbc:teiid:vdb@/foo/blah/deploy.properties")); //$NON-NLS-1$
     	
     	assertTrue(drv.acceptsURL("jdbc:teiid:vdb@mm://localhost:12345")); //$NON-NLS-1$
     	assertTrue(drv.acceptsURL("jdbc:teiid:vdb@mm://localhost:12345;user=foo;password=bar")); //$NON-NLS-1$
     	assertTrue(drv.acceptsURL("jdbc:teiid:vdb")); //$NON-NLS-1$
-    	assertFalse(drv.acceptsURL("jdbc:teiid:vdb@/foo/blah/deploy.properties")); //$NON-NLS-1$
+    	assertTrue(drv.acceptsURL("jdbc:teiid:vdb@/foo/blah/deploy.properties")); //$NON-NLS-1$
     	assertTrue(drv.acceptsURL("jdbc:teiid:8294601c-9fe9-4244-9499-4a012c5e1476_vdb")); //$NON-NLS-1$
     	assertTrue(drv.acceptsURL("jdbc:teiid:8294601c-9fe9-4244-9499-4a012c5e1476_vdb@mm://localhost:12345")); //$NON-NLS-1$
     	assertTrue(drv.acceptsURL("jdbc:teiid:test_vdb@mm://local-host:12345")); //$NON-NLS-1$
@@ -77,12 +75,12 @@ public class TestTeiidDriver {
         assertTrue(drv.acceptsURL("jdbc:teiid:vdb@mm://123.123.123.123:53535,127.0.0.1:1234")); //$NON-NLS-1$
 
         //DQP type
-        assertTrue(!drv.acceptsURL("jdbc:teiid:jvdb@c:/dqp.properties;version=1")); //$NON-NLS-1$
-        assertTrue(!drv.acceptsURL("jdbc:teiid:jvdb@/foo/dqp.properties;version=1")); //$NON-NLS-1$
-        assertTrue(!drv.acceptsURL("jdbc:teiid:jvdb@../foo/dqp.properties;version=1")); //$NON-NLS-1$
+        assertTrue(drv.acceptsURL("jdbc:teiid:jvdb@c:/dqp.properties;version=1")); //$NON-NLS-1$
+        assertTrue(drv.acceptsURL("jdbc:teiid:jvdb@/foo/dqp.properties;version=1")); //$NON-NLS-1$
+        assertTrue(drv.acceptsURL("jdbc:teiid:jvdb@../foo/dqp.properties;version=1")); //$NON-NLS-1$
         
-        assertTrue(!drv.acceptsURL("jdbc:teiid:jvdb@mm://localhost:port")); //$NON-NLS-1$
-        assertTrue(!drv.acceptsURL("jdbc:teiid:vdb@localhost:port;version=x")); //$NON-NLS-1$
+        assertTrue(drv.acceptsURL("jdbc:teiid:jvdb@mm://localhost:port")); //$NON-NLS-1$
+        assertTrue(drv.acceptsURL("jdbc:teiid:vdb@localhost:port;version=x")); //$NON-NLS-1$
         assertTrue(!drv.acceptsURL("jdbc:teiid:@localhost:1234")); //$NON-NLS-1$
         assertTrue(!drv.acceptsURL("jdbc:teiid:@localhost:1234,localhost2:12342,localhost3:12343")); //$NON-NLS-1$       
         assertTrue(!drv.acceptsURL("jdbc:teiid:@localhost:1234;logFile=D:\\metamatrix\\work\\DQP\\log\\jdbcLogFile.log")); //$NON-NLS-1$
@@ -104,7 +102,7 @@ public class TestTeiidDriver {
 
     @Test public void testParseURL() throws Exception{
         Properties p = new Properties();
-        SocketProfile.parseURL("jdbc:teiid:BQT@mm://slwxp157:1234", p); //$NON-NLS-1$
+        TeiidDriver.parseURL("jdbc:teiid:BQT@mm://slwxp157:1234", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
         assertTrue(p.getProperty(TeiidURL.CONNECTION.SERVER_URL).equals("mm://slwxp157:1234")); //$NON-NLS-1$
         assertEquals(3, p.size());        
@@ -112,7 +110,7 @@ public class TestTeiidDriver {
 
     @Test public void testParseURL2() throws Exception {
         Properties p = new Properties();       
-        SocketProfile.parseURL("jdbc:teiid:BQT@mms://slwxp157:1234;version=3", p); //$NON-NLS-1$
+        TeiidDriver.parseURL("jdbc:teiid:BQT@mms://slwxp157:1234;version=3", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("3")); //$NON-NLS-1$
         assertTrue(p.getProperty(TeiidURL.CONNECTION.SERVER_URL).equals("mms://slwxp157:1234")); //$NON-NLS-1$
@@ -123,7 +121,7 @@ public class TestTeiidDriver {
     
     @Test public void testParseURL3() throws Exception{
         Properties p = new Properties();
-        SocketProfile.parseURL("jdbc:teiid:BQT@mm://slwxp157:1234,slntmm01:43401,sluxmm09:43302;version=4;autoCommitTxn=ON;partialResultsMode=YES;ApplicationName=Client", p); //$NON-NLS-1$
+        TeiidDriver.parseURL("jdbc:teiid:BQT@mm://slwxp157:1234,slntmm01:43401,sluxmm09:43302;version=4;autoCommitTxn=ON;partialResultsMode=YES;ApplicationName=Client", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("4"));         //$NON-NLS-1$
         assertTrue(p.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP).equals("ON")); //$NON-NLS-1$

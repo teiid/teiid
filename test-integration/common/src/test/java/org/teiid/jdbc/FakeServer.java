@@ -151,7 +151,7 @@ public class FakeServer extends ClientServiceRegistryImpl {
 	
 	public ConnectionImpl createConnection(String embeddedURL) throws Exception {
 		final Properties p = new Properties();
-		EmbeddedProfile.parseURL(embeddedURL, p);
+		TeiidDriver.parseURL(embeddedURL, p);
 
 		LocalServerConnection conn = new LocalServerConnection(p) {
 			@Override

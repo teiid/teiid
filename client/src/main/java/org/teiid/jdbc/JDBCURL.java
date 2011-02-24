@@ -32,13 +32,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.teiid.net.TeiidURL;
-
-
-
-
-
 
 /** 
  * @since 4.3
@@ -46,7 +43,9 @@ import org.teiid.net.TeiidURL;
 public class JDBCURL {
     private static final String UTF_8 = "UTF-8"; //$NON-NLS-1$
     public static final String JDBC_PROTOCOL = "jdbc:teiid:"; //$NON-NLS-1$
-    private static final String OLD_JDBC_PROTOCOL = "jdbc:metamatrix:"; //$NON-NLS-1$
+    
+    static final String URL_PATTERN = JDBC_PROTOCOL + "([\\w-\\.]+)(?:@([^;]*))?(;.*)?"; //$NON-NLS-1$
+    static Pattern urlPattern = Pattern.compile(URL_PATTERN);
 
     public static final Set<String> EXECUTION_PROPERTIES = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(
             ExecutionProperties.PROP_TXN_AUTO_WRAP,
@@ -80,6 +79,19 @@ public class JDBCURL {
     private String vdbName;
     private String connectionURL;
     private Properties properties = new Properties();
+    
+    public enum ConnectionType {
+    	Embedded,
+    	Socket
+    }
+    
+    public static ConnectionType acceptsUrl(String url) {
+    	Matcher m = urlPattern.matcher(url);
+    	if (m.matches()) {
+    		return m.group(2) != null?ConnectionType.Socket:ConnectionType.Embedded;
+    	}
+    	return null;
+    }
     
     private String urlString;
     
@@ -122,59 +134,19 @@ public class JDBCURL {
         if (jdbcURL.length() == 0) {
             throw new IllegalArgumentException();
         }
-        int delimiter = jdbcURL.indexOf('@');
-        if (delimiter == -1) {
-            // this is for default connection protocol in embedded driver.
-            // then go by first semi colon
-            int fsc = jdbcURL.indexOf(';');
-            if (fsc == -1) {
-                parseJDBCProtocol(jdbcURL);
-            }
-            else {
-                parseJDBCProtocol(jdbcURL.substring(0, fsc));
-                parseConnectionProperties(jdbcURL.substring(fsc+1), this.properties);
-            }
-        }
-        else {
-            String[] urlParts = jdbcURL.split("@", 2); //$NON-NLS-1$
-            if (urlParts.length != 2) {
-                throw new IllegalArgumentException();
-            }
-            parseJDBCProtocol(urlParts[0]);
-            parseConnectionPart(urlParts[1]);
-        }
-    }
-
-    private void parseJDBCProtocol(String protocol) {
-        if (protocol.startsWith(JDBC_PROTOCOL)) {
-	        if (protocol.length() == JDBC_PROTOCOL.length()) {
-	            throw new IllegalArgumentException();
-	        }
-	        vdbName = protocol.substring(JDBC_PROTOCOL.length());
-        }
-        else if (protocol.startsWith(OLD_JDBC_PROTOCOL)) {
-	        if (protocol.length() == OLD_JDBC_PROTOCOL.length()) {
-	            throw new IllegalArgumentException();
-	        }
-	        vdbName = protocol.substring(OLD_JDBC_PROTOCOL.length());
-        }
-        else {
+        
+        Matcher m = urlPattern.matcher(jdbcURL);
+        if (!m.matches()) {
         	throw new IllegalArgumentException();
         }
-        
-    }
-    
-    private void parseConnectionPart(String connectionInfo) {
-        String[] connectionParts = connectionInfo.split(";"); //$NON-NLS-1$
-        if (connectionParts.length == 0 || connectionParts[0].trim().length() == 0) {
-            throw new IllegalArgumentException();
+        vdbName = m.group(1);
+        connectionURL = m.group(2);
+        if (connectionURL != null) {
+        	connectionURL = connectionURL.trim();
         }
-        connectionURL = connectionParts[0].trim();
-        if (connectionParts.length > 1) {
-            // The rest should be connection params
-            for (int i = 1; i < connectionParts.length; i++) {
-                parseConnectionProperty(connectionParts[i], this.properties);
-            }
+        String props = m.group(3);
+        if (props != null) {
+        	parseConnectionProperties(props, this.properties);
         }
     }
     

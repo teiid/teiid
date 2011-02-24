@@ -22,6 +22,7 @@
 
 package org.teiid.jdbc;
 
+import java.net.MalformedURLException;
 import java.sql.Connection;
 import java.util.Properties;
 
@@ -59,7 +60,7 @@ public class TeiidDataSource extends BaseDataSource {
 	/**
      * The port number where a server is listening for requests.
      * This property name is one of the standard property names defined by the JDBC 2.0 specification,
-     * and is <i>optional</i>.
+     * and is <i>required</i>.
      */
     private int portNumber;
 
@@ -119,68 +120,66 @@ public class TeiidDataSource extends BaseDataSource {
         return props;
     }
     
-    private Properties buildServerProperties(final String userName, final String password) {               
-        Properties props = buildProperties(userName, password);
-        
-        props.setProperty(TeiidURL.CONNECTION.SERVER_URL,this.buildServerURL());
-
-        return props;
-    }    
-
-    protected String buildServerURL() {
-    	if ( this.alternateServers == null ) {
+    protected String buildServerURL() throws TeiidSQLException {
+    	if ( this.alternateServers == null || this.alternateServers.length() == 0) {
     		// Format:  "mm://server:port"
     		return new TeiidURL(this.serverName, this.portNumber, this.secure).getAppServerURL();
     	} 
 
     	// Format: "mm://server1:port,server2:port,..."
-		String serverURL = ""; //$NON-NLS-1$
+		String serverURL = this.secure ? TeiidURL.SECURE_PROTOCOL : TeiidURL.DEFAULT_PROTOCOL;
 		
-		serverURL = "" + ( this.secure ? TeiidURL.SECURE_PROTOCOL : TeiidURL.DEFAULT_PROTOCOL ); //$NON-NLS-1$
-		
-		if (this.serverName.indexOf(':') != -1) {
-			serverURL += "["; //$NON-NLS-1$
-		}
-			
-		serverURL += "" + this.serverName; //$NON-NLS-1$
-		
-		if (this.serverName.indexOf(':') != -1) {
-			serverURL += "]"; //$NON-NLS-1$
+		if (this.serverName.indexOf(':') != -1 && !this.serverName.startsWith("[")) { //$NON-NLS-1$
+			serverURL += "[" + this.serverName + "]"; //$NON-NLS-1$ //$NON-NLS-2$
+		} else {
+			serverURL += this.serverName; 
 		}
 		
-		if ( this.portNumber != 0 ) 
-			serverURL += TeiidURL.COLON_DELIMITER  + this.portNumber;
+		serverURL += TeiidURL.COLON_DELIMITER + this.portNumber;
 		
-		if ( this.alternateServers.length() > 0 ) {
-        	String[] as = this.alternateServers.split( TeiidURL.COMMA_DELIMITER);
-        	
-        	for ( int i = 0; i < as.length; i++ ) {
-        		if (as[i].startsWith("[") && as[i].endsWith("]:")) { //$NON-NLS-1$ //$NON-NLS-2$
-        			serverURL += (TeiidURL.COMMA_DELIMITER + as[i]);
-        		}
-        		else if (as[i].startsWith("[") && as[i].endsWith("]")) { //$NON-NLS-1$ //$NON-NLS-2$
-        			serverURL += (TeiidURL.COMMA_DELIMITER +as[i] + TeiidURL.COLON_DELIMITER + this.portNumber);
-        		}
-        		else {
-	        		String[] server = as[i].split(TeiidURL.COLON_DELIMITER );
-	
-	        		if ( server.length > 0 ) {
-	        			serverURL += TeiidURL.COMMA_DELIMITER + server[0];
-	        			if ( server.length > 1 ) {
-	        				serverURL += TeiidURL.COLON_DELIMITER + server[1];
-	        			} else {
-	        				serverURL += TeiidURL.COLON_DELIMITER + this.portNumber;
-	        			}
-	        		}
-        		}
-        	}
+		//add in the port number if not specified 
+		
+    	String[] as = this.alternateServers.split( TeiidURL.COMMA_DELIMITER);
+    	
+    	for ( int i = 0; i < as.length; i++ ) {
+    		String server = as[i].trim();
+    		//ipv6 without port
+    		if (server.startsWith("[") && server.endsWith("]")) { //$NON-NLS-1$ //$NON-NLS-2$
+    			String msg = reasonWhyInvalidServerName(server.substring(1, server.length() - 1));
+    			if (msg != null) {
+    				throw createConnectionError(JDBCPlugin.Util.getString("MMDataSource.alternateServer_is_invalid", msg)); //$NON-NLS-1$
+    			}
+    			serverURL += (TeiidURL.COMMA_DELIMITER +as[i] + TeiidURL.COLON_DELIMITER + this.portNumber);
+    		} else {
+        		String[] serverParts = server.split(TeiidURL.COLON_DELIMITER, 2);
+        		String msg = reasonWhyInvalidServerName(serverParts[0]);
+    			if (msg != null) {
+    				throw createConnectionError(JDBCPlugin.Util.getString("MMDataSource.alternateServer_is_invalid", msg)); //$NON-NLS-1$
+    			}
+    			serverURL += (TeiidURL.COMMA_DELIMITER + serverParts[0] + TeiidURL.COLON_DELIMITER);
+    			if ( serverParts.length > 1 ) {
+    				try {
+						TeiidURL.validatePort(serverParts[1]);
+					} catch (MalformedURLException e) {
+						throw createConnectionError(JDBCPlugin.Util.getString("MMDataSource.alternateServer_is_invalid", e.getMessage())); //$NON-NLS-1$
+					}
+        			
+    				serverURL += serverParts[1];
+    			} else {
+    				serverURL += this.portNumber;
+    			}
+    		}
+    	}
+		
+		try {
+			return new TeiidURL(serverURL).getAppServerURL();
+		} catch (MalformedURLException e) {
+			throw TeiidSQLException.create(e);
 		}
-		
-		return new TeiidURL(serverURL).getAppServerURL();
     }
 
-    protected String buildURL() {
-        return new JDBCURL(this.getDatabaseName(), buildServerURL(), buildProperties(getUser(), getPassword())).getJDBCURL();
+    protected JDBCURL buildURL() throws TeiidSQLException {
+        return new JDBCURL(this.getDatabaseName(), buildServerURL(), buildProperties(getUser(), getPassword()));
     }
 
     protected void validateProperties( final String userName, final String password) throws java.sql.SQLException {
@@ -194,11 +193,6 @@ public class TeiidDataSource extends BaseDataSource {
         reason = reasonWhyInvalidServerName(this.serverName);
         if ( reason != null ) {
             throw createConnectionError(reason);
-        }
-
-        reason = reasonWhyInvalidAlternateServers(this.alternateServers);
-        if ( reason != null) {
-        	throw createConnectionError(reason);
         }
     }
     
@@ -242,9 +236,8 @@ public class TeiidDataSource extends BaseDataSource {
     	
     	// if not proceed with socket connection.
         validateProperties(userName,password);
-        final Properties props = buildServerProperties(userName, password);	        
-        return driver.connect(buildURL(), props);
-    	
+        
+        return driver.connect(buildURL().getJDBCURL(), null);
     }
     
 	private Properties buildEmbeddedProperties(final String userName, final String password) {
@@ -257,7 +250,11 @@ public class TeiidDataSource extends BaseDataSource {
      * @see java.lang.Object#toString()
      */
     public String toString() {
-        return buildURL(); 
+        try {
+			return buildURL().getJDBCURL();
+		} catch (TeiidSQLException e) {
+			return e.getMessage();
+		} 
     }
 
     // --------------------------------------------------------------------------------------------
@@ -371,13 +368,7 @@ public class TeiidDataSource extends BaseDataSource {
      * @see #setPortNumber(int)
      */
     public static String reasonWhyInvalidPortNumber( final int portNumber) {
-        if ( portNumber == 0 ) {
-            return null;        // default is always fine
-        }
-        if ( portNumber < 1 ) {
-            return JDBCPlugin.Util.getString("MMDataSource.Port_number_must_be_positive"); //$NON-NLS-1$
-        }
-        return null;
+    	return TeiidURL.validatePort(portNumber);
     }
 
     /**
@@ -428,61 +419,6 @@ public class TeiidDataSource extends BaseDataSource {
             }
         }
         return null;
-    }
- 
-    /**
-     * The reason why "alternateServers" is invalid.
-     * @param value of "alternateServers" property
-     * @return reason
-     */
-    public static String reasonWhyInvalidAlternateServers(final String alternateServers) {
-    	if ( alternateServers == null || alternateServers.trim().length() < 1 )
-    		return null;
-    	
-    	String[] as = alternateServers.split( TeiidURL.COMMA_DELIMITER);
-    	String sReason = null;
-    	String reason = ""; //$NON-NLS-1$
-    	int reasonCount = 0;
-    	final String newline = System.getProperty("line.separator"); //$NON-NLS-1$
-    	
-    	for ( int i = 0; i < as.length; i++ ) {
-    		String[] server = as[i].split( TeiidURL.COLON_DELIMITER );
-
-    		if ( server.length < 1 || server.length > 2 ) {
-    			// ie "server:31000:an invalid value"
-    			// ie "server,server:31000"
-				return JDBCPlugin.Util.getString("MMDataSource.Alternate_Servers_format"); //$NON-NLS-1$
-    		}
-
-    		// check the server name portion
-    		sReason = reasonWhyInvalidServerName(server[0] );
-    		if ( sReason != null ) {
-   				reason += (reason.length() > 0 ? newline : "" ) + sReason; //$NON-NLS-1$
-   				reasonCount++;
-   				sReason = null;
-    		}
-    		
-    		if ( server.length > 1 ) {
-				// check the port portion
-				int port = 0;
-				// parse the int from the string
-				try { port = Integer.parseInt(server[1]); }
-				catch ( NumberFormatException e ) { 
-	    			// ie "server:invalid_port"
-	   				reason += (reason.length() > 0 ? newline : "" )  //$NON-NLS-1$
-						+ JDBCPlugin.Util.getString("MMDataSource.serverPort_must_be_a_number"); //$NON-NLS-1$
-					reasonCount++;
-				}
-				sReason = reasonWhyInvalidPortNumber(port);
-				if ( sReason != null ) {
-	   				reason += (reason.length() > 0 ? newline : "" ) + sReason; //$NON-NLS-1$
-	   				reasonCount++;
-	   				sReason = null;
-				}
-    		}
-    	}
-    	if ( reasonCount < 1 ) return null;
-    	return JDBCPlugin.Util.getString("MMDataSource.alternateServer_is_invalid", String.valueOf(reasonCount), reason); //$NON-NLS-1$
     }
  
     /** 

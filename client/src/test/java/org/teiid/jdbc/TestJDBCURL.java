@@ -25,12 +25,9 @@ package org.teiid.jdbc;
 import java.net.URLEncoder;
 import java.util.Properties;
 
-import org.teiid.jdbc.BaseDataSource;
-import org.teiid.jdbc.ExecutionProperties;
-import org.teiid.jdbc.JDBCURL;
-import org.teiid.net.TeiidURL;
-
 import junit.framework.TestCase;
+
+import org.teiid.net.TeiidURL;
 
 
 
@@ -42,13 +39,13 @@ public class TestJDBCURL extends TestCase {
     // Need to allow embedded spaces and ='s within optional properties
     public final void testCredentials() throws Exception {
         String credentials = URLEncoder.encode("defaultToLogon,(system=BQT1 SQL Server 2000 Simple Cap,user=xyz,password=xyz)", "UTF-8"); //$NON-NLS-1$ //$NON-NLS-2$
-        JDBCURL url = new JDBCURL("jdbc:metamatrix:QT_sqls2kds@mm://slwxp136:43100;credentials="+credentials); //$NON-NLS-1$
+        JDBCURL url = new JDBCURL("jdbc:teiid:QT_sqls2kds@mm://slwxp136:43100;credentials="+credentials); //$NON-NLS-1$
         Properties p = url.getProperties();
         assertEquals("defaultToLogon,(system=BQT1 SQL Server 2000 Simple Cap,user=xyz,password=xyz)", p.getProperty("credentials"));  //$NON-NLS-1$//$NON-NLS-2$        
     }
        
     public void testJDBCURLWithProperties() {
-        String URL = "jdbc:metamatrix:bqt@mm://localhost:12345;version=1;user=xyz;password=***;logLevel=1;configFile=testdata/bqt/dqp_stmt_e2e.xmi;disableLocalTxn=true;autoFailover=false"; //$NON-NLS-1$
+        String URL = "jdbc:teiid:bqt@mm://localhost:12345;version=1;user=xyz;password=***;logLevel=1;configFile=testdata/bqt/dqp_stmt_e2e.xmi;disableLocalTxn=true;autoFailover=false"; //$NON-NLS-1$
         
         Properties expectedProperties = new Properties();
         expectedProperties.setProperty("version", "1"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -65,7 +62,7 @@ public class TestJDBCURL extends TestCase {
     }
     
     public void testJDBCURLWithoutProperties() {
-        String URL = "jdbc:metamatrix:bqt@mm://localhost:12345"; //$NON-NLS-1$
+        String URL = "jdbc:teiid:bqt@mm://localhost:12345"; //$NON-NLS-1$
         
         JDBCURL url = new JDBCURL(URL); 
         assertEquals("bqt", url.getVDBName()); //$NON-NLS-1$
@@ -75,7 +72,7 @@ public class TestJDBCURL extends TestCase {
     
     public void testCaseConversion() {
         // Different case ------------------------------------HERE -v  ----------------and HERE  -v
-        String URL = "jdbc:metamatrix:bqt@mm://localhost:12345;VERSION=1;user=xyz;password=***;configFile=testdata/bqt/dqp_stmt_e2e.xmi"; //$NON-NLS-1$
+        String URL = "jdbc:teiid:bqt@mm://localhost:12345;VERSION=1;user=xyz;password=***;configFile=testdata/bqt/dqp_stmt_e2e.xmi"; //$NON-NLS-1$
         
         Properties expectedProperties = new Properties();
         expectedProperties.setProperty("version", "1"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -89,7 +86,7 @@ public class TestJDBCURL extends TestCase {
     }
     
     public void testWithExtraSemicolons() {
-        String URL = "jdbc:metamatrix:bqt@mm://localhost:12345;version=1;user=xyz;password=***;logLevel=1;;;configFile=testdata/bqt/dqp_stmt_e2e.xmi;;"; //$NON-NLS-1$
+        String URL = "jdbc:teiid:bqt@mm://localhost:12345;version=1;user=xyz;password=***;logLevel=1;;;configFile=testdata/bqt/dqp_stmt_e2e.xmi;;"; //$NON-NLS-1$
         
         Properties expectedProperties = new Properties();
         expectedProperties.setProperty("version", "1"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -104,7 +101,7 @@ public class TestJDBCURL extends TestCase {
     }
     
     public void testWithWhitespace() {
-        String URL = "jdbc:metamatrix:bqt@mm://localhost:12345; version =1;user= xyz ;password=***; logLevel = 1 ; configFile=testdata/bqt/dqp_stmt_e2e.xmi ;"; //$NON-NLS-1$
+        String URL = "jdbc:teiid:bqt@mm://localhost:12345; version =1;user= xyz ;password=***; logLevel = 1 ; configFile=testdata/bqt/dqp_stmt_e2e.xmi ;"; //$NON-NLS-1$
         
         Properties expectedProperties = new Properties();
         expectedProperties.setProperty("version", "1"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -119,7 +116,7 @@ public class TestJDBCURL extends TestCase {
     }
     
     public void testNoPropertyValue() {
-        String URL = "jdbc:metamatrix:bqt@mm://localhost:12345;version=1;user=xyz;password=***;logLevel=;configFile="; //$NON-NLS-1$
+        String URL = "jdbc:teiid:bqt@mm://localhost:12345;version=1;user=xyz;password=***;logLevel=;configFile="; //$NON-NLS-1$
         
         Properties expectedProperties = new Properties();
         expectedProperties.setProperty("version", "1"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -144,7 +141,7 @@ public class TestJDBCURL extends TestCase {
     }
     
     public void testNoVDBName() {
-        String URL = "jdbc:metamatrix:@mm://localhost:12345;version=1;user=xyz;password=***;logLevel=1"; //$NON-NLS-1$
+        String URL = "jdbc:teiid:@mm://localhost:12345;version=1;user=xyz;password=***;logLevel=1"; //$NON-NLS-1$
         try {
             new JDBCURL(URL);
             fail("Illegal argument should have failed."); //$NON-NLS-1$
@@ -154,7 +151,7 @@ public class TestJDBCURL extends TestCase {
     }
     
     public void testNoAtSignInURL() {
-        String URL = "jdbc:metamatrix:bqt!mm://localhost:12345;version=1;user=xyz;password=***;logLevel=1"; //$NON-NLS-1$
+        String URL = "jdbc:teiid:bqt!mm://localhost:12345;version=1;user=xyz;password=***;logLevel=1"; //$NON-NLS-1$
         try {
             new JDBCURL(URL);
             // No @ sign is llowed as part of embedded driver now, 
@@ -166,7 +163,7 @@ public class TestJDBCURL extends TestCase {
     }
     
     public void testMoreThanOneAtSign() {
-        String URL = "jdbc:metamatrix:bqt@mm://localhost:12345;version=1;user=xy@;password=***;logLevel=1"; //$NON-NLS-1$
+        String URL = "jdbc:teiid:bqt@mm://localhost:12345;version=1;user=xy@;password=***;logLevel=1"; //$NON-NLS-1$
         try {
             // this allowed as customer properties can have @ in their properties
             new JDBCURL(URL);            
@@ -176,7 +173,7 @@ public class TestJDBCURL extends TestCase {
     }
     
     public void testNoEqualsInProperty() {
-        String URL = "jdbc:metamatrix:bqt@mm://localhost:12345;version=1;user=xyz;password***;logLevel=1"; //$NON-NLS-1$
+        String URL = "jdbc:teiid:bqt@mm://localhost:12345;version=1;user=xyz;password***;logLevel=1"; //$NON-NLS-1$
         try {
             new JDBCURL(URL);
             fail("Illegal argument should have failed."); //$NON-NLS-1$
@@ -186,21 +183,21 @@ public class TestJDBCURL extends TestCase {
     }
     
     public void testMoreThanOneEqualsInProperty() {
-        String URL = "jdbc:metamatrix:bqt@mm://localhost:12345;version=1;user=xyz;password==***;logLevel=1"; //$NON-NLS-1$
+        String URL = "jdbc:teiid:bqt@mm://localhost:12345;version=1;user=xyz;password==***;logLevel=1"; //$NON-NLS-1$
         try {
             new JDBCURL(URL);
             fail("Illegal argument should have failed."); //$NON-NLS-1$
         } catch (IllegalArgumentException e) {
             // expected
         }
-        URL = "jdbc:metamatrix:bqt@mm://localhost:12345;version=1;user=xyz;password=***=;logLevel=1"; //$NON-NLS-1$
+        URL = "jdbc:teiid:bqt@mm://localhost:12345;version=1;user=xyz;password=***=;logLevel=1"; //$NON-NLS-1$
         try {
             new JDBCURL(URL);
             fail("Illegal argument should have failed."); //$NON-NLS-1$
         } catch (IllegalArgumentException e) {
             // expected
         }
-        URL = "jdbc:metamatrix:bqt@mm://localhost:12345;version=1;user=xyz;=password=***;logLevel=1"; //$NON-NLS-1$
+        URL = "jdbc:teiid:bqt@mm://localhost:12345;version=1;user=xyz;=password=***;logLevel=1"; //$NON-NLS-1$
         try {
             new JDBCURL(URL);
             fail("Illegal argument should have failed."); //$NON-NLS-1$
@@ -210,7 +207,7 @@ public class TestJDBCURL extends TestCase {
     }
     
     public void testNoKeyInProperty() {
-        String URL = "jdbc:metamatrix:bqt@mm://localhost:12345;version=1;user=xyz;=***;logLevel=1"; //$NON-NLS-1$
+        String URL = "jdbc:teiid:bqt@mm://localhost:12345;version=1;user=xyz;=***;logLevel=1"; //$NON-NLS-1$
         try {
             new JDBCURL(URL);
             fail("Illegal argument should have failed."); //$NON-NLS-1$
@@ -277,19 +274,19 @@ public class TestJDBCURL extends TestCase {
     public final void testEncodedPropertyInURL() throws Exception {
         String password = "=@#^&*()+!%$^%@#_-)_~{}||\\`':;,./<>?password has = & %"; //$NON-NLS-1$
         String encPassword = URLEncoder.encode(password, "UTF-8"); //$NON-NLS-1$
-        JDBCURL url = new JDBCURL("jdbc:metamatrix:QT_sqls2kds@mm://slwxp136:43100;PASswoRd="+encPassword); //$NON-NLS-1$
+        JDBCURL url = new JDBCURL("jdbc:teiid:QT_sqls2kds@mm://slwxp136:43100;PASswoRd="+encPassword); //$NON-NLS-1$
         Properties p = url.getProperties();
         assertEquals(password, p.getProperty("password"));  //$NON-NLS-1$
     }   
     
     
     public void testGetServerURL_NoProperties() {        
-        String result = new JDBCURL("jdbc:metamatrix:designtimecatalog@mm://slwxp172:44401;user=ddifranco;password=mm").getConnectionURL(); //$NON-NLS-1$
+        String result = new JDBCURL("jdbc:teiid:designtimecatalog@mm://slwxp172:44401;user=ddifranco;password=mm").getConnectionURL(); //$NON-NLS-1$
         assertEquals("mm://slwxp172:44401", result);         //$NON-NLS-1$
     }
 
     public void testGetServerURL_Properties() {        
-        String result = new JDBCURL("jdbc:metamatrix:designtimecatalog@mm://slwxp172:44401;user=ddifranco;password=mm").getConnectionURL(); //$NON-NLS-1$
+        String result = new JDBCURL("jdbc:teiid:designtimecatalog@mm://slwxp172:44401;user=ddifranco;password=mm").getConnectionURL(); //$NON-NLS-1$
         assertEquals("mm://slwxp172:44401", result);         //$NON-NLS-1$
     }
     
@@ -301,7 +298,7 @@ public class TestJDBCURL extends TestCase {
      */
     public void testGetServerURL_PasswordProperties() throws Exception {        
         String result = null;
-        String srcURL = "jdbc:metamatrix:designtimecatalog@mm://slwxp172:44401;user=ddifranco;password="; //$NON-NLS-1$
+        String srcURL = "jdbc:teiid:designtimecatalog@mm://slwxp172:44401;user=ddifranco;password="; //$NON-NLS-1$
         String password = null;
         String tgtURL = "mm://slwxp172:44401"; //$NON-NLS-1$
         
@@ -318,7 +315,7 @@ public class TestJDBCURL extends TestCase {
     }
     
     public void testGetServerURL_2Servers() {       
-        String result = new JDBCURL("jdbc:metamatrix:designtimecatalog@mm://slwxp172:44401,slabc123:12345;user=ddifranco;password=mm").getConnectionURL(); //$NON-NLS-1$
+        String result = new JDBCURL("jdbc:teiid:designtimecatalog@mm://slwxp172:44401,slabc123:12345;user=ddifranco;password=mm").getConnectionURL(); //$NON-NLS-1$
         assertEquals("mm://slwxp172:44401,slabc123:12345", result);         //$NON-NLS-1$
     }
 

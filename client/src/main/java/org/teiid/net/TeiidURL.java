@@ -22,13 +22,13 @@
 
 package org.teiid.net;
 
-import java.net.UnknownHostException;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
+import org.teiid.core.util.StringUtil;
 import org.teiid.jdbc.JDBCPlugin;
 
 
@@ -92,12 +92,7 @@ public class TeiidURL {
     public static final String DEFAULT_PROTOCOL= TeiidURL.CONNECTION.NON_SECURE_PROTOCOL + "://"; //$NON-NLS-1$
     public static final String SECURE_PROTOCOL= TeiidURL.CONNECTION.SECURE_PROTOCOL + "://"; //$NON-NLS-1$
 
-    public static final String FORMAT_SERVER = "mm[s]://server1:port1[,server2:port2]"; //$NON-NLS-1$
-
-    public static final String INVALID_FORMAT_SERVER = JDBCPlugin.Util.getString("MMURL.INVALID_FORMAT", new Object[] {FORMAT_SERVER}); //$NON-NLS-1$
-
-
-    
+    public static final String INVALID_FORMAT_SERVER = JDBCPlugin.Util.getString("MMURL.INVALID_FORMAT"); //$NON-NLS-1$
     /*
      * appserver URL
      */
@@ -112,15 +107,21 @@ public class TeiidURL {
     /**
      * Create an MMURL from the server URL.  For use by the server-side.
      * @param serverURL   Expected format: mm[s]://server1:port1[,server2:port2]
+     * @throws MalformedURLException 
      * @since 4.2
      */
-    public TeiidURL(String serverURL) {
-        appServerURL = serverURL;
-        if (!hasValidURLProtocol(serverURL)) {
-            throw new IllegalArgumentException(INVALID_FORMAT_SERVER);
+    public TeiidURL(String serverURL) throws MalformedURLException {
+        if (serverURL == null) {
+            throw new MalformedURLException(INVALID_FORMAT_SERVER);
+        } 
+        if (StringUtil.startsWithIgnoreCase(serverURL, SECURE_PROTOCOL)) {
+        	usingSSL = true;
+        } else if (!StringUtil.startsWithIgnoreCase(serverURL, DEFAULT_PROTOCOL)) {
+        	throw new IllegalArgumentException(INVALID_FORMAT_SERVER);
         }
-        usingSSL = isSecureProtocol(appServerURL);
-		parseURL(serverURL, INVALID_FORMAT_SERVER);
+
+        appServerURL = serverURL;
+		parseServerURL(serverURL.substring(usingSSL?SECURE_PROTOCOL.length():DEFAULT_PROTOCOL.length()), INVALID_FORMAT_SERVER);
     }
     
     public TeiidURL(String host, int port, boolean secure) {
@@ -147,18 +148,6 @@ public class TeiidURL {
         return valid;
     }
 
-    /**
-     * @param appServerURL2
-     * @return
-     */
-    private boolean isSecureProtocol(String url) { 
-        return url.toLowerCase().startsWith(SECURE_PROTOCOL);
-    }
-    
-    private boolean hasValidURLProtocol(String url) {
-        return url != null && (url.startsWith(DEFAULT_PROTOCOL) || url.startsWith(SECURE_PROTOCOL));        
-    }
-    
     public List<HostInfo> getHostInfo() {
         return hosts;
     }
@@ -166,7 +155,7 @@ public class TeiidURL {
     /**
      * Get a list of hosts
      *  
-     * @return string of host seperated by commas
+     * @return string of host separated by commas
      * @since 4.2
      */
     public String getHosts() {
@@ -205,79 +194,68 @@ public class TeiidURL {
         return portList.toString();
     }
 
-    private void parseURL(String url, String exceptionMessage) {
-
-        //      Parse property string
-        int urlProtocolIndex = url.indexOf(DOUBLE_SLASH_DELIMITER);
-        String serverURL;
-        if (urlProtocolIndex > 0) {
-            serverURL = url.substring(urlProtocolIndex + 2);
-            if(serverURL == null || serverURL.equals("")) { //$NON-NLS-1$
-                throw new IllegalArgumentException(exceptionMessage);
-            }
-			parseServerURL(serverURL, exceptionMessage);
-        } else {
-            throw new IllegalArgumentException(exceptionMessage);
-        }
-    }
-
     /**
      * @param url
-     * @throws UnknownHostException 
+     * @throws MalformedURLException 
      * @since 4.2
      */
-    private void parseServerURL(String serverURL, String exceptionMessage) {
-        StringTokenizer st;
-        StringTokenizer st2;
-
-        st = new StringTokenizer(serverURL, COMMA_DELIMITER); 
+    private void parseServerURL(String serverURL, String exceptionMessage) throws MalformedURLException {
+        StringTokenizer st = new StringTokenizer(serverURL, COMMA_DELIMITER); 
         if (!st.hasMoreTokens()) {
-            throw new IllegalArgumentException(exceptionMessage);
+            throw new MalformedURLException(exceptionMessage);
         }
         while (st.hasMoreTokens()) {
         	String nextToken = st.nextToken();
-            try {
-            	String host = ""; //$NON-NLS-1$
-            	String port = ""; //$NON-NLS-1$
-	        	if (nextToken.startsWith("[")) { //$NON-NLS-1$
-	        		int hostEnd = nextToken.indexOf("]:"); //$NON-NLS-1$
-	        		host = nextToken.substring(1, hostEnd);
-	        		port = nextToken.substring(hostEnd+2);
-	        	}
-	        	else {
-	        		st2 = new StringTokenizer(nextToken, COLON_DELIMITER);
-	                host = st2.nextToken().trim();
-	                port = st2.nextToken().trim();
-	        	}
-	        	
-                if (host.equals("")) { //$NON-NLS-1$
-                    throw new IllegalArgumentException("hostname can't be empty"); //$NON-NLS-1$
-                }
-
-                if (port.equals("")) { //$NON-NLS-1$
-                    throw new IllegalArgumentException("port can't be empty"); //$NON-NLS-1$
-                }
-                
-                int portNumber;
-                try {
-                    portNumber = Integer.parseInt(port);
-                } catch (NumberFormatException nfe) {
-                    throw new IllegalArgumentException("port must be numeric:" + port); //$NON-NLS-1$
-                }
-                if (portNumber < 0 || portNumber > 0xFFFF) {
-                    throw new IllegalArgumentException("port out of range:" + portNumber); //$NON-NLS-1$
-                }
-                HostInfo hostInfo = new HostInfo(host, portNumber);
-                hosts.add(hostInfo);
-	        	
-            } catch (NoSuchElementException nsee) {
-                throw new IllegalArgumentException(exceptionMessage);
-            } catch (NullPointerException ne) {
-                throw new IllegalArgumentException(exceptionMessage);
+        	nextToken = nextToken.trim();
+        	String host = ""; //$NON-NLS-1$
+        	String port = ""; //$NON-NLS-1$
+        	if (nextToken.startsWith("[")) { //$NON-NLS-1$
+        		int hostEnd = nextToken.indexOf("]:"); //$NON-NLS-1$
+        		if (hostEnd == -1) {
+        			throw new MalformedURLException(JDBCPlugin.Util.getString("TeiidURL.invalid_ipv6_hostport", nextToken, exceptionMessage)); //$NON-NLS-1$
+        		}
+        		host = nextToken.substring(1, hostEnd);
+        		port = nextToken.substring(hostEnd+2);
+        	}
+        	else {
+        		int hostEnd = nextToken.indexOf(":"); //$NON-NLS-1$
+        		if (hostEnd == -1) {
+        			throw new MalformedURLException(JDBCPlugin.Util.getString("TeiidURL.invalid_hostport", nextToken, exceptionMessage)); //$NON-NLS-1$
+        		}
+        		host = nextToken.substring(0, hostEnd);
+        		port = nextToken.substring(hostEnd+1);
+        	}
+        	host = host.trim();
+        	port = port.trim();
+            if (host.equals("") || port.equals("")) { //$NON-NLS-1$ //$NON-NLS-2$
+                throw new MalformedURLException(JDBCPlugin.Util.getString("TeiidURL.invalid_hostport", nextToken, exceptionMessage)); //$NON-NLS-1$
             }
-        	
+            int portNumber = validatePort(port);
+            HostInfo hostInfo = new HostInfo(host, portNumber);
+            hosts.add(hostInfo);
         }
     }
+
+	public static int validatePort(String port) throws MalformedURLException {
+		int portNumber;
+		try {
+		    portNumber = Integer.parseInt(port);
+		} catch (NumberFormatException nfe) {
+		    throw new MalformedURLException(JDBCPlugin.Util.getString("TeiidURL.non_numeric_port", port)); //$NON-NLS-1$
+		}
+		String msg = validatePort(portNumber);
+		if (msg != null) {
+			throw new MalformedURLException(msg);
+		}
+		return portNumber;
+	}
+
+	public static String validatePort(int portNumber) {
+		if (portNumber < 0 || portNumber > 0xFFFF) {
+		    return JDBCPlugin.Util.getString("TeiidURL.port_out_of_range", portNumber); //$NON-NLS-1$
+		}
+		return null;
+	}
 
     /**
      * Get the Application Server URL

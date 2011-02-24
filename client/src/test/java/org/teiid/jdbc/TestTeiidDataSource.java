@@ -27,14 +27,12 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.teiid.client.RequestMessage.ShowPlan;
-import org.teiid.core.util.UnitTestUtil;
-import org.teiid.jdbc.BaseDataSource;
-import org.teiid.jdbc.TeiidDataSource;
-
 import junit.framework.TestCase;
 
+import org.teiid.client.RequestMessage.ShowPlan;
+import org.teiid.core.util.UnitTestUtil;
 
+@SuppressWarnings("nls")
 public class TestTeiidDataSource extends TestCase {
 
     protected static final boolean VALID = true;
@@ -102,9 +100,7 @@ public class TestTeiidDataSource extends TestCase {
             return TeiidDataSource.reasonWhyInvalidSocketsPerVM(value);
         } else if ( propertyName.equals("stickyConnections")) { //$NON-NLS-1$
             return TeiidDataSource.reasonWhyInvalidStickyConnections(value);
-        } else if ( propertyName.equals("alternateServers")) { //$NON-NLS-1$
-            return TeiidDataSource.reasonWhyInvalidAlternateServers(value);
-        }
+        } 
 
         fail("Unknown property name \"" + propertyName + "\""); //$NON-NLS-1$ //$NON-NLS-2$
         return null;
@@ -159,7 +155,12 @@ public class TestTeiidDataSource extends TestCase {
         ds.setSecure(secure);
         ds.setAlternateServers(alternateServers);
 
-        final String url = ds.buildURL();
+        String url;
+		try {
+			url = ds.buildURL().getJDBCURL();
+		} catch (TeiidSQLException e) {
+			throw new RuntimeException(e);
+		}
         assertEquals(expectedURL, url);
     }
 
@@ -336,7 +337,7 @@ public class TestTeiidDataSource extends TestCase {
         helpTestReasonWhyInvalid("PortNumber", 1, VALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidPortNumber2() {
-        helpTestReasonWhyInvalid("PortNumber", 9999999, VALID); //$NON-NLS-1$
+        helpTestReasonWhyInvalid("PortNumber", 9999999, INVALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidPortNumber3() {
         helpTestReasonWhyInvalid("PortNumber", 0, VALID); //$NON-NLS-1$
@@ -406,62 +407,76 @@ public class TestTeiidDataSource extends TestCase {
         helpTestReasonWhyInvalid("stickyConnections", "YES", INVALID); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
+    public void helpTestAlternateServer(String altServers, boolean valid) {
+    	this.dataSource.setAlternateServers(altServers);
+    	try {
+			this.dataSource.buildURL();
+			if (!valid) {
+				fail("expected exception");
+			}
+		} catch (TeiidSQLException e) {
+			if (valid) {
+				throw new RuntimeException(e);
+			}
+		}
+    }
+    
     public void testReasonWhyInvalidAlternateServers1() {
-    	helpTestReasonWhyInvalid("alternateServers", null, VALID); //$NON-NLS-1$
+    	helpTestAlternateServer(null, VALID); 
     }
     public void testReasonWhyInvalidAlternateServers2() {
-    	helpTestReasonWhyInvalid("alternateServers", "", VALID); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestAlternateServer("", VALID); //$NON-NLS-1$ 
     }
     public void testReasonWhyInvalidAlternateServers3() {
-    	helpTestReasonWhyInvalid("alternateServers", "server", VALID); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestAlternateServer("server", VALID); //$NON-NLS-1$ 
     }
     public void testReasonWhyInvalidAlternateServers4() {
-    	helpTestReasonWhyInvalid("alternateServers", "server:100", VALID); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestAlternateServer("server:100", VALID); //$NON-NLS-1$ 
     }
     public void testReasonWhyInvalidAlternateServers5() {
-    	helpTestReasonWhyInvalid("alternateServers", "server:port", INVALID); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestAlternateServer("server:port", INVALID); //$NON-NLS-1$ 
     }
     public void testReasonWhyInvalidAlternateServers6() {
-    	helpTestReasonWhyInvalid("alternateServers", "server:100:1", INVALID); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestAlternateServer("server:100:1", INVALID); //$NON-NLS-1$ 
     }
     public void testReasonWhyInvalidAlternateServers7() {
-    	helpTestReasonWhyInvalid("alternateServers", "server:100:abc", INVALID); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestAlternateServer("server:100:abc", INVALID); //$NON-NLS-1$ 
     }
     public void testReasonWhyInvalidAlternateServers8() {
-    	helpTestReasonWhyInvalid("alternateServers", "server:abc:100", INVALID); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestAlternateServer("server:abc:100", INVALID); //$NON-NLS-1$ 
     }
     public void testReasonWhyInvalidAlternateServers9() {
-    	helpTestReasonWhyInvalid("alternateServers", ":100", INVALID); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestAlternateServer(":100", INVALID); //$NON-NLS-1$ 
     }
     public void testReasonWhyInvalidAlternateServers10() {
-    	helpTestReasonWhyInvalid("alternateServers", ":abc", INVALID); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestAlternateServer(":abc", INVALID); //$NON-NLS-1$ 
     }
     public void testReasonWhyInvalidAlternateServers11() {
-    	helpTestReasonWhyInvalid("alternateServers", "server1:100,server2", VALID); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestAlternateServer("server1:100,server2", VALID); //$NON-NLS-1$ 
     }
     public void testReasonWhyInvalidAlternateServers12() {
-    	helpTestReasonWhyInvalid("alternateServers", "server1:100,server2:101", VALID); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestAlternateServer("server1:100,server2:101", VALID); //$NON-NLS-1$ 
     }
     public void testReasonWhyInvalidAlternateServers13() {
-    	helpTestReasonWhyInvalid("alternateServers", "server1:100,", VALID); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestAlternateServer("server1:100,", VALID); //$NON-NLS-1$ 
     }
     public void testReasonWhyInvalidAlternateServers14() {
-    	helpTestReasonWhyInvalid("alternateServers", "server1:100,server2:abc", INVALID); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestAlternateServer("server1:100,server2:abc", INVALID); //$NON-NLS-1$ 
     }
     public void testReasonWhyInvalidAlternateServers15() {
-    	helpTestReasonWhyInvalid("alternateServers", "server1:100,server2:101:abc", INVALID); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestAlternateServer("server1:100,server2:101:abc", INVALID); //$NON-NLS-1$ 
     }
     public void testReasonWhyInvalidAlternateServers16() {
-    	helpTestReasonWhyInvalid("alternateServers", "server1,server2:100", VALID); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestAlternateServer("server1,server2:100", VALID); //$NON-NLS-1$ 
     }
     public void testReasonWhyInvalidAlternateServers17() {
-    	helpTestReasonWhyInvalid("alternateServers", "server1,server2", VALID); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestAlternateServer("server1,server2", VALID); //$NON-NLS-1$ 
     }
     public void testReasonWhyInvalidAlternateServers18() {
-    	helpTestReasonWhyInvalid("alternateServers", ",server2:100", INVALID); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestAlternateServer(",server2:100", INVALID); //$NON-NLS-1$ 
     }
     public void testReasonWhyInvalidAlternateServers19() {
-    	helpTestReasonWhyInvalid("alternateServers", "server1,server2,server3,server4:500", VALID); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTestAlternateServer("server1,server2,server3,server4:500", VALID); //$NON-NLS-1$ 
     }
     
 
@@ -612,13 +627,13 @@ public class TestTeiidDataSource extends TestCase {
                             "jdbc:teiid:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;SHOWPLAN=ON;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName"); //$NON-NLS-1$ 
     }
     
-    public void testBuildURL_AdditionalProperties() {
+    public void testBuildURL_AdditionalProperties() throws TeiidSQLException {
     	final TeiidDataSource ds = new TeiidDataSource();
     	ds.setAdditionalProperties("foo=bar;a=b"); //$NON-NLS-1$
     	ds.setServerName("hostName"); //$NON-NLS-1$
     	ds.setDatabaseName("vdbName"); //$NON-NLS-1$
     	ds.setPortNumber(1);
-    	assertEquals("jdbc:teiid:vdbName@mm://hostname:1;fetchSize=2048;ApplicationName=JDBC;a=b;VirtualDatabaseName=vdbName;foo=bar", ds.buildURL()); //$NON-NLS-1$
+    	assertEquals("jdbc:teiid:vdbName@mm://hostname:1;fetchSize=2048;ApplicationName=JDBC;a=b;VirtualDatabaseName=vdbName;foo=bar", ds.buildURL().getJDBCURL()); //$NON-NLS-1$
     }
 
     public void testInvalidDataSource() {

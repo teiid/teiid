@@ -28,6 +28,7 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import org.junit.Test;
+import org.teiid.jdbc.JDBCURL.ConnectionType;
 
 public class TestEmbeddedProfile {
     
@@ -38,29 +39,25 @@ public class TestEmbeddedProfile {
     @Test public void testAcceptsURL() {    
         
         // ClassPath based URL
-        assertFalse(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:teiid:BQT@classpath:/dqp.properties;partialResultsMode=true")); //$NON-NLS-1$
+        assertFalse(ConnectionType.Embedded == JDBCURL.acceptsUrl("jdbc:teiid:BQT@classpath:/dqp.properties;partialResultsMode=true")); //$NON-NLS-1$
         
-        // These are specific to the MMorg.teiid.jdbc.EmbeddedProfile and should not be suported
-        assertFalse(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:teiid:BQT@mm://host:7001;version=1")); //$NON-NLS-1$
-        assertFalse(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:teiid:BQT@mms://host:7001;version=1")); //$NON-NLS-1$
-        
-        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:teiid:BQT")); //$NON-NLS-1$
-        assertFalse(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:teiid:BQT!/path/foo.properties")); //$NON-NLS-1$
-        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:teiid:BQT;")); //$NON-NLS-1$
-        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:teiid:BQT;version=1;logFile=foo.txt")); //$NON-NLS-1$
-        assertTrue(org.teiid.jdbc.EmbeddedProfile.acceptsURL("jdbc:teiid:BQT.1;version=1;logFile=foo.txt")); //$NON-NLS-1$
+        assertEquals(ConnectionType.Embedded, JDBCURL.acceptsUrl("jdbc:teiid:BQT")); //$NON-NLS-1$
+        assertNull(JDBCURL.acceptsUrl("jdbc:teiid:BQT!/path/foo.properties")); //$NON-NLS-1$
+        assertEquals(ConnectionType.Embedded, JDBCURL.acceptsUrl("jdbc:teiid:BQT;")); //$NON-NLS-1$
+        assertEquals(ConnectionType.Embedded, JDBCURL.acceptsUrl("jdbc:teiid:BQT;version=1;logFile=foo.txt")); //$NON-NLS-1$
+        assertEquals(ConnectionType.Embedded, JDBCURL.acceptsUrl("jdbc:teiid:BQT.1;version=1;logFile=foo.txt")); //$NON-NLS-1$
     }
 
     @Test public void testParseURL() throws SQLException{
         Properties p = new Properties();
-        org.teiid.jdbc.EmbeddedProfile.parseURL("jdbc:teiid:BQT", p); //$NON-NLS-1$
+        TeiidDriver.parseURL("jdbc:teiid:BQT", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
         assertEquals(2, p.size());        
     }
 
     @Test public void testParseURL2() throws SQLException {
         Properties p = new Properties();       
-        org.teiid.jdbc.EmbeddedProfile.parseURL("jdbc:teiid:BQT;version=3", p); //$NON-NLS-1$
+        TeiidDriver.parseURL("jdbc:teiid:BQT;version=3", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("3")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VERSION).equals("3")); //$NON-NLS-1$
@@ -69,7 +66,7 @@ public class TestEmbeddedProfile {
     
     @Test public void testParseURL3() throws SQLException{
         Properties p = new Properties();
-        org.teiid.jdbc.EmbeddedProfile.parseURL("jdbc:teiid:BQT@/metamatrix/dqp/dqp.properties;version=4;autoCommitTxn=ON;partialResultsMode=YES;", p); //$NON-NLS-1$
+        TeiidDriver.parseURL("jdbc:teiid:BQT;version=4;autoCommitTxn=ON;partialResultsMode=YES;", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("4")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VERSION).equals("4")); //$NON-NLS-1$
@@ -80,7 +77,7 @@ public class TestEmbeddedProfile {
     
     @Test public void testParseURL4() throws SQLException{
         Properties p = new Properties();
-        org.teiid.jdbc.EmbeddedProfile.parseURL("jdbc:teiid:BQT;partialResultsMode=true", p); //$NON-NLS-1$
+        TeiidDriver.parseURL("jdbc:teiid:BQT;partialResultsMode=true", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
         assertTrue(p.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE).equals("true")); //$NON-NLS-1$
         assertEquals(3, p.size());                
@@ -88,19 +85,19 @@ public class TestEmbeddedProfile {
     
     @Test public void testParseURL5() throws SQLException{
         Properties p = new Properties();
-        org.teiid.jdbc.EmbeddedProfile.parseURL("jdbc:teiid:BQT", p); //$NON-NLS-1$
+        TeiidDriver.parseURL("jdbc:teiid:BQT", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
     }
     
     @Test public void testParseURL55() throws SQLException{
         Properties p = new Properties();
-        org.teiid.jdbc.EmbeddedProfile.parseURL("jdbc:teiid:BQT;", p); //$NON-NLS-1$
+        TeiidDriver.parseURL("jdbc:teiid:BQT;", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
     }    
        
     @Test public void testParseURL6() throws SQLException{
         Properties p = new Properties();
-        org.teiid.jdbc.EmbeddedProfile.parseURL("jdbc:teiid:BQT;partialResultsMode=true;version=1", p); //$NON-NLS-1$
+        TeiidDriver.parseURL("jdbc:teiid:BQT;partialResultsMode=true;version=1", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
         assertTrue(p.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE).equals("true")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("1")); //$NON-NLS-1$
