@@ -290,9 +290,9 @@ public interface Admin {
     Set<String> getDataSourceTemplateNames() throws AdminException;
     
     /**
-     * Let 
-     * @param name
+     * Tell the engine that the given source is available. Pending dynamic vdb metadata loads will be resumed.
+     * @param jndiName
      * @throws AdminException
      */
-    void markDataSourceAvailable(String name) throws AdminException;
+    void markDataSourceAvailable(String jndiName) throws AdminException;
 }
