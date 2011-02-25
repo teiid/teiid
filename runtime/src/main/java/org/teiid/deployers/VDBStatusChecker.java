@@ -82,20 +82,21 @@ public class VDBStatusChecker {
 					}
 	
 					String sourceName = getSourceName(resourceName, model, translator);
-					if (sourceName != null) {
-						ConnectorManager cm = cmr.getConnectorManager(sourceName);
-						String status = cm.getStausMessage();
-						if (status != null && status.length() > 0) {
-							model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), status);
-							LogManager.logInfo(LogConstants.CTX_RUNTIME, status);					
+					if (sourceName == null) {
+						continue;
+					}
+					ConnectorManager cm = cmr.getConnectorManager(sourceName);
+					String status = cm.getStausMessage();
+					if (status != null && status.length() > 0) {
+						model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), status);
+						LogManager.logInfo(LogConstants.CTX_RUNTIME, status);					
+					} else {
+						//get the pending metadata load
+						Runnable r = model.removeAttachment(Runnable.class);
+						if (r != null) {
+							runnables.add(r);
 						} else {
-							//get the pending metadata load
-							Runnable r = model.removeAttachment(Runnable.class);
-							if (r != null) {
-								runnables.add(r);
-							} else {
-								model.clearErrors();
-							}
+							model.clearErrors();
 						}
 					}
 				}

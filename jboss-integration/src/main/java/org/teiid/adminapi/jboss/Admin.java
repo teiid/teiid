@@ -73,6 +73,7 @@ import org.teiid.adminapi.impl.TransactionMetadata;
 import org.teiid.adminapi.impl.TranslatorMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
+import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.jboss.IntegrationPlugin;
 
 public class Admin implements org.teiid.adminapi.Admin, Serializable {	
@@ -91,13 +92,15 @@ public class Admin implements org.teiid.adminapi.Admin, Serializable {
 	private ManagementView view;
 	private DeploymentManager deploymentMgr;
 	
+	final private VDBStatusChecker statusChecker;
 	
 	static {
 		VFS.init();
 	}
 	
-	public Admin(ManagementView view, DeploymentManager deployMgr) {
+	public Admin(ManagementView view, DeploymentManager deployMgr, VDBStatusChecker statusChecker) {
 		this.view = view;
+		this.statusChecker = statusChecker;
 		this.view.load();
 				
 		this.deploymentMgr =  deployMgr;
@@ -733,5 +736,10 @@ public class Admin implements org.teiid.adminapi.Admin, Serializable {
 		} catch (Exception e) {
 			throw new AdminComponentException(e.getMessage(), e);
 		}
+	}
+	
+	@Override
+	public void markDataSourceAvailable(String name) throws AdminException {
+		statusChecker.dataSourceAdded(name);
 	}
 }

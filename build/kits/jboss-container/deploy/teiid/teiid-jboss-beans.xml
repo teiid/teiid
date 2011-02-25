@@ -83,6 +83,7 @@
         <property name="bufferService"><inject bean="BufferService"/></property>
         <property name="securityHelper"><inject bean="SecurityHelper"/></property>
         <property name="VDBRepository"><inject bean="VDBRepository"/></property>
+        <property name="VDBStatusChecker"><inject bean="VDBStatusChecker"/></property>
         <property name="cacheFactory"><inject bean="CacheFactory"/></property>
         <property name="resultsetCacheConfig"><inject bean="ResultsetCacheConfig"/></property>
         

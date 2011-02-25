@@ -43,22 +43,23 @@ import org.jboss.deployers.spi.management.ManagementView;
 import org.jboss.deployers.spi.management.deploy.DeploymentManager;
 import org.jboss.profileservice.spi.ProfileService;
 import org.teiid.adminapi.AdminComponentException;
+import org.teiid.deployers.VDBStatusChecker;
 
 public class AdminProvider {
 	
-	public static Admin getLocal(final ProfileService profileService) {
+	public static Admin getLocal(final ProfileService profileService, VDBStatusChecker vdbStatusChecker) {
 		ProfileConnection pc = new ProfileConnection(profileService);
-		return new Admin(pc.getManagementView(), pc.getDeploymentManager());
+		return new Admin(pc.getManagementView(), pc.getDeploymentManager(), vdbStatusChecker);
 	}
 
-	public static Admin getLocal() throws AdminComponentException {
+	public static Admin getLocal(VDBStatusChecker vdbStatusChecker) throws AdminComponentException {
 		ProfileConnection pc = new ProfileConnection();
-		return new Admin(pc.getManagementView(), pc.getDeploymentManager());
+		return new Admin(pc.getManagementView(), pc.getDeploymentManager(), vdbStatusChecker);
 	}
 	
-	public static Admin getRemote(String provideURL, String userid, String password) throws AdminComponentException {
+	public static Admin getRemote(String provideURL, String userid, String password, VDBStatusChecker vdbStatusChecker) throws AdminComponentException {
 		ProfileConnection pc = new ProfileConnection(provideURL, userid, password);
-		return new Admin(pc.getManagementView(), pc.getDeploymentManager());		
+		return new Admin(pc.getManagementView(), pc.getDeploymentManager(), vdbStatusChecker);		
 	}
 	
 	/**

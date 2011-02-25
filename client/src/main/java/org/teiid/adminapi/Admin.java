@@ -288,4 +288,11 @@ public interface Admin {
      * @throws AdminException 
      */
     Set<String> getDataSourceTemplateNames() throws AdminException;
+    
+    /**
+     * Let 
+     * @param name
+     * @throws AdminException
+     */
+    void markDataSourceAvailable(String name) throws AdminException;
 }
