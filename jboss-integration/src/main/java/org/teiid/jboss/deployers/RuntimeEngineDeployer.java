@@ -80,6 +80,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
+import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DQPWorkContext;
@@ -121,6 +122,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	private transient Admin admin;
 	private transient ClientServiceRegistryImpl csr = new ClientServiceRegistryImpl();	
 	private transient VDBRepository vdbRepository;
+	private transient VDBStatusChecker vdbStatusChecker;
 
 	private transient ProfileService profileService;
 	private transient String jndiName;
@@ -279,10 +281,10 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		
 		this.logon = new LogonImpl(this.sessionService, "teiid-cluster"); //$NON-NLS-1$
 		if (profileService != null) {
-			this.admin = AdminProvider.getLocal(profileService);
+			this.admin = AdminProvider.getLocal(profileService, vdbStatusChecker);
 		} else {
 			try {
-				this.admin = AdminProvider.getLocal();
+				this.admin = AdminProvider.getLocal(vdbStatusChecker);
 			} catch (AdminComponentException e) {
 				throw new TeiidRuntimeException(e.getCause());
 			}
@@ -350,6 +352,10 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	
 	public void setVDBRepository(VDBRepository repo) {
 		this.vdbRepository = repo;
+	}
+	
+	public void setVDBStatusChecker(VDBStatusChecker vdbStatusChecker) {
+		this.vdbStatusChecker = vdbStatusChecker;
 	}
 	
 	public void setProfileService(final ProfileService profileService) {
