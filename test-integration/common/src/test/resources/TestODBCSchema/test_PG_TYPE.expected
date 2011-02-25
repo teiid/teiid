@@ -3,7 +3,7 @@ oid          typname                                                            
 16           boolean                                                            2             1       b        0            -1           0          
 20           long                                                               2             8       b        0            -1           0          
 21           short                                                              2             2       b        0            -1           0          
-23           int                                                                2             4       b        0            -1           0          
+23           integer                                                            2             4       b        0            -1           0          
 25           text                                                               2             -1      b        0            -1           0          
 26           oid                                                                2             4       b        0            -1           0          
 142          xml                                                                2             -1      b        0            -1           0          
