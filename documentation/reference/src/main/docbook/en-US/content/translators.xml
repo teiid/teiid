@@ -511,6 +511,19 @@
                 </tbody>
             </tgroup>
         </table>
+        
+        <para>
+        There are no import settings for the ldap translator; it also does not 
+        provide metadata.
+        </para>
+        
+        <section>
+        	<title>Metadata Directives</title>
+	        <para>String columns with a default value of "multivalued-concat" will concatinate all attribute 
+	        values together in alphabetical order using a ? delimiter.  If a multivalued attribute does not have a default value of "multivalued-concat", then
+	        any value may be returned.  
+	        </para>        
+        </section>
     </section>
 
     <section>
