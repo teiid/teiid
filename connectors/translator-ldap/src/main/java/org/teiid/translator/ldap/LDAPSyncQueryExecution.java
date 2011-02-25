@@ -76,6 +76,7 @@ import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -97,8 +98,9 @@ import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 
 
 
@@ -108,10 +110,12 @@ import org.teiid.translator.ResultSetExecution;
  */
 public class LDAPSyncQueryExecution implements ResultSetExecution {
 
+	private static final String delimiter = "?"; //$NON-NLS-1$
+	
 	private LDAPSearchDetails searchDetails;
 	private LdapContext ldapConnection;
 	private LdapContext ldapCtx;
-	private NamingEnumeration searchEnumeration;
+	private NamingEnumeration<?> searchEnumeration;
 	private IQueryToLdapSearchParser parser;
 	private Select query;
 	private LDAPExecutionFactory executionFactory;
@@ -192,18 +196,13 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 	/** 
 	 * Set the search controls
 	 */
-	private SearchControls setSearchControls() throws TranslatorException {
+	private SearchControls setSearchControls() {
 		SearchControls ctrls = new SearchControls();
 		//ArrayList modelAttrList = searchDetails.getAttributeList();
-		ArrayList modelAttrList = searchDetails.getElementList();
+		ArrayList<Column> modelAttrList = searchDetails.getElementList();
 		String[] attrs = new String[modelAttrList.size()];
-		Iterator itr = modelAttrList.iterator();
-		int i = 0;
-		while(itr.hasNext()) {
-			attrs[i] = (parser.getNameFromElement((Column)itr.next()));
-			//attrs[i] = (((Attribute)itr.next()).getID();
-			//logger.logTrace("Adding attribute named " + attrs[i] + " to the search list.");
-			i++;
+		for (int i = 0; i < attrs.length; i++) {
+			attrs[i] = (parser.getNameFromElement(modelAttrList.get(i)));
 		}
 
 		ctrls.setSearchScope(searchDetails.getSearchScope());
@@ -285,11 +284,11 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 	// it from being used again.
 	// GHH 20080326 - also added return of explanation for generic
 	// NamingException
-	public List next() throws TranslatorException {
+	public List<?> next() throws TranslatorException {
 		try {
 			// The search has been executed, so process up to one batch of
 			// results.
-			List result = null;
+			List<?> result = null;
 			while (result == null && searchEnumeration != null && searchEnumeration.hasMore())
 			{
 				SearchResult searchResult = (SearchResult) searchEnumeration.next();
@@ -316,20 +315,16 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 	 */
 	// GHH 20080326 - added fetching of DN of result, for directories that
 	// do not include it as an attribute
-	private List getRow(SearchResult result) throws TranslatorException {
+	private List<?> getRow(SearchResult result) throws TranslatorException {
 		Attributes attrs = result.getAttributes();
 		String resultDN = result.getNameInNamespace(); // added GHH 20080326 
-		ArrayList attributeList = searchDetails.getElementList();
-		List row = new ArrayList();
+		ArrayList<Column> attributeList = searchDetails.getElementList();
+		List<Object> row = new ArrayList<Object>(attributeList.size());
 		
-		if (attrs != null && attrs.size()>0) {
-			Iterator itr = attributeList.iterator();
-			while(itr.hasNext()) {
-				addResultToRow((Column)itr.next(), resultDN, attrs, row);  // GHH 20080326 - added resultDN parameter to call
-			}
-			return row;
+		for (Column col : attributeList) {
+			addResultToRow(col, resultDN, attrs, row);  // GHH 20080326 - added resultDN parameter to call
 		}
-		return null;
+		return row;
 	}
 
 	/**
@@ -344,11 +339,14 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 	// value for that column in the result
 	// GHH 20080326 - added handling of ClassCastException when non-string
 	// attribute is returned
-	private void addResultToRow(Column modelElement, String resultDistinguishedName, Attributes attrs, List row) throws TranslatorException {
+	private void addResultToRow(Column modelElement, String resultDistinguishedName, Attributes attrs, List<Object> row) throws TranslatorException {
 
-		String strResult;
+		String strResult = null;
 		String modelAttrName = parser.getNameFromElement(modelElement);
-		Class modelAttrClass = modelElement.getJavaType();
+		Class<?> modelAttrClass = modelElement.getJavaType();
+		
+		String multivalAttr = modelElement.getDefaultValue();
+		
 		if(modelAttrName == null) {
             final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.nullAttrError"); //$NON-NLS-1$
 			throw new TranslatorException(msg); 
@@ -370,97 +368,86 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 				row.add(null);
 			}
 			return;
-		} 
-		// TODO: Currently, if an LDAP entry contains more than one matching
-		// attribute, we only return the first. 
-		// Since attribute order is not guaranteed, this means that we may not
-		// always return the exact same information.
-		// Putting multi-valued attributes into a single row (or multiple rows) requires
-		// some design decisions.
-		// GHH 20080326 - first get attribute as generic object
-		// so we can check to make sure it is a string separately - previously it was just put straight into a string.
+		}
 		Object objResult = null;
 		try {
+			if(TypeFacility.RUNTIME_TYPES.STRING.equals(modelAttrClass) && "multivalued-concat".equalsIgnoreCase(multivalAttr)) { //$NON-NLS-1$
+				// mpw 5/09
+				// Order the multi-valued attrs alphabetically before creating a single string, 
+				// using the delimiter to separate each token
+				ArrayList<String> multivalList = new ArrayList<String>();
+				NamingEnumeration<?> attrNE = resultAttr.getAll();
+				int length = 0;
+				while(attrNE.hasMore()) {
+					String val = (String)attrNE.next();
+					multivalList.add(val);
+					length += ((val==null?0:val.length()) + 1);
+				}
+				Collections.sort(multivalList);
+	
+				StringBuilder multivalSB = new StringBuilder(length);
+				Iterator<String> itr = multivalList.iterator();
+				while(itr.hasNext()) {
+					multivalSB.append(itr.next());
+					if (itr.hasNext()) {
+						multivalSB.append(delimiter);
+					}
+				}
+				row.add(multivalSB.toString());
+				return;
+			}
+			
+			//just a single value
 			objResult = resultAttr.get();
 		} catch (NamingException ne) {
-            final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.attrValueFetchError",modelAttrName); //$NON-NLS-1$
-            LogManager.logWarning(LogConstants.CTX_CONNECTOR, msg+" : "+ne.getExplanation()); //$NON-NLS-1$
-			throw new TranslatorException(msg+" : "+ne.getExplanation()); //$NON-NLS-1$
+            final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.attrValueFetchError",modelAttrName) +" : "+ne.getExplanation(); //$NON-NLS-1$m//$NON-NLS-2$
+            LogManager.logWarning(LogConstants.CTX_CONNECTOR, msg);
+			throw new TranslatorException(msg);
 		}
 
-		// GHH 20080326 - if attribute is not a string, just
-		// return an empty string.
+		// GHH 20080326 - if attribute is not a string or empty, just
+		// return null.
 		// TODO - allow return of non-strings (always byte[]) as
-		// MM object.  Perhaps also add directory-specific logic
+		// MM object (or blob).  Perhaps also add directory-specific logic
 		// to deserialize byte[] attributes into Java objects
 		// when appropriate
-		try {
+		if (objResult instanceof String) {
 			strResult = (String)objResult;
-		} catch (ClassCastException cce) {
-			strResult = ""; //$NON-NLS-1$
-		}
-
-		// MPW - 3.9.07 - Also return NULL when attribute is unset or empty string.
-		// There is no way to differentiate between being unset and being the empty string.
-		if(strResult.equals("")) {  //$NON-NLS-1$
-			strResult = null;
+			// MPW - 3.9.07 - Also return NULL when attribute is unset or empty string.
+			// There is no way to differentiate between being unset and being the empty string.
+			if(strResult.equals("")) {  //$NON-NLS-1$
+				strResult = null;
+			}
 		}
 
 		// MPW: 3-11-07: Added support for java.lang.Integer conversion.
-		try {
-			if(modelAttrClass.equals(Class.forName(Integer.class.getName()))) {
-				try {
-					//	Throw an exception if class cast fails.
-					if(strResult != null) {
-						Integer intResult = new Integer(strResult);
-						row.add(intResult);
-					} else {
-						row.add(null);
-					}
-				} catch(NumberFormatException nfe) {
-					throw new TranslatorException(nfe, "Element " + modelAttrName + " is typed as Integer, " + //$NON-NLS-1$ //$NON-NLS-2$
-							"but it's value (" + strResult + ") cannot be converted from string " + //$NON-NLS-1$ //$NON-NLS-2$
-							"to Integer. Please change type to String, or modify the data."); //$NON-NLS-1$
-				}
-			// java.lang.String
-			} else if(modelAttrClass.equals(Class.forName(String.class.getName()))) {
-				row.add(strResult);
-			// java.sql.Timestamp
-			} else if(modelAttrClass.equals(Class.forName(java.sql.Timestamp.class.getName()))) {
-				Map<String, String> p = modelElement.getProperties();
+		if(TypeFacility.RUNTIME_TYPES.TIMESTAMP.equals(modelAttrClass)) {
+			Map<String, String> p = modelElement.getProperties();
 
-				String timestampFormat = p.get("Format"); //$NON-NLS-1$
-				SimpleDateFormat dateFormat;
-				if(timestampFormat == null) {
-					timestampFormat = LDAPConnectorConstants.ldapTimestampFormat;
-					
-				}
-				dateFormat = new SimpleDateFormat(timestampFormat);
-				try {
-					if(strResult != null) {
-						Date dateResult = dateFormat.parse(strResult);
-						Timestamp tsResult = new Timestamp(dateResult.getTime());
-						row.add(tsResult);
-					} else {
-						row.add(null);
-					}
-				} catch(ParseException pe) {
-					throw new TranslatorException(pe, "Timestamp could not be parsed. Please check to ensure the "  //$NON-NLS-1$
-							+ " Format field for attribute "  //$NON-NLS-1$
-							+ modelAttrName + " is configured using SimpleDateFormat conventions."); //$NON-NLS-1$
-				}		
+			String timestampFormat = p.get("Format"); //$NON-NLS-1$
+			SimpleDateFormat dateFormat;
+			if(timestampFormat == null) {
+				timestampFormat = LDAPConnectorConstants.ldapTimestampFormat;
 				
+			}
+			dateFormat = new SimpleDateFormat(timestampFormat);
+			try {
+				if(strResult != null) {
+					Date dateResult = dateFormat.parse(strResult);
+					Timestamp tsResult = new Timestamp(dateResult.getTime());
+					row.add(tsResult);
+				} else {
+					row.add(null);
+				}
+			} catch(ParseException pe) {
+				throw new TranslatorException(pe, LDAPPlugin.Util.getString("LDAPSyncQueryExecution.timestampParseFailed", modelAttrName)); //$NON-NLS-1$
+			}		
+			
 			//	TODO: Extend support for more types in the future.
 			// Specifically, add support for byte arrays, since that's actually supported
 			// in the underlying data source.
-			} else {
-				throw new TranslatorException("Base type " + modelAttrClass.toString()  //$NON-NLS-1$
-						+ " is not supported in the LDAP connector. "  //$NON-NLS-1$
-						+ " Please modify the base model to use a supported type."); //$NON-NLS-1$
-			}
-		} catch(ClassNotFoundException cne) {
-            final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.supportedClassNotFoundError"); //$NON-NLS-1$
-			throw new TranslatorException(cne, msg); 
+		} else {
+			row.add(strResult); //the Teiid type conversion logic will handle refine from here if necessary
 		}
 	}
 	

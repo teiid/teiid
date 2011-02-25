@@ -32,6 +32,7 @@ import javax.naming.ldap.SortKey;
 
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.Column;
 
 
 
@@ -49,7 +50,7 @@ public class LDAPSearchDetails {
 //	private LdapSortKey[] netscapeKeys;
 	// If limit is set to -1, this means no limit (return all rows)
 	private long limit;
-	private ArrayList elementList;
+	private ArrayList<Column> elementList;
 	
 	/**
 	 * Constructor
@@ -108,7 +109,7 @@ public class LDAPSearchDetails {
 	 * get the element list
 	 * @return the element list
 	 */
-	public ArrayList getElementList() {
+	public ArrayList<Column> getElementList() {
 		return elementList;
 	}
 	
