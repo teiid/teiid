@@ -50,7 +50,6 @@ import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryContainer;
-import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
@@ -221,36 +220,6 @@ public class ExecResolver extends ProcedureContainerResolver {
         storedProcedureCommand.setGroup(procGroup);
     }
     
-    @Override
-    public GroupContext findChildCommandMetadata(ProcedureContainer container,
-    		TempMetadataStore discoveredMetadata, QueryMetadataInterface metadata) throws QueryMetadataException,
-    		QueryResolverException, TeiidComponentException {
-
-        StoredProcedure storedProcedureCommand = (StoredProcedure) container;
-
-        // Create temporary metadata that defines a group based on either the stored proc
-        // name or the stored query name - this will be used later during planning
-        String procName = metadata.getFullName(storedProcedureCommand.getProcedureID());
-        
-        GroupContext context = new GroupContext();
-
-        // Look through parameters to find input elements - these become child metadata
-        List<ElementSymbol> tempElements = new ArrayList<ElementSymbol>(storedProcedureCommand.getParameters().size());
-        boolean[] updatable = new boolean[storedProcedureCommand.getParameters().size()];
-        int i = 0;
-        for (SPParameter param : storedProcedureCommand.getParameters()) {
-            if(param.getParameterType() != ParameterInfo.RESULT_SET) {
-                ElementSymbol symbol = param.getParameterSymbol();
-                tempElements.add(symbol);
-                updatable[i++] = param.getParameterType() != ParameterInfo.IN;  
-            }
-        }
-
-        ProcedureContainerResolver.addScalarGroup(procName, discoveredMetadata, context, tempElements, updatable);
-        
-        return context;
-    }
-
     /** 
      * @see org.teiid.query.resolver.ProcedureContainerResolver#resolveProceduralCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter)
      */

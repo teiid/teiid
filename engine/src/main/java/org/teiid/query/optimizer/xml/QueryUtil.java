@@ -24,7 +24,6 @@ package org.teiid.query.optimizer.xml;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -183,9 +182,9 @@ public class QueryUtil {
     }     
     
     static void handleBindings(LanguageObject object, QueryNode planNode, XMLPlannerEnvironment planEnv) 
-        throws QueryResolverException, QueryPlannerException, QueryMetadataException, TeiidComponentException {
+        throws QueryMetadataException, TeiidComponentException {
 
-        List parsedBindings = parseBindings(planNode, planEnv);
+        List parsedBindings = QueryResolver.parseBindings(planNode);
     
         if (!parsedBindings.isEmpty()) {
             //use ReferenceBindingReplacer Visitor
@@ -193,24 +192,6 @@ public class QueryUtil {
         }
     }    
     
-    static List parseBindings(QueryNode planNode, XMLPlannerEnvironment planEnv) throws TeiidComponentException {
-        Collection bindingsCol = planNode.getBindings();
-        if (bindingsCol == null) {
-            return Collections.EMPTY_LIST;
-        }
-        
-        List parsedBindings = new ArrayList(bindingsCol.size());
-        for (Iterator bindings=bindingsCol.iterator(); bindings.hasNext();) {
-            try {
-                ElementSymbol binding = (ElementSymbol)QueryParser.getQueryParser().parseExpression((String)bindings.next());
-                parsedBindings.add(binding);
-            } catch (QueryParserException err) {
-                throw new TeiidComponentException(err);
-            }
-        }
-        return parsedBindings;
-    }
-
     static Map createSymbolMap(GroupSymbol oldGroup, final String newGroup, Collection projectedElements) {
         HashMap symbolMap = new HashMap();
         symbolMap.put(oldGroup, new GroupSymbol(newGroup));

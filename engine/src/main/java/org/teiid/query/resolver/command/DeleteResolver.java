@@ -30,14 +30,11 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
-import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.resolver.ProcedureContainerResolver;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Delete;
-import org.teiid.query.sql.lang.GroupContext;
-import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.symbol.GroupSymbol;
 
 
@@ -74,12 +71,4 @@ public class DeleteResolver extends ProcedureContainerResolver {
         return metadata.getDeletePlan(group.getMetadataID());
     }
     
-    @Override
-    public GroupContext findChildCommandMetadata(ProcedureContainer container,
-    		TempMetadataStore discoveredMetadata, QueryMetadataInterface metadata) throws QueryMetadataException,
-    		QueryResolverException, TeiidComponentException {
-    	//defect 16451: don't expose input and changing variables to delete procedures
-    	return null;
-    }
-
 }

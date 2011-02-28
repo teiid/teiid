@@ -57,7 +57,6 @@ import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.FakeFunctionMetadataSource;
 import org.teiid.query.parser.QueryParser;
-import org.teiid.query.resolver.util.BindVariableVisitor;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
@@ -228,26 +227,16 @@ public class TestResolver {
         return criteria;
     }
     
-    private Command helpResolve(String sql, List bindings) { 
+    public static Command helpResolveWithBindings(String sql, QueryMetadataInterface metadata, List bindings) throws QueryResolverException, TeiidComponentException { 
        
         // parse
         Command command = helpParse(sql);
         
-        // apply bindings
-        if(bindings != null) {
-            try { 
-                BindVariableVisitor.bindReferences(command, bindings, metadata);
-            } catch(TeiidException e) { 
-                fail("Exception during binding (" + e.getClass().getName() + "): " + e.getMessage());    //$NON-NLS-1$ //$NON-NLS-2$
-            }   
-        }
-        
+        QueryNode qn = new QueryNode("x", sql);
+        qn.setBindings(bindings);
         // resolve
-        try { 
-            QueryResolver.resolveCommand(command, metadata);
-        } catch(TeiidException e) { 
-            fail("Exception during resolution (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
-        } 
+    	QueryResolver.addBindingMetadata(command, metadata, qn);
+        QueryResolver.resolveCommand(command, metadata);
 
         CheckSymbolsAreResolvedVisitor vis = new CheckSymbolsAreResolvedVisitor();
         DeepPreOrderNavigator.doVisit(command, vis);
@@ -832,12 +821,12 @@ public class TestResolver {
 		helpResolveException("SELECT dayofmonth('2002-01-01') FROM pm1.g1", "Error Code:ERR.015.008.0040 Message:The function 'dayofmonth('2002-01-01')' is a valid function form, but the arguments do not match a known type signature and cannot be converted using implicit type conversions."); //$NON-NLS-1$ //$NON-NLS-2$
 	}
     
-    @Test public void testResolveParameters() {
+    @Test public void testResolveParameters() throws Exception {
         List bindings = new ArrayList();
         bindings.add("pm1.g2.e1"); //$NON-NLS-1$
         bindings.add("pm1.g2.e2"); //$NON-NLS-1$
         
-        Query resolvedQuery = (Query) helpResolve("SELECT pm1.g1.e1, ? FROM pm1.g1 WHERE pm1.g1.e1 = ?", bindings); //$NON-NLS-1$
+        Query resolvedQuery = (Query) helpResolveWithBindings("SELECT pm1.g1.e1, ? FROM pm1.g1 WHERE pm1.g1.e1 = ?", metadata, bindings); //$NON-NLS-1$
 
         helpCheckFrom(resolvedQuery, new String[] { "pm1.g1" }); //$NON-NLS-1$
         helpCheckSelect(resolvedQuery, new String[] { "pm1.g1.e1", "expr" }); //$NON-NLS-1$ //$NON-NLS-2$
@@ -847,18 +836,18 @@ public class TestResolver {
             
     }
 
-    @Test public void testResolveParametersInsert() {
+    @Test public void testResolveParametersInsert() throws Exception {
         List bindings = new ArrayList();
         bindings.add("pm1.g2.e1"); //$NON-NLS-1$
         
-        helpResolve("INSERT INTO pm1.g1 (e1) VALUES (?)", bindings); //$NON-NLS-1$
+        helpResolveWithBindings("INSERT INTO pm1.g1 (e1) VALUES (?)", metadata, bindings); //$NON-NLS-1$
     }
     
-    @Test public void testResolveParametersExec() {
+    @Test public void testResolveParametersExec() throws Exception {
         List bindings = new ArrayList();
         bindings.add("pm1.g2.e1"); //$NON-NLS-1$
         
-        Query resolvedQuery = (Query)helpResolve("SELECT * FROM (exec pm1.sq2(?)) as a", bindings); //$NON-NLS-1$
+        Query resolvedQuery = (Query)helpResolveWithBindings("SELECT * FROM (exec pm1.sq2(?)) as a", metadata, bindings); //$NON-NLS-1$
         //verify the type of the reference is resolved
         List refs = ReferenceCollectorVisitor.getReferences(resolvedQuery);
         Reference ref = (Reference)refs.get(0);
@@ -967,65 +956,6 @@ public class TestResolver {
         assertEquals("Did not get expected type", DataTypeManager.DefaultDataClasses.INTEGER, elem2.getType()); //$NON-NLS-1$
     }
 
-    @Test public void testStoredQueryTransformationWithVariable() throws Exception {
-        Command command = QueryParser.getQueryParser().parseCommand("SELECT * FROM pm1.g1 WHERE pm1.sq5.in1 = 5"); //$NON-NLS-1$
-        
-        // Construct command metadata 
-        GroupSymbol sqGroup = new GroupSymbol("pm1.sq5");  //$NON-NLS-1$
-        ArrayList sqParams = new ArrayList();
-        ElementSymbol in = new ElementSymbol("pm1.sq5.in1"); //$NON-NLS-1$
-        in.setType(DataTypeManager.DefaultDataClasses.STRING);
-        sqParams.add(in);
-        Map externalMetadata = new HashMap();
-        externalMetadata.put(sqGroup, sqParams);
-        QueryResolver.buildExternalGroups(externalMetadata, command);
-        QueryResolver.resolveCommand(command, metadata);
-
-        // Verify results        
-        helpCheckFrom((Query)command, new String[] { "pm1.g1" });         //$NON-NLS-1$
-        Collection vars = getVariables(command);
-        assertEquals("Did not find variable in resolved query", 1, vars.size()); //$NON-NLS-1$
-    }
-
-    @Test public void testStoredQueryTransformationWithVariable2() throws Exception {
-        Command command = QueryParser.getQueryParser().parseCommand("SELECT * FROM pm1.g1 WHERE in1 = 5"); //$NON-NLS-1$
-        
-        // Construct command metadata
-        GroupSymbol sqGroup = new GroupSymbol("pm1.sq5");  //$NON-NLS-1$
-        ArrayList sqParams = new ArrayList();
-        ElementSymbol in = new ElementSymbol("pm1.sq5.in1"); //$NON-NLS-1$
-        in.setType(DataTypeManager.DefaultDataClasses.STRING);
-        sqParams.add(in);
-        Map externalMetadata = new HashMap();
-        externalMetadata.put(sqGroup, sqParams);
-        QueryResolver.buildExternalGroups(externalMetadata, command);            
-        QueryResolver.resolveCommand(command, metadata);
-
-        // Verify results        
-        helpCheckFrom((Query)command, new String[] { "pm1.g1" });         //$NON-NLS-1$
-        Collection vars = getVariables(command);
-        assertEquals("Did not find variable in resolved query", 1, vars.size()); //$NON-NLS-1$
-    }
-
-    @Test public void testStoredQueryTransformationWithVariable3() throws Exception {
-        Command command = QueryParser.getQueryParser().parseCommand("SELECT * FROM pm1.g1 WHERE in1 = 5 UNION SELECT * FROM pm1.g1"); //$NON-NLS-1$
-
-        // Construct command metadata
-        GroupSymbol sqGroup = new GroupSymbol("pm1.sq5"); //$NON-NLS-1$
-        ArrayList sqParams = new ArrayList();
-        ElementSymbol in = new ElementSymbol("pm1.sq5.in1"); //$NON-NLS-1$
-        in.setType(DataTypeManager.DefaultDataClasses.STRING);
-        sqParams.add(in);
-        Map externalMetadata = new HashMap();
-        externalMetadata.put(sqGroup, sqParams);
-        QueryResolver.buildExternalGroups(externalMetadata, command);
-        QueryResolver.resolveCommand(command, metadata);
-
-        // Verify results
-        Collection vars = getVariables(command);
-        assertEquals("Did not find variable in resolved query", 1, vars.size()); //$NON-NLS-1$
-    }
-    
     @Test public void testStoredQueryTransformationWithVariable4() throws Exception {
         Command command = QueryParser.getQueryParser().parseCommand("EXEC pm1.sq2(pm1.sq2.in)"); //$NON-NLS-1$
 
@@ -2231,27 +2161,6 @@ public class TestResolver {
         assertFalse(groups.contains(inputSet));
     }
     
-    @Test public void testDefect15872() throws Exception {
-    	String sql = "CREATE VIRTUAL PROCEDURE " //$NON-NLS-1$
-    		+ "BEGIN " //$NON-NLS-1$
-			+"SELECT * FROM pm1.g1 where model.table.param=e1; " //$NON-NLS-1$
-			+"end "; //$NON-NLS-1$
-        Command command = helpParse(sql);
-    	Map externalMetadata = new HashMap();
-    	GroupSymbol procGroup = new GroupSymbol("model.table"); //$NON-NLS-1$
-    	List procPrarms = new ArrayList();
-    	ElementSymbol param = new ElementSymbol("model.table.param"); //$NON-NLS-1$
-    	param.setType(String.class);
-    	procPrarms.add(param);
-    	externalMetadata.put(procGroup, procPrarms);
-    	QueryResolver.buildExternalGroups(externalMetadata, command);
-        QueryResolver.resolveCommand(command, metadata);
-        CreateUpdateProcedureCommand proc = (CreateUpdateProcedureCommand)command;
-        Query query = (Query)proc.getSubCommands().get(0);
-        ElementSymbol inElement = (ElementSymbol)((CompareCriteria)query.getCriteria()).getLeftExpression();
-        assertNotNull("Input parameter does not have group", inElement.getGroupSymbol()); //$NON-NLS-1$
-    }
-    
     @Test public void testInputToInputsConversion() throws Exception {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -2497,26 +2406,6 @@ public class TestResolver {
         String sql = "select p.e1 from pm1.g1 as pp, pm1.g1 as p"; //$NON-NLS-1$
         
         helpResolve(sql);
-    }
-    
-    @Test public void testDefect23342() throws Exception {
-        String sql = "CREATE VIRTUAL PROCEDURE " //$NON-NLS-1$
-            + "BEGIN " //$NON-NLS-1$
-            + "IF (param = '1')" //$NON-NLS-1$
-            + " BEGIN " //$NON-NLS-1$
-            +"SELECT * FROM pm1.g1 where model.table.param=e1; " //$NON-NLS-1$
-            +" END " //$NON-NLS-1$
-            +"end "; //$NON-NLS-1$
-        Command command = helpParse(sql);
-        Map externalMetadata = new HashMap();
-        GroupSymbol proc = new GroupSymbol("model.table"); //$NON-NLS-1$
-        List procPrarms = new ArrayList();
-        ElementSymbol param = new ElementSymbol("model.table.param"); //$NON-NLS-1$
-        param.setType(DataTypeManager.DefaultDataClasses.STRING);
-        procPrarms.add(param);
-        externalMetadata.put(proc, procPrarms);
-        QueryResolver.buildExternalGroups(externalMetadata, command);
-        QueryResolver.resolveCommand(command, metadata);
     }
         
     @Test public void testBatchedUpdateResolver() throws Exception {

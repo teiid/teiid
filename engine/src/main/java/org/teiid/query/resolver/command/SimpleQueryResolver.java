@@ -148,11 +148,7 @@ public class SimpleQueryResolver implements CommandResolver {
             
             QueryResolver.setChildMetadata(queryExpression, query);
             
-            try {
-                QueryResolver.resolveCommand(queryExpression, metadata.getMetadata(), false);
-            } catch (TeiidException err) {
-                throw new TeiidRuntimeException(err);
-            }
+            QueryResolver.resolveCommand(queryExpression, metadata.getMetadata(), false);
 
             if (!discoveredGroups.add(obj.getGroupSymbol())) {
             	throw new QueryResolverException(QueryPlugin.Util.getString("SimpleQueryResolver.duplicate_with", obj.getGroupSymbol())); //$NON-NLS-1$

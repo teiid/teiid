@@ -33,7 +33,9 @@ import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
@@ -233,7 +235,14 @@ public class CreateUpdateProcedureCommand extends Command {
                 //user may have not entered any query yet
                 return Collections.EMPTY_LIST;
             }
-            setProjectedSymbols(this.resultsCommand.getProjectedSymbols());
+            List<? extends SingleElementSymbol> symbols = this.resultsCommand.getProjectedSymbols();
+            if (this.resultsCommand instanceof StoredProcedure) {
+            	StoredProcedure sp = (StoredProcedure)this.resultsCommand;
+            	if (sp.isCallableStatement()) {
+            		symbols = sp.getResultSetColumns();
+            	}
+            }
+            setProjectedSymbols(symbols);
             return this.projectedSymbols;
         }
         this.projectedSymbols = Command.getUpdateCommandSymbol();

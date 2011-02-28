@@ -27,12 +27,9 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.junit.Ignore;
@@ -51,14 +48,11 @@ import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.mapping.xml.MappingElement;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.metadata.StoredProcedureInfo;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.ProcedureContainer;
-import org.teiid.query.sql.lang.SPParameter;
-import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.unittest.FakeMetadataFacade;
@@ -69,39 +63,6 @@ import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
 public class TestValidator {
-
-    public static Map getStoredProcedureExternalMetadata(GroupSymbol virtualProc, QueryMetadataInterface metadata)
-    throws QueryMetadataException, TeiidComponentException {
-
-        Map externalMetadata = new HashMap();
-
-        StoredProcedureInfo info = metadata.getStoredProcedureInfoForProcedure(virtualProc.getName());
-        if(info!=null) {
-            virtualProc.setMetadataID(info.getProcedureID());
-
-            // List of ElementSymbols - Map Values
-            List paramList = info.getParameters();
-            Iterator iter = paramList.iterator();
-            // Create Symbol List from parameter list
-            List symbolList = new ArrayList();
-            while(iter.hasNext()) {
-                SPParameter param = (SPParameter) iter.next();
-                if(param.getParameterType() == ParameterInfo.IN ||
-                    param.getParameterType() == ParameterInfo.INOUT) {
-                    // Create Element Symbol
-                    ElementSymbol eSymbol = new ElementSymbol(param.getName());
-                    eSymbol.setMetadataID(param);
-                    eSymbol.setType(param.getClassType());
-                    symbolList.add(eSymbol);
-                }
-            }
-            // Create external Metadata Map
-            externalMetadata = new HashMap();
-            externalMetadata.put(virtualProc, symbolList);
-        }
-
-        return externalMetadata;
-    }
 
     public static FakeMetadataFacade exampleMetadata() {
         // Create metadata objects        
@@ -320,23 +281,31 @@ public class TestValidator {
 	// ################################## TEST HELPERS ################################
 
     static Command helpResolve(String sql, QueryMetadataInterface metadata) { 
-        return helpResolve(sql, metadata, Collections.EMPTY_MAP);
-    }
-    
-	public static Command helpResolve(String sql, QueryMetadataInterface metadata, Map externalMetadata) { 
-		Command command = null;
+    	Command command = null;
 		
 		try { 
 			command = QueryParser.getQueryParser().parseCommand(sql);
-			QueryResolver.buildExternalGroups(externalMetadata, command);
 			QueryResolver.resolveCommand(command, metadata);
 		} catch(Exception e) {
             throw new TeiidRuntimeException(e);
 		} 
 
 		return command;
-	}
+    }
+    
+    static Command helpResolve(String sql, GroupSymbol container, int type, QueryMetadataInterface metadata) { 
+    	Command command = null;
+		
+		try { 
+			command = QueryParser.getQueryParser().parseCommand(sql);
+			QueryResolver.resolveCommand(command, container, type, metadata);
+		} catch(Exception e) {
+            throw new TeiidRuntimeException(e);
+		} 
 
+		return command;
+    }
+        
 	static ValidatorReport helpValidate(String sql, String[] expectedStringArray, QueryMetadataInterface metadata) {
         Command command = helpResolve(sql, metadata);
 
@@ -600,44 +569,6 @@ public class TestValidator {
         helpValidate("INSERT INTO test.group (e0) VALUES (null)", new String[] {"e0"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
     }    
 
-    @Test public void testInsert2() throws Exception {
-        QueryMetadataInterface metadata = exampleMetadata();
-
-        Command command = QueryParser.getQueryParser().parseCommand("INSERT INTO test.group (e0) VALUES (p1)"); //$NON-NLS-1$
-
-        // Create external metadata
-        GroupSymbol sqGroup = new GroupSymbol("pm1.sq5"); //$NON-NLS-1$
-        ArrayList sqParams = new ArrayList();
-        ElementSymbol in = new ElementSymbol("pm1.sq5.p1"); //$NON-NLS-1$
-        in.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-        sqParams.add(in);
-        Map externalMetadata = new HashMap();
-        externalMetadata.put(sqGroup, sqParams);
-        QueryResolver.buildExternalGroups(externalMetadata, command);
-        QueryResolver.resolveCommand(command, metadata);
-
-        helpRunValidator(command, new String[] {}, metadata);
-    }
-
-    @Test public void testInsert3() throws Exception {
-        QueryMetadataInterface metadata = exampleMetadata();
-
-        Command command = QueryParser.getQueryParser().parseCommand("INSERT INTO test.group (e0) VALUES (p1+2)"); //$NON-NLS-1$
-
-        // Create external metadata
-        GroupSymbol sqGroup = new GroupSymbol("pm1.sq5"); //$NON-NLS-1$
-        ArrayList sqParams = new ArrayList();
-        ElementSymbol in = new ElementSymbol("pm1.sq5.p1"); //$NON-NLS-1$
-        in.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-        sqParams.add(in);
-        Map externalMetadata = new HashMap();
-        externalMetadata.put(sqGroup, sqParams);
-        QueryResolver.buildExternalGroups(externalMetadata, command);
-        QueryResolver.resolveCommand(command, metadata);
-
-        helpRunValidator(command, new String[] {}, metadata);
-    }
-    
 	// non-null, no-default elements not left
     @Test public void testInsert4() throws Exception {
         QueryMetadataInterface metadata = exampleMetadata1();
@@ -690,43 +621,6 @@ public class TestValidator {
         helpValidate("UPDATE test.group SET e0=1, e0=2", new String[] {"e0"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
     }  
     
-    @Test public void testUpdate4() throws Exception {
-        QueryMetadataInterface metadata = exampleMetadata();
-
-        Command command = QueryParser.getQueryParser().parseCommand("UPDATE test.group SET e0=p1"); //$NON-NLS-1$
-        
-        // Create external metadata
-        GroupSymbol sqGroup = new GroupSymbol("pm1.sq5"); //$NON-NLS-1$
-        ArrayList sqParams = new ArrayList();
-        ElementSymbol in = new ElementSymbol("pm1.sq5.p1"); //$NON-NLS-1$
-        in.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-        sqParams.add(in);
-        Map externalMetadata = new HashMap();
-        externalMetadata.put(sqGroup, sqParams);
-        QueryResolver.buildExternalGroups(externalMetadata, command);
-        QueryResolver.resolveCommand(command, metadata);
-
-        helpRunValidator(command, new String[] {}, metadata);
-    }
-
-    @Test public void testUpdate5() throws Exception {
-        QueryMetadataInterface metadata = exampleMetadata();
-
-        Command command = QueryParser.getQueryParser().parseCommand("UPDATE test.group SET e0=p1+2"); //$NON-NLS-1$
-
-        // Create external metadata
-        GroupSymbol sqGroup = new GroupSymbol("pm1.sq5"); //$NON-NLS-1$
-        ArrayList sqParams = new ArrayList();
-        ElementSymbol in = new ElementSymbol("pm1.sq5.p1"); //$NON-NLS-1$
-        in.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-        sqParams.add(in);
-        Map externalMetadata = new HashMap();
-        externalMetadata.put(sqGroup, sqParams);
-        QueryResolver.buildExternalGroups(externalMetadata, command);
-        QueryResolver.resolveCommand(command, metadata);
-        helpRunValidator(command, new String[] {}, metadata);
-    }
-
     @Test public void testValidateUpdateElements1() throws Exception {
         QueryMetadataInterface metadata = exampleMetadata();
 
@@ -1605,9 +1499,7 @@ public class TestValidator {
         Command command = new QueryParser().parseCommand(procSql);
         
         GroupSymbol group = new GroupSymbol(procName);
-        Map externalMetadata = getStoredProcedureExternalMetadata(group, metadata);
-        QueryResolver.buildExternalGroups(externalMetadata, command);
-        QueryResolver.resolveCommand(command, metadata);
+        QueryResolver.resolveCommand(command, group, Command.TYPE_STORED_PROCEDURE, metadata);
         
         // Validate
         return Validator.validate(command, metadata);         
@@ -1718,10 +1610,9 @@ public class TestValidator {
     @Test public void testCase4237() {
 
         FakeMetadataFacade metadata = helpCreateCase4237VirtualProcedureMetadata();
-        Map externalMetadata = helpCreateCase4237ExternalMetadata(metadata);
         
         String sql = "CREATE VIRTUAL PROCEDURE BEGIN EXEC pm1.sp(vm1.sp.in1); END"; //$NON-NLS-1$ 
-        Command command = helpResolve(sql, metadata, externalMetadata);
+        Command command = helpResolve(sql, new GroupSymbol("vm1.sp"), Command.TYPE_STORED_PROCEDURE, metadata);
         helpRunValidator(command, new String[0], metadata);
     }
 
@@ -1732,40 +1623,12 @@ public class TestValidator {
     @Test public void testCase4237InlineView() {
 
         FakeMetadataFacade metadata = helpCreateCase4237VirtualProcedureMetadata();
-        Map externalMetadata = helpCreateCase4237ExternalMetadata(metadata);
         
         String sql = "CREATE VIRTUAL PROCEDURE BEGIN SELECT * FROM (EXEC pm1.sp(vm1.sp.in1)) AS FOO; END"; //$NON-NLS-1$ 
-        Command command = helpResolve(sql, metadata, externalMetadata);
+        Command command = helpResolve(sql, new GroupSymbol("vm1.sp"), Command.TYPE_STORED_PROCEDURE, metadata);
         helpRunValidator(command, new String[0], metadata);
     }    
     
-    /**
-     * Set up external metadata describing the virtual procedure and parameters 
-     * @param metadata FakeMetadataFacade
-     * @return external metadata Map
-     */
-    private Map helpCreateCase4237ExternalMetadata(FakeMetadataFacade metadata) {
-        GroupSymbol sp = new GroupSymbol("vm1.sp");//$NON-NLS-1$ 
-        FakeMetadataObject spObj = metadata.getStore().findObject("vm1.sp", FakeMetadataObject.PROCEDURE);//$NON-NLS-1$ 
-        sp.setMetadataID(spObj);
-        ElementSymbol param = new ElementSymbol("vm1.sp.in1");//$NON-NLS-1$ 
-        List paramIDs = (List)spObj.getProperty(FakeMetadataObject.Props.PARAMS);
-        Iterator i = paramIDs.iterator();
-        while (i.hasNext()) {
-            FakeMetadataObject paramID = (FakeMetadataObject)i.next();
-            if (paramID.getProperty(FakeMetadataObject.Props.DIRECTION).equals(new Integer(ParameterInfo.IN))) {
-                param.setMetadataID(paramID);
-                param.setType(DataTypeManager.getDataTypeClass((String)paramID.getProperty(FakeMetadataObject.Props.TYPE)));
-                break;
-            }
-        }
-        
-        Map externalMetadata = new HashMap();
-        externalMetadata.put(sp, Arrays.asList(new ElementSymbol[] { param }));
- 
-        return externalMetadata;
-    }
-
     /**
      * Create fake metadata for this case.  Need a physical stored procedure and
      * a virtual stored procedure which calls the physical one. 

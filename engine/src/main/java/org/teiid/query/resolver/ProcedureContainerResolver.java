@@ -29,6 +29,7 @@ import java.util.List;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
@@ -36,6 +37,7 @@ import org.teiid.language.SQLConstants;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.StoredProcedureInfo;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
@@ -45,11 +47,9 @@ import org.teiid.query.resolver.command.UpdateProcedureResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.Delete;
 import org.teiid.query.sql.lang.GroupContext;
-import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.ProcedureContainer;
-import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -101,46 +101,6 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
             throw new QueryResolverException(e, "ERR.015.008.0045", QueryPlugin.Util.getString("ERR.015.008.0045", group)); //$NON-NLS-1$ //$NON-NLS-2$
         }
         
-        if(subCommand instanceof CreateUpdateProcedureCommand){
-            CreateUpdateProcedureCommand cupCommand = (CreateUpdateProcedureCommand)subCommand;
-            //if the subcommand is virtual stored procedure, it must have the same
-            //projected symbol as its parent.
-            if(!cupCommand.isUpdateProcedure()){
-                cupCommand.setProjectedSymbols(procCommand.getProjectedSymbols());
-            } 
-            
-            cupCommand.setVirtualGroup(procCommand.getGroup());
-            cupCommand.setUserCommand(procCommand);
-        } else if (subCommand instanceof TriggerAction) {
-        	TriggerAction ta = (TriggerAction)subCommand;
-        	ta.setView(procCommand.getGroup());
-        	TempMetadataAdapter tma = new TempMetadataAdapter(metadata, new TempMetadataStore());
-        	ta.setTemporaryMetadata(tma.getMetadataStore().getData());
-            GroupContext externalGroups = ta.getExternalGroupContexts();
-            //TODO: it seems easier to just inline the handling here rather than have each of the resolvers check for trigger actions
-            List<ElementSymbol> viewElements = ResolverUtil.resolveElementsInGroup(ta.getView(), metadata);
-            if (procCommand instanceof Update || procCommand instanceof Insert) {
-            	addChanging(tma.getMetadataStore(), externalGroups, viewElements);
-            	ProcedureContainerResolver.addScalarGroup(SQLConstants.Reserved.NEW, tma.getMetadataStore(), externalGroups, viewElements, false);
-            }
-            if (procCommand instanceof Update || procCommand instanceof Delete) {
-            	ProcedureContainerResolver.addScalarGroup(SQLConstants.Reserved.OLD, tma.getMetadataStore(), externalGroups, viewElements, false);
-            }
-            QueryResolver.setChildMetadata(subCommand, tma.getMetadataStore().getData(), externalGroups);
-            QueryResolver.resolveCommand(subCommand, metadata);
-            return ta;
-        }
-        
-        //find the childMetadata using a clean metadata store
-        TempMetadataStore childMetadata = new TempMetadataStore();
-        QueryMetadataInterface resolveMetadata = new TempMetadataAdapter(metadata, childMetadata);
-
-        GroupContext externalGroups = findChildCommandMetadata(procCommand, childMetadata, resolveMetadata);
-        
-        QueryResolver.setChildMetadata(subCommand, childMetadata.getData(), externalGroups);
-        
-        QueryResolver.resolveCommand(subCommand, metadata);
-        
         return subCommand;
     }
 
@@ -157,52 +117,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
                            GroupSymbol group) throws TeiidComponentException,
                                              QueryMetadataException, QueryResolverException;
         
-    /**
-     * Find all metadata defined by this command for it's children.  This metadata should be collected 
-     * in the childMetadata object.  Typical uses of this are for stored queries that define parameter
-     * variables valid in subcommands. only used for inserts, updates, and deletes
-     * @param metadata Metadata access
-     * @param command The command to find metadata on
-     * @param childMetadata The store to collect child metadata in 
-     * @throws QueryMetadataException If there is a metadata problem
-     * @throws QueryResolverException If the query cannot be resolved
-     * @throws TeiidComponentException If there is an internal error    
-     */ 
-    public GroupContext findChildCommandMetadata(ProcedureContainer container, TempMetadataStore discoveredMetadata, QueryMetadataInterface metadata)
-    throws QueryMetadataException, QueryResolverException, TeiidComponentException {
-        // get the group on the delete statement
-        GroupSymbol group = container.getGroup();
-        // proceed further if it is a virtual group
-            
-        return createChildMetadata(discoveredMetadata, metadata, group);
-    }
-
-	static GroupContext createChildMetadata(
-			TempMetadataStore discoveredMetadata,
-			QueryMetadataInterface metadata, GroupSymbol group)
-			throws QueryMetadataException, TeiidComponentException {
-		GroupContext externalGroups = new GroupContext();
-        
-        //Look up elements for the virtual group
-        List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(group, metadata);
-
-        // Create the INPUT variables
-        List<ElementSymbol> inputElments = new ArrayList<ElementSymbol>(elements.size());
-        for(int i=0; i<elements.size(); i++) {
-            ElementSymbol virtualElmnt = elements.get(i);
-            ElementSymbol inputElement = (ElementSymbol)virtualElmnt.clone();
-            inputElments.add(inputElement);
-        }
-
-        addScalarGroup(ProcedureReservedWords.INPUT, discoveredMetadata, externalGroups, inputElments, false);
-        addScalarGroup(ProcedureReservedWords.INPUTS, discoveredMetadata, externalGroups, inputElments, false);
-
-        // Switch type to be boolean for all CHANGING variables
-        addChanging(discoveredMetadata, externalGroups, elements);
-		return externalGroups;
-	}
-
-	private static void addChanging(TempMetadataStore discoveredMetadata,
+	public static void addChanging(TempMetadataStore discoveredMetadata,
 			GroupContext externalGroups, List<ElementSymbol> elements) {
 		List<ElementSymbol> changingElements = new ArrayList<ElementSymbol>(elements.size());
         for(int i=0; i<elements.size(); i++) {
@@ -339,6 +254,82 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 		}
 	    variables.setMetadataID(tid);
 	    return variables;
+	}
+	
+	/**
+	 * Set the appropriate "external" metadata for the given command
+	 */
+	public static void findChildCommandMetadata(Command currentCommand,
+			GroupSymbol container, int type, QueryMetadataInterface metadata)
+			throws QueryMetadataException, TeiidComponentException {
+		//find the childMetadata using a clean metadata store
+	    TempMetadataStore childMetadata = new TempMetadataStore();
+	    TempMetadataAdapter tma = new TempMetadataAdapter(metadata, childMetadata);
+	    GroupContext externalGroups = new GroupContext();
+
+		if (currentCommand instanceof TriggerAction) {
+			TriggerAction ta = (TriggerAction)currentCommand;
+			ta.setView(container);
+		    //TODO: it seems easier to just inline the handling here rather than have each of the resolvers check for trigger actions
+		    List<ElementSymbol> viewElements = ResolverUtil.resolveElementsInGroup(ta.getView(), metadata);
+		    if (type == Command.TYPE_UPDATE || type == Command.TYPE_INSERT) {
+		    	ProcedureContainerResolver.addChanging(tma.getMetadataStore(), externalGroups, viewElements);
+		    	ProcedureContainerResolver.addScalarGroup(SQLConstants.Reserved.NEW, tma.getMetadataStore(), externalGroups, viewElements, false);
+		    }
+		    if (type == Command.TYPE_UPDATE || type == Command.TYPE_DELETE) {
+		    	ProcedureContainerResolver.addScalarGroup(SQLConstants.Reserved.OLD, tma.getMetadataStore(), externalGroups, viewElements, false);
+		    }
+		} else if (currentCommand instanceof CreateUpdateProcedureCommand) {
+			CreateUpdateProcedureCommand cupc = (CreateUpdateProcedureCommand)currentCommand;
+			cupc.setVirtualGroup(container);
+
+			if (type == Command.TYPE_STORED_PROCEDURE) {
+				StoredProcedureInfo info = metadata.getStoredProcedureInfoForProcedure(container.getCanonicalName());
+		        // Create temporary metadata that defines a group based on either the stored proc
+		        // name or the stored query name - this will be used later during planning
+		        String procName = metadata.getFullName(info.getProcedureID());
+		        
+		        // Look through parameters to find input elements - these become child metadata
+		        List<ElementSymbol> tempElements = new ArrayList<ElementSymbol>(info.getParameters().size());
+		        boolean[] updatable = new boolean[info.getParameters().size()];
+		        int i = 0;
+		        for (SPParameter param : info.getParameters()) {
+		            if(param.getParameterType() != ParameterInfo.RESULT_SET) {
+		                ElementSymbol symbol = param.getParameterSymbol();
+		                tempElements.add(symbol);
+		                updatable[i++] = param.getParameterType() != ParameterInfo.IN;  
+		            }
+		        }
+
+		        ProcedureContainerResolver.addScalarGroup(procName, childMetadata, externalGroups, tempElements, updatable);
+			} else if (type != Command.TYPE_DELETE) {
+				createInputChangingMetadata(childMetadata, tma, container, externalGroups);
+			}
+		}
+		
+	    QueryResolver.setChildMetadata(currentCommand, childMetadata.getData(), externalGroups);
+	}
+
+	static void createInputChangingMetadata(
+			TempMetadataStore discoveredMetadata,
+			QueryMetadataInterface metadata, GroupSymbol group, GroupContext externalGroups)
+			throws QueryMetadataException, TeiidComponentException {
+        //Look up elements for the virtual group
+        List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(group, metadata);
+
+        // Create the INPUT variables
+        List<ElementSymbol> inputElments = new ArrayList<ElementSymbol>(elements.size());
+        for(int i=0; i<elements.size(); i++) {
+            ElementSymbol virtualElmnt = elements.get(i);
+            ElementSymbol inputElement = (ElementSymbol)virtualElmnt.clone();
+            inputElments.add(inputElement);
+        }
+
+        ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.INPUT, discoveredMetadata, externalGroups, inputElments, false);
+        ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.INPUTS, discoveredMetadata, externalGroups, inputElments, false);
+
+        // Switch type to be boolean for all CHANGING variables
+        ProcedureContainerResolver.addChanging(discoveredMetadata, externalGroups, elements);
 	}
         
 }

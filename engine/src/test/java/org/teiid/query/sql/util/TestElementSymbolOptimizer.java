@@ -22,23 +22,18 @@
 
 package org.teiid.query.sql.util;
 
-import java.util.*;
+
+import junit.framework.TestCase;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.util.ElementSymbolOptimizer;
 import org.teiid.query.unittest.FakeMetadataFactory;
-
-import junit.framework.*;
 
 
 /**
@@ -53,22 +48,15 @@ public class TestElementSymbolOptimizer extends TestCase {
         super(name);
     }
     
-    public Command helpResolve(String sql, QueryMetadataInterface metadata, Map externalMetadata) throws QueryParserException, QueryResolverException, TeiidComponentException {
+    public Command helpResolve(String sql, QueryMetadataInterface metadata) throws QueryParserException, QueryResolverException, TeiidComponentException {
         Command command = QueryParser.getQueryParser().parseCommand(sql);
-        QueryResolver.buildExternalGroups(externalMetadata, command);
         QueryResolver.resolveCommand(command, metadata);
         
         return command;      
     }
     
-
     public void helpTestOptimize(String sql, QueryMetadataInterface metadata, String expected) throws QueryMetadataException, TeiidComponentException, QueryParserException, QueryResolverException {
-        this.helpTestOptimize(sql, metadata, expected, Collections.EMPTY_MAP);    
-    }
-    
-    
-    public void helpTestOptimize(String sql, QueryMetadataInterface metadata, String expected, Map externalMetadata) throws QueryMetadataException, TeiidComponentException, QueryParserException, QueryResolverException {
-    	Command command = helpResolve(sql, metadata, externalMetadata);
+    	Command command = helpResolve(sql, metadata);
         ElementSymbolOptimizer.optimizeElements(command, metadata);
         String actual = command.toString();
             
@@ -127,7 +115,7 @@ public class TestElementSymbolOptimizer extends TestCase {
     }
 
     public void helpTestFullyQualify(String sql, QueryMetadataInterface metadata, String expected) throws QueryParserException, QueryResolverException, TeiidComponentException {
-        Command command = helpResolve(sql, metadata, Collections.EMPTY_MAP);
+        Command command = helpResolve(sql, metadata);
         ElementSymbolOptimizer.fullyQualifyElements(command);
         String actual = command.toString();
 
@@ -162,30 +150,6 @@ public class TestElementSymbolOptimizer extends TestCase {
         helpTestOptimize("select x.e1 from (EXEC pm1.sq1()) as x WHERE x.e2 = 3",  //$NON-NLS-1$
                             FakeMetadataFactory.example1Cached(), 
                             "SELECT e1 FROM (EXEC pm1.sq1()) AS x WHERE e2 = 3"); //$NON-NLS-1$
-    }
-
-    public void testStoredQuerySubquery3() throws Exception {
-        
-        // Set up external metadata - stored query pm1.sq3 with
-        // params in and in2
-        Map externalMetadata = new HashMap();
-        GroupSymbol gs = new GroupSymbol("SYSTEM.DESCRIBE"); //$NON-NLS-1$
-        List<ElementSymbol> elements = new ArrayList<ElementSymbol>(2);
-        elements.add(new ElementSymbol("SYSTEM.DESCRIBE.entity")); //$NON-NLS-1$
-        elements.get(0).setType(DataTypeManager.DefaultDataClasses.STRING);
-        externalMetadata.put(gs, elements);
-        
-        
-        helpTestOptimize("select nvl(entities.entityType, '') as Description " +  //$NON-NLS-1$
-                         "from (SELECT 'Model' AS entityType, pm1.g1.e1 AS entityName FROM pm1.g1 " + //$NON-NLS-1$
-                         "UNION ALL SELECT 'Group', pm1.g2.e1 FROM pm1.g2) as entities " +  //$NON-NLS-1$
-                         "WHERE ucase(entities.entityName) = ucase(SYSTEM.DESCRIBE.entity)",  //$NON-NLS-1$
-                            FakeMetadataFactory.example1Cached(), 
-                            "SELECT nvl(entityType, '') AS Description " +  //$NON-NLS-1$
-                            "FROM (SELECT 'Model' AS entityType, e1 AS entityName FROM pm1.g1 " + //$NON-NLS-1$
-                            "UNION ALL SELECT 'Group', e1 FROM pm1.g2) AS entities " +  //$NON-NLS-1$
-                            "WHERE ucase(entityName) = ucase(entity)",  //$NON-NLS-1$
-                           externalMetadata);
     }
     
     public void testOptimizeOrderBy() throws Exception {

@@ -22,15 +22,10 @@
 
 package org.teiid.query.resolver;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import junit.framework.TestCase;
 
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.parser.QueryParser;
-import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
@@ -42,8 +37,6 @@ import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.util.ElementSymbolOptimizer;
 import org.teiid.query.unittest.FakeMetadataFactory;
-
-import junit.framework.TestCase;
 
 
 public class TestXMLResolver extends TestCase {
@@ -387,26 +380,6 @@ public class TestXMLResolver extends TestCase {
         helpResolveException("SELECT * FROM vm1.doc1, vm1.doc2"); //$NON-NLS-1$
     }
     
-    public void testXMLQueryWithParam1() throws Exception {
-        Command command =  QueryParser.getQueryParser().parseCommand("select * from xmltest.doc4 where xmltest.doc4.root.node3 = pm1.sq5.in1"); //$NON-NLS-1$
-        
-        // resolve
-        // Construct command metadata 
-        GroupSymbol sqGroup = new GroupSymbol("pm1.sq5");  //$NON-NLS-1$
-        ArrayList sqParams = new ArrayList();
-        ElementSymbol in = new ElementSymbol("pm1.sq5.in1"); //$NON-NLS-1$
-        in.setType(DataTypeManager.DefaultDataClasses.STRING);
-        sqParams.add(in);
-        Map externalMetadata = new HashMap();
-        externalMetadata.put(sqGroup, sqParams);
-        QueryResolver.buildExternalGroups(externalMetadata, command);
-        QueryResolver.resolveCommand(command, FakeMetadataFactory.example1Cached());
-    
-        // Verify results        
-        Collection vars = TestResolver.getVariables(command);
-        assertEquals("Did not find variable in resolved query", 1, vars.size()); //$NON-NLS-1$
-    }
-      
     public void testXMLWithOrderBy1() {
         helpResolveException("select * from xmltest.doc4 order by node1");             //$NON-NLS-1$
     }

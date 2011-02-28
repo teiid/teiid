@@ -27,20 +27,23 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import junit.framework.TestCase;
+
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.query.resolver.TestResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Option;
 import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
+import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.GroupSymbol;
-
-import junit.framework.TestCase;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 
 /**
  *
  * @author gchadalavadaDec 9, 2002
  */
+@SuppressWarnings("nls")
 public class TestCreateUpdateProcedureCommand  extends TestCase {
 
 	// ################################## FRAMEWORK ################################
@@ -192,6 +195,15 @@ public class TestCreateUpdateProcedureCommand  extends TestCase {
         CreateUpdateProcedureCommand s1 = new CreateUpdateProcedureCommand();
         CreateUpdateProcedureCommand s2 = (CreateUpdateProcedureCommand)s1.clone();
         UnitTestUtil.helpTestEquivalence(0, s1, s2);
+    }
+    
+    public void testProjectedSymbols() {
+    	CreateUpdateProcedureCommand cupc = new CreateUpdateProcedureCommand();
+    	cupc.setUpdateProcedure(false);
+    	StoredProcedure sp = (StoredProcedure)TestResolver.helpResolve("call TEIIDSP9(p1=>1, p2=>?)", RealMetadataFactory.exampleBQTCached(), null);
+    	sp.setCallableStatement(true);
+    	cupc.setResultsCommand(sp);
+    	assertEquals(1, cupc.getProjectedSymbols().size());
     }
     
 }

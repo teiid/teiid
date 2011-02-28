@@ -188,18 +188,18 @@ public class StoredProcedure extends ProcedureContainer {
     	return null;
     }
 
-    public List getResultSetColumns(){
+    public List<ElementSymbol> getResultSetColumns(){
         SPParameter resultSetParameter = getResultSetParameter();
         if(resultSetParameter != null){
-            List result = new LinkedList();
-            for (Iterator i = resultSetParameter.getResultSetColumns().iterator(); i.hasNext();) {
-                ElementSymbol symbol = (ElementSymbol)((ElementSymbol)i.next()).clone();
+            List<ElementSymbol> result = new LinkedList<ElementSymbol>();
+            for (Iterator<ElementSymbol> i = resultSetParameter.getResultSetColumns().iterator(); i.hasNext();) {
+                ElementSymbol symbol = (ElementSymbol)i.next().clone();
                 symbol.setGroupSymbol(getGroup());
                 result.add(symbol);
             }
         	return result;
     	}
-    	return Collections.EMPTY_LIST;
+    	return Collections.emptyList();
     }
 
     public void acceptVisitor(LanguageVisitor visitor) {

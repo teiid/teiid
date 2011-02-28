@@ -22,27 +22,18 @@
 
 package org.teiid.query.resolver.util;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import org.teiid.api.exception.query.QueryMetadataException;
-import org.teiid.api.exception.query.QueryParserException;
-import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.client.metadata.ParameterInfo;
-import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.parser.QueryParser;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
 import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 
 
@@ -61,46 +52,18 @@ import org.teiid.query.sql.symbol.Reference;
  */
 public class BindVariableVisitor extends LanguageVisitor {
 
-    private List bindings;
-    private QueryMetadataInterface metadata;
-
-    private TeiidComponentException componentException;
-    private QueryResolverException resolverException;
+    private List<ElementSymbol> bindings;
 
 	/**
 	 * Constructor
 	 * @param bindings List of String binding expressions from query
 	 * transformation node
-	 * @param metadata source of metadata
 	 */
-	public BindVariableVisitor(List bindings, QueryMetadataInterface metadata) {
+	public BindVariableVisitor(List<ElementSymbol> bindings) {
 		ArgCheck.isNotNull(bindings, QueryPlugin.Util.getString("ERR.015.008.0049")); //$NON-NLS-1$
         
 		this.bindings = bindings;
-		this.metadata = metadata;
 	}
-
-    public TeiidComponentException getComponentException() {
-        return this.componentException;
-    }
-
-    public QueryResolverException getResolverException() {
-        return this.resolverException;
-    }
-
-    private void handleException(TeiidComponentException e) {
-        this.componentException = e;
-
-        // Abort the validation process
-        setAbort(true);
-    }
-
-    private void handleException(QueryResolverException e) {
-        this.resolverException = e;
-
-        // Abort the validation process
-        setAbort(true);
-    }
 
     /**
      * Visit a Reference object and bind it based on the bindings
@@ -113,25 +76,15 @@ public class BindVariableVisitor extends LanguageVisitor {
     private void bindReference(Reference obj) {
         int index = obj.getIndex();
         
-        String binding = (String) bindings.get(index);
-        try { 
-            bindReference(obj, binding);
-        } catch(QueryParserException e) {
-            handleException(new QueryResolverException(QueryPlugin.Util.getString("ERR.015.008.0022"), e.getMessage())); //$NON-NLS-1$
-        } catch(QueryMetadataException e) {
-            handleException(new TeiidComponentException(e, e.getMessage()));    
-        } catch(QueryResolverException e) {
-            handleException(e);
-        } catch(TeiidComponentException e) {
-            handleException(e);
-        }
+        ElementSymbol binding = bindings.get(index);
+        obj.setExpression(binding);
     }
 
     public void visit(StoredProcedure storedProcedure){
         //collect reference for physical stored procedure
-        Iterator paramsIter = storedProcedure.getParameters().iterator();
+        Iterator<SPParameter> paramsIter = storedProcedure.getParameters().iterator();
         while(paramsIter.hasNext()){
-            SPParameter param = (SPParameter)paramsIter.next();
+            SPParameter param = paramsIter.next();
             if(param.getParameterType() == ParameterInfo.IN || param.getParameterType() == ParameterInfo.INOUT){
                 if(param.getExpression() instanceof Reference){
                     bindReference((Reference)param.getExpression()); 
@@ -140,48 +93,17 @@ public class BindVariableVisitor extends LanguageVisitor {
         }       
     }
 
-    private void bindReference(Reference reference, String binding)
-        throws  QueryParserException, QueryResolverException,
-                QueryMetadataException, TeiidComponentException {
-
-        // Parse and resolve ref
-        Expression expr = QueryParser.getQueryParser().parseExpression(binding);
-
-        if(!(expr instanceof ElementSymbol)) {
-            throw new QueryResolverException("ERR.015.008.0025", QueryPlugin.Util.getString("ERR.015.008.0025", expr)); //$NON-NLS-1$ //$NON-NLS-2$
-        }
-        
-        ElementSymbol element = (ElementSymbol) expr;
-
-        GroupSymbol groupSymbol = new GroupSymbol(metadata.getGroupName(element.getName()));
-        ResolverUtil.resolveGroup(groupSymbol, metadata);
-
-        ResolverVisitor.resolveLanguageObject(element, Arrays.asList(groupSymbol), metadata);
-
-        reference.setExpression(element);
-    }
-
 	/**
 	 * Convenient static method for using this visitor
 	 * @param obj LanguageObject which has References to be bound
 	 * @param bindings List of String binding expressions from query
 	 * transformation node
-	 * @param metadata source of metadata
 	 * @param boundReferencesMap Map to be filled with String group name to List of References
 	 */
-    public static void bindReferences(LanguageObject obj, List bindings, QueryMetadataInterface metadata)
-        throws QueryResolverException, TeiidComponentException {
+    public static void bindReferences(LanguageObject obj, List<ElementSymbol> bindings) {
 
-        BindVariableVisitor visitor = new BindVariableVisitor(bindings, metadata);
+        BindVariableVisitor visitor = new BindVariableVisitor(bindings);
         DeepPreOrderNavigator.doVisit(obj, visitor);
-
-        if(visitor.getComponentException() != null) {
-            throw visitor.getComponentException();
-        }
-
-        if(visitor.getResolverException() != null) {
-            throw visitor.getResolverException();
-        }
     }
 
 }

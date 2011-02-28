@@ -43,6 +43,7 @@ import org.teiid.query.mapping.xml.Navigator;
 import org.teiid.query.mapping.xml.ResultSetInfo;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
@@ -193,12 +194,16 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
     private boolean areBindingsOnlyToNode(QueryNode modifiedNode, MappingSourceNode sourceNode) 
         throws TeiidComponentException {
         
-        List bindings = QueryUtil.parseBindings(modifiedNode, planEnv);
+        List<SingleElementSymbol> bindings = QueryResolver.parseBindings(modifiedNode);
 
         String nodeStr = (sourceNode.getActualResultSetName() + ElementSymbol.SEPARATOR).toUpperCase();
         
-        for (Iterator i = bindings.iterator(); i.hasNext();) {
-            ElementSymbol binding = (ElementSymbol)i.next();
+        for (Iterator<SingleElementSymbol> i = bindings.iterator(); i.hasNext();) {
+        	SingleElementSymbol ses = i.next();
+        	if (ses instanceof AliasSymbol) {
+        		ses = ((AliasSymbol)ses).getSymbol();
+        	}
+            ElementSymbol binding = (ElementSymbol)ses;
             
             if (!binding.getCanonicalName().startsWith(nodeStr)) {
                 return false;
@@ -259,12 +264,23 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
 
     static void mapBindings(MappingSourceNode sourceNode,
                              QueryNode oldQueryNode,
-                             QueryNode modifiedNode) {
+                             QueryNode modifiedNode) throws TeiidComponentException {
         if (oldQueryNode.getBindings() != null) {
-            List bindings = new ArrayList();
-            for (Iterator i = oldQueryNode.getBindings().iterator(); i.hasNext();) {
-                String binding = (String)i.next();
-                bindings.add(sourceNode.getMappedSymbol(new ElementSymbol(binding)).getName());
+            List<String> bindings = new ArrayList<String>();
+            for (Iterator<SingleElementSymbol> i = QueryResolver.parseBindings(oldQueryNode).iterator(); i.hasNext();) {
+            	SingleElementSymbol ses = i.next();
+            	String name = ses.getName();
+            	boolean useName = false;
+            	if (ses instanceof AliasSymbol) {
+            		ses = ((AliasSymbol)ses).getSymbol();
+            		useName = true;
+            	}
+            	ElementSymbol es = (ElementSymbol)ses;
+            	if (!useName) {
+            		bindings.add(sourceNode.getMappedSymbol(es).getName());
+            	} else {
+            		bindings.add(new AliasSymbol(name, sourceNode.getMappedSymbol(es)).toString());
+            	}
             }
             modifiedNode.setBindings(bindings);
         }

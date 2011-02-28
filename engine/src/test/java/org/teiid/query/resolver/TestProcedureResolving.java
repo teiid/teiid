@@ -25,8 +25,6 @@ package org.teiid.query.resolver;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
@@ -41,12 +39,8 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.parser.QueryParser;
-import org.teiid.query.resolver.ProcedureContainerResolver;
-import org.teiid.query.resolver.QueryResolver;
-import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.GroupContext;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.proc.AssignmentStatement;
@@ -100,27 +94,6 @@ public class TestProcedureResolving {
 			throw new RuntimeException(e);
 		} 
 	}	
-	
-    public static Map getProcedureExternalMetadata(GroupSymbol virtualGroup, QueryMetadataInterface metadata)
-    throws QueryMetadataException, TeiidComponentException {
-        Map externalMetadata = new HashMap();
-        
-        //TODO: it doesn't seem like these should be in the 
-        List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(virtualGroup, metadata);
-        externalMetadata.put(virtualGroup, elements);
-        
-        TempMetadataStore tms = new TempMetadataStore();
-
-        TempMetadataAdapter tma = new TempMetadataAdapter(metadata, tms);
-        
-        GroupContext gc = ProcedureContainerResolver.createChildMetadata(tms, metadata, virtualGroup);
-        
-        for (GroupSymbol symbol : gc.getAllGroups()) {
-        	externalMetadata.put(symbol, ResolverUtil.resolveElementsInGroup(symbol, tma));
-        }
-        
-        return externalMetadata;
-    }
 	
     @Test public void testDefect13029_CorrectlySetUpdateProcedureTempGroupIDs() throws Exception {
         StringBuffer proc = new StringBuffer("CREATE VIRTUAL PROCEDURE") //$NON-NLS-1$
@@ -843,9 +816,7 @@ public class TestProcedureResolving {
         Command procCommand = QueryParser.getQueryParser().parseCommand(procedure);
 		GroupSymbol virtualGroup = new GroupSymbol("vm1.g1"); //$NON-NLS-1$
 		virtualGroup.setMetadataID(metadata.getGroupID("vm1.g1")); //$NON-NLS-1$
-		Map externalMetadata = getProcedureExternalMetadata(virtualGroup, metadata);
-		QueryResolver.buildExternalGroups(externalMetadata, procCommand);
-        QueryResolver.resolveCommand(procCommand, metadata);
+        QueryResolver.resolveCommand(procCommand, virtualGroup, Command.TYPE_UPDATE, metadata);
     }
     
 	// special variable CHANGING compared against integer no implicit conversion available
@@ -881,9 +852,7 @@ public class TestProcedureResolving {
 		GroupSymbol virtualGroup = new GroupSymbol("vm1.g1"); //$NON-NLS-1$
 		virtualGroup.setMetadataID(metadata.getGroupID("vm1.g1")); //$NON-NLS-1$
 		
-    	Map externalMetadata = getProcedureExternalMetadata(virtualGroup, metadata);        
-    	QueryResolver.buildExternalGroups(externalMetadata, procCommand);
-        QueryResolver.resolveCommand(procCommand, metadata);
+        QueryResolver.resolveCommand(procCommand, virtualGroup, Command.TYPE_INSERT, metadata);
     }
     
 	// special variable CHANGING compared against integer no implicit conversion available
@@ -900,9 +869,7 @@ public class TestProcedureResolving {
 		GroupSymbol virtualGroup = new GroupSymbol("vm1.g1"); //$NON-NLS-1$
 		virtualGroup.setMetadataID(metadata.getGroupID("vm1.g1")); //$NON-NLS-1$
 
-		Map externalMetadata = getProcedureExternalMetadata(virtualGroup, metadata);  
-		QueryResolver.buildExternalGroups(externalMetadata, procCommand);
-        QueryResolver.resolveCommand(procCommand, metadata);
+        QueryResolver.resolveCommand(procCommand, virtualGroup, Command.TYPE_UPDATE, metadata);
     }
 
 	// TranslateCriteria on criteria of the if statement
@@ -1046,18 +1013,6 @@ public class TestProcedureResolving {
 									 FakeMetadataObject.Props.UPDATE_PROCEDURE);
 	}	
 
-    // no user command provided - should throw resolver exception
-    @Test public void testCreateUpdateProcedure56() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE string var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "var1 = 1+ROWS_UPDATED;"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-
-        TestResolver.helpResolveException(procedure, FakeMetadataFactory.example1Cached(), "Error Code:ERR.015.008.0012 Message:Unable to resolve update procedure as the virtual group context is ambiguous."); //$NON-NLS-1$
-    }
-    
     @Test public void testDefect14912_CreateUpdateProcedure57_FunctionWithElementParamInAssignmentStatement() {
         // Tests that the function params are resolved before the function for assignment statements
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$

@@ -74,7 +74,7 @@ import org.teiid.query.processor.relational.SortNode;
 import org.teiid.query.processor.relational.UnionAllNode;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.resolver.QueryResolver;
-import org.teiid.query.resolver.util.BindVariableVisitor;
+import org.teiid.query.resolver.TestResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -196,11 +196,14 @@ public class TestOptimizer {
     
     public static Command helpGetCommand(String sql, QueryMetadataInterface md, List bindings) throws TeiidComponentException, TeiidProcessingException { 
 		if(DEBUG) System.out.println("\n####################################\n" + sql);	 //$NON-NLS-1$
-		Command command = QueryParser.getQueryParser().parseCommand(sql);
+		Command command = null;
+		if (bindings != null && !bindings.isEmpty()) {
+			command = TestResolver.helpResolveWithBindings(sql, md, bindings);
+		} else {
+ 			command = QueryParser.getQueryParser().parseCommand(sql);
+			QueryResolver.resolveCommand(command, md);
+		}
 		
-		// resolve
-		QueryResolver.resolveCommand(command, md);
-        
         ValidatorReport repo = Validator.validate(command, md);
 
         Collection failures = new ArrayList();
@@ -209,11 +212,6 @@ public class TestOptimizer {
             fail("Exception during validation (" + repo); //$NON-NLS-1$
         }
         
-        // bind variables
-        if(bindings != null) {
-            BindVariableVisitor.bindReferences(command, bindings, md);
-        }                       	
-
 		// rewrite
 		command = QueryRewriter.rewrite(command, md, new CommandContext());
 

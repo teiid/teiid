@@ -86,29 +86,11 @@ public class UpdateProcedureResolver implements CommandResolver {
 
 		// virtual group on procedure
 		GroupSymbol virtualGroup = procCommand.getVirtualGroup();
-
-		// not set by user command resolver in case of modeler
-		if(virtualGroup == null) {
-			for (GroupSymbol groupSymbol : procCommand.getAllExternalGroups()) {
-	        	String groupName = groupSymbol.getName();
-	        	if(!groupName.equalsIgnoreCase(ProcedureReservedWords.INPUT) &&
-	        		!groupName.equalsIgnoreCase(ProcedureReservedWords.INPUTS) &&
-		        	 !groupName.equalsIgnoreCase(ProcedureReservedWords.CHANGING) ) {
-		        	 // set the groupSymbol on the procedure
-		        	 ResolverUtil.resolveGroup(groupSymbol, metadata);
-	        		 procCommand.setVirtualGroup(groupSymbol);
-		        	 virtualGroup = groupSymbol;
-                     break;
-	        	 }
-	        }
-		} else if (!metadata.isVirtualGroup(virtualGroup.getMetadataID())) {
+		
+		if (!metadata.isVirtualGroup(virtualGroup.getMetadataID())) {
+			//if this is a compensating procedure, just return
 			return;
 		}
-
-        // If still haven't found virtual group, the external metadata is bad
-        if(virtualGroup == null) {
-            throw new QueryResolverException("ERR.015.008.0012", QueryPlugin.Util.getString("ERR.015.008.0012")); //$NON-NLS-1$ //$NON-NLS-2$
-        }
 
 		ResolveVirtualGroupCriteriaVisitor.resolveCriteria(procCommand, virtualGroup, metadata);
 
@@ -215,19 +197,16 @@ public class UpdateProcedureResolver implements CommandResolver {
                 if (subCommand instanceof StoredProcedure) {
                 	StoredProcedure sp = (StoredProcedure)subCommand;
                 	for (SPParameter param : sp.getParameters()) {
-                		if (!(param.getExpression() instanceof ElementSymbol)) {
-                			continue;
-                		}
             			switch (param.getParameterType()) {
         	            case ParameterInfo.OUT:
         	            case ParameterInfo.RETURN_VALUE:
-        	            	if (param.getExpression() instanceof ElementSymbol && !metadata.elementSupports(((ElementSymbol)param.getExpression()).getMetadataID(), SupportConstants.Element.UPDATE)) {
+        	            	if (!isAssignable(metadata, param)) {
         	                    throw new QueryResolverException(QueryPlugin.Util.getString("UpdateProcedureResolver.only_variables", param.getExpression())); //$NON-NLS-1$
         	            	}
         	            	sp.setCallableStatement(true);
         	            	break;
         	            case ParameterInfo.INOUT:
-        	            	if (param.getExpression() instanceof ElementSymbol && !metadata.elementSupports(((ElementSymbol)param.getExpression()).getMetadataID(), SupportConstants.Element.UPDATE)) {
+        	            	if (!isAssignable(metadata, param)) {
         	            		continue;
         	            	}
         	            	sp.setCallableStatement(true);
@@ -346,6 +325,16 @@ public class UpdateProcedureResolver implements CommandResolver {
                 throw new QueryResolverException("ERR.015.008.0015", QueryPlugin.Util.getString("ERR.015.008.0015", statement.getType())); //$NON-NLS-1$ //$NON-NLS-2$
         }
     }
+
+	private boolean isAssignable(TempMetadataAdapter metadata, SPParameter param)
+			throws TeiidComponentException, QueryMetadataException {
+		if (!(param.getExpression() instanceof ElementSymbol)) {
+			return false;
+		}
+		ElementSymbol symbol = (ElementSymbol)param.getExpression();
+		
+		return metadata.elementSupports(symbol.getMetadataID(), SupportConstants.Element.UPDATE);
+	}
 
     private TempMetadataStore resolveEmbeddedCommand(TempMetadataAdapter metadata, GroupContext groupContext,
                                 Command cmd) throws TeiidComponentException,

@@ -22,9 +22,11 @@
 
 package org.teiid.query.resolver;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -57,6 +59,7 @@ import org.teiid.query.resolver.command.XMLQueryResolver;
 import org.teiid.query.resolver.util.BindVariableVisitor;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
+import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.From;
@@ -66,9 +69,12 @@ import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
+import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.validator.ValidationVisitor;
 
@@ -96,7 +102,21 @@ public class QueryResolver {
     
     public static Command expandCommand(ProcedureContainer proc, QueryMetadataInterface metadata, AnalysisRecord analysisRecord) throws QueryResolverException, QueryMetadataException, TeiidComponentException {
     	ProcedureContainerResolver cr = (ProcedureContainerResolver)chooseResolver(proc, metadata);
-    	return cr.expandCommand(proc, metadata, analysisRecord);
+    	Command command = cr.expandCommand(proc, metadata, analysisRecord);
+    	if (command == null) {
+    		return null;
+    	}
+		if (command instanceof CreateUpdateProcedureCommand) {
+    		CreateUpdateProcedureCommand cupCommand = (CreateUpdateProcedureCommand)command;
+		    cupCommand.setUserCommand(proc);
+    		//if the subcommand is virtual stored procedure, it must have the same
+            //projected symbol as its parent.
+            if(!cupCommand.isUpdateProcedure()){
+                cupCommand.setProjectedSymbols(proc.getProjectedSymbols());
+            } 
+    	}
+    	resolveCommand(command, proc.getGroup(), proc.getType(), metadata);
+    	return command;
     }
 
 	/**
@@ -116,6 +136,93 @@ public class QueryResolver {
 
 		return resolveCommand(command, metadata, true);
 	}
+
+	/**
+	 * Resolve a command in a given type container and type context.
+	 * @param type The {@link Command} type
+	 */
+    public static TempMetadataStore resolveCommand(Command currentCommand, GroupSymbol container, int type, QueryMetadataInterface metadata) throws QueryResolverException, TeiidComponentException {
+    	ResolverUtil.resolveGroup(container, metadata);
+    	switch (type) {
+	    case Command.TYPE_QUERY:
+	        QueryNode queryNode = metadata.getVirtualPlan(metadata.getGroupID(container.getCanonicalName()));
+            
+            addBindingMetadata(currentCommand, metadata, queryNode);
+	        break;
+    	case Command.TYPE_INSERT:
+    	case Command.TYPE_UPDATE:
+    	case Command.TYPE_DELETE:
+    	case Command.TYPE_STORED_PROCEDURE:
+    		ProcedureContainerResolver.findChildCommandMetadata(currentCommand, container, type, metadata);
+    	}
+    	return resolveCommand(currentCommand, metadata, true);
+    }
+
+	static void addBindingMetadata(Command currentCommand,
+			QueryMetadataInterface metadata, QueryNode queryNode)
+			throws TeiidComponentException, QueryResolverException {
+		if (queryNode.getBindings() != null && queryNode.getBindings().size() > 0) {
+			// GroupSymbol (name form) for InputSet
+		    GroupSymbol inputSetSymbol = new GroupSymbol(ProcedureReservedWords.INPUT);
+
+		    // Create ElementSymbols for each InputParameter
+		    List<ElementSymbol> elements = new ArrayList<ElementSymbol>(queryNode.getBindings().size());
+		    boolean positional = true;
+		    for (SingleElementSymbol ses : parseBindings(queryNode)) {
+		    	String name = ses.getName();
+		    	if (ses instanceof AliasSymbol) {
+		    		ses = ((AliasSymbol)ses).getSymbol();
+		    		positional = false;
+		    	}
+		    	ElementSymbol elementSymbol = (ElementSymbol)ses;
+		    	ResolverVisitor.resolveLanguageObject(elementSymbol, metadata);
+		    	if (!positional) {
+		    		elementSymbol.setName(name);
+		    	}
+		        elements.add(elementSymbol);
+		    }
+		    if (positional) {
+		    	BindVariableVisitor.bindReferences(currentCommand, elements);
+		    } else {
+		        TempMetadataStore rootExternalStore = new TempMetadataStore();
+		        rootExternalStore.addTempGroup(inputSetSymbol.getName(), elements);
+		        currentCommand.addExternalGroupToContext(inputSetSymbol);
+   
+		        Map tempMetadata = currentCommand.getTemporaryMetadata();
+		        if(tempMetadata == null) {
+		            currentCommand.setTemporaryMetadata(rootExternalStore.getData());
+		        } else {
+		            tempMetadata.putAll(rootExternalStore.getData());
+		        }
+		    }
+		}
+	}
+
+	/**
+	 * Bindings are a poor mans input parameters.  They are represented in legacy metadata
+	 * by ElementSymbols and placed positionally into the command or by alias symbols
+	 * and matched by names.
+	 * @param planNode
+	 * @return
+	 * @throws TeiidComponentException
+	 */
+    public static List<SingleElementSymbol> parseBindings(QueryNode planNode) throws TeiidComponentException {
+        Collection<String> bindingsCol = planNode.getBindings();
+        if (bindingsCol == null) {
+            return Collections.emptyList();
+        }
+        
+        List<SingleElementSymbol> parsedBindings = new ArrayList<SingleElementSymbol>(bindingsCol.size());
+        for (Iterator<String> bindings=bindingsCol.iterator(); bindings.hasNext();) {
+            try {
+                SingleElementSymbol binding = QueryParser.getQueryParser().parseSelectExpression(bindings.next());
+                parsedBindings.add(binding);
+            } catch (QueryParserException err) {
+                throw new TeiidComponentException(err);
+            }
+        }
+        return parsedBindings;
+    }
 
     public static TempMetadataStore resolveCommand(Command currentCommand, QueryMetadataInterface metadata, boolean resolveNullLiterals)
         throws QueryResolverException, TeiidComponentException {
@@ -295,7 +402,7 @@ public class QueryResolver {
         	result = (Command)result.clone();
         } else {
         	result = qnode.getCommand();
-            
+        	List bindings = null;
             if (result == null) {
                 try {
                 	result = QueryParser.getQueryParser().parseCommand(qnode.getQuery());
@@ -303,33 +410,17 @@ public class QueryResolver {
                     throw new QueryResolverException(e, "ERR.015.008.0011", QueryPlugin.Util.getString("ERR.015.008.0011", qnode.getGroupName())); //$NON-NLS-1$ //$NON-NLS-2$
                 }
                 
-                //Handle bindings and references
-                List bindings = qnode.getBindings();
-                if (bindings != null){
-                    BindVariableVisitor.bindReferences(result, bindings, qmi);
-                }
+                bindings = qnode.getBindings();
             }
-	        QueryResolver.resolveCommand(result, qmi);
+            if (bindings != null && !bindings.isEmpty()) {
+            	QueryResolver.resolveCommand(result, virtualGroup, Command.TYPE_QUERY, qmi);
+            } else {
+            	QueryResolver.resolveCommand(result, qmi);
+            }
 	        Request.validateWithVisitor(new ValidationVisitor(), qmi, result);
 	        qmi.addToMetadataCache(virtualGroup.getMetadataID(), "transformation/" + cacheString, result.clone()); //$NON-NLS-1$
         }
 		return result;
 	}
 	
-	public static void buildExternalGroups(Map<GroupSymbol, List<ElementSymbol>> externalMetadata, Command currentCommand) {
-		TempMetadataStore rootExternalStore = new TempMetadataStore();
-		for(Map.Entry<GroupSymbol, List<ElementSymbol>> entry : externalMetadata.entrySet()) {
-		    GroupSymbol group = entry.getKey();
-		    List<ElementSymbol> elements = entry.getValue();
-		    rootExternalStore.addTempGroup(group.getName(), elements);
-		    currentCommand.addExternalGroupToContext(group);
-		}
-		Map tempMetadata = currentCommand.getTemporaryMetadata();
-        if(tempMetadata == null) {
-        	currentCommand.setTemporaryMetadata(rootExternalStore.getData());
-        } else {
-            tempMetadata.putAll(rootExternalStore.getData());
-        }
-	}
-
 }
