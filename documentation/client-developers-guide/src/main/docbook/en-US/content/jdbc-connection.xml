@@ -489,7 +489,7 @@
         </para>
         <section id="failover">
         	<title>Fail Over</title>
-        	<para>Post connection fail over will be sued if you're using an admin connection (such as what is used by AdminShell) or if the autoFailover connection property is set to true. 
+        	<para>Post connection fail over will be used, if you're using an admin connection (such as what is used by AdminShell) or if the <emphasis>autoFailover</emphasis> connection property on JDBC URL is set to true. 
         	Post connection failover works by sending a ping, at most every second, to test the connection prior to use.  If the ping fails, a new instance will be selected prior to the operation being attempted.  
         	This is not true "transparent application failover" as the client will not restart the transaction/query/recreate session scoped temp tables, etc.  So this feature should be used with caution by non-admin connections.</para>
         </section>
