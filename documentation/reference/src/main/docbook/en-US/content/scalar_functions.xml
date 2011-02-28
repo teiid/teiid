@@ -2062,7 +2062,16 @@
                string value for the first matching result.</para>
     	<para><synopsis>XPATHVALUE(doc, xpath)</synopsis></para>
     	<para>Doc and xpath in {string, clob, xml}. Return value is a string.</para>
-    	<para>An attempt is made to provide a meaningful result for non-text nodes.</para>
+    	<para>Matching a non-text node will still produce a string result, which includes all descendent text nodes.</para>
+    	<example>
+        	<title>Sample xpathValue Ignoring Namespaces</title>
+        	<para>XML value:</para>
+        	<programlisting language="XML"><![CDATA[<?xml version="1.0" ?><ns1:return xmlns:ns1="http://com.test.ws/exampleWebService">Hello<x> World</x></return>]]></programlisting>
+        	<para>Function:</para>
+        	<programlisting language="SQL">xpathValue(value, '/*[local-name()="return"])</programlisting>
+        	<para>Results in 'Hello World'</para>
+        </example>
+        <para>See also <xref linkend="xmlquery"/></para>
     </section>
   </section>
   <section>
