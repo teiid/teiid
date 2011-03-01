@@ -34,6 +34,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -42,7 +43,6 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-import org.teiid.core.util.Assertion;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.JDBCPlugin;
 
@@ -54,6 +54,7 @@ import org.teiid.jdbc.JDBCPlugin;
  * ssl connection
  */
 public class SocketUtil {
+	private static Logger logger = Logger.getLogger(SocketUtil.class.getName());
     
     static final String TRUSTSTORE_PASSWORD = "org.teiid.ssl.trustStorePassword"; //$NON-NLS-1$
     public static final String TRUSTSTORE_FILENAME = "org.teiid.ssl.trustStore"; //$NON-NLS-1$
@@ -71,6 +72,7 @@ public class SocketUtil {
     
     public static class SSLSocketFactory {
     	private boolean isAnon;
+    	private boolean warned;
     	private javax.net.ssl.SSLSocketFactory factory;
     	
     	public SSLSocketFactory(SSLContext context, boolean isAnon) {
@@ -81,8 +83,9 @@ public class SocketUtil {
 		public synchronized Socket getSocket() throws IOException {
     		SSLSocket result = (SSLSocket)factory.createSocket();
     		result.setUseClientMode(true);
-    		if (isAnon) {
-    			addCipherSuite(result, ANON_CIPHER_SUITE);
+    		if (isAnon && !addCipherSuite(result, ANON_CIPHER_SUITE) && !warned) {
+    			warned = true;
+    			logger.warning(JDBCPlugin.Util.getString("SocketUtil.anon_not_available")); //$NON-NLS-1$
     		}
     		return result;
     	}
@@ -131,8 +134,10 @@ public class SocketUtil {
         return getSSLContext(keystore, password, truststore, truststorePassword, algorithm, keystoreType, protocol);
     }
     
-    public static void addCipherSuite(SSLSocket engine, String cipherSuite) {
-        Assertion.assertTrue(Arrays.asList(engine.getSupportedCipherSuites()).contains(cipherSuite));
+    public static boolean addCipherSuite(SSLSocket engine, String cipherSuite) {
+        if (!Arrays.asList(engine.getSupportedCipherSuites()).contains(cipherSuite)) {
+        	return false;
+        }
 
         String[] suites = engine.getEnabledCipherSuites();
 
@@ -142,6 +147,7 @@ public class SocketUtil {
         newSuites[suites.length] = cipherSuite;
         
         engine.setEnabledCipherSuites(newSuites);
+        return true;
     }
 
     public static SSLContext getAnonSSLContext() throws IOException, GeneralSecurityException {
