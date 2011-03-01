@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -82,7 +83,7 @@ public class QueryUtil {
         if (query == null) {
             try {
                 query = QueryParser.getQueryParser().parseCommand(queryNode.getQuery());
-                QueryResolver.resolveWithBindingMetadata(query, env.getGlobalMetadata(), queryNode);
+                QueryResolver.resolveWithBindingMetadata(query, env.getGlobalMetadata(), queryNode, true);
             } catch (TeiidException e) {
                 throw new QueryPlannerException(e, QueryPlugin.Util.getString("ERR.015.004.0054", new Object[]{queryNode.getGroupName(), queryNode.getQuery()})); //$NON-NLS-1$
 			}
@@ -187,7 +188,7 @@ public class QueryUtil {
     }
     
     static List<ElementSymbol> getBindingsReferences(LanguageObject object, Collection<ElementSymbol> allBindings) {
-    	List<ElementSymbol> elements = new ArrayList<ElementSymbol>();
+    	List<ElementSymbol> elements = new LinkedList<ElementSymbol>();
     	ElementCollectorVisitor visitor = new ElementCollectorVisitor(elements);
         DeepPreOrderNavigator.doVisit(object, visitor);
         for (Iterator<ElementSymbol> i = elements.iterator(); i.hasNext();) {

@@ -183,8 +183,14 @@ public class ResolverVisitor extends LanguageVisitor {
                 resolveAgainstGroups(shortCanonicalName, matchedGroups, matches);
                 
                 if (matches.size() > 1) {
-                    handleUnresolvedElement(elementSymbol, QueryPlugin.Util.getString("ERR.015.008.0053", elementSymbol)); //$NON-NLS-1$
-                    return;
+                	if (isExternal && matches.size() == 2 
+                			&& ((isScalar(matches.get(0).element, ProcedureReservedWords.INPUTS) && isScalar(matches.get(1).element, ProcedureReservedWords.INPUT))
+                					|| (isScalar(matches.get(1).element, ProcedureReservedWords.INPUTS) && isScalar(matches.get(0).element, ProcedureReservedWords.INPUT)))) {
+                		matches.remove();
+                	} else {
+                	    handleUnresolvedElement(elementSymbol, QueryPlugin.Util.getString("ERR.015.008.0053", elementSymbol)); //$NON-NLS-1$
+                	    return;
+                	}
                 }
                 
                 if (matches.size() == 1) {
@@ -211,8 +217,7 @@ public class ResolverVisitor extends LanguageVisitor {
         GroupSymbol resolvedGroup = match.group;
         String oldName = elementSymbol.getOutputName();
         if (isExternal //convert input to inputs
-        		&& metadata.isScalarGroup(resolvedSymbol.getGroupSymbol().getMetadataID())
-        		&& ProcedureReservedWords.INPUT.equals(groupContext)) {
+        		&& isScalar(resolvedSymbol, ProcedureReservedWords.INPUT)) {
         	resolvedSymbol = new ElementSymbol(ProcedureReservedWords.INPUTS + ElementSymbol.SEPARATOR + elementShortName);
         	resolveElementSymbol(resolvedSymbol);
         	oldName = resolvedSymbol.getOutputName();
@@ -230,6 +235,11 @@ public class ResolverVisitor extends LanguageVisitor {
         elementSymbol.setName(resolvedSymbol.getName());
         elementSymbol.setOutputName(oldName);
    }
+    
+    private boolean isScalar(ElementSymbol resolvedSymbol, String group) throws QueryMetadataException, TeiidComponentException {
+    	return metadata.isScalarGroup(resolvedSymbol.getGroupSymbol().getMetadataID())
+		&& group.equals(resolvedSymbol.getGroupSymbol().getCanonicalName());
+    }
 
     private void resolveAgainstGroups(String elementShortName,
                                       Collection<GroupSymbol> matchedGroups, LinkedList<ElementMatch> matches) throws QueryMetadataException,

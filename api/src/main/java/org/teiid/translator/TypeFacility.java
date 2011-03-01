@@ -34,6 +34,7 @@ import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.core.types.NullType;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.util.TimestampWithTimezone;
 
@@ -60,6 +61,7 @@ public class TypeFacility {
         public static final Class<BlobType> BLOB          = DataTypeManager.DefaultDataClasses.BLOB;
         public static final Class<ClobType> CLOB          = DataTypeManager.DefaultDataClasses.CLOB;
         public static final Class<XMLType> XML           = DataTypeManager.DefaultDataClasses.XML;
+        public static final Class<NullType> NULL         = DataTypeManager.DefaultDataClasses.NULL;
     }
     
     public static final class RUNTIME_NAMES {

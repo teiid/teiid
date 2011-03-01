@@ -24,7 +24,6 @@ package org.teiid.query.resolver.command;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -62,10 +61,9 @@ public class SetQueryResolver implements CommandResolver {
         QueryResolver.setChildMetadata(firstCommand, setQuery);
         QueryResolver.resolveCommand(firstCommand, metadata.getMetadata(), false);
 
-        List firstProject = firstCommand.getProjectedSymbols();
+        List<SingleElementSymbol> firstProject = firstCommand.getProjectedSymbols();
         List<Class<?>> firstProjectTypes = new ArrayList<Class<?>>();
-        for (Iterator j = firstProject.iterator(); j.hasNext();) {
-            SingleElementSymbol symbol = (SingleElementSymbol)j.next();
+        for (SingleElementSymbol symbol : firstProject) {
             firstProjectTypes.add(symbol.getType());
         }
 

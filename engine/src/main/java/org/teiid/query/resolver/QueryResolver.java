@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
@@ -149,14 +148,14 @@ public class QueryResolver {
 	    case Command.TYPE_QUERY:
 	        QueryNode queryNode = metadata.getVirtualPlan(metadata.getGroupID(container.getCanonicalName()));
             
-	        return resolveWithBindingMetadata(currentCommand, metadata, queryNode);
+	        return resolveWithBindingMetadata(currentCommand, metadata, queryNode, false);
     	case Command.TYPE_INSERT:
     	case Command.TYPE_UPDATE:
     	case Command.TYPE_DELETE:
     	case Command.TYPE_STORED_PROCEDURE:
     		ProcedureContainerResolver.findChildCommandMetadata(currentCommand, container, type, metadata);
     	}
-    	return resolveCommand(currentCommand, metadata, true);
+    	return resolveCommand(currentCommand, metadata, false);
     }
 
 	/**
@@ -167,13 +166,11 @@ public class QueryResolver {
 	 * be marked as external references.
 	 */
 	public static TempMetadataStore resolveWithBindingMetadata(Command currentCommand,
-			QueryMetadataInterface metadata, QueryNode queryNode)
+			QueryMetadataInterface metadata, QueryNode queryNode, boolean replaceBindings)
 			throws TeiidComponentException, QueryResolverException {
 		Map<ElementSymbol, ElementSymbol> symbolMap = null;
 		if (queryNode.getBindings() != null && queryNode.getBindings().size() > 0) {
 			symbolMap = new HashMap<ElementSymbol, ElementSymbol>();
-			// GroupSymbol (name form) for InputSet
-		    GroupSymbol inputSetSymbol = new GroupSymbol(ProcedureReservedWords.INPUT);
 
 		    // Create ElementSymbols for each InputParameter
 		    final List<ElementSymbol> elements = new ArrayList<ElementSymbol>(queryNode.getBindings().size());
@@ -189,6 +186,7 @@ public class QueryResolver {
 		    	elementSymbol.setIsExternalReference(true);
 		    	if (!positional) {
 		    		symbolMap.put(new ElementSymbol(ProcedureReservedWords.INPUT + ElementSymbol.SEPARATOR + name), (ElementSymbol)elementSymbol.clone());
+		    		symbolMap.put(new ElementSymbol(ProcedureReservedWords.INPUTS + ElementSymbol.SEPARATOR + name), (ElementSymbol)elementSymbol.clone());
 		    		elementSymbol.setName(name);
 		    	}
 		        elements.add(elementSymbol);
@@ -210,19 +208,16 @@ public class QueryResolver {
 		    	DeepPostOrderNavigator.doVisit(currentCommand, emv);
 		    } else {
 		        TempMetadataStore rootExternalStore = new TempMetadataStore();
-		        rootExternalStore.addTempGroup(inputSetSymbol.getName(), elements);
-		        currentCommand.addExternalGroupToContext(inputSetSymbol);
-   
-		        Map tempMetadata = currentCommand.getTemporaryMetadata();
-		        if(tempMetadata == null) {
-		            currentCommand.setTemporaryMetadata(rootExternalStore.getData());
-		        } else {
-		            tempMetadata.putAll(rootExternalStore.getData());
-		        }
+		        
+		        GroupContext externalGroups = new GroupContext();
+		        
+		        ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.INPUT, rootExternalStore, externalGroups, elements);
+		        ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.INPUTS, rootExternalStore, externalGroups, elements);
+		        QueryResolver.setChildMetadata(currentCommand, rootExternalStore.getData(), externalGroups);
 		    }
 		}
-		TempMetadataStore result = resolveCommand(currentCommand, metadata, true);
-		if (symbolMap != null && !symbolMap.isEmpty()) {
+		TempMetadataStore result = resolveCommand(currentCommand, metadata, false);
+		if (replaceBindings && symbolMap != null && !symbolMap.isEmpty()) {
 			ExpressionMappingVisitor emv = new ExpressionMappingVisitor(symbolMap);
 			emv.setClone(true);
 			DeepPostOrderNavigator.doVisit(currentCommand, emv);
@@ -445,9 +440,9 @@ public class QueryResolver {
                 bindings = qnode.getBindings();
             }
             if (bindings != null && !bindings.isEmpty()) {
-            	QueryResolver.resolveCommand(result, virtualGroup, Command.TYPE_QUERY, qmi);
+            	QueryResolver.resolveWithBindingMetadata(result, qmi, qnode, true);
             } else {
-            	QueryResolver.resolveCommand(result, qmi);
+            	QueryResolver.resolveCommand(result, qmi, false);
             }
 	        Request.validateWithVisitor(new ValidationVisitor(), qmi, result);
 	        qmi.addToMetadataCache(virtualGroup.getMetadataID(), "transformation/" + cacheString, result.clone()); //$NON-NLS-1$

@@ -44,9 +44,9 @@ public class ResultsMetadataDefaults {
     public static final String UPDATE_COLUMN = "count"; //$NON-NLS-1$
 
     /** Maximum display size for the data type (Class -> Integer) */
-    private static final Map MAX_DISPLAY_SIZE = new HashMap(21, 1.0f);
+    private static final Map<String, Integer> MAX_DISPLAY_SIZE = new HashMap<String, Integer>();
     /** Default precision for a data type (String -> Integer) */
-    private static final Map DEFAULT_PRECISION = new HashMap(21, 1.0f);
+    private static final Map<String, Integer> DEFAULT_PRECISION = new HashMap<String, Integer>();
 
     static {
         MAX_DISPLAY_SIZE.put(DataTypeManager.DefaultDataTypes.BIG_DECIMAL, new Integer(22));
@@ -68,6 +68,7 @@ public class ResultsMetadataDefaults {
         MAX_DISPLAY_SIZE.put(DataTypeManager.DefaultDataTypes.TIME, new Integer(8));
         MAX_DISPLAY_SIZE.put(DataTypeManager.DefaultDataTypes.TIMESTAMP, new Integer(29));
         MAX_DISPLAY_SIZE.put(DataTypeManager.DefaultDataTypes.XML, new Integer(Integer.MAX_VALUE));
+        MAX_DISPLAY_SIZE.put(DataTypeManager.DefaultDataTypes.NULL, 4);
 
         /* NOTE1
          * For non-numeric columns (BLOB, BOOLEAN, CHAR, CLOB, DATE, OBJECT, STRING, TIME, TIMESTAMP, XML),
@@ -92,22 +93,23 @@ public class ResultsMetadataDefaults {
         DEFAULT_PRECISION.put(DataTypeManager.DefaultDataTypes.TIME, new Integer(8));
         DEFAULT_PRECISION.put(DataTypeManager.DefaultDataTypes.TIMESTAMP, new Integer(29));
         DEFAULT_PRECISION.put(DataTypeManager.DefaultDataTypes.XML, new Integer(Integer.MAX_VALUE));
+        DEFAULT_PRECISION.put(DataTypeManager.DefaultDataTypes.NULL, 1);
     }
     
-    public static Integer getMaxDisplaySize(Class dataTypeClass) {
-        return (Integer)MAX_DISPLAY_SIZE.get(DataTypeManager.getDataTypeName(dataTypeClass));
+    public static Integer getMaxDisplaySize(Class<?> dataTypeClass) {
+        return MAX_DISPLAY_SIZE.get(DataTypeManager.getDataTypeName(dataTypeClass));
     }
     
     public static Integer getMaxDisplaySize(String typeName) {
-        return (Integer)MAX_DISPLAY_SIZE.get(typeName);
+        return MAX_DISPLAY_SIZE.get(typeName);
     }
     
-    public static Integer getDefaultPrecision(Class dataTypeClass) {
-        return (Integer)DEFAULT_PRECISION.get(DataTypeManager.getDataTypeName(dataTypeClass));
+    public static Integer getDefaultPrecision(Class<?> dataTypeClass) {
+        return DEFAULT_PRECISION.get(DataTypeManager.getDataTypeName(dataTypeClass));
     }
     
     public static Integer getDefaultPrecision(String typeName) {
-        return (Integer)DEFAULT_PRECISION.get(typeName);
+        return DEFAULT_PRECISION.get(typeName);
     }
     
     /** Uninstantiable */

@@ -35,10 +35,10 @@ import org.teiid.language.Limit;
 import org.teiid.language.Literal;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.language.Join.JoinType;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
@@ -140,7 +140,11 @@ public class DB2ExecutionFactory extends JDBCExecutionFactory {
 			if (selectSymbol.getExpression() instanceof Literal) {
 				Literal literal = (Literal)selectSymbol.getExpression();
 				if (literal.getValue() == null) {
-					selectSymbol.setExpression(ConvertModifier.createConvertFunction(getLanguageFactory(), literal, TypeFacility.getDataTypeName(literal.getType())));
+					String type = TypeFacility.RUNTIME_NAMES.INTEGER;
+					if (literal.getType() != TypeFacility.RUNTIME_TYPES.NULL) {
+						type = TypeFacility.getDataTypeName(literal.getType());
+					}
+					selectSymbol.setExpression(ConvertModifier.createConvertFunction(getLanguageFactory(), literal, type));
 				}
 			}
 		}

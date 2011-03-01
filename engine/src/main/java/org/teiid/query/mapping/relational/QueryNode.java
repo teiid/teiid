@@ -45,7 +45,7 @@ public class QueryNode implements Serializable {
 	// Initial state
 	private String groupName;
 	private String query;
-	private List bindings;     // optional - construct if needed
+	private List<String> bindings;     // optional - construct if needed
 
 	// After parsing and resolution
 	private Command command;
@@ -91,7 +91,7 @@ public class QueryNode implements Serializable {
      */
     public void addBinding(String binding) {
         if(this.bindings == null) {
-            this.bindings = new ArrayList();
+            this.bindings = new ArrayList<String>();
         }
         this.bindings.add(binding);
     }
@@ -100,7 +100,7 @@ public class QueryNode implements Serializable {
      * Get list of bindings.
      * @return bindings
      */
-    public List getBindings() {
+    public List<String> getBindings() {
         return this.bindings;
     }
 
@@ -108,8 +108,8 @@ public class QueryNode implements Serializable {
      * Set all of the bindings (existing are dropped)
      * @param bindings New bindings
      */
-    public void setBindings(List bindings) {
-        this.bindings = new ArrayList(bindings);
+    public void setBindings(List<String> bindings) {
+        this.bindings = new ArrayList<String>(bindings);
     }
 
     /**

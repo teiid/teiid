@@ -234,7 +234,7 @@ public class TestResolver {
         QueryNode qn = new QueryNode("x", sql);
         qn.setBindings(bindings);
         // resolve
-    	QueryResolver.resolveWithBindingMetadata(command, metadata, qn);
+    	QueryResolver.resolveWithBindingMetadata(command, metadata, qn, true);
 
         CheckSymbolsAreResolvedVisitor vis = new CheckSymbolsAreResolvedVisitor();
         DeepPreOrderNavigator.doVisit(command, vis);

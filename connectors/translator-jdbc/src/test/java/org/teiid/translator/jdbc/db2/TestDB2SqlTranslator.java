@@ -22,7 +22,7 @@
 
 package org.teiid.translator.jdbc.db2;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -31,8 +31,8 @@ import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.cdk.unittest.FakeTranslationFactory;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Command;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
 
@@ -109,6 +109,16 @@ public class TestDB2SqlTranslator {
     public void testSelectNullLiteral() throws Exception {
         String input = "select null + 1 as x, null || 'a', char(null) from BQT1.Smalla"; //$NON-NLS-1$       
         String output = "SELECT cast(NULL AS integer) AS x, cast(NULL AS char), cast(NULL AS char(1)) FROM SmallA";  //$NON-NLS-1$
+        
+        helpTestVisitor(FakeTranslationFactory.getInstance().getBQTTranslationUtility(),
+                input, 
+                output);
+    }    
+    
+    @Test
+    public void testSelectNullLiteral1() throws Exception {
+        String input = "select x, intkey from (select null as x, intkey from BQT1.Smalla) y "; //$NON-NLS-1$       
+        String output = "SELECT y.x, y.intkey FROM (SELECT cast(NULL AS integer) AS x, SmallA.IntKey FROM SmallA) AS y";  //$NON-NLS-1$
         
         helpTestVisitor(FakeTranslationFactory.getInstance().getBQTTranslationUtility(),
                 input, 

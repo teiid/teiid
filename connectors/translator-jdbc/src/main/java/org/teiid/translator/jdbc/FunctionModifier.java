@@ -61,28 +61,30 @@ public abstract class FunctionModifier {
     public static final int BLOB = 15;
     public static final int CLOB = 16;
     public static final int XML = 17;
+    public static final int NULL = 18;
 
     private static final Map<Class<?>, Integer> typeMap = new HashMap<Class<?>, Integer>();
     
     static {
-        typeMap.put(TypeFacility.RUNTIME_TYPES.STRING, new Integer(STRING));
-        typeMap.put(TypeFacility.RUNTIME_TYPES.CHAR, new Integer(CHAR));
-        typeMap.put(TypeFacility.RUNTIME_TYPES.BOOLEAN, new Integer(BOOLEAN));
-        typeMap.put(TypeFacility.RUNTIME_TYPES.BYTE, new Integer(BYTE));
-        typeMap.put(TypeFacility.RUNTIME_TYPES.SHORT, new Integer(SHORT));
-        typeMap.put(TypeFacility.RUNTIME_TYPES.INTEGER, new Integer(INTEGER));
-        typeMap.put(TypeFacility.RUNTIME_TYPES.LONG, new Integer(LONG));
-        typeMap.put(TypeFacility.RUNTIME_TYPES.BIG_INTEGER, new Integer(BIGINTEGER));
-        typeMap.put(TypeFacility.RUNTIME_TYPES.FLOAT, new Integer(FLOAT));
-        typeMap.put(TypeFacility.RUNTIME_TYPES.DOUBLE, new Integer(DOUBLE));
-        typeMap.put(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL, new Integer(BIGDECIMAL));
-        typeMap.put(TypeFacility.RUNTIME_TYPES.DATE, new Integer(DATE));
-        typeMap.put(TypeFacility.RUNTIME_TYPES.TIME, new Integer(TIME));
-        typeMap.put(TypeFacility.RUNTIME_TYPES.TIMESTAMP, new Integer(TIMESTAMP));
-        typeMap.put(TypeFacility.RUNTIME_TYPES.OBJECT, new Integer(OBJECT));        
-        typeMap.put(TypeFacility.RUNTIME_TYPES.BLOB, new Integer(BLOB));
-        typeMap.put(TypeFacility.RUNTIME_TYPES.CLOB, new Integer(CLOB));
-        typeMap.put(TypeFacility.RUNTIME_TYPES.XML, new Integer(XML));
+        typeMap.put(TypeFacility.RUNTIME_TYPES.STRING, STRING);
+        typeMap.put(TypeFacility.RUNTIME_TYPES.CHAR, CHAR);
+        typeMap.put(TypeFacility.RUNTIME_TYPES.BOOLEAN, BOOLEAN);
+        typeMap.put(TypeFacility.RUNTIME_TYPES.BYTE, BYTE);
+        typeMap.put(TypeFacility.RUNTIME_TYPES.SHORT, SHORT);
+        typeMap.put(TypeFacility.RUNTIME_TYPES.INTEGER, INTEGER);
+        typeMap.put(TypeFacility.RUNTIME_TYPES.LONG, LONG);
+        typeMap.put(TypeFacility.RUNTIME_TYPES.BIG_INTEGER, BIGINTEGER);
+        typeMap.put(TypeFacility.RUNTIME_TYPES.FLOAT, FLOAT);
+        typeMap.put(TypeFacility.RUNTIME_TYPES.DOUBLE, DOUBLE);
+        typeMap.put(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL, BIGDECIMAL);
+        typeMap.put(TypeFacility.RUNTIME_TYPES.DATE, DATE);
+        typeMap.put(TypeFacility.RUNTIME_TYPES.TIME, TIME);
+        typeMap.put(TypeFacility.RUNTIME_TYPES.TIMESTAMP, TIMESTAMP);
+        typeMap.put(TypeFacility.RUNTIME_TYPES.OBJECT, OBJECT);        
+        typeMap.put(TypeFacility.RUNTIME_TYPES.BLOB, BLOB);
+        typeMap.put(TypeFacility.RUNTIME_TYPES.CLOB, CLOB);
+        typeMap.put(TypeFacility.RUNTIME_TYPES.XML, XML);
+        typeMap.put(TypeFacility.RUNTIME_TYPES.NULL, NULL);
     }    
     
     public static int getCode(Class<?> source) {
