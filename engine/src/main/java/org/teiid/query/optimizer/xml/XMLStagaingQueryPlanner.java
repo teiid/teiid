@@ -26,6 +26,7 @@ import java.util.Collection;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
+import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.query.mapping.relational.QueryNode;
@@ -85,7 +86,7 @@ public class XMLStagaingQueryPlanner {
     }    
     
     static boolean stagePlannedQuery(MappingSourceNode sourceNode, XMLPlannerEnvironment planEnv) 
-        throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
+        throws QueryPlannerException, QueryMetadataException, TeiidComponentException, QueryResolverException {
     
         Option option = planEnv.xmlCommand.getOption();
         

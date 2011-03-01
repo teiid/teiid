@@ -157,9 +157,9 @@ public class TestXMLProcessor {
         FakeMetadataObject rs = FakeMetadataFactory.createVirtualGroup("xmltest.group.items", xmltest, rsQuery); //$NON-NLS-1$
 
         // Created 2nd virtual group w/ nested result set & binding
-        QueryNode rsQuery2 = new QueryNode("xmltest.suppliers", "SELECT concat(stock.suppliers.supplierNum, '') as supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsQuery2 = new QueryNode("xmltest.suppliers", "SELECT concat(stock.suppliers.supplierNum, '') as supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = input.x"); //$NON-NLS-1$ //$NON-NLS-2$
         //QueryNode rsQuery2 = new QueryNode("xmltest.suppliers", "SELECT stock.suppliers.supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = ?");
-        rsQuery2.addBinding("xmltest.group.items.itemNum"); //$NON-NLS-1$
+        rsQuery2.addBinding("xmltest.group.items.itemNum as x"); //$NON-NLS-1$
         FakeMetadataObject rs2 = FakeMetadataFactory.createVirtualGroup("xmltest.suppliers", xmltest, rsQuery2); //$NON-NLS-1$
 
         // Created virtual group w/ nested result set & binding

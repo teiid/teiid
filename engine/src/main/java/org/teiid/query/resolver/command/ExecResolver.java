@@ -110,8 +110,12 @@ public class ExecResolver extends ProcedureContainerResolver {
         // for this map will either be the String names of the parameters or
         // the Integer indices, as entered in the user query
         Map<Object, Expression> inputExpressions = new HashMap<Object, Expression>();
+        int adjustIndex = 0;
         for (SPParameter param : oldParams) {
             if(param.getExpression() == null) {
+            	if (param.getParameterType() == SPParameter.RESULT_SET) {
+            		adjustIndex--;  //If this was already resolved, just pretend the result set param doesn't exist
+        		}
             	continue;
             }
             if (namedParameters && param.getParameterType() != SPParameter.RETURN_VALUE) {
@@ -119,7 +123,7 @@ public class ExecResolver extends ProcedureContainerResolver {
                 	throw new QueryResolverException(QueryPlugin.Util.getString("ExecResolver.duplicate_named_params", param.getName().toUpperCase())); //$NON-NLS-1$
                 }
             } else {
-                inputExpressions.put(param.getIndex(), param.getExpression());
+                inputExpressions.put(param.getIndex() + adjustIndex, param.getExpression());
             }
         }
 

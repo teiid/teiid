@@ -53,6 +53,7 @@ import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalPlan;
+import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
@@ -203,13 +204,13 @@ public class XMLQueryPlanner {
     }
 
     static void prepareQuery(MappingSourceNode sourceNode, XMLPlannerEnvironment planEnv, QueryCommand rsQuery) 
-        throws TeiidComponentException, QueryPlannerException {
+        throws TeiidComponentException, QueryResolverException {
         
         Collection externalGroups = getExternalGroups(sourceNode);
         
         rsQuery.setExternalGroupContexts(new GroupContext(null, externalGroups));
         
-        QueryUtil.resolveQuery(rsQuery, planEnv.getGlobalMetadata());
+		QueryResolver.resolveCommand(rsQuery, planEnv.getGlobalMetadata());
     }
     
     private static Collection getExternalGroups(MappingSourceNode sourceNode) {
@@ -291,7 +292,7 @@ public class XMLQueryPlanner {
             ResultSetInfo childRsInfo = rsNode.getResultSetInfo();
             
             QueryNode planNode = QueryUtil.getQueryNode(childRsInfo.getResultSetName(), planEnv.getGlobalMetadata());    
-            Command command = QueryUtil.getQuery(planNode);
+            Command command = QueryUtil.getQuery(planNode, planEnv);
             
             String inlineViewName = planEnv.getAliasName(childRsInfo.getResultSetName());
             
@@ -338,8 +339,6 @@ public class XMLQueryPlanner {
                 throw new QueryPlannerException(QueryPlugin.Util.getString("XMLQueryPlanner.cannot_plan", rsInfo.getCriteria())); //$NON-NLS-1$
             }
             
-            QueryUtil.handleBindings(command, planNode, planEnv);
-            
             Query subQuery = QueryUtil.wrapQuery(new SubqueryFromClause(inlineViewName, command), inlineViewName);
 
             currentQuery.setCriteria(Criteria.combineCriteria(currentQuery.getCriteria(), new ExistsCriteria(subQuery)));
@@ -359,13 +358,13 @@ public class XMLQueryPlanner {
             QueryUtil.rewriteQuery(contextQuery, planEnv.getGlobalMetadata(), planEnv.context);
 
             //selectively replace correlated references with their actual element symbols
-            List bindings = QueryUtil.getReferences(contextQuery);
+            List<Reference> bindings = QueryUtil.getReferences(contextQuery);
             
             QueryNode modifiedNode = new QueryNode(rsInfo.getResultSetName(), null);
             modifiedNode.setCommand(contextQuery);
             
-            for (Iterator i = bindings.iterator(); i.hasNext();) {
-                Reference ref = (Reference)i.next();
+            for (Iterator<Reference> i = bindings.iterator(); i.hasNext();) {
+                Reference ref = i.next();
                 modifiedNode.addBinding(ref.getExpression().toString());
             }
             
@@ -393,9 +392,10 @@ public class XMLQueryPlanner {
      * @param groupName
      * @param planEnv
      * @return {@link GroupSymbol} the temptable which has been planned.
+     * @throws QueryResolverException 
      */
     static void planStagingTable(String groupName, XMLPlannerEnvironment planEnv) 
-        throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
+        throws QueryPlannerException, QueryMetadataException, TeiidComponentException, QueryResolverException {
 
         ResultSetInfo rsInfo = planEnv.getStagingTableResultsInfo(groupName);
         
@@ -410,9 +410,10 @@ public class XMLQueryPlanner {
      * This method takes given query and adds the "into" symbol to query and resoves it
      * and registers it with planner env as the staging table. Also, builds a unload query
      * to unload the staging table.
+     * @throws QueryResolverException 
      */
     static boolean planStagaingQuery(boolean implicit, String srcGroupName, String stageGroupName, Query query, XMLPlannerEnvironment planEnv) 
-        throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
+        throws QueryPlannerException, QueryMetadataException, TeiidComponentException, QueryResolverException {
 
         GroupSymbol srcGroup = QueryUtil.createResolvedGroup(srcGroupName, planEnv.getGlobalMetadata());
         
@@ -421,7 +422,7 @@ public class XMLQueryPlanner {
                 
         query.setInto(new Into(intoGroupSymbol));
         
-        QueryUtil.resolveQuery(query, planEnv.getGlobalMetadata());
+        QueryResolver.resolveCommand(query, planEnv.getGlobalMetadata());
         
         Command cmd = QueryUtil.rewriteQuery(query, planEnv.getGlobalMetadata(), planEnv.context);
                 
@@ -493,7 +494,7 @@ public class XMLQueryPlanner {
         String unloadName = planEnv.unLoadResultName(stageGroupName);
         ResultSetInfo rsUnloadInfo = planEnv.getStagingTableResultsInfo(unloadName);
         Command command = wrapStagingTableUnloadQuery(intoGroupSymbol);
-        QueryUtil.resolveQuery(command, planEnv.getGlobalMetadata());
+        QueryResolver.resolveCommand(command, planEnv.getGlobalMetadata());
         command = QueryUtil.rewriteQuery(command, planEnv.getGlobalMetadata(), planEnv.context);
         
         plan = optimizePlan(command, planEnv);

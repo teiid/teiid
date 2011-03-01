@@ -31,7 +31,6 @@ import java.util.Map;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
-import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.query.mapping.relational.QueryNode;
@@ -56,7 +55,6 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
-import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
@@ -112,23 +110,23 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
             //create the command off of the unresolved group symbol
             Query baseQuery = QueryUtil.wrapQuery(new UnaryFromClause(new GroupSymbol(newGroup)), newGroup);
             baseQuery.getSelect().clearSymbols();
-            for (Iterator i = ResolverUtil.resolveElementsInGroup(groupSymbol, planEnv.getGlobalMetadata()).iterator(); i.hasNext();) {
-                SingleElementSymbol ses = (SingleElementSymbol)i.next();
+            for (Iterator<ElementSymbol> i = ResolverUtil.resolveElementsInGroup(groupSymbol, planEnv.getGlobalMetadata()).iterator(); i.hasNext();) {
+            	ElementSymbol ses = i.next();
                 baseQuery.getSelect().addSymbol(new ElementSymbol(newGroup + SingleElementSymbol.SEPARATOR + ses.getShortName()));
             }
             
             rsInfo.setCommand(baseQuery);
             
             QueryNode modifiedNode = QueryUtil.getQueryNode(newGroup, planEnv.getGlobalMetadata());
-            Command command = QueryUtil.getQuery(modifiedNode);
+            Command command = QueryUtil.getQuery(modifiedNode, planEnv);
                         
             MappingSourceNode parent = sourceNode.getParentSourceNode();
-            
+            Collection<ElementSymbol> bindings = QueryUtil.getBindingElements(modifiedNode);
             // root source nodes do not have any inputset criteria on them; so there is no use in
             // going through the raising the criteria.
             // if the original query is not a select.. we are out of luck. we can expand on this later
             // versions. make ure bindings are only to parent.
-            if (parent == null || !canRaiseInputset(command) || !areBindingsOnlyToNode(modifiedNode, parent)) {
+            if (parent == null || !canRaiseInputset(command, bindings) || !areBindingsOnlyToNode(modifiedNode, parent)) {
                 return;
             }
             
@@ -136,18 +134,16 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
             // criteria.
             Query transformationQuery = (Query)command;
             
-            QueryUtil.resolveQuery(transformationQuery, planEnv.getGlobalMetadata());
-            
             Criteria criteria = transformationQuery.getCriteria();
             Criteria nonInputsetCriteria = null;
             Criteria inputSetCriteria = null;
             
-            for (Iterator i = Criteria.separateCriteriaByAnd(criteria).iterator(); i.hasNext();) {
-                Criteria conjunct = (Criteria) i.next();
+            for (Iterator<Criteria> i = Criteria.separateCriteriaByAnd(criteria).iterator(); i.hasNext();) {
+                Criteria conjunct = i.next();
 
                 // collect references in the criteria; if there are references; then this is
                 // set by inputset criteria
-                Collection references = ReferenceCollectorVisitor.getReferences(conjunct);
+                Collection<ElementSymbol> references = QueryUtil.getBindingsReferences(conjunct, bindings);
                 if (references.isEmpty()) {
                     nonInputsetCriteria = Criteria.combineCriteria(nonInputsetCriteria, conjunct);
                 }
@@ -176,9 +172,7 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
             QueryNode relationalNode = new QueryNode(newGroup, SQLStringVisitor.getSQLString(transformationQuery));
             planEnv.addQueryNodeToMetadata(newGroupSymbol.getMetadataID(), relationalNode);
             
-            // this is the simple form of the planned query preplan stage. set the command
-            // with newly found criteria.
-            QueryUtil.handleBindings(inputSetCriteria, modifiedNode, planEnv);
+            QueryUtil.markBindingsAsNonExternal(inputSetCriteria, bindings);
             
             baseQuery.setCriteria(inputSetCriteria);
             rsInfo.setCriteriaRaised(true);
@@ -232,7 +226,7 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
      * set names in a mapping document.
      */
     private GroupSymbol createAlternateGroup(GroupSymbol oldSymbol, MappingSourceNode sourceNode) 
-        throws QueryMetadataException, TeiidComponentException, QueryResolverException, QueryPlannerException {
+        throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
         
         // get elements in the old group
         List elements = ResolverUtil.resolveElementsInGroup(oldSymbol, planEnv.getGlobalMetadata());
@@ -277,7 +271,7 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
             	}
             	ElementSymbol es = (ElementSymbol)ses;
             	if (!useName) {
-            		bindings.add(sourceNode.getMappedSymbol(es).getName());
+            		bindings.add(sourceNode.getMappedSymbol(es).toString());
             	} else {
             		bindings.add(new AliasSymbol(name, sourceNode.getMappedSymbol(es)).toString());
             	}
@@ -286,7 +280,7 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
         }
     }
     
-    private boolean canRaiseInputset(Command command) {
+    private boolean canRaiseInputset(Command command, Collection<ElementSymbol> bindings) throws TeiidComponentException {
         // check to see if this is query.
         if (!(command instanceof Query)) {
             return false;
@@ -303,7 +297,7 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
         //just throw away order by
         query.setOrderBy(null);
         
-        Collection references = ReferenceCollectorVisitor.getReferences(query);
+        List<ElementSymbol> references = QueryUtil.getBindingsReferences(query, bindings);
 
         query.setCriteria(crit);
         
@@ -321,16 +315,20 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
         throws QueryMetadataException, TeiidComponentException {
         
         String groupName = newGroupSymbol.getName();
-        Collection elementsInCriteria = ElementCollectorVisitor.getElements(criteria, true);
+        Collection<ElementSymbol> elementsInCriteria = ElementCollectorVisitor.getElements(criteria, true);
         Map mappedElements = new HashMap();
 
         List projectedSymbols = transformationQuery.getProjectedSymbols();
         
         boolean addedProjectedSymbol = false;
         
-        for (Iterator i = elementsInCriteria.iterator(); i.hasNext();) {
+        for (Iterator<ElementSymbol> i = elementsInCriteria.iterator(); i.hasNext();) {
             
-            final ElementSymbol symbol = (ElementSymbol)i.next();
+            final ElementSymbol symbol = i.next();
+            
+            if (symbol.isExternalReference()) {
+            	continue;
+            }
             
             if (projectedSymbols.contains(symbol)) {
                 mappedElements.put(symbol, new ElementSymbol(groupName + ElementSymbol.SEPARATOR + symbol.getShortName()));

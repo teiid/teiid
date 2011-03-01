@@ -90,7 +90,6 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
-import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
 import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.FakeMetadataObject;
@@ -235,8 +234,7 @@ public class TestResolver {
         QueryNode qn = new QueryNode("x", sql);
         qn.setBindings(bindings);
         // resolve
-    	QueryResolver.addBindingMetadata(command, metadata, qn);
-        QueryResolver.resolveCommand(command, metadata);
+    	QueryResolver.resolveWithBindingMetadata(command, metadata, qn);
 
         CheckSymbolsAreResolvedVisitor vis = new CheckSymbolsAreResolvedVisitor();
         DeepPreOrderNavigator.doVisit(command, vis);
@@ -831,27 +829,29 @@ public class TestResolver {
         helpCheckFrom(resolvedQuery, new String[] { "pm1.g1" }); //$NON-NLS-1$
         helpCheckSelect(resolvedQuery, new String[] { "pm1.g1.e1", "expr" }); //$NON-NLS-1$ //$NON-NLS-2$
         helpCheckElements(resolvedQuery.getCriteria(), 
-            new String[] { "pm1.g1.e1" }, //$NON-NLS-1$
-            new String[] { "pm1.g1.e1" } ); //$NON-NLS-1$
+            new String[] { "pm1.g1.e1", "pm1.g2.e2" }, //$NON-NLS-1$
+            new String[] { "pm1.g1.e1", "pm1.g2.e2" } ); //$NON-NLS-1$
             
     }
 
     @Test public void testResolveParametersInsert() throws Exception {
-        List bindings = new ArrayList();
-        bindings.add("pm1.g2.e1"); //$NON-NLS-1$
+    	List<String> bindings = Arrays.asList("pm1.g2.e1"); //$NON-NLS-1$
         
         helpResolveWithBindings("INSERT INTO pm1.g1 (e1) VALUES (?)", metadata, bindings); //$NON-NLS-1$
     }
     
     @Test public void testResolveParametersExec() throws Exception {
-        List bindings = new ArrayList();
-        bindings.add("pm1.g2.e1"); //$NON-NLS-1$
+        List<String> bindings = Arrays.asList("pm1.g2.e1"); //$NON-NLS-1$
         
         Query resolvedQuery = (Query)helpResolveWithBindings("SELECT * FROM (exec pm1.sq2(?)) as a", metadata, bindings); //$NON-NLS-1$
-        //verify the type of the reference is resolved
-        List refs = ReferenceCollectorVisitor.getReferences(resolvedQuery);
-        Reference ref = (Reference)refs.get(0);
-        assertNotNull(ref.getType());
+        StoredProcedure sp = (StoredProcedure)((SubqueryFromClause)resolvedQuery.getFrom().getClauses().get(0)).getCommand();
+        assertEquals(String.class, sp.getInputParameters().get(0).getExpression().getType());
+    }
+    
+    @Test public void testResolveParametersExecNamed() throws Exception {
+        List<String> bindings = Arrays.asList("pm1.g2.e1 as x"); //$NON-NLS-1$
+        
+        helpResolveWithBindings("SELECT * FROM (exec pm1.sq2(input.x)) as a", metadata, bindings); //$NON-NLS-1$
     }
 
     @Test public void testUseNonExistentAlias() {

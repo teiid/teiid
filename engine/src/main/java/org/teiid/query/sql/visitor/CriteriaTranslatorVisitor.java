@@ -28,8 +28,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 
-import net.sf.saxon.query.QueryReader;
-
 import org.teiid.core.util.Assertion;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.AbstractSetCriteria;

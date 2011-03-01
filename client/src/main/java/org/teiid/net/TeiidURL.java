@@ -117,7 +117,7 @@ public class TeiidURL {
         if (StringUtil.startsWithIgnoreCase(serverURL, SECURE_PROTOCOL)) {
         	usingSSL = true;
         } else if (!StringUtil.startsWithIgnoreCase(serverURL, DEFAULT_PROTOCOL)) {
-        	throw new IllegalArgumentException(INVALID_FORMAT_SERVER);
+        	throw new MalformedURLException(INVALID_FORMAT_SERVER);
         }
 
         appServerURL = serverURL;

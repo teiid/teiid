@@ -25,20 +25,20 @@ package org.teiid.query.optimizer.xml;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.teiid.api.exception.query.QueryMetadataException;
-import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
@@ -49,11 +49,13 @@ import org.teiid.query.sql.lang.From;
 import org.teiid.query.sql.lang.FromClause;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Select;
+import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
 import org.teiid.query.sql.symbol.AllInGroupSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 
@@ -74,35 +76,18 @@ public class QueryUtil {
      * @throws QueryPlannerException If an error occurred
      * @since 4.3
      */
-    static Command getQuery(QueryNode queryNode) throws QueryPlannerException {
+    static Command getQuery(QueryNode queryNode, XMLPlannerEnvironment env) throws QueryPlannerException {
         Command query = queryNode.getCommand();
         
         if (query == null) {
             try {
-                query = QueryParser.getQueryParser().parseCommand(queryNode.getQuery());            
-            } catch (QueryParserException e) {
+                query = QueryParser.getQueryParser().parseCommand(queryNode.getQuery());
+                QueryResolver.resolveWithBindingMetadata(query, env.getGlobalMetadata(), queryNode);
+            } catch (TeiidException e) {
                 throw new QueryPlannerException(e, QueryPlugin.Util.getString("ERR.015.004.0054", new Object[]{queryNode.getGroupName(), queryNode.getQuery()})); //$NON-NLS-1$
-            }
+			}
         } 
         return query;
-    }
-
-    /** 
-     * Resolve a command using the metadata in the planner environment.
-     * @param query The query to resolve
-     * @param planEnv The planner environment
-     * @throws TeiidComponentException
-     * @throws QueryPlannerException
-     * @since 4.3
-     */
-    static void resolveQuery(Command query, TempMetadataAdapter metadata) 
-        throws TeiidComponentException, QueryPlannerException {
-        // Run resolver
-        try {
-            QueryResolver.resolveCommand(query, metadata);
-        } catch(QueryResolverException e) {
-            throw new QueryPlannerException(e, e.getMessage());
-        }
     }
 
     /** 
@@ -177,20 +162,42 @@ public class QueryUtil {
         throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
         
         QueryNode queryNode = QueryUtil.getQueryNode(groupName, planEnv.getGlobalMetadata());
-        Command command = QueryUtil.getQuery(queryNode);
+        Command command = QueryUtil.getQuery(queryNode, planEnv);
         return command;
     }     
     
-    static void handleBindings(LanguageObject object, QueryNode planNode, XMLPlannerEnvironment planEnv) 
-        throws QueryMetadataException, TeiidComponentException {
-
-        List parsedBindings = QueryResolver.parseBindings(planNode);
+    static void markBindingsAsNonExternal(LanguageObject object,
+			Collection<ElementSymbol> allBindings) {
+    	List<ElementSymbol> elements = new ArrayList<ElementSymbol>();
+    	ElementCollectorVisitor visitor = new ElementCollectorVisitor(elements);
+        DeepPreOrderNavigator.doVisit(object, visitor);
+        for (Iterator<ElementSymbol> i = elements.iterator(); i.hasNext();) {
+        	ElementSymbol elementSymbol = i.next();
+			if (allBindings.contains(elementSymbol)) {
+				elementSymbol.setIsExternalReference(false);
+				elementSymbol.setMetadataID(null);
+			}
+		}
+    }
     
-        if (!parsedBindings.isEmpty()) {
-            //use ReferenceBindingReplacer Visitor
-            ReferenceBindingReplacerVisitor.replaceReferences(object, parsedBindings);
-        }
-    }    
+    static Collection<ElementSymbol> getBindingElements(QueryNode queryNode) throws TeiidComponentException {
+    	HashSet<ElementSymbol> set = new HashSet<ElementSymbol>();
+    	ElementCollectorVisitor.getElements(QueryResolver.parseBindings(queryNode), set);
+    	return set;
+    }
+    
+    static List<ElementSymbol> getBindingsReferences(LanguageObject object, Collection<ElementSymbol> allBindings) {
+    	List<ElementSymbol> elements = new ArrayList<ElementSymbol>();
+    	ElementCollectorVisitor visitor = new ElementCollectorVisitor(elements);
+        DeepPreOrderNavigator.doVisit(object, visitor);
+        for (Iterator<ElementSymbol> i = elements.iterator(); i.hasNext();) {
+        	ElementSymbol elementSymbol = i.next();
+			if (!elementSymbol.isExternalReference() || !allBindings.contains(elementSymbol)) {
+				i.remove();
+			}
+		}
+    	return elements;
+    }
     
     static Map createSymbolMap(GroupSymbol oldGroup, final String newGroup, Collection projectedElements) {
         HashMap symbolMap = new HashMap();
@@ -205,11 +212,11 @@ public class QueryUtil {
     }
 
     
-    static List getReferences(Command command) {
-        List boundList = new ArrayList();
+    static List<Reference> getReferences(Command command) {
+        List<Reference> boundList = new ArrayList<Reference>();
         
-        for (Iterator refs = ReferenceCollectorVisitor.getReferences(command).iterator(); refs.hasNext();) {
-            Reference ref = (Reference) refs.next();
+        for (Iterator<Reference> refs = ReferenceCollectorVisitor.getReferences(command).iterator(); refs.hasNext();) {
+            Reference ref = refs.next();
             Expression expr = ref.getExpression();
             if (!(expr instanceof ElementSymbol)){
                 continue;
@@ -222,5 +229,6 @@ public class QueryUtil {
             boundList.add(ref);
         }
         return boundList;
-    }     
+    }
+
 }

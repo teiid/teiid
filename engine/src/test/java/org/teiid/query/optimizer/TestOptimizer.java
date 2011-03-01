@@ -1102,11 +1102,11 @@ public class TestOptimizer {
                             "SELECT 1 FROM pm1.g2" } );     //$NON-NLS-1$
     }
     
-    @Test public void testPushMatchCritWithReference() {
+    @Test public void testPushMatchCritWithReference() throws Exception {
         List bindings = new ArrayList();
         bindings.add("pm1.g2.e1"); //$NON-NLS-1$
         helpPlan("select e1 FROM pm1.g1 WHERE e1 LIKE ?", example1(), bindings, null,  //$NON-NLS-1$
-            new String[] { "SELECT e1 FROM pm1.g1 WHERE e1 LIKE ?" }, true ); //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 LIKE PM1.G2.e1" }, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
     }
     
     @Test public void testDefect6517() {
