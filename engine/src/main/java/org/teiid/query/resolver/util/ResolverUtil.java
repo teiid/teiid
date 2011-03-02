@@ -56,6 +56,7 @@ import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.relational.rules.RuleChooseJoinStrategy;
 import org.teiid.query.optimizer.relational.rules.RuleRaiseAccess;
 import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.FromClause;
@@ -637,38 +638,41 @@ public class ResolverUtil {
             if(!DataTypeManager.DefaultDataClasses.NULL.equals(symbol.getType()) && symbol.getType() != null) {
                 continue;
             }
-            if(symbol instanceof AliasSymbol) {
-                symbol = ((AliasSymbol)symbol).getSymbol();
-            }
                         
-            Class replacement = DataTypeManager.DefaultDataClasses.STRING;
-            
-            if(symbol instanceof ExpressionSymbol && !(symbol instanceof AggregateSymbol)) {
-                ExpressionSymbol exprSymbol = (ExpressionSymbol) symbol;
-                Expression expr = exprSymbol.getExpression();
-               	
-                if(expr instanceof Constant) {                	
-                    exprSymbol.setExpression(new Constant(null, replacement));
-                } else if (expr instanceof AbstractCaseExpression) {
-                    ((AbstractCaseExpression)expr).setType(replacement);
-                } else if (expr instanceof ScalarSubquery) {
-                    ((ScalarSubquery)expr).setType(replacement);                                        
-                } else {
-                	try {
-						ResolverUtil.setDesiredType(expr, replacement, symbol);
-					} catch (QueryResolverException e) {
-						//cannot happen
-					}
-                }
-            } else if(symbol instanceof ElementSymbol) {
-                ElementSymbol elementSymbol = (ElementSymbol)symbol;
-                Class elementType = elementSymbol.getType();
-                if(elementType != null && elementType.equals(DataTypeManager.DefaultDataClasses.NULL)) {
-                    elementSymbol.setType(replacement);
-                }
-            }
+            setSymbolType(symbol, DataTypeManager.DefaultDataClasses.STRING);
         }
     }
+
+	public static void setSymbolType(SingleElementSymbol symbol,
+			Class<?> replacement) {
+		if(symbol instanceof AliasSymbol) {
+            symbol = ((AliasSymbol)symbol).getSymbol();
+        }
+		if(symbol instanceof ExpressionSymbol && !(symbol instanceof AggregateSymbol)) {
+		    ExpressionSymbol exprSymbol = (ExpressionSymbol) symbol;
+		    Expression expr = exprSymbol.getExpression();
+		   	
+		    if(expr instanceof Constant) {                	
+		        exprSymbol.setExpression(new Constant(null, replacement));
+		    } else if (expr instanceof AbstractCaseExpression) {
+		        ((AbstractCaseExpression)expr).setType(replacement);
+		    } else if (expr instanceof ScalarSubquery) {
+		        ((ScalarSubquery)expr).setType(replacement);                                        
+		    } else {
+		    	try {
+					ResolverUtil.setDesiredType(expr, replacement, symbol);
+				} catch (QueryResolverException e) {
+					//cannot happen
+				}
+		    }
+		} else if(symbol instanceof ElementSymbol) {
+		    ElementSymbol elementSymbol = (ElementSymbol)symbol;
+		    Class elementType = elementSymbol.getType();
+		    if(elementType != null && elementType.equals(DataTypeManager.DefaultDataClasses.NULL)) {
+		        elementSymbol.setType(replacement);
+		    }
+		}
+	}
     
     /**
      *  
@@ -723,7 +727,7 @@ public class ResolverUtil {
     }
 
     
-    private static boolean nameMatchesGroup(String groupContext,
+    public static boolean nameMatchesGroup(String groupContext,
                                             String fullName) {
         //if there is a name match, make sure that it is the full name or a proper qualifier
         if (fullName.endsWith(groupContext)) {
@@ -1090,6 +1094,17 @@ public class ResolverUtil {
 			}
 		}
 		return result;
+	}
+
+	/**
+	 * This method will convert all elements in a command to their fully qualified name.
+	 * @param command Command to convert
+	 */
+	public static void fullyQualifyElements(Command command) {
+	    Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(command, false, true);
+	    for (ElementSymbol element : elements) {
+	        element.setDisplayFullyQualified(true);
+	    }
 	}
     
 }

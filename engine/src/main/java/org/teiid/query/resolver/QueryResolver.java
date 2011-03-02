@@ -29,11 +29,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.Assertion;
 import org.teiid.dqp.internal.process.Request;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
@@ -445,6 +448,18 @@ public class QueryResolver {
             	QueryResolver.resolveCommand(result, qmi, false);
             }
 	        Request.validateWithVisitor(new ValidationVisitor(), qmi, result);
+            
+	        //ensure that null types match the view
+	        List<ElementSymbol> symbols = ResolverUtil.resolveElementsInGroup(virtualGroup, qmi);
+            List<SingleElementSymbol> projectedSymbols = result.getProjectedSymbols();
+            Assertion.assertTrue(symbols.size() == projectedSymbols.size(), "View " + virtualGroup + " does not have the correct number of projected symbols"); //$NON-NLS-1$ //$NON-NLS-2$
+            for (int i = 0; i < projectedSymbols.size(); i++) {
+            	SingleElementSymbol projectedSymbol = projectedSymbols.get(i);
+            	if (projectedSymbol.getType() != DataTypeManager.DefaultDataClasses.NULL) {
+            		continue;
+            	}
+            	ResolverUtil.setSymbolType(projectedSymbol, symbols.get(i).getType());
+            }
 	        qmi.addToMetadataCache(virtualGroup.getMetadataID(), "transformation/" + cacheString, result.clone()); //$NON-NLS-1$
         }
 		return result;

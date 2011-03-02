@@ -26,6 +26,7 @@ import junit.framework.TestCase;
 
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
@@ -35,7 +36,6 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.util.ElementSymbolOptimizer;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
 
@@ -43,7 +43,7 @@ public class TestXMLResolver extends TestCase {
     
     public Command helpResolve(String sql) {
         Command cmd = TestResolver.helpResolve(sql, FakeMetadataFactory.example1Cached(), AnalysisRecord.createNonRecordingRecord());
-        ElementSymbolOptimizer.fullyQualifyElements(cmd);
+        ResolverUtil.fullyQualifyElements(cmd);
         return cmd;
     }
     

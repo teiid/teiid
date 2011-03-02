@@ -32,6 +32,8 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.resolver.util.ResolverUtil;
+import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
@@ -56,11 +58,16 @@ public class TestElementSymbolOptimizer extends TestCase {
     }
     
     public void helpTestOptimize(String sql, QueryMetadataInterface metadata, String expected) throws QueryMetadataException, TeiidComponentException, QueryParserException, QueryResolverException {
-    	Command command = helpResolve(sql, metadata);
-        ElementSymbolOptimizer.optimizeElements(command, metadata);
-        String actual = command.toString();
-            
-        assertEquals("Expected different optimized string", expected, actual);             //$NON-NLS-1$
+    	try {
+    		ResolverVisitor.setFindShortName(true);
+	    	Command command = helpResolve(sql, metadata);
+	        String actual = command.toString();
+	            
+	        assertEquals("Expected different optimized string", expected, actual);             //$NON-NLS-1$
+    	}
+        finally {
+        	ResolverVisitor.setFindShortName(false);
+        }
     }
 
     /** Can be optimized */
@@ -98,7 +105,7 @@ public class TestElementSymbolOptimizer extends TestCase {
     public void testOptimize6() throws Exception {
         helpTestOptimize("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 WHERE e2 > (SELECT AVG(pm1.g2.e2) FROM pm1.g2 WHERE pm1.g1.e1 = pm1.g2.e1)", //$NON-NLS-1$
                             FakeMetadataFactory.example1Cached(), 
-                            "SELECT e1, e2 FROM pm1.g1 WHERE e2 > (SELECT AVG(pm1.g2.e2) FROM pm1.g2 WHERE pm1.g1.e1 = pm1.g2.e1)"); //$NON-NLS-1$
+                            "SELECT e1, e2 FROM pm1.g1 WHERE e2 > (SELECT AVG(e2) FROM pm1.g2 WHERE pm1.g1.e1 = e1)"); //$NON-NLS-1$
     }
 
     /** alias */
@@ -116,7 +123,7 @@ public class TestElementSymbolOptimizer extends TestCase {
 
     public void helpTestFullyQualify(String sql, QueryMetadataInterface metadata, String expected) throws QueryParserException, QueryResolverException, TeiidComponentException {
         Command command = helpResolve(sql, metadata);
-        ElementSymbolOptimizer.fullyQualifyElements(command);
+        ResolverUtil.fullyQualifyElements(command);
         String actual = command.toString();
 
         assertEquals("Expected different fully qualified string", expected, actual); //$NON-NLS-1$
