@@ -93,6 +93,7 @@ public class TeiidDriver implements Driver {
         	//don't modify the original
             info = PropertiesUtils.clone(info);
         }
+        parseURL(url, info);
     	if (conn == ConnectionType.Embedded) {
     		return EmbeddedProfile.connect(url, info);
     	}
