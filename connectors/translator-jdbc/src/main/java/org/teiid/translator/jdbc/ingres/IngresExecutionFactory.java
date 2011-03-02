@@ -84,7 +84,6 @@ public class IngresExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.RAND, new AliasModifier("random")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("uppercase")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$
-        registerFunctionModifier("bitadd", new AliasModifier("bit_add")); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory())); 
         
 		supportedFunctions.add(SourceSystemFunctions.ABS);
@@ -118,7 +117,7 @@ public class IngresExecutionFactory extends JDBCExecutionFactory {
     public List<FunctionMethod> getPushDownFunctions(){
     	List<FunctionMethod> pushdownFunctions = new ArrayList<FunctionMethod>();
     
-		pushdownFunctions.add(new FunctionMethod(INGRES + '.' + "bitadd", "bitadd", INGRES, //$NON-NLS-1$ //$NON-NLS-2$
+		pushdownFunctions.add(new FunctionMethod(INGRES + '.' + "bit_add", "bit_add", INGRES, //$NON-NLS-1$ //$NON-NLS-2$
             new FunctionParameter[] {
                 new FunctionParameter("integer1", DataTypeManager.DefaultDataTypes.INTEGER, ""), //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("integer2", DataTypeManager.DefaultDataTypes.INTEGER, "")}, //$NON-NLS-1$ //$NON-NLS-2$
