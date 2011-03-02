@@ -71,6 +71,10 @@ public class TempTableResolver implements CommandResolver {
             if(!exitsingGroups.isEmpty()) {
                 throw new QueryResolverException(QueryPlugin.Util.getString("TempTableResolver.table_already_exists", group.getName())); //$NON-NLS-1$
             }
+        	if (metadata.getMetadata().hasProcedure(group.getName())) {
+        		throw new QueryResolverException(QueryPlugin.Util.getString("TempTableResolver.table_already_exists", group.getName())); //$NON-NLS-1$
+        	}
+            
             //now we will be more specific for temp groups
             TempMetadataID id = metadata.getMetadataStore().getTempGroupID(group.getName());
             if (id != null && !metadata.isTemporaryTable(id)) {

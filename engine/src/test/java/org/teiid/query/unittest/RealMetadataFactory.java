@@ -117,7 +117,7 @@ public class RealMetadataFactory {
         QueryNode vqtn2589f = new QueryNode("VQT.SmallA_2589f", "SELECT * FROM VQT.SmallA_2589"); //$NON-NLS-1$ //$NON-NLS-2$
         Table vqtg2589f = createVirtualGroup("SmallA_2589f", vqt, vqtn2589f); //$NON-NLS-1$
 
-        QueryNode vqtn2589g = new QueryNode("VQT.SmallA_2589g", "SELECT * FROM VQT.SmallA_2589b"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vqtn2589g = new QueryNode("VQT.SmallA_2589g", "SELECT * FROM SmallA_2589b"); //$NON-NLS-1$ //$NON-NLS-2$
         Table vqtg2589g = createVirtualGroup("SmallA_2589g", vqt, vqtn2589g); //$NON-NLS-1$
 
         QueryNode vqtn2589h = new QueryNode("VQT.SmallA_2589h", "SELECT VQT.SmallA_2589.* FROM VQT.SmallA_2589 INNER JOIN BQT1.SmallB ON VQT.SmallA_2589.StringKey = SmallB.StringKey"); //$NON-NLS-1$ //$NON-NLS-2$

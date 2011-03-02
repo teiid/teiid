@@ -119,7 +119,7 @@ public class QueryResolver {
                 cupCommand.setProjectedSymbols(proc.getProjectedSymbols());
             } 
     	}
-    	resolveCommand(command, proc.getGroup(), proc.getType(), metadata);
+    	resolveCommand(command, proc.getGroup(), proc.getType(), metadata.getDesignTimeMetadata());
     	return command;
     }
 
@@ -427,6 +427,7 @@ public class QueryResolver {
 			String cacheString, QueryMetadataInterface qmi) throws TeiidComponentException,
 			QueryMetadataException, QueryResolverException,
 			QueryValidatorException {
+		qmi = qmi.getDesignTimeMetadata();
 		Command result = (Command)qmi.getFromMetadataCache(virtualGroup.getMetadataID(), "transformation/" + cacheString); //$NON-NLS-1$
         if (result != null) {
         	result = (Command)result.clone();

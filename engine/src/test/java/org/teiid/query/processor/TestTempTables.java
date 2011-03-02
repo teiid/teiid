@@ -22,8 +22,7 @@
 
 package org.teiid.query.processor;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -66,6 +65,7 @@ public class TestTempTables {
 	@Before public void setUp() {
 		tempStore = new TempTableStore("1"); //$NON-NLS-1$
 		metadata = new TempMetadataAdapter(FakeMetadataFactory.example1Cached(), tempStore.getMetadataStore());
+		metadata.setSession(true);
 		FakeDataManager fdm = new FakeDataManager();
 	    TestProcessor.sampleData1(fdm);
 	    BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
@@ -286,7 +286,16 @@ public class TestTempTables {
 		execute("create local temporary table x (e1 serial, e2 integer not null, primary key (e1))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
 		execute("insert into x (e2) values ((select null))", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 	}
-
+	
+	/**
+	 * If the session metadata is still visible, then the procedure will fail due to the conflicting
+	 * definitions of temp_table
+	 */
+	@Test public void testSessionResolving() throws Exception {
+		execute("create local temporary table temp_table (column1 integer)", new List[] {Arrays.asList(0)});
+		execute("exec pm1.vsp60()", new List[] {Arrays.asList("First"), Arrays.asList("Second"), Arrays.asList("Third")});
+	}
+	
 	private void sampleTable() throws Exception {
 		execute("create local temporary table x (e1 string, e2 integer, primary key (e1, e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
 		execute("insert into x (e2, e1) values (3, 'b')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$

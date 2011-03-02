@@ -684,4 +684,8 @@ public interface QueryMetadataInterface {
     boolean isMultiSource(Object modelId) throws QueryMetadataException, TeiidComponentException;
     
     boolean isMultiSourceElement(Object elementId) throws QueryMetadataException, TeiidComponentException;
+
+	QueryMetadataInterface getDesignTimeMetadata();
+	
+	boolean hasProcedure(String name) throws TeiidComponentException;
 }

@@ -83,7 +83,7 @@ public class QueryUtil {
         if (query == null) {
             try {
                 query = QueryParser.getQueryParser().parseCommand(queryNode.getQuery());
-                QueryResolver.resolveWithBindingMetadata(query, env.getGlobalMetadata(), queryNode, true);
+                QueryResolver.resolveWithBindingMetadata(query, env.getGlobalMetadata().getDesignTimeMetadata(), queryNode, true);
             } catch (TeiidException e) {
                 throw new QueryPlannerException(e, QueryPlugin.Util.getString("ERR.015.004.0054", new Object[]{queryNode.getGroupName(), queryNode.getQuery()})); //$NON-NLS-1$
 			}

@@ -52,8 +52,9 @@ public class TestDQPCore {
     private DQPCore core;
 
     @Before public void setUp() throws Exception {
-        DQPWorkContext context = FakeMetadataFactory.buildWorkContext(FakeMetadataFactory.exampleBQTCached(), FakeMetadataFactory.exampleBQTVDB());
+        DQPWorkContext context = FakeMetadataFactory.buildWorkContext(FakeMetadataFactory.exampleBQT());
         context.getVDB().getModel("BQT3").setVisible(false); //$NON-NLS-1$
+        context.getVDB().getModel("VQT").setVisible(false); //$NON-NLS-1$
 
         ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
         context.getVDB().addAttchment(ConnectorManagerRepository.class, repo);
@@ -156,6 +157,14 @@ public class TestDQPCore {
     @Test public void testTxnAutoWrap() throws Exception {
     	String sql = "SELECT * FROM BQT1.SmallA"; //$NON-NLS-1$
     	helpExecute(sql, "a", 1, true); //$NON-NLS-1$
+    }
+    
+    /**
+     * Ensures that VQT visibility does not affect the view query
+     */
+    @Test public void testViewVisibility() throws Exception {
+    	String sql = "SELECT * FROM VQT.SmallA_2589g"; //$NON-NLS-1$
+    	helpExecute(sql, "a"); //$NON-NLS-1$
     }
     
     /**

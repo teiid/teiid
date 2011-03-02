@@ -58,6 +58,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     private TempMetadataStore tempStore;
     private Map materializationTables;
     private Map queryNodes;
+    private boolean session;
 	
 	public TempMetadataAdapter(QueryMetadataInterface metadata, TempMetadataStore tempStore) {
 		super(metadata);
@@ -69,7 +70,22 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         this.tempStore = tempStore;
         this.materializationTables = materializationTables;
         this.queryNodes = queryNodes;
-    }    
+    } 
+    
+    public boolean isSession() {
+		return session;
+	}
+    
+    public void setSession(boolean session) {
+		this.session = session;
+	}
+    
+    public QueryMetadataInterface getDesignTimeMetadata() {
+    	if (isSession()) {
+    		return this.actualMetadata.getDesignTimeMetadata();
+    	}
+    	return new TempMetadataAdapter(this.actualMetadata.getDesignTimeMetadata(), tempStore, materializationTables, queryNodes);
+    }
     
     public TempMetadataStore getMetadataStore() {
         return this.tempStore;    
@@ -290,8 +306,11 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         throws TeiidComponentException, QueryMetadataException {
         
         // check if any dynamic materialization tables are defined
-        if (this.materializationTables != null && this.materializationTables.containsKey(groupID)) {
-            return this.materializationTables.get(groupID);
+        if (this.materializationTables != null) {
+            Object result = this.materializationTables.get(groupID);
+            if (result != null) {
+            	return result;
+            }
         }
         
         if(groupID instanceof TempMetadataID) {                         

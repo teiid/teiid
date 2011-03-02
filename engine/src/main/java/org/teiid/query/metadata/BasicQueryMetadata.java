@@ -518,5 +518,15 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 	public boolean isMultiSourceElement(Object elementId) {
 		return false;
 	}
+	
+	@Override
+	public QueryMetadataInterface getDesignTimeMetadata() {
+		return this;
+	}
+	
+	@Override
+	public boolean hasProcedure(String name) throws TeiidComponentException {
+		return false;
+	}
     
 }

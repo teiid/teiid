@@ -383,5 +383,15 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 	public boolean isMultiSourceElement(Object elementId) throws QueryMetadataException, TeiidComponentException {
 		return actualMetadata.isMultiSourceElement(elementId);
 	}
+	
+	@Override
+	public QueryMetadataInterface getDesignTimeMetadata() {
+		return actualMetadata.getDesignTimeMetadata();
+	}
+	
+	@Override
+	public boolean hasProcedure(String name) throws TeiidComponentException {
+		return actualMetadata.hasProcedure(name);
+	}
 
 }

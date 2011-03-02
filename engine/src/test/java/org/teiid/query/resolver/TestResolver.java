@@ -2338,6 +2338,11 @@ public class TestResolver {
         String sql = "CREATE LOCAL TEMPORARY TABLE pm1.g1 (column1 string)"; //$NON-NLS-1$
         helpResolveException(sql, "Cannot create temporary table \"pm1.g1\". Local temporary tables must be created with unqualified names."); //$NON-NLS-1$
     }
+    
+    @Test public void testProcedureConflict() {
+        String sql = "create local temporary table MMSP6 (e1 string, e2 integer)"; //$NON-NLS-1$
+        helpResolveException(sql, RealMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
+    }    
 
     @Test public void testCreatePk() {
         String sql = "CREATE LOCAL TEMPORARY TABLE foo (column1 string, column2 integer, primary key (column1, column2))"; //$NON-NLS-1$

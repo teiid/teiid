@@ -22,7 +22,7 @@
 
 package org.teiid.query.processor.proc;
 
-import static org.teiid.query.analysis.AnalysisRecord.PROP_SQL;
+import static org.teiid.query.analysis.AnalysisRecord.*;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -162,7 +162,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 						parentProcCommand.getVirtualGroup(), metadata);
 			}
 
-			QueryResolver.resolveCommand(command, metadata);
+			QueryResolver.resolveCommand(command, metadata.getDesignTimeMetadata());
 
 			validateDynamicCommand(procEnv, command);
 

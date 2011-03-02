@@ -196,14 +196,16 @@ public class Request {
             throw new TeiidComponentException(QueryPlugin.Util.getString("DQPCore.Unable_to_load_metadata_for_VDB_name__{0},_version__{1}", this.vdbName, this.vdbVersion)); //$NON-NLS-1$
         }
         
-        this.metadata = new TempMetadataAdapter(metadata, new TempMetadataStore());
-    
         // Check for multi-source models and further wrap the metadata interface
         Set<String> multiSourceModelList = workContext.getVDB().getMultiSourceModelNames();
         if(multiSourceModelList != null && multiSourceModelList.size() > 0) {
         	this.multiSourceModels = multiSourceModelList;
             this.metadata = new MultiSourceMetadataWrapper(this.metadata, this.multiSourceModels);
         }
+        
+        TempMetadataAdapter tma = new TempMetadataAdapter(metadata, new TempMetadataStore());
+        tma.setSession(true);
+        this.metadata = tma;
     }
     
     protected void createCommandContext() throws QueryValidatorException {
