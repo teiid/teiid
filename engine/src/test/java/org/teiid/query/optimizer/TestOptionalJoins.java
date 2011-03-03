@@ -500,4 +500,11 @@ public class TestOptionalJoins {
 				});
 	}
     
+    @Test public void testOptionalJoinNodeStar() throws Exception { 
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT g2.e1 FROM /* optional */ ( /* optional */ pm1.g1 as g1 makedep INNER JOIN /* optional */ pm2.g2 ON g1.e1 = pm2.g2.e1) makedep INNER JOIN /* optional */ pm2.g3 ON g1.e1 = pm2.g3.e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] {"SELECT g_0.e1 FROM pm2.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
+
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
+    }
+    
 }

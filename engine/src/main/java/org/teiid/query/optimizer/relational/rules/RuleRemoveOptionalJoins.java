@@ -103,6 +103,7 @@ public class RuleRemoveOptionalJoins implements
     	// remove the parent node and move the sibling node upward
 		PlanNode parentNode = joinNode.getParent();
 		joinNode.removeChild(optionalNode);
+		joinNode.getFirstChild().setProperty(NodeConstants.Info.OUTPUT_COLS, joinNode.getProperty(NodeConstants.Info.OUTPUT_COLS));
 		NodeEditor.removeChildNode(parentNode, joinNode);
 
 		return NodeEditor.findAllNodes(optionalNode, NodeConstants.Types.JOIN);
