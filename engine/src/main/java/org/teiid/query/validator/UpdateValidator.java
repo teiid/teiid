@@ -426,9 +426,9 @@ public class UpdateValidator {
     	}
     	
     	if (query.getFrom().getClauses().size() > 1 || (!(query.getFrom().getClauses().get(0) instanceof UnaryFromClause))) {
-    	    String warning = QueryPlugin.Util.getString("ERR.015.012.0009", query.getFrom());
-    		updateReport.handleValidationWarning(warning); //$NON-NLS-1$
-    		deleteReport.handleValidationWarning(warning); //$NON-NLS-1$
+    	    String warning = QueryPlugin.Util.getString("ERR.015.012.0009", query.getFrom()); //$NON-NLS-1$
+    		updateReport.handleValidationWarning(warning); 
+    		deleteReport.handleValidationWarning(warning);
     		updateInfo.isSimple = false;
     	}
     	List<GroupSymbol> allGroups = query.getFrom().getGroups();
