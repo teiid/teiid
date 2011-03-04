@@ -44,21 +44,26 @@ import org.teiid.dqp.internal.datamgr.FakeTransactionService;
 import org.teiid.dqp.internal.process.AbstractWorkItem.ThreadState;
 import org.teiid.dqp.service.AutoGenDataService;
 import org.teiid.dqp.service.FakeBufferService;
+import org.teiid.query.optimizer.TestOptimizer;
+import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
 
 public class TestDQPCore {
 
     private DQPCore core;
+    private AutoGenDataService agds;
 
     @Before public void setUp() throws Exception {
+    	agds = new AutoGenDataService();
         DQPWorkContext context = FakeMetadataFactory.buildWorkContext(FakeMetadataFactory.exampleBQT());
         context.getVDB().getModel("BQT3").setVisible(false); //$NON-NLS-1$
         context.getVDB().getModel("VQT").setVisible(false); //$NON-NLS-1$
 
         ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
         context.getVDB().addAttchment(ConnectorManagerRepository.class, repo);
-        Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(new AutoGenDataService());
+        Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(agds);
         
         core = new DQPCore();
         core.setBufferService(new FakeBufferService());
@@ -166,6 +171,23 @@ public class TestDQPCore {
     	String sql = "SELECT * FROM VQT.SmallA_2589g"; //$NON-NLS-1$
     	helpExecute(sql, "a"); //$NON-NLS-1$
     }
+    
+    @Test public void testLimitCompensation() throws Exception {
+    	String sql = "SELECT * FROM VQT.SmallA_2589g LIMIT 1, 1"; //$NON-NLS-1$
+    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+    	caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+    	agds.setCaps(caps);
+    	ResultsMessage rm = helpExecute(sql, "a"); //$NON-NLS-1$
+    	//we test for > 0 here because the autogen service doesn't obey the limit
+    	assertTrue(rm.getResults().length > 0);
+    }
+    
+    @Test public void testLimitCompensation1() throws Exception {
+    	String sql = "SELECT * FROM VQT.SmallA_2589g LIMIT 1, 1"; //$NON-NLS-1$
+    	ResultsMessage rm = helpExecute(sql, "a"); //$NON-NLS-1$
+    	assertEquals(1, rm.getResults().length);
+    }
+
     
     /**
      * Tests whether an exception result is sent when an exception occurs

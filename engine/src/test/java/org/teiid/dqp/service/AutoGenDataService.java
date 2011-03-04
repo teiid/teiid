@@ -58,6 +58,10 @@ public class AutoGenDataService extends ConnectorManager{
     	super("FakeConnector","FakeConnector"); //$NON-NLS-1$ //$NON-NLS-2$
         caps = TestOptimizer.getTypicalCapabilities();
     }
+    
+    public void setCaps(SourceCapabilities caps) {
+		this.caps = caps;
+	}
 
     public void setRows(int rows) {
         this.rows = rows;
