@@ -36,7 +36,6 @@ import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.OptimizerRule;
@@ -44,7 +43,6 @@ import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.OrderBy;
@@ -509,7 +507,6 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		}
 
         // Gather elements from correlated subquery references;
-        // currently only for SELECT or PROJECT nodes
 		for (SymbolMap refs : node.getAllReferences()) {
         	for (Expression expr : refs.asMap().values()) {
                 AggregateSymbolCollectorVisitor.getAggregates(expr, requiredSymbols, requiredSymbols);

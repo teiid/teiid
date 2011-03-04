@@ -25,6 +25,7 @@ package org.teiid.query.optimizer.relational.rules;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -40,6 +41,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -62,26 +64,51 @@ public class RuleRemoveOptionalJoins implements
                             CommandContext context) throws QueryPlannerException,
                                                    QueryMetadataException,
                                                    TeiidComponentException {
-
-    	List<PlanNode> joinNodes = NodeEditor.findAllNodes(plan, NodeConstants.Types.JOIN);
-    	HashSet<PlanNode> removedNodes = new HashSet<PlanNode>();
-    	for (PlanNode planNode : joinNodes) {
-    		if (removedNodes.contains(planNode)) {
+    	List<PlanNode> projectNodes = NodeEditor.findAllNodes(plan, NodeConstants.Types.PROJECT);
+    	HashSet<PlanNode> skipNodes = new HashSet<PlanNode>();
+    	for (PlanNode projectNode : projectNodes) {
+    		if (projectNode.getChildCount() == 0 || projectNode.getProperty(NodeConstants.Info.INTO_GROUP) != null) {
     			continue;
     		}
-    		Set<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups((Collection<? extends LanguageObject>)planNode.getProperty(NodeConstants.Info.OUTPUT_COLS));
-    		List<PlanNode> removed = removeJoin(groups, planNode, planNode.getFirstChild());
-    		if (removed != null) {
-    			removedNodes.addAll(removed);
-    			continue;
+    		PlanNode groupNode = NodeEditor.findNodePreOrder(projectNode, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE | NodeConstants.Types.JOIN);
+    		if (groupNode != null) {
+    			projectNode = groupNode;
     		}
-    		removed = removeJoin(groups, planNode, planNode.getLastChild());
-    		if (removed != null) {
-    			removedNodes.addAll(removed);
+        	Set<GroupSymbol> requiredForOptional = getRequiredGroupSymbols(projectNode.getFirstChild());
+    		boolean done = false;
+    		while (!done) {
+    			done = true;
+		    	List<PlanNode> joinNodes = NodeEditor.findAllNodes(projectNode, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE);
+		    	for (PlanNode planNode : joinNodes) {
+		    		if (skipNodes.contains(planNode)) {
+		    			continue;
+		    		}
+		    		if (!planNode.getExportedCorrelatedReferences().isEmpty()) {
+		    			skipNodes.add(planNode);
+		    			continue;
+		    		}
+		    		Set<GroupSymbol> required = getRequiredGroupSymbols(planNode);
+		    		
+		    		List<PlanNode> removed = removeJoin(required, requiredForOptional, planNode, planNode.getFirstChild(), analysisRecord);
+		    		if (removed != null) {
+		    			skipNodes.addAll(removed);
+		    			done = false;
+		    			continue;
+		    		}
+		    		removed = removeJoin(required, requiredForOptional, planNode, planNode.getLastChild(), analysisRecord);
+		    		if (removed != null) {
+		    			skipNodes.addAll(removed);
+		    			done = false;
+		    		}
+				}
     		}
-		}
+    	}
         return plan;
     }
+
+	private Set<GroupSymbol> getRequiredGroupSymbols(PlanNode planNode) {
+		return GroupsUsedByElementsVisitor.getGroups((Collection<? extends LanguageObject>)planNode.getProperty(NodeConstants.Info.OUTPUT_COLS));
+	}
     
     /**
      * remove the optional node if possible
@@ -89,14 +116,42 @@ public class RuleRemoveOptionalJoins implements
      * @throws TeiidComponentException 
      * @throws QueryMetadataException 
      */ 
-    private List<PlanNode> removeJoin(Set<GroupSymbol> groups, PlanNode joinNode, PlanNode optionalNode) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
-        if (!Collections.disjoint(optionalNode.getGroups(), groups)) {
+    private List<PlanNode> removeJoin(Set<GroupSymbol> required, Set<GroupSymbol> requiredForOptional, PlanNode joinNode, PlanNode optionalNode, AnalysisRecord record) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
+    	boolean correctFrame = false;
+    	boolean isOptional = optionalNode.hasBooleanProperty(NodeConstants.Info.IS_OPTIONAL);
+    	if (isOptional) {
+    		required = requiredForOptional;
+			correctFrame = true;
+			//prevent bridge table removal
+			HashSet<GroupSymbol> joinGroups = new HashSet<GroupSymbol>();
+    		PlanNode parentNode = joinNode;
+    		while (parentNode.getType() != NodeConstants.Types.PROJECT) {
+    			PlanNode current = parentNode;
+    			parentNode = parentNode.getParent();
+    			if (current.getType() != NodeConstants.Types.SELECT && current.getType() != NodeConstants.Types.JOIN) {
+    				continue;
+    			}
+    			Set<GroupSymbol> currentGroups = current.getGroups();
+				if (current.getType() == NodeConstants.Types.JOIN) {
+					currentGroups = GroupsUsedByElementsVisitor.getGroups((List<Criteria>)current.getProperty(NodeConstants.Info.JOIN_CRITERIA));
+				}
+				if (!Collections.disjoint(currentGroups, optionalNode.getGroups()) && !optionalNode.getGroups().containsAll(currentGroups)) {
+					//we're performing a join
+					boolean wasEmpty = joinGroups.isEmpty();
+					boolean modified = joinGroups.addAll(current.getGroups());
+					if (!wasEmpty && modified) {
+						return null;
+					}
+				}
+    		}
+		}
+        if (!Collections.disjoint(optionalNode.getGroups(), required)) {
         	return null;
         }
     	
         JoinType jt = (JoinType)joinNode.getProperty(NodeConstants.Info.JOIN_TYPE);
         
-        if (!optionalNode.hasBooleanProperty(NodeConstants.Info.IS_OPTIONAL) && 
+        if (!isOptional && 
         		(jt != JoinType.JOIN_LEFT_OUTER || optionalNode != joinNode.getLastChild() || useNonDistinctRows(joinNode.getParent()))) {
         	return null;
         }
@@ -105,7 +160,46 @@ public class RuleRemoveOptionalJoins implements
 		joinNode.removeChild(optionalNode);
 		joinNode.getFirstChild().setProperty(NodeConstants.Info.OUTPUT_COLS, joinNode.getProperty(NodeConstants.Info.OUTPUT_COLS));
 		NodeEditor.removeChildNode(parentNode, joinNode);
+		if (record != null && record.recordDebug()) {
+			record.println("Removing join node since " + (isOptional?"it was marked as optional ":"it will not affect the results") + joinNode); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		}
 
+		while (parentNode.getType() != NodeConstants.Types.PROJECT) {
+			PlanNode current = parentNode;
+			parentNode = parentNode.getParent();
+			if (correctFrame) {
+				if (current.getType() == NodeConstants.Types.SELECT) {
+					if (!Collections.disjoint(current.getGroups(), optionalNode.getGroups())) {
+						current.getFirstChild().setProperty(NodeConstants.Info.OUTPUT_COLS, current.getProperty(NodeConstants.Info.OUTPUT_COLS));
+						NodeEditor.removeChildNode(parentNode, current);
+					}
+				} else if (current.getType() == NodeConstants.Types.JOIN) {
+					if (!Collections.disjoint(current.getGroups(), optionalNode.getGroups())) {
+						List<Criteria> crits = (List<Criteria>) current.getProperty(NodeConstants.Info.JOIN_CRITERIA);
+						if (crits != null && !crits.isEmpty()) {
+							for (Iterator<Criteria> iterator = crits.iterator(); iterator.hasNext();) {
+								Criteria criteria = iterator.next();
+								if (!Collections.disjoint(GroupsUsedByElementsVisitor.getGroups(criteria), optionalNode.getGroups())) {
+									iterator.remove();
+								}
+							}
+							if (crits.isEmpty()) {
+								JoinType joinType = (JoinType) current.getProperty(NodeConstants.Info.JOIN_TYPE);
+								if (joinType == JoinType.JOIN_INNER) {
+									current.setProperty(NodeConstants.Info.JOIN_TYPE, JoinType.JOIN_CROSS);
+								}
+							}
+						}
+					}
+				}
+			} else if (current.getType() != NodeConstants.Types.JOIN) { 
+				break;
+			}
+			if (current.getType() == NodeConstants.Types.JOIN) { 
+				current.getGroups().removeAll(optionalNode.getGroups());
+			}
+		}
+		
 		return NodeEditor.findAllNodes(optionalNode, NodeConstants.Types.JOIN);
     }
     

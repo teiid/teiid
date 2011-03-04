@@ -217,32 +217,54 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
     <section id="optional_join">
       <title>Optional Join</title>
       <para>The optional join hint indicates to the 
-        optimizer that a join clause should be omitted if none of its
-        columns are used in either user criteria or output columns in
-        the result. This hint is typically only used in view layers
+        optimizer that a joined table should be omitted if none of its
+        columns are used by the output of the user query or in a meaningful way to construct the results of the user query. This hint is typically only used in view layers
         containing multi-source joins.</para>
       <para>
-        The optional join hint is applied as a comment on a join clause.
+        The optional join hint is applied as a comment on a join clause.  It can be applied in both ANSI and non-ANSI joins.  With non-ANSI joins an entire joined table may be marked as optional.
         <example>
           <title>Example Optional Join Hint</title>
-          <programlisting>select a.column1, b.column2 from a inner join /*+ optional */ b on a.key = b.key</programlisting>
+          <programlisting language="SQL">select a.column1, b.column2 from a, /*+ optional */ b WHERE a.key = b.key</programlisting>
+          <para>Suppose this example defines a view layer X.
+	        If X is queried in such a way as to not need b.column2, then the
+	        optional join hint will cause b to be omitted from the query
+	        plan. The result would be the same as if X were defined as:
+	      </para>
+	      <programlisting language="SQL">select a.column1 from a</programlisting>
+        </example>
+        <example>
+          <title>Example ANSI Optional Join Hint</title>
+          <programlisting>select a.column1, b.column2, c.column3 from /*+ optional */ (a inner join b ON a.key = b.key) INNER JOIN c ON a.key = c.key</programlisting>
+          <para>In this example the ANSI join syntax allows for the join of a and b to be marked as optional.  Suppose this example defines a view layer X.  Only if both column a.column1 and b.column2 are not needed, e.g. "SELECT column3 FROM X" will the join be removed.</para>
         </example>
       </para>
-      <para> Suppose that the preceding example defined a view layer X.
-        If X is queried in such a way as to not need b.column2, then the
-        optional join hint will cause b to be omitted from the query
-        plan. The result would be the same as if X were defined as:
+      <para>
+      	The optional join hint will not remove a bridging table that is still required.
+      	<example>
+          <title>Example Briding Table</title>
+          <programlisting language="SQL">select a.column1, b.column2, c.column3 from /*+ optional */ a, b, c WHERE ON a.key = b.key AND a.key = c.key</programlisting>
+          <para>Suppose this example defines a view layer X.  If b.column2 or c.column3 are solely required by a query to X, then the join on a be removed.  
+          However if a.column1 or both b.column2 and c.column3 are needed, then the optional join hint will not take effect.</para>
+        </example>
       </para>
-      <programlisting>select a.column1 from a</programlisting>
       <tip>
-        <para>When a join clause is omitted via the optional join hint, the relevant join criteria
+        <para>When a join clause is omitted via the optional join hint, the relevant criteria
           is not applied. Thus it is possible that the query results may
           not have the same cardinality or even the same row values as
           when the join is fully applied.</para>
 	    <para>Left/right outer joins where the inner side values are not used
 		  and whose rows under go a distinct operation will automatically be
-		  treated as an optional join and does not require a hint.</para>
+		  treated as an optional join and do not require a hint.
+		  <example>
+          <title>Example Unnecessary Optional Join Hint</title>
+          <programlisting language="SQL">select a.column1, b.column2 from a LEFT OUTER JOIN /*+optional*/ b ON a.key = b.key</programlisting>
+          </example>
+		</para>
       </tip>
+      <warning><para>
+      	A simple SELECT COUNT(*) ... against a view where all join tables are marked as optional will not return a meaningful result.
+      	</para>
+      </warning>
     </section>
     <section id="partitioned_union">
       <title>Partitioned Union</title>

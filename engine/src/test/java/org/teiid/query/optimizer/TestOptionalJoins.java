@@ -27,7 +27,7 @@ import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
-
+@SuppressWarnings("nls")
 public class TestOptionalJoins {
     
     @Test public void testOptionalJoinNode1() { 
@@ -35,6 +35,42 @@ public class TestOptionalJoins {
             new String[] {"SELECT pm1.g1.e1 FROM pm1.g1"} ); //$NON-NLS-1$
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
+    }
+    
+    @Test public void testOptionalJoinNode1WithPredicate() { 
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT pm1.g1.e1 FROM pm1.g1, /* optional */ pm1.g2 WHERE pm1.g1.e1 = pm1.g2.e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] {"SELECT pm1.g1.e1 FROM pm1.g1"} ); //$NON-NLS-1$
+
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
+    }
+    
+    @Test public void testOptionalJoinNode1WithJoinCriteria() { 
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT pm1.g3.e1 FROM (pm1.g1 CROSS JOIN /* optional */ pm1.g2) INNER JOIN pm1.g3 ON pm1.g1.e1 = pm1.g3.e1 AND pm1.g2.e1 = pm1.g3.e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] {"SELECT g_1.e1 FROM pm1.g1 AS g_0, pm1.g3 AS g_1 WHERE g_0.e1 = g_1.e1"} ); //$NON-NLS-1$
+
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
+    }
+    
+    @Test public void testOptionalJoinNodeNonAnsiWithHaving() { 
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT e1 FROM (SELECT pm1.g1.e1, max(pm1.g2.e2) FROM pm1.g1, /* optional */ pm1.g2 WHERE pm1.g1.e1 = pm1.g2.e1 GROUP BY pm1.g1.e1) x", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] {"SELECT pm1.g1.e1 FROM pm1.g1"} ); //$NON-NLS-1$
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                1,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                1,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                0,      // Select
+                0,      // Sort
+                0       // UnionAll
+            });    
     }
     
     @Test public void testOptionalJoinNode1_1() { 
@@ -505,6 +541,42 @@ public class TestOptionalJoins {
             new String[] {"SELECT g_0.e1 FROM pm2.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
+    }
+    
+    @Test public void testOptionalJoinNodeStarTransitiveAnsi() throws Exception { 
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT g3.e1 FROM ( /* optional */ pm1.g1 as g1 makedep INNER JOIN /* optional */ pm2.g2 ON g1.e1 = pm2.g2.e1) makedep INNER JOIN /* optional */ pm2.g3 ON g1.e1 = pm2.g3.e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] {"SELECT g_0.e1 FROM pm2.g3 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
+
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
+    }
+    
+    @Test public void testOptionalJoinNodeStarNonAnsi() throws Exception { 
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT g3.e1 FROM /* optional */ pm1.g1 as g1, /* optional */ pm2.g2, /* optional */ pm2.g3 WHERE g1.e1 = pm2.g2.e1 AND g1.e1 = pm2.g3.e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] {"SELECT g_0.e1 FROM pm2.g3 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
+
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
+    }
+    
+    @Test public void testOptionalJoinNodeBridgeNonAnsi() throws Exception { 
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT g3.e1 FROM /* optional */ pm1.g1 as g1 makedep, pm2.g2, /* optional */ pm2.g3 WHERE g1.e1 = pm2.g2.e1 AND g1.e1 = pm2.g3.e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] {"SELECT g_1.e1 AS c_0, g_0.e1 AS c_1 FROM pm2.g2 AS g_0, pm2.g3 AS g_1 WHERE g_1.e1 = g_0.e1 ORDER BY c_0, c_1", "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 WHERE (g_0.e1 IN (<dependent values>)) AND (g_0.e1 IN (<dependent values>)) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
+
+		TestOptimizer.checkNodeTypes(plan, new int[] { 
+				1, // Access
+				1, // DependentAccess
+				0, // DependentSelect
+				0, // DependentProject
+				0, // DupRemove
+				0, // Grouping
+				0, // Join
+				1, // MergeJoin
+				0, // Null
+				0, // PlanExecution
+				1, // Project
+				0, // Select
+				0, // Sort
+				0  // UnionAll
+				});
     }
     
 }
