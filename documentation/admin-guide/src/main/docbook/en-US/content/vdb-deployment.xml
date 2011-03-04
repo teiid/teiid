@@ -330,8 +330,8 @@
    		
    		<para>
    		Setting the version can either be done in the vdb.xml, which is useful for dynamic vdbs, or through a naming convention of the deployment file - vdbname.version.vdb, e.g. marketdata.2.vdb. 
-   		The deployer is responsible for choosing an appropriate version number.  If the version number is same as an existing VDB existing connections to the 
-   		previous VDB will remain valid and any new connections will be made to the new VDB - note that the new VDB may be able to use cache entries of the previous VDB.
+   		The deployer is responsible for choosing an appropriate version number.  If there is alreay a VDB name/version that matches the current deployment, then connections to the 
+   		previous VDB will be terminated and its cache entries will be flushed.  Any new connections will then be made to the new VDB.
    		</para>  
    		
    		<para>

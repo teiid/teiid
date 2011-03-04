@@ -550,7 +550,7 @@ public class DQPCore implements DQP {
 	}
 	
     private void clearPlanCache(String vdbName, int version){
-        LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.getString("DQPCore.Clearing_prepared_plan_cache")); //$NON-NLS-1$
+        LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.getString("DQPCore.Clearing_prepared_plan_cache_for_vdb", vdbName, version)); //$NON-NLS-1$
         this.prepPlanCache.clearForVDB(vdbName, version);
     }
 

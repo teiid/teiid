@@ -32,9 +32,11 @@ import java.sql.SQLXML;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -78,6 +80,7 @@ import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.LRUCache;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
@@ -102,6 +105,7 @@ import org.teiid.transport.LogonImpl;
 import org.teiid.transport.ODBCSocketListener;
 import org.teiid.transport.SocketConfiguration;
 import org.teiid.transport.SocketListener;
+import org.teiid.vdb.runtime.VDBKey;
 
 
 @ManagementObject(name="RuntimeEngineDeployer", isRuntime=true, componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
@@ -214,14 +218,19 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	
     	// add vdb life cycle listeners
 		this.vdbRepository.addListener(new VDBLifeCycleListener() {
-
+			
+			private Set<VDBKey> recentlyRemoved = Collections.newSetFromMap(new LRUCache<VDBKey, Boolean>(10000));
+			
 			@Override
 			public void removed(String name, int version) {
-				
+				recentlyRemoved.add(new VDBKey(name, version));
 			}
 			
 			@Override
 			public void added(String name, int version) {
+				if (!recentlyRemoved.remove(new VDBKey(name, version))) {
+					return;
+				}
 				// terminate all the previous sessions
 				try {
 					Collection<SessionMetadata> sessions = sessionService.getActiveSessions();
