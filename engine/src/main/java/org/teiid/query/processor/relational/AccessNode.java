@@ -197,6 +197,9 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 		if (getParent() instanceof LimitNode) {
 			LimitNode parent = (LimitNode)getParent();
 			limit = parent.getLimit() + parent.getOffset();
+			if (limit < parent.getLimit()) {
+				limit = -1; //guard against overflow
+			}
 		}
 		tupleSource = getDataManager().registerRequest(getContext(), atomicCommand, modelName, connectorBindingId, getID(), limit);
 	}
