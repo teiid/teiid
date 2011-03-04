@@ -118,7 +118,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         this.bufferService = bufferService;
 	}
     
-	public TupleSource registerRequest(CommandContext context, Command command, String modelName, String connectorBindingId, int nodeID) throws TeiidComponentException, TeiidProcessingException {
+	public TupleSource registerRequest(CommandContext context, Command command, String modelName, String connectorBindingId, int nodeID, int limit) throws TeiidComponentException, TeiidProcessingException {
 		RequestWorkItem workItem = requestMgr.getRequestWorkItem((RequestID)context.getProcessorID());
 		
 		if(CoreConstants.SYSTEM_MODEL.equals(modelName) || CoreConstants.SYSTEM_ADMIN_MODEL.equals(modelName)) {
@@ -126,9 +126,13 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		}
 		
 		AtomicRequestMessage aqr = createRequest(context.getProcessorID(), command, modelName, connectorBindingId, nodeID);
+		if (limit > 0) {
+			aqr.setFetchSize(Math.min(limit, aqr.getFetchSize()));
+			throw new AssertionError();
+		}
 		ConnectorManagerRepository cmr = workItem.getDqpWorkContext().getVDB().getAttachment(ConnectorManagerRepository.class);
 		ConnectorWork work = cmr.getConnectorManager(aqr.getConnectorName()).registerRequest(aqr);
-        return new DataTierTupleSource(aqr, workItem, work, this);
+        return new DataTierTupleSource(aqr, workItem, work, this, limit);
 	}
 
 	/**

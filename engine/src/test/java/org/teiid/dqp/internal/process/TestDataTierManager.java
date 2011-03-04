@@ -54,8 +54,10 @@ public class TestDataTierManager {
     private DataTierTupleSource info;
     private AutoGenDataService connectorManager = new AutoGenDataService();
     private RequestWorkItem workItem;
+    private int limit = -1;
     
     @Before public void setUp() {
+    	limit = -1;
     	connectorManager = new AutoGenDataService();
     }
     
@@ -103,12 +105,29 @@ public class TestDataTierManager {
         request = new AtomicRequestMessage(original, workContext, nodeId);
         request.setCommand(command);
         request.setConnectorName("FakeConnectorID"); //$NON-NLS-1$
-        info = new DataTierTupleSource(request, workItem, connectorManager.registerRequest(request), dtm);
+        info = new DataTierTupleSource(request, workItem, connectorManager.registerRequest(request), dtm, limit);
     }
     
     @Test public void testDataTierTupleSource() throws Exception {
     	helpSetup(1);
     	for (int i = 0; i < 10;) {
+	    	try {
+	    		info.nextTuple();
+	    		i++;
+	    	} catch (BlockedException e) {
+	    		Thread.sleep(50);
+	    	}
+    	}
+        assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
+        assertNull(info.nextTuple());
+        info.closeSource();
+        assertNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
+    }
+    
+    @Test public void testDataTierTupleSourceLimit() throws Exception {
+    	limit = 1;
+    	helpSetup(1);
+    	for (int i = 0; i < 1;) {
 	    	try {
 	    		info.nextTuple();
 	    		i++;

@@ -56,6 +56,12 @@ public class LimitNode extends RelationalNode {
                                           TeiidComponentException,
                                           TeiidProcessingException {
         TupleBatch batch = null; // Can throw BlockedException
+        
+        if (limit == 0) {
+        	this.terminateBatches();
+        	return pullBatch();
+        }
+        
         // If we haven't reached the offset, then skip rows/batches
         if (offsetPhase) {
             while (rowCounter <= offset) {
@@ -107,13 +113,14 @@ public class LimitNode extends RelationalNode {
     }
     
     public void open() throws TeiidComponentException, TeiidProcessingException {
-        super.open();
     	limit = -1;
     	if (limitExpr != null) {
             Integer limitVal = (Integer)new Evaluator(Collections.emptyMap(), getDataManager(), getContext()).evaluate(limitExpr, Collections.emptyList());
             limit = limitVal.intValue();
     	}
-        
+        if (limit == 0) {
+        	return;
+        }
         if (offsetExpr != null) {
             Integer offsetVal = (Integer)new Evaluator(Collections.emptyMap(), getDataManager(), getContext()).evaluate(offsetExpr, Collections.emptyList());
             offset = offsetVal.intValue();
@@ -121,6 +128,7 @@ public class LimitNode extends RelationalNode {
             offset = 0;
         }
         offsetPhase = offset > 0;
+        super.open();
     }
 
     public void reset() {
@@ -162,6 +170,14 @@ public class LimitNode extends RelationalNode {
 
 	public Expression getOffsetExpr() {
 		return offsetExpr;
+	}
+	
+	public int getLimit() {
+		return limit;
+	}
+	
+	public int getOffset() {
+		return offset;
 	}
 
 }

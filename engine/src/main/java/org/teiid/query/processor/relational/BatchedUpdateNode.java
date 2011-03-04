@@ -114,7 +114,7 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
         }
         if (!commandsToExecute.isEmpty()) {
             BatchedUpdateCommand command = new BatchedUpdateCommand(commandsToExecute);
-            tupleSource = getDataManager().registerRequest(getContext(), command, modelName, null, getID());
+            tupleSource = getDataManager().registerRequest(getContext(), command, modelName, null, getID(), -1);
         }
     }
     

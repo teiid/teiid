@@ -23,7 +23,6 @@
 package org.teiid.query.processor.relational;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
-import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.sql.lang.Command;
@@ -49,29 +48,11 @@ public class RelationalNodeUtil {
     }
     
     /**
-     * Assuming there are no elements in the criteria, evaluate the criteria.
-     * A null value for criteria is considered to be always true.
-     * @param criteria
-     * @return true if the criteria always evaluate to true (e.g. 1 = 1); false otherwise.
-     * @throws TeiidComponentException 
-     * @throws BlockedException 
-     * @throws TeiidComponentException
-     * @throws ExpressionEvaluationException 
-     * @since 4.2
-     */
-    private static boolean evaluateCriteria(Criteria criteria) throws TeiidComponentException, ExpressionEvaluationException {
-        if(criteria == null) {
-            return true;
-        }
-        return Evaluator.evaluate(criteria);
-    }
-
-    /**
      * Decides whether a command needs to be executed.
      * <br/><b>NOTE: This method has a side-effect.</b> If the criteria of this command always evaluate to true,
      * and the simplifyCriteria flag is true, then the command criteria are set to null.
      * @param command
-     * @param simplifyCriteria wheter to simplify the criteria of the command if they always evaluate to true
+     * @param simplifyCriteria whether to simplify the criteria of the command if they always evaluate to true
      * @return true if this command should be executed by the connector; false otherwise.
      * @throws TeiidComponentException
      * @throws ExpressionEvaluationException 
@@ -89,7 +70,7 @@ public class RelationalNodeUtil {
                 
                 if (limit != null && limit.getRowLimit() instanceof Constant) {
                     Constant rowLimit = (Constant)limit.getRowLimit();
-                    if (new Integer(0).equals(rowLimit.getValue())) {
+                    if (Integer.valueOf(0) == rowLimit.getValue()) {
                         return false;
                     }
                 }
@@ -117,7 +98,7 @@ public class RelationalNodeUtil {
                     // If there are elements present in the criteria,
                     // then we don't know the result, so assume we need to execute
                     return true;
-                } else if(evaluateCriteria(criteria)) {
+                } else if(Evaluator.evaluate(criteria)) {
                     if (simplifyCriteria) {
                         query.setCriteria(null);
                     }
@@ -146,7 +127,7 @@ public class RelationalNodeUtil {
                 }
                 if(!EvaluatableVisitor.isFullyEvaluatable(criteria, false)) {
                     return true;
-                } else if(evaluateCriteria(criteria)) {
+                } else if(Evaluator.evaluate(criteria)) {
                     if (simplifyCriteria) {
                         update.setCriteria(null);
                     }
@@ -163,7 +144,7 @@ public class RelationalNodeUtil {
                 }
                 if(!EvaluatableVisitor.isFullyEvaluatable(criteria, false)) {
                     return true;
-                } else if(evaluateCriteria(criteria)) {
+                } else if(Evaluator.evaluate(criteria)) {
                     if (simplifyCriteria) {
                         delete.setCriteria(null);
                     }

@@ -117,13 +117,13 @@ public class HardcodedDataManager implements
     }
     
     /** 
-     * @see org.teiid.query.processor.ProcessorDataManager#registerRequest(CommandContext, org.teiid.query.sql.lang.Command, java.lang.String, String, int)
+     * @see org.teiid.query.processor.ProcessorDataManager#registerRequest(CommandContext, org.teiid.query.sql.lang.Command, java.lang.String, String, int, int)
      * @since 4.2
      */
     public TupleSource registerRequest(CommandContext context,
                                 Command command,
                                 String modelName,
-                                String connectorBindingId, int nodeID) throws TeiidComponentException {
+                                String connectorBindingId, int nodeID, int limit) throws TeiidComponentException {
         
         if(modelName != null && validModels != null && ! validModels.contains(modelName)) {
             throw new TeiidComponentException("Detected query against invalid model: " + modelName + ": " + command);  //$NON-NLS-1$//$NON-NLS-2$

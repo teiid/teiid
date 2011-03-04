@@ -211,7 +211,7 @@ public class TestBatchedUpdateNode {
         	this.numExecutedCommands = numExecutedCommands;
         }
         public Object lookupCodeValue(CommandContext context,String codeTableName,String returnElementName,String keyElementName,Object keyValue) throws BlockedException,TeiidComponentException {return null;}
-        public TupleSource registerRequest(CommandContext context,Command command,String modelName,String connectorBindingId, int nodeID) throws TeiidComponentException {
+        public TupleSource registerRequest(CommandContext context,Command command,String modelName,String connectorBindingId, int nodeID, int limit) throws TeiidComponentException {
             assertEquals("myProcessorID", context.getProcessorID()); //$NON-NLS-1$
             assertEquals("myModelName", modelName); //$NON-NLS-1$
             assertEquals(1, nodeID);

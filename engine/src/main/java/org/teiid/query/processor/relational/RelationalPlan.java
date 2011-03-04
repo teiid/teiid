@@ -134,13 +134,13 @@ public class RelationalPlan extends ProcessorPlan {
 					Create create = new Create();
 					create.setElementSymbolsAsColumns(withCommand.getColumns());
 					create.setTable(withCommand.getGroupSymbol());
-					this.root.getDataManager().registerRequest(getContext(), create, TempMetadataAdapter.TEMP_MODEL.getID(), null, 0);
+					this.root.getDataManager().registerRequest(getContext(), create, TempMetadataAdapter.TEMP_MODEL.getID(), null, 0, -1);
     			}
     			while (true) {
     				TupleBatch batch = withProcessor.nextBatch();
     				Insert insert = new Insert(withCommand.getGroupSymbol(), withCommand.getColumns(), null);
             		insert.setTupleSource(new CollectionTupleSource(batch.getTuples().iterator()));
-            		this.root.getDataManager().registerRequest(getContext(), insert, TempMetadataAdapter.TEMP_MODEL.getID(), null, 0);
+            		this.root.getDataManager().registerRequest(getContext(), insert, TempMetadataAdapter.TEMP_MODEL.getID(), null, 0, -1);
     				if (batch.getTerminationFlag()) {
     					break;
     				}

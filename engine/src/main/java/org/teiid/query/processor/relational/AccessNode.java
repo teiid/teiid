@@ -22,8 +22,7 @@
 
 package org.teiid.query.processor.relational;
 
-import static org.teiid.query.analysis.AnalysisRecord.PROP_MODEL_NAME;
-import static org.teiid.query.analysis.AnalysisRecord.PROP_SQL;
+import static org.teiid.query.analysis.AnalysisRecord.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -194,7 +193,12 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 
 	private void registerRequest(Command atomicCommand)
 			throws TeiidComponentException, TeiidProcessingException {
-		tupleSource = getDataManager().registerRequest(getContext(), atomicCommand, modelName, connectorBindingId, getID());
+		int limit = -1;
+		if (getParent() instanceof LimitNode) {
+			LimitNode parent = (LimitNode)getParent();
+			limit = parent.getLimit() + parent.getOffset();
+		}
+		tupleSource = getDataManager().registerRequest(getContext(), atomicCommand, modelName, connectorBindingId, getID(), limit);
 	}
 	
 	protected boolean processCommandsIndividually() {

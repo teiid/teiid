@@ -22,23 +22,18 @@
 
 package org.teiid.query.processor.relational;
 
+import static org.junit.Assert.*;
+
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Test;
 import org.teiid.common.buffer.TupleBatch;
-import org.teiid.query.processor.relational.LimitNode;
-import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.sql.symbol.Constant;
 
-import junit.framework.TestCase;
-
-
-/** 
- * @since 4.3
- */
-public class TestLimitNode extends TestCase {
+public class TestLimitNode {
     
-    public void testLimitInFirstBatch() throws Exception {
+    @Test public void testLimitInFirstBatch() throws Exception {
         LimitNode node = getLimitNode(40, new FakeRelationalNode(2, getRows(100), 50));
         
         TupleBatch batch = node.nextBatch();
@@ -49,7 +44,7 @@ public class TestLimitNode extends TestCase {
         assertTrue(batch.getTerminationFlag());
     }
 
-    public void testLimitAtBatchSize() throws Exception {
+    @Test public void testLimitAtBatchSize() throws Exception {
         LimitNode node = getLimitNode(50, new FakeRelationalNode(2, getRows(100), 50));
         
         TupleBatch batch = node.nextBatch();
@@ -60,7 +55,7 @@ public class TestLimitNode extends TestCase {
         assertTrue(batch.getTerminationFlag());
     }
 
-    public void testLimitInSecondBatch() throws Exception {
+    @Test public void testLimitInSecondBatch() throws Exception {
         LimitNode node = getLimitNode(55, new FakeRelationalNode(2, getRows(100), 50));
         
         TupleBatch batch = node.nextBatch();
@@ -77,7 +72,7 @@ public class TestLimitNode extends TestCase {
         assertTrue(batch.getTerminationFlag());
     }
 
-    public void testLimitMultipleOfBatchSize() throws Exception {
+    @Test public void testLimitMultipleOfBatchSize() throws Exception {
         LimitNode node = getLimitNode(100, new FakeRelationalNode(2, getRows(150), 50));
         
         TupleBatch batch = node.nextBatch();
@@ -94,7 +89,7 @@ public class TestLimitNode extends TestCase {
         assertTrue(batch.getTerminationFlag());
     }
 
-    public void testLimitProducesMultipleBatches() throws Exception {
+    @Test public void testLimitProducesMultipleBatches() throws Exception {
         LimitNode node = getLimitNode(130, new FakeRelationalNode(2, getRows(300), 50));
         
         TupleBatch batch = node.nextBatch();
@@ -119,7 +114,7 @@ public class TestLimitNode extends TestCase {
         assertTrue(batch.getTerminationFlag());
     }
 
-    public void testLimitGetsNoRows() throws Exception {
+    @Test public void testLimitGetsNoRows() throws Exception {
         LimitNode node = getLimitNode(100, new FakeRelationalNode(2, getRows(0), 50));
         
         TupleBatch batch = node.nextBatch();
@@ -128,7 +123,7 @@ public class TestLimitNode extends TestCase {
         assertTrue(batch.getTerminationFlag());
     }
     
-    public void testZeroLimit() throws Exception {
+    @Test public void testZeroLimit() throws Exception {
         LimitNode node = getLimitNode(0, new FakeRelationalNode(2, getRows(100), 50));
         
         TupleBatch batch = node.nextBatch();
@@ -141,7 +136,7 @@ public class TestLimitNode extends TestCase {
         assertTrue(batch.getTerminationFlag());
     }
     
-    public void testOffsetInFirstBatch() throws Exception {
+    @Test public void testOffsetInFirstBatch() throws Exception {
         LimitNode node = getOffsetNode(49, new FakeRelationalNode(2, getRows(100), 50));
         // batch 1
         TupleBatch batch = node.nextBatch();
@@ -161,7 +156,7 @@ public class TestLimitNode extends TestCase {
         assertTrue(batch.getTerminationFlag());
     }
     
-    public void testOffsetAtBatchSize() throws Exception {
+    @Test public void testOffsetAtBatchSize() throws Exception {
         LimitNode node = getOffsetNode(50, new FakeRelationalNode(2, getRows(100), 50));
 
         TupleBatch batch = node.nextBatch();
@@ -173,7 +168,7 @@ public class TestLimitNode extends TestCase {
         assertTrue(batch.getTerminationFlag());
     }
     
-    public void testOffsetInSecondBatch() throws Exception {
+    @Test public void testOffsetInSecondBatch() throws Exception {
         LimitNode node = getOffsetNode(55, new FakeRelationalNode(2, getRows(100), 50));
         // batch 1
         TupleBatch batch = node.nextBatch();
@@ -185,7 +180,7 @@ public class TestLimitNode extends TestCase {
         assertTrue(batch.getTerminationFlag());
     }
     
-    public void testOffsetMultipleOfBatchSize() throws Exception {
+    @Test public void testOffsetMultipleOfBatchSize() throws Exception {
         LimitNode node = getOffsetNode(100, new FakeRelationalNode(2, getRows(300), 50));
 
         TupleBatch batch = node.nextBatch();
@@ -197,7 +192,7 @@ public class TestLimitNode extends TestCase {
         assertFalse(batch.getTerminationFlag());
     }
     
-    public void testOffsetGreaterThanRowCount() throws Exception {
+    @Test public void testOffsetGreaterThanRowCount() throws Exception {
         LimitNode node = getOffsetNode(100, new FakeRelationalNode(2, getRows(10), 50));
 
         TupleBatch batch = node.nextBatch();
@@ -206,7 +201,7 @@ public class TestLimitNode extends TestCase {
         assertTrue(batch.getTerminationFlag());
     }
     
-    public void testOffsetNoRows() throws Exception {
+    @Test public void testOffsetNoRows() throws Exception {
         LimitNode node = getOffsetNode(100, new FakeRelationalNode(2, getRows(0), 50));
 
         TupleBatch batch = node.nextBatch();
@@ -215,7 +210,7 @@ public class TestLimitNode extends TestCase {
         assertTrue(batch.getTerminationFlag());
     }
     
-    public void testZeroOffset() throws Exception {
+    @Test public void testZeroOffset() throws Exception {
         LimitNode node = getOffsetNode(0, new FakeRelationalNode(2, getRows(100), 50));
         
         TupleBatch batch = node.nextBatch();
@@ -233,7 +228,7 @@ public class TestLimitNode extends TestCase {
         assertTrue(batch.getTerminationFlag());
     }
     
-    public void testOffsetWithoutLimit() throws Exception {
+    @Test public void testOffsetWithoutLimit() throws Exception {
         LimitNode node = new LimitNode(1, null, new Constant(new Integer(10)));
         node.addChild(new FakeRelationalNode(2, getRows(10), 50));
         node.open();
@@ -266,7 +261,7 @@ public class TestLimitNode extends TestCase {
         return node;
     }
     
-    public void testClone() {
+    @Test public void testClone() {
     	LimitNode node = new LimitNode(1, new Constant(new Integer(-1)), null);
     	
     	LimitNode clone = (LimitNode)node.clone();

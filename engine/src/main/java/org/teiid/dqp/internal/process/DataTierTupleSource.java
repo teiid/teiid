@@ -80,6 +80,8 @@ public class DataTierTupleSource implements TupleSource {
     private boolean[] convertToDesiredRuntimeType;
     private Class<?>[] schema;
     
+    private int limit = -1;
+    
     // Data state
     private int index;
     private int rowsProcessed;
@@ -93,11 +95,12 @@ public class DataTierTupleSource implements TupleSource {
     private volatile ResultsFuture<AtomicResultsMessage> futureResult;
     private volatile boolean running;
     
-    public DataTierTupleSource(AtomicRequestMessage aqr, RequestWorkItem workItem, ConnectorWork cwi, DataTierManagerImpl dtm) {
+    public DataTierTupleSource(AtomicRequestMessage aqr, RequestWorkItem workItem, ConnectorWork cwi, DataTierManagerImpl dtm, int limit) {
         this.aqr = aqr;
         this.workItem = workItem;
         this.cwi = cwi;
         this.dtm = dtm;
+        this.limit = limit;
 		List<SingleElementSymbol> symbols = this.aqr.getCommand().getProjectedSymbols();
 		this.schema = new Class[symbols.size()];
         this.convertToDesiredRuntimeType = new boolean[symbols.size()];
@@ -224,6 +227,11 @@ public class DataTierTupleSource implements TupleSource {
     			receiveResults(results);
     		}
 	    	if (index < arm.getResults().length) {
+	    		if (limit-- == 0) {
+	    			this.done = true;
+	    			arm = null;
+	    			return null;
+	    		}
 	            return correctTypes(this.arm.getResults()[index++]);
 	        }
 	    	arm = null;

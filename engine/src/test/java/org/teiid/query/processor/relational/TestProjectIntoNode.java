@@ -132,7 +132,7 @@ public class TestProjectIntoNode {
             this.expectedBatchSize = expectedBatchSize;
         }
         public Object lookupCodeValue(CommandContext context,String codeTableName,String returnElementName,String keyElementName,Object keyValue) throws BlockedException,TeiidComponentException {return null;}
-        public TupleSource registerRequest(CommandContext context,Command command,String modelName,String connectorBindingId, int nodeID) throws TeiidComponentException, TeiidProcessingException {
+        public TupleSource registerRequest(CommandContext context,Command command,String modelName,String connectorBindingId, int nodeID, int limit) throws TeiidComponentException, TeiidProcessingException {
             callCount++;
             
             int batchSize = 1;
