@@ -26,7 +26,6 @@ import java.io.File;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.deployers.spi.management.deploy.DeploymentManager;
-import org.rhq.core.domain.configuration.Configuration;
 import org.rhq.core.domain.content.PackageDetailsKey;
 import org.rhq.core.domain.content.transfer.ResourcePackageDetails;
 import org.rhq.core.domain.resource.CreateResourceStatus;
@@ -56,20 +55,15 @@ public abstract class AbstractDeployer implements Deployer {
             ResourcePackageDetails details = createResourceReport.getPackageDetails();
             PackageDetailsKey key = details.getKey();
 
-            archiveFile = prepareArchive(key, resourceType);
+            archiveFile = prepareArchive(createResourceReport.getUserSpecifiedResourceName(), key, resourceType);
 
-            String archiveName = key.getName();
+            String archiveName = archiveFile.getName();
 
             if (!DeploymentUtils.hasCorrectExtension(archiveName, resourceType)) {
                 createResourceReport.setStatus(CreateResourceStatus.FAILURE);
                 createResourceReport.setErrorMessage("Incorrect extension specified on filename [" + archiveName + "]");
                 return;
             }
-
-          //  abortIfApplicationAlreadyDeployed(resourceType, archiveFile);
-
-            Configuration deployTimeConfig = details.getDeploymentTimeConfiguration();
-            @SuppressWarnings( { "ConstantConditions" })
 
             DeploymentManager deploymentManager = this.profileServiceConnection.getDeploymentManager();
             
@@ -102,25 +96,10 @@ public abstract class AbstractDeployer implements Deployer {
 
 	protected abstract File prepareArchive(PackageDetailsKey key,
 			ResourceType resourceType);
+	
+	protected abstract File prepareArchive(String userSpecifiedName, PackageDetailsKey key,
+			ResourceType resourceType);
 
 	protected abstract void destroyArchive(File archive);
-
-	// private void abortIfApplicationAlreadyDeployed(ResourceType resourceType,
-	// File archiveFile) throws Exception {
-	// String archiveFileName = archiveFile.getName();
-	// KnownDeploymentTypes deploymentType =
-	// ConversionUtils.getDeploymentType(resourceType);
-	// String deploymentTypeString = deploymentType.getType();
-	// ManagementView managementView =
-	// profileServiceConnection.getManagementView();
-	// managementView.load();
-	// Set<ManagedDeployment> managedDeployments =
-	// managementView.getDeploymentsForType(deploymentTypeString);
-	// for (ManagedDeployment managedDeployment : managedDeployments) {
-	// if (managedDeployment.getSimpleName().equals(archiveFileName))
-	// throw new IllegalArgumentException("An application named '" +
-	// archiveFileName
-	// + "' is already deployed.");
-	// }
-	// }
+	
 }

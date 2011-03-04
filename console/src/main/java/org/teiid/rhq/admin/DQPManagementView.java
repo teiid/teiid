@@ -65,7 +65,8 @@ public class DQPManagementView implements PluginConstants {
 	private static ManagedComponent mc = null;
 	private static final Log LOG = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 
-	private static final String VDB_EXT = ".vdb"; //$NON-NLS-1$
+	public static final String VDB_EXT = ".vdb"; //$NON-NLS-1$
+	public static final String DYNAMIC_VDB_EXT = "-vdb.xml"; //$NON-NLS-1$
 	
 	//Session metadata fields
 	private static final String SECURITY_DOMAIN = "securityDomain"; //$NON-NLS-1$
@@ -154,10 +155,8 @@ public class DQPManagementView implements PluginConstants {
 		Object resultObject = new Object();
 
 		if (metric.equals(PluginConstants.ComponentType.VDB.Metrics.ERROR_COUNT)) {
-			// TODO remove version parameter after AdminAPI is changed
 			resultObject = getErrorCount(connection, (String) valueMap.get(VDB.NAME));
 		} else if (metric.equals(PluginConstants.ComponentType.VDB.Metrics.STATUS)) {
-			// TODO remove version parameter after AdminAPI is changed
 			resultObject = getVDBStatus(connection, (String) valueMap.get(VDB.NAME));
 		} else if (metric.equals(PluginConstants.ComponentType.VDB.Metrics.QUERY_COUNT)) {
 			resultObject = new Double(getQueryCount(connection).doubleValue());
@@ -244,15 +243,22 @@ public class DQPManagementView implements PluginConstants {
 		} else if (operationName.equals(Platform.Operations.DEPLOY_VDB_BY_URL)) {
 			String vdbUrl = (String) valueMap.get(Operation.Value.VDB_URL);
 			String deployName = (String) valueMap.get(Operation.Value.VDB_DEPLOY_NAME);
-		
-			// add vdb extension if missing
-			if (!deployName.endsWith(VDB_EXT)) {
-				deployName = deployName + VDB_EXT;
+			Object vdbVersion = valueMap.get(Operation.Value.VDB_VERSION);
+			//strip off vdb extension if user added it
+			if (deployName.endsWith(VDB_EXT)){  
+				deployName = deployName.substring(0, deployName.lastIndexOf(VDB_EXT));  
 			}
-
+			if (vdbVersion!=null){
+				deployName = deployName + "." + ((Integer)vdbVersion).toString() + VDB_EXT; //$NON-NLS-1$ 
+			}
+			//add vdb extension if there was no version
+			if (!deployName.endsWith(VDB_EXT) &&  !deployName.endsWith(DYNAMIC_VDB_EXT)){ 
+				deployName = deployName + VDB_EXT;  
+			}
+	
 			try {
 				URL url = new URL(vdbUrl);
-				DeploymentUtils.deployArchive(deployName, connection.getDeploymentManager(), url, false);
+				DeploymentUtils.deployArchive( deployName, connection.getDeploymentManager(), url, false);
 			} catch (Exception e) {
 				final String msg = "Exception executing operation: " + Platform.Operations.DEPLOY_VDB_BY_URL; //$NON-NLS-1$
 				LOG.error(msg, e);

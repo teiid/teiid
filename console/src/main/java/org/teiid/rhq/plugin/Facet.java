@@ -47,6 +47,7 @@ import org.jboss.managed.api.ManagedProperty;
 import org.jboss.profileservice.spi.NoSuchDeploymentException;
 import org.rhq.core.domain.configuration.Configuration;
 import org.rhq.core.domain.configuration.ConfigurationUpdateStatus;
+import org.rhq.core.domain.configuration.Property;
 import org.rhq.core.domain.configuration.PropertySimple;
 import org.rhq.core.domain.configuration.definition.ConfigurationTemplate;
 import org.rhq.core.domain.content.PackageDetailsKey;
@@ -87,6 +88,7 @@ import org.teiid.rhq.plugin.objects.ExecutedResult;
 import org.teiid.rhq.plugin.util.DeploymentUtils;
 import org.teiid.rhq.plugin.util.PluginConstants;
 import org.teiid.rhq.plugin.util.ProfileServiceUtil;
+import org.teiid.rhq.plugin.util.PluginConstants.Operation;
 
 /**
  * This class implements required RHQ interfaces and provides common logic used
@@ -794,6 +796,34 @@ public abstract class Facet implements
 
 	protected void createContentBasedResource(
 			CreateResourceReport createResourceReport) {
+
+		Property versionProp = createResourceReport.getPackageDetails().getDeploymentTimeConfiguration().get(Operation.Value.VDB_VERSION);
+		String name = createResourceReport.getPackageDetails().getKey().getName();
+		name = name.substring(name.lastIndexOf(File.separatorChar)+1);
+		String userSpecifiedName = createResourceReport.getUserSpecifiedResourceName();
+		String deployName = (userSpecifiedName !=null ? userSpecifiedName : name);
+		
+				
+		if (versionProp!=null){
+			
+			Integer vdbVersion = ((PropertySimple)versionProp).getIntegerValue();
+			//strip off vdb extension if user added it
+			if (deployName.endsWith(DQPManagementView.VDB_EXT)){  
+				deployName = deployName.substring(0, deployName.lastIndexOf(DQPManagementView.VDB_EXT));  
+			}
+			if (vdbVersion!=null){
+				deployName = deployName + "." + ((Integer)vdbVersion).toString() + DQPManagementView.VDB_EXT; //$NON-NLS-1$ 
+			}
+			//add vdb extension if there was no version
+			if (!deployName.endsWith(DQPManagementView.VDB_EXT) &&  !deployName.endsWith(DQPManagementView.DYNAMIC_VDB_EXT)){ 
+				deployName = deployName + DQPManagementView.VDB_EXT;  
+			}
+
+			//null out version 
+			PropertySimple nullVersionProperty = new PropertySimple(Operation.Value.VDB_VERSION, null);
+			createResourceReport.getPackageDetails().getDeploymentTimeConfiguration().put(nullVersionProperty);
+			createResourceReport.setUserSpecifiedResourceName(deployName);
+		}
 		
 		getDeployer().deploy(createResourceReport, createResourceReport.getResourceType());
 

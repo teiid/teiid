@@ -159,10 +159,12 @@
 			description="Deploy a VDB using a URL">
 			<parameters>
 				<c:simple-property displayName="VDB URL" name="vdbUrl"
-					type="file" required="true" description="The URL of the VDB's source file" />
-				<c:simple-property displayName="VDB Deploy File Name"
+					type="file" required="true" description="The URL of the VDB's source file." />
+				<c:simple-property displayName="VDB File Name"
 					name="vdbDeployName" type="string" required="true"
-					description="The deployment file name to use. Must match the VDB Name you are deploying." />
+					description="The name of the VDB to deploy." />
+				<c:simple-property displayName="VDB Version" name="vdbVersion" 
+					type="integer" required="false" description="The version to use for the deployed VDB. Leave blank to use the default version as determined by the deployer, overwrite a current version, or use the VDB file name version (i.e. vdbname.{version}.vdb). The version parameter is not applicable for deployment of dynamic VDBs." />
 			</parameters>
 		</operation>
 
@@ -560,7 +562,14 @@
 
 			<content name="vdb" displayName="VDB File" category="deployable"
 				isCreationType="true">
-			</content>
+		        <configuration>
+	               <c:group name="deployment" displayName="Deployment Options">
+	                 	<c:simple-property displayName="VDB Version" name="vdbVersion"
+							type="integer" required="false" 
+							description="The version to use for the deployed VDB. Leave blank to use the default version as determined by the deployer, overwrite a current version, or use the VDB file name version (i.e. vdbname.{version}.vdb). The version parameter is not applicable for deployment of dynamic VDBs." />
+	               </c:group>
+	            </configuration>
+	    		</content>
 
 			<resource-configuration>
 				<c:group name="general" displayName="General"

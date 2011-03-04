@@ -61,7 +61,7 @@ public class RemoteDeployer extends AbstractDeployer {
     }
 
     @Override
-    protected File prepareArchive(PackageDetailsKey key, ResourceType resourceType) {
+    protected File prepareArchive(String userSpecifedName, PackageDetailsKey key, ResourceType resourceType) {
         //we're running in the agent. During the development of this functionality, there was
         //a time when the deployment only worked from within the JBossAS server home.
         //Further investigation never confirmed the problem again but since we have access to
@@ -71,11 +71,8 @@ public class RemoteDeployer extends AbstractDeployer {
         try {
             File tempDir = createTempDirectory("teiid-deploy-content", null, getServerTempDirectory());
 
-            File archiveFile = new File(key.getName());
-
-            //this is to ensure that we only get the filename part no matter whether the key contains
-            //full path or not.
-            File contentCopy = new File(tempDir, archiveFile.getName());
+            //The userSpecifiedName is used in case we renamed the file to add version.
+            File contentCopy = new File(tempDir, userSpecifedName);
 
             os = new BufferedOutputStream(new FileOutputStream(contentCopy));
             ContentContext contentContext = resourceContext.getContentContext();
@@ -137,4 +134,11 @@ public class RemoteDeployer extends AbstractDeployer {
 
         return tmpDir;
     }
+
+	@Override
+	protected File prepareArchive(PackageDetailsKey key,
+			ResourceType resourceType) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
