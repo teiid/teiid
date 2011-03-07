@@ -34,7 +34,6 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
-import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.OrderBy;
@@ -137,7 +136,7 @@ public class TestOrderByRewrite  {
         Query resolvedQuery = (Query) getCommand(sql); 
         
         helpCheckExpressionsSymbols(resolvedQuery.getOrderBy(),
-                new String[] {"(SELECT e2 FROM pm4.g1)"}); //$NON-NLS-1$        
+                new String[] {"(SELECT e2 FROM pm4.g1 LIMIT 2)"}); //$NON-NLS-1$        
     }
     
     @Test public void testOrderBy1() throws Exception {

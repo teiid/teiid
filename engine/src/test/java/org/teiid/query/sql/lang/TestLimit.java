@@ -22,11 +22,10 @@
 
 package org.teiid.query.sql.lang;
 
-import org.teiid.query.sql.lang.Limit;
+import junit.framework.TestCase;
+
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Reference;
-
-import junit.framework.TestCase;
 
 
 /** 
@@ -62,8 +61,6 @@ public class TestLimit extends TestCase {
         assertFalse(limit1.equals(null));
         assertFalse(limit1.equals(limit3));
         assertFalse(limit1.equals(limit4));
-        assertTrue(limit5.equals(limit6));
-        assertTrue(limit6.equals(limit5));
         assertFalse(limit6.equals(limit7));
         assertFalse(limit7.equals(limit6));
         assertFalse(limit5.equals(limit7));

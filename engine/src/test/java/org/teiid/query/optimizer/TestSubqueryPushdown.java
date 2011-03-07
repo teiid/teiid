@@ -27,6 +27,7 @@ import static org.teiid.query.optimizer.TestOptimizer.*;
 import org.junit.Test;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -766,7 +767,7 @@ public class TestSubqueryPushdown {
      * Even though this situation is essentially the same as above, we don't yet handle it
      */
     @Test public void testSubqueryRewriteToJoin3() throws Exception {
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where exists (select pm1.g1.e2 FROM pm1.g1 WHERE pm3.g1.e1 = pm1.g1.e1 || 1)", "SELECT e1 FROM pm3.g1 WHERE EXISTS (SELECT pm1.g1.e2 FROM pm1.g1 WHERE concat(pm1.g1.e1, '1') = pm3.g1.e1)", FakeMetadataFactory.example4());
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where exists (select pm1.g1.e2 FROM pm1.g1 WHERE pm3.g1.e1 = pm1.g1.e1 || 1)", "SELECT e1 FROM pm3.g1 WHERE EXISTS (SELECT pm1.g1.e2 FROM pm1.g1 WHERE concat(pm1.g1.e1, '1') = pm3.g1.e1 LIMIT 1)", FakeMetadataFactory.example4());
     }
     
     @Test public void testSubqueryRewriteToJoinWithOtherCriteria() throws Exception {

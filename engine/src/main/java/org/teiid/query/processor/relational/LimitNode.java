@@ -45,12 +45,21 @@ public class LimitNode extends RelationalNode {
     private int offset;
     private int rowCounter;
     private boolean offsetPhase = true;
+    private boolean implicit;
     
     public LimitNode(int nodeID, Expression limitExpr, Expression offsetExpr) {
         super(nodeID);
         this.limitExpr = limitExpr;
         this.offsetExpr = offsetExpr;
     }
+    
+    public void setImplicit(boolean implicit) {
+		this.implicit = implicit;
+	}
+    
+    public boolean isImplicit() {
+		return implicit;
+	}
     
     protected TupleBatch nextBatchDirect() throws BlockedException,
                                           TeiidComponentException,
@@ -157,8 +166,8 @@ public class LimitNode extends RelationalNode {
     }
     
     public Object clone() {
-        
         LimitNode node = new LimitNode(getID(), limitExpr, offsetExpr);
+        node.implicit = this.implicit;
         copy(this, node);
         node.rowCounter = this.rowCounter;
         return node;

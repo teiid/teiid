@@ -68,6 +68,7 @@ import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
 import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria.PlannedResult;
 import org.teiid.query.processor.relational.DependentValueSource;
+import org.teiid.query.processor.relational.RelationalNodeUtil;
 import org.teiid.query.resolver.ProcedureContainerResolver;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
@@ -602,7 +603,7 @@ public class QueryRewriter {
         // Rewrite from clause
         From from = query.getFrom();
         if(from != null){
-            List clauses = new ArrayList(from.getClauses().size());
+            List<FromClause> clauses = new ArrayList<FromClause>(from.getClauses().size());
             Iterator clauseIter = from.getClauses().iterator();
             while(clauseIter.hasNext()) {
                 clauses.add( rewriteFromClause(query, (FromClause) clauseIter.next()) );
@@ -1121,17 +1122,23 @@ public class QueryRewriter {
             criteria = rewriteCriteria((TranslateCriteria)criteria);
 		} else if (criteria instanceof ExistsCriteria) {
 			ExistsCriteria exists = (ExistsCriteria)criteria;
+			if (exists.shouldEvaluate() && processing) {
+        		return getCriteria(evaluator.evaluate(exists, null));
+        	}
 			if (exists.getCommand().getProcessorPlan() == null && exists.getCommand() instanceof Query) {
 				Query query = (Query)exists.getCommand();
-				if (query.getLimit() == null && query.getProjectedSymbols().size() > 1) {
+				if ((query.getLimit() == null || query.getOrderBy() == null) && query.getProjectedSymbols().size() > 1) {
 					query.getSelect().clearSymbols();
 					query.getSelect().addSymbol(new ExpressionSymbol("x", new Constant(1))); //$NON-NLS-1$
 				}
 			}
-			if (exists.shouldEvaluate() && processing) {
-        		return getCriteria(evaluator.evaluate(exists, null));
-        	}
 		    rewriteSubqueryContainer((SubqueryContainer)criteria, true);
+			if (!RelationalNodeUtil.shouldExecute(exists.getCommand(), false, true)) {
+            	return FALSE_CRITERIA;
+            }
+		    if (exists.getCommand().getProcessorPlan() == null) {
+	            addImplicitLimit(exists, 1);
+		    }
 		} else if (criteria instanceof SubquerySetCriteria) {
 		    SubquerySetCriteria sub = (SubquerySetCriteria)criteria;
 		    if (isNull(sub.getExpression())) {
@@ -1145,6 +1152,33 @@ public class QueryRewriter {
         }
     	
         return evaluateCriteria(criteria);
+	}
+
+	private void addImplicitLimit(SubqueryContainer<QueryCommand> container, int rowLimit) {
+		if (container.getCommand().getLimit() != null) {
+			Limit lim = container.getCommand().getLimit();
+			if (lim.getRowLimit() instanceof Constant) {
+				Constant c = (Constant)lim.getRowLimit();
+				if (!c.isMultiValued() && Integer.valueOf(rowLimit).compareTo((Integer) c.getValue()) <= 0) {
+					lim.setRowLimit(new Constant(rowLimit));
+					if (lim.getRowLimit() == null) {
+						lim.setImplicit(true);
+						container.getCommand().setOrderBy(null);
+					}
+				}
+			}
+			return;
+		}
+		boolean addLimit = true;
+		if (container.getCommand() instanceof Query) {
+			Query query = (Query)container.getCommand();
+			addLimit = !(query.hasAggregates() && query.getGroupBy() == null);
+		}
+		if (addLimit) {
+			Limit lim = new Limit(null, new Constant(rowLimit));
+			lim.setImplicit(true);
+			container.getCommand().setLimit(lim);
+		}
 	}
 
 	private Criteria rewriteDependentSetCriteria(DependentSetCriteria dsc)
@@ -1196,142 +1230,187 @@ public class QueryRewriter {
 
         // Walk through crits and collect converted ones
         LinkedHashSet<Criteria> newCrits = new LinkedHashSet<Criteria>(crits.size());
-        HashMap<Expression, Criteria> exprMap = operator == CompoundCriteria.AND?new HashMap<Expression, Criteria>():null;
+        HashMap<Expression, Criteria> exprMap = new HashMap<Expression, Criteria>();
         for (Criteria converted : crits) {
             if (rewrite) {
                 converted = rewriteCriteria(converted);
             } else if (converted instanceof CompoundCriteria) {
                 converted = rewriteCriteria((CompoundCriteria)converted, false);
             }
-
-            //begin boolean optimizations
-            if(TRUE_CRITERIA.equals(converted)) {
-                if(operator == CompoundCriteria.OR) {
-                    // this OR must be true as at least one branch is always true
-                    return converted;
+            List<Criteria> critList = null;
+            if (converted instanceof CompoundCriteria) {
+                CompoundCriteria other = (CompoundCriteria)converted;
+                if (other.getOperator() == criteria.getOperator()) {
+                	critList = other.getCriteria(); 
                 }
-            } else if(FALSE_CRITERIA.equals(converted)) {
-                if(operator == CompoundCriteria.AND) {
-                    // this AND must be false as at least one branch is always false
-                    return converted;
-                }
-            } else if (UNKNOWN_CRITERIA.equals(converted)) {
-                if (operator == CompoundCriteria.AND) {
-                    return FALSE_CRITERIA;
-                } 
-            	continue;
-            } else {
-                if (converted instanceof CompoundCriteria) {
-                    CompoundCriteria other = (CompoundCriteria)converted;
-                    if (other.getOperator() == criteria.getOperator()) {
-                        newCrits.addAll(other.getCriteria());
-                        continue;
+            }
+            if (critList == null) {
+            	critList = Arrays.asList(converted);
+            }
+        	for (Criteria criteria2 : critList) {
+        		converted = criteria2;
+                //begin boolean optimizations
+                if(TRUE_CRITERIA.equals(converted)) {
+                    if(operator == CompoundCriteria.OR) {
+                        // this OR must be true as at least one branch is always true
+                        return converted;
+                    }
+                } else if(FALSE_CRITERIA.equals(converted)) {
+                    if(operator == CompoundCriteria.AND) {
+                        // this AND must be false as at least one branch is always false
+                        return converted;
+                    }
+                } else if (UNKNOWN_CRITERIA.equals(converted)) {
+                    if (operator == CompoundCriteria.AND) {
+                        return FALSE_CRITERIA;
                     } 
-                } else if (operator == CompoundCriteria.AND) {
-                	if (converted instanceof IsNullCriteria) {
-	                	IsNullCriteria inc = (IsNullCriteria)converted;
-	                	if (!inc.isNegated()) {
-		                	Criteria crit = exprMap.get(inc.getExpression());
-		                	if (crit == null) {
-		                		exprMap.put(inc.getExpression(), converted);
-		                	} else if (!(crit instanceof IsNullCriteria)) {
+                } else { 
+                    if (operator == CompoundCriteria.AND) {
+	                	if (converted instanceof IsNullCriteria) {
+		                	IsNullCriteria inc = (IsNullCriteria)converted;
+		                	if (!inc.isNegated()) {
+			                	Criteria crit = exprMap.get(inc.getExpression());
+			                	if (crit == null) {
+			                		exprMap.put(inc.getExpression(), converted);
+			                	} else if (!(crit instanceof IsNullCriteria)) {
+			                		return FALSE_CRITERIA;
+			                	}
+		                	}
+		                } else if (converted instanceof SetCriteria) {
+		                	SetCriteria sc = (SetCriteria)converted;
+		                	Criteria crit = exprMap.get(sc.getExpression());
+		                	if (crit instanceof IsNullCriteria) {
 		                		return FALSE_CRITERIA;
 		                	}
-	                	}
-	                } else if (converted instanceof SetCriteria) {
-	                	SetCriteria sc = (SetCriteria)converted;
-	                	Criteria crit = exprMap.get(sc.getExpression());
-	                	if (crit instanceof IsNullCriteria) {
-	                		return FALSE_CRITERIA;
-	                	}
-	                	if (!sc.isNegated() && sc.isAllConstants()) {
-	                    	if (crit == null) {
-	                    		exprMap.put(sc.getExpression(), converted);
-	                    	} else if (crit instanceof SetCriteria) {
-	                    		SetCriteria sc1 = (SetCriteria)crit;
-	                    		newCrits.remove(sc1);
-	                    		sc1.getValues().retainAll(sc.getValues());
-	                    		if (sc1.getValues().isEmpty()) {
-	                    			return FALSE_CRITERIA;
-	                    		}
-	                    		//TODO: single value as compare criteria
-	                    		newCrits.add(sc1);
-	                    		exprMap.put(sc1.getExpression(), sc1);
-	                    		continue;
-	                    	} else {
-	                    		CompareCriteria cc = (CompareCriteria)crit;
-	                    		for (Iterator<Constant> exprIter = sc.getValues().iterator(); exprIter.hasNext();) {
-									if (!Evaluator.compare(cc, exprIter.next().getValue(), ((Constant)cc.getRightExpression()).getValue())) {
-										exprIter.remove();
-									}
-								}
-	                    		if (sc.getValues().isEmpty()) {
-	                    			return FALSE_CRITERIA;
-	                    		}
-	                    		if (cc.getOperator() != CompareCriteria.EQ) {
-		                    		newCrits.remove(cc);
+		                	if (!sc.isNegated() && sc.isAllConstants()) {
+		                    	if (crit == null) {
+		                    		exprMap.put(sc.getExpression(), converted);
+		                    	} else if (crit instanceof SetCriteria) {
+		                    		SetCriteria sc1 = (SetCriteria)crit;
+		                    		newCrits.remove(sc1);
+		                    		sc1.getValues().retainAll(sc.getValues());
+		                    		if (sc1.getValues().isEmpty()) {
+		                    			return FALSE_CRITERIA;
+		                    		}
 		                    		//TODO: single value as compare criteria
-		                    		exprMap.put(sc.getExpression(), sc);
-	                    		} else {
-	                    			continue;
-	                    		}
-	                    	}
-	                	}
-	                } else if (converted instanceof CompareCriteria) {
-	                	CompareCriteria cc = (CompareCriteria)converted;
-	                	Criteria crit = exprMap.get(cc.getLeftExpression());
-	                	if (crit instanceof IsNullCriteria) {
-	                		return FALSE_CRITERIA;
-	                	}
-	                	if (cc.getRightExpression() instanceof Constant) {
-	                    	if (crit == null) {
-	                    		exprMap.put(cc.getLeftExpression(), cc);
-	                    	} else if (crit instanceof SetCriteria) {
-	                    		SetCriteria sc = (SetCriteria)crit;
-	                    		boolean modified = false;
-	                    		for (Iterator<Constant> exprIter = sc.getValues().iterator(); exprIter.hasNext();) {
-									if (!Evaluator.compare(cc, exprIter.next().getValue(), ((Constant)cc.getRightExpression()).getValue())) {
-										if (!modified) {
-											modified = true;
-											newCrits.remove(sc);
-										}
-										exprIter.remove();
-									}
-								}
-	                    		//TODO: single value as compare criteria
-	                    		if (sc.getValues().isEmpty()) {
-	                    			return FALSE_CRITERIA;
-	                    		}
-	                    		if (cc.getOperator() == CompareCriteria.EQ) {
-	                        		exprMap.put(cc.getLeftExpression(), cc);
-	                    		} else if (modified) {
-	                    			newCrits.add(sc);
-	                    			exprMap.put(sc.getExpression(), sc);
+		                    		newCrits.add(sc1);
+		                    		exprMap.put(sc1.getExpression(), sc1);
 		                    		continue;
-	                    		}
-	                    	} else {
-	                    		CompareCriteria cc1 = (CompareCriteria)crit;
-	                    		if (cc1.getOperator() == CompareCriteria.NE) {
-	                        		exprMap.put(cc.getLeftExpression(), cc);
-	                    		} else if (cc1.getOperator() == CompareCriteria.EQ) {
-	                    			if (!Evaluator.compare(cc1, ((Constant)cc1.getRightExpression()).getValue(), ((Constant)cc.getRightExpression()).getValue())) {
-										return FALSE_CRITERIA;
+		                    	} else {
+		                    		CompareCriteria cc = (CompareCriteria)crit;
+		                    		for (Iterator<Constant> exprIter = sc.getValues().iterator(); exprIter.hasNext();) {
+										if (!Evaluator.compare(cc, exprIter.next().getValue(), ((Constant)cc.getRightExpression()).getValue())) {
+											exprIter.remove();
+										}
 									}
-	                    			continue;
-	                    		} 
-	                    		if (cc.getOperator() == CompareCriteria.EQ) {
-	                    			if (!Evaluator.compare(cc1, ((Constant)cc.getRightExpression()).getValue(), ((Constant)cc1.getRightExpression()).getValue())) {
-	                    				return FALSE_CRITERIA;
-	                    			}
-	                    			exprMap.put(cc.getLeftExpression(), cc);
-	                    			newCrits.remove(cc1);
-	                    		}
-	                    	}
-	                	}
-	                }
-                } 
-                newCrits.add(converted);
-            }            
+		                    		if (sc.getValues().isEmpty()) {
+		                    			return FALSE_CRITERIA;
+		                    		}
+		                    		if (cc.getOperator() != CompareCriteria.EQ) {
+			                    		newCrits.remove(cc);
+			                    		//TODO: single value as compare criteria
+			                    		exprMap.put(sc.getExpression(), sc);
+		                    		} else {
+		                    			continue;
+		                    		}
+		                    	}
+		                	}
+		                } else if (converted instanceof CompareCriteria) {
+		                	CompareCriteria cc = (CompareCriteria)converted;
+		                	Criteria crit = exprMap.get(cc.getLeftExpression());
+		                	if (crit instanceof IsNullCriteria) {
+		                		return FALSE_CRITERIA;
+		                	}
+		                	if (cc.getRightExpression() instanceof Constant) {
+		                    	if (crit == null) {
+		                    		exprMap.put(cc.getLeftExpression(), cc);
+		                    	} else if (crit instanceof SetCriteria) {
+		                    		SetCriteria sc = (SetCriteria)crit;
+		                    		boolean modified = false;
+		                    		for (Iterator<Constant> exprIter = sc.getValues().iterator(); exprIter.hasNext();) {
+										if (!Evaluator.compare(cc, exprIter.next().getValue(), ((Constant)cc.getRightExpression()).getValue())) {
+											if (!modified) {
+												modified = true;
+												newCrits.remove(sc);
+											}
+											exprIter.remove();
+										}
+									}
+		                    		//TODO: single value as compare criteria
+		                    		if (sc.getValues().isEmpty()) {
+		                    			return FALSE_CRITERIA;
+		                    		}
+		                    		if (cc.getOperator() == CompareCriteria.EQ) {
+		                        		exprMap.put(cc.getLeftExpression(), cc);
+		                    		} else if (modified) {
+		                    			newCrits.add(sc);
+		                    			exprMap.put(sc.getExpression(), sc);
+			                    		continue;
+		                    		}
+		                    	} else {
+		                    		CompareCriteria cc1 = (CompareCriteria)crit;
+		                    		if (cc1.getOperator() == CompareCriteria.NE) {
+		                        		exprMap.put(cc.getLeftExpression(), cc);
+		                    		} else if (cc1.getOperator() == CompareCriteria.EQ) {
+		                    			if (!Evaluator.compare(cc1, ((Constant)cc1.getRightExpression()).getValue(), ((Constant)cc.getRightExpression()).getValue())) {
+											return FALSE_CRITERIA;
+										}
+		                    			continue;
+		                    		} 
+		                    		if (cc.getOperator() == CompareCriteria.EQ) {
+		                    			if (!Evaluator.compare(cc1, ((Constant)cc.getRightExpression()).getValue(), ((Constant)cc1.getRightExpression()).getValue())) {
+		                    				return FALSE_CRITERIA;
+		                    			}
+		                    			exprMap.put(cc.getLeftExpression(), cc);
+		                    			newCrits.remove(cc1);
+		                    		}
+		                    	}
+		                	}
+	                    } 
+                    } else {
+                    	//or
+                    	if (converted instanceof SetCriteria) {
+                    		SetCriteria sc = (SetCriteria)converted;
+                    		if (!sc.isNegated() && sc.isAllConstants()) {
+			                	Criteria crit = exprMap.get(sc.getExpression());
+			                	if (crit == null) {
+			                		exprMap.put(sc.getExpression(), sc);
+			                	} else if (crit instanceof SetCriteria) {
+			                		SetCriteria other = (SetCriteria)crit;
+			                		other.getValues().addAll(sc.getValues());
+			                		continue;
+			                	} else {
+				                	newCrits.remove(crit);
+			                		CompareCriteria cc = (CompareCriteria)crit;
+			                		sc.getValues().add(cc.getRightExpression());
+			                	}
+		                	}
+                    	} else if (converted instanceof CompareCriteria) {
+                    		CompareCriteria cc = (CompareCriteria)converted;
+                    		if (cc.getOperator() == CompareCriteria.EQ && cc.getRightExpression() instanceof Constant) {
+			                	Criteria crit = exprMap.get(cc.getLeftExpression());
+			                	if (crit == null) {
+			                		exprMap.put(cc.getLeftExpression(), cc);
+			                	} else if (crit instanceof SetCriteria) {
+			                		SetCriteria other = (SetCriteria)crit;
+			                		other.getValues().add(cc.getRightExpression());
+			                		continue;
+			                	} else {
+				                	newCrits.remove(crit);
+			                		CompareCriteria other = (CompareCriteria)crit;
+			                		SetCriteria sc = new SetCriteria(cc.getLeftExpression(), new TreeSet<Expression>());
+			                		sc.setAllConstants(true);
+			                		sc.getValues().add(cc.getRightExpression());
+			                		sc.getValues().add(other.getRightExpression());
+			                		exprMap.put(sc.getExpression(), sc);
+			                		converted = sc;
+			                	}
+                    		}
+                    	}
+                    }
+                    newCrits.add(converted);
+                }            
+            }
 		}
 
         if(newCrits.size() == 0) {
@@ -2157,6 +2236,12 @@ public class QueryRewriter {
         		return new Constant(evaluator.evaluate(subquery, null), subquery.getType());
         	}
             rewriteSubqueryContainer(subquery, true);
+            if (!RelationalNodeUtil.shouldExecute(subquery.getCommand(), false, true)) {
+            	return new Constant(null, subquery.getType());
+            }
+            if (subquery.getCommand().getProcessorPlan() == null) {
+            	addImplicitLimit(subquery, 2);
+            }
             return expression;
         } else if (expression instanceof ExpressionSymbol) {
         	if (expression instanceof AggregateSymbol) {
@@ -2958,6 +3043,9 @@ public class QueryRewriter {
     private Limit rewriteLimitClause(Limit limit) throws TeiidComponentException, TeiidProcessingException{
         if (limit.getOffset() != null) {
             limit.setOffset(rewriteExpressionDirect(limit.getOffset()));
+            if (new Constant(0).equals(limit.getOffset())) {
+            	limit.setOffset(null);
+            }
         }
         if (limit.getRowLimit() != null) {
             limit.setRowLimit(rewriteExpressionDirect(limit.getRowLimit()));

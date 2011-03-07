@@ -26,7 +26,6 @@ import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
@@ -36,11 +35,24 @@ public class Limit implements LanguageObject {
     
     private Expression offset;
     private Expression rowLimit;
+    private boolean implicit;
     
     public Limit(Expression offset, Expression rowLimit) {
         this.offset = offset;
         this.rowLimit = rowLimit;
     }
+    
+    private Limit() {
+    	
+    }
+    
+    public boolean isImplicit() {
+		return implicit;
+	}
+    
+    public void setImplicit(boolean implicit) {
+		this.implicit = implicit;
+	}
     
     public Expression getOffset() {
         return offset;
@@ -75,30 +87,22 @@ public class Limit implements LanguageObject {
             return false;
         }
         Limit other = (Limit)o;
-        if (this.offset == null) {
-            if (other.offset != null
-                && !(other.offset instanceof Constant && ((Constant)other.offset).getValue().equals(new Integer(0)))) {
-                return false;
-            }
-        } else if (this.offset instanceof Constant) {
-            if (other.offset == null) {
-                if (!((Constant)this.offset).getValue().equals(new Integer(0))) {
-                    return false;
-                }
-            } else if (!this.offset.equals(other.offset)) {
-                return false;
-            }
-        } else if (!EquivalenceUtil.areEqual(this.offset, other.offset)) {
+        if (!EquivalenceUtil.areEqual(this.offset, other.offset)) {
             return false;
         }
         return EquivalenceUtil.areEqual(this.rowLimit, other.rowLimit);
     }
     
-    public Object clone() {
-        if (offset == null) {
-            return new Limit(null, (Expression)rowLimit.clone());
+    public Limit clone() {
+        Limit clone = new Limit();
+        clone.implicit = this.implicit;
+        if (this.rowLimit != null) {
+        	clone.setRowLimit((Expression) this.rowLimit.clone());
         }
-        return new Limit((Expression)offset.clone(), (Expression)rowLimit.clone());
+        if (this.offset != null) {
+        	clone.setOffset((Expression) this.offset.clone());
+        }
+        return clone;
     }
     
     public String toString() {

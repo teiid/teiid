@@ -638,7 +638,7 @@ public class RelationalPlanner {
     		subqueryContainer.getCommand().setProcessorPlan(plan);
     		
     		if (c == null) {
-				RuleCollapseSource.replaceCorrelatedReferences(subqueryContainer);
+				RuleCollapseSource.prepareSubquery(subqueryContainer);
 			}
 		}
 		return false;
@@ -1014,6 +1014,9 @@ public class RelationalPlanner {
             attach = true;
         }
         if (attach) {
+        	if (limit.isImplicit()) {
+        		limitNode.setProperty(Info.IS_IMPLICIT_LIMIT, true);
+        	}
             attachLast(limitNode, plan);
             plan = limitNode;
         }

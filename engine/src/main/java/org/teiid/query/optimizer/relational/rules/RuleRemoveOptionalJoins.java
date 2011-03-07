@@ -44,6 +44,7 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.util.CommandContext;
@@ -122,7 +123,12 @@ public class RuleRemoveOptionalJoins implements
     	if (isOptional) {
     		required = requiredForOptional;
 			correctFrame = true;
-			//prevent bridge table removal
+		}
+        if (!Collections.disjoint(optionalNode.getGroups(), required)) {
+        	return null;
+        }
+        if (isOptional) {
+        	//prevent bridge table removal
 			HashSet<GroupSymbol> joinGroups = new HashSet<GroupSymbol>();
     		PlanNode parentNode = joinNode;
     		while (parentNode.getType() != NodeConstants.Types.PROJECT) {
@@ -144,11 +150,7 @@ public class RuleRemoveOptionalJoins implements
 					}
 				}
     		}
-		}
-        if (!Collections.disjoint(optionalNode.getGroups(), required)) {
-        	return null;
         }
-    	
         JoinType jt = (JoinType)joinNode.getProperty(NodeConstants.Info.JOIN_TYPE);
         
         if (!isOptional && 
@@ -227,7 +229,14 @@ public class RuleRemoveOptionalJoins implements
 					return areAggregatesCardinalityDependent(aggs);
 				}
 				case NodeConstants.Types.TUPLE_LIMIT: {
-					return true;
+					if (!(parent.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT) instanceof Constant) 
+							|| parent.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT) != null) {
+						return true;
+					}
+					Constant constant = (Constant)parent.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT);
+					if (!Integer.valueOf(1).equals(constant.getValue())) {
+						return true;
+					}
 				}
 				//we assmue that projects of non-deterministic expressions do not matter
 			}

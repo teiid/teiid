@@ -22,9 +22,7 @@
 
 package org.teiid.query.parser;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
@@ -6435,9 +6433,8 @@ public class TestParser {
         From from = new From(Arrays.asList(new Object[] {new UnaryFromClause(new GroupSymbol("a"))})); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
-        query.setLimit(new Limit(new Constant(new Integer(0)), new Constant(new Integer(100))));
+        query.setLimit(new Limit(null, new Constant(new Integer(100))));
         helpTest("Select * from a limit 100", "SELECT * FROM a LIMIT 100", query); //$NON-NLS-1$ //$NON-NLS-2$
-        helpTest("Select * from a limit 0, 100", "SELECT * FROM a LIMIT 0, 100", query); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testLimitWithOffset() {

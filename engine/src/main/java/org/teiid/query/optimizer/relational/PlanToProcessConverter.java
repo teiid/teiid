@@ -450,7 +450,9 @@ public class PlanToProcessConverter {
             case NodeConstants.Types.TUPLE_LIMIT:
                 Expression rowLimit = (Expression)node.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT);
                 Expression offset = (Expression)node.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT);
-                processNode = new LimitNode(getID(), rowLimit, offset);
+                LimitNode ln = new LimitNode(getID(), rowLimit, offset);
+                ln.setImplicit(node.hasBooleanProperty(Info.IS_IMPLICIT_LIMIT));
+                processNode = ln;
                 break;
                 
             case NodeConstants.Types.NULL:

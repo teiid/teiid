@@ -426,11 +426,12 @@ public final class RuleMergeCriteria implements OptimizerRule {
 	}
 	
 	public boolean planQuery(Collection<GroupSymbol> leftGroups, boolean requireDistinct, PlannedResult plannedResult) throws QueryMetadataException, TeiidComponentException {
-		if (plannedResult.query.getLimit() != null || plannedResult.query.getFrom() == null) {
+		if ((plannedResult.query.getLimit() != null && !plannedResult.query.getLimit().isImplicit()) || plannedResult.query.getFrom() == null) {
 			return false;
 		}
 		
 		plannedResult.query = (Query)plannedResult.query.clone();
+		plannedResult.query.setLimit(null);
 
 		List<GroupSymbol> rightGroups = plannedResult.query.getFrom().getGroups();
 		Set<SingleElementSymbol> requiredExpressions = new LinkedHashSet<SingleElementSymbol>();

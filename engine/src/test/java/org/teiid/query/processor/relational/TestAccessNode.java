@@ -22,15 +22,16 @@
 
 package org.teiid.query.processor.relational;
 
+import static org.junit.Assert.*;
+
 import java.util.Arrays;
 
+import org.junit.Test;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.TestProcessor;
-import org.teiid.query.processor.relational.AccessNode;
-import org.teiid.query.processor.relational.RelationalNodeUtil;
 import org.teiid.query.resolver.TestResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.CompoundCriteria;
@@ -44,14 +45,12 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
-import junit.framework.TestCase;
-
 
 
 /** 
  * @since 4.2
  */
-public class TestAccessNode extends TestCase {
+public class TestAccessNode {
 
     private void helpTestOpen(Command command, String expectedCommand, boolean shouldRegisterRequest) throws Exception {
         // Setup
@@ -74,7 +73,7 @@ public class TestAccessNode extends TestCase {
         }
     }
     
-    public void testOpen_Defect16059() throws Exception {
+    @Test public void testOpen_Defect16059() throws Exception {
     	Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5 AND ? IS NULL", FakeMetadataFactory.example1Cached(), null); //$NON-NLS-1$
         IsNullCriteria nullCrit = (IsNullCriteria)((CompoundCriteria)query.getCriteria()).getCriteria(1);
         nullCrit.setExpression(new Constant(null));
@@ -82,7 +81,7 @@ public class TestAccessNode extends TestCase {
         helpTestOpen(query, "SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5", true); //$NON-NLS-1$
     }
     
-    public void testOpen_Defect16059_2() throws Exception {
+    @Test public void testOpen_Defect16059_2() throws Exception {
     	Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5 AND ? IS NOT NULL", FakeMetadataFactory.example1Cached(), null); //$NON-NLS-1$
         IsNullCriteria nullCrit = (IsNullCriteria)((CompoundCriteria)query.getCriteria()).getCriteria(1);
         nullCrit.setExpression(new Constant(null));
@@ -90,7 +89,7 @@ public class TestAccessNode extends TestCase {
         helpTestOpen(query, null, false);
     }
     
-    public void testExecCount()throws Exception{
+    @Test public void testExecCount()throws Exception{
         // Setup
         AccessNode node = new AccessNode(1);
     	Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5", FakeMetadataFactory.example1Cached(), null); //$NON-NLS-1$
@@ -106,7 +105,7 @@ public class TestAccessNode extends TestCase {
         assertEquals(Arrays.asList("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5"), dataManager.getQueries()); //$NON-NLS-1$
     }
 	
-    public void testShouldExecuteUpdate() throws Exception {
+    @Test public void testShouldExecuteUpdate() throws Exception {
         Update update = new Update();
         
         update.setGroup(new GroupSymbol("test")); //$NON-NLS-1$
@@ -120,7 +119,7 @@ public class TestAccessNode extends TestCase {
         assertFalse(RelationalNodeUtil.shouldExecute(update, false));
     }
     
-    public void testShouldExecuteLimitZero() throws Exception {
+    @Test public void testShouldExecuteLimitZero() throws Exception {
         Query query = (Query)QueryParser.getQueryParser().parseCommand("SELECT e1, e2 FROM pm1.g1 LIMIT 0"); //$NON-NLS-1$
         assertFalse(RelationalNodeUtil.shouldExecute(query, false));
     }

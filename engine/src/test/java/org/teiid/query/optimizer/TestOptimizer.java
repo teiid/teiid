@@ -2248,7 +2248,7 @@ public class TestOptimizer {
     /**
      * BQT query that is failing
      */
-    @Test public void testPushAggregate8() {
+    @Test public void testPushAggregate8() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -2267,13 +2267,13 @@ public class TestOptimizer {
             "SELECT MAX(sa.datevalue) FROM bqt1.smalla AS sb " + //$NON-NLS-1$
             "WHERE (sb.intkey = sa.intkey) AND (sa.stringkey = sb.stringkey) ))"; //$NON-NLS-1$
 
-        String sqlOut = "SELECT intkey FROM bqt1.smalla AS sa WHERE (sa.intkey = 46) AND (sa.stringkey = '46') AND (sa.datevalue = (SELECT sa.datevalue FROM bqt1.smalla AS sb WHERE (sb.intkey = sa.intkey) AND (sb.stringkey = sa.stringkey)))"; //$NON-NLS-1$
+        String sqlOut = "SELECT g_0.intkey FROM bqt1.smalla AS g_0 WHERE (g_0.intkey = 46) AND (g_0.stringkey = '46') AND (g_0.datevalue = (SELECT g_0.datevalue FROM bqt1.smalla AS g_1 WHERE (g_1.intkey = g_0.intkey) AND (g_1.stringkey = g_0.stringkey)))"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sqlIn, 
             FakeMetadataFactory.exampleBQTCached(),
             null, capFinder,
             new String[] {sqlOut}, 
-            SHOULD_SUCCEED );
+            ComparisonMode.EXACT_COMMAND_STRING );
     
         checkNodeTypes(plan, FULL_PUSHDOWN);                                                                  
     }
@@ -6379,7 +6379,7 @@ public class TestOptimizer {
     /**
      * previously the subqueries were being pushed too far and then not having the appropriate correlated references
      */
-    @Test public void testCorrelatedSubqueryOverJoin() {
+    @Test public void testCorrelatedSubqueryOverJoin() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
@@ -6392,7 +6392,8 @@ public class TestOptimizer {
         
         String sql = "select pm1.g1.e1 from pm1.g1, (select * from pm1.g2) y where (pm1.g1.e1 = y.e1) and exists (select e2 from pm1.g2 where e1 = y.e1) and exists (select e3 from pm1.g2 where e1 = y.e1)"; //$NON-NLS-1$
         
-        ProcessorPlan plan = helpPlan(sql, metadata, null, capFinder, new String[] {"SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2 AS g2__1 WHERE (pm1.g1.e1 = g2__1.e1) AND (EXISTS (SELECT e2 FROM pm1.g2 WHERE e1 = g2__1.e1)) AND (EXISTS (SELECT e3 FROM pm1.g2 WHERE e1 = g2__1.e1))"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ 
+        ProcessorPlan plan = helpPlan(sql, metadata, null, capFinder, 
+        		new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (EXISTS (SELECT g_2.e2 FROM pm1.g2 AS g_2 WHERE g_2.e1 = g_1.e1)) AND (EXISTS (SELECT g_3.e3 FROM pm1.g2 AS g_3 WHERE g_3.e1 = g_1.e1))"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
         
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }

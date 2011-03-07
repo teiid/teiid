@@ -350,7 +350,7 @@ public class LanguageBridgeFactory {
     }
 
     Exists translate(ExistsCriteria criteria) {
-        return new Exists(translate((QueryCommand)criteria.getCommand()));
+        return new Exists(translate(criteria.getCommand()));
     }
 
     IsNull translate(IsNullCriteria criteria) {

@@ -27,14 +27,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import junit.framework.TestCase;
+
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.cdk.unittest.FakeTranslationFactory;
 import org.teiid.language.Condition;
 import org.teiid.language.LanguageFactory;
 import org.teiid.language.LanguageUtil;
 import org.teiid.language.Select;
-
-import junit.framework.TestCase;
 
 
 
@@ -81,7 +81,7 @@ public class TestLanguageUtil extends TestCase {
     }
 
     public void testSeparateCrit_ORisConjunct() throws Exception {
-        helpTestSeparateByAnd("intkey = 1 OR intkey = 2", new String[] { "SmallA.IntKey = 1 OR SmallA.IntKey = 2" }); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestSeparateByAnd("intkey = 1 OR intnum = 2", new String[] { "SmallA.IntKey = 1 OR SmallA.IntNum = 2" }); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testSeparateCrit_nestedAND() throws Exception {

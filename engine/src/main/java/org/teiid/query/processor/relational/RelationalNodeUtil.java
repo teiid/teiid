@@ -59,6 +59,10 @@ public class RelationalNodeUtil {
      * @since 4.2
      */
     public static boolean shouldExecute(Command command, boolean simplifyCriteria) throws TeiidComponentException, ExpressionEvaluationException {
+    	return shouldExecute(command, simplifyCriteria, false);
+    }
+    
+    public static boolean shouldExecute(Command command, boolean simplifyCriteria, boolean duringPlanning) throws TeiidComponentException, ExpressionEvaluationException {
         int cmdType = command.getType();
         Criteria criteria = null;
         switch(cmdType) {
@@ -79,7 +83,7 @@ public class RelationalNodeUtil {
                     SetQuery union = (SetQuery) queryCommand;
                     boolean shouldExecute = false;
                     for (QueryCommand innerQuery : union.getQueryCommands()) {
-                        boolean shouldInner = shouldExecute(innerQuery, simplifyCriteria);
+                        boolean shouldInner = shouldExecute(innerQuery, simplifyCriteria, duringPlanning);
                         if(shouldInner) {
                         	shouldExecute = true;
                             break;                            
@@ -94,7 +98,7 @@ public class RelationalNodeUtil {
 
                 if(criteria == null) {
                     return true;
-                } else if(!EvaluatableVisitor.isFullyEvaluatable(criteria, false)) {
+                } else if(!EvaluatableVisitor.isFullyEvaluatable(criteria, duringPlanning)) {
                     // If there are elements present in the criteria,
                     // then we don't know the result, so assume we need to execute
                     return true;
@@ -125,7 +129,7 @@ public class RelationalNodeUtil {
                 if (criteria == null) {
                 	return true;
                 }
-                if(!EvaluatableVisitor.isFullyEvaluatable(criteria, false)) {
+                if(!EvaluatableVisitor.isFullyEvaluatable(criteria, duringPlanning)) {
                     return true;
                 } else if(Evaluator.evaluate(criteria)) {
                     if (simplifyCriteria) {
@@ -142,7 +146,7 @@ public class RelationalNodeUtil {
                 if (criteria == null) {
                 	return true;
                 }
-                if(!EvaluatableVisitor.isFullyEvaluatable(criteria, false)) {
+                if(!EvaluatableVisitor.isFullyEvaluatable(criteria, duringPlanning)) {
                     return true;
                 } else if(Evaluator.evaluate(criteria)) {
                     if (simplifyCriteria) {

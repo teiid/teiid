@@ -37,6 +37,7 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.AccessNode;
+import org.teiid.query.processor.relational.LimitNode;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.sql.LanguageObject;
@@ -529,8 +530,17 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 		
 		// Check that the plan is just an access node                
 		RelationalNode accessNode = rplan.getRootNode();
-		if(accessNode == null || ! (accessNode instanceof AccessNode) || accessNode.getChildren()[0] != null) {
-		    return null;
+		
+		if (accessNode instanceof LimitNode) {
+			LimitNode ln = (LimitNode)accessNode;
+			if (!ln.isImplicit()) {
+				return null;
+			}
+			accessNode = ln.getChildren()[0];
+		}
+		
+		if (! (accessNode instanceof AccessNode) || accessNode.getChildren()[0] != null) {
+			return null;
 		}
 		
 		// Check that command in access node is a query

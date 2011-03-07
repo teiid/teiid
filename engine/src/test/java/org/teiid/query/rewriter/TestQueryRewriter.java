@@ -672,11 +672,11 @@ public class TestQueryRewriter {
     }
     
     @Test public void testRewriteOr6() {
-        helpTestRewriteCriteria("(0 = 1) OR (4 = 5) OR (pm1.g1.e1 = 'x') OR (pm1.g1.e1 = 'y')", "(pm1.g1.e1 = 'x') OR (pm1.g1.e1 = 'y')");     //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("(0 = 1) OR (4 = 5) OR (pm1.g1.e1 = 'x') OR (pm1.g1.e1 = 'y')", "pm1.g1.e1 IN ('x', 'y')");     //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testRewriteOr7() {
-        helpTestRewriteCriteria("(pm1.g1.e1 = 'x') OR (pm1.g1.e1 = 'y')", "(pm1.g1.e1 = 'x') OR (pm1.g1.e1 = 'y')");     //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("(pm1.g1.e1 = 'x') OR (pm1.g1.e1 = 'y')", "pm1.g1.e1 IN ('x', 'y')");     //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testRewriteAnd1() {
@@ -799,7 +799,7 @@ public class TestQueryRewriter {
 
     @Test public void testExistsSubquery() {
         helpTestRewriteCommand("SELECT e1 FROM pm1.g1 WHERE EXISTS (SELECT e1 FROM pm1.g2)", //$NON-NLS-1$
-                                "SELECT e1 FROM pm1.g1 WHERE EXISTS (SELECT e1 FROM pm1.g2)"); //$NON-NLS-1$
+                                "SELECT e1 FROM pm1.g1 WHERE EXISTS (SELECT e1 FROM pm1.g2 LIMIT 1)"); //$NON-NLS-1$
     }
 
     @Test public void testCompareSubqueryANY() {
@@ -1041,7 +1041,7 @@ public class TestQueryRewriter {
 		String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "BEGIN\n";		 //$NON-NLS-1$
 		rewritProc = rewritProc + "DECLARE String var1;\n"; //$NON-NLS-1$
-		rewritProc = rewritProc + "IF((var1 = 'x') OR (var1 = 'y'))\n"; //$NON-NLS-1$
+		rewritProc = rewritProc + "IF(var1 IN ('x', 'y'))\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "BEGIN\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "SELECT pm1.g1.e2, null, FALSE, TRUE FROM pm1.g1;\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "END\n"; //$NON-NLS-1$
@@ -1230,7 +1230,7 @@ public class TestQueryRewriter {
 		String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "BEGIN\n";		 //$NON-NLS-1$
 		rewritProc = rewritProc + "DECLARE integer var1;\n"; //$NON-NLS-1$
-		rewritProc = rewritProc + "UPDATE pm1.g1 SET e1 = 'x' WHERE (CONCAT(e1, 'm') = '1') OR (CONCAT(e1, 'm') = '2');\n"; //$NON-NLS-1$
+		rewritProc = rewritProc + "UPDATE pm1.g1 SET e1 = 'x' WHERE CONCAT(e1, 'm') IN ('1', '2');\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 
@@ -2360,6 +2360,10 @@ public class TestQueryRewriter {
     @Ignore("TODO")
     @Test public void testRewritePredicateOptimization7() throws Exception {
     	helpTestRewriteCriteria("pm1.g1.e2 > 5 and pm1.g1.e2 < 2", "1 = 0");
+    }
+    
+    @Test public void testRewritePredicateOptimizationOr() throws Exception {
+    	helpTestRewriteCriteria("pm1.g1.e2 in (5, 6) or pm1.g1.e2 = 2", "pm1.g1.e2 IN (2, 5, 6)");
     }
     
 	@Test public void testUDFParse() throws Exception {     

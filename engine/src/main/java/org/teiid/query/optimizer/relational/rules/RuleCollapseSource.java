@@ -45,13 +45,13 @@ import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.CompoundCriteria;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.ExistsCriteria;
 import org.teiid.query.sql.lang.From;
 import org.teiid.query.sql.lang.FromClause;
 import org.teiid.query.sql.lang.GroupBy;
@@ -75,6 +75,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
@@ -228,7 +229,7 @@ public final class RuleCollapseSource implements OptimizerRule {
 		Query query = new Query();
         Select select = new Select();
         List<SingleElementSymbol> columns = (List<SingleElementSymbol>)node.getProperty(NodeConstants.Info.OUTPUT_COLS);
-        replaceCorrelatedReferences(ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(columns));
+        prepareSubqueries(ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(columns));
         select.addSymbols(columns);
         query.setSelect(select);
 		query.setFrom(new From());
@@ -284,7 +285,7 @@ public final class RuleCollapseSource implements OptimizerRule {
         switch(node.getType()) {
             case NodeConstants.Types.JOIN:
             {
-                replaceCorrelatedReferences(node.getSubqueryContainers());
+                prepareSubqueries(node.getSubqueryContainers());
                 JoinType joinType = (JoinType) node.getProperty(NodeConstants.Info.JOIN_TYPE);
                 List<Criteria> crits = (List<Criteria>) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
                 
@@ -362,7 +363,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             case NodeConstants.Types.SELECT:
             {
                 Criteria crit = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);       
-                replaceCorrelatedReferences(node.getSubqueryContainers());
+                prepareSubqueries(node.getSubqueryContainers());
                 if(!node.hasBooleanProperty(NodeConstants.Info.IS_HAVING)) {
                     query.setCriteria( CompoundCriteria.combineCriteria(query.getCriteria(), crit) );
                 } else {
@@ -396,25 +397,33 @@ public final class RuleCollapseSource implements OptimizerRule {
         }        
     }
 
-	private void replaceCorrelatedReferences(List<SubqueryContainer> containers) {
+	private void prepareSubqueries(List<SubqueryContainer> containers) {
 		for (SubqueryContainer container : containers) {
-		    replaceCorrelatedReferences(container);
+		    prepareSubquery(container);
 		}
 	}
 
-	public static void replaceCorrelatedReferences(SubqueryContainer container) {
+	public static void prepareSubquery(SubqueryContainer container) {
 		RelationalPlan subqueryPlan = (RelationalPlan)container.getCommand().getProcessorPlan();
-		if (subqueryPlan == null || !(subqueryPlan.getRootNode() instanceof AccessNode)) {
+		QueryCommand command = CriteriaCapabilityValidatorVisitor.getQueryCommand(subqueryPlan);
+		if (command == null) {
 			return;
 		}
-		AccessNode child = (AccessNode)subqueryPlan.getRootNode();
-		Command command = child.getCommand();
 		final SymbolMap map = container.getCommand().getCorrelatedReferences();
 		if (map != null) {
 			ExpressionMappingVisitor visitor = new RuleMergeCriteria.ReferenceReplacementVisitor(map);
 			DeepPostOrderNavigator.doVisit(command, visitor);
 		}
 		command.setProcessorPlan(container.getCommand().getProcessorPlan());
+		boolean removeLimit = false;
+		if (container instanceof ExistsCriteria) {
+			removeLimit = !((ExistsCriteria)container).shouldEvaluate();
+		} else if (container instanceof ScalarSubquery) {
+			removeLimit = !((ScalarSubquery)container).shouldEvaluate();
+		}
+		if (removeLimit && command.getLimit() != null && command.getLimit().isImplicit()) {
+			command.setLimit(null);
+		}
 		container.setCommand(command);
 	}
 
@@ -432,8 +441,9 @@ public final class RuleCollapseSource implements OptimizerRule {
         	childOffset = query.getLimit().getOffset();
         }
         RulePushLimit.combineLimits(limitNode, metadata, limit, offset, childLimit, childOffset);
-        
-        query.setLimit(new Limit((Expression)limitNode.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT), (Expression)limitNode.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT)));
+        Limit lim = new Limit((Expression)limitNode.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT), (Expression)limitNode.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT));
+        lim.setImplicit(node.hasBooleanProperty(Info.IS_IMPLICIT_LIMIT));
+        query.setLimit(lim);
     }
 
     /** 
