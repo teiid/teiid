@@ -30,8 +30,8 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
-import org.teiid.core.util.Assertion;
 import org.teiid.net.socket.SocketUtil;
+import org.teiid.runtime.RuntimePlugin;
 
 
 
@@ -83,7 +83,9 @@ public class SSLConfiguration {
         SSLEngine result = context.createSSLEngine();
         result.setUseClientMode(false);
         if (ANONYMOUS.equals(authenticationMode)) {
-            Assertion.assertTrue(Arrays.asList(result.getSupportedCipherSuites()).contains(SocketUtil.ANON_CIPHER_SUITE));
+            if (!(Arrays.asList(result.getSupportedCipherSuites()).contains(SocketUtil.ANON_CIPHER_SUITE))) {
+            	throw new GeneralSecurityException(RuntimePlugin.Util.getString("SSLConfiguration.no_anonymous")); //$NON-NLS-1$
+            }
             result.setEnabledCipherSuites(new String[] {
             		SocketUtil.ANON_CIPHER_SUITE
             });
