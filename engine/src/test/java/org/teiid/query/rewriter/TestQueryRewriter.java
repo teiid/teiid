@@ -2429,6 +2429,18 @@ public class TestQueryRewriter {
     	helpTestRewriteCriteria("pm1.g1.e2 in (5, 6) or pm1.g1.e2 = 2", "pm1.g1.e2 IN (2, 5, 6)");
     }
     
+    @Test public void testRewriteCritSubqueryFalse() {
+        helpTestRewriteCriteria("exists(select 1 from pm1.g1 where 1=0)", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testRewriteCritSubqueryFalse1() {
+        helpTestRewriteCriteria("not(pm1.g1.e1 < SOME (select 'a' from pm1.g1 where 1=0))", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testRewriteCritSubqueryFalse2() {
+        helpTestRewriteCriteria("pm1.g1.e1 < ALL (select 'a' from pm1.g1 where 1=0)", "pm1.g1.e1 IS NOT NULL"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
 	@Test public void testUDFParse() throws Exception {     
         FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new FakeFunctionMetadataSource()));
         FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);

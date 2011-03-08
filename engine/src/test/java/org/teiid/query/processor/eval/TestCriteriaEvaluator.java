@@ -93,7 +93,7 @@ public class TestCriteriaEvaluator {
         assertEquals("Result did not match expected value", expectedMatch, result); //$NON-NLS-1$
     }
         
-    private void helpTestCompareSubqueryCriteria(Criteria crit, boolean expectedResult, final Collection values) throws ExpressionEvaluationException, BlockedException, TeiidComponentException{
+    private void helpTestCompareSubqueryCriteria(Criteria crit, Boolean expectedResult, final Collection<Object> values) throws ExpressionEvaluationException, BlockedException, TeiidComponentException{
         
         Map elementMap = new HashMap();
         ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
@@ -109,7 +109,7 @@ public class TestCriteriaEvaluator {
         			TeiidComponentException {
         		return new CollectionValueIterator(values);
         	}
-        }.evaluate(crit, tuple));
+        }.evaluateTVL(crit, tuple));
     }
 
     private SubqueryCompareCriteria helpGetCompareSubqueryCriteria(int operator, int predicateQuantifier){
@@ -470,7 +470,7 @@ public class TestCriteriaEvaluator {
         ArrayList values = new ArrayList();
         values.add(null);
         values.add(null);
-        helpTestCompareSubqueryCriteria(crit, false, values); 
+        helpTestCompareSubqueryCriteria(crit, null, values); 
     }
 
     @Test public void testCompareSubqueryCriteriaNulls4() throws Exception {
@@ -478,7 +478,7 @@ public class TestCriteriaEvaluator {
         ArrayList values = new ArrayList();
         values.add(null);
         values.add(null);
-        helpTestCompareSubqueryCriteria(crit, false, values); 
+        helpTestCompareSubqueryCriteria(crit, null, values); 
     }
 
     @Test public void testCompareSubqueryCriteriaNulls5() throws Exception {
@@ -507,7 +507,7 @@ public class TestCriteriaEvaluator {
         ArrayList values = new ArrayList();
         values.add(null);
         values.add(null);
-        helpTestCompareSubqueryCriteria(crit, false, values); 
+        helpTestCompareSubqueryCriteria(crit, null, values); 
     }
 
     /**
@@ -518,8 +518,8 @@ public class TestCriteriaEvaluator {
         ArrayList values = new ArrayList();
         values.add(null);
         values.add(null);
-        helpTestCompareSubqueryCriteria(crit, false, values); 
-    }
+        helpTestCompareSubqueryCriteria(crit, null, values); 
+    }    
     
     /**
      * Big decimal comparisons should ignore precision.

@@ -25,7 +25,6 @@ package org.teiid.query.sql.lang;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.lang.PredicateCriteria.Negatable;
 import org.teiid.query.sql.symbol.Expression;
 
 
@@ -42,7 +41,7 @@ import org.teiid.query.sql.symbol.Expression;
  * <LI>5 &lt;= length(companyName)</LI>
  * </UL>
  */
-public class CompareCriteria extends AbstractCompareCriteria implements Negatable {
+public class CompareCriteria extends AbstractCompareCriteria {
 
 	/** The right-hand expression. */
 	private Expression rightExpression;
@@ -177,22 +176,5 @@ public class CompareCriteria extends AbstractCompareCriteria implements Negatabl
 		result.isOptional = isOptional;
 		return result;
 	}
-	
-    @Override
-    public void negate() {
-    	this.setOperator(getInverseOperator(this.getOperator()));
-    }
-    
-    public static int getInverseOperator(int op) {
-    	switch ( op ) {
-        case EQ: return NE; 
-        case NE: return EQ;
-        case LT: return GE;
-        case GT: return LE;
-        case LE: return GT;
-        case GE: return LT;
-        default: return -1;
-    	}
-    }
 	
 }  // END CLASS
