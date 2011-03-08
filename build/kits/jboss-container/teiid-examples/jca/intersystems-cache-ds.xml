@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<datasources>
+    <!-- unfortunately I did not see a XA data source for intersys cache -->
+    <!-- copy the cacheDB.jar to the lib directory -->
+     <local-tx-datasource>
+        <jndi-name>cacheDS</jndi-name>
+        <connection-url>jdbc:Cache://localhost:1972/{database}</connection-url>
+        <driver-class>com.intersys.jdbc.CacheDriver</driver-class>
+        <user-name>user</user-name>
+        <password>pass</password>
+         <min-pool-size>5</min-pool-size>
+         <max-pool-size>20</max-pool-size>
+  </local-tx-datasource>
+</datasources>

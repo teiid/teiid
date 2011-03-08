@@ -247,6 +247,11 @@
                 </listitem>
                 <listitem>
                     <para>
+                    <emphasis>intersystems-cache</emphasis> - for use with Intersystems Cache Object database (only relational aspect of it)
+                    </para>
+                </listitem>                
+                <listitem>
+                    <para>
                     <emphasis>informix</emphasis> - for use with any version.
                     </para>
                 </listitem>
