@@ -25,7 +25,6 @@ package org.teiid.query.sql.lang;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -148,11 +147,20 @@ public abstract class Criteria implements Expression {
 	}
     
     public static Criteria toDisjunctiveNormalForm(Criteria input) {
-        return normalize(input, true);
+    	Criteria result = normalize(input, true);
+    	return cloneIfNeeded(input, result);
     }
+
+	private static Criteria cloneIfNeeded(Criteria input, Criteria result) {
+		if (result != null && !result.equals(input)) {
+    		return (Criteria) result.clone();
+    	}
+    	return input;
+	}
     
     public static Criteria toConjunctiveNormalForm(Criteria input) {
-        return normalize(input, false);
+        Criteria result = normalize(input, false);
+        return cloneIfNeeded(input, result);
     }
     
     /**
@@ -192,11 +200,10 @@ public abstract class Criteria implements Expression {
             operator = (operator==CompoundCriteria.OR)?CompoundCriteria.AND:CompoundCriteria.OR;
         }
         
-        List criteria = new ArrayList(compCrit.getCriteria().size());
-        List parts = new LinkedList();
+        List<Criteria> criteria = new ArrayList<Criteria>(compCrit.getCriteria().size());
+        List<CompoundCriteria> parts = new LinkedList<CompoundCriteria>();
         
-        for (Iterator i = compCrit.getCriteria().iterator(); i.hasNext();) {
-            Criteria crit = (Criteria)i.next();
+        for (Criteria crit : compCrit.getCriteria()) {
             
             if (invert) {
                 crit = new NotCriteria(crit);
@@ -228,21 +235,21 @@ public abstract class Criteria implements Expression {
         
         int total = 1;
         int[] divisors = new int[parts.size()];
-        
-        for (int i = 0; i < parts.size(); i++) {
-            divisors[i] = total;
-            total *= ((CompoundCriteria)parts.get(i)).getCriteriaCount();
+        int i = 0;
+        for (CompoundCriteria crit : parts) {
+            divisors[i++] = total;
+            total *= crit.getCriteriaCount();
         }
         
-        List newCrits = new ArrayList(total);
+        List<Criteria> newCrits = new ArrayList<Criteria>(total);
         
-        for (int i = 0; i < total; i++) {
-            CompoundCriteria crit = new CompoundCriteria(dnf?CompoundCriteria.AND:CompoundCriteria.OR, new ArrayList(parts.size() + criteria.size()));
+        for (i = 0; i < total; i++) {
+            CompoundCriteria crit = new CompoundCriteria(dnf?CompoundCriteria.AND:CompoundCriteria.OR, new ArrayList<Criteria>(parts.size() + criteria.size()));
             crit.getCriteria().addAll(criteria);
             for (int j = 0; j < parts.size(); j++) {
-                CompoundCriteria disjunct = (CompoundCriteria)parts.get(j);
+                CompoundCriteria disjunct = parts.get(j);
                 
-                Criteria part = (Criteria)disjunct.getCriteria().get((i/divisors[j])%disjunct.getCriteriaCount());
+                Criteria part = disjunct.getCriteria().get((i/divisors[j])%disjunct.getCriteriaCount());
                 crit.addCriteria(part);
             }
             newCrits.add(crit);

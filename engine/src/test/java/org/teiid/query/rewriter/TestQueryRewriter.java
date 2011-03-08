@@ -2231,9 +2231,12 @@ public class TestQueryRewriter {
     	helpTestRewriteCriteria(original, expected);
     }
     
+    /**
+     * TODO: this should just be (pm1.g1.e2 >= 5) OR (pm1.g1.e1 <> '1')
+     */
     @Test public void testRewriteNullHandling4() {
     	String original = "not((pm1.g1.e1 like '%' or pm1.g1.e1 = '1') and pm1.g1.e2 < 5)"; //$NON-NLS-1$
-    	String expected = "(pm1.g1.e2 < 5) AND ((pm1.g1.e2 < 5) OR (pm1.g1.e1 <> '1'))"; //$NON-NLS-1$
+    	String expected = "(pm1.g1.e2 >= 5) AND ((pm1.g1.e2 >= 5) OR (pm1.g1.e1 <> '1'))"; //$NON-NLS-1$
     	
     	helpTestRewriteCriteria(original, expected);
     }
