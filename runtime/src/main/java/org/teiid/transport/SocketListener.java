@@ -77,8 +77,12 @@ public class SocketListener implements ChannelListenerFactory {
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)) { 
             LogManager.logDetail(LogConstants.CTX_TRANSPORT, "server = " + bindAddress + "binding to port:" + port); //$NON-NLS-1$ //$NON-NLS-2$
 		}
+        
+        if (maxWorkers == 0) {
+        	maxWorkers = Runtime.getRuntime().availableProcessors();
+        }
 		
-        ChannelFactory factory = new NioServerSocketChannelFactory(this.nettyPool, this.nettyPool, Math.min(Runtime.getRuntime().availableProcessors(), maxWorkers));
+        ChannelFactory factory = new NioServerSocketChannelFactory(this.nettyPool, this.nettyPool, maxWorkers);
         
         ServerBootstrap bootstrap = new ServerBootstrap(factory);
         this.channelHandler = createChannelPipelineFactory(config, storageManager);

@@ -27,7 +27,8 @@
         <!-- 
             The number of batch columns to allow in memory (default 16384).  
             This value should be set lower or higher depending on the available memory to Teiid in the VM.  
-            16384 is considered a good default for a dedicated 32-bit VM running Teiid with a 1 gig heap.        
+            16384 is considered a good default for a dedicated 32-bit VM running Teiid with a 1 gig heap.
+            See the admin guide for more.          
          -->
         <property name="maxReserveBatchColumns">16384</property>
         <!-- 
@@ -121,8 +122,10 @@
         <property name="enabled">true</property>
         <property name="bindAddress">${jboss.bind.address}</property>
         <property name="portNumber">31000</property>
-        <!-- Max number of threads dedicated to initial request processing (default 15) -->
-        <property name="maxSocketThreads">15</property>
+        <!-- Max number of threads dedicated to initial request processing.
+             Zero indicates the system default of max available processors. (default 0) 
+             Setting this value above the max available processors is not recommended. -->
+        <property name="maxSocketThreads">0</property>
         <!-- SO_RCVBUF size, 0 indicates that system default should be used (default 0) -->
         <property name="inputBufferSize">0</property>
         <!-- SO_SNDBUF size, 0 indicates that system default should be used (default 0) -->
@@ -156,7 +159,8 @@
         <property name="enabled">true</property>
         <property name="bindAddress">${jboss.bind.address}</property>
         <property name="portNumber">31443</property>
-        <!-- Max number of threads dedicated to Admin and initial request processing (default 4) -->
+        <!-- Max number of threads dedicated to Admin request processing.
+             Zero indicates the system default of max available processors. (default 4) -->
         <property name="maxSocketThreads">4</property>
         <!-- SO_RCVBUF size, 0 indicates that system default should be used (default 0) -->
         <property name="inputBufferSize">0</property>
@@ -191,7 +195,10 @@
         <property name="enabled">true</property>
         <property name="bindAddress">${jboss.bind.address}</property>
         <property name="portNumber">35432</property>
-        <!-- Max number of threads dedicated to initial request processing (default 15) -->
+        <!-- Max number of threads dedicated to ODBC request processing.
+             Zero indicates the system default of max available processors. (default 15)
+             ODBC queries are currently blocking on IO operations, so this value
+             should be set the expected number of concurrent ODBC queries -->
         <property name="maxSocketThreads">15</property>
         <!-- SO_RCVBUF size, 0 indicates that system default should be used (default 0) -->
         <property name="inputBufferSize">0</property>

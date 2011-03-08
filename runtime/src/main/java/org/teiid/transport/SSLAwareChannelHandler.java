@@ -173,7 +173,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 		maxChannels = Math.max(maxChannels, this.listeners.size());
 		SslHandler sslHandler = ctx.getPipeline().get(SslHandler.class);
 		if (sslHandler != null) {
-	        sslHandler.handshake(e.getChannel()).addListener(new ChannelFutureListener() {
+	        sslHandler.handshake().addListener(new ChannelFutureListener() {
 	        	public void operationComplete(ChannelFuture arg0)
 	        			throws Exception {
 	        		onConnection(e.getChannel());
