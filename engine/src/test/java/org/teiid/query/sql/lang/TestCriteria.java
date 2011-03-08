@@ -25,16 +25,10 @@ package org.teiid.query.sql.lang;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.teiid.api.exception.query.QueryParserException;
-import org.teiid.query.parser.QueryParser;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.CompoundCriteria;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.NotCriteria;
+import junit.framework.TestCase;
+
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
-
-import junit.framework.*;
 
 
 /**
@@ -57,8 +51,8 @@ public class TestCriteria extends TestCase {
 	}
 
 	public void helpTestSeparateCriteria(Criteria originalCrit, Criteria[] partsArray) {
-		Collection expectedParts = Arrays.asList(partsArray);
-		Collection actualParts = Criteria.separateCriteriaByAnd(originalCrit);
+		Collection<Criteria> expectedParts = Arrays.asList(partsArray);
+		Collection<Criteria> actualParts = Criteria.separateCriteriaByAnd(originalCrit);
 		
 		assertEquals("Didn't get the same parts ", expectedParts, actualParts); //$NON-NLS-1$
 	}
@@ -184,49 +178,6 @@ public class TestCriteria extends TestCase {
     	compCrit2.addCriteria(crit1);
     	compCrit2.addCriteria(crit2);
     	helpTestCombineCriteria(crit3, compCrit, compCrit2);
-    }
-    
-    private void helpTestNormalize(String critString,
-                             String resultString, String cnfString) throws QueryParserException {
-        QueryParser parser = new QueryParser();
-        Criteria crit = parser.parseCriteria(critString);
-        
-        assertEquals(resultString, Criteria.normalize(crit, true).toString());
-        assertEquals(cnfString, Criteria.normalize(crit, false).toString());
-    }
-
-    public void testNF() throws Exception {
-        String critString = "((4 = '4') AND (5 = '5')) OR ((1 = '1') AND ((2 = '2') OR (3 = '3')))"; //$NON-NLS-1$
-        String resultString = "((4 = '4') AND (5 = '5')) OR ((1 = '1') AND (2 = '2')) OR ((1 = '1') AND (3 = '3'))"; //$NON-NLS-1$
-        String cnf = "((4 = '4') OR (1 = '1')) AND ((5 = '5') OR (1 = '1')) AND ((4 = '4') OR ((2 = '2') OR (3 = '3'))) AND ((5 = '5') OR ((2 = '2') OR (3 = '3')))"; //$NON-NLS-1$
-        helpTestNormalize(critString, resultString, cnf); 
-    }
-    
-    public void testNF1() throws Exception {
-        String critString = "4 = '4'"; //$NON-NLS-1$
-        String resultString = "4 = '4'"; //$NON-NLS-1$ 
-        helpTestNormalize(critString, resultString, resultString); 
-    }
-
-    public void testNF2() throws Exception {
-        String critString = "((4 = '4') OR (1 = '1') OR (2 = '2')) AND ((3 = '3') OR (5 = '5'))"; //$NON-NLS-1$
-        String resultString = "((4 = '4') AND (3 = '3')) OR ((1 = '1') AND (3 = '3')) OR ((2 = '2') AND (3 = '3')) OR ((4 = '4') AND (5 = '5')) OR ((1 = '1') AND (5 = '5')) OR ((2 = '2') AND (5 = '5'))"; //$NON-NLS-1$
-        String cnf = "((4 = '4') OR (1 = '1') OR (2 = '2')) AND ((3 = '3') OR (5 = '5'))"; //$NON-NLS-1$
-        helpTestNormalize(critString, resultString, cnf); 
-    }
-    
-    public void testNF3() throws Exception {
-        String critString = "NOT (((1 = '1') OR (2 = '2')) AND ((3 = '3') OR (5 = '5')))"; //$NON-NLS-1$
-        String resultString = "((NOT (1 = '1')) AND (NOT (2 = '2'))) OR ((NOT (3 = '3')) AND (NOT (5 = '5')))"; //$NON-NLS-1$
-        String cnf = "((NOT (1 = '1')) OR (NOT (3 = '3'))) AND ((NOT (2 = '2')) OR (NOT (3 = '3'))) AND ((NOT (1 = '1')) OR (NOT (5 = '5'))) AND ((NOT (2 = '2')) OR (NOT (5 = '5')))"; //$NON-NLS-1$
-        helpTestNormalize(critString, resultString, cnf); 
-    }
-    
-    public void testNF4() throws Exception {
-        String critString = "(1 = '1') OR (2 = '2')"; //$NON-NLS-1$
-        String resultString = "(1 = '1') OR (2 = '2')"; //$NON-NLS-1$
-        String cnf = "(1 = '1') OR (2 = '2')"; //$NON-NLS-1$
-        helpTestNormalize(critString, resultString, cnf); 
     }
 
 }

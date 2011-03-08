@@ -1459,7 +1459,7 @@ public class QueryRewriter {
 		Criteria innerCrit = criteria.getCriteria(); 
         if (innerCrit instanceof CompoundCriteria) {
         	//reduce to only negation of predicates, so that the null/unknown handling criteria is applied appropriately
-    		return rewriteCriteria(Criteria.toConjunctiveNormalForm(criteria));
+    		return rewriteCriteria(Criteria.applyDemorgan(innerCrit));
         } 
         if (innerCrit instanceof Negatable) {
         	((Negatable) innerCrit).negate();

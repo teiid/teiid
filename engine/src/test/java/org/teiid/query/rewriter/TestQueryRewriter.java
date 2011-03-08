@@ -2231,19 +2231,37 @@ public class TestQueryRewriter {
     	helpTestRewriteCriteria(original, expected);
     }
     
-    /**
-     * TODO: this should just be (pm1.g1.e2 >= 5) OR (pm1.g1.e1 <> '1')
-     */
     @Test public void testRewriteNullHandling4() {
-    	String original = "not((pm1.g1.e1 like '%' or pm1.g1.e1 = '1') and pm1.g1.e2 < 5)"; //$NON-NLS-1$
-    	String expected = "(pm1.g1.e2 >= 5) AND ((pm1.g1.e2 >= 5) OR (pm1.g1.e1 <> '1'))"; //$NON-NLS-1$
+    	String original = "not((pm1.g1.e1 like '%' or pm1.g1.e2 = 1) and pm1.g1.e2 < 5)"; //$NON-NLS-1$
+    	String expected = "pm1.g1.e2 >= 5"; //$NON-NLS-1$
+    	
+    	helpTestRewriteCriteria(original, expected);
+    }
+    
+    @Test public void testRewriteNullHandling4a() {
+    	String original = "not(not((pm1.g1.e1 like '%' or pm1.g1.e2 = 1) and pm1.g1.e2 < 5))"; //$NON-NLS-1$
+    	String expected = "((pm1.g1.e1 IS NOT NULL) OR (pm1.g1.e2 = 1)) AND (pm1.g1.e2 < 5)"; //$NON-NLS-1$
     	
     	helpTestRewriteCriteria(original, expected);
     }
     
     @Test public void testRewriteNullHandling5() {
-    	String original = "not(pm1.g1.e1 not like '%' and pm1.g1.e3 = '1') or pm1.g1.e2 < 5"; //$NON-NLS-1$
-    	String expected = "(pm1.g1.e1 IS NOT NULL) OR (pm1.g1.e3 <> TRUE) OR (pm1.g1.e2 < 5)"; //$NON-NLS-1$
+    	String original = "not((pm1.g1.e1 not like '%' or pm1.g1.e2 = 1) and pm1.g1.e2 < 5)"; //$NON-NLS-1$
+    	String expected = "((pm1.g1.e1 IS NOT NULL) AND (pm1.g1.e2 <> 1)) OR (pm1.g1.e2 >= 5)"; //$NON-NLS-1$
+    	
+    	helpTestRewriteCriteria(original, expected);
+    }
+    
+    @Test public void testRewriteNullHandling6() {
+    	String original = "not((pm1.g1.e1 not like '%' and pm1.g1.e2 = 1) or pm1.g1.e2 < 5)"; //$NON-NLS-1$
+    	String expected = "((pm1.g1.e1 IS NOT NULL) OR (pm1.g1.e2 <> 1)) AND (pm1.g1.e2 >= 5)"; //$NON-NLS-1$
+    	
+    	helpTestRewriteCriteria(original, expected);
+    }
+    
+    @Test public void testRewriteNullHandling7() {
+    	String original = "not(not(pm1.g1.e1 not like '%' and pm1.g1.e2 = 1) or pm1.g1.e2 < 5)"; //$NON-NLS-1$
+    	String expected = "1 = 0"; //$NON-NLS-1$
     	
     	helpTestRewriteCriteria(original, expected);
     }
