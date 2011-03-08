@@ -35,6 +35,15 @@
 			If you are processing large (100s of MBs) of highly unique datasets
 			through Teiid, you should consider <link linkend="system_properties">disabling value caching</link> since it
 			will not significantly reduce memory consumption.
+			<note>
+				<para>The formula (average bytes per value)*(processor batch size)*(maxReserveBatchColumns) approximates the amount of 
+            reserve memory used by the BufferManager.  The defaults with an assumed value (8 bytes in 32 bit mode) for bytes per column
+            works out to be: 8 bytes * 512 * 16384 = 64MB.  Memory consumption can be significantly more or less
+            depending upon actual column values and whether value caching is enabled. The 8 bytes per column includes row/batch list overhead and 
+            represents the Java type memory foot print (e.g. java.lang.Integer not a raw 4 byte integer).
+            The nominal target of 64MB per 1 gigabyte of may be too low based upon the particulars of your usage. Raising the maxReserveBatchColumns 
+            value too high though may result in out of memory errors.</para>
+			</note>
 		</para>
 		<para>
 			Each intermediate result buffer, temporary LOB, and temporary table
@@ -78,11 +87,15 @@
 			JDBC, ODBC, and Admin access.
 			Typical installations will not need to
 			adjust the default thread and buffer
-			size settings. At this time, ODBC
+			size settings. 
+			All JDBC socket operations are non-blocking, so setting the number of maxThreads
+			higher than the maximum effective parallelism of the machine will not result in greater performance.  The default value 0 for JDBC socket threads will
+			set the max to the number of available processors.  
+			At this time, ODBC
 			queries are executed synchronously from the socket thread.
 			Simultaneous long-running queries may exhaust the available threads.
 			Consider increasing the default max threads (15) for ODBC if you
-			expect a higher concurrent load of long-running queries.</para>
+			expect a higher concurrent load of long-running ODBC client queries.</para>
 	</section>
 	<section>
 		<title>LOBs</title>
