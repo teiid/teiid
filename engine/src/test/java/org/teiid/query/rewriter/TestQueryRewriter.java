@@ -24,13 +24,17 @@ package org.teiid.query.rewriter;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
 
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
@@ -44,6 +48,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.TimestampWithTimezone;
+import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -119,6 +124,14 @@ public class TestQueryRewriter {
         }
         return helpTestRewriteCriteria(original, expectedCrit, metadata);
     }
+    
+    private Map<ElementSymbol, Integer> elements;
+    private List<List> tuples;
+    
+    @Before public void setUp() {
+    	elements = null;
+    	tuples = new ArrayList<List>();
+    }
 
     private Criteria helpTestRewriteCriteria(String original, Criteria expectedCrit, QueryMetadataInterface metadata) {
         Criteria origCrit = parseCriteria(original, metadata);
@@ -126,8 +139,15 @@ public class TestQueryRewriter {
         Criteria actual = null;
         // rewrite
         try { 
+        	ArrayList<Boolean> booleanVals = new ArrayList<Boolean>(tuples.size());
+        	for (List<Object> tuple : tuples) {
+            	booleanVals.add(new Evaluator(elements, null, null).evaluate(origCrit, tuple));
+			}
             actual = QueryRewriter.rewriteCriteria(origCrit, null, null, metadata);
             assertEquals("Did not rewrite correctly: ", expectedCrit, actual); //$NON-NLS-1$
+            for (int i = 0; i < tuples.size(); i++) {
+            	assertEquals(tuples.get(i).toString(), booleanVals.get(i), new Evaluator(elements, null, null).evaluate(actual, tuples.get(i)));
+			}
         } catch(TeiidException e) { 
         	throw new RuntimeException(e);
         }
@@ -2206,63 +2226,85 @@ public class TestQueryRewriter {
     @Test public void testRewriteNullHandling() {
     	String original = "pm1.g1.e1 like '%'"; //$NON-NLS-1$
     	String expected = "pm1.g1.e1 is not null"; //$NON-NLS-1$
+    	addTestData();
     	
     	helpTestRewriteCriteria(original, expected);
     }
+
+	private void addTestData() {
+		this.elements = new HashMap<ElementSymbol, Integer>();
+    	elements.put(new ElementSymbol("pm1.g1.e1"), 0);
+    	elements.put(new ElementSymbol("pm1.g1.e2"), 1);
+    	elements.put(new ElementSymbol("pm1.g1.e3"), 2);
+    	for (String s : Arrays.asList("a", null, "*")) {
+			for (Integer i : Arrays.asList(1, null, 6)) {
+	    		for (Boolean b : Arrays.asList(true, false, null)) {
+    		    	tuples.add(Arrays.asList(s, i, b));
+    			}
+    		}
+		}
+	}
     
     @Test public void testRewriteNullHandling1() {
     	String original = "not(pm1.g1.e1 like '%' or pm1.g1.e1 = '1')"; //$NON-NLS-1$
     	String expected = "1 = 0"; //$NON-NLS-1$
-    	
+    	addTestData();
     	helpTestRewriteCriteria(original, expected);
     }
     
     @Test public void testRewriteNullHandling2() {
     	String original = "not(pm1.g1.e1 like '%' and pm1.g1.e1 = '1')"; //$NON-NLS-1$
     	String expected = "pm1.g1.e1 <> '1'"; //$NON-NLS-1$
-    	
+    	addTestData();
     	helpTestRewriteCriteria(original, expected);
     }
     
     @Test public void testRewriteNullHandling3() {
     	String original = "pm1.g1.e1 like '%' or pm1.g1.e1 = '1'"; //$NON-NLS-1$
     	String expected = "(pm1.g1.e1 IS NOT NULL) OR (pm1.g1.e1 = '1')"; //$NON-NLS-1$
-    	
+    	addTestData();
     	helpTestRewriteCriteria(original, expected);
     }
     
     @Test public void testRewriteNullHandling4() {
-    	String original = "not((pm1.g1.e1 like '%' or pm1.g1.e2 = 1) and pm1.g1.e2 < 5)"; //$NON-NLS-1$
+    	String original = "not((pm1.g1.e1 like '%' or pm1.g1.e3 = true) and pm1.g1.e2 < 5)"; //$NON-NLS-1$
     	String expected = "pm1.g1.e2 >= 5"; //$NON-NLS-1$
-    	
+    	addTestData();
     	helpTestRewriteCriteria(original, expected);
     }
     
     @Test public void testRewriteNullHandling4a() {
-    	String original = "not(not((pm1.g1.e1 like '%' or pm1.g1.e2 = 1) and pm1.g1.e2 < 5))"; //$NON-NLS-1$
-    	String expected = "((pm1.g1.e1 IS NOT NULL) OR (pm1.g1.e2 = 1)) AND (pm1.g1.e2 < 5)"; //$NON-NLS-1$
-    	
+    	String original = "not(not((pm1.g1.e1 like '%' or pm1.g1.e3 = true) and pm1.g1.e2 < 5))"; //$NON-NLS-1$
+    	String expected = "((pm1.g1.e1 IS NOT NULL) OR (pm1.g1.e3 = TRUE)) AND (pm1.g1.e2 < 5)"; //$NON-NLS-1$
+    	addTestData();
     	helpTestRewriteCriteria(original, expected);
     }
     
     @Test public void testRewriteNullHandling5() {
-    	String original = "not((pm1.g1.e1 not like '%' or pm1.g1.e2 = 1) and pm1.g1.e2 < 5)"; //$NON-NLS-1$
-    	String expected = "((pm1.g1.e1 IS NOT NULL) AND (pm1.g1.e2 <> 1)) OR (pm1.g1.e2 >= 5)"; //$NON-NLS-1$
-    	
+    	String original = "not((pm1.g1.e1 not like '%' or pm1.g1.e3 = true) and pm1.g1.e2 < 5)"; //$NON-NLS-1$
+    	String expected = "((pm1.g1.e1 IS NOT NULL) AND (pm1.g1.e3 <> TRUE)) OR (pm1.g1.e2 >= 5)"; //$NON-NLS-1$
+    	addTestData();
     	helpTestRewriteCriteria(original, expected);
     }
     
     @Test public void testRewriteNullHandling6() {
-    	String original = "not((pm1.g1.e1 not like '%' and pm1.g1.e2 = 1) or pm1.g1.e2 < 5)"; //$NON-NLS-1$
-    	String expected = "((pm1.g1.e1 IS NOT NULL) OR (pm1.g1.e2 <> 1)) AND (pm1.g1.e2 >= 5)"; //$NON-NLS-1$
-    	
+    	String original = "not((pm1.g1.e1 not like '%' and pm1.g1.e3 = true) or pm1.g1.e2 < 5)"; //$NON-NLS-1$
+    	String expected = "((pm1.g1.e1 IS NOT NULL) OR (pm1.g1.e3 <> TRUE)) AND (pm1.g1.e2 >= 5)"; //$NON-NLS-1$
+    	addTestData();
     	helpTestRewriteCriteria(original, expected);
     }
     
     @Test public void testRewriteNullHandling7() {
-    	String original = "not(not(pm1.g1.e1 not like '%' and pm1.g1.e2 = 1) or pm1.g1.e2 < 5)"; //$NON-NLS-1$
+    	String original = "not(not(pm1.g1.e1 not like '%' and pm1.g1.e3 = true) or pm1.g1.e2 < 5)"; //$NON-NLS-1$
     	String expected = "1 = 0"; //$NON-NLS-1$
-    	
+    	addTestData();
+    	helpTestRewriteCriteria(original, expected);
+    }
+    
+    @Test public void testRewriteNullHandling7a() {
+    	String original = "not(not(pm1.g1.e1 like '*%' and pm1.g1.e3 = true) or pm1.g1.e2 < 5)"; //$NON-NLS-1$
+    	String expected = "(pm1.g1.e1 LIKE '*%') AND (pm1.g1.e3 = TRUE) AND (pm1.g1.e2 >= 5)"; //$NON-NLS-1$
+    	addTestData();
     	helpTestRewriteCriteria(original, expected);
     }
     
