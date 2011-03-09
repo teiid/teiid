@@ -348,7 +348,7 @@ public class Query extends QueryCommand {
         }
 
         if(getLimit() != null) {
-            copy.setLimit( (Limit) getLimit().clone());
+            copy.setLimit( getLimit().clone());
         }
         
         copy.setWith(LanguageObject.Util.deepClone(this.getWith(), WithQueryCommand.class));

@@ -59,7 +59,6 @@ import org.teiid.query.sql.lang.ExistsCriteria;
 import org.teiid.query.sql.lang.FromClause;
 import org.teiid.query.sql.lang.GroupBy;
 import org.teiid.query.sql.lang.JoinType;
-import org.teiid.query.sql.lang.NotCriteria;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.Query;
@@ -119,6 +118,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		public boolean not;
 		public List<Criteria> nonEquiJoinCriteria = new LinkedList<Criteria>();
 		public Criteria additionalCritieria;
+		public Class<?> type;
 	}
 
 	private IDGenerator idGenerator;
@@ -264,7 +264,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
         	//if it's currently unknown, removing criteria won't make it any better
         	return current;
         }
-
+        
         Collection<GroupSymbol> leftGroups = FrameUtil.findJoinSourceNode(current).getGroups();
 
 		if (!planQuery(leftGroups, false, plannedResult)) {
@@ -279,6 +279,8 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		}
 		
 		try {
+			//clone the symbols as they may change during planning
+			List<SingleElementSymbol> projectedSymbols = LanguageObject.Util.deepClone(plannedResult.query.getProjectedSymbols(), SingleElementSymbol.class);
 			//NOTE: we could tap into the relationalplanner at a lower level to get this in a plan node form,
 			//the major benefit would be to reuse the dependent join planning logic if possible.
 			RelationalPlan subPlan = (RelationalPlan)QueryOptimizer.optimizePlan(plannedResult.query, metadata, idGenerator, capFinder, analysisRecord, context);
@@ -286,6 +288,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
             
             if (planCardinality.floatValue() == NewCalculateCostUtil.UNKNOWN_VALUE 
             		|| planCardinality.floatValue() > 10000000
+            		|| (sourceCost == NewCalculateCostUtil.UNKNOWN_VALUE && planCardinality.floatValue() > 1000)
             		|| (sourceCost != NewCalculateCostUtil.UNKNOWN_VALUE && sourceCost * originalCardinality.floatValue() < planCardinality.floatValue() / (100 * Math.log(Math.max(4, sourceCost))))) {
             	//bail-out if both are unknown or the new plan is too large
             	return current;
@@ -312,7 +315,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
             
             PlanNode node = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
             node.setProperty(NodeConstants.Info.PROCESSOR_PLAN, subPlan);
-            node.setProperty(NodeConstants.Info.OUTPUT_COLS, plannedResult.query.getProjectedSymbols());
+            node.setProperty(NodeConstants.Info.OUTPUT_COLS, projectedSymbols);
             node.setProperty(NodeConstants.Info.EST_CARDINALITY, planCardinality);
             root.addAsParent(semiJoin);
             semiJoin.addLastChild(node);
@@ -328,20 +331,18 @@ public final class RuleMergeCriteria implements OptimizerRule {
 
 	public PlannedResult findSubquery(Criteria crit) throws TeiidComponentException, QueryMetadataException {
 		PlannedResult result = new PlannedResult();
-		if (crit instanceof NotCriteria) {
-			result.not = true;
-			crit = ((NotCriteria)crit).getCriteria();
-		} 
 		if (crit instanceof SubquerySetCriteria) {
 			//convert to the quantified form
 			SubquerySetCriteria ssc = (SubquerySetCriteria)crit;
 			result.not ^= ssc.isNegated();
+			result.type = crit.getClass();
 			crit = new SubqueryCompareCriteria(ssc.getExpression(), ssc.getCommand(), SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.SOME);
 		} else if (crit instanceof CompareCriteria) {
 			//convert to the quantified form
 			CompareCriteria cc = (CompareCriteria)crit;
 			if (cc.getRightExpression() instanceof ScalarSubquery) {
 				ScalarSubquery ss = (ScalarSubquery)cc.getRightExpression();
+				result.type = ss.getClass();
 				if (ss.getCommand() instanceof Query) {
 					Query query = (Query)ss.getCommand();
 					if (query.getGroupBy() == null && query.hasAggregates()) {
@@ -375,7 +376,9 @@ public final class RuleMergeCriteria implements OptimizerRule {
 			if (result.not && !isNonNull(query, rightExpr)) {
 				return result;
 			}
-			
+			if (result.type == null) {
+				result.type = scc.getClass();
+			}
 			result.query = query;
 			result.additionalCritieria = (Criteria)new CompareCriteria(scc.getLeftExpression(), scc.getOperator(), rightExpr).clone();
 		}
@@ -384,6 +387,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 			if (!(exists.getCommand() instanceof Query)) {
 				return result;
 			} 
+			result.type = crit.getClass();
 			//the correlations can only be in where (if no group by or aggregates) or having
 			result.query = (Query)exists.getCommand();
 		}
@@ -428,6 +432,12 @@ public final class RuleMergeCriteria implements OptimizerRule {
 	
 	public boolean planQuery(Collection<GroupSymbol> leftGroups, boolean requireDistinct, PlannedResult plannedResult) throws QueryMetadataException, TeiidComponentException {
 		if ((plannedResult.query.getLimit() != null && !plannedResult.query.getLimit().isImplicit()) || plannedResult.query.getFrom() == null) {
+			return false;
+		}
+		
+		if ((plannedResult.type == ExistsCriteria.class || plannedResult.type == ScalarSubquery.class) && plannedResult.query.getCorrelatedReferences() == null) {
+			//we can't really improve on this case
+			//TODO: do this check earlier
 			return false;
 		}
 		
@@ -500,12 +510,12 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		}
 		for (SingleElementSymbol ses : requiredExpressions) {
 			if (projectedSymbols.add(ses)) {
-				plannedResult.query.getSelect().addSymbol(ses);
+				plannedResult.query.getSelect().addSymbol((SingleElementSymbol) ses.clone());
 			}
 		}
 		for (SingleElementSymbol ses : (List<SingleElementSymbol>)plannedResult.rightExpressions) {
 			if (projectedSymbols.add(ses)) {
-				plannedResult.query.getSelect().addSymbol(ses);
+				plannedResult.query.getSelect().addSymbol((SingleElementSymbol)ses.clone());
 			}
 		}
 		return true;

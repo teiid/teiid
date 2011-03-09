@@ -836,6 +836,27 @@ public class TestSubqueryPushdown {
         }); 
     } 
     
+    @Test public void testNonSemiJoin() throws Exception {
+        ProcessorPlan plan = helpPlan("Select x from xmltable('/a/b' passing convert('<a/>', xml) columns x integer path '@x') as t where x = (select count(e2) FROM pm1.g2)", FakeMetadataFactory.example4(),  //$NON-NLS-1$
+            new String[] {}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        checkNodeTypes(plan, new int[] {
+            0,      // Access
+            0,      // DependentAccess
+            1,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        }); 
+    }
+    
     /**
      * Test to ensure that we don't create an invalid semijoin query when attempting to convert the subquery to a semijoin
      */
