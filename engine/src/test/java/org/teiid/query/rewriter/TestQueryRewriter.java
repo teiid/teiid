@@ -824,12 +824,12 @@ public class TestQueryRewriter {
 
     @Test public void testCompareSubqueryANY() {
         helpTestRewriteCommand("SELECT e1 FROM pm1.g1 WHERE '3' = ANY (SELECT e1 FROM pm1.g2)", //$NON-NLS-1$
-                                "SELECT e1 FROM pm1.g1 WHERE '3' = SOME (SELECT e1 FROM pm1.g2)"); //$NON-NLS-1$
+                                "SELECT e1 FROM pm1.g1 WHERE '3' IN (SELECT e1 FROM pm1.g2)"); //$NON-NLS-1$
     }
 
     @Test public void testCompareSubquery() {
         helpTestRewriteCommand("SELECT e1 FROM pm1.g1 WHERE '3' = SOME (SELECT e1 FROM pm1.g2)", //$NON-NLS-1$
-                                "SELECT e1 FROM pm1.g1 WHERE '3' = SOME (SELECT e1 FROM pm1.g2)"); //$NON-NLS-1$
+                                "SELECT e1 FROM pm1.g1 WHERE '3' IN (SELECT e1 FROM pm1.g2)"); //$NON-NLS-1$
     }
     
     @Test public void testCompareSubqueryUnknown() {
@@ -2428,13 +2428,17 @@ public class TestQueryRewriter {
     @Test public void testRewritePredicateOptimizationOr() throws Exception {
     	helpTestRewriteCriteria("pm1.g1.e2 in (5, 6) or pm1.g1.e2 = 2", "pm1.g1.e2 IN (2, 5, 6)");
     }
+
+    @Test public void testRewriteCritSubqueryNegate() {
+        helpTestRewriteCriteria("not(pm1.g1.e1 > SOME (select 'a' from pm1.g2))", "pm1.g1.e1 <= ALL (SELECT 'a' FROM pm1.g2)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
     
     @Test public void testRewriteCritSubqueryFalse() {
         helpTestRewriteCriteria("exists(select 1 from pm1.g1 where 1=0)", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testRewriteCritSubqueryFalse1() {
-        helpTestRewriteCriteria("not(pm1.g1.e1 < SOME (select 'a' from pm1.g1 where 1=0))", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("not(pm1.g1.e1 > SOME (select 'a' from pm1.g1 where 1=0))", "pm1.g1.e1 IS NOT NULL"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testRewriteCritSubqueryFalse2() {

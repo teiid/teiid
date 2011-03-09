@@ -1292,28 +1292,7 @@ public class TestOptimizer {
     }
 
     @Test public void testCompareSubquery1() {
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 < any (select e1 FROM pm2.g1)", example1(),  //$NON-NLS-1$
-            new String[] { "SELECT e1 FROM pm1.g1" }); //$NON-NLS-1$
-        checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            1,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        }); 
-    }
-
-    @Test public void testCompareSubquery2() {
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 <= some (select e1 FROM pm2.g1)", example1(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 < ALL (select e1 FROM pm2.g1)", example1(),  //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -2972,14 +2951,14 @@ public class TestOptimizer {
     }   
 
     /** Case 1456, defect 10492*/
-    @Test public void testAliasingDefect3(){
+    @Test public void testAliasingDefect3() throws Exception {
         // Create query
-        String sql = "SELECT X.e1 FROM pm1.g2, vm1.g1 X WHERE X.e2 = ANY (SELECT MAX(e2) FROM vm1.g1 Y WHERE X.e1 = Y.e1) AND X.e1 = pm1.g2.e1";//$NON-NLS-1$
+        String sql = "SELECT X.e1 FROM pm1.g2, vm1.g1 X WHERE X.e2 = ALL (SELECT MAX(e2) FROM vm1.g1 Y WHERE X.e1 = Y.e1) AND X.e1 = pm1.g2.e1";//$NON-NLS-1$
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.CRITERIA_QUANTIFIED_SOME, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_QUANTIFIED_ALL, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
@@ -2993,7 +2972,7 @@ public class TestOptimizer {
     
         ProcessorPlan plan = helpPlan(sql, metadata,  
             null, capFinder,
-            new String[] { "SELECT g_1.e1 FROM pm1.g2 AS g_0, pm1.g1 AS g_1 WHERE (g_1.e1 = g_0.e1) AND (g_1.e2 = SOME (SELECT MAX(g_2.e2) FROM pm1.g1 AS g_2 WHERE g_2.e1 = g_1.e1))" }, SHOULD_SUCCEED); //$NON-NLS-1$
+            new String[] { "SELECT g_1.e1 FROM pm1.g2 AS g_0, pm1.g1 AS g_1 WHERE (g_1.e1 = g_0.e1) AND (g_1.e2 = ALL (SELECT MAX(g_2.e2) FROM pm1.g1 AS g_2 WHERE g_2.e1 = g_1.e1))" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
         

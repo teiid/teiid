@@ -871,4 +871,10 @@ public class TestSubqueryPushdown {
     @Test public void testInvalidGeneratedSemijoinQuery1() throws Exception {
     	TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 = (Select max(e2) from pm2.g2 where e1 = pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS MAX, e1 FROM pm2.g2 GROUP BY e1) AS X__1 WHERE (pm3.g1.e1 = X__1.e1) AND (pm3.g1.e2 = X__1.MAX)", FakeMetadataFactory.example4());
     }
+    
+    @Test public void testCompareSubquery2() throws Exception {
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 <= some (select e1 FROM pm2.g1)", example1(),  //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 <= (SELECT MAX(X.e1) FROM (SELECT e1 FROM pm2.g1) AS X)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        checkNodeTypes(plan, FULL_PUSHDOWN); 
+    }
 }

@@ -1141,8 +1141,8 @@ public class QueryRewriter {
 		    }
 		} else if (criteria instanceof SubquerySetCriteria) {
 		    SubquerySetCriteria sub = (SubquerySetCriteria)criteria;
-		    if (isNull(sub.getExpression())) {
-		        return UNKNOWN_CRITERIA;
+		    if (rewriteLeftExpression(sub)) {
+		    	return UNKNOWN_CRITERIA;
 		    }
 		    rewriteSubqueryContainer(sub, true);
 		    if (!RelationalNodeUtil.shouldExecute(sub.getCommand(), false, true)) {
@@ -1187,7 +1187,10 @@ public class QueryRewriter {
 	private Criteria rewriteDependentSetCriteria(DependentSetCriteria dsc)
 			throws TeiidComponentException, TeiidProcessingException{
 		if (!processing) {
-			return rewriteCriteria(dsc);
+			if (rewriteLeftExpression(dsc)) {
+				return UNKNOWN_CRITERIA;
+			}
+			return dsc;
 		}
 		SetCriteria setCrit = new SetCriteria();
 		setCrit.setExpression(dsc.getExpression());
@@ -1570,6 +1573,28 @@ public class QueryRewriter {
      * quantifier is replaced with the canonical and equivalent 'SOME'
      */
     private Criteria rewriteCriteria(SubqueryCompareCriteria criteria) throws TeiidComponentException, TeiidProcessingException{
+    	
+    	if (criteria.getCommand().getProcessorPlan() == null && criteria.getPredicateQuantifier() != SubqueryCompareCriteria.ALL) {
+    		if (criteria.getOperator() == CompareCriteria.EQ || criteria.getOperator() == CompareCriteria.NE) {
+    			SubquerySetCriteria result = new SubquerySetCriteria(criteria.getLeftExpression(), criteria.getCommand());
+    			result.setNegated(criteria.getOperator() == CompareCriteria.NE);
+    			return rewriteCriteria(result);
+    		}
+    		CompareCriteria cc = new CompareCriteria();
+    		cc.setLeftExpression(criteria.getLeftExpression());
+    		Query q = createInlineViewQuery(new GroupSymbol("X"), criteria.getCommand(), metadata, criteria.getCommand().getProjectedSymbols()); //$NON-NLS-1$
+    		SingleElementSymbol ses = q.getProjectedSymbols().get(0);
+    		Expression expr = SymbolMap.getExpression(ses);
+    		q.getSelect().clearSymbols();
+    		AggregateSymbol.Type type = Type.MAX;
+    		if (criteria.getOperator() == CompareCriteria.GT || criteria.getOperator() == CompareCriteria.GE) {
+    			type = Type.MIN;
+    		}
+    		q.getSelect().addSymbol(new AggregateSymbol(ses.getName(), type.name(), false, expr));
+    		cc.setRightExpression(new ScalarSubquery(q));
+			cc.setOperator(criteria.getOperator());
+    		return rewriteCriteria(cc);
+    	}
 
         Expression leftExpr = rewriteExpressionDirect(criteria.getLeftExpression());
         
@@ -2132,14 +2157,14 @@ public class QueryRewriter {
 		return FALSE_CRITERIA;
 	}
 	
-    private Criteria rewriteCriteria(AbstractSetCriteria criteria) throws TeiidComponentException, TeiidProcessingException{
+    private boolean rewriteLeftExpression(AbstractSetCriteria criteria) throws TeiidComponentException, TeiidProcessingException{
         criteria.setExpression(rewriteExpressionDirect(criteria.getExpression()));
         
         if (isNull(criteria.getExpression())) {
-            return UNKNOWN_CRITERIA;
+            return true;
         }
 
-        return criteria;
+        return false;
     }
 
 	private Criteria rewriteCriteria(SetCriteria criteria) throws TeiidComponentException, TeiidProcessingException{
@@ -2149,7 +2174,7 @@ public class QueryRewriter {
 		
 		criteria.setExpression(rewriteExpressionDirect(criteria.getExpression()));
         
-        if (isNull(criteria.getExpression())) {
+        if (rewriteLeftExpression(criteria)) {
             return UNKNOWN_CRITERIA;
         }
 
