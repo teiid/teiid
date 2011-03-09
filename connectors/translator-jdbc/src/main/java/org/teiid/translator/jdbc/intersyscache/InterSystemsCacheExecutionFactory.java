@@ -29,15 +29,16 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
+import org.teiid.translator.jdbc.EscapeSyntaxModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 
@@ -50,50 +51,66 @@ public class InterSystemsCacheExecutionFactory extends JDBCExecutionFactory {
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
+		convert.addTypeMapping("tinyint", FunctionModifier.BYTE); //$NON-NLS-1$		
+		convert.addTypeMapping("smallint", FunctionModifier.SHORT); //$NON-NLS-1$
+		convert.addTypeMapping("integer", FunctionModifier.INTEGER); //$NON-NLS-1$
 		convert.addTypeMapping("bigint", FunctionModifier.LONG); //$NON-NLS-1$
-		convert.addTypeMapping("character", FunctionModifier.CHAR); //$NON-NLS-1$
 		convert.addTypeMapping("decimal(38,19)", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
 		convert.addTypeMapping("decimal(19,0)", FunctionModifier.BIGINTEGER); //$NON-NLS-1$		
-		convert.addTypeMapping("smallint", FunctionModifier.SHORT); //$NON-NLS-1$
-		convert.addTypeMapping("tinyint", FunctionModifier.BYTE); //$NON-NLS-1$		
+		convert.addTypeMapping("character", FunctionModifier.CHAR); //$NON-NLS-1$
 		convert.addTypeMapping("varchar(4000)", FunctionModifier.STRING); //$NON-NLS-1$
+		convert.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
+		convert.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
+		convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
 		convert.addNumericBooleanConversions();
 		registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);		
 		
 		registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("nvl")); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.CONCAT, new ModifiedFunction(SourceSystemFunctions.CONCAT));
-		registerFunctionModifier(SourceSystemFunctions.ACOS, new ModifiedFunction(SourceSystemFunctions.ACOS));
-		registerFunctionModifier(SourceSystemFunctions.ASIN, new ModifiedFunction(SourceSystemFunctions.ASIN));
-		registerFunctionModifier(SourceSystemFunctions.ATAN, new ModifiedFunction(SourceSystemFunctions.ATAN));
-		registerFunctionModifier(SourceSystemFunctions.COS, new ModifiedFunction(SourceSystemFunctions.COS));
-		registerFunctionModifier(SourceSystemFunctions.COT, new ModifiedFunction(SourceSystemFunctions.COT));
-		registerFunctionModifier(SourceSystemFunctions.CURDATE, new ModifiedFunction(SourceSystemFunctions.CURDATE));		
-		registerFunctionModifier(SourceSystemFunctions.CURTIME, new ModifiedFunction(SourceSystemFunctions.CURTIME));   
-		registerFunctionModifier(SourceSystemFunctions.DAYNAME, new ModifiedFunction(SourceSystemFunctions.DAYNAME));
-        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new ModifiedFunction(SourceSystemFunctions.DAYOFMONTH)); 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new ModifiedFunction(SourceSystemFunctions.DAYOFWEEK));
-        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new ModifiedFunction(SourceSystemFunctions.DAYOFYEAR));
-        registerFunctionModifier(SourceSystemFunctions.EXP, new ModifiedFunction(SourceSystemFunctions.EXP));    
-        registerFunctionModifier(SourceSystemFunctions.HOUR, new ModifiedFunction(SourceSystemFunctions.HOUR)); 
-        registerFunctionModifier(SourceSystemFunctions.LOG,new ModifiedFunction(SourceSystemFunctions.LOG)); 
-        registerFunctionModifier(SourceSystemFunctions.LOG10, new ModifiedFunction(SourceSystemFunctions.LOG10)); 
-        registerFunctionModifier(SourceSystemFunctions.LEFT, new ModifiedFunction(SourceSystemFunctions.LEFT));
-        registerFunctionModifier(SourceSystemFunctions.MINUTE, new ModifiedFunction(SourceSystemFunctions.MINUTE));
-        registerFunctionModifier(SourceSystemFunctions.MONTH, new ModifiedFunction(SourceSystemFunctions.MONTH));
-        registerFunctionModifier(SourceSystemFunctions.MONTHNAME, new ModifiedFunction(SourceSystemFunctions.MONTHNAME));
-        registerFunctionModifier(SourceSystemFunctions.MOD, new ModifiedFunction(SourceSystemFunctions.MOD));
-        registerFunctionModifier(SourceSystemFunctions.NOW, new ModifiedFunction(SourceSystemFunctions.NOW));
-        registerFunctionModifier(SourceSystemFunctions.PI, new ModifiedFunction(SourceSystemFunctions.PI));
-        registerFunctionModifier(SourceSystemFunctions.QUARTER, new ModifiedFunction(SourceSystemFunctions.QUARTER));
-        registerFunctionModifier(SourceSystemFunctions.RIGHT, new ModifiedFunction(SourceSystemFunctions.RIGHT));
-        registerFunctionModifier(SourceSystemFunctions.SIN, new ModifiedFunction(SourceSystemFunctions.SIN));
-        registerFunctionModifier(SourceSystemFunctions.SECOND, new ModifiedFunction(SourceSystemFunctions.SECOND));
-        registerFunctionModifier(SourceSystemFunctions.SQRT,new ModifiedFunction(SourceSystemFunctions.SQRT));
-        registerFunctionModifier(SourceSystemFunctions.TAN,new ModifiedFunction(SourceSystemFunctions.TAN));
-        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new ModifiedFunction(SourceSystemFunctions.TIMESTAMPADD));   
-        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new ModifiedFunction(SourceSystemFunctions.TIMESTAMPDIFF));    
-        registerFunctionModifier(SourceSystemFunctions.TRUNCATE,new ModifiedFunction(SourceSystemFunctions.TRUNCATE));   
-        registerFunctionModifier(SourceSystemFunctions.WEEK,new ModifiedFunction(SourceSystemFunctions.WEEK));          
+		registerFunctionModifier(SourceSystemFunctions.CONCAT, new EscapeSyntaxModifier());
+		registerFunctionModifier(SourceSystemFunctions.ACOS, new EscapeSyntaxModifier());
+		registerFunctionModifier(SourceSystemFunctions.ASIN, new EscapeSyntaxModifier());
+		registerFunctionModifier(SourceSystemFunctions.ATAN, new EscapeSyntaxModifier());
+		registerFunctionModifier(SourceSystemFunctions.COS, new EscapeSyntaxModifier());
+		registerFunctionModifier(SourceSystemFunctions.COT, new EscapeSyntaxModifier());
+		registerFunctionModifier(SourceSystemFunctions.CURDATE, new EscapeSyntaxModifier());		
+		registerFunctionModifier(SourceSystemFunctions.CURTIME, new EscapeSyntaxModifier());   
+		registerFunctionModifier(SourceSystemFunctions.DAYNAME, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new EscapeSyntaxModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.EXP, new EscapeSyntaxModifier());    
+        registerFunctionModifier(SourceSystemFunctions.HOUR, new EscapeSyntaxModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.LOG,new EscapeSyntaxModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.LOG10, new EscapeSyntaxModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.LEFT, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.MINUTE, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.MONTH, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.MONTHNAME, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.MOD, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.NOW, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.PI, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.QUARTER, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.RIGHT, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.SIN, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.SECOND, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.SQRT,new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.TAN, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new EscapeSyntaxModifier());   
+        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new EscapeSyntaxModifier());    
+        registerFunctionModifier(SourceSystemFunctions.TRUNCATE, new EscapeSyntaxModifier());   
+        registerFunctionModifier(SourceSystemFunctions.WEEK, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.DIVIDE_OP, new FunctionModifier() {
+			
+			@Override
+			public List<?> translate(Function function) {
+				if (function.getType() == TypeFacility.RUNTIME_TYPES.INTEGER || function.getType() == TypeFacility.RUNTIME_TYPES.LONG) {
+					Function result = convert.createConvertFunction(getLanguageFactory(), function, TypeFacility.getDataTypeName(function.getType()));
+					function.setType(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL);
+					return Arrays.asList(result);
+				}
+				return null;
+			}
+		});
 	}
 	
     @Override
@@ -227,28 +244,4 @@ public class InterSystemsCacheExecutionFactory extends JDBCExecutionFactory {
         return true;
     } 
     
-    static class ModifiedFunction extends FunctionModifier{
-    	String name;
-    	ModifiedFunction(String name){
-    		this.name = name;
-    	}
-    	
-		@Override
-		public List<?> translate(Function function) {
-			StringBuilder sb = new StringBuilder();
-			sb.append("{fn ").append(this.name).append('(');//$NON-NLS-1$ 
-			List<Expression> params = function.getParameters();
-			if (params != null && !params.isEmpty()) {
-				for (int i = 0; i < params.size(); i++) {
-					sb.append(params.get(0));
-					if (i < (params.size()-1)) {
-						sb.append(',');
-					}
-				}
-			}
-			sb.append(")}");//$NON-NLS-1$
-			
-			return Arrays.asList(sb); 
-		}
-    }
 }

@@ -29,24 +29,34 @@ import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.Arrays;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
 import org.teiid.query.unittest.TimestampUtil;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
+import org.teiid.translator.jdbc.TranslationHelper;
 import org.teiid.translator.jdbc.intersyscache.InterSystemsCacheExecutionFactory;
 /**
  */
-public class TestInterSystemsCacheConvertModifier {
+public class TestInterSystemsCacheTranslation {
 
     private static final LanguageFactory LANG_FACTORY = new LanguageFactory();
+    
+    private static InterSystemsCacheExecutionFactory TRANSLATOR; 
+
+    @BeforeClass
+    public static void setUp() throws TranslatorException {
+        TRANSLATOR = new InterSystemsCacheExecutionFactory();
+        TRANSLATOR.setUseBindVariables(false);
+        TRANSLATOR.start();
+    }
 
     public String helpGetString(Expression expr) throws Exception {
-    	InterSystemsCacheExecutionFactory trans = new InterSystemsCacheExecutionFactory();
-        trans.start();
-        SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
+        SQLConversionVisitor sqlVisitor = TRANSLATOR.getSQLConversionVisitor(); 
         sqlVisitor.append(expr);  
         
         return sqlVisitor.toString();        
@@ -113,7 +123,7 @@ public class TestInterSystemsCacheConvertModifier {
     // Source = DATE
 
     @Test public void testDateToTimestamp() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createDate(103, 10, 1), java.sql.Date.class), "timestamp", "to_date('2003-11-01', 'yyyy-mm-dd')"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createDate(103, 10, 1), java.sql.Date.class), "timestamp", "cast(to_date('2003-11-01', 'yyyy-mm-dd') AS timestamp)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // Source = TIME
@@ -133,6 +143,15 @@ public class TestInterSystemsCacheConvertModifier {
  // Source = LONG
     @Test public void testLongToBigInt() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(5, Long.class), "long", "cast(5 AS bigint)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testSubstring1() throws Exception {
+        String input = "SELECT intnum/intkey FROM BQT1.SMALLA"; //$NON-NLS-1$
+        String output = "SELECT cast((SmallA.IntNum / SmallA.IntKey) AS integer) FROM SmallA";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
     }
 
 }
