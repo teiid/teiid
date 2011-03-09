@@ -84,6 +84,7 @@ import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.FakeMetadataObject;
 import org.teiid.query.unittest.FakeMetadataStore;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorReport;
@@ -6752,6 +6753,17 @@ public class TestOptimizer {
     @Test public void testUpdatePushdownFails() { 
         helpPlan("update pm1.g1 set e1 = 1 where exists (select 1 from pm1.g2)", FakeMetadataFactory.example1Cached(), null, //$NON-NLS-1$
 			null, null, false); //$NON-NLS-1$
+    }
+    
+    /**
+     * Test to ensure that we don't create an invalid semijoin query when attempting to convert the subquery to a semijoin
+     */
+    @Test public void testInvalidGeneratedSemijoinQuery() throws Exception {
+    	String sql = "SELECT intkey FROM BQT1.SmallA AS A WHERE convert(shortvalue, integer) = (SELECT MAX(convert(shortvalue, integer)) FROM (select * from BQT1.SmallA) AS B WHERE b.intnum = a.intnum) ORDER BY intkey";
+    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+    	bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+    	TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.shortvalue, g_0.intnum, g_0.intkey FROM BQT1.SmallA AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
     }
 
 	public static final boolean DEBUG = false;

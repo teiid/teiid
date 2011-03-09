@@ -260,6 +260,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		RelationalPlan originalPlan = (RelationalPlan)plannedResult.query.getProcessorPlan();
         Number originalCardinality = originalPlan.getRootNode().getEstimateNodeCardinality();
         if (originalCardinality.floatValue() == NewCalculateCostUtil.UNKNOWN_VALUE) {
+            //TODO: this check isn't really accurate - exists and scalarsubqueries will always have cardinality 2/1
         	//if it's currently unknown, removing criteria won't make it any better
         	return current;
         }
@@ -271,7 +272,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		}
 		
 		//add an order by, which hopefully will get pushed down
-		plannedResult.query.setOrderBy(new OrderBy(plannedResult.rightExpressions));
+		plannedResult.query.setOrderBy(new OrderBy(plannedResult.rightExpressions).clone());
 		for (OrderByItem item : plannedResult.query.getOrderBy().getOrderByItems()) {
 			int index = plannedResult.query.getProjectedSymbols().indexOf(item.getSymbol());
 			item.setExpressionPosition(index);
@@ -481,7 +482,14 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		}
 
 		if (addGroupBy) {
-			plannedResult.query.setGroupBy(new GroupBy(plannedResult.rightExpressions));
+			LinkedHashSet<SingleElementSymbol> groupingSymbols = new LinkedHashSet<SingleElementSymbol>();
+			ArrayList<SingleElementSymbol> aggs = new ArrayList<SingleElementSymbol>();
+			for (Expression expr : (List<Expression>)plannedResult.rightExpressions) {
+				AggregateSymbolCollectorVisitor.getAggregates(expr, aggs, groupingSymbols);
+			}
+			if (!groupingSymbols.isEmpty()) {
+				plannedResult.query.setGroupBy((GroupBy) new GroupBy(new ArrayList<SingleElementSymbol>(groupingSymbols)).clone());
+			}
 		}
 		HashSet<SingleElementSymbol> projectedSymbols = new HashSet<SingleElementSymbol>();
 		for (SingleElementSymbol ses : plannedResult.query.getProjectedSymbols()) {
