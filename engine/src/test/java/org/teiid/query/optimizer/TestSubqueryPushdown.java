@@ -29,12 +29,14 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.rewriter.TestQueryRewriter;
 import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings("nls")
@@ -833,5 +835,19 @@ public class TestSubqueryPushdown {
             0       // UnionAll
         }); 
     } 
- 
+    
+    /**
+     * Test to ensure that we don't create an invalid semijoin query when attempting to convert the subquery to a semijoin
+     */
+    @Test public void testInvalidGeneratedSemijoinQuery() throws Exception {
+    	String sql = "SELECT intkey FROM BQT1.SmallA AS A WHERE convert(shortvalue, integer) = (SELECT MAX(convert(shortvalue, integer)) FROM (select * from BQT1.SmallA) AS B WHERE b.intnum = a.intnum) ORDER BY intkey";
+    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+    	bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+    	TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.shortvalue, g_0.intnum, g_0.intkey FROM BQT1.SmallA AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+    }
+
+    @Test public void testInvalidGeneratedSemijoinQuery1() throws Exception {
+    	TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 = (Select max(e2) from pm2.g2 where e1 = pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS MAX, e1 FROM pm2.g2 GROUP BY e1) AS X__1 WHERE (pm3.g1.e1 = X__1.e1) AND (pm3.g1.e2 = X__1.MAX)", FakeMetadataFactory.example4());
+    }
 }
