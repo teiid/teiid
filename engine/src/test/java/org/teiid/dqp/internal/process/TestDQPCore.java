@@ -241,7 +241,7 @@ public class TestDQPCore {
         	Thread.sleep(100);
         }
         assertEquals(ThreadState.IDLE, item.getThreadState());
-        assertTrue(item.resultsBuffer.getManagedRowCount() < 44);
+        assertTrue(item.resultsBuffer.getManagedRowCount() <= 46);
         //pull the rest of the results
         for (int j = 0; j < 48; j++) {
             item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
