@@ -164,7 +164,7 @@ public class FakeMetadataFactory {
     		model.setModelType(Model.Type.PHYSICAL);
     	}
     	else {
-    		model.setModelType(Model.Type.PHYSICAL);
+    		model.setModelType(Model.Type.VIRTUAL);
     	}
     	model.setVisible(true);
     	model.setSupportsMultiSourceBindings(false);

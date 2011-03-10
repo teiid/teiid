@@ -238,12 +238,13 @@ public class JDBCMetdataProcessor {
 			String columnName = columns.getString(4);
 			int type = columns.getInt(5);
 			String typeName = columns.getString(6);
-			int columnLength = columns.getInt(7);
-			String runtimeType = getRuntimeType(type, typeName, columnLength);
+			int columnSize = columns.getInt(7);
+			String runtimeType = getRuntimeType(type, typeName, columnSize);
 			//note that the resultset is already ordered by position, so we can rely on just adding columns in order
 			Column column = metadataFactory.addColumn(columnName, runtimeType, tableInfo.table);
 			column.setNameInSource(quoteName(columnName));
-			column.setPrecision(columnLength);
+			column.setPrecision(columnSize);
+			column.setLength(columnSize);
 			column.setNativeType(typeName);
 			column.setRadix(columns.getInt(10));
 			column.setNullType(NullType.values()[columns.getShort(11)]);
@@ -264,7 +265,7 @@ public class JDBCMetdataProcessor {
                     }
 				} else { //SQLServer quotes bit values
                     String trimedDefault = defaultValue.trim();
-                    if (defaultValue.startsWith("(") && defaultValue.endsWith(")")) {
+                    if (defaultValue.startsWith("(") && defaultValue.endsWith(")")) { //$NON-NLS-1$ //$NON-NLS-2$
                         trimedDefault = defaultValue.substring(1, defaultValue.length() - 1);
                     }
                     column.setDefaultValue(trimedDefault);
