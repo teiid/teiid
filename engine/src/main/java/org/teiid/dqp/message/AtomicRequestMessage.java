@@ -81,6 +81,8 @@ public class AtomicRequestMessage implements Serializable {
     private boolean exceptionOnMaxRows;
     private int maxRows;
     
+    private boolean serial;
+    
     private DQPWorkContext workContext;
     
     public AtomicRequestMessage() {
@@ -137,6 +139,14 @@ public class AtomicRequestMessage implements Serializable {
     public void setTransactionContext(TransactionContext context) {
         txnContext = context;
     }
+    
+    public boolean isSerial() {
+    	return serial || isTransactional();
+    }
+    
+    public void setSerial(boolean serial) {
+		this.serial = serial;
+	}
 
     public boolean isTransactional(){
         return this.txnContext != null && this.txnContext.getTransactionType() != Scope.NONE;

@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.teiid.client.RequestMessage;
@@ -46,6 +47,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.dqp.internal.process.DQPCore.FutureWork;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor.PrioritizedRunnable;
 import org.teiid.dqp.message.AtomicRequestID;
@@ -71,11 +73,44 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
 
 public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunnable {
 	
+	private final class WorkWrapper<T> implements
+			DQPCore.CompletionListener<T> {
+		
+		boolean submitted;
+		FutureWork<T> work;
+		
+		public WorkWrapper(FutureWork<T> work) {
+			this.work = work;
+		}
+
+		@Override
+		public void onCompletion(FutureWork<T> future) {
+			WorkWrapper<?> nextWork = null;
+			synchronized (queue) {
+				if (!submitted) {
+					return;
+				}
+				nextWork = queue.pollFirst();
+				if (nextWork == null) {
+					totalThreads--;
+				} else {
+					nextWork.submitted = true;
+				}
+			}
+			if (nextWork != null) {
+				dqpCore.addWork(nextWork.work);
+			}    		
+		}
+	}
+
 	private enum ProcessingState {NEW, PROCESSING, CLOSE}
 	private ProcessingState state = ProcessingState.NEW;
     
 	private enum TransactionState {NONE, ACTIVE, DONE}
 	private TransactionState transactionState = TransactionState.NONE;
+	
+	private int totalThreads;
+	private LinkedList<WorkWrapper<?>> queue = new LinkedList<WorkWrapper<?>>();
 	
 	/*
 	 * Obtained at construction time 
@@ -764,6 +799,33 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	@Override
 	public long getCreationTime() {
 		return processingTimestamp;
+	}	
+	
+	<T> FutureWork<T> addHighPriorityWork(Callable<T> callable) {
+		FutureWork<T> work = new FutureWork<T>(callable, PrioritizedRunnable.NO_WAIT_PRIORITY);
+		dqpCore.addWork(work);
+		return work;
 	}
+	
+    <T> FutureWork<T> addWork(Callable<T> callable, int priority) {
+    	FutureWork<T> work = new FutureWork<T>(callable, priority);
+    	WorkWrapper<T> wl = new WorkWrapper<T>(work);
+    	work.addCompletionListener(wl);
+    	synchronized (queue) {
+        	if (totalThreads < dqpCore.getUserRequestSourceConcurrency()) {
+        		dqpCore.addWork(work);
+        		totalThreads++;
+        		wl.submitted = true;
+        	} else {
+    	    	queue.add(wl);
+    	    	LogManager.logDetail(LogConstants.CTX_DQP, this.requestID, " reached max source concurrency of ", dqpCore.getUserRequestSourceConcurrency()); //$NON-NLS-1$
+        	}
+    	}
+    	return work;
+    }
+    
+    void scheduleWork(Runnable r, int priority, long delay) {
+    	dqpCore.scheduleWork(r, priority, delay);
+    }
 
 }

@@ -62,13 +62,21 @@
 		They handle NIO non-blocking IO operations as well as directly servicing any operation that can run without blocking.</para>
 		<para>For longer running operations, the socket threads queue with work the query engine.  
 		The query engine has two settings that determine its thread utilization.  
+		
 		<code>maxThreads</code> sets the total number of threads available for query engine work (processing plans, transaction control operations, processing source queries, etc.). 
 		You should consider increasing the maximum threads on systems with a large number of available processors and/or when it's common to issue non-transactional queries with that 
 		issue a large number of concurrent source requests.
+		
 		<code>maxActivePlans</code>, which should always be smaller than maxThreads, sets the number of the maxThreads 
 		that should be used for user query processing.  Increasing the maxActivePlans should be considered for workloads with a high number of long 
 		running queries and/or systems with a large number of available processors.  If memory issues arise from increasing the max threads and the
-		max active plans, then consider decreasing the processor/connector batch sizes to limit the base number of memory rows consumed by each plan.</para>
+		max active plans, then consider decreasing the processor/connector batch sizes to limit the base number of memory rows consumed by each plan.
+		
+		<code>userRequestSourceConcurrency</code>, which should always be smaller than maxThreads, sets the number of concurrently executing source queries per user request.
+		Setting this value to 1 forces serial execution of all source queries by the processing thread.  The default value is computed based upon 2*maxThreads/maxActivePlans. 
+		Using the respective default values, this means that each user request would be allowed 6 concurrently executing source queries.  If the default calculated value is
+		not applicable to your workload, for example if you have queries that generate more concurrent long running source queries, you should adjust this value.   
+		</para>
 	</section>
 	<section>
 		<title>Cache Tuning</title>

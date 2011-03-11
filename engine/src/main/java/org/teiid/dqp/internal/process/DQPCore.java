@@ -30,11 +30,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
 import javax.resource.spi.work.Work;
-import javax.resource.spi.work.WorkEvent;
-import javax.resource.spi.work.WorkListener;
 import javax.transaction.xa.Xid;
 
 import org.teiid.adminapi.Admin;
@@ -83,58 +82,26 @@ import org.teiid.query.tempdata.TempTableStore;
  */
 public class DQPCore implements DQP {
 	
-	//TODO: replace with FutureTask
-	public final static class FutureWork<T> implements Work, WorkListener, PrioritizedRunnable {
-		private final Callable<T> toCall;
-		private ResultsFuture<T> result = new ResultsFuture<T>();
-		private ResultsReceiver<T> receiver = result.getResultsReceiver();
+	public interface CompletionListener<T> {
+		void onCompletion(FutureWork<T> future);
+	}
+	
+	public final static class FutureWork<T> extends FutureTask<T> implements PrioritizedRunnable, Work {
 		private int priority;
 		private long creationTime = System.currentTimeMillis();
 		private DQPWorkContext workContext = DQPWorkContext.getWorkContext();
+		private List<CompletionListener<T>> completionListeners = new LinkedList<CompletionListener<T>>();
 
-		public FutureWork(Callable<T> processor, int priority) {
-			this.toCall = processor;
+		public FutureWork(final Callable<T> processor, int priority) {
+			super(processor);
 			this.priority = priority;
 		}
 		
-		public ResultsFuture<T> getResult() {
-			return result;
+		public FutureWork(final Runnable processor, T result, int priority) {
+			super(processor, result);
+			this.priority = priority;
 		}
 		
-		@Override
-		public void run() {
-			try {
-				receiver.receiveResults(toCall.call());
-			} catch (Throwable t) {
-				receiver.exceptionOccurred(t);
-			}
-		}
-
-		@Override
-		public void release() {
-			
-		}
-		
-		@Override
-		public void workAccepted(WorkEvent arg0) {
-			
-		}
-		
-		@Override
-		public void workCompleted(WorkEvent arg0) {
-			
-		}
-		
-		@Override
-		public void workRejected(WorkEvent arg0) {
-			receiver.exceptionOccurred(arg0.getException());
-		}
-		
-		@Override
-		public void workStarted(WorkEvent arg0) {
-			
-		}
-
 		@Override
 		public int getPriority() {
 			return priority;
@@ -149,6 +116,24 @@ public class DQPCore implements DQP {
 		public DQPWorkContext getDqpWorkContext() {
 			return workContext;
 		}
+		
+		@Override
+		public void release() {
+			
+		}
+		
+		void addCompletionListener(CompletionListener<T> completionListener) {
+			this.completionListeners.add(completionListener);
+		}
+		
+		@Override
+		protected void done() {
+			for (CompletionListener<T> listener : this.completionListeners) {
+				listener.onCompletion(this);
+			}
+			completionListeners.clear();
+		}
+		
 	}	
 	
 	static class ClientState {
@@ -200,6 +185,7 @@ public class DQPCore implements DQP {
     
     private int maxActivePlans = DQPConfiguration.DEFAULT_MAX_ACTIVE_PLANS;
     private int currentlyActivePlans;
+    private int userRequestSourceConcurrency;
     private LinkedList<RequestWorkItem> waitingPlans = new LinkedList<RequestWorkItem>();
     private CacheFactory cacheFactory;
 
@@ -690,8 +676,18 @@ public class DQPCore implements DQP {
         prepPlanCache = new SessionAwareCache<PreparedPlan>(this.cacheFactory, SessionAwareCache.Type.PREPAREDPLAN,  new CacheConfiguration(Policy.LRU, 60*60*8, config.getPreparedPlanCacheMaxCount(), "PreparedCache")); //$NON-NLS-1$
         prepPlanCache.setBufferManager(this.bufferManager);
 		
-        
         this.processWorkerPool = new ThreadReuseExecutor(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, config.getMaxThreads());
+        this.maxActivePlans = config.getMaxActivePlans();
+        
+        if (this.maxActivePlans > config.getMaxThreads()) {
+        	LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.getString("DQPCore.invalid_max_active_plan", this.maxActivePlans, config.getMaxThreads())); //$NON-NLS-1$
+        	this.maxActivePlans = config.getMaxThreads();
+        }
+        
+        this.userRequestSourceConcurrency = config.getUserRequestSourceConcurrency();
+        if (this.userRequestSourceConcurrency < 1) {
+        	this.userRequestSourceConcurrency = Math.min(config.getMaxThreads(), 2*config.getMaxThreads()/this.maxActivePlans);
+        }
         
         if (cacheFactory.isReplicated()) {
         	matTables = new SessionAwareCache<CachedResults>(this.cacheFactory, SessionAwareCache.Type.RESULTSET, new CacheConfiguration(Policy.EXPIRATION, -1, -1, "MaterilizationTables")); //$NON-NLS-1$
@@ -786,10 +782,23 @@ public class DQPCore implements DQP {
 		return addWork(processor, 10);
 	}
 
-	<T> ResultsFuture<T> addWork(Callable<T> processor, int priority) {
-		FutureWork<T> work = new FutureWork<T>(processor, priority);
+	<T> ResultsFuture<T> addWork(final Callable<T> processor, int priority) {
+		final ResultsFuture<T> result = new ResultsFuture<T>();
+		final ResultsReceiver<T> receiver = result.getResultsReceiver();
+		Runnable r = new Runnable() {
+
+			@Override
+			public void run() {
+				try {
+					receiver.receiveResults(processor.call());
+				} catch (Throwable t) {
+					receiver.exceptionOccurred(t);
+				}
+			}
+		};
+		FutureWork<T> work = new FutureWork<T>(r, null, priority);
 		this.addWork(work);
-		return work.getResult();
+		return result;
 	}
 	
 	// global txn
@@ -850,6 +859,18 @@ public class DQPCore implements DQP {
 	
 	public void setCacheFactory(CacheFactory factory) {
 		this.cacheFactory = factory;
+	}
+	
+	public int getUserRequestSourceConcurrency() {
+		return userRequestSourceConcurrency;
+	}
+	
+	void setUserRequestSourceConcurrency(int userRequestSourceConcurrency) {
+		this.userRequestSourceConcurrency = userRequestSourceConcurrency;
+	}
+	
+	public int getMaxActivePlans() {
+		return maxActivePlans;
 	}
 	
 }

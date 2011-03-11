@@ -569,17 +569,7 @@ public class Evaluator {
                 }
 
             } else { // value is null
-
-                switch(criteria.getPredicateQuantifier()) {
-                    case SubqueryCompareCriteria.ALL:
-                        // null counts as unknown; one unknown means the whole thing is unknown
-                        return null;
-                    case SubqueryCompareCriteria.SOME:
-                        result = null;
-                        break;
-                    default:
-                        throw new ExpressionEvaluationException("ERR.015.006.0057", QueryPlugin.Util.getString("ERR.015.006.0057", criteria.getPredicateQuantifier())); //$NON-NLS-1$ //$NON-NLS-2$
-                }
+                result = null;
             }
 
 

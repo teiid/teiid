@@ -37,7 +37,9 @@
 	    </UL>
 	<LI><B>ARRAYTABLE</B> - the ARRAYTABLE table function was added to simplify array value extraction into a tabular format.
 	<LI><B>Ingres</B> - Ingres database translator is now available to use as supported source under Teiid.
+	<LI><B>Optional Join Enhancements</B> - the optional join hint no longer requires the use of ANSI joins and can will not remove optional bridging tables that are used by two other tables that are required.
 	<LI><B>InterSystems Cache</B> - InterSystems Cache database translator is now available to use as supported source under Teiid.
+	<LI><B>userRequestSourceConcurrency</B> - was added to control the number of concurrent source queries allowed for each user request.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -102,6 +104,11 @@
 <h2><a name="Configuration">Configuration Issues</a></h2>
 
 See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
+
+<h4>from 7.3</h4>
+<ul>
+  <LI>SocketConfiguration.maxSocketThreads will interpret a setting of 0 to mean use the system default of max available processors.  
+</ul>
 
 <h4>from 7.2</h4>
 <ul>

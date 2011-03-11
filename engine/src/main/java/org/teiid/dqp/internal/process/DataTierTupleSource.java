@@ -27,12 +27,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.activation.DataSource;
 import javax.xml.transform.Source;
 
 import org.teiid.client.SourceWarning;
-import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.TupleSource;
@@ -51,6 +51,7 @@ import org.teiid.core.types.XMLType;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorWork;
+import org.teiid.dqp.internal.process.DQPCore.FutureWork;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.query.processor.xml.XMLUtil;
@@ -86,13 +87,15 @@ public class DataTierTupleSource implements TupleSource {
     private int index;
     private int rowsProcessed;
     private AtomicResultsMessage arm;
-    private boolean closed;
+    private AtomicBoolean closed = new AtomicBoolean();
+    private volatile boolean canAsynchClose;
     private volatile boolean canceled;
+    private volatile boolean cancelAsynch;
     private boolean executed;
     private volatile boolean done;
     private boolean explicitClose;
     
-    private volatile ResultsFuture<AtomicResultsMessage> futureResult;
+    private volatile FutureWork<AtomicResultsMessage> futureResult;
     private volatile boolean running;
     
     public DataTierTupleSource(AtomicRequestMessage aqr, RequestWorkItem workItem, ConnectorWork cwi, DataTierManagerImpl dtm, int limit) {
@@ -114,23 +117,19 @@ public class DataTierTupleSource implements TupleSource {
         
     	Assertion.isNull(workItem.getConnectorRequest(aqr.getAtomicRequestID()));
         workItem.addConnectorRequest(aqr.getAtomicRequestID(), this);
-        if (!aqr.isTransactional()) {
+        if (!aqr.isSerial()) {
         	addWork();
         }
     }
 
 	private void addWork() {
-		futureResult = dtm.addWork(new Callable<AtomicResultsMessage>() {
+		this.canAsynchClose = true;
+		futureResult = workItem.addWork(new Callable<AtomicResultsMessage>() {
 			@Override
 			public AtomicResultsMessage call() throws Exception {
 				return getResults();
 			}
 		}, 100);
-		futureResult.addCompletionListener(new ResultsFuture.CompletionListener<AtomicResultsMessage>() {
-			public void onCompletion(ResultsFuture<AtomicResultsMessage> future) {
-				workItem.moreWork();
-			}
-		});
 	}
 
 	private List correctTypes(List row) throws TransformationException {
@@ -208,7 +207,7 @@ public class DataTierTupleSource implements TupleSource {
     		if (arm == null) {
     			AtomicResultsMessage results = null;
     			try {
-	    			if (futureResult != null || !aqr.isTransactional()) {
+	    			if (futureResult != null || !aqr.isSerial()) {
 	    				results = asynchGet();
 	    			} else {
 	    				results = getResults();
@@ -216,7 +215,7 @@ public class DataTierTupleSource implements TupleSource {
     			} catch (TranslatorException e) {
     				results = exceptionOccurred(e, true);
     			} catch (DataNotAvailableException e) {
-    				dtm.scheduleWork(new Runnable() {
+    				workItem.scheduleWork(new Runnable() {
     					@Override
     					public void run() {
 							workItem.moreWork();
@@ -250,7 +249,7 @@ public class DataTierTupleSource implements TupleSource {
 		if (!futureResult.isDone()) {
 			throw BlockedException.INSTANCE;
 		}
-		ResultsFuture<AtomicResultsMessage> currentResults = futureResult;
+		FutureWork<AtomicResultsMessage> currentResults = futureResult;
 		futureResult = null;
 		AtomicResultsMessage results = null;
 		try {
@@ -284,6 +283,9 @@ public class DataTierTupleSource implements TupleSource {
 			TranslatorException {
 		AtomicResultsMessage results = null;
 		try {
+			if (cancelAsynch) {
+				return null;
+			}
 			running = true;
 			if (!executed) {
 				results = cwi.execute();
@@ -292,13 +294,20 @@ public class DataTierTupleSource implements TupleSource {
 				results = cwi.more();
 			}
 		} finally {
+			if (!cancelAsynch) {
+				workItem.moreWork();
+			}
+			canAsynchClose = false;
+			if (closed.get()) {
+				cwi.close();
+			}
 			running = false;
 		}
 		return results;
 	}
     
     public boolean isQueued() {
-    	ResultsFuture<AtomicResultsMessage> future = futureResult;
+    	FutureWork<AtomicResultsMessage> future = futureResult;
     	return !running && future != null && !future.isDone();
     }
 
@@ -311,32 +320,20 @@ public class DataTierTupleSource implements TupleSource {
 	}
     
     public void fullyCloseSource() {
-    	if (!closed) {
-    		if (cwi != null) {
-		    	workItem.closeAtomicRequest(this.aqr.getAtomicRequestID());
-		    	if (!aqr.isTransactional()) {
-		    		if (futureResult != null && !futureResult.isDone()) {
-		    			futureResult.addCompletionListener(new ResultsFuture.CompletionListener<AtomicResultsMessage>() {
-		    				@Override
-		    				public void onCompletion(
-		    						ResultsFuture<AtomicResultsMessage> future) {
-		    					cwi.close(); // there is a small chance that this will be done in the processing thread
-		    				}
-						});
-		    		} else {
-		    			dtm.addWork(new Callable<Void>() {
-		    				@Override
-		    				public Void call() throws Exception {
-		    					cwi.close();
-		    					return null;
-		    				}
-		    			}, 0);
-		    		}
-		    	} else {
-		    		this.cwi.close();
-		    	}
-    		}
-			closed = true;
+		cancelAsynch = true;
+    	if (closed.compareAndSet(false, true)) {
+	    	workItem.closeAtomicRequest(this.aqr.getAtomicRequestID());
+	    	if (aqr.isSerial()) {
+	    		this.cwi.close();
+	    	} else if (!canAsynchClose) {
+	    		workItem.addHighPriorityWork(new Callable<Void>() {
+    				@Override
+    				public Void call() throws Exception {
+    					cwi.close();
+    					return null;
+    				}
+    			});
+	    	}
     	}
     }
     
@@ -346,15 +343,14 @@ public class DataTierTupleSource implements TupleSource {
     
     public void cancelRequest() {
     	this.canceled = true;
-    	if (this.cwi != null) {
-    		this.cwi.cancel();
-    	}
+		this.cwi.cancel();
     }
 
     /**
      * @see TupleSource#closeSource()
      */
     public void closeSource() {
+    	cancelAsynch = true;
     	if (!explicitClose) {
         	fullyCloseSource();
     	}

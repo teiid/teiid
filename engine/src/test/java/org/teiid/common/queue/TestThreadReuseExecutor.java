@@ -215,10 +215,10 @@ public class TestThreadReuseExecutor {
     	synchronized (pool) {
         	pool.notifyAll();
 		}
-    	work1.getResult().get();
-    	work2.getResult().get();
-    	work3.getResult().get();
-    	work4.getResult().get();
+    	work1.get();
+    	work2.get();
+    	work3.get();
+    	work4.get();
     	assertEquals(Integer.valueOf(3), order.remove());
     	assertEquals(Integer.valueOf(2), order.remove());
     	assertEquals(Integer.valueOf(4), order.remove());

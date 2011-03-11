@@ -27,6 +27,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
@@ -53,11 +54,19 @@ public class AutoGenDataService extends ConnectorManager{
     private SourceCapabilities caps;
 	public boolean throwExceptionOnExecute;
 	public int dataNotAvailable = -1;
+	public int sleep;
+    private final AtomicInteger executeCount = new AtomicInteger();
+    private final AtomicInteger closeCount = new AtomicInteger();
+
     
     public AutoGenDataService() {
     	super("FakeConnector","FakeConnector"); //$NON-NLS-1$ //$NON-NLS-2$
         caps = TestOptimizer.getTypicalCapabilities();
     }
+    
+    public void setSleep(int sleep) {
+		this.sleep = sleep;
+	}
     
     public void setCaps(SourceCapabilities caps) {
 		this.caps = caps;
@@ -88,6 +97,14 @@ public class AutoGenDataService extends ConnectorManager{
 			
 			@Override
 			public AtomicResultsMessage execute() throws TranslatorException {
+				executeCount.incrementAndGet();
+				if (sleep > 0) {
+					try {
+						Thread.sleep(sleep);
+					} catch (InterruptedException e) {
+						throw new RuntimeException(e);
+					}
+				}
 				if (throwExceptionOnExecute) {
 		    		throw new TranslatorException("Connector Exception"); //$NON-NLS-1$
 		    	}
@@ -101,7 +118,7 @@ public class AutoGenDataService extends ConnectorManager{
 			
 			@Override
 			public void close() {
-				
+				closeCount.incrementAndGet();
 			}
 			
 			@Override
@@ -111,6 +128,14 @@ public class AutoGenDataService extends ConnectorManager{
 			
 		};
     }
+    
+    public AtomicInteger getExecuteCount() {
+		return executeCount;
+	}
+    
+    public AtomicInteger getCloseCount() {
+		return closeCount;
+	}
     
     private List[] createResults(List symbols) {
         List[] rows = new List[this.rows];

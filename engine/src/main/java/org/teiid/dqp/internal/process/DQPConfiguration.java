@@ -38,6 +38,7 @@ public class DQPConfiguration{
     public static final int DEFAULT_MAX_PROCESS_WORKERS = 64;
 	public static final int DEFAULT_MAX_SOURCE_ROWS = -1;
 	public static final int DEFAULT_MAX_ACTIVE_PLANS = 20;
+	public static final int DEFAULT_USER_REQUEST_SOURCE_CONCURRENCY = 0;
     
 	private int maxThreads = DEFAULT_MAX_PROCESS_WORKERS;
 	private int timeSliceInMilli = DEFAULT_PROCESSOR_TIMESLICE;
@@ -52,6 +53,7 @@ public class DQPConfiguration{
 	private int maxActivePlans = DEFAULT_MAX_ACTIVE_PLANS;
 	private CacheConfiguration resultsetCacheConfig;
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
+    private int userRequestSourceConcurrency = DEFAULT_USER_REQUEST_SOURCE_CONCURRENCY;
 
 	@ManagementProperty(description="Max active plans (default 20).  Increase this value, and max threads, on highly concurrent systems - but ensure that the underlying pools can handle the increased load without timeouts.")
 	public int getMaxActivePlans() {
@@ -60,6 +62,18 @@ public class DQPConfiguration{
 	
 	public void setMaxActivePlans(int maxActivePlans) {
 		this.maxActivePlans = maxActivePlans;
+	}
+	
+	@ManagementProperty(description="Max source query concurrency per user request (default 0).  " +
+			"0 indicates use the default calculated value based on max active plans and max threads - approximately 2*(max threads)/(max active plans). " +
+			"1 forces serial execution in the processing thread, just as is done for a transactional request. " +
+			"Any number greater than 1 limits the maximum number of concurrently executing source requests accordingly.")
+	public int getUserRequestSourceConcurrency() {
+		return userRequestSourceConcurrency;
+	}
+	
+	public void setUserRequestSourceConcurrency(int userRequestSourceConcurrency) {
+		this.userRequestSourceConcurrency = userRequestSourceConcurrency;
 	}
 	
 	@ManagementProperty(description="Process pool maximum thread count. (default 64)")

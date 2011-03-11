@@ -74,6 +74,8 @@ public class ThreadReuseExecutor implements Executor {
 	
 	public interface PrioritizedRunnable extends Runnable {
 		
+		final static int NO_WAIT_PRIORITY = 0;
+		
 		int getPriority();
 		
 		long getCreationTime();

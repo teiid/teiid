@@ -92,6 +92,11 @@
         <property name="maxThreads">64</property>
         <!-- Max active plans (default 20).  Increase this value on highly concurrent systems - but ensure that the underlying pools can handle the increased load without timeouts. -->
         <property name="maxActivePlans">20</property>
+	    <!-- Max source query concurrency per user request (default 0).  
+			 0 indicates use the default calculated value based on max active plans and max threads - approximately 2*(max threads)/(max active plans).  
+			 1 forces serial execution in the processing thread, just as is done for a transactional request.  
+			 Any number greater than 1 limits the maximum number of concurrently executing source requests accordingly. -->
+	    <property name="userRequestSourceConcurrency">0</property>
         <!-- Query processor time slice, in milliseconds. (default 2000) -->
         <property name="timeSliceInMilli">2000</property>
         <!-- Maximum allowed fetch size, set via JDBC. User requested value ignored above this value. (default 20480) -->

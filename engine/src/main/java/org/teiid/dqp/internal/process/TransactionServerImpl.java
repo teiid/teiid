@@ -248,7 +248,7 @@ public class TransactionServerImpl implements TransactionService {
 							}
 						}, 0);
 						workManager.doWork(work, WorkManager.INDEFINITE, tc, null);
-						tc.setTransaction(work.getResult().get());
+						tc.setTransaction(work.get());
 					}
 				} catch (NotSupportedException e) {
 					throw new XATransactionException(e, XAException.XAER_INVAL);

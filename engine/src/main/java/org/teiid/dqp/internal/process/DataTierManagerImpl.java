@@ -30,13 +30,11 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.client.RequestMessage;
-import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleSource;
@@ -360,6 +358,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         aqr.setMaxResultRows(requestMgr.getMaxSourceRows());
         aqr.setExceptionOnMaxRows(requestMgr.isExceptionOnMaxSourceRows());
         aqr.setPartialResults(request.supportsPartialResults());
+        aqr.setSerial(requestMgr.getUserRequestSourceConcurrency() == 1);
         if (nodeID >= 0) {
         	aqr.setTransactionContext(workItem.getTransactionContext());
         }
@@ -389,14 +388,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
     	throw new UnsupportedOperationException();
     }
 
-    <T> ResultsFuture<T> addWork(Callable<T> callable, int priority) {
-    	return requestMgr.addWork(callable, priority);
-    }
-    
-    void scheduleWork(Runnable r, int priority, long delay) {
-    	requestMgr.scheduleWork(r, priority, delay);
-    }
-    
     BufferManager getBufferManager() {
 		return bufferService.getBufferManager();
 	}

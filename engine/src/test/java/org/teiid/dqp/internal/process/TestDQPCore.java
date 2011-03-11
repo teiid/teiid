@@ -49,7 +49,7 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
-
+@SuppressWarnings("nls")
 public class TestDQPCore {
 
     private DQPCore core;
@@ -70,7 +70,10 @@ public class TestDQPCore {
         core.setCacheFactory(new DefaultCacheFactory());
         core.setTransactionService(new FakeTransactionService());
         
-        core.start(new DQPConfiguration());
+        DQPConfiguration config = new DQPConfiguration();
+        config.setMaxActivePlans(1);
+        config.setUserRequestSourceConcurrency(2);
+        core.start(config);
     }
     
     @After public void tearDown() throws Exception {
@@ -85,6 +88,11 @@ public class TestDQPCore {
         msg.setPartialResults(false);
         msg.setExecutionId(100);
         return msg;
+    }
+    
+    @Test public void testConfigurationSets() {
+    	assertEquals(1, core.getMaxActivePlans());
+    	assertEquals(2, core.getUserRequestSourceConcurrency());
     }
 
     @Test public void testRequest1() throws Exception {
@@ -272,6 +280,35 @@ public class TestDQPCore {
         assertEquals(100, item.resultsBuffer.getRowCount());
     }
     
+    @Test public void testSourceConcurrency() throws Exception {
+    	//setup default of 2
+    	agds.setSleep(100);
+    	StringBuffer sql = new StringBuffer();
+    	int branches = 20;
+    	for (int i = 0; i < branches; i++) {
+    		if (i > 0) {
+    			sql.append(" union all ");
+    		}
+    		sql.append("select intkey || " + i + " from bqt1.smalla");
+    	}
+    	sql.append(" limit 2");
+    	helpExecute(sql.toString(), "a");
+    	//there's isn't a hard guarantee that only two requests will get started
+    	assertTrue(agds.getExecuteCount().get() <= 6);
+    	
+    	//20 concurrent
+    	core.setUserRequestSourceConcurrency(20);
+    	agds.getExecuteCount().set(0);
+    	helpExecute(sql.toString(), "a");
+    	assertEquals(20, agds.getExecuteCount().get());
+    	
+    	//serial
+    	core.setUserRequestSourceConcurrency(1);
+    	agds.getExecuteCount().set(0);
+    	helpExecute(sql.toString(), "a");
+    	assertEquals(1, agds.getExecuteCount().get());
+    }
+    
 	public void helpTestVisibilityFails(String sql) throws Exception {
         RequestMessage reqMsg = exampleRequestMessage(sql); 
         reqMsg.setTxnAutoWrapMode(RequestMessage.TXN_WRAP_OFF);
@@ -295,7 +332,7 @@ public class TestDQPCore {
 
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
         assertNotNull(core.getClientState(String.valueOf(sessionid), false));
-        ResultsMessage results = message.get(5000, TimeUnit.MILLISECONDS);
+        ResultsMessage results = message.get(500000, TimeUnit.MILLISECONDS);
         core.terminateSession(String.valueOf(sessionid));
         assertNull(core.getClientState(String.valueOf(sessionid), false));
         if (results.getException() != null) {
