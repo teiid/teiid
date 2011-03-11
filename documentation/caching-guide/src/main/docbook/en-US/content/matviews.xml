@@ -60,7 +60,7 @@
 			Constraints or other database features cannot be added to internal materialization tables.</para>
 			</listitem>
 			<listitem><para>The data volume is large.  Internal materialization (and temp tables in general) have memory overhead for each page.  
-			A rough guideline is that there can be 100 million rows in all materializated tables across all VDBs for every gigabyte of heap.</para>
+			A rough guideline is that there can be 100 million rows in all materialized tables across all VDBs for every gigabyte of heap.</para>
 			</listitem>
 		</itemizedlist>
 		</para>
@@ -73,7 +73,7 @@
 		<para>External materialized views cache their data in an external database
 			system.  External materialized views give the administrator full control over the loading and refresh strategies.</para>
 		<para>Since the actual physical cache for materialized views is
-			maintained external to the Teiid system, there is no pre-defined
+			maintained external to the Teiid system, there is no predefined
 			policy for clearing and managing the cache.  These policies will be
 			defined and enforced by administrators of the Teiid system.
 		</para>
@@ -102,7 +102,7 @@
 		<para>Internal materialization creates Teiid temporary tables to hold the materialized table.  While these tables are not fully durable, they perform 
 		well in most circumstances and the data is present at each Teiid instance which removes the single point of failure and network overhead of an external database. 
 		Internal materialization also provides more built-in facilities for refreshing and monitoring.</para>
-		<para>The cache hint, when used in the context of an internal materialized view transformation query, provides the ability to fine tune the materializated table.  
+		<para>The cache hint, when used in the context of an internal materialized view transformation query, provides the ability to fine tune the materialized table.  
 		The pref_mem option also applies to internal materialized views.  Internal table index pages already have a memory preference, so the perf_mem option indicates that the data pages should prefer memory as well.</para>
 		<section>
 			<title>Loading And Refreshing</title>
@@ -110,7 +110,7 @@
 			All other queries against the materialized view will block until the load completes.
 			In some situations administrators may wish to better control when the cache is loaded with a call to <code>SYSADMIN.refreshMatView</code>.  The initial load may itself trigger the initial load
 			of dependent materialized views.  After the initial load user queries against the materialized view table will only block if it is in an invalid state.
-			The valid state may also be controled through the <code>SYSADMIN.refreshMatView</code> procedure.
+			The valid state may also be controlled through the <code>SYSADMIN.refreshMatView</code> procedure.
 			<example>
 				<title>Invalidating Refresh</title>
 				<programlisting>CALL SYSADMIN.refreshMatView(viewname=>'schema.matview', invalidate=>true)</programlisting>
@@ -149,9 +149,9 @@
 				To be updatable the materialized view must have a single column primary key.  Composite keys are not yet supported by <code>SYSADMIN.refreshMatViewRow</code>.
 				<example>
 					<title>Updatable Transformation Query</title>
-					<para>Transofrmation Query: <programlisting>/*+ cache(updatable) */ select t.col, t1.col from t, t1 where t.id = t1.id</programlisting></para>
+					<para>Transformation Query: <programlisting>/*+ cache(updatable) */ select t.col, t1.col from t, t1 where t.id = t1.id</programlisting></para>
 					<para>Update SQL: <programlisting>CALL SYSADMIN.updateMatViewRow(viewname=>'schema.matview', key=>5)</programlisting></para>
-					<para>Given that the schema.matview defines an interger column col as it's primary key, the update will check the live source(s) for the row values.</para>
+					<para>Given that the schema.matview defines an integer column col as its primary key, the update will check the live source(s) for the row values.</para>
 				</example>
 				The update query will not use dependent materialized view tables, so care should be taken to ensure that getting a single 
 				row from this transformation query performs well.  See the Reference Guide for information on controlling dependent joins, which may be applicable to increasing the performance of retrieving a single row.
@@ -169,10 +169,10 @@
 			These indexes are created as non-unique even for unique constraints since the materialized table is not intended as an enforcement point for data integrity 
 			and when updatable the table may not be consistent with underlying values and thus unable to satisfy constraints.  The primary key (if it exists) of the view will automatically be part of the covered columns for the index.</para>
 			<para>The secondary indexes are always created as trees - bitmap or hash indexes are not supported.  Teiid's metadata for indexes is currently limited.  
-			We are not currently able to capture additional information, such as specifying the evluated expressions, sort direction, additional columns to cover, etc.  You may workaround some of these limitations though.  
+			We are not currently able to capture additional information, such as specifying the evaluated expressions, sort direction, additional columns to cover, etc.  You may workaround some of these limitations though.  
 			<itemizedlist>
-				<listitem><para>If a function based index is needed, consider adding another column to the view that projects the funciton expression, then place an index on that new column.  
-			Queries to the view will need to be modified as appropiate though to make use of the new column/index.</para></listitem>
+				<listitem><para>If a function based index is needed, consider adding another column to the view that projects the function expression, then place an index on that new column.  
+			Queries to the view will need to be modified as appropriate though to make use of the new column/index.</para></listitem>
 				<listitem><para>If additional covered columns are needed, they may simply be added to the index columns.  This however is only applicable to comparable types.  
 				Adding additional columns will increase the amount of space used by the index, but may allow 
 			its usage to result in higher performance when only the covered columns are used and the main table is not consulted.</para></listitem>
@@ -184,10 +184,10 @@
 			<para>Each member in a cluster maintains its own copy of each materialized table and associated indexes.  
 			With cache clustering enabled, an additional snapshot copy of the table is maintained for loading by other members.  
 			An attempt is made to ensure each member receives the same full refresh events as the others.  
-			Full consistency for updatable materialized views however is not guarenteed.  
+			Full consistency for updatable materialized views however is not guaranteed.  
 			Periodic full refreshes of updatable materialized view tables helps ensure consistency among members.
 			<note><para>Loads of materialized tables are not coordinated across the cluster.  It is possible for the same ttl expiration to trigger a load at each member.</para></note> 
-		    In many clustered scenarios using external materialization is advantagious to fully control the loading of the tables and to have materialized data that is durable.
+		    In many clustered scenarios using external materialization is advantageous to fully control the loading of the tables and to have materialized data that is durable.
 		    </para>
 		</section>
 	</section>

@@ -51,7 +51,7 @@
 		<itemizedlist>
 			<title>Reasons to use a materialized view:</title>
 			<listitem>
-				<para>More control of the possible return columns. Code tables will create a mat view for each key/value pair. If there are multiple return columns it would be better to have a single materialized view.</para>
+				<para>More control of the possible return columns. Code tables will create a materialized view for each key/value pair. If there are multiple return columns it would be better to have a single materialized view.</para>
 			</listitem>
 			<listitem>
 				<para>Proper materialized views have built-in system procedure/table support.</para>
@@ -75,7 +75,7 @@
 				<para>Designate the appropriate column(s) as the primary key.</para>
 				</listitem>
 			<listitem>
-				<para>Set the materailized property to true.</para>
+				<para>Set the materialized property to true.</para>
 				</listitem>
 			<listitem>
 				<para>Add a cache hint to the transformation query.  To mimic the behavior of the implicit internal materialized view created by the lookup function, use the <link linkend="cache-hint">cache hint</link> <code>/*+ cache(pref_mem) */</code> to indicate that the table data pages should prefer to remain in memory.</para>
