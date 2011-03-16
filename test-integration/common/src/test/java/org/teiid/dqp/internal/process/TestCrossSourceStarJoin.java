@@ -67,7 +67,7 @@ public class TestCrossSourceStarJoin {
                 new String[] { "PRODUCT", "CURRENCY", "BOOK", "AMOUNT"}, //$NON-NLS-1$
                 new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.BIG_DECIMAL});
 
-        f_cols.get(0).setDistinctValues(200);
+        f_cols.get(0).setDistinctValues(400);
         f_cols.get(1).setDistinctValues(228);
         f_cols.get(2).setDistinctValues(141496);
         createKey(KeyRecord.Type.Index, "idx_p", f, f_cols.subList(0, 1));
@@ -79,6 +79,8 @@ public class TestCrossSourceStarJoin {
                 new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
         
         createKey(KeyRecord.Type.Primary, "pk", b, b_cols.subList(0, 1));
+        b_cols.get(1).setDistinctValues(70000);
+        
         //createKey(KeyRecord.Type.Unique, "uk", b, b_cols.subList(1, 2));
 
         List<Column> c_cols = createElements(c,
@@ -102,9 +104,18 @@ public class TestCrossSourceStarJoin {
         
         TestOptimizer.helpPlan(sql, metadata, new String[] {
         		"SELECT g_0.CurrencyCode AS c_0 FROM sybase.s2 AS g_0 WHERE g_0.Name = 'abc' ORDER BY c_0", 
-        		"SELECT g_0.BOOKID FROM sybase.s1 AS g_0 WHERE g_0.Name = 'xyz'", 
+        		"SELECT g_0.BOOKID AS c_0 FROM sybase.s1 AS g_0 WHERE g_0.Name = 'xyz' ORDER BY c_0", 
         		"SELECT g_0.PRODUCTID AS c_0, g_0.Description AS c_1 FROM sybase.s3 AS g_0 ORDER BY c_0", 
-        		"SELECT g_0.CURRENCY AS c_0, g_0.PRODUCT AS c_1, g_0.BOOK AS c_2, SUM(g_0.AMOUNT) AS c_3 FROM oracle.o1 AS g_0 WHERE (g_0.CURRENCY IN (<dependent values>)) AND (g_0.PRODUCT IN (<dependent values>)) AND (g_0.BOOK IN (<dependent values>)) GROUP BY g_0.CURRENCY, g_0.PRODUCT, g_0.BOOK ORDER BY c_0 NULLS FIRST"
+        		"SELECT g_0.BOOK AS c_0, g_0.CURRENCY AS c_1, g_0.PRODUCT AS c_2, SUM(g_0.AMOUNT) AS c_3 FROM oracle.o1 AS g_0 WHERE (g_0.BOOK IN (<dependent values>)) AND (g_0.CURRENCY IN (<dependent values>)) AND (g_0.PRODUCT IN (<dependent values>)) GROUP BY g_0.BOOK, g_0.CURRENCY, g_0.PRODUCT ORDER BY c_0 NULLS FIRST"
+        }, finder, ComparisonMode.EXACT_COMMAND_STRING);
+        
+        //test that aggregate will not be staged
+        f.setCardinality(527696);
+        TestOptimizer.helpPlan(sql, metadata, new String[] {
+        		"SELECT g_0.CurrencyCode AS c_0 FROM sybase.s2 AS g_0 WHERE g_0.Name = 'abc' ORDER BY c_0", 
+        		"SELECT g_0.BOOKID AS c_0 FROM sybase.s1 AS g_0 WHERE g_0.Name = 'xyz' ORDER BY c_0", 
+        		"SELECT g_0.PRODUCTID AS c_0, g_0.Description AS c_1 FROM sybase.s3 AS g_0 ORDER BY c_0", 
+        		"SELECT g_0.BOOK AS c_0, g_0.CURRENCY AS c_1, g_0.PRODUCT AS c_2, g_0.AMOUNT AS c_3 FROM oracle.o1 AS g_0 WHERE (g_0.BOOK IN (<dependent values>)) AND (g_0.CURRENCY IN (<dependent values>)) AND (g_0.PRODUCT IN (<dependent values>)) ORDER BY c_0 NULLS FIRST"
         }, finder, ComparisonMode.EXACT_COMMAND_STRING);
     } 
 

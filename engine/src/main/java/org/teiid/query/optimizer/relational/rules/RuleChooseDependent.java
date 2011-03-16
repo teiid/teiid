@@ -23,6 +23,7 @@
 package org.teiid.query.optimizer.relational.rules;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,8 +43,10 @@ import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.util.SymbolMap;
+import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 
 
@@ -82,7 +85,7 @@ public final class RuleChooseDependent implements OptimizerRule {
             
             PlanNode chosenNode = chooseDepWithoutCosting(sourceNode, bothCandidates?siblingNode:null, analysisRecord);
             if(chosenNode != null) {
-                pushCriteria |= markDependent(chosenNode, joinNode);
+                pushCriteria |= markDependent(chosenNode, joinNode, metadata);
                 continue;
             }   
             
@@ -97,16 +100,16 @@ public final class RuleChooseDependent implements OptimizerRule {
             }
             
             if (useDepJoin) {
-                pushCriteria |= markDependent(dependentNode, joinNode);
+                pushCriteria |= markDependent(dependentNode, joinNode, metadata);
             } else {
             	float sourceCost = NewCalculateCostUtil.computeCostForTree(sourceNode, metadata);
             	float siblingCost = NewCalculateCostUtil.computeCostForTree(siblingNode, metadata);
             	
                 if (bothCandidates && sourceCost != NewCalculateCostUtil.UNKNOWN_VALUE && sourceCost < RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY 
                 		&& (sourceCost < siblingCost || siblingCost == NewCalculateCostUtil.UNKNOWN_VALUE)) {
-                    pushCriteria |= markDependent(siblingNode, joinNode);
+                    pushCriteria |= markDependent(siblingNode, joinNode, metadata);
                 } else if (siblingCost != NewCalculateCostUtil.UNKNOWN_VALUE && siblingCost < RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY) {
-                    pushCriteria |= markDependent(sourceNode, joinNode);
+                    pushCriteria |= markDependent(sourceNode, joinNode, metadata);
                 }
             }
         }
@@ -257,8 +260,10 @@ public final class RuleChooseDependent implements OptimizerRule {
     /**
      * Mark the specified access node to be made dependent
      * @param sourceNode Node to make dependent
+     * @throws TeiidComponentException 
+     * @throws QueryMetadataException 
      */
-    boolean markDependent(PlanNode sourceNode, PlanNode joinNode) {
+    boolean markDependent(PlanNode sourceNode, PlanNode joinNode, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
 
         boolean isLeft = joinNode.getFirstChild() == sourceNode;
         
@@ -274,12 +279,11 @@ public final class RuleChooseDependent implements OptimizerRule {
         // Create DependentValueSource and set on the independent side as this will feed the values
         joinNode.setProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE, id);
 
-        List crits = getDependentCriteriaNodes(id, independentExpressions, dependentExpressions);
+        List<PlanNode> crits = getDependentCriteriaNodes(id, independentExpressions, dependentExpressions, isLeft?joinNode.getLastChild():joinNode.getFirstChild(), metadata);
         
         PlanNode newRoot = sourceNode;
         
-        for (Iterator i = crits.iterator(); i.hasNext();) {
-            PlanNode crit = (PlanNode)i.next();
+        for (PlanNode crit : crits) {
             newRoot.addAsParent(crit);
             newRoot = crit;
         }
@@ -294,20 +298,27 @@ public final class RuleChooseDependent implements OptimizerRule {
      * @param independentExpressions
      * @param dependentExpressions
      * @return
+     * @throws TeiidComponentException 
+     * @throws QueryMetadataException 
      * @since 4.3
      */
-    private List getDependentCriteriaNodes(String id, List independentExpressions,
-                                           List dependentExpressions) {
+    private List<PlanNode> getDependentCriteriaNodes(String id, List independentExpressions,
+                                           List dependentExpressions, PlanNode indNode, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
         
-        List result = new LinkedList();
+        List<PlanNode> result = new LinkedList<PlanNode>();
         
         Iterator depIter = dependentExpressions.iterator();
         Iterator indepIter = independentExpressions.iterator();
+        
+        float cardinality = NewCalculateCostUtil.computeCostForTree(indNode, metadata);
         
         while(depIter.hasNext()) {
             Expression depExpr = (Expression) depIter.next();
             Expression indepExpr = (Expression) indepIter.next();
             DependentSetCriteria crit = new DependentSetCriteria(SymbolMap.getExpression(depExpr), id);
+            Collection<ElementSymbol> elems = ElementCollectorVisitor.getElements(indepExpr, true);
+            float ndv = NewCalculateCostUtil.getNDVEstimate(indNode, metadata, cardinality, elems, true);
+            crit.setNdv(ndv);
             crit.setValueExpression(indepExpr);
             
             PlanNode selectNode = RelationalPlanner.createSelectNode(crit, false);

@@ -237,7 +237,7 @@ public class RulePlanJoins implements OptimizerRule {
                      *  Ideally we should be a little smarter in case 2 
                      *    - pushing down a same source cross join can be done if we know that a dependent join will be performed 
                      */
-                    //boolean hasJoinCriteria = false; 
+                    boolean hasJoinCriteria = false; 
                     LinkedList<Criteria> joinCriteria = new LinkedList<Criteria>();
                     Object modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode1, metadata);
                     SupportedJoinCriteria sjc = CapabilitiesUtil.getSupportedJoinCriteria(modelId, metadata, capFinder);
@@ -250,27 +250,23 @@ public class RulePlanJoins implements OptimizerRule {
                         
                         if (sources.contains(accessNode1)) {
                             if (sources.contains(accessNode2) && sources.size() == 2) {
-                                //hasJoinCriteria = true;
                                 Criteria crit = (Criteria)critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
 								if (RuleRaiseAccess.isSupportedJoinCriteria(sjc, crit, modelId, metadata, capFinder, null)) {
 	                                joinCriteriaNodes.add(critNode);
 	                                joinCriteria.add(crit);
                                 }
                             } else if (!accessNodes.containsAll(sources)) {
-                                //hasJoinCriteria = true;
+                                hasJoinCriteria = true;
                             }
                         } else if (sources.contains(accessNode2) && !accessNodes.containsAll(sources)) {
-                           //hasJoinCriteria = true;
+                           hasJoinCriteria = true;
                         }
                     }
                     
                     /*
                      * If we failed to find direct criteria, a cross join may still be acceptable
                      */
-                    if (joinCriteriaNodes.isEmpty() && !canPushCrossJoin(metadata, context, accessNode1, accessNode2)) {
-                    	//if (hasJoinCriteria) {
-                    		//a cross join would still be a good idea given that a dependent join can be used
-                    	//}
+                    if (joinCriteriaNodes.isEmpty() && (hasJoinCriteria || !canPushCrossJoin(metadata, context, accessNode1, accessNode2))) {
                     	continue;
                     }                    
                     

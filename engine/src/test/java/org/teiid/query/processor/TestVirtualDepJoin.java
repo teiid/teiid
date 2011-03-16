@@ -374,7 +374,7 @@ public class TestVirtualDepJoin {
             0,      // DependentSelect
             0,      // DependentProject
             0,      // DupRemove
-            3,      // Grouping
+            2,      // Grouping
             0,      // NestedLoopJoinStrategy
             1,      // MergeJoinStrategy
             0,      // Null
@@ -710,7 +710,7 @@ public class TestVirtualDepJoin {
             0,      // DependentSelect
             0,      // DependentProject
             0,      // DupRemove
-            3,      // Grouping
+            2,      // Grouping
             0,      // NestedLoopJoinStrategy
             1,      // MergeJoinStrategy
             0,      // Null

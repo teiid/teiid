@@ -399,11 +399,11 @@ public class RelationalPlanner {
         if (hints.hasRelationalProc) {
             rules.push(RuleConstants.PLAN_PROCEDURES);
         }
-        if(hints.hasJoin) {
-            rules.push(RuleConstants.CHOOSE_DEPENDENT);
-        }
         if(hints.hasAggregates) {
             rules.push(RuleConstants.PUSH_AGGREGATES);
+        }
+        if(hints.hasJoin) {
+            rules.push(RuleConstants.CHOOSE_DEPENDENT);
         }
         if(hints.hasJoin) {
             rules.push(RuleConstants.CHOOSE_JOIN_STRATEGY);

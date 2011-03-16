@@ -43,6 +43,10 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
      */
     private Expression valueExpression;
     private String id;
+    /**
+     * The estimated number of distinct values for the value Expression
+     */
+    private float ndv;
     
     /** 
      * Construct with the left expression 
@@ -56,6 +60,14 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
     public String getContextSymbol() {
     	return id;
     }
+    
+    public float getNdv() {
+		return ndv;
+	}
+    
+    public void setNdv(float ndv) {
+		this.ndv = ndv;
+	}
 
     /** 
      * Get the independent value expression
@@ -131,6 +143,7 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
         	criteriaCopy.setValueExpression((Expression) getValueExpression().clone());
         }
         criteriaCopy.id = this.id;
+        criteriaCopy.ndv = this.ndv;
         return criteriaCopy;
     }
     

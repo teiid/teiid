@@ -774,11 +774,11 @@ public class ResolverUtil {
 		}
 		String exprTypeName = DataTypeManager.getDataTypeName(exprType);
 	
-		Collection projectedSymbols = crit.getCommand().getProjectedSymbols();
+		Collection<SingleElementSymbol> projectedSymbols = crit.getCommand().getProjectedSymbols();
 		if (projectedSymbols.size() != 1){
 	        throw new QueryResolverException("ERR.015.008.0032", QueryPlugin.Util.getString("ERR.015.008.0032", crit.getCommand())); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		Class subqueryType = ((Expression)projectedSymbols.iterator().next()).getType();
+		Class<?> subqueryType = projectedSymbols.iterator().next().getType();
 		String subqueryTypeName = DataTypeManager.getDataTypeName(subqueryType);
 		Expression result = null;
 	    try {

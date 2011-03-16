@@ -93,7 +93,7 @@ public class NewCalculateCostUtil {
     private final static float readTime = .001f; //TODO: should come from the connector
     private final static float procNewRequestTime = 1; //TODO: should come from the connector
     
-    private enum Stat {
+    enum Stat {
     	NDV,
     	NNV
     }
@@ -305,7 +305,7 @@ public class NewCalculateCostUtil {
 			throws QueryMetadataException, TeiidComponentException {
 		PlanNode projectNode = NodeEditor.findNodePreOrder(node, NodeConstants.Types.PROJECT);
 		if (projectNode != null) {
-			cost = getDistinctEstimate(projectNode, (List)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS), metadata, cost);
+			cost = getNDVEstimate(node.getParent(), metadata, cost, (List)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS), false);
 		}
 		return cost;
 	}
@@ -452,10 +452,12 @@ public class NewCalculateCostUtil {
         				newStats[Stat.NDV.ordinal()] = stats[Stat.NDV.ordinal()];
         			} else if (stats[Stat.NDV.ordinal()] != UNKNOWN_VALUE) {
     					newStats[Stat.NDV.ordinal()] = stats[Stat.NDV.ordinal()]*Math.min(1, cardinality/origCardinality);
+    					newStats[Stat.NDV.ordinal()] = Math.max(1, newStats[Stat.NDV.ordinal()]);
         			}
     				if (stats[Stat.NNV.ordinal()] != UNKNOWN_VALUE) {
     					//TODO: this is an under estimate for the inner side of outer joins
 	        			newStats[Stat.NNV.ordinal()] = stats[Stat.NNV.ordinal()]*Math.min(1, cardinality/origCardinality);
+	        			newStats[Stat.NNV.ordinal()] = Math.max(1, newStats[Stat.NNV.ordinal()]);
     				}
         		}
     		}
@@ -537,9 +539,11 @@ public class NewCalculateCostUtil {
             	if (groupCardinality != UNKNOWN_VALUE && groupCardinality > cardinality) {
             		if (ndv != UNKNOWN_VALUE) {
             			ndv *= cardinality / Math.max(1, groupCardinality);
+            			ndv = Math.max(ndv, 1);
             		}
             		if (nnv != UNKNOWN_VALUE) {
             			nnv *= cardinality / Math.max(1, groupCardinality);
+            			nnv = Math.max(nnv, 1);
             		}
             	}
 			}
@@ -598,50 +602,38 @@ public class NewCalculateCostUtil {
             return;
         }
 
-        Float newCost = getDistinctEstimate(node, expressions, metadata, childCost);
-        setCardinalityEstimate(node, newCost, true, metadata);
+        float cardinality = getNDVEstimate(node, metadata, childCost, expressions, false);
+        setCardinalityEstimate(node, cardinality, true, metadata);
     }
 
-    private static Float getDistinctEstimate(PlanNode node,
-                                             List elements,
-                                             QueryMetadataInterface metadata,
-                                             float childCost) throws QueryMetadataException,
-                                                             TeiidComponentException {
-        if(elements == null) {
-            return new Float(childCost);
-        }
-        HashSet<ElementSymbol> elems = new HashSet<ElementSymbol>();
-        ElementCollectorVisitor.getElements(elements, elems);
-        if (usesKey(elements, metadata)) {
-        	return new Float(childCost);
-        }
-        float ndvCost = getStat(Stat.NDV, elems, node, childCost, metadata);
-        if(ndvCost == UNKNOWN_VALUE) {
-            ndvCost = childCost;
-        }
-        
-        Float newCost = new Float(Math.min(childCost, ndvCost));
-        return newCost;
-    }
-    
-    private static float getStat(Stat stat, Collection<? extends Expression> elems, PlanNode node,
+    static float getStat(Stat stat, Collection<? extends Expression> elems, PlanNode node,
     		float cardinality, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
         float result = 0;
+        int branch = 0;
+        boolean branchFound = false;
         for (Expression expression : elems) {
         	ColStats colStats = null;
 	    	if (node.getChildCount() == 0) {
 	    		colStats = createColStats(node, metadata, cardinality);
 	    	} else {
-		    	for (PlanNode child : node.getChildren()) {
+		    	for (int i = branch; i < node.getChildCount(); i++) {
+		    		PlanNode child = node.getChildren().get(i);
 			    	colStats = (ColStats) child.getProperty(Info.EST_COL_STATS);
 			        if (colStats == null) {
 			        	continue;
 			        }
 					float[] stats = colStats.get(expression);
 					if (stats != null) {
+						if (node.getType() == NodeConstants.Types.SET_OP) {
+							branch = i;
+							branchFound = true;
+						}
 						break;
 					}
 					colStats = null;
+					if (branchFound) {
+						break;
+					}
 		    	}
 	    	}
 	    	if (colStats == null) {
@@ -879,6 +871,17 @@ public class NewCalculateCostUtil {
             }
             
             isNegatedPredicateCriteria = isNullCriteria.isNegated();
+        } else if (predicateCriteria instanceof DependentSetCriteria) {
+        	DependentSetCriteria dsc = (DependentSetCriteria)predicateCriteria;
+        	
+        	if (unknownChildCost) {
+                return UNKNOWN_VALUE;
+            }
+        	if (dsc.getNdv() == UNKNOWN_VALUE) {
+        		return childCost / 3;
+        	}
+        	
+        	cost = childCost * dsc.getNdv() / ndv;
         }
 
         if (cost == UNKNOWN_VALUE) {
@@ -1005,6 +1008,7 @@ public class NewCalculateCostUtil {
     }
     
     static boolean usesKey(PlanNode planNode, Collection<? extends SingleElementSymbol> allElements, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+    	//TODO: key preserved joins should be marked
     	return NodeEditor.findAllNodes(planNode, NodeConstants.Types.SOURCE, NodeConstants.Types.JOIN | NodeConstants.Types.SET_OP).size() == 1
     	&& usesKey(allElements, metadata);
     }
@@ -1132,15 +1136,7 @@ public class NewCalculateCostUtil {
 		for (int i = 0; i < independentExpressions.size(); i++) {
 			Expression indExpr = (Expression)independentExpressions.get(i);
 			Collection<ElementSymbol> indElements = ElementCollectorVisitor.getElements(indExpr, true);
-			float indSymbolNDV = getStat(Stat.NDV, indElements, independentNode, independentCardinality, metadata);
-			boolean usesIndKey = usesKey(dependentNode, indElements, metadata);
-			if (indSymbolNDV == UNKNOWN_VALUE) {
-				if (!usesIndKey) {
-					indSymbolNDV = Math.max(1, independentCardinality/2);
-				} else {
-					indSymbolNDV = independentCardinality;
-				}
-			}
+			float indSymbolNDV = getNDVEstimate(independentNode, metadata, independentCardinality, indElements, true);
 			Expression depExpr = (Expression)dependentExpressions.get(i);
 			
 			LinkedList<PlanNode> critNodes = new LinkedList<PlanNode>();
@@ -1237,11 +1233,7 @@ public class NewCalculateCostUtil {
 							indCardinalityOrig = computeCostForTree(indOrigNode, metadata);
 							indSymbolOrigNDV = getStat(Stat.NDV, indElements, indOrigNode, indCardinalityOrig, metadata);
 							if (indSymbolOrigNDV == UNKNOWN_VALUE) {
-								if (!usesIndKey) {
-									indSymbolOrigNDV = Math.max(1, indCardinalityOrig / 3);
-								} else {
-									indSymbolOrigNDV = indCardinalityOrig;
-								}
+								indSymbolOrigNDV = indCardinalityOrig * indSymbolNDV / independentCardinality;
 							} 
 						}
 						depSymbolNDV = Math.max((float)Math.pow(depTargetCardinality, .75), Math.min(indSymbolOrigNDV, depTargetCardinality));
@@ -1273,6 +1265,27 @@ public class NewCalculateCostUtil {
 		}
         
         return null;
+	}
+
+	static float getNDVEstimate(PlanNode indNode,
+			QueryMetadataInterface metadata, float cardinality,
+			Collection<? extends SingleElementSymbol> elems, boolean useCardinalityIfUnknown) throws QueryMetadataException,
+			TeiidComponentException {
+		if (elems == null || elems.isEmpty()) {
+			return cardinality;
+		}
+		float ndv = getStat(Stat.NDV, elems, indNode, cardinality, metadata);
+		if (ndv == UNKNOWN_VALUE) { 
+			if (cardinality == UNKNOWN_VALUE) {
+				return UNKNOWN_VALUE;
+			}
+			if (usesKey(indNode, elems, metadata)) {
+				ndv = cardinality;
+			} else if (useCardinalityIfUnknown) {
+				ndv = cardinality/2; 
+			}
+		}
+		return Math.max(1, ndv);
 	}
     
 }

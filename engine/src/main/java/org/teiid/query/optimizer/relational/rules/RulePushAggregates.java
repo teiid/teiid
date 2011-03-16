@@ -558,12 +558,12 @@ public class RulePushAggregates implements
 
             collectSymbolsFromOtherAggregates(allAggregates, aggregates, planNode, stagedGroupingSymbols);
             
-            //if the grouping expressions are unique then there's no point in staging the aggregate
-            if (NewCalculateCostUtil.usesKey(planNode, stagedGroupingSymbols, metadata)) {
-            	continue;
-            }
-
-        	//TODO: we should be doing another cost check here - especially if the aggregate cannot be pushed.
+            //perform a costing check, if there's not a significant reduction, then don't stage
+            float cardinality = NewCalculateCostUtil.computeCostForTree(planNode, metadata);
+            float ndv = NewCalculateCostUtil.getNDVEstimate(planNode, metadata, cardinality, stagedGroupingSymbols, false);
+        	if (ndv != NewCalculateCostUtil.UNKNOWN_VALUE && cardinality / ndv < 4) {
+    			continue;
+        	}
             
             if (aggregates != null) {
                 stageAggregates(groupNode, metadata, stagedGroupingSymbols, aggregates);
