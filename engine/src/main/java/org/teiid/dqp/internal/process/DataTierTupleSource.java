@@ -51,6 +51,7 @@ import org.teiid.core.types.XMLType;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorWork;
+import org.teiid.dqp.internal.process.DQPCore.CompletionListener;
 import org.teiid.dqp.internal.process.DQPCore.FutureWork;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
@@ -69,7 +70,7 @@ import org.teiid.translator.TranslatorException;
  * In the multi-threaded case we'd like to not even
  * notify the parent plan and just schedule the next poll. 
  */
-public class DataTierTupleSource implements TupleSource {
+public class DataTierTupleSource implements TupleSource, CompletionListener<AtomicResultsMessage> {
 	
     // Construction state
     private final AtomicRequestMessage aqr;
@@ -129,7 +130,7 @@ public class DataTierTupleSource implements TupleSource {
 			public AtomicResultsMessage call() throws Exception {
 				return getResults();
 			}
-		}, 100);
+		}, this, 100);
 	}
 
 	private List correctTypes(List row) throws TransformationException {
@@ -282,26 +283,15 @@ public class DataTierTupleSource implements TupleSource {
 			throws BlockedException, TeiidComponentException,
 			TranslatorException {
 		AtomicResultsMessage results = null;
-		try {
-			if (cancelAsynch) {
-				return null;
-			}
-			running = true;
-			if (!executed) {
-				results = cwi.execute();
-				executed = true;
-			} else {
-				results = cwi.more();
-			}
-		} finally {
-			if (!cancelAsynch) {
-				workItem.moreWork();
-			}
-			canAsynchClose = false;
-			if (closed.get()) {
-				cwi.close();
-			}
-			running = false;
+		if (cancelAsynch) {
+			return null;
+		}
+		running = true;
+		if (!executed) {
+			results = cwi.execute();
+			executed = true;
+		} else {
+			results = cwi.more();
 		}
 		return results;
 	}
@@ -401,6 +391,18 @@ public class DataTierTupleSource implements TupleSource {
 	
 	public boolean isTransactional() {
 		return this.aqr.isTransactional();
+	}
+
+	@Override
+	public void onCompletion(FutureWork<AtomicResultsMessage> future) {
+		if (!cancelAsynch) {
+			workItem.moreWork();
+		}
+		canAsynchClose = false;
+		if (closed.get()) {
+			cwi.close();
+		}
+		running = false;		
 	}
 	
 }

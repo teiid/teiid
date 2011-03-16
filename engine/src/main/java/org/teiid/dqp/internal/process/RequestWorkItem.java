@@ -47,6 +47,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.dqp.internal.process.DQPCore.CompletionListener;
 import org.teiid.dqp.internal.process.DQPCore.FutureWork;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor.PrioritizedRunnable;
@@ -807,10 +808,11 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		return work;
 	}
 	
-    <T> FutureWork<T> addWork(Callable<T> callable, int priority) {
+    <T> FutureWork<T> addWork(Callable<T> callable, CompletionListener<T> listener, int priority) {
     	FutureWork<T> work = new FutureWork<T>(callable, priority);
     	WorkWrapper<T> wl = new WorkWrapper<T>(work);
     	work.addCompletionListener(wl);
+    	work.addCompletionListener(listener);
     	synchronized (queue) {
         	if (totalThreads < dqpCore.getUserRequestSourceConcurrency()) {
         		dqpCore.addWork(work);
