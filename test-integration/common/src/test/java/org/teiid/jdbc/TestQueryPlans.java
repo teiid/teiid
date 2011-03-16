@@ -71,6 +71,7 @@ public class TestQueryPlans {
 		rs = s.executeQuery("show plan");
 		assertTrue(rs.next());
 		assertEquals(rs.getMetaData().getColumnType(1), Types.CLOB);
+		assertTrue(rs.getString(1).startsWith("ProjectNode"));
 		SQLXML plan = rs.getSQLXML(2);
 		assertTrue(plan.getString().startsWith("<?xml"));
 		assertNull(rs.getObject("DEBUG_LOG"));

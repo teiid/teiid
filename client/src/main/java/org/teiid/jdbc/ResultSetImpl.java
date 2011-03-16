@@ -291,12 +291,10 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
         currentValue = cursorRow.get(column-1);
             
         if (currentValue instanceof Streamable<?>) {
-        	if (Boolean.getBoolean(Streamable.FORCE_STREAMING)) {
-        		Object reference = ((Streamable<?>)currentValue).getReference();
-            	if (reference != null) {
-            		currentValue = reference;
-            		return currentValue;
-            	}
+    		Object reference = ((Streamable<?>)currentValue).getReference();
+        	if (reference != null) {
+        		currentValue = reference;
+        		return currentValue;
         	}
             if(currentValue instanceof ClobType){
             	currentValue = new ClobImpl(createInputStreamFactory((ClobType)currentValue), ((ClobType)currentValue).getLength());

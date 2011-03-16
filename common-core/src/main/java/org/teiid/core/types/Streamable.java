@@ -48,7 +48,6 @@ public abstract class Streamable<T> implements Externalizable {
 	
 	public static final String ENCODING = "UTF-8"; //$NON-NLS-1$
 	public static final Charset CHARSET = Charset.forName(ENCODING);
-    public static final String FORCE_STREAMING = "FORCE_STREAMING"; //$NON-NLS-1$
     public static final int STREAMING_BATCH_SIZE_IN_BYTES = 102400; // 100K
 
     private String referenceStreamId = String.valueOf(counter.getAndIncrement());
