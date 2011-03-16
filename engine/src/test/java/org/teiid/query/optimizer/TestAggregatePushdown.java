@@ -629,9 +629,9 @@ public class TestAggregatePushdown {
         ProcessorPlan plan = helpPlan(sql,  
                                       metadata,
                                       null, capFinder,
-                                      new String[] {"SELECT g_0.\"MONTH\", g_0.\"YEAR\" FROM msModel.\"TIME\" AS g_0 WHERE g_0.\"YEAR\" = '1999'", //$NON-NLS-1$
-                                                    "SELECT g_0.\"MONTH\" AS c_0, g_0.CITY AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0 WHERE (g_0.\"MONTH\" IN (<dependent values>)) AND (g_0.CITY IN (<dependent values>)) GROUP BY g_0.\"MONTH\", g_0.CITY ORDER BY c_0, c_1", //$NON-NLS-1$ 
-                                                    "SELECT g_0.CITY, g_0.REGION FROM oraclemodel.GEOGRAPHY AS g_0 WHERE g_0.REGION IN ('BORDEAUX', 'POLINESIA')"},  //$NON-NLS-1$
+                                      new String[] {"SELECT g_0.\"MONTH\" AS c_0, g_0.\"YEAR\" AS c_1 FROM msModel.\"TIME\" AS g_0 WHERE g_0.\"YEAR\" = '1999' ORDER BY c_0", //$NON-NLS-1$
+                                                    "SELECT g_0.\"MONTH\" AS c_0, g_0.CITY AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0 WHERE (g_0.\"MONTH\" IN (<dependent values>)) AND (g_0.CITY IN (<dependent values>)) GROUP BY g_0.\"MONTH\", g_0.CITY ORDER BY c_0", //$NON-NLS-1$ 
+                                                    "SELECT g_0.CITY AS c_0, g_0.REGION AS c_1 FROM oraclemodel.GEOGRAPHY AS g_0 WHERE g_0.REGION IN ('BORDEAUX', 'POLINESIA') ORDER BY c_0"},  //$NON-NLS-1$
                                       ComparisonMode.EXACT_COMMAND_STRING );
 
         checkNodeTypes(plan, new int[] {
@@ -641,8 +641,8 @@ public class TestAggregatePushdown {
                                         0,      // DependentProject
                                         0,      // DupRemove
                                         1,      // Grouping
-                                        1,      // NestedLoopJoinStrategy
-                                        1,      // MergeJoinStrategy
+                                        0,      // NestedLoopJoinStrategy
+                                        2,      // MergeJoinStrategy
                                         0,      // Null
                                         0,      // PlanExecution
                                         1,      // Project
@@ -677,9 +677,9 @@ public class TestAggregatePushdown {
         ProcessorPlan plan = helpPlan(sql,  
                                       metadata,
                                       null, capFinder,
-                                      new String[] {"SELECT g_0.\"MONTH\", g_0.\"YEAR\" FROM msModel.\"TIME\" AS g_0 WHERE g_0.\"YEAR\" = '1999'", //$NON-NLS-1$
-                                          "SELECT g_0.\"MONTH\" AS c_0, g_0.CITY AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0 WHERE (g_0.\"MONTH\" IN (<dependent values>)) AND (g_0.CITY IN (<dependent values>)) GROUP BY g_0.\"MONTH\", g_0.CITY ORDER BY c_0, c_1", //$NON-NLS-1$ 
-                                          "SELECT g_0.CITY, g_0.REGION FROM oraclemodel.GEOGRAPHY AS g_0 WHERE g_0.REGION IN ('BORDEAUX', 'POLINESIA')"},  //$NON-NLS-1$
+                                      new String[] {"SELECT g_0.\"MONTH\" AS c_0, g_0.\"YEAR\" AS c_1 FROM msModel.\"TIME\" AS g_0 WHERE g_0.\"YEAR\" = '1999' ORDER BY c_0", //$NON-NLS-1$
+                                          "SELECT g_0.\"MONTH\" AS c_0, g_0.CITY AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0 WHERE (g_0.\"MONTH\" IN (<dependent values>)) AND (g_0.CITY IN (<dependent values>)) GROUP BY g_0.\"MONTH\", g_0.CITY ORDER BY c_0", //$NON-NLS-1$ 
+                                          "SELECT g_0.CITY AS c_0, g_0.REGION AS c_1 FROM oraclemodel.GEOGRAPHY AS g_0 WHERE g_0.REGION IN ('BORDEAUX', 'POLINESIA') ORDER BY c_0"},  //$NON-NLS-1$
                                       ComparisonMode.EXACT_COMMAND_STRING );
 
         checkNodeTypes(plan, new int[] {
@@ -689,8 +689,8 @@ public class TestAggregatePushdown {
                                         0,      // DependentProject
                                         0,      // DupRemove
                                         1,      // Grouping
-                                        1,      // NestedLoopJoinStrategy
-                                        1,      // MergeJoinStrategy
+                                        0,      // NestedLoopJoinStrategy
+                                        2,      // MergeJoinStrategy
                                         0,      // Null
                                         0,      // PlanExecution
                                         1,      // Project

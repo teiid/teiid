@@ -139,6 +139,7 @@ public final class NodeConstants {
         EST_DEP_JOIN_COST,   // Float value that represents the estimated cost of a dependent join (the join strategy for this could be Nested Loop or Merge)
         EST_JOIN_COST,       // Float value that represents the estimated cost of a merge join (the join strategy for this could be Nested Loop or Merge)
         EST_CARDINALITY,     // Float represents the estimated cardinality (amount of rows) produced by this node
+        EST_COL_STATS,
         EST_SELECTIVITY,     // Float that represents the selectivity of a criteria node 
         
         // Tuple limit and offset

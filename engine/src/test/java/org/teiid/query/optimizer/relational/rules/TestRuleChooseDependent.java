@@ -22,6 +22,8 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,6 +32,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
@@ -40,10 +43,6 @@ import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.optimizer.relational.rules.FrameUtil;
-import org.teiid.query.optimizer.relational.rules.RuleChooseDependent;
-import org.teiid.query.optimizer.relational.rules.RuleChooseJoinStrategy;
-import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.CompareCriteria;
@@ -65,10 +64,7 @@ import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.FakeMetadataObject;
 import org.teiid.query.util.CommandContext;
 
-import junit.framework.TestCase;
-
-
-public class TestRuleChooseDependent extends TestCase {
+public class TestRuleChooseDependent {
 
     /* Make Left Side Dependent */
     private static final int LEFT_SIDE = 1;
@@ -79,12 +75,6 @@ public class TestRuleChooseDependent extends TestCase {
 
     private FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
     
-    // ################################## FRAMEWORK ################################
-    
-    public TestRuleChooseDependent(String name) { 
-        super(name);
-    }    
-
     // ################################## TEST HELPERS ################################
     
     public PlanNode createAccessNode(Collection groupSymbols) {
@@ -413,7 +403,7 @@ public class TestRuleChooseDependent extends TestCase {
     
     // ################################## ACTUAL TESTS ################################
     
-    public void testValidJoin1() {
+    @Test public void testValidJoin1() {
         PlanNode accessNode = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);                       
         accessNode.addGroup(getPhysicalGroup(1));
                         
@@ -424,7 +414,7 @@ public class TestRuleChooseDependent extends TestCase {
         helpTestValidJoin(joinNode, accessNode, false);
     }
 
-    public void testValidJoin2() {
+    @Test public void testValidJoin2() {
         PlanNode accessNode = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);                       
         accessNode.addGroup(getPhysicalGroup(1));
                         
@@ -436,7 +426,7 @@ public class TestRuleChooseDependent extends TestCase {
         helpTestValidJoin(joinNode, accessNode, false);
     }
 
-    public void testValidJoin3() {
+    @Test public void testValidJoin3() {
         PlanNode accessNode1 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);                       
         PlanNode accessNode2 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);                       
         accessNode1.addGroup(getPhysicalGroup(1));                
@@ -453,7 +443,7 @@ public class TestRuleChooseDependent extends TestCase {
         helpTestValidJoin(joinNode, accessNode1, true);
     }
 
-    public void testValidJoin4() {
+    @Test public void testValidJoin4() {
         PlanNode accessNode1 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);                       
         PlanNode accessNode2 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);                       
                         
@@ -468,7 +458,7 @@ public class TestRuleChooseDependent extends TestCase {
         helpTestValidJoin(joinNode, accessNode2, false);
     }
 
-    public void testValidJoin5() {
+    @Test public void testValidJoin5() {
         PlanNode accessNode1 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);                       
         PlanNode accessNode2 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);                       
                         
@@ -483,7 +473,7 @@ public class TestRuleChooseDependent extends TestCase {
         helpTestValidJoin(joinNode, accessNode1, false);
     }
 
-    public void testValidJoin6() {
+    @Test public void testValidJoin6() {
         PlanNode accessNode1 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);                       
         PlanNode accessNode2 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
         accessNode1.addGroup(getPhysicalGroup(1));                
@@ -504,7 +494,7 @@ public class TestRuleChooseDependent extends TestCase {
      * Tests that heuristics will take a primary key in the atomic criteria into account when 
      * making a dependent join.
      */
-    public void testChooseKey() throws Exception {
+    @Test public void testChooseKey() throws Exception {
         //override default metadata
         this.metadata = FakeMetadataFactory.example4();
         
@@ -529,7 +519,7 @@ public class TestRuleChooseDependent extends TestCase {
     /**
      * Neither side should be chosen since the left side lacks cardinality information and the right is not strong
      */
-    public void testChooseKey2() throws Exception {
+    @Test public void testChooseKey2() throws Exception {
         //override default metadata
         this.metadata = FakeMetadataFactory.example4();
         
@@ -583,7 +573,7 @@ public class TestRuleChooseDependent extends TestCase {
      * Tests that heuristics will take cardinality of a group into account when 
      * making a dependent join.
      */
-    public void testCardinality() throws Exception {
+    @Test public void testCardinality() throws Exception {
         //override default metadata
         this.metadata = FakeMetadataFactory.example4();
         
@@ -614,7 +604,7 @@ public class TestRuleChooseDependent extends TestCase {
      * making a dependent join, and that this information supercedes a key
      * in the atomic criteria.
      */
-    public void testCardinalityAndKey() throws Exception {
+    @Test public void testCardinalityAndKey() throws Exception {
         //override default metadata
         this.metadata = FakeMetadataFactory.example4();
         
@@ -640,7 +630,7 @@ public class TestRuleChooseDependent extends TestCase {
         helpTestChooseSiblingAndMarkDependent(group2, atomicCrit2, group1, atomicCrit1, crits, expected);        
     }
     
-    public void testCardinalityAndKeyNestedLoop() throws Exception {
+    @Test public void testCardinalityAndKeyNestedLoop() throws Exception {
         //override default metadata
         this.metadata = FakeMetadataFactory.example4();
         
@@ -666,7 +656,7 @@ public class TestRuleChooseDependent extends TestCase {
         helpTestChooseSiblingAndMarkDependent(group2, atomicCrit2, group1, atomicCrit1, crits, expected);        
     }
     
-    public void testRejectDependentJoin() throws Exception {
+    @Test public void testRejectDependentJoin() throws Exception {
         //override default metadata
         this.metadata = FakeMetadataFactory.example4();
         
@@ -692,7 +682,7 @@ public class TestRuleChooseDependent extends TestCase {
      * Tests that join side with larger cardinality will still have a lower
      * cost computed because it has a criteria including a primary key
      */
-    public void testCardinalityWithKeyCrit() throws Exception {
+    @Test public void testCardinalityWithKeyCrit() throws Exception {
         //override default metadata
         this.metadata = FakeMetadataFactory.example4();
         
@@ -720,7 +710,7 @@ public class TestRuleChooseDependent extends TestCase {
      * Tests that join side with larger cardinality will still have a lower
      * cost computed because it has a criteria including a primary key
      */
-    public void testCardinalityWithKeyCompoundCritAND() throws Exception {
+    @Test public void testCardinalityWithKeyCompoundCritAND() throws Exception {
         //override default metadata
         this.metadata = FakeMetadataFactory.example4();
         
@@ -752,7 +742,7 @@ public class TestRuleChooseDependent extends TestCase {
      * cost computed because it has a criteria including a primary key.
      * Defect 8445
      */
-    public void testCardinalityWithKeyCompoundCritOR() throws Exception {
+    @Test public void testCardinalityWithKeyCompoundCritOR() throws Exception {
         //override default metadata
         this.metadata = FakeMetadataFactory.example4();
         
@@ -782,7 +772,7 @@ public class TestRuleChooseDependent extends TestCase {
     /**
      * Tests SetCriteria against a key column in the atomic criteria
      */
-    public void testCardinalityWithKeySetCrit() throws Exception {
+    @Test public void testCardinalityWithKeySetCrit() throws Exception {
         //override default metadata
         this.metadata = FakeMetadataFactory.example4();
         
@@ -813,7 +803,7 @@ public class TestRuleChooseDependent extends TestCase {
     /**
      * Tests SetCriteria in the atomic criteria
      */
-    public void testCardinalityWithKeyMatchCrit() throws Exception {
+    @Test public void testCardinalityWithKeyMatchCrit() throws Exception {
         //override default metadata
         this.metadata = FakeMetadataFactory.example4();
         
@@ -840,7 +830,7 @@ public class TestRuleChooseDependent extends TestCase {
     /**
      * Tests SetCriteria in the atomic criteria
      */
-    public void testCardinalityWithKeyIsNullCrit() throws Exception {
+    @Test public void testCardinalityWithKeyIsNullCrit() throws Exception {
         //override default metadata
         this.metadata = FakeMetadataFactory.example4();
         
@@ -867,7 +857,7 @@ public class TestRuleChooseDependent extends TestCase {
     /**
      * Tests NotCriteria in the atomic criteria
      */
-    public void testCardinalityWithKeyNotCrit() throws Exception {
+    @Test public void testCardinalityWithKeyNotCrit() throws Exception {
         //override default metadata
         this.metadata = FakeMetadataFactory.example4();
         
@@ -896,7 +886,7 @@ public class TestRuleChooseDependent extends TestCase {
      * Tests that join side with larger cardinality will still have a lower
      * cost computed because it has a criteria including a primary key
      */
-    public void testCardinalityWithKeyComplexCrit() throws Exception {
+    @Test public void testCardinalityWithKeyComplexCrit() throws Exception {
         //override default metadata
         this.metadata = FakeMetadataFactory.example4();
         
@@ -925,7 +915,7 @@ public class TestRuleChooseDependent extends TestCase {
         helpTestChooseSiblingAndMarkDependent(group2, atomicCrit2, group1, atomicCrit1, crits, expected);        
     }  
 
-    public void testCardinalityWithKeyComplexCrit2() throws Exception {
+    @Test public void testCardinalityWithKeyComplexCrit2() throws Exception {
         //override default metadata
         this.metadata = FakeMetadataFactory.example4();
         
@@ -955,7 +945,7 @@ public class TestRuleChooseDependent extends TestCase {
         helpTestChooseSiblingAndMarkDependent(group2, atomicCrit2, group1, atomicCrit1, crits, expected);        
     } 
 
-    public void testCardinalityWithKeyComplexCrit3() throws Exception {
+    @Test public void testCardinalityWithKeyComplexCrit3() throws Exception {
         //override default metadata
         this.metadata = FakeMetadataFactory.example4();
         
@@ -989,7 +979,7 @@ public class TestRuleChooseDependent extends TestCase {
      * Tests that join side with larger cardinality and non-key criteria
      * will be made dependent
      */
-    public void testCardinalityWithNonKeyCrit() throws Exception {
+    @Test public void testCardinalityWithNonKeyCrit() throws Exception {
         //override default metadata
         this.metadata = FakeMetadataFactory.example4();
         
@@ -1018,7 +1008,7 @@ public class TestRuleChooseDependent extends TestCase {
      * Tests that join side with larger cardinality will still have a lower
      * cost computed because it has a criteria including a primary key
      */
-    public void testCardinalityWithCriteriaAndJoin() throws Exception {
+    @Test public void testCardinalityWithCriteriaAndJoin() throws Exception {
         //override default metadata
         this.metadata = FakeMetadataFactory.example4();
         
@@ -1069,7 +1059,7 @@ public class TestRuleChooseDependent extends TestCase {
          expected, 1000, 1);        
     }    
 
-    public void testCardinalityWithAtomicCrossJoin() throws Exception {
+    @Test public void testCardinalityWithAtomicCrossJoin() throws Exception {
         //override default metadata
         this.metadata = FakeMetadataFactory.example4();
         
@@ -1098,7 +1088,7 @@ public class TestRuleChooseDependent extends TestCase {
         //atomic Join criteria 2
         List atomicJoinCrits2 = Collections.EMPTY_LIST; //INDICATES CROSS JOIN
         
-        int expected = RIGHT_SIDE;
+        int expected = NEITHER_SIDE;
 
         helpTestChooseSiblingAndMarkDependent(
          group1, 
@@ -1115,7 +1105,7 @@ public class TestRuleChooseDependent extends TestCase {
          expected, 1000, 1E5);        
     } 
     
-    public void testCardinalityWithAtomicCrossJoin2() throws Exception {
+    @Test public void testCardinalityWithAtomicCrossJoin2() throws Exception {
         //override default metadata
         this.metadata = FakeMetadataFactory.example4();
         

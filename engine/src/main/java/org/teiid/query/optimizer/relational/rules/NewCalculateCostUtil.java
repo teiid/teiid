@@ -31,11 +31,15 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
@@ -43,16 +47,18 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
+import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
+import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.AbstractSetCriteria;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.CompoundCriteria;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.IsNullCriteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.MatchCriteria;
@@ -61,12 +67,14 @@ import org.teiid.query.sql.lang.PredicateCriteria;
 import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
+import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
+import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
@@ -81,11 +89,41 @@ public class NewCalculateCostUtil {
 	public static final float UNKNOWN_VALUE = -1;
     
     // the following variables are used to hold cost estimates (roughly in milliseconds)
-    private final static float compareTime = .05f; //TODO: a better estimate would be based upon the number of conjuncts
+    private final static float compareTime = .0001f; //TODO: a better estimate would be based upon the number of conjuncts
     private final static float readTime = .001f; //TODO: should come from the connector
-    private final static float procNewRequestTime = 100; //TODO: should come from the connector
-    private final static float procMoreRequestTime = 15; //TODO: should come from the connector
+    private final static float procNewRequestTime = 1; //TODO: should come from the connector
     
+    private enum Stat {
+    	NDV,
+    	NNV
+    }
+
+    @SuppressWarnings("serial")
+	private static class ColStats extends LinkedHashMap<Expression, float[]> {
+    	@Override
+    	public String toString() {
+    		StringBuilder sb = new StringBuilder();
+    		sb.append('{');
+    		
+    		int j = 0;
+    		for (Iterator<Entry<Expression, float[]>> i = this.entrySet().iterator(); i.hasNext();) {
+    		    Entry<Expression, float[]> e = i.next();
+    		    sb.append(e.getKey());
+    		    sb.append('=');
+    		    sb.append(Arrays.toString(e.getValue()));
+    		    j++;
+    		    if (i.hasNext()) {
+    		    	sb.append(", "); //$NON-NLS-1$
+    		    	if (j > 3) {
+        		    	sb.append("..."); //$NON-NLS-1$
+        		    	break;
+        		    }
+    		    }
+    		}
+    		return sb.append('}').toString();
+    	}
+    }
+        
     /**
      * Calculate cost of a node and all children, recursively from the bottom up.
      * @param node
@@ -97,22 +135,24 @@ public class NewCalculateCostUtil {
     static float computeCostForTree(PlanNode node, QueryMetadataInterface metadata) 
         throws QueryMetadataException, TeiidComponentException {
 
-        Float cost = (Float) node.getProperty(NodeConstants.Info.EST_CARDINALITY);
+    	updateCardinality(node, metadata);
+        
+        return node.getCardinality();
+    }
+    
+    static boolean updateCardinality(PlanNode node, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+    	Float cost = (Float) node.getProperty(NodeConstants.Info.EST_CARDINALITY);
 
     	// check if already computed
-        if(cost == null) {
-        	for (PlanNode child : node.getChildren()) {
-        		computeCostForTree(child, metadata);
-            }
-            computeNodeCost(node, metadata);
-            cost = (Float) node.getProperty(NodeConstants.Info.EST_CARDINALITY); 
+    	boolean updated = false;
+    	for (PlanNode child : node.getChildren()) {
+    		updated |= updateCardinality(child, metadata);
         }
-        
-        if(cost != null) {
-            return cost.floatValue();
-        } 
-        
-        return UNKNOWN_VALUE;
+        if(cost == null || updated) {
+            computeNodeCost(node, metadata);
+            return true;
+        }
+        return false;
     }
    
     /**
@@ -144,7 +184,7 @@ public class NewCalculateCostUtil {
 
             case NodeConstants.Types.GROUP:
             	if (!node.hasCollectionProperty(NodeConstants.Info.GROUP_COLS)) {
-            		setCardinalityEstimate(node, 1f);
+            		setCardinalityEstimate(node, 1f, true, metadata);
             	} else {
             		estimateNodeCost(node, (List)node.getProperty(NodeConstants.Info.GROUP_COLS), metadata);
             	}
@@ -155,11 +195,11 @@ public class NewCalculateCostUtil {
                 //Simply record the cost of the only child
                 PlanNode child = node.getFirstChild();
                 Float childCost = (Float)child.getProperty(NodeConstants.Info.EST_CARDINALITY);
-                setCardinalityEstimate(node, childCost);
+                setCardinalityEstimate(node, childCost, true, metadata);
                 break;
             }
             case NodeConstants.Types.NULL:
-                setCardinalityEstimate(node, 0f);
+                setCardinalityEstimate(node, 0f, true, metadata);
                 break;
 
             case NodeConstants.Types.PROJECT:
@@ -172,7 +212,7 @@ public class NewCalculateCostUtil {
                 } else {
                     childCost = 1f;
                 }
-                setCardinalityEstimate(node, childCost);
+                setCardinalityEstimate(node, childCost, true, metadata);
                 break;
             }
             case NodeConstants.Types.SET_OP: 
@@ -202,7 +242,7 @@ public class NewCalculateCostUtil {
                         cost = new Float(limitCost);
                     }
                 } 
-                setCardinalityEstimate(node, cost);
+                setCardinalityEstimate(node, cost, true, metadata);
                 break;
             }
         }
@@ -223,6 +263,13 @@ public class NewCalculateCostUtil {
 			rightCost = getDistinctEstimate(node.getLastChild(), metadata, rightCost);
 		}
 		
+		cost = getCombinedSetEstimate(op, leftCost, rightCost, !node.hasBooleanProperty(NodeConstants.Info.USE_ALL));
+		
+		setCardinalityEstimate(node, new Float(cost), true, metadata);
+	}
+
+	private static float getCombinedSetEstimate(SetQuery.Operation op, float leftCost, float rightCost, boolean distinct) {
+		float cost;
 		cost = leftCost;
 		
 		switch (op) {
@@ -242,7 +289,7 @@ public class NewCalculateCostUtil {
 			break;
 		default: //union
 			if (leftCost != UNKNOWN_VALUE && rightCost != UNKNOWN_VALUE) {
-		        if (!node.hasBooleanProperty(NodeConstants.Info.USE_ALL)) {
+		        if (distinct) {
 		        	cost = Math.max(leftCost, rightCost) + .5f * Math.min(leftCost, rightCost);
 		        } else {
 		            cost = rightCost + leftCost;
@@ -250,8 +297,7 @@ public class NewCalculateCostUtil {
 			}
 			break;
 		}
-		
-		setCardinalityEstimate(node, new Float(cost));
+		return cost;
 	}
 
 	private static float getDistinctEstimate(PlanNode node,
@@ -264,11 +310,17 @@ public class NewCalculateCostUtil {
 		return cost;
 	}
 
-    private static void setCardinalityEstimate(PlanNode node, Float bestEstimate) {
+    private static void setCardinalityEstimate(PlanNode node, Float bestEstimate, boolean setColEstimates, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
         if (bestEstimate == null){
         	bestEstimate = Float.valueOf(UNKNOWN_VALUE);
         }
-        node.setProperty(NodeConstants.Info.EST_CARDINALITY, bestEstimate);
+        Float lastEstimate = (Float)node.setProperty(NodeConstants.Info.EST_CARDINALITY, bestEstimate);
+        if (node.getParent() != null && (lastEstimate == null || !lastEstimate.equals(bestEstimate))) {
+        	node.getParent().setProperty(Info.EST_CARDINALITY, null);
+        }
+        if (setColEstimates) {
+        	setColStatEstimates(node, bestEstimate, metadata);
+        }
     }
 
     /**
@@ -286,7 +338,7 @@ public class NewCalculateCostUtil {
         float childCost2 = child2.getCardinality();
         
         if (childCost1 == UNKNOWN_VALUE || childCost2 == UNKNOWN_VALUE) {
-        	setCardinalityEstimate(node, null);
+        	setCardinalityEstimate(node, null, true, metadata);
         	return;
         }
 
@@ -303,19 +355,17 @@ public class NewCalculateCostUtil {
         }
         
         Float cost = null;
-        if (JoinType.JOIN_CROSS.equals(joinType)){
-            cost = new Float(baseCost);
+        if (JoinType.JOIN_CROSS.equals(joinType) || JoinType.JOIN_INNER.equals(joinType)){
+            cost = baseCost;
         } else if (JoinType.JOIN_FULL_OUTER.equals(joinType)) {
-            cost = new Float(Math.max((childCost1+childCost2),baseCost));
+            cost = Math.max((childCost1+childCost2),baseCost);
         } else if (JoinType.JOIN_LEFT_OUTER.equals(joinType)) {
-            cost = new Float(Math.max(childCost1,baseCost));
-        } else if (JoinType.JOIN_RIGHT_OUTER.equals(joinType)) {
-            cost = new Float(Math.max(childCost2,baseCost));
-        } else if (JoinType.JOIN_INNER.equals(joinType)) {
-            cost = new Float(baseCost);
+            cost = Math.max(childCost1,baseCost);
+        } else if (JoinType.JOIN_SEMI.equals(joinType) || JoinType.JOIN_ANTI_SEMI.equals(joinType)) {
+        	cost = Math.min(childCost1, baseCost);
         }
         
-        setCardinalityEstimate(node, cost);
+        setCardinalityEstimate(node, cost, true, metadata);
     }
 
     /**
@@ -332,7 +382,86 @@ public class NewCalculateCostUtil {
         //Get list of conjuncts
         Criteria selectCriteria = (Criteria)node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
         float newCost = recursiveEstimateCostOfCriteria(childCost, node, selectCriteria, metadata);
-        setCardinalityEstimate(node, new Float(newCost));
+        setCardinalityEstimate(node, newCost, true, metadata);
+    }
+    
+    private static void setColStatEstimates(PlanNode node, float cardinality, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+    	if (cardinality == UNKNOWN_VALUE) {
+    		return;
+    	}
+    	ColStats colStats = null;
+    	ColStats colStatsOther = null;
+    	float childCardinality = UNKNOWN_VALUE;
+    	if (node.getChildCount() > 0) {
+    		childCardinality = node.getFirstChild().getCardinality();
+    		colStats = (ColStats) node.getFirstChild().getProperty(Info.EST_COL_STATS);
+    	} 
+    	float otherChildCardinality = UNKNOWN_VALUE;
+    	List<? extends Expression> outputColsOther = null;
+    	if (node.getChildCount() > 1) {
+    		otherChildCardinality = node.getLastChild().getCardinality();
+    		colStatsOther = (ColStats) node.getLastChild().getProperty(Info.EST_COL_STATS);
+    		outputColsOther = getOutputCols(node.getLastChild(), metadata);
+    	}
+    	SetQuery.Operation setOp = (Operation) node.getProperty(Info.SET_OPERATION);
+    	List<? extends Expression> outputCols = getOutputCols(node, metadata);
+    	ColStats newColStats = new ColStats();
+    	for (int i = 0; i < outputCols.size(); i++) {
+    		Expression expr = outputCols.get(i);
+    		float[] newStats = new float[2];
+    		Arrays.fill(newStats, UNKNOWN_VALUE);
+    		if (childCardinality == UNKNOWN_VALUE || (setOp != null && (colStats == null || colStatsOther == null))) {
+    			//base case - cannot determine, just assume unique rows
+        		newStats[Stat.NDV.ordinal()] = cardinality;
+        		newStats[Stat.NNV.ordinal()] = 0;
+    		} else if (setOp != null) {
+    			//set op
+				float[] stats = colStats.get(expr);
+				float[] statsOther = colStatsOther.get(outputColsOther.get(i));
+				newStats[Stat.NDV.ordinal()] = getCombinedSetEstimate(setOp, stats[Stat.NDV.ordinal()], statsOther[Stat.NDV.ordinal()], true);
+        		newStats[Stat.NNV.ordinal()] = getCombinedSetEstimate(setOp, stats[Stat.NNV.ordinal()], statsOther[Stat.NNV.ordinal()], !node.hasBooleanProperty(NodeConstants.Info.USE_ALL));
+    		} else {
+    			//all other cases - join is the only multi-node case here
+    			float[] stats = null;
+    			float origCardinality = childCardinality;
+    			if (colStats != null) {
+    				stats = colStats.get(expr);
+    			}
+    			if (stats == null && colStatsOther != null) {
+    				origCardinality = otherChildCardinality;
+    				stats = colStatsOther.get(expr);
+    			}
+    			if (stats == null) {
+        			if (node.getType() == NodeConstants.Types.PROJECT) {
+	        			Collection<SingleElementSymbol> elems = new HashSet<SingleElementSymbol>();
+	        			AggregateSymbolCollectorVisitor.getAggregates(expr, elems, elems);
+	        			newStats[Stat.NDV.ordinal()] = getStat(Stat.NDV, elems, node, childCardinality, metadata);
+		        		newStats[Stat.NNV.ordinal()] = getStat(Stat.NNV, elems, node, childCardinality, metadata);
+        			} else {
+        				//TODO: use a better estimate for new aggs
+        				if (node.hasProperty(Info.GROUP_COLS)) {
+            				newStats[Stat.NDV.ordinal()] = cardinality / 3;
+        				} else {
+        					newStats[Stat.NDV.ordinal()] = cardinality;
+        				}
+                		newStats[Stat.NNV.ordinal()] = UNKNOWN_VALUE;
+        			}
+        		} else {
+        			if (node.getType() == NodeConstants.Types.DUP_REMOVE || node.getType() == NodeConstants.Types.GROUP) {
+        				//don't scale down
+        				newStats[Stat.NDV.ordinal()] = stats[Stat.NDV.ordinal()];
+        			} else if (stats[Stat.NDV.ordinal()] != UNKNOWN_VALUE) {
+    					newStats[Stat.NDV.ordinal()] = stats[Stat.NDV.ordinal()]*Math.min(1, cardinality/origCardinality);
+        			}
+    				if (stats[Stat.NNV.ordinal()] != UNKNOWN_VALUE) {
+    					//TODO: this is an under estimate for the inner side of outer joins
+	        			newStats[Stat.NNV.ordinal()] = stats[Stat.NNV.ordinal()]*Math.min(1, cardinality/origCardinality);
+    				}
+        		}
+    		}
+    		newColStats.put(expr, newStats);
+		}
+    	node.setProperty(Info.EST_COL_STATS, newColStats);
     }
 
     /**
@@ -353,6 +482,26 @@ public class NewCalculateCostUtil {
         	if (references == null) {
 	            PlanNode child = node.getFirstChild();
 	            cost = child.getCardinality();
+	            SymbolMap symbolMap = (SymbolMap)node.getProperty(NodeConstants.Info.SYMBOL_MAP);
+	            if (symbolMap != null) {
+		            ColStats colStats = (ColStats) child.getProperty(Info.EST_COL_STATS);
+		            if (colStats != null) {
+		            	List<? extends Expression> outputCols = getOutputCols(node, metadata);
+		            	ColStats newColStats = new ColStats();
+		            	for (Expression expr : outputCols) {
+		            		if (!(expr instanceof ElementSymbol)) {
+		            			continue;
+		            		}
+		            		ElementSymbol es = (ElementSymbol)expr;
+		            		Expression ex = symbolMap.getMappedExpression(es);
+							newColStats.put(es, colStats.get(ex));
+						}
+		        		node.setProperty(Info.EST_COL_STATS, newColStats);
+		            } else {
+		            	colStats = createColStats(node, metadata, cost);
+		        		node.setProperty(Info.EST_COL_STATS, colStats);
+		            }
+	            }
         	}
         }else {
             GroupSymbol group = node.getGroups().iterator().next();
@@ -361,10 +510,74 @@ public class NewCalculateCostUtil {
                 cardinality = UNKNOWN_VALUE;
             }
             cost = cardinality;
+            if (!node.hasProperty(Info.ATOMIC_REQUEST)) {
+	            ColStats colStats = createColStats(node, metadata, cost);
+	    		node.setProperty(Info.EST_COL_STATS, colStats);
+            }
         }
         
-        setCardinalityEstimate(node, new Float(cost));
-    } 
+        setCardinalityEstimate(node, new Float(cost), false, metadata);
+    }
+
+	private static ColStats createColStats(PlanNode node,
+			QueryMetadataInterface metadata, float cardinality)
+			throws QueryMetadataException, TeiidComponentException {
+		ColStats colStats = new ColStats();
+		List<? extends Expression> outputCols = getOutputCols(node, metadata);
+		for (Expression expr : outputCols) {
+			if (!(expr instanceof ElementSymbol)) {
+				continue;
+			}
+			ElementSymbol es = (ElementSymbol)expr;
+			float[] vals = new float[2];
+			float ndv = metadata.getDistinctValues(es.getMetadataID());
+			float nnv = metadata.getNullValues(es.getMetadataID());
+			if (cardinality != UNKNOWN_VALUE) {
+            	int groupCardinality = metadata.getCardinality(es.getGroupSymbol().getMetadataID());
+            	if (groupCardinality != UNKNOWN_VALUE && groupCardinality > cardinality) {
+            		if (ndv != UNKNOWN_VALUE) {
+            			ndv *= cardinality / Math.max(1, groupCardinality);
+            		}
+            		if (nnv != UNKNOWN_VALUE) {
+            			nnv *= cardinality / Math.max(1, groupCardinality);
+            		}
+            	}
+			}
+			vals[Stat.NDV.ordinal()] = ndv;
+			vals[Stat.NNV.ordinal()] = nnv;
+			colStats.put(es, vals);
+		}
+		return colStats;
+	}
+
+	private static List<? extends Expression> getOutputCols(PlanNode node,
+			QueryMetadataInterface metadata) throws QueryMetadataException,
+			TeiidComponentException {
+		List<Expression> outputCols =(List<Expression>)node.getProperty(Info.OUTPUT_COLS);
+		if (outputCols != null) {
+			return outputCols;
+		}
+		PlanNode projectNode = NodeEditor.findNodePreOrder(node, 
+				NodeConstants.Types.PROJECT | NodeConstants.Types.GROUP 
+				| NodeConstants.Types.SOURCE | NodeConstants.Types.JOIN 
+				| NodeConstants.Types.NULL);
+		if (projectNode != null) {
+			node = projectNode;
+		} 
+		
+		if (node.getType() == NodeConstants.Types.PROJECT) {
+			return (List<? extends Expression>) node.getProperty(NodeConstants.Info.PROJECT_COLS);
+		} else if (node.getType() == NodeConstants.Types.GROUP) {
+			LinkedList<Expression> result = new LinkedList<Expression>(RulePushAggregates.collectAggregates(node));
+			result.addAll((Collection<? extends Expression>) node.getProperty(Info.GROUP_COLS));
+			return result;
+		} 
+		LinkedList<ElementSymbol> elements = new LinkedList<ElementSymbol>();
+		for (GroupSymbol group : node.getGroups()) {
+			elements.addAll(ResolverUtil.resolveElementsInGroup(group, metadata));
+		}
+		return elements;
+	} 
     
     /**
      * For a Group or Dup Removal node, the cost is basically the smaller of the largest NDV of the 
@@ -381,12 +594,12 @@ public class NewCalculateCostUtil {
         float childCost = child.getCardinality();
         
         if(childCost == UNKNOWN_VALUE) {
-            setCardinalityEstimate(node, null);
+            setCardinalityEstimate(node, null, true, metadata);
             return;
         }
 
         Float newCost = getDistinctEstimate(node, expressions, metadata, childCost);
-        setCardinalityEstimate(node, newCost);
+        setCardinalityEstimate(node, newCost, true, metadata);
     }
 
     private static Float getDistinctEstimate(PlanNode node,
@@ -402,7 +615,7 @@ public class NewCalculateCostUtil {
         if (usesKey(elements, metadata)) {
         	return new Float(childCost);
         }
-        float ndvCost = getNDV(elems, node, childCost, metadata);
+        float ndvCost = getStat(Stat.NDV, elems, node, childCost, metadata);
         if(ndvCost == UNKNOWN_VALUE) {
             ndvCost = childCost;
         }
@@ -411,7 +624,39 @@ public class NewCalculateCostUtil {
         return newCost;
     }
     
-    static float recursiveEstimateCostOfCriteria(float childCost, PlanNode currentNode, Criteria crit, QueryMetadataInterface metadata)
+    private static float getStat(Stat stat, Collection<? extends Expression> elems, PlanNode node,
+    		float cardinality, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+        float result = 0;
+        for (Expression expression : elems) {
+        	ColStats colStats = null;
+	    	if (node.getChildCount() == 0) {
+	    		colStats = createColStats(node, metadata, cardinality);
+	    	} else {
+		    	for (PlanNode child : node.getChildren()) {
+			    	colStats = (ColStats) child.getProperty(Info.EST_COL_STATS);
+			        if (colStats == null) {
+			        	continue;
+			        }
+					float[] stats = colStats.get(expression);
+					if (stats != null) {
+						break;
+					}
+					colStats = null;
+		    	}
+	    	}
+	    	if (colStats == null) {
+	    		return UNKNOWN_VALUE;
+	    	}
+	    	float[] stats = colStats.get(expression);
+			if (stats == null || stats[stat.ordinal()] == UNKNOWN_VALUE) {
+				return UNKNOWN_VALUE;
+			}
+			result = Math.max(result, stats[stat.ordinal()]);
+    	}
+		return result;
+	}
+
+	static float recursiveEstimateCostOfCriteria(float childCost, PlanNode currentNode, Criteria crit, QueryMetadataInterface metadata)
         throws QueryMetadataException, TeiidComponentException {
         
         float cost = childCost; 
@@ -552,7 +797,7 @@ public class NewCalculateCostUtil {
         boolean multiGroup = groups.size() > 1;
         
         float cost = childCost;
-        float ndv = getNDV(elements, currentNode, childCost, metadata);
+        float ndv = getStat(Stat.NDV, elements, currentNode, childCost, metadata);
         
         boolean unknownChildCost = childCost == UNKNOWN_VALUE;
         boolean usesKey = usesKey(elements, metadata);
@@ -623,7 +868,7 @@ public class NewCalculateCostUtil {
         } else if(predicateCriteria instanceof IsNullCriteria) {
             IsNullCriteria isNullCriteria = (IsNullCriteria)predicateCriteria;
 
-            float nnv = getNNV(elements, currentNode, childCost, metadata);
+            float nnv = getStat(Stat.NNV, elements, currentNode, childCost, metadata);
             if (nnv == UNKNOWN_VALUE) {
             	if (unknownChildCost) {
             		return UNKNOWN_VALUE;
@@ -684,7 +929,7 @@ public class NewCalculateCostUtil {
             return childCost/3;
         }
         ElementSymbol element = (ElementSymbol)compCrit.getLeftExpression();
-        Class dataType = compCrit.getRightExpression().getType();
+        Class<?> dataType = compCrit.getRightExpression().getType();
     
         String max = (String)metadata.getMaximumValue(element.getMetadataID());
         String min = (String)metadata.getMinimumValue(element.getMetadataID());
@@ -777,10 +1022,10 @@ public class NewCalculateCostUtil {
      */
     public static boolean usesKey(Collection<? extends SingleElementSymbol> allElements, QueryMetadataInterface metadata)
         throws QueryMetadataException, TeiidComponentException {
-    	return usesKey(allElements, null, metadata);
+    	return usesKey(allElements, null, metadata, true);
     }
     
-    public static boolean usesKey(Collection<? extends SingleElementSymbol> allElements, Set<GroupSymbol> groups, QueryMetadataInterface metadata)
+    public static boolean usesKey(Collection<? extends SingleElementSymbol> allElements, Set<GroupSymbol> groups, QueryMetadataInterface metadata, boolean unique)
     throws QueryMetadataException, TeiidComponentException {
         
         if(allElements == null || allElements.size() == 0) { 
@@ -813,7 +1058,13 @@ public class NewCalculateCostUtil {
             List<Object> elements = entry.getValue();
             
             // Look up keys
-            Collection keys = metadata.getUniqueKeysInGroup(group.getMetadataID());
+            Collection keys = null;
+            if (unique) {
+            	keys = metadata.getUniqueKeysInGroup(group.getMetadataID());
+            } else {
+            	keys = metadata.getIndexesInGroup(group.getMetadataID());
+            }
+            
             if(keys != null && keys.size() > 0) { 
                 // For each key, get key elements
                 Iterator keyIter = keys.iterator();
@@ -828,126 +1079,8 @@ public class NewCalculateCostUtil {
         }
         
         return false; 
-    }
+    }    
     
-    /**
-     * Get the scaled max ndv for a set of elements.
-     * 
-     * NOTE: this is not a good approximation over unions, joins, grouping, etc.
-     */
-    private static float getNDV(Collection<ElementSymbol> elements, PlanNode current, float cardinality, QueryMetadataInterface metadata) 
-        throws QueryMetadataException, TeiidComponentException {
-        float result = UNKNOWN_VALUE;
-        
-    	for (ElementSymbol elementSymbol : elements) {
-            Object elemID = elementSymbol.getMetadataID();
-            float ndv = metadata.getDistinctValues(elemID);
-            if (ndv == UNKNOWN_VALUE) {
-                if (metadata.isVirtualGroup(elementSymbol.getGroupSymbol().getMetadataID()) && !metadata.isProcedure(elementSymbol.getGroupSymbol().getMetadataID())) {
-            		PlanNode sourceNode = FrameUtil.findOriginatingNode(current, new HashSet<GroupSymbol>(Arrays.asList(elementSymbol.getGroupSymbol())));
-            		if (sourceNode != null) {
-	        			SymbolMap symbolMap = (SymbolMap)sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
-	        			//symbolMap will be null for table functions
-	        			if (symbolMap != null) {
-		        			Expression expr = symbolMap.getMappedExpression(elementSymbol);
-		        			ndv = getNDV(ElementCollectorVisitor.getElements(expr, true), sourceNode.getFirstChild(), cardinality, metadata);
-	        			}
-            		}
-            	}
-            } else if (cardinality != UNKNOWN_VALUE) {
-            	int groupCardinality = metadata.getCardinality(elementSymbol.getGroupSymbol().getMetadataID());
-            	if (groupCardinality != UNKNOWN_VALUE && groupCardinality > cardinality) {
-        			ndv *= cardinality / Math.max(1, groupCardinality);
-            	}
-            }
-            result = Math.max(result, ndv);
-		}
-        return result;
-    }
-    
-    /**
-     * Get the scaled max nnv for a set of elements.
-     * 
-     * NOTE: assumes that the expression does not allow nulls
-     */
-    private static float getNNV(Collection<ElementSymbol> elements, PlanNode current, float cardinality, QueryMetadataInterface metadata) 
-        throws QueryMetadataException, TeiidComponentException {
-        float result = 0;
-    	for (ElementSymbol elementSymbol : elements) {
-            Object elemID = elementSymbol.getMetadataID();
-            float nnv = metadata.getNullValues(elemID);
-            if (nnv == UNKNOWN_VALUE) {
-            	if (!metadata.elementSupports(elemID, SupportConstants.Element.NULL) 
-            			&& !metadata.elementSupports(elemID, SupportConstants.Element.NULL_UNKNOWN)) {
-            		nnv = 0;
-            	} else if (metadata.isVirtualGroup(elementSymbol.getGroupSymbol().getMetadataID()) && !metadata.isProcedure(elementSymbol.getGroupSymbol().getMetadataID())) {
-            		PlanNode sourceNode = FrameUtil.findOriginatingNode(current, new HashSet<GroupSymbol>(Arrays.asList(elementSymbol.getGroupSymbol())));
-            		if (sourceNode != null) {
-	        			SymbolMap symbolMap = (SymbolMap)sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
-	        			Expression expr = symbolMap.getMappedExpression(elementSymbol);
-	        			nnv = getNNV(ElementCollectorVisitor.getElements(expr, true), sourceNode.getFirstChild(), cardinality, metadata);
-            		}
-            	}
-            	if (nnv == UNKNOWN_VALUE) {
-            		return UNKNOWN_VALUE;
-            	}
-            } else if (cardinality != UNKNOWN_VALUE) {
-            	int groupCardinality = metadata.getCardinality(elementSymbol.getGroupSymbol().getMetadataID());
-            	if (groupCardinality != UNKNOWN_VALUE) {
-            		nnv *= cardinality / Math.max(1, groupCardinality);
-            	}
-            }
-            result = Math.max(result, nnv);
-		}
-        return result;
-    }
-    
-    /**
-     * Computes the cost of a Merge Join
-     */
-    public static float computeCostForJoin(PlanNode leftChildNode, PlanNode rightChildNode, JoinStrategyType joinStrategy, QueryMetadataInterface metadata, CommandContext context) 
-        throws TeiidComponentException, QueryMetadataException {
-        
-        float leftChildCardinality = computeCostForTree(leftChildNode, metadata);
-        float rightChildCardinality = computeCostForTree(rightChildNode, metadata);
-        
-        boolean merge = JoinStrategyType.MERGE.equals(joinStrategy);
-                
-        // If either cardinality is unknown, we return unknown
-        if(leftChildCardinality == UNKNOWN_VALUE || rightChildCardinality == UNKNOWN_VALUE) {
-            return UNKNOWN_VALUE;
-        }
-        
-        float numberComparisons = merge?(leftChildCardinality + rightChildCardinality):(leftChildCardinality * rightChildCardinality);
-        
-        float connectorBatchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
-        if(context != null) {
-            connectorBatchSize = context.getConnectorBatchSize(); 
-        }
-        
-        float totalReadTime = (leftChildCardinality + rightChildCardinality) * readTime;
-        float totalCompareTime = numberComparisons * compareTime;
-        float totalProcMoreRequestLeftTime = (float)Math.floor(leftChildCardinality/connectorBatchSize)*procMoreRequestTime;
-        float totalProcMoreRequestRightTime = (float)Math.floor(rightChildCardinality/connectorBatchSize)*procMoreRequestTime;
-        
-        float cost = (totalReadTime+
-                                           totalCompareTime+
-                                           totalProcMoreRequestLeftTime+
-                                           totalProcMoreRequestRightTime);
-        
-        if (merge) {
-            cost += (leftChildCardinality*safeLog(leftChildCardinality) + rightChildCardinality*safeLog(rightChildCardinality)) * readTime;
-        }
-        
-        if (isPhysicalSource(rightChildNode)) {
-            cost += procNewRequestTime;
-        }
-        if (isPhysicalSource(leftChildNode)) {
-            cost += procNewRequestTime;
-        }
-        return cost;
-    }
-
     private static float safeLog(float x) {
         return (float)Math.max(1, Math.log(x));
     }
@@ -958,10 +1091,11 @@ public class NewCalculateCostUtil {
      * The worst possible cost will arise from a high independent ndv (many dependent sets) and a low dependent ndv (possibly many matches per set)
      * 
      * This logic uses the same assumption as criteria in that ndv is used as a divisor of cardinality. 
+     * @throws QueryPlannerException 
      * 
      */
-    public static float computeCostForDepJoin(PlanNode joinNode, boolean leftIndependent, JoinStrategyType joinStrategy, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, CommandContext context) 
-        throws TeiidComponentException, QueryMetadataException {
+    public static Float computeCostForDepJoin(PlanNode joinNode, boolean leftIndependent, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, CommandContext context) 
+        throws TeiidComponentException, QueryMetadataException, QueryPlannerException {
         
         PlanNode independentNode = leftIndependent?joinNode.getFirstChild():joinNode.getLastChild();
         PlanNode dependentNode = leftIndependent?joinNode.getLastChild():joinNode.getFirstChild();
@@ -969,139 +1103,176 @@ public class NewCalculateCostUtil {
         List independentExpressions = (List)(leftIndependent?joinNode.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS):joinNode.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS));
         List dependentExpressions = (List)(leftIndependent?joinNode.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS):joinNode.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS));
         
-        // compute the cost for both trees, if we don't come up with a valid cost for both we have to return unknown
+        return computeCostForDepJoin(independentNode, dependentNode,
+				independentExpressions, dependentExpressions, metadata,
+				capFinder, context);
+    }
+
+	public static Float computeCostForDepJoin(PlanNode independentNode,
+			PlanNode dependentNode, List independentExpressions,
+			List dependentExpressions, QueryMetadataInterface metadata,
+			CapabilitiesFinder capFinder, CommandContext context)
+			throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
+
         float independentCardinality = computeCostForTree(independentNode, metadata);
         float dependentCardinality = computeCostForTree(dependentNode, metadata);
         
-        float indSymbolNDV = getNDV(independentNode, independentExpressions, metadata, independentCardinality, true);
-        float depSymbolNDV = getNDV(dependentNode, dependentExpressions, metadata, dependentCardinality, false);
-        
-        //If either cardinality is unknown, we return unknown
-        if(indSymbolNDV == UNKNOWN_VALUE || depSymbolNDV == UNKNOWN_VALUE || independentCardinality == UNKNOWN_VALUE || dependentCardinality == UNKNOWN_VALUE) {
-            return UNKNOWN_VALUE;
+        if (independentCardinality == UNKNOWN_VALUE || dependentCardinality == UNKNOWN_VALUE) {
+        	return null;
         }
-
-        float connectorBatchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
+        
         float processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
         if(context != null) {
-            connectorBatchSize = context.getConnectorBatchSize();
             processorBatchSize = context.getProcessorBatchSize();
         }
+
+        RulePushSelectCriteria rpsc = new RulePushSelectCriteria();
+        rpsc.setCreatedNodes(new LinkedList<PlanNode>());
         
-        float setCriteriaBatchSize = indSymbolNDV;
+		for (int i = 0; i < independentExpressions.size(); i++) {
+			Expression indExpr = (Expression)independentExpressions.get(i);
+			Collection<ElementSymbol> indElements = ElementCollectorVisitor.getElements(indExpr, true);
+			float indSymbolNDV = getStat(Stat.NDV, indElements, independentNode, independentCardinality, metadata);
+			boolean usesIndKey = usesKey(dependentNode, indElements, metadata);
+			if (indSymbolNDV == UNKNOWN_VALUE) {
+				if (!usesIndKey) {
+					indSymbolNDV = Math.max(1, independentCardinality/2);
+				} else {
+					indSymbolNDV = independentCardinality;
+				}
+			}
+			Expression depExpr = (Expression)dependentExpressions.get(i);
+			
+			LinkedList<PlanNode> critNodes = new LinkedList<PlanNode>();
+			LinkedList<PlanNode> initialTargets = new LinkedList<PlanNode>();
+			
+			LinkedList<Expression> depExpressions = new LinkedList<Expression>();
+			LinkedList<PlanNode> targets = new LinkedList<PlanNode>();
+			critNodes.add(RelationalPlanner.createSelectNode(new DependentSetCriteria(depExpr, null), false));
+			initialTargets.add(dependentNode);
+			while (!critNodes.isEmpty()) {
+				PlanNode critNode = critNodes.remove();
+				PlanNode initial = initialTargets.remove();
+				if (critNode.getGroups().isEmpty()) {
+					//TODO: we need to project constants up through a plan to avoid this case
+					continue;
+				}
+				PlanNode sourceNode = FrameUtil.findOriginatingNode(initial, critNode.getGroups());
+				PlanNode target = sourceNode;
+				if (initial != sourceNode) {
+					target = rpsc.examinePath(initial, sourceNode, metadata, capFinder);					
+				}
+				if (target != sourceNode || (sourceNode.getType() == NodeConstants.Types.SOURCE && sourceNode.getChildCount() == 0)) {
+					targets.add(target);
+					DependentSetCriteria dsc = (DependentSetCriteria)critNode.getProperty(Info.SELECT_CRITERIA);
+					depExpressions.add(dsc.getExpression());
+					continue;
+				}
+				if (sourceNode.getType() == NodeConstants.Types.SOURCE) {
+					PlanNode child = sourceNode.getFirstChild();
+		            child = FrameUtil.findOriginatingNode(child, child.getGroups());
+		            if (child != null && child.getType() == NodeConstants.Types.SET_OP) {
+		            	targets.add(target);
+						DependentSetCriteria dsc = (DependentSetCriteria)critNode.getProperty(Info.SELECT_CRITERIA);
+						depExpressions.add(dsc.getExpression());
+						//TODO: we need better handling for set op situations
+						continue;
+		            }
+					if (!rpsc.pushAcrossFrame(sourceNode, critNode, metadata)) {
+						targets.add(target);
+						DependentSetCriteria dsc = (DependentSetCriteria)critNode.getProperty(Info.SELECT_CRITERIA);
+						depExpressions.add(dsc.getExpression());
+					}
+					List<PlanNode> createdNodes = rpsc.getCreatedNodes();
+					for (PlanNode planNode : createdNodes) {
+						critNodes.add(planNode);
+						initialTargets.add(planNode.getFirstChild());
+						NodeEditor.removeChildNode(planNode.getParent(), planNode);
+					}
+					rpsc.getCreatedNodes().clear();
+				} 
+				//the source must be a null or project node, which we don't care about
+			}
+			
+			Iterator<Expression> exprIter = depExpressions.iterator(); 
+			for (Iterator<PlanNode> targetIter = targets.iterator(); targetIter.hasNext();) {
+				PlanNode target = targetIter.next();
+				Expression targerDepExpr = exprIter.next();
+				PlanNode accessNode = NodeEditor.findParent(target, NodeConstants.Types.ACCESS);
+
+		        float setCriteriaBatchSize = indSymbolNDV;
+                
+		        if (accessNode != null) {
+		            setCriteriaBatchSize = CapabilitiesUtil.getMaxInCriteriaSize(RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata), metadata, capFinder);
+		            if (setCriteriaBatchSize < 1) {
+		                setCriteriaBatchSize = indSymbolNDV;
+		            }
+		        } else if (indSymbolNDV > processorBatchSize) {
+	            	//don't bother making a virtual join dependent if they are likely to be large
+		        	//TODO: what operations are performed between origNode and dependentNode
+	        		//TODO: we should be using a tree structure rather than just a value iterator
+	        		continue;
+		        }
+		        if (target.hasBooleanProperty(Info.MAKE_NOT_DEP)) {
+		        	continue;
+		        }
+	        	Collection<ElementSymbol> depElems = ElementCollectorVisitor.getElements(targerDepExpr, true);
+	        	while (target.getParent().getType() == NodeConstants.Types.SELECT) {
+	        		target = target.getParent();
+	        	}
+	        	float depTargetCardinality = computeCostForTree(target, metadata);
+	        	if (depTargetCardinality == UNKNOWN_VALUE) {
+	        		continue;
+	        	}
+	        	float depSymbolNDV = getStat(Stat.NDV, depElems, target, depTargetCardinality, metadata);
+	        	boolean usesKey = usesKey(dependentNode, depElems, metadata);
+				if (depSymbolNDV == UNKNOWN_VALUE) {
+					if (!usesKey) {
+						//make an educated guess that this is a fk
+						float indSymbolOrigNDV = indSymbolNDV;
+						float indCardinalityOrig = independentCardinality;
+						//TODO: we should probably dig deeper than this
+						PlanNode indOrigNode = FrameUtil.findOriginatingNode(independentNode, GroupsUsedByElementsVisitor.getGroups(indElements));
+						if (indOrigNode != null) {
+							indCardinalityOrig = computeCostForTree(indOrigNode, metadata);
+							indSymbolOrigNDV = getStat(Stat.NDV, indElements, indOrigNode, indCardinalityOrig, metadata);
+							if (indSymbolOrigNDV == UNKNOWN_VALUE) {
+								if (!usesIndKey) {
+									indSymbolOrigNDV = Math.max(1, indCardinalityOrig / 3);
+								} else {
+									indSymbolOrigNDV = indCardinalityOrig;
+								}
+							} 
+						}
+						depSymbolNDV = Math.max((float)Math.pow(depTargetCardinality, .75), Math.min(indSymbolOrigNDV, depTargetCardinality));
+					} else {
+						depSymbolNDV = depTargetCardinality;
+					}
+				}
+				boolean usesIndex = accessNode != null && usesKey;
+				if (!usesKey && accessNode != null && target.getType() == NodeConstants.Types.SOURCE && target.getChildCount() == 0) {
+					usesIndex = usesKey(depElems, target.getGroups(), metadata, false);
+				}
+		        float dependentAccessCardinality = Math.min(depTargetCardinality, depTargetCardinality * indSymbolNDV / depSymbolNDV);
+		        float scaledCardinality = Math.min(dependentCardinality, dependentCardinality * indSymbolNDV / depSymbolNDV);
+		        float numberComparisons = (usesIndex?safeLog(depTargetCardinality):depTargetCardinality) * (usesIndex?indSymbolNDV:safeLog(indSymbolNDV));
+		        float newDependentQueries = accessNode == null?0:(float)Math.ceil(indSymbolNDV / setCriteriaBatchSize);
+		        
+		        float relativeCost = newDependentQueries*procNewRequestTime;
+		        float relativeComparisonCost = (numberComparisons - safeLog(scaledCardinality) /*no longer needed by the join*/
+		            /*sort cost reduction, however it's always true if its on the source and using an index
+		              TODO: there are other cost reductions, which we could get by checking the other parent nodes */
+		        	+ (scaledCardinality*safeLog(scaledCardinality) - dependentCardinality*safeLog(dependentCardinality))) 
+		        	* compareTime;
+		        float relativeReadCost = (dependentAccessCardinality - depTargetCardinality)*readTime; //cardinality reductions
+		        
+		        if (relativeCost + relativeComparisonCost + relativeReadCost < 0) {
+		        	return scaledCardinality;
+		        }
+			}
+		}
         
-        PlanNode node = FrameUtil.findJoinSourceNode(dependentNode);
-        
-        while (node != null && node.getType() != NodeConstants.Types.ACCESS) {
-            if (node.getType() == NodeConstants.Types.JOIN || node.getType() == NodeConstants.Types.SET_OP) {
-                node = null;
-                break;
-            }
-            node = node.getFirstChild();
-        }
-        
-        if (node != null) {
-            setCriteriaBatchSize = CapabilitiesUtil.getMaxInCriteriaSize(RuleRaiseAccess.getModelIDFromAccess(node, metadata), metadata, capFinder);
-            if (setCriteriaBatchSize < 1) {
-                setCriteriaBatchSize = indSymbolNDV;
-            }
-        } else {
-            //don't bother making a virtual join dependent if they are likely to be large
-            if (indSymbolNDV > Math.min(processorBatchSize, setCriteriaBatchSize)) {
-                return UNKNOWN_VALUE;
-            }
-        }
-        
-        independentNode.setProperty(NodeConstants.Info.EST_SET_SIZE, new Float(indSymbolNDV));
-        
-        //for non-partitioned joins the cardinality of the dependentaccess should never be greater than the dependent cardinality
-        //TODO: when partitioned joins are implemented, this logic will need updated
-        float dependentAccessCardinality = Math.min(dependentCardinality, dependentCardinality * indSymbolNDV / depSymbolNDV);
-        
-        boolean merge = false;
-        if (JoinStrategyType.MERGE.equals(joinStrategy)) {
-            merge = true;
-        } else if (!JoinStrategyType.NESTED_LOOP.equals(joinStrategy)) {
-            return UNKNOWN_VALUE;
-        }
-        
-        dependentNode.setProperty(NodeConstants.Info.EST_DEP_CARDINALITY, new Float(dependentAccessCardinality));
-        
-        float numberComparisons = merge?(independentCardinality + dependentAccessCardinality):(independentCardinality * dependentAccessCardinality);
-        
-        //account for sorting
-        float totalLoadDataTime = independentCardinality * safeLog(independentCardinality) * readTime;
-        if (merge) {
-            totalLoadDataTime += dependentAccessCardinality * safeLog(dependentAccessCardinality) * readTime;
-        }
-        
-        //the independentCardinality is doubled to account for the dependent setup time, which re-reads the independent values
-        float totalReadTime = (2*independentCardinality + dependentAccessCardinality) * readTime;
-        float totalCompareTime = numberComparisons * compareTime;
-        float totalProcMoreRequestLeftTime = (float)Math.floor(independentCardinality / connectorBatchSize) * procMoreRequestTime;
-        float newDependentQueries = (float)Math.ceil(indSymbolNDV / setCriteriaBatchSize);
-        float totalProcMoreRequestRightTime = Math.max(dependentAccessCardinality / connectorBatchSize - newDependentQueries, 0) * procMoreRequestTime;
-        
-        float cost = (totalLoadDataTime +
-                                           totalReadTime+
-                                           totalCompareTime+
-                                           totalProcMoreRequestLeftTime+
-                                           totalProcMoreRequestRightTime);
-       
-        if (isPhysicalSource(independentNode)) {
-            cost += procNewRequestTime; //independent query latency
-        }
-        /*estimate for dependent query latencies
-         *NOTE: the initial latency estimate can be made significantly larger for queries against large dependent sets,
-         *which is consistent with observed behavior in which criteria-less queries outperform those with in criteria
-         *with 1000 entries.  
-         */        
-        if (isPhysicalSource(dependentNode)) {
-            cost += newDependentQueries * (procNewRequestTime * 
-                            Math.max(safeLog(dependentCardinality) - 10, 1) * 
-                            Math.max(safeLog(Math.min(dependentCardinality, Math.min(setCriteriaBatchSize, indSymbolNDV))) - 2, 1)
-                            ); 
-        }
-        
-        return cost;
-    }
-    
-    private static boolean isPhysicalSource(PlanNode node) {
-        node = FrameUtil.findJoinSourceNode(node);
-        if (node != null) {
-            return node.getType() == NodeConstants.Types.ACCESS;
-        }
-        return false;
-    }
-    
-    private static float getNDV(PlanNode node,
-                                   List expressions,
-                                   QueryMetadataInterface metadata,
-                                   float nodeCardinality, boolean independent) throws QueryMetadataException,
-                                                      TeiidComponentException {
-        float result = UNKNOWN_VALUE;
-        for(Iterator iter = expressions.iterator(); iter.hasNext();) {
-            Expression expr = (Expression)iter.next();
-            Collection<ElementSymbol> symbols = ElementCollectorVisitor.getElements(expr, true);
-            
-            float currentSymbolNDV = getNDV(symbols, node, nodeCardinality, metadata);                
-            
-            if(currentSymbolNDV == UNKNOWN_VALUE) { 
-                if (usesKey(symbols, metadata)) {
-                    return nodeCardinality;
-                } 
-                if (independent) {
-                    currentSymbolNDV = nodeCardinality / 2;
-                } else {
-                    currentSymbolNDV = nodeCardinality / 4;
-                }
-            }
-            
-            if(result == UNKNOWN_VALUE || currentSymbolNDV > result) {
-                result = currentSymbolNDV;
-            }
-        }
-        return Math.max(1, Math.min(nodeCardinality, result));
-    }
+        return null;
+	}
     
 }

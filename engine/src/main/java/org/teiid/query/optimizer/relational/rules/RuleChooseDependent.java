@@ -40,7 +40,6 @@ import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.Expression;
@@ -81,29 +80,24 @@ public final class RuleChooseDependent implements OptimizerRule {
             
             boolean bothCandidates = entry.leftCandidate&&entry.rightCandidate;
             
-            JoinStrategyType joinStrategy = (JoinStrategyType)joinNode.getProperty(NodeConstants.Info.JOIN_STRATEGY);
-            
             PlanNode chosenNode = chooseDepWithoutCosting(sourceNode, bothCandidates?siblingNode:null, analysisRecord);
             if(chosenNode != null) {
                 pushCriteria |= markDependent(chosenNode, joinNode);
                 continue;
             }   
             
-            float depJoinCost = NewCalculateCostUtil.computeCostForDepJoin(joinNode, !entry.leftCandidate, joinStrategy, metadata, capFinder, context);
+            boolean useDepJoin = NewCalculateCostUtil.computeCostForDepJoin(joinNode, !entry.leftCandidate, metadata, capFinder, context) != null;
             PlanNode dependentNode = sourceNode;
-            PlanNode independentNode = siblingNode;
             
-            if (bothCandidates) {
-                float siblingDepJoinCost = NewCalculateCostUtil.computeCostForDepJoin(joinNode, true, joinStrategy, metadata, capFinder, context);
-                if (siblingDepJoinCost != NewCalculateCostUtil.UNKNOWN_VALUE && (siblingDepJoinCost < depJoinCost || depJoinCost == NewCalculateCostUtil.UNKNOWN_VALUE)) {
+            if (bothCandidates && !useDepJoin) {
+                useDepJoin = NewCalculateCostUtil.computeCostForDepJoin(joinNode, true, metadata, capFinder, context) != null;
+                if (useDepJoin) {
                     dependentNode = siblingNode;
-                    depJoinCost = siblingDepJoinCost;
-                    independentNode = sourceNode;
                 }
             }
             
-            if (depJoinCost != NewCalculateCostUtil.UNKNOWN_VALUE) {
-                pushCriteria |= decideForAgainstDependentJoin(depJoinCost, independentNode, dependentNode, joinNode, metadata, context);
+            if (useDepJoin) {
+                pushCriteria |= markDependent(dependentNode, joinNode);
             } else {
             	float sourceCost = NewCalculateCostUtil.computeCostForTree(sourceNode, metadata);
             	float siblingCost = NewCalculateCostUtil.computeCostForTree(siblingNode, metadata);
@@ -126,20 +120,6 @@ public final class RuleChooseDependent implements OptimizerRule {
         return plan;
     }    
 
-    boolean decideForAgainstDependentJoin(float depJoinCost, PlanNode independentNode, PlanNode dependentNode, PlanNode joinNode, QueryMetadataInterface metadata, CommandContext context)
-        throws QueryMetadataException, TeiidComponentException {
-        JoinStrategyType joinStrategy = (JoinStrategyType)joinNode.getProperty(NodeConstants.Info.JOIN_STRATEGY);
-        joinNode.setProperty(NodeConstants.Info.EST_DEP_JOIN_COST, new Float(depJoinCost));
-
-        float joinCost = NewCalculateCostUtil.computeCostForJoin(independentNode, dependentNode, joinStrategy, metadata, context);
-        joinNode.setProperty(NodeConstants.Info.EST_JOIN_COST, new Float(joinCost));
-        if(depJoinCost < joinCost) {
-            return markDependent(dependentNode, joinNode);
-        }
-        
-        return false;
-    }
-        
     /**
      * Walk the tree pre-order, finding all access nodes that are candidates and
      * adding them to the matches list.

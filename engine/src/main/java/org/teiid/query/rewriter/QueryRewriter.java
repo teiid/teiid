@@ -703,7 +703,7 @@ public class QueryRewriter {
 				continue;
 			}
 			ResolverUtil.findKeyPreserved(query, keyPreservingGroups, metadata);
-			if (!NewCalculateCostUtil.usesKey(plannedResult.leftExpressions, keyPreservingGroups, metadata)) {
+			if (!NewCalculateCostUtil.usesKey(plannedResult.leftExpressions, keyPreservingGroups, metadata, true)) {
 				continue;
 			}
 			crits.remove();

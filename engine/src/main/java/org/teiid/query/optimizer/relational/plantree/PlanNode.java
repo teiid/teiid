@@ -170,11 +170,11 @@ public class PlanNode {
         return nodeProperties.get(propertyID);
     }
 
-    public void setProperty(NodeConstants.Info propertyID, Object value) {
+    public Object setProperty(NodeConstants.Info propertyID, Object value) {
         if(nodeProperties == null) {
             nodeProperties = new HashMap<NodeConstants.Info, Object>();
         }    
-        nodeProperties.put(propertyID, value);
+        return nodeProperties.put(propertyID, value);
     }
 
     public Object removeProperty(Object propertyID) {

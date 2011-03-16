@@ -127,7 +127,7 @@ public class TestTPCR extends BaseQueryTest {
         List[] sqlServerExpected =
             new List[] { Arrays.asList(new Object[] { new Integer(5), new Integer(12), new Long(5) } ),
                          Arrays.asList(new Object[] { new Integer(5), new Integer(13), new Long(5) } )};
-        dataMgr.addData("SELECT g_0.O_CUSTKEY AS c_0, g_0.O_ORDERKEY AS c_1, g_0.O_CUSTKEY AS c_2 FROM TPCR_SQLS.ORDERS AS g_0 WHERE g_0.O_ORDERDATE < {ts'1992-01-02 00:00:00.0'} ORDER BY c_2", //$NON-NLS-1$
+        dataMgr.addData("SELECT g_0.O_CUSTKEY AS c_0, g_0.O_ORDERKEY AS c_1, g_0.O_CUSTKEY AS c_2 FROM TPCR_SQLS.ORDERS AS g_0 WHERE (g_0.O_ORDERDATE < {ts'1992-01-02 00:00:00.0'}) AND (g_0.O_CUSTKEY IN (5, 6)) ORDER BY c_2", //$NON-NLS-1$
                         sqlServerExpected);
         
         List[] expected =
@@ -167,7 +167,7 @@ public class TestTPCR extends BaseQueryTest {
         List[] sqlServerExpected =
             new List[] { Arrays.asList(new Object[] { new Integer(5), new Integer(12), new Long(5) } ),
                          Arrays.asList(new Object[] { new Integer(5), new Integer(13), new Long(5) } )};
-        dataMgr.addData("SELECT g_0.O_CUSTKEY AS c_0, g_0.O_ORDERKEY AS c_1, g_0.O_CUSTKEY AS c_2 FROM TPCR_SQLS.ORDERS AS g_0 WHERE g_0.O_ORDERDATE < {ts'1992-01-02 00:00:00.0'} ORDER BY c_2", //$NON-NLS-1$
+        dataMgr.addData("SELECT g_0.O_CUSTKEY AS c_0, g_0.O_ORDERKEY AS c_1, g_0.O_CUSTKEY AS c_2 FROM TPCR_SQLS.ORDERS AS g_0 WHERE (g_0.O_ORDERDATE < {ts'1992-01-02 00:00:00.0'}) AND (g_0.O_CUSTKEY IN (5, 6)) ORDER BY c_2", //$NON-NLS-1$
                         sqlServerExpected);
         
         List[] expected =

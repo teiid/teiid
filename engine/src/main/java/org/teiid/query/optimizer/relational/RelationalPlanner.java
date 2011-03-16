@@ -389,9 +389,9 @@ public class RelationalPlanner {
             rules.push(RuleConstants.IMPLEMENT_JOIN_STRATEGY);
         }
         
-        rules.push(RuleConstants.ASSIGN_OUTPUT_ELEMENTS);
-        
         rules.push(RuleConstants.CALCULATE_COST);
+        
+        rules.push(RuleConstants.ASSIGN_OUTPUT_ELEMENTS);
         
         if (hints.hasLimit) {
             rules.push(RuleConstants.PUSH_LIMIT);

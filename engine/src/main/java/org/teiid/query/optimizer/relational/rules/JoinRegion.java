@@ -23,6 +23,7 @@
 package org.teiid.query.optimizer.relational.rules;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,12 +35,15 @@ import java.util.Map;
 import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.resolver.util.AccessPattern;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.CompoundCriteria;
@@ -51,6 +55,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
+import org.teiid.query.util.CommandContext;
 
 
 /**
@@ -86,6 +91,8 @@ class JoinRegion {
     
     private Map<ElementSymbol, Set<Collection<GroupSymbol>>> dependentCriteriaElements;
     private Map<PlanNode, Set<PlanNode>> critieriaToSourceMap;
+    
+    private HashMap<List<Object>, Float> depCache;
     
     public PlanNode getJoinRoot() {
         return joinRoot;
@@ -224,7 +231,7 @@ class JoinRegion {
         }
         this.joinRoot = root;
     }
-    
+        
     /**
      * Will provide an estimate of cost by summing the estimated tuples flowing through
      * each intermediate join. 
@@ -234,8 +241,9 @@ class JoinRegion {
      * @return
      * @throws TeiidComponentException 
      * @throws QueryMetadataException 
+     * @throws QueryPlannerException 
      */
-    public double scoreRegion(Object[] joinOrder, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+    public double scoreRegion(Object[] joinOrder, int startIndex, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, CommandContext context) throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
         List<Map.Entry<PlanNode, PlanNode>> joinSourceEntries = new ArrayList<Map.Entry<PlanNode, PlanNode>>(joinSourceNodes.entrySet());
         double totalIntermediatCost = 0;
         double cost = 1;
@@ -249,18 +257,24 @@ class JoinRegion {
             Map.Entry<PlanNode, PlanNode> entry = joinSourceEntries.get(source.intValue());
             PlanNode joinSourceRoot = entry.getValue();
             
-            //check to make sure that this group ordering satisfies the access patterns
-            if (!this.unsatisfiedAccessPatterns.isEmpty() || this.containsNestedTable) {
-                PlanNode joinSource = entry.getKey();
-                
-                Collection<GroupSymbol> requiredGroups = (Collection<GroupSymbol>)joinSource.getProperty(NodeConstants.Info.REQUIRED_ACCESS_PATTERN_GROUPS);
-                
-                if (requiredGroups != null && !groups.containsAll(requiredGroups)) {
-                    return Double.MAX_VALUE;
-                }
-            }
+            if (startIndex == 0) {
+	            //check to make sure that this group ordering satisfies the access patterns
+	            if (!this.unsatisfiedAccessPatterns.isEmpty() || this.containsNestedTable) {
+	                PlanNode joinSource = entry.getKey();
+	                
+	                Collection<GroupSymbol> requiredGroups = (Collection<GroupSymbol>)joinSource.getProperty(NodeConstants.Info.REQUIRED_ACCESS_PATTERN_GROUPS);
+	                
+	                if (requiredGroups != null && !groups.containsAll(requiredGroups)) {
+	                    return Double.MAX_VALUE;
+	                }
+	            }
+            } 
             
             groups.addAll(joinSourceRoot.getGroups());
+            
+            if (startIndex > 0) {
+            	continue;
+            }
             
             float sourceCost = ((Float)joinSourceRoot.getProperty(NodeConstants.Info.EST_CARDINALITY)).floatValue();
             
@@ -280,7 +294,7 @@ class JoinRegion {
                 	sourceCost = (float)cost;
                 	criteria.removeAll(applicableCriteria);
 	            	applicableCriteria = null;
-            		if (NewCalculateCostUtil.usesKey(cc, metadata)) {
+            		if (NewCalculateCostUtil.usesKey(cc, metadata) || (i == 1 && joinSourceRoot.hasBooleanProperty(Info.MAKE_DEP) && !joinSourceRoot.hasBooleanProperty(Info.MAKE_NOT_DEP))) {
     	            	sourceCost = Math.min(UNKNOWN_TUPLE_EST, sourceCost * Math.min(NewCalculateCostUtil.UNKNOWN_JOIN_SCALING, sourceCost));
             		} else {
     	            	sourceCost = Math.min(UNKNOWN_TUPLE_EST, sourceCost * Math.min(NewCalculateCostUtil.UNKNOWN_JOIN_SCALING * 2, sourceCost));
@@ -288,6 +302,25 @@ class JoinRegion {
                 }
             } else if (Double.isInfinite(sourceCost) || Double.isNaN(sourceCost)) {
             	return Double.MAX_VALUE;
+            } else if (i == 1 && applicableCriteria != null && !applicableCriteria.isEmpty()) {
+            	List<Object> key = Arrays.asList(joinOrder[0], joinOrder[1]);
+            	Float depJoinCost = null;
+            	if (depCache != null && depCache.containsKey(key)) {
+        			depJoinCost = depCache.get(key);
+            	} else {
+	            	Integer indIndex = (Integer)joinOrder[0];
+	            	Map.Entry<PlanNode, PlanNode> indEntry = joinSourceEntries.get(indIndex.intValue());
+	                PlanNode possibleInd = indEntry.getValue();
+	                
+	                depJoinCost = getDepJoinCost(metadata, capFinder, context, possibleInd, applicableCriteria, joinSourceRoot);
+	                if (depCache == null) {
+	                	depCache = new HashMap<List<Object>, Float>();
+	                }
+	                depCache.put(key, depJoinCost);
+            	}
+                if (depJoinCost != null) {
+                	sourceCost = depJoinCost;
+                }
             }
         
             cost *= sourceCost;
@@ -306,6 +339,34 @@ class JoinRegion {
         
         return totalIntermediatCost;
     }
+
+	private Float getDepJoinCost(QueryMetadataInterface metadata,
+			CapabilitiesFinder capFinder, CommandContext context,
+			PlanNode indNode, List<PlanNode> applicableCriteria,
+			PlanNode depNode) throws QueryMetadataException,
+			TeiidComponentException, QueryPlannerException {
+		if (depNode.hasBooleanProperty(Info.MAKE_NOT_DEP)) {
+			return null;
+		}
+		
+		float indCost = indNode.getCardinality();
+		
+		if (indCost == NewCalculateCostUtil.UNKNOWN_VALUE) {
+			return null;
+		}
+		
+		List<Criteria> crits = new ArrayList<Criteria>(applicableCriteria.size());
+		for (PlanNode planNode : applicableCriteria) {
+			crits.add((Criteria) planNode.getProperty(NodeConstants.Info.SELECT_CRITERIA));
+		}
+		List<Expression> leftExpressions = new LinkedList<Expression>();
+		List<Expression> rightExpressions = new LinkedList<Expression>();
+		RuleChooseJoinStrategy.separateCriteria(indNode.getGroups(), depNode.getGroups(), leftExpressions, rightExpressions, crits, new LinkedList<Criteria>());
+		if (leftExpressions.isEmpty()) {
+			return null;
+		}
+		return NewCalculateCostUtil.computeCostForDepJoin(indNode, depNode, leftExpressions, rightExpressions, metadata, capFinder, context);
+	}
     
     /**
      *  Returns true if every element in an unsatisfied access pattern can be satisfied by the current join criteria

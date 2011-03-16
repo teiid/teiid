@@ -45,6 +45,7 @@ import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -251,6 +252,7 @@ public class RulePushAggregates implements
             ElementSymbol virtualElement = new ElementSymbol(virtualElementName);
             virtualElement.setGroupSymbol(virtualGroup);
             virtualElement.setType(symbol.getType());
+            virtualElement.setMetadataID(new TempMetadataID(virtualElementName, symbol.getType()));
             updatedVirturalElement.add(virtualElement);
 		}
 		SymbolMap newParentMap = SymbolMap.createSymbolMap(updatedVirturalElement, projectedViewSymbols);

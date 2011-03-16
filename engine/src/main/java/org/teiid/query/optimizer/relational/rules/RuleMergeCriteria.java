@@ -354,16 +354,6 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		if (crit instanceof SubqueryCompareCriteria) {
 			SubqueryCompareCriteria scc = (SubqueryCompareCriteria)crit;
 		
-			/*if (scc.getCommand().getCorrelatedReferences() == null) {
-				RelationalPlan originalPlan = (RelationalPlan)scc.getCommand().getProcessorPlan();
-	            Number originalCardinality = originalPlan.getRootNode().getEstimateNodeCardinality();
-	            if (originalCardinality.floatValue() != NewCalculateCostUtil.UNKNOWN_VALUE 
-	            		&& originalCardinality.floatValue() < this.context.getProcessorBatchSize()) {
-	            	//this is small enough that it will effectively be a hash join
-	            	return current;
-	            }
-			}*/
-			
 			if (scc.getPredicateQuantifier() != SubqueryCompareCriteria.SOME
 					//TODO: could add an inline view if not a query
 					|| !(scc.getCommand() instanceof Query)) {
@@ -570,7 +560,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		}
 		HashSet<GroupSymbol> keyPreservingGroups = new HashSet<GroupSymbol>();
 		ResolverUtil.findKeyPreserved(query, keyPreservingGroups, metadata);
-		return NewCalculateCostUtil.usesKey(expressions, keyPreservingGroups, metadata);			
+		return NewCalculateCostUtil.usesKey(expressions, keyPreservingGroups, metadata, true);			
 	}
 
 	private boolean hasCorrelatedReferences(LanguageObject object, SymbolMap correlatedReferences) {

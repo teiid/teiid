@@ -60,6 +60,16 @@ import org.teiid.query.util.CommandContext;
 
 
 public final class RulePushSelectCriteria implements OptimizerRule {
+	
+	private List<PlanNode> createdNodes;
+	
+	public List<PlanNode> getCreatedNodes() {
+		return createdNodes;
+	}
+	
+	public void setCreatedNodes(List<PlanNode> createdNodes) {
+		this.createdNodes = createdNodes;
+	}
     
 	/**
 	 * Execute the rule as described in the class comments.
@@ -286,8 +296,9 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                     if (!RuleRaiseAccess.canRaiseOverSelect(currentNode, metadata, capFinder, critNode, null)) {
                         return currentNode;
                     }
-                    
-                    satisfyAccessPatterns(critNode, currentNode);
+                    if (this.createdNodes == null) {
+                    	satisfyAccessPatterns(critNode, currentNode);
+                    }
 
                     if (critNode.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET) 
                     		&& CapabilitiesUtil.getMaxInCriteriaSize(RuleRaiseAccess.getModelIDFromAccess(currentNode, metadata), metadata, capFinder) > 0) {
@@ -302,7 +313,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 				}
 			} else if(currentNode.getType() == NodeConstants.Types.JOIN) {
 				//pushing below a join is not necessary under an access node
-				if (NodeEditor.findParent(currentNode, NodeConstants.Types.ACCESS) != null) {
+				if (this.createdNodes == null && NodeEditor.findParent(currentNode, NodeConstants.Types.ACCESS) != null) {
 					return currentNode;
 				}
 				
@@ -476,6 +487,9 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 		copyNode.addGroups(critNode.getGroups());
         if(critNode.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)) {
             copyNode.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);
+        }
+        if (createdNodes != null) {
+        	createdNodes.add(copyNode);
         }
 	    return copyNode;
 	}

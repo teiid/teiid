@@ -3287,7 +3287,7 @@ public class TestOptimizer {
             0,      // Null
             0,      // PlanExecution
             1,      // Project
-            1,      // Select
+            0,      // Select
             0,      // Sort
             0       // UnionAll
         });         

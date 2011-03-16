@@ -484,7 +484,7 @@ public class TestXMLPlanningEnhancements {
 
         // supply the costing information for OrdersC
         orders.putProperty(FakeMetadataObject.Props.CARDINALITY, BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE - 1);
-        suppliers.putProperty(FakeMetadataObject.Props.CARDINALITY, RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY);        
+        suppliers.putProperty(FakeMetadataObject.Props.CARDINALITY, RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1);        
 
         String expectedDoc = TestXMLProcessor.readFile("TestXMLProcessor-FullSuppliers.xml"); //$NON-NLS-1$
         

@@ -26,7 +26,6 @@ import static org.junit.Assert.*;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import org.junit.Test;
@@ -59,11 +58,11 @@ public class TestDependentJoins {
         }
                                 
         // Collect all the group names (uppercase) for all the dependent groups in the plan
-        Set depGroups = new HashSet();
-        getDependentGroups(((RelationalPlan)plan).getRootNode(), depGroups);
+        Set<String> depGroups = new HashSet<String>();
+        getDependentGroups(((RelationalPlan)plan).getRootNode(), depGroups, true);
 
         // Check that all the expected groups exist in depGroups
-        Set expectedGroups = new HashSet();
+        Set<String> expectedGroups = new HashSet<String>();
         for(int i=0; i<groups.length; i++) {
             expectedGroups.add(groups[i].toUpperCase());    
         }        
@@ -71,15 +70,20 @@ public class TestDependentJoins {
         assertEquals("Expected groups were not made dependent", expectedGroups, depGroups);         //$NON-NLS-1$
     }
     
-    static void getDependentGroups(RelationalNode node, Set depGroups) {
-        if(node instanceof DependentAccessNode) {
-            DependentAccessNode accessNode = (DependentAccessNode)node;
+    static void getDependentGroups(RelationalNode node, Set<String> depGroups, boolean depdenent) {
+        if(node instanceof AccessNode) {
+        	if (node instanceof DependentAccessNode) {
+        		if (!depdenent) {
+        			return;
+        		}
+        	} else if (depdenent) {
+        		return;
+        	}
+            AccessNode accessNode = (AccessNode)node;
             Command depCommand = accessNode.getCommand();
-            Collection groupSymbols = GroupCollectorVisitor.getGroups(depCommand, true);
-            Iterator groupIter = groupSymbols.iterator();
-            while(groupIter.hasNext()) {
-                GroupSymbol group = (GroupSymbol) groupIter.next();
-                depGroups.add(group.getName().toUpperCase());    
+            Collection<GroupSymbol> groupSymbols = GroupCollectorVisitor.getGroups(depCommand, true);
+            for (GroupSymbol groupSymbol : groupSymbols) {
+        		depGroups.add(groupSymbol.getName().toUpperCase());
             }
         }
         
@@ -87,7 +91,7 @@ public class TestDependentJoins {
         RelationalNode[] children = node.getChildren();
         for(int i=0; i<children.length; i++) {
             if(children[i] != null) {
-                getDependentGroups(node.getChildren()[i], depGroups);                
+                getDependentGroups(node.getChildren()[i], depGroups, depdenent);                
             }
         }
     }
@@ -98,37 +102,16 @@ public class TestDependentJoins {
         }
                                 
         // Collect all the group names (uppercase) for all the dependent groups in the plan
-        Set notDepGroups = new HashSet();
-        getNotDependentGroups(((RelationalPlan)plan).getRootNode(), notDepGroups);
+        Set<String> notDepGroups = new HashSet<String>();
+        getDependentGroups(((RelationalPlan)plan).getRootNode(), notDepGroups, false);
 
         // Check that all the expected groups exist in depGroups
-        Set expectedGroups = new HashSet();
+        Set<String> expectedGroups = new HashSet<String>();
         for(int i=0; i<groups.length; i++) {
             expectedGroups.add(groups[i].toUpperCase());    
         }        
         
         assertEquals("Expected groups were made dependent", expectedGroups, notDepGroups);         //$NON-NLS-1$
-    }
-    
-    private void getNotDependentGroups(RelationalNode node, Set notDepGroups) {
-        if(node instanceof AccessNode && !(node instanceof DependentAccessNode)) {
-            AccessNode accessNode = (AccessNode)node;
-            Command depCommand = accessNode.getCommand();
-            Collection groupSymbols = GroupCollectorVisitor.getGroups(depCommand, true);
-            Iterator groupIter = groupSymbols.iterator();
-            while(groupIter.hasNext()) {
-                GroupSymbol group = (GroupSymbol) groupIter.next();
-                notDepGroups.add(group.getName().toUpperCase());    
-            }
-        }
-        
-        // Recurse through children
-        RelationalNode[] children = node.getChildren();
-        for(int i=0; i<children.length; i++) {
-            if(children[i] != null) {
-                getNotDependentGroups(node.getChildren()[i], notDepGroups);                
-            }
-        }
     }
     
     @Test public void testOptionMakeDep1() throws Exception {
@@ -823,10 +806,13 @@ public class TestDependentJoins {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
 
         TransformationMetadata metadata = FakeMetadataFactory.exampleBQT();
-        FakeMetadataFactory.setCardinality("bqt1.smalla", 3000, metadata); //$NON-NLS-1$
+        FakeMetadataFactory.setCardinality("bqt1.smalla", 1000, metadata); //$NON-NLS-1$
         FakeMetadataFactory.setCardinality("bqt2.smalla", 10000, metadata); //$NON-NLS-1$
         Column fmo = (Column)metadata.getElementID("bqt1.smalla.intnum");
 		fmo.setDistinctValues(1000);
+        Column floatnum = (Column)metadata.getElementID("bqt1.smalla.floatnum");
+        floatnum.setDistinctValues(800);
+
         ProcessorPlan plan = TestOptimizer.helpPlan(
             "SELECT max(a.stringkey) from bqt1.smalla a, bqt2.smalla a2, bqt1.smalla a1 where a.intnum = a2.intnum and a1.stringnum = a2.stringnum and a.floatnum = a1.floatnum",  //$NON-NLS-1$
             metadata,
@@ -852,5 +838,5 @@ public class TestDependentJoins {
         });             
 
     } 
-
+    
 }

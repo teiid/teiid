@@ -464,6 +464,9 @@ public class RealMetadataFactory {
 		case Index:
 			group.getIndexes().add(key);
 			break;
+		case Unique:
+			group.getUniqueKeys().add(key);
+			break;
 		default:
 			throw new AssertionError("TODO");
 		}

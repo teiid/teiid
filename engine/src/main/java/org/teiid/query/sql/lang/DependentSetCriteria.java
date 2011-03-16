@@ -127,7 +127,9 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
         }
 
         DependentSetCriteria criteriaCopy = new DependentSetCriteria(copy, id);
-        criteriaCopy.setValueExpression((Expression) getValueExpression().clone());
+        if (this.valueExpression != null) {
+        	criteriaCopy.setValueExpression((Expression) getValueExpression().clone());
+        }
         criteriaCopy.id = this.id;
         return criteriaCopy;
     }

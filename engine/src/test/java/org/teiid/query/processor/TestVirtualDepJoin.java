@@ -247,6 +247,7 @@ public class TestVirtualDepJoin {
         Command command = TestProcessor.helpParse(sql);   
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
         caps.setCapabilitySupport(Capability.CRITERIA_IN, setPushdown);    
         finder.addCapabilities("US", caps); //$NON-NLS-1$
@@ -255,8 +256,8 @@ public class TestVirtualDepJoin {
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, exampleVirtualDepJoin(), finder, context); 
          
         // Check plan contents
-        int selectCount = !setPushdown ? 2 : 0;
-        int accessCount = setPushdown ? 2 : 4;
+        int selectCount = !setPushdown ? 3 : 0;
+        int accessCount = setPushdown ? 1 : 4;
         int depAccessCount = 4 - accessCount;
         TestOptimizer.checkNodeTypes(plan, new int[] {
             accessCount,      // Access

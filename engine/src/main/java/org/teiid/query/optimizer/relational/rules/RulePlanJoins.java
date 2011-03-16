@@ -169,7 +169,7 @@ public class RulePlanJoins implements OptimizerRule {
             
             joinRegion.initializeCostingInformation(metadata);
             
-            Object[] bestOrder = findBestJoinOrder(joinRegion, metadata);
+            Object[] bestOrder = findBestJoinOrder(joinRegion, metadata, capabilitiesFinder, context);
             
             //if no best order was found, just stick with how the user entered the query
             if (bestOrder == null) {
@@ -522,8 +522,9 @@ public class RulePlanJoins implements OptimizerRule {
      * @param region
      * @param metadata
      * @return
+     * @throws QueryPlannerException 
      */
-    Object[] findBestJoinOrder(JoinRegion region, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+    Object[] findBestJoinOrder(JoinRegion region, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, CommandContext context) throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
         int regionCount = region.getJoinSourceNodes().size();
         
         List<Integer> orderList = new ArrayList<Integer>(regionCount);
@@ -549,7 +550,7 @@ public class RulePlanJoins implements OptimizerRule {
         while(permIter.hasNext()) {
             Object[] order = (Object[]) permIter.next();
 
-            double score = region.scoreRegion(order, metadata);
+            double score = region.scoreRegion(order, 0, metadata, capFinder, context);
             if(score < bestSubScore) {
                 bestSubScore = score;
                 bestSubOrder = order;
@@ -568,7 +569,6 @@ public class RulePlanJoins implements OptimizerRule {
         
         //remove the joins that have already been placed
         for(int i=0; i<bestSubOrder.length; i++) {
-            orderList.remove(bestSubOrder[i]);
             result[i] = (Integer)bestSubOrder[i];
         }
         
@@ -578,12 +578,12 @@ public class RulePlanJoins implements OptimizerRule {
             List bestOrder = null;
 
             for (int i = 0; i < orderList.size(); i++) {
-                Integer index = (Integer)orderList.get(i);
+                Integer index = orderList.get(i);
                 
                 List order = new ArrayList(Arrays.asList(bestSubOrder));
                 order.add(index);
                 
-                double partialScore = region.scoreRegion(order.toArray(), metadata);
+                double partialScore = region.scoreRegion(order.toArray(), bestSubOrder.length, metadata, capFinder, context);
                 
                 if (partialScore < bestPartialScore) {
                     bestPartialScore = partialScore;

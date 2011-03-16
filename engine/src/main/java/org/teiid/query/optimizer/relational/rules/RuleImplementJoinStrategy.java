@@ -104,8 +104,8 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
             	if (leftCost != NewCalculateCostUtil.UNKNOWN_VALUE && rightCost != NewCalculateCostUtil.UNKNOWN_VALUE 
             			&& (leftCost > context.getProcessorBatchSize() || rightCost > context.getProcessorBatchSize())) {
             		//we use a larger constant here to ensure that we don't unwisely prevent pushdown
-            		pushLeft = leftCost < context.getProcessorBatchSize() || leftCost / rightCost < 16;
-            		pushRight = rightCost < context.getProcessorBatchSize() || rightCost / leftCost < 16 || joinNode.getProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE) != null;
+            		pushLeft = leftCost < context.getProcessorBatchSize() || leftCost / rightCost < 8;
+            		pushRight = rightCost < context.getProcessorBatchSize() || rightCost / leftCost < 8 || joinNode.getProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE) != null;
             	}
             }            
 
