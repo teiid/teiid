@@ -45,6 +45,8 @@ import org.teiid.core.util.SqlUtil;
 
 
 public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaData {
+	private static final String IS_NULLABLE = "CASE NullType WHEN 'Nullable' THEN 'YES' WHEN 'No Nulls' THEN 'NO' ELSE '' END AS IS_NULLABLE"; //$NON-NLS-1$
+
 	private static final String DATA_TYPES = "DataTypes"; //$NON-NLS-1$
 
 	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
@@ -202,7 +204,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         .append(", convert(decodeString(NullType, '").append(NULLABILITY_MAPPING).append("', ','), integer) AS NULLABLE") //$NON-NLS-1$ //$NON-NLS-2$
         .append(", Description AS REMARKS, DefaultValue AS COLUMN_DEF, NULL AS SQL_DATA_TYPE, NULL AS SQL_DATETIME_SUB") //$NON-NLS-1$
         .append(", CharOctetLength AS CHAR_OCTET_LENGTH, Position AS ORDINAL_POSITION") //$NON-NLS-1$
-        .append(", decodeString(NullType, 'No Nulls, YES, Nullable, NO, Unknown, '' ''', ',') AS IS_NULLABLE") //$NON-NLS-1$
+        .append(", " + IS_NULLABLE) //$NON-NLS-1$
     	.append(", NULL AS SCOPE_CATALOG, NULL AS SCOPE_SCHEMA, NULL AS SCOPE_TABLE, NULL AS SOURCE_DATA_TYPE, CASE WHEN e.IsAutoIncremented = 'true' THEN 'YES' ELSE 'NO' END AS IS_AUTOINCREMENT") //$NON-NLS-1$
         .append(" FROM ").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME) //$NON-NLS-1$
         .append(".Columns e") //$NON-NLS-1$
@@ -258,7 +260,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         .append(PROC_COLUMN_NULLABILITY_MAPPING).append("', ','), integer) AS NULLABLE") //$NON-NLS-1$
         .append(", p.Description AS REMARKS, NULL AS COLUMN_DEF") //$NON-NLS-1$
         .append(", NULL AS SQL_DATA_TYPE, NULL AS SQL_DATETIME_SUB, NULL AS CHAR_OCTET_LENGTH, p.Position AS ORDINAL_POSITION") //$NON-NLS-1$
-        .append(", CASE NullType WHEN 'Nullable' THEN 'YES' WHEN 'No Nulls' THEN 'NO' ELSE '' END AS IS_NULLABLE, p.ProcedureName as SPECIFIC_NAME FROM ") //$NON-NLS-1$
+        .append(", "+IS_NULLABLE+", p.ProcedureName as SPECIFIC_NAME FROM ") //$NON-NLS-1$ //$NON-NLS-2$
         .append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME)
         .append(".ProcedureParams as p") //$NON-NLS-1$
         .append(" WHERE UCASE(VDBName)").append(LIKE_ESCAPE)//$NON-NLS-1$
