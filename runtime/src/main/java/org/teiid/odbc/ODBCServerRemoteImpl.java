@@ -53,7 +53,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	
 	private static Pattern pkPattern = Pattern.compile("select ta.attname, ia.attnum, ic.relname, n.nspname, tc.relname " +//$NON-NLS-1$
 			"from pg_catalog.pg_attribute ta, pg_catalog.pg_attribute ia, pg_catalog.pg_class tc, pg_catalog.pg_index i, " +//$NON-NLS-1$
-			"pg_catalog.pg_namespace n, pg_catalog.pg_class ic where tc.relname = E'(\\w+)' AND n.nspname = E'(\\w+)'.*" );//$NON-NLS-1$
+			"pg_catalog.pg_namespace n, pg_catalog.pg_class ic where tc.relname = E?'(\\w+)' AND n.nspname = E?'(\\w+)'.*" );//$NON-NLS-1$
 	
 
 	private static Pattern pkKeyPattern = Pattern.compile("select ta.attname, ia.attnum, ic.relname, n.nspname, NULL .*"); //$NON-NLS-1$
@@ -101,9 +101,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			"\\s+pg_catalog.pg_namespace n" +  //$NON-NLS-1$
 			"\\s+where contype = 'f' " +  //$NON-NLS-1$
 			"\\s+and  conrelid = c.oid" +  //$NON-NLS-1$
-			"\\s+and  relname = E'(\\w+)'" +  //$NON-NLS-1$
+			"\\s+and  relname = E?'(\\w+)'" +  //$NON-NLS-1$
 			"\\s+and  n.oid = c.relnamespace" +  //$NON-NLS-1$
-			"\\s+and  n.nspname = E'(\\w+)'" +  //$NON-NLS-1$
+			"\\s+and  n.nspname = E?'(\\w+)'" +  //$NON-NLS-1$
 			"\\s+\\) ref" +  //$NON-NLS-1$
 			"\\s+inner join pg_catalog.pg_class c1" +  //$NON-NLS-1$
 			"\\s+on c1.oid = ref.conrelid\\)" +  //$NON-NLS-1$
@@ -128,8 +128,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			"nspname, p.oid, atttypid, attname, proargnames, proargmodes, proallargtypes from ((pg_catalog.pg_namespace n inner join " + //$NON-NLS-1$
 			"pg_catalog.pg_proc p on p.pronamespace = n.oid) inner join pg_type t on t.oid = p.prorettype) left outer join " + //$NON-NLS-1$
 			"pg_attribute a on a.attrelid = t.typrelid  and attnum > 0 and not attisdropped " + //$NON-NLS-1$
-			"where has_function_privilege(p.oid, 'EXECUTE') and nspname like E'(\\w+)' " + //$NON-NLS-1$
-			"and proname like E'(\\w+)' " + //$NON-NLS-1$
+			"where has_function_privilege(p.oid, 'EXECUTE') and nspname like E?'(\\w+)' " + //$NON-NLS-1$
+			"and proname like E?'(\\w+)' " + //$NON-NLS-1$
 			"order by nspname, proname, p.oid, attnum"); //$NON-NLS-1$
 	
 	
