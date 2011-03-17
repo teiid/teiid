@@ -23,6 +23,7 @@
 package org.teiid.query.sql.lang;
 
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.sql.lang.PredicateCriteria.Negatable;
 import org.teiid.query.sql.symbol.Expression;
 
 /**
@@ -30,7 +31,7 @@ import org.teiid.query.sql.symbol.Expression;
  * {@link SubqueryCompareCriteria}.  The comparison operators are defined
  * here.</p>
  */
-public abstract class AbstractCompareCriteria extends PredicateCriteria {
+public abstract class AbstractCompareCriteria extends PredicateCriteria implements Negatable {
 
     /** Constant indicating the two operands are equal. */
     public static final int EQ = 1;
@@ -131,6 +132,23 @@ public abstract class AbstractCompareCriteria extends PredicateCriteria {
             case GE: return ">="; //$NON-NLS-1$
             default: return "??"; //$NON-NLS-1$
         }
+    }
+    
+    @Override
+    public void negate() {
+    	this.setOperator(getInverseOperator(this.getOperator()));
+    }
+    
+    public static int getInverseOperator(int op) {
+    	switch ( op ) {
+        case EQ: return NE; 
+        case NE: return EQ;
+        case LT: return GE;
+        case GT: return LE;
+        case LE: return GT;
+        case GE: return LT;
+        default: return -1;
+    	}
     }
         
 }  // END CLASS

@@ -213,5 +213,15 @@ implements SubqueryContainer, ContextReference {
     public Expression getRightExpression() {
         return new ScalarSubquery(getCommand());
     }
+    
+    @Override
+    public void negate() {
+    	super.negate();
+    	if (this.predicateQuantifier == ALL) {
+    		this.predicateQuantifier = SOME;
+    	} else {
+    		this.predicateQuantifier = ALL;
+    	}
+    }
 
 }

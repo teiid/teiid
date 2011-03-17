@@ -25,8 +25,6 @@ package org.teiid.query.sql.lang;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.teiid.core.types.DataTypeManager;
@@ -147,112 +145,36 @@ public abstract class Criteria implements Expression {
 		return compCrit;
 	}
     
-    public static Criteria toDisjunctiveNormalForm(Criteria input) {
-        return normalize(input, true);
-    }
-    
-    public static Criteria toConjunctiveNormalForm(Criteria input) {
-        return normalize(input, false);
-    }
-    
-    /**
-     * Returns a new criteria object in the equivalent normal form to the input.
-     *  
-     * @param input
-     * @return
-     */
-    static Criteria normalize(Criteria input, boolean dnf) {
+    public static Criteria applyDemorgan(Criteria input) {
 
-        boolean invert = false;
-        
         if (input instanceof NotCriteria) {
             NotCriteria not = (NotCriteria)input;
             
-            Criteria child = not.getCriteria();
-            
-            if (child instanceof NotCriteria) {
-                return normalize(((NotCriteria)child).getCriteria(), dnf);
-            }
-            
-            if (child instanceof CompoundCriteria) {
-                invert = true;
-                input = child;
-            }
+            return not.getCriteria();
         }
         
         if (!(input instanceof CompoundCriteria)) {
-            return input;
+            return new NotCriteria(input);
         }
         
         CompoundCriteria compCrit = (CompoundCriteria)input;
         
-        int operator = compCrit.getOperator();
+        int operator = (compCrit.getOperator()==CompoundCriteria.OR)?CompoundCriteria.AND:CompoundCriteria.OR;
         
-        if (invert) {
-            operator = (operator==CompoundCriteria.OR)?CompoundCriteria.AND:CompoundCriteria.OR;
-        }
+        List<Criteria> criteria = new ArrayList<Criteria>(compCrit.getCriteria().size());
         
-        List criteria = new ArrayList(compCrit.getCriteria().size());
-        List parts = new LinkedList();
-        
-        for (Iterator i = compCrit.getCriteria().iterator(); i.hasNext();) {
-            Criteria crit = (Criteria)i.next();
+        for (Criteria crit : compCrit.getCriteria()) {
             
-            if (invert) {
-                crit = new NotCriteria(crit);
-            }
-            
-            crit = normalize(crit, dnf);
-            
-            if (crit instanceof CompoundCriteria) {
-                CompoundCriteria child = (CompoundCriteria)crit;
-                
-                if (operator == child.getOperator()) {
-                    criteria.addAll(child.getCriteria());
-                    continue;
-                } 
-                
-                if ((dnf && operator == CompoundCriteria.AND) || (!dnf && operator == CompoundCriteria.OR)) {
-                    parts.add(child);
-                    continue;
-                }
-            } 
+            crit = new NotCriteria(crit);
 
             criteria.add(crit);
         }
-
-        if (parts.isEmpty()) {
-            //no expansion needed, just return
-            return new CompoundCriteria(operator, criteria);
-        }
         
-        int total = 1;
-        int[] divisors = new int[parts.size()];
-        
-        for (int i = 0; i < parts.size(); i++) {
-            divisors[i] = total;
-            total *= ((CompoundCriteria)parts.get(i)).getCriteriaCount();
-        }
-        
-        List newCrits = new ArrayList(total);
-        
-        for (int i = 0; i < total; i++) {
-            CompoundCriteria crit = new CompoundCriteria(dnf?CompoundCriteria.AND:CompoundCriteria.OR, new ArrayList(parts.size() + criteria.size()));
-            crit.getCriteria().addAll(criteria);
-            for (int j = 0; j < parts.size(); j++) {
-                CompoundCriteria disjunct = (CompoundCriteria)parts.get(j);
-                
-                Criteria part = (Criteria)disjunct.getCriteria().get((i/divisors[j])%disjunct.getCriteriaCount());
-                crit.addCriteria(part);
-            }
-            newCrits.add(crit);
-        }
-        
-        return new CompoundCriteria(!dnf?CompoundCriteria.AND:CompoundCriteria.OR, newCrits);
+        return new CompoundCriteria(operator, criteria);
     }
     
     @Override
-    public Class getType() {
+    public Class<?> getType() {
     	return DataTypeManager.DefaultDataClasses.BOOLEAN;
     }
     
