@@ -703,6 +703,12 @@ public class DQPCore implements DQP {
 		
         
         this.processWorkerPool = new ThreadReuseExecutor(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, config.getMaxThreads());
+        this.maxActivePlans = config.getMaxActivePlans();
+        
+        if (this.maxActivePlans > config.getMaxThreads()) {
+        	LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.getString("DQPCore.invalid_max_active_plan", this.maxActivePlans, config.getMaxThreads())); //$NON-NLS-1$
+        	this.maxActivePlans = config.getMaxThreads();
+        }
         
         if (cacheFactory.isReplicated()) {
         	matTables = new SessionAwareCache<CachedResults>(this.cacheFactory, SessionAwareCache.Type.RESULTSET, new CacheConfiguration(Policy.EXPIRATION, -1, -1, "MaterilizationTables")); //$NON-NLS-1$
