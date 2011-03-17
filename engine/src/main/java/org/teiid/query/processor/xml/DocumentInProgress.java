@@ -33,12 +33,12 @@ import javax.xml.transform.stream.StreamResult;
 import net.sf.saxon.TransformerFactoryImpl;
 
 import org.teiid.common.buffer.FileStore;
+import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.mapping.xml.MappingNodeConstants;
-import org.teiid.query.processor.xml.XMLUtil.FileStoreInputStreamFactory;
 import org.xml.sax.SAXException;
 
 

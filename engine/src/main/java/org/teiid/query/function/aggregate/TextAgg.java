@@ -31,13 +31,13 @@ import java.util.List;
 import javax.sql.rowset.serial.SerialBlob;
 
 import org.teiid.common.buffer.FileStore;
+import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.common.buffer.FileStore.FileStoreOutputStream;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.Streamable;
-import org.teiid.query.processor.xml.XMLUtil.FileStoreInputStreamFactory;
 import org.teiid.query.sql.symbol.DerivedColumn;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.TextLine;

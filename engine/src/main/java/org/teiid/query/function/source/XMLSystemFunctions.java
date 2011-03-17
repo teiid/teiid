@@ -78,17 +78,20 @@ import net.sf.saxon.value.TimeValue;
 import org.json.simple.parser.ContentHandler;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.FileStore;
+import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.SQLXMLImpl;
+import org.teiid.core.types.Streamable;
 import org.teiid.core.types.XMLTranslator;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.types.XMLType.Type;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.CharsetUtils;
-import org.teiid.query.processor.xml.XMLUtil;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.WSConnection.Util;
 
@@ -245,7 +248,7 @@ public class XMLSystemFunctions {
             final Transformer transformer = factory.newTransformer(styleSource);
             
 			//this creates a non-validated sqlxml - it may not be valid xml/root-less xml
-			SQLXMLImpl result = XMLUtil.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
+			SQLXMLImpl result = XMLSystemFunctions.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
 				
 				@Override
 				public void translate(Writer writer) throws TransformerException {
@@ -273,7 +276,7 @@ public class XMLSystemFunctions {
 			return null;
 		}
 
-		XMLType result = new XMLType(XMLUtil.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
+		XMLType result = new XMLType(XMLSystemFunctions.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
 			
 			@Override
 			public void translate(Writer writer) throws TransformerException,
@@ -309,7 +312,7 @@ public class XMLSystemFunctions {
 	 */
 	public static XMLType xmlElement(CommandContext context, final String name, 
 			final Evaluator.NameValuePair<String>[] namespaces, final Evaluator.NameValuePair<?>[] attributes, final List<?> contents) throws TeiidComponentException, TeiidProcessingException {
-		XMLType result = new XMLType(XMLUtil.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
+		XMLType result = new XMLType(XMLSystemFunctions.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
 			
 			@Override
 			public void translate(Writer writer) throws TransformerException,
@@ -383,7 +386,7 @@ public class XMLSystemFunctions {
 			return singleValue;
 		}
 		
-		XMLType result = new XMLType(XMLUtil.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
+		XMLType result = new XMLType(XMLSystemFunctions.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
 			
 			@Override
 			public void translate(Writer writer) throws TransformerException,
@@ -671,7 +674,7 @@ public class XMLSystemFunctions {
 	private static SQLXML jsonToXml(CommandContext context,
 			final String rootName, final Reader r) throws TeiidComponentException,
 			TeiidProcessingException {
-		XMLType result = new XMLType(XMLUtil.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
+		XMLType result = new XMLType(XMLSystemFunctions.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
 			
 			@Override
 			public void translate(Writer writer) throws TransformerException,
@@ -700,9 +703,31 @@ public class XMLSystemFunctions {
 		result.setType(Type.DOCUMENT);
 		return result;
 	}
-    
-    public static void main(String[] args) {
-		System.out.println(Charset.availableCharsets());
+
+	/**
+	 * This method saves the given XML object to the buffer manager's disk process
+	 * Documents less than the maxMemorySize will be held directly in memory
+	 */
+	public static SQLXMLImpl saveToBufferManager(BufferManager bufferMgr, XMLTranslator translator) 
+	    throws TeiidComponentException, TeiidProcessingException {        
+	    boolean success = false;
+	    final FileStore lobBuffer = bufferMgr.createFileStore("xml"); //$NON-NLS-1$
+	    FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(lobBuffer, Streamable.ENCODING);
+	    try{  
+	    	Writer writer = fsisf.getWriter();
+	        translator.translate(writer);
+	        writer.close();
+	        success = true;
+	        return new SQLXMLImpl(fsisf);
+	    } catch(IOException e) {
+	        throw new TeiidComponentException(e);
+	    } catch(TransformerException e) {
+	        throw new TeiidProcessingException(e);
+	    } finally {
+	    	if (!success && lobBuffer != null) {
+	    		lobBuffer.remove();
+	    	}
+	    }
 	}
-	
+    
 }

@@ -41,6 +41,7 @@ import org.teiid.client.security.LogonResult;
 import org.teiid.client.security.SessionToken;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.common.buffer.impl.MemoryStorageManager;
 import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.crypto.NullCryptor;
@@ -62,6 +63,7 @@ public class TestCommSockets {
 	SocketListener listener;
 	private SocketServerConnectionFactory sscf;
 	private InetSocketAddress addr;
+	private MemoryStorageManager storageManager;
 
 	@Before public void setUp() {
 		addr = new InetSocketAddress(0);
@@ -125,8 +127,14 @@ public class TestCommSockets {
 		SocketServerConnection conn = helpEstablishConnection(false);
 		FakeService fs = conn.getService(FakeService.class);
 		assertEquals(150, fs.lobMethod(new ByteArrayInputStream(new byte[100]), new StringReader(new String(new char[50]))));
+		assertEquals(2, storageManager.getCreated());
+		assertEquals(2, storageManager.getRemoved());
 		assertEquals(0, fs.lobMethod(new ByteArrayInputStream(new byte[0]), new StringReader(new String(new char[0]))));
+		assertEquals(4, storageManager.getCreated());
+		assertEquals(4, storageManager.getRemoved());
 		assertEquals((1 << 17) + 50, fs.lobMethod(new ByteArrayInputStream(new byte[1 << 17]), new StringReader(new String(new char[50]))));
+		assertEquals(6, storageManager.getCreated());
+		assertEquals(6, storageManager.getRemoved());
 	}
 	
 	@Test public void testServerRemoteStreaming() throws Exception {
@@ -173,7 +181,8 @@ public class TestCommSockets {
 
 			}, null); 
 			server.registerClientService(FakeService.class, new TestSocketRemoting.FakeServiceImpl(), null);
-			listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(), 1024, 1024, 1, config, server, BufferManagerFactory.getStandaloneBufferManager());
+			storageManager = new MemoryStorageManager();
+			listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(), 1024, 1024, 1, config, server, storageManager);
 			
 			SocketListenerStats stats = listener.getStats();
 			assertEquals(0, stats.maxSockets);

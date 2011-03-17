@@ -35,6 +35,7 @@ import javax.xml.transform.Source;
 import org.teiid.client.SourceWarning;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.FileStore;
+import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
@@ -55,8 +56,7 @@ import org.teiid.dqp.internal.process.DQPCore.CompletionListener;
 import org.teiid.dqp.internal.process.DQPCore.FutureWork;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
-import org.teiid.query.processor.xml.XMLUtil;
-import org.teiid.query.processor.xml.XMLUtil.FileStoreInputStreamFactory;
+import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.TranslatorException;
@@ -192,7 +192,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 			StandardXMLTranslator sxt = new StandardXMLTranslator((Source)value);
 			SQLXMLImpl sqlxml;
 			try {
-				sqlxml = XMLUtil.saveToBufferManager(dtm.getBufferManager(), sxt);
+				sqlxml = XMLSystemFunctions.saveToBufferManager(dtm.getBufferManager(), sxt);
 			} catch (TeiidComponentException e) {
 				throw new TeiidRuntimeException(e);
 			} catch (TeiidProcessingException e) {

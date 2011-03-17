@@ -83,7 +83,6 @@ import org.teiid.core.types.XMLType.Type;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.function.source.XMLSystemFunctions;
-import org.teiid.query.processor.xml.XMLUtil;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.symbol.DerivedColumn;
@@ -446,7 +445,7 @@ public class SaxonXQueryExpression {
 		if (next != null) {
 			type = Type.CONTENT;
 		}
-		SQLXMLImpl xml = XMLUtil.saveToBufferManager(bufferManager, new XMLTranslator() {
+		SQLXMLImpl xml = XMLSystemFunctions.saveToBufferManager(bufferManager, new XMLTranslator() {
 			
 			@Override
 			public void translate(Writer writer) throws TransformerException,

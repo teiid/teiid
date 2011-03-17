@@ -23,6 +23,7 @@
 package org.teiid.common.buffer.impl;
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.StorageManager;
@@ -31,11 +32,15 @@ import org.teiid.core.TeiidComponentException;
 
 public class MemoryStorageManager implements StorageManager {
     
+	private AtomicInteger created = new AtomicInteger();
+	private AtomicInteger removed = new AtomicInteger();
+	
     public void initialize() {
     }
 
 	@Override
 	public FileStore createFileStore(String name) {
+		created.incrementAndGet();
 		return new FileStore() {
 			private ByteBuffer buffer = ByteBuffer.allocate(1 << 16);
 			
@@ -53,6 +58,7 @@ public class MemoryStorageManager implements StorageManager {
 			
 			@Override
 			public synchronized void removeDirect() {
+				removed.incrementAndGet();
 				buffer = ByteBuffer.allocate(0);
 			}
 			
@@ -69,5 +75,13 @@ public class MemoryStorageManager implements StorageManager {
 				return length;
 			}
 		};
+	}
+	
+	public int getCreated() {
+		return created.get();
+	}
+	
+	public int getRemoved() {
+		return removed.get();
 	}
 }

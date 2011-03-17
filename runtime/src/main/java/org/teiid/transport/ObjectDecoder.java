@@ -22,10 +22,7 @@
  */
 package org.teiid.transport;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.StreamCorruptedException;
@@ -40,8 +37,9 @@ import org.jboss.netty.handler.codec.serialization.CompatibleObjectDecoder;
 import org.jboss.netty.handler.codec.serialization.CompatibleObjectEncoder;
 import org.jboss.netty.handler.codec.serialization.ObjectEncoder;
 import org.teiid.common.buffer.FileStore;
+import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.common.buffer.StorageManager;
-import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.Streamable;
 import org.teiid.core.types.InputStreamFactory.StreamFactoryReference;
 import org.teiid.core.util.ExternalizeUtil;
 import org.teiid.netty.handler.codec.serialization.CompactObjectInputStream;
@@ -144,14 +142,7 @@ public class ObjectDecoder extends FrameDecoder {
 	        if (stream == null) {
 	        	store = storageManager.createFileStore("temp-stream"); //$NON-NLS-1$
 		        StreamFactoryReference sfr = streams.get(streamIndex);
-		        store.setCleanupReference(sfr);
-		        sfr.setStreamFactory(new InputStreamFactory() {
-					FileStore fs = store;
-					@Override
-					public InputStream getInputStream() throws IOException {
-						return new BufferedInputStream(fs.createInputStream(0));
-					}
-				});
+		        sfr.setStreamFactory(new FileStoreInputStreamFactory(store, Streamable.ENCODING));
 		        this.stream = new BufferedOutputStream(store.createOutputStream());
 	        }
 	        if (dataLen == 0) {
