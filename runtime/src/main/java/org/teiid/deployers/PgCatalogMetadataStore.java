@@ -148,7 +148,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"pt.typlen as attlen, " + //$NON-NLS-1$
 				"convert(t1.Position, short) as attnum, " + //$NON-NLS-1$
 				"t1.Length as atttypmod, " + //$NON-NLS-1$
-				"false as attnotnull, " + //$NON-NLS-1$
+				"CASE WHEN (t1.NullType = 'No Nulls') THEN true ELSE false END as attnotnull, " + //$NON-NLS-1$
 				"false as attisdropped, " + //$NON-NLS-1$
 				"false as atthasdef " + //$NON-NLS-1$
 				"FROM SYS.Columns as t1 LEFT OUTER JOIN " + //$NON-NLS-1$

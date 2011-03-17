@@ -56,7 +56,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			"pg_catalog.pg_namespace n, pg_catalog.pg_class ic where tc.relname = E?'(\\w+)' AND n.nspname = E?'(\\w+)'.*" );//$NON-NLS-1$
 	
 
-	private static Pattern pkKeyPattern = Pattern.compile("select ta.attname, ia.attnum, ic.relname, n.nspname, NULL .*"); //$NON-NLS-1$
+	private static Pattern pkKeyPattern = Pattern.compile("select ta.attname, ia.attnum, ic.relname, n.nspname, NULL from " + //$NON-NLS-1$
+			"pg_catalog.pg_attribute ta, pg_catalog.pg_attribute ia, pg_catalog.pg_class ic, pg_catalog.pg_index i, " + //$NON-NLS-1$
+			"pg_catalog.pg_namespace n where ic.relname = E?'(\\w+)' AND n.nspname = E?'(\\w+)' .*"); //$NON-NLS-1$
 	
 	private Pattern fkPattern = Pattern.compile("select\\s+'(\\w+)'::name as PKTABLE_CAT," + //$NON-NLS-1$
 			"\\s+n2.nspname as PKTABLE_SCHEM," +  //$NON-NLS-1$
@@ -131,8 +133,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			"where has_function_privilege(p.oid, 'EXECUTE') and nspname like E?'(\\w+)' " + //$NON-NLS-1$
 			"and proname like E?'(\\w+)' " + //$NON-NLS-1$
 			"order by nspname, proname, p.oid, attnum"); //$NON-NLS-1$
-	
-	
 	
 	private static Pattern deallocatePattern = Pattern.compile("DEALLOCATE \"(\\w+\\d+_*)\""); //$NON-NLS-1$
 	private static Pattern releasePattern = Pattern.compile("RELEASE (\\w+\\d+_*)"); //$NON-NLS-1$
@@ -310,13 +310,25 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 					modified = new StringBuffer("SELECT k.Name AS attname, convert(Position, short) AS attnum, TableName AS relname, SchemaName AS nspname, TableName AS relname") //$NON-NLS-1$
 				          .append(" FROM SYS.KeyColumns k") //$NON-NLS-1$ 
 				          .append(" WHERE ") //$NON-NLS-1$
-				          .append(" UCASE(SchemaName)").append(" LIKE '").append(m.group(2)).append("'")//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-				          .append(" AND UCASE(TableName)") .append(" LIKE '").append(m.group(1)).append("'")//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				          .append(" UCASE(SchemaName)").append(" LIKE UCASE('").append(m.group(2)).append("')")//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				          .append(" AND UCASE(TableName)") .append(" LIKE UCASE('").append(m.group(1)).append("')")//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				          .append(" AND KeyType LIKE 'Primary'") //$NON-NLS-1$
 				          .append(" ORDER BY attnum").toString(); //$NON-NLS-1$					
 				}
 				else if ((m = pkKeyPattern.matcher(modified)).matches()) {
-					modified = "SELECT NULL, NULL, NULL, NULL, NULL FROM (SELECT 1) as X WHERE 0=1"; //$NON-NLS-1$
+					String tableName = m.group(1);
+					if (tableName.endsWith("_pkey")) { //$NON-NLS-1$
+						tableName = tableName.substring(0, tableName.length()-5);
+						modified = "select ia.attname, ia.attnum, ic.relname, n.nspname, NULL "+ //$NON-NLS-1$	
+							"from pg_catalog.pg_attribute ia, pg_catalog.pg_class ic, pg_catalog.pg_namespace n, Sys.KeyColumns kc "+ //$NON-NLS-1$	
+							"where ic.relname = '"+tableName+"' AND n.nspname = '"+m.group(2)+"' AND "+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+							"n.oid = ic.relnamespace AND ia.attrelid = ic.oid AND kc.SchemaName = n.nspname " +//$NON-NLS-1$	
+							"AND kc.TableName = ic.relname AND kc.KeyType = 'Primary' AND kc.Name = ia.attname order by ia.attnum";//$NON-NLS-1$	
+					}
+					else {
+						modified = "SELECT NULL, NULL, NULL, NULL, NULL FROM (SELECT 1) as X WHERE 0=1"; //$NON-NLS-1$
+					}
+					
 				}
 				else if ((m = fkPattern.matcher(modified)).matches()){
 					modified = "SELECT PKTABLE_CAT, PKTABLE_SCHEM, PKTABLE_NAME, PKCOLUMN_NAME, FKTABLE_CAT, FKTABLE_SCHEM, "+//$NON-NLS-1$
