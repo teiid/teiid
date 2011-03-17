@@ -43,5 +43,29 @@ public class TestDefaultCache {
 		//preferred to purge 2 instead of 3
 		assertNotNull(cache.get(3));
 	}
+	
+	@Test public void testExpirationAtMaxSize() throws Exception {
+		DefaultCache<Integer, Integer> cache = new DefaultCache<Integer, Integer>("foo", 2, 70);
+		cache.put(1, 1);
+		cache.put(2, 2);
+		cache.put(3, 3);
+		assertEquals(2, cache.getCacheMap().size());
+		assertEquals(2, cache.getExpirationQueue().size());
+		Thread.sleep(100);
+		cache.put(4, 4);
+		cache.put(5, 5);
+		cache.get(4);
+		cache.put(6, 6);
+		assertEquals(2, cache.getCacheMap().size());
+		assertEquals(2, cache.getExpirationQueue().size());
+		assertNotNull(cache.get(4));
+		assertNotNull(cache.get(6));
+	}
+	
+	@Test public void testZeroSize() throws Exception {
+		DefaultCache<Integer, Integer> cache = new DefaultCache<Integer, Integer>("foo", 0, 70);
+		cache.put(1, 1);
+		assertEquals(0, cache.size());
+	}
 
 }

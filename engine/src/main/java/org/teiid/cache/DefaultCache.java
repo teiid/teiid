@@ -24,9 +24,9 @@ package org.teiid.cache;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -71,7 +71,7 @@ public class DefaultCache<K, V> implements Cache<K, V>, Serializable {
 	protected Map<String, Cache> children = new ConcurrentHashMap<String, Cache>();
 	protected String name;
 	protected long ttl;
-	protected LinkedHashSet<ExpirationEntry<K, V>> expirationQueue = new LinkedHashSet<ExpirationEntry<K, V>>();
+	protected Set<ExpirationEntry<K, V>> expirationQueue;
 	
 	public DefaultCache(String name) {
 		this(name, DEFAULT_MAX_SIZE_TOTAL, DEFAULT_MAX_SIZE_TOTAL);
@@ -83,12 +83,14 @@ public class DefaultCache<K, V> implements Cache<K, V>, Serializable {
 			protected boolean removeEldestEntry(java.util.Map.Entry<K, ExpirationEntry<K, V>> eldest) {
 				if (super.removeEldestEntry(eldest)) {
 					Iterator<ExpirationEntry<K, V>> iter = expirationQueue.iterator();
-					return validate(iter.next()) != null;
+					if (validate(iter.next()) != null) {
+						DefaultCache.this.remove(eldest.getKey());
+					}
 				}
 				return false;
 			}
 		};
-		
+		this.expirationQueue = Collections.newSetFromMap(new LRUCache<ExpirationEntry<K, V>, Boolean>(maxEntries));
 		this.name = name;
 		this.ttl = ttl;
 	}
@@ -147,10 +149,13 @@ public class DefaultCache<K, V> implements Cache<K, V>, Serializable {
 	}
 	
 	public V put(K key, V value, Long timeToLive) {
+		if (this.map.getSpaceLimit() == 0) {
+			return null;
+		}
 		synchronized (map) {
 			ExpirationEntry<K, V> entry = new ExpirationEntry<K, V>(getExpirationTime(ttl, timeToLive), key, value);
-			expirationQueue.add(entry);
 			ExpirationEntry<K, V> result = map.put(key, entry);
+			expirationQueue.add(entry);
 			if (result != null) {
 				return result.value;
 			}
@@ -160,10 +165,9 @@ public class DefaultCache<K, V> implements Cache<K, V>, Serializable {
 
 	public V remove(K key) {
 		synchronized (map) {
-			ExpirationEntry<K, V> entry = new ExpirationEntry<K, V>(-1, key, null);
-			ExpirationEntry<K, V> result = map.put(key, entry);
+			ExpirationEntry<K, V> result = map.remove(key);
 			if (result != null) {
-				expirationQueue.remove(entry);
+				expirationQueue.remove(result);
 				return result.value;
 			}
 			return null;
@@ -223,6 +227,14 @@ public class DefaultCache<K, V> implements Cache<K, V>, Serializable {
 		synchronized(this.map) {
 			return new HashSet<K>(map.keySet());
 		}
+	}
+	
+	Set<ExpirationEntry<K, V>> getExpirationQueue() {
+		return expirationQueue;
+	}
+	
+	LRUCache<K, ExpirationEntry<K, V>> getCacheMap() {
+		return map;
 	}
 	
 }
