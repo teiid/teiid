@@ -159,6 +159,13 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         this.functionLibrary = new FunctionLibrary(systemFunctions, new FunctionTree(new UDFSource(udfMethods), true));
     }
     
+    private TransformationMetadata(final CompositeMetadataStore store, FunctionLibrary functionLibrary) {
+    	ArgCheck.isNotNull(store);
+        this.store = store;
+    	this.vdbEntries = Collections.emptyMap();
+        this.functionLibrary = functionLibrary;
+    }
+    
     //==================================================================================
     //                     I N T E R F A C E   M E T H O D S
     //==================================================================================
@@ -287,11 +294,31 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
             throw createInvalidRecordTypeException(elementID);
         }
     }
+    
+    public boolean hasProcedure(String name) throws TeiidComponentException {
+    	try {
+    		return getStoredProcedureInfoForProcedure(name) != null;
+    	} catch (QueryMetadataException e) {
+    		return false;
+    	}
+    }
 
-    public StoredProcedureInfo getStoredProcedureInfoForProcedure(final String fullyQualifiedProcedureName)
+    public StoredProcedureInfo getStoredProcedureInfoForProcedure(final String name)
         throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isNotEmpty(fullyQualifiedProcedureName);
-        String lowerGroupName = fullyQualifiedProcedureName.toLowerCase();
+        StoredProcedureInfo result = getStoredProcInfoDirect(name);
+        
+		if (result == null) {
+			throw new QueryMetadataException(name+NOT_EXISTS_MESSAGE);
+		}
+    	
+        return result;
+    }
+
+	private StoredProcedureInfo getStoredProcInfoDirect(
+			final String name)
+			throws TeiidComponentException, QueryMetadataException {
+		ArgCheck.isNotEmpty(name);
+        String lowerGroupName = name.toLowerCase();
         Collection<StoredProcedureInfo> results = this.procedureCache.get(lowerGroupName);
         
         if (results == null) {
@@ -353,18 +380,14 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         
         for (StoredProcedureInfo storedProcedureInfo : results) {
         	Schema schema = (Schema)storedProcedureInfo.getModelID();
-	        if(vdbMetaData == null || vdbMetaData.isVisible(schema.getName())){
+        	if(name.equalsIgnoreCase(storedProcedureInfo.getProcedureCallableName()) || vdbMetaData == null || vdbMetaData.isVisible(schema.getName())){
 	        	if (result != null) {
-	    			throw new QueryMetadataException(QueryPlugin.Util.getString("ambiguous_procedure", fullyQualifiedProcedureName)); //$NON-NLS-1$
+	        		throw new QueryMetadataException(QueryPlugin.Util.getString("ambiguous_procedure", name)); //$NON-NLS-1$
 	    		}
 	        	result = storedProcedureInfo;
 	        }
 		}
         
-		if (result == null) {
-			throw new QueryMetadataException(fullyQualifiedProcedureName+NOT_EXISTS_MESSAGE);
-		}
-    	
         return result;
     }
     
@@ -744,6 +767,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     	return vdbMetaData.getVersion();
     }
     
+    public VDBMetaData getVdbMetaData() {
+		return vdbMetaData;
+	}
+    
     /**
      * @see org.teiid.query.metadata.QueryMetadataInterface#getXMLTempGroups(java.lang.Object)
      */
@@ -1081,5 +1108,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		ArgCheck.isInstanceOf(Table.class, metadataID);
 		Table table = (Table)metadataID;
 		return table.getPrimaryKey();
+	}
+	
+	@Override
+	public QueryMetadataInterface getDesignTimeMetadata() {
+		return new TransformationMetadata(store, functionLibrary);
 	}
 }

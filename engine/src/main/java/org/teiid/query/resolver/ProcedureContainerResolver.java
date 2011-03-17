@@ -87,7 +87,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         try {
             subCommand = parser.parseCommand(plan);
         } catch(QueryParserException e) {
-            throw new QueryResolverException(e, "ERR.015.008.0045", QueryPlugin.Util.getString("ERR.015.008.0045", group)); //$NON-NLS-1$ //$NON-NLS-2$
+            throw new QueryResolverException(e, "ERR.015.008.0045", QueryPlugin.Util.getString("ERR.015.008.0045", group, procCommand.getClass().getSimpleName())); //$NON-NLS-1$ //$NON-NLS-2$
         }
         
         if(subCommand instanceof CreateUpdateProcedureCommand){

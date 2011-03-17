@@ -87,7 +87,7 @@ public class QueryResolver {
     
     public static Command expandCommand(ProcedureContainer proc, QueryMetadataInterface metadata, AnalysisRecord analysisRecord) throws QueryResolverException, QueryMetadataException, TeiidComponentException {
     	ProcedureContainerResolver cr = (ProcedureContainerResolver)chooseResolver(proc, metadata);
-    	return cr.expandCommand(proc, metadata, analysisRecord);
+    	return cr.expandCommand(proc, metadata.getDesignTimeMetadata(), analysisRecord);
     }
 
     /**

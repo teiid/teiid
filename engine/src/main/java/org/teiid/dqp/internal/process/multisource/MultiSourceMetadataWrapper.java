@@ -330,5 +330,10 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
         
 		return actualMetadata.getNativeType(elementID);
 	}
+	
+	@Override
+	public QueryMetadataInterface getDesignTimeMetadata() {
+		return new MultiSourceMetadataWrapper(actualMetadata.getDesignTimeMetadata(), multiSourceModels);
+	}
 
 }

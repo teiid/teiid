@@ -373,5 +373,15 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 	public Object getPrimaryKey(Object metadataID) {
 		return actualMetadata.getPrimaryKey(metadataID);
 	}
+	
+	@Override
+	public QueryMetadataInterface getDesignTimeMetadata() {
+		return actualMetadata.getDesignTimeMetadata();
+	}
+	
+	@Override
+	public boolean hasProcedure(String name) throws TeiidComponentException {
+		return actualMetadata.hasProcedure(name);
+	}
 
 }

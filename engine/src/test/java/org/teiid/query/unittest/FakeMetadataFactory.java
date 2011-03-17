@@ -83,6 +83,10 @@ public class FakeMetadataFactory {
         return CACHED_AGGREGATES;
     }       
     
+    public static DQPWorkContext buildWorkContext(TransformationMetadata metadata) {
+    	return buildWorkContext(metadata, metadata.getVdbMetaData());
+    }
+    
 	public static DQPWorkContext buildWorkContext(QueryMetadataInterface metadata, VDBMetaData vdb) {
 		DQPWorkContext workContext = new DQPWorkContext();
 		SessionMetadata session = new SessionMetadata();

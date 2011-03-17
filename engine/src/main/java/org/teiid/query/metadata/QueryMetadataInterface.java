@@ -680,4 +680,9 @@ public interface QueryMetadataInterface {
     FunctionLibrary getFunctionLibrary();
     
     Object getPrimaryKey(Object metadataID);
+    
+    QueryMetadataInterface getDesignTimeMetadata();
+    
+    boolean hasProcedure(String name) throws TeiidComponentException;
+
 }

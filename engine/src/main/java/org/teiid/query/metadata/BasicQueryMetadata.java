@@ -439,6 +439,16 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 	public boolean isProcedure(Object elementID) throws TeiidComponentException, QueryMetadataException {
 		return false;
 	}
+	
+	@Override
+	public QueryMetadataInterface getDesignTimeMetadata() {
+		return this;
+	}
+	
+	@Override
+	public boolean hasProcedure(String name) throws TeiidComponentException {
+		return false;
+	}
     
     public byte[] getBinaryVDBResource(String resourcePath) throws TeiidComponentException, QueryMetadataException {
         return null;

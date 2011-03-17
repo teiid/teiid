@@ -1048,6 +1048,7 @@ public class RelationalPlanner {
 			String cacheString, QueryMetadataInterface qmi, AnalysisRecord analysisRecord) throws TeiidComponentException,
 			QueryMetadataException, QueryResolverException,
 			QueryValidatorException {
+		qmi = qmi.getDesignTimeMetadata();
 		Command result = (Command)qmi.getFromMetadataCache(virtualGroup.getMetadataID(), "transformation/" + cacheString); //$NON-NLS-1$
         if (result != null) {
         	result = (Command)result.clone();

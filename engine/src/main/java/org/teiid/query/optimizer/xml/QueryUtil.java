@@ -101,7 +101,7 @@ public class QueryUtil {
         throws TeiidComponentException, QueryPlannerException {
         // Run resolver
         try {
-            QueryResolver.resolveCommand(query, Collections.EMPTY_MAP, metadata, AnalysisRecord.createNonRecordingRecord());
+            QueryResolver.resolveCommand(query, Collections.EMPTY_MAP, metadata.getDesignTimeMetadata(), AnalysisRecord.createNonRecordingRecord());
         } catch(QueryResolverException e) {
             throw new QueryPlannerException(e, e.getMessage());
         }
