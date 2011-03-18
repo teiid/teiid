@@ -41,6 +41,7 @@
 	<LI><B>InterSystems Cache</B> - InterSystems Cache database translator is now available to use as supported source under Teiid.
 	<LI><B>userRequestSourceConcurrency</B> - was added to control the number of concurrent source queries allowed for each user request.
 	<LI><B>Dependent Join Improvements</B> - dependent join analysis and costing in general was improved to consider dependent joins earlier in planning.
+	<LI><B>Memory Management Improvements</B> - maxReserveBatchColumns and maxProcessingBatchesColumns will be default be determined automatically and will more reliably prevent memory issues.  See the admin guide for more.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -108,7 +109,9 @@ See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on c
 
 <h4>from 7.3</h4>
 <ul>
-  <LI>SocketConfiguration.maxSocketThreads will interpret a setting of 0 to mean use the system default of max available processors.  
+  <LI>SocketConfiguration.maxSocketThreads will interpret a setting of 0 to mean use the system default of max available processors.
+  <LI>maxReserveBatchColumns and maxProcessingBatchesColumns will interpret a setting of -1 to mean auto-calculate acceptable values given the max heap and other information.  See the admin guide for more.
+  <LI>The default for org.teiid.useValueCache has changed to false, since typical installations will not greatly benefit from the additional lookup cost.
 </ul>
 
 <h4>from 7.2</h4>

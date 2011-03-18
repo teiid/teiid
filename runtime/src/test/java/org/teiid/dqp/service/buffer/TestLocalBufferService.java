@@ -24,10 +24,17 @@ package org.teiid.dqp.service.buffer;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Test;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.common.buffer.impl.FileStorageManager;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.services.BufferServiceImpl;
 
 @SuppressWarnings("nls")
@@ -57,6 +64,34 @@ public class TestLocalBufferService {
         
         // all the properties are set
         assertFalse(svc.isUseDisk());
+    }
+    
+    @Test public void testSchemaSize() throws Exception {
+    	//82 strings of Total Length 2515 charcacters
+    	//11 Dates
+    	//1 Long
+    	//1 short
+    	//20 bigdecimal with 671 total integers in them.
+    	List<Expression> schema = new ArrayList<Expression>();
+    	for (int i = 0; i <82; i++) {
+    		schema.add(new Constant(null, DataTypeManager.DefaultDataClasses.STRING));
+    	}
+    	for (int i = 0; i <11; i++) {
+    		schema.add(new Constant(null, DataTypeManager.DefaultDataClasses.DATE));
+    	}
+    	schema.add(new Constant(null, DataTypeManager.DefaultDataClasses.LONG));
+    	schema.add(new Constant(null, DataTypeManager.DefaultDataClasses.SHORT));
+    	for (int i = 0; i <20; i++) {
+    		schema.add(new Constant(null, DataTypeManager.DefaultDataClasses.BIG_DECIMAL));
+    	}
+    	
+    	BufferServiceImpl svc = new BufferServiceImpl();
+        svc.setDiskDirectory(UnitTestUtil.getTestScratchPath()+"/teiid/1");
+        svc.setUseDisk(false);
+        svc.start();
+        
+        BufferManager mgr = svc.getBufferManager();
+        assertEquals(16261, mgr.getSchemaSize(schema));
     }
     
 }

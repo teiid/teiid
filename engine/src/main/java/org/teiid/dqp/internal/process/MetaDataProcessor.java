@@ -217,7 +217,7 @@ public class MetaDataProcessor {
     }
 
     private Map createXMLColumnMetadata(Query xmlCommand) {
-        GroupSymbol doc = (GroupSymbol) xmlCommand.getFrom().getGroups().get(0);
+        GroupSymbol doc = xmlCommand.getFrom().getGroups().get(0);
         Map xmlMetadata = getDefaultColumn(doc.getName(), ResultsMetadataDefaults.XML_COLUMN_NAME, XMLType.class);
 
         // Override size as XML may be big        
@@ -238,7 +238,7 @@ public class MetaDataProcessor {
     private Map createElementMetadata(String shortColumnName, ElementSymbol symbol) throws QueryMetadataException, TeiidComponentException {
         Object elementID = symbol.getMetadataID();
         
-        Map column = new HashMap();
+        Map<Integer, Object> column = new HashMap<Integer, Object>();
         column.put(ResultsMetadataConstants.AUTO_INCREMENTING, Boolean.valueOf(metadata.elementSupports(elementID, SupportConstants.Element.AUTO_INCREMENT)));
         column.put(ResultsMetadataConstants.CASE_SENSITIVE, Boolean.valueOf(metadata.elementSupports(elementID, SupportConstants.Element.CASE_SENSITIVE)));
         column.put(ResultsMetadataConstants.CURRENCY, Boolean.FALSE);
@@ -318,7 +318,7 @@ public class MetaDataProcessor {
         return getDefaultColumn(null, shortColumnName, symbol.getType());
     }
     
-    private int getColumnPrecision(Class dataType, Object elementID) throws QueryMetadataException, TeiidComponentException {
+    private int getColumnPrecision(Class<?> dataType, Object elementID) throws QueryMetadataException, TeiidComponentException {
         if (!Number.class.isAssignableFrom(dataType)) {
             int length = metadata.getElementLength(elementID);
             if (length > 0) {
@@ -346,7 +346,7 @@ public class MetaDataProcessor {
      * @param dataType A string representing the MetaMatrix data type of the column
      * @return An int value giving the displaysize of the column
      */
-    private Integer getColumnDisplaySize(int precision, Class dataType, Object elementID) throws QueryMetadataException, TeiidComponentException {
+    private Integer getColumnDisplaySize(int precision, Class<?> dataType, Object elementID) throws QueryMetadataException, TeiidComponentException {
 
        if(elementID != null && dataType.equals(DataTypeManager.DefaultDataClasses.STRING)) {
            int length = metadata.getElementLength(elementID);

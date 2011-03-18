@@ -25,6 +25,7 @@ package org.teiid.common.buffer;
 import java.util.List;
 
 import org.teiid.core.TeiidComponentException;
+import org.teiid.query.sql.symbol.Expression;
 
 
 /**
@@ -50,20 +51,24 @@ public interface BufferManager extends StorageManager {
 	}
 	
 	public enum BufferReserveMode {
+		/**
+		 * Claim unused buffers up to the amount requested, using a progressive decaying algorithm
+		 */
 		WAIT,
+		/**
+		 * Claim all of the buffers requested, even if they are not available, without waiting
+		 */
 		FORCE,
+		/**
+		 * Claim unused buffers up to the amount requested witout waiting
+		 */
 		NO_WAIT
 	}
 
 	public static int DEFAULT_CONNECTOR_BATCH_SIZE = 1024;
 	public static int DEFAULT_PROCESSOR_BATCH_SIZE = 512;
-	public static int DEFAULT_MAX_PROCESSING_BATCHES = 128;
-	
-	/**
-	 * This is the maximum number of batch columns used for processing.
-	 * See {@link #reserveBuffers(int, boolean)}
-	 */
-	public static int DEFAULT_RESERVE_BUFFERS = 16384;
+	public static int DEFAULT_MAX_PROCESSING_BATCHES = -1;
+	public static int DEFAULT_RESERVE_BUFFERS = -1;
 	
     /**
      * Get the batch size to use during query processing.  
@@ -81,11 +86,11 @@ public interface BufferManager extends StorageManager {
     throws TeiidComponentException;
 	
 	/**
-	 * Return the maximum number of batches that can be temporarily held potentially 
+	 * Return the maximum KB that can be temporarily held potentially 
 	 * across even a blocked exception.
 	 * @return
 	 */
-    int getMaxProcessingBatchColumns();
+    int getMaxProcessingKB();
     
     /**
      * Creates a new {@link FileStore}.  See {@link FileStore#setCleanupReference(Object)} to
@@ -110,13 +115,19 @@ public interface BufferManager extends StorageManager {
     void releaseBuffers(int count);
     
     /**
-     * Get the size estimate for the given schema.
+     * Get the size estimate in KB for the given schema.
      */
-    int getSchemaSize(List elements);
+    int getSchemaSize(List<? extends Expression> elements);
     
     STree createSTree(final List elements, String groupName, int keyLength);
     
 	void addTupleBuffer(TupleBuffer tb);
 	
-	TupleBuffer getTupleBuffer(String id);		
+	TupleBuffer getTupleBuffer(String id);
+
+	/**
+	 * Set the maxActivePlans as a hint at determining the maxProcessingKB
+	 * @param maxActivePlans
+	 */
+	void setMaxActivePlans(int maxActivePlans);		
 }

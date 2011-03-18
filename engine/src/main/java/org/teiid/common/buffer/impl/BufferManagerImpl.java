@@ -61,6 +61,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
+import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
@@ -86,6 +87,7 @@ import org.teiid.query.sql.symbol.Expression;
  */
 public class BufferManagerImpl implements BufferManager, StorageManager {
 	
+	private static final double KB_PER_VALUE = 64d/1024;
 	private static final int IO_BUFFER_SIZE = 1 << 14;
 	private static final int COMPACTION_THRESHOLD = 1 << 25; //start checking at 32 megs
 	
@@ -384,8 +386,11 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     private int processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
     private int maxProcessingBatches = BufferManager.DEFAULT_MAX_PROCESSING_BATCHES;
     private int maxReserveBatchColumns = BufferManager.DEFAULT_RESERVE_BUFFERS;
-    private volatile int reserveBatchColumns = BufferManager.DEFAULT_RESERVE_BUFFERS;
-    
+    private int maxProcessingKB;
+    private int maxReserveBatchKB;
+    private volatile int reserveBatchKB;
+    private int maxActivePlans = DQPConfiguration.DEFAULT_MAX_ACTIVE_PLANS; //used as a hint to set the reserveBatchKB
+
     private ReentrantLock lock = new ReentrantLock(true);
     private Condition batchesFreed = lock.newCondition();
     
@@ -421,12 +426,12 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	}
 	
 	@Override
-    public int getMaxProcessingBatchColumns() {
-		return maxProcessingBatches;
+    public int getMaxProcessingKB() {
+		return maxProcessingKB;
 	}
     
     public void setMaxProcessingBatchColumns(int maxProcessingBatches) {
-		this.maxProcessingBatches = Math.max(0, maxProcessingBatches);
+		this.maxProcessingBatches = maxProcessingBatches;
 	}
 
     /**
@@ -498,10 +503,32 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
         LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating FileStore:", name); //$NON-NLS-1$ 
     	return this.diskMgr.createFileStore(name);
     }
+        
+    public void setMaxActivePlans(int maxActivePlans) {
+		this.maxActivePlans = maxActivePlans;
+	}
     
 	@Override
 	public void initialize() throws TeiidComponentException {
-		
+		int maxMemory = (int)Math.min(Runtime.getRuntime().maxMemory() / 1024, Integer.MAX_VALUE);
+		if (maxReserveBatchColumns < 0) {
+			this.maxReserveBatchKB = 0;
+			maxMemory -= 300 * 1024; //assume 300 megs of overhead for the AS/system stuff
+			int one_gig = 1024 * 1024;
+			if (maxMemory > one_gig) {
+				//assume 75% of the memory over the first gig
+				this.maxReserveBatchKB += (int)Math.max(0, (maxMemory - one_gig) * .75);
+			}
+			this.maxReserveBatchKB += Math.max(0, Math.min(one_gig, maxMemory) * .5);
+    	} else {
+    		this.maxReserveBatchKB = Math.max(0, (int)Math.min(maxReserveBatchColumns * KB_PER_VALUE * processorBatchSize, Integer.MAX_VALUE));
+    	}
+		this.reserveBatchKB = this.maxReserveBatchKB;
+		if (this.maxProcessingBatches < 0) {
+			this.maxProcessingKB = (int)(.1 * maxMemory)/maxActivePlans;
+		} else {
+			this.maxProcessingKB = Math.max(0, (int)Math.min(maxProcessingBatches * KB_PER_VALUE * processorBatchSize, Integer.MAX_VALUE));
+		}
 	}
 	
     @Override
@@ -511,7 +538,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     	}
     	lock.lock();
     	try {
-	    	this.reserveBatchColumns += count;
+	    	this.reserveBatchKB += count;
 	    	batchesFreed.signalAll();
     	} finally {
     		lock.unlock();
@@ -524,7 +551,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	    try {
 	    	if (mode == BufferReserveMode.WAIT) {
 		    	int waitCount = 0;
-		    	while (count - waitCount > this.reserveBatchColumns) {
+		    	while (count - waitCount > this.reserveBatchKB) {
 		    		try {
 						batchesFreed.await(100, TimeUnit.MILLISECONDS);
 					} catch (InterruptedException e) {
@@ -533,12 +560,12 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 					waitCount++;
 		    	}	
 	    	}
-	    	if (this.reserveBatchColumns >= count || mode == BufferReserveMode.FORCE) {
-		    	this.reserveBatchColumns -= count;
+	    	if (this.reserveBatchKB >= count || mode == BufferReserveMode.FORCE) {
+		    	this.reserveBatchKB -= count;
 	    		return count;
 	    	}
-	    	int result = Math.max(0, this.reserveBatchColumns);
-	    	this.reserveBatchColumns -= result;
+	    	int result = Math.max(0, this.reserveBatchKB);
+	    	this.reserveBatchKB -= result;
 	    	return result;
 	    } finally {
     		lock.unlock();
@@ -547,8 +574,8 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     }
     
 	void persistBatchReferences() {
-		if (activeBatchColumnCount == 0 || activeBatchColumnCount <= reserveBatchColumns) {
-			int memoryCount = activeBatchColumnCount + maxReserveBatchColumns - reserveBatchColumns;
+		if (activeBatchColumnCount == 0 || activeBatchColumnCount <= reserveBatchKB) {
+			int memoryCount = activeBatchColumnCount + maxReserveBatchColumns - reserveBatchKB;
 			if (DataTypeManager.isValueCacheEnabled()) {
 				if (memoryCount < maxReserveBatchColumns / 8) {
 					DataTypeManager.setValueCacheEnabled(false);
@@ -561,7 +588,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		while (true) {
 			ManagedBatchImpl mb = null;
 			synchronized (activeBatches) {
-				if (activeBatchColumnCount == 0 || activeBatchColumnCount * 5 < reserveBatchColumns * 4) {
+				if (activeBatchColumnCount == 0 || activeBatchColumnCount * 5 < reserveBatchKB * 4) {
 					break;
 				}
 				Iterator<TupleBufferInfo> iter = activeBatches.values().iterator();
@@ -588,47 +615,49 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	}
 	
 	@Override
-	public int getSchemaSize(List elements) {
+	public int getSchemaSize(List<? extends Expression> elements) {
 		int total = 0;
+		boolean isValueCacheEnabled = DataTypeManager.isValueCacheEnabled();
 		//we make a assumption that the average column size under 64bits is approximately 128bytes
 		//this includes alignment, row/array, and reference overhead
-		for (Object element : elements) {
-			Class<?> type = ((Expression)element).getType();
+		for (Expression element : elements) {
+			Class<?> type = element.getType();
 			if (type == DataTypeManager.DefaultDataClasses.STRING) {
-				total += 256; //assumes an "average" string length of approximately 100 chars
+				total += isValueCacheEnabled?100:256; //assumes an "average" string length of approximately 100 chars
 			} else if (type == DataTypeManager.DefaultDataClasses.DATE 
 					|| type == DataTypeManager.DefaultDataClasses.TIME 
 					|| type == DataTypeManager.DefaultDataClasses.TIMESTAMP) {
-				total += 32;
+				total += isValueCacheEnabled?20:28;
 			} else if (type == DataTypeManager.DefaultDataClasses.LONG 
 					|| type	 == DataTypeManager.DefaultDataClasses.DOUBLE) {
-				total += 20;
+				total += isValueCacheEnabled?12:16;
 			} else if (type == DataTypeManager.DefaultDataClasses.INTEGER 
 					|| type == DataTypeManager.DefaultDataClasses.FLOAT) {
-				total += 14;
+				total += isValueCacheEnabled?6:12;
 			} else if (type == DataTypeManager.DefaultDataClasses.CHAR 
 					|| type == DataTypeManager.DefaultDataClasses.SHORT) {
-				total += 10;
-			} else if (type == DataTypeManager.DefaultDataClasses.BOOLEAN 
-					|| type == DataTypeManager.DefaultDataClasses.BYTE
-					|| type == DataTypeManager.DefaultDataClasses.NULL) {
-				//even if value caching is turned off we don't bother counting 
-				//the additional references that may exist to boolean and byte values
-				total += 8;
+				total += isValueCacheEnabled?4:10;
 			} else if (type == DataTypeManager.DefaultDataClasses.OBJECT) {
 				total += 1024;
+			} else if (type == DataTypeManager.DefaultDataClasses.NULL) {
+				//it's free
+			} else if (type == DataTypeManager.DefaultDataClasses.BYTE) {
+				total += 2; //always value cached
+			} else if (type == DataTypeManager.DefaultDataClasses.BOOLEAN) {
+				total += 1; //always value cached
 			} else {
 				total += 512; //assumes buffer overhead in the case of lobs
 				//however the account for lobs is misleading as the lob
 				//references are not actually removed from memory
 			}
 		}
-		return Math.max(1, total/128);
+		total += 8*elements.size() + 36;  // column list / row overhead
+		total *= processorBatchSize; 
+		return Math.max(1, total / 1024);
 	}
 	
     public void setMaxReserveBatchColumns(int maxReserve) {
     	this.maxReserveBatchColumns = maxReserve;
-		this.reserveBatchColumns = maxReserve;
 	}
 
 	public void shutdown() {
@@ -652,7 +681,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	
 	private void cleanDefunctTupleBuffers() {
 		while (true) {
-			Reference r = this.tupleBufferQueue.poll();
+			Reference<?> r = this.tupleBufferQueue.poll();
 			if (r == null) {
 				break;
 			}

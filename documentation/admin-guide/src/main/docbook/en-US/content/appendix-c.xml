@@ -12,10 +12,11 @@
 			<para><emphasis>org.teiid.allowNanInfinity</emphasis> - defaults to false.  Set to true to allow numeric functions
 			 to return NaN (Not A Number) and +-Infinity.  Note that these values are not covered by the SQL specification.</para>
 		</listitem>
-		<listitem>
-			<para><emphasis>org.teiid.useValueCache</emphasis> - defaults to true.  Set to false to disable the value cache. 
-			Value caching is used dynamically when buffer memory is running low to reuse identical values, but at a computational cost.  
-			If there is memory available, you should first increase the buffer memory rather than disabling value caching.</para>
+		<listitem id="value_caching">
+			<para><emphasis>org.teiid.useValueCache</emphasis> - defaults to false.  Set to true to enable the canonical value cache. 
+			Value caching is used dynamically when buffer memory is consumed to reuse identical values and thus reduce the memory consumed by Teiid.
+			There is a computation cost associated with the cache lookup, so enabling this setting is not appropriate for installations handling large volumes of dissimilar data.  
+			</para>
 		</listitem>
 		<listitem>
 			<para><emphasis>org.teiid.ansiQuotedIdentifiers</emphasis> - defaults to true.  

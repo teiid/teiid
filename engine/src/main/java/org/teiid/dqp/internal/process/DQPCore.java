@@ -58,6 +58,7 @@ import org.teiid.client.xa.XidImpl;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.Streamable;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor.PrioritizedRunnable;
 import org.teiid.dqp.message.AtomicRequestMessage;
@@ -683,6 +684,14 @@ public class DQPCore implements DQP {
         	LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.getString("DQPCore.invalid_max_active_plan", this.maxActivePlans, config.getMaxThreads())); //$NON-NLS-1$
         	this.maxActivePlans = config.getMaxThreads();
         }
+
+        //hack to set the max active plans
+        this.bufferManager.setMaxActivePlans(this.maxActivePlans);
+        try {
+			this.bufferManager.initialize();
+		} catch (TeiidComponentException e) {
+			throw new TeiidRuntimeException(e);
+		}
         
         this.userRequestSourceConcurrency = config.getUserRequestSourceConcurrency();
         if (this.userRequestSourceConcurrency < 1) {

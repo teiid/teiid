@@ -53,7 +53,7 @@ public class TestSubqueryCompareCriteriaImpl extends TestCase {
     }
     
     public static SubqueryComparison example() throws Exception {
-        return (SubqueryComparison)TstLanguageBridgeFactory.factory.translate(helpExample());
+        return TstLanguageBridgeFactory.factory.translate(helpExample());
     }
 
     public void testGetExpression() throws Exception {

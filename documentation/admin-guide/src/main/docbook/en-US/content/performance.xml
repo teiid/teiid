@@ -19,31 +19,42 @@
 		</para>
 		<para>
 			The <code>maxReserveBatchColumns</code>
-			setting determines the total number of batches (with a max of
-			<code>processorBatchSize</code> rows) multiplied by their column width
-			that can be held in memory directly by the BufferManager.
+			setting determines the total size of batches that can be held by the BufferManager in memory.
 			This number does not include persistent batches held by soft (such as
-			index pages) or weak references. When your installation can dedicate
-			more memory to Teiid, consider increasing this value in proportion to the number of gigabytes you
-			wish Teiid to use - e.g. 2GB on a 32 bit VM would double the value to
-			32768. For 64 bit VMs you should use a value of approximately 11000
-			per GB.
-			The BufferManager automatically triggers the use of a canonical
-			value cache when more than 25% of the reserve is in use.
+			index pages) or weak references. 
+			The value is treated internally as an approximation of bytes using the conversion
+			<code>maxReserveBatchColumns</code> * <code>processorBatchSize</code> * (64bytes per column value).
+			The default value of -1 will auto-calculate a typical max based upon the max heap available to the VM.  
+			The auto-calculated value assumes a 64bit architecture and will limit buffer usage to 50% of the first 
+			gigabyte of memory beyond the first 300 megabytes (which are assumed for use by the AS and other Teiid purposes) 
+			and 75% of the memory beyond that. 
+		</para>
+		<para>
+		    The BufferManager automatically triggers the use of a canonical
+			value cache if enabled when more than 25% of the reserve is in use.
 			This can dramatically cut the memory usage in situations where similar
 			value sets are being read through Teiid, but does introduce a lookup cost.
-			If you are processing large (100s of MBs) of highly unique datasets
-			through Teiid, you should consider <link linkend="system_properties">disabling value caching</link> since it
-			will not significantly reduce memory consumption.
-			<note>
-				<para>The formula (average bytes per value)*(processor batch size)*(maxReserveBatchColumns) approximates the amount of 
-            reserve memory used by the BufferManager.  The defaults with an assumed value (8 bytes in 32 bit mode) for bytes per column
-            works out to be: 8 bytes * 512 * 16384 = 64MB.  Memory consumption can be significantly more or less
-            depending upon actual column values and whether value caching is enabled. The 8 bytes per column includes row/batch list overhead and 
-            represents the Java type memory foot print (e.g. java.lang.Integer not a raw 4 byte integer).
-            The nominal target of 64MB per 1 gigabyte of may be too low based upon the particulars of your usage. Raising the maxReserveBatchColumns 
-            value too high though may result in out of memory errors.</para>
-			</note>
+			If you are processing small or highly similar datasets 
+			through Teiid, and wish to conserve memory, you should consider <link linkend="value_caching">enabling value caching</link>.
+		</para>
+		<note>
+			<para>Memory consumption can be significantly more or less than the nominal target
+	            depending upon actual column values and whether value caching is enabled.  Large strings, bigintegers, bigdecimals, or values typed as object can exceed their default size estimate.
+	            If an out of memory errors occur, then set a lower the maxReserveBatchColumns value.
+			</para>
+		</note>
+		<para>
+			The <code>maxProcessingBatchesColumns</code>
+			setting determines the total size of batches that can be used by active plans regardless of the memory held based on <code>maxReserveBatchColumns</code>.
+			The value is treated internally as an approximation of bytes using the conversion
+			<code>maxProcessingBatchesColumns</code> * <code>processorBatchSize</code> * (64bytes per column value).
+			The default value of -1 will auto-calculate a typical max based upon the max heap available to the VM and max active plans.  
+			The auto-calculated value assumes a 64bit architecture and will limit processing batch usage to 10% of memory 
+			beyond the first 300 megabytes (which are assumed for use by the AS and other Teiid purposes).
+		</para>
+		<para>
+			In systems where large intermediate results are normal (scrolling cursors or sorting over millions of rows) you can consider increasing the <code>maxProcessingBatchColumns</code> and decreasing
+			the <code>maxReserveBatchColumns</code> so that each request has access to an effectively smaller buffer space.
 		</para>
 		<para>
 			Each intermediate result buffer, temporary LOB, and temporary table
@@ -59,9 +70,10 @@
 	<section>
 		<title>Threading</title>
 		<para>Socket threads are configured for each <link linkend="socket_transport">transport</link>.  
-		They handle NIO non-blocking IO operations as well as directly servicing any operation that can run without blocking.</para>
-		<para>For longer running operations, the socket threads queue with work the query engine.  
-		The query engine has two settings that determine its thread utilization.  
+		They handle NIO non-blocking IO operations as well as directly servicing any operation that can run without blocking.
+		For longer running operations, the socket threads queue with work the query engine.</para>
+		
+		<para>The query engine has several settings that determine its thread utilization.  
 		
 		<code>maxThreads</code> sets the total number of threads available for query engine work (processing plans, transaction control operations, processing source queries, etc.). 
 		You should consider increasing the maximum threads on systems with a large number of available processors and/or when it's common to issue non-transactional queries with that 
@@ -93,14 +105,16 @@
 		<title>Socket Transports</title>
 		<para>Teiid separates the configuration of its socket transports for
 			JDBC, ODBC, and Admin access.
-			Typical installations will not need to
-			adjust the default thread and buffer
-			size settings. 
+			Typical installations will not need to adjust the default thread and buffer size settings.
+			The default input output buffer sizes are set to 0, which will use the system default.  
+			Before adjusting this value keep in mind that each JDBC, ODBC, and Admin client will create a new socket connection.  
+			Setting these values to a large buffer size should only be done if the number of client is constrained.
 			All JDBC socket operations are non-blocking, so setting the number of maxThreads
-			higher than the maximum effective parallelism of the machine will not result in greater performance.  The default value 0 for JDBC socket threads will
-			set the max to the number of available processors.  
-			At this time, ODBC
-			queries are executed synchronously from the socket thread.
+			higher than the maximum effective parallelism of the machine should not result in greater performance.  
+			The default value 0 for JDBC socket threads will set the max to the number of available processors.
+			</para>
+			<para>  
+			At this time, ODBC queries are executed synchronously from the socket thread.
 			Simultaneous long-running queries may exhaust the available threads.
 			Consider increasing the default max threads (15) for ODBC if you
 			expect a higher concurrent load of long-running ODBC client queries.</para>

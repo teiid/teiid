@@ -163,11 +163,11 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
 	private boolean testAndSetPartitions(int rowCount, List elements) {
 		int partitionCount = (rowCount / this.joinNode.getBatchSize() + rowCount % this.joinNode.getBatchSize() == 0 ? 0:1) 
 			* this.joinNode.getBufferManager().getSchemaSize(elements);
-		if (partitionCount > this.joinNode.getBufferManager().getMaxProcessingBatchColumns() * 8) {
+		if (partitionCount > this.joinNode.getBufferManager().getMaxProcessingKB() * 8) {
 			return false; 
 		}
 		int toReserve = Math.max(1, (int)(partitionCount * .75));
-		int excess = Math.max(0, toReserve - this.joinNode.getBufferManager().getMaxProcessingBatchColumns());
+		int excess = Math.max(0, toReserve - this.joinNode.getBufferManager().getMaxProcessingKB());
 		reserved = this.joinNode.getBufferManager().reserveBuffers(toReserve - excess, BufferReserveMode.FORCE);
 		if (excess > 0) {
 			reserved += this.joinNode.getBufferManager().reserveBuffers(toReserve, BufferReserveMode.NO_WAIT);

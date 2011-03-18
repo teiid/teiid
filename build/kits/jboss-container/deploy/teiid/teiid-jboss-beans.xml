@@ -25,18 +25,15 @@
         <!-- The max row count of a batch from a connector. Should be even multiple of processorBatchSize. (default 1024) -->
         <property name="connectorBatchSize">1024</property>
         <!-- 
-            The number of batch columns to allow in memory (default 16384).  
-            This value should be set lower or higher depending on the available memory to Teiid in the VM.  
-            16384 is considered a good default for a dedicated 32-bit VM running Teiid with a 1 gig heap.
+            The number of batch columns to allow in buffer memory. -1 means to automatically calculate a value (default -1).  
             See the admin guide for more.          
          -->
-        <property name="maxReserveBatchColumns">16384</property>
+        <property name="maxReserveBatchColumns">-1</property>
         <!-- 
-            The number of batch columns guaranteed to a processing operation.  Set this value lower if the workload typically
-            processes larger numbers of concurrent queries with large intermediate results from operations such as sorting, 
-            grouping, etc. (default 128)        
+            The number of batch columns guaranteed to a processing operation. -1 means to automatically calculate a value (default -1).
+            See the admin guide for more.        
          -->
-        <property name="maxProcessingBatchesColumns">128</property>
+        <property name="maxProcessingBatchesColumns">-1</property>
         <!--  Max File size in MB (default 2GB)-->
         <property name="maxFileSize">2048</property>
         <!-- Max storage space, in MB, to be used for buffer files (default 50G) -->

@@ -685,7 +685,17 @@ public interface QueryMetadataInterface {
     
     boolean isMultiSourceElement(Object elementId) throws QueryMetadataException, TeiidComponentException;
 
+    /**
+     * Get the metadata without visibility and session tables
+     * @return
+     */
 	QueryMetadataInterface getDesignTimeMetadata();
 	
+	/**
+	 * Return true if a procedure exists with the given name (partial or fqn)
+	 * @param name
+	 * @return
+	 * @throws TeiidComponentException
+	 */
 	boolean hasProcedure(String name) throws TeiidComponentException;
 }

@@ -78,7 +78,7 @@ import org.teiid.core.util.PropertiesUtils;
  */
 public class DataTypeManager {
 	
-	private static final boolean USE_VALUE_CACHE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.useValueCache", true); //$NON-NLS-1$
+	private static final boolean USE_VALUE_CACHE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.useValueCache", false); //$NON-NLS-1$
 	
 	private static boolean valueCacheEnabled;
 	
@@ -488,19 +488,20 @@ public class DataTypeManager {
 		dataTypeNames.put(DataTypeAliases.TINYINT, DefaultDataClasses.BYTE);
 		dataTypeNames.put(DataTypeAliases.VARCHAR, DefaultDataClasses.STRING);
 		
+		valueMaps.put(DefaultDataClasses.BOOLEAN, new ValueCache<Boolean>() {
+			@Override
+			public Boolean getValue(Boolean value) {
+				return Boolean.valueOf(value);
+			}
+		});
+		valueMaps.put(DefaultDataClasses.BYTE, new ValueCache<Byte>() {
+			@Override
+			public Byte getValue(Byte value) {
+				return Byte.valueOf(value);
+			}
+		});
+		
 		if (USE_VALUE_CACHE) {
-			valueMaps.put(DefaultDataClasses.BOOLEAN, new ValueCache<Boolean>() {
-				@Override
-				public Boolean getValue(Boolean value) {
-					return Boolean.valueOf(value);
-				}
-			});
-			valueMaps.put(DefaultDataClasses.BYTE, new ValueCache<Byte>() {
-				@Override
-				public Byte getValue(Byte value) {
-					return Byte.valueOf(value);
-				}
-			});
 			valueMaps.put(DefaultDataClasses.SHORT, new HashedValueCache<Short>(13));
 			valueMaps.put(DefaultDataClasses.CHAR, new HashedValueCache<Character>(13));
 			valueMaps.put(DefaultDataClasses.INTEGER, new HashedValueCache<Integer>(14));
@@ -797,13 +798,13 @@ public class DataTypeManager {
     	valueCacheEnabled = enabled;
     }
     
-    public static boolean isValueCacheEnabled() {
+    public static final boolean isValueCacheEnabled() {
     	return valueCacheEnabled;
     }
     
     @SuppressWarnings("unchecked")
 	public static <T> T getCanonicalValue(T value) {
-    	if (USE_VALUE_CACHE && valueCacheEnabled) {
+    	if (valueCacheEnabled) {
     		if (value == null) {
     			return null;
     		}

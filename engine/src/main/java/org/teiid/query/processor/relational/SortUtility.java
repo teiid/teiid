@@ -203,7 +203,7 @@ public class SortUtility {
 		        	//attempt to reserve more working memory if there are additional rows available before blocking
 		        	if (workingTuples.size() >= maxRows) {
 	        			int reserved = bufferManager.reserveBuffers(schemaSize, 
-	        					(totalReservedBuffers + schemaSize <= bufferManager.getMaxProcessingBatchColumns())?BufferReserveMode.FORCE:BufferReserveMode.NO_WAIT);
+	        					(totalReservedBuffers + schemaSize <= bufferManager.getMaxProcessingKB())?BufferReserveMode.FORCE:BufferReserveMode.NO_WAIT);
 	        			if (reserved != schemaSize) {
 		        			break;
 		        		} 
@@ -268,7 +268,7 @@ public class SortUtility {
             TupleBuffer merged = createTupleBuffer();
 
             int desiredSpace = activeTupleBuffers.size() * schemaSize;
-            int reserved = Math.min(desiredSpace, this.bufferManager.getMaxProcessingBatchColumns());
+            int reserved = Math.min(desiredSpace, this.bufferManager.getMaxProcessingKB());
             bufferManager.reserveBuffers(reserved, BufferReserveMode.FORCE);
             if (desiredSpace > reserved) {
             	reserved += bufferManager.reserveBuffers(desiredSpace - reserved, BufferReserveMode.WAIT);
