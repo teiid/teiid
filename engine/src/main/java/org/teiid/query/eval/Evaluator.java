@@ -588,9 +588,9 @@ public class Evaluator {
 			throw new ExpressionEvaluationException(e, e.getMessage());
 		}
         if(valueIter.hasNext()) {
-            return true;
+            return !criteria.isNegated();
         }
-        return false;
+        return criteria.isNegated();
     }
     
 	public Object evaluate(Expression expression, List<?> tuple)

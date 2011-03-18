@@ -144,6 +144,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     private static final String BEGIN_HINT = "/*+"; //$NON-NLS-1$
     private static final String END_HINT = "*/"; //$NON-NLS-1$
     private static final char ID_ESCAPE_CHAR = '\"';
+	public static String MJ = "MJ"; //$NON-NLS-1$
 
     protected StringBuilder parts = new StringBuilder();
 
@@ -1066,6 +1067,14 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(SPACE);
         }
         append(IN);
+        if (obj.isMergeJoin()) {
+            append(SPACE);
+        	append(BEGIN_HINT);
+            append(SPACE);
+            append(MJ);
+            append(SPACE);
+            append(END_HINT);
+        }
         append(" ("); //$NON-NLS-1$
         visitNode(obj.getCommand());
         append(")"); //$NON-NLS-1$
@@ -1546,8 +1555,19 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit( ExistsCriteria obj ) {
-        // operator and beginning of list
+    	if (obj.isNegated()) {
+            append(NOT);
+            append(SPACE);
+        }
         append(EXISTS);
+        if (obj.isMergeJoin()) {
+            append(SPACE);
+        	append(BEGIN_HINT);
+            append(SPACE);
+            append(MJ);
+            append(SPACE);
+            append(END_HINT);
+        }
         append(" ("); //$NON-NLS-1$
         visitNode(obj.getCommand());
         append(")"); //$NON-NLS-1$

@@ -602,7 +602,7 @@ public class NewCalculateCostUtil {
             return;
         }
 
-        float cardinality = getNDVEstimate(node, metadata, childCost, expressions, false);
+        float cardinality = getNDVEstimate(node, metadata, childCost, expressions, true);
         setCardinalityEstimate(node, cardinality, true, metadata);
     }
 
@@ -1283,6 +1283,8 @@ public class NewCalculateCostUtil {
 				ndv = cardinality;
 			} else if (useCardinalityIfUnknown) {
 				ndv = cardinality/2; 
+			} else {
+				return UNKNOWN_VALUE;
 			}
 		}
 		return Math.max(1, ndv);

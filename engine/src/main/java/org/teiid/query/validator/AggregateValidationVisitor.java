@@ -119,11 +119,11 @@ public class AggregateValidationVisitor extends AbstractValidationVisitor {
         }
         
         if(groupExpressions == null) {
-            if (symbol instanceof ElementSymbol) {
+            if (symbol instanceof ElementSymbol && !((ElementSymbol)symbol).isExternalReference()) {
                 handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0037", symbol), symbol); //$NON-NLS-1$
             }
         } else if(! groupExpressions.contains(symbol)) {
-            if (symbol instanceof ElementSymbol) {
+            if (symbol instanceof ElementSymbol && !((ElementSymbol)symbol).isExternalReference()) {
                 handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0038", symbol), symbol); //$NON-NLS-1$
             }
         } else {

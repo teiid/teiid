@@ -4955,7 +4955,15 @@ public class TestParser {
      
     @Test public void testSubquerySetCriteria0() { 
         //test wrap up command with subquerySetCriteria
-        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
+        Query outer = exampleIn(false);
+                     
+        helpTest("SELECT a FROM db.g WHERE b IN (SELECT a FROM db.g WHERE a2 = 5)", //$NON-NLS-1$
+            "SELECT a FROM db.g WHERE b IN (SELECT a FROM db.g WHERE a2 = 5)", //$NON-NLS-1$
+             outer);        
+    }
+    
+	static Query exampleIn(boolean semiJoin) {
+		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
 
@@ -4972,16 +4980,13 @@ public class TestParser {
         query.setFrom(from);
         query.setCriteria(criteria);
         SubquerySetCriteria subCrit = new SubquerySetCriteria(expr, query);
-       
+        subCrit.setMergeJoin(semiJoin);
         Query outer = new Query();
         outer.setSelect(select);
         outer.setFrom(from);
         outer.setCriteria(subCrit);
-                     
-        helpTest("SELECT a FROM db.g WHERE b IN (SELECT a FROM db.g WHERE a2 = 5)", //$NON-NLS-1$
-            "SELECT a FROM db.g WHERE b IN (SELECT a FROM db.g WHERE a2 = 5)", //$NON-NLS-1$
-             outer);        
-    }     
+		return outer;
+	}     
                
     @Test public void testSubquerySetCriteria1() { 
 
@@ -5710,7 +5715,14 @@ public class TestParser {
 
     @Test public void testExistsPredicateCriteria(){
 
-        Select s1 = new Select();
+        Query q2 = exampleExists(false);
+
+        helpTest("SELECT e1 FROM m.g2 WHERE Exists (SELECT e1 FROM m.g1)",  //$NON-NLS-1$
+                 "SELECT e1 FROM m.g2 WHERE EXISTS (SELECT e1 FROM m.g1)", //$NON-NLS-1$
+                 q2);            
+    }
+	static Query exampleExists(boolean semiJoin) {
+		Select s1 = new Select();
         s1.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
         From f1 = new From();
         f1.addGroup(new GroupSymbol("m.g1"));        //$NON-NLS-1$
@@ -5722,16 +5734,14 @@ public class TestParser {
         s2.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
         From f2 = new From();
         f2.addGroup(new GroupSymbol("m.g2"));        //$NON-NLS-1$
-        Criteria existsCrit = new ExistsCriteria(q1);
+        ExistsCriteria existsCrit = new ExistsCriteria(q1);
+        existsCrit.setMergeJoin(semiJoin);
         Query q2 = new Query();
         q2.setSelect(s2);
         q2.setFrom(f2);
         q2.setCriteria(existsCrit);
-
-        helpTest("SELECT e1 FROM m.g2 WHERE Exists (SELECT e1 FROM m.g1)",  //$NON-NLS-1$
-                 "SELECT e1 FROM m.g2 WHERE EXISTS (SELECT e1 FROM m.g1)", //$NON-NLS-1$
-                 q2);            
-    }
+		return q2;
+	}
     
     @Test public void testAnyQuantifierSubqueryComparePredicate(){
 

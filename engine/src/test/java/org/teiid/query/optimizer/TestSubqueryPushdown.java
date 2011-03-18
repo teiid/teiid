@@ -24,10 +24,13 @@ package org.teiid.query.optimizer;
 
 import static org.teiid.query.optimizer.TestOptimizer.*;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.optimizer.TestOptimizer.AntiSemiJoin;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
+import org.teiid.query.optimizer.TestOptimizer.SemiJoin;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
@@ -836,6 +839,103 @@ public class TestSubqueryPushdown {
         }); 
     } 
     
+    /**
+     * This will not plan as a semi-join since the cost seems too high
+     */
+    @Test public void testNonSemiJoinExistsCosting() {
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g2 as o where exists (select 1 from pm3.g1 where e1 = o.e1 having o.e2 = count(e2))", FakeMetadataFactory.example4(),  //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1, g_0.e2 FROM pm1.g2 AS g_0" }); //$NON-NLS-1$
+        checkNodeTypes(plan, new int[] {
+            1,      // Access
+            0,      // DependentAccess
+            1,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        }); 
+    } 
+    
+    /**
+     * Same as above, but the source is much larger, so a semi-join is favorable
+     */
+    @Test public void testSemiJoinExistsCosting() {
+        ProcessorPlan plan = helpPlan("Select e1 from pm2.g2 as o where exists (select 1 from pm3.g1 where e1 = o.e1 having o.e2 = count(e2))", FakeMetadataFactory.example4(),  //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_0, c_1" }); //$NON-NLS-1$
+        checkNodeTypes(plan, new int[] {
+            1,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            1,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        }); 
+        checkJoinCounts(plan, 1, 0);
+    }
+    
+    @Test public void testAntiSemiJoinExistsHint() {
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g2 as o where not exists /*+ MJ */ (select 1 from pm3.g1 where e1 = o.e1 having o.e2 = count(e2))", FakeMetadataFactory.example4(),  //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g2 AS g_0 ORDER BY c_0, c_1" }); //$NON-NLS-1$
+        checkNodeTypes(plan, new int[] {
+            1,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            1,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        }); 
+        checkJoinCounts(plan, 0, 1);
+    }
+    
+    @Test public void testSemiJoinInHint() {
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g2 as o where e2 IN /*+ MJ */ (select count(e2) from pm3.g1 where e1 = o.e1)", FakeMetadataFactory.example4(),  //$NON-NLS-1$
+            new String[] { "SELECT g_0.e2 AS c_0, g_0.e1 AS c_1 FROM pm1.g2 AS g_0 ORDER BY c_1, c_0" }); //$NON-NLS-1$
+        checkNodeTypes(plan, new int[] {
+            1,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            1,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        }); 
+        checkJoinCounts(plan, 1, 0);
+    }
+    
+    void checkJoinCounts(ProcessorPlan plan, int semi, int antiSemi) {
+    	checkNodeTypes(plan, new int[] {semi, antiSemi}, new Class[] {SemiJoin.class, AntiSemiJoin.class});
+    }
+    
     @Test public void testNonSemiJoin() throws Exception {
         ProcessorPlan plan = helpPlan("Select x from xmltable('/a/b' passing convert('<a/>', xml) columns x integer path '@x') as t where x = (select count(e2) FROM pm1.g2)", FakeMetadataFactory.example4(),  //$NON-NLS-1$
             new String[] {}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
@@ -877,4 +977,27 @@ public class TestSubqueryPushdown {
             new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 <= (SELECT MAX(X.e1) FROM (SELECT e1 FROM pm2.g1) AS X)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
+    
+    @Ignore
+    @Test public void testUncorrelatedSet() {
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (select e1 FROM pm2.g1)", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
+            new String[] { "SELECT e1, pm1.g1.e2 FROM pm1.g1" }); //$NON-NLS-1$
+        checkNodeTypes(plan, new int[] {
+            1,      // Access
+            0,      // DependentAccess
+            1,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        }); 
+    }
+
 }

@@ -349,8 +349,12 @@ public class LanguageBridgeFactory {
         return result;
     }
 
-    Exists translate(ExistsCriteria criteria) {
-        return new Exists(translate(criteria.getCommand()));
+    Condition translate(ExistsCriteria criteria) {
+        Exists exists = new Exists(translate(criteria.getCommand()));
+        if (criteria.isNegated()) {
+        	return new Not(exists);
+        }
+        return exists;
     }
 
     IsNull translate(IsNullCriteria criteria) {

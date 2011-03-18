@@ -1134,7 +1134,7 @@ public class QueryRewriter {
 			}
 		    rewriteSubqueryContainer((SubqueryContainer)criteria, true);
 			if (!RelationalNodeUtil.shouldExecute(exists.getCommand(), false, true)) {
-            	return FALSE_CRITERIA;
+            	return exists.isNegated()?TRUE_CRITERIA:FALSE_CRITERIA;
             }
 		    if (exists.getCommand().getProcessorPlan() == null) {
 	            addImplicitLimit(exists, 1);

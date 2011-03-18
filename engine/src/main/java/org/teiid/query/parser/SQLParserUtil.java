@@ -39,6 +39,7 @@ import org.teiid.query.sql.lang.Option;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.proc.CriteriaSelector;
+import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class SQLParserUtil {
 	
@@ -165,8 +166,18 @@ public class SQLParserUtil {
             }        
         }
     }
-
-	private String getComment(Token t) {
+    
+    boolean isMergeJoin(Token t) {
+    	String[] parts = getComment(t).split("\\s"); //$NON-NLS-1$
+    	for (int i = 0; i < parts.length; i++) {
+            if (parts[i].equalsIgnoreCase(SQLStringVisitor.MJ)) {
+                return true;
+            }        
+        }
+    	return false;
+    }
+    
+	String getComment(Token t) {
 		Token optToken = t.specialToken;
         if (optToken == null) { 
             return ""; //$NON-NLS-1$

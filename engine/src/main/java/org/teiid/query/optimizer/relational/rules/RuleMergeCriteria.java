@@ -33,6 +33,8 @@ import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
+import org.teiid.client.plan.Annotation;
+import org.teiid.client.plan.Annotation.Priority;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -119,6 +121,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		public List<Criteria> nonEquiJoinCriteria = new LinkedList<Criteria>();
 		public Criteria additionalCritieria;
 		public Class<?> type;
+		public boolean mergeJoin;
 	}
 
 	private IDGenerator idGenerator;
@@ -143,7 +146,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 
         // Find strings of criteria and merge them, removing duplicates
         List<PlanNode> criteriaChains = new ArrayList<PlanNode>();
-        findCriteriaChains(plan, criteriaChains);
+        findCriteriaChains(plan, criteriaChains, analysisRecord);
         
         // Merge chains
         for (PlanNode critNode : criteriaChains) {
@@ -158,7 +161,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
      * @param node Root node to search
      * @param foundNodes Roots of criteria chains
      */
-     void findCriteriaChains(PlanNode root, List<PlanNode> foundNodes)
+     void findCriteriaChains(PlanNode root, List<PlanNode> foundNodes, AnalysisRecord analysisRecord)
         throws QueryPlannerException, TeiidComponentException {
 
         PlanNode recurseRoot = root;
@@ -167,7 +170,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
             // Walk to end of the chain and change recurse root
             while(recurseRoot.getType() == NodeConstants.Types.SELECT) {
             	// Look for opportunities to replace with a semi-join 
-            	recurseRoot = planSemiJoin(recurseRoot, root);
+            	recurseRoot = planMergeJoin(recurseRoot, root, analysisRecord);
             	if (root.getChildCount() == 0) {
             		root = recurseRoot.getFirstChild();
             		if (root.getType() != NodeConstants.Types.SELECT) {
@@ -186,7 +189,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
         
         if (recurseRoot.getType() != NodeConstants.Types.ACCESS) {
             for (PlanNode child : recurseRoot.getChildren()) {
-                findCriteriaChains(child, foundNodes);
+                findCriteriaChains(child, foundNodes, analysisRecord);
             }
         }
     }
@@ -242,24 +245,24 @@ public final class RuleMergeCriteria implements OptimizerRule {
      * 
      * TODO: it would be good to have a hint to force
      */
-	private PlanNode planSemiJoin(PlanNode current, PlanNode root) throws QueryMetadataException,
+	private PlanNode planMergeJoin(PlanNode current, PlanNode root, AnalysisRecord analysisRecord) throws QueryMetadataException,
 			TeiidComponentException {
-		float sourceCost = NewCalculateCostUtil.computeCostForTree(current, metadata);
-		if (sourceCost != NewCalculateCostUtil.UNKNOWN_VALUE 
-				&& sourceCost < RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY) {
-			//TODO: see if a dependent join applies
-			return current;
-		}
+		float sourceCost = NewCalculateCostUtil.computeCostForTree(current.getFirstChild(), metadata);
 		Criteria crit = (Criteria)current.getProperty(NodeConstants.Info.SELECT_CRITERIA);
 		
 		PlannedResult plannedResult = findSubquery(crit);
 		if (plannedResult.query == null) {
 			return current;
 		}
+		if (sourceCost != NewCalculateCostUtil.UNKNOWN_VALUE 
+				&& sourceCost < RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY && !plannedResult.mergeJoin) {
+			//TODO: see if a dependent join applies the other direction
+			return current;
+		}
 		
 		RelationalPlan originalPlan = (RelationalPlan)plannedResult.query.getProcessorPlan();
         Number originalCardinality = originalPlan.getRootNode().getEstimateNodeCardinality();
-        if (originalCardinality.floatValue() == NewCalculateCostUtil.UNKNOWN_VALUE) {
+        if (!plannedResult.mergeJoin && originalCardinality.floatValue() == NewCalculateCostUtil.UNKNOWN_VALUE) {
             //TODO: this check isn't really accurate - exists and scalarsubqueries will always have cardinality 2/1
         	//if it's currently unknown, removing criteria won't make it any better
         	return current;
@@ -268,6 +271,9 @@ public final class RuleMergeCriteria implements OptimizerRule {
         Collection<GroupSymbol> leftGroups = FrameUtil.findJoinSourceNode(current).getGroups();
 
 		if (!planQuery(leftGroups, false, plannedResult)) {
+			if (plannedResult.mergeJoin && analysisRecord != null && analysisRecord.recordAnnotations()) {
+				this.analysisRecord.addAnnotation(new Annotation(Annotation.HINTS, "could not plan as a merge join: " + crit, "ignoring hint", Priority.MEDIUM)); //$NON-NLS-1$ //$NON-NLS-2$
+			}
 			return current;
 		}
 		
@@ -283,18 +289,26 @@ public final class RuleMergeCriteria implements OptimizerRule {
 			List<SingleElementSymbol> projectedSymbols = LanguageObject.Util.deepClone(plannedResult.query.getProjectedSymbols(), SingleElementSymbol.class);
 			//NOTE: we could tap into the relationalplanner at a lower level to get this in a plan node form,
 			//the major benefit would be to reuse the dependent join planning logic if possible.
+			if (analysisRecord != null && analysisRecord.recordDebug()) {
+				analysisRecord.println("Attempting to plan " + crit + " as a mege join"); //$NON-NLS-1$ //$NON-NLS-2$
+			}
 			RelationalPlan subPlan = (RelationalPlan)QueryOptimizer.optimizePlan(plannedResult.query, metadata, idGenerator, capFinder, analysisRecord, context);
-            Number planCardinality = subPlan.getRootNode().getEstimateNodeCardinality();
+			Number planCardinality = subPlan.getRootNode().getEstimateNodeCardinality();
             
-            if (planCardinality.floatValue() == NewCalculateCostUtil.UNKNOWN_VALUE 
-            		|| planCardinality.floatValue() > 10000000
-            		|| (sourceCost == NewCalculateCostUtil.UNKNOWN_VALUE && planCardinality.floatValue() > 1000)
-            		|| (sourceCost != NewCalculateCostUtil.UNKNOWN_VALUE && sourceCost * originalCardinality.floatValue() < planCardinality.floatValue() / (100 * Math.log(Math.max(4, sourceCost))))) {
-            	//bail-out if both are unknown or the new plan is too large
-            	return current;
-            }
+			if (!plannedResult.mergeJoin) {
+				//if we don't have a specific hint, then use costing
+	            if (planCardinality.floatValue() == NewCalculateCostUtil.UNKNOWN_VALUE 
+	            		|| planCardinality.floatValue() > 10000000
+	            		|| (sourceCost == NewCalculateCostUtil.UNKNOWN_VALUE && planCardinality.floatValue() > 1000)
+	            		|| (sourceCost != NewCalculateCostUtil.UNKNOWN_VALUE && sourceCost * originalCardinality.floatValue() < planCardinality.floatValue() / (100 * Math.log(Math.max(4, sourceCost))))) {
+	            	//bail-out if both are unknown or the new plan is too large
+	            	if (analysisRecord != null && analysisRecord.recordDebug()) {
+	    				analysisRecord.println("Failed to use mege join, as the cost was not favorable.  Use the MJ hint to force."); //$NON-NLS-1$
+	    			}
+	            	return current;
+	            }
+			}
             
-            //TODO: don't allow if too large
             PlanNode semiJoin = NodeFactory.getNewNode(NodeConstants.Types.JOIN);
             semiJoin.addGroups(current.getGroups());
             semiJoin.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.MERGE);
@@ -336,6 +350,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 			SubquerySetCriteria ssc = (SubquerySetCriteria)crit;
 			result.not ^= ssc.isNegated();
 			result.type = crit.getClass();
+			result.mergeJoin = ssc.isMergeJoin();
 			crit = new SubqueryCompareCriteria(ssc.getExpression(), ssc.getCommand(), SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.SOME);
 		} else if (crit instanceof CompareCriteria) {
 			//convert to the quantified form
@@ -343,6 +358,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 			if (cc.getRightExpression() instanceof ScalarSubquery) {
 				ScalarSubquery ss = (ScalarSubquery)cc.getRightExpression();
 				result.type = ss.getClass();
+				//we can only use a semi-join if we know that 1 row will be present
 				if (ss.getCommand() instanceof Query) {
 					Query query = (Query)ss.getCommand();
 					if (query.getGroupBy() == null && query.hasAggregates()) {
@@ -378,8 +394,10 @@ public final class RuleMergeCriteria implements OptimizerRule {
 				return result;
 			} 
 			result.type = crit.getClass();
+			result.not = exists.isNegated();
 			//the correlations can only be in where (if no group by or aggregates) or having
 			result.query = (Query)exists.getCommand();
+			result.mergeJoin = exists.isMergeJoin();
 		}
 		return result;
 	}
@@ -466,8 +484,6 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		}
 		
 		if (plannedResult.leftExpressions.isEmpty()) {
-			//there's no equi-join
-			//TODO: if there are correlations a "cross" join may still be preferable 
 			return false;
 		}
 		

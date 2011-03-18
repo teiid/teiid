@@ -2680,11 +2680,23 @@ CompareCriteria compareCrit(ParseInfo info, Expression expression) :
 
 QueryCommand subquery(ParseInfo info) :
 {
-    QueryCommand subquery = null;
-    StoredProcedure proc = null;
+	Object[] result = null;    
 }
 {
-	<LPAREN>	
+	result = subqueryAndHint(info)
+	{
+		return (QueryCommand)result[0];
+	} 
+}
+
+Object[] subqueryAndHint(ParseInfo info) :
+{
+    QueryCommand subquery = null;
+    StoredProcedure proc = null;
+    Token lparen = null;
+}
+{
+	lparen = <LPAREN>
 	( subquery = queryExpression(info) | 
 	 (
 		proc = storedProcedure(info, new StoredProcedure()) //deprecated	  
@@ -2695,7 +2707,7 @@ QueryCommand subquery(ParseInfo info) :
 	)
 	<RPAREN>
 	{
-		return subquery;
+		return new Object[] {subquery, isMergeJoin(lparen)};
 	}
 }
 
@@ -2838,7 +2850,7 @@ AbstractSetCriteria setCrit(ParseInfo info, Expression expression) :
 {
 	Expression value = null;
 	List setList = new ArrayList();
-	QueryCommand command = null;
+	Object[] command = null;
 	boolean negated = false;
 	AbstractSetCriteria criteria = null;
 }
@@ -2846,7 +2858,7 @@ AbstractSetCriteria setCrit(ParseInfo info, Expression expression) :
 	[<NOT> {negated = true;}]
 	<IN>
 	(
-		LOOKAHEAD(subquery(info)) (command = subquery(info)) |
+		LOOKAHEAD(subquery(info)) (command = subqueryAndHint(info)) |
 		(
 			<LPAREN>
 			value = commonValueExpression(info)
@@ -2862,14 +2874,11 @@ AbstractSetCriteria setCrit(ParseInfo info, Expression expression) :
 			<RPAREN>
 		)
 	)
-	
-
 	{
-		if(setList.size() == 1 && setList.get(0) instanceof ScalarSubquery) {
-			ScalarSubquery subqueryExpr = (ScalarSubquery) setList.get(0);
-			criteria = new SubquerySetCriteria(expression, subqueryExpr.getCommand());
-		} else if (command != null) {
-			criteria = new SubquerySetCriteria(expression, command);
+	    if (command != null) {
+			SubquerySetCriteria ssc = new SubquerySetCriteria(expression, (QueryCommand)command[0]);
+			ssc.setMergeJoin((Boolean)command[1]);
+			criteria = ssc;
 		} else {
 		    criteria = new SetCriteria(expression, setList);
 		}
@@ -2885,15 +2894,15 @@ AbstractSetCriteria setCrit(ParseInfo info, Expression expression) :
  */
 ExistsCriteria existsCriteria(ParseInfo info) :
 {
-    ExistsCriteria existsCrit = null;
-    QueryCommand subquery = null;
+    Object[] subquery = null;
 }
 {
 	<EXISTS>
-	subquery = subquery(info)
+	subquery = subqueryAndHint(info)
 
 	{
-		existsCrit = new ExistsCriteria(subquery);
+		ExistsCriteria existsCrit = new ExistsCriteria((QueryCommand)subquery[0]);
+		existsCrit.setMergeJoin((Boolean)subquery[1]);
 	    return existsCrit;
    	}
 }

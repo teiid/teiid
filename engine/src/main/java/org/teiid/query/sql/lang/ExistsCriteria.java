@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.lang.PredicateCriteria.Negatable;
 import org.teiid.query.sql.symbol.ContextReference;
 import org.teiid.query.sql.symbol.Expression;
 
@@ -37,13 +38,15 @@ import org.teiid.query.sql.symbol.Expression;
  * "EXISTS (Select EmployeeID FROM Employees WHERE EmployeeName = 'Smith')".
  */
 public class ExistsCriteria extends PredicateCriteria
-implements SubqueryContainer<QueryCommand>, ContextReference {
+implements SubqueryContainer<QueryCommand>, ContextReference, Negatable {
 	
 	private static AtomicInteger ID = new AtomicInteger();
 
     private QueryCommand command;
     private String id = "$ec/id" + ID.getAndIncrement(); //$NON-NLS-1$
     private boolean shouldEvaluate;
+    private boolean mergeJoin;
+    private boolean negated;
 
     /**
      * Default constructor
@@ -51,6 +54,14 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
     public ExistsCriteria() {
         super();
     }
+    
+    public void setMergeJoin(boolean semiJoin) {
+		this.mergeJoin = semiJoin;
+	}
+    
+    public boolean isMergeJoin() {
+		return mergeJoin;
+	}
 
     public ExistsCriteria(QueryCommand subqueryCommand){
         this.command = subqueryCommand;
@@ -104,7 +115,6 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
      * @return True if equal
      */
     public boolean equals(Object obj) {
-        // Use super.equals() to check obvious stuff and variable
         if(obj == this) {
             return true;
         }
@@ -112,8 +122,12 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
         if(!(obj instanceof ExistsCriteria)) {
             return false;
         }
+        
+        ExistsCriteria other = (ExistsCriteria)obj;
 
-        return EquivalenceUtil.areEqual(getCommand(), ((ExistsCriteria)obj).getCommand());
+        return EquivalenceUtil.areEqual(getCommand(), other.getCommand()) &&
+        	this.negated == other.negated &&
+        	this.mergeJoin == other.mergeJoin;
     }
 
     /**
@@ -124,6 +138,22 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
      * @see java.lang.Object#clone()
      */
     public Object clone() {
-        return new ExistsCriteria((QueryCommand) this.command.clone());
+        ExistsCriteria ec = new ExistsCriteria((QueryCommand) this.command.clone());
+        ec.setMergeJoin(this.mergeJoin);
+        ec.setNegated(this.negated);
+        return ec;
     }
+    
+    public boolean isNegated() {
+		return negated;
+	}
+    
+    public void setNegated(boolean negated) {
+		this.negated = negated;
+	}
+
+	@Override
+	public void negate() {
+		this.negated = !this.negated;
+	}
 }

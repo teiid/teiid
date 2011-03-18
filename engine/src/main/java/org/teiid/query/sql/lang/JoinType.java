@@ -22,7 +22,8 @@
 
 package org.teiid.query.sql.lang;
 
-import org.teiid.query.sql.*;
+import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 /**
@@ -102,10 +103,6 @@ public class JoinType implements LanguageObject {
 		return outer; 	
 	}
 	
-	public boolean isSemi() {
-	    return this.equals(JOIN_ANTI_SEMI) || this.equals(JOIN_SEMI);
-	}
-
 	/**
 	 * Override Object.equals() to compare objects
 	 * @param other Other object

@@ -77,6 +77,7 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.TestResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
@@ -95,6 +96,7 @@ public class TestOptimizer {
     public interface DependentJoin {}
     public interface DependentSelectNode {}
     public interface SemiJoin {}
+    public interface AntiSemiJoin {}
     public interface DependentProjectNode {}
     public interface DupRemoveNode {}
     public interface DupRemoveSortNode {}
@@ -385,9 +387,11 @@ public class TestOptimizer {
         Class<?> nodeType = relationalNode.getClass();
         if(nodeType.equals(JoinNode.class)) {
         	JoinStrategy strategy = ((JoinNode)relationalNode).getJoinStrategy();
-        	if (((JoinNode)relationalNode).getJoinType().isSemi()) {
+        	if (((JoinNode)relationalNode).getJoinType().equals(JoinType.JOIN_SEMI)) {
         		updateCounts(SemiJoin.class, counts, types);
-        	}
+        	} else if (((JoinNode)relationalNode).getJoinType().equals(JoinType.JOIN_ANTI_SEMI)) {
+        		updateCounts(AntiSemiJoin.class, counts, types);
+        	} 
             if (strategy instanceof NestedLoopJoinStrategy) {
                 updateCounts(NestedLoopJoinStrategy.class, counts, types);
             } else if (strategy instanceof MergeJoinStrategy) {

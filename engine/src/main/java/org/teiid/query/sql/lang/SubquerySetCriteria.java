@@ -42,6 +42,7 @@ public class SubquerySetCriteria extends AbstractSetCriteria implements Subquery
 
     private QueryCommand command;
     private String id = "$ssc/id" + ID.getAndIncrement(); //$NON-NLS-1$
+    private boolean mergeJoin;
 
     /**
      * Constructor for SubquerySetCriteria.
@@ -54,6 +55,14 @@ public class SubquerySetCriteria extends AbstractSetCriteria implements Subquery
         setExpression(expression);
         setCommand(subCommand);
     }
+    
+    public boolean isMergeJoin() {
+		return mergeJoin;
+	}
+    
+    public void setMergeJoin(boolean semiJoin) {
+		this.mergeJoin = semiJoin;
+	}
     
     @Override
     public String getContextSymbol() {
@@ -114,12 +123,11 @@ public class SubquerySetCriteria extends AbstractSetCriteria implements Subquery
         }
 
         SubquerySetCriteria sc = (SubquerySetCriteria)obj;
-        if (isNegated() ^ sc.isNegated()) {
-            return false;
-        }
 
-        return EquivalenceUtil.areEqual(getExpression(), sc.getExpression()) &&
-               EquivalenceUtil.areEqual(getCommand(), sc.getCommand());
+        return this.isNegated() == sc.isNegated() &&
+         	   EquivalenceUtil.areEqual(getExpression(), sc.getExpression()) &&
+               EquivalenceUtil.areEqual(getCommand(), sc.getCommand()) &&
+               this.mergeJoin == sc.mergeJoin;
     }
 
     /**
@@ -128,7 +136,7 @@ public class SubquerySetCriteria extends AbstractSetCriteria implements Subquery
      * (see #setValueIterator setValueIterator}).
      * @return Deep copy of object
      */
-    public Object clone() {
+    public SubquerySetCriteria clone() {
         Expression copy = null;
         if(getExpression() != null) {
             copy = (Expression) getExpression().clone();
@@ -141,6 +149,7 @@ public class SubquerySetCriteria extends AbstractSetCriteria implements Subquery
 
         SubquerySetCriteria criteriaCopy = new SubquerySetCriteria(copy, copyCommand);
         criteriaCopy.setNegated(isNegated());
+        criteriaCopy.mergeJoin = this.mergeJoin;
         return criteriaCopy;
     }
 

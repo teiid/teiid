@@ -327,6 +327,11 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
             return;
         }
         
+        if (crit.isNegated() && !this.caps.supportsCapability(Capability.CRITERIA_NOT)) {
+        	markInvalid(crit, "Negation is not supported by source"); //$NON-NLS-1$
+        	return;
+        }
+        
         try {
 			if (validateSubqueryPushdown(crit, modelID, metadata, capFinder, analysisRecord) == null) {
 				if (crit.getCommand().getCorrelatedReferences() == null) {
