@@ -544,10 +544,11 @@ public class TestXMLProcessor {
         List normDocE3 = FakeMetadataFactory.createElements(normDoc3, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.DiscontinuedItem", "Catalogs.Catalog.items.DiscontinuedItem.@ItemID", "Catalogs.Catalog.items.DiscontinuedItem.Name", "Catalogs.Catalog.items.DiscontinuedItem.Quantity", "Catalogs.Catalog.items.StatusUnknown", "Catalogs.Catalog.items.StatusUnknown.@ItemID", "Catalogs.Catalog.items.StatusUnknown.Name", "Catalogs.Catalog.items.StatusUnknown.Quantity", "Catalogs.Catalog.items.Shouldn't see", "Catalogs.Catalog.items.Shouldn't see 2" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$
                                                             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
         
-        QueryNode vspqn1 = new QueryNode("vsp1", "CREATE VIRTUAL PROCEDURE BEGIN insert into #temp select * from stock.items; SELECT * FROM xmltest.doc1 where Item.Quantity < (select avg(itemquantity) from #temp); END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn1 = new QueryNode("vsp1", "CREATE VIRTUAL PROCEDURE BEGIN insert into #temp select * from stock.items where itemquantity < param; SELECT * FROM xmltest.doc1 where Item.Quantity < (select avg(itemquantity) from #temp); END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsprs1 = FakeMetadataFactory.createResultSet("pm1.vsprs1", xmltest, new String[] { "xml" }, new String[] { DataTypeManager.DefaultDataTypes.XML }); //$NON-NLS-1$ //$NON-NLS-2$
-        FakeMetadataObject vspp1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.XML, vsprs1); //$NON-NLS-1$
-        FakeMetadataObject vsp1 = FakeMetadataFactory.createVirtualProcedure("xmltest.vsp1", xmltest, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn1); //$NON-NLS-1$
+        FakeMetadataObject vspp1 = FakeMetadataFactory.createParameter("param", 1, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, vsprs1); //$NON-NLS-1$
+        FakeMetadataObject vspp2 = FakeMetadataFactory.createParameter("ret", 2, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.XML, vsprs1); //$NON-NLS-1$
+        FakeMetadataObject vsp1 = FakeMetadataFactory.createVirtualProcedure("xmltest.vsp1", xmltest, Arrays.asList(vspp1, vspp2 ), vspqn1); //$NON-NLS-1$
 
         // Add all objects to the store
         store.addObject(stock);
@@ -11758,7 +11759,48 @@ public class TestXMLProcessor {
             "        </Items>\r\n" +  //$NON-NLS-1$
             "    </Catalog>\r\n" +  //$NON-NLS-1$
             "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
-        helpTestProcess("call xmltest.vsp1()", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
+        helpTestProcess("call xmltest.vsp1(1000)", expectedDoc, metadata, dataMgr);         //$NON-NLS-1$
+    }
+    
+    @Test public void testProcedureAndXML1() throws Exception {
+        FakeMetadataFacade metadata = exampleMetadataCached();
+        FakeDataManager dataMgr = exampleDataManager(metadata);
+        String expectedDoc1 = 
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
+            "<Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\r\n" + //$NON-NLS-1$
+            "    <Catalog>\r\n" +  //$NON-NLS-1$
+            "        <Items/>\r\n" +  //$NON-NLS-1$
+            "    </Catalog>\r\n" +  //$NON-NLS-1$
+            "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
+        String expectedDoc2 = 
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
+            "<Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\r\n" + //$NON-NLS-1$
+            "    <Catalog>\r\n" +  //$NON-NLS-1$
+            "        <Items>\r\n" +  //$NON-NLS-1$
+            "            <Item ItemID=\"003\">\r\n" +  //$NON-NLS-1$
+            "                <Name>Goat</Name>\r\n" +  //$NON-NLS-1$
+            "                <Quantity>4</Quantity>\r\n" +  //$NON-NLS-1$
+            "            </Item>\r\n" +  //$NON-NLS-1$
+            "        </Items>\r\n" +  //$NON-NLS-1$
+            "    </Catalog>\r\n" +  //$NON-NLS-1$
+            "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
+        String expectedDoc3 = 
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" +  //$NON-NLS-1$
+            "<Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\r\n" + //$NON-NLS-1$
+            "    <Catalog>\r\n" +  //$NON-NLS-1$
+            "        <Items>\r\n" +  //$NON-NLS-1$
+            "            <Item ItemID=\"001\">\r\n" +  //$NON-NLS-1$
+            "                <Name>Lamp</Name>\r\n" +  //$NON-NLS-1$
+            "                <Quantity>5</Quantity>\r\n" +  //$NON-NLS-1$
+            "            </Item>\r\n" +  //$NON-NLS-1$
+            "            <Item ItemID=\"003\">\r\n" +  //$NON-NLS-1$
+            "                <Name>Goat</Name>\r\n" +  //$NON-NLS-1$
+            "                <Quantity>4</Quantity>\r\n" +  //$NON-NLS-1$
+            "            </Item>\r\n" +  //$NON-NLS-1$
+            "        </Items>\r\n" +  //$NON-NLS-1$
+            "    </Catalog>\r\n" +  //$NON-NLS-1$
+            "</Catalogs>\r\n\r\n"; //$NON-NLS-1$
+        helpTestProcess("select (call xmltest.vsp1(y)) from texttable(unescape('1\n100\n1000') COLUMNS y integer) as x", metadata, dataMgr, null, new DefaultCapabilitiesFinder(), expectedDoc1, expectedDoc2, expectedDoc3);         //$NON-NLS-1$
     }
     
     /**
