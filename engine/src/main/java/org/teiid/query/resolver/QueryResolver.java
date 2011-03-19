@@ -222,7 +222,6 @@ public class QueryResolver {
 		TempMetadataStore result = resolveCommand(currentCommand, metadata, false);
 		if (replaceBindings && symbolMap != null && !symbolMap.isEmpty()) {
 			ExpressionMappingVisitor emv = new ExpressionMappingVisitor(symbolMap);
-			emv.setClone(true);
 			DeepPostOrderNavigator.doVisit(currentCommand, emv);
 		}
 		return result;

@@ -754,7 +754,25 @@ public class TestSubqueryPushdown {
         ProcessorPlan plan = helpPlan("Select e1, (select e1 FROM pm2.g1 where e1 = 'x') from pm1.g1", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
             new String[] { "SELECT g_0.e1, (SELECT g_0.e1 FROM pm2.g1 AS g_0 WHERE g_0.e1 = 'x') FROM pm1.g1 AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
-    }   
+    }
+    
+    @Test public void testSubqueryRewriteToJoinDistinct() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("Select distinct e1 from pm1.g1 as x where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = x.e1)", "SELECT DISTINCT e1 FROM pm1.g1 AS x, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE x.e1 = X__1.e1", FakeMetadataFactory.example1Cached());
+    }
+    
+    /**
+     * Agg does not depend on cardinality
+     */
+    @Test public void testSubqueryRewriteToJoinGroupBy() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("Select max(e1) from pm1.g1 as x where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = x.e1) group by e2", "SELECT MAX(e1) FROM pm1.g1 AS x, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE x.e1 = X__1.e1 GROUP BY e2", FakeMetadataFactory.example1Cached());
+    }
+    
+    /**
+     * Agg does depend on cardinality
+     */
+    @Test public void testSubqueryRewriteToJoinGroupBy1() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("Select avg(e1) from pm1.g1 as x where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = x.e1) group by e2", "SELECT AVG(e1) FROM pm1.g1 AS x WHERE EXISTS (SELECT pm1.g1.e1 FROM pm1.g1 WHERE e1 = x.e1 LIMIT 1) GROUP BY e2", FakeMetadataFactory.example1Cached());
+    }
     
     @Test public void testSubqueryRewriteToJoin() throws Exception {
         TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.e1", FakeMetadataFactory.example4());

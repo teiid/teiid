@@ -22,27 +22,20 @@
 
 package org.teiid.core.util;
 
+import static org.junit.Assert.*;
+
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.core.util.ReflectionHelper;
-
-import junit.framework.TestCase;
+import org.junit.Test;
 
 /**
  * TestReflectionHelper
  */
-public class TestReflectionHelper extends TestCase {
-
-    /**
-     * Constructor for TestReflectionHelper.
-     * @param name
-     */
-    public TestReflectionHelper(String name) {
-        super(name);
-    }
+@SuppressWarnings("unchecked")
+public class TestReflectionHelper {
 
     // =========================================================================
     //                      H E L P E R   M E T H O D S
@@ -68,7 +61,7 @@ public class TestReflectionHelper extends TestCase {
     //                         T E S T     C A S E S
     // =========================================================================
 
-    public void testConstructorWithNullTargetClass() {
+    @Test public void testConstructorWithNullTargetClass() {
         try {
             new ReflectionHelper(null);
             fail("Should have caught null target class passed to constructor"); //$NON-NLS-1$
@@ -77,7 +70,7 @@ public class TestReflectionHelper extends TestCase {
         }
     }
 
-    public void testConstructorWithValidTargetClass() {
+    @Test public void testConstructorWithValidTargetClass() {
         final ReflectionHelper helper = new ReflectionHelper(String.class);
         assertNotNull(helper);
     }
@@ -85,7 +78,7 @@ public class TestReflectionHelper extends TestCase {
     //  ===============================================================================================
     //   Test overloaded methods
     //  ===============================================================================================
-    public void testFindBestMethodWithSignature_String() throws Exception {
+    @Test public void testFindBestMethodWithSignature_String() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeInterface.class);
         Class[] signatureSought = new Class[] {String.class};
         Method theMethod = helper.findBestMethodWithSignature("method", signatureSought ); //$NON-NLS-1$
@@ -98,7 +91,7 @@ public class TestReflectionHelper extends TestCase {
         helpAssertSameMethodSignature("Found wrong method signature", signatureExpected, signatureFound); //$NON-NLS-1$
     }
 
-    public void testFindBestMethodWithSignature_Serializable() throws Exception {
+    @Test public void testFindBestMethodWithSignature_Serializable() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeInterface.class);
         Class[] signatureSought = new Class[] {Serializable.class};
         Method theMethod = helper.findBestMethodWithSignature("method", signatureSought ); //$NON-NLS-1$
@@ -111,7 +104,7 @@ public class TestReflectionHelper extends TestCase {
         helpAssertSameMethodSignature("Found wrong method signature", signatureExpected, signatureFound); //$NON-NLS-1$
     }
 
-    public void testFindBestMethodWithSignature_Object() throws Exception {
+    @Test public void testFindBestMethodWithSignature_Object() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeInterface.class);
         Class[] signatureSought = new Class[] {NullPointerException.class};
         try {
@@ -122,7 +115,7 @@ public class TestReflectionHelper extends TestCase {
         }
     }
 
-    public void testFindBestMethodWithSignature_StringArray() throws Exception {
+    @Test public void testFindBestMethodWithSignature_StringArray() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeInterface.class);
         Class[] signatureSought = new Class[] {String[].class};
         Method theMethod = helper.findBestMethodWithSignature("method", signatureSought ); //$NON-NLS-1$
@@ -135,7 +128,7 @@ public class TestReflectionHelper extends TestCase {
         helpAssertSameMethodSignature("Found wrong method signature", signatureExpected, signatureFound); //$NON-NLS-1$
     }
 
-    public void testFindBestMethodWithSignature_Integer() throws Exception {
+    @Test public void testFindBestMethodWithSignature_Integer() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeInterface.class);
         Class[] signatureSought = new Class[] {Integer.class};
         Method theMethod = helper.findBestMethodWithSignature("method", signatureSought ); //$NON-NLS-1$
@@ -148,7 +141,7 @@ public class TestReflectionHelper extends TestCase {
         helpAssertSameMethodSignature("Found wrong method signature", signatureExpected, signatureFound); //$NON-NLS-1$
     }
 
-    public void testFindBestMethodWithSignature_long() throws Exception {
+    @Test public void testFindBestMethodWithSignature_long() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeInterface.class);
         Class[] signatureSought = new Class[] {Long.TYPE};
         Method theMethod = helper.findBestMethodWithSignature("method", signatureSought ); //$NON-NLS-1$
@@ -161,7 +154,7 @@ public class TestReflectionHelper extends TestCase {
         helpAssertSameMethodSignature("Found wrong method signature", signatureExpected, signatureFound); //$NON-NLS-1$
     }
 
-    public void testFindBestMethodWithSignature_2ArgSerializableAndNumber() throws Exception {
+    @Test public void testFindBestMethodWithSignature_2ArgSerializableAndNumber() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeInterface.class);
         Class[] signatureSought = new Class[] {Integer.class, Integer.class};
         Method theMethod = helper.findBestMethodWithSignature("method", signatureSought ); //$NON-NLS-1$
@@ -177,7 +170,7 @@ public class TestReflectionHelper extends TestCase {
     //  ===============================================================================================
     //   Test explicit method names
     //  ===============================================================================================
-    public void testFindBestMethodWithSignature_StringAndMethodName() throws Exception {
+    @Test public void testFindBestMethodWithSignature_StringAndMethodName() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeInterface.class);
         Class[] signatureSought = new Class[] {String.class};
         Method theMethod = helper.findBestMethodWithSignature("methodString", signatureSought ); //$NON-NLS-1$
@@ -190,7 +183,7 @@ public class TestReflectionHelper extends TestCase {
         helpAssertSameMethodSignature("Found wrong method signature", signatureExpected, signatureFound); //$NON-NLS-1$
     }
 
-    public void testFindBestMethodWithSignature_ObjectAndMethodName() throws Exception {
+    @Test public void testFindBestMethodWithSignature_ObjectAndMethodName() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeInterface.class);
         Class[] signatureSought = new Class[] {NullPointerException.class};
         Method theMethod = helper.findBestMethodWithSignature("methodObject", signatureSought ); //$NON-NLS-1$
@@ -203,7 +196,7 @@ public class TestReflectionHelper extends TestCase {
         helpAssertSameMethodSignature("Found wrong method signature", signatureExpected, signatureFound); //$NON-NLS-1$
     }
 
-    public void testFindBestMethodWithSignature_SerializableAndMethodName() throws Exception {
+    @Test public void testFindBestMethodWithSignature_SerializableAndMethodName() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeInterface.class);
         Class[] signatureSought = new Class[] {NullPointerException.class};
         Method theMethod = helper.findBestMethodWithSignature("methodSerializable", signatureSought ); //$NON-NLS-1$
@@ -216,7 +209,7 @@ public class TestReflectionHelper extends TestCase {
         helpAssertSameMethodSignature("Found wrong method signature", signatureExpected, signatureFound); //$NON-NLS-1$
     }
 
-    public void testFindBestMethodWithSignature_ObjectSerializableAndMethodName() throws Exception {
+    @Test public void testFindBestMethodWithSignature_ObjectSerializableAndMethodName() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeInterface.class);
         Class[] signatureSought = new Class[] {NullPointerException.class};
         Method theMethod = helper.findBestMethodWithSignature("methodSerializable", signatureSought ); //$NON-NLS-1$
@@ -229,7 +222,7 @@ public class TestReflectionHelper extends TestCase {
         helpAssertSameMethodSignature("Found wrong method signature", signatureExpected, signatureFound); //$NON-NLS-1$
     }
 
-    public void testFindBestMethodWithSignature_IntegerSerializableAndMethodName() throws Exception {
+    @Test public void testFindBestMethodWithSignature_IntegerSerializableAndMethodName() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeInterface.class);
         Class[] signatureSought = new Class[] {Integer.class};
         Method theMethod = helper.findBestMethodWithSignature("methodSerializable", signatureSought ); //$NON-NLS-1$
@@ -242,7 +235,7 @@ public class TestReflectionHelper extends TestCase {
         helpAssertSameMethodSignature("Found wrong method signature", signatureExpected, signatureFound); //$NON-NLS-1$
     }
 
-    public void testFindBestMethodWithSignature_StringArrayAndMethodName() throws Exception {
+    @Test public void testFindBestMethodWithSignature_StringArrayAndMethodName() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeInterface.class);
         Class[] signatureSought = new Class[] {String[].class};
         Method theMethod = helper.findBestMethodWithSignature("methodStringArray", signatureSought ); //$NON-NLS-1$
@@ -255,7 +248,7 @@ public class TestReflectionHelper extends TestCase {
         helpAssertSameMethodSignature("Found wrong method signature", signatureExpected, signatureFound); //$NON-NLS-1$
     }
 
-    public void testFindBestMethodWithSignature_ListAndMethodName() throws Exception {
+    @Test public void testFindBestMethodWithSignature_ListAndMethodName() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeInterface.class);
         Class[] signatureSought = new Class[] {ArrayList.class};
         Method theMethod = helper.findBestMethodWithSignature("methodList", signatureSought ); //$NON-NLS-1$
@@ -268,7 +261,7 @@ public class TestReflectionHelper extends TestCase {
         helpAssertSameMethodSignature("Found wrong method signature", signatureExpected, signatureFound); //$NON-NLS-1$
     }
 
-    public void testFindBestMethodWithSignature_IntegerAndMethodName() throws Exception {
+    @Test public void testFindBestMethodWithSignature_IntegerAndMethodName() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeInterface.class);
         Class[] signatureSought = new Class[] {Integer.class};
         Method theMethod = helper.findBestMethodWithSignature("methodInteger", signatureSought ); //$NON-NLS-1$
@@ -281,7 +274,7 @@ public class TestReflectionHelper extends TestCase {
         helpAssertSameMethodSignature("Found wrong method signature", signatureExpected, signatureFound); //$NON-NLS-1$
     }
 
-    public void testFindBestMethodWithSignature_IntegerObjectAndMethodName() throws Exception {
+    @Test public void testFindBestMethodWithSignature_IntegerObjectAndMethodName() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeInterface.class);
         Class[] signatureSought = new Class[] {Integer.class};
         Method theMethod = helper.findBestMethodWithSignature("methodObject", signatureSought ); //$NON-NLS-1$
@@ -294,7 +287,7 @@ public class TestReflectionHelper extends TestCase {
         helpAssertSameMethodSignature("Found wrong method signature", signatureExpected, signatureFound); //$NON-NLS-1$
     }
 
-    public void testFindBestMethodWithSignature_LongObjectAndMethodName() throws Exception {
+    @Test public void testFindBestMethodWithSignature_LongObjectAndMethodName() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeInterface.class);
         Class[] signatureSought = new Class[] {Long.class};
         Method theMethod = helper.findBestMethodWithSignature("methodObject", signatureSought ); //$NON-NLS-1$
@@ -307,7 +300,7 @@ public class TestReflectionHelper extends TestCase {
         helpAssertSameMethodSignature("Found wrong method signature", signatureExpected, signatureFound); //$NON-NLS-1$
     }
 
-    public void testFindBestMethodWithSignature_longAndMethodName() throws Exception {
+    @Test public void testFindBestMethodWithSignature_longAndMethodName() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeInterface.class);
         Class[] signatureSought = new Class[] {Long.TYPE};
         Method theMethod = helper.findBestMethodWithSignature("method_long", signatureSought ); //$NON-NLS-1$
@@ -323,7 +316,7 @@ public class TestReflectionHelper extends TestCase {
     //  ===============================================================================================
     //   Test 2-arg methods
     //  ===============================================================================================
-    public void testFindBestMethodWithSignature_2ArgIntegerObjectAndMethodName() throws Exception {
+    @Test public void testFindBestMethodWithSignature_2ArgIntegerObjectAndMethodName() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeInterface.class);
         Class[] signatureSought = new Class[] {Integer.class, Integer.class};
         Method theMethod = helper.findBestMethodWithSignature("twoArgMethod_Object_Object", signatureSought ); //$NON-NLS-1$
@@ -336,7 +329,7 @@ public class TestReflectionHelper extends TestCase {
         helpAssertSameMethodSignature("Found wrong method signature", signatureExpected, signatureFound); //$NON-NLS-1$
     }
 
-    public void testFindBestMethodWithSignature_2ArgLongObjectAndMethodName() throws Exception {
+    @Test public void testFindBestMethodWithSignature_2ArgLongObjectAndMethodName() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeInterface.class);
         Class[] signatureSought = new Class[] {Long.class, Long.class};
         Method theMethod = helper.findBestMethodWithSignature("twoArgMethod_Object_Object", signatureSought ); //$NON-NLS-1$
@@ -349,7 +342,7 @@ public class TestReflectionHelper extends TestCase {
         helpAssertSameMethodSignature("Found wrong method signature", signatureExpected, signatureFound); //$NON-NLS-1$
     }
 
-    public void testFindBestMethodWithSignature_2ArgSerializableNumberAndMethodName() throws Exception {
+    @Test public void testFindBestMethodWithSignature_2ArgSerializableNumberAndMethodName() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeInterface.class);
         Class[] signatureSought = new Class[] {Long.class, Long.class};
         Method theMethod = helper.findBestMethodWithSignature("twoArgMethod_Serializable_Number", signatureSought ); //$NON-NLS-1$
@@ -365,7 +358,7 @@ public class TestReflectionHelper extends TestCase {
     //  ===============================================================================================
     //   Test overridden methods
     //  ===============================================================================================
-    public void testFindBestMethodWithSignature_SubInterface_2ArgSerializableAndNumber() throws Exception {
+    @Test public void testFindBestMethodWithSignature_SubInterface_2ArgSerializableAndNumber() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeSubInterface.class);
         Class[] signatureSought = new Class[] {Serializable.class, Number.class};
         Method theMethod = helper.findBestMethodWithSignature("method", signatureSought ); //$NON-NLS-1$
@@ -378,7 +371,7 @@ public class TestReflectionHelper extends TestCase {
         helpAssertSameMethodSignature("Found wrong method signature", signatureExpected, signatureFound); //$NON-NLS-1$
     }
 
-    public void testFindBestMethodWithSignature_SubInterface_2ArgSerializableAndLong() throws Exception {
+    @Test public void testFindBestMethodWithSignature_SubInterface_2ArgSerializableAndLong() throws Exception {
         ReflectionHelper helper = new ReflectionHelper(FakeSubInterface.class);
         Class[] signatureSought = new Class[] {Serializable.class, Long.class};
         Method theMethod = helper.findBestMethodWithSignature("method", signatureSought ); //$NON-NLS-1$
@@ -390,12 +383,12 @@ public class TestReflectionHelper extends TestCase {
         assertEquals("Wrong class", theMethod.getDeclaringClass().getName(), FakeSubInterface.class.getName()); //$NON-NLS-1$
         helpAssertSameMethodSignature("Found wrong method signature", signatureExpected, signatureFound); //$NON-NLS-1$
     }
-
+    
     /**
      * Test base interface
      */
     public interface FakeInterface {
-
+    	
         void method(String arg);
         void method(Serializable arg);
         void method(Object arg);

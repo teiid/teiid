@@ -24,6 +24,7 @@ package org.teiid.query.sql.visitor;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 
 import org.teiid.query.sql.LanguageObject;
@@ -98,6 +99,9 @@ public class AggregateSymbolCollectorVisitor extends LanguageVisitor {
     }
 
     public static final Collection<AggregateSymbol> getAggregates(LanguageObject obj, boolean removeDuplicates) {
+    	if (obj == null) {
+    		return Collections.emptyList();
+    	}
         Collection<AggregateSymbol> aggregates = null;
         if (removeDuplicates) {
             aggregates = new HashSet<AggregateSymbol>();

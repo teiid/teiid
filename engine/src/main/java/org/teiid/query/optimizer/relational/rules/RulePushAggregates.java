@@ -186,7 +186,7 @@ public class RulePushAggregates implements
 		Map<ElementSymbol, List<Set<Constant>>> partitionInfo = (Map<ElementSymbol, List<Set<Constant>>>)child.getProperty(Info.PARTITION_INFO);
 
 		//check to see if any aggregate is dependent upon cardinality
-		boolean cardinalityDependent = RuleRemoveOptionalJoins.areAggregatesCardinalityDependent(aggregates);
+		boolean cardinalityDependent = AggregateSymbol.areAggregatesCardinalityDependent(aggregates);
 
 		LinkedList<PlanNode> unionChildren = new LinkedList<PlanNode>();
 		findUnionChildren(unionChildren, cardinalityDependent, setOp);
@@ -747,7 +747,7 @@ public class RulePushAggregates implements
             if (originatingNode.getParent() == groupNode) {
             	//anything logically applied after the join and is
             	//dependent upon the cardinality prevents us from optimizing.
-            	if (aggs && RuleRemoveOptionalJoins.isCardinalityDependent((AggregateSymbol)aggregateSymbol)) {
+            	if (aggs && ((AggregateSymbol)aggregateSymbol).isCardinalityDependent()) {
             		return null;
             	}
                 continue;

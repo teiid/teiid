@@ -22,12 +22,22 @@
 
 package org.teiid.query.sql.lang;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
-import org.teiid.query.sql.*;
-import org.teiid.query.sql.symbol.*;
+import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.symbol.AllInGroupSymbol;
+import org.teiid.query.sql.symbol.AllSymbol;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.MultipleElementSymbol;
+import org.teiid.query.sql.symbol.SelectSymbol;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
@@ -200,15 +210,15 @@ public class Select implements LanguageObject {
 	 * single column.
 	 * @return Ordered list of SingleElementSymbol
 	 */
-	public List getProjectedSymbols() { 
-		ArrayList projectedSymbols = new ArrayList();
+	public List<SingleElementSymbol> getProjectedSymbols() { 
+		ArrayList<SingleElementSymbol> projectedSymbols = new ArrayList<SingleElementSymbol>();
 		Iterator iter = symbols.iterator();
 		while(iter.hasNext()) {
 			SelectSymbol symbol = (SelectSymbol) iter.next();
 			if(symbol instanceof SingleElementSymbol) { 
-				projectedSymbols.add(symbol);
+				projectedSymbols.add((SingleElementSymbol)symbol);
 			} else {
-			    List multiSymbols = ((MultipleElementSymbol)symbol).getElementSymbols();
+			    List<ElementSymbol> multiSymbols = ((MultipleElementSymbol)symbol).getElementSymbols();
 			    if(multiSymbols != null) { 
 			        projectedSymbols.addAll(multiSymbols);
 			    }

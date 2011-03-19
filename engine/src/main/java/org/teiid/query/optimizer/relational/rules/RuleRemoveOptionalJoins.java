@@ -226,7 +226,7 @@ public class RuleRemoveOptionalJoins implements
 				}
 				case NodeConstants.Types.GROUP: {
 					Set<AggregateSymbol> aggs = RulePushAggregates.collectAggregates(parent);
-					return areAggregatesCardinalityDependent(aggs);
+					return AggregateSymbol.areAggregatesCardinalityDependent(aggs);
 				}
 				case NodeConstants.Types.TUPLE_LIMIT: {
 					if (!(parent.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT) instanceof Constant) 
@@ -245,33 +245,7 @@ public class RuleRemoveOptionalJoins implements
 		return true;
 	}
 
-	static boolean areAggregatesCardinalityDependent(Set<AggregateSymbol> aggs) {
-		for (AggregateSymbol aggregateSymbol : aggs) {
-			if (isCardinalityDependent(aggregateSymbol)) {
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	static boolean isCardinalityDependent(AggregateSymbol aggregateSymbol) {
-		if (aggregateSymbol.isDistinct()) {
-			return false;
-		}
-		switch (aggregateSymbol.getAggregateFunction()) {
-		case COUNT:
-		case AVG:
-		case STDDEV_POP:
-		case STDDEV_SAMP:
-		case VAR_POP:
-		case VAR_SAMP:
-		case SUM:
-			return true;
-		}
-		return false;
-	}
-
-    public String toString() {
+	public String toString() {
         return "RuleRemoveOptionalJoins"; //$NON-NLS-1$
     }
 

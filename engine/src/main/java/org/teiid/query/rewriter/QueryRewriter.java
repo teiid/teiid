@@ -55,6 +55,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
@@ -62,6 +63,7 @@ import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
@@ -159,6 +161,8 @@ import org.teiid.query.sql.visitor.CriteriaTranslatorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
+import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
+import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
@@ -685,6 +689,8 @@ public class QueryRewriter {
 				continue;
 			}
 			if (plannedResult.query.getCorrelatedReferences() == null) {
+				//create the correlated refs if they exist
+				//there is a little bit of a design problem here that null usually means no refs.
 				ArrayList<Reference> correlatedReferences = new ArrayList<Reference>();
 				CorrelatedReferenceCollectorVisitor.collectReferences(plannedResult.query, groups, correlatedReferences);
 				if (!correlatedReferences.isEmpty()) {
@@ -695,26 +701,30 @@ public class QueryRewriter {
 		            plannedResult.query.setCorrelatedReferences(map);
 		        }	
 			}
-			if (!rmc.planQuery(groups, true, plannedResult)) {
+			boolean requiresDistinct = requiresDistinctRows(query);
+			if (!rmc.planQuery(groups, requiresDistinct, plannedResult)) {
 				continue;
 			}
-			HashSet<GroupSymbol> keyPreservingGroups = new HashSet<GroupSymbol>();
-			if (query.getFrom().getClauses().size() > 1) {
-				continue;
-			}
-			ResolverUtil.findKeyPreserved(query, keyPreservingGroups, metadata);
-			if (!NewCalculateCostUtil.usesKey(plannedResult.leftExpressions, keyPreservingGroups, metadata, true)) {
-				continue;
+			if (requiresDistinct) {
+				//check for key preservation
+				HashSet<GroupSymbol> keyPreservingGroups = new HashSet<GroupSymbol>();
+				ResolverUtil.findKeyPreserved(query, keyPreservingGroups, metadata);
+				if (!NewCalculateCostUtil.usesKey(plannedResult.leftExpressions, keyPreservingGroups, metadata, true)) {
+					//if not key perserved then the semi-join will not remain in tact
+					continue;
+				}
 			}
 			crits.remove();
 			
 			GroupSymbol viewName = RulePlaceAccess.recontextSymbol(new GroupSymbol("X"), names); //$NON-NLS-1$
+			viewName.setName(viewName.getCanonicalName());
+			viewName.setDefinition(null);
 			Query q = createInlineViewQuery(viewName, plannedResult.query, metadata, plannedResult.query.getSelect().getProjectedSymbols());
 			
-			Iterator iter = q.getSelect().getProjectedSymbols().iterator();
+			Iterator<SingleElementSymbol> iter = q.getSelect().getProjectedSymbols().iterator();
 		    HashMap<Expression, SingleElementSymbol> expressionMap = new HashMap<Expression, SingleElementSymbol>();
-		    for (SingleElementSymbol symbol : (List<SingleElementSymbol>)plannedResult.query.getSelect().getProjectedSymbols()) {
-		        expressionMap.put(SymbolMap.getExpression(symbol), (SingleElementSymbol)iter.next());
+		    for (SingleElementSymbol symbol : plannedResult.query.getSelect().getProjectedSymbols()) {
+		        expressionMap.put(SymbolMap.getExpression(symbol), iter.next());
 		    }
 			for (int i = 0; i < plannedResult.leftExpressions.size(); i++) {
 				plannedResult.nonEquiJoinCriteria.add(new CompareCriteria(SymbolMap.getExpression((Expression)plannedResult.leftExpressions.get(i)), CompareCriteria.EQ, (Expression)plannedResult.rightExpressions.get(i)));
@@ -727,6 +737,32 @@ public class QueryRewriter {
 			//transform the query into an inner join 
 		}
 		query.setCriteria(Criteria.combineCriteria(query.getCriteria(), Criteria.combineCriteria(current)));
+	}
+
+	private boolean requiresDistinctRows(Query query) {
+		Set<AggregateSymbol> aggs = new HashSet<AggregateSymbol>();
+		aggs.addAll(AggregateSymbolCollectorVisitor.getAggregates(query.getSelect(), false));
+		aggs.addAll(AggregateSymbolCollectorVisitor.getAggregates(query.getHaving(), false));
+		if (!aggs.isEmpty() || query.getGroupBy() != null) {
+			if (!AggregateSymbol.areAggregatesCardinalityDependent(aggs)) {
+				return false;
+			}
+		} else if (query.getSelect().isDistinct()) {
+			for (SingleElementSymbol projectSymbol : query.getSelect().getProjectedSymbols()) {
+				Expression ex = SymbolMap.getExpression(projectSymbol);
+	            Collection<Function> functions = FunctionCollectorVisitor.getFunctions(ex, true, false);
+	           	for (Function function : functions) {
+	           		if ( function.getFunctionDescriptor().getDeterministic() == Determinism.NONDETERMINISTIC) {
+	           			return true;
+	           		}
+	            }
+	           	if (!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(ex).isEmpty()) {
+	           		return true;
+	           	}
+			}
+			return false;
+		}
+		return true;
 	}
 
 	/**
@@ -792,10 +828,10 @@ public class QueryRewriter {
         } catch (TeiidException err) {
             throw new TeiidRuntimeException(err);
         }
-        Iterator iter = outerQuery.getSelect().getProjectedSymbols().iterator();
+        Iterator<SingleElementSymbol> iter = outerQuery.getSelect().getProjectedSymbols().iterator();
         HashMap<Expression, SingleElementSymbol> expressionMap = new HashMap<Expression, SingleElementSymbol>();
-        for (SingleElementSymbol symbol : (List<SingleElementSymbol>)query.getSelect().getProjectedSymbols()) {
-            expressionMap.put(SymbolMap.getExpression(symbol), (SingleElementSymbol)iter.next());
+        for (SingleElementSymbol symbol : query.getSelect().getProjectedSymbols()) {
+            expressionMap.put(SymbolMap.getExpression(symbol), iter.next());
         }
         ExpressionMappingVisitor.mapExpressions(groupBy, expressionMap);
         outerQuery.setGroupBy(groupBy);
@@ -819,7 +855,7 @@ public class QueryRewriter {
 			return false;
 		}
 		HashSet<Expression> selectExpressions = new HashSet<Expression>();
-		for (SingleElementSymbol selectExpr : (List<SingleElementSymbol>)query.getSelect().getProjectedSymbols()) {
+		for (SingleElementSymbol selectExpr : query.getSelect().getProjectedSymbols()) {
 			selectExpressions.add(SymbolMap.getExpression(selectExpr));
 		}
 		for (SingleElementSymbol groupByExpr :  (List<SingleElementSymbol>)groupBy.getSymbols()) {
@@ -873,7 +909,7 @@ public class QueryRewriter {
             return queryCommand;
         }
         Select select = queryCommand.getProjectedQuery().getSelect();
-        final List projectedSymbols = select.getProjectedSymbols();
+        final List<SingleElementSymbol> projectedSymbols = select.getProjectedSymbols();
         
         LinkedList<OrderByItem> unrelatedItems = new LinkedList<OrderByItem>();
         
@@ -904,10 +940,10 @@ public class QueryRewriter {
         
         try {
         	top = createInlineViewQuery(new GroupSymbol("X"), query, metadata, select.getProjectedSymbols()); //$NON-NLS-1$
-			Iterator iter = top.getSelect().getProjectedSymbols().iterator();
+			Iterator<SingleElementSymbol> iter = top.getSelect().getProjectedSymbols().iterator();
 		    HashMap<Expression, SingleElementSymbol> expressionMap = new HashMap<Expression, SingleElementSymbol>();
-		    for (SingleElementSymbol symbol : (List<SingleElementSymbol>)select.getProjectedSymbols()) {
-		    	SingleElementSymbol ses = (SingleElementSymbol)iter.next();
+		    for (SingleElementSymbol symbol : select.getProjectedSymbols()) {
+		    	SingleElementSymbol ses = iter.next();
 		        expressionMap.put(SymbolMap.getExpression(symbol), ses);
 		        expressionMap.put(new ElementSymbol(symbol.getName()), ses);
 		    }
@@ -2739,8 +2775,8 @@ public class QueryRewriter {
 	        Query firstProject = ((QueryCommand)nested).getProjectedQuery(); 
 	        makeSelectUnique(firstProject.getSelect(), false);
         }
-        store.addTempGroup(inlineGroup.getName(), nested.getProjectedSymbols());
-        inlineGroup.setMetadataID(store.getTempGroupID(inlineGroup.getName()));
+        TempMetadataID gid = store.addTempGroup(inlineGroup.getName(), nested.getProjectedSymbols());
+        inlineGroup.setMetadataID(gid);
         
         List<Class<?>> actualTypes = new ArrayList<Class<?>>(nested.getProjectedSymbols().size());
         for (SingleElementSymbol ses : actualSymbols) {

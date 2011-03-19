@@ -77,7 +77,7 @@ import org.teiid.query.sql.symbol.XMLSerialize;
 public class ExpressionMappingVisitor extends LanguageVisitor {
 
     private Map symbolMap;
-    private boolean clone;
+    private boolean clone = true;
 
     /**
      * Constructor for ExpressionMappingVisitor.

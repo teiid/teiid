@@ -40,8 +40,8 @@ import org.teiid.core.TeiidException;
 
 public class ReflectionHelper {
 
-    private Class targetClass;
-    private Map methodMap = null;       // used for the brute-force method finder
+    private Class<?> targetClass;
+    private Map<String, LinkedList<Method>> methodMap = null;       // used for the brute-force method finder
 
     /**
      * Construct a ReflectionHelper instance that cache's some information about
@@ -50,7 +50,7 @@ public class ReflectionHelper {
      * @param targetClass the target class
      * @throws IllegalArgumentException if the target class is null
      */
-    public ReflectionHelper( Class targetClass ) {
+    public ReflectionHelper( Class<?> targetClass ) {
         if ( targetClass == null ) {
             throw new IllegalArgumentException(CorePlugin.Util.getString("ReflectionHelper.errorConstructing")); //$NON-NLS-1$
         }
@@ -79,10 +79,10 @@ public class ReflectionHelper {
     		return findBestMethodWithSignature(methodName, Collections.EMPTY_LIST);
     	}
         int size = arguments.length;
-        List argumentClasses = new ArrayList(size);
+        List<Class<?>> argumentClasses = new ArrayList<Class<?>>(size);
         for (int i=0; i!=size; ++i) {
             if ( arguments[i] != null ) {
-                Class clazz = arguments[i].getClass();
+                Class<?> clazz = arguments[i].getClass();
                 argumentClasses.add( clazz );
             } else {
                 argumentClasses.add(null);
@@ -122,7 +122,7 @@ public class ReflectionHelper {
      * @throws NoSuchMethodException if a matching method is not found.
      * @throws SecurityException if access to the information is denied.
      */
-    public Method findBestMethodWithSignature( String methodName, List argumentsClasses ) throws NoSuchMethodException, SecurityException {
+    public Method findBestMethodWithSignature( String methodName, List<Class<?>> argumentsClasses ) throws NoSuchMethodException, SecurityException {
         // Attempt to find the method
         Method result = null;
         Class[] classArgs = new Class[argumentsClasses.size()];
@@ -141,7 +141,7 @@ public class ReflectionHelper {
         // ---------------------------------------------------------------------------------------------
         // Then try to find a method with the argument classes converted to a primitive, if possible ...
         // ---------------------------------------------------------------------------------------------
-        List argumentsClassList = convertArgumentClassesToPrimitives(argumentsClasses);
+        List<Class<?>> argumentsClassList = convertArgumentClassesToPrimitives(argumentsClasses);
         argumentsClassList.toArray(classArgs);
         try {
             result = this.targetClass.getMethod(methodName,classArgs);  // this may throw an exception if not found
@@ -156,20 +156,20 @@ public class ReflectionHelper {
         // the arguments).  There is no canned algorithm in Java to do this, so we have to brute-force it.
         // ---------------------------------------------------------------------------------------------
         if ( this.methodMap == null ) {
-            this.methodMap = new HashMap();
+            this.methodMap = new HashMap<String, LinkedList<Method>>();
             Method[] methods = this.targetClass.getMethods();
             for ( int i=0; i!=methods.length; ++i ) {
                 Method method = methods[i];
-                LinkedList methodsWithSameName = (LinkedList) this.methodMap.get(method.getName());
+                LinkedList<Method> methodsWithSameName = this.methodMap.get(method.getName());
                 if ( methodsWithSameName == null ) {
-                    methodsWithSameName = new LinkedList();
+                    methodsWithSameName = new LinkedList<Method>();
                     this.methodMap.put(method.getName(),methodsWithSameName);
                 }
                 methodsWithSameName.addFirst(method);   // add lower methods first
             }
         }
 
-        LinkedList<Method> methodsWithSameName = (LinkedList) this.methodMap.get(methodName);
+        LinkedList<Method> methodsWithSameName = this.methodMap.get(methodName);
         if ( methodsWithSameName == null ) {
             throw new NoSuchMethodException(methodName);
         }
@@ -180,8 +180,8 @@ public class ReflectionHelper {
             }
             boolean allMatch = true;            // assume all args match
             for ( int i=0; i<args.length && allMatch == true; ++i ) {
-                Class primitiveClazz = (Class) argumentsClassList.get(i);
-                Class objectClazz = (Class) argumentsClasses.get(i);
+                Class<?> primitiveClazz = argumentsClassList.get(i);
+                Class<?> objectClazz = argumentsClasses.get(i);
                 if ( objectClazz != null ) {
                     // Check for possible matches with (converted) primitive types
                     // as well as the original Object type 
@@ -216,11 +216,9 @@ public class ReflectionHelper {
      * @return the list of Class instances in which any classes that could be represented
      * by primitives (e.g., Boolean) were replaced with the primitive classes (e.g., Boolean.TYPE).
      */
-    private static List convertArgumentClassesToPrimitives( List arguments ) {
-        List result = new ArrayList(arguments.size());
-        Iterator iter = arguments.iterator();
-        while ( iter.hasNext() ) {
-            Class clazz = (Class) iter.next();
+    private static List<Class<?>> convertArgumentClassesToPrimitives( List<Class<?>> arguments ) {
+        List<Class<?>> result = new ArrayList<Class<?>>(arguments.size());
+        for (Class<?> clazz : arguments) {
             if      ( clazz == Boolean.class   ) clazz = Boolean.TYPE;
             else if ( clazz == Character.class ) clazz = Character.TYPE;
             else if ( clazz == Byte.class      ) clazz = Byte.TYPE;
@@ -244,8 +242,8 @@ public class ReflectionHelper {
      * @return Class is the instance of the class 
      * @throws ClassNotFoundException 
      */
-    private static final Class loadClass(final String className, final ClassLoader classLoader) throws ClassNotFoundException {
-        Class cls = null;
+    private static final Class<?> loadClass(final String className, final ClassLoader classLoader) throws ClassNotFoundException {
+        Class<?> cls = null;
         if ( classLoader == null ) {
             cls = Class.forName(className.trim());
         } else {
@@ -290,9 +288,9 @@ public class ReflectionHelper {
     public static final Object create(String className, Object[] ctorObjs, Class<?>[] argTypes, 
                 final ClassLoader classLoader) throws TeiidException {
         try {
-            final Class cls = loadClass(className,classLoader);
+            final Class<?> cls = loadClass(className,classLoader);
 
-            Constructor ctor = cls.getDeclaredConstructor(argTypes);
+            Constructor<?> ctor = cls.getDeclaredConstructor(argTypes);
 
             return ctor.newInstance(ctorObjs);
             
