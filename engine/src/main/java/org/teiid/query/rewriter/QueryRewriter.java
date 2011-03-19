@@ -55,7 +55,6 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants.NonReserved;
-import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
@@ -162,7 +161,6 @@ import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
-import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
@@ -750,11 +748,8 @@ public class QueryRewriter {
 		} else if (query.getSelect().isDistinct()) {
 			for (SingleElementSymbol projectSymbol : query.getSelect().getProjectedSymbols()) {
 				Expression ex = SymbolMap.getExpression(projectSymbol);
-	            Collection<Function> functions = FunctionCollectorVisitor.getFunctions(ex, true, false);
-	           	for (Function function : functions) {
-	           		if ( function.getFunctionDescriptor().getDeterministic() == Determinism.NONDETERMINISTIC) {
-	           			return true;
-	           		}
+	            if (FunctionCollectorVisitor.isNonDeterministic(ex)) {
+	            	return true;
 	            }
 	           	if (!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(ex).isEmpty()) {
 	           		return true;

@@ -7540,6 +7540,30 @@ public class TestProcessor {
         helpProcess(plan, hdm, expected);
     }
     
+    @Test public void testNonDeterministicScalarSubquery() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        
+        BasicSourceCapabilities caps = getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, false);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpPlan("select count(distinct x) from (select (select uuid()) as x from pm1.g1) as v", metadata,  //$NON-NLS-1
+                                      null, capFinder,
+            new String[] { "SELECT 1 FROM pm1.g1 AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT 1 FROM pm1.g1 AS g_0", new List[] {Arrays.asList(1), Arrays.asList(1)});
+        hdm.setBlockOnce(true);
+        List[] expected = new List[] {
+        		Arrays.asList(2),
+        };    
+
+        helpProcess(plan, hdm, expected);
+    }
+    
     @Test public void testUncorrelatedScalarSubqueryPushdown1() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();

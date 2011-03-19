@@ -30,6 +30,7 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.ProcessorDataManager;
@@ -39,8 +40,11 @@ import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.symbol.ContextReference;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.ScalarSubquery;
+import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.util.ValueIterator;
 import org.teiid.query.sql.util.VariableContext;
+import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 
 
@@ -54,8 +58,10 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		QueryProcessor processor;
 		BatchCollector collector;
 		boolean done;
-		List<?> tuple;
 		ProcessorPlan plan;
+		boolean nonDeterministic;
+		List<Object> refValues;
+		boolean comparable = true;
 		
 		void close() {
 			if (processor == null) {
@@ -73,13 +79,13 @@ public class SubqueryAwareEvaluator extends Evaluator {
 	
 	//processing state
 	private Map<String, SubqueryState> subqueries = new HashMap<String, SubqueryState>();
-		
+	
 	public SubqueryAwareEvaluator(Map elements, ProcessorDataManager dataMgr,
 			CommandContext context, BufferManager manager) {
 		super(elements, dataMgr, context);
 		this.manager = manager;
 	}
-
+	
 	public void reset() {
 		for (SubqueryState subQueryState : subqueries.values()) {
 			subQueryState.plan.reset();
@@ -102,26 +108,48 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		if (state == null) {
 			state = new SubqueryState();
 			state.plan = container.getCommand().getProcessorPlan().clone();
+	        if (container instanceof ScalarSubquery) {
+				state.nonDeterministic = FunctionCollectorVisitor.isNonDeterministic(container.getCommand());
+			}
+	        if (container.getCommand().getCorrelatedReferences() != null) {
+		        for (ElementSymbol es : container.getCommand().getCorrelatedReferences().getKeys()) {
+		        	if (DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(es.getType()))) {
+		        		state.comparable = false;
+		        		break;
+		        	}
+		        }
+	        }
 			this.subqueries.put(key, state);
 		}
-		if ((tuple == null && state.tuple != null) || (tuple != null && !tuple.equals(state.tuple))) {
-			if (container.getCommand().getCorrelatedReferences() != null) {
-				state.close();
+		SymbolMap correlatedRefs = container.getCommand().getCorrelatedReferences();
+		VariableContext currentContext = null;
+		boolean shouldClose = state.done && state.nonDeterministic;
+		if (correlatedRefs != null) {
+            currentContext = new VariableContext();
+            for (Map.Entry<ElementSymbol, Expression> entry : container.getCommand().getCorrelatedReferences().asMap().entrySet()) {
+				currentContext.setValue(entry.getKey(), evaluate(entry.getValue(), tuple));
 			}
-			state.tuple = tuple;
+            List<Object> refValues = currentContext.getLocalValues();
+            if (!refValues.equals(state.refValues)) {
+            	state.refValues = refValues;
+            	shouldClose = true;
+            }
+		}
+		if (shouldClose) {
+			//if (state.done && state.comparable) {
+				//cache
+			//} else {
+			state.close();
+			//}
 		}
 		if (!state.done) {
 			if (state.processor == null) {
 				CommandContext subContext = context.clone();
 				state.plan.reset();
 		        state.processor = new QueryProcessor(state.plan, subContext, manager, this.dataMgr);
-		        if (container.getCommand().getCorrelatedReferences() != null) { 
-		            VariableContext currentContext = new VariableContext();
-		            for (Map.Entry<ElementSymbol, Expression> entry : container.getCommand().getCorrelatedReferences().asMap().entrySet()) {
-						currentContext.setValue(entry.getKey(), evaluate(entry.getValue(), tuple));
-					}
-					state.processor.getContext().pushVariableContext(currentContext);
-				}
+		        if (currentContext != null) {
+		        	state.processor.getContext().pushVariableContext(currentContext);
+		        }
 		        state.collector = state.processor.createBatchCollector();
 			}
 			state.done = true;

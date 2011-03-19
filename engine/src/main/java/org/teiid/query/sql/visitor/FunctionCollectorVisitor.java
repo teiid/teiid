@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
@@ -141,4 +142,15 @@ public class FunctionCollectorVisitor extends LanguageVisitor {
         getFunctions(obj, functions, deep);
         return functions;
     }
+    
+	public static boolean isNonDeterministic(LanguageObject ex) {
+		Collection<Function> functions = FunctionCollectorVisitor.getFunctions(ex, true, false);
+		for (Function function : functions) {
+			if ( function.getFunctionDescriptor().getDeterministic() == Determinism.NONDETERMINISTIC) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 }

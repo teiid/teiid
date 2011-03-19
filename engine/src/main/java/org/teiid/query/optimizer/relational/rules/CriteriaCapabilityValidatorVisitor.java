@@ -76,6 +76,7 @@ import org.teiid.query.sql.symbol.XMLQuery;
 import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
+import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 
 
@@ -386,7 +387,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     	try {    
             if(!this.caps.supportsCapability(Capability.QUERY_SUBQUERIES_SCALAR) 
             		|| validateSubqueryPushdown(obj, modelID, metadata, capFinder, analysisRecord) == null) {
-            	if (obj.getCommand().getCorrelatedReferences() == null) {
+            	if (obj.getCommand().getCorrelatedReferences() == null && !FunctionCollectorVisitor.isNonDeterministic(obj.getCommand())) {
             		obj.setShouldEvaluate(true);
             	} else {
             		markInvalid(obj.getCommand(), !this.caps.supportsCapability(Capability.QUERY_SUBQUERIES_SCALAR)?

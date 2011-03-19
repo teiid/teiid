@@ -22,7 +22,9 @@
 
 package org.teiid.query.sql.util;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.teiid.core.TeiidComponentException;
@@ -33,7 +35,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 public class VariableContext {
 
     // map between variables and their values
-    private Map variableMap = new HashMap();
+    private Map variableMap = new LinkedHashMap();
 
     // reference to the parent variable context
     private VariableContext parentContext;
@@ -48,7 +50,6 @@ public class VariableContext {
     
     public VariableContext(boolean delegateSets) {
     	this.delegateSets = delegateSets;
-    	this.variableMap = new HashMap();
     }
 
     public void setGlobalValue(String variable, Object value) {
@@ -183,6 +184,10 @@ public class VariableContext {
     
     public void putAll(VariableContext other) {
     	this.variableMap.putAll(other.variableMap);
+    }
+    
+    public List<Object> getLocalValues() {
+    	return new ArrayList<Object>(this.variableMap.values());
     }
     
 }

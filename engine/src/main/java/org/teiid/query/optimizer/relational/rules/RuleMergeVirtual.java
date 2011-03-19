@@ -32,7 +32,6 @@ import java.util.Set;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -47,7 +46,6 @@ import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
@@ -355,11 +353,8 @@ public final class RuleMergeVirtual implements
                 return false;
             }
             // TEIID-16: We do not want to merge a non-deterministic scalar function
-            Collection<Function> functions = FunctionCollectorVisitor.getFunctions(symbol, true, true);
-           	for (Function function : functions) {
-           		if ( function.getFunctionDescriptor().getDeterministic() == Determinism.NONDETERMINISTIC) {
-           			return false;
-           		}
+            if (FunctionCollectorVisitor.isNonDeterministic(symbol)) {
+            	return false;
             }
         }
 
