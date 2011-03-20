@@ -25,7 +25,6 @@ package org.teiid.core.types.basic;
 import java.math.BigDecimal;
 
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.TeiidBigDecimal;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
 
@@ -49,7 +48,7 @@ public class FloatingNumberToBigDecimalTransform extends Transform {
 	public Object transformDirect(Object value) throws TransformationException {
 		BigDecimal result = BigDecimal.valueOf(((Number)value).doubleValue());
 		result = result.setScale(Math.max(result.scale(), (value instanceof Double ? 16 : 8) - result.precision()));
-		return new TeiidBigDecimal(result);
+		return result;
 	}
 
 	/**

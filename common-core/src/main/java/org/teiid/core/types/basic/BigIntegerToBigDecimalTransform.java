@@ -22,9 +22,9 @@
 
 package org.teiid.core.types.basic;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import org.teiid.core.types.TeiidBigDecimal;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
@@ -41,7 +41,7 @@ public class BigIntegerToBigDecimalTransform extends Transform {
 	 * the transformation fails
 	 */
 	public Object transformDirect(Object value) throws TransformationException {
-		return new TeiidBigDecimal((BigInteger) value, 0);
+		return new BigDecimal((BigInteger) value, 0);
 	}
 
 	/**

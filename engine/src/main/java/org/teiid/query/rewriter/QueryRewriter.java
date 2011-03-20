@@ -2235,7 +2235,6 @@ public class QueryRewriter {
         criteria.setValues(newVals);
         if (allConstants) {
         	criteria.setAllConstants(true);
-        	criteria.setValues(new LinkedHashSet(newVals));
         }        
         
         if (size == 0) {

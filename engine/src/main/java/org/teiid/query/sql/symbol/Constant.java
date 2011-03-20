@@ -22,6 +22,7 @@
 
 package org.teiid.query.sql.symbol;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.teiid.core.types.DataTypeManager;
@@ -153,6 +154,16 @@ public class Constant implements Expression, Comparable<Constant> {
 		if(! other.getType().equals(this.getType())) {
 			return false;
 		}
+		
+		if (this.value instanceof BigDecimal) {
+			if (this.value == other.value) {
+				return true;
+			}
+			if (!(other.value instanceof BigDecimal)) {
+				return false;
+			}
+			return ((BigDecimal)this.value).compareTo((BigDecimal)other.value) == 0;
+		}
 
         return multiValued == other.multiValued && other.getValue().equals(this.getValue());
 	}
@@ -163,6 +174,14 @@ public class Constant implements Expression, Comparable<Constant> {
 	 */
 	public int hashCode() {
 		if(this.value != null) {
+			if (this.value instanceof BigDecimal) {
+				BigDecimal bd = (BigDecimal)this.value;
+				int xsign = bd.signum();
+		        if (xsign == 0)
+		            return 0;
+		        bd = bd.stripTrailingZeros();
+		        return bd.hashCode();
+			}
 			return this.value.hashCode();
 		}
 		return 0;
