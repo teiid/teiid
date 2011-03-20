@@ -68,7 +68,7 @@ public class TestFunctionLibrary {
 	private static final Class<String> T_STRING = DataTypeManager.DefaultDataClasses.STRING;
 	private static final Class<Integer> T_INTEGER = DataTypeManager.DefaultDataClasses.INTEGER;
 	private static final Class<BigInteger> T_BIG_INTEGER = DataTypeManager.DefaultDataClasses.BIG_INTEGER;
-	private static final Class<BigDecimal> T_BIG_DECIMAL = DataTypeManager.DefaultDataClasses.BIG_DECIMAL;		
+	private static final Class<? extends BigDecimal> T_BIG_DECIMAL = DataTypeManager.DefaultDataClasses.BIG_DECIMAL;		
     private static final Class<Long> T_LONG = DataTypeManager.DefaultDataClasses.LONG;
 	private static final Class<Float> T_FLOAT = DataTypeManager.DefaultDataClasses.FLOAT;
     private static final Class<Double> T_DOUBLE = DataTypeManager.DefaultDataClasses.DOUBLE;

@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.symbol.ContextReference;
 import org.teiid.query.sql.symbol.Expression;
 
@@ -41,8 +42,8 @@ public class SubquerySetCriteria extends AbstractSetCriteria implements Subquery
 	private static AtomicInteger ID = new AtomicInteger();
 
     private QueryCommand command;
+    private SubqueryHint subqueryHint = new SubqueryHint();
     private String id = "$ssc/id" + ID.getAndIncrement(); //$NON-NLS-1$
-    private boolean mergeJoin;
 
     /**
      * Constructor for SubquerySetCriteria.
@@ -56,12 +57,12 @@ public class SubquerySetCriteria extends AbstractSetCriteria implements Subquery
         setCommand(subCommand);
     }
     
-    public boolean isMergeJoin() {
-		return mergeJoin;
+    public SubqueryHint getSubqueryHint() {
+		return subqueryHint;
 	}
     
-    public void setMergeJoin(boolean semiJoin) {
-		this.mergeJoin = semiJoin;
+    public void setSubqueryHint(SubqueryHint subqueryHint) {
+		this.subqueryHint = subqueryHint;
 	}
     
     @Override
@@ -127,7 +128,7 @@ public class SubquerySetCriteria extends AbstractSetCriteria implements Subquery
         return this.isNegated() == sc.isNegated() &&
          	   EquivalenceUtil.areEqual(getExpression(), sc.getExpression()) &&
                EquivalenceUtil.areEqual(getCommand(), sc.getCommand()) &&
-               this.mergeJoin == sc.mergeJoin;
+               this.subqueryHint.equals(sc.getSubqueryHint());
     }
 
     /**
@@ -149,7 +150,7 @@ public class SubquerySetCriteria extends AbstractSetCriteria implements Subquery
 
         SubquerySetCriteria criteriaCopy = new SubquerySetCriteria(copy, copyCommand);
         criteriaCopy.setNegated(isNegated());
-        criteriaCopy.mergeJoin = this.mergeJoin;
+        criteriaCopy.subqueryHint = this.subqueryHint.clone();
         return criteriaCopy;
     }
 

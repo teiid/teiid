@@ -38,8 +38,8 @@ import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.Option;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SetQuery;
+import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.proc.CriteriaSelector;
-import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class SQLParserUtil {
 	
@@ -167,14 +167,17 @@ public class SQLParserUtil {
         }
     }
     
-    boolean isMergeJoin(Token t) {
+    SubqueryHint getSubqueryHint(Token t) {
+    	SubqueryHint hint = new SubqueryHint();
     	String[] parts = getComment(t).split("\\s"); //$NON-NLS-1$
     	for (int i = 0; i < parts.length; i++) {
-            if (parts[i].equalsIgnoreCase(SQLStringVisitor.MJ)) {
-                return true;
-            }        
+            if (parts[i].equalsIgnoreCase(SubqueryHint.MJ)) {
+                hint.setMergeJoin(true);
+            } else if (parts[i].equalsIgnoreCase(SubqueryHint.NOUNNEST)) {
+            	hint.setNoUnnest(true);
+            }
         }
-    	return false;
+    	return hint;
     }
     
 	String getComment(Token t) {

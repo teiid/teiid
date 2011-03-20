@@ -4980,7 +4980,7 @@ public class TestParser {
         query.setFrom(from);
         query.setCriteria(criteria);
         SubquerySetCriteria subCrit = new SubquerySetCriteria(expr, query);
-        subCrit.setMergeJoin(semiJoin);
+        subCrit.getSubqueryHint().setMergeJoin(semiJoin);
         Query outer = new Query();
         outer.setSelect(select);
         outer.setFrom(from);
@@ -5735,7 +5735,7 @@ public class TestParser {
         From f2 = new From();
         f2.addGroup(new GroupSymbol("m.g2"));        //$NON-NLS-1$
         ExistsCriteria existsCrit = new ExistsCriteria(q1);
-        existsCrit.setMergeJoin(semiJoin);
+        existsCrit.getSubqueryHint().setMergeJoin(semiJoin);
         Query q2 = new Query();
         q2.setSelect(s2);
         q2.setFrom(f2);

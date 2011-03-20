@@ -24,5 +24,11 @@
 			expected by the SQL specification.
 			</para>
 		</listitem>
+		<listitem id="subquery_unnest">
+			<para><emphasis>org.teiid.subqueryUnnestDefault</emphasis> - defaults to false.  
+			Set to true to aggressively unnest subquery IN and EXISTS predicates.  If possible the predicate will be unnested to a traditional join and will be eligible for dependent join planning.
+			If a traditional join is not possible (such as with NOT IN) a merge join version of the semijoin or antijoin will be considered by upon the costing information available. 
+			</para>
+		</listitem>
 	</itemizedlist>
 </appendix>

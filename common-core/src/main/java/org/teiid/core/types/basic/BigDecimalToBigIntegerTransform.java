@@ -23,10 +23,10 @@
 package org.teiid.core.types.basic;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
+import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 
 
 public class BigDecimalToBigIntegerTransform extends Transform {
@@ -47,16 +47,16 @@ public class BigDecimalToBigIntegerTransform extends Transform {
 	 * Type of the incoming value.
 	 * @return Source type
 	 */
-	public Class getSourceType() {
-		return BigDecimal.class;
+	public Class<?> getSourceType() {
+		return DefaultDataClasses.BIG_DECIMAL;
 	}
 
 	/**
 	 * Type of the outgoing value.
 	 * @return Target type
 	 */
-	public Class getTargetType() {
-		return BigInteger.class;
+	public Class<?> getTargetType() {
+		return DefaultDataClasses.BIG_INTEGER;
 	}
 
 	public boolean isExplicit() {

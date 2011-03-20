@@ -173,7 +173,7 @@ public class DataTypeManager {
 		public static final Class<BigInteger> BIG_INTEGER = BigInteger.class;
 		public static final Class<Float> FLOAT = Float.class;
 		public static final Class<Double> DOUBLE = Double.class;
-		public static final Class<BigDecimal> BIG_DECIMAL = BigDecimal.class;
+		public static final Class<? extends BigDecimal> BIG_DECIMAL = TeiidBigDecimal.class;
 		public static final Class<java.sql.Date> DATE = java.sql.Date.class;
 		public static final Class<Time> TIME = Time.class;
 		public static final Class<Timestamp> TIMESTAMP = Timestamp.class;
@@ -201,14 +201,14 @@ public class DataTypeManager {
 	}
 
 	/** Base data type names and classes, Type name --> Type class */
-	private static Map<String, Class> dataTypeNames = new LinkedHashMap<String, Class>(128);
+	private static Map<String, Class<?>> dataTypeNames = new LinkedHashMap<String, Class<?>>(128);
 
 	/** Base data type names and classes, Type class --> Type name */
-	private static Map<Class, String> dataTypeClasses = new LinkedHashMap<Class, String>(128);
+	private static Map<Class<?>, String> dataTypeClasses = new LinkedHashMap<Class<?>, String>(128);
 
 	private static Set<String> DATA_TYPE_NAMES;
 
-	private static Set<Class> DATA_TYPE_CLASSES = Collections.unmodifiableSet(dataTypeClasses.keySet());
+	private static Set<Class<?>> DATA_TYPE_CLASSES = Collections.unmodifiableSet(dataTypeClasses.keySet());
 
 	private static Map<Class<?>, SourceTransform> sourceConverters = new HashMap<Class<?>, SourceTransform>();
 
@@ -251,7 +251,7 @@ public class DataTypeManager {
 		return DATA_TYPE_NAMES;
 	}
 
-	public static Set<Class> getAllDataTypeClasses() {
+	public static Set<Class<?>> getAllDataTypeClasses() {
 		return DATA_TYPE_CLASSES;
 	}
 
@@ -734,6 +734,12 @@ public class DataTypeManager {
 			@Override
 			public Timestamp transform(Date value) {
 				return new Timestamp(value.getTime());
+			}
+		});
+		addSourceTransform(BigDecimal.class, new SourceTransform<BigDecimal, TeiidBigDecimal>() {
+			@Override
+			public TeiidBigDecimal transform(BigDecimal value) {
+				return new TeiidBigDecimal(value);
 			}
 		});
 	}

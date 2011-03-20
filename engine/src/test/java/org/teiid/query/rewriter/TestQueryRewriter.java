@@ -1061,7 +1061,7 @@ public class TestQueryRewriter {
 		String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "BEGIN\n";		 //$NON-NLS-1$
 		rewritProc = rewritProc + "DECLARE String var1;\n"; //$NON-NLS-1$
-		rewritProc = rewritProc + "IF(var1 IN ('x', 'y'))\n"; //$NON-NLS-1$
+		rewritProc = rewritProc + "IF(var1 IN ('y', 'x'))\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "BEGIN\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "SELECT pm1.g1.e2, null, FALSE, TRUE FROM pm1.g1;\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "END\n"; //$NON-NLS-1$
@@ -1250,7 +1250,7 @@ public class TestQueryRewriter {
 		String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "BEGIN\n";		 //$NON-NLS-1$
 		rewritProc = rewritProc + "DECLARE integer var1;\n"; //$NON-NLS-1$
-		rewritProc = rewritProc + "UPDATE pm1.g1 SET e1 = 'x' WHERE CONCAT(e1, 'm') IN ('1', '2');\n"; //$NON-NLS-1$
+		rewritProc = rewritProc + "UPDATE pm1.g1 SET e1 = 'x' WHERE CONCAT(e1, 'm') IN ('2', '1');\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getRewritenProcedure(procedure, userQuery, 

@@ -22,11 +22,11 @@
 
 package org.teiid.core.types.basic;
 
-import java.math.BigDecimal;
-
 import org.teiid.core.CorePlugin;
+import org.teiid.core.types.TeiidBigDecimal;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
+import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 
 
 public class StringToBigDecimalTransform extends Transform {
@@ -41,7 +41,7 @@ public class StringToBigDecimalTransform extends Transform {
 	 */
 	public Object transformDirect(Object value) throws TransformationException {
 		try {
-			return new BigDecimal(((String)value).trim());
+			return new TeiidBigDecimal(((String)value).trim());
 		} catch(NumberFormatException e) {
 			throw new TransformationException("ERR.003.029.0014", CorePlugin.Util.getString("ERR.003.029.0014", value)); //$NON-NLS-1$ //$NON-NLS-2$
 		}
@@ -51,16 +51,16 @@ public class StringToBigDecimalTransform extends Transform {
 	 * Type of the incoming value.
 	 * @return Source type
 	 */
-	public Class getSourceType() {
-		return String.class;
+	public Class<?> getSourceType() {
+		return DefaultDataClasses.STRING;
 	}
 
 	/**
 	 * Type of the outgoing value.
 	 * @return Target type
 	 */
-	public Class getTargetType() {
-		return BigDecimal.class;
+	public Class<?> getTargetType() {
+		return DefaultDataClasses.BIG_DECIMAL;
 	}
 	
 	@Override

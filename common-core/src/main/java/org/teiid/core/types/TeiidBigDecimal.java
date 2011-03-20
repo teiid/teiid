@@ -19,45 +19,50 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
+ 
+package org.teiid.core.types;
 
-package org.teiid.core.types.basic;
-
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import org.teiid.core.types.TeiidBigDecimal;
-import org.teiid.core.types.Transform;
-import org.teiid.core.types.TransformationException;
-import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
+/**
+ * Same as a regular BigDecimal, but changes the implementation of hashCode and equals
+ * so that the same numerical value regardless of scale will be equal
+ */
+public class TeiidBigDecimal extends BigDecimal {
 
+	private static final long serialVersionUID = -5796515987947436480L;
 
-public class BigIntegerToBigDecimalTransform extends Transform {
-
-	/**
-	 * This method transforms a value of the source type into a value
-	 * of the target type.
-	 * @param value Incoming value of source type
-	 * @return Outgoing value of target type
-	 * @throws TransformationException if value is an incorrect input type or
-	 * the transformation fails
-	 */
-	public Object transformDirect(Object value) throws TransformationException {
-		return new TeiidBigDecimal((BigInteger) value, 0);
+	public TeiidBigDecimal(BigInteger unscaled, int scale) {
+		super(unscaled, scale);
 	}
 
-	/**
-	 * Type of the incoming value.
-	 * @return Source type
-	 */
-	public Class<?> getSourceType() {
-		return DefaultDataClasses.BIG_INTEGER;
+	public TeiidBigDecimal(BigDecimal bigDecimal) {
+		this(bigDecimal.unscaledValue(), bigDecimal.scale());
 	}
-
-	/**
-	 * Type of the outgoing value.
-	 * @return Target type
-	 */
-	public Class<?> getTargetType() {
-		return DefaultDataClasses.BIG_DECIMAL;
+	
+	public TeiidBigDecimal(String val) {
+		super(val);
 	}
-
+	
+	@Override
+	public int hashCode() {
+		int xsign = this.signum();
+        if (xsign == 0)
+            return 0;
+        BigDecimal bd = this.stripTrailingZeros();
+        return bd.hashCode();
+    }
+	
+	@Override
+	public boolean equals(Object x) {
+		if (x == this) {
+			return true;
+		}
+		if (!(x instanceof BigDecimal)) {
+			return false;
+		}
+		return this.compareTo((BigDecimal)x) == 0;
+	}
+	
 }

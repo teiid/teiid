@@ -23,11 +23,11 @@
 package org.teiid.query.tempdata;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.TreeSet;
 
 import org.teiid.common.buffer.TupleBrowser;
 import org.teiid.common.buffer.TupleSource;
@@ -151,7 +151,7 @@ class IndexInfo {
 						if (!setCriteria.getExpression().equals(keyColumn) || !setCriteria.isAllConstants()) {
 							continue;
 						}
-						TreeSet<Constant> values = (TreeSet<Constant>) setCriteria.getValues();
+						Collection<Constant> values = (Collection<Constant>) setCriteria.getValues();
 						this.addSet(i, values);
 					}
 				}
@@ -197,7 +197,7 @@ class IndexInfo {
 		}
 	}
 	
-	void addSet(int i, TreeSet<Constant> values) {
+	void addSet(int i, Collection<Constant> values) {
 		if (!valueSet.isEmpty()) {
 			return;
 		}

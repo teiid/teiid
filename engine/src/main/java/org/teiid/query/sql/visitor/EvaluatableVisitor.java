@@ -27,8 +27,8 @@ package org.teiid.query.sql.visitor;
 
 import java.util.TreeSet;
 
-import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.sql.LanguageObject;

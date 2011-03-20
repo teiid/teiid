@@ -27,13 +27,13 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.sql.lang.CompareCriteria;
@@ -124,9 +124,9 @@ public class PartitionAnalyzer {
 					continue;
 				}
 				if (cc.getLeftExpression() instanceof Constant) {
-					inMap.put(cc.getRightExpression(), new TreeSet<Constant>(Arrays.asList((Constant)cc.getLeftExpression())));
+					inMap.put(cc.getRightExpression(), new HashSet<Constant>(Arrays.asList((Constant)cc.getLeftExpression())));
 				} else if (cc.getRightExpression() instanceof Constant) {
-					inMap.put(cc.getLeftExpression(), new TreeSet<Constant>(Arrays.asList((Constant)cc.getRightExpression())));
+					inMap.put(cc.getLeftExpression(), new HashSet<Constant>(Arrays.asList((Constant)cc.getRightExpression())));
 				}
 				continue;
 			}
@@ -134,7 +134,7 @@ public class PartitionAnalyzer {
 				continue;
 			}
 			SetCriteria sc = (SetCriteria)criteria;
-			TreeSet<Constant> values = new TreeSet<Constant>();
+			HashSet<Constant> values = new HashSet<Constant>();
 			boolean allConstants = true;
 			for (Expression exp : (Collection<Expression>)sc.getValues()) {
 				if (exp instanceof Constant) {

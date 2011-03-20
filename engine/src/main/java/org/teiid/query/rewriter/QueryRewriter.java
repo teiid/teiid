@@ -40,7 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.TreeSet;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
@@ -161,6 +160,7 @@ import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
+import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
@@ -632,7 +632,7 @@ public class QueryRewriter {
             } 
         }
         
-        if (from != null) {
+        if (from != null && !query.getIsXML()) {
         	writeSubqueriesAsJoins(query);
         }
 
@@ -707,9 +707,10 @@ public class QueryRewriter {
 				//check for key preservation
 				HashSet<GroupSymbol> keyPreservingGroups = new HashSet<GroupSymbol>();
 				ResolverUtil.findKeyPreserved(query, keyPreservingGroups, metadata);
-				if (!NewCalculateCostUtil.usesKey(plannedResult.leftExpressions, keyPreservingGroups, metadata, true)) {
-					//if not key perserved then the semi-join will not remain in tact
-					continue;
+				if (NewCalculateCostUtil.usesKey(plannedResult.leftExpressions, keyPreservingGroups, metadata, true) && plannedResult.madeDistinct) {
+					//if key perserved then the semi-join will remain in-tact without make the other query distinct
+					plannedResult.madeDistinct = false;
+					plannedResult.query.getSelect().setDistinct(false);
 				}
 			}
 			crits.remove();
@@ -1156,18 +1157,18 @@ public class QueryRewriter {
 			if (exists.shouldEvaluate() && processing) {
         		return getCriteria(evaluator.evaluate(exists, null));
         	}
-			if (exists.getCommand().getProcessorPlan() == null && exists.getCommand() instanceof Query) {
-				Query query = (Query)exists.getCommand();
-				if ((query.getLimit() == null || query.getOrderBy() == null) && query.getProjectedSymbols().size() > 1) {
-					query.getSelect().clearSymbols();
-					query.getSelect().addSymbol(new ExpressionSymbol("x", new Constant(1))); //$NON-NLS-1$
-				}
-			}
 		    rewriteSubqueryContainer((SubqueryContainer)criteria, true);
 			if (!RelationalNodeUtil.shouldExecute(exists.getCommand(), false, true)) {
             	return exists.isNegated()?TRUE_CRITERIA:FALSE_CRITERIA;
             }
 		    if (exists.getCommand().getProcessorPlan() == null) {
+		    	if (exists.getCommand() instanceof Query) {
+					Query query = (Query)exists.getCommand();
+					if ((query.getLimit() == null || query.getOrderBy() == null) && query.getSelect().getProjectedSymbols().size() > 1) {
+						query.getSelect().clearSymbols();
+						query.getSelect().addSymbol(new ExpressionSymbol("x", new Constant(1))); //$NON-NLS-1$
+					}
+				}
 	            addImplicitLimit(exists, 1);
 		    }
 		} else if (criteria instanceof SubquerySetCriteria) {
@@ -1338,7 +1339,7 @@ public class QueryRewriter {
 			                	} else {
 				                	newCrits.remove(crit);
 			                		CompareCriteria other = (CompareCriteria)crit;
-			                		SetCriteria sc = new SetCriteria(cc.getLeftExpression(), new TreeSet<Expression>());
+			                		SetCriteria sc = new SetCriteria(cc.getLeftExpression(), new LinkedHashSet<Expression>());
 			                		sc.setAllConstants(true);
 			                		sc.getValues().add(cc.getRightExpression());
 			                		sc.getValues().add(other.getRightExpression());
@@ -2234,7 +2235,7 @@ public class QueryRewriter {
         criteria.setValues(newVals);
         if (allConstants) {
         	criteria.setAllConstants(true);
-        	criteria.setValues(new TreeSet(newVals));
+        	criteria.setValues(new LinkedHashSet(newVals));
         }        
         
         if (size == 0) {

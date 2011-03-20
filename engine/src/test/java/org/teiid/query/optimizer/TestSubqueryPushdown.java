@@ -24,7 +24,7 @@ package org.teiid.query.optimizer;
 
 import static org.teiid.query.optimizer.TestOptimizer.*;
 
-import org.junit.Ignore;
+import org.junit.After;
 import org.junit.Test;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
@@ -35,6 +35,7 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
+import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.rewriter.TestQueryRewriter;
 import org.teiid.query.unittest.FakeMetadataFacade;
@@ -395,18 +396,18 @@ public class TestSubqueryPushdown {
 
         ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (select max(e1) FROM pm1.g2)", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
             null, capFinder,
-            new String[] { "SELECT e1 AS c_0 FROM pm1.g1 ORDER BY c_0" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
+            new String[] { "SELECT e1 FROM pm1.g1" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
         checkNodeTypes(plan, new int[] {
             1,      // Access
             0,      // DependentAccess
-            0,      // DependentSelect
+            1,      // DependentSelect
             0,      // DependentProject
             0,      // DupRemove
             0,      // Grouping
             0,      // NestedLoopJoinStrategy
-            1,      // MergeJoinStrategy
+            0,      // MergeJoinStrategy
             0,      // Null
-            1,      // PlanExecution
+            0,      // PlanExecution
             1,      // Project
             0,      // Select
             0,      // Sort
@@ -779,11 +780,11 @@ public class TestSubqueryPushdown {
     }
     
     @Test public void testSubqueryRewriteToJoin1() throws Exception {
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in (select pm1.g1.e1 as x FROM pm1.g1)", "SELECT e1 FROM pm3.g1, (SELECT pm1.g1.e1 AS x FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.x", FakeMetadataFactory.example4());
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in /*+ mj */ (select pm1.g1.e1 as x FROM pm1.g1)", "SELECT e1 FROM pm3.g1, (SELECT pm1.g1.e1 AS x FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.x", FakeMetadataFactory.example4());
     }
     
     @Test public void testSubqueryRewriteToJoin2() throws Exception {
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in (select pm1.g1.e1 || 1 FROM pm1.g1)", "SELECT e1 FROM pm3.g1, (SELECT DISTINCT concat(pm1.g1.e1, '1') AS EXPR FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.EXPR", FakeMetadataFactory.example4());
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in /*+ mj */ (select pm1.g1.e1 || 1 FROM pm1.g1)", "SELECT e1 FROM pm3.g1, (SELECT concat(pm1.g1.e1, '1') AS EXPR FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.EXPR", FakeMetadataFactory.example4());
     }
     
     /**
@@ -794,10 +795,16 @@ public class TestSubqueryPushdown {
     }
     
     @Test public void testSubqueryRewriteToJoinWithOtherCriteria() throws Exception {
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in (select pm1.g1.e1 FROM pm1.g1 where e2 < pm3.g1.e2)", "SELECT e1 FROM pm3.g1, (SELECT pm1.g1.e1, e2 FROM pm1.g1) AS X__1 WHERE (X__1.e2 < pm3.g1.e2) AND (pm3.g1.e1 = X__1.e1)", FakeMetadataFactory.example4());
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in /*+ mj */ (select pm1.g1.e1 FROM pm1.g1 where e2 < pm3.g1.e2)", "SELECT e1 FROM pm3.g1, (SELECT pm1.g1.e1, e2 FROM pm1.g1) AS X__1 WHERE (X__1.e2 < pm3.g1.e2) AND (pm3.g1.e1 = X__1.e1)", FakeMetadataFactory.example4());
+    }
+    
+    @Test public void testDontRewriteToJoinWithOtherCriteria() throws Exception {
+    	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in /*+ NO_UNNEST */ (select pm1.g1.e1 FROM pm1.g1 where e2 < pm3.g1.e2)", "SELECT e1 FROM pm3.g1 WHERE pm3.g1.e1 IN /*+ NO_UNNEST */ (SELECT pm1.g1.e1 FROM pm1.g1 WHERE e2 < pm3.g1.e2)", FakeMetadataFactory.example4());
     }
 
     @Test public void testSubqueryRewriteToJoinWithAggregate() throws Exception {
+    	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
         TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (select max(e2) FROM pm1.g1 where pm3.g1.e1 = e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS MAX, e1 FROM pm1.g1 GROUP BY e1) AS X__1 WHERE (pm3.g1.e2 < X__1.MAX) AND (pm3.g1.e1 = X__1.e1)", FakeMetadataFactory.example4());
     }
     
@@ -810,6 +817,7 @@ public class TestSubqueryPushdown {
     }
     
     @Test public void testSubqueryRewriteToJoinWithAggregate2() throws Exception {
+    	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
         TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (select max(e2) FROM pm1.g1 WHERE pm3.g1.e1 = e1 HAVING min(e3) < pm3.g1.e3)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS MAX, e1, MIN(e3) AS MIN FROM pm1.g1 GROUP BY e1) AS X__1 WHERE (X__1.MIN < pm3.g1.e3) AND (pm3.g1.e2 < X__1.MAX) AND (pm3.g1.e1 = X__1.e1)", FakeMetadataFactory.example4());
     }
 
@@ -830,14 +838,15 @@ public class TestSubqueryPushdown {
     }
     
     @Test public void testSubqueryExpressionJoin() throws Exception {
+    	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
         TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (Select max(e2) from pm2.g2 where e1 = pm3.g1.e1 having convert(min(e2), string) > pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS MAX, e1, MIN(e2) AS MIN FROM pm2.g2 GROUP BY e1) AS X__1 WHERE (convert(X__1.MIN, string) > pm3.g1.e1) AND (pm3.g1.e2 < X__1.MAX) AND (pm3.g1.e1 = X__1.e1)", FakeMetadataFactory.example4());
     }
 
     /**
-     * Must be handled as a semi-join
+     * Must be handled as a semi-join, rather than a regular join
      */
     @Test public void testSemiJoin() {
-        ProcessorPlan plan = helpPlan("Select e1 from pm2.g2 where e2 in (select count(e2) FROM pm1.g2 group by e1 having e1 < pm2.g2.e3)", FakeMetadataFactory.example4(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm2.g2 where e2 in /*+ mj */ (select count(e2) FROM pm1.g2 group by e1 having e1 < pm2.g2.e3)", FakeMetadataFactory.example4(),  //$NON-NLS-1$
             new String[] { "SELECT g_0.e2 AS c_0, g_0.e3 AS c_1, g_0.e1 AS c_2 FROM pm2.g2 AS g_0 ORDER BY c_0" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -854,14 +863,15 @@ public class TestSubqueryPushdown {
             0,      // Select
             0,      // Sort
             0       // UnionAll
-        }); 
+        });
+        checkJoinCounts(plan, 1, 0);
     } 
     
     /**
-     * This will not plan as a semi-join since the cost seems too high
+     * This will not plan as a anti semi-join since the cost seems too high
      */
-    @Test public void testNonSemiJoinExistsCosting() {
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g2 as o where exists (select 1 from pm3.g1 where e1 = o.e1 having o.e2 = count(e2))", FakeMetadataFactory.example4(),  //$NON-NLS-1$
+    @Test public void testNoAntiSemiJoinExistsCosting() {
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g2 as o where not exists (select 1 from pm3.g1 where e1 = o.e1 having o.e2 = count(e2))", FakeMetadataFactory.example4(),  //$NON-NLS-1$
             new String[] { "SELECT g_0.e1, g_0.e2 FROM pm1.g2 AS g_0" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -885,7 +895,7 @@ public class TestSubqueryPushdown {
      * Same as above, but the source is much larger, so a semi-join is favorable
      */
     @Test public void testSemiJoinExistsCosting() {
-        ProcessorPlan plan = helpPlan("Select e1 from pm2.g2 as o where exists (select 1 from pm3.g1 where e1 = o.e1 having o.e2 = count(e2))", FakeMetadataFactory.example4(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm2.g2 as o where not exists (select 1 from pm3.g1 where e1 = o.e1 having o.e2 = count(e2))", FakeMetadataFactory.example4(),  //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_0, c_1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -903,7 +913,7 @@ public class TestSubqueryPushdown {
             0,      // Sort
             0       // UnionAll
         }); 
-        checkJoinCounts(plan, 1, 0);
+        checkJoinCounts(plan, 0, 1);
     }
     
     @Test public void testAntiSemiJoinExistsHint() {
@@ -928,8 +938,12 @@ public class TestSubqueryPushdown {
         checkJoinCounts(plan, 0, 1);
     }
     
-    @Test public void testSemiJoinInHint() {
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g2 as o where e2 IN /*+ MJ */ (select count(e2) from pm3.g1 where e1 = o.e1)", FakeMetadataFactory.example4(),  //$NON-NLS-1$
+    @After public void tearDown() {
+    	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.FALSE.toString());
+    }
+    
+    @Test public void testAntiSemiJoinInHint() {
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g2 as o where e2 NOT IN /*+ MJ */ (select count(e2) from pm3.g1 where e1 = o.e1)", FakeMetadataFactory.example4(),  //$NON-NLS-1$
             new String[] { "SELECT g_0.e2 AS c_0, g_0.e1 AS c_1 FROM pm1.g2 AS g_0 ORDER BY c_1, c_0" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -947,7 +961,7 @@ public class TestSubqueryPushdown {
             0,      // Sort
             0       // UnionAll
         }); 
-        checkJoinCounts(plan, 1, 0);
+        checkJoinCounts(plan, 0, 1);
     }
     
     void checkJoinCounts(ProcessorPlan plan, int semi, int antiSemi) {
@@ -987,7 +1001,7 @@ public class TestSubqueryPushdown {
     }
 
     @Test public void testInvalidGeneratedSemijoinQuery1() throws Exception {
-    	TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 = (Select max(e2) from pm2.g2 where e1 = pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS MAX, e1 FROM pm2.g2 GROUP BY e1) AS X__1 WHERE (pm3.g1.e1 = X__1.e1) AND (pm3.g1.e2 = X__1.MAX)", FakeMetadataFactory.example4());
+    	TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 IN /*+ mj */ (Select max(e2) from pm2.g2 where e1 = pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS MAX, e1 FROM pm2.g2 GROUP BY e1) AS X__1 WHERE (pm3.g1.e1 = X__1.e1) AND (pm3.g1.e2 = X__1.MAX)", FakeMetadataFactory.example4());
     }
     
     @Test public void testCompareSubquery2() throws Exception {
@@ -996,19 +1010,18 @@ public class TestSubqueryPushdown {
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
     
-    @Ignore
     @Test public void testUncorrelatedSet() {
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (select e1 FROM pm2.g1)", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
-            new String[] { "SELECT e1, pm1.g1.e2 FROM pm1.g1" }); //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in /*+ mj */ (select e1 FROM pm2.g1)", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
+            new String[] { "SELECT DISTINCT g_0.e1 FROM pm2.g1 AS g_0", "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
-            1,      // Access
+            2,      // Access
             0,      // DependentAccess
-            1,      // DependentSelect
+            0,      // DependentSelect
             0,      // DependentProject
             0,      // DupRemove
             0,      // Grouping
             0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
+            1,      // MergeJoinStrategy
             0,      // Null
             0,      // PlanExecution
             1,      // Project
@@ -1016,6 +1029,7 @@ public class TestSubqueryPushdown {
             0,      // Sort
             0       // UnionAll
         }); 
+        checkJoinCounts(plan, 0, 0);
     }
 
 }

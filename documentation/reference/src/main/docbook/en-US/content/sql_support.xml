@@ -800,6 +800,7 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
         <listitem><para>FROM <link linkend="texttable">TEXTTABLE...</link></para></listitem>
         <listitem><para>FROM <link linkend="xmltable">XMLTABLE...</link></para></listitem>
         <listitem><para>FROM <link linkend="arraytable">ARRAYTABLE...</link></para></listitem>
+        <listitem><para>FROM <link linkend="from_subquery">(SELECT ...</link></para></listitem>
       </itemizedlist> 
       <note>
         <title>DEP Hints</title>
@@ -1256,47 +1257,34 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
         </para>
       </listitem>
     </itemizedlist>
-    <itemizedlist>
-      <para>Supported subquery locations:
-      </para>
-      <listitem>
-        <para><link linkend="from_subquery">Subqueries in the FROM clause</link></para>
-      </listitem>
-      <listitem>
-        <para><link linkend="where_subquery">Subqueries in the WHERE/HAVING Clauses</link></para>
-      </listitem>
-      <listitem>
-        <para>Subqueries may be used in any expression or CASE CRITERIA in the SELECT clasue.</para>
-      </listitem>
-    </itemizedlist>
     <section id="from_subquery">
       <title>Inline views</title>
-      <para> Subqueries in the FROM clause of the outer query (also known as
+      <para>Subqueries in the FROM clause of the outer query (also known as
         "inline views") can return any number of rows and columns. This type
-        of subquery must always be given an alias.</para>
+        of subquery must always be given an alias.  An inline view is nearly identical to a traditional view. See also <xref linkend="with_clause"/>.</para>
       <example>
         <title>Example Subquery in FROM Clause (Inline View)</title>
-        <programlisting>SELECT a FROM (SELECT Y.b, Y.c FROM Y WHERE Y.d = ‘3’) AS X WHERE a = X.c AND b = X.b</programlisting>
+        <programlisting language="SQL">SELECT a FROM (SELECT Y.b, Y.c FROM Y WHERE Y.d = ‘3’) AS X WHERE a = X.c AND b = X.b</programlisting>
       </example>
     </section>
-    <section id="where_subquery">
-      <title>Subqueries in the WHERE and HAVING clauses</title>
-      <para>Subqueries supported in the criteria of the outer query include subqueries in an IN clause, subqueries using the ANY/SOME or ALL predicate quantifier, and subqueries using the EXISTS predicate. </para>
+    <section id="other_subqueries">
+      <title>Subqueries can appear anywhere where an expression or criteria is expected.</title>
+      <para>Subqueries are supported in quantified criteria, the EXISTS predicate, the IN predicate, and as <xref linkend="scalar_subqueries"/>.</para>
       <example>
         <title>Example Subquery in WHERE Using EXISTS</title>
         <programlisting>SELECT a FROM X WHERE EXISTS (SELECT 1 FROM Y WHERE c=X.a)</programlisting>
       </example>
-      <note><para>EXISTS subqueries should typically follow the convention "SELECT 1 FROM ..." to prevent unnecessary evaluation of select expressions.</para></note>
-      <para>
-        The following usages of subqueries must each select only one column, but can return any number of rows.
-      </para>
       <example>
-        <title>Example Subqueries in WHERE Clause</title>
-        <programlisting>SELECT a FROM X WHERE a IN (SELECT b FROM Y WHERE c=3) 
-SELECT a FROM X WHERE a &gt;= ANY (SELECT b FROM Y WHERE c=3) 
+        <title>Example Quantified Comparison Subqueries</title>
+        <programlisting language="SQL">SELECT a FROM X WHERE a &gt;= ANY (SELECT b FROM Y WHERE c=3) 
 SELECT a FROM X WHERE a &lt; SOME (SELECT b FROM Y WHERE c=4) 
 SELECT a FROM X WHERE a = ALL (SELECT b FROM Y WHERE c=2)</programlisting>
       </example>
+      <example>
+        <title>Example IN Subquery</title>
+        <programlisting language="SQL">SELECT a FROM X WHERE a IN (SELECT b FROM Y WHERE c=3)</programlisting>
+      </example>
+      <para>See also <xref linkend="subquery_optimization"/>.</para>
     </section>
   </section>
 </chapter>

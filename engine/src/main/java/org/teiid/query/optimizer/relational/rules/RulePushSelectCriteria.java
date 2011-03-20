@@ -33,7 +33,6 @@ import java.util.Stack;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.util.Assertion;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -391,8 +390,6 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 	boolean moveNodeAcrossFrame(PlanNode critNode, PlanNode sourceNode, QueryMetadataInterface metadata)
 		throws QueryPlannerException {
 
-		Assertion.isNotNull(critNode.getParent());
-		
 	      // Check that sourceNode has a child to push across
         if(sourceNode.getChildCount() == 0) {
             return false;

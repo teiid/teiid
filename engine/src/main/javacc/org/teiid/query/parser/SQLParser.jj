@@ -2707,7 +2707,7 @@ Object[] subqueryAndHint(ParseInfo info) :
 	)
 	<RPAREN>
 	{
-		return new Object[] {subquery, isMergeJoin(lparen)};
+		return new Object[] {subquery, getSubqueryHint(lparen)};
 	}
 }
 
@@ -2877,7 +2877,7 @@ AbstractSetCriteria setCrit(ParseInfo info, Expression expression) :
 	{
 	    if (command != null) {
 			SubquerySetCriteria ssc = new SubquerySetCriteria(expression, (QueryCommand)command[0]);
-			ssc.setMergeJoin((Boolean)command[1]);
+			ssc.setSubqueryHint((ExistsCriteria.SubqueryHint)command[1]);
 			criteria = ssc;
 		} else {
 		    criteria = new SetCriteria(expression, setList);
@@ -2902,7 +2902,7 @@ ExistsCriteria existsCriteria(ParseInfo info) :
 
 	{
 		ExistsCriteria existsCrit = new ExistsCriteria((QueryCommand)subquery[0]);
-		existsCrit.setMergeJoin((Boolean)subquery[1]);
+		existsCrit.setSubqueryHint((ExistsCriteria.SubqueryHint)subquery[1]);
 	    return existsCrit;
    	}
 }

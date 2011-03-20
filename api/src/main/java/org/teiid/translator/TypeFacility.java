@@ -53,7 +53,7 @@ public class TypeFacility {
         public static final Class<BigInteger> BIG_INTEGER   = DataTypeManager.DefaultDataClasses.BIG_INTEGER;
         public static final Class<Float> FLOAT         = DataTypeManager.DefaultDataClasses.FLOAT;
         public static final Class<Double> DOUBLE        = DataTypeManager.DefaultDataClasses.DOUBLE;
-        public static final Class<BigDecimal> BIG_DECIMAL   = DataTypeManager.DefaultDataClasses.BIG_DECIMAL;
+        public static final Class<? extends BigDecimal> BIG_DECIMAL   = DataTypeManager.DefaultDataClasses.BIG_DECIMAL;
         public static final Class<java.sql.Date> DATE          = DataTypeManager.DefaultDataClasses.DATE;
         public static final Class<Time> TIME          = DataTypeManager.DefaultDataClasses.TIME;
         public static final Class<Timestamp> TIMESTAMP     = DataTypeManager.DefaultDataClasses.TIMESTAMP;

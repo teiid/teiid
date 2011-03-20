@@ -84,6 +84,7 @@ import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.lang.XMLTable;
+import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.lang.TableFunctionReference.ProjectedColumn;
 import org.teiid.query.sql.lang.TextTable.TextColumn;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
@@ -144,9 +145,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     private static final String BEGIN_HINT = "/*+"; //$NON-NLS-1$
     private static final String END_HINT = "*/"; //$NON-NLS-1$
     private static final char ID_ESCAPE_CHAR = '\"';
-	public static String MJ = "MJ"; //$NON-NLS-1$
-
-    protected StringBuilder parts = new StringBuilder();
+	protected StringBuilder parts = new StringBuilder();
 
     /**
      * Helper to quickly get the parser string for an object using the visitor.
@@ -1067,14 +1066,7 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(SPACE);
         }
         append(IN);
-        if (obj.isMergeJoin()) {
-            append(SPACE);
-        	append(BEGIN_HINT);
-            append(SPACE);
-            append(MJ);
-            append(SPACE);
-            append(END_HINT);
-        }
+        addSubqueryHint(obj.getSubqueryHint());
         append(" ("); //$NON-NLS-1$
         visitNode(obj.getCommand());
         append(")"); //$NON-NLS-1$
@@ -1560,17 +1552,28 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(SPACE);
         }
         append(EXISTS);
-        if (obj.isMergeJoin()) {
-            append(SPACE);
-        	append(BEGIN_HINT);
-            append(SPACE);
-            append(MJ);
-            append(SPACE);
-            append(END_HINT);
-        }
+        addSubqueryHint(obj.getSubqueryHint());
         append(" ("); //$NON-NLS-1$
         visitNode(obj.getCommand());
         append(")"); //$NON-NLS-1$
+    }
+    
+    public void addSubqueryHint(SubqueryHint hint) {
+    	if (hint.isNoUnnest()) {
+        	append(SPACE);
+        	append(BEGIN_HINT);
+            append(SPACE);
+            append(SubqueryHint.NOUNNEST);
+            append(SPACE);
+            append(END_HINT);
+        } else if (hint.isMergeJoin()) {
+            append(SPACE);
+        	append(BEGIN_HINT);
+            append(SPACE);
+            append(SubqueryHint.MJ);
+            append(SPACE);
+            append(END_HINT);
+        }
     }
 
     public void visit( SubqueryCompareCriteria obj ) {

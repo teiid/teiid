@@ -24,7 +24,7 @@ package org.teiid.query.sql.lang;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.TreeSet;
+import java.util.LinkedHashSet;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
@@ -152,7 +152,7 @@ public class SetCriteria extends AbstractSetCriteria {
 	    
 	    Collection copyValues = null;
 	    if (isAllConstants()) {
-	    	copyValues = new TreeSet(values);
+	    	copyValues = new LinkedHashSet(values);
 	    } else {
 	    	copyValues = LanguageObject.Util.deepClone(new ArrayList(values), Expression.class);
 	    }

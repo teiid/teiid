@@ -86,6 +86,9 @@ import org.teiid.query.util.CommandContext;
 
 public final class RuleMergeCriteria implements OptimizerRule {
 	
+	public static final String UNNEST_DEFAULT = "org.teiid.subqueryUnnestDefault"; //$NON-NLS-1$ 
+	private final boolean UNNEST = Boolean.getBoolean(UNNEST_DEFAULT); 
+	
 	/**
 	 * Used to replace correlated references
 	 */
@@ -104,6 +107,11 @@ public final class RuleMergeCriteria implements OptimizerRule {
 				Reference r = (Reference)element;
 				Expression ex = refs.getMappedExpression(r.getExpression());
 				if (ex != null) {
+					if (ex instanceof ElementSymbol) {
+						ElementSymbol es = (ElementSymbol) ex.clone();
+						es.setIsExternalReference(false);
+						ex = es;
+					}
 					replacedAny = true;
 					return ex;
 				}
@@ -122,6 +130,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		public Criteria additionalCritieria;
 		public Class<?> type;
 		public boolean mergeJoin;
+		public boolean madeDistinct;
 	}
 
 	private IDGenerator idGenerator;
@@ -348,11 +357,20 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		if (crit instanceof SubquerySetCriteria) {
 			//convert to the quantified form
 			SubquerySetCriteria ssc = (SubquerySetCriteria)crit;
+			if (ssc.getSubqueryHint().isNoUnnest()) {
+				return result;
+			}
 			result.not ^= ssc.isNegated();
 			result.type = crit.getClass();
-			result.mergeJoin = ssc.isMergeJoin();
+			result.mergeJoin = ssc.getSubqueryHint().isMergeJoin();
+			if (!UNNEST && !result.mergeJoin) {
+				return result;
+			}
 			crit = new SubqueryCompareCriteria(ssc.getExpression(), ssc.getCommand(), SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.SOME);
 		} else if (crit instanceof CompareCriteria) {
+			if (!UNNEST) {
+				return result;
+			}
 			//convert to the quantified form
 			CompareCriteria cc = (CompareCriteria)crit;
 			if (cc.getRightExpression() instanceof ScalarSubquery) {
@@ -369,7 +387,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		}
 		if (crit instanceof SubqueryCompareCriteria) {
 			SubqueryCompareCriteria scc = (SubqueryCompareCriteria)crit;
-		
+			
 			if (scc.getPredicateQuantifier() != SubqueryCompareCriteria.SOME
 					//TODO: could add an inline view if not a query
 					|| !(scc.getCommand() instanceof Query)) {
@@ -390,6 +408,9 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		}
 		if (crit instanceof ExistsCriteria) {
 			ExistsCriteria exists = (ExistsCriteria)crit;
+			if (exists.getSubqueryHint().isNoUnnest()) {
+				return result;
+			}
 			if (!(exists.getCommand() instanceof Query)) {
 				return result;
 			} 
@@ -397,7 +418,10 @@ public final class RuleMergeCriteria implements OptimizerRule {
 			result.not = exists.isNegated();
 			//the correlations can only be in where (if no group by or aggregates) or having
 			result.query = (Query)exists.getCommand();
-			result.mergeJoin = exists.isMergeJoin();
+			result.mergeJoin = exists.getSubqueryHint().isMergeJoin();
+			if (!UNNEST && !result.mergeJoin) {
+				return result;
+			}
 		}
 		return result;
 	}
@@ -495,6 +519,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 				return false;
 			}
 			plannedResult.query.getSelect().setDistinct(true);
+			plannedResult.madeDistinct = true;
 		}
 
 		if (addGroupBy) {

@@ -1144,13 +1144,13 @@ public class TestOptionsAndHints {
         TestParser.helpTest(sql, "/*+ cache */ ? = EXEC proc()", sp);         //$NON-NLS-1$
     }
     
-    @Test public void testSemiJoinHint() {
+    @Test public void testMergeJoinHint() {
         String sql = "SELECT e1 FROM m.g2 WHERE EXISTS /*+ MJ */ (SELECT e1 FROM m.g1)"; //$NON-NLS-1$
         Query q = TestParser.exampleExists(true);
         TestParser.helpTest(sql, "SELECT e1 FROM m.g2 WHERE EXISTS /*+ MJ */ (SELECT e1 FROM m.g1)", q);         //$NON-NLS-1$
     }
     
-    @Test public void testSemiJoinHint1() {
+    @Test public void testMergeJoinHint1() {
         String sql = "SELECT a FROM db.g WHERE b IN /*+ MJ */ (SELECT a FROM db.g WHERE a2 = 5)"; //$NON-NLS-1$
         Query q = TestParser.exampleIn(true);
         TestParser.helpTest(sql, "SELECT a FROM db.g WHERE b IN /*+ MJ */ (SELECT a FROM db.g WHERE a2 = 5)", q);         //$NON-NLS-1$

@@ -42,6 +42,7 @@
 	<LI><B>userRequestSourceConcurrency</B> - was added to control the number of concurrent source queries allowed for each user request.
 	<LI><B>Dependent Join Improvements</B> - dependent join analysis and costing in general was improved to consider dependent joins earlier in planning.
 	<LI><B>Memory Management Improvements</B> - maxReserveBatchColumns and maxProcessingBatchesColumns will be default be determined automatically and will more reliably prevent memory issues.  See the admin guide for more.
+	<LI><B>Subquery optimization control</B> - added the MJ and NO_UNNEST hints and the org.teiid.subqueryUnnestDefault system property to control the optimization of subqueries to traditional joins or to a merge join implemenation of a semijoin or antijoin.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -153,6 +154,7 @@ temporary table access.
 
 <h2><a name="Other">Other Issues</a></h2>
 <ul>
+    <li>TEIID-1170 - correlated subqueries are not allowed in UPDATEs or DELETEs against internal Teiid tables (internal materialized views or temporary tables).
     <li>TEIID-1281 - Negative start indexing is not supported by DB2 and Derby databases.  Usage of the Teiid SUBSTRING against these sources should not use negative start values.
     <li>TEIID-1008 - Most versions of Oracle and MySQL do not support deeply nested correlated references.  There is currently no workaround for this issue.
 	<li>For compatibility with the 7.0 release if a stored procedure parameter list begins with identifier=, then it will be parsed as a named parameter invocation even if the intent was to use a comparison predicate 

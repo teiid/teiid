@@ -40,13 +40,57 @@ import org.teiid.query.sql.symbol.Expression;
 public class ExistsCriteria extends PredicateCriteria
 implements SubqueryContainer<QueryCommand>, ContextReference, Negatable {
 	
+	public static class SubqueryHint {
+		public static String MJ = "MJ"; //$NON-NLS-1$
+		public static String NOUNNEST = "NO_UNNEST"; //$NON-NLS-1$
+
+		private boolean mergeJoin;
+	    private boolean noUnnest;
+	    
+	    public void setMergeJoin(boolean semiJoin) {
+			this.mergeJoin = semiJoin;
+		}
+	    
+	    public boolean isMergeJoin() {
+			return mergeJoin;
+		}
+	    
+	    public void setNoUnnest(boolean noUnnest) {
+			this.noUnnest = noUnnest;
+		}
+	    
+	    public boolean isNoUnnest() {
+			return noUnnest;
+		}
+	    
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (!(obj instanceof SubqueryHint)) {
+				return false;
+			}
+			SubqueryHint other = (SubqueryHint) obj;
+			return mergeJoin == other.mergeJoin && noUnnest == other.noUnnest;
+		}
+		
+		public SubqueryHint clone() {
+			SubqueryHint clone = new SubqueryHint();
+			clone.mergeJoin = this.mergeJoin;
+			clone.noUnnest = this.noUnnest;
+			return clone;
+		}
+		
+	}
+	
 	private static AtomicInteger ID = new AtomicInteger();
 
     private QueryCommand command;
     private String id = "$ec/id" + ID.getAndIncrement(); //$NON-NLS-1$
     private boolean shouldEvaluate;
-    private boolean mergeJoin;
     private boolean negated;
+    private SubqueryHint subqueryHint = new SubqueryHint();
 
     /**
      * Default constructor
@@ -55,14 +99,6 @@ implements SubqueryContainer<QueryCommand>, ContextReference, Negatable {
         super();
     }
     
-    public void setMergeJoin(boolean semiJoin) {
-		this.mergeJoin = semiJoin;
-	}
-    
-    public boolean isMergeJoin() {
-		return mergeJoin;
-	}
-
     public ExistsCriteria(QueryCommand subqueryCommand){
         this.command = subqueryCommand;
     }
@@ -127,9 +163,17 @@ implements SubqueryContainer<QueryCommand>, ContextReference, Negatable {
 
         return EquivalenceUtil.areEqual(getCommand(), other.getCommand()) &&
         	this.negated == other.negated &&
-        	this.mergeJoin == other.mergeJoin;
+        	this.subqueryHint.equals(other.subqueryHint);
     }
-
+    
+    public SubqueryHint getSubqueryHint() {
+		return subqueryHint;
+	}
+    
+    public void setSubqueryHint(SubqueryHint subqueryHint) {
+		this.subqueryHint = subqueryHint;
+	}
+    
     /**
      * Deep copy of object.  The values Iterator of this object
      * will not be cloned - it will be null in the new object
@@ -139,7 +183,7 @@ implements SubqueryContainer<QueryCommand>, ContextReference, Negatable {
      */
     public Object clone() {
         ExistsCriteria ec = new ExistsCriteria((QueryCommand) this.command.clone());
-        ec.setMergeJoin(this.mergeJoin);
+        ec.subqueryHint = this.subqueryHint.clone();
         ec.setNegated(this.negated);
         return ec;
     }

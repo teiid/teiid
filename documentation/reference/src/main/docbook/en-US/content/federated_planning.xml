@@ -262,7 +262,7 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
 		</para>
       </tip>
       <warning><para>
-      	A simple SELECT COUNT(*) ... against a view where all join tables are marked as optional will not return a meaningful result.
+      	A simple "SELECT COUNT(*) FROM VIEW" against a view where all join tables are marked as optional will not return a meaningful result.
       	</para>
       </warning>
     </section>
@@ -305,11 +305,60 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
           <listitem>
             <para>Parallelizing of source access during execution.</para>
           </listitem>
+          <listitem>
+          	<para><xref linkend="subquery_optimization"/></para>
+          </listitem>
         </itemizedlist>
       </para>
     </section>
   </section>
-  <section>
+     <section id="subquery_optimization">
+     	<title>Subquery optimization</title>
+     	<itemizedlist>
+     	<listitem>
+			<para>EXISTS subqueries are typically rewrite to "SELECT 1 FROM ..." to prevent unnecessary evaluation of SELECT expressions.</para>
+		</listitem>
+   		<listitem>
+			<para>Quantified compare SOME subqueries are always turned into an equivalent IN prediate or comparison against an aggregate value.  e.g. col > SOME (select col1 from table) would become col > (select min(col1) from table)</para>
+		</listitem>
+		<listitem>
+			<para>Uncorrelated EXISTs and scalar subquery that are not pushed to the source can be preevaluated prior to source command formation.</para>
+		</listitem>
+		<listitem>
+			<para>Correlated subqueries used in DETELEs or UPDATEs that are not pushed as part of the corresponding DELETE/UPDATE will cause Teiid to perform row-by-row compensating processing.  
+				This will only happen if the affected table has a primary key.  If it does not, then an exception will be thrown.</para>
+		</listitem>
+		<listitem>
+			<para>WHERE or HAVING clause IN and EXISTs predicates can take the MJ (merge join) or NO_UNNEST (no unnest) hints appearing just before the subquery.  
+			The MJ hint directs the optimizer to use a traditional, semijoin, or antisemijoin merge join if possible.  
+			The NO_UNNEST hint, which supercedes the MJ hint, will direct the optimizer to leave the subquery in place.
+			<example>
+				<title>Merge Join Hint Usage</title>
+				<programlisting language="SQL">SELECT col1 from tbl where col2 IN /*+ MJ */ (SELECT col1 FROM tbl2)</programlisting>
+			</example>
+			<example>
+				<title>No Unnest Hint Usage</title>
+				<programlisting language="SQL">SELECT col1 from tbl where col2 IN /*+ NO_UNNEST */ (SELECT col1 FROM tbl2)</programlisting>
+			</example>
+			</para>
+		</listitem>
+		<listitem>
+			<para>The system property <link linkend="subquery_unnest">org.teiid.subqueryUnnestDefault</link> controls whether the optimizer will by default unnest subqueries.  
+			The default is false.  If true, then most non-negated WHERE or HAVING clause non-negated EXISTS or IN subquery predicates can be converted to a traditional merge join or as antijoin or semijoin variants.</para>
+		</listitem>
+		<listitem>
+			<para>WHERE clause EXISTs and IN predicates that can be rewriten to a traditional join with the semantics of the semi-join can preserved 
+			if the system property <link linkend="subquery_unnest">org.teiid.subqueryUnnestDefault</link> is set to true or the subquery has a MJ hint.</para>
+		</listitem>
+		<listitem>
+			<para>EXISTs and scalar subqueries that are not pushed down, and not converted to merge joins, are implicitly limited to 1 and 2 result rows respectively.</para>
+		</listitem>
+		<listitem>
+			<para>Conversion of subquery predicates to nested loop joins is not yet available.</para>
+		</listitem>
+	</itemizedlist>
+   </section>
+   <section>
     <title>Federated Failure Modes</title>
     <section>
       <title>Partial Results</title>
