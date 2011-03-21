@@ -22,6 +22,7 @@
 
 package org.teiid.metadata;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.translator.TypeFacility;
 
 public abstract class BaseColumn extends AbstractMetadataRecord {
@@ -130,7 +131,7 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
 	}
 
 	public void setDefaultValue(String object) {
-		defaultValue = object;
+		defaultValue = DataTypeManager.getCanonicalString(object);
 	}
 
     public Datatype getDatatype() {
@@ -139,6 +140,10 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
     
     public void setDatatype(Datatype datatype) {
 		this.datatype = datatype;
+		if (datatype != null) {
+			this.datatypeUUID = this.datatype.getUUID();
+			this.runtimeType = this.datatype.getRuntimeTypeName();
+		}
 	}
     
 	public String getDatatypeID() {

@@ -84,7 +84,7 @@ public class TestUpdateValidator {
 			throws QueryParserException, QueryResolverException,
 			TeiidComponentException {
 		QueryNode vm1g1n1 = new QueryNode(vGroup, sql); 
-		Table vm1g1 = RealMetadataFactory.createUpdatableVirtualGroup(vGroup, md.getMetadataStore().getSchema("vm1"), vm1g1n1);
+		Table vm1g1 = RealMetadataFactory.createUpdatableVirtualGroup(vGroup, md.getMetadataStore().getSchema("VM1"), vm1g1n1);
 
 		Command command = QueryParser.getQueryParser().parseCommand(sql);
 		QueryResolver.resolveCommand(command, md);

@@ -42,7 +42,7 @@ public class MetadataStore implements Serializable {
 	}
 	
 	public void addSchema(Schema schema) {
-		this.schemas.put(schema.getName().toLowerCase(), schema);
+		this.schemas.put(schema.getCanonicalName(), schema);
 	}
 	
 	public void addDatatype(Datatype datatype) {

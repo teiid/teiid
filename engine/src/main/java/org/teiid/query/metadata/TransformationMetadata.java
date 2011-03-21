@@ -174,7 +174,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		if (columnIndex == -1) {
 			throw new QueryMetadataException(elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 		}
-		Table table = this.store.findGroup(elementName.substring(0, columnIndex).toLowerCase());
+		Table table = this.store.findGroup(elementName.substring(0, columnIndex).toUpperCase());
 		String shortElementName = elementName.substring(columnIndex + 1);
 		for (Column column : (List<Column>)getElementIDsInGroupID(table)) {
 			if (column.getName().equalsIgnoreCase(shortElementName)) {
@@ -185,7 +185,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
     public Table getGroupID(final String groupName) throws TeiidComponentException, QueryMetadataException {
-        return getMetadataStore().findGroup(groupName.toLowerCase());
+        return getMetadataStore().findGroup(groupName.toUpperCase());
     }
     
     public Collection<String> getGroupsForPartialName(final String partialGroupName)
@@ -195,7 +195,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		Collection<Table> matches = this.partialNameToFullNameCache.get(partialGroupName);
 		
 		if (matches == null) {
-			String partialName = DELIMITER_CHAR + partialGroupName.toLowerCase(); 
+			String partialName = DELIMITER_CHAR + partialGroupName.toUpperCase(); 
 	
 	        matches = getMetadataStore().getGroupsForPartialName(partialName);
 	        
@@ -317,11 +317,11 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 			final String name)
 			throws TeiidComponentException, QueryMetadataException {
 		ArgCheck.isNotEmpty(name);
-        String lowerGroupName = name.toLowerCase();
-        Collection<StoredProcedureInfo> results = this.procedureCache.get(lowerGroupName);
+        String canonicalName = name.toUpperCase();
+        Collection<StoredProcedureInfo> results = this.procedureCache.get(canonicalName);
         
         if (results == null) {
-        	Collection<Procedure> procRecords = getMetadataStore().getStoredProcedure(lowerGroupName); 
+        	Collection<Procedure> procRecords = getMetadataStore().getStoredProcedure(canonicalName); 
         	results = new ArrayList<StoredProcedureInfo>(procRecords.size());
         	for (Procedure procRecord : procRecords) {
                 String procedureFullName = procRecord.getFullName();
@@ -372,7 +372,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                 procInfo.setUpdateCount(procRecord.getUpdateCount() -1);
 				results.add(procInfo);
 			}
-        	this.procedureCache.put(lowerGroupName, results);        	
+        	this.procedureCache.put(canonicalName, results);        	
         }
         
         StoredProcedureInfo result = null;

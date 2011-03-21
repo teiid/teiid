@@ -22,6 +22,7 @@
 
 package org.teiid.query.sql.symbol;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageObject;
@@ -92,7 +93,7 @@ public abstract class Symbol implements LanguageObject {
 		if(name == null) {
             throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0017")); //$NON-NLS-1$
 		}
-		this.name = name;
+		this.name = DataTypeManager.getCanonicalString(name);
 		this.outputName = null;
         // Canonical name is lazily created
         this.canonicalName = null;
@@ -115,6 +116,10 @@ public abstract class Symbol implements LanguageObject {
         // of the total toUpperCase() calls, so we are lazily performing the toUpperCase and calculating the hash.
         computeCanonicalNameAndHash();
         return this.canonicalName;
+	}
+	
+	public void setCanonicalName(String canonicalName) {
+		this.canonicalName = canonicalName;
 	}
     
 	/**
@@ -176,7 +181,7 @@ public abstract class Symbol implements LanguageObject {
     
     private void computeCanonicalNameAndHash() {
         if (canonicalName == null) {
-            canonicalName = StringUtil.toUpperCase(name);
+            canonicalName = DataTypeManager.getCanonicalString(StringUtil.toUpperCase(name));
         }
     }
     

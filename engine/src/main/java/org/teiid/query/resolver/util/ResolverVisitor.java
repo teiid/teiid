@@ -267,6 +267,7 @@ public class ResolverVisitor extends LanguageVisitor {
         elementSymbol.setMetadataID(resolvedSymbol.getMetadataID());
         elementSymbol.setGroupSymbol(resolvedGroup);
         elementSymbol.setName(resolvedSymbol.getName());
+        elementSymbol.setCanonicalName(resolvedSymbol.getCanonicalName());
         elementSymbol.setOutputName(oldName);
         return true;
 	}

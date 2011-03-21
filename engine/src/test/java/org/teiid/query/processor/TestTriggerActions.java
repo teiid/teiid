@@ -41,10 +41,13 @@ import org.teiid.query.validator.TestUpdateValidator;
 @SuppressWarnings("nls")
 public class TestTriggerActions {
     
+	private static final String GX = "GX";
+	private static final String VM1 = "VM1";
+
 	@Test public void testInsert() throws Exception {
 		TransformationMetadata metadata = TestUpdateValidator.example1();
-		TestUpdateValidator.createView("select 1 as x, 2 as y", metadata, "gx");
-		Table t = metadata.getMetadataStore().getSchemas().get("vm1").getTables().get("gx");
+		TestUpdateValidator.createView("select 1 as x, 2 as y", metadata, GX);
+		Table t = metadata.getMetadataStore().getSchemas().get(VM1).getTables().get(GX);
 		t.setDeletePlan("");
 		t.setUpdatePlan("");
 		t.setInsertPlan("FOR EACH ROW BEGIN insert into pm1.g1 (e1) values (new.x); END");
@@ -63,8 +66,8 @@ public class TestTriggerActions {
 	
 	@Test public void testInsertWithQueryExpression() throws Exception {
 		TransformationMetadata metadata = TestUpdateValidator.example1();
-		TestUpdateValidator.createView("select '1' as x, 2 as y", metadata, "gx");
-		Table t = metadata.getMetadataStore().getSchemas().get("vm1").getTables().get("gx");
+		TestUpdateValidator.createView("select '1' as x, 2 as y", metadata, GX);
+		Table t = metadata.getMetadataStore().getSchemas().get(VM1).getTables().get(GX);
 		t.setDeletePlan("");
 		t.setUpdatePlan("");
 		t.setInsertPlan("FOR EACH ROW BEGIN insert into pm1.g1 (e1) values (new.x); END");
@@ -82,8 +85,8 @@ public class TestTriggerActions {
 	
 	@Test public void testDelete() throws Exception {
 		TransformationMetadata metadata = TestUpdateValidator.example1();
-		TestUpdateValidator.createView("select 1 as x, 2 as y", metadata, "gx");
-		Table t = metadata.getMetadataStore().getSchemas().get("vm1").getTables().get("gx");
+		TestUpdateValidator.createView("select 1 as x, 2 as y", metadata, GX);
+		Table t = metadata.getMetadataStore().getSchemas().get(VM1).getTables().get(GX);
 		t.setDeletePlan("FOR EACH ROW BEGIN delete from pm1.g1 where e2 = old.x; END");
 		t.setUpdatePlan("");
 		t.setInsertPlan("");
@@ -102,8 +105,8 @@ public class TestTriggerActions {
 	
 	@Test public void testUpdate() throws Exception {
 		TransformationMetadata metadata = TestUpdateValidator.example1();
-		TestUpdateValidator.createView("select 1 as x, 2 as y", metadata, "gx");
-		Table t = metadata.getMetadataStore().getSchemas().get("vm1").getTables().get("gx");
+		TestUpdateValidator.createView("select 1 as x, 2 as y", metadata, GX);
+		Table t = metadata.getMetadataStore().getSchemas().get(VM1).getTables().get(GX);
 		t.setDeletePlan("");
 		t.setUpdatePlan("FOR EACH ROW BEGIN update pm1.g1 set e2 = new.y where e2 = old.y; END");
 		t.setInsertPlan("");
@@ -123,8 +126,8 @@ public class TestTriggerActions {
 	
 	@Test public void testUpdateWithNonConstant() throws Exception {
 		TransformationMetadata metadata = TestUpdateValidator.example1();
-		TestUpdateValidator.createView("select 1 as x, 2 as y", metadata, "gx");
-		Table t = metadata.getMetadataStore().getSchemas().get("vm1").getTables().get("gx");
+		TestUpdateValidator.createView("select 1 as x, 2 as y", metadata, GX);
+		Table t = metadata.getMetadataStore().getSchemas().get(VM1).getTables().get(GX);
 		t.setDeletePlan("");
 		t.setUpdatePlan("FOR EACH ROW BEGIN update pm1.g1 set e2 = new.y where e2 = old.y; END");
 		t.setInsertPlan("");

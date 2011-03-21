@@ -26,6 +26,8 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.teiid.core.types.DataTypeManager;
+
 public class Table extends ColumnSet<Schema> {
 
 	private static final long serialVersionUID = 4891356771125218672L;
@@ -167,15 +169,15 @@ public class Table extends ColumnSet<Schema> {
     }
     
     public void setInsertPlan(String insertPlan) {
-		this.insertPlan = insertPlan;
+		this.insertPlan = DataTypeManager.getCanonicalString(insertPlan);
 	}
     
     public void setUpdatePlan(String updatePlan) {
-		this.updatePlan = updatePlan;
+		this.updatePlan = DataTypeManager.getCanonicalString(updatePlan);
 	}
     
     public void setDeletePlan(String deletePlan) {
-		this.deletePlan = deletePlan;
+		this.deletePlan = DataTypeManager.getCanonicalString(deletePlan);
 	}
     
     public List<ForeignKey> getForeignKeys() {
@@ -223,7 +225,7 @@ public class Table extends ColumnSet<Schema> {
 	}
     
     public void setSelectTransformation(String selectTransformation) {
-		this.selectTransformation = selectTransformation;
+		this.selectTransformation = DataTypeManager.getCanonicalString(selectTransformation);
 	}
     
     public Table getMaterializedStageTable() {
@@ -243,7 +245,7 @@ public class Table extends ColumnSet<Schema> {
 	}
 
 	public void setResourcePath(String resourcePath) {
-		this.resourcePath = resourcePath;
+		this.resourcePath = DataTypeManager.getCanonicalString(resourcePath);
 	}
 
 	public String getResourcePath() {

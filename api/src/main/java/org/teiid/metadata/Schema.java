@@ -39,21 +39,21 @@ public class Schema extends AbstractMetadataRecord {
 	
 	public void addTable(Table table) {
 		table.setParent(this);
-		if (this.tables.put(table.getName().toLowerCase(), table) != null) {
+		if (this.tables.put(table.getCanonicalName(), table) != null) {
 			throw new AssertionError("Duplicate Table " + table.getName()); //$NON-NLS-1$
 		}
 	}
 	
 	public void addProcedure(Procedure procedure) {
 		procedure.setParent(this);
-		if (this.procedures.put(procedure.getName().toLowerCase(), procedure) != null) {
+		if (this.procedures.put(procedure.getCanonicalName(), procedure) != null) {
 			throw new AssertionError("Duplicate Procedure " + procedure.getName()); //$NON-NLS-1$
 		}
 	}
 	
 	public void addFunction(FunctionMethod function) {
 		function.setParent(this);
-		if (this.functions.put(function.getName().toLowerCase(), function) != null) {
+		if (this.functions.put(function.getCanonicalName(), function) != null) {
 			throw new AssertionError("Duplicate function " + function.getName()); //$NON-NLS-1$
 		}
 	}	

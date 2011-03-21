@@ -22,6 +22,7 @@
 
 package org.teiid.metadata;
 
+import org.teiid.core.types.DataTypeManager;
 
 /**
  * ColumnRecordImpl
@@ -180,14 +181,14 @@ public class Column extends BaseColumn implements Comparable<Column> {
      * @param object
      */
     public void setMaximumValue(String object) {
-        maximumValue = object;
+        maximumValue = DataTypeManager.getCanonicalString(object);
     }
 
     /**
      * @param object
      */
     public void setMinimumValue(String object) {
-        minimumValue = object;
+        minimumValue = DataTypeManager.getCanonicalString(object);
     }
 
     /**
@@ -222,7 +223,7 @@ public class Column extends BaseColumn implements Comparable<Column> {
      * @param string
      */
     public void setFormat(String string) {
-        format = string;
+        format = DataTypeManager.getCanonicalString(string);
     }
 
     /**
@@ -246,7 +247,7 @@ public class Column extends BaseColumn implements Comparable<Column> {
      * @since 4.2
      */
     public void setNativeType(String nativeType) {
-        this.nativeType = nativeType;
+        this.nativeType = DataTypeManager.getCanonicalString(nativeType);
     }
 
 }

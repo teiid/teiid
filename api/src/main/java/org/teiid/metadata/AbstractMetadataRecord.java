@@ -28,6 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 
 
@@ -44,6 +45,7 @@ public abstract class AbstractMetadataRecord implements Serializable {
     
     private String uuid; //globally unique id
     private String name; //contextually unique name
+    private String canonicalName;
     
     private String nameInSource;
 	
@@ -66,7 +68,7 @@ public abstract class AbstractMetadataRecord implements Serializable {
 	}
 	
 	public void setNameInSource(String nameInSource) {
-		this.nameInSource = nameInSource;
+		this.nameInSource = DataTypeManager.getCanonicalString(nameInSource);
 	}
 	
 	/**
@@ -90,7 +92,12 @@ public abstract class AbstractMetadataRecord implements Serializable {
 	}	
 	
 	public void setName(String name) {
-		this.name = name;
+		this.name = DataTypeManager.getCanonicalString(name);
+		this.canonicalName = DataTypeManager.getCanonicalString(name.toUpperCase());
+	}
+	
+	public String getCanonicalName() {
+		return canonicalName;
 	}
 	
     public String toString() {
@@ -127,7 +134,7 @@ public abstract class AbstractMetadataRecord implements Serializable {
     	if (this.properties == null) {
     		this.properties = new LinkedHashMap<String, String>();
     	}
-    	this.properties.put(key, value);
+    	this.properties.put(DataTypeManager.getCanonicalString(key), DataTypeManager.getCanonicalString(value));
     }
     
     public void setProperties(LinkedHashMap<String, String> properties) {
@@ -139,7 +146,7 @@ public abstract class AbstractMetadataRecord implements Serializable {
 	}
     
     public void setAnnotation(String annotation) {
-		this.annotation = annotation;
+		this.annotation = DataTypeManager.getCanonicalString(annotation);
 	}
 
     /**

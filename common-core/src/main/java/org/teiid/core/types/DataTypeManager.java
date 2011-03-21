@@ -126,7 +126,31 @@ public class DataTypeManager {
 		}
 	}
 	
-	private static Map<Class<?>, ValueCache<?>> valueMaps = new HashMap<Class<?>, ValueCache<?>>(128); 
+	private static Map<Class<?>, ValueCache<?>> valueMaps = new HashMap<Class<?>, ValueCache<?>>(128);
+	private static HashedValueCache<String> stringCache = new HashedValueCache<String>(17) {
+		
+		@Override
+		protected Object get(int index) {
+			WeakReference<?> ref = (WeakReference<?>) cache[index];
+			if (ref != null) {
+				return ref.get();
+			}
+			return null;
+		}
+		
+		@Override
+		protected void set(int index, String value) {
+			cache[index] = new WeakReference<Object>(value);
+		}
+		
+		@Override
+		protected int primaryHash(String value) {
+			if (value.length() < 14) {
+				return value.hashCode();
+			}
+			return HashCodeUtil.expHashCode(value);
+		}
+	};
 
 	public static final int MAX_STRING_LENGTH = 4000;
 	public static final int MAX_LOB_MEMORY_BYTES = 1 << 13;
@@ -506,13 +530,13 @@ public class DataTypeManager {
 			valueMaps.put(DefaultDataClasses.CHAR, new HashedValueCache<Character>(13));
 			valueMaps.put(DefaultDataClasses.INTEGER, new HashedValueCache<Integer>(14));
 			valueMaps.put(DefaultDataClasses.LONG, new HashedValueCache<Long>(14));
-			valueMaps.put(DefaultDataClasses.BIG_INTEGER, new HashedValueCache<BigInteger>(14));
+			valueMaps.put(DefaultDataClasses.BIG_INTEGER, new HashedValueCache<BigInteger>(15));
 			valueMaps.put(DefaultDataClasses.FLOAT, new HashedValueCache<Float>(14));
 			valueMaps.put(DefaultDataClasses.DOUBLE, new HashedValueCache<Double>(14));
 			valueMaps.put(DefaultDataClasses.DATE, new HashedValueCache<Date>(14));
 			valueMaps.put(DefaultDataClasses.TIME, new HashedValueCache<Time>(14));
 			valueMaps.put(DefaultDataClasses.TIMESTAMP, new HashedValueCache<Timestamp>(14));
-			valueMaps.put(DefaultDataClasses.BIG_DECIMAL, new HashedValueCache<BigDecimal>(15) {
+			valueMaps.put(DefaultDataClasses.BIG_DECIMAL, new HashedValueCache<BigDecimal>(16) {
 				@Override
 				protected Object get(int index) {
 					WeakReference<?> ref = (WeakReference<?>) cache[index];
@@ -527,36 +551,7 @@ public class DataTypeManager {
 					cache[index] = new WeakReference<BigDecimal>(value);
 				}
 			});
-			valueMaps.put(DefaultDataClasses.STRING, new HashedValueCache<String>(15) {
-				HashedValueCache<String> smallCache = new HashedValueCache<String>(13);
-				
-				@Override
-				public String getValue(String value) {
-					if (value.length() < 14) {
-						return smallCache.getValue(value);
-					}
-					return super.getValue(value);
-				}
-				
-				@Override
-				protected Object get(int index) {
-					WeakReference<?> ref = (WeakReference<?>) cache[index];
-					if (ref != null) {
-						return ref.get();
-					}
-					return null;
-				}
-				
-				@Override
-				protected void set(int index, String value) {
-					cache[index] = new WeakReference<Object>(value);
-				}
-				
-				@Override
-				protected int primaryHash(String value) {
-					return HashCodeUtil.expHashCode(value);
-				}
-			});
+			valueMaps.put(DefaultDataClasses.STRING, stringCache);
 		}
 	}
 
@@ -803,7 +798,7 @@ public class DataTypeManager {
     }
     
     @SuppressWarnings("unchecked")
-	public static <T> T getCanonicalValue(T value) {
+	public static final <T> T getCanonicalValue(T value) {
     	if (valueCacheEnabled) {
     		if (value == null) {
     			return null;
@@ -815,5 +810,12 @@ public class DataTypeManager {
 	    	}
     	}
 		return value;
+    }
+    
+    public static final String getCanonicalString(String value) {
+    	if (value == null) {
+    		return null;
+    	}
+    	return stringCache.getValue(value);
     }
 }

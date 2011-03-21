@@ -30,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.sql.symbol.ElementSymbol;
 
 
@@ -48,7 +49,7 @@ public class GroupInfo implements Serializable {
 		this.symbolList = Collections.unmodifiableList(new ArrayList(symbols.values()));
 		this.shortNameToSymbolMap = new HashMap<String, ElementSymbol>(symbolList.size());
 		for (ElementSymbol symbol : symbolList) {
-			shortNameToSymbolMap.put(symbol.getShortCanonicalName(), symbol);
+			shortNameToSymbolMap.put(DataTypeManager.getCanonicalString(symbol.getShortCanonicalName()), symbol);
 		}
 	}
 	

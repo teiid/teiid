@@ -38,7 +38,7 @@ import org.teiid.metadata.Table.Type;
 
 /**
  * Aggregates the metadata from multiple stores.  
- * IMPORTANT: All strings queries should be in lower case.
+ * IMPORTANT: All strings queries should be in upper case.
  */
 public class CompositeMetadataStore extends MetadataStore {
 

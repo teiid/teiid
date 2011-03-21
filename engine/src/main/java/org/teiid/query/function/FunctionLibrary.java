@@ -347,7 +347,7 @@ public class FunctionLibrary {
     
     public static boolean isConvert(Function function) {
         Expression[] args = function.getArgs();
-        String funcName = function.getName().toLowerCase();
+        String funcName = function.getName();
         
         return args.length == 2 && (funcName.equalsIgnoreCase(FunctionLibrary.CONVERT) || funcName.equalsIgnoreCase(FunctionLibrary.CAST));
     }

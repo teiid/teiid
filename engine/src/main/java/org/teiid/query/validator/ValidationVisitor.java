@@ -482,7 +482,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 
     public void visit(DeclareStatement obj) {
     	ElementSymbol variable = obj.getVariable();
-    	String elementname = variable.getShortName().toUpperCase();
+    	String elementname = variable.getShortCanonicalName();
 
 		// varible cannot be one of the special variables
     	if(elementname.equals(ProcedureReservedWords.ROWS_UPDATED)) {
