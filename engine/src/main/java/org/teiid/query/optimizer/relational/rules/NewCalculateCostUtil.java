@@ -608,7 +608,7 @@ public class NewCalculateCostUtil {
 
     static float getStat(Stat stat, Collection<? extends Expression> elems, PlanNode node,
     		float cardinality, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
-        float result = 0;
+        float result = 1;
         int branch = 0;
         boolean branchFound = false;
         for (Expression expression : elems) {
