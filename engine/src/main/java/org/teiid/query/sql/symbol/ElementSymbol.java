@@ -252,7 +252,7 @@ public class ElementSymbol extends SingleElementSymbol {
 	 * Return a deep copy of this object.
 	 * @return Deep copy of this object
 	 */
-	public Object clone() {
+	public ElementSymbol clone() {
 		ElementSymbol copy = new ElementSymbol(getShortName(), getCanonical());
 		if(getGroupSymbol() != null) { 
 			copy.setGroupSymbol(getGroupSymbol().clone());

@@ -88,8 +88,8 @@ public class Block implements LanguageObject {
 				stmt.setCommand(null);
 				stmt.setExpression(null);
 				String fullName = ProcedureReservedWords.VARIABLES+ElementSymbol.SEPARATOR+ProcedureReservedWords.ROWCOUNT;
-				if (stmt.getVariable().getCanonicalName().equals(ProcedureReservedWords.ROWCOUNT) 
-						|| stmt.getVariable().getCanonicalName().equals(fullName)) {
+				if (stmt.getVariable().getShortName().equalsIgnoreCase(ProcedureReservedWords.ROWCOUNT) 
+						&& stmt.getVariable().getCanonicalName().equals(fullName)) {
 					return;
 				}
 				stmt.setExpression(new ElementSymbol(fullName));

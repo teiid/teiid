@@ -109,6 +109,11 @@ public class ProcedurePlan extends ProcessorPlan {
 
 	static ElementSymbol ROWCOUNT =
 		new ElementSymbol(ProcedureReservedWords.VARIABLES+"."+ProcedureReservedWords.ROWCOUNT); //$NON-NLS-1$
+	
+	static {
+		ROWS_UPDATED.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+		ROWCOUNT.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+	}
 
 	private VariableContext currentVarContext;
     private boolean isUpdateProcedure = true;

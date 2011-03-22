@@ -447,13 +447,12 @@ public class ResolverUtil {
 	public static Expression getDefault(ElementSymbol symbol, QueryMetadataInterface metadata) throws TeiidComponentException, QueryMetadataException, QueryResolverException {
         //Check if there is a default value, if so use it
 		Object mid = symbol.getMetadataID();
-    	Class type = symbol.getType();
-    	String name = symbol.getCanonicalName();
+    	Class<?> type = symbol.getType();
 		
         Object defaultValue = metadata.getDefaultValue(mid);
         
         if (defaultValue == null && !metadata.elementSupports(mid, SupportConstants.Element.NULL)) {
-            throw new QueryResolverException(QueryPlugin.Util.getString("ResolverUtil.required_param", name)); //$NON-NLS-1$
+            throw new QueryResolverException(QueryPlugin.Util.getString("ResolverUtil.required_param", symbol.getOutputName())); //$NON-NLS-1$
         }
         
         return getProperlyTypedConstant(defaultValue, type);

@@ -1599,7 +1599,7 @@ public class TestProcedureProcessor {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
     	
-        helpTestProcessFailure(plan, dataMgr, "Couldn't execute the dynamic SQL command \"EXECUTE 'select e1 from pm1.g1'\" with the SQL statement \"'select e1 from pm1.g1'\" due to: The datatype 'string' for element 'E1' in the dynamic SQL cannot be implicitly converted to 'integer'.", metadata); //$NON-NLS-1$
+        helpTestProcessFailure(plan, dataMgr, "Couldn't execute the dynamic SQL command \"EXECUTE 'select e1 from pm1.g1'\" with the SQL statement \"'select e1 from pm1.g1'\" due to: The datatype 'string' for element 'e1' in the dynamic SQL cannot be implicitly converted to 'integer'.", metadata); //$NON-NLS-1$
      }
      
     @Test public void testDynamicCommandWithTwoDynamicStatements() throws Exception {

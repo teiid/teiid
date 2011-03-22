@@ -319,4 +319,8 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 		}
 		return canonicalSchema;
 	}
+	
+	public String getSchema() {
+		return schema;
+	}
 }

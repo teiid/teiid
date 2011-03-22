@@ -26,8 +26,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
@@ -92,40 +90,35 @@ public class UpdateResolver extends ProcedureContainerResolver implements Variab
     /** 
      * @see org.teiid.query.resolver.VariableResolver#getVariableValues(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.QueryMetadataInterface)
      */
-    public Map<String, Expression> getVariableValues(Command command, boolean changingOnly,
+    public Map<ElementSymbol, Expression> getVariableValues(Command command, boolean changingOnly,
                                  QueryMetadataInterface metadata) throws QueryMetadataException,
                                                                  TeiidComponentException {
-        Map result = new HashMap();
+        Map<ElementSymbol, Expression> result = new HashMap<ElementSymbol, Expression>();
         
         Update update = (Update) command;
         
-        List updateVars = new LinkedList();
+        Map<ElementSymbol, Expression> changing = update.getChangeList().getClauseMap();
         
-        for (Entry<ElementSymbol, Expression> entry : update.getChangeList().getClauseMap().entrySet()) {
-        	ElementSymbol leftSymbol = entry.getKey();
-            
-            String varName = leftSymbol.getShortCanonicalName();
-            String changingKey = ProcedureReservedWords.CHANGING + ElementSymbol.SEPARATOR + varName;
-            String inputsKey = ProcedureReservedWords.INPUTS + ElementSymbol.SEPARATOR + varName;
-            result.put(changingKey, new Constant(Boolean.TRUE));
+        for (Entry<ElementSymbol, Expression> entry : changing.entrySet()) {
+        	ElementSymbol leftSymbol = entry.getKey().clone();
+            leftSymbol.getGroupSymbol().setName(ProcedureReservedWords.CHANGING);
+            result.put(leftSymbol, new Constant(Boolean.TRUE));
             if (!changingOnly) {
-            	result.put(inputsKey, entry.getValue());
+            	leftSymbol = leftSymbol.clone();
+            	leftSymbol.getGroupSymbol().setName(ProcedureReservedWords.INPUTS);
+            	result.put(leftSymbol, entry.getValue());
             }
-            updateVars.add(leftSymbol);
         }
         
-        Collection insertElmnts = ResolverUtil.resolveElementsInGroup(update.getGroup(), metadata);
+        Collection<ElementSymbol> insertElmnts = ResolverUtil.resolveElementsInGroup(update.getGroup(), metadata);
 
-        insertElmnts.removeAll(updateVars);
+        insertElmnts.removeAll(changing.keySet());
 
-        Iterator defaultIter = insertElmnts.iterator();
+        Iterator<ElementSymbol> defaultIter = insertElmnts.iterator();
         while(defaultIter.hasNext()) {
-            ElementSymbol varSymbol = (ElementSymbol) defaultIter.next();
-
-            String varName = varSymbol.getShortCanonicalName();
-            String changingKey = ProcedureReservedWords.CHANGING + ElementSymbol.SEPARATOR + varName;
-            
-            result.put(changingKey, new Constant(Boolean.FALSE));
+            ElementSymbol varSymbol = defaultIter.next().clone();
+            varSymbol.getGroupSymbol().setName(ProcedureReservedWords.CHANGING);
+            result.put(varSymbol, new Constant(Boolean.FALSE));
         }
         
         return result;

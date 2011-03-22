@@ -201,7 +201,7 @@ public class QueryRewriter {
     private boolean rewriteSubcommands;
     private boolean processing;
     private Evaluator evaluator;
-    private Map variables; //constant propagation
+    private Map<ElementSymbol, Expression> variables; //constant propagation
     private int commandType;
     
     private QueryRewriter(QueryMetadataInterface metadata,
@@ -220,7 +220,7 @@ public class QueryRewriter {
 		return queryRewriter.rewriteCommand(command, false);
     }
 
-	public static Command rewrite(Command command, CreateUpdateProcedureCommand procCommand, QueryMetadataInterface metadata, CommandContext context, Map variableValues, int commandType) throws TeiidComponentException, TeiidProcessingException{
+	public static Command rewrite(Command command, CreateUpdateProcedureCommand procCommand, QueryMetadataInterface metadata, CommandContext context, Map<ElementSymbol, Expression> variableValues, int commandType) throws TeiidComponentException, TeiidProcessingException{
 		QueryRewriter rewriter = new QueryRewriter(metadata, context, procCommand);
 		rewriter.rewriteSubcommands = true;
 		rewriter.variables = variableValues;
@@ -307,7 +307,7 @@ public class QueryRewriter {
     
 	private Command rewriteUpdateProcedure(CreateUpdateProcedureCommand command)
 								 throws TeiidComponentException, TeiidProcessingException{
-        Map oldVariables = variables;
+        Map<ElementSymbol, Expression> oldVariables = variables;
     	if (command.getUserCommand() != null) {
             variables = QueryResolver.getVariableValues(command.getUserCommand(), false, metadata);                        
             commandType = command.getUserCommand().getType();
@@ -2271,21 +2271,21 @@ public class QueryRewriter {
     		ElementSymbol es = (ElementSymbol)expression;
     		Class<?> type  = es.getType();
             if (!processing && es.isExternalReference()) {
-                String grpName = es.getGroupSymbol().getCanonicalName();
-                
                 if (variables == null) {
                 	return new Reference(es);
                 }
-                
-                Expression value = (Expression)variables.get(es.getCanonicalName());
+                Expression value = variables.get(es);
 
                 if (value == null) {
-	                if (grpName.equals(ProcedureReservedWords.INPUTS)) {
-	                	return new Constant(null, es.getType());
-	                } 
-	                if (grpName.equals(ProcedureReservedWords.CHANGING)) {
-	                    Assertion.failed("Changing value should not be null"); //$NON-NLS-1$
-	                } 
+                	if (es.getGroupSymbol().getSchema() == null) {
+                        String grpName = es.getGroupSymbol().getShortCanonicalName();
+		                if (grpName.equals(ProcedureReservedWords.INPUTS)) {
+		                	return new Constant(null, es.getType());
+		                } 
+		                if (grpName.equals(ProcedureReservedWords.CHANGING)) {
+		                    Assertion.failed("Changing value should not be null"); //$NON-NLS-1$
+		                } 
+                	}
                 } else if (value instanceof Constant) {
                 	if (value.getType() == type) {
                 		return value;
@@ -3014,12 +3014,12 @@ public class QueryRewriter {
     private boolean checkInputVariables(Expression expr) throws TeiidComponentException, TeiidProcessingException{
         Boolean result = null;
         for (ElementSymbol var : ElementCollectorVisitor.getElements(expr, false)) {
-            String grpName = var.getGroupSymbol().getName();
-            if (var.isExternalReference() && grpName.equalsIgnoreCase(ProcedureReservedWords.INPUTS)) {
+            if (var.isExternalReference() && var.getGroupSymbol().getSchema() == null && var.getGroupSymbol().getShortName().equalsIgnoreCase(ProcedureReservedWords.INPUTS)) {
                 
-                String changingKey = ProcedureReservedWords.CHANGING + ElementSymbol.SEPARATOR + var.getShortCanonicalName();
+                var = var.clone();
+                var.getGroupSymbol().setShortName(ProcedureReservedWords.CHANGING);
                 
-                Boolean changingValue = (Boolean)((Constant)variables.get(changingKey)).getValue();
+                Boolean changingValue = (Boolean)((Constant)variables.get(var)).getValue();
                 
                 if (result == null) {
                     result = changingValue;

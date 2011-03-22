@@ -481,16 +481,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
 
     public void visit(DeclareStatement obj) {
-    	ElementSymbol variable = obj.getVariable();
-    	String elementname = variable.getShortCanonicalName();
-
-		// varible cannot be one of the special variables
-    	if(elementname.equals(ProcedureReservedWords.ROWS_UPDATED)) {
-			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0017", new Object[] {ProcedureReservedWords.ROWS_UPDATED}), obj); //$NON-NLS-1$
-		} else if(elementname.equals(ProcedureReservedWords.ROWCOUNT)) {
-			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0017", new Object[] {ProcedureReservedWords.ROWCOUNT}), obj); //$NON-NLS-1$
-		}
-        
         validateAssignment(obj, obj.getVariable());
     }
     

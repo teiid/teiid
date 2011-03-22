@@ -93,15 +93,17 @@ public final class TriggerActionPlanner {
 			throw new AssertionError();
 		}
 		
-		for (Map.Entry<String, Expression> entry : QueryResolver.getVariableValues(userCommand, false, metadata).entrySet()) {
-			if (entry.getKey().startsWith(ProcedureReservedWords.INPUTS)) {
+		for (Map.Entry<ElementSymbol, Expression> entry : QueryResolver.getVariableValues(userCommand, false, metadata).entrySet()) {
+			if (entry.getKey().getGroupSymbol().getShortName().equalsIgnoreCase(ProcedureReservedWords.INPUTS)) {
 				Expression value = entry.getValue() instanceof SingleElementSymbol ? entry.getValue() : new ExpressionSymbol("x", entry.getValue()); //$NON-NLS-1$
-				params.put(new ElementSymbol(SQLConstants.Reserved.NEW + ElementSymbol.SEPARATOR + SingleElementSymbol.getShortName(entry.getKey())), value);
+				ElementSymbol newElementSymbol = entry.getKey().clone();
+				newElementSymbol.getGroupSymbol().setName(SQLConstants.Reserved.NEW);
+				params.put(newElementSymbol, value);
 				if (userCommand instanceof Update) {
 					((Query)query).getSelect().addSymbol((SelectSymbol) value);
 				}
 			} else {
-				params.put(new ElementSymbol(entry.getKey()), entry.getValue()); 
+				params.put(entry.getKey(), entry.getValue()); 
 			}
 		}
 		ForEachRowPlan result = new ForEachRowPlan();

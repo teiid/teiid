@@ -61,6 +61,7 @@ import org.teiid.query.sql.lang.SetClause;
 import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.VariableContext;
@@ -167,7 +168,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 			validateDynamicCommand(procEnv, command);
 
 			// create a new set of variables including vars
-			Map nameValueMap = createVariableValuesMap(localContext);
+			Map<ElementSymbol, Expression> nameValueMap = createVariableValuesMap(localContext);
             nameValueMap.putAll(QueryResolver.getVariableValues(parentProcCommand.getUserCommand(), false, metadata));
             ValidationVisitor visitor = new ValidationVisitor();
             visitor.setUpdateProc(parentProcCommand);
@@ -236,7 +237,9 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 						new Object[] { this, " The using variable ", //$NON-NLS-1$
 						setClause.getSymbol(), " has value :", assignment }); //$NON-NLS-1$
 				localContext.setValue(setClause.getSymbol(), assignment);
-				localContext.setValue(new ElementSymbol(Reserved.USING + ElementSymbol.SEPARATOR + setClause.getSymbol().getShortName()), assignment);
+				ElementSymbol es = setClause.getSymbol().clone();
+				es.getGroupSymbol().setShortName(Reserved.USING);
+				localContext.setValue(es, assignment);
 			}
 		}
 	}
@@ -245,17 +248,13 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 	 * @param localContext
 	 * @return
 	 */
-	private Map createVariableValuesMap(VariableContext localContext) {
-		Map variableMap = new HashMap();
+	private Map<ElementSymbol, Expression> createVariableValuesMap(VariableContext localContext) {
+		Map<ElementSymbol, Object> variableMap = new HashMap<ElementSymbol, Object>();
 		localContext.getFlattenedContextMap(variableMap);
-		Map nameValueMap = new HashMap(variableMap.size());
-		Iterator entries = variableMap.entrySet().iterator();
-		while (entries.hasNext()) {
-			Map.Entry entry = (Map.Entry) entries.next();
-			nameValueMap.put(((ElementSymbol) entry.getKey())
-					.getCanonicalName(), new Constant(entry.getValue()));
+		Map<ElementSymbol, Expression> nameValueMap = new HashMap<ElementSymbol, Expression>(variableMap.size());
+		for (Map.Entry<ElementSymbol, Object> entry : variableMap.entrySet()) {
+			nameValueMap.put(entry.getKey(), new Constant(entry.getValue(), entry.getKey().getType()));
 		}
-
 		return nameValueMap;
 	}
 
@@ -303,7 +302,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 					// conversion between the
 					// two
 					Object[] params = new Object[] { sourceTypeName,
-							dynamicSymbol.getShortCanonicalName(),
+							dynamicSymbol.getShortName(),
 							dynamicTypeName };
 					throw new QueryProcessingException(QueryPlugin.Util
 							.getString("ExecDynamicSqlInstruction.6", params)); //$NON-NLS-1$

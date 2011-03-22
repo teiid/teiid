@@ -2322,6 +2322,7 @@ public class FakeMetadataFactory {
         FakeMetadataObject rs2 = FakeMetadataFactory.createResultSet("Virt.rs1", virtModel, new String[] { "a", "b" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
         FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
+        rs2p2.putProperty(FakeMetadataObject.Props.NULL, Boolean.TRUE);
         QueryNode sq2n1 = new QueryNode("pm1.sq1", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
                                         + "execute string 'SELECT a, b FROM MultiModel.Phys where SOURCE_NAME = Virt.sq1.in'; END"); //$NON-NLS-1$ 
         FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("Virt.sq1", virtModel, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$

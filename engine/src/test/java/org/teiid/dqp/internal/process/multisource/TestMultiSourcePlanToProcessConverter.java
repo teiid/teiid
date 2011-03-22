@@ -246,6 +246,16 @@ public class TestMultiSourcePlanToProcessConverter {
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, FakeMetadataFactory.exampleMultiBindingVDB());
     }
     
+    @Test public void testSingleReplacementInDynamicCommandNullValue() throws Exception {
+        final QueryMetadataInterface metadata = FakeMetadataFactory.exampleMultiBinding();
+        final String userSql = "exec Virt.sq1(null)"; //$NON-NLS-1$
+        final String multiModel = "MultiModel"; //$NON-NLS-1$
+        final int sources = 3;
+        final List[] expected = new List[0];
+        final ProcessorDataManager dataMgr = new MultiSourceDataManager();
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, FakeMetadataFactory.exampleMultiBindingVDB());
+    }
+    
     @Test public void testMultiUpdateAll() throws Exception {
         final QueryMetadataInterface metadata = FakeMetadataFactory.exampleMultiBinding();
         final String userSql = "update MultiModel.Phys set a = '1' where b = 'z'"; //$NON-NLS-1$

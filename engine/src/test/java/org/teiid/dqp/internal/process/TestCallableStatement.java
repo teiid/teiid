@@ -44,7 +44,7 @@ public class TestCallableStatement {
 			TestPreparedStatement.helpTestProcessing(sql, Collections.EMPTY_LIST, null, new HardcodedDataManager(), FakeMetadataFactory.exampleBQTCached(), true, FakeMetadataFactory.exampleBQTVDB());
 			fail();
 		} catch (QueryResolverException e) {
-			assertEquals("Required parameter 'PM4.SPTEST9.INKEY' has no value was set or is an invalid parameter.", e.getMessage()); //$NON-NLS-1$
+			assertEquals("Required parameter 'pm4.spTest9.inkey' has no value was set or is an invalid parameter.", e.getMessage()); //$NON-NLS-1$
 		}
 	}
 	

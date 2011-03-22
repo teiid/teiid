@@ -399,7 +399,7 @@ public class QueryResolver {
         subCommand.setExternalGroupContexts(parentContext);
     }
     
-    public static Map<String, Expression> getVariableValues(Command command, boolean changingOnly, QueryMetadataInterface metadata) throws QueryMetadataException, QueryResolverException, TeiidComponentException {
+    public static Map<ElementSymbol, Expression> getVariableValues(Command command, boolean changingOnly, QueryMetadataInterface metadata) throws QueryMetadataException, QueryResolverException, TeiidComponentException {
         
         CommandResolver resolver = chooseResolver(command, metadata);
         
@@ -407,7 +407,7 @@ public class QueryResolver {
             return ((VariableResolver)resolver).getVariableValues(command, changingOnly, metadata);
         }
         
-        return Collections.EMPTY_MAP;
+        return Collections.emptyMap();
     }
     
 	public static void resolveSubqueries(Command command,
@@ -452,7 +452,9 @@ public class QueryResolver {
 	        //ensure that null types match the view
 	        List<ElementSymbol> symbols = ResolverUtil.resolveElementsInGroup(virtualGroup, qmi);
             List<SingleElementSymbol> projectedSymbols = result.getProjectedSymbols();
-            Assertion.assertTrue(symbols.size() == projectedSymbols.size(), "View " + virtualGroup + " does not have the correct number of projected symbols"); //$NON-NLS-1$ //$NON-NLS-2$
+            if (symbols.size() != projectedSymbols.size()) {
+            	Assertion.failed("View " + virtualGroup + " does not have the correct number of projected symbols"); //$NON-NLS-1$ //$NON-NLS-2$
+        	}
             for (int i = 0; i < projectedSymbols.size(); i++) {
             	SingleElementSymbol projectedSymbol = projectedSymbols.get(i);
             	if (projectedSymbol.getType() != DataTypeManager.DefaultDataClasses.NULL) {

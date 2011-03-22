@@ -241,15 +241,15 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
      * @throws QueryMetadataException 
      * @see org.teiid.query.resolver.CommandResolver#getVariableValues(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.QueryMetadataInterface)
      */
-    public Map<String, Expression> getVariableValues(Command command, boolean changingOnly,
+    public Map<ElementSymbol, Expression> getVariableValues(Command command, boolean changingOnly,
                                  QueryMetadataInterface metadata) throws QueryMetadataException, QueryResolverException, TeiidComponentException {
         
         Insert insert = (Insert) command;
         
-        Map<String, Expression> result = new HashMap<String, Expression>();
+        Map<ElementSymbol, Expression> result = new HashMap<ElementSymbol, Expression>();
         
         // iterate over the variables and values they should be the same number
-        Iterator varIter = insert.getVariables().iterator();
+        Iterator<ElementSymbol> varIter = insert.getVariables().iterator();
         Iterator valIter = null;
         if (insert.getQueryExpression() != null) {
         	valIter = insert.getQueryExpression().getProjectedSymbols().iterator();
@@ -257,34 +257,32 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             valIter = insert.getValues().iterator();
         }
         while (varIter.hasNext()) {
-            ElementSymbol varSymbol = (ElementSymbol) varIter.next();
+            ElementSymbol varSymbol = varIter.next().clone();
             
-            String varName = varSymbol.getShortCanonicalName();
-            String changingKey = ProcedureReservedWords.CHANGING + ElementSymbol.SEPARATOR + varName;
-            String inputsKey = ProcedureReservedWords.INPUTS + ElementSymbol.SEPARATOR + varName;
-            result.put(changingKey, new Constant(Boolean.TRUE));
+            varSymbol.getGroupSymbol().setName(ProcedureReservedWords.CHANGING);
+            result.put(varSymbol, new Constant(Boolean.TRUE));
             if (!changingOnly) {
-	            Object value = valIter.next();
-	            result.put(inputsKey, (Expression)value);
+            	varSymbol = varSymbol.clone();
+            	varSymbol.getGroupSymbol().setName(ProcedureReservedWords.INPUTS);
+            	result.put(varSymbol, (Expression)valIter.next());
             }
         }
         
-        Collection insertElmnts = ResolverUtil.resolveElementsInGroup(insert.getGroup(), metadata);
+        Collection<ElementSymbol> insertElmnts = ResolverUtil.resolveElementsInGroup(insert.getGroup(), metadata);
 
         insertElmnts.removeAll(insert.getVariables());
 
-        Iterator defaultIter = insertElmnts.iterator();
+        Iterator<ElementSymbol> defaultIter = insertElmnts.iterator();
         while(defaultIter.hasNext()) {
-            ElementSymbol varSymbol = (ElementSymbol) defaultIter.next();
-
-            Expression value = ResolverUtil.getDefault(varSymbol, metadata);
+            ElementSymbol varSymbol = defaultIter.next().clone();
+            varSymbol.getGroupSymbol().setName(ProcedureReservedWords.CHANGING);
+            result.put(varSymbol, new Constant(Boolean.FALSE));
             
-            String varName = varSymbol.getShortCanonicalName();
-            String changingKey = ProcedureReservedWords.CHANGING + ElementSymbol.SEPARATOR + varName;
-            String inputsKey = ProcedureReservedWords.INPUTS + ElementSymbol.SEPARATOR + varName;
-            result.put(changingKey, new Constant(Boolean.FALSE));
             if (!changingOnly) {
-            	result.put(inputsKey, value);
+                Expression value = ResolverUtil.getDefault(varSymbol, metadata);
+            	varSymbol = varSymbol.clone();
+            	varSymbol.getGroupSymbol().setName(ProcedureReservedWords.INPUTS);
+            	result.put(varSymbol, value);
             }
         }
         
