@@ -254,7 +254,6 @@ public class TestElementSymbol {
 		
 		// Change original, clone shouldn't change
 		String originalName = e1.getName();		
-		e1.setName("a"); //$NON-NLS-1$
 		assertTrue("Cloned value changed but should not have: ", copy.getName().equals(originalName)); //$NON-NLS-1$
 
 		GroupSymbol originalGroup = e1.getGroupSymbol();
