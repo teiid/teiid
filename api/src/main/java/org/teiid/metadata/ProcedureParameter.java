@@ -33,6 +33,7 @@ public class ProcedureParameter extends BaseColumn {
 		Unknown,
 		In,
 		InOut,
+		Result,
 		Out,
 		ReturnValue
 	}
