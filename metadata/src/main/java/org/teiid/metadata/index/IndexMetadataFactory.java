@@ -149,18 +149,17 @@ public class IndexMetadataFactory {
 
 		for (IEntryResult iEntryResult : properties) {
         	final String str = new String(iEntryResult.getWord());
-            final List tokens = StringUtil.split(str,String.valueOf(IndexConstants.RECORD_STRING.RECORD_DELIMITER));
+            final List<String> tokens = RecordFactory.getStrings(str, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
 
-            // The tokens are the standard header values
-            int tokenIndex = 2;
-
-            String uuid = (String)tokens.get(1);
+            String uuid = tokens.get(1);
 	    	LinkedHashMap<String, String> result = this.extensionCache.get(uuid);
 	    	if (result == null) {
 	    		result = new LinkedHashMap<String, String>(); 
 	    		this.extensionCache.put(uuid, result);
 	    	}
-            result.put( (String)tokens.get(tokenIndex++), (String)tokens.get(tokenIndex++));
+            // The tokens are the standard header values
+            int tokenIndex = 2;
+            result.put( tokens.get(tokenIndex++), tokens.get(tokenIndex++));
 		}
 	}
 
@@ -169,13 +168,11 @@ public class IndexMetadataFactory {
 		
 		for (IEntryResult iEntryResult : results) {
 	        final String str = new String(iEntryResult.getWord());
-	        final List tokens = StringUtil.split(str,String.valueOf(IndexConstants.RECORD_STRING.RECORD_DELIMITER));
+	        final List<String> tokens = RecordFactory.getStrings(str, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
 
 	        // Extract the index version information from the record 
 	        int indexVersion = recordFactory.getIndexVersion(iEntryResult.getWord());
-
-	        
-	        String uuid = (String)tokens.get(2);
+	        String uuid = tokens.get(2);
 	        
 	        // The tokens are the standard header values
 	        int tokenIndex = 6;
@@ -186,7 +183,7 @@ public class IndexMetadataFactory {
 	        }
 
 	        // The next token is the description
-	        this.annotationCache.put(uuid, (String)tokens.get(tokenIndex++));
+	        this.annotationCache.put(uuid, tokens.get(tokenIndex++));
 		}
 	}
 
@@ -275,7 +272,7 @@ public class IndexMetadataFactory {
 		    		columnRecordImpl.setParent(tableRecord);
 		    		String fullName = columnRecordImpl.getName();
 		    		if (fullName.startsWith(tableRecord.getName() + '.')) {
-		    			columnRecordImpl.setName(fullName.substring(tableRecord.getName().length() + 1));
+		    			columnRecordImpl.setName(new String(fullName.substring(tableRecord.getName().length() + 1)));
 		    		}
 				}
 		        Collections.sort(columns);
