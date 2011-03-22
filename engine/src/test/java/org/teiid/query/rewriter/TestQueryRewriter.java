@@ -1971,7 +1971,7 @@ public class TestQueryRewriter {
     
     @Test public void testRewriteSelectInto() {
         String sql = "select distinct pm1.g1.e1 into #temp from pm1.g1"; //$NON-NLS-1$
-        String expected = "INSERT INTO #temp (#TEMP.e1) SELECT DISTINCT pm1.g1.e1 FROM pm1.g1"; //$NON-NLS-1$
+        String expected = "INSERT INTO #temp (#temp.e1) SELECT DISTINCT pm1.g1.e1 FROM pm1.g1"; //$NON-NLS-1$
                 
         helpTestRewriteCommand(sql, expected);        
     }
@@ -2038,7 +2038,7 @@ public class TestQueryRewriter {
         procedure += "Select x from temp;\n"; //$NON-NLS-1$
         procedure += "END\n"; //$NON-NLS-1$
         
-        helpTestRewriteCommand(procedure, "CREATE VIRTUAL PROCEDURE\nBEGIN\nCREATE LOCAL TEMPORARY TABLE temp (x string, y integer, z integer);\nINSERT INTO temp (TEMP.x, TEMP.y, TEMP.z) SELECT X.e2 AS x, X.x AS y, X.X_0 AS z FROM (SELECT pm1.g1.e2, 1 AS x, 2 AS X_0 FROM pm1.g1 ORDER BY pm1.g1.e2 LIMIT 1) AS X;\nSELECT x FROM temp;\nEND"); //$NON-NLS-1$
+        helpTestRewriteCommand(procedure, "CREATE VIRTUAL PROCEDURE\nBEGIN\nCREATE LOCAL TEMPORARY TABLE temp (x string, y integer, z integer);\nINSERT INTO temp (temp.x, temp.y, temp.z) SELECT X.e2 AS x, X.x AS y, X.X_0 AS z FROM (SELECT pm1.g1.e2, 1 AS x, 2 AS X_0 FROM pm1.g1 ORDER BY pm1.g1.e2 LIMIT 1) AS X;\nSELECT x FROM temp;\nEND"); //$NON-NLS-1$
     }
     
     @Test public void testRewriteNot() {

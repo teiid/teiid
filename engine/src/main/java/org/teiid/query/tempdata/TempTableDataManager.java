@@ -427,7 +427,8 @@ public class TempTableDataManager implements ProcessorDataManager {
 				public Expression replaceExpression(Expression element) {
 					if (element instanceof ElementSymbol) {
 						ElementSymbol es = (ElementSymbol)element;
-						((ElementSymbol) element).setName(tableName + ElementSymbol.SEPARATOR + es.getShortName());
+						es.getGroupSymbol().setName(tableName);
+						es.getGroupSymbol().setDefinition(null);
 					}
 					return element;
 				}

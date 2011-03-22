@@ -93,7 +93,6 @@ import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
@@ -474,7 +473,7 @@ public class PlanToProcessConverter {
 		String groupName = node.getGroups().iterator().next().getName();
 		tt.getGroupSymbol().setName(groupName);
 		for (ElementSymbol symbol : tt.getProjectedSymbols()) {
-			symbol.setName(groupName + SingleElementSymbol.SEPARATOR + symbol.getShortName());
+			symbol.setGroupSymbol(new GroupSymbol(groupName));
 		}
 	}
 

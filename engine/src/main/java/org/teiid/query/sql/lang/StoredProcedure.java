@@ -116,7 +116,7 @@ public class StoredProcedure extends ProcedureContainer {
         return this.procedureName;
     }
     public String getProcedureCallableName(){
-        return this.callableName;
+        return this.callableName != null?this.callableName:this.procedureName;
     }
     public void setProcedureCallableName(String callableName){
         this.callableName = callableName;
@@ -265,11 +265,11 @@ public class StoredProcedure extends ProcedureContainer {
 		for (SPParameter parameter : mapOfParameters.values()) {
 			if(parameter.getParameterType() == ParameterInfo.RETURN_VALUE){
                 ElementSymbol symbol = parameter.getParameterSymbol();
-                symbol.setGroupSymbol(getGroup());
+                symbol.setGroupSymbol(this.getGroup());
                 result.add(0, symbol);
 	        } else if(parameter.getParameterType() == ParameterInfo.INOUT || parameter.getParameterType() == ParameterInfo.OUT){
                 ElementSymbol symbol = parameter.getParameterSymbol();
-                symbol.setGroupSymbol(getGroup());
+                symbol.setGroupSymbol(this.getGroup());
 	        	result.add(symbol);
 	        }
 		}
@@ -320,7 +320,7 @@ public class StoredProcedure extends ProcedureContainer {
 
     public GroupSymbol getGroup() {
         if(group == null) {
-            return new GroupSymbol(this.getProcedureName());
+            return new GroupSymbol(this.getProcedureCallableName());
         }
         return group;
     }

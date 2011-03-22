@@ -2784,7 +2784,7 @@ public class TestOptimizer {
     @Test public void testCopyCriteriaWithOuterJoin2_defect10050(){
         
         ProcessorPlan plan = helpPlan("select pm2.g1.e1, pm2.g2.e1 from pm2.g1 left outer join pm2.g2 on pm2.g1.e1=pm2.g2.e1 and pm2.g1.e2=pm2.g2.e2 where pm2.g1.e1 = 'a' and pm2.g1.e2 = 1", example1(), //$NON-NLS-1$
-            new String[] { "SELECT g_0.e1, g_1.e1 FROM pm2.g1 AS g_0 LEFT OUTER JOIN pm2.g2 AS g_1 ON g_0.e1 = g_1.e1 AND g_0.e2 = g_1.e2 AND g_1.e2 = 1 AND g_1.e1 = 'a' WHERE (g_0.e1 = 'a') AND (g_0.e2 = 1)" }); //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1, g_1.e1 FROM pm2.g1 AS g_0 LEFT OUTER JOIN pm2.g2 AS g_1 ON g_0.e1 = g_1.e1 AND g_0.e2 = g_1.e2 AND g_1.e1 = 'a' AND g_1.e2 = 1 WHERE (g_0.e1 = 'a') AND (g_0.e2 = 1)" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN);         
     }
 

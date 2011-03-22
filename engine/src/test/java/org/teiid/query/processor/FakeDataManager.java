@@ -282,11 +282,8 @@ public class FakeDataManager implements ProcessorDataManager {
         if (group.getDefinition() != null){
             String groupAlias = group.getCanonicalName();
             ElementSymbol elementSymbol = (ElementSymbol)SymbolMap.getExpression((SingleElementSymbol)element);
-            String newName = groupAlias + "." + elementSymbol.getShortName(); //$NON-NLS-1$
-            ElementSymbol aliasedElement = new ElementSymbol(newName, elementSymbol.getDisplayFullyQualified());
-            aliasedElement.setGroupSymbol(elementSymbol.getGroupSymbol());
-            aliasedElement.setMetadataID(elementSymbol.getMetadataID());
-            aliasedElement.setType(elementSymbol.getType());
+            ElementSymbol aliasedElement = (ElementSymbol)elementSymbol.clone();
+            aliasedElement.getGroupSymbol().setName(groupAlias);
             lookupMap.put(aliasedElement, index);
         } else {
             lookupMap.put(element, index);

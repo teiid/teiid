@@ -2966,7 +2966,6 @@ public class TestParser {
 
         Select select = new Select();
         ElementSymbol symbol = new ElementSymbol("c"); //$NON-NLS-1$
-        symbol.setGroupSymbol(g);
         select.addSymbol(symbol);
         
         Query query = new Query();
@@ -2998,7 +2997,6 @@ public class TestParser {
 
         Select select = new Select();
         ElementSymbol symbol = new ElementSymbol("c"); //$NON-NLS-1$
-        symbol.setGroupSymbol(g);
         select.addSymbol(symbol);
         
         Query query = new Query();
@@ -3030,7 +3028,6 @@ public class TestParser {
 
         Select select = new Select();
         ElementSymbol symbol = new ElementSymbol("c"); //$NON-NLS-1$
-        symbol.setGroupSymbol(g);
         select.addSymbol(symbol);
         
         Query query = new Query();
@@ -6440,7 +6437,7 @@ public class TestParser {
     @Test public void testLimit() {
         Query query = new Query();
         Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
-        From from = new From(Arrays.asList(new Object[] {new UnaryFromClause(new GroupSymbol("a"))})); //$NON-NLS-1$
+        From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
         query.setLimit(new Limit(null, new Constant(new Integer(100))));
@@ -6450,7 +6447,7 @@ public class TestParser {
     @Test public void testLimitWithOffset() {
         Query query = new Query();
         Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
-        From from = new From(Arrays.asList(new Object[] {new UnaryFromClause(new GroupSymbol("a"))})); //$NON-NLS-1$
+        From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
         query.setLimit(new Limit(new Constant(new Integer(50)), new Constant(new Integer(100))));
@@ -6460,7 +6457,7 @@ public class TestParser {
     @Test public void testLimitWithReferences1() {
         Query query = new Query();
         Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
-        From from = new From(Arrays.asList(new Object[] {new UnaryFromClause(new GroupSymbol("a"))})); //$NON-NLS-1$
+        From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
         query.setLimit(new Limit(new Reference(0), new Constant(new Integer(100))));
@@ -6470,7 +6467,7 @@ public class TestParser {
     @Test public void testLimitWithReferences2() {
         Query query = new Query();
         Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
-        From from = new From(Arrays.asList(new Object[] {new UnaryFromClause(new GroupSymbol("a"))})); //$NON-NLS-1$
+        From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
         query.setLimit(new Limit(new Constant(new Integer(50)), new Reference(0)));
@@ -6480,7 +6477,7 @@ public class TestParser {
     @Test public void testLimitWithReferences3() {
         Query query = new Query();
         Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
-        From from = new From(Arrays.asList(new Object[] {new UnaryFromClause(new GroupSymbol("a"))})); //$NON-NLS-1$
+        From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
         query.setLimit(new Limit(new Reference(0), new Reference(1)));

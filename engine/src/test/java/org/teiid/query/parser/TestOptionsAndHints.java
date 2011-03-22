@@ -305,7 +305,7 @@ public class TestOptionsAndHints {
         
         Criteria criteria = new CompareCriteria(x, CompareCriteria.EQ, new Function("func", new Expression[] {y})); //$NON-NLS-1$
         JoinPredicate predicate = new JoinPredicate(new UnaryFromClause(a), new UnaryFromClause(b), JoinType.JOIN_INNER, Arrays.asList(new Object[] {criteria}));
-        From from = new From(Arrays.asList(new Object[] {predicate}));
+        From from = new From(Arrays.asList(predicate));
         predicate.getLeftClause().setMakeNotDep(true);
         predicate.getRightClause().setMakeDep(true);
         Select select = new Select(Arrays.asList(new Object[] {x, y}));
@@ -990,7 +990,7 @@ public class TestOptionsAndHints {
         ElementSymbol x = new ElementSymbol("a.x", true); //$NON-NLS-1$
         ElementSymbol y = new ElementSymbol("b.y", true); //$NON-NLS-1$
         
-        From from = new From(Arrays.asList(new Object[] {new UnaryFromClause(a), new UnaryFromClause(b)}));
+        From from = new From(Arrays.asList(new UnaryFromClause(a), new UnaryFromClause(b)));
         
         Option option = new Option();
         option.addDependentGroup("a"); //$NON-NLS-1$

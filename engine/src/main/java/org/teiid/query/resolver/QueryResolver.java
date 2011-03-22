@@ -190,7 +190,7 @@ public class QueryResolver {
 		    	if (!positional) {
 		    		symbolMap.put(new ElementSymbol(ProcedureReservedWords.INPUT + ElementSymbol.SEPARATOR + name), (ElementSymbol)elementSymbol.clone());
 		    		symbolMap.put(new ElementSymbol(ProcedureReservedWords.INPUTS + ElementSymbol.SEPARATOR + name), (ElementSymbol)elementSymbol.clone());
-		    		elementSymbol.setName(name);
+		    		elementSymbol.setShortName(name);
 		    	}
 		        elements.add(elementSymbol);
 		    }

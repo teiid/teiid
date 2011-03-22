@@ -405,7 +405,7 @@ public class UpdateValidator {
         		UpdateMapping info = updateInfo.updatableGroups.get(groupName);
         		if (es.getGroupSymbol().getDefinition() != null) {
             		ElementSymbol clone = (ElementSymbol)es.clone();
-            		clone.setName(es.getGroupSymbol().getDefinition() + ElementSymbol.SEPARATOR + es.getShortName());
+            		clone.setOutputName(null);
             		clone.getGroupSymbol().setName(clone.getGroupSymbol().getNonCorrelationName());
             		clone.getGroupSymbol().setDefinition(null);
             		es = clone;

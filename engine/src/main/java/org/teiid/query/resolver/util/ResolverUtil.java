@@ -43,6 +43,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
+import org.teiid.core.util.StringUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionLibrary;
@@ -503,21 +504,20 @@ public class ResolverUtil {
 
     		LinkedHashMap<Object, ElementSymbol> symbols = new LinkedHashMap<Object, ElementSymbol>(elementIDs.size());
                         
-            boolean groupIsAliased = group.getDefinition() != null;
+            String groupFullName = metadata.getFullName(group.getMetadataID());
+            boolean isXml = metadata.isXMLGroup(group.getMetadataID());
             
             for (Object elementID : elementIDs) {
-                String elementName = metadata.getFullName(elementID);
-                String fullName = elementName;
-    			// This is only really needed if the group is an ALIAS.  Doing the check outside the loop
-                // and NOT doing unnecessary work if Aliased group.
-                if(groupIsAliased) {
-                	String shortName = metadata.getShortElementName(elementName);
-                    fullName = metadata.getFullElementName(group.getName(), shortName);
-                }
-
+            	String elementName = metadata.getFullName(elementID);
+            	if (isXml) {
+            		elementName = elementName.substring(groupFullName.length() + 1);
+            	} else {
+            		//the logic about should work in either case, 
+            		//but there is a lot of metadata to correct
+            		elementName = metadata.getShortElementName(elementName);
+            	}
                 // Form an element symbol from the ID
-                ElementSymbol element = new ElementSymbol(fullName);
-                element.setGroupSymbol(group);
+                ElementSymbol element = new ElementSymbol(elementName, DataTypeManager.getCanonicalString(StringUtil.toUpperCase(elementName)), group);
                 element.setMetadataID(elementID);
                 element.setType( DataTypeManager.getDataTypeClass(metadata.getElementType(element.getMetadataID())) );
 

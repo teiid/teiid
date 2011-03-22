@@ -22,6 +22,10 @@
 
 package org.teiid.query.sql.symbol;
 
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.EquivalenceUtil;
+import org.teiid.core.util.HashCodeUtil;
+import org.teiid.core.util.StringUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageVisitor;
 
@@ -54,6 +58,8 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
     private Object modelMetadataId;
     
     private String outputDefinition;
+    private String schema;
+    private String canonicalSchema;
     
     /**
      * Cloning constructor 
@@ -188,14 +194,16 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 	 * @return Deep copy of the object
 	 */
 	public GroupSymbol clone() {
-		GroupSymbol copy = new GroupSymbol(getName(), getCanonical(), getDefinition());
+		GroupSymbol copy = new GroupSymbol(getShortName(), getCanonical(), getDefinition());
+		copy.schema = this.schema;
+		copy.canonicalSchema = this.canonicalSchema;
 		if(getMetadataID() != null) {
 			copy.setMetadataID(getMetadataID());
 		}
         copy.setIsTempTable(isTempTable);
         copy.setProcedure(isProcedure);
         copy.setOutputDefinition(this.getOutputDefinition());
-        copy.setOutputName(this.getOutputName());
+        copy.outputName = this.outputName;
         copy.isGlobalTable = isGlobalTable;
         copy.modelMetadataId = modelMetadataId;
 		return copy;
@@ -216,16 +224,10 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 		}
 		GroupSymbol other = (GroupSymbol) obj;
 
-		// Two group symbols will be equal only if both use aliases or both
-		// don't use aliases.  In either case, comparing canonical names is
-		// enough.
-		if( (this.getDefinition() == null && other.getDefinition() == null) ||
-			(this.getDefinition() != null && other.getDefinition() != null) ) {
-
+		if (this.schema == null || other.schema == null) {
 			return this.getCanonicalName().equals(other.getCanonicalName());
-
 		}
-		return false;
+		return EquivalenceUtil.areEqual(this.getCanonicalSchema(), other.getCanonicalSchema()) && this.getShortCanonicalName().equals(other.getShortCanonicalName());
 	}
     
     public boolean hasAlias() {
@@ -273,5 +275,48 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
     
     public void setGlobalTable(boolean isGlobalTable) {
 		this.isGlobalTable = isGlobalTable;
+	}
+    
+    @Override
+    public String getName() {
+    	if (this.schema != null) {
+    		return this.schema + SingleElementSymbol.SEPARATOR + this.getShortName();
+    	}
+    	return super.getName();
+    }
+    
+    @Override
+    public String getCanonicalName() {
+    	if (this.schema != null) {
+    		return this.getCanonicalSchema() + SingleElementSymbol.SEPARATOR + this.getShortCanonicalName();
+    	}
+    	return super.getCanonicalName();
+    }
+    
+    @Override
+    public int hashCode() {
+    	if (this.schema != null) {
+    		return HashCodeUtil.hashCode(this.getCanonicalSchema().hashCode(), this.getShortCanonicalName().hashCode());
+    	}
+    	return super.hashCode();
+    }
+    
+    public void setName(String name) {
+    	int index = name.indexOf('.');
+    	if (index > 0) {
+    		this.schema = name.substring(0, index);
+    		name = name.substring(index + 1);
+    	} else {
+    		this.schema = null;
+    	}
+    	this.canonicalSchema = null;
+    	super.setShortName(name);
+    }
+
+	private String getCanonicalSchema() {
+		if (this.canonicalSchema == null && this.schema != null) {
+			this.canonicalSchema = DataTypeManager.getCanonicalString(StringUtil.toUpperCase(this.schema));
+		}
+		return canonicalSchema;
 	}
 }

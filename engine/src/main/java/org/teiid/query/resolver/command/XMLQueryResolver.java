@@ -309,7 +309,7 @@ public class XMLQueryResolver implements CommandResolver {
         
         // Get exact matching name
         String critElemName = elem.getName();
-        String critElemNameSuffix = "." + critElemName.toUpperCase(); //$NON-NLS-1$
+        String critElemNameSuffix = "." + elem.getCanonicalName(); //$NON-NLS-1$
 
         // Prepare results
         ElementSymbol exactMatch = null;
@@ -375,13 +375,14 @@ public class XMLQueryResolver implements CommandResolver {
         }
 
         if(exactMatch != null) {
-            String name = elem.getName();
+            String name = elem.getOutputName();
             // Resolve based on exact match
-            elem.setName(exactMatch.getName());
-            elem.setOutputName(name);
+            elem.setShortName(exactMatch.getShortName());
+            elem.setShortCanonicalName(exactMatch.getShortCanonicalName());
             elem.setMetadataID(exactMatch.getMetadataID());
             elem.setType(exactMatch.getType());
             elem.setGroupSymbol(exactMatch.getGroupSymbol());
+            elem.setOutputName(name);
         } else if(partialMatches.size() == 0 && attributeMatches.size() == 0){
             try {
                 ResolverVisitor.resolveLanguageObject(elem, Collections.EMPTY_LIST, externalGroups, metadata);

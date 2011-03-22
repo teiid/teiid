@@ -33,7 +33,6 @@ import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
@@ -265,7 +264,7 @@ public class Update extends TranslatableProcedureContainer {
         for (Iterator iter = getChangeList().getClauses().iterator(); iter.hasNext();) {
         	SetClause setClause = (SetClause)iter.next();
             ElementSymbol symbol = (ElementSymbol)(setClause.getSymbol()).clone();
-            symbol.setName(ProcedureReservedWords.INPUTS + SingleElementSymbol.SEPARATOR + symbol.getShortCanonicalName());
+            symbol.setGroupSymbol(new GroupSymbol(ProcedureReservedWords.INPUTS));
             map.put( symbol, setClause.getValue() );
         } // for
         

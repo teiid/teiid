@@ -485,7 +485,7 @@ public class RulePushAggregates implements
 	private void updateSymbolName(List<SingleElementSymbol> projectCols, int i,
 			ElementSymbol virtualElem, SingleElementSymbol projectedSymbol) {
 		if (projectedSymbol instanceof AliasSymbol) {
-			((AliasSymbol)projectedSymbol).setName(virtualElem.getShortCanonicalName());
+			((AliasSymbol)projectedSymbol).setShortName(virtualElem.getShortCanonicalName());
 		} else {
 			projectCols.set(i, new AliasSymbol(virtualElem.getShortCanonicalName(), projectedSymbol));
 		}

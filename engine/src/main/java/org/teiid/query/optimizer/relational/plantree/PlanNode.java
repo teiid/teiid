@@ -26,9 +26,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -67,7 +68,7 @@ public class PlanNode {
     // --------------------- Planning Info --------------------------
 
     /** The set of groups that this node deals with. */
-    private Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
+    private Set<GroupSymbol> groups = new LinkedHashSet<GroupSymbol>();
         
     // =========================================================================
     //                         C O N S T R U C T O R S
@@ -172,7 +173,7 @@ public class PlanNode {
 
     public Object setProperty(NodeConstants.Info propertyID, Object value) {
         if(nodeProperties == null) {
-            nodeProperties = new HashMap<NodeConstants.Info, Object>();
+            nodeProperties = new LinkedHashMap<NodeConstants.Info, Object>();
         }    
         return nodeProperties.put(propertyID, value);
     }

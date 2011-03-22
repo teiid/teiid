@@ -60,7 +60,7 @@ public class TestAliasGenerator {
         Query command = (Query)QueryParser.getQueryParser().parseCommand(sql);
         ((ElementSymbol)command.getSelect().getSymbol(0)).setGroupSymbol(new GroupSymbol("y")); //$NON-NLS-1$
         command.acceptVisitor(new AliasGenerator(true));
-        assertEquals("SELECT v_0.c_0 FROM (SELECT pm1.g1.e1 AS c_0 FROM pm1.g1 AS g_0) AS v_0", command.toString()); //$NON-NLS-1$
+        assertEquals("SELECT v_0.c_0 FROM (SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0) AS v_0", command.toString()); //$NON-NLS-1$
     }
     
     @Test public void testLongOrderByAlias() throws Exception {

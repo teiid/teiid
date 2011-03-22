@@ -206,7 +206,6 @@ public class FakeMetadataObject implements Comparable, Serializable {
         public static final String INSERT_PROCEDURE = "insertProcedure"; // string giving the insert procedure //$NON-NLS-1$
         public static final String UPDATE_PROCEDURE = "updateProcedure"; // string giving the update procedure //$NON-NLS-1$
         public static final String DELETE_PROCEDURE = "deleteProcedure"; // string giving the delete procedure //$NON-NLS-1$
-        public static final String CALLABLE_NAME = "callableName";       // string giving the callable name of the procedure //$NON-NLS-1$
         public static final String UPDATE_COUNT = "updateCount";       // integer giving the update count //$NON-NLS-1$
         
         // Parameter properties

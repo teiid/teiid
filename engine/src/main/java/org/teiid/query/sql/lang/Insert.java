@@ -237,7 +237,7 @@ public class Insert extends ProcedureContainer {
         
         for (int j = 0; j < iSize; j++) {
             ElementSymbol symbol = (ElementSymbol)variables.get( j ).clone();
-            symbol.setName(ProcedureReservedWords.INPUTS + SingleElementSymbol.SEPARATOR + symbol.getShortCanonicalName());
+            symbol.setGroupSymbol(new GroupSymbol(ProcedureReservedWords.INPUTS));
             map.put(symbol, values.get( j ) );
         } // for 
         return map;

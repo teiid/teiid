@@ -23,9 +23,9 @@
 package org.teiid.query.sql.symbol;
 
 
-import org.teiid.query.sql.symbol.GroupSymbol;
-
 import junit.framework.TestCase;
+
+import org.teiid.query.sql.lang.UnaryFromClause;
 
 
 /** 
@@ -55,16 +55,16 @@ public class TestGroupSymbol extends TestCase {
         assertFalse(group.isTempGroupSymbol());
     }
     
-    public void defer_testInequality() {
+    public void testEquality() {
         GroupSymbol group = new GroupSymbol("g1", "a"); //$NON-NLS-1$ //$NON-NLS-2$
         GroupSymbol group1 = new GroupSymbol("g1", "b"); //$NON-NLS-1$ //$NON-NLS-2$
-        assertFalse(group.equals(group1));
+        assertEquals(group, group1);
     }
     
     public void testInequality1() {
         GroupSymbol group = new GroupSymbol("g1", "a"); //$NON-NLS-1$ //$NON-NLS-2$
         GroupSymbol group1 = new GroupSymbol("g1"); //$NON-NLS-1$ 
-        assertFalse(group.equals(group1));
+        assertFalse(new UnaryFromClause(group).equals(new UnaryFromClause(group1)));
     }
     
 }

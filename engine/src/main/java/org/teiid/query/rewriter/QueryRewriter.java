@@ -2784,7 +2784,7 @@ public class QueryRewriter {
         	SingleElementSymbol actual = iter.next();
         	if (!ses.getShortCanonicalName().equals(actual.getShortCanonicalName())) {
 	        	if (ses instanceof AliasSymbol) {
-	        		((AliasSymbol)ses).setName(actual.getShortName());
+	        		((AliasSymbol)ses).setShortName(actual.getShortName());
 	        	} else {
 	        		ses = new AliasSymbol(actual.getShortName(), ses);
 	        	}

@@ -25,8 +25,8 @@ package org.teiid.query.optimizer.relational.rules;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -190,7 +190,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
             List<Criteria> joinCrits = (List<Criteria>) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
             Set<Criteria> combinedCriteria = null;
             if (joinCrits != null) {
-                combinedCriteria = new HashSet<Criteria>(joinCrits); 
+                combinedCriteria = new LinkedHashSet<Criteria>(joinCrits); 
                 combinedCriteria.addAll(leftChildCriteria[1]);
                 combinedCriteria.addAll(rightChildCriteria[1]);
             }
@@ -262,8 +262,8 @@ public final class RuleCopyCriteria implements OptimizerRule {
             case NodeConstants.Types.PROJECT: 
             {
                 if (criteriaInfo[0] == null) {
-                    criteriaInfo[0] = new HashSet<Criteria>();
-                    criteriaInfo[1] = new HashSet<Criteria>();
+                    criteriaInfo[0] = new LinkedHashSet<Criteria>();
+                    criteriaInfo[1] = new LinkedHashSet<Criteria>();
                 } else {
                     criteriaInfo[0].clear();
                     criteriaInfo[1].clear();

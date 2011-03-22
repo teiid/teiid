@@ -1639,7 +1639,7 @@ public class TestValidator {
         FakeMetadataObject resultSet = FakeMetadataFactory.createResultSet("pm1.rs", physicalModel, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         FakeMetadataObject returnParam = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, resultSet);  //$NON-NLS-1$
         FakeMetadataObject inParam = FakeMetadataFactory.createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        FakeMetadataObject storedProcedure = FakeMetadataFactory.createStoredProcedure("pm1.sp", physicalModel, Arrays.asList(new FakeMetadataObject[] { returnParam, inParam }), "pm1.sp2");  //$NON-NLS-1$ //$NON-NLS-2$
+        FakeMetadataObject storedProcedure = FakeMetadataFactory.createStoredProcedure("pm1.sp", physicalModel, Arrays.asList(new FakeMetadataObject[] { returnParam, inParam }));  //$NON-NLS-1$ //$NON-NLS-2$
         
         FakeMetadataObject virtualModel = FakeMetadataFactory.createVirtualModel("vm1"); //$NON-NLS-1$
         FakeMetadataObject virtualResultSet = FakeMetadataFactory.createResultSet("vm1.rs", physicalModel, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

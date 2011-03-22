@@ -698,7 +698,7 @@ public class TestProcedureRelational {
         FakeMetadataObject in1 = FakeMetadataFactory.createParameter("pm1.sp119.in1", 2, SPParameter.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
 		FakeMetadataObject rs3 = FakeMetadataFactory.createResultSet("pm1.sp119.rs1", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ 
         FakeMetadataObject rs3p1 = FakeMetadataFactory.createParameter("ret", 1, SPParameter.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs3);  //$NON-NLS-1$
-		FakeMetadataObject sp1 = FakeMetadataFactory.createStoredProcedure("pm1.sp119", pm1, Arrays.asList(new FakeMetadataObject[] { rs3p1, in1 }), "pm1.sp119");  //$NON-NLS-1$ //$NON-NLS-2$
+		FakeMetadataObject sp1 = FakeMetadataFactory.createStoredProcedure("pm1.sp119", pm1, Arrays.asList(new FakeMetadataObject[] { rs3p1, in1 }));  //$NON-NLS-1$ //$NON-NLS-2$
 
         FakeMetadataStore store = new FakeMetadataStore();
         store.addObject(pm1);

@@ -343,7 +343,7 @@ public class FakeMetadataFacade extends BasicQueryMetadata {
         procInfo.setProcedureID(procedureID);
         procInfo.setModelID(procedureID.getProperty(FakeMetadataObject.Props.MODEL));
         procInfo.setQueryPlan((QueryNode)procedureID.getProperty(FakeMetadataObject.Props.PLAN));
-        procInfo.setProcedureCallableName((String)procedureID.getProperty(FakeMetadataObject.Props.CALLABLE_NAME));
+        procInfo.setProcedureCallableName(fullyQualifiedProcedureName);
         procInfo.setUpdateCount(((Integer)procedureID.getProperty(FakeMetadataObject.Props.UPDATE_COUNT, new Integer(-1))).intValue());
 
         // Read params

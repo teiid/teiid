@@ -53,15 +53,6 @@ public abstract class SingleElementSymbol extends SelectSymbol implements Expres
         super(name);
     }
 
-    /**
-     * Get the short name of the element
-     * @return Short name of the symbol (un-dotted)
-     */
-    public String getShortName() { 
-        String name = getName();
-        return getShortName(name);
-    }
-
     public static String getShortName(String name) {
         int index = name.lastIndexOf(SEPARATOR);
         if(index >= 0) { 
@@ -69,13 +60,5 @@ public abstract class SingleElementSymbol extends SelectSymbol implements Expres
         }
         return name;
     }
-    
-    /**
-     * Get the short name of the element
-     * @return Short name of the symbol (un-dotted)
-     */
-    public String getShortCanonicalName() { 
-        String name = getCanonicalName();
-        return getShortName(name);
-    }
+
 }

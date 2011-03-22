@@ -164,7 +164,7 @@ public abstract class AbstractSymbolMappingVisitor extends ExpressionMappingVisi
 		
 		// Finally, swap name of group, which should be the name of the group
 		// for all of the element symbols
-		obj.setName(newGroupName + ".*"); //$NON-NLS-1$
+		obj.setShortName(newGroupName + ".*"); //$NON-NLS-1$
 			
     }
 

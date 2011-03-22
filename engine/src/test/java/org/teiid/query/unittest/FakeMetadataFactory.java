@@ -731,7 +731,7 @@ public class FakeMetadataFactory {
         
 		FakeMetadataObject rs3 = createResultSet("pm1.rs3", pm1, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         FakeMetadataObject rs3p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs3);  //$NON-NLS-1$
-        FakeMetadataObject sp1 = createStoredProcedure("pm1.sp1", pm1, Arrays.asList(new FakeMetadataObject[] { rs3p1 }), "pm1.sp1");  //$NON-NLS-1$ //$NON-NLS-2$
+        FakeMetadataObject sp1 = createStoredProcedure("pm1.sp1", pm1, Arrays.asList(new FakeMetadataObject[] { rs3p1 }));  //$NON-NLS-1$ //$NON-NLS-2$
 
 		FakeMetadataObject rs4 = createResultSet("pm1.rs4", pm1, new String[] { "e1"}, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs4p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs4);  //$NON-NLS-1$
@@ -781,7 +781,7 @@ public class FakeMetadataFactory {
 		FakeMetadataObject rs13 = createResultSet("pm1.rs13", pm1, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         FakeMetadataObject rs13p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs13);  //$NON-NLS-1$
         FakeMetadataObject rs13p2 = createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null);  //$NON-NLS-1$
-        FakeMetadataObject sp2 = createStoredProcedure("pm1.sp2", pm1, Arrays.asList(new FakeMetadataObject[] { rs13p1, rs13p2 }), "pm1.sp2");  //$NON-NLS-1$ //$NON-NLS-2$
+        FakeMetadataObject sp2 = createStoredProcedure("pm1.sp2", pm1, Arrays.asList(new FakeMetadataObject[] { rs13p1, rs13p2 }));  //$NON-NLS-1$ //$NON-NLS-2$
 
 		FakeMetadataObject rs14 = createResultSet("pm1.rs14", pm1, new String[] { "e1"}, new String[] { DataTypeManager.DefaultDataTypes.STRING}); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs14p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs14);  //$NON-NLS-1$
@@ -825,7 +825,7 @@ public class FakeMetadataFactory {
         QueryNode sq17n1 = new QueryNode("pm1.sq17", "CREATE VIRTUAL PROCEDURE BEGIN SELECT * FROM xmltest.doc1; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq17 = createVirtualProcedure("pm1.sq17", pm1, Arrays.asList(new FakeMetadataObject[] { sq17p1 }), sq17n1);  //$NON-NLS-1$
 
-		FakeMetadataObject sp3 = createStoredProcedure("pm1.sp3", pm1, new ArrayList(), "pm1.sp3");  //$NON-NLS-1$ //$NON-NLS-2$
+		FakeMetadataObject sp3 = createStoredProcedure("pm1.sp3", pm1, new ArrayList());  //$NON-NLS-1$ //$NON-NLS-2$
 
         FakeMetadataObject rs20 = createResultSet("pm1.rs20", pm1, new String[] { "xml" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq18p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs20); //$NON-NLS-1$
@@ -839,10 +839,10 @@ public class FakeMetadataFactory {
         FakeMetadataObject sq19 = createVirtualProcedure("pm1.sq19", pm1, Arrays.asList(new FakeMetadataObject[] { sq19p1, sq19p2 }), sq19n1); //$NON-NLS-1$
 
         FakeMetadataObject rs22p2 = createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.BIG_INTEGER, null);  //$NON-NLS-1$
-        FakeMetadataObject sp4 = createStoredProcedure("pm1.sp4", pm1, Arrays.asList(new FakeMetadataObject[] { rs13p1, rs22p2 }), "pm1.sp4");  //$NON-NLS-1$ //$NON-NLS-2$
+        FakeMetadataObject sp4 = createStoredProcedure("pm1.sp4", pm1, Arrays.asList(new FakeMetadataObject[] { rs13p1, rs22p2 }));  //$NON-NLS-1$ //$NON-NLS-2$
 
         // no params or result set at all
-        FakeMetadataObject sp5 = createStoredProcedure("pm1.sp5", pm1, Arrays.asList(new FakeMetadataObject[] {}), "pm1.sp5");  //$NON-NLS-1$ //$NON-NLS-2$
+        FakeMetadataObject sp5 = createStoredProcedure("pm1.sp5", pm1, Arrays.asList(new FakeMetadataObject[] {}));  //$NON-NLS-1$ //$NON-NLS-2$
 
         //virtual stored procedures
         FakeMetadataObject vsprs1 = createResultSet("pm1.vsprs1", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
@@ -2331,7 +2331,7 @@ public class FakeMetadataFactory {
         FakeMetadataObject rs3p2 = FakeMetadataFactory.createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
         FakeMetadataObject rs3p3 = FakeMetadataFactory.createParameter("source_name", 3, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
         rs3p3.putProperty(FakeMetadataObject.Props.NULL, Boolean.TRUE);
-        FakeMetadataObject sq2 = FakeMetadataFactory.createStoredProcedure("MultiModel.proc", physModel, Arrays.asList(new FakeMetadataObject[] { rs3p1, rs3p2, rs3p3 }), "MultiModel.proc");
+        FakeMetadataObject sq2 = FakeMetadataFactory.createStoredProcedure("MultiModel.proc", physModel, Arrays.asList(new FakeMetadataObject[] { rs3p1, rs3p2, rs3p3 }));
         rs3p2.putProperty(FakeMetadataObject.Props.GROUP, sq2);
         rs3p3.putProperty(FakeMetadataObject.Props.GROUP, sq2);
         
@@ -2979,14 +2979,12 @@ public class FakeMetadataFactory {
      * @param name Name of procedure, must match model name
      * @param model Metadata object for the model
      * @param params List of FakeMetadataObject that are the parameters for the procedure
-     * @param callableName Callable name of procedure, usually same as procedure name
      * @return Metadata object for stored procedure
      */
-    public static FakeMetadataObject createStoredProcedure(String name, FakeMetadataObject model, List params, String callableName) {
+    public static FakeMetadataObject createStoredProcedure(String name, FakeMetadataObject model, List params) {
         FakeMetadataObject obj = new FakeMetadataObject(name, FakeMetadataObject.PROCEDURE);
         obj.putProperty(FakeMetadataObject.Props.MODEL, model);
         obj.putProperty(FakeMetadataObject.Props.PARAMS, params);
-        obj.putProperty(FakeMetadataObject.Props.CALLABLE_NAME, callableName);
         
         return obj;    
     }

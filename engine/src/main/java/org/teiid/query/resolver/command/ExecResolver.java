@@ -216,7 +216,7 @@ public class ExecResolver extends ProcedureContainerResolver {
         discoveredMetadata.addTempGroup(procName, tempElements, isVirtual);
 
         // Resolve tempElements against new metadata
-        GroupSymbol procGroup = new GroupSymbol(procName);
+        GroupSymbol procGroup = new GroupSymbol(storedProcedureInfo.getProcedureCallableName());
         procGroup.setProcedure(true);
         TempMetadataID tid = discoveredMetadata.getTempGroupID(procName);
         tid.setOriginalMetadataID(storedProcedureCommand.getProcedureID());

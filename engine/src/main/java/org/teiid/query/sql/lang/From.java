@@ -22,13 +22,16 @@
 
 package org.teiid.query.sql.lang;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
-import org.teiid.query.sql.*;
+import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.visitor.*;
+import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
 /**
@@ -38,22 +41,21 @@ import org.teiid.query.sql.visitor.*;
  */
 public class From implements LanguageObject {
 
-	// List of <FromClause>
-    private List clauses;
+    private List<FromClause> clauses;
 
     /**
      * Constructs a default instance of this class.
      */
     public From() {
-    	clauses = new ArrayList();
+    	clauses = new ArrayList<FromClause>();
     }
 
     /**
      * Constructs an instance of this class from an ordered set of from clauses
      * @param parameters The ordered list of from clauses
      */
-    public From( List parameters ) {
-        clauses = new ArrayList( parameters );
+    public From( List<? extends FromClause> parameters ) {
+        clauses = new ArrayList<FromClause>( parameters );
     }
 
     // =========================================================================
@@ -72,15 +74,15 @@ public class From implements LanguageObject {
 	 * Add clauses to the FROM 
 	 * @param clauses Collection of {@link FromClause}s
 	 */
-	public void addClauses(Collection clauses) {
-		this.clauses.addAll(clauses);
+	public void addClauses(Collection<? extends FromClause> toAdd) {
+		this.clauses.addAll(toAdd);
 	}
 	
 	/** 
 	 * Get all the clauses in FROM
 	 * @return List of {@link FromClause}
 	 */
-	public List getClauses() {
+	public List<FromClause> getClauses() {
 		return this.clauses;
 	}
     
@@ -88,7 +90,7 @@ public class From implements LanguageObject {
 	 * Set all the clauses
 	 * @param clauses List of {@link FromClause}
 	 */
-	public void setClauses(List clauses) {
+	public void setClauses(List<FromClause> clauses) {
 		this.clauses = clauses;
 	}
 	
@@ -123,7 +125,7 @@ public class From implements LanguageObject {
         List<GroupSymbol> groups = new ArrayList<GroupSymbol>();
         if(clauses != null) {
             for(int i=0; i<clauses.size(); i++) {
-                FromClause clause = (FromClause) clauses.get(i);
+                FromClause clause = clauses.get(i);
                 clause.collectGroups(groups);
             }
         }
@@ -152,16 +154,7 @@ public class From implements LanguageObject {
      * Return copy of this From clause.
      */
     public Object clone() {
-        List copyClauses = new ArrayList(clauses.size());
-        if(clauses.size() > 0) { 
-            Iterator iter = clauses.iterator();
-            while(iter.hasNext()) { 
-                FromClause c = (FromClause) iter.next();
-                copyClauses.add(c.clone());
-            }
-        }
-        
-		return new From(copyClauses);
+		return new From(LanguageObject.Util.deepClone(clauses, FromClause.class));
     }
 
 	/**

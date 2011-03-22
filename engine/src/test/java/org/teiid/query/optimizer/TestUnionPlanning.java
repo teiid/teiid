@@ -186,8 +186,8 @@ public class TestUnionPlanning {
     
     @Test public void testUnionPushDownWithJoin1() throws Exception {
         ProcessorPlan plan = TestOptimizer.helpPlan("select * from (SELECT IntKey FROM BQT1.SmallA where intkey in (1, 2) UNION ALL SELECT intkey FROM BQT2.SmallA where intkey in (3, 4)) A inner join (SELECT intkey FROM BQT1.SmallB where intkey in (1, 2) UNION ALL SELECT intkey FROM BQT2.SmallB where intkey in (3, 4)) B on a.intkey = b.intkey where a.intkey in (1, 4)", FakeMetadataFactory.exampleBQTCached(), null, TestOptimizer.getGenericFinder(),//$NON-NLS-1$
-            new String[] { "SELECT g_1.intkey, g_0.intkey FROM BQT2.SmallA AS g_0, BQT2.SmallB AS g_1 WHERE (g_0.intkey = g_1.intkey) AND (g_0.intkey IN (4)) AND (g_0.intkey = 4) AND (g_1.intkey = 4)", 
-        	"SELECT g_1.intkey, g_0.IntKey FROM BQT1.SmallA AS g_0, BQT1.SmallB AS g_1 WHERE (g_0.IntKey = g_1.intkey) AND (g_0.intkey IN (1)) AND (g_0.IntKey = 1) AND (g_1.intkey IN (1)) AND (g_1.intkey = 1)" }, ComparisonMode.EXACT_COMMAND_STRING); 
+            new String[] { "SELECT g_1.intkey, g_0.intkey FROM BQT2.SmallA AS g_0, BQT2.SmallB AS g_1 WHERE (g_0.intkey = g_1.intkey) AND (g_0.intkey IN (4)) AND (g_0.intkey = 4) AND (g_1.intkey IN (4)) AND (g_1.intkey = 4)",
+        		"SELECT g_1.intkey, g_0.IntKey FROM BQT1.SmallA AS g_0, BQT1.SmallB AS g_1 WHERE (g_0.IntKey = g_1.intkey) AND (g_0.intkey IN (1)) AND (g_0.IntKey = 1) AND (g_1.intkey = 1)" }, ComparisonMode.EXACT_COMMAND_STRING); 
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access

@@ -35,7 +35,6 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.UnresolvedSymbolDescription;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.query.QueryPlugin;
@@ -151,7 +150,7 @@ public class ResolverVisitor extends LanguageVisitor {
         
         // look up group and element parts of the potentialID
         String groupContext = metadata.getGroupName(potentialID);
-        String elementShortName = metadata.getShortElementName(potentialID);
+        String elementShortName = elementSymbol.getShortCanonicalName();
         if (groupContext != null) {
             groupContext = groupContext.toUpperCase();
         	try {
@@ -170,7 +169,7 @@ public class ResolverVisitor extends LanguageVisitor {
    }
 
 	private boolean internalResolveElementSymbol(ElementSymbol elementSymbol,
-			String groupContext, String elementShortName, String expectedGroupContext)
+			String groupContext, String shortCanonicalName, String expectedGroupContext)
 			throws TeiidComponentException, QueryResolverException {
 		boolean isExternal = false;
         boolean groupMatched = false;
@@ -205,7 +204,6 @@ public class ResolverVisitor extends LanguageVisitor {
         }
         
         LinkedList<ElementMatch> matches = new LinkedList<ElementMatch>();
-        String shortCanonicalName = elementShortName.toUpperCase();
         while (root != null) {
             Collection<GroupSymbol> matchedGroups = ResolverUtil.findMatchingGroups(groupContext, root.getGroups(), metadata);
             if (matchedGroups != null && !matchedGroups.isEmpty()) {
@@ -252,22 +250,18 @@ public class ResolverVisitor extends LanguageVisitor {
         }
         if (isExternal //convert input to inputs
         		&& isScalar(resolvedSymbol, ProcedureReservedWords.INPUT)) {
-        	resolvedSymbol = new ElementSymbol(ProcedureReservedWords.INPUTS + ElementSymbol.SEPARATOR + elementShortName);
+        	resolvedSymbol = new ElementSymbol(shortCanonicalName);
+        	resolvedSymbol.setGroupSymbol(new GroupSymbol(ProcedureReservedWords.INPUTS));
         	resolveElementSymbol(resolvedSymbol);
         	oldName = resolvedSymbol.getOutputName();
-        	resolvedGroup = new GroupSymbol(ProcedureReservedWords.INPUTS);
-        	try {
-				ResolverUtil.resolveGroup(resolvedGroup, metadata);
-			} catch (QueryResolverException e) {
-				throw new TeiidRuntimeException(e);
-			}
+        	resolvedGroup = resolvedSymbol.getGroupSymbol();
         } 
         elementSymbol.setIsExternalReference(isExternal);
         elementSymbol.setType(resolvedSymbol.getType());
         elementSymbol.setMetadataID(resolvedSymbol.getMetadataID());
         elementSymbol.setGroupSymbol(resolvedGroup);
-        elementSymbol.setName(resolvedSymbol.getName());
-        elementSymbol.setCanonicalName(resolvedSymbol.getCanonicalName());
+        elementSymbol.setShortName(resolvedSymbol.getShortName());
+        elementSymbol.setShortCanonicalName(resolvedSymbol.getShortCanonicalName());
         elementSymbol.setOutputName(oldName);
         return true;
 	}

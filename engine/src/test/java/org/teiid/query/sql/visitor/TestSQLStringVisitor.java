@@ -1120,7 +1120,6 @@ public class TestSQLStringVisitor extends TestCase {
 
     public void testElementSymbol4() {
         ElementSymbol es = new ElementSymbol("vdb.m.g.elem", true); //$NON-NLS-1$
-        es.setGroupSymbol(new GroupSymbol("m.g")); //$NON-NLS-1$
         helpTest(es, "vdb.m.g.elem"); //$NON-NLS-1$
     }
     
@@ -1853,7 +1852,7 @@ public class TestSQLStringVisitor extends TestCase {
     public void testLimit() {
         Query query = new Query();
         Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
-        From from = new From(Arrays.asList(new Object[] {new UnaryFromClause(new GroupSymbol("a"))})); //$NON-NLS-1$
+        From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
         query.setLimit(new Limit(null, new Constant(new Integer(100))));
@@ -1863,7 +1862,7 @@ public class TestSQLStringVisitor extends TestCase {
     public void testLimitWithOffset() {
         Query query = new Query();
         Select select = new Select(Arrays.asList(new Object[] {new AllSymbol()}));
-        From from = new From(Arrays.asList(new Object[] {new UnaryFromClause(new GroupSymbol("a"))})); //$NON-NLS-1$
+        From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("a")))); //$NON-NLS-1$
         query.setSelect(select);
         query.setFrom(from);
         query.setLimit(new Limit(new Constant(new Integer(50)), new Constant(new Integer(100))));

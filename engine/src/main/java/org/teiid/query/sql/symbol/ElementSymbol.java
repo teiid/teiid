@@ -22,7 +22,8 @@
 
 package org.teiid.query.sql.symbol;
 
-import org.teiid.query.sql.*;
+import org.teiid.core.util.HashCodeUtil;
+import org.teiid.query.sql.LanguageVisitor;
 
 /**
  * <p>This is a subclass of Symbol representing a single element.  An ElementSymbol
@@ -67,6 +68,11 @@ public class ElementSymbol extends SingleElementSymbol {
         super(name);		
     }
     
+    public ElementSymbol(String shortName, String shortCanonical, GroupSymbol group) {
+    	super(shortName, shortCanonical);
+    	this.groupSymbol = group;
+    }
+    
     /**
      * Constructor taking a name and a flag whether to display fully qualified.
      * @param name Name of the symbol
@@ -77,6 +83,48 @@ public class ElementSymbol extends SingleElementSymbol {
 		setDisplayFullyQualified(displayFullyQualified);
     }
     
+    @Override
+    public String getName() {
+    	if (this.groupSymbol != null) {
+    		return this.groupSymbol.getName() + SingleElementSymbol.SEPARATOR + this.getShortName();
+    	}
+    	return super.getName();
+    }
+    
+    @Override
+    public String getCanonicalName() {
+    	if (this.groupSymbol != null) {
+    		return this.groupSymbol.getCanonicalName() + SingleElementSymbol.SEPARATOR + this.getShortCanonicalName();
+    	}
+    	return super.getCanonicalName();
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+    	if (this.groupSymbol == null) {
+        	return super.equals(obj);
+    	}
+    	if (obj == this) {
+    		return true;
+    	}
+    	if (!(obj instanceof ElementSymbol)) {
+    		return false;
+    	}
+    	ElementSymbol other = (ElementSymbol)obj;
+    	if (other.groupSymbol == null) {
+        	return super.equals(obj);
+    	}
+    	return this.groupSymbol.equals(other.groupSymbol) && this.getShortCanonicalName().equals(other.getShortCanonicalName());
+    }
+    
+    @Override
+    public int hashCode() {
+    	if (this.groupSymbol != null) {
+    		return HashCodeUtil.hashCode(this.groupSymbol.hashCode(), this.getShortCanonicalName().hashCode());
+    	}
+    	return super.hashCode();
+    }
+        
     public void setDisplayMode(DisplayMode displayMode) { 
         if (displayMode == null) {
             this.displayMode = DisplayMode.OUTPUT_NAME;
@@ -131,7 +179,22 @@ public class ElementSymbol extends SingleElementSymbol {
     public void setGroupSymbol(GroupSymbol symbol) {
         this.groupSymbol = symbol;
     }
-
+    
+    public void setName(String name) {
+    	int index = name.lastIndexOf('.');
+    	if (index > 0) {
+    		if (this.groupSymbol != null) {
+    			throw new AssertionError("Attempt to set an invalid name"); //$NON-NLS-1$
+    		}
+    		GroupSymbol gs = new GroupSymbol(name.substring(0, index));
+    		this.setGroupSymbol(gs);
+    		name = name.substring(index + 1);
+    	} else {
+    		this.groupSymbol = null;
+    	}
+    	super.setShortName(name);
+    }
+    
     /**
      * Get the group symbol referred to by this element symbol, may be null before resolution
      * @return Group symbol referred to by this element, may be null
@@ -190,14 +253,14 @@ public class ElementSymbol extends SingleElementSymbol {
 	 * @return Deep copy of this object
 	 */
 	public Object clone() {
-		ElementSymbol copy = new ElementSymbol(getName(), getCanonical());
+		ElementSymbol copy = new ElementSymbol(getShortName(), getCanonical());
 		if(getGroupSymbol() != null) { 
 			copy.setGroupSymbol(getGroupSymbol().clone());
 		}
 		copy.setMetadataID(getMetadataID());
 		copy.setType(getType());
 		copy.setIsExternalReference(isExternalReference());
-		copy.setOutputName(this.getOutputName());
+		copy.outputName = this.outputName;
 		copy.setDisplayMode(this.getDisplayMode());
 		return copy;
 	}

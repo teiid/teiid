@@ -164,7 +164,7 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
 		if (replacement instanceof SingleElementSymbol) {
 		    replacmentSymbol = (SingleElementSymbol)replacement;
 		} else {
-		    replacmentSymbol = new ExpressionSymbol(ses.getName(), replacement);
+		    replacmentSymbol = new ExpressionSymbol(ses.getShortName(), replacement);
 		}
 		
 		if (alias && createAliases() && !replacmentSymbol.getShortCanonicalName().equals(ses.getShortCanonicalName())) {

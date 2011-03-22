@@ -46,12 +46,12 @@ public abstract class Symbol implements LanguageObject {
 	 * Prior to resolving it is the name as entered in the query,
 	 * after resolving it is the fully qualified name.
 	 */
-	private String name;
+	private String shortName;
 
 	/** 
 	 * upper case of name
 	 */
-	private String canonicalName;
+	private String canonicalShortName;
 	
 	/**
 	 * Prior to resolving null, after resolving it is the exact string
@@ -59,7 +59,7 @@ public abstract class Symbol implements LanguageObject {
 	 * 
 	 * The AliasGenerator can also set this value as necessary for the data tier.
 	 */
-    private String outputName;
+    protected String outputName;
     
     /**
      * Constructor to be used for cloning instances. Calls to String.toUpperCase() to generate the canonical names
@@ -70,8 +70,8 @@ public abstract class Symbol implements LanguageObject {
      * @since 4.3
      */
     protected Symbol(String name, String canonicalName) {
-        this.name = name;
-        this.canonicalName = canonicalName;
+        this.shortName = name;
+        this.canonicalShortName = canonicalName;
     }
 
 	/**
@@ -80,7 +80,11 @@ public abstract class Symbol implements LanguageObject {
 	 * @throws IllegalArgumentException If name is null
 	 */
 	public Symbol(String name) {
-		setName(name);
+		this.setName(name);
+	}
+	
+	protected void setName(String name) {
+		setShortName(name);
 	}
 
 	/**
@@ -89,14 +93,14 @@ public abstract class Symbol implements LanguageObject {
 	 * collection, it will be lost!
 	 * @param name New name
 	 */
-	public void setName(String name) {
+	public void setShortName(String name) {
 		if(name == null) {
             throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0017")); //$NON-NLS-1$
 		}
-		this.name = DataTypeManager.getCanonicalString(name);
+		this.shortName = DataTypeManager.getCanonicalString(name);
 		this.outputName = null;
         // Canonical name is lazily created
-        this.canonicalName = null;
+        this.canonicalShortName = null;
 	}
 
 	/**
@@ -104,7 +108,7 @@ public abstract class Symbol implements LanguageObject {
 	 * @return Name of the symbol, never null
 	 */
 	public String getName() {
-		return this.name;
+		return getShortName();
 	}
 
 	/**
@@ -112,14 +116,11 @@ public abstract class Symbol implements LanguageObject {
 	 * @return Canonical name for comparisons
 	 */
 	public String getCanonicalName() {
-        // PERFORMANCE1: String.toUpperCase() is an expensive call, and calls from this class are the largest component
-        // of the total toUpperCase() calls, so we are lazily performing the toUpperCase and calculating the hash.
-        computeCanonicalNameAndHash();
-        return this.canonicalName;
+        return getShortCanonicalName();
 	}
 	
-	public void setCanonicalName(String canonicalName) {
-		this.canonicalName = canonicalName;
+	public void setShortCanonicalName(String shortCanonicalName) {
+		this.canonicalShortName = shortCanonicalName;
 	}
     
 	/**
@@ -146,9 +147,7 @@ public abstract class Symbol implements LanguageObject {
 	 * @return Hash code
 	 */
 	public int hashCode() {
-        computeCanonicalNameAndHash();
-		// Return cached hash code
-		return this.canonicalName.hashCode();
+		return this.getCanonicalName().hashCode();
 	}
 
 	/**
@@ -167,7 +166,9 @@ public abstract class Symbol implements LanguageObject {
 		if(!(obj instanceof Symbol)) {
 			return false;
 		}
-		return ((Symbol)obj).getCanonicalName().equals(getCanonicalName());
+		String otherFqn = ((Symbol)obj).getCanonicalName();
+		String thisFqn = getCanonicalName();
+		return thisFqn.equals(otherFqn);
 	}
 
 	/**
@@ -175,14 +176,8 @@ public abstract class Symbol implements LanguageObject {
 	 */
 	public abstract Object clone();
     
-    protected String getCanonical() {
-        return canonicalName;
-    }
-    
-    private void computeCanonicalNameAndHash() {
-        if (canonicalName == null) {
-            canonicalName = DataTypeManager.getCanonicalString(StringUtil.toUpperCase(name));
-        }
+    protected final String getCanonical() {
+        return canonicalShortName;
     }
     
     public String getOutputName() {
@@ -192,5 +187,25 @@ public abstract class Symbol implements LanguageObject {
     public void setOutputName(String outputName) {
         this.outputName =outputName;
     }
+    
+    /**
+     * Get the short name of the element
+     * @return Short name of the symbol (un-dotted)
+     */
+    public final String getShortName() { 
+    	return shortName;
+    }
+
+    /**
+     * Get the short name of the element
+     * @return Short name of the symbol (un-dotted)
+     */
+    public final String getShortCanonicalName() { 
+		if (canonicalShortName == null) {
+        	canonicalShortName = DataTypeManager.getCanonicalString(StringUtil.toUpperCase(shortName));
+        }
+    	return this.canonicalShortName;
+    }
+
 
 }

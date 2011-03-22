@@ -22,9 +22,10 @@
 
 package org.teiid.query.sql.symbol;
 
-import java.util.*;
+import java.util.List;
 
-import org.teiid.query.sql.*;
+import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.LanguageVisitor;
 
 /**
  * <p>This is a subclass of Symbol representing *, which contains all of
@@ -63,15 +64,9 @@ public class AllSymbol extends MultipleElementSymbol {
 	public Object clone() {
 		AllSymbol copy = new AllSymbol(ALL_SYMBOL_NAME, ALL_SYMBOL_NAME);
 
-		List elements = getElementSymbols();
+		List<ElementSymbol> elements = getElementSymbols();
 		if(elements != null && elements.size() > 0) {
-			ArrayList copyElements = new ArrayList(elements.size());
-			Iterator iter = elements.iterator();
-			while(iter.hasNext()) {
-				ElementSymbol element = (ElementSymbol) iter.next();
-				copyElements.add( element.clone() );
-			}
-			copy.setElementSymbols(copyElements);				
+			copy.setElementSymbols(LanguageObject.Util.deepClone(elements, ElementSymbol.class));				
 		}	
 
 		return copy;
