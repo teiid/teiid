@@ -211,7 +211,7 @@
                         </entry>
                         <entry>(typically not set as a connection property) Can be ON|OFF; ON prevents query execution, but parsing and planning will still occur.  Default OFF.</entry>
                     </row>                    
-                    <row>
+                    <row id="PassthroughAuthentication">
                         <entry>
                             <code>PassthroughAuthentication</code>
                         </entry>
@@ -388,6 +388,8 @@
         JBoss AS, you can also deploy as data source in Glassfish, Tomcat, Websphere, Weblogic etc servers, however their
         configuration files are different than JBoss AS. Consult the respective documentation of the environment 
         in which you are deploying.</para>
+
+	<para>A special case is if the Teiid instance you are connecting to is in the same VM as the JBoss AS instance.  If that matches you deployment, then follow the <xref linkend="local_connection"/> instructions</para>
         
         <orderedlist numeration="arabic">
         	<para>Installation Steps</para>
@@ -416,10 +418,6 @@
     <xa-datasource-property name="portNumber">31000</xa-datasource-property> 
     <xa-datasource-property name="user">admin</xa-datasource-property> 
     <xa-datasource-property name="password">password</xa-datasource-property> 
-    <track-connection-by-tx>true</track-connection-by-tx>
-
-    <isSameRM-override-value>false</isSameRM-override-value>
-    <no-tx-separate-pools />
 
     <!-- pool and other JBoss datasource properties -->
     <check-valid-connection-sql>SELECT 1</check-valid-connection-sql>
@@ -449,8 +447,9 @@
         <section id="local_connection">
             <title>Local JDBC Connection</title>
             <para>If you are deploying your client application on the same JBoss AS instance as the Teiid runtime is installed, then
-           there is no reason for your client application to open socket based JDBC connection.
+           there is a way to make connections that by-pass making a socket based JDBC connection.
            You can use slightly modified data source configuration to make a "local" connection, where the JDBC API will lookup a local Teiid runtime in the same VM.</para>
+           <warning><para>Since DataSources start before before Teiid VDBs are deployed, leave the min pool size of local connections as the default of 0.  Otherwise errors will occur on the startup of the Teiid DataSource.</para></warning>
            <example>
            <title>Local data source</title>
            <programlisting><![CDATA[<datasources>
@@ -460,18 +459,13 @@
     <xa-datasource-property name="DatabaseName">myVDB</xa-datasource-property>
     <xa-datasource-property name="user">admin</xa-datasource-property> 
     <xa-datasource-property name="password">password</xa-datasource-property> 
-    <track-connection-by-tx>true</track-connection-by-tx>
-    <isSameRM-override-value>false</isSameRM-override-value>
-    <no-tx-separate-pools />
 
     <!-- pool and other JBoss datasource properties -->
-    <check-valid-connection-sql>SELECT 1</check-valid-connection-sql>
-    <min-pool-size>5</min-pool-size> 
     <max-pool-size>10</max-pool-size>                
   </xa-datasource>        
 </datasources>]]></programlisting>
 </example>
-           <para>This is essentially the same as the XA configuration, but "ServerName" and "PortNumber" are not specified.</para>            
+           <para>This is essentially the same as the XA configuration, but "ServerName" and "PortNumber" are not specified.  Local connections have additional features such as using <xref linkend="PassthroughAuthentication"/> </para>            
         </section>
               
     </section>
