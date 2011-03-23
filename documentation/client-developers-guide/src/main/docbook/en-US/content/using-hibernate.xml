@@ -7,10 +7,19 @@
     <title>Using Teiid with Hibernate</title>
     <section>
         <title>Limitations</title>
-        <para>Many Hibernate use cases assume a data source has the ability (with proper user permissions) 
+        <itemizedlist>
+        	<listitem>
+        		<para>Many Hibernate use cases assume a data source has the ability (with proper user permissions) 
         to process Data Definition Language (DDL) statements like CREATE TABLE and DROP TABLE 
         as well as Data Manipulation Language (DML) statements like SELECT, UPDATE, INSERT and DELETE. 
-        Teiid can handle a broad range of DML, but does not support DDL.</para>
+        Teiid can handle a broad range of DML, but does not support directly support DDL against a particular source.</para>
+        	</listitem>
+        	<listitem>
+        		<para>Sequence and Identity generation are not supported.  
+        		Identifier generation based upon table values, such as the hilo generator, require that the identifier table(s) be exposed through Teiid.  
+        		The GUID identifier generation strategy is directly supported.</para>
+        	</listitem>
+        </itemizedlist>
     </section>
     
     <section>
