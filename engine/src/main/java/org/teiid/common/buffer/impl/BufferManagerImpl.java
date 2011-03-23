@@ -384,8 +384,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	// Configuration 
     private int connectorBatchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
     private int processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
-    private int maxProcessingBatches = BufferManager.DEFAULT_MAX_PROCESSING_BATCHES;
-    private int maxReserveBatchColumns = BufferManager.DEFAULT_RESERVE_BUFFERS;
+    //set to acceptable defaults for testing
+    private int maxProcessingBatches = 128;
+    private int maxReserveBatchColumns = 16384; 
     private int maxProcessingKB;
     private int maxReserveBatchKB;
     private volatile int reserveBatchKB;
@@ -511,9 +512,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	@Override
 	public void initialize() throws TeiidComponentException {
 		int maxMemory = (int)Math.min(Runtime.getRuntime().maxMemory() / 1024, Integer.MAX_VALUE);
+		maxMemory -= 300 * 1024; //assume 300 megs of overhead for the AS/system stuff
 		if (maxReserveBatchColumns < 0) {
 			this.maxReserveBatchKB = 0;
-			maxMemory -= 300 * 1024; //assume 300 megs of overhead for the AS/system stuff
 			int one_gig = 1024 * 1024;
 			if (maxMemory > one_gig) {
 				//assume 75% of the memory over the first gig
@@ -525,7 +526,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     	}
 		this.reserveBatchKB = this.maxReserveBatchKB;
 		if (this.maxProcessingBatches < 0) {
-			this.maxProcessingKB = (int)(.1 * maxMemory)/maxActivePlans;
+			this.maxProcessingKB = Math.max((int)Math.min(128 * KB_PER_VALUE * processorBatchSize, Integer.MAX_VALUE), (int)(.1 * maxMemory)/maxActivePlans);
 		} else {
 			this.maxProcessingKB = Math.max(0, (int)Math.min(maxProcessingBatches * KB_PER_VALUE * processorBatchSize, Integer.MAX_VALUE));
 		}
