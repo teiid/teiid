@@ -649,25 +649,26 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	 */
     private static int convertType(final int type) {
         switch (type) {
+        case Types.BIT:
         case Types.BOOLEAN:
-            return PG_TYPE_BOOL;        
+            return PG_TYPE_BOOL;
         case Types.VARCHAR:
             return PG_TYPE_VARCHAR;        
         case Types.CHAR:
-            return PG_TYPE_BPCHAR;        
+            return PG_TYPE_BPCHAR;
         case Types.TINYINT:
         case Types.SMALLINT:
-            return PG_TYPE_INT2;            
+        	return PG_TYPE_INT2;
         case Types.INTEGER:
-            return PG_TYPE_INT4;            
+            return PG_TYPE_INT4;
         case Types.BIGINT:
-            return PG_TYPE_INT8;            
+            return PG_TYPE_INT8;
         case Types.NUMERIC:
         case Types.DECIMAL:
-            return PG_TYPE_NUMERIC;        
+            return PG_TYPE_NUMERIC;
         case Types.FLOAT:
         case Types.REAL:
-            return PG_TYPE_FLOAT4;            
+            return PG_TYPE_FLOAT4;
         case Types.DOUBLE:
             return PG_TYPE_FLOAT8;
         case Types.TIME:
@@ -679,7 +680,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
             
         case Types.BLOB:            
         case Types.BINARY:
-        case Types.VARBINARY:  
+        case Types.VARBINARY:
         case Types.LONGVARBINARY:
         	return PG_TYPE_BYTEA;
         	
