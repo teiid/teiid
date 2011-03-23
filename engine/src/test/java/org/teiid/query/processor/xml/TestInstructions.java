@@ -106,7 +106,7 @@ public class TestInstructions extends TestCase {
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
 
         // Create virtual groups
-        QueryNode rsQuery = new QueryNode("xmltest.rs", "SELECT itemNum, itemName, itemQuantity FROM stock.items"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsQuery = new QueryNode("SELECT itemNum, itemName, itemQuantity FROM stock.items"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs = FakeMetadataFactory.createVirtualGroup("xmltest.rs", xmltest, rsQuery); //$NON-NLS-1$
 
         // Create virtual elements

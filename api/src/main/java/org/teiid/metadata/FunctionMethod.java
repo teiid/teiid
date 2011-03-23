@@ -355,10 +355,10 @@ public class FunctionMethod extends AbstractMetadataRecord {
                 return false;
             }
 
-            // Compare function names - case insensitive
-            if(other.getName() == null || this.getName() == null) { 
-                return false;
+            if (!EquivalenceUtil.areEqual(this.parent, other.getParent())) {
+            	return false;
             }
+            
             if(! other.getName().equalsIgnoreCase(this.getName()) ) {
                 return false;
             }

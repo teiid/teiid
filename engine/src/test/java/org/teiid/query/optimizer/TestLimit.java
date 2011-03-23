@@ -136,7 +136,7 @@ public class TestLimit extends TestCase {
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
          
         // Create virtual groups
-        QueryNode vm1g1n1 = new QueryNode("vm1.g1", "SELECT * FROM pm1.g1 LIMIT 100"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g1n1 = new QueryNode("SELECT * FROM pm1.g1 LIMIT 100"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g1 = FakeMetadataFactory.createVirtualGroup("vm1.g1", vm1, vm1g1n1); //$NON-NLS-1$
 
         // Create virtual elements
@@ -144,7 +144,7 @@ public class TestLimit extends TestCase {
             new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
 
-        QueryNode vm1g2n1 = new QueryNode("vm1.g2", "SELECT * FROM vm1.g1 ORDER BY e1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g2n1 = new QueryNode("SELECT * FROM vm1.g1 ORDER BY e1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g2 = FakeMetadataFactory.createVirtualGroup("vm1.g2", vm1, vm1g2n1); //$NON-NLS-1$
 
         // Create virtual elements

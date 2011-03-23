@@ -111,22 +111,21 @@ public class FakeMetadataFactory {
         FakeMetadataObject virt = createVirtualModel("virt"); //$NON-NLS-1$
         FakeMetadataObject rs = createResultSet("rs", virt, new String[] { "ID", "Name", "source_bits" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         FakeMetadataObject paramRS = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs);  //$NON-NLS-1$
-        QueryNode qn = new QueryNode("agg", //$NON-NLS-1$
-                                          "CREATE VIRTUAL PROCEDURE " //$NON-NLS-1$
-                                          + "BEGIN " //$NON-NLS-1$
-                                          + "        DECLARE integer VARIABLES.BITS;" //$NON-NLS-1$
-                                          + "        create local temporary table #temp (id integer, name string, bits integer);" //$NON-NLS-1$
-                                          + "        LOOP ON (SELECT DISTINCT phys.t.ID, phys.t.Name FROM phys.t) AS idCursor" //$NON-NLS-1$
-                                          + "        BEGIN" //$NON-NLS-1$
-                                          + "                VARIABLES.BITS = 0;" //$NON-NLS-1$
-                                          + "                LOOP ON (SELECT phys.t.source_bits FROM phys.t WHERE phys.t.ID = idCursor.id) AS bitsCursor" //$NON-NLS-1$
-                                          + "                BEGIN" //$NON-NLS-1$
-                                          + "                        VARIABLES.BITS = bitor(VARIABLES.BITS, bitsCursor.source_bits);" //$NON-NLS-1$
-                                          + "                END" //$NON-NLS-1$
-                                          + "                SELECT idCursor.id, idCursor.name, VARIABLES.BITS INTO #temp;" //$NON-NLS-1$
-                                          + "        END" //$NON-NLS-1$
-                                          + "        SELECT ID, Name, #temp.BITS AS source_bits FROM #temp;" //$NON-NLS-1$                                          
-                                          + "END"); //$NON-NLS-1$ 
+        QueryNode qn = new QueryNode("CREATE VIRTUAL PROCEDURE " //$NON-NLS-1$
+		  + "BEGIN " //$NON-NLS-1$
+		  + "        DECLARE integer VARIABLES.BITS;" //$NON-NLS-1$
+		  + "        create local temporary table #temp (id integer, name string, bits integer);" //$NON-NLS-1$
+		  + "        LOOP ON (SELECT DISTINCT phys.t.ID, phys.t.Name FROM phys.t) AS idCursor" //$NON-NLS-1$
+		  + "        BEGIN" //$NON-NLS-1$
+		  + "                VARIABLES.BITS = 0;" //$NON-NLS-1$
+		  + "                LOOP ON (SELECT phys.t.source_bits FROM phys.t WHERE phys.t.ID = idCursor.id) AS bitsCursor" //$NON-NLS-1$
+		  + "                BEGIN" //$NON-NLS-1$
+		  + "                        VARIABLES.BITS = bitor(VARIABLES.BITS, bitsCursor.source_bits);" //$NON-NLS-1$
+		  + "                END" //$NON-NLS-1$
+		  + "                SELECT idCursor.id, idCursor.name, VARIABLES.BITS INTO #temp;" //$NON-NLS-1$
+		  + "        END" //$NON-NLS-1$
+		  + "        SELECT ID, Name, #temp.BITS AS source_bits FROM #temp;" //$NON-NLS-1$                                          
+		  + "END"); //$NON-NLS-1$ 
         FakeMetadataObject proc = createVirtualProcedure("virt.agg", virt, Arrays.asList(new FakeMetadataObject[] { paramRS }), qn); //$NON-NLS-1$
 
         FakeMetadataStore store = new FakeMetadataStore();
@@ -308,135 +307,135 @@ public class FakeMetadataFactory {
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });            
 
 		// Create virtual groups
-		QueryNode vm1g1n1 = new QueryNode("vm1.g1", "SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm1g1n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1g1 = createUpdatableVirtualGroup("vm1.g1", vm1, vm1g1n1); //$NON-NLS-1$
 
-		QueryNode vm2g1n1 = new QueryNode("vm2.g1", "SELECT pm1.g1.* FROM pm1.g1, pm1.g2 where pm1.g1.e2 = pm1.g2.e2"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm2g1n1 = new QueryNode("SELECT pm1.g1.* FROM pm1.g1, pm1.g2 where pm1.g1.e2 = pm1.g2.e2"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm2g1 = FakeMetadataFactory.createUpdatableVirtualGroup("vm2.g1", vm2, vm2g1n1); //$NON-NLS-1$		
 		
-        QueryNode vm1g1n1_defect10711 = new QueryNode("vm1.g1a", "SELECT * FROM vm1.g1 as X"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g1n1_defect10711 = new QueryNode("SELECT * FROM vm1.g1 as X"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g1_defect10711 = createVirtualGroup("vm1.g1a", vm1, vm1g1n1_defect10711); //$NON-NLS-1$
 
-        QueryNode vm1g1n1_defect12081 = new QueryNode("vm1.g1b", "SELECT e1, upper(e1) as e1Upper FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g1n1_defect12081 = new QueryNode("SELECT e1, upper(e1) as e1Upper FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g1_defect12081 = createVirtualGroup("vm1.g1b", vm1, vm1g1n1_defect12081); //$NON-NLS-1$
 
-        QueryNode vm1g1n1c = new QueryNode("vm1.g1c", "SELECT PARSETIMESTAMP(pm1.g1.e1, 'MMM dd yyyy hh:mm:ss') as e5, e2, e3, e4 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g1n1c = new QueryNode("SELECT PARSETIMESTAMP(pm1.g1.e1, 'MMM dd yyyy hh:mm:ss') as e5, e2, e3, e4 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g1c = createVirtualGroup("vm1.g1c", vm1, vm1g1n1c); //$NON-NLS-1$
         
-        QueryNode vm1g2an1 = new QueryNode("vm1.g2a", "SELECT * FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g2an1 = new QueryNode("SELECT * FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g2a = createVirtualGroup("vm1.g2a", vm1, vm1g2an1); //$NON-NLS-1$
 
-		QueryNode vm1g2n1 = new QueryNode("vm1.g2", "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g1, pm1.g2 WHERE pm1.g1.e1=pm1.g2.e1"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm1g2n1 = new QueryNode("SELECT pm1.g1.e1, pm1.g1.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g1, pm1.g2 WHERE pm1.g1.e1=pm1.g2.e1"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1g2 = createVirtualGroup("vm1.g2", vm1, vm1g2n1); //$NON-NLS-1$
 
-        QueryNode vm1g4n1 = new QueryNode("vm1.g4", "SELECT e1 FROM pm1.g1 UNION ALL SELECT convert(e2, string) as x FROM pm1.g2 ORDER BY e1");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g4n1 = new QueryNode("SELECT e1 FROM pm1.g1 UNION ALL SELECT convert(e2, string) as x FROM pm1.g2 ORDER BY e1");         //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1g4 = createVirtualGroup("vm1.g4", vm1, vm1g4n1); //$NON-NLS-1$
 	
-        QueryNode vm1g5n1 = new QueryNode("vm1.g5", "SELECT concat(e1, 'val'), e2 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g5n1 = new QueryNode("SELECT concat(e1, 'val'), e2 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g5 = createVirtualGroup("vm1.g5", vm1, vm1g5n1); //$NON-NLS-1$
 
-        QueryNode vm1g6n1 = new QueryNode("vm1.g6", "SELECT concat(e1, 'val') AS e, e2 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g6n1 = new QueryNode("SELECT concat(e1, 'val') AS e, e2 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g6 = createVirtualGroup("vm1.g6", vm1, vm1g6n1); //$NON-NLS-1$
 
-        QueryNode vm1g7n1 = new QueryNode("vm1.g7", "SELECT concat(e1, e2) AS e, e2 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g7n1 = new QueryNode("SELECT concat(e1, e2) AS e, e2 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g7 = createVirtualGroup("vm1.g7", vm1, vm1g7n1); //$NON-NLS-1$
 
-        QueryNode vm1g8n1 = new QueryNode("vm1.g8", "SELECT concat(e1, 'val') AS e, e2 FROM pm1.g1 ORDER BY e"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g8n1 = new QueryNode("SELECT concat(e1, 'val') AS e, e2 FROM pm1.g1 ORDER BY e"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g8 = createVirtualGroup("vm1.g8", vm1, vm1g8n1); //$NON-NLS-1$
 
-        QueryNode vm1g9n1 = new QueryNode("vm1.g9", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1, pm4.g1 WHERE pm1.g1.e1 = pm4.g1.e1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g9n1 = new QueryNode("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1, pm4.g1 WHERE pm1.g1.e1 = pm4.g1.e1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g9 = createVirtualGroup("vm1.g9", vm1, vm1g9n1); //$NON-NLS-1$
 
-        QueryNode vm1g10n1 = new QueryNode("vm1.g10", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1, pm4.g2 WHERE pm1.g1.e1 = pm4.g2.e1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g10n1 = new QueryNode("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1, pm4.g2 WHERE pm1.g1.e1 = pm4.g2.e1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g10 = createVirtualGroup("vm1.g10", vm1, vm1g10n1); //$NON-NLS-1$
 
-        QueryNode vm1g11n1 = new QueryNode("vm1.g11", "SELECT * FROM pm4.g2"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g11n1 = new QueryNode("SELECT * FROM pm4.g2"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g11 = createVirtualGroup("vm1.g11", vm1, vm1g11n1); //$NON-NLS-1$
 
-        QueryNode vm1g12n1 = new QueryNode("vm1.g12", "SELECT DISTINCT * FROM pm3.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g12n1 = new QueryNode("SELECT DISTINCT * FROM pm3.g1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g12 = createVirtualGroup("vm1.g12", vm1, vm1g12n1); //$NON-NLS-1$
 
-        QueryNode vm1g13n1 = new QueryNode("vm1.g13", "SELECT DISTINCT * FROM pm3.g1 ORDER BY e1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g13n1 = new QueryNode("SELECT DISTINCT * FROM pm3.g1 ORDER BY e1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g13 = createVirtualGroup("vm1.g13", vm1, vm1g13n1); //$NON-NLS-1$
 
-        QueryNode vm1g14n1 = new QueryNode("vm1.g14", "SELECT * FROM pm3.g1 ORDER BY e1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g14n1 = new QueryNode("SELECT * FROM pm3.g1 ORDER BY e1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g14 = createVirtualGroup("vm1.g14", vm1, vm1g14n1); //$NON-NLS-1$
    
-        QueryNode vm1g15n1 = new QueryNode("vm1.g15", "SELECT e1, concat(e1, convert(e2, string)) AS x FROM pm3.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g15n1 = new QueryNode("SELECT e1, concat(e1, convert(e2, string)) AS x FROM pm3.g1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g15 = createVirtualGroup("vm1.g15", vm1, vm1g15n1); //$NON-NLS-1$
 
-        QueryNode vm1g16n1 = new QueryNode("vm1.g16", "SELECT concat(e1, 'val') AS e, e2 FROM pm3.g1 ORDER BY e"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g16n1 = new QueryNode("SELECT concat(e1, 'val') AS e, e2 FROM pm3.g1 ORDER BY e"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g16 = createVirtualGroup("vm1.g16", vm1, vm1g16n1); //$NON-NLS-1$
 
-        QueryNode vm1g17n1 = new QueryNode("vm1.g17", "SELECT pm3.g1.e1, pm3.g1.e2 FROM pm3.g1 UNION ALL SELECT pm3.g2.e1, pm3.g2.e2 FROM pm3.g2 ORDER BY e2");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g17n1 = new QueryNode("SELECT pm3.g1.e1, pm3.g1.e2 FROM pm3.g1 UNION ALL SELECT pm3.g2.e1, pm3.g2.e2 FROM pm3.g2 ORDER BY e2");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g17 = createVirtualGroup("vm1.g17", vm1, vm1g17n1); //$NON-NLS-1$
 
-        QueryNode vm1g18n1 = new QueryNode("vm1.g18", "SELECT (e4 * 100.0) as x FROM pm1.g1");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g18n1 = new QueryNode("SELECT (e4 * 100.0) as x FROM pm1.g1");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g18 = createVirtualGroup("vm1.g18", vm1, vm1g18n1); //$NON-NLS-1$
 
         // Transformations with subqueries and correlated subqueries
-        QueryNode vm1g19n1 = new QueryNode("vm1.g19", "Select * from vm1.g4 where not (e1 in (select e1 FROM vm1.g1 WHERE vm1.g4.e1 = e1))");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g19n1 = new QueryNode("Select * from vm1.g4 where not (e1 in (select e1 FROM vm1.g1 WHERE vm1.g4.e1 = e1))");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g19 = createVirtualGroup("vm1.g19", vm1, vm1g19n1); //$NON-NLS-1$
 
-        QueryNode vm1g20n1 = new QueryNode("vm1.g20", "Select * from vm1.g1 where exists (select e1 FROM vm1.g2 WHERE vm1.g1.e1 = e1)");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g20n1 = new QueryNode("Select * from vm1.g1 where exists (select e1 FROM vm1.g2 WHERE vm1.g1.e1 = e1)");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g20 = createVirtualGroup("vm1.g20", vm1, vm1g20n1); //$NON-NLS-1$
 
-        QueryNode vm1g21n1 = new QueryNode("vm1.g21", "Select * from pm1.g1 where exists (select e1 FROM pm2.g1 WHERE pm1.g1.e1 = e1)");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g21n1 = new QueryNode("Select * from pm1.g1 where exists (select e1 FROM pm2.g1 WHERE pm1.g1.e1 = e1)");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g21 = createVirtualGroup("vm1.g21", vm1, vm1g21n1); //$NON-NLS-1$
 
-        QueryNode vm1g22n1 = new QueryNode("vm1.g22", "Select e1, e2, e3, e4, (select e4 FROM vm1.g21 WHERE vm1.g20.e4 = e4 and e4 = 7.0) as E5 from vm1.g20");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g22n1 = new QueryNode("Select e1, e2, e3, e4, (select e4 FROM vm1.g21 WHERE vm1.g20.e4 = e4 and e4 = 7.0) as E5 from vm1.g20");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g22 = createVirtualGroup("vm1.g22", vm1, vm1g22n1); //$NON-NLS-1$
 
-        QueryNode vm1g23n1 = new QueryNode("vm1.g23", "Select e1, e2, e3, e4, (select e4 FROM vm1.g21 WHERE vm1.g20.e4 = 7.0 and e4 = 7.0) as E5 from vm1.g20");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g23n1 = new QueryNode("Select e1, e2, e3, e4, (select e4 FROM vm1.g21 WHERE vm1.g20.e4 = 7.0 and e4 = 7.0) as E5 from vm1.g20");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g23 = createVirtualGroup("vm1.g23", vm1, vm1g23n1); //$NON-NLS-1$
 
-        QueryNode vm1g24n1 = new QueryNode("vm1.g24", "Select * from vm1.g20 where exists (select * FROM vm1.g21 WHERE vm1.g20.e4 = E4)");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g24n1 = new QueryNode("Select * from vm1.g20 where exists (select * FROM vm1.g21 WHERE vm1.g20.e4 = E4)");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g24 = createVirtualGroup("vm1.g24", vm1, vm1g24n1); //$NON-NLS-1$
 
-        QueryNode vm1g25n1 = new QueryNode("vm1.g25", "Select e1, e2, e3, e4, (select e4 FROM pm1.g2 WHERE e1 = 'b') as E5 from pm1.g1");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g25n1 = new QueryNode("Select e1, e2, e3, e4, (select e4 FROM pm1.g2 WHERE e1 = 'b') as E5 from pm1.g1");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g25 = createVirtualGroup("vm1.g25", vm1, vm1g25n1); //$NON-NLS-1$
 
-        QueryNode vm1g26n1 = new QueryNode("vm1.g26", "Select e1, e2, e3, e4, (select e4 FROM pm1.g2 WHERE e4 = pm1.g1.e4 and e1 = 'b') as E5 from pm1.g1");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g26n1 = new QueryNode("Select e1, e2, e3, e4, (select e4 FROM pm1.g2 WHERE e4 = pm1.g1.e4 and e1 = 'b') as E5 from pm1.g1");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g26 = createVirtualGroup("vm1.g26", vm1, vm1g26n1); //$NON-NLS-1$
 
         //defect 10976
 //        QueryNode vm1g27n1 = new QueryNode("vm1.g27", "SELECT DISTINCT x as a, lower(e1) as x FROM vm1.g28");         //$NON-NLS-1$ //$NON-NLS-2$
-        QueryNode vm1g27n1 = new QueryNode("vm1.g27", "SELECT upper(e1) as x, e1 FROM pm1.g1");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g27n1 = new QueryNode("SELECT upper(e1) as x, e1 FROM pm1.g1");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g27 = createVirtualGroup("vm1.g27", vm1, vm1g27n1); //$NON-NLS-1$
 
-        QueryNode vm1g28n1 = new QueryNode("vm1.g28", "SELECT DISTINCT x as a, lower(e1) as x FROM vm1.g27");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g28n1 = new QueryNode("SELECT DISTINCT x as a, lower(e1) as x FROM vm1.g27");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g28 = createVirtualGroup("vm1.g28", vm1, vm1g28n1); //$NON-NLS-1$
 
-        QueryNode vm1g29n1 = new QueryNode("vm1.g29", "SELECT DISTINCT x, lower(e1) FROM vm1.g27");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g29n1 = new QueryNode("SELECT DISTINCT x, lower(e1) FROM vm1.g27");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g29 = createVirtualGroup("vm1.g29", vm1, vm1g29n1); //$NON-NLS-1$
 
-        QueryNode vm1g30n1 = new QueryNode("vm1.g30", "SELECT DISTINCT e1 as x, e1 as y FROM pm1.g1");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g30n1 = new QueryNode("SELECT DISTINCT e1 as x, e1 as y FROM pm1.g1");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g30 = createVirtualGroup("vm1.g30", vm1, vm1g30n1); //$NON-NLS-1$
 
-        QueryNode vm1g31n1 = new QueryNode("vm1.g31", "SELECT e1 as x, e1 as y FROM pm1.g1 ORDER BY x");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g31n1 = new QueryNode("SELECT e1 as x, e1 as y FROM pm1.g1 ORDER BY x");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g31 = createVirtualGroup("vm1.g31", vm1, vm1g31n1); //$NON-NLS-1$
 
-        QueryNode vm1g32n1 = new QueryNode("vm1.g32", "SELECT DISTINCT e1 as x, e1 as y FROM pm1.g1 ORDER BY x");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g32n1 = new QueryNode("SELECT DISTINCT e1 as x, e1 as y FROM pm1.g1 ORDER BY x");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g32 = createVirtualGroup("vm1.g32", vm1, vm1g32n1); //$NON-NLS-1$
 
-        QueryNode vm1g33n1 = new QueryNode("vm1.g33", "SELECT e2 FROM pm1.g1 WHERE 2 = e2");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g33n1 = new QueryNode("SELECT e2 FROM pm1.g1 WHERE 2 = e2");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g33 = createVirtualGroup("vm1.g33", vm1, vm1g33n1); //$NON-NLS-1$
 
-        QueryNode vm1g34n1 = new QueryNode("vm1.g34", "SELECT e1 as e1_, e2 as e2_ FROM pm1.g1 UNION ALL SELECT e1 as e1_, e2 as e2_ FROM pm2.g1");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g34n1 = new QueryNode("SELECT e1 as e1_, e2 as e2_ FROM pm1.g1 UNION ALL SELECT e1 as e1_, e2 as e2_ FROM pm2.g1");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g34 = createVirtualGroup("vm1.g34", vm1, vm1g34n1); //$NON-NLS-1$
 
-        QueryNode vm1g36n1 = new QueryNode("vm1.g36", "SELECT pm1.g1.e1 as ve1, pm1.g2.e1 as ve2 FROM pm1.g1 LEFT OUTER JOIN /* optional */ pm1.g2 on pm1.g1.e1 = pm1.g2.e1");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g36n1 = new QueryNode("SELECT pm1.g1.e1 as ve1, pm1.g2.e1 as ve2 FROM pm1.g1 LEFT OUTER JOIN /* optional */ pm1.g2 on pm1.g1.e1 = pm1.g2.e1");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g36 = createVirtualGroup("vm1.g36", vm1, vm1g36n1); //$NON-NLS-1$
 
-        QueryNode vm1g37n1 = new QueryNode("vm1.g37", "SELECT * from pm4.g1");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g37n1 = new QueryNode("SELECT * from pm4.g1");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g37 = createVirtualGroup("vm1.g37", vm1, vm1g37n1); //$NON-NLS-1$
         vm1g37.putProperty(FakeMetadataObject.Props.UPDATE, Boolean.TRUE);
 
-        QueryNode vm1g38n1 = new QueryNode("vm1.g38", "SELECT a.e1, b.e2 from pm1.g1 as a, pm6.g1 as b where a.e1=b.e1");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g38n1 = new QueryNode("SELECT a.e1, b.e2 from pm1.g1 as a, pm6.g1 as b where a.e1=b.e1");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g38 = createVirtualGroup("vm1.g38", vm1, vm1g38n1); //$NON-NLS-1$
         
 		// Create virtual groups
-		QueryNode vm1g39n1 = new QueryNode("vm1.g39", "SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm1g39n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1g39 = createUpdatableVirtualGroup("vm1.g39", vm1, vm1g39n1, "CREATE PROCEDURE BEGIN LOOP ON (SELECT pm1.g1.e2 FROM pm1.g1 where pm1.g1.e2=3) AS mycursor begin update pm1.g1 set pm1.g1.e1 = input.e1 where pm1.g1.e1 = input.e1; ROWS_UPDATED = ROWS_UPDATED + ROWCOUNT;\nupdate pm1.g1 set pm1.g1.e2 = input.e2 where pm1.g1.e2 = input.e2; END END"); //$NON-NLS-1$ //$NON-NLS-2$
         
 		// Create virtual elements
@@ -599,7 +598,7 @@ public class FakeMetadataFactory {
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
             
         // Create mapping classes for xmltest.doc5
-        QueryNode mc1n1 = new QueryNode("xmltest.mc1", "SELECT e1 FROM pm1.g1 UNION ALL SELECT e1 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode mc1n1 = new QueryNode("SELECT e1 FROM pm1.g1 UNION ALL SELECT e1 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1mc1 = createVirtualGroup("xmltest.mc1", vm1, mc1n1); //$NON-NLS-1$
         List vm1mc1e = createElements(vm1mc1,
             new String[] { "e1" }, //$NON-NLS-1$
@@ -613,20 +612,20 @@ public class FakeMetadataFactory {
         // Procedures and stored queries
         FakeMetadataObject rs1 = createResultSet("pm1.rs1", pm1, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         FakeMetadataObject rs1p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs1);  //$NON-NLS-1$
-        QueryNode sq1n1 = new QueryNode("pm1.sq1", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 FROM pm1.g1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sq1n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 FROM pm1.g1; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq1 = createVirtualProcedure("pm1.sq1", pm1, Arrays.asList(new FakeMetadataObject[] { rs1p1 }), sq1n1); //$NON-NLS-1$
         
         FakeMetadataObject rs2 = createResultSet("pm1.rs2", pm1, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         FakeMetadataObject rs2p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
         FakeMetadataObject rs2p2 = createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode("pm1.sq2", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 FROM pm1.g1 WHERE e1=pm1.sq2.in; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 FROM pm1.g1 WHERE e1=pm1.sq2.in; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq2 = createVirtualProcedure("pm1.sq2", pm1, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
 
         FakeMetadataObject rs5 = createResultSet("pm1.r5", pm1, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         FakeMetadataObject rs5p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs5);  //$NON-NLS-1$
         FakeMetadataObject rs5p2 = createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
         FakeMetadataObject rs5p3 = createParameter("in2", 3, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null);  //$NON-NLS-1$
-        QueryNode sq3n1 = new QueryNode("pm1.sq3", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 FROM pm1.g1 WHERE e1=pm1.sq3.in UNION ALL SELECT e1, e2 FROM pm1.g1 WHERE e2=pm1.sq3.in2; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sq3n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 FROM pm1.g1 WHERE e1=pm1.sq3.in UNION ALL SELECT e1, e2 FROM pm1.g1 WHERE e2=pm1.sq3.in2; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq3 = createVirtualProcedure("pm1.sq3", pm1, Arrays.asList(new FakeMetadataObject[] { rs5p1, rs5p2, rs5p3 }), sq3n1);  //$NON-NLS-1$
 
         //For defect 8211 - this stored query has two input params, no return param, and
@@ -634,7 +633,7 @@ public class FakeMetadataFactory {
         FakeMetadataObject rs5a = createResultSet("pm1.r5a", pm1, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         FakeMetadataObject rs5p1a = createParameter("in", 1, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
         FakeMetadataObject rs5p2a = createParameter("in2", 3, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null);  //$NON-NLS-1$
-        QueryNode sq3n1a = new QueryNode("pm1.sq3a", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 FROM pm1.g1 WHERE e1=pm1.sq3a.in UNION ALL SELECT e1, e2 FROM pm1.g1 WHERE e2=pm1.sq3a.in2; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sq3n1a = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 FROM pm1.g1 WHERE e1=pm1.sq3a.in UNION ALL SELECT e1, e2 FROM pm1.g1 WHERE e2=pm1.sq3a.in2; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq3a = createVirtualProcedure("pm1.sq3a", pm1, Arrays.asList(new FakeMetadataObject[] { rs5p1a, rs5p2a }), sq3n1a);  //$NON-NLS-1$
 
         //Case 3281 - create procedures with optional parameter(s)
@@ -647,7 +646,7 @@ public class FakeMetadataFactory {
         FakeMetadataObject rs5p4b = createParameter("in3", 4, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
         rs5p3b.putProperty(FakeMetadataObject.Props.NULL, Boolean.TRUE);
         rs5p4b.setDefaultValue("YYZ"); //$NON-NLS-1$
-        QueryNode sq3n1b = new QueryNode("pm1.sq3b", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 FROM pm1.g1 WHERE e1=pm1.sq3b.in UNION ALL SELECT e1, e2 FROM pm1.g1 WHERE e2=pm1.sq3b.in2; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sq3n1b = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 FROM pm1.g1 WHERE e1=pm1.sq3b.in UNION ALL SELECT e1, e2 FROM pm1.g1 WHERE e2=pm1.sq3b.in2; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq3b = createVirtualProcedure("pm1.sq3b", pm1, Arrays.asList(new FakeMetadataObject[] { rs5p1b, rs5p2b, rs5p3b, rs5p4b }), sq3n1b);  //$NON-NLS-1$
         
         //Make parameters of all different types, all with appropriate default values
@@ -697,7 +696,7 @@ public class FakeMetadataFactory {
         FakeMetadataObject rsParameterTime = createParameter("inTime", 15, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.TIME, null);  //$NON-NLS-1$
         rsParameterTime.putProperty(FakeMetadataObject.Props.NULL, Boolean.TRUE);
         rsParameterTime.setDefaultValue(new String("21:26:00")); //$NON-NLS-1$
-        QueryNode sqDefaultsNode = new QueryNode("pm1.sqDefaults", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 FROM pm1.g1 WHERE e1=pm1.sqDefaults.inString UNION ALL SELECT e1, e2 FROM pm1.g1 WHERE e2=pm1.sqDefaults.inInteger; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sqDefaultsNode = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 FROM pm1.g1 WHERE e1=pm1.sqDefaults.inString UNION ALL SELECT e1, e2 FROM pm1.g1 WHERE e2=pm1.sqDefaults.inInteger; END"); //$NON-NLS-1$ //$NON-NLS-2$
 
         FakeMetadataObject sqDefaults = createVirtualProcedure("pm1.sqDefaults", pm1, //$NON-NLS-1$
                                                           Arrays.asList(new FakeMetadataObject[] { 
@@ -724,7 +723,7 @@ public class FakeMetadataFactory {
         FakeMetadataObject paramBadDefaultIn = createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null);  //$NON-NLS-1$
         paramBadDefaultIn.putProperty(FakeMetadataObject.Props.NULL, Boolean.TRUE);
         paramBadDefaultIn.setDefaultValue("Clearly Not An Integer"); //$NON-NLS-1$
-        QueryNode sqnBadDefault = new QueryNode("pm1.sqBadDefault", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 FROM pm1.g1 WHERE e2=pm1.sqBadDefault.in; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sqnBadDefault = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 FROM pm1.g1 WHERE e2=pm1.sqBadDefault.in; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sqBadDefault = createVirtualProcedure("pm1.sqBadDefault", pm1, Arrays.asList(new FakeMetadataObject[] { paramBadDefaultRet, paramBadDefaultIn }), sqnBadDefault);  //$NON-NLS-1$
         
         //end case 3281
@@ -735,47 +734,47 @@ public class FakeMetadataFactory {
 
 		FakeMetadataObject rs4 = createResultSet("pm1.rs4", pm1, new String[] { "e1"}, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs4p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs4);  //$NON-NLS-1$
-        QueryNode sqsp1n1 = new QueryNode("pm1.sqsp1", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 FROM (EXEC pm1.sp1()) as x; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sqsp1n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 FROM (EXEC pm1.sp1()) as x; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sqsp1 = createVirtualProcedure("pm1.sqsp1", pm1, Arrays.asList(new FakeMetadataObject[] { rs4p1 }), sqsp1n1);  //$NON-NLS-1$
 
 		FakeMetadataObject rs6 = createResultSet("pm1.rs6", pm1, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         FakeMetadataObject rs6p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs6);  //$NON-NLS-1$
-        QueryNode sq4n1 = new QueryNode("pm1.sq4", "CREATE VIRTUAL PROCEDURE BEGIN EXEC pm1.sq1(); END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sq4n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN EXEC pm1.sq1(); END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq4 = createVirtualProcedure("pm1.sq4", pm1, Arrays.asList(new FakeMetadataObject[] { rs6p1}), sq4n1);  //$NON-NLS-1$
 
 		FakeMetadataObject rs7 = createResultSet("pm1.rs7", pm1, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         FakeMetadataObject rs7p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs7);  //$NON-NLS-1$
         FakeMetadataObject rs7p2 = createParameter("in1", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode sq5n1 = new QueryNode("pm1.sq5", "CREATE VIRTUAL PROCEDURE BEGIN EXEC pm1.sq2(pm1.sq5.in1); END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sq5n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN EXEC pm1.sq2(pm1.sq5.in1); END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq5 = createVirtualProcedure("pm1.sq5", pm1, Arrays.asList(new FakeMetadataObject[] { rs7p1, rs7p2 }), sq5n1);  //$NON-NLS-1$
 
 		FakeMetadataObject rs8 = createResultSet("pm1.rs8", pm1, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         FakeMetadataObject rs8p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs8);  //$NON-NLS-1$
-        QueryNode sq6n1 = new QueryNode("pm1.sq6", "CREATE VIRTUAL PROCEDURE BEGIN EXEC pm1.sq2(\'1\'); END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sq6n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN EXEC pm1.sq2(\'1\'); END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq6 = createVirtualProcedure("pm1.sq6", pm1, Arrays.asList(new FakeMetadataObject[] { rs8p1 }), sq6n1);  //$NON-NLS-1$
 
 		FakeMetadataObject rs9 = createResultSet("pm1.rs9", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs9p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs9);  //$NON-NLS-1$
-        QueryNode sq7n1 = new QueryNode("pm1.sq7", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 FROM (EXEC pm1.sq1()) as x; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sq7n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 FROM (EXEC pm1.sq1()) as x; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq7 = createVirtualProcedure("pm1.sq7", pm1, Arrays.asList(new FakeMetadataObject[] { rs9p1 }), sq7n1);  //$NON-NLS-1$
 
 		FakeMetadataObject rs10 = createResultSet("pm1.rs10", pm1, new String[] { "e1"}, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs10p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs10);  //$NON-NLS-1$
         FakeMetadataObject rs10p2 = createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode sq8n1 = new QueryNode("pm1.sq8", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 FROM (EXEC pm1.sq1()) as x WHERE x.e1=pm1.sq8.in; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sq8n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 FROM (EXEC pm1.sq1()) as x WHERE x.e1=pm1.sq8.in; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq8 = createVirtualProcedure("pm1.sq8", pm1, Arrays.asList(new FakeMetadataObject[] { rs10p1, rs10p2 }), sq8n1);  //$NON-NLS-1$
 
 		FakeMetadataObject rs11 = createResultSet("pm1.rs11", pm1, new String[] { "e1"}, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs11p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs11);  //$NON-NLS-1$
         FakeMetadataObject rs11p2 = createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode sq9n1 = new QueryNode("pm1.sq9", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 FROM (EXEC pm1.sq2(pm1.sq9.in)) as x; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sq9n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 FROM (EXEC pm1.sq2(pm1.sq9.in)) as x; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq9 = createVirtualProcedure("pm1.sq9", pm1, Arrays.asList(new FakeMetadataObject[] { rs11p1, rs11p2 }), sq9n1);  //$NON-NLS-1$
 
 		FakeMetadataObject rs12 = createResultSet("pm1.rs12", pm1, new String[] { "e1"}, new String[] { DataTypeManager.DefaultDataTypes.STRING}); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs12p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs12);  //$NON-NLS-1$
         FakeMetadataObject rs12p2 = createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
         FakeMetadataObject rs12p3 = createParameter("in2", 3, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null);  //$NON-NLS-1$
-        QueryNode sq10n1 = new QueryNode("pm1.sq10", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 FROM (EXEC pm1.sq2(pm1.sq10.in)) as x where e2=pm1.sq10.in2; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sq10n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 FROM (EXEC pm1.sq2(pm1.sq10.in)) as x where e2=pm1.sq10.in2; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq10 = createVirtualProcedure("pm1.sq10", pm1, Arrays.asList(new FakeMetadataObject[] { rs12p1, rs12p2,  rs12p3}), sq10n1);  //$NON-NLS-1$
 
 		FakeMetadataObject rs13 = createResultSet("pm1.rs13", pm1, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -787,55 +786,55 @@ public class FakeMetadataFactory {
         FakeMetadataObject rs14p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs14);  //$NON-NLS-1$
         FakeMetadataObject rs14p2 = createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
         FakeMetadataObject rs14p3 = createParameter("in2", 3, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null);  //$NON-NLS-1$
-        QueryNode sq11n1 = new QueryNode("pm1.sq11", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 FROM (EXEC pm1.sp2(?)) as x where e2=pm1.sq11.in; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sq11n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 FROM (EXEC pm1.sp2(?)) as x where e2=pm1.sq11.in; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq11 = createVirtualProcedure("pm1.sq11", pm1, Arrays.asList(new FakeMetadataObject[] { rs14p1, rs14p2,  rs14p3}), sq11n1);  //$NON-NLS-1$
 
 		FakeMetadataObject rs15 = createResultSet("pm1.rs15", pm1, new String[] { "count" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs15p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs15);  //$NON-NLS-1$
         FakeMetadataObject rs15p2 = createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
         FakeMetadataObject rs15p3 = createParameter("in2", 3, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null);  //$NON-NLS-1$
-        QueryNode sq12n1 = new QueryNode("pm1.sq12", "CREATE VIRTUAL PROCEDURE BEGIN INSERT INTO pm1.g1 ( e1, e2 ) VALUES( pm1.sq12.in, pm1.sq12.in2 ); END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sq12n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN INSERT INTO pm1.g1 ( e1, e2 ) VALUES( pm1.sq12.in, pm1.sq12.in2 ); END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq12 = createVirtualProcedure("pm1.sq12", pm1, Arrays.asList(new FakeMetadataObject[] { rs15p1, rs15p2, rs15p3 }), sq12n1);  //$NON-NLS-1$
 
 		FakeMetadataObject rs16 = createResultSet("pm1.rs16", pm1, new String[] { "count" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs16p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs16);  //$NON-NLS-1$
         FakeMetadataObject rs16p2 = createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode sq13n1 = new QueryNode("pm1.sq13", "CREATE VIRTUAL PROCEDURE BEGIN INSERT INTO pm1.g1 ( e1, e2 ) VALUES( pm1.sq13.in, 2 ); END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sq13n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN INSERT INTO pm1.g1 ( e1, e2 ) VALUES( pm1.sq13.in, 2 ); END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq13 = createVirtualProcedure("pm1.sq13", pm1, Arrays.asList(new FakeMetadataObject[] { rs16p1, rs16p2 }), sq13n1);  //$NON-NLS-1$
 
 		FakeMetadataObject rs17 = createResultSet("pm1.rs17", pm1, new String[] { "count" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs17p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs17);  //$NON-NLS-1$
         FakeMetadataObject rs17p2 = createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
         FakeMetadataObject rs17p3 = createParameter("in2", 3, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null);  //$NON-NLS-1$
-        QueryNode sq14n1 = new QueryNode("pm1.sq14", "CREATE VIRTUAL PROCEDURE BEGIN UPDATE pm1.g1 SET e1 = pm1.sq14.in WHERE e2 = pm1.sq14.in2; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sq14n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN UPDATE pm1.g1 SET e1 = pm1.sq14.in WHERE e2 = pm1.sq14.in2; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq14 = createVirtualProcedure("pm1.sq14", pm1, Arrays.asList(new FakeMetadataObject[] { rs17p1, rs17p2, rs17p3 }), sq14n1);  //$NON-NLS-1$
 
 		FakeMetadataObject rs18 = createResultSet("pm1.rs17", pm1, new String[] { "count" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs18p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs18);  //$NON-NLS-1$
         FakeMetadataObject rs18p2 = createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
         FakeMetadataObject rs18p3 = createParameter("in2", 3, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null);  //$NON-NLS-1$
-        QueryNode sq15n1 = new QueryNode("pm1.sq15", "CREATE VIRTUAL PROCEDURE BEGIN DELETE FROM pm1.g1 WHERE e1 = pm1.sq15.in AND e2 = pm1.sq15.in2; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sq15n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DELETE FROM pm1.g1 WHERE e1 = pm1.sq15.in AND e2 = pm1.sq15.in2; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq15 = createVirtualProcedure("pm1.sq15", pm1, Arrays.asList(new FakeMetadataObject[] { rs18p1, rs18p2, rs18p3 }), sq15n1);  //$NON-NLS-1$
 
-		QueryNode sq16n1 = new QueryNode("pm1.sq16", "CREATE VIRTUAL PROCEDURE BEGIN INSERT INTO pm1.g1 ( e1, e2 ) VALUES( 1, 2 ); END"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode sq16n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN INSERT INTO pm1.g1 ( e1, e2 ) VALUES( 1, 2 ); END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq16 = createVirtualProcedure("pm1.sq16", pm1, new ArrayList(), sq16n1);  //$NON-NLS-1$
 
         FakeMetadataObject rs19 = createResultSet("pm1.rs19", pm1, new String[] { "xml" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq17p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs19);  //$NON-NLS-1$
-        QueryNode sq17n1 = new QueryNode("pm1.sq17", "CREATE VIRTUAL PROCEDURE BEGIN SELECT * FROM xmltest.doc1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sq17n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT * FROM xmltest.doc1; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq17 = createVirtualProcedure("pm1.sq17", pm1, Arrays.asList(new FakeMetadataObject[] { sq17p1 }), sq17n1);  //$NON-NLS-1$
 
 		FakeMetadataObject sp3 = createStoredProcedure("pm1.sp3", pm1, new ArrayList());  //$NON-NLS-1$ //$NON-NLS-2$
 
         FakeMetadataObject rs20 = createResultSet("pm1.rs20", pm1, new String[] { "xml" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq18p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs20); //$NON-NLS-1$
-        QueryNode sq18n1 = new QueryNode("pm1.sq18", "CREATE VIRTUAL PROCEDURE BEGIN SELECT * FROM xmltest.doc1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sq18n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT * FROM xmltest.doc1; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq18 = createVirtualProcedure("pm1.sq18", pm1, Arrays.asList(new FakeMetadataObject[] { sq18p1 }), sq18n1); //$NON-NLS-1$
 
         FakeMetadataObject rs21 = createResultSet("pm1.rs21", pm1, new String[] { "xml" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq19p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs21); //$NON-NLS-1$
         FakeMetadataObject sq19p2 = createParameter("param1", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null); //$NON-NLS-1$
-        QueryNode sq19n1 = new QueryNode("pm1.sq19", "CREATE VIRTUAL PROCEDURE BEGIN SELECT * FROM xmltest.doc4 WHERE root.node1 = param1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sq19n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT * FROM xmltest.doc4 WHERE root.node1 = param1; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sq19 = createVirtualProcedure("pm1.sq19", pm1, Arrays.asList(new FakeMetadataObject[] { sq19p1, sq19p2 }), sq19n1); //$NON-NLS-1$
 
         FakeMetadataObject rs22p2 = createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.BIG_INTEGER, null);  //$NON-NLS-1$
@@ -848,124 +847,124 @@ public class FakeMetadataFactory {
         FakeMetadataObject vsprs1 = createResultSet("pm1.vsprs1", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vspp1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, vsprs1); //$NON-NLS-1$
 //        QueryNode vspqn1 = new QueryNode("vsp1", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE string x; LOOP ON (SELECT e1 FROM pm1.g1) AS mycursor BEGIN x=mycursor.e1; IF(x > 5) BEGIN CONTINUE; END END SELECT e1 FROM pm1.g1; END"); //$NON-NLS-1$ //$NON-NLS-2$
-        QueryNode vspqn1 = new QueryNode("vsp1", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT e2 FROM pm1.g1) AS mycursor BEGIN x=mycursor.e2; IF(x = 15) BEGIN BREAK; END END SELECT e1 FROM pm1.g1 where pm1.g1.e2 = x; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT e2 FROM pm1.g1) AS mycursor BEGIN x=mycursor.e2; IF(x = 15) BEGIN BREAK; END END SELECT e1 FROM pm1.g1 where pm1.g1.e2 = x; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp1 = createVirtualProcedure("pm1.vsp1", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn1); //$NON-NLS-1$
 
-        QueryNode vspqn2 = new QueryNode("vsp2", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT e2 FROM pm1.g1) AS mycursor BEGIN x=mycursor.e2; END SELECT e1 FROM pm1.g1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn2 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT e2 FROM pm1.g1) AS mycursor BEGIN x=mycursor.e2; END SELECT e1 FROM pm1.g1; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp2 = createVirtualProcedure("pm1.vsp2", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn2); //$NON-NLS-1$
 
-        QueryNode vspqn3 = new QueryNode("vsp3", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT e2 FROM pm1.g1) AS mycursor BEGIN x=mycursor.e2; END SELECT e1 FROM pm1.g1 WHERE x=e2; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn3 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT e2 FROM pm1.g1) AS mycursor BEGIN x=mycursor.e2; END SELECT e1 FROM pm1.g1 WHERE x=e2; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp3 = createVirtualProcedure("pm1.vsp3", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn3); //$NON-NLS-1$
 
-        QueryNode vspqn4 = new QueryNode("vsp4", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT e2 FROM pm1.g1) AS mycursor BEGIN IF(mycursor.e2 > 10) BEGIN BREAK; END x=mycursor.e2; END SELECT e1 FROM pm1.g1 WHERE x=e2; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn4 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT e2 FROM pm1.g1) AS mycursor BEGIN IF(mycursor.e2 > 10) BEGIN BREAK; END x=mycursor.e2; END SELECT e1 FROM pm1.g1 WHERE x=e2; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp4 = createVirtualProcedure("pm1.vsp4", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn4); //$NON-NLS-1$
         
-        QueryNode vspqn5 = new QueryNode("vsp5", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT e2 FROM pm1.g1) AS mycursor BEGIN IF(mycursor.e2 > 10) BEGIN CONTINUE; END x=mycursor.e2; END SELECT e1 FROM pm1.g1 WHERE x=e2; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn5 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT e2 FROM pm1.g1) AS mycursor BEGIN IF(mycursor.e2 > 10) BEGIN CONTINUE; END x=mycursor.e2; END SELECT e1 FROM pm1.g1 WHERE x=e2; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp5 = createVirtualProcedure("pm1.vsp5", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn5); //$NON-NLS-1$
 
-        QueryNode vspqn6 = new QueryNode("vsp6", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; x=0; WHILE (x < 15) BEGIN x=x+1; END SELECT e1 FROM pm1.g1 WHERE x=e2; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn6 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; x=0; WHILE (x < 15) BEGIN x=x+1; END SELECT e1 FROM pm1.g1 WHERE x=e2; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp6 = createVirtualProcedure("pm1.vsp6", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn6); //$NON-NLS-1$
 
         FakeMetadataObject vspp2 = createParameter("param1", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
-        QueryNode vspqn7 = new QueryNode("vsp7", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; x=0; WHILE (x < 12) BEGIN x=x+pm1.vsp7.param1; END SELECT e1 FROM pm1.g1 WHERE x=e2; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn7 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; x=0; WHILE (x < 12) BEGIN x=x+pm1.vsp7.param1; END SELECT e1 FROM pm1.g1 WHERE x=e2; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp7 = createVirtualProcedure("pm1.vsp7", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1, vspp2 }), vspqn7); //$NON-NLS-1$
 
         FakeMetadataObject vspp8 = createParameter("param1", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
-        QueryNode vspqn8 = new QueryNode("vsp8", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; x=0; WHILE (x < 12) BEGIN x=x+pm1.vsp8.param1; END SELECT e1 FROM pm1.g1 WHERE e2 >= param1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn8 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; x=0; WHILE (x < 12) BEGIN x=x+pm1.vsp8.param1; END SELECT e1 FROM pm1.g1 WHERE e2 >= param1; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp8 = createVirtualProcedure("pm1.vsp8", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1, vspp8 }), vspqn8); //$NON-NLS-1$
 
         FakeMetadataObject vspp9 = createParameter("param1", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
-        QueryNode vspqn9 = new QueryNode("vsp9", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; x=0; WHILE (x < param1) BEGIN x=x+pm1.vsp9.param1; END SELECT e1 FROM pm1.g1 WHERE e2 >= param1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn9 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; x=0; WHILE (x < param1) BEGIN x=x+pm1.vsp9.param1; END SELECT e1 FROM pm1.g1 WHERE e2 >= param1; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp9 = createVirtualProcedure("pm1.vsp9", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1, vspp9 }), vspqn9); //$NON-NLS-1$
 
         FakeMetadataObject vspp3 = createParameter("param1", 1, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
-        QueryNode vspqn10 = new QueryNode("vsp10", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT e2 FROM pm1.g1 WHERE e2=param1) AS mycursor BEGIN x=mycursor.e2; END END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn10 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT e2 FROM pm1.g1 WHERE e2=param1) AS mycursor BEGIN x=mycursor.e2; END END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp10 = createVirtualProcedure("pm1.vsp10", pm1, Arrays.asList(new FakeMetadataObject[] { vspp3 }), vspqn10); //$NON-NLS-1$
 
         //invalid
-        QueryNode vspqn11 = new QueryNode("vsp11", "CREATE VIRTUAL PROCEDURE BEGIN LOOP ON (SELECT e2 FROM pm1.g1) AS mycursor BEGIN LOOP ON (SELECT e1 FROM pm1.g1) AS mycursor BEGIN END END SELECT e1 FROM pm1.g1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn11 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN LOOP ON (SELECT e2 FROM pm1.g1) AS mycursor BEGIN LOOP ON (SELECT e1 FROM pm1.g1) AS mycursor BEGIN END END SELECT e1 FROM pm1.g1; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp11 = createVirtualProcedure("pm1.vsp11", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn11); //$NON-NLS-1$
 
         //invalid
-        QueryNode vspqn12 = new QueryNode("vsp12", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT e2 FROM pm1.g1) AS mycursor BEGIN END x=mycursor.e2; SELECT e1 FROM pm1.g1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn12 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT e2 FROM pm1.g1) AS mycursor BEGIN END x=mycursor.e2; SELECT e1 FROM pm1.g1; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp12 = createVirtualProcedure("pm1.vsp12", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn12); //$NON-NLS-1$
 
         FakeMetadataObject vsprs2 = createResultSet("pm1.vsprs2", pm1, new String[] { "e1", "const" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         FakeMetadataObject vspp4 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, vsprs2); //$NON-NLS-1$
-        QueryNode vspqn13 = new QueryNode("vsp13", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE string x; LOOP ON (SELECT e1 FROM pm1.g1) AS mycursor BEGIN x=mycursor.e1; END SELECT x, 5; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn13 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE string x; LOOP ON (SELECT e1 FROM pm1.g1) AS mycursor BEGIN x=mycursor.e1; END SELECT x, 5; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp13 = createVirtualProcedure("pm1.vsp13", pm1, Arrays.asList(new FakeMetadataObject[] { vspp4 }), vspqn13); //$NON-NLS-1$
 
-        QueryNode vspqn14 = new QueryNode("vsp14", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 INTO #temptable FROM pm1.g1; SELECT e1 FROM #temptable; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn14 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 INTO #temptable FROM pm1.g1; SELECT e1 FROM #temptable; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp14 = createVirtualProcedure("pm1.vsp14", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn14); //$NON-NLS-1$
 
-        QueryNode vspqn15 = new QueryNode("vsp15", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 INTO #temptable FROM pm1.g1; SELECT #temptable.e1 FROM #temptable, pm1.g2 WHERE #temptable.e2 = pm1.g2.e2; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn15 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 INTO #temptable FROM pm1.g1; SELECT #temptable.e1 FROM #temptable, pm1.g2 WHERE #temptable.e2 = pm1.g2.e2; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp15 = createVirtualProcedure("pm1.vsp15", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn15); //$NON-NLS-1$
         
-        QueryNode vspqn16 = new QueryNode("vsp16", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 INTO #temptable FROM pm1.g1; SELECT a.e1 FROM (SELECT pm1.g2.e1 FROM #temptable, pm1.g2 WHERE #temptable.e2 = pm1.g2.e2) AS a; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn16 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 INTO #temptable FROM pm1.g1; SELECT a.e1 FROM (SELECT pm1.g2.e1 FROM #temptable, pm1.g2 WHERE #temptable.e2 = pm1.g2.e2) AS a; END"); //$NON-NLS-1$ //$NON-NLS-2$
         //QueryNode vspqn16 = new QueryNode("vsp16", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 INTO #temptable FROM pm1.g1; SELECT e1 FROM #temptable where e1 in (SELECT pm1.g2.e1 FROM  #temptable, pm1.g2 WHERE #temptable.e2 = pm1.g2.e2); END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp16 = createVirtualProcedure("pm1.vsp16", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn16); //$NON-NLS-1$
 
-        QueryNode vspqn17 = new QueryNode("vsp17", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; SELECT e1, e2 INTO #temptable FROM pm1.g1; LOOP ON (SELECT e1, e2 FROM #temptable) AS mycursor BEGIN x=mycursor.e2; END SELECT e1 FROM pm1.g1 WHERE x=e2; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn17 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; SELECT e1, e2 INTO #temptable FROM pm1.g1; LOOP ON (SELECT e1, e2 FROM #temptable) AS mycursor BEGIN x=mycursor.e2; END SELECT e1 FROM pm1.g1 WHERE x=e2; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp17 = createVirtualProcedure("pm1.vsp17", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn17); //$NON-NLS-1$
 
         //invalid
-         QueryNode vspqn18 = new QueryNode("vsp18", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 INTO temptable FROM pm1.g1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+         QueryNode vspqn18 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 INTO temptable FROM pm1.g1; END"); //$NON-NLS-1$ //$NON-NLS-2$
          FakeMetadataObject vsp18 = createVirtualProcedure("pm1.vsp18", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn18); //$NON-NLS-1$
 
-        QueryNode vspqn19 = new QueryNode("vsp19", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 INTO #temptable FROM pm1.g1; SELECT e1 INTO #temptable FROM pm1.g1; SELECT e1 FROM #temptable; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn19 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 INTO #temptable FROM pm1.g1; SELECT e1 INTO #temptable FROM pm1.g1; SELECT e1 FROM #temptable; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp19 = createVirtualProcedure("pm1.vsp19", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn19); //$NON-NLS-1$
 
-        QueryNode vspqn20 = new QueryNode("vsp20", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 INTO #temptable FROM pm1.g1; INSERT INTO #temptable(e1) VALUES( 'Fourth'); SELECT e1 FROM #temptable; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn20 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 INTO #temptable FROM pm1.g1; INSERT INTO #temptable(e1) VALUES( 'Fourth'); SELECT e1 FROM #temptable; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp20 = createVirtualProcedure("pm1.vsp20", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn20); //$NON-NLS-1$
 
         FakeMetadataObject vspp21 = createParameter("param1", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
-        QueryNode vspqn21 = new QueryNode("vsp21", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 INTO #temptable FROM pm1.g1; INSERT INTO #temptable(#temptable.e1, e2) VALUES( 'Fourth', param1); SELECT e1, e2 FROM #temptable; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn21 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 INTO #temptable FROM pm1.g1; INSERT INTO #temptable(#temptable.e1, e2) VALUES( 'Fourth', param1); SELECT e1, e2 FROM #temptable; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp21 = createVirtualProcedure("pm1.vsp21", pm1, Arrays.asList(new FakeMetadataObject[] { vspp4, vspp21 }), vspqn21); //$NON-NLS-1$
 
         FakeMetadataObject vspp22 = createParameter("param1", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
-        QueryNode vspqn22 = new QueryNode("vsp22", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 INTO #temptable FROM pm1.g1 where e2 > param1; SELECT e1, e2 FROM #temptable; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn22 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 INTO #temptable FROM pm1.g1 where e2 > param1; SELECT e1, e2 FROM #temptable; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp22 = createVirtualProcedure("pm1.vsp22", pm1, Arrays.asList(new FakeMetadataObject[] { vspp4, vspp22 }), vspqn22); //$NON-NLS-1$
 
         FakeMetadataObject vspp23 = createParameter("param1", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
-        QueryNode vspqn23 = new QueryNode("vsp23", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE string x; SELECT e1, e2 INTO #temptable FROM pm1.g1 where e2 > param1; x = SELECT e1 FROM #temptable WHERE e2=15; SELECT x, 15; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn23 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE string x; SELECT e1, e2 INTO #temptable FROM pm1.g1 where e2 > param1; x = SELECT e1 FROM #temptable WHERE e2=15; SELECT x, 15; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp23 = createVirtualProcedure("pm1.vsp23", pm1, Arrays.asList(new FakeMetadataObject[] { vspp4, vspp23 }), vspqn23); //$NON-NLS-1$
  
-        QueryNode vspqn24 = new QueryNode("vsp24", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 INTO #temptable FROM pm1.g1; SELECT #temptable.e1 FROM #temptable WHERE #temptable.e2=15; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn24 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 INTO #temptable FROM pm1.g1; SELECT #temptable.e1 FROM #temptable WHERE #temptable.e2=15; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp24 = createVirtualProcedure("pm1.vsp24", pm1, Arrays.asList(new FakeMetadataObject[] { vspp4 }), vspqn24); //$NON-NLS-1$
  
-        QueryNode vspqn25 = new QueryNode("vsp25", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 INTO #temptable FROM pm1.g1 WHERE e1 ='no match'; SELECT e1 FROM #temptable; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn25 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 INTO #temptable FROM pm1.g1 WHERE e1 ='no match'; SELECT e1 FROM #temptable; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp25 = createVirtualProcedure("pm1.vsp25", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn25); //$NON-NLS-1$
 
-        QueryNode vspqn27 = new QueryNode("vsp27", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 from (exec pm1.vsp25())as c; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn27 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 from (exec pm1.vsp25())as c; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp27 = createVirtualProcedure("pm1.vsp27", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn27); //$NON-NLS-1$
 
-        QueryNode vspqn28 = new QueryNode("vsp28", "CREATE VIRTUAL PROCEDURE BEGIN SELECT 0 AS e1 ORDER BY e1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn28 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT 0 AS e1 ORDER BY e1; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp28 = createVirtualProcedure("pm1.vsp28", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn28); //$NON-NLS-1$
 
-        QueryNode vspqn29 = new QueryNode("vsp29", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 FROM pm1.g1 ORDER BY e1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn29 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 FROM pm1.g1 ORDER BY e1; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp29 = createVirtualProcedure("pm1.vsp29", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn29); //$NON-NLS-1$
 
         FakeMetadataObject vsprs30 = createResultSet("pm1.vsprs30", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp30p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, null, vsprs30); //$NON-NLS-1$
-        QueryNode vspqn30 = new QueryNode("vsp30", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 FROM pm1.g1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn30 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 FROM pm1.g1; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp30 = createVirtualProcedure("pm1.vsp30", pm1, Arrays.asList(new FakeMetadataObject[] {vsp30p1}), vspqn30); //$NON-NLS-1$        
 
         FakeMetadataObject vsprs31 = createResultSet("pm1.vsprs31", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp31p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, null, vsprs31); //$NON-NLS-1$
         FakeMetadataObject vsp31p2 = createParameter("p1", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
-        QueryNode vspqn31 = new QueryNode("vsp31", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 FROM pm1.g1 WHERE e2 = pm1.vsp31.p1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn31 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 FROM pm1.g1 WHERE e2 = pm1.vsp31.p1; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp31 = createVirtualProcedure("pm1.vsp31", pm1, Arrays.asList(new FakeMetadataObject[] {vsp31p1, vsp31p2}), vspqn31); //$NON-NLS-1$        
 
-        QueryNode vspqn38 = new QueryNode("vsp38", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer VARIABLES.y; VARIABLES.y=5; EXEC pm1.vsp7(VARIABLES.y); END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn38 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer VARIABLES.y; VARIABLES.y=5; EXEC pm1.vsp7(VARIABLES.y); END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp38 = createVirtualProcedure("pm1.vsp38", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn38); //$NON-NLS-1$
   
-        QueryNode vspqn39 = new QueryNode("vsp39", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer VARIABLES.x; VARIABLES.x=5; EXEC pm1.vsp7(VARIABLES.x); END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn39 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer VARIABLES.x; VARIABLES.x=5; EXEC pm1.vsp7(VARIABLES.x); END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp39 = createVirtualProcedure("pm1.vsp39", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn39); //$NON-NLS-1$
 
-        QueryNode vspqn40 = new QueryNode("vsp40", "CREATE VIRTUAL PROCEDURE BEGIN LOOP ON (SELECT e2 FROM pm1.g1) AS mycursor BEGIN EXEC pm1.vsp41(); END END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn40 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN LOOP ON (SELECT e2 FROM pm1.g1) AS mycursor BEGIN EXEC pm1.vsp41(); END END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp40 = createVirtualProcedure("pm1.vsp40", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn40); //$NON-NLS-1$
 
-        QueryNode vspqn41 = new QueryNode("vsp41", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 FROM pm1.g1 where e2=15; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn41 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1 FROM pm1.g1 where e2=15; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp41 = createVirtualProcedure("pm1.vsp41", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn41); //$NON-NLS-1$
 
         vm1g1.putProperty(FakeMetadataObject.Props.INSERT_PROCEDURE, "CREATE PROCEDURE BEGIN ROWS_UPDATED = INSERT INTO pm1.g1(e1, e2, e3, e4) values(INPUT.e1, INPUT.e2, INPUT.e3, INPUT.e4); END"); //$NON-NLS-1$
@@ -974,10 +973,10 @@ public class FakeMetadataFactory {
 
         vm1g37.putProperty(FakeMetadataObject.Props.INSERT_PROCEDURE, "CREATE PROCEDURE BEGIN ROWS_UPDATED = INSERT INTO pm4.g1(e1, e2, e3, e4) values(INPUT.e1, INPUT.e2, INPUT.e3, INPUT.e4); END"); //$NON-NLS-1$
         vm1g37.putProperty(FakeMetadataObject.Props.DELETE_PROCEDURE, "CREATE PROCEDURE BEGIN ROWS_UPDATED = DELETE FROM pm4.g1 where translate criteria; END"); //$NON-NLS-1$
-        QueryNode vspqn37 = new QueryNode("vsp37", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; VARIABLES.x=5; INSERT INTO vm1.g1(e2) values(VARIABLES.x); SELECT ROWCOUNT; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn37 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; VARIABLES.x=5; INSERT INTO vm1.g1(e2) values(VARIABLES.x); SELECT ROWCOUNT; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp37 = createVirtualProcedure("pm1.vsp37", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn37); //$NON-NLS-1$
 
-        QueryNode vspqn33 = new QueryNode("vsp33", new StringBuffer("CREATE VIRTUAL PROCEDURE")  //$NON-NLS-1$//$NON-NLS-2$
+        QueryNode vspqn33 = new QueryNode(new StringBuffer("CREATE VIRTUAL PROCEDURE")  //$NON-NLS-1$//$NON-NLS-2$
                                                             .append(" BEGIN") //$NON-NLS-1$
                                                             .append(" SELECT 3 AS temp1 INTO #myTempTable;") //$NON-NLS-1$
                                                             .append(" SELECT 2 AS temp1 INTO #myTempTable;") //$NON-NLS-1$
@@ -987,17 +986,17 @@ public class FakeMetadataFactory {
                                          );
         FakeMetadataObject vsp33 = createVirtualProcedure("pm1.vsp33", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn33); //$NON-NLS-1$
 
-        QueryNode vspqn35 = new QueryNode("vsp35", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer VARIABLES.ID; VARIABLES.ID = pm1.vsp35.p1; SELECT e1 FROM pm1.g1 WHERE e2 = VARIABLES.ID; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn35 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer VARIABLES.ID; VARIABLES.ID = pm1.vsp35.p1; SELECT e1 FROM pm1.g1 WHERE e2 = VARIABLES.ID; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp35 = createVirtualProcedure("pm1.vsp35", pm1, Arrays.asList(new FakeMetadataObject[] {vsp31p1, vsp31p2}), vspqn35); //$NON-NLS-1$        
 
-        QueryNode vspqn34 = new QueryNode("vsp34", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, 0 AS const FROM pm1.g1 ORDER BY const; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn34 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, 0 AS const FROM pm1.g1 ORDER BY const; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp34 = createVirtualProcedure("pm1.vsp34", pm1, Arrays.asList(new FakeMetadataObject[] { vspp4 }), vspqn34); //$NON-NLS-1$
 
-        QueryNode vspqn45 = new QueryNode("vsp45", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 INTO #temptable FROM pm1.g1; SELECT #temptable.e1 FROM #temptable where #temptable.e1 in (SELECT pm1.g2.e1 FROM pm1.g2 ); END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn45 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 INTO #temptable FROM pm1.g1; SELECT #temptable.e1 FROM #temptable where #temptable.e1 in (SELECT pm1.g2.e1 FROM pm1.g2 ); END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp45 = createVirtualProcedure("pm1.vsp45", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn45); //$NON-NLS-1$
         
         // Virtual group w/ procedure in transformation, optional params, named parameter syntax
-        QueryNode vspqn47 = new QueryNode("vsp47", "CREATE VIRTUAL PROCEDURE BEGIN IF (pm1.vsp47.param1 IS NOT NULL) BEGIN SELECT 'FOO' as e1, pm1.vsp47.param1 as e2; END ELSE BEGIN SELECT pm1.vsp47.param2 as e1, 2112 as e2; END END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn47 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN IF (pm1.vsp47.param1 IS NOT NULL) BEGIN SELECT 'FOO' as e1, pm1.vsp47.param1 as e2; END ELSE BEGIN SELECT pm1.vsp47.param2 as e1, 2112 as e2; END END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsprs47 = createResultSet("pm1.vsprs47", pm1, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         FakeMetadataObject vspp47_1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, vsprs47); //$NON-NLS-1$
         FakeMetadataObject vspp47_2 = createParameter("param1", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
@@ -1005,7 +1004,7 @@ public class FakeMetadataFactory {
         FakeMetadataObject vspp47_3 = createParameter("param2", 3, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null); //$NON-NLS-1$
         vspp47_3.putProperty(FakeMetadataObject.Props.NULL, Boolean.TRUE);
         FakeMetadataObject vsp47 = createVirtualProcedure("pm1.vsp47", pm1, Arrays.asList(new FakeMetadataObject[] { vspp47_1, vspp47_2, vspp47_3 }), vspqn47); //$NON-NLS-1$
-        QueryNode vgvpn7 = new QueryNode("vm1.vgvp7", "SELECT P.e2 as ve3, P.e1 as ve4 FROM (EXEC pm1.vsp47(param1=vm1.vgvp7.ve1, param2=vm1.vgvp7.ve2)) as P"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vgvpn7 = new QueryNode("SELECT P.e2 as ve3, P.e1 as ve4 FROM (EXEC pm1.vsp47(param1=vm1.vgvp7.ve1, param2=vm1.vgvp7.ve2)) as P"); //$NON-NLS-1$ //$NON-NLS-2$
 //        QueryNode vgvpn7 = new QueryNode("vm1.vgvp7", "SELECT P.e2 as ve1, P.e1 as ve2 FROM (EXEC pm1.vsp47(vm1.vgvp7.ve1, vm1.vgvp7.ve2)) as P"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vgvp7 = createVirtualGroup("vm1.vgvp7", vm1, vgvpn7); //$NON-NLS-1$
         FakeMetadataObject vgvp7e1 = FakeMetadataFactory.createElement("vm1.vgvp7.ve1", vgvp7, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
@@ -1017,17 +1016,17 @@ public class FakeMetadataFactory {
         
         
         //invalid
-        QueryNode vspqn32 = new QueryNode("vsp32", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT e2 FROM pm1.g1) AS #mycursor BEGIN IF(#mycursor.e2 > 10) BEGIN CONTINUE; END x=#mycursor.e2; END SELECT e1 FROM pm1.g1 WHERE x=e2; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn32 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; LOOP ON (SELECT e2 FROM pm1.g1) AS #mycursor BEGIN IF(#mycursor.e2 > 10) BEGIN CONTINUE; END x=#mycursor.e2; END SELECT e1 FROM pm1.g1 WHERE x=e2; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp32 = createVirtualProcedure("pm1.vsp32", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn32); //$NON-NLS-1$
 
         //virtual group with procedure in transformation
-        QueryNode vspqn26 = new QueryNode("vsp26", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 FROM pm1.g1 WHERE e2 >= pm1.vsp26.param1 and e1 = pm1.vsp26.param2; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn26 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 FROM pm1.g1 WHERE e2 >= pm1.vsp26.param1 and e1 = pm1.vsp26.param2; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vspp26_1 = createParameter("param1", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
         FakeMetadataObject vspp26_2 = createParameter("param2", 3, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null); //$NON-NLS-1$
         FakeMetadataObject vsprs3 = createResultSet("pm1.vsprs3", pm1, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         FakeMetadataObject vspp6 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, vsprs3); //$NON-NLS-1$
         FakeMetadataObject vsp26 = createVirtualProcedure("pm1.vsp26", pm1, Arrays.asList(new FakeMetadataObject[] { vspp6, vspp26_1, vspp26_2 }), vspqn26); //$NON-NLS-1$
-		QueryNode vgvpn1 = new QueryNode("vm1.vgvp1", "SELECT P.e1 as ve3 FROM (EXEC pm1.vsp26(vm1.vgvp1.ve1, vm1.vgvp1.ve2)) as P"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vgvpn1 = new QueryNode("SELECT P.e1 as ve3 FROM (EXEC pm1.vsp26(vm1.vgvp1.ve1, vm1.vgvp1.ve2)) as P"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vgvp1 = createVirtualGroup("vm1.vgvp1", vm1, vgvpn1); //$NON-NLS-1$
         FakeMetadataObject vgvp1e1 = FakeMetadataFactory.createElement("vm1.vgvp1.ve1", vgvp1, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
         vgvp1e1.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
@@ -1035,7 +1034,7 @@ public class FakeMetadataFactory {
         vgvp1e2.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
         FakeMetadataObject vgvp1e3 = FakeMetadataFactory.createElement("vm1.vgvp1.ve3", vgvp1, DataTypeManager.DefaultDataTypes.STRING, 2); //$NON-NLS-1$
       
-		QueryNode vgvpn2 = new QueryNode("vm1.vgvp2", "SELECT P.e1 as ve3 FROM (EXEC pm1.vsp26(vm1.vgvp2.ve1, vm1.vgvp2.ve2)) as P where P.e1='a'"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vgvpn2 = new QueryNode("SELECT P.e1 as ve3 FROM (EXEC pm1.vsp26(vm1.vgvp2.ve1, vm1.vgvp2.ve2)) as P where P.e1='a'"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vgvp2 = createVirtualGroup("vm1.vgvp2", vm1, vgvpn2); //$NON-NLS-1$
         FakeMetadataObject vgvp2e1 = FakeMetadataFactory.createElement("vm1.vgvp2.ve1", vgvp2, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
         vgvp2e1.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
@@ -1043,7 +1042,7 @@ public class FakeMetadataFactory {
         vgvp2e2.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
         FakeMetadataObject vgvp2e3 = FakeMetadataFactory.createElement("vm1.vgvp2.ve3", vgvp2, DataTypeManager.DefaultDataTypes.STRING, 2); //$NON-NLS-1$
    
-		QueryNode vgvpn3 = new QueryNode("vm1.vgvp3", "SELECT P.e1 as ve3 FROM (EXEC pm1.vsp26(vm1.vgvp3.ve1, vm1.vgvp3.ve2)) as P, pm1.g2 where P.e1=g2.e1"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vgvpn3 = new QueryNode("SELECT P.e1 as ve3 FROM (EXEC pm1.vsp26(vm1.vgvp3.ve1, vm1.vgvp3.ve2)) as P, pm1.g2 where P.e1=g2.e1"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vgvp3 = createVirtualGroup("vm1.vgvp3", vm1, vgvpn3); //$NON-NLS-1$
         FakeMetadataObject vgvp3e1 = FakeMetadataFactory.createElement("vm1.vgvp3.ve1", vgvp3, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
         vgvp3e1.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
@@ -1051,7 +1050,7 @@ public class FakeMetadataFactory {
         vgvp3e2.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
         FakeMetadataObject vgvp3e3 = FakeMetadataFactory.createElement("vm1.vgvp3.ve3", vgvp3, DataTypeManager.DefaultDataTypes.STRING, 2); //$NON-NLS-1$
 
-		QueryNode vgvpn4 = new QueryNode("vm1.vgvp4", "SELECT P.e1 as ve3 FROM (EXEC pm1.vsp26(vm1.vgvp4.ve1, vm1.vgvp4.ve2)) as P, vm1.g1 where P.e1=g1.e1"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vgvpn4 = new QueryNode("SELECT P.e1 as ve3 FROM (EXEC pm1.vsp26(vm1.vgvp4.ve1, vm1.vgvp4.ve2)) as P, vm1.g1 where P.e1=g1.e1"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vgvp4 = createVirtualGroup("vm1.vgvp4", vm1, vgvpn4); //$NON-NLS-1$
         FakeMetadataObject vgvp4e1 = FakeMetadataFactory.createElement("vm1.vgvp4.ve1", vgvp4, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
         vgvp4e1.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
@@ -1059,7 +1058,7 @@ public class FakeMetadataFactory {
         vgvp4e2.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
         FakeMetadataObject vgvp4e3 = FakeMetadataFactory.createElement("vm1.vgvp4.ve3", vgvp4, DataTypeManager.DefaultDataTypes.STRING, 2); //$NON-NLS-1$
         
-		QueryNode vgvpn5 = new QueryNode("vm1.vgvp5", "SELECT * FROM vm1.vgvp4 where vm1.vgvp4.ve1=vm1.vgvp5.ve1 and  vm1.vgvp4.ve2=vm1.vgvp5.ve2"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vgvpn5 = new QueryNode("SELECT * FROM vm1.vgvp4 where vm1.vgvp4.ve1=vm1.vgvp5.ve1 and  vm1.vgvp4.ve2=vm1.vgvp5.ve2"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vgvp5 = createVirtualGroup("vm1.vgvp5", vm1, vgvpn5); //$NON-NLS-1$
         FakeMetadataObject vgvp5e1 = FakeMetadataFactory.createElement("vm1.vgvp5.ve1", vgvp5, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
         vgvp5e1.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
@@ -1067,7 +1066,7 @@ public class FakeMetadataFactory {
         vgvp5e2.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
         FakeMetadataObject vgvp5e3 = FakeMetadataFactory.createElement("vm1.vgvp5.ve3", vgvp5, DataTypeManager.DefaultDataTypes.STRING, 2); //$NON-NLS-1$
 
-		QueryNode vgvpn6 = new QueryNode("vm1.vgvp6", "SELECT P.e1 as ve3, P.e2 as ve4 FROM (EXEC pm1.vsp26(vm1.vgvp6.ve1, vm1.vgvp6.ve2)) as P"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vgvpn6 = new QueryNode("SELECT P.e1 as ve3, P.e2 as ve4 FROM (EXEC pm1.vsp26(vm1.vgvp6.ve1, vm1.vgvp6.ve2)) as P"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vgvp6 = createVirtualGroup("vm1.vgvp6", vm1, vgvpn6); //$NON-NLS-1$
         FakeMetadataObject vgvp6e1 = FakeMetadataFactory.createElement("vm1.vgvp6.ve1", vgvp6, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
         vgvp6e1.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
@@ -1077,7 +1076,7 @@ public class FakeMetadataFactory {
         FakeMetadataObject vgvp6e4 = FakeMetadataFactory.createElement("vm1.vgvp6.ve4", vgvp6, DataTypeManager.DefaultDataTypes.INTEGER, 3); //$NON-NLS-1$
 
         //virtual group with two elements. One selectable, one not.
-        QueryNode vm1g35n1 = new QueryNode("vm1.g35", "SELECT e1, e2 FROM pm1.g1");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g35n1 = new QueryNode("SELECT e1, e2 FROM pm1.g1");         //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1g35 = createVirtualGroup("vm1.g35", vm1, vm1g35n1); //$NON-NLS-1$
         FakeMetadataObject vm1g35e1 = FakeMetadataFactory.createElement("vm1.g35.e1", vm1g35, DataTypeManager.DefaultDataTypes.STRING, 1); //$NON-NLS-1$
         vm1g35e1.putProperty(FakeMetadataObject.Props.SELECT, Boolean.FALSE);
@@ -1086,91 +1085,91 @@ public class FakeMetadataFactory {
         FakeMetadataObject vsprs36 = createResultSet("pm1.vsprs36", pm1, new String[] { "x" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp36p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, null, vsprs36); //$NON-NLS-1$
         FakeMetadataObject vsp36p2 = createParameter("param1", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
-        QueryNode vspqn36 = new QueryNode("vsp36", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; x = pm1.vsp36.param1 * 2; SELECT x; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn36 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE integer x; x = pm1.vsp36.param1 * 2; SELECT x; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp36 = createVirtualProcedure("pm1.vsp36", pm1, Arrays.asList(new FakeMetadataObject[] { vsp36p1, vsp36p2 }), vspqn36); //$NON-NLS-1$
 
         FakeMetadataObject vsprs42 = createResultSet("pm1.vsprs42", pm1, new String[] { "x" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp42p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, null, vsprs42); //$NON-NLS-1$
         FakeMetadataObject vsp42p2 = createParameter("param1", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
-        QueryNode vspqn42 = new QueryNode("vsp42", "CREATE VIRTUAL PROCEDURE BEGIN IF (pm1.vsp42.param1 > 0) SELECT 1 AS x; ELSE SELECT 0 AS x; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn42 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN IF (pm1.vsp42.param1 > 0) SELECT 1 AS x; ELSE SELECT 0 AS x; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp42 = createVirtualProcedure("pm1.vsp42", pm1, Arrays.asList(new FakeMetadataObject[] { vsp42p1, vsp42p2 }), vspqn42); //$NON-NLS-1$
 
         FakeMetadataObject vspp44 = createParameter("param1", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
-        QueryNode vspqn44 = new QueryNode("vsp44", "CREATE VIRTUAL PROCEDURE BEGIN SELECT pm1.vsp44.param1 INTO #temptable; SELECT e1 from pm1.g1; END"); //$NON-NLS-1$ //$NON-NLS-2$    
+        QueryNode vspqn44 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT pm1.vsp44.param1 INTO #temptable; SELECT e1 from pm1.g1; END"); //$NON-NLS-1$ //$NON-NLS-2$    
         FakeMetadataObject vsp44 = createVirtualProcedure("pm1.vsp44", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1, vspp44 }), vspqn44); //$NON-NLS-1$
 
         FakeMetadataObject vspp43 = createParameter("param1", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
-        QueryNode vspqn43 = new QueryNode("vsp43", "CREATE VIRTUAL PROCEDURE BEGIN exec pm1.vsp44(pm1.vsp43.param1); END"); //$NON-NLS-1$ //$NON-NLS-2$    
+        QueryNode vspqn43 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN exec pm1.vsp44(pm1.vsp43.param1); END"); //$NON-NLS-1$ //$NON-NLS-2$    
         FakeMetadataObject vsp43 = createVirtualProcedure("pm1.vsp43", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1, vspp43 }), vspqn43); //$NON-NLS-1$
         
-        QueryNode vspqn46 = new QueryNode("vsp46", "CREATE VIRTUAL PROCEDURE BEGIN create local temporary table #temptable (e1 string, e2 string); LOOP ON (SELECT e1 FROM pm1.g1) AS mycursor BEGIN select mycursor.e1, a.e1 as e2 into #temptable from (SELECT pm1.g1.e1 FROM pm1.g1 where pm1.g1.e1 = mycursor.e1) a; END SELECT e1 FROM #temptable; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn46 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN create local temporary table #temptable (e1 string, e2 string); LOOP ON (SELECT e1 FROM pm1.g1) AS mycursor BEGIN select mycursor.e1, a.e1 as e2 into #temptable from (SELECT pm1.g1.e1 FROM pm1.g1 where pm1.g1.e1 = mycursor.e1) a; END SELECT e1 FROM #temptable; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp46 = createVirtualProcedure("pm1.vsp46", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn46); //$NON-NLS-1$
         
         FakeMetadataObject vsp48rs = createResultSet("pm1vsp48.rs", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ 
         FakeMetadataObject vsp48p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, vsp48rs);  //$NON-NLS-1$
         FakeMetadataObject vsp48p2 = createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode vspqn48 = new QueryNode("vsp48", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE string x; SELECT e1 FROM (EXEC pm1.sq2(pm1.vsp48.in)) as e; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn48 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE string x; SELECT e1 FROM (EXEC pm1.sq2(pm1.vsp48.in)) as e; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp48 = createVirtualProcedure("pm1.vsp48", pm1, Arrays.asList(new FakeMetadataObject[] { vsp48p1, vsp48p2 }), vspqn48); //$NON-NLS-1$
         
         FakeMetadataObject vsp49rs = createResultSet("pm1vsp49.rs", pm1, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         FakeMetadataObject vsp49p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, vsp49rs);  //$NON-NLS-1$
-        QueryNode vspqn49 = new QueryNode("vsp49", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE string x; x = 'b'; EXEC pm1.sq2(x); END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn49 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE string x; x = 'b'; EXEC pm1.sq2(x); END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp49 = createVirtualProcedure("pm1.vsp49", pm1, Arrays.asList(new FakeMetadataObject[] { vsp49p1 }), vspqn49); //$NON-NLS-1$
 
         FakeMetadataObject vsp50rs = createResultSet("pm1vsp50.rs", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ 
         FakeMetadataObject vsp50p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, vsp50rs);  //$NON-NLS-1$
-        QueryNode vspqn50 = new QueryNode("vsp50", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE string x; x = 'b'; SELECT e1 FROM (EXEC pm1.sq2(x)) as e; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn50 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE string x; x = 'b'; SELECT e1 FROM (EXEC pm1.sq2(x)) as e; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp50 = createVirtualProcedure("pm1.vsp50", pm1, Arrays.asList(new FakeMetadataObject[] { vsp50p1 }), vspqn50); //$NON-NLS-1$
 
         FakeMetadataObject vsp51rs = createResultSet("pm1vsp51.rs", pm1, new String[] { "result" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ 
         FakeMetadataObject vsp51p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, vsp51rs);  //$NON-NLS-1$
-        QueryNode vspqn51 = new QueryNode("vsp51", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE string x; x = 'b'; LOOP ON (SELECT e1 FROM (EXEC pm1.sq2(x)) as e) AS c BEGIN x = x || 'b'; END SELECT x AS result; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn51 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE string x; x = 'b'; LOOP ON (SELECT e1 FROM (EXEC pm1.sq2(x)) as e) AS c BEGIN x = x || 'b'; END SELECT x AS result; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp51 = createVirtualProcedure("pm1.vsp51", pm1, Arrays.asList(new FakeMetadataObject[] { vsp51p1 }), vspqn51); //$NON-NLS-1$
 
         FakeMetadataObject vsp52rs = createResultSet("pm1vsp52.rs", pm1, new String[] { "result" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ 
         FakeMetadataObject vsp52p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, vsp52rs);  //$NON-NLS-1$
-        QueryNode vspqn52 = new QueryNode("vsp52", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE string x; x = 'c'; x = SELECT e1 FROM (EXEC pm1.sq2(x)) as e; SELECT x AS result; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn52 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE string x; x = 'c'; x = SELECT e1 FROM (EXEC pm1.sq2(x)) as e; SELECT x AS result; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp52 = createVirtualProcedure("pm1.vsp52", pm1, Arrays.asList(new FakeMetadataObject[] { vsp52p1 }), vspqn52); //$NON-NLS-1$
 
         FakeMetadataObject vsp53rs = createResultSet("pm1vsp53.rs", pm1, new String[] { "result" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ 
         FakeMetadataObject vsp53p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, vsp53rs);  //$NON-NLS-1$
         FakeMetadataObject vsp53p2 = createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode vspqn53 = new QueryNode("vsp53", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE string x; x = 'b'; LOOP ON (SELECT e1 FROM (EXEC pm1.sq2(pm1.vsp53.in)) as e) AS c BEGIN x = x || 'b'; END SELECT x AS result; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn53 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE string x; x = 'b'; LOOP ON (SELECT e1 FROM (EXEC pm1.sq2(pm1.vsp53.in)) as e) AS c BEGIN x = x || 'b'; END SELECT x AS result; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp53 = createVirtualProcedure("pm1.vsp53", pm1, Arrays.asList(new FakeMetadataObject[] { vsp53p1, vsp53p2 }), vspqn53); //$NON-NLS-1$
 
         FakeMetadataObject vsp54rs = createResultSet("pm1vsp54.rs", pm1, new String[] { "result" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ 
         FakeMetadataObject vsp54p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, vsp54rs);  //$NON-NLS-1$
         FakeMetadataObject vsp54p2 = createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode vspqn54 = new QueryNode("vsp54", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE string x; x = 'c'; x = SELECT e1 FROM (EXEC pm1.sq2(pm1.vsp54.in)) as e; SELECT x AS result; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn54 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN DECLARE string x; x = 'c'; x = SELECT e1 FROM (EXEC pm1.sq2(pm1.vsp54.in)) as e; SELECT x AS result; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp54 = createVirtualProcedure("pm1.vsp54", pm1, Arrays.asList(new FakeMetadataObject[] { vsp54p1, vsp54p2 }), vspqn54); //$NON-NLS-1$
         
         FakeMetadataObject vspp55 = createParameter("param1", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
-        QueryNode vspqn55 = new QueryNode("vsp55", "CREATE VIRTUAL PROCEDURE BEGIN select e1, param1 as a from vm1.g1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn55 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN select e1, param1 as a from vm1.g1; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp55 = createVirtualProcedure("pm1.vsp55", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1, vspp55 }), vspqn55); //$NON-NLS-1$
 
-        QueryNode vspqn56 = new QueryNode("vsp56", "CREATE VIRTUAL PROCEDURE BEGIN SELECT * INTO #temptable FROM pm1.g1; SELECT #temptable.e1 FROM #temptable; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn56 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT * INTO #temptable FROM pm1.g1; SELECT #temptable.e1 FROM #temptable; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp56 = createVirtualProcedure("pm1.vsp56", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn56); //$NON-NLS-1$
 
-        QueryNode vspqn57 = new QueryNode("vsp57", "CREATE VIRTUAL PROCEDURE BEGIN SELECT * INTO #temptable FROM pm1.g1; SELECT #temptable.e1 FROM #temptable order by #temptable.e1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn57 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT * INTO #temptable FROM pm1.g1; SELECT #temptable.e1 FROM #temptable order by #temptable.e1; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp57 = createVirtualProcedure("pm1.vsp57", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn57); //$NON-NLS-1$
 
         FakeMetadataObject vspp58 = createParameter("inp", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
-        QueryNode vspqn58 = new QueryNode("vsp58", "CREATE VIRTUAL PROCEDURE BEGIN SELECT vsp58.inp; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn58 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT vsp58.inp; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp58 = createVirtualProcedure("pm1.vsp58", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1, vspp58 }), vspqn58); //$NON-NLS-1$
         
-        QueryNode vspqn59 = new QueryNode("vsp59", "CREATE VIRTUAL PROCEDURE BEGIN SELECT * INTO #temp FROM pm5.g3;INSERT INTO #temp (e1, e2) VALUES('integer',1); END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn59 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT * INTO #temp FROM pm5.g3;INSERT INTO #temp (e1, e2) VALUES('integer',1); END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp59 = createVirtualProcedure("pm5.vsp59", pm6, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn59); //$NON-NLS-1$
         
-        QueryNode vspqn60 = new QueryNode("vsp60", "CREATE VIRTUAL PROCEDURE BEGIN create local temporary table temp_table (column1 string);insert into temp_table (column1) values ('First');insert into temp_table (column1) values ('Second');insert into temp_table (column1) values ('Third');select * from temp_table; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn60 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN create local temporary table temp_table (column1 string);insert into temp_table (column1) values ('First');insert into temp_table (column1) values ('Second');insert into temp_table (column1) values ('Third');select * from temp_table; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp60 = createVirtualProcedure("pm1.vsp60", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn60); //$NON-NLS-1$
 
-        QueryNode vspqn61 = new QueryNode("vsp61", "CREATE VIRTUAL PROCEDURE BEGIN create local temporary table temp_table (column1 string);insert into temp_table (column1) values ('First');drop table temp_table;create local temporary table temp_table (column1 string);insert into temp_table (column1) values ('First');insert into temp_table (column1) values ('Second');insert into temp_table (column1) values ('Third');select * from temp_table; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn61 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN create local temporary table temp_table (column1 string);insert into temp_table (column1) values ('First');drop table temp_table;create local temporary table temp_table (column1 string);insert into temp_table (column1) values ('First');insert into temp_table (column1) values ('Second');insert into temp_table (column1) values ('Third');select * from temp_table; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp61 = createVirtualProcedure("pm1.vsp61", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn61); //$NON-NLS-1$
 
-        QueryNode vspqn62 = new QueryNode("vsp62", "CREATE VIRTUAL PROCEDURE BEGIN create local temporary table temp_table (column1 string); select e1 as column1 into temp_table from pm1.g1;select * from temp_table; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn62 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN create local temporary table temp_table (column1 string); select e1 as column1 into temp_table from pm1.g1;select * from temp_table; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp62 = createVirtualProcedure("pm1.vsp62", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn62); //$NON-NLS-1$
 
-        QueryNode vspqn63 = new QueryNode("vsp63", "CREATE VIRTUAL PROCEDURE BEGIN declare string o; if(1>0) begin declare string a; a='b'; o=a; end if(1>0) begin declare string a; a='c'; o=a; end  select o; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn63 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN declare string o; if(1>0) begin declare string a; a='b'; o=a; end if(1>0) begin declare string a; a='c'; o=a; end  select o; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp63 = createVirtualProcedure("pm1.vsp63", pm1, Arrays.asList(new FakeMetadataObject[] { vspp1 }), vspqn63); //$NON-NLS-1$
 
         // Add all objects to the store
@@ -1747,16 +1746,16 @@ public class FakeMetadataFactory {
 
 
 		// Create virtual groups
-		QueryNode vm1g1n1 = new QueryNode("vm1.g1", "SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm1g1n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1g1 = createUpdatableVirtualGroup("vm1.g1", vm1, vm1g1n1); //$NON-NLS-1$
 
-		QueryNode vm1g2n1 = new QueryNode("vm1.g2", "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm1g2n1 = new QueryNode("SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1g2 = createUpdatableVirtualGroup("vm1.g2", vm1, vm1g2n1); //$NON-NLS-1$
 
-		QueryNode vm1g3n1 = new QueryNode("vm1.g3", "SELECT pm1.g3.e1 AS x, pm1.g3.e2 AS y from pm1.g3"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm1g3n1 = new QueryNode("SELECT pm1.g3.e1 AS x, pm1.g3.e2 AS y from pm1.g3"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1g3 = createUpdatableVirtualGroup("vm1.g3", vm1, vm1g3n1); //$NON-NLS-1$
 	
-        QueryNode vm1g4n1 = new QueryNode("vm1.g4", "SELECT distinct pm1.g2.e1 as ve1, pm1.g1.e1 as ve2 FROM pm1.g2 LEFT OUTER JOIN /* optional */ pm1.g1 on pm1.g1.e1 = pm1.g2.e1");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g4n1 = new QueryNode("SELECT distinct pm1.g2.e1 as ve1, pm1.g1.e1 as ve2 FROM pm1.g2 LEFT OUTER JOIN /* optional */ pm1.g1 on pm1.g1.e1 = pm1.g2.e1");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g4 = createVirtualGroup("vm1.g4", vm1, vm1g4n1); //$NON-NLS-1$
         List vm1g4e = createElements(vm1g4,
                   new String[] { "ve1", "ve2" }, //$NON-NLS-1$ //$NON-NLS-2$
@@ -1854,16 +1853,16 @@ public class FakeMetadataFactory {
 			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
 
 		// Create virtual groups
-		QueryNode vm1g1n1 = new QueryNode("vm1.g1", "SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm1g1n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1g1 = createUpdatableVirtualGroup("vm1.g1", vm1, vm1g1n1); //$NON-NLS-1$
 
-		QueryNode vm1g2n1 = new QueryNode("vm1.g2", "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm1g2n1 = new QueryNode("SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1g2 = createUpdatableVirtualGroup("vm1.g2", vm1, vm1g2n1); //$NON-NLS-1$
 
-		QueryNode vm1g3n1 = new QueryNode("vm1.g3", "SELECT CONCAT(e1, 'm') as x, (e2 +1) as y, 1 as e3, e4*50 as e4 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm1g3n1 = new QueryNode("SELECT CONCAT(e1, 'm') as x, (e2 +1) as y, 1 as e3, e4*50 as e4 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1g3 = createUpdatableVirtualGroup("vm1.g3", vm1, vm1g3n1); //$NON-NLS-1$
 
-		QueryNode vm1g4n1 = new QueryNode("vm1.g4", "SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm1g4n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1g4 = createUpdatableVirtualGroup("vm1.g4", vm1, vm1g4n1); //$NON-NLS-1$
 
 		// Create virtual elements
@@ -1944,10 +1943,10 @@ public class FakeMetadataFactory {
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
 
         // Create virtual groups
-        QueryNode vm1g1n1 = new QueryNode("vm1.g1", "SELECT * FROM vm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g1n1 = new QueryNode("SELECT * FROM vm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g1 = createUpdatableVirtualGroup("vm1.g1", vm1, vm1g1n1); //$NON-NLS-1$
 
-        QueryNode vm1g2n1 = new QueryNode("vm1.g2", "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g2n1 = new QueryNode("SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g2 = createUpdatableVirtualGroup("vm1.g2", vm1, vm1g2n1); //$NON-NLS-1$
 
         // Create virtual elements
@@ -2079,7 +2078,7 @@ public class FakeMetadataFactory {
         // Create physical groups
         FakeMetadataObject pm1g1 = createPhysicalGroup("pm1.g1", pm1); //$NON-NLS-1$
             
-        QueryNode vm1g1n1 = new QueryNode("vm1.g1", "SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g1n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g1 = createVirtualGroup("vm1.g1", vm1, vm1g1n1); //$NON-NLS-1$
         
         FakeMetadataObject pm1g2 = createPhysicalGroup("pm1.g2", pm1); //$NON-NLS-1$
@@ -2183,13 +2182,13 @@ public class FakeMetadataFactory {
         FakeMetadataObject timePk = createKey("msmodel.TIME.TIME_PK", timeTable, timePkElem); //$NON-NLS-1$
 
         FakeMetadataObject virtModel = createVirtualModel("logical"); //$NON-NLS-1$
-        QueryNode n1 = new QueryNode("vm1.g1", "select sum(c0) as c0, c1, c2 from db2Table group by c1, c2"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode n1 = new QueryNode("select sum(c0) as c0, c1, c2 from db2Table group by c1, c2"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject logicalTable1 = createVirtualGroup("logical.logicalTable1", virtModel, n1); //$NON-NLS-1$
         List logicalElem1 = createElements(logicalTable1, 
             new String[] { "c0", "c1", "c2"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
             new String[] { DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER});
 
-        QueryNode n2 = new QueryNode("vm1.g1", "select sum(c0) as c0, c1, c2 from db2Table group by c1, c2"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode n2 = new QueryNode("select sum(c0) as c0, c1, c2 from db2Table group by c1, c2"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject logicalTable2 = createVirtualGroup("logical.logicalTable2", virtModel, n2); //$NON-NLS-1$
         List logicalElem2 = createElements(logicalTable2, 
             new String[] { "b0", "b1", "b2"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
@@ -2313,7 +2312,7 @@ public class FakeMetadataFactory {
                                       new String[] { "a", "b" }, //$NON-NLS-1$ //$NON-NLS-2$ 
                                       new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
         
-        QueryNode virtTrans = new QueryNode("Virt.view", "SELECT * FROM MultiModel.Phys");         //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode virtTrans = new QueryNode("SELECT * FROM MultiModel.Phys");         //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject virtGroup = createVirtualGroup("Virt.view", virtModel, virtTrans); //$NON-NLS-1$
         List virtElements = createElements(virtGroup,
                                            new String[] { "a", "b" }, //$NON-NLS-1$ //$NON-NLS-2$ 
@@ -2323,7 +2322,7 @@ public class FakeMetadataFactory {
         FakeMetadataObject rs2p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
         FakeMetadataObject rs2p2 = FakeMetadataFactory.createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
         rs2p2.putProperty(FakeMetadataObject.Props.NULL, Boolean.TRUE);
-        QueryNode sq2n1 = new QueryNode("pm1.sq1", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
                                         + "execute string 'SELECT a, b FROM MultiModel.Phys where SOURCE_NAME = Virt.sq1.in'; END"); //$NON-NLS-1$ 
         FakeMetadataObject sq1 = FakeMetadataFactory.createVirtualProcedure("Virt.sq1", virtModel, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2 }), sq2n1);  //$NON-NLS-1$
 
@@ -2402,19 +2401,19 @@ public class FakeMetadataFactory {
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 
         // Create mapping classes - items doc
-        QueryNode rsQuery = new QueryNode("xmltest.items", "SELECT itemNum, itemName, itemQuantity, itemStatus FROM stock.items"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsQuery = new QueryNode("SELECT itemNum, itemName, itemQuantity, itemStatus FROM stock.items"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rsItems = FakeMetadataFactory.createVirtualGroup("xmltest.items", xmltest, rsQuery); //$NON-NLS-1$
 
-        QueryNode rsQuery2 = new QueryNode("xmltest.suppliers", "SELECT stock.suppliers.supplierNum, supplierName, supplierZipCode, stock.item_supplier.itemNum FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsQuery2 = new QueryNode("SELECT stock.suppliers.supplierNum, supplierName, supplierZipCode, stock.item_supplier.itemNum FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsQuery2.addBinding("xmltest.items.itemNum"); //$NON-NLS-1$
         FakeMetadataObject rsSuppliers = FakeMetadataFactory.createVirtualGroup("xmltest.suppliers", xmltest, rsQuery2); //$NON-NLS-1$
 
-        QueryNode rsQuery3 = new QueryNode("xmltest.orders", "SELECT orderNum, orderDate, orderQty, orderStatus, itemFK, supplierFK FROM stock.orders WHERE itemFK = ? AND supplierFK = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsQuery3 = new QueryNode("SELECT orderNum, orderDate, orderQty, orderStatus, itemFK, supplierFK FROM stock.orders WHERE itemFK = ? AND supplierFK = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsQuery3.addBinding("xmltest.suppliers.itemNum"); //$NON-NLS-1$
         rsQuery3.addBinding("xmltest.suppliers.supplierNum"); //$NON-NLS-1$
         FakeMetadataObject rsOrders = FakeMetadataFactory.createVirtualGroup("xmltest.orders", xmltest, rsQuery3); //$NON-NLS-1$
 
-        QueryNode rsQuery4 = new QueryNode("xmltest.employees", "SELECT employeeNum, firstName, lastName, supervisorNum, specializesInItemNum, supplierNumFK FROM stock.employees WHERE specializesInItemNum = ? AND supplierNumFK = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsQuery4 = new QueryNode("SELECT employeeNum, firstName, lastName, supervisorNum, specializesInItemNum, supplierNumFK FROM stock.employees WHERE specializesInItemNum = ? AND supplierNumFK = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsQuery4.addBinding("xmltest.suppliers.itemNum"); //$NON-NLS-1$
         rsQuery4.addBinding("xmltest.suppliers.supplierNum"); //$NON-NLS-1$
         FakeMetadataObject rsEmployees = FakeMetadataFactory.createVirtualGroup("xmltest.employees", xmltest, rsQuery4); //$NON-NLS-1$
@@ -2538,15 +2537,15 @@ public class FakeMetadataFactory {
                            });
             
         // Create mapping classes - baseball players employees doc
-        QueryNode playersNode = new QueryNode("xmltest.players", "SELECT stock.employees.employeeNum, firstName, lastName, supervisorNum FROM stock.employees WHERE specializesInItemNum is not null"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode playersNode = new QueryNode("SELECT stock.employees.employeeNum, firstName, lastName, supervisorNum FROM stock.employees WHERE specializesInItemNum is not null"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rsPlayers = FakeMetadataFactory.createVirtualGroup("xmltest.players", xmltest, playersNode); //$NON-NLS-1$
 
-        QueryNode managersNode = new QueryNode("xmltest.managers", "SELECT stock.employees.employeeNum, firstName, lastName, supervisorNum FROM stock.employees WHERE stock.employees.employeeNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode managersNode = new QueryNode("SELECT stock.employees.employeeNum, firstName, lastName, supervisorNum FROM stock.employees WHERE stock.employees.employeeNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         managersNode.addBinding("xmltest.players.supervisorNum"); //$NON-NLS-1$
         FakeMetadataObject rsManagers = FakeMetadataFactory.createVirtualGroup("xmltest.managers", xmltest, managersNode); //$NON-NLS-1$
 
             // TODO what if elements in criteria weren't fully qualified? see defect 19541
-        QueryNode ownersNode = new QueryNode("xmltest.owners", "SELECT stock.employees.employeeNum, firstName, lastName, supervisorNum FROM stock.employees WHERE stock.employees.employeeNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$ 
+        QueryNode ownersNode = new QueryNode("SELECT stock.employees.employeeNum, firstName, lastName, supervisorNum FROM stock.employees WHERE stock.employees.employeeNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$ 
         ownersNode.addBinding("xmltest.managers.supervisorNum"); //$NON-NLS-1$
         FakeMetadataObject rsOwners = FakeMetadataFactory.createVirtualGroup("xmltest.owners", xmltest, ownersNode); //$NON-NLS-1$
 

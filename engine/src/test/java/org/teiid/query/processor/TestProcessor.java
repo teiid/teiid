@@ -6166,15 +6166,15 @@ public class TestProcessor {
         List e1 = FakeMetadataFactory.createElements(t1, new String[] {"a", "b" }, new String[] { "string", "string" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         
         FakeMetadataObject v1 = FakeMetadataFactory.createVirtualModel("v1"); //$NON-NLS-1$
-        QueryNode n1 = new QueryNode("v1.t1", "SELECT convert(a, integer) as c, b FROM p1.t"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode n1 = new QueryNode("SELECT convert(a, integer) as c, b FROM p1.t"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vt1 = FakeMetadataFactory.createVirtualGroup("v1.t1", v1, n1); //$NON-NLS-1$
         List vte1 = FakeMetadataFactory.createElements(vt1, new String[] {"c", "b" }, new String[] { "string", "string" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
-        QueryNode n2 = new QueryNode("v1.t2", "SELECT convert(a, integer) as c, b FROM p1.t"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode n2 = new QueryNode("SELECT convert(a, integer) as c, b FROM p1.t"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vt2 = FakeMetadataFactory.createVirtualGroup("v1.t2", v1, n2); //$NON-NLS-1$
         List vte2 = FakeMetadataFactory.createElements(vt2, new String[] {"c", "b" }, new String[] { "string", "string" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
-        QueryNode n3 = new QueryNode("v1.u1", "SELECT c, b FROM v1.t1 UNION ALL SELECT c, b FROM v1.t1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode n3 = new QueryNode("SELECT c, b FROM v1.t1 UNION ALL SELECT c, b FROM v1.t1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vu1 = FakeMetadataFactory.createVirtualGroup("v1.u1", v1, n3); //$NON-NLS-1$
         List vtu1 = FakeMetadataFactory.createElements(vu1, new String[] {"c", "b" }, new String[] { "string", "string" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         
@@ -6267,7 +6267,7 @@ public class TestProcessor {
      */    
     @Test public void testInsertTempTableCreation() {
         FakeMetadataObject v1 = FakeMetadataFactory.createVirtualModel("v1"); //$NON-NLS-1$
-        QueryNode n1 = new QueryNode("v1.vp", "CREATE VIRTUAL PROCEDURE BEGIN insert into #temp (var1) values (1); select #temp.var1 from #temp; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN insert into #temp (var1) values (1); select #temp.var1 from #temp; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs = FakeMetadataFactory.createResultSet("rs", v1, new String[] { "var1" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER}); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject paramRS = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs);  //$NON-NLS-1$
         FakeMetadataObject vp = FakeMetadataFactory.createVirtualProcedure("v1.vp", v1, Arrays.asList(new Object[] {paramRS}), n1); //$NON-NLS-1$
@@ -6286,7 +6286,7 @@ public class TestProcessor {
     
     @Test public void testInsertTempTableCreation1() {
         FakeMetadataObject v1 = FakeMetadataFactory.createVirtualModel("v1"); //$NON-NLS-1$
-        QueryNode n1 = new QueryNode("v1.vp", "CREATE VIRTUAL PROCEDURE BEGIN insert into #temp (var1) values (1); select 2 as var1 into #temp; select #temp.var1 from #temp; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN insert into #temp (var1) values (1); select 2 as var1 into #temp; select #temp.var1 from #temp; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs = FakeMetadataFactory.createResultSet("rs", v1, new String[] { "var1" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER}); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject paramRS = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs);  //$NON-NLS-1$
         FakeMetadataObject vp = FakeMetadataFactory.createVirtualProcedure("v1.vp", v1, Arrays.asList(new Object[] {paramRS}), n1); //$NON-NLS-1$

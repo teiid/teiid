@@ -158,30 +158,29 @@ public class TestXMLPlanner extends TestCase {
                     DataTypeManager.DefaultDataTypes.DOUBLE });
 
         // Create virtual groups
-        QueryNode vm1g1n1 = new QueryNode("vm1.g1", "SELECT * FROM tm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g1n1 = new QueryNode("SELECT * FROM tm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
         //selects from temp group
         FakeMetadataObject vm1g1 =
             FakeMetadataFactory.createVirtualGroup("vm1.g1", vm1, vm1g1n1); //$NON-NLS-1$
 
         QueryNode vm1g2n1 =
-            new QueryNode("vm1.g2", "SELECT * FROM pm1.g2 where pm1.g2.e1=?"); //$NON-NLS-1$ //$NON-NLS-2$
+            new QueryNode("SELECT * FROM pm1.g2 where pm1.g2.e1=?"); //$NON-NLS-1$ //$NON-NLS-2$
         vm1g2n1.addBinding("vm1.g1.e1"); //$NON-NLS-1$
         FakeMetadataObject vm1g2 =
             FakeMetadataFactory.createVirtualGroup("vm1.g2", vm1, vm1g2n1); //$NON-NLS-1$
 
         QueryNode vm1g3n1 =
-            new QueryNode("vm1.g3", "SELECT * FROM pm1.g3 where pm1.g3.e1=?"); //$NON-NLS-1$ //$NON-NLS-2$
+            new QueryNode("SELECT * FROM pm1.g3 where pm1.g3.e1=?"); //$NON-NLS-1$ //$NON-NLS-2$
         vm1g3n1.addBinding("vm1.g2.e1"); //$NON-NLS-1$
         FakeMetadataObject vm1g3 =
             FakeMetadataFactory.createVirtualGroup("vm1.g3", vm1, vm1g3n1); //$NON-NLS-1$
 
-        QueryNode vm1g4n1 = new QueryNode("vm1.g4", "SELECT * FROM pm1.g4"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g4n1 = new QueryNode("SELECT * FROM pm1.g4"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g4 =
             FakeMetadataFactory.createVirtualGroup("vm1.g4", vm1, vm1g4n1); //$NON-NLS-1$
 
         QueryNode vm1g5n1 =
             new QueryNode(
-                "vm1.g5", //$NON-NLS-1$
                 "SELECT * FROM pm1.g5 where pm1.g5.e1=? AND pm1.g5.e2=?"); //$NON-NLS-1$
         vm1g5n1.addBinding("vm1.g4.e1"); //$NON-NLS-1$
         vm1g5n1.addBinding("vm1.g1.e1"); //$NON-NLS-1$
@@ -189,7 +188,7 @@ public class TestXMLPlanner extends TestCase {
             FakeMetadataFactory.createVirtualGroup("vm1.g5", vm1, vm1g5n1); //$NON-NLS-1$
 
         QueryNode tempGroup1 =
-            new QueryNode("tm1.g1", "SELECT * FROM pm1.g1 where e2 < '5'"); //$NON-NLS-1$ //$NON-NLS-2$
+            new QueryNode("SELECT * FROM pm1.g1 where e2 < '5'"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject tm1g1 =
             FakeMetadataFactory.createVirtualGroup("tm1.g1", vm1, tempGroup1); //$NON-NLS-1$
 
@@ -875,7 +874,7 @@ public class TestXMLPlanner extends TestCase {
 
 
         QueryNode stagingTableNode =
-            new QueryNode("tm1.stagingTable2", "SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+            new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject stagingTable =
             FakeMetadataFactory.createVirtualGroup("tm1.stagingTable2", vm1, stagingTableNode); //$NON-NLS-1$
         

@@ -195,9 +195,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		Collection<Table> matches = this.partialNameToFullNameCache.get(partialGroupName);
 		
 		if (matches == null) {
-			String partialName = DELIMITER_CHAR + partialGroupName.toUpperCase(); 
-	
-	        matches = getMetadataStore().getGroupsForPartialName(partialName);
+	        matches = getMetadataStore().getGroupsForPartialName(partialGroupName);
 	        
         	this.partialNameToFullNameCache.put(partialGroupName, matches);
 		}
@@ -332,7 +330,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
                 // if this is a virtual procedure get the procedure plan
                 if(procRecord.isVirtual()) {
-                    QueryNode queryNode = new QueryNode(procedureFullName, procRecord.getQueryPlan()); 
+                    QueryNode queryNode = new QueryNode(procRecord.getQueryPlan()); 
                     procInfo.setQueryPlan(queryNode);
                 }
                 
@@ -447,7 +445,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
             throw new QueryMetadataException(QueryPlugin.Util.getString("TransformationMetadata.QueryPlan_could_not_be_found_for_physical_group__6")+tableRecord.getFullName()); //$NON-NLS-1$
         }
         String transQuery = tableRecord.getSelectTransformation();
-        QueryNode queryNode = new QueryNode(tableRecord.getFullName(), transQuery);
+        QueryNode queryNode = new QueryNode(transQuery);
 
         // get any bindings and add them onto the query node
         List bindings = tableRecord.getBindings();

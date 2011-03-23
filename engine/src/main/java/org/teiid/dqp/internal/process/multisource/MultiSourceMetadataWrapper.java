@@ -134,7 +134,7 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
             boolean elementExists = false;
             for(int i=0; i<elements.size(); i++) {
                 Object elemID = elements.get(i);
-                if(actualMetadata.getFullName(elemID).endsWith("." + MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME)) { //$NON-NLS-1$
+                if(actualMetadata.getName(elemID).equalsIgnoreCase(MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME)) { //$NON-NLS-1$
                     // Replace the element with a MultiSourceElement
                     elements.set(i, new MultiSourceElement(groupID, i+1, fullName));
                     elementExists = true;

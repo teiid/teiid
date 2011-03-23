@@ -70,6 +70,7 @@ import org.teiid.query.util.CommandContext;
 public class QueryUtil {
 
     /** Parse a query from a query node and return a Command object.
+     * @param groupName 
      * 
      * @param queryNode The query node which contains a query
      * @param planEnv The planner environment
@@ -77,7 +78,7 @@ public class QueryUtil {
      * @throws QueryPlannerException If an error occurred
      * @since 4.3
      */
-    static Command getQuery(QueryNode queryNode, XMLPlannerEnvironment env) throws QueryPlannerException {
+    static Command getQuery(String groupName, QueryNode queryNode, XMLPlannerEnvironment env) throws QueryPlannerException {
         Command query = queryNode.getCommand();
         
         if (query == null) {
@@ -85,7 +86,7 @@ public class QueryUtil {
                 query = QueryParser.getQueryParser().parseCommand(queryNode.getQuery());
                 QueryResolver.resolveWithBindingMetadata(query, env.getGlobalMetadata().getDesignTimeMetadata(), queryNode, true);
             } catch (TeiidException e) {
-                throw new QueryPlannerException(e, QueryPlugin.Util.getString("ERR.015.004.0054", new Object[]{queryNode.getGroupName(), queryNode.getQuery()})); //$NON-NLS-1$
+                throw new QueryPlannerException(e, QueryPlugin.Util.getString("ERR.015.004.0054", new Object[]{groupName, queryNode.getQuery()})); //$NON-NLS-1$
 			}
         } 
         return query;
@@ -163,7 +164,7 @@ public class QueryUtil {
         throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
         
         QueryNode queryNode = QueryUtil.getQueryNode(groupName, planEnv.getGlobalMetadata());
-        Command command = QueryUtil.getQuery(queryNode, planEnv);
+        Command command = QueryUtil.getQuery(groupName, queryNode, planEnv);
         return command;
     }     
     

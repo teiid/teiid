@@ -517,11 +517,11 @@ public class TestProcedureRelational {
         FakeMetadataObject rs1 = FakeMetadataFactory.createResultSet("v1.rs1", v1, new String[] {"e1"}, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ 
         FakeMetadataObject rs1p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs1);  //$NON-NLS-1$
 
-        QueryNode n1 = new QueryNode("v1.vp1", "CREATE VIRTUAL PROCEDURE BEGIN declare string VARIABLES.x = '1'; SELECT e1 FROM v1.vp2 where v1.vp2.in = VARIABLES.x; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN declare string VARIABLES.x = '1'; SELECT e1 FROM v1.vp2 where v1.vp2.in = VARIABLES.x; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vt1 = FakeMetadataFactory.createVirtualProcedure("v1.vp1", v1, Arrays.asList(new FakeMetadataObject[] { rs1p1 }), n1); //$NON-NLS-1$
         
         FakeMetadataObject p1 = FakeMetadataFactory.createParameter("v1.vp2.in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode n2 = new QueryNode("v1.vp2", "CREATE VIRTUAL PROCEDURE BEGIN declare string VARIABLES.x; declare string VARIABLES.y; VARIABLES.x = '2'; VARIABLES.y = v1.vp2.in; select VARIABLES.y; end"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode n2 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN declare string VARIABLES.x; declare string VARIABLES.y; VARIABLES.x = '2'; VARIABLES.y = v1.vp2.in; select VARIABLES.y; end"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vt2 = FakeMetadataFactory.createVirtualProcedure("v1.vp2", v1, Arrays.asList(new FakeMetadataObject[] { rs1p1, p1 }), n2); //$NON-NLS-1$
                 
         FakeMetadataStore store = new FakeMetadataStore();
@@ -691,7 +691,7 @@ public class TestProcedureRelational {
         FakeMetadataObject rs1 = FakeMetadataFactory.createResultSet("v1.vp1.rs1", v1, new String[] {"e1", "e2", "e3", "e4", "e5"}, new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ 
         FakeMetadataObject rs1p1 = FakeMetadataFactory.createParameter("ret", 1, SPParameter.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs1);  //$NON-NLS-1$
 
-        QueryNode n1 = new QueryNode("v1.vp1", "CREATE VIRTUAL PROCEDURE BEGIN SELECT vp1.in1 e1, x.in1 e2, x.e1 e3, y.in1 e4, y.e1 e5 FROM pm1.sp119 x, pm1.sp119 y where x.in1 = vp1.in1 and y.in1 = x.e1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT vp1.in1 e1, x.in1 e2, x.e1 e3, y.in1 e4, y.e1 e5 FROM pm1.sp119 x, pm1.sp119 y where x.in1 = vp1.in1 and y.in1 = x.e1; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vt1 = FakeMetadataFactory.createVirtualProcedure("v1.vp1", v1, Arrays.asList(new FakeMetadataObject[] { rs1p1, in }), n1); //$NON-NLS-1$
         
         FakeMetadataObject in1 = FakeMetadataFactory.createParameter("pm1.sp119.in1", 2, SPParameter.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$

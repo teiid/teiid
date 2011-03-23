@@ -153,17 +153,17 @@ public class TestXMLProcessor {
 
         // Create virtual groups
         // per defect 6829 - intentionally including the reserved word "group" as part of this virtual group name
-        QueryNode rsQuery = new QueryNode("xmltest.group.items", "SELECT itemNum, itemName, itemQuantity, itemStatus FROM stock.items"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsQuery = new QueryNode("SELECT itemNum, itemName, itemQuantity, itemStatus FROM stock.items"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs = FakeMetadataFactory.createVirtualGroup("xmltest.group.items", xmltest, rsQuery); //$NON-NLS-1$
 
         // Created 2nd virtual group w/ nested result set & binding
-        QueryNode rsQuery2 = new QueryNode("xmltest.suppliers", "SELECT concat(stock.suppliers.supplierNum, '') as supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = input.x"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsQuery2 = new QueryNode("SELECT concat(stock.suppliers.supplierNum, '') as supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = input.x"); //$NON-NLS-1$ //$NON-NLS-2$
         //QueryNode rsQuery2 = new QueryNode("xmltest.suppliers", "SELECT stock.suppliers.supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = ?");
         rsQuery2.addBinding("xmltest.group.items.itemNum as x"); //$NON-NLS-1$
         FakeMetadataObject rs2 = FakeMetadataFactory.createVirtualGroup("xmltest.suppliers", xmltest, rsQuery2); //$NON-NLS-1$
 
         // Created virtual group w/ nested result set & binding
-        QueryNode rsQuery3 = new QueryNode("xmltest.orders", "SELECT orderNum, orderDate, orderQty, orderStatus FROM stock.orders WHERE itemFK = ? AND supplierFK = ? AND supplierNameFK = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsQuery3 = new QueryNode("SELECT orderNum, orderDate, orderQty, orderStatus FROM stock.orders WHERE itemFK = ? AND supplierFK = ? AND supplierNameFK = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsQuery3.addBinding("xmltest.group.items.itemNum"); //$NON-NLS-1$
         rsQuery3.addBinding("xmltest.suppliers.supplierNum"); //$NON-NLS-1$
         rsQuery3.addBinding("xmltest.suppliers.supplierName"); //$NON-NLS-1$
@@ -173,22 +173,22 @@ public class TestXMLProcessor {
 // ======================================================================================================================
 
         //create employees - not connected to any of the above
-        QueryNode rsEmployees = new QueryNode("xmltest.employees", "SELECT employeeNum, firstName, lastName FROM stock.employees WHERE supervisorNum IS NULL"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsEmployees = new QueryNode("SELECT employeeNum, firstName, lastName FROM stock.employees WHERE supervisorNum IS NULL"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs4 = FakeMetadataFactory.createVirtualGroup("xmltest.employees", xmltest, rsEmployees); //$NON-NLS-1$
 
         //recursive piece
-        QueryNode rsEmployeesRecursive = new QueryNode("xmltest.employeesRecursive", "SELECT employeeNum, firstName, lastName FROM stock.employees WHERE supervisorNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsEmployeesRecursive = new QueryNode("SELECT employeeNum, firstName, lastName FROM stock.employees WHERE supervisorNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsEmployeesRecursive.addBinding("xmltest.employees.employeeNum"); //$NON-NLS-1$
         FakeMetadataObject rs4a = FakeMetadataFactory.createVirtualGroup("xmltest.employeesRecursive", xmltest, rsEmployeesRecursive); //$NON-NLS-1$
 
 // ======================================================================================================================
 
         //create employees - not connected to any of the above
-        QueryNode rsEmployees2 = new QueryNode("xmltest.employees2", "SELECT employeeNum, firstName, lastName, supervisorNum FROM stock.employees WHERE supplierNumFK = '2' AND NOT (supervisorNum IS NULL)"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsEmployees2 = new QueryNode("SELECT employeeNum, firstName, lastName, supervisorNum FROM stock.employees WHERE supplierNumFK = '2' AND NOT (supervisorNum IS NULL)"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs5 = FakeMetadataFactory.createVirtualGroup("xmltest.employees2", xmltest, rsEmployees2); //$NON-NLS-1$
 
         //recursive piece
-        QueryNode rsEmployees2Recursive = new QueryNode("xmltest.employees2Recursive", "SELECT employeeNum, firstName, lastName, supervisorNum FROM stock.employees WHERE employeeNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsEmployees2Recursive = new QueryNode("SELECT employeeNum, firstName, lastName, supervisorNum FROM stock.employees WHERE employeeNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsEmployees2Recursive.addBinding("xmltest.employees2.supervisorNum"); //$NON-NLS-1$
         FakeMetadataObject rs5a = FakeMetadataFactory.createVirtualGroup("xmltest.employees2Recursive", xmltest, rsEmployees2Recursive); //$NON-NLS-1$
 
@@ -196,7 +196,7 @@ public class TestXMLProcessor {
 // Alternate mapping class which selects from stored query
 
         // Created 2nd virtual group w/ nested result set & binding
-        QueryNode rsQueryX = new QueryNode("xmltest.suppliersX", "SELECT * FROM (exec xmltest.sqX(?)) as X"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsQueryX = new QueryNode("SELECT * FROM (exec xmltest.sqX(?)) as X"); //$NON-NLS-1$ //$NON-NLS-2$
         rsQueryX.addBinding("xmltest.group.items.itemNum"); //$NON-NLS-1$
         FakeMetadataObject rsQX = FakeMetadataFactory.createVirtualGroup("xmltest.suppliersX", xmltest, rsQueryX); //$NON-NLS-1$
 
@@ -204,15 +204,15 @@ public class TestXMLProcessor {
 // ALTERNATE METADATA A (temp groups)
 
         // root temp group
-        QueryNode tempQuery = new QueryNode("tempGroup.orders", "SELECT * FROM stock.orders"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode tempQuery = new QueryNode("SELECT * FROM stock.orders"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject temp = FakeMetadataFactory.createVirtualGroup("tempGroup.orders", xmltest, tempQuery); //$NON-NLS-1$
 
         // 2nd bogus root temp group selects from first - tests that temp groups can select from others
-        QueryNode tempQuery2 = new QueryNode("tempGroup.orders2", "SELECT * FROM tempGroup.orders"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode tempQuery2 = new QueryNode("SELECT * FROM tempGroup.orders"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject temp2 = FakeMetadataFactory.createVirtualGroup("tempGroup.orders2", xmltest, tempQuery2); //$NON-NLS-1$
         
         // Created virtual group w/ nested result set & binding - selects from 2nd temp root group
-        QueryNode rsQuery3a = new QueryNode("xmltest.ordersA", "SELECT orderNum, orderDate, orderQty, orderStatus FROM tempGroup.orders2 WHERE itemFK = ? AND supplierFK = ? AND supplierNameFK = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsQuery3a = new QueryNode("SELECT orderNum, orderDate, orderQty, orderStatus FROM tempGroup.orders2 WHERE itemFK = ? AND supplierFK = ? AND supplierNameFK = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsQuery3a.addBinding("xmltest.group.items.itemNum"); //$NON-NLS-1$
         rsQuery3a.addBinding("xmltest.suppliers.supplierNum"); //$NON-NLS-1$
         rsQuery3a.addBinding("xmltest.suppliers.supplierName"); //$NON-NLS-1$
@@ -224,14 +224,14 @@ public class TestXMLProcessor {
         //temp group selects from root temp group and it has bindings to other mapping classes
         // from 5.5 bindings are not supported in the staging tables. even before we did not supported 
         // them in the modeler; but we did in execution; now we remove it as it poses more issues.
-        QueryNode tempQuery3b = new QueryNode("tempGroup.orders3B", "SELECT orderNum, orderDate, orderQty, orderStatus FROM tempGroup.orders2 WHERE itemFK = ? AND supplierFK = ? AND supplierNameFK = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode tempQuery3b = new QueryNode("SELECT orderNum, orderDate, orderQty, orderStatus FROM tempGroup.orders2 WHERE itemFK = ? AND supplierFK = ? AND supplierNameFK = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         tempQuery3b.addBinding("xmltest.group.items.itemNum"); //$NON-NLS-1$
         tempQuery3b.addBinding("xmltest.suppliers.supplierNum"); //$NON-NLS-1$
         tempQuery3b.addBinding("xmltest.suppliers.supplierName"); //$NON-NLS-1$
         FakeMetadataObject temp3b = FakeMetadataFactory.createVirtualGroup("tempGroup.orders3B", xmltest, tempQuery3b); //$NON-NLS-1$
         
         // Created virtual group w/ nested result set & binding
-        QueryNode rsQuery3b = new QueryNode("xmltest.ordersB", "SELECT orderNum, orderDate, orderQty, orderStatus FROM tempGroup.orders3B"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsQuery3b = new QueryNode("SELECT orderNum, orderDate, orderQty, orderStatus FROM tempGroup.orders3B"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs3b = FakeMetadataFactory.createVirtualGroup("xmltest.ordersB", xmltest, rsQuery3b); //$NON-NLS-1$
 
 
@@ -255,7 +255,7 @@ public class TestXMLProcessor {
 // ALTERNATE METADATA D (correlated subquery in mapping class)
        // Create virtual groups
        // per defect 12260 - correlated subquery in mapping class transformation
-       QueryNode rsQuery12260 = new QueryNode("xmltest.group.itemsWithNumSuppliers", "SELECT itemNum, itemName, itemQuantity, itemStatus, convert((select count(*) from stock.item_supplier where stock.items.itemNum = stock.item_supplier.itemNum), string) as NUMSuppliers FROM stock.items"); //$NON-NLS-1$ //$NON-NLS-2$
+       QueryNode rsQuery12260 = new QueryNode("SELECT itemNum, itemName, itemQuantity, itemStatus, convert((select count(*) from stock.item_supplier where stock.items.itemNum = stock.item_supplier.itemNum), string) as NUMSuppliers FROM stock.items"); //$NON-NLS-1$ //$NON-NLS-2$
        FakeMetadataObject rs12260 = FakeMetadataFactory.createVirtualGroup("xmltest.group.itemsWithNumSuppliers", xmltest, rsQuery12260); //$NON-NLS-1$
 
        List rsElements12260 = FakeMetadataFactory.createElements(rs12260, 
@@ -266,7 +266,7 @@ public class TestXMLProcessor {
 // ALTERNATE METADATA E (mapping class w/ Union)
        // Create virtual groups
        // per defect 8373
-       QueryNode rsQuery8373 = new QueryNode("xmltest.items8373", "SELECT itemNum, itemName, itemQuantity, itemStatus FROM stock.items UNION ALL SELECT itemNum, itemName, itemQuantity, itemStatus FROM stock.items"); //$NON-NLS-1$ //$NON-NLS-2$
+       QueryNode rsQuery8373 = new QueryNode("SELECT itemNum, itemName, itemQuantity, itemStatus FROM stock.items UNION ALL SELECT itemNum, itemName, itemQuantity, itemStatus FROM stock.items"); //$NON-NLS-1$ //$NON-NLS-2$
        FakeMetadataObject rs8373 = FakeMetadataFactory.createVirtualGroup("xmltest.items8373", xmltest, rsQuery8373); //$NON-NLS-1$
 
        List rsElements8373 = FakeMetadataFactory.createElements(rs8373, 
@@ -274,14 +274,14 @@ public class TestXMLProcessor {
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });        
 
        //select * from xmltest.items8373
-       QueryNode rsQuery8373a = new QueryNode("xmltest.items8373a", "SELECT * FROM xmltest.items8373"); //$NON-NLS-1$ //$NON-NLS-2$
+       QueryNode rsQuery8373a = new QueryNode("SELECT * FROM xmltest.items8373"); //$NON-NLS-1$ //$NON-NLS-2$
        FakeMetadataObject rs8373a = FakeMetadataFactory.createVirtualGroup("xmltest.items8373a", xmltest, rsQuery8373a); //$NON-NLS-1$
 
        List rsElements8373a = FakeMetadataFactory.createElements(rs8373a, 
             new String[] { "itemNum", "itemName", "itemQuantity", "itemStatus" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });        
 
-       QueryNode rsQuery8373b = new QueryNode("xmltest.items8373b", "SELECT * FROM xmltest.group.items UNION ALL SELECT * FROM xmltest.group.items"); //$NON-NLS-1$ //$NON-NLS-2$
+       QueryNode rsQuery8373b = new QueryNode("SELECT * FROM xmltest.group.items UNION ALL SELECT * FROM xmltest.group.items"); //$NON-NLS-1$ //$NON-NLS-2$
        FakeMetadataObject rs8373b = FakeMetadataFactory.createVirtualGroup("xmltest.items8373b", xmltest, rsQuery8373b); //$NON-NLS-1$
 
        List rsElements8373b = FakeMetadataFactory.createElements(rs8373b, 
@@ -293,7 +293,7 @@ public class TestXMLProcessor {
 
         // Test an update query as a mapping class transformation, as if it were a 
         // mapping class returning a single int - defect 8812
-        QueryNode rsUpdateQuery = new QueryNode("xmltest.updateTest", "INSERT INTO stock.items (itemNum, itemName, itemQuantity, itemStatus) VALUES ('3','beer',12,'something')"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsUpdateQuery = new QueryNode("INSERT INTO stock.items (itemNum, itemName, itemQuantity, itemStatus) VALUES ('3','beer',12,'something')"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rsUpdate = FakeMetadataFactory.createVirtualGroup("xmltest.updateTest", xmltest, rsUpdateQuery); //$NON-NLS-1$
 
         // Create virtual elements
@@ -495,7 +495,7 @@ public class TestXMLProcessor {
         FakeMetadataObject doc19 = FakeMetadataFactory.createVirtualGroup("xmltest.doc19", xmltest, createXMLPlanRecursiveStaging(true, recursionlimit, exceptionOnLimit)); //$NON-NLS-1$
         
         // root temp group
-        QueryNode doc19TempQuery = new QueryNode("xmltest.doc19temp", "SELECT employeeNum, firstName, lastName, supervisorNum FROM stock.employees"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode doc19TempQuery = new QueryNode("SELECT employeeNum, firstName, lastName, supervisorNum FROM stock.employees"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject tempDoc19 = FakeMetadataFactory.createVirtualGroup("xmltest.doc19temp", xmltest, doc19TempQuery); //$NON-NLS-1$
         List doc19TempQueryE = FakeMetadataFactory.createElements(tempDoc19, 
                                                               new String[] { "employeeNum", "firstName", "lastName", "supervisorNum" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
@@ -503,14 +503,14 @@ public class TestXMLProcessor {
         
 
         //create employees - not connected to any of the above
-        QueryNode rsEmployeesDoc19 = new QueryNode("xmltest.employeesDoc19", "SELECT employeeNum, firstName, lastName FROM xmltest.doc19temp WHERE supervisorNum IS NULL"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsEmployeesDoc19 = new QueryNode("SELECT employeeNum, firstName, lastName FROM xmltest.doc19temp WHERE supervisorNum IS NULL"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject mc1Doc19 = FakeMetadataFactory.createVirtualGroup("xmltest.employeesDoc19", xmltest, rsEmployeesDoc19); //$NON-NLS-1$
         List mc1Doc19E = FakeMetadataFactory.createElements(mc1Doc19, 
                                                                   new String[] { "employeeNum", "firstName", "lastName" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
                                                                   new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 
         //recursive piece
-        QueryNode rsEmployeesRecursiveDoc19 = new QueryNode("xmltest.employeesRecursiveDoc19", "SELECT employeeNum, firstName, lastName FROM xmltest.doc19temp WHERE supervisorNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsEmployeesRecursiveDoc19 = new QueryNode("SELECT employeeNum, firstName, lastName FROM xmltest.doc19temp WHERE supervisorNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsEmployeesRecursiveDoc19.addBinding("xmltest.employeesDoc19.employeeNum"); //$NON-NLS-1$
         FakeMetadataObject mc2Doc19 = FakeMetadataFactory.createVirtualGroup("xmltest.employeesRecursiveDoc19", xmltest, rsEmployeesRecursiveDoc19); //$NON-NLS-1$
         List mc2Doc19E = FakeMetadataFactory.createElements(mc2Doc19, 
@@ -526,7 +526,7 @@ public class TestXMLProcessor {
         FakeMetadataObject rsXp1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rsX);  //$NON-NLS-1$
         FakeMetadataObject rsXp2 = FakeMetadataFactory.createParameter("in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
         //there is an extra statement in this proc so that the procedure wrapper is not removed
-        QueryNode sqXn1 = new QueryNode("xmltest.sqX", "CREATE VIRTUAL PROCEDURE BEGIN declare string x; SELECT concat(stock.suppliers.supplierNum, '') as supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = xmltest.sqX.in; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sqXn1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN declare string x; SELECT concat(stock.suppliers.supplierNum, '') as supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = xmltest.sqX.in; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject sqX = FakeMetadataFactory.createVirtualProcedure("xmltest.sqX", xmltest, Arrays.asList(new FakeMetadataObject[] { rsXp1, rsXp2 }), sqXn1);  //$NON-NLS-1$
        
         // Documents for Text Normalization Test 
@@ -544,7 +544,7 @@ public class TestXMLProcessor {
         List normDocE3 = FakeMetadataFactory.createElements(normDoc3, new String[] { "Catalogs", "Catalogs.Catalog", "Catalogs.Catalog.items", "Catalogs.Catalog.items.item", "Catalogs.Catalog.items.item.@ItemID", "Catalogs.Catalog.items.item.Name", "Catalogs.Catalog.items.item.Quantity", "Catalogs.Catalog.items.DiscontinuedItem", "Catalogs.Catalog.items.DiscontinuedItem.@ItemID", "Catalogs.Catalog.items.DiscontinuedItem.Name", "Catalogs.Catalog.items.DiscontinuedItem.Quantity", "Catalogs.Catalog.items.StatusUnknown", "Catalogs.Catalog.items.StatusUnknown.@ItemID", "Catalogs.Catalog.items.StatusUnknown.Name", "Catalogs.Catalog.items.StatusUnknown.Quantity", "Catalogs.Catalog.items.Shouldn't see", "Catalogs.Catalog.items.Shouldn't see 2" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$
                                                             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
         
-        QueryNode vspqn1 = new QueryNode("vsp1", "CREATE VIRTUAL PROCEDURE BEGIN insert into #temp select * from stock.items where itemquantity < param; SELECT * FROM xmltest.doc1 where Item.Quantity < (select avg(itemquantity) from #temp); END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vspqn1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN insert into #temp select * from stock.items where itemquantity < param; SELECT * FROM xmltest.doc1 where Item.Quantity < (select avg(itemquantity) from #temp); END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsprs1 = FakeMetadataFactory.createResultSet("pm1.vsprs1", xmltest, new String[] { "xml" }, new String[] { DataTypeManager.DefaultDataTypes.XML }); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vspp1 = FakeMetadataFactory.createParameter("param", 1, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, vsprs1); //$NON-NLS-1$
         FakeMetadataObject vspp2 = FakeMetadataFactory.createParameter("ret", 2, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.XML, vsprs1); //$NON-NLS-1$
@@ -739,14 +739,14 @@ public class TestXMLProcessor {
 // ======================================================================================================================
 
 		// Create virtual groups
-		QueryNode rsQuery1 = new QueryNode("xmltest.group.items", "SELECT itemNum, itemName, itemQuantity, itemStatus FROM stock.items"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode rsQuery1 = new QueryNode("SELECT itemNum, itemName, itemQuantity, itemStatus FROM stock.items"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject rs1 = FakeMetadataFactory.createVirtualGroup("xmltest.group.items", xmltest, rsQuery1); //$NON-NLS-1$
 
-		QueryNode rsQuery2 = new QueryNode("xmltest.suppliers", "SELECT concat(stock.suppliers.supplierNum, '') as supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode rsQuery2 = new QueryNode("SELECT concat(stock.suppliers.supplierNum, '') as supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
 		rsQuery2.addBinding("xmltest.group.items.itemNum"); //$NON-NLS-1$
 		FakeMetadataObject rs2 = FakeMetadataFactory.createVirtualGroup("xmltest.suppliers", xmltest, rsQuery2); //$NON-NLS-1$
 
-		QueryNode rsQuery3 = new QueryNode("xmltest.orders", "SELECT concat(stock.orders.orderNum, '') as orderNum, orderName, orderZipCode FROM stock.orders, stock.item_order WHERE stock.orders.orderNum = stock.item_order.orderNum AND stock.item_order.itemNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode rsQuery3 = new QueryNode("SELECT concat(stock.orders.orderNum, '') as orderNum, orderName, orderZipCode FROM stock.orders, stock.item_order WHERE stock.orders.orderNum = stock.item_order.orderNum AND stock.item_order.itemNum = ?"); //$NON-NLS-1$ //$NON-NLS-2$
 		rsQuery3.addBinding("xmltest.group.items.itemNum"); //$NON-NLS-1$
 		FakeMetadataObject rs3= FakeMetadataFactory.createVirtualGroup("xmltest.orders", xmltest, rsQuery3); //$NON-NLS-1$
 
@@ -820,17 +820,17 @@ public class TestXMLProcessor {
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
 
         // Create new XML recursion tests virtual groups
-        QueryNode xqtDataGroup = new QueryNode("xqttest.xqtData", "SELECT intKey as key, intNum as data, (intKey + 2) as nextKey FROM xqt.data"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode xqtDataGroup = new QueryNode("SELECT intKey as key, intNum as data, (intKey + 2) as nextKey FROM xqt.data"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject objData = FakeMetadataFactory.createVirtualGroup("xqttest.xqtData", xqttest, xqtDataGroup); //$NON-NLS-1$
         
-        QueryNode rsGroup = new QueryNode("xqttest.group", "SELECT key as ID, data as CODE, nextKey as supervisorID FROM xqttest.xqtData"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsGroup = new QueryNode("SELECT key as ID, data as CODE, nextKey as supervisorID FROM xqttest.xqtData"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject objGroup = FakeMetadataFactory.createVirtualGroup("xqttest.group", xqttest, rsGroup); //$NON-NLS-1$
         
-        QueryNode rsSupervisor = new QueryNode("xqttest.supervisor", "SELECT key as ID, data as CODE, nextKey as groupID FROM xqttest.xqtData WHERE key = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsSupervisor = new QueryNode("SELECT key as ID, data as CODE, nextKey as groupID FROM xqttest.xqtData WHERE key = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsSupervisor.addBinding("xqttest.group.supervisorID"); //$NON-NLS-1$
         FakeMetadataObject objSupervisor = FakeMetadataFactory.createVirtualGroup("xqttest.supervisor", xqttest, rsSupervisor); //$NON-NLS-1$
 
-        QueryNode rsGroup1 = new QueryNode("xqttest.group1", "SELECT key as ID, data as CODE, nextKey as supervisorID FROM xqttest.xqtData WHERE key = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsGroup1 = new QueryNode("SELECT key as ID, data as CODE, nextKey as supervisorID FROM xqttest.xqtData WHERE key = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsGroup1.addBinding("xqttest.supervisor.groupID"); //$NON-NLS-1$
         FakeMetadataObject objGroup1 = FakeMetadataFactory.createVirtualGroup("xqttest.group1", xqttest, rsGroup1); //$NON-NLS-1$
         
@@ -853,34 +853,34 @@ public class TestXMLProcessor {
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER });
         
         // Create virtual groups
-        QueryNode rsQuery = new QueryNode("xqttest.data", "SELECT intKey, intNum, stringNum FROM xqt.data WHERE intKey=13"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsQuery = new QueryNode("SELECT intKey, intNum, stringNum FROM xqt.data WHERE intKey=13"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs = FakeMetadataFactory.createVirtualGroup("xqttest.data", xqttest, rsQuery); //$NON-NLS-1$
         
-        QueryNode rsQuery2 = new QueryNode("xqttest.data2", "SELECT intKey, intNum, stringNum FROM xqt.data WHERE intKey = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsQuery2 = new QueryNode("SELECT intKey, intNum, stringNum FROM xqt.data WHERE intKey = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsQuery2.addBinding("xqttest.data.intNum"); //$NON-NLS-1$
         FakeMetadataObject rs2 = FakeMetadataFactory.createVirtualGroup("xqttest.data2", xqttest, rsQuery2); //$NON-NLS-1$
 
-        QueryNode rsQuery3 = new QueryNode("xqttest.data3", "SELECT intKey, intNum, stringNum FROM xqt.data WHERE intKey = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsQuery3 = new QueryNode("SELECT intKey, intNum, stringNum FROM xqt.data WHERE intKey = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsQuery3.addBinding("xqttest.data2.intNum"); //$NON-NLS-1$
         FakeMetadataObject rs3 = FakeMetadataFactory.createVirtualGroup("xqttest.data3", xqttest, rsQuery3); //$NON-NLS-1$
 
-        QueryNode rsQuery4 = new QueryNode("xqttest.data4", "SELECT intKey, intNum, stringNum FROM xqt.data WHERE intKey = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsQuery4 = new QueryNode("SELECT intKey, intNum, stringNum FROM xqt.data WHERE intKey = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsQuery4.addBinding("xqttest.data.intNum"); //$NON-NLS-1$
         FakeMetadataObject rs4 = FakeMetadataFactory.createVirtualGroup("xqttest.data4", xqttest, rsQuery4); //$NON-NLS-1$
 
-        QueryNode rsQuery5 = new QueryNode("xqttest.data5", "SELECT intKey, intNum, stringNum FROM xqt.data WHERE intKey = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsQuery5 = new QueryNode("SELECT intKey, intNum, stringNum FROM xqt.data WHERE intKey = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsQuery5.addBinding("xqttest.data4.intNum"); //$NON-NLS-1$
         FakeMetadataObject rs5 = FakeMetadataFactory.createVirtualGroup("xqttest.data5", xqttest, rsQuery5); //$NON-NLS-1$
 
-        QueryNode rsQuery6 = new QueryNode("xqttest.data6", "SELECT intKey, intNum, stringNum FROM xqt.data WHERE intKey = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsQuery6 = new QueryNode("SELECT intKey, intNum, stringNum FROM xqt.data WHERE intKey = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsQuery6.addBinding("xqttest.data5.intNum"); //$NON-NLS-1$
         FakeMetadataObject rs6 = FakeMetadataFactory.createVirtualGroup("xqttest.data6", xqttest, rsQuery6); //$NON-NLS-1$
 
         
-        QueryNode rsQuery7 = new QueryNode("xqttest.data7", "SELECT intKey, intNum, stringNum FROM xqt.data"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsQuery7 = new QueryNode("SELECT intKey, intNum, stringNum FROM xqt.data"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs7 = FakeMetadataFactory.createVirtualGroup("xqttest.data7", xqttest, rsQuery7); //$NON-NLS-1$
 
-        QueryNode rsQuery8 = new QueryNode("xqttest.data8", "SELECT intKey, intNum, stringNum FROM xqt.data WHERE intKey < ?"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsQuery8 = new QueryNode("SELECT intKey, intNum, stringNum FROM xqt.data WHERE intKey < ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsQuery8.addBinding("xqttest.data7.intNum"); //$NON-NLS-1$
         FakeMetadataObject rs8 = FakeMetadataFactory.createVirtualGroup("xqttest.data8", xqttest, rsQuery8); //$NON-NLS-1$
 
@@ -998,7 +998,7 @@ public class TestXMLProcessor {
             new String[] {DataTypeManager.DefaultDataTypes.STRING});
 
 
-        QueryNode rsQuerySoap = new QueryNode("xmltest.group.TaxIDs", "SELECT ID FROM taxReport.TaxIDs"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsQuerySoap = new QueryNode("SELECT ID FROM taxReport.TaxIDs"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rsSoap = FakeMetadataFactory.createVirtualGroup("xmltest.group.TaxIDs", xmltest, rsQuerySoap); //$NON-NLS-1$
 
         List rsSoapElements = FakeMetadataFactory.createElements(rsSoap, 

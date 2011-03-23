@@ -438,7 +438,7 @@ public class QueryResolver {
                 try {
                 	result = QueryParser.getQueryParser().parseCommand(qnode.getQuery());
                 } catch(QueryParserException e) {
-                    throw new QueryResolverException(e, "ERR.015.008.0011", QueryPlugin.Util.getString("ERR.015.008.0011", qnode.getGroupName())); //$NON-NLS-1$ //$NON-NLS-2$
+                    throw new QueryResolverException(e, "ERR.015.008.0011", QueryPlugin.Util.getString("ERR.015.008.0011", virtualGroup)); //$NON-NLS-1$ //$NON-NLS-2$
                 }
                 
                 bindings = qnode.getBindings();

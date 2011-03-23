@@ -512,74 +512,74 @@ public class TestOptimizer {
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
 
 		// Create virtual groups
-		QueryNode vm1g1n1 = new QueryNode("vm1.g1", "SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm1g1n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1g1 = FakeMetadataFactory.createUpdatableVirtualGroup("vm1.g1", vm1, vm1g1n1); //$NON-NLS-1$
 
-		QueryNode vm1g2n1 = new QueryNode("vm1.g2", "SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm1g2n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1g2 = FakeMetadataFactory.createUpdatableVirtualGroup("vm1.g2", vm1, vm1g2n1); //$NON-NLS-1$
 
 		//defect 8096
-		QueryNode vm1sub1n1 = new QueryNode("vm1.sub1", "SELECT * FROM vm1.g1 WHERE e1 IN (SELECT e1 FROM vm1.g3)"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm1sub1n1 = new QueryNode("SELECT * FROM vm1.g1 WHERE e1 IN (SELECT e1 FROM vm1.g3)"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1sub1 = FakeMetadataFactory.createVirtualGroup("vm1.sub1", vm1, vm1sub1n1); //$NON-NLS-1$
 
-		QueryNode vm1g3n1 = new QueryNode("vm1.g3", "SELECT * FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm1g3n1 = new QueryNode("SELECT * FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1g3 = FakeMetadataFactory.createUpdatableVirtualGroup("vm1.g3", vm1, vm1g3n1); //$NON-NLS-1$
 
-        QueryNode vm1g4n1 = new QueryNode("vm1.g4", "SELECT pm1.g1.e1, pm1.g2.e1 FROM pm1.g1, pm1.g2 WHERE pm1.g1.e1=pm1.g2.e1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g4n1 = new QueryNode("SELECT pm1.g1.e1, pm1.g2.e1 FROM pm1.g1, pm1.g2 WHERE pm1.g1.e1=pm1.g2.e1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g4 = FakeMetadataFactory.createUpdatableVirtualGroup("vm1.g4", vm1, vm1g4n1); //$NON-NLS-1$
 
-        QueryNode vm1g5n1 = new QueryNode("vm1.g5", "SELECT DISTINCT pm1.g1.e1 FROM pm1.g1 ORDER BY pm1.g1.e1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g5n1 = new QueryNode("SELECT DISTINCT pm1.g1.e1 FROM pm1.g1 ORDER BY pm1.g1.e1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g5 = FakeMetadataFactory.createUpdatableVirtualGroup("vm1.g5", vm1, vm1g5n1); //$NON-NLS-1$
 
-        QueryNode vm1g6n1 = new QueryNode("vm1.g6", "SELECT e1, convert(e2, string), 3 as e3, ((e2+e4)/3) as e4 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g6n1 = new QueryNode("SELECT e1, convert(e2, string), 3 as e3, ((e2+e4)/3) as e4 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g6 = FakeMetadataFactory.createUpdatableVirtualGroup("vm1.g6", vm1, vm1g6n1); //$NON-NLS-1$
 
-		QueryNode vm1u1n1 = new QueryNode("vm1.u1", "SELECT * FROM pm1.g1 UNION SELECT * FROM pm1.g2 UNION ALL SELECT * FROM pm1.g3"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm1u1n1 = new QueryNode("SELECT * FROM pm1.g1 UNION SELECT * FROM pm1.g2 UNION ALL SELECT * FROM pm1.g3"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1u1 = FakeMetadataFactory.createUpdatableVirtualGroup("vm1.u1", vm1, vm1u1n1); //$NON-NLS-1$
 
-		QueryNode vm1u2n1 = new QueryNode("vm1.u2", "SELECT * FROM pm1.g1 UNION SELECT * FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm1u2n1 = new QueryNode("SELECT * FROM pm1.g1 UNION SELECT * FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1u2 = FakeMetadataFactory.createUpdatableVirtualGroup("vm1.u2", vm1, vm1u2n1); //$NON-NLS-1$
 
-		QueryNode vm1u3n1 = new QueryNode("vm1.u3", "SELECT e1 FROM pm1.g1 UNION SELECT convert(e2, string) as x FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm1u3n1 = new QueryNode("SELECT e1 FROM pm1.g1 UNION SELECT convert(e2, string) as x FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
 		FakeMetadataObject vm1u3 = FakeMetadataFactory.createUpdatableVirtualGroup("vm1.u3", vm1, vm1u3n1); //$NON-NLS-1$
 
-        QueryNode vm1u4n1 = new QueryNode("vm1.u4", "SELECT concat(e1, 'x') as v1 FROM pm1.g1 UNION ALL SELECT e1 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1u4n1 = new QueryNode("SELECT concat(e1, 'x') as v1 FROM pm1.g1 UNION ALL SELECT e1 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1u4 = FakeMetadataFactory.createUpdatableVirtualGroup("vm1.u4", vm1, vm1u4n1); //$NON-NLS-1$
 
-        QueryNode vm1u5n1 = new QueryNode("vm1.u5", "SELECT concat(e1, 'x') as v1 FROM pm1.g1 UNION ALL SELECT concat('a', e1) FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1u5n1 = new QueryNode("SELECT concat(e1, 'x') as v1 FROM pm1.g1 UNION ALL SELECT concat('a', e1) FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1u5 = FakeMetadataFactory.createUpdatableVirtualGroup("vm1.u5", vm1, vm1u5n1); //$NON-NLS-1$
 
-        QueryNode vm1u6n1 = new QueryNode("vm1.u6", "SELECT x1.e1 AS elem, 'xyz' AS const FROM pm1.g1 AS x1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1u6n1 = new QueryNode("SELECT x1.e1 AS elem, 'xyz' AS const FROM pm1.g1 AS x1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1u6 = FakeMetadataFactory.createUpdatableVirtualGroup("vm1.u6", vm1, vm1u6n1); //$NON-NLS-1$
 
-        QueryNode vm1u7n1 = new QueryNode("vm1.u7", "SELECT 's1' AS const, e1 FROM pm1.g1 UNION ALL SELECT 's2', e1 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1u7n1 = new QueryNode("SELECT 's1' AS const, e1 FROM pm1.g1 UNION ALL SELECT 's2', e1 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1u7 = FakeMetadataFactory.createUpdatableVirtualGroup("vm1.u7", vm1, vm1u7n1); //$NON-NLS-1$
 
-        QueryNode vm1u8n1 = new QueryNode("vm1.u8", "SELECT const, e1 FROM vm1.u7 UNION ALL SELECT 's3', e1 FROM pm1.g3"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1u8n1 = new QueryNode("SELECT const, e1 FROM vm1.u7 UNION ALL SELECT 's3', e1 FROM pm1.g3"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1u8 = FakeMetadataFactory.createUpdatableVirtualGroup("vm1.u8", vm1, vm1u8n1); //$NON-NLS-1$
 
-        QueryNode vm1u9n1 = new QueryNode("vm1.u9", "SELECT e1 as a, e1 as b FROM pm1.g1 UNION ALL SELECT e1, e1 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1u9n1 = new QueryNode("SELECT e1 as a, e1 as b FROM pm1.g1 UNION ALL SELECT e1, e1 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1u9 = FakeMetadataFactory.createUpdatableVirtualGroup("vm1.u9", vm1, vm1u9n1); //$NON-NLS-1$
 
-        QueryNode vm1a1n1 = new QueryNode("vm1.a1", "SELECT e1, SUM(e2) AS sum_e2 FROM pm1.g1 GROUP BY e1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1a1n1 = new QueryNode("SELECT e1, SUM(e2) AS sum_e2 FROM pm1.g1 GROUP BY e1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1a1 = FakeMetadataFactory.createUpdatableVirtualGroup("vm1.a1", vm1, vm1a1n1); //$NON-NLS-1$
         
-        QueryNode vm1a2n1 = new QueryNode("vm1.a2", "SELECT e1, SUM(e2) AS sum_e2 FROM pm1.g1 GROUP BY e1 HAVING SUM(e2) > 5"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1a2n1 = new QueryNode("SELECT e1, SUM(e2) AS sum_e2 FROM pm1.g1 GROUP BY e1 HAVING SUM(e2) > 5"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1a2 = FakeMetadataFactory.createUpdatableVirtualGroup("vm1.a2", vm1, vm1a2n1); //$NON-NLS-1$
 
-        QueryNode vm1a3n1 = new QueryNode("vm1.a3", "SELECT SUM(e2) AS sum_e2 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1a3n1 = new QueryNode("SELECT SUM(e2) AS sum_e2 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1a3 = FakeMetadataFactory.createUpdatableVirtualGroup("vm1.a3", vm1, vm1a3n1); //$NON-NLS-1$
         
-        QueryNode vm1a4n1 = new QueryNode("vm1.a4", "SELECT COUNT(*) FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1a4n1 = new QueryNode("SELECT COUNT(*) FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1a4 = FakeMetadataFactory.createUpdatableVirtualGroup("vm1.a4", vm1, vm1a4n1); //$NON-NLS-1$
 
-        QueryNode vm1a5n1 = new QueryNode("vm1.a5", "SELECT vm1.a4.count FROM vm1.a4 UNION ALL SELECT COUNT(*) FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1a5n1 = new QueryNode("SELECT vm1.a4.count FROM vm1.a4 UNION ALL SELECT COUNT(*) FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1a5 = FakeMetadataFactory.createUpdatableVirtualGroup("vm1.a5", vm1, vm1a5n1); //$NON-NLS-1$
 
-        QueryNode vm1a6n1 = new QueryNode("vm1.a6", "SELECT COUNT(*) FROM vm1.u2"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1a6n1 = new QueryNode("SELECT COUNT(*) FROM vm1.u2"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1a6 = FakeMetadataFactory.createUpdatableVirtualGroup("vm1.a6", vm1, vm1a6n1); //$NON-NLS-1$
         
-        QueryNode vm1g7n1 = new QueryNode("vm1.g7", "select DECODESTRING(e1, 'S,Pay,P,Rec') as e1, e2 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g7n1 = new QueryNode("select DECODESTRING(e1, 'S,Pay,P,Rec') as e1, e2 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vm1g7 = FakeMetadataFactory.createVirtualGroup("vm1.g7", vm1, vm1g7n1); //$NON-NLS-1$
         
 		// Create virtual elements

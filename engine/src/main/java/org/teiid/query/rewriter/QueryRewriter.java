@@ -2995,9 +2995,9 @@ public class QueryRewriter {
 		List<Object> ids = metadata.getElementIDsInKey(pk);
 		List<Criteria> pkCriteria = new ArrayList<Criteria>(ids.size());
 		for (Object object : ids) {
-			ElementSymbol es = new ElementSymbol(correlationName + ElementSymbol.SEPARATOR + SingleElementSymbol.getShortName(metadata.getFullName(object)));
+			ElementSymbol es = new ElementSymbol(correlationName + ElementSymbol.SEPARATOR + metadata.getName(object));
 			query.getSelect().addSymbol(new AliasSymbol("s_" +i, es)); //$NON-NLS-1$
-			es = new ElementSymbol(group.getName() + ElementSymbol.SEPARATOR + SingleElementSymbol.getShortName(metadata.getFullName(object)));
+			es = new ElementSymbol(group.getName() + ElementSymbol.SEPARATOR + metadata.getName(object));
 			pkCriteria.add(new CompareCriteria(es, CompareCriteria.EQ, new ElementSymbol("X.s_" + i))); //$NON-NLS-1$
 			i++;
 		}

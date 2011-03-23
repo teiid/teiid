@@ -26,7 +26,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.function.FunctionDescriptor;
-import org.teiid.query.sql.*;
+import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
@@ -198,7 +198,7 @@ public class Function implements Expression {
 		
 		Function other = (Function) obj;
 		if (this.descriptor != null && other.descriptor != null) {
-			if (!this.descriptor.getMethod().getFullName().equals(other.descriptor.getMethod().getFullName())) {
+			if (!this.descriptor.getMethod().equals(other.descriptor.getMethod())) {
 				return false;
 			}
 		} else if(! other.getName().equalsIgnoreCase(getName())) { 

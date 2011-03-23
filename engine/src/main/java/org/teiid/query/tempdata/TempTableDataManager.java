@@ -589,7 +589,7 @@ public class TempTableDataManager implements ProcessorDataManager {
     	if (id == null) {
 	    	id = context.getGlobalTableStore().getMetadataStore().addTempGroup(matTableName, Arrays.asList(keyElement, returnElement), false, true);
 	    	String queryString = Reserved.SELECT + ' ' + keyElementName + " ," + returnElementName + ' ' + Reserved.FROM + ' ' + codeTableName; //$NON-NLS-1$ 
-	    	id.setQueryNode(new QueryNode(matTableName, queryString));
+	    	id.setQueryNode(new QueryNode(queryString));
 	    	id.setPrimaryKey(id.getElements().subList(0, 1));
 	    	CacheHint hint = new CacheHint(true, null);
 	    	id.setCacheHint(hint);

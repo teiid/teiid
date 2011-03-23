@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.util.StringUtil;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Schema;
@@ -90,13 +91,30 @@ public class CompositeMetadataStore extends MetadataStore {
 		List<Table> result = new LinkedList<Table>();
 		for (Schema schema : getSchemas().values()) {
 			for (Table t : schema.getTables().values()) {
-				String fullName = t.getFullName();
-				if (fullName.regionMatches(true, fullName.length() - partialGroupName.length(), partialGroupName, 0, partialGroupName.length())) {
+				String name = t.getName();
+				if (matchesPartialName(partialGroupName, name, schema)) {
 					result.add(t);	
 				}
 			}
 		}
 		return result;
+	}
+	
+	protected boolean matchesPartialName(String partialGroupName, String name, Schema schema) {
+		if (!StringUtil.endsWithIgnoreCase(name, partialGroupName)) {
+			return false;
+		}
+		int schemaMatch = partialGroupName.length() - name.length();
+		if (schemaMatch > 0) {
+			if (schemaMatch != schema.getName().length() + 1 
+					|| !StringUtil.startsWithIgnoreCase(partialGroupName, schema.getName())
+					|| partialGroupName.charAt(schemaMatch + 1) != '.') {
+				return false;
+			}
+		} else if (schemaMatch < 0 && name.charAt(-schemaMatch - 1) != '.') {
+			return false;
+		}
+		return true;
 	}
 	
 	public Collection<Procedure> getStoredProcedure(String name)
@@ -112,11 +130,9 @@ public class CompositeMetadataStore extends MetadataStore {
 			}	
 		}
 		//assume it's a partial name
-		name = TransformationMetadata.DELIMITER_STRING + name;
 		for (Schema schema : getSchemas().values()) {
 			for (Procedure p : schema.getProcedures().values()) {
-				String fullName = p.getFullName();
-				if (fullName.regionMatches(true, fullName.length() - name.length(), name, 0, name.length())) {
+				if (matchesPartialName(name, p.getName(), schema)) {
 					result.add(p);	
 				}
 			}

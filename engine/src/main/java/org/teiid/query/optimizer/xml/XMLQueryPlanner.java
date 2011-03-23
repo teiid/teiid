@@ -292,7 +292,7 @@ public class XMLQueryPlanner {
             ResultSetInfo childRsInfo = rsNode.getResultSetInfo();
             
             QueryNode planNode = QueryUtil.getQueryNode(childRsInfo.getResultSetName(), planEnv.getGlobalMetadata());    
-            Command command = QueryUtil.getQuery(planNode, planEnv);
+            Command command = QueryUtil.getQuery(childRsInfo.getResultSetName(), planNode, planEnv);
             
             String inlineViewName = planEnv.getAliasName(childRsInfo.getResultSetName());
             
@@ -360,7 +360,7 @@ public class XMLQueryPlanner {
             //selectively replace correlated references with their actual element symbols
             List<Reference> bindings = QueryUtil.getReferences(contextQuery);
             
-            QueryNode modifiedNode = new QueryNode(rsInfo.getResultSetName(), null);
+            QueryNode modifiedNode = new QueryNode(null);
             modifiedNode.setCommand(contextQuery);
             
             for (Iterator<Reference> i = bindings.iterator(); i.hasNext();) {

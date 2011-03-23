@@ -1082,7 +1082,6 @@ public class RelationalPlanner {
         boolean noCache = isNoCacheGroup(metadata, metadataID, option);
         boolean isMaterializedGroup = metadata.hasMaterialization(metadataID);
         String cacheString = SQLConstants.Reserved.SELECT; 
-        String groupName = metadata.getFullName(metadataID);
         
         if( isMaterializedGroup) {
         	Object matMetadataId = metadata.getMaterialization(metadataID);
@@ -1090,7 +1089,7 @@ public class RelationalPlanner {
         	CacheHint hint = null;
         	boolean isImplicitGlobal = matMetadataId == null;
             if (isImplicitGlobal) {
-        		matTableName = MAT_PREFIX + groupName;
+        		matTableName = MAT_PREFIX + metadata.getFullName(metadataID);
         		matMetadataId = getGlobalTempTableMetadataId(virtualGroup, matTableName, context, metadata, analysisRecord);
         		hint = ((TempMetadataID)matMetadataId).getCacheHint();
             } else {
@@ -1103,7 +1102,7 @@ public class RelationalPlanner {
         		//TODO: update the table for defaultMat
         		recordAnnotation(analysisRecord, Annotation.MATERIALIZED_VIEW, Priority.LOW, "SimpleQueryResolver.materialized_table_not_used", virtualGroup, matTableName); //$NON-NLS-1$
         	}else{
-        		qnode = new QueryNode(groupName, null);
+        		qnode = new QueryNode(null);
         		Query query = createMatViewQuery(matMetadataId, matTableName, Arrays.asList(new AllSymbol()), isImplicitGlobal);
         		query.setCacheHint(hint);
         		qnode.setCommand(query);

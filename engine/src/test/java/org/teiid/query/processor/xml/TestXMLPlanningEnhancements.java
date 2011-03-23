@@ -56,7 +56,7 @@ public class TestXMLPlanningEnhancements {
         
         FakeMetadataObject xmltest = store.findObject("xmltest", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
-        QueryNode rsQueryY = new QueryNode("xmltest.suppliersY", query); //$NON-NLS-1$
+        QueryNode rsQueryY = new QueryNode(query); //$NON-NLS-1$
         rsQueryY.addBinding("xmltest.group.items.itemNum"); //$NON-NLS-1$
         rsQueryY.addBinding("xmltest.group.items.itemNum"); //$NON-NLS-1$
         FakeMetadataObject rsQY = FakeMetadataFactory.createVirtualGroup("xmltest.suppliersY", xmltest, rsQueryY); //$NON-NLS-1$
@@ -88,9 +88,9 @@ public class TestXMLPlanningEnhancements {
 
         QueryNode tempQueryJoin = null;
         if (!simpleTempSelect) {
-            tempQueryJoin = new QueryNode("tempGroup.orders", "SELECT stock.orders.* FROM stock.orders"); //$NON-NLS-1$ //$NON-NLS-2$
+            tempQueryJoin = new QueryNode("SELECT stock.orders.* FROM stock.orders"); //$NON-NLS-1$ //$NON-NLS-2$
         } else {
-            tempQueryJoin = new QueryNode("tempGroup.orders", "SELECT stock.orders.* FROM stock.orders join stock.suppliers on stock.orders.supplierFK=stock.suppliers.supplierNum"); //$NON-NLS-1$ //$NON-NLS-2$
+            tempQueryJoin = new QueryNode("SELECT stock.orders.* FROM stock.orders join stock.suppliers on stock.orders.supplierFK=stock.suppliers.supplierNum"); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         FakeMetadataObject tempJoin = FakeMetadataFactory.createVirtualGroup("tempGroup.orders", xmltest, tempQueryJoin); //$NON-NLS-1$
@@ -98,11 +98,11 @@ public class TestXMLPlanningEnhancements {
         // Created virtual group w/ nested result set & binding - selects from 2nd temp root group
         QueryNode rsQueryJoin = null;
         if (!simpleTempSelect) {
-            rsQueryJoin = new QueryNode("xmltest.ordersC", "SELECT orderNum, orderDate, orderQty, orderStatus FROM tempGroup.orders join stock.suppliers on tempGroup.orders.supplierFK=stock.suppliers.supplierNum WHERE itemFK = ? AND supplierNameFK = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+            rsQueryJoin = new QueryNode("SELECT orderNum, orderDate, orderQty, orderStatus FROM tempGroup.orders join stock.suppliers on tempGroup.orders.supplierFK=stock.suppliers.supplierNum WHERE itemFK = ? AND supplierNameFK = ?"); //$NON-NLS-1$ //$NON-NLS-2$
             rsQueryJoin.addBinding("xmltest.group.items.itemNum"); //$NON-NLS-1$
             rsQueryJoin.addBinding("xmltest.suppliers.supplierName"); //$NON-NLS-1$
         } else {
-            rsQueryJoin = new QueryNode("xmltest.ordersC1", "SELECT orderNum, orderDate, orderQty, orderStatus FROM tempGroup.orders WHERE supplierNameFK = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+            rsQueryJoin = new QueryNode("SELECT orderNum, orderDate, orderQty, orderStatus FROM tempGroup.orders WHERE supplierNameFK = ?"); //$NON-NLS-1$ //$NON-NLS-2$
             rsQueryJoin.addBinding("xmltest.suppliers.supplierName"); //$NON-NLS-1$
         }
         FakeMetadataObject rsJoin = FakeMetadataFactory.createVirtualGroup("xmltest.ordersC", xmltest, rsQueryJoin); //$NON-NLS-1$
@@ -321,7 +321,7 @@ public class TestXMLPlanningEnhancements {
         
         FakeMetadataObject rs1p1 = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs1);  //$NON-NLS-1$
         FakeMetadataObject rs1p2 = FakeMetadataFactory.createParameter("itemNum", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode n1 = new QueryNode("v1.supplierProc", "CREATE VIRTUAL PROCEDURE BEGIN SELECT concat(stock.suppliers.supplierNum, '') as supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = v1.supplierProc.itemNum; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT concat(stock.suppliers.supplierNum, '') as supplierNum, supplierName, supplierZipCode FROM stock.suppliers, stock.item_supplier WHERE stock.suppliers.supplierNum = stock.item_supplier.supplierNum AND stock.item_supplier.itemNum = v1.supplierProc.itemNum; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vt1 = FakeMetadataFactory.createVirtualProcedure("v1.supplierProc", v1, Arrays.asList(new FakeMetadataObject[] { rs1p1, rs1p2 }), n1); //$NON-NLS-1$
 
         metadata.getStore().addObject(vt1);

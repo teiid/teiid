@@ -118,7 +118,7 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
             rsInfo.setCommand(baseQuery);
             
             QueryNode modifiedNode = QueryUtil.getQueryNode(newGroup, planEnv.getGlobalMetadata());
-            Command command = QueryUtil.getQuery(modifiedNode, planEnv);
+            Command command = QueryUtil.getQuery(newGroup, modifiedNode, planEnv);
                         
             MappingSourceNode parent = sourceNode.getParentSourceNode();
             Collection<ElementSymbol> bindings = QueryUtil.getBindingElements(modifiedNode);
@@ -169,7 +169,7 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
                         
             // Now that we have the modified Query Node for the group name
             // we need to update the metadata.
-            QueryNode relationalNode = new QueryNode(newGroup, SQLStringVisitor.getSQLString(transformationQuery));
+            QueryNode relationalNode = new QueryNode(SQLStringVisitor.getSQLString(transformationQuery));
             planEnv.addQueryNodeToMetadata(newGroupSymbol.getMetadataID(), relationalNode);
             
             QueryUtil.markBindingsAsNonExternal(inputSetCriteria, bindings);
@@ -247,7 +247,7 @@ public class SourceNodePlannerVisitor extends MappingVisitor {
         QueryNode oldQueryNode = QueryUtil.getQueryNode(oldSymbol.getName(), planEnv.getGlobalMetadata());
 
         // move the query and its bindings
-        QueryNode modifiedNode = new QueryNode(newGroup, oldQueryNode.getQuery());
+        QueryNode modifiedNode = new QueryNode(oldQueryNode.getQuery());
         mapBindings(sourceNode, oldQueryNode, modifiedNode);
         
         // add the query node for the new group into metadata.

@@ -83,7 +83,7 @@ public class TestUpdateValidator {
 	public static Command createView(String sql, TransformationMetadata md, String vGroup)
 			throws QueryParserException, QueryResolverException,
 			TeiidComponentException {
-		QueryNode vm1g1n1 = new QueryNode(vGroup, sql); 
+		QueryNode vm1g1n1 = new QueryNode(sql); 
 		Table vm1g1 = RealMetadataFactory.createUpdatableVirtualGroup(vGroup, md.getMetadataStore().getSchema("VM1"), vm1g1n1);
 
 		Command command = QueryParser.getQueryParser().parseCommand(sql);
@@ -149,15 +149,15 @@ public class TestUpdateValidator {
         pm1g3e.get(2).setDefaultValue("xyz"); //$NON-NLS-1$
 
 		// Create virtual groups
-		QueryNode vm1g1n1 = new QueryNode("g1", "SELECT e1 as a, e2 FROM pm1.g1 WHERE e3 > 5"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm1g1n1 = new QueryNode("SELECT e1 as a, e2 FROM pm1.g1 WHERE e3 > 5"); //$NON-NLS-1$ //$NON-NLS-2$
 		Table vm1g1 = RealMetadataFactory.createUpdatableVirtualGroup("g1", vm1, vm1g1n1); //$NON-NLS-1$
-		QueryNode vm1g2n1 = new QueryNode("g2", "SELECT e1, e2, e3, e4 FROM pm1.g2 WHERE e3 > 5"); //$NON-NLS-1$ //$NON-NLS-2$
+		QueryNode vm1g2n1 = new QueryNode("SELECT e1, e2, e3, e4 FROM pm1.g2 WHERE e3 > 5"); //$NON-NLS-1$ //$NON-NLS-2$
 		Table vm1g2 = RealMetadataFactory.createUpdatableVirtualGroup("g2", vm1, vm1g2n1); //$NON-NLS-1$
-        QueryNode vm1g3n1 = new QueryNode("g3", "SELECT e1, e3 FROM pm1.g3"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g3n1 = new QueryNode("SELECT e1, e3 FROM pm1.g3"); //$NON-NLS-1$ //$NON-NLS-2$
         Table vm1g3 = RealMetadataFactory.createUpdatableVirtualGroup("g3", vm1, vm1g3n1); //$NON-NLS-1$
-        QueryNode vm1g4n1 = new QueryNode("g4", "SELECT e1, e2 FROM pm1.g3"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g4n1 = new QueryNode("SELECT e1, e2 FROM pm1.g3"); //$NON-NLS-1$ //$NON-NLS-2$
         Table vm1g4 = RealMetadataFactory.createUpdatableVirtualGroup("g4", vm1, vm1g4n1); //$NON-NLS-1$
-        QueryNode vm1g5n1 = new QueryNode("g5", "SELECT e2, e3 FROM pm1.g3"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g5n1 = new QueryNode("SELECT e2, e3 FROM pm1.g3"); //$NON-NLS-1$ //$NON-NLS-2$
         Table vm1g5 = RealMetadataFactory.createVirtualGroup("g5", vm1, vm1g5n1); //$NON-NLS-1$
 
 		// Create virtual elements
@@ -179,7 +179,7 @@ public class TestUpdateValidator {
 
         // Stored queries
         ColumnSet<Procedure> rs1 = RealMetadataFactory.createResultSet("rs1", new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        QueryNode sq1n1 = new QueryNode("sq1", "CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 FROM pm1.g1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode sq1n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT e1, e2 FROM pm1.g1; END"); //$NON-NLS-1$ //$NON-NLS-2$
         Procedure sq1 = RealMetadataFactory.createVirtualProcedure("pm1.sq1", pm1, Collections.EMPTY_LIST, sq1n1);  //$NON-NLS-1$
         sq1.setResultSet(rs1);
 		// Create the facade from the store

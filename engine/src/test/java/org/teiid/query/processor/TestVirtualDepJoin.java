@@ -145,18 +145,16 @@ public class TestVirtualDepJoin {
         );
 
         FakeMetadataObject vAccts = FakeMetadataFactory.createVirtualModel("Accounts"); //$NON-NLS-1$
-        QueryNode accountsPlan = new QueryNode("Accounts.Accounts", //$NON-NLS-1$
-                                               "SELECT customer as customer_id, convert(account, long) as account_id, convert(txnid, long) as transaction_id, case txn when 'DEP' then 1 when 'TFR' then 2 when 'WD' then 3 else -1 end as txn_type, (pennies + convert('0.00', bigdecimal)) / 100 as amount, 'US' as source FROM US.Accounts where txn != 'X'" +  //$NON-NLS-1$
-                                               "UNION ALL " +  //$NON-NLS-1$
-                                               "SELECT id, convert(accid / 10000, long), mod(accid, 10000), convert(type, integer), amount, 'EU' from Europe.CustAccts"); //$NON-NLS-1$ 
+        QueryNode accountsPlan = new QueryNode("SELECT customer as customer_id, convert(account, long) as account_id, convert(txnid, long) as transaction_id, case txn when 'DEP' then 1 when 'TFR' then 2 when 'WD' then 3 else -1 end as txn_type, (pennies + convert('0.00', bigdecimal)) / 100 as amount, 'US' as source FROM US.Accounts where txn != 'X'" +  //$NON-NLS-1$
+		   "UNION ALL " +  //$NON-NLS-1$
+		   "SELECT id, convert(accid / 10000, long), mod(accid, 10000), convert(type, integer), amount, 'EU' from Europe.CustAccts"); //$NON-NLS-1$ 
         FakeMetadataObject accounts = FakeMetadataFactory.createVirtualGroup("Accounts.Accounts", vAccts, accountsPlan); //$NON-NLS-1$
         List accountsElem = FakeMetadataFactory.createElements(accounts, 
                                             new String[] { "customer_id", "account_id", "transaction_id", "txn_type", "amount", "source" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
                                             new String[] { DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BIG_DECIMAL, DataTypeManager.DefaultDataTypes.STRING });
         
         FakeMetadataObject master = FakeMetadataFactory.createVirtualModel("Master"); //$NON-NLS-1$
-        QueryNode masterPlan = new QueryNode("Master.Transactions", //$NON-NLS-1$
-                                               "select id as CustomerID, First, Last, a.account_id as AccountID, transaction_id as TransactionID, txn_type AS TxnCode, Amount from CustomerMaster.Customers c, Accounts.Accounts a where c.id=a.customer_id"); //$NON-NLS-1$ 
+        QueryNode masterPlan = new QueryNode("select id as CustomerID, First, Last, a.account_id as AccountID, transaction_id as TransactionID, txn_type AS TxnCode, Amount from CustomerMaster.Customers c, Accounts.Accounts a where c.id=a.customer_id"); //$NON-NLS-1$ 
         FakeMetadataObject transactions = FakeMetadataFactory.createVirtualGroup("Master.Transactions", master, masterPlan); //$NON-NLS-1$
         List transactionsElem = FakeMetadataFactory.createElements(transactions, 
                                             new String[] { "CustomerID", "First", "Last", "AccountID", "TransactionID", "TxnCode", "Amount" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$

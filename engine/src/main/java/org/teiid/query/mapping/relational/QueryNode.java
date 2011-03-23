@@ -22,7 +22,6 @@
 
 package org.teiid.query.mapping.relational;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,13 +36,11 @@ import org.teiid.query.sql.lang.Command;
  * groups.</p>
  *
  * <p>A QueryNode must have a group name and a query.  It may have a command (just used
- * for convenient storage during conversion - this is not persisted).  It may optionally
- * have children and bindings.</p>
+ * for convenient storage during conversion - this is not persisted).</p>
  */
-public class QueryNode implements Serializable {
+public class QueryNode {
 
 	// Initial state
-	private String groupName;
 	private String query;
 	private List<String> bindings;     // optional - construct if needed
 
@@ -52,20 +49,10 @@ public class QueryNode implements Serializable {
 
     /**
      * Construct a query node with the required parameters.
-     * @param groupName Fully qualified group name
      * @param query SQL query
      */
-	public QueryNode(String groupName, String query) {
+	public QueryNode(String query) {
 		this.query = query;
-        this.groupName = groupName;
-	}
-
-    /**
-     * Get fully-qualified group name
-     * @return group name
-     */
-	public String getGroupName() {
-		return this.groupName;
 	}
 
     /**
@@ -127,34 +114,6 @@ public class QueryNode implements Serializable {
      */
     public Command getCommand() {
         return this.command;
-    }
-
-    /**
-     * Get hash code for node
-     * @return hash code
-     */
-	public int hashCode() {
-		return this.query.hashCode();
-	}
-
-    /**
-     * Check whether nodes are equal based on their group name and children.
-     * @param obj Other node to compare with
-     * @return True if equal
-     */
-    public boolean equals(Object obj) {
-        if(obj == this) {
-            return true;
-        }
-        if(!(obj instanceof QueryNode)) {
-            return false;
-        }
-
-        QueryNode other = (QueryNode) obj;
-        if(! other.getGroupName().equals(getGroupName())) {
-            return false;
-        }
-        return true;
     }
 
 	/**

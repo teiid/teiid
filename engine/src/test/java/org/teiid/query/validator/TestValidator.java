@@ -92,13 +92,13 @@ public class TestValidator {
         FakeMetadataObject elemObj3_2 = FakeMetadataFactory.createElement("test.group3.e2", group3Obj, DataTypeManager.DefaultDataTypes.STRING, 2); //$NON-NLS-1$
     
         // Create virtual group & elements.
-        QueryNode vNode = new QueryNode("vTest.vGroup", "SELECT * FROM test.group WHERE e2 = 'x'"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vNode = new QueryNode("SELECT * FROM test.group WHERE e2 = 'x'"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vGroup = FakeMetadataFactory.createVirtualGroup("vTest.vGroup", vModelObj2, vNode);         //$NON-NLS-1$
         List vGroupE = FakeMetadataFactory.createElements(vGroup, 
             new String[] { "e0", "e1", "e2", "e3" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
 
-        QueryNode vNode2 = new QueryNode("vTest.vMap", "SELECT * FROM test.group"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vNode2 = new QueryNode("SELECT * FROM test.group"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vGroup2 = FakeMetadataFactory.createVirtualGroup("vTest.vMap", vModelObj2, vNode2);         //$NON-NLS-1$
         List vGroupE2 = FakeMetadataFactory.createElements(vGroup2, 
             new String[] { "e0", "e1", "e2", "e3" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
@@ -237,7 +237,7 @@ public class TestValidator {
         FakeMetadataObject elemObj1 = FakeMetadataFactory.createElement("test.group.e1", groupObj, DataTypeManager.DefaultDataTypes.STRING, 1); //$NON-NLS-1$
         FakeMetadataObject elemObj2 = FakeMetadataFactory.createElement("test.group.e2", groupObj, DataTypeManager.DefaultDataTypes.STRING, 2); //$NON-NLS-1$
         FakeMetadataObject vModelObj = FakeMetadataFactory.createVirtualModel("vTest");  //$NON-NLS-1$
-        QueryNode vNode = new QueryNode("vTest.vGroup", "SELECT * FROM test.group"); //$NON-NLS-1$ //$NON-NLS-2$ 
+        QueryNode vNode = new QueryNode("SELECT * FROM test.group"); //$NON-NLS-1$ //$NON-NLS-2$ 
         FakeMetadataObject vGroupObj = FakeMetadataFactory.createVirtualGroup("vTest.vGroup", vModelObj, vNode); //$NON-NLS-1$
         FakeMetadataObject vElemObj0 = FakeMetadataFactory.createElement("vTest.vGroup.e0", vGroupObj, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
         FakeMetadataObject vElemObj1 = FakeMetadataFactory.createElement("vTest.vGroup.e1", vGroupObj, DataTypeManager.DefaultDataTypes.STRING, 1); //$NON-NLS-1$
@@ -247,7 +247,7 @@ public class TestValidator {
         elements.add(vElemObj1);
         FakeMetadataObject vGroupAp1 = FakeMetadataFactory.createAccessPattern("vTest.vGroup.ap1", vGroupObj, elements); //e1 //$NON-NLS-1$
         
-        QueryNode vNode2 = new QueryNode("vTest.vGroup", "SELECT * FROM vTest.vGroup"); //$NON-NLS-1$ //$NON-NLS-2$ 
+        QueryNode vNode2 = new QueryNode("SELECT * FROM vTest.vGroup"); //$NON-NLS-1$ //$NON-NLS-2$ 
         FakeMetadataObject vGroupObj2 = FakeMetadataFactory.createVirtualGroup("vTest.vGroup2", vModelObj, vNode2); //$NON-NLS-1$
         FakeMetadataObject vElemObj20 = FakeMetadataFactory.createElement("vTest.vGroup2.e0", vGroupObj2, DataTypeManager.DefaultDataTypes.INTEGER, 0); //$NON-NLS-1$
         FakeMetadataObject vElemObj21 = FakeMetadataFactory.createElement("vTest.vGroup2.e1", vGroupObj2, DataTypeManager.DefaultDataTypes.STRING, 1); //$NON-NLS-1$
@@ -1645,7 +1645,7 @@ public class TestValidator {
         FakeMetadataObject virtualResultSet = FakeMetadataFactory.createResultSet("vm1.rs", physicalModel, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         FakeMetadataObject virtualReturnParam = FakeMetadataFactory.createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, virtualResultSet);  //$NON-NLS-1$
         FakeMetadataObject virtualInParam = FakeMetadataFactory.createParameter("in1", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
-        QueryNode queryNode = new QueryNode("vm1.sp", "CREATE VIRTUAL PROCEDURE BEGIN EXEC pm1.sp(vm1.sp.in1); END"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode queryNode = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN EXEC pm1.sp(vm1.sp.in1); END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject virtualStoredProcedure = FakeMetadataFactory.createVirtualProcedure("vm1.sp", physicalModel, Arrays.asList(new FakeMetadataObject[] { virtualReturnParam, virtualInParam }), queryNode);  //$NON-NLS-1$
                 
         FakeMetadataStore store = new FakeMetadataStore();
