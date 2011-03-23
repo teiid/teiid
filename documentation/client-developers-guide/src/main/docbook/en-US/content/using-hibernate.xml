@@ -53,7 +53,9 @@
        
        <programlisting><![CDATA[<property name="connection.url">
 	jdbc:teiid:<vdb-name>@mm://<host>:<port>;user=<user-name>;password=<password>
-</property>]]></programlisting></para>      
+</property>]]></programlisting>
+       <note><para>Be sure to use a <xref linkend="local_connection"/> if Hibernate is in the same VM as the application server.</para></note>
+       </para>      
        </listitem>
        <listitem>
        <para>Specify the Teiid dialect class in the “dialect” property:
