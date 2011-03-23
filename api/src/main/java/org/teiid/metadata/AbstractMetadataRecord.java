@@ -23,6 +23,7 @@
 package org.teiid.metadata;
 
 import java.io.Serializable;
+import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -45,6 +46,7 @@ public abstract class AbstractMetadataRecord implements Serializable {
     
     private String uuid; //globally unique id
     private String name; //contextually unique name
+    private WeakReference<String> fullNameRef;
     private String canonicalName;
     
     private String nameInSource;
@@ -76,9 +78,18 @@ public abstract class AbstractMetadataRecord implements Serializable {
      * is not SQL safe - it may need quoted/escaped
      */
 	public String getFullName() {
+		if (this.fullNameRef != null) {
+			String fullName = this.fullNameRef.get();
+			if (fullName != null) {
+				return fullName;
+			}
+			this.fullNameRef = null;
+		}
         AbstractMetadataRecord parent = getParent();
         if (parent != null) {
-        	return parent.getFullName() + NAME_DELIM_CHAR + getName();
+        	String result = parent.getFullName() + NAME_DELIM_CHAR + getName();
+        	this.fullNameRef = new WeakReference<String>(result);
+        	return result;
         }
         return name;
 	}

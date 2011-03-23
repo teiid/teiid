@@ -625,7 +625,7 @@ public final class FunctionMethods {
 
 		int endVal = Math.min(startVal+lengthVal, string.length());
 
-		return string.substring(startVal, endVal);
+		return new String(string.substring(startVal, endVal));
 	}
 
     public static Object substring(String string, Integer start) {
@@ -644,7 +644,7 @@ public final class FunctionMethods {
         if(string.length() < countValue) {
             return string;
         }
-        return string.substring(0, countValue);
+        return new String(string.substring(0, countValue));
 	}
 
 	// ================== Function = right =====================
@@ -657,7 +657,7 @@ public final class FunctionMethods {
         } else if(string.length() < countValue) {
             return string;
 		} else {
-			return string.substring(string.length() - countValue);
+			return new String(string.substring(string.length() - countValue));
         }
 	}
 
@@ -702,7 +702,7 @@ public final class FunctionMethods {
 		for(int i=0; i<string.length(); i++) {
 			if(string.charAt(i) != SPACE) {
 				// end of trim, return what's left
-				return string.substring(i);
+				return new String(string.substring(i));
 			}
 		}
 
@@ -716,7 +716,7 @@ public final class FunctionMethods {
 		for(int i=string.length()-1; i>=0; i--) {
 			if(string.charAt(i) != SPACE) {
 				// end of trim, return what's left
-				return string.substring(0, i+1);
+				return new String(string.substring(0, i+1));
 			}
 		}
 
@@ -739,7 +739,7 @@ public final class FunctionMethods {
 			int newIndex = string.indexOf(subString, index);
 			if(newIndex < 0) {
 				// No more replacement sections, grab from old index to end of string
-				result.append( string.substring(index) );
+				result.append( string.substring(index));
 
 				// Break out of loop
 				break;
@@ -748,7 +748,7 @@ public final class FunctionMethods {
 			// Matched the substring at newIndex
 
 			// First append section from old index to new
-			result.append( string.substring( index, newIndex) );
+			result.append( string.substring( index, newIndex));
 
 			// Then append replacement section for sub
 			result.append( replaceString );
@@ -858,7 +858,7 @@ public final class FunctionMethods {
 	        throw new FunctionExecutionException("ERR.015.001.0025", QueryPlugin.Util.getString("ERR.015.001.0025")); //$NON-NLS-1$ //$NON-NLS-2$
 	    }
 	    if(length < str.length()) {
-	        return str.substring(0, length);
+	        return new String(str.substring(0, length));
 	    }
 	    if(length > DataTypeManager.MAX_STRING_LENGTH) {
 	    	length = DataTypeManager.MAX_STRING_LENGTH;
@@ -877,9 +877,9 @@ public final class FunctionMethods {
 	    	}
 	    }
 	    if (left) {
-	    	return outStr.substring(outStr.length() - length);
+	    	return new String(outStr.substring(outStr.length() - length));
 	    }
-	    return outStr.substring(0, length);
+	    return new String(outStr.substring(0, length));
 	}
 
     

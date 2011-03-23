@@ -180,9 +180,7 @@ public class ExecResolver extends ProcedureContainerResolver {
             	continue;
             }
             if (namedParameters) {
-                String nameKey = param.getName();
-                nameKey = metadata.getShortElementName(nameKey);
-                nameKey = nameKey.toUpperCase();
+                String nameKey = param.getParameterSymbol().getShortCanonicalName();
                 Expression expr = inputExpressions.remove(nameKey);
                 // With named parameters, have to check on optional params and default values
                 if (expr == null && param.getParameterType() != ParameterInfo.OUT) {

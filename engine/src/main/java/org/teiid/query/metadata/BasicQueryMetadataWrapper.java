@@ -126,13 +126,6 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 		return actualMetadata.getForeignKeysInGroup(groupID);
 	}
 
-	public String getFullElementName(String fullGroupName,
-			String shortElementName) throws TeiidComponentException,
-			QueryMetadataException {
-		return actualMetadata.getFullElementName(fullGroupName,
-				shortElementName);
-	}
-
 	public String getFullName(Object metadataID)
 			throws TeiidComponentException, QueryMetadataException {
 		return actualMetadata.getFullName(metadataID);
@@ -146,11 +139,6 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 	public Object getGroupIDForElementID(Object elementID)
 			throws TeiidComponentException, QueryMetadataException {
 		return actualMetadata.getGroupIDForElementID(elementID);
-	}
-
-	public String getGroupName(String fullElementName)
-			throws TeiidComponentException, QueryMetadataException {
-		return actualMetadata.getGroupName(fullElementName);
 	}
 
 	public Collection getGroupsForPartialName(String partialGroupName)
@@ -260,11 +248,6 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 	public int getScale(Object elementID) throws TeiidComponentException,
 			QueryMetadataException {
 		return actualMetadata.getScale(elementID);
-	}
-
-	public String getShortElementName(String fullElementName)
-			throws TeiidComponentException, QueryMetadataException {
-		return actualMetadata.getShortElementName(fullElementName);
 	}
 
 	public StoredProcedureInfo getStoredProcedureInfoForProcedure(
@@ -392,6 +375,12 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 	@Override
 	public boolean hasProcedure(String name) throws TeiidComponentException {
 		return actualMetadata.hasProcedure(name);
+	}
+	
+	@Override
+	public String getName(Object metadataID) throws TeiidComponentException,
+			QueryMetadataException {
+		return actualMetadata.getName(metadataID);
 	}
 
 }

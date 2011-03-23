@@ -149,7 +149,8 @@ public class QueryResolver {
     	ResolverUtil.resolveGroup(container, metadata);
     	switch (type) {
 	    case Command.TYPE_QUERY:
-	        QueryNode queryNode = metadata.getVirtualPlan(metadata.getGroupID(container.getCanonicalName()));
+	    	ResolverUtil.resolveGroup(container, metadata);
+	        QueryNode queryNode = metadata.getVirtualPlan(container.getMetadataID());
             
 	        return resolveWithBindingMetadata(currentCommand, metadata, queryNode, false);
     	case Command.TYPE_INSERT:

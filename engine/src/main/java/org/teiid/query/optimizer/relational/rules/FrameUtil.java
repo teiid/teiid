@@ -38,7 +38,6 @@ import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -320,27 +319,16 @@ public class FrameUtil {
     public static Map<ElementSymbol, Expression> buildSymbolMap(GroupSymbol oldGroup, GroupSymbol newGroup, QueryMetadataInterface metadata) 
         throws QueryMetadataException, TeiidComponentException {
 
-        String newGroupName = null;
-        if (newGroup != null) {
-            newGroupName = newGroup.getName();
-        }
-        Map map = new HashMap();    
+        Map<ElementSymbol, Expression> map = new HashMap<ElementSymbol, Expression>();    
 
         // Get elements of old group
-        List elements = ResolverUtil.resolveElementsInGroup(oldGroup, metadata);
+        List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(oldGroup, metadata);
         
-        Iterator iter = elements.iterator();
-        while(iter.hasNext()) {
-            ElementSymbol oldElementSymbol = (ElementSymbol)iter.next();
-            
+        for (ElementSymbol oldElementSymbol : elements) {
             Expression symbol = null;
             if (newGroup != null) {
-                String newFullName = metadata.getFullElementName(newGroupName, oldElementSymbol.getShortName());
-                ElementSymbol newElementSymbol = new ElementSymbol(newFullName);
+                ElementSymbol newElementSymbol = oldElementSymbol.clone();
                 newElementSymbol.setGroupSymbol(newGroup);
-                newElementSymbol.setMetadataID(oldElementSymbol.getMetadataID());
-                String elementType = metadata.getElementType(newElementSymbol.getMetadataID());
-                newElementSymbol.setType(DataTypeManager.getDataTypeClass(elementType));
                 symbol = newElementSymbol;
             } else {
                 symbol = new Constant(null, oldElementSymbol.getType());

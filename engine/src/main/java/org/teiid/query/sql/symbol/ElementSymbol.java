@@ -180,15 +180,15 @@ public class ElementSymbol extends SingleElementSymbol {
         this.groupSymbol = symbol;
     }
     
-    public void setName(String name) {
+    protected void setName(String name) {
     	int index = name.lastIndexOf('.');
     	if (index > 0) {
     		if (this.groupSymbol != null) {
     			throw new AssertionError("Attempt to set an invalid name"); //$NON-NLS-1$
     		}
-    		GroupSymbol gs = new GroupSymbol(name.substring(0, index));
+    		GroupSymbol gs = new GroupSymbol(new String(name.substring(0, index)));
     		this.setGroupSymbol(gs);
-    		name = name.substring(index + 1);
+    		name = new String(name.substring(index + 1));
     	} else {
     		this.groupSymbol = null;
     	}

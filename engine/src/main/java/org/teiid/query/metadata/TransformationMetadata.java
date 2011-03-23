@@ -237,44 +237,13 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         AbstractMetadataRecord metadataRecord = (AbstractMetadataRecord) metadataID;
         return metadataRecord.getFullName();
     }
-
-    public String getFullElementName(final String fullGroupName, final String shortElementName)     
-        throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isNotEmpty(fullGroupName);
-        ArgCheck.isNotEmpty(shortElementName);
-
-        return fullGroupName + DELIMITER_CHAR + shortElementName;
-    }
-
-    public String getShortElementName(final String fullElementName) throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isNotEmpty(fullElementName);
-        int index = fullElementName.lastIndexOf(DELIMITER_CHAR);
-        if(index >= 0) { 
-            return fullElementName.substring(index+1);
-        }
-        return fullElementName;
-    }
-
-    /**
-     * Return the text portion of the fullElementName representing a group.
-     * That means that this should only return text that is part of the 
-     * fullElementName and not look up new IDs or do much of anything fancy.
-     * This method is used by the resolver to decide which portion of a fully-
-     * qualified element name is the group name.  It will compare whatever comes
-     * back with the actual group names and aliases in the query, which is 
-     * why it is important not to introduce new metadata here.  Also, returning
-     * null indicates that no portion of the fullElementName is a
-     * group name - that is ok as it will be resolved as an ambiguous element.
-     * @see org.teiid.query.metadata.QueryMetadataInterface#getGroupName(java.lang.String)
-     */
-    public String getGroupName(final String fullElementName) throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isNotEmpty(fullElementName);  
-
-        int index = fullElementName.lastIndexOf(DELIMITER_CHAR);
-        if(index >= 0) { 
-            return fullElementName.substring(0, index);
-        }
-        return null;
+    
+    @Override
+    public String getName(Object metadataID) throws TeiidComponentException,
+    		QueryMetadataException {
+    	ArgCheck.isInstanceOf(AbstractMetadataRecord.class, metadataID);
+        AbstractMetadataRecord metadataRecord = (AbstractMetadataRecord) metadataID;
+        return metadataRecord.getName();
     }
 
     public List getElementIDsInGroupID(final Object groupID) throws TeiidComponentException, QueryMetadataException {
@@ -285,13 +254,12 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     public Object getGroupIDForElementID(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             Column columnRecord = (Column) elementID;
-            return this.getGroupID(getGroupName(columnRecord.getFullName()));
-        } else if(elementID instanceof ProcedureParameter){
-            ProcedureParameter columnRecord = (ProcedureParameter) elementID;
-            return this.getGroupID(getGroupName(columnRecord.getFullName()));
-        } else {
-            throw createInvalidRecordTypeException(elementID);
-        }
+            AbstractMetadataRecord parent = columnRecord.getParent();
+            if (parent instanceof Table) {
+            	return parent;
+            }
+        } 
+        throw createInvalidRecordTypeException(elementID);
     }
     
     public boolean hasProcedure(String name) throws TeiidComponentException {

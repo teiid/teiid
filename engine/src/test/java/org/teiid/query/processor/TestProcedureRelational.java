@@ -35,7 +35,6 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.optimizer.TestOptimizer;
-import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.proc.CreateCursorResultSetInstruction;
 import org.teiid.query.processor.proc.ProcedurePlan;
 import org.teiid.query.processor.proc.TestProcedureProcessor;
@@ -296,7 +295,7 @@ public class TestProcedureRelational {
         
         String userQuery = "select e1 from pm1.vsp26 where param1=1 and param2='a'"; //$NON-NLS-1$
         String inputCriteria = "(pm1.vsp26.param1 = 1) AND (pm1.vsp26.param2 = 'a')"; //$NON-NLS-1$
-        String atomicQuery = "SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0 WHERE (g_0.e2 >= pm1.vsp26.param1) AND (g_0.e1 = pm1.vsp26.param2)"; //$NON-NLS-1$
+        String atomicQuery = "SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0 WHERE (g_0.e2 >= PM1.VSP26.param1) AND (g_0.e1 = PM1.VSP26.param2)"; //$NON-NLS-1$
         
         helpTestProcRelational(userQuery, inputCriteria, atomicQuery);
     }
@@ -305,7 +304,7 @@ public class TestProcedureRelational {
     @Test public void testCase3403() {        
         String userQuery = "select e1 from pm1.vsp26 where param1=2 and param2='a' and 'x'='x'"; //$NON-NLS-1$
         String inputCriteria = "(pm1.vsp26.param1 = 2) AND (pm1.vsp26.param2 = 'a')"; //$NON-NLS-1$
-        String atomicQuery = "SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0 WHERE (g_0.e2 >= pm1.vsp26.param1) AND (g_0.e1 = pm1.vsp26.param2)"; //$NON-NLS-1$
+        String atomicQuery = "SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0 WHERE (g_0.e2 >= PM1.VSP26.param1) AND (g_0.e1 = PM1.VSP26.param2)"; //$NON-NLS-1$
         
         helpTestProcRelational(userQuery, inputCriteria, atomicQuery);
     }
@@ -313,7 +312,7 @@ public class TestProcedureRelational {
     @Test public void testCase3448() {
         String userQuery = "select e1 from pm1.vsp26 where (param1=1 and e2=2) and param2='a'"; //$NON-NLS-1$
         String inputCriteria = "(pm1.vsp26.param1 = 1) AND (pm1.vsp26.param2 = 'a')"; //$NON-NLS-1$
-        String atomicQuery = "SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0 WHERE (g_0.e2 >= pm1.vsp26.param1) AND (g_0.e1 = pm1.vsp26.param2)"; //$NON-NLS-1$
+        String atomicQuery = "SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0 WHERE (g_0.e2 >= PM1.VSP26.param1) AND (g_0.e1 = PM1.VSP26.param2)"; //$NON-NLS-1$
         
         helpTestProcRelational(userQuery, inputCriteria, atomicQuery);
     }

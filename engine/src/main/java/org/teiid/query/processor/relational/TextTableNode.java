@@ -428,7 +428,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		ArrayList<String> result = new ArrayList<String>();
 		int beginIndex = 0;
 		for (TextColumn col : table.getColumns()) {
-			String val = line.substring(beginIndex, beginIndex + col.getWidth());
+			String val = new String(line.substring(beginIndex, beginIndex + col.getWidth()));
 			addValue(result, false, val);
 			beginIndex += col.getWidth();
 		}

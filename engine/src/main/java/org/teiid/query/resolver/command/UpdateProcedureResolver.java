@@ -347,17 +347,13 @@ public class UpdateProcedureResolver implements CommandResolver {
     private void collectDeclareVariable(DeclareStatement obj, GroupSymbol variables, TempMetadataAdapter metadata, GroupContext externalGroups) throws QueryResolverException, TeiidComponentException {
         ElementSymbol variable = obj.getVariable();
         String typeName = obj.getVariableType();
-        String varName = variable.getName();
-        int sepIndex = varName.indexOf(ElementSymbol.SEPARATOR);
-        if(sepIndex < 0) {
-            String outputName = varName;
-            varName = ProcedureReservedWords.VARIABLES + ElementSymbol.SEPARATOR+ varName;
-            variable.setName(varName);
+        GroupSymbol gs = variable.getGroupSymbol();
+        if(gs == null) {
+            String outputName = variable.getShortName();
+            variable.setGroupSymbol(new GroupSymbol(ProcedureReservedWords.VARIABLES));
             variable.setOutputName(outputName);
         } else {
-            sepIndex = varName.lastIndexOf(ElementSymbol.SEPARATOR);
-            String groupName = varName.substring(0, sepIndex);
-            if(!groupName.equals(ProcedureReservedWords.VARIABLES)) {
+        	if (gs.getSchema() != null || !gs.getShortCanonicalName().equals(ProcedureReservedWords.VARIABLES)) {
                 handleUnresolvableDeclaration(variable, QueryPlugin.Util.getString("ERR.015.010.0031", new Object[]{ProcedureReservedWords.VARIABLES, variable})); //$NON-NLS-1$
             }
         }

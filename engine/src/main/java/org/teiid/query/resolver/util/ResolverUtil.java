@@ -363,7 +363,10 @@ public class ResolverUtil {
         	SingleElementSymbol sortKey = orderBy.getVariable(i);
         	if (sortKey instanceof ElementSymbol) {
         		ElementSymbol symbol = (ElementSymbol)sortKey;
-        		String groupPart = metadata.getGroupName(symbol.getName());
+        		String groupPart = null;
+        		if (symbol.getGroupSymbol() != null) {
+        			groupPart = symbol.getGroupSymbol().getName();
+        		}
         		String symbolName = symbol.getName();
         		String shortName = symbol.getShortName();
         		if (groupPart == null) {
@@ -502,19 +505,9 @@ public class ResolverUtil {
             List elementIDs = metadata.getElementIDsInGroupID(group.getMetadataID());
 
     		LinkedHashMap<Object, ElementSymbol> symbols = new LinkedHashMap<Object, ElementSymbol>(elementIDs.size());
-                        
-            String groupFullName = metadata.getFullName(group.getMetadataID());
-            boolean isXml = metadata.isXMLGroup(group.getMetadataID());
             
             for (Object elementID : elementIDs) {
-            	String elementName = metadata.getFullName(elementID);
-            	if (isXml) {
-            		elementName = elementName.substring(groupFullName.length() + 1);
-            	} else {
-            		//the logic about should work in either case, 
-            		//but there is a lot of metadata to correct
-            		elementName = metadata.getShortElementName(elementName);
-            	}
+            	String elementName = metadata.getName(elementID);
                 // Form an element symbol from the ID
                 ElementSymbol element = new ElementSymbol(elementName, DataTypeManager.getCanonicalString(StringUtil.toUpperCase(elementName)), group);
                 element.setMetadataID(elementID);

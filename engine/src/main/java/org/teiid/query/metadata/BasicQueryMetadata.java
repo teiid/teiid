@@ -90,32 +90,6 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
     }
 
     /**
-     * @see QueryMetadataInterface#getFullElementName(String, String)
-     */
-    public String getFullElementName(
-        String fullGroupName,
-        String shortElementName)
-        throws TeiidComponentException, QueryMetadataException {
-        return null;
-    }
-
-    /**
-     * @see QueryMetadataInterface#getShortElementName(String)
-     */
-    public String getShortElementName(String fullElementName)
-        throws TeiidComponentException, QueryMetadataException {
-        return null;
-    }
-
-    /**
-     * @see QueryMetadataInterface#getGroupName(String)
-     */
-    public String getGroupName(String fullElementName)
-        throws TeiidComponentException, QueryMetadataException {
-        return null;
-    }
-
-    /**
      * @see QueryMetadataInterface#getElementIDsInGroupID(Object)
      */
     public List getElementIDsInGroupID(Object groupID)
@@ -527,6 +501,12 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 	@Override
 	public boolean hasProcedure(String name) throws TeiidComponentException {
 		return false;
+	}
+	
+	@Override
+	public String getName(Object metadataID) throws TeiidComponentException,
+			QueryMetadataException {
+		return null;
 	}
     
 }

@@ -31,9 +31,11 @@ import java.util.Set;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.StringUtil;
 import org.teiid.query.metadata.BasicQueryMetadataWrapper;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 
 
 /**
@@ -42,19 +44,27 @@ import org.teiid.query.metadata.SupportConstants;
  */
 public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	
-    private Set<String> multiSourceModels;
+    private static final String SUFFIX = SingleElementSymbol.SEPARATOR + MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME;
+	private Set<String> multiSourceModels;
     
     public MultiSourceMetadataWrapper(QueryMetadataInterface actualMetadata, Set<String> multiSourceModels){
     	super(actualMetadata);
         this.multiSourceModels = multiSourceModels;
     }	
 
+    public static String getGroupName(final String fullElementName) {
+        int index = fullElementName.lastIndexOf('.');
+        if(index >= 0) { 
+            return fullElementName.substring(0, index);
+        }
+        return null;
+    }
+    
     /**
 	 * @see org.teiid.query.metadata.QueryMetadataInterface#getElementID(java.lang.String)
 	 */
 	public Object getElementID(String elementName) throws TeiidComponentException, QueryMetadataException {
-        String shortName = getShortElementName(elementName);        
-        if(shortName.equalsIgnoreCase(MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME)) {
+        if(StringUtil.endsWithIgnoreCase(elementName, SUFFIX)) {
             try {
                 String groupName = getGroupName(elementName);
                 Object groupID = getGroupID(groupName);
@@ -96,6 +106,15 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
             return ((MultiSourceElement)metadataID).fullName;
         }
 		return actualMetadata.getFullName(metadataID);
+	}
+	
+	@Override
+	public String getName(Object metadataID) throws TeiidComponentException,
+			QueryMetadataException {
+		if(metadataID instanceof MultiSourceElement) {
+            return MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME;
+        }
+		return actualMetadata.getName(metadataID);
 	}
 
 	/**
@@ -346,7 +365,7 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 			Object modelID = this.getModelID(gid);
 	        String modelName = this.getFullName(modelID);
 	        if(multiSourceModels.contains(modelName)) {
-				String shortName = getShortElementName(getFullName(elementId));        
+				String shortName = getName(elementId);        
 		        return shortName.equalsIgnoreCase(MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME);
 	        }
 		}

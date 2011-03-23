@@ -26,10 +26,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.query.unittest.FakeMetadataFactory;
-
 import junit.framework.TestCase;
+
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.unittest.FakeMetadataFactory;
 
 
 
@@ -68,7 +69,7 @@ public class TestMultiSourceMetadataWrapper extends TestCase {
         assertEquals(0, wrapper.getPrecision(instanceElementID));
         assertEquals(0, wrapper.getScale(instanceElementID));
         assertEquals(0, wrapper.getRadix(instanceElementID));
-        assertEquals(MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME, wrapper.getShortElementName(fullName));
-        assertEquals(fullName, wrapper.getFullElementName(wrapper.getFullName(groupID), MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME));
+        assertEquals(MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME, SingleElementSymbol.getShortName(fullName));
+        assertEquals(fullName, wrapper.getFullName(groupID) + SingleElementSymbol.SEPARATOR + MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME);
     }
 }

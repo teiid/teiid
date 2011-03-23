@@ -287,7 +287,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 				StoredProcedureInfo info = metadata.getStoredProcedureInfoForProcedure(container.getCanonicalName());
 		        // Create temporary metadata that defines a group based on either the stored proc
 		        // name or the stored query name - this will be used later during planning
-		        String procName = metadata.getFullName(info.getProcedureID());
+		        String procName = info.getProcedureCallableName();
 		        
 		        // Look through parameters to find input elements - these become child metadata
 		        List<ElementSymbol> tempElements = new ArrayList<ElementSymbol>(info.getParameters().size());

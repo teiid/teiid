@@ -31,6 +31,7 @@ import java.util.List;
 import org.teiid.core.util.LRUCache;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.sql.lang.CacheHint;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 
 
 /**
@@ -68,6 +69,7 @@ public class TempMetadataID implements Serializable {
 	}
 	
     private String ID;      // never null, upper cased fully-qualified string
+    private String name;
     private Type metadataType = Type.VIRTUAL;
     private Object originalMetadataID;
     
@@ -103,6 +105,7 @@ public class TempMetadataID implements Serializable {
         for (TempMetadataID tempMetadataID : elements) {
 			tempMetadataID.setPosition(pos++);
 		}
+        this.name = ID;
         this.metadataType = type;
     }
     
@@ -362,6 +365,13 @@ public class TempMetadataID implements Serializable {
 	
 	public boolean isUpdatable() {
 		return updatable;
+	}
+
+	public String getName() {
+		if (this.name == null) {
+			this.name = SingleElementSymbol.getShortName(this.ID);
+		}
+		return this.name;
 	}
 		
 }

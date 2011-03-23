@@ -163,7 +163,17 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
 			return ((TempMetadataID)metadataID).getID();
 		}
 		return this.actualMetadata.getFullName(metadataID);
-	}    
+	}  
+    
+    @Override
+    public String getName(Object metadataID) throws TeiidComponentException,
+    		QueryMetadataException {
+    	if(metadataID instanceof TempMetadataID) {
+    		TempMetadataID tid = (TempMetadataID)metadataID;
+    		return tid.getName();
+		}
+		return this.actualMetadata.getName(metadataID);
+    }
 
 	// SPECIAL: Override for temp groups
     public List getElementIDsInGroupID(Object groupID)

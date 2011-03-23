@@ -96,39 +96,18 @@ public interface QueryMetadataInterface {
      * @throws TeiidComponentException Unexpected internal system problem during request
      */
     String getFullName(Object metadataID)
-        throws TeiidComponentException, QueryMetadataException;    
-
-    /**
-     * Get the fully qualified (unique) element name given the full group name and the short element name.  
-     * @param fullGroupName Fully qualified group name
-     * @param shortElementName Short element name
-     * @return Unique element name for the specified group and element name
-     * @throws QueryMetadataException Metadata implementation detected a problem during the request
-     * @throws TeiidComponentException Unexpected internal system problem during request
-     */
-    String getFullElementName(String fullGroupName, String shortElementName)     
         throws TeiidComponentException, QueryMetadataException;
     
     /**
-     * Get the short (unique only to group) name of an element, given a fully qualified element name.
-     * @param fullElementName Fully qualified element name
-     * @return Short (unique only to group) name of element
+     * Get the name of the metadata identifier specified.  This metadata
+     * identifier was previously returned by some other method.
+     * @param metadataID Metadata identifier
+     * @return Metadata identifier for this model
      * @throws QueryMetadataException Metadata implementation detected a problem during the request
      * @throws TeiidComponentException Unexpected internal system problem during request
      */
-    String getShortElementName(String fullElementName) 
-        throws TeiidComponentException, QueryMetadataException;    
+    String getName(Object metadataID) throws TeiidComponentException, QueryMetadataException;
 
-    /**
-     * Get the group name from a fully qualified element name.
-     * @param fullElementName Fully qualified element name
-     * @return Group name
-     * @throws QueryMetadataException Metadata implementation detected a problem during the request
-     * @throws TeiidComponentException Unexpected internal system problem during request
-     */
-    String getGroupName(String fullElementName) 
-        throws TeiidComponentException, QueryMetadataException;    
-        
 	/**
 	 * Get list of metadata element IDs for a group ID
 	 * @param groupID Group ID

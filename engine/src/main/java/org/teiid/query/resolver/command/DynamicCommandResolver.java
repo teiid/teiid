@@ -43,7 +43,6 @@ import org.teiid.query.sql.lang.DynamicCommand;
 import org.teiid.query.sql.lang.SetClause;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
 
 
 public class DynamicCommandResolver implements CommandResolver {
@@ -69,7 +68,7 @@ public class DynamicCommandResolver implements CommandResolver {
         } else if (dynamicCmd.getIntoGroup().isTempGroupSymbol()) {
             while (columns.hasNext()) {
                 ElementSymbol column = (ElementSymbol)columns.next();
-                column.setName(dynamicCmd.getIntoGroup().getCanonicalName() + SingleElementSymbol.SEPARATOR + column.getShortName());
+                column.setGroupSymbol(new GroupSymbol(dynamicCmd.getIntoGroup().getCanonicalName()));
             }
         }
         
@@ -85,7 +84,6 @@ public class DynamicCommandResolver implements CommandResolver {
         if (dynamicCmd.getUsing() != null && !dynamicCmd.getUsing().isEmpty()) {
             for (SetClause clause : dynamicCmd.getUsing().getClauses()) {
                 ElementSymbol id = clause.getSymbol();
-                id.setName(ProcedureReservedWords.DVARS + SingleElementSymbol.SEPARATOR + id.getShortName());
                 id.setGroupSymbol(new GroupSymbol(ProcedureReservedWords.DVARS));
                 id.setType(clause.getValue().getType());
                 id.setMetadataID(new TempMetadataID(id.getCanonicalName(), id.getType()));

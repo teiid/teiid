@@ -37,12 +37,12 @@ public class MultiSourceElement {
     }
     
     public boolean equals(Object obj) {
-        if(obj == null || !(obj instanceof MultiSourceElement)) {
-            return false;
-        } else if(obj == this) {
+    	if(obj == this) {
             return true;
         }
-        
+        if(!(obj instanceof MultiSourceElement)) {
+            return false;
+        } 
         return groupID.equals(((MultiSourceElement)obj).groupID);
     }
     

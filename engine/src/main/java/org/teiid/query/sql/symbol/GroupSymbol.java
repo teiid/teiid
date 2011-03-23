@@ -304,8 +304,8 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
     public void setName(String name) {
     	int index = name.indexOf('.');
     	if (index > 0) {
-    		this.schema = name.substring(0, index);
-    		name = name.substring(index + 1);
+    		this.schema = new String(name.substring(0, index));
+    		name = new String(name.substring(index + 1));
     	} else {
     		this.schema = null;
     	}

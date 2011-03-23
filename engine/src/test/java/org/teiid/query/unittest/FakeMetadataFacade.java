@@ -48,6 +48,7 @@ import org.teiid.query.metadata.StoredProcedureInfo;
 import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 
 
 public class FakeMetadataFacade extends BasicQueryMetadata {
@@ -153,6 +154,28 @@ public class FakeMetadataFacade extends BasicQueryMetadata {
     	ArgCheck.isInstanceOf(FakeMetadataObject.class, metadataID);
 		return ((FakeMetadataObject)metadataID).getName();
 	}
+    
+    @Override
+    public String getName(Object metadataID) throws TeiidComponentException,
+    		QueryMetadataException {
+    	String name = getFullName(metadataID);
+    	Object groupID = getGroupIDForElementID(metadataID);
+    	boolean isXml = false;
+    	String groupFullName = null;
+    	if (groupID != null) {
+        	isXml = isXMLGroup(groupID);
+        	groupFullName = getFullName(groupID);
+    	}
+    	
+    	if (isXml) {
+    		name = name.substring(groupFullName.length() + 1);
+    	} else {
+    		//the logic about should work in either case, 
+    		//but there is a lot of metadata to correct
+    		name = SingleElementSymbol.getShortName(name);
+    	}
+    	return name;
+    }
 
     public List getElementIDsInGroupID(Object groupID)
         throws TeiidComponentException, QueryMetadataException {
@@ -294,40 +317,6 @@ public class FakeMetadataFacade extends BasicQueryMetadata {
         }
         return maxSetSize.intValue();
     }
-
-    public String getFullElementName(String fullGroupName, String shortElementName)
-        throws TeiidComponentException, QueryMetadataException {
-
-        Assertion.isNotNull(fullGroupName);
-        Assertion.isNotNull(shortElementName);
-
-        return fullGroupName + "." + shortElementName; //$NON-NLS-1$
-    }
-
-    public String getShortElementName(String fullElementName)
-        throws TeiidComponentException, QueryMetadataException {
-
-        Assertion.isNotNull(fullElementName);
-
-        int index = fullElementName.lastIndexOf("."); //$NON-NLS-1$
-        if(index >= 0) {
-            return fullElementName.substring(index+1);
-        }
-        return fullElementName;
-    }
-
-    public String getGroupName(String fullElementName)
-        throws TeiidComponentException, QueryMetadataException {
-
-        Assertion.isNotNull(fullElementName);
-
-        int index = fullElementName.lastIndexOf("."); //$NON-NLS-1$
-        if(index >= 0) {
-            return fullElementName.substring(0, index);
-        }
-        return null;
-    }
-
 
     public StoredProcedureInfo getStoredProcedureInfoForProcedure(String fullyQualifiedProcedureName)
         throws TeiidComponentException, QueryMetadataException {

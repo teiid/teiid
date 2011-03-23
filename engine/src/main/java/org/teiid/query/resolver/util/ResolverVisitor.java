@@ -145,14 +145,14 @@ public class ResolverVisitor extends LanguageVisitor {
         	return;
         }
         
-        // determine the "metadataID" part of the symbol to look up
-        String potentialID = elementSymbol.getName();
-        
         // look up group and element parts of the potentialID
-        String groupContext = metadata.getGroupName(potentialID);
+        String groupContext = null;
+        if (elementSymbol.getGroupSymbol() != null) {
+        	groupContext = elementSymbol.getGroupSymbol().getName();
+        }
         String elementShortName = elementSymbol.getShortCanonicalName();
         if (groupContext != null) {
-            groupContext = groupContext.toUpperCase();
+            groupContext = elementSymbol.getGroupSymbol().getCanonicalName();
         	try {
 				if (findShortName && internalResolveElementSymbol(elementSymbol, null, elementShortName, groupContext)) {
 		    		elementSymbol.setDisplayMode(DisplayMode.SHORT_OUTPUT_NAME);
