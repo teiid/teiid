@@ -22,12 +22,18 @@
 
 package org.teiid.query.optimizer;
 
+import static org.junit.Assert.*;
 import static org.teiid.query.optimizer.TestOptimizer.*;
 
 import org.junit.Test;
+import org.teiid.query.optimizer.TestOptimizer.DupRemoveSortNode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.relational.LimitNode;
+import org.teiid.query.processor.relational.ProjectNode;
+import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
 
@@ -166,6 +172,26 @@ public class TestSortOptimization {
                 0       // UnionAll
             });
         checkNodeTypes(plan, new int[] {0}, new Class[] {DupRemoveSortNode.class});
+    }
+    
+    @Test public void testProjectionRaisingWithLimit() { 
+        // Create query 
+        String sql = "select e1, (select e1 from pm2.g1 where e2 = x.e2) from pm1.g1 as x order by e2 limit 2"; //$NON-NLS-1$
+
+        RelationalPlan plan = (RelationalPlan)helpPlan(sql, FakeMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(), 
+                                      new String[] {"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
+        
+        assertTrue(plan.getRootNode() instanceof ProjectNode);
+    }
+    
+    @Test public void testProjectionRaisingWithLimit1() { 
+        // Create query 
+        String sql = "select (select e1 from pm2.g1 where e2 = x.e2) as z from pm1.g1 as x order by z limit 2"; //$NON-NLS-1$
+
+        RelationalPlan plan = (RelationalPlan)helpPlan(sql, FakeMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(), 
+                                      new String[] {"SELECT pm1.g1.e2 FROM pm1.g1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
+        
+        assertTrue(plan.getRootNode() instanceof LimitNode);
     }
 
 }
