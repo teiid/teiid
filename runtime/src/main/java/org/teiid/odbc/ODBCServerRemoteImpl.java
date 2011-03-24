@@ -35,6 +35,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.teiid.core.util.ApplicationInfo;
+import org.teiid.core.util.StringUtil;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.logging.LogConstants;
@@ -53,18 +54,17 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	
 	private static Pattern pkPattern = Pattern.compile("select ta.attname, ia.attnum, ic.relname, n.nspname, tc.relname " +//$NON-NLS-1$
 			"from pg_catalog.pg_attribute ta, pg_catalog.pg_attribute ia, pg_catalog.pg_class tc, pg_catalog.pg_index i, " +//$NON-NLS-1$
-			"pg_catalog.pg_namespace n, pg_catalog.pg_class ic where tc.relname = E?'(\\w+)' AND n.nspname = E?'(\\w+)'.*" );//$NON-NLS-1$
+			"pg_catalog.pg_namespace n, pg_catalog.pg_class ic where tc.relname = E?((?:'[^']*')+) AND n.nspname = E?((?:'[^']*')+).*" );//$NON-NLS-1$
 	
-
 	private static Pattern pkKeyPattern = Pattern.compile("select ta.attname, ia.attnum, ic.relname, n.nspname, NULL from " + //$NON-NLS-1$
 			"pg_catalog.pg_attribute ta, pg_catalog.pg_attribute ia, pg_catalog.pg_class ic, pg_catalog.pg_index i, " + //$NON-NLS-1$
-			"pg_catalog.pg_namespace n where ic.relname = E?'(\\w+)' AND n.nspname = E?'(\\w+)' .*"); //$NON-NLS-1$
+			"pg_catalog.pg_namespace n where ic.relname = E?((?:'[^']*')+) AND n.nspname = E?((?:'[^']*')+) .*"); //$NON-NLS-1$
 	
-	private Pattern fkPattern = Pattern.compile("select\\s+'(\\w+)'::name as PKTABLE_CAT," + //$NON-NLS-1$
+	private Pattern fkPattern = Pattern.compile("select\\s+((?:'[^']*')+)::name as PKTABLE_CAT," + //$NON-NLS-1$
 			"\\s+n2.nspname as PKTABLE_SCHEM," +  //$NON-NLS-1$
 			"\\s+c2.relname as PKTABLE_NAME," +  //$NON-NLS-1$
 			"\\s+a2.attname as PKCOLUMN_NAME," +  //$NON-NLS-1$
-			"\\s+'(\\w+)'::name as FKTABLE_CAT," +  //$NON-NLS-1$
+			"\\s+((?:'[^']*')+)::name as FKTABLE_CAT," +  //$NON-NLS-1$
 			"\\s+n1.nspname as FKTABLE_SCHEM," +  //$NON-NLS-1$
 			"\\s+c1.relname as FKTABLE_NAME," +  //$NON-NLS-1$
 			"\\s+a1.attname as FKCOLUMN_NAME," +  //$NON-NLS-1$
@@ -103,9 +103,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			"\\s+pg_catalog.pg_namespace n" +  //$NON-NLS-1$
 			"\\s+where contype = 'f' " +  //$NON-NLS-1$
 			"\\s+and  conrelid = c.oid" +  //$NON-NLS-1$
-			"\\s+and  relname = E?'(\\w+)'" +  //$NON-NLS-1$
+			"\\s+and  relname = E?((?:'[^']*')+)" +  //$NON-NLS-1$
 			"\\s+and  n.oid = c.relnamespace" +  //$NON-NLS-1$
-			"\\s+and  n.nspname = E?'(\\w+)'" +  //$NON-NLS-1$
+			"\\s+and  n.nspname = E?((?:'[^']*')+)" +  //$NON-NLS-1$
 			"\\s+\\) ref" +  //$NON-NLS-1$
 			"\\s+inner join pg_catalog.pg_class c1" +  //$NON-NLS-1$
 			"\\s+on c1.oid = ref.conrelid\\)" +  //$NON-NLS-1$
@@ -130,8 +130,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			"nspname, p.oid, atttypid, attname, proargnames, proargmodes, proallargtypes from ((pg_catalog.pg_namespace n inner join " + //$NON-NLS-1$
 			"pg_catalog.pg_proc p on p.pronamespace = n.oid) inner join pg_type t on t.oid = p.prorettype) left outer join " + //$NON-NLS-1$
 			"pg_attribute a on a.attrelid = t.typrelid  and attnum > 0 and not attisdropped " + //$NON-NLS-1$
-			"where has_function_privilege(p.oid, 'EXECUTE') and nspname like E?'(\\w+)' " + //$NON-NLS-1$
-			"and proname like E?'(\\w+)' " + //$NON-NLS-1$
+			"where has_function_privilege(p.oid, 'EXECUTE') and nspname like E?((?:'[^']*')+) " + //$NON-NLS-1$
+			"and proname like E?((?:'[^']*')+) " + //$NON-NLS-1$
 			"order by nspname, proname, p.oid, attnum"); //$NON-NLS-1$
 	
 	private static Pattern deallocatePattern = Pattern.compile("DEALLOCATE \"(\\w+\\d+_*)\""); //$NON-NLS-1$
@@ -301,8 +301,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		// set client_encoding to 'WIN1252'
 		if (sql != null) {
 			// selects are coming with "select\t" so using a space after "select" does not always work
-			String sqlLower = sql.toLowerCase();
-			if (sqlLower.startsWith("select")) { //$NON-NLS-1$
+			if (StringUtil.startsWithIgnoreCase(sql, "select")) { //$NON-NLS-1$
 				modified = sql.replace('\n', ' ');
 											
 				Matcher m = null;
