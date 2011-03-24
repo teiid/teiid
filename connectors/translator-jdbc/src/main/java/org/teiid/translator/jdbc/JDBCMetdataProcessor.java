@@ -39,6 +39,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.DuplicateRecordException;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
@@ -108,20 +109,24 @@ public class JDBCMetdataProcessor {
 			}
 		}
 		
-		Map<String, TableInfo> tableMap = getTables(metadataFactory, metadata);
-		
-		if (importKeys) {
-			getPrimaryKeys(metadataFactory, metadata, tableMap);
+		try {
+			Map<String, TableInfo> tableMap = getTables(metadataFactory, metadata);
 			
-			getForeignKeys(metadataFactory, metadata, tableMap);
-		}
-		
-		if (importIndexes) {
-			getIndexes(metadataFactory, metadata, tableMap);
-		}
-		
-		if (importProcedures) {
-			getProcedures(metadataFactory, metadata);
+			if (importKeys) {
+				getPrimaryKeys(metadataFactory, metadata, tableMap);
+				
+				getForeignKeys(metadataFactory, metadata, tableMap);
+			}
+			
+			if (importIndexes) {
+				getIndexes(metadataFactory, metadata, tableMap);
+			}
+			
+			if (importProcedures) {
+				getProcedures(metadataFactory, metadata);
+			}
+		} catch (DuplicateRecordException e) {
+			throw new TranslatorException(e, JDBCPlugin.Util.getString("JDBCMetadataProcessor.not_unique")); //$NON-NLS-1$
 		}
 		
 	}

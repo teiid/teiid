@@ -22,6 +22,7 @@
 package org.teiid.jdbc;
 
 import java.io.File;
+import java.util.LinkedHashMap;
 import java.util.Properties;
 
 import org.jboss.deployers.spi.DeploymentException;
@@ -48,6 +49,7 @@ import org.teiid.metadata.Schema;
 import org.teiid.metadata.index.IndexMetadataFactory;
 import org.teiid.metadata.index.VDBMetadataFactory;
 import org.teiid.query.function.SystemFunctionManager;
+import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.services.SessionServiceImpl;
@@ -100,8 +102,14 @@ public class FakeServer extends ClientServiceRegistryImpl {
 		
 		IndexMetadataFactory imf = VDBMetadataFactory.loadMetadata(new File(vdbPath).toURI().toURL());
 		MetadataStore metadata = imf.getMetadataStore(repo.getSystemStore().getDatatypes());
+		LinkedHashMap<String, Resource> entries = imf.getEntriesPlusVisibilities();
 		
-        VDBMetaData vdbMetaData = new VDBMetaData();
+        deployVDB(vdbName, metadata, entries);		
+	}
+
+	public void deployVDB(String vdbName, MetadataStore metadata,
+			LinkedHashMap<String, Resource> entries) {
+		VDBMetaData vdbMetaData = new VDBMetaData();
         vdbMetaData.setName(vdbName);
         vdbMetaData.setStatus(VDB.Status.ACTIVE);
         
@@ -120,10 +128,10 @@ public class FakeServer extends ClientServiceRegistryImpl {
         try {
         	MetadataStoreGroup stores = new MetadataStoreGroup();
         	stores.addStore(metadata);
-			this.repo.addVDB(vdbMetaData, stores, imf.getEntriesPlusVisibilities(), null, cmr);
+			this.repo.addVDB(vdbMetaData, stores, entries, null, cmr);
 		} catch (DeploymentException e) {
 			throw new RuntimeException(e);
-		}		
+		}
 	}
 	
 	public void removeVDB(String vdbName) {

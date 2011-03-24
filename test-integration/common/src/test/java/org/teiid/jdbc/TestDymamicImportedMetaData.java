@@ -25,15 +25,19 @@ package org.teiid.jdbc;
 import static org.junit.Assert.*;
 
 import java.sql.Connection;
+import java.util.LinkedHashMap;
 import java.util.Properties;
 
-import org.junit.Before;
 import org.junit.Test;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
+import org.teiid.metadata.Table;
 import org.teiid.metadata.index.VDBMetadataFactory;
+import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.teiid.TeiidExecutionFactory;
 
@@ -43,32 +47,60 @@ import org.teiid.translator.jdbc.teiid.TeiidExecutionFactory;
 @SuppressWarnings("nls")
 public class TestDymamicImportedMetaData {
 
-	Connection conn;
-    
-    ////////////////////Query Related Methods///////////////////////////
-
-    @Before public void setUp() throws Exception {
-    	FakeServer server = new FakeServer();
-    	server.deployVDB("test", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb");
-    	conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$
-    }
-
-	private MetadataFactory getMetadata(Properties importProperties)
+	private MetadataFactory getMetadata(Properties importProperties, Connection conn)
 			throws TranslatorException {
-		VDBRepository vdbRepository = new VDBRepository();
-    	vdbRepository.setSystemStore(VDBMetadataFactory.getSystem());
+		MetadataFactory mf = createMetadataFactory("test", importProperties);
     	
     	TeiidExecutionFactory tef = new TeiidExecutionFactory();
-    	MetadataFactory mf = new MetadataFactory("test", vdbRepository.getBuiltinDatatypes(), importProperties);
     	tef.getMetadata(mf, conn);
     	return mf;
 	}
+
+	private MetadataFactory createMetadataFactory(String schema, Properties importProperties) {
+		VDBRepository vdbRepository = new VDBRepository();
+    	vdbRepository.setSystemStore(VDBMetadataFactory.getSystem());
+    	return new MetadataFactory(schema, vdbRepository.getBuiltinDatatypes(), importProperties);
+	}
 	
     @Test public void testProcImport() throws Exception {
+    	FakeServer server = new FakeServer();
+    	server.deployVDB("test", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb");
+    	Connection conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$
+    	
     	Properties importProperties = new Properties();
     	importProperties.setProperty("importer.importProcedures", Boolean.TRUE.toString());
-    	MetadataFactory mf = getMetadata(importProperties);
+    	MetadataFactory mf = getMetadata(importProperties, conn);
     	Procedure p = mf.getMetadataStore().getSchemas().get("TEST").getProcedures().get("GETXMLSCHEMAS");
     	assertEquals(1, p.getResultSet().getColumns().size());
     }
+    
+    @Test public void testDuplicatException() throws Exception {
+    	FakeServer server = new FakeServer();
+    	MetadataFactory mf = createMetadataFactory("x", new Properties());
+    	MetadataFactory mf1 = createMetadataFactory("y", new Properties());
+    	
+    	Table dup = mf.addTable("dup");
+    	Table dup1 = mf1.addTable("dup");
+    	
+    	mf.addColumn("x", DataTypeManager.DefaultDataTypes.STRING, dup);
+    	mf1.addColumn("x", DataTypeManager.DefaultDataTypes.STRING, dup1);
+    	
+    	MetadataStore ms = mf.getMetadataStore();
+    	ms.addSchema(mf1.getMetadataStore().getSchemas().values().iterator().next());
+    	
+    	server.deployVDB("test", ms, new LinkedHashMap<String, Resource>());
+    	Connection conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$
+    	
+    	Properties importProperties = new Properties();
+    	try {
+    		getMetadata(importProperties, conn);
+    	} catch (TranslatorException e) {
+    		
+    	}
+    	
+    	importProperties.setProperty("importer.useFullSchemaName", Boolean.TRUE.toString());
+    	getMetadata(importProperties, conn);
+    	assertNotNull(mf.getMetadataStore().getSchemas().get("X").getTables().get("DUP"));
+    }
+
 }

@@ -25,6 +25,8 @@ package org.teiid.metadata;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.teiid.connector.DataPlugin;
+
 public class Schema extends AbstractMetadataRecord {
 
 	private static final long serialVersionUID = -5113742472848113008L;
@@ -40,21 +42,21 @@ public class Schema extends AbstractMetadataRecord {
 	public void addTable(Table table) {
 		table.setParent(this);
 		if (this.tables.put(table.getCanonicalName(), table) != null) {
-			throw new AssertionError("Duplicate Table " + table.getName()); //$NON-NLS-1$
+			throw new DuplicateRecordException(DataPlugin.Util.getString("Schema.duplicate_table", table.getName())); //$NON-NLS-1$
 		}
 	}
 	
 	public void addProcedure(Procedure procedure) {
 		procedure.setParent(this);
 		if (this.procedures.put(procedure.getCanonicalName(), procedure) != null) {
-			throw new AssertionError("Duplicate Procedure " + procedure.getName()); //$NON-NLS-1$
+			throw new DuplicateRecordException(DataPlugin.Util.getString("Schema.duplicate_procedure", procedure.getName())); //$NON-NLS-1$
 		}
 	}
 	
 	public void addFunction(FunctionMethod function) {
 		function.setParent(this);
 		if (this.functions.put(function.getCanonicalName(), function) != null) {
-			throw new AssertionError("Duplicate function " + function.getName()); //$NON-NLS-1$
+			throw new DuplicateRecordException(DataPlugin.Util.getString("Schema.duplicate_function", function.getName())); //$NON-NLS-1$
 		}
 	}	
 
