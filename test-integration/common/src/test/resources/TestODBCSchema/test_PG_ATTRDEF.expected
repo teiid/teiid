@@ -1,9 +1,8 @@
-integer      integer      integer      integer    
-oid          adsrc        adrelid      adnum      
-0            0            0            0          
-Row Count : 1
+integer      integer      string                                                             string                                                           
+adrelid      adnum        adbin                                                              adsrc                                                            
+Row Count : 0
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
-oid            4              PartsSupplier   java.lang.Integer   oid             integer            pg_catalog     pg_attrdef    11                    10            0         false            false            false       false                 2           true        true          false     false       
-adsrc          4              PartsSupplier   java.lang.Integer   adsrc           integer            pg_catalog     pg_attrdef    11                    10            0         false            false            false       false                 2           true        true          false     false       
 adrelid        4              PartsSupplier   java.lang.Integer   adrelid         integer            pg_catalog     pg_attrdef    11                    10            0         false            false            false       false                 2           true        true          false     false       
 adnum          4              PartsSupplier   java.lang.Integer   adnum           integer            pg_catalog     pg_attrdef    11                    10            0         false            false            false       false                 2           true        true          false     false       
+adbin          12             PartsSupplier   java.lang.String    adbin           string             pg_catalog     pg_attrdef    4000                  4000          0         false            false            false       false                 2           true        true          false     false       
+adsrc          12             PartsSupplier   java.lang.String    adsrc           string             pg_catalog     pg_attrdef    4000                  4000          0         false            false            false       false                 2           true        true          false     false       
