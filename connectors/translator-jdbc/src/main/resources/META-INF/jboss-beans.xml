@@ -305,6 +305,22 @@
         </constructor>
     </bean>     
     
+    <!-- Ingres 9.3 -->
+    <bean name="translator-ingres-template" class="org.teiid.templates.TranslatorDeploymentTemplate">
+        <property name="info"><inject bean="translator-ingres93" /> </property>
+        <property name="managedObjectFactory"> <inject bean="ManagedObjectFactory" /> </property>
+    </bean>
+
+    <bean name="translator-ingres" class="org.teiid.templates.TranslatorTemplateInfo">
+        <constructor factoryMethod="createTemplateInfo">
+            <factory bean="TranslatorDeploymentTemplateInfoFactory" />
+            <parameter class="java.lang.Class">org.teiid.templates.TranslatorTemplateInfo</parameter>
+            <parameter class="java.lang.Class">org.teiid.translator.jdbc.ingres.Ingres93ExecutionFactory</parameter>
+            <parameter class="java.lang.String">translator-ingres93</parameter>
+            <parameter class="java.lang.String">Ingres93</parameter>
+        </constructor>
+    </bean>
+    
     <!-- InterSystems Cache -->
     <bean name="translator-intersystems-cache-template" class="org.teiid.templates.TranslatorDeploymentTemplate">
         <property name="info"><inject bean="translator-intersystems-cache" /> </property>
