@@ -958,7 +958,9 @@ Account.Contacts) FROM Account]]></programlisting>
                     <tbody>
                         <row>
                             <entry>DefaultBinding</entry>
-                            <entry>The binding that should be used if one is not specified.  Can be one of HTTP, SOAP11, or SOAP12</entry>
+                            <entry>The binding that should be used if one is not specified.  Can be one of HTTP, SOAP11, or SOAP12
+                            <note><para>Setting the proper binding value on the translator is recommended as it removes the need for callers to pass an explict value.  If your service is actually uses SOAP11, but the binding used SOAP12 you will receive execution failures.</para></note>
+                            </entry>
                             <entry>SOAP12</entry>
                         </row>
                         <row>
