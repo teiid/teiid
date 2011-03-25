@@ -22,12 +22,13 @@
 
 package org.teiid.systemmodel;
 
+import static org.junit.Assert.*;
+
 import java.io.IOException;
 import java.sql.SQLException;
 
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.FakeServer;
@@ -130,6 +131,11 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 				"PK_SUPPLIER	null",  //$NON-NLS-1$
 				"PK_SUPPLIER_PARTS	null", //$NON-NLS-1$
 				"PK_SUPPLIER_PARTS	null",  //$NON-NLS-1$
+				"idx_matpg_relatt_ids	null",
+				"idx_matpg_relatt_ids	null",
+				"pk_matpg_relatt_names	null",
+				"pk_matpg_relatt_names	null",
+				"pk_matpg_relatt_names	null",
 				"pk_pg_attr	null",  //$NON-NLS-1$
 				"pk_pg_class	null",  //$NON-NLS-1$
 				"pk_pg_index	null",  //$NON-NLS-1$

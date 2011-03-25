@@ -6878,5 +6878,12 @@ public class TestParser {
         query.setFrom(new From(Arrays.asList(tt)));
         helpTest(sql, "SELECT * FROM ARRAYTABLE(null COLUMNS x string, y date) AS x", query);
     }
+    
+    @Test public void testPositionalReference() throws Exception {
+    	String sql = "select $1";
+    	Query query = new Query();
+    	query.setSelect(new Select(Arrays.asList(new ExpressionSymbol("foo", new Reference(0)))));
+        helpTest(sql, "SELECT ?", query);
+    }
 
 }

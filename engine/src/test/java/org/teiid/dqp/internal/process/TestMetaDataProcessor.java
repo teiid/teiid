@@ -22,12 +22,12 @@
 
 package org.teiid.dqp.internal.process;
 
-import java.util.Iterator;
+import static org.junit.Assert.*;
+
 import java.util.Map;
 import java.util.Set;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.metadata.MetadataResult;
@@ -44,13 +44,10 @@ import org.teiid.query.unittest.FakeMetadataFactory;
 
 /**
  */
-public class TestMetaDataProcessor extends TestCase {
+@SuppressWarnings({"nls", "unchecked"})
+public class TestMetaDataProcessor {
 
-    public TestMetaDataProcessor(String name) {
-        super(name);
-    }
-    
-    public Map[] helpGetMetadata(String sql, QueryMetadataInterface metadata, VDBMetaData vdb) throws Exception {
+	public Map[] helpGetMetadata(String sql, QueryMetadataInterface metadata, VDBMetaData vdb) throws Exception {
         // Prepare sql 
         Command command = QueryParser.getQueryParser().parseCommand(sql);
         QueryResolver.resolveCommand(command, metadata);
@@ -72,13 +69,13 @@ public class TestMetaDataProcessor extends TestCase {
         return mdProc.processMessage(requestID, workContext, null, true).getColumnMetadata();    
     }
     
-    public void testSimpleQuery() throws Exception {
+    @Test public void testSimpleQuery() throws Exception {
         Map[] metadata = helpGetMetadata("SELECT e1 FROM pm1.g1", FakeMetadataFactory.example1Cached(), FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNotNull(metadata);
         assertEquals(1, metadata.length);
     }
 
-    public void testSimpleUpdate() throws Exception {
+    @Test public void testSimpleUpdate() throws Exception {
         Map[] metadata = helpGetMetadata("INSERT INTO pm1.g1 (e1) VALUES ('x')", FakeMetadataFactory.example1Cached(), FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNull(metadata);
         
@@ -92,20 +89,21 @@ public class TestMetaDataProcessor extends TestCase {
         assertNull(metadata);
     }
     
-    public void testElementLabel() throws Exception {
+    @Test public void testElementLabel() throws Exception {
     	Map[] metadata = helpGetMetadata("SELECT E2 FROM pm1.g1", FakeMetadataFactory.example1Cached(), FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNotNull(metadata);
         assertEquals(1, metadata.length);
-        assertEquals("E2", metadata[0].get(ResultsMetadataConstants.ELEMENT_NAME)); //$NON-NLS-1$
+        assertEquals("e2", metadata[0].get(ResultsMetadataConstants.ELEMENT_NAME)); //$NON-NLS-1$
+        assertEquals("E2", metadata[0].get(ResultsMetadataConstants.ELEMENT_LABEL)); //$NON-NLS-1$
     }
     
-    public void testSimpleExec() throws Exception {
+    @Test public void testSimpleExec() throws Exception {
         Map[] metadata = helpGetMetadata("EXEC pm1.sq1()", FakeMetadataFactory.example1Cached(), FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNotNull(metadata);
         assertEquals(2, metadata.length);        
     }
     
-    public void testExecNoResultColumns() throws Exception {
+    @Test public void testExecNoResultColumns() throws Exception {
         Map[] metadata = helpGetMetadata("EXEC pm1.sp5()", FakeMetadataFactory.example1Cached(), FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNotNull(metadata);
         assertEquals(0, metadata.length);                
@@ -130,7 +128,7 @@ public class TestMetaDataProcessor extends TestCase {
         assertEquals(new Integer(expectedScale), md[column].get(ResultsMetadataConstants.SCALE)); 
     }
 
-    public void testDefect16629_moneyType() throws Exception {
+    @Test public void testDefect16629_moneyType() throws Exception {
         QueryMetadataInterface metadata = FakeMetadataFactory.examplePrivatePhysicalModel(); 
         String sql = "SELECT e1 FROM pm1.g2"; //$NON-NLS-1$
         
@@ -139,7 +137,7 @@ public class TestMetaDataProcessor extends TestCase {
         helpCheckNumericAttributes(response, 0, 21, 19, 4);
     }
 
-    public void testDefect16629_aggregatesOnMoneyType() throws Exception {
+    @Test public void testDefect16629_aggregatesOnMoneyType() throws Exception {
         QueryMetadataInterface metadata = FakeMetadataFactory.examplePrivatePhysicalModel(); 
         String sql = "SELECT min(e1), max(e1), sum(e1), avg(e1) FROM pm1.g2"; //$NON-NLS-1$
         
@@ -150,15 +148,12 @@ public class TestMetaDataProcessor extends TestCase {
         helpCheckNumericAttributes(response, 3, 22, 20, 0);
     }
     
-    public void testMetadataGenerationForAllTypes() throws Exception {
-        Set dataTypes = DataTypeManager.getAllDataTypeNames();
-        Iterator iter = dataTypes.iterator();
-        
-        while(iter.hasNext()) {
-            String type = (String) iter.next();
-            Class typeClass = DataTypeManager.getDataTypeClass(type);
+    @Test public void testMetadataGenerationForAllTypes() throws Exception {
+        Set<String> dataTypes = DataTypeManager.getAllDataTypeNames();
+        for (String type : dataTypes) {
+            Class<?> typeClass = DataTypeManager.getDataTypeClass(type);
             MetaDataProcessor processor = new MetaDataProcessor(null, null, "vdb", 1);
-            Map columnMetadata = processor.getDefaultColumn("t", "c", typeClass); //$NON-NLS-1$ //$NON-NLS-2$
+            Map<Integer, Object> columnMetadata = processor.getDefaultColumn("t", "c", typeClass); //$NON-NLS-1$ //$NON-NLS-2$
             verifyColumn(columnMetadata, type);            
         }               
     }
@@ -193,7 +188,7 @@ public class TestMetaDataProcessor extends TestCase {
         verifyAttribute(column, ResultsMetadataConstants.WRITABLE, false, Boolean.class, dataType);
     }
     
-    private Object verifyAttribute(Map column, Integer attributeType, boolean nullsAllowed, Class expectedClass, String columnDataType) {
+    private Object verifyAttribute(Map column, Integer attributeType, boolean nullsAllowed, Class<?> expectedClass, String columnDataType) {
         //System.out.println("Checking " + columnDataType + ", attribute " + attributeType); //$NON-NLS-1$ //$NON-NLS-2$
         Object value = column.get(attributeType);
         if(! nullsAllowed) {

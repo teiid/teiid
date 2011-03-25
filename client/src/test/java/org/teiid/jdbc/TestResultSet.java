@@ -586,7 +586,7 @@ public class TestResultSet {
         assertNotNull(rm);
             
         for (int j = 1; j <= rm.getColumnCount(); j++) {  
-            assertEquals(" Actual doesn't match with expected. ", columnName.get(j-1), rm.getColumnName(j)); //$NON-NLS-1$
+            assertEquals(" Actual doesn't match with expected. ", columnName.get(j-1), rm.getColumnLabel(j)); //$NON-NLS-1$
             assertEquals(" Actual doesn't match with expected. ", columnType.get(j-1), new Integer(rm.getColumnType(j))); //$NON-NLS-1$
             assertEquals(" Actual doesn't match with expected. ", columnTypeName.get(j-1), rm.getColumnTypeName(j)); //$NON-NLS-1$
         }

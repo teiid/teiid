@@ -58,7 +58,7 @@ public class DeferredMetadataProvider extends MetadataProvider {
         Map<Integer, String>[] columnMetadata = new Map[columnNames.length];
         for(int i=0; i<columnNames.length; i++) {
             columnMetadata[i] = new HashMap<Integer, String>();
-            columnMetadata[i].put(ResultsMetadataConstants.ELEMENT_NAME, columnNames[i]);
+            columnMetadata[i].put(ResultsMetadataConstants.ELEMENT_LABEL, columnNames[i]);
             columnMetadata[i].put(ResultsMetadataConstants.DATA_TYPE, columnTypes[i]);
         }
         return columnMetadata;
@@ -78,7 +78,7 @@ public class DeferredMetadataProvider extends MetadataProvider {
 
     @Override
     public Object getValue(int columnIndex, Integer metadataPropertyKey) throws SQLException {
-        if(!loaded && !(metadataPropertyKey == ResultsMetadataConstants.ELEMENT_NAME || metadataPropertyKey == ResultsMetadataConstants.DATA_TYPE)) {
+        if(!loaded && !(metadataPropertyKey == ResultsMetadataConstants.ELEMENT_LABEL || metadataPropertyKey == ResultsMetadataConstants.DATA_TYPE)) {
             loadFullMetadata();
             loaded = true;
         }

@@ -135,6 +135,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			"and proname like E?((?:'[^']*')+) " + //$NON-NLS-1$
 			"order by nspname, proname, p.oid, attnum"); //$NON-NLS-1$
 	
+	private static Pattern preparedAutoIncrement = Pattern.compile("select 1 \\s*from pg_catalog.pg_attrdef \\s*where adrelid = \\$1 AND adnum = \\$2 " + //$NON-NLS-1$
+			"\\s*and pg_catalog.pg_get_expr\\(adbin, adrelid\\) \\s*like .*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	
 	private static Pattern deallocatePattern = Pattern.compile("DEALLOCATE \"(\\w+\\d+_*)\""); //$NON-NLS-1$
 	private static Pattern releasePattern = Pattern.compile("RELEASE (\\w+\\d+_*)"); //$NON-NLS-1$
 	private static Pattern savepointPattern = Pattern.compile("SAVEPOINT (\\w+\\d+_*)"); //$NON-NLS-1$
@@ -201,7 +204,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 						
 			if (sql != null) {
 				String modfiedSQL = fixSQL(sql);
-				modfiedSQL = modfiedSQL.replaceAll("\\$\\d+", "?");//$NON-NLS-1$ //$NON-NLS-2$
 				try {
 					// close if the name is already used or the unnamed prepare; otherwise
 					// stmt is alive until session ends.
@@ -362,6 +364,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				else if (modified.equalsIgnoreCase("select db_name() dbname")) { //$NON-NLS-1$
 					modified = "SELECT current_database()"; //$NON-NLS-1$
 				}
+				else if (preparedAutoIncrement.matcher(modified).matches()) {
+					modified = "SELECT 1 from matpg_relatt where attrelid = ? and attnum = ? and autoinc = true"; //$NON-NLS-1$
+				}
 				else {
 					//these are somewhat dangerous
 					modified = modified.replaceAll("E'", "'"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -468,7 +473,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		}
 		else {
 			try {
-				this.client.sendResultSetDescription(query.stmt.getMetaData());
+				this.client.sendResultSetDescription(query.stmt.getMetaData(), query.stmt);
 			} catch (SQLException e) {
 				this.client.errorOccurred(e);
 			}

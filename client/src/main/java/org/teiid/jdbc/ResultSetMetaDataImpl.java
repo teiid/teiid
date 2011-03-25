@@ -97,7 +97,11 @@ public class ResultSetMetaDataImpl extends WrapperImpl implements ResultSetMetaD
     }
 
     public String getColumnLabel(int index) throws SQLException {
-        return provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.ELEMENT_LABEL);
+        String result = provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.ELEMENT_LABEL);
+        if (result != null) {
+        	return result;
+        }
+        return getColumnName(index);
     }
 
     public String getColumnName(int index) throws SQLException {
@@ -139,7 +143,7 @@ public class ResultSetMetaDataImpl extends WrapperImpl implements ResultSetMetaD
     }
 
     public int getColumnType(int index) throws SQLException {
-        String runtimeTypeName = provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.DATA_TYPE);
+        String runtimeTypeName = getColumnTypeName(index);
         return JDBCSQLTypeInfo.getSQLType(runtimeTypeName);
     }
 

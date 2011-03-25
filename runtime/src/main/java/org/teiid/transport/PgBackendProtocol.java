@@ -31,10 +31,12 @@ import java.nio.charset.Charset;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.ParameterMetaData;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLXML;
+import java.sql.Statement;
 import java.sql.Types;
 import java.util.Properties;
 
@@ -308,10 +310,10 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	}
 
 	@Override
-	public void sendResultSetDescription(ResultSetMetaData metaData) {
+	public void sendResultSetDescription(ResultSetMetaData metaData, Statement stmt) {
 		try {
 			try {
-				sendRowDescription(metaData);
+				sendRowDescription(metaData, stmt);
 			} catch (SQLException e) {
 				sendErrorResponse(e);				
 			}			
@@ -331,7 +333,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
             try {
             	if (describeRows) {
             		ResultSetMetaData meta = rs.getMetaData();
-            		sendRowDescription(meta);
+            		sendRowDescription(meta, rs.getStatement());
             	}
             	final int columns = rs.getMetaData().getColumnCount();
             	final int[] types = new int[columns];
@@ -524,33 +526,49 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		sendMessage();
 	}
 
-	private void sendRowDescription(ResultSetMetaData meta) throws SQLException, IOException {
+	private void sendRowDescription(ResultSetMetaData meta, Statement stmt) throws SQLException, IOException {
 		if (meta == null) {
 			sendNoData();
 		} else {
 			int columns = meta.getColumnCount();
-			int[] types = new int[columns];
-			int[] precision = new int[columns];
-			String[] names = new String[columns];
-			for (int i = 0; i < columns; i++) {
-				names[i] = meta.getColumnName(i + 1);
-				int type = meta.getColumnType(i + 1);
-				type = convertType(type);
-				precision[i] = meta.getColumnDisplaySize(i + 1);
-				types[i] = type;
-			}
 			startMessage('T');
 			writeShort(columns);
-			for (int i = 0; i < columns; i++) {
-				writeString(names[i].toLowerCase());
-				// object ID
-				writeInt(0);
+			for (int i = 1; i < columns + 1; i++) {
+				writeString(meta.getColumnName(i).toLowerCase());
+				int type = meta.getColumnType(i);
+				type = convertType(type);
+				int precision = meta.getColumnDisplaySize(i);
+				String name = meta.getColumnName(i);
+				String table = meta.getTableName(i);
+				String schema = meta.getSchemaName(i);
+				int reloid = 0;
+				short attnum = 0;
+				if (schema != null) {
+					PreparedStatement ps = null;
+					try {
+						ps = stmt.getConnection().prepareStatement("select attrelid, attnum from matpg_relatt where attname = ? and relname = ? and nspname = ?");
+						ps.setString(1, name);
+						ps.setString(2, table);
+						ps.setString(3, schema);
+						ResultSet rs = ps.executeQuery();
+						if (rs.next()) {
+							reloid = rs.getInt(1);
+							attnum = rs.getShort(2);
+						}
+					} finally {
+						if (ps != null) {
+							ps.close();
+						}
+					}
+				}
+				// rel ID
+				writeInt(reloid);
 				// attribute number of the column
-				writeShort(0);
+				writeShort(attnum);
 				// data type
-				writeInt(types[i]);
+				writeInt(type);
 				// pg_type.typlen
-				writeShort(getTypeSize(types[i], precision[i]));
+				writeShort(getTypeSize(type, precision));
 				// pg_attribute.atttypmod
 				writeInt(-1);
 				// text

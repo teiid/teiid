@@ -1,5 +1,5 @@
 string                                                             string                                                           
-TABLE_SCHEM                                                        TABLE_CATALOG                                                    
+Name                                                               VDBName                                                          
 BQT1                                                               QT_Ora9DS                                                        
 BQT2                                                               QT_Ora9DS                                                        
 SP                                                                 QT_Ora9DS                                                        
@@ -13,5 +13,5 @@ XQTRecursiveDoc                                                    QT_Ora9DS
 pg_catalog                                                         QT_Ora9DS                                                        
 Row Count : 11
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
-TABLE_SCHEM    12             QT_Ora9DS       java.lang.String    TABLE_SCHEM     string             SYS            Schemas       255                   255           0         false            true             false       true                  1           false       true          true      true        
-TABLE_CATALOG  12             QT_Ora9DS       java.lang.String    TABLE_CATALOG   string             SYS            Schemas       255                   255           0         false            true             false       true                  1           false       true          true      true        
+Name           12             QT_Ora9DS       java.lang.String    TABLE_SCHEM     string             SYS            Schemas       255                   255           0         false            true             false       true                  1           false       true          true      true        
+VDBName        12             QT_Ora9DS       java.lang.String    TABLE_CATALOG   string             SYS            Schemas       255                   255           0         false            true             false       true                  1           false       true          true      true        

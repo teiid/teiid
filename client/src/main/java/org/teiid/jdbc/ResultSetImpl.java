@@ -45,6 +45,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -108,6 +109,8 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
     private PlanNode updatedPlanDescription;
     private int maxFieldSize;
     private int fetchSize;
+    
+	private Map<String, Integer> columnMap;
 
 	/**
 	 * Constructor.
@@ -853,43 +856,15 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 		return DataTypeTransformer.getString(getObject(columnIndex));
 	}
 
-	/**
-	 * Get a string based on the column name.
-	 * 
-	 * @param String
-	 * 		representing name of the column.
-	 * @return String value of the column.
-	 * @throws SQLException
-	 * 		if a results access error occurs.
-	 */
 	public String getString(String columnName) throws SQLException {
 		// find the columnIndex for the given column name.
 		return getString(findColumn(columnName));
 	}
 
-	/**
-	 * This method will return the value in the current row as a Time object.
-	 * This will assume the default timeZone.
-	 * 
-	 * @param The
-	 * 		index of the column whose value needs to be fetched.
-	 * @return The value of the column as a Time object.
-	 * @throws SQLException
-	 * 		if a results access error occurs or transform fails.
-	 */
 	public Time getTime(int columnIndex) throws SQLException {
 		return getTime(columnIndex, null);
 	}
 
-	/**
-	 * Get a java.sql.Time based on the column name.
-	 * 
-	 * @param name
-	 * 		of the column whose value is to be fetched as a timestamp
-	 * @return value of the column as a Timestamp object
-	 * @throws SQLException
-	 * 		if a results access error occurs.
-	 */
 	public Time getTime(String columnName) throws SQLException {
 		// find the columnIndex for the given column name.
 		return getTime(findColumn(columnName));
@@ -1236,18 +1211,6 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 		return absolute(1);
 	}
 
-	/**
-	 * <p>
-	 * This method returns the integer that represents which column represents
-	 * the column name parameter.
-	 * </p>
-	 * 
-	 * @param Name
-	 * 		of the column whose position is to be returned.
-	 * @return Position of column amoung the columns in the ResultSet.
-	 * @throws SQLException
-	 * 		if a database access error occurs.
-	 */
 	public int findColumn(String columnName) throws SQLException {
 		checkClosed();
 
@@ -1256,13 +1219,17 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 	}
 
 	protected int findColumnIndex(String columnName) throws SQLException {
-		int colCount = getMetaData().getColumnCount();
-		for (int i = 1; i <= colCount; i++) {
-			if (getMetaData().getColumnName(i).equalsIgnoreCase(columnName)) {
-				return i;
+		if (this.columnMap == null) {
+			columnMap = new TreeMap<String, Integer>(String.CASE_INSENSITIVE_ORDER);
+			int colCount = getMetaData().getColumnCount();
+			for (int i = 1; i <= colCount; i++) {
+				columnMap.put(getMetaData().getColumnLabel(i), i);
 			}
 		}
-
+		Integer index = columnMap.get(columnName);
+		if (index != null) {
+			return index;
+		}
 		String msg = JDBCPlugin.Util.getString(
 				"MMResultsImpl.Col_doesnt_exist", columnName); //$NON-NLS-1$
 		throw new TeiidSQLException(msg);

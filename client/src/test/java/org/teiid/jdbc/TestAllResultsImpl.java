@@ -49,8 +49,6 @@ import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.util.TimestampWithTimezone;
-import org.teiid.jdbc.ResultSetImpl;
-import org.teiid.jdbc.StatementImpl;
 import org.teiid.query.unittest.TimestampUtil;
 
 
@@ -272,7 +270,7 @@ public class TestAllResultsImpl {
 		String[] columnNames = columnNames();
 		String[] dataTypes = dataTypes();
 		for (int i = 0; i < 2; i++) {
-			assertEquals(columnNames[i], rmetadata.getColumnName(i + 1)); 
+			assertEquals(columnNames[i], rmetadata.getColumnLabel(i + 1)); 
 			assertEquals(dataTypes[i], rmetadata.getColumnTypeName(i + 1)); 
 		}
 		rs.close();
@@ -714,8 +712,11 @@ public class TestAllResultsImpl {
 	static ResultSetImpl helpTestBatching(StatementImpl statement, int fetchSize, int batchLength,
 			int totalLength) throws InterruptedException, ExecutionException,
 			TeiidProcessingException, SQLException, TimeoutException {
-		DQP dqp = mock(DQP.class);
-		stub(statement.getDQP()).toReturn(dqp);
+		DQP dqp = statement.getDQP();
+		if (dqp == null) {
+			dqp = mock(DQP.class);
+			stub(statement.getDQP()).toReturn(dqp);
+		}
 		stub(statement.getFetchSize()).toReturn(fetchSize);
 		for (int i = batchLength; i < totalLength; i += batchLength) {
 			//forward requests
@@ -732,7 +733,7 @@ public class TestAllResultsImpl {
 		}
 		
 		ResultsMessage msg = exampleResultsMsg4(1, batchLength, fetchSize, batchLength == totalLength);
-		return new ResultSetImpl(msg, statement);
+		return new ResultSetImpl(msg, statement, new ResultSetMetaDataImpl(new MetadataProvider(DeferredMetadataProvider.loadPartialMetadata(msg.getColumnNames(), msg.getDataTypes()))), 0);
 	}
 
 	// /////////////////////Helper Method///////////////////

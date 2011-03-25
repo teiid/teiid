@@ -99,7 +99,7 @@ public class TestResultSetMetadata extends AbstractMMQueryTestCase {
     	String[] expected = {
 	        "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName",	 //$NON-NLS-1$
 	        "count	4	integer	java.lang.Integer	1	null	null	PartsSupplier", //$NON-NLS-1$
-	        "part_name	12	string	java.lang.String	1	PARTSSUPPLIER.PARTS	PartsSupplier	PartsSupplier" //$NON-NLS-1$
+	        "PART_NAME	12	string	java.lang.String	1	PARTSSUPPLIER.PARTS	PartsSupplier	PartsSupplier" //$NON-NLS-1$
     	};
     	executeTest("select count(*), part_name from parts where 1=0 group by part_name", expected); //$NON-NLS-1$
     }
@@ -127,7 +127,7 @@ public class TestResultSetMetadata extends AbstractMMQueryTestCase {
     	String[] expected = {
 	        "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName", //$NON-NLS-1$
 	        "count	4	integer	java.lang.Integer	1	null	null	PartsSupplier", //$NON-NLS-1$
-	        "part_name	12	string	java.lang.String	1	PARTSSUPPLIER.PARTS	PartsSupplier	PartsSupplier" //$NON-NLS-1$
+	        "PART_NAME	12	string	java.lang.String	1	PARTSSUPPLIER.PARTS	PartsSupplier	PartsSupplier" //$NON-NLS-1$
     	};
     	executePreparedTest("select count(*), part_name from parts where 1=0 group by part_name", expected); //$NON-NLS-1$
     }

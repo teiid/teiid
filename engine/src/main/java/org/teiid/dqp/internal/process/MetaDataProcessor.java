@@ -226,29 +226,29 @@ public class MetaDataProcessor {
         return xmlMetadata;
     }
 
-    private Map createColumnMetadata(String shortColumnName, SingleElementSymbol symbol) throws QueryMetadataException, TeiidComponentException {
+    private Map createColumnMetadata(String label, SingleElementSymbol symbol) throws QueryMetadataException, TeiidComponentException {
         if(symbol instanceof ElementSymbol) {
-            return createElementMetadata(shortColumnName, (ElementSymbol) symbol);        
+            return createElementMetadata(label, (ElementSymbol) symbol);        
         } else if(symbol instanceof AggregateSymbol) {
-            return createAggregateMetadata(shortColumnName, (AggregateSymbol) symbol);
+            return createAggregateMetadata(label, (AggregateSymbol) symbol);
         }
-        return createTypedMetadata(shortColumnName, symbol);            
+        return createTypedMetadata(label, symbol);            
     }
     
-    private Map createElementMetadata(String shortColumnName, ElementSymbol symbol) throws QueryMetadataException, TeiidComponentException {
+    private Map createElementMetadata(String label, ElementSymbol symbol) throws QueryMetadataException, TeiidComponentException {
         Object elementID = symbol.getMetadataID();
         
         Map<Integer, Object> column = new HashMap<Integer, Object>();
         column.put(ResultsMetadataConstants.AUTO_INCREMENTING, Boolean.valueOf(metadata.elementSupports(elementID, SupportConstants.Element.AUTO_INCREMENT)));
         column.put(ResultsMetadataConstants.CASE_SENSITIVE, Boolean.valueOf(metadata.elementSupports(elementID, SupportConstants.Element.CASE_SENSITIVE)));
         column.put(ResultsMetadataConstants.CURRENCY, Boolean.FALSE);
-        Class type = symbol.getType();
+        Class<?> type = symbol.getType();
         column.put(ResultsMetadataConstants.DATA_TYPE, DataTypeManager.getDataTypeName(type));
-        column.put(ResultsMetadataConstants.ELEMENT_LABEL, shortColumnName); 
-        column.put(ResultsMetadataConstants.ELEMENT_NAME, shortColumnName);
+        column.put(ResultsMetadataConstants.ELEMENT_LABEL, label); 
+        column.put(ResultsMetadataConstants.ELEMENT_NAME, metadata.getName(elementID));
         
         GroupSymbol group = symbol.getGroupSymbol();        
-        if(group == null) {
+        if(group == null || group.getMetadataID() == null) {
             column.put(ResultsMetadataConstants.GROUP_NAME, null);
         } else {
             column.put(ResultsMetadataConstants.GROUP_NAME, metadata.getFullName(group.getMetadataID()));

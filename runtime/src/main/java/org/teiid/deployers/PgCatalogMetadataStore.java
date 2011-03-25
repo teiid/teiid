@@ -55,6 +55,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		add_pg_attrdef();
 		add_pg_database();
 		add_pg_user();
+		add_matpg_relatt();
 	}
 	
 	@Override
@@ -98,13 +99,13 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 	// column defaul values
 	private Table add_pg_attrdef() throws TranslatorException {
 		Table t = createView("pg_attrdef"); //$NON-NLS-1$ 
-		
-		addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
-		addColumn("adsrc", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
+
 		addColumn("adrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
-		addColumn("adnum", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
+		addColumn("adnum", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+		addColumn("adbin", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+		addColumn("adsrc", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
 		
-		String transformation = "SELECT 0 as oid, 0 as adsrc, 0 as adrelid, 0 as adnum"; //$NON-NLS-1$
+		String transformation = "SELECT null as oid, null as adsrc, null as adrelid, null as adnum from sys.tables where 1 = 0"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		return t;		
 	}
@@ -439,6 +440,26 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"false as usecreatedb, " + //$NON-NLS-1$
 				"false as usesuper "; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);	
+		return t;
+	}
+	
+	private Table add_matpg_relatt() throws TranslatorException  {
+		Table t = createView("matpg_relatt"); //$NON-NLS-1$ 
+		addColumn("attrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+		addColumn("attnum", DataTypeManager.DefaultDataTypes.SHORT, t); //$NON-NLS-1$ 
+		addColumn("attname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+		addColumn("relname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+		addColumn("nspname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+		addColumn("autoinc", DataTypeManager.DefaultDataTypes.BOOLEAN, t); //$NON-NLS-1$
+		
+		addPrimaryKey("pk_matpg_relatt_names", Arrays.asList("attname", "relname", "nspname"), t); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$  
+		addIndex("idx_matpg_relatt_ids", true, Arrays.asList("attrelid", "attnum"), t); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+		String transformation = "select pg_class.oid as attrelid, attnum, attname, relname, nspname, IsAutoIncremented as autoinc " + //$NON-NLS-1$
+				"from pg_attribute, pg_class, pg_namespace, SYS.Columns " + //$NON-NLS-1$
+				"where pg_attribute.attrelid = pg_class.oid and pg_namespace.oid = relnamespace" + //$NON-NLS-1$
+				" and SchemaName = nspname and TableName = relname and Name = attname";  //$NON-NLS-1$
+		t.setSelectTransformation(transformation);
+		t.setMaterialized(true);
 		return t;
 	}
 }

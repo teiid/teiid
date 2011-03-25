@@ -23,6 +23,7 @@ package org.teiid.odbc;
 
 import java.sql.ParameterMetaData;
 import java.sql.ResultSetMetaData;
+import java.sql.Statement;
 import java.util.Properties;
 
 import org.teiid.jdbc.ResultSetImpl;
@@ -60,7 +61,7 @@ public interface ODBCClientRemote {
 
 	//	RowDescription (B)
 	//	NoData (B)
-	void sendResultSetDescription(ResultSetMetaData metaData);
+	void sendResultSetDescription(ResultSetMetaData metaData, Statement stmt);
 	
 	//	DataRow (B)
 	//	CommandComplete (B)

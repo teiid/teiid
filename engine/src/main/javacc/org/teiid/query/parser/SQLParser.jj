@@ -371,7 +371,7 @@ TOKEN : /* User variables and literals */
 | 	< TIMETYPE: "{" "t" >
 | 	< TIMESTAMPTYPE: "{" "ts" >
 | 	< BOOLEANTYPE: "{" "b" >
-
+|   < POS_REF: ["$"] (<DIGIT>)+ >
 |	< INTEGERVAL: (<MINUS>)?(<DIGIT>)+ >
 |   < FLOATVAL: (<MINUS>)? (<DIGIT>)* <PERIOD> (<DIGIT>)+ 
 				( ["e", "E"] (["+","-"])? (<DIGIT>)+ )? >
@@ -3300,6 +3300,8 @@ Expression valueExpressionPrimary(ParseInfo info) :
 		// Reference
 		refToken=<QMARK>
 		|
+		refToken=<POS_REF>
+		|
 		// Literal
 		literal=literal()
 		|
@@ -3350,6 +3352,9 @@ Expression valueExpressionPrimary(ParseInfo info) :
 		
 	{
 		if(refToken != null) {
+		    if (refToken.image.charAt(0) == '$') {
+				return new Reference(Integer.parseInt(refToken.image.substring(1)) -1);
+		    }
 			return new Reference(info.referenceCount++);
 		} else if(symbol != null) {
 			return new ElementSymbol(normalizeId(symbol.image));

@@ -75,12 +75,6 @@ public class TestODBCSocketTransport {
 	Connection conn;
 	
 	@Before public void setUp() throws Exception {
-		/*Logger logger = Logger.getLogger(LogConstants.CTX_ODBC);
-		logger.setLevel(Level.FINEST);
-		ConsoleHandler handler = new ConsoleHandler();
-		handler.setLevel(Level.FINEST);
-		logger.addHandler(handler);*/
-		
 		Driver d = new Driver();
 		Properties p = new Properties();
 		p.setProperty("user", "testuser");
