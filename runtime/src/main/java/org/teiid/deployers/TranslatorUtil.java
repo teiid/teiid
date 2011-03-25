@@ -26,6 +26,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TreeMap;
 
 import org.jboss.deployers.spi.DeploymentException;
 import org.teiid.adminapi.Translator;
@@ -33,6 +34,8 @@ import org.teiid.adminapi.impl.TranslatorMetaData;
 import org.teiid.core.TeiidException;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.core.util.StringUtil;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorProperty;
@@ -107,11 +110,13 @@ public class TranslatorUtil {
 	
 	private static void injectProperties(ExecutionFactory ef, final Translator data) throws InvocationTargetException, IllegalAccessException, DeploymentException{
 		Map<Method, TranslatorProperty> props = TranslatorUtil.getTranslatorProperties(ef.getClass());
-		
+		Map p = data.getProperties();
+		TreeMap<String, String> caseInsensitivProps = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+		caseInsensitivProps.putAll(p);
 		for (Method method:props.keySet()) {
 			TranslatorProperty tp = props.get(method);
 			String propertyName = getPropertyName(method);
-			Object value = data.getPropertyValue(propertyName);
+			String value = caseInsensitivProps.remove(propertyName);
 			
 			if (value != null) {
 				Method setterMethod = getSetter(ef.getClass(), method);
@@ -119,6 +124,10 @@ public class TranslatorUtil {
 			} else if (tp.required()) {
 				throw new DeploymentException(RuntimePlugin.Util.getString("required_property_not_exists", tp.display())); //$NON-NLS-1$
 			}
+		}
+		caseInsensitivProps.remove(Translator.EXECUTION_FACTORY_CLASS);
+		if (!caseInsensitivProps.isEmpty()) {
+			LogManager.logWarning(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("undefined_translator_props", caseInsensitivProps.keySet(), data.getName())); //$NON-NLS-1$
 		}
 	}
 	

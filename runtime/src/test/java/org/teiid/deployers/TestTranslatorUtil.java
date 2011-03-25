@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 import org.teiid.adminapi.impl.TranslatorMetaData;
 import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorProperty;
 
 @SuppressWarnings("nls")
@@ -43,6 +44,18 @@ public class TestTranslatorUtil {
 		assertEquals("correctly-assigned", my.getMyProperty());
 	}
 	
+	@Test public void testBuildExecutionFactoryCaseInsensitive() throws Exception {
+		TranslatorMetaData tm = new TranslatorMetaData();
+		
+		tm.addProperty("myproperty", "correctly-assigned");
+		tm.setExecutionFactoryClass(MyTranslator.class);
+		
+		MyTranslator my = (MyTranslator)TranslatorUtil.buildExecutionFactory(tm);
+		
+		assertEquals("correctly-assigned", my.getMyProperty());
+	}
+	
+	@Translator(name="my-translator")
 	public static class MyTranslator extends ExecutionFactory<Object, Object> {
 		String mine;
 		

@@ -28,7 +28,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-
+/**
+ * Annotates a property that can be externally configured.  
+ * The property name will be inferred from the method.
+ * Keep in mind that TranslatorProprties name are treated as case-insensitive 
+ * - do not annotate two methods in the same ExecutionFactory with the same case-insensitive name.
+ */
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
