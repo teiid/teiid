@@ -18,7 +18,8 @@
      	<para>Steps to install Teiid</para>
         <listitem>
             <para>Download the <ulink url="http://www.jboss.org/jbossas/downloads.html">JBoss AS 5.1.0</ulink> application server. 
-            Install the server by unzipping into a known location. Ex: /apps/jboss-5.1.0</para>
+            Install the server by unzipping into a known location. Ex: /apps/jboss-5.1.0
+            <note><para>You may also choose to use an existing AS installation.  However if a previous version of Teiid was already installed, you must remove the old teiid distribution artifacts before installing the new version.</para></note></para>
         </listitem>
         <listitem>
             <para>Download <ulink url="http://www.jboss.org/teiid/downloads.html">Teiid &versionNumber;</ulink>. Unzip the downloaded artifact inside any "profile" 
