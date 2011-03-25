@@ -55,6 +55,7 @@ import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.ResultsMode;
 import org.teiid.client.RequestMessage.StatementType;
 import org.teiid.client.metadata.MetadataResult;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BlobImpl;
@@ -189,10 +190,14 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
     	String msg = JDBCPlugin.Util.getString("JDBC.Method_not_supported"); //$NON-NLS-1$
         throw new TeiidSQLException(msg);
     }
+    
+    public ResultsFuture<Boolean> submitExecute() throws SQLException {
+        return executeSql(new String[] {this.prepareSql}, false, ResultsMode.EITHER, false);
+    }
 
 	@Override
     public boolean execute() throws SQLException {
-        executeSql(new String[] {this.prepareSql}, false, ResultsMode.EITHER);
+        executeSql(new String[] {this.prepareSql}, false, ResultsMode.EITHER, true);
         return hasResultSet();
     }
     
@@ -202,7 +207,7 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
    	     	return new int[0];
     	}
 	   	try{
-	   		executeSql(new String[] {this.prepareSql}, true, ResultsMode.UPDATECOUNT);
+	   		executeSql(new String[] {this.prepareSql}, true, ResultsMode.UPDATECOUNT, true);
 	   	}finally{
 	   		batchParameterList.clear();
 	   	}
@@ -211,13 +216,13 @@ public class PreparedStatementImpl extends StatementImpl implements PreparedStat
 
 	@Override
     public ResultSet executeQuery() throws SQLException {
-        executeSql(new String[] {this.prepareSql}, false, ResultsMode.RESULTSET);
+        executeSql(new String[] {this.prepareSql}, false, ResultsMode.RESULTSET, true);
         return resultSet;
     }
 
 	@Override
     public int executeUpdate() throws SQLException {
-        executeSql(new String[] {this.prepareSql}, false, ResultsMode.UPDATECOUNT);
+        executeSql(new String[] {this.prepareSql}, false, ResultsMode.UPDATECOUNT, true);
         return this.updateCounts[0];
     }
     

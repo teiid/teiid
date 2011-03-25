@@ -25,31 +25,45 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Arrays;
 
 import org.teiid.core.util.ReflectionHelper;
+import org.teiid.jdbc.TeiidDriver;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.socket.ObjectChannel;
 import org.teiid.net.socket.ServiceInvocationStruct;
 import org.teiid.odbc.ODBCClientRemote;
 import org.teiid.odbc.ODBCServerRemote;
 import org.teiid.odbc.ODBCServerRemoteImpl;
+import org.teiid.transport.PgFrontendProtocol.PGRequest;
 
 public class ODBCClientInstance implements ChannelListener{
 
 	private ODBCClientRemote client;
 	private ODBCServerRemoteImpl server;
 	private ReflectionHelper serverProxy = new ReflectionHelper(ODBCServerRemote.class);
+	private boolean hasPending;
 	
-	public ODBCClientInstance(final ObjectChannel channel, ODBCServerRemote.AuthenticationType authType) {
+	public ODBCClientInstance(final ObjectChannel channel, ODBCServerRemote.AuthenticationType authType, TeiidDriver driver) {
 		this.client = (ODBCClientRemote)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {ODBCClientRemote.class}, new InvocationHandler() {
 			@Override
 			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_ODBC, MessageLevel.TRACE)) {
+					LogManager.logTrace(LogConstants.CTX_ODBC, "invoking client method:", method.getName(), Arrays.deepToString(args)); //$NON-NLS-1$
+				}
 				ServiceInvocationStruct message = new ServiceInvocationStruct(args, method.getName(),ODBCServerRemote.class);
 				channel.write(message);
 				return null;
 			}
 		});
-		this.server = new ODBCServerRemoteImpl(this.client, authType);
+		this.server = new ODBCServerRemoteImpl(this, authType, driver);
+	}
+	
+	public ODBCClientRemote getClient() {
+		return client;
 	}
 	
 	@Override
@@ -61,6 +75,10 @@ public class ODBCClientInstance implements ChannelListener{
 	public void exceptionOccurred(Throwable t) {
 		server.terminate();
 	}
+	
+	public boolean hasPending() {
+		return hasPending;
+	}
 
 	@Override
 	public void onConnection() throws CommunicationException {
@@ -68,8 +86,10 @@ public class ODBCClientInstance implements ChannelListener{
 
 	@Override
 	public void receivedMessage(Object msg) throws CommunicationException {
-        if (msg instanceof ServiceInvocationStruct) {
-            processMessage((ServiceInvocationStruct)msg);
+        if (msg instanceof PGRequest) {
+        	PGRequest request = (PGRequest)msg;
+        	hasPending = request.hasPending;
+            processMessage(request.struct);
         }
 	}
 

@@ -41,7 +41,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -312,11 +311,9 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         // MMConnection.closeStatement() method to be called,
         // which will modify this.statements.  So, we do this iteration
         // in a separate safe copy of the list
-        List statementsSafe = new ArrayList(this.statements);
-        Iterator statementIter = statementsSafe.iterator();
+        List<StatementImpl> statementsSafe = new ArrayList<StatementImpl>(this.statements);
         SQLException ex = null;
-        while (statementIter.hasNext ()) {
-            Statement statement = (Statement) statementIter.next();
+        for (StatementImpl statement : statementsSafe) {
             try {
             	statement.close();
             } catch (SQLException e) {
@@ -386,7 +383,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         }
     }
     
-    public Statement createStatement() throws SQLException {
+    public StatementImpl createStatement() throws SQLException {
         return createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
     }
 
@@ -397,7 +394,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
      * @param intValue indicating the ResultSet's concurrency
      * @return Statement object.
      */
-    public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException {
+    public StatementImpl createStatement(int resultSetType, int resultSetConcurrency) throws SQLException {
         //Check to see the connection is open
         checkConnection();
 
@@ -673,6 +670,26 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
                     this.autoCommitFlag = true;
                 }
             }
+        }
+    }
+    
+	public ResultsFuture<?> submitSetAutoCommitTrue(boolean commit) throws SQLException {
+    	//Check to see the connection is open
+        checkConnection();
+
+        if (this.autoCommitFlag) {
+            return ResultsFuture.NULL_FUTURE;
+        }
+        
+        this.autoCommitFlag = true;
+    	
+        try {
+	        if (commit) {
+	        	return dqp.commit();
+	        } 
+	        return dqp.rollback();
+        } catch (XATransactionException e) {
+        	throw TeiidSQLException.create(e);
         }
     }
 

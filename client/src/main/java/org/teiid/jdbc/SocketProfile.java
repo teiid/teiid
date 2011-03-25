@@ -22,31 +22,24 @@
 
 package org.teiid.jdbc;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.teiid.core.TeiidException;
-import org.teiid.net.CommunicationException;
-import org.teiid.net.ConnectionException;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.socket.SocketServerConnectionFactory;
 
 
 /**
- * <p> The java.sql.DriverManager class uses this class to connect to Teiid Server or Teiid Embedded.
+ * <p> The java.sql.DriverManager class uses this class to connect to Teiid Server.
  * The TeiidDriver class has a static initializer, which
  * is used to instantiate and register itself with java.sql.DriverManager. The
  * DriverManager's <code>getConnection</code> method calls <code>connect</code>
  * method on available registered drivers. </p>
  */
 
-final class SocketProfile {
+final class SocketProfile implements ConnectionProfile {
 	
-	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
-    
     /**
      * This method tries to make a connection to the given URL. This class
      * will return a null if this is not the right driver to connect to the given URL.
@@ -54,28 +47,14 @@ final class SocketProfile {
      * @return Connection object created
      * @throws SQLException if it is unable to establish a connection to the server.
      */
-    static Connection connect(String url, Properties info) throws SQLException {
+    public ConnectionImpl connect(String url, Properties info) throws TeiidSQLException {
 
-        ConnectionImpl myConnection = null;
-
-        try {
-            myConnection = createConnection(url, info);
-        } catch (TeiidException e) {
-            logger.log(Level.SEVERE, "Could not create connection", e); //$NON-NLS-1$
-            throw TeiidSQLException.create(e, e.getMessage());
-        }
-
-        // logging
-        String logMsg = JDBCPlugin.Util.getString("JDBCDriver.Connection_sucess"); //$NON-NLS-1$
-        logger.fine(logMsg);
-
-        return myConnection;
-    }
-
-    static ConnectionImpl createConnection(String url, Properties info)
-        throws ConnectionException, CommunicationException {
-
-        ServerConnection serverConn = SocketServerConnectionFactory.getInstance().getConnection(info);
+        ServerConnection serverConn;
+		try {
+			serverConn = SocketServerConnectionFactory.getInstance().getConnection(info);
+		} catch (TeiidException e) {
+			throw TeiidSQLException.create(e);
+		}
 
         // construct a MMConnection object.
         ConnectionImpl connection = new ConnectionImpl(serverConn, info, url);

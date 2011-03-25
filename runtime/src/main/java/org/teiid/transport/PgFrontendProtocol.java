@@ -29,6 +29,8 @@ import java.io.StreamCorruptedException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Properties;
 
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -37,6 +39,7 @@ import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.handler.codec.frame.FrameDecoder;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.net.socket.ServiceInvocationStruct;
 import org.teiid.odbc.ODBCServerRemote;
 
@@ -60,9 +63,9 @@ public class PgFrontendProtocol extends FrameDecoder {
 	private Byte messageType;
 	private Integer dataLength;
 	private boolean initialized = false;
-	private String encoding = "UTF-8"; // client can override this
+	private Charset encoding = Charset.forName("UTF-8"); // client can override this
 	private ODBCServerRemote odbcProxy;
-	private ServiceInvocationStruct message;
+	private PGRequest message;
 	private String user;
 	private String databaseName;
 	
@@ -72,17 +75,17 @@ public class PgFrontendProtocol extends FrameDecoder {
             throw new IllegalArgumentException("maxObjectSize: " + maxObjectSize); //$NON-NLS-1$
         }
 		
-		if (encoding == null) {
-			this.encoding = "UTF-8"; //$NON-NLS-1$ 
-		}
-        		
 		this.maxObjectSize = maxObjectSize;
 		
 		// the proxy is used for generating the object based message based on ServiceInvocationStruct class.
 		this.odbcProxy = (ODBCServerRemote)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {ODBCServerRemote.class}, new InvocationHandler() {
 			@Override
 			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-				message = new ServiceInvocationStruct(args, method.getName(),ODBCServerRemote.class);
+				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_ODBC, MessageLevel.TRACE)) {
+					LogManager.logTrace(LogConstants.CTX_ODBC, "invoking server method:", method.getName(), Arrays.deepToString(args)); //$NON-NLS-1$
+				}
+				message = new PGRequest();
+				message.struct = new ServiceInvocationStruct(args, method.getName(),ODBCServerRemote.class);
 				return null;
 			}
 		});
@@ -126,8 +129,9 @@ public class PgFrontendProtocol extends FrameDecoder {
         }
 
         byte[] data = createByteArray(this.dataLength - 4);
-        buffer.readBytes(data);      
-		Object message =  createRequestMessage(this.messageType, new NullTerminatedStringDataInputStream(new DataInputStream(new ByteArrayInputStream(data, 0, this.dataLength-4)), this.encoding));
+        buffer.readBytes(data);
+		createRequestMessage(this.messageType, new NullTerminatedStringDataInputStream(new DataInputStream(new ByteArrayInputStream(data, 0, this.dataLength-4)), this.encoding));
+		message.hasPending = buffer.readableBytes() > 0;
 		this.dataLength = null;
 		this.messageType = null;
 		return message;
@@ -166,25 +170,21 @@ public class PgFrontendProtocol extends FrameDecoder {
 	}
 
 	private Object buildError() {
-		trace("error");
 		this.odbcProxy.unsupportedOperation("option not suported");
 		return message;
 	}
 
 	private Object buildFlush() {
-		trace("flush");
 		this.odbcProxy.flush();
 		return message;
 	}
 
 	private Object buildTeminate() {
-		trace("terminate");
 		this.odbcProxy.terminate();
 		return message;
 	}
 
 	private Object buildInitialize(NullTerminatedStringDataInputStream data) throws IOException{
-        trace("Init");
         Properties props = new Properties();
        
         int version = data.readInt();
@@ -197,8 +197,7 @@ public class PgFrontendProtocol extends FrameDecoder {
         	return message;
         }
         
-        trace("StartupMessage");
-        trace(" version " + version + " (" + (version >> 16) + "." + (version & 0xff) + ")");
+        trace("StartupMessage version", version, "(", (version >> 16), ".", (version & 0xff), ")");
         
         while (true) {
             String param =  data.readString();
@@ -207,24 +206,25 @@ public class PgFrontendProtocol extends FrameDecoder {
             }
             String value =  data.readString();
             props.setProperty(param, value);
-            trace(" param " + param + "=" + value);
         }        
         this.user = props.getProperty("user");
         this.databaseName = props.getProperty("database");
-        this.encoding = props.getProperty("client_encoding", "UTF-8");
+        String clientEncoding = props.getProperty("client_encoding", "UTF-8");
+        Charset cs = PGCharsetConverter.getCharset(clientEncoding);
+        if (cs != null) {
+        	this.encoding = cs;
+        }
         this.odbcProxy.initialize(props);
         return message;
 	}
 	
 	private Object buildLogin(NullTerminatedStringDataInputStream data) throws IOException{
-        trace("PasswordMessage");
         String password = data.readString();
         this.odbcProxy.logon(this.databaseName, this.user, password);
         return message;
 	}	
 
 	private Object buildParse(NullTerminatedStringDataInputStream data) throws IOException {
-        trace("Parse");
         String name = data.readString();
         String sql = data.readString();
         
@@ -242,7 +242,6 @@ public class PgFrontendProtocol extends FrameDecoder {
 	}	
 
 	private Object buildBind(NullTerminatedStringDataInputStream data) throws IOException {
-        trace("Bind");
         String bindName = data.readString();
         String prepName = data.readString();
         
@@ -279,7 +278,6 @@ public class PgFrontendProtocol extends FrameDecoder {
 
 	private Object buildExecute(NullTerminatedStringDataInputStream data) throws IOException {
 		String portalName = data.readString();
-		trace("Execute "+ portalName);
         int maxRows = data.readShort();
         this.odbcProxy.execute(portalName, maxRows);
         return message;
@@ -289,7 +287,6 @@ public class PgFrontendProtocol extends FrameDecoder {
 	private Object buildDescribe(NullTerminatedStringDataInputStream data)  throws IOException{
         char type = (char) data.readByte();
         String name = data.readString();
-        trace("Describe");
         if (type == 'S') {
         	this.odbcProxy.getParameterDescription(name);
         	return message;
@@ -297,7 +294,7 @@ public class PgFrontendProtocol extends FrameDecoder {
         	this.odbcProxy.getResultSetMetaDataDescription(name);
         	return message;
         } else {
-            trace("expected S or P, got " + type);
+            trace("expected S or P, got ", type);
             this.odbcProxy.unsupportedOperation("expected S or P");
             return message;
         }
@@ -305,14 +302,12 @@ public class PgFrontendProtocol extends FrameDecoder {
 	
 
 	private Object buildSync() {
-		trace("sync");
 		this.odbcProxy.sync();
 		return message;
 	}	
 
 	private Object buildExecuteQuery(NullTerminatedStringDataInputStream data) throws IOException {
         String query = data.readString();
-        trace("Query:"+query);
         this.odbcProxy.executeQuery(query);
         return message;
 	}	
@@ -400,10 +395,15 @@ public class PgFrontendProtocol extends FrameDecoder {
 		return content;
 	}
 	
+	public static class PGRequest {
+		ServiceInvocationStruct struct;
+		boolean hasPending;
+	}
+	
 	static class NullTerminatedStringDataInputStream extends DataInputStream{
-		private String encoding;
+		private Charset encoding;
 		
-		public NullTerminatedStringDataInputStream(DataInputStream in, String encoding) {
+		public NullTerminatedStringDataInputStream(DataInputStream in, Charset encoding) {
 			super(in);
 			this.encoding = encoding;
 		}
@@ -421,7 +421,7 @@ public class PgFrontendProtocol extends FrameDecoder {
 	    }
 	}
 	
-	private static void trace(String msg) {
+	private static void trace(Object... msg) {
 		LogManager.logTrace(LogConstants.CTX_ODBC, msg);
 	}
 }

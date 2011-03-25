@@ -295,26 +295,20 @@ public final class StringUtil {
 	 * replaced with the replace string
 	 */
 	public static String replaceAll(String source, String search, String replace) {
-	    if (source != null && search != null && search.length() > 0 && replace != null) {
-	        int start = source.indexOf(search);
-	        if (start > -1) {
-		        StringBuffer newString = new StringBuffer(source);
-	            replaceAll(newString, search, replace);
-		        return newString.toString();
-	        }
+	    if (source == null || search == null || search.length() == 0 || replace == null) {
+	    	return source;
 	    }
-	    return source;    
-	}
-
-    public static void replaceAll(StringBuffer source, String search, String replace) {
-	    if (source != null && search != null && search.length() > 0 && replace != null) {
-	        int start = source.toString().indexOf(search);
+        int start = source.indexOf(search);
+        if (start > -1) {
+	        StringBuffer newString = new StringBuffer(source);
 	        while (start > -1) {
 	            int end = start + search.length();
-                source.replace(start, end, replace);
-	            start = source.toString().indexOf(search, start + replace.length());
+	            newString.replace(start, end, replace);
+	            start = newString.indexOf(search, start + replace.length());
 	        }
-	    }
+	        return newString.toString();
+        }
+	    return source;    
 	}
 
     /**

@@ -69,6 +69,9 @@ public class TeiidDriver implements Driver {
             logger.log(Level.SEVERE, logMsg);
         }
     }
+    
+    private static SocketProfile SOCKET_PROFILE = new SocketProfile();
+    private ConnectionProfile embeddedProfile = new EmbeddedProfile();
 
     public static TeiidDriver getInstance() {
         return INSTANCE;
@@ -94,11 +97,30 @@ public class TeiidDriver implements Driver {
             info = PropertiesUtils.clone(info);
         }
         parseURL(url, info);
-    	if (conn == ConnectionType.Embedded) {
-    		return EmbeddedProfile.connect(url, info);
-    	}
-		return SocketProfile.connect(url, info);
+        
+        ConnectionImpl myConnection = null;
+
+        try {
+        	if (conn == ConnectionType.Embedded) {
+        		myConnection = embeddedProfile.connect(url, info);
+        	} else { 
+        		myConnection = SOCKET_PROFILE.connect(url, info);
+        	}
+        } catch (TeiidSQLException e) {
+            logger.log(Level.SEVERE, "Could not create connection", e); //$NON-NLS-1$
+            throw TeiidSQLException.create(e, e.getMessage());
+        }
+
+        // logging
+        String logMsg = JDBCPlugin.Util.getString("JDBCDriver.Connection_sucess"); //$NON-NLS-1$
+        logger.fine(logMsg);
+        
+		return myConnection;
     }
+    
+    public void setEmbeddedProfile(ConnectionProfile embeddedProfile) {
+		this.embeddedProfile = embeddedProfile;
+	}
     
     /**
      * Returns true if the driver thinks that it can open a connection to the given URL.

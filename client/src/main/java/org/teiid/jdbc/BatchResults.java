@@ -223,13 +223,13 @@ public class BatchResults {
     }
         
     private void requestBatchAndWait(int beginRow) throws SQLException{
-    	if (batches.size() == savedBatches) {
-        	batches.remove(savedBatches - 1);
-        }
     	setBatch(batchFetcher.requestBatch(beginRow));
 	}
 
-	private void setBatch(Batch batch) {
+	void setBatch(Batch batch) {
+		if (batches.size() == savedBatches) {
+        	batches.remove(savedBatches - 1);
+        }
 		Assertion.assertTrue(batch.getLength() != 0 || batch.isLast());
 		if (batch.getLastRow() != -1) {
             this.lastRowNumber = batch.getLastRow();
@@ -241,11 +241,14 @@ public class BatchResults {
 	}
 
 	public boolean hasNext() throws SQLException {
-		return hasNext(1);
+		return hasNext(1, true);
 	}
 
-	public boolean hasNext(int next) throws SQLException {
+	public Boolean hasNext(int next, boolean wait) throws SQLException {
     	while (this.currentRowNumber + next > highestRowNumber && lastRowNumber == -1) {
+    		if (!wait) {
+    			return null;
+    		}
 			requestNextBatch();
         }
         

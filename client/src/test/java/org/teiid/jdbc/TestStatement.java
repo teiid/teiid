@@ -35,18 +35,10 @@ import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.util.ResultsFuture;
-import org.teiid.jdbc.ConnectionImpl;
-import org.teiid.jdbc.TeiidSQLException;
-import org.teiid.jdbc.StatementImpl;
 
 
 public class TestStatement {
 
-	@Test(expected=TeiidSQLException.class) public void testUpdateException() throws Exception {
-		StatementImpl statement = new StatementImpl(Mockito.mock(ConnectionImpl.class), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-		statement.executeQuery("delete from table"); //$NON-NLS-1$
-	}
-	
 	@Test public void testBatchExecution() throws Exception {
 		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
 		DQP dqp = Mockito.mock(DQP.class);
@@ -96,6 +88,22 @@ public class TestStatement {
 		assertFalse(statement.execute("start transaction")); //$NON-NLS-1$
 		assertFalse(statement.execute("rollback")); //$NON-NLS-1$
 		Mockito.verify(conn).rollback(false);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test public void testTransactionStatementsAsynch() throws Exception {
+		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+		Mockito.stub(conn.submitSetAutoCommitTrue(Mockito.anyBoolean())).toReturn((ResultsFuture)ResultsFuture.NULL_FUTURE);
+		Properties p = new Properties();
+		Mockito.stub(conn.getExecutionProperties()).toReturn(p);
+		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		statement.submitExecute("start transaction"); //$NON-NLS-1$
+		Mockito.verify(conn).setAutoCommit(false);
+		statement.submitExecute("commit"); //$NON-NLS-1$
+		Mockito.verify(conn).submitSetAutoCommitTrue(true);
+		statement.submitExecute("start transaction"); //$NON-NLS-1$
+		statement.submitExecute("rollback"); //$NON-NLS-1$
+		Mockito.verify(conn).submitSetAutoCommitTrue(false);
 	}
 	
 }

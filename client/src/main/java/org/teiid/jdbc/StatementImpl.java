@@ -39,7 +39,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -57,6 +56,7 @@ import org.teiid.client.metadata.ResultsMetadataConstants;
 import org.teiid.client.metadata.ResultsMetadataDefaults;
 import org.teiid.client.plan.Annotation;
 import org.teiid.client.plan.PlanNode;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
@@ -117,7 +117,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     private Collection<Annotation> annotations;
 
     // resultSet object produced by execute methods on the statement.
-    protected ResultSetImpl resultSet;
+    protected volatile ResultSetImpl resultSet;
 
     private List<Exception> serverWarnings;
 
@@ -303,10 +303,14 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
             throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Stmt_closed")); //$NON-NLS-1$
         }
     }
+    
+    public ResultsFuture<Boolean> submitExecute(String sql) throws SQLException {
+    	return executeSql(new String[] {sql}, false, ResultsMode.EITHER, false);
+    }
 
 	@Override
     public boolean execute(String sql) throws SQLException {
-        executeSql(new String[] {sql}, false, ResultsMode.EITHER);
+        executeSql(new String[] {sql}, false, ResultsMode.EITHER, true);
         return hasResultSet();
     }
     
@@ -316,20 +320,20 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
             return new int[0];
         }
         String[] commands = (String[])batchedUpdates.toArray(new String[batchedUpdates.size()]);
-        executeSql(commands, true, ResultsMode.UPDATECOUNT);
+        executeSql(commands, true, ResultsMode.UPDATECOUNT, true);
         return updateCounts;
     }
 
 	@Override
     public ResultSet executeQuery(String sql) throws SQLException {
-        executeSql(new String[] {sql}, false, ResultsMode.RESULTSET);
+        executeSql(new String[] {sql}, false, ResultsMode.RESULTSET, true);
         return resultSet;
     }
 
 	@Override
     public int executeUpdate(String sql) throws SQLException {
         String[] commands = new String[] {sql};
-        executeSql(commands, false, ResultsMode.UPDATECOUNT);
+        executeSql(commands, false, ResultsMode.UPDATECOUNT, true);
         return this.updateCounts[0];
     }
 
@@ -384,7 +388,8 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 		resultSet.setMaxFieldSize(this.maxFieldSize);
 	}
     
-    protected void executeSql(String[] commands, boolean isBatchedCommand, ResultsMode resultsMode)
+	@SuppressWarnings("unchecked")
+	protected ResultsFuture<Boolean> executeSql(String[] commands, boolean isBatchedCommand, ResultsMode resultsMode, boolean synch)
         throws SQLException {
         checkStatement();
         resetExecutionState();
@@ -405,7 +410,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         			JDBCURL.addNormalizedProperty(key, value, this.driverConnection.getExecutionProperties());
         		}
         		this.updateCounts = new int[] {0};
-        		return;
+        		return booleanFuture(true);
         	}
         	match = TRANSACTION_STATEMENT.matcher(commands[0]);
         	if (match.matches()) {
@@ -414,15 +419,38 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         			throw new TeiidSQLException(JDBCPlugin.Util.getString("StatementImpl.set_result_set")); //$NON-NLS-1$
         		}
         		String command = match.group(1);
+        		Boolean commit = null;
         		if (StringUtil.startsWithIgnoreCase(command, "start")) { //$NON-NLS-1$
         			this.getConnection().setAutoCommit(false);
         		} else if (command.equalsIgnoreCase("commit")) { //$NON-NLS-1$
-        			this.getConnection().setAutoCommit(true);
+        			commit = true;
+        			if (synch) {
+        				this.getConnection().setAutoCommit(true);
+        			}
         		} else if (command.equalsIgnoreCase("rollback")) { //$NON-NLS-1$
-        			this.getConnection().rollback(false);
+        			commit = false;
+        			if (synch) {
+        				this.getConnection().rollback(false);
+        			}
         		}
         		this.updateCounts = new int[] {0};
-        		return;
+        		if (commit != null && !synch) {
+        			ResultsFuture<?> pending = this.getConnection().submitSetAutoCommitTrue(commit);
+        			final ResultsFuture<Boolean> result = new ResultsFuture<Boolean>();
+        			pending.addCompletionListener(new ResultsFuture.CompletionListener() {
+        				@Override
+        				public void onCompletion(ResultsFuture future) {
+        					try {
+								future.get();
+								result.getResultsReceiver().receiveResults(false);
+							} catch (Throwable t) {
+								result.getResultsReceiver().exceptionOccurred(t);
+							}
+        				}
+					});
+        			return result;
+        		}
+        		return booleanFuture(false);
         	}
         	match = SHOW_STATEMENT.matcher(commands[0]);
         	if (match.matches()) {
@@ -443,7 +471,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         			}
         			createResultSet(records, new String[] {"PLAN_TEXT", "PLAN_XML", "DEBUG_LOG"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         					new String[] {JDBCSQLTypeInfo.CLOB, JDBCSQLTypeInfo.XML, JDBCSQLTypeInfo.CLOB});
-            		return;
+        			return booleanFuture(true);
         		}
         		if (show.equalsIgnoreCase("ANNOTATIONS")) { //$NON-NLS-1$
         			List<ArrayList<Object>> records = new ArrayList<ArrayList<Object>>(1);
@@ -458,7 +486,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         			}
         			createResultSet(records, new String[] {"CATEGORY", "PRIORITY", "ANNOTATION", "RESOLUTION"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         					new String[] {JDBCSQLTypeInfo.STRING, JDBCSQLTypeInfo.STRING, JDBCSQLTypeInfo.STRING, JDBCSQLTypeInfo.STRING});
-            		return;
+        			return booleanFuture(true);
         		}
         		if (show.equalsIgnoreCase("ALL")) { //$NON-NLS-1$
         			List<ArrayList<Object>> records = new ArrayList<ArrayList<Object>>(1);
@@ -470,25 +498,85 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         			}
         			createResultSet(records, new String[] {"NAME", "VALUE"}, //$NON-NLS-1$ //$NON-NLS-2$
         					new String[] {JDBCSQLTypeInfo.STRING, JDBCSQLTypeInfo.STRING});
-            		return;
+        			return booleanFuture(true);
         		}
         		List<List<String>> records = Collections.singletonList(Collections.singletonList(driverConnection.getExecutionProperties().getProperty(JDBCURL.getValidKey(show))));
     			createResultSet(records, new String[] {show}, new String[] {JDBCSQLTypeInfo.STRING});
-        		return;
+        		return booleanFuture(true);
         	}
         }
         
-        RequestMessage reqMessage = createRequestMessage(commands, isBatchedCommand, resultsMode);
-    	ResultsMessage resultsMsg = null;
-        try {
-        	resultsMsg = sendRequestMessageAndWait(reqMessage);
+        final RequestMessage reqMessage = createRequestMessage(commands, isBatchedCommand, resultsMode);
+    	ResultsFuture<ResultsMessage> pendingResult = this.sendRequestMessage(reqMessage);
+    	
+    	if (synch) {
+	    	ResultsMessage resultsMsg = getResults(reqMessage, pendingResult);
+	        postReceiveResults(reqMessage, resultsMsg);
+	        return booleanFuture(hasResultSet());
+    	}
+    	
+    	final ResultsFuture<Boolean> result = new ResultsFuture<Boolean>();
+    	pendingResult.addCompletionListener(new ResultsFuture.CompletionListener<ResultsMessage>() {
+    		@Override
+    		public void onCompletion(ResultsFuture<ResultsMessage> future) {
+    			try {
+					postReceiveResults(reqMessage, future.get());
+					result.getResultsReceiver().receiveResults(hasResultSet());
+				} catch (Throwable t) {
+					result.getResultsReceiver().exceptionOccurred(t);
+				}
+    		}
+		});
+    	return result;
+    }
+
+	public static ResultsFuture<Boolean> booleanFuture(boolean isTrue) {
+		ResultsFuture<Boolean> rs = new ResultsFuture<Boolean>();
+		rs.getResultsReceiver().receiveResults(isTrue);
+		return rs;
+	}
+
+	private ResultsMessage getResults(RequestMessage reqMessage,
+			ResultsFuture<ResultsMessage> pendingResult)
+			throws TeiidSQLException {
+		try {
+    		long timeoutMillis = queryTimeout * 1000;
+            long endTime = System.currentTimeMillis() + timeoutMillis;
+            ResultsMessage result = null;        
+            while (result == null) {
+
+            	if (timeoutMillis > 0 && endTime <= System.currentTimeMillis() && commandStatus != TIMED_OUT && commandStatus != CANCELLED) {
+    	            timeoutOccurred();
+            	}
+            	
+                checkStatement();
+    			try {
+    				result = pendingResult.get(SPIN_TIMEOUT, TimeUnit.MILLISECONDS);
+    			} catch (ExecutionException e) {
+    				throw TeiidSQLException.create(e);
+    			} catch (TimeoutException e) {
+    				continue;
+    			}
+            }
+            
+        	if (commandStatus == CANCELLED) {
+                throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Cancel_before_execute")); //$NON-NLS-1$
+            }
+        	 
+        	if (commandStatus == TIMED_OUT) {
+                throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Timeout_before_complete")); //$NON-NLS-1$
+            }    	
+            return result;
         } catch ( Throwable ex ) {
         	String msg = JDBCPlugin.Util.getString("MMStatement.Error_executing_stmt", reqMessage.getCommandString()); //$NON-NLS-1$ 
             logger.log(ex instanceof SQLException?Level.WARNING:Level.SEVERE, msg, ex);
             throw TeiidSQLException.create(ex, msg);
         }
-        
-        // warnings thrown
+	}
+
+	private void postReceiveResults(RequestMessage reqMessage,
+			ResultsMessage resultsMsg) throws TeiidSQLException, SQLException {
+		// warnings thrown
         List resultsWarning = resultsMsg.getWarnings();
 
         setAnalysisInfo(resultsMsg);
@@ -524,7 +612,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         }
         
         logger.fine(JDBCPlugin.Util.getString("MMStatement.Success_query", reqMessage.getCommandString())); //$NON-NLS-1$
-    }
+	}
 
 	protected RequestMessage createRequestMessage(String[] commands,
 			boolean isBatchedCommand, ResultsMode resultsMode) {
@@ -648,7 +736,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
      * @return ResultSet object giving the next available ResultSet
      * @throws SQLException should never occur
      */
-    public ResultSet getResultSet() throws SQLException {
+    public ResultSetImpl getResultSet() throws SQLException {
         //Check to see the statement is closed and throw an exception
         checkStatement();
         if (!hasResultSet()) {
@@ -887,8 +975,8 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     /**
      * Send out request message with necessary states.
      */
-    protected ResultsMessage sendRequestMessageAndWait(RequestMessage reqMsg)
-        throws SQLException, InterruptedException {
+    protected ResultsFuture<ResultsMessage> sendRequestMessage(RequestMessage reqMsg)
+        throws SQLException {
         this.currentRequestID = this.driverConnection.nextRequestID();
         // Create a request message
         reqMsg.setExecutionPayload(this.payload);        
@@ -902,39 +990,11 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 
         reqMsg.setExecutionId(this.currentRequestID);
     	
-        Future<ResultsMessage> pendingResult = null;
 		try {
-			pendingResult = this.getDQP().executeRequest(this.currentRequestID, reqMsg);
+			return this.getDQP().executeRequest(this.currentRequestID, reqMsg);
 		} catch (TeiidException e) {
 			throw TeiidSQLException.create(e);
 		}
-		long timeoutMillis = queryTimeout * 1000;
-        long endTime = System.currentTimeMillis() + timeoutMillis;
-        ResultsMessage result = null;        
-        while (result == null) {
-
-        	if (timeoutMillis > 0 && endTime <= System.currentTimeMillis() && commandStatus != TIMED_OUT && commandStatus != CANCELLED) {
-	            timeoutOccurred();
-        	}
-        	
-            checkStatement();
-			try {
-				result = pendingResult.get(SPIN_TIMEOUT, TimeUnit.MILLISECONDS);
-			} catch (ExecutionException e) {
-				throw TeiidSQLException.create(e);
-			} catch (TimeoutException e) {
-				continue;
-			}
-        }
-        
-    	if (commandStatus == CANCELLED) {
-            throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Cancel_before_execute")); //$NON-NLS-1$
-        }
-    	 
-    	if (commandStatus == TIMED_OUT) {
-            throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Timeout_before_complete")); //$NON-NLS-1$
-        }    	
-    	return result;
     }
 
     long getCurrentRequestID() {

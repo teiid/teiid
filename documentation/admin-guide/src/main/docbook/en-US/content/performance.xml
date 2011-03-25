@@ -109,15 +109,10 @@
 			The default input output buffer sizes are set to 0, which will use the system default.  
 			Before adjusting this value keep in mind that each JDBC, ODBC, and Admin client will create a new socket connection.  
 			Setting these values to a large buffer size should only be done if the number of client is constrained.
-			All JDBC socket operations are non-blocking, so setting the number of maxThreads
+			All JDBC/ODBC socket operations are non-blocking, so setting the number of maxThreads
 			higher than the maximum effective parallelism of the machine should not result in greater performance.  
 			The default value 0 for JDBC socket threads will set the max to the number of available processors.
 			</para>
-			<para>  
-			At this time, ODBC queries are executed synchronously from the socket thread.
-			Simultaneous long-running queries may exhaust the available threads.
-			Consider increasing the default max threads (15) for ODBC if you
-			expect a higher concurrent load of long-running ODBC client queries.</para>
 	</section>
 	<section>
 		<title>LOBs</title>

@@ -23,10 +23,8 @@ package org.teiid.odbc;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,14 +32,17 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.StringUtil;
 import org.teiid.jdbc.ConnectionImpl;
+import org.teiid.jdbc.PreparedStatementImpl;
+import org.teiid.jdbc.StatementImpl;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.runtime.RuntimePlugin;
-import org.teiid.transport.PGCharsetConverter;
+import org.teiid.transport.ODBCClientInstance;
 
 /**
  * While executing the multiple prepared statements I see this bug currently
@@ -139,17 +140,23 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	private static Pattern savepointPattern = Pattern.compile("SAVEPOINT (\\w+\\d+_*)"); //$NON-NLS-1$
 	private static Pattern rollbackPattern = Pattern.compile("ROLLBACK\\s*(to)*\\s*(\\w+\\d+_*)*"); //$NON-NLS-1$
 	
+	private TeiidDriver driver;
+	private ODBCClientInstance clientInstance;
 	private ODBCClientRemote client;
 	private Properties props;
 	private AuthenticationType authType;
 	private ConnectionImpl connection;
 	
+	private volatile ResultsFuture<Boolean> executionFuture;
+	
 	// TODO: this is unbounded map; need to define some boundaries as to how many stmts each session can have
 	private Map<String, Prepared> preparedMap = Collections.synchronizedMap(new HashMap<String, Prepared>());
 	private Map<String, Portal> portalMap = Collections.synchronizedMap(new HashMap<String, Portal>());
 	
-	public ODBCServerRemoteImpl(ODBCClientRemote client, AuthenticationType authType) {
-		this.client = client;
+	public ODBCServerRemoteImpl(ODBCClientInstance client, AuthenticationType authType, TeiidDriver driver) {
+		this.driver = driver;
+		this.client = client.getClient();
+		this.clientInstance = client;
 		this.authType = authType;
 	}
 	
@@ -172,7 +179,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		try {
 			 java.util.Properties info = new java.util.Properties();
 			String url = "jdbc:teiid:"+databaseName+";ApplicationName=ODBC"; //$NON-NLS-1$ //$NON-NLS-2$
-			TeiidDriver driver = new TeiidDriver();
 			info.put("user", user); //$NON-NLS-1$
 			info.put("password", password); //$NON-NLS-1$
 			this.connection =  (ConnectionImpl)driver.connect(url, info);
@@ -194,7 +200,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			}
 						
 			if (sql != null) {
-				String modfiedSQL = sql.replaceAll("\\$\\d+", "?");//$NON-NLS-1$ //$NON-NLS-2$
+				String modfiedSQL = fixSQL(sql);
+				modfiedSQL = modfiedSQL.replaceAll("\\$\\d+", "?");//$NON-NLS-1$ //$NON-NLS-2$
 				try {
 					// close if the name is already used or the unnamed prepare; otherwise
 					// stmt is alive until session ends.
@@ -203,7 +210,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 						previous.stmt.close();
 					}
 					
-					PreparedStatement stmt = this.connection.prepareStatement(modfiedSQL);
+					PreparedStatementImpl stmt = this.connection.prepareStatement(modfiedSQL);
 					this.preparedMap.put(prepareName, new Prepared(prepareName, sql, stmt, paramType));
 					this.client.prepareCompleted(prepareName);
 				} catch (SQLException e) {
@@ -256,11 +263,14 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 
 	@Override
 	public void execute(String bindName, int maxRows) {
+		if (isAwaitingAsynch()) {
+			return;
+		}
 		if (bindName == null || bindName.length() == 0) {
 			bindName  = UNNAMED;
 		}		
 		
-		Portal query = this.portalMap.get(bindName);
+		final Portal query = this.portalMap.get(bindName);
 		if (query == null) {
 			this.client.errorOccurred(RuntimePlugin.Util.getString("not_bound", bindName)); //$NON-NLS-1$
 			sync();
@@ -271,24 +281,33 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				return;
 			}
 			
-            PreparedStatement stmt = query.stmt;
+            final PreparedStatementImpl stmt = query.stmt;
             try {
             	// maxRows = 0, means unlimited.
             	if (maxRows != 0) {
             		stmt.setMaxRows(maxRows);
             	}
             	
-                boolean result = stmt.execute();
-                if (result) {
-                    try {
-                        ResultSet rs = stmt.getResultSet();
-                        this.client.sendResults(query.sql, rs, true);
-                    } catch (SQLException e) {
-                        this.client.errorOccurred(e);
-                    }
-                } else {
-                	this.client.sendUpdateCount(query.sql, stmt.getUpdateCount());
-                }
+                this.executionFuture = stmt.submitExecute();
+                executionFuture.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
+	        		@Override
+	        		public void onCompletion(ResultsFuture<Boolean> future) {
+	        			executionFuture = null;
+                        try {
+		        			if (future.get()) {
+	                            client.sendResults(query.sql, stmt.getResultSet(), true);
+		                    } else {
+		                    	client.sendUpdateCount(query.sql, stmt.getUpdateCount());
+		                    	setEncoding();
+		                    }
+                        } catch (Throwable e) {
+                            client.errorOccurred(e);
+                        }
+                        if (!clientInstance.hasPending()) {
+                        	sync();
+                        }
+	        		}
+				});
             } catch (SQLException e) {
             	this.client.errorOccurred(e);
             }			
@@ -344,6 +363,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 					modified = "SELECT current_database()"; //$NON-NLS-1$
 				}
 				else {
+					//these are somewhat dangerous
 					modified = modified.replaceAll("E'", "'"); //$NON-NLS-1$ //$NON-NLS-2$
 					modified =  modified.replaceAll("::[A-Za-z0-9]*", " "); //$NON-NLS-1$ //$NON-NLS-2$
 					modified =  modified.replaceAll("'pg_toast'", "'SYS'"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -362,37 +382,13 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			else {
 				Matcher m = setPattern.matcher(sql);
 				if (m.matches()) {
-					if (m.group(2).equalsIgnoreCase("client_encoding")) { //$NON-NLS-1$
-						this.client.setEncoding(PGCharsetConverter.getCharset(m.group(4)));
-					}
-					else {
-						this.props.setProperty(m.group(2), m.group(4));
-					}
-					modified = "SELECT 'SET'"; //$NON-NLS-1$
+					modified = "SET " + m.group(2) + " " + m.group(4); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 				else if (modified.equalsIgnoreCase("BEGIN")) { //$NON-NLS-1$
-					try {
-						this.connection.setAutoCommit(false);
-						modified = "SELECT 'BEGIN'"; //$NON-NLS-1$
-					} catch (SQLException e) {
-						this.client.errorOccurred(e);
-					}
-				}
-				else if (modified.equalsIgnoreCase("COMMIT")) { //$NON-NLS-1$
-					try {
-						this.connection.setAutoCommit(true);
-						modified = "SELECT 'COMMIT'"; //$NON-NLS-1$
-					} catch (SQLException e) {
-						this.client.errorOccurred(e);
-					}					
+					modified = "START TRANSACTION"; //$NON-NLS-1$
 				}
 				else if ((m = rollbackPattern.matcher(modified)).matches()) {
-					try {
-						this.connection.rollback(false);
-						modified = "SELECT 'ROLLBACK'"; //$NON-NLS-1$
-					} catch (SQLException e) {
-						this.client.errorOccurred(e);
-					}					
+					modified = "ROLLBACK"; //$NON-NLS-1$
 				}	
 				else if ((m = savepointPattern.matcher(modified)).matches()) {
 					modified = "SELECT 'SAVEPOINT'"; //$NON-NLS-1$
@@ -413,8 +409,10 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	}
 
 	@Override
-	public void executeQuery(String query) {
-
+	public void executeQuery(final String query) {
+		if (isAwaitingAsynch()) {
+			return;
+		}
 		//46.2.3 Note that a simple Query message also destroys the unnamed portal.
 		this.portalMap.remove(UNNAMED);
 		this.preparedMap.remove(UNNAMED);
@@ -424,39 +422,20 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
     		sync();
     		return;
     	}
-		
-		try {			
-	        ScriptReader reader = new ScriptReader(new StringReader(query));
-	        String s = fixSQL(reader.readStatement());
-	        while (s != null) {
-	            Statement stmt = null;
-	            try {
-	                stmt = this.connection.createStatement();
-	                boolean result = stmt.execute(s);
-	                if (result) {
-	                	this.client.sendResults(s, stmt.getResultSet(), true);
-	                } else {
-	                	this.client.sendUpdateCount(s, stmt.getUpdateCount());
-	                }
-	                s = fixSQL(reader.readStatement());
-	            } catch (SQLException e) {
-	                this.client.errorOccurred(e);
-	                break;
-	            } finally {
-	                try {
-	                	if (stmt != null) {
-	                		stmt.close();
-	                	}
-					} catch (SQLException e) {
-						this.client.errorOccurred(e);
-						break;
-					}
-	            }
-	        }
-		} catch(IOException e) {
-			this.client.errorOccurred(e);
+        QueryWorkItem r = new QueryWorkItem(query);
+		r.run();
+	}
+
+	/**
+	 * Just a sanity check.  Should never happen
+	 */
+	private boolean isAwaitingAsynch() {
+		if (this.executionFuture != null) {
+			this.client.errorOccurred("Awaiting asynch result"); //$NON-NLS-1$
+			sync();
+			return true;
 		}
-		sync();
+		return false;
 	}
 
 	@Override
@@ -498,6 +477,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 
 	@Override
 	public void sync() {
+		if (this.executionFuture != null) {
+			return;
+		}
 		boolean inTxn = false;
 		boolean failedTxn = false;
 		try {
@@ -608,12 +590,85 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		this.client.sslDenied();
 	}
 	
-    /**
+	private void setEncoding() {
+		try {
+			StatementImpl t = connection.createStatement();
+			ResultSet rs = t.executeQuery("show client_encoding"); //$NON-NLS-1$
+			if (rs.next()) {
+				String encoding = rs.getString(1);
+				if (encoding != null) {
+					//this may be unnecessary
+					this.client.setEncoding(encoding);
+				}
+			}
+		} catch (Exception e) {
+			//don't care
+		}
+	}
+	
+    private final class QueryWorkItem implements Runnable {
+		private final ScriptReader reader;
+		String s;
+
+		private QueryWorkItem(String query) {
+			this.reader = new ScriptReader(new StringReader(query));
+		}
+
+		@Override
+		public void run() {
+			try {
+				if (s == null) {
+			        s = fixSQL(reader.readStatement());
+				}
+		        while (s != null) {
+		            try {
+		            	final StatementImpl stmt = connection.createStatement();
+		                executionFuture = stmt.submitExecute(s);
+		                executionFuture.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
+			        		@Override
+			        		public void onCompletion(ResultsFuture<Boolean> future) {
+			        			executionFuture = null;
+			        			try {
+					                if (future.get()) {
+					                	client.sendResults(s, stmt.getResultSet(), true);
+					                } else {
+					                	client.sendUpdateCount(s, stmt.getUpdateCount());
+					                	setEncoding();
+					                }
+					                s = fixSQL(reader.readStatement());
+			        			} catch (Throwable e) {
+			        				client.errorOccurred(e);
+			        				sync();
+			        				return;
+			        			} finally {
+			        				try {
+										stmt.close();
+									} catch (SQLException e) {
+										LogManager.logDetail(LogConstants.CTX_ODBC, e, "Error closing statement"); //$NON-NLS-1$
+									}
+			        			}
+			        			QueryWorkItem.this.run(); //continue processing
+			        		}
+						});
+		                return; //wait for the execution to finish
+		            } catch (SQLException e) {
+		                client.errorOccurred(e);
+		                break;
+		            } 
+		        }
+			} catch(IOException e) {
+				client.errorOccurred(e);
+			}
+			sync();
+		}
+	}
+
+	/**
      * Represents a PostgreSQL Prepared object.
      */
     static class Prepared {
 
-    	public Prepared (String name, String sql, PreparedStatement stmt, int[] paramType) {
+    	public Prepared (String name, String sql, PreparedStatementImpl stmt, int[] paramType) {
     		this.name = name;
     		this.sql = sql;
     		this.stmt = stmt;
@@ -633,7 +688,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
         /**
          * The prepared statement.
          */
-        PreparedStatement stmt;
+        PreparedStatementImpl stmt;
 
         /**
          * The list of parameter types (if set).
@@ -646,7 +701,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
      */
     static class Portal {
 
-    	public Portal(String name, String preparedName, String sql, PreparedStatement stmt, int[] resultColumnformat) {
+    	public Portal(String name, String preparedName, String sql, PreparedStatementImpl stmt, int[] resultColumnformat) {
     		this.name = name;
     		this.preparedName = preparedName;
     		this.sql = sql;
@@ -674,7 +729,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
         /**
          * The prepared statement.
          */
-        PreparedStatement stmt;
+        PreparedStatementImpl stmt;
     }
 
 

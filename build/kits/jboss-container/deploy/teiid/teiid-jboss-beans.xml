@@ -198,10 +198,8 @@
         <property name="bindAddress">${jboss.bind.address}</property>
         <property name="portNumber">35432</property>
         <!-- Max number of threads dedicated to ODBC request processing.
-             Zero indicates the system default of max available processors. (default 15)
-             ODBC queries are currently blocking on IO operations, so this value
-             should be set the expected number of concurrent ODBC queries -->
-        <property name="maxSocketThreads">15</property>
+             Zero indicates the system default of max available processors. (default 0) -->
+        <property name="maxSocketThreads">0</property>
         <!-- SO_RCVBUF size, 0 indicates that system default should be used (default 0) -->
         <property name="inputBufferSize">0</property>
         <!-- SO_SNDBUF size, 0 indicates that system default should be used (default 0) -->

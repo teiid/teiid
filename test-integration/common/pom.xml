@@ -9,5 +9,12 @@
 	<artifactId>test-integration-common</artifactId>
 	<name>Common Integration Tests</name>
 	<description>Common Integration tests that do not require external dependencies</description>
+	<dependencies>
+		<dependency>
+			<groupId>postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>8.3-606.jdbc3</version>
+		</dependency>
+	</dependencies>
      
 </project>

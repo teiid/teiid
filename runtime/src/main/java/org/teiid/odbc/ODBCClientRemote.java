@@ -21,17 +21,17 @@
  */
 package org.teiid.odbc;
 
-import java.nio.charset.Charset;
 import java.sql.ParameterMetaData;
-import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.Properties;
+
+import org.teiid.jdbc.ResultSetImpl;
 
 public interface ODBCClientRemote {
 	
 	void initialized(Properties props);
 	
-	void setEncoding(Charset value);
+	void setEncoding(String value);
 	
 	//	AuthenticationCleartextPassword (B)
 	void useClearTextAuthentication();
@@ -64,7 +64,7 @@ public interface ODBCClientRemote {
 	
 	//	DataRow (B)
 	//	CommandComplete (B)
-	void sendResults(String sql, ResultSet rs, boolean describeRows);
+	void sendResults(String sql, ResultSetImpl rs, boolean describeRows);
 
 	//	CommandComplete (B)
 	void sendUpdateCount(String sql, int updateCount);

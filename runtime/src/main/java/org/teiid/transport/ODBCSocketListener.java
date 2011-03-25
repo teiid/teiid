@@ -27,17 +27,23 @@ import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.DefaultChannelPipeline;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.teiid.common.buffer.StorageManager;
+import org.teiid.jdbc.TeiidDriver;
 import org.teiid.net.socket.ObjectChannel;
 import org.teiid.odbc.ODBCServerRemote;
 
 public class ODBCSocketListener extends SocketListener {
 	private ODBCServerRemote.AuthenticationType authType = ODBCServerRemote.AuthenticationType.CLEARTEXT;
 	private int maxLobSize;
+	private TeiidDriver driver = TeiidDriver.getInstance();
 	
 	public ODBCSocketListener(SocketConfiguration config, StorageManager storageManager, int portOffset, int maxLobSize) {
 		//the clientserviceregistry isn't actually used by ODBC 
 		super(config, new ClientServiceRegistryImpl(ClientServiceRegistry.Type.ODBC), storageManager, portOffset);
 		this.maxLobSize = maxLobSize;
+	}
+	
+	public void setDriver(TeiidDriver driver) {
+		this.driver = driver;
 	}
 
 	@Override
@@ -60,7 +66,7 @@ public class ODBCSocketListener extends SocketListener {
 	
 	@Override
 	public ChannelListener createChannelListener(ObjectChannel channel) {
-		return new ODBCClientInstance(channel, this.authType);
+		return new ODBCClientInstance(channel, this.authType, driver);
 	}
 
 	public void setAuthenticationType(String value) {

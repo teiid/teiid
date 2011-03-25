@@ -227,6 +227,29 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
     public int getFetchSize() throws SQLException {
         return this.fetchSize;
     }
+    
+    /**
+     * Assumes forward only cursoring
+     */
+    public ResultsFuture<Boolean> submitNext() throws SQLException {
+    	Boolean hasNext = batchResults.hasNext(getOffset() + 1, false);
+    	if (hasNext != null) {
+    		return StatementImpl.booleanFuture(next());
+    	}
+    	ResultsFuture<ResultsMessage> pendingResult = submitRequestBatch(batchResults.getHighestRowNumber() + 1);
+    	final ResultsFuture<Boolean> result = new ResultsFuture<Boolean>();
+    	pendingResult.addCompletionListener(new ResultsFuture.CompletionListener<ResultsMessage>() {
+    		@Override
+    		public void onCompletion(ResultsFuture<ResultsMessage> future) {
+    			try {
+					batchResults.setBatch(processBatch(future.get()));
+				} catch (Throwable t) {
+					result.getResultsReceiver().exceptionOccurred(t);
+				}
+    		}
+		});
+    	return result;
+    }
 
     /**
      * Move row pointer forward one row.  This may cause the cursor
@@ -358,26 +381,11 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
     }
     
     public Batch requestBatch(int beginRow) throws SQLException{
-    	if (logger.isLoggable(Level.FINER)) {
-    		logger.finer("requestBatch requestID: " + requestID + " beginRow: " + beginRow ); //$NON-NLS-1$ //$NON-NLS-2$
-    	}
     	checkClosed();
         try {
-        	ResultsFuture<ResultsMessage> results = statement.getDQP().processCursorRequest(requestID, beginRow, fetchSize);
-        	int timeoutSeconds = statement.getQueryTimeout();
-        	if (timeoutSeconds == 0) {
-        		timeoutSeconds = Integer.MAX_VALUE;
-        	}
-        	ResultsMessage currentResultMsg = results.get(timeoutSeconds, TimeUnit.SECONDS);
-        	
-            if (currentResultMsg.getException() != null) {
-                throw TeiidSQLException.create(currentResultMsg.getException());
-            }
-
-    		this.accumulateWarnings(currentResultMsg);
-    		return getCurrentBatch(currentResultMsg);
-        } catch (TeiidProcessingException e) {
-			throw TeiidSQLException.create(e);
+        	ResultsFuture<ResultsMessage> results = submitRequestBatch(beginRow);
+        	ResultsMessage currentResultMsg = getResults(results);
+            return processBatch(currentResultMsg);
 		} catch (InterruptedException e) {
 			throw TeiidSQLException.create(e);
 		} catch (ExecutionException e) {
@@ -386,6 +394,41 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 			throw TeiidSQLException.create(e);
 		}
     }
+
+	private ResultsFuture<ResultsMessage> submitRequestBatch(int beginRow)
+			throws TeiidSQLException {
+		if (logger.isLoggable(Level.FINER)) {
+			logger.finer("requestBatch requestID: " + requestID + " beginRow: " + beginRow ); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		ResultsFuture<ResultsMessage> results;
+		try {
+			results = statement.getDQP().processCursorRequest(requestID, beginRow, fetchSize);
+		} catch (TeiidProcessingException e) {
+			throw TeiidSQLException.create(e);
+		}
+		return results;
+	}
+
+	private Batch processBatch(
+			ResultsMessage currentResultMsg) throws TeiidSQLException {
+		if (currentResultMsg.getException() != null) {
+		    throw TeiidSQLException.create(currentResultMsg.getException());
+		}
+
+		this.accumulateWarnings(currentResultMsg);
+		return getCurrentBatch(currentResultMsg);
+	}
+
+	private ResultsMessage getResults(ResultsFuture<ResultsMessage> results)
+			throws SQLException, InterruptedException, ExecutionException,
+			TimeoutException {
+		int timeoutSeconds = statement.getQueryTimeout();
+		if (timeoutSeconds == 0) {
+			timeoutSeconds = Integer.MAX_VALUE;
+		}
+		ResultsMessage currentResultMsg = results.get(timeoutSeconds, TimeUnit.SECONDS);
+		return currentResultMsg;
+	}
 
 	private Batch getCurrentBatch(ResultsMessage currentResultMsg) {
 		this.updatedPlanDescription = currentResultMsg.getPlanDescription();
@@ -400,7 +443,7 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 	}
 
 	protected boolean hasNext() throws SQLException {
-		return batchResults.hasNext(getOffset() + 1);
+		return batchResults.hasNext(getOffset() + 1, true);
 	}
 	
 	protected int getOffset() {

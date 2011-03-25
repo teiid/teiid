@@ -48,6 +48,8 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.index.IndexMetadataFactory;
 import org.teiid.metadata.index.VDBMetadataFactory;
+import org.teiid.net.CommunicationException;
+import org.teiid.net.ConnectionException;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -59,7 +61,7 @@ import org.teiid.transport.LocalServerConnection;
 import org.teiid.transport.LogonImpl;
 
 @SuppressWarnings("nls")
-public class FakeServer extends ClientServiceRegistryImpl {
+public class FakeServer extends ClientServiceRegistryImpl implements ConnectionProfile {
 
 	SessionServiceImpl sessionService = new SessionServiceImpl();
 	LogonImpl logon;
@@ -161,14 +163,26 @@ public class FakeServer extends ClientServiceRegistryImpl {
 		final Properties p = new Properties();
 		TeiidDriver.parseURL(embeddedURL, p);
 
-		LocalServerConnection conn = new LocalServerConnection(p) {
-			@Override
-			protected ClientServiceRegistry getClientServiceRegistry() {
-				return FakeServer.this;
-			}
-		};
-		return new ConnectionImpl(conn, p, embeddedURL);
+		return connect(embeddedURL, p);
 	}
 	
+	@Override
+	public ConnectionImpl connect(String url, Properties info)
+			throws TeiidSQLException {
+		LocalServerConnection conn;
+		try {
+			conn = new LocalServerConnection(info) {
+				@Override
+				protected ClientServiceRegistry getClientServiceRegistry() {
+					return FakeServer.this;
+				}
+			};
+		} catch (CommunicationException e) {
+			throw TeiidSQLException.create(e);
+		} catch (ConnectionException e) {
+			throw TeiidSQLException.create(e);
+		}
+		return new ConnectionImpl(conn, info, url);	
+	}
 	
 }

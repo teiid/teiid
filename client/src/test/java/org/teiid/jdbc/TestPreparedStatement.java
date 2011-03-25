@@ -42,9 +42,6 @@ import org.teiid.client.ResultsMessage;
 import org.teiid.client.RequestMessage.ResultsMode;
 import org.teiid.client.security.LogonResult;
 import org.teiid.client.util.ResultsFuture;
-import org.teiid.jdbc.ConnectionImpl;
-import org.teiid.jdbc.PreparedStatementImpl;
-import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.net.ServerConnection;
 
 
@@ -54,17 +51,6 @@ import org.teiid.net.ServerConnection;
  */
 public class TestPreparedStatement {
 
-	/**
-	 * Test that <code>MMPreparedStatement</code>'s <code>execute()</code> method
-	 * will throw a <code>MMSQLException</code> if a connection does not exist.
-	 * 
-	 * @throws Exception
-	 */
-	@Test(expected=TeiidSQLException.class) public void testUpdateException() throws Exception {
-		PreparedStatementImpl statement = getMMPreparedStatement("delete from table"); //$NON-NLS-1$
-		statement.execute();
-	}
-	
 	/**
 	 * Verify that the <code>executeBatch()</code> method of <code>
 	 * MMPreparedStatement</code> is resulting in the correct command, 
