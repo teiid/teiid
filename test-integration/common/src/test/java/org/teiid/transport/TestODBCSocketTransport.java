@@ -123,4 +123,19 @@ public class TestODBCSocketTransport {
 		assertTrue(s.execute("select * from tables order by name"));
 		conn.setAutoCommit(true);
 	}
+	
+	@Test public void testPk() throws Exception {
+		Statement stmt = conn.createStatement();
+		ResultSet rs = stmt.executeQuery("select ta.attname, ia.attnum, ic.relname, n.nspname, tc.relname " +//$NON-NLS-1$
+			"from pg_catalog.pg_attribute ta, pg_catalog.pg_attribute ia, pg_catalog.pg_class tc, pg_catalog.pg_index i, " +//$NON-NLS-1$
+			"pg_catalog.pg_namespace n, pg_catalog.pg_class ic where tc.relname = E'pg_attribute' AND n.nspname = E'pg_catalog'");
+		TestMMDatabaseMetaData.compareResultSet(rs);
+	}
+	
+	@Test public void testEscapedLiteral() throws Exception {
+		Statement stmt = conn.createStatement();
+		ResultSet rs = stmt.executeQuery("select E'\\n\\thello pg'");
+		assertTrue(rs.next());
+		assertEquals("\n\thello pg", rs.getString(1));
+	}
 }

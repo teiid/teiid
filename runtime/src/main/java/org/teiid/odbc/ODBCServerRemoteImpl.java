@@ -330,18 +330,18 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 					modified = new StringBuffer("SELECT k.Name AS attname, convert(Position, short) AS attnum, TableName AS relname, SchemaName AS nspname, TableName AS relname") //$NON-NLS-1$
 				          .append(" FROM SYS.KeyColumns k") //$NON-NLS-1$ 
 				          .append(" WHERE ") //$NON-NLS-1$
-				          .append(" UCASE(SchemaName)").append(" LIKE UCASE('").append(m.group(2)).append("')")//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-				          .append(" AND UCASE(TableName)") .append(" LIKE UCASE('").append(m.group(1)).append("')")//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				          .append(" UCASE(SchemaName)").append(" LIKE UCASE(").append(m.group(2)).append(")")//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				          .append(" AND UCASE(TableName)") .append(" LIKE UCASE(").append(m.group(1)).append(")")//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				          .append(" AND KeyType LIKE 'Primary'") //$NON-NLS-1$
 				          .append(" ORDER BY attnum").toString(); //$NON-NLS-1$					
 				}
 				else if ((m = pkKeyPattern.matcher(modified)).matches()) {
 					String tableName = m.group(1);
-					if (tableName.endsWith("_pkey")) { //$NON-NLS-1$
-						tableName = tableName.substring(0, tableName.length()-5);
+					if (tableName.endsWith("_pkey'")) { //$NON-NLS-1$
+						tableName = tableName.substring(0, tableName.length()-6) + '\'';
 						modified = "select ia.attname, ia.attnum, ic.relname, n.nspname, NULL "+ //$NON-NLS-1$	
 							"from pg_catalog.pg_attribute ia, pg_catalog.pg_class ic, pg_catalog.pg_namespace n, Sys.KeyColumns kc "+ //$NON-NLS-1$	
-							"where ic.relname = '"+tableName+"' AND n.nspname = '"+m.group(2)+"' AND "+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+							"where ic.relname = "+tableName+" AND n.nspname = "+m.group(2)+" AND "+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 							"n.oid = ic.relnamespace AND ia.attrelid = ic.oid AND kc.SchemaName = n.nspname " +//$NON-NLS-1$	
 							"AND kc.TableName = ic.relname AND kc.KeyType = 'Primary' AND kc.Name = ia.attname order by ia.attnum";//$NON-NLS-1$	
 					}
@@ -353,7 +353,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				else if ((m = fkPattern.matcher(modified)).matches()){
 					modified = "SELECT PKTABLE_CAT, PKTABLE_SCHEM, PKTABLE_NAME, PKCOLUMN_NAME, FKTABLE_CAT, FKTABLE_SCHEM, "+//$NON-NLS-1$
 								"FKTABLE_NAME, FKCOLUMN_NAME, KEY_SEQ, UPDATE_RULE, DELETE_RULE, FK_NAME, PK_NAME, DEFERRABILITY "+//$NON-NLS-1$
-								"FROM SYS.ReferenceKeyColumns WHERE PKTABLE_NAME LIKE '"+m.group(14)+"' and PKTABLE_SCHEM LIKE '"+m.group(15)+"'";//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+								"FROM SYS.ReferenceKeyColumns WHERE PKTABLE_NAME LIKE "+m.group(14)+" and PKTABLE_SCHEM LIKE "+m.group(15);//$NON-NLS-1$ //$NON-NLS-2$ 
 				}
 				else if (modified.equalsIgnoreCase("select version()")) { //$NON-NLS-1$
 					modified = "SELECT 'Teiid "+ApplicationInfo.getInstance().getReleaseNumber()+"'"; //$NON-NLS-1$ //$NON-NLS-2$
@@ -368,11 +368,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 					modified = "SELECT 1 from matpg_relatt where attrelid = ? and attnum = ? and autoinc = true"; //$NON-NLS-1$
 				}
 				else {
-					//these are somewhat dangerous
-					modified = modified.replaceAll("E'", "'"); //$NON-NLS-1$ //$NON-NLS-2$
-					modified =  modified.replaceAll("::[A-Za-z0-9]*", " "); //$NON-NLS-1$ //$NON-NLS-2$
-					modified =  modified.replaceAll("'pg_toast'", "'SYS'"); //$NON-NLS-1$ //$NON-NLS-2$
-					
 					// since teiid can work with multiple schemas at a given time
 					// this call resolution is ambiguous
 					if (sql.equalsIgnoreCase("select current_schema()")) { //$NON-NLS-1$
@@ -406,6 +401,11 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 					modified = "SELECT 'DEALLOCATE'"; //$NON-NLS-1$
 				}					
 			}
+			//these are somewhat dangerous
+			modified = modified.replaceAll("E('[^']*')+", "unescape($1)"); //$NON-NLS-1$ //$NON-NLS-2$
+			modified =  modified.replaceAll("::[A-Za-z0-9]*", " "); //$NON-NLS-1$ //$NON-NLS-2$
+			modified =  modified.replaceAll("'pg_toast'", "'SYS'"); //$NON-NLS-1$ //$NON-NLS-2$
+
 			if (modified != null && !modified.equalsIgnoreCase(sql)) {
 				LogManager.logDetail(LogConstants.CTX_ODBC, "Modified Query:"+modified); //$NON-NLS-1$
 			}			
