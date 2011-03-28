@@ -109,14 +109,18 @@
                         <entry>If joins are supported, defines what criteria may be used as the join criteria.  May be one of (ANY, THETA, EQUI, or KEY).</entry>
                         <entry>ANY</entry>
                     </row>
+                    <row>
+                        <entry>MaxInCriteriaSize</entry>
+                        <entry>If in criteria are supported, defines what the maximum number of in entries are per predicate.  -1 indicates no limit.</entry>
+                        <entry>-1</entry>
+                    </row>
                 </tbody>
             </tgroup>
         </table>
         
         <note>
             <para>
-            Only a subset of the metadata as to what SQL constructs the source supports 
-            can be set through execution properties.  If more control is needed, please 
+            Only a subset of the supports metadata can be set through execution properties.  If more control is needed, please 
             consult the Teiid Developers Guide.
             </para>
         </note>

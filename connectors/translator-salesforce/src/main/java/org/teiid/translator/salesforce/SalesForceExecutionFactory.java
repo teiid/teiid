@@ -60,7 +60,6 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 	private static final String INCLUDES = "includes";//$NON-NLS-1$
 	private String connectorStateClass;
 	private boolean auditModelFields = false;
-	private int maxInSize = 300;
 	
 	public SalesForceExecutionFactory() {
 	    // http://jira.jboss.org/jira/browse/JBEDSP-306
@@ -124,16 +123,6 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 		processor.processMetadata();
 	}	
 	
-	@Override
-	@TranslatorProperty(display="Max number of IN predicate entries", advanced=true)
-    public int getMaxInCriteriaSize() {
-        return maxInSize;
-    }
-	
-	public void setMaxInCriteriaSize(int maxInSize) {
-		this.maxInSize = maxInSize;
-	}
-
     @Override
     public List getSupportedFunctions() {
         return Collections.EMPTY_LIST;

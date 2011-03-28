@@ -64,6 +64,7 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
 	public SybaseExecutionFactory() {
 		setDatabaseVersion(TWELVE_5);
 		setSupportsFullOuterJoins(false);
+		setMaxInCriteriaSize(250);
 	}
     
     public void start() throws TranslatorException {
@@ -239,11 +240,6 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean useSelectLimit() {
     	return true;
-    }
-    
-    @Override
-    public int getMaxInCriteriaSize() {
-    	return 250;
     }
     
     @Override

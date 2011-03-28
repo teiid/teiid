@@ -42,6 +42,10 @@ public class YahooExecutionFactory extends ExecutionFactory<Object, Object> {
 
 	public static final int YAHOO_MAX_SET_SIZE = 100;
 	
+	public YahooExecutionFactory() {
+		setMaxInCriteriaSize(YAHOO_MAX_SET_SIZE);
+	}
+	
     @Override
     public void start() throws TranslatorException {
     }
@@ -64,10 +68,6 @@ public class YahooExecutionFactory extends ExecutionFactory<Object, Object> {
         return true;
     }
 
-    public int getMaxInCriteriaSize() {
-        return YAHOO_MAX_SET_SIZE;
-    }
-    
     @Override
     public boolean isSourceRequired() {
     	return false;

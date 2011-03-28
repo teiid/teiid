@@ -39,6 +39,7 @@ public class AccessExecutionFactory extends SybaseExecutionFactory {
 	public AccessExecutionFactory() {
 		setSupportsOrderBy(false);
 		setDatabaseVersion("2003"); //$NON-NLS-1$
+		setMaxInCriteriaSize(JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA);
 	}
 	
     @Override
@@ -89,11 +90,6 @@ public class AccessExecutionFactory extends SybaseExecutionFactory {
     @Override
     public boolean supportsFunctionsInGroupBy() {
         return false;
-    }
-    
-    @Override
-    public int getMaxInCriteriaSize() {
-    	return JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA;
     }
     
     @Override

@@ -105,6 +105,7 @@ public class ExecutionFactory<F, C> {
 	private boolean supportsInnerJoins;
 	private boolean supportsFullOuterJoins;
 	private boolean requiresCriteria;
+	private int maxInSize = DEFAULT_MAX_IN_CRITERIA_SIZE;
 	
 	/**
 	 * Initialize the connector with supplied configuration
@@ -658,9 +659,14 @@ public class ExecutionFactory<F, C> {
      * in the WHERE clause of a query
      * @since 5.0
      */
-    public int getMaxInCriteriaSize() {
-    	return DEFAULT_MAX_IN_CRITERIA_SIZE;
+	@TranslatorProperty(display="Max number of IN predicate entries", advanced=true)
+    public final int getMaxInCriteriaSize() {
+        return maxInSize;
     }
+	
+	public void setMaxInCriteriaSize(int maxInSize) {
+		this.maxInSize = maxInSize;
+	}
     
     /**
      * <p>Support indicates that the connector supports functions in GROUP BY, such as:

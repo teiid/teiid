@@ -128,10 +128,6 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 		return delegate.getMaxFromGroups();
 	}
 	@Override
-	public int getMaxInCriteriaSize() {
-		return delegate.getMaxInCriteriaSize();
-	}
-	@Override
 	public void getMetadata(MetadataFactory metadataFactory, C conn)
 			throws TranslatorException {
 		delegate.getMetadata(metadataFactory, conn);
@@ -155,43 +151,6 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	@Override
 	public boolean isSourceRequired() {
 		return delegate.isSourceRequired();
-	}
-	@Override
-	public void setImmutable(boolean arg0) {
-		delegate.setImmutable(arg0);
-	}
-	@Override
-	public void setRequiresCriteria(boolean requiresCriteria) {
-		delegate.setRequiresCriteria(requiresCriteria);
-	}
-	@Override
-	public void setSourceRequired(boolean value) {
-		delegate.setSourceRequired(value);
-	}
-	@Override
-	public void setSupportedJoinCriteria(
-			SupportedJoinCriteria supportedJoinCriteria) {
-		delegate.setSupportedJoinCriteria(supportedJoinCriteria);
-	}
-	@Override
-	public void setSupportsFullOuterJoins(boolean supportsFullOuterJoins) {
-		delegate.setSupportsFullOuterJoins(supportsFullOuterJoins);
-	}
-	@Override
-	public void setSupportsInnerJoins(boolean supportsInnerJoins) {
-		delegate.setSupportsInnerJoins(supportsInnerJoins);
-	}
-	@Override
-	public void setSupportsOrderBy(boolean supportsOrderBy) {
-		delegate.setSupportsOrderBy(supportsOrderBy);
-	}
-	@Override
-	public void setSupportsOuterJoins(boolean supportsOuterJoins) {
-		delegate.setSupportsOuterJoins(supportsOuterJoins);
-	}
-	@Override
-	public void setSupportsSelectDistinct(boolean supportsSelectDistinct) {
-		delegate.setSupportsSelectDistinct(supportsSelectDistinct);
 	}
 	@Override
 	public boolean supportsAggregatesAvg() {

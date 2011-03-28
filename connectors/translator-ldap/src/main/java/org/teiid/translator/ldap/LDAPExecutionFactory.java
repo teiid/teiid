@@ -54,6 +54,10 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 	private boolean restrictToObjectClass;
 	private SearchDefaultScope searchDefaultScope = SearchDefaultScope.ONELEVEL_SCOPE;
 	
+	public LDAPExecutionFactory() {
+		this.setMaxInCriteriaSize(1000);
+	}
+	
     @TranslatorProperty(display="Default Search Base DN", description="Default Base DN for LDAP Searches")
 	public String getSearchDefaultBaseDN() {
 		return searchDefaultBaseDN;
@@ -92,11 +96,6 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 			throws TranslatorException {
 		return new LDAPUpdateExecution(command, context);
 	}	
-	
-	@Override
-	public int getMaxInCriteriaSize() {
-		return 1000;
-	}
 	
 	@Override
     public boolean supportsCompareCriteriaEquals() {

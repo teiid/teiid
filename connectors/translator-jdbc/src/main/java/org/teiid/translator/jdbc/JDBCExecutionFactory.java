@@ -281,11 +281,6 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	}
 	
     @Override
-    public int getMaxInCriteriaSize() {
-        return DEFAULT_MAX_IN_CRITERIA;
-    }
-    
-    @Override
     public boolean supportsGroupBy() {
     	return true;
     }

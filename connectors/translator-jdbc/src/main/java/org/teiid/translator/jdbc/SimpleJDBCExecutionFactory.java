@@ -40,13 +40,9 @@ public class SimpleJDBCExecutionFactory extends JDBCExecutionFactory {
 		setSupportsOuterJoins(false);
 		setSupportsFullOuterJoins(false);
 		setSupportsOrderBy(false);
+		setMaxInCriteriaSize(250);
 	}
 	
-    @Override
-    public int getMaxInCriteriaSize() {
-    	return 250;
-    }
-    
     @Override
     public boolean supportsCompareCriteriaEquals() {
         return true;

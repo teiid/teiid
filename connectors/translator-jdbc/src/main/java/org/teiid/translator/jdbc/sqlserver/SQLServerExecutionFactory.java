@@ -50,6 +50,7 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 	//TEIID-31 remove mod modifier for SQL Server 2008
 	public SQLServerExecutionFactory() {
 		setDatabaseVersion(V_2005);
+		setMaxInCriteriaSize(JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA);
 	}
 	
 	@Override
@@ -183,11 +184,6 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     @Override
     public int getMaxFromGroups() {
         return DEFAULT_MAX_FROM_GROUPS;
-    } 
-    
-    @Override
-    public int getMaxInCriteriaSize() {
-    	return JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA;
     } 
     
     @Override
