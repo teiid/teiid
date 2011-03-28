@@ -68,6 +68,7 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 	DQPCore dqp = new DQPCore();
 	VDBRepository repo = new VDBRepository();
 	private ConnectorManagerRepository cmr;
+	private boolean useCallingThread = true;
 	
 	public FakeServer() {
 		this.logon = new LogonImpl(sessionService, null);
@@ -98,6 +99,10 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         
         registerClientService(ILogon.class, logon, null);
         registerClientService(DQP.class, dqp, null);
+	}
+	
+	public void setUseCallingThread(boolean useCallingThread) {
+		this.useCallingThread = useCallingThread;
 	}
 	
 	public void deployVDB(String vdbName, String vdbPath) throws Exception {
@@ -171,7 +176,7 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 			throws TeiidSQLException {
 		LocalServerConnection conn;
 		try {
-			conn = new LocalServerConnection(info) {
+			conn = new LocalServerConnection(info, useCallingThread) {
 				@Override
 				protected ClientServiceRegistry getClientServiceRegistry() {
 					return FakeServer.this;

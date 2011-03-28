@@ -22,11 +22,12 @@
 
 package org.teiid.dqp.internal.process;
 
-import org.teiid.dqp.internal.process.AbstractWorkItem;
+import static org.junit.Assert.*;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
-public class TestWorkItemState extends TestCase {
+
+public class TestWorkItemState {
 	
 	private class TestWorkItem extends AbstractWorkItem {
 
@@ -39,6 +40,7 @@ public class TestWorkItemState extends TestCase {
 		}
 		
 		private TestWorkItem(boolean done, boolean callMoreWork) {
+			super(false);
 			this.isDone = done;
 			this.callMoreWork = callMoreWork;
 		}
@@ -86,37 +88,33 @@ public class TestWorkItemState extends TestCase {
 	        checkState(ThreadState.DONE);
 	    }
 	}
-	
-    public TestWorkItemState(String name) {
-        super(name);
-    }
 
-    public void testInitialState() {
+    @Test public void testInitialState() {
         TestWorkItem item = new TestWorkItem();
         item.assertMoreWorkState();
     }
     
-    public void testGotoIdleState() {
+    @Test public void testGotoIdleState() {
         TestWorkItem item = new TestWorkItem();
         item.run();
         item.assertIdleState();
     }
     
-    public void testGotoMoreWorkState() {
+    @Test public void testGotoMoreWorkState() {
     	TestWorkItem item = new TestWorkItem();
         item.run();
         item.moreWork();
         item.assertMoreWorkState();
     }
     
-    public void testGotoWorkingState() {
+    @Test public void testGotoWorkingState() {
     	TestWorkItem item = new TestWorkItem();
     	item.run();
     	item.moreWork();
     	item.run();
     }
     
-    public void testResume() {
+    @Test public void testResume() {
     	TestWorkItem item = new TestWorkItem();
     	item.run();
     	assertFalse(item.resumed);
@@ -124,14 +122,14 @@ public class TestWorkItemState extends TestCase {
     	assertTrue(item.resumed);
     }
     
-    public void testResumeDuringWorking() {
+    @Test public void testResumeDuringWorking() {
     	TestWorkItem item = new TestWorkItem(false, true);
     	assertFalse(item.resumed);
     	item.run();
     	assertTrue(item.resumed);
     }
     
-    public void testRunAfterDone() {
+    @Test public void testRunAfterDone() {
     	TestWorkItem item = new TestWorkItem(true, false);
     	item.run();
     	item.assertDoneState();
@@ -143,7 +141,7 @@ public class TestWorkItemState extends TestCase {
     	}
     }
     
-    public void testRunDuringIdle() {
+    @Test public void testRunDuringIdle() {
     	TestWorkItem item = new TestWorkItem();
     	item.run();
     	item.assertIdleState();

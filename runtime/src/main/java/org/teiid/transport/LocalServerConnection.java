@@ -58,10 +58,11 @@ public class LocalServerConnection implements ServerConnection {
     private Properties connectionProperties;
     private boolean passthrough;
 
-	public LocalServerConnection(Properties connectionProperties) throws CommunicationException, ConnectionException{
+	public LocalServerConnection(Properties connectionProperties, boolean useCallingThread) throws CommunicationException, ConnectionException{
 		this.connectionProperties = connectionProperties;
 		this.csr = getClientServiceRegistry();
 		workContext.setSecurityHelper(csr.getSecurityHelper());
+		workContext.setUseCallingThread(useCallingThread);
 		authenticate();
 		passthrough = Boolean.valueOf(connectionProperties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$
 	}

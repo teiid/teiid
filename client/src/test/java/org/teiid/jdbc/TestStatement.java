@@ -36,7 +36,7 @@ import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.util.ResultsFuture;
 
-
+@SuppressWarnings("nls")
 public class TestStatement {
 
 	@Test public void testBatchExecution() throws Exception {
@@ -104,6 +104,19 @@ public class TestStatement {
 		statement.submitExecute("start transaction"); //$NON-NLS-1$
 		statement.submitExecute("rollback"); //$NON-NLS-1$
 		Mockito.verify(conn).submitSetAutoCommitTrue(false);
+	}
+	
+	@Test public void testAsynchTimeout() throws Exception {
+		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		statement.setQueryTimeoutMS(1);
+		DQP dqp = Mockito.mock(DQP.class);
+		Mockito.stub(statement.getDQP()).toReturn(dqp);
+		ResultsFuture<ResultsMessage> future = new ResultsFuture<ResultsMessage>();
+		Mockito.stub(dqp.executeRequest(Mockito.anyLong(), (RequestMessage) Mockito.anyObject())).toReturn(future);
+		statement.submitExecute("select 'hello world'");
+		Thread.sleep(100);
+		Mockito.verify(dqp).cancelRequest(0);
 	}
 	
 }

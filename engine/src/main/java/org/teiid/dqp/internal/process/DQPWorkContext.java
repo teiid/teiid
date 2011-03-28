@@ -71,8 +71,17 @@ public class DQPWorkContext implements Serializable {
     private String clientHostname;
     private SecurityHelper securityHelper;
     private HashMap<String, DataPolicy> policies;
+    private boolean useCallingThread;
     
     public DQPWorkContext() {
+	}
+
+    public boolean useCallingThread() {
+		return useCallingThread;
+	}
+    
+    public void setUseCallingThread(boolean useCallingThread) {
+		this.useCallingThread = useCallingThread;
 	}
     
     public SessionMetadata getSession() {

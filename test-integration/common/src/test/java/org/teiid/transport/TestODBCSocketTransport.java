@@ -58,6 +58,7 @@ public class TestODBCSocketTransport {
 		odbcTransport = new ODBCSocketListener(config, BufferManagerFactory.getStandaloneBufferManager(), 0, 100000);
 		
 		FakeServer server = new FakeServer();
+		server.setUseCallingThread(false);
 		server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
 		
 		TeiidDriver driver = new TeiidDriver();

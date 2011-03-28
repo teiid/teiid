@@ -46,6 +46,7 @@ import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.process.DQPCore.CompletionListener;
 import org.teiid.dqp.internal.process.DQPCore.FutureWork;
@@ -160,6 +161,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     private long processingTimestamp = System.currentTimeMillis();
     
     public RequestWorkItem(DQPCore dqpCore, RequestMessage requestMsg, Request request, ResultsReceiver<ResultsMessage> receiver, RequestID requestID, DQPWorkContext workContext) {
+    	super(workContext.useCallingThread());
         this.requestMsg = requestMsg;
         this.requestID = requestID;
         this.processorTimeslice = dqpCore.getProcessorTimeSlice();
@@ -200,6 +202,16 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		} else {
 			dqpCore.addWork(this);
 		}
+	}
+	
+	@Override
+	protected void interrupted(InterruptedException e) {
+		try {
+			this.requestCancel();
+		} catch (TeiidComponentException e1) {
+			throw new TeiidRuntimeException(e1);
+		}
+		super.interrupted(e);
 	}
 	
 	@Override
@@ -600,8 +612,11 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	}
 
     private void sendError() {
+    	ResultsReceiver<ResultsMessage> receiver = null;
     	synchronized (this) {
-    		if (this.resultsReceiver == null) {
+    		receiver = this.resultsReceiver;
+    		this.resultsReceiver = null;
+    		if (receiver == null) {
     			LogManager.logDetail(LogConstants.CTX_DQP, processingException, "Unable to send error to client as results were already sent.", requestID); //$NON-NLS-1$
     			return;
     		}
@@ -610,7 +625,13 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         ResultsMessage response = new ResultsMessage(requestMsg);
         response.setException(processingException);
         setAnalysisRecords(response);
-        resultsReceiver.receiveResults(response);
+        receiver.receiveResults(response);
+    }
+    
+    @Override
+    protected boolean shouldPause() {
+    	//if we are waiting on results it's ok to pause
+    	return this.resultsReceiver != null;
     }
 
     private static List<ParameterInfo> getParameterInfo(StoredProcedure procedure) {
@@ -634,7 +655,11 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
             }
 		}
     	workItem.setResultsReceiver(chunckReceiver);
-        dqpCore.addWork(workItem);
+    	if (this.dqpWorkContext.useCallingThread()) {
+    		workItem.run();
+    	} else {
+    		dqpCore.addWork(workItem);
+    	}
     }
     
     public void removeLobStream(int streamRequestId) {

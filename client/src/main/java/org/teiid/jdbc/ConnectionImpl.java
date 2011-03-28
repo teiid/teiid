@@ -87,6 +87,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
     private boolean closed = false;
     // determines if a statement executed should be immediately committed.
     private boolean autoCommitFlag = true;
+    private boolean inLocalTxn;
 
     // collection of all open statements on this connection
     private Collection<StatementImpl> statements = new ArrayList<StatementImpl>();
@@ -125,7 +126,11 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         
         this.disableLocalTransactions = Boolean.valueOf(this.propInfo.getProperty(ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS)).booleanValue();
     }
-
+    
+    boolean isInLocalTxn() {
+		return inLocalTxn;
+	}
+    
 	private void setExecutionProperties(Properties info) {
 		this.propInfo = new Properties();
         
@@ -346,39 +351,37 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
             try {
                 directCommit();
             } finally {
-                beginLocalTxn(); 
+                inLocalTxn = false; 
             }
         }
     }
 
     private void directCommit() throws SQLException {
-        try {
-			ResultsFuture<?> future = this.dqp.commit();
-			future.get();
-		} catch (Exception e) {
-			throw TeiidSQLException.create(e);
-		}
-        logger.fine(JDBCPlugin.Util.getString("MMConnection.Commit_success")); //$NON-NLS-1$
+    	if (inLocalTxn) {
+	        try {
+				ResultsFuture<?> future = this.dqp.commit();
+				future.get();
+			} catch (Exception e) {
+				throw TeiidSQLException.create(e);
+			}
+	        logger.fine(JDBCPlugin.Util.getString("MMConnection.Commit_success")); //$NON-NLS-1$
+    	}
     }
 
-    private void beginLocalTxn() throws SQLException {
-        if (this.transactionXid == null) {
-        	if (disableLocalTransactions) {
-        		this.autoCommitFlag = true;
-        		return;
-        	}
-            boolean txnStarted = false;
-            try {
-            	try {
-            		this.dqp.begin();
-        		} catch (XATransactionException e) {
-        			throw TeiidSQLException.create(e);
-        		} 
-                txnStarted = true;
-            } finally {
-                if (!txnStarted) {
-                    autoCommitFlag = true;
-                }
+    void beginLocalTxnIfNeeded() throws SQLException {
+        if (this.transactionXid != null || inLocalTxn || this.autoCommitFlag || disableLocalTransactions) {
+        	return;
+        }
+        try {
+        	try {
+        		this.dqp.begin();
+    		} catch (XATransactionException e) {
+    			throw TeiidSQLException.create(e);
+    		} 
+            inLocalTxn = true;
+        } finally {
+            if (!inLocalTxn) {
+                autoCommitFlag = true;
             }
         }
     }
@@ -655,16 +658,19 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         checkConnection();
         if (!autoCommitFlag) {
             try {
-            	try {
-            		ResultsFuture<?> future = this.dqp.rollback();
-            		future.get();
-        		} catch (Exception e) {
-        			throw TeiidSQLException.create(e);
-        		}
-                logger.fine(JDBCPlugin.Util.getString("MMConnection.Rollback_success")); //$NON-NLS-1$
+            	if (this.inLocalTxn) {
+            		this.inLocalTxn = false;
+	            	try {
+	            		ResultsFuture<?> future = this.dqp.rollback();
+	            		future.get();
+	        		} catch (Exception e) {
+	        			throw TeiidSQLException.create(e);
+	        		}
+	                logger.fine(JDBCPlugin.Util.getString("MMConnection.Rollback_success")); //$NON-NLS-1$
+            	}
             } finally {
                 if (startTxn) {
-                    beginLocalTxn();
+                    this.inLocalTxn = false;
                 }
                 else {
                     this.autoCommitFlag = true;
@@ -706,8 +712,8 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         if (autoCommit) {
             directCommit();   
         } else {
-            beginLocalTxn();
-        }        
+        	inLocalTxn = false;
+        }
     }
 
     /**

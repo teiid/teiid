@@ -34,8 +34,8 @@ import org.teiid.net.ConnectionException;
 import org.teiid.net.ServerConnection;
 
 
-final class EmbeddedProfile implements ConnectionProfile {
-    
+public class EmbeddedProfile implements ConnectionProfile {
+	
     /**
      * This method tries to make a connection to the given URL. This class
      * will return a null if this is not the right driver to connect to the given URL.
@@ -46,7 +46,7 @@ final class EmbeddedProfile implements ConnectionProfile {
     public ConnectionImpl connect(String url, Properties info) 
         throws TeiidSQLException {
         try {
-        	ServerConnection sc = (ServerConnection)ReflectionHelper.create("org.teiid.transport.LocalServerConnection", Arrays.asList(info), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
+        	ServerConnection sc = createServerConnection(info);
 			return new ConnectionImpl(sc, info, url);
 		} catch (TeiidRuntimeException e) {
 			throw TeiidSQLException.create(e);
@@ -58,5 +58,10 @@ final class EmbeddedProfile implements ConnectionProfile {
 			throw TeiidSQLException.create(e);
 		}
     }
+
+	protected ServerConnection createServerConnection(Properties info)
+			throws TeiidException {
+		return (ServerConnection)ReflectionHelper.create("org.teiid.transport.LocalServerConnection", Arrays.asList(info, true), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
+	}
     
 }

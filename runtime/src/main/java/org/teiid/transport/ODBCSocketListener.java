@@ -21,25 +21,39 @@
  */
 package org.teiid.transport;
 
+import java.util.Properties;
+
 import javax.net.ssl.SSLEngine;
 
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.DefaultChannelPipeline;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.teiid.common.buffer.StorageManager;
+import org.teiid.core.TeiidException;
+import org.teiid.jdbc.EmbeddedProfile;
 import org.teiid.jdbc.TeiidDriver;
+import org.teiid.net.ServerConnection;
 import org.teiid.net.socket.ObjectChannel;
 import org.teiid.odbc.ODBCServerRemote;
 
 public class ODBCSocketListener extends SocketListener {
 	private ODBCServerRemote.AuthenticationType authType = ODBCServerRemote.AuthenticationType.CLEARTEXT;
 	private int maxLobSize;
-	private TeiidDriver driver = TeiidDriver.getInstance();
+	private TeiidDriver driver;
 	
 	public ODBCSocketListener(SocketConfiguration config, StorageManager storageManager, int portOffset, int maxLobSize) {
 		//the clientserviceregistry isn't actually used by ODBC 
 		super(config, new ClientServiceRegistryImpl(ClientServiceRegistry.Type.ODBC), storageManager, portOffset);
 		this.maxLobSize = maxLobSize;
+		this.driver = new TeiidDriver();
+		this.driver.setEmbeddedProfile(new EmbeddedProfile() {
+			@Override
+			protected ServerConnection createServerConnection(Properties info)
+					throws TeiidException {
+				//When using the non-blocking api, we don't want to use the calling thread
+				return new LocalServerConnection(info, false);
+			}
+		});
 	}
 	
 	public void setDriver(TeiidDriver driver) {

@@ -358,8 +358,13 @@ public class DQPCore implements DQP {
 
 	private void startActivePlan(RequestWorkItem workItem) {
 		workItem.active = true;
-		this.addWork(workItem);
-		this.currentlyActivePlans++;
+		if (workItem.getDqpWorkContext().useCallingThread()) {
+			this.currentlyActivePlans++;
+			workItem.run();
+		} else {
+			this.addWork(workItem);
+			this.currentlyActivePlans++;
+		}
 	}
 	
     void finishProcessing(final RequestWorkItem workItem) {
@@ -791,7 +796,7 @@ public class DQPCore implements DQP {
 		return addWork(processor, 10);
 	}
 
-	<T> ResultsFuture<T> addWork(final Callable<T> processor, int priority) {
+	private <T> ResultsFuture<T> addWork(final Callable<T> processor, int priority) {
 		final ResultsFuture<T> result = new ResultsFuture<T>();
 		final ResultsReceiver<T> receiver = result.getResultsReceiver();
 		Runnable r = new Runnable() {
@@ -806,7 +811,11 @@ public class DQPCore implements DQP {
 			}
 		};
 		FutureWork<T> work = new FutureWork<T>(r, null, priority);
-		this.addWork(work);
+		if (DQPWorkContext.getWorkContext().useCallingThread()) {
+			work.run();
+		} else {
+			this.addWork(work);
+		}
 		return result;
 	}
 	

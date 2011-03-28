@@ -450,6 +450,7 @@
            there is a way to make connections that by-pass making a socket based JDBC connection.
            You can use slightly modified data source configuration to make a "local" connection, where the JDBC API will lookup a local Teiid runtime in the same VM.</para>
            <warning><para>Since DataSources start before before Teiid VDBs are deployed, leave the min pool size of local connections as the default of 0.  Otherwise errors will occur on the startup of the Teiid DataSource.</para></warning>
+           <note><para>Local connections use their calling thread to perform processing operations rather than using an engine thread while the calling thread is blocked.</para></note>
            <example>
            <title>Local data source</title>
            <programlisting><![CDATA[<datasources>

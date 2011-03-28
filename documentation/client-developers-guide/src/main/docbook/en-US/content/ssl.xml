@@ -13,8 +13,7 @@
     <section id="default_security">
         <title>Default Security</title>
         
-        <para>If you are always using a 
-        <link linkend="local_connection">local connection</link>, then you do need to secure a channels.</para>
+        <para>If you are using a socket connection, then you may need to secure the channel more completely.</para>
     
         <para>By default all sensitive (non-data) messages between client and server 
         are encrypted using a <ulink url="http://en.wikipedia.org/wiki/Diffie-Hellman_key_exchange">Diffy-Hellman</ulink> 
