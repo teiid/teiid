@@ -40,10 +40,14 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
@@ -107,10 +111,66 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
             		pushLeft = leftCost < context.getProcessorBatchSize() || leftCost / rightCost < 8;
             		pushRight = rightCost < context.getProcessorBatchSize() || rightCost / leftCost < 8 || joinNode.getProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE) != null;
             	}
-            }            
+            }
 
-            boolean pushedLeft = insertSort(joinNode.getFirstChild(), (List<SingleElementSymbol>) joinNode.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS), joinNode, metadata, capabilitiesFinder, pushLeft);	
-            insertSort(joinNode.getLastChild(), (List<SingleElementSymbol>) joinNode.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS), joinNode, metadata, capabilitiesFinder, pushRight);
+            List<SingleElementSymbol> leftExpressions = (List<SingleElementSymbol>) joinNode.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS);
+            List<SingleElementSymbol> rightExpressions = (List<SingleElementSymbol>) joinNode.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS);
+
+            //check index information on each side
+            //TODO: don't do null order compensation - in fact we should check what the order actually is, but we don't have that metadata
+            Object key = null;
+            boolean right = true;
+            //we check the right first, since it should be larger
+            if (joinNode.getLastChild().getType() == NodeConstants.Types.ACCESS && NewCalculateCostUtil.isSingleTable(joinNode.getLastChild())) {
+            	key = NewCalculateCostUtil.getKeyUsed(rightExpressions, null, metadata, null);
+            }
+            if (key == null && joinNode.getFirstChild().getType() == NodeConstants.Types.ACCESS && NewCalculateCostUtil.isSingleTable(joinNode.getFirstChild())) {
+            	key = NewCalculateCostUtil.getKeyUsed(leftExpressions, null, metadata, null);
+            	right = false;
+            }
+            if (key != null) {
+            	//redo the join predicates based upon the key alone
+            	List<Object> keyCols = metadata.getElementIDsInKey(key);
+            	int[] reorder = new int[keyCols.size()];
+            	List<Integer> toCriteria = new ArrayList<Integer>(rightExpressions.size() - keyCols.size()); 
+            	List<SingleElementSymbol> keyExpressions = right?rightExpressions:leftExpressions;
+        		for (int j = 0; j < keyExpressions.size(); j++) {
+					SingleElementSymbol ses = keyExpressions.get(j);
+					if (!(ses instanceof ElementSymbol)) {
+						continue;
+					}
+					ElementSymbol es = (ElementSymbol)ses;
+					boolean found = false;
+					for (int i = 0; !found && i < keyCols.size(); i++) {
+						if (es.getMetadataID().equals(keyCols.get(i))) {
+							reorder[i] = j;
+							found = true;
+						}
+					}
+					if (!found) {
+						toCriteria.add(j);
+					}
+				}
+        		List<Criteria> joinCriteria = (List<Criteria>) joinNode.getProperty(Info.JOIN_CRITERIA);
+        		for (int index : toCriteria) {
+					SingleElementSymbol lses = leftExpressions.get(index);
+					SingleElementSymbol rses = rightExpressions.get(index);
+					CompareCriteria cc = new CompareCriteria(lses, CompareCriteria.EQ, rses);
+					if (joinCriteria == null || joinCriteria.isEmpty()) {
+						joinCriteria = new ArrayList<Criteria>();
+						joinCriteria.add(cc);
+						joinNode.setProperty(Info.JOIN_TYPE, JoinType.JOIN_INNER);
+					}
+				}
+        		joinNode.setProperty(Info.JOIN_CRITERIA, joinCriteria);
+        		leftExpressions = RuleAssignOutputElements.filter(reorder, leftExpressions);
+            	rightExpressions = RuleAssignOutputElements.filter(reorder, rightExpressions);
+            	joinNode.setProperty(NodeConstants.Info.LEFT_EXPRESSIONS, leftExpressions);
+            	joinNode.setProperty(NodeConstants.Info.RIGHT_EXPRESSIONS, rightExpressions);
+            }
+            
+			boolean pushedLeft = insertSort(joinNode.getFirstChild(), leftExpressions, joinNode, metadata, capabilitiesFinder, pushLeft);	
+			insertSort(joinNode.getLastChild(), rightExpressions, joinNode, metadata, capabilitiesFinder, pushRight);
         	
         	if (joinNode.getProperty(NodeConstants.Info.JOIN_TYPE) == JoinType.JOIN_INNER && (!pushRight || !pushedLeft)) {
         		joinNode.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.PARTITIONED_SORT);

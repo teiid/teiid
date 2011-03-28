@@ -523,11 +523,11 @@ public class TempTableDataManager implements ProcessorDataManager {
 			//TODO: could pre-process indexes to remove overlap
 			for (Object index : metadata.getIndexesInGroup(group.getMetadataID())) {
 				List<ElementSymbol> columns = resolveIndex(metadata, allColumns, index);
-				table.addIndex(columns);
+				table.addIndex(columns, false);
 			}
 			for (Object key : metadata.getUniqueKeysInGroup(group.getMetadataID())) {
 				List<ElementSymbol> columns = resolveIndex(metadata, allColumns, key);
-				table.addIndex(columns);
+				table.addIndex(columns, true);
 			}
 			table.setUpdatable(updatable);
 		} catch (TeiidComponentException e) {

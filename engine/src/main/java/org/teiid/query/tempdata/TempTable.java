@@ -281,6 +281,7 @@ class TempTable {
 	
 	private List<Integer> notNull = new LinkedList<Integer>();
 	private Map<Integer, AtomicInteger> sequences;
+	private int uniqueColIndex;
 
 	TempTable(TempMetadataID tid, BufferManager bm, List<ElementSymbol> columns, int primaryKeyLength, String sessionID) {
 		this.tid = tid;
@@ -294,6 +295,7 @@ class TempTable {
     		rowId = new AtomicInteger();
         	tree = bm.createSTree(columns, sessionID, 1);
         } else {
+        	this.uniqueColIndex = primaryKeyLength;
         	tree = bm.createSTree(columns, sessionID, primaryKeyLength);
         }
 		this.columnMap = RelationalNode.createLookupMap(columns);
@@ -321,7 +323,7 @@ class TempTable {
 		this.leafBatchSize = bm.getSchemaSize(columns.subList(0, primaryKeyLength));
 	}
 	
-	void addIndex(List<ElementSymbol> indexColumns) throws TeiidComponentException, TeiidProcessingException {
+	void addIndex(List<ElementSymbol> indexColumns, boolean unique) throws TeiidComponentException, TeiidProcessingException {
 		List<ElementSymbol> keyColumns = columns.subList(0, tree.getKeyLength());
 		if (keyColumns.equals(indexColumns) || (indexTables != null && indexTables.containsKey(indexColumns))) {
 			return;
@@ -335,6 +337,9 @@ class TempTable {
 		TempTable indexTable = new TempTable(new TempMetadataID("idx", Collections.EMPTY_LIST), this.bm, allColumns, allColumns.size(), this.sessionID); //$NON-NLS-1$
 		indexTable.setPreferMemory(this.tree.isPreferMemory());
 		indexTable.lock = this.lock;
+		if (unique) {
+			indexTable.uniqueColIndex = indexColumns.size();
+		}
 		if (indexTables == null) {
 			indexTables = new LinkedHashMap<List<ElementSymbol>, TempTable>();
 			indexTables.put(indexColumns, indexTable);
@@ -447,19 +452,24 @@ class TempTable {
 	 * TODO: this should also factor in the block size
 	 */
 	private int estimateCost(OrderBy orderBy, IndexInfo ii, int rowCost) {
+		int initialCost = rowCost;
 		if (ii.valueSet.size() != 0) {
 			int length = ii.valueSet.get(0).size();
 			rowCost = ii.valueSet.size() * (ii.table.getPkLength() - length + 1);
+			if (ii.table.uniqueColIndex != length) {
+				rowCost *= 3;
+			}
 		} else if (ii.upper != null) {
 			rowCost /= 3;
 		} else if (ii.lower != null) {
 			rowCost /= 3;
 		}
-		int cost = Math.max(1, rowCost);
+		int additionalCost = Math.max(0, initialCost - rowCost);
+		int cost = Math.min(initialCost, Math.max(1, rowCost));
 		if (cost > 1 && (!ii.covering || (orderBy != null && ii.ordering == null))) {
 			cost *= (32 - Integer.numberOfLeadingZeros(cost - 1));
 		}
-		return cost;
+		return cost + additionalCost;
 	}
 
 	private TupleBrowser createTupleBrower(Criteria condition, boolean direction) throws TeiidComponentException {

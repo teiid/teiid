@@ -1009,9 +1009,13 @@ public class NewCalculateCostUtil {
     
     static boolean usesKey(PlanNode planNode, Collection<? extends SingleElementSymbol> allElements, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
     	//TODO: key preserved joins should be marked
-    	return NodeEditor.findAllNodes(planNode, NodeConstants.Types.SOURCE, NodeConstants.Types.JOIN | NodeConstants.Types.SET_OP).size() == 1
+    	return isSingleTable(planNode)
     	&& usesKey(allElements, metadata);
     }
+
+	static boolean isSingleTable(PlanNode planNode) {
+		return NodeEditor.findAllNodes(planNode, NodeConstants.Types.SOURCE, NodeConstants.Types.JOIN | NodeConstants.Types.SET_OP).size() == 1;
+	}
     
     public static boolean usesKey(Criteria crit, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
         HashSet<ElementSymbol> elements = new HashSet<ElementSymbol>();
@@ -1028,12 +1032,17 @@ public class NewCalculateCostUtil {
         throws QueryMetadataException, TeiidComponentException {
     	return usesKey(allElements, null, metadata, true);
     }
-    
+
     public static boolean usesKey(Collection<? extends SingleElementSymbol> allElements, Set<GroupSymbol> groups, QueryMetadataInterface metadata, boolean unique)
+    throws QueryMetadataException, TeiidComponentException {
+		return getKeyUsed(allElements, groups, metadata, unique) != null;
+    }
+    
+    public static Object getKeyUsed(Collection<? extends SingleElementSymbol> allElements, Set<GroupSymbol> groups, QueryMetadataInterface metadata, Boolean unique)
     throws QueryMetadataException, TeiidComponentException {
         
         if(allElements == null || allElements.size() == 0) { 
-            return false;
+            return null;
         }    
      
         // Sort elements into groups
@@ -1041,7 +1050,7 @@ public class NewCalculateCostUtil {
         for (SingleElementSymbol ses : allElements) {
         	Expression ex = SymbolMap.getExpression(ses); 
         	if (!(ex instanceof ElementSymbol)) {
-        		continue;
+        		continue; //TODO: function based indexes are possible, but we don't have the metadata
         	}
         	ElementSymbol element = (ElementSymbol)ex;
             GroupSymbol group = element.getGroupSymbol();
@@ -1063,26 +1072,31 @@ public class NewCalculateCostUtil {
             
             // Look up keys
             Collection keys = null;
-            if (unique) {
+            if ((unique != null && unique) || unique == null) {
             	keys = metadata.getUniqueKeysInGroup(group.getMetadataID());
-            } else {
-            	keys = metadata.getIndexesInGroup(group.getMetadataID());
+            } 
+            if ((unique != null && !unique) || unique == null) {
+            	if (keys != null) {
+            		keys = new ArrayList<Object>(keys);
+            	} else {
+            		keys = new ArrayList<Object>(2);
+            	}
+            	keys.addAll(metadata.getIndexesInGroup(group.getMetadataID()));
             }
             
             if(keys != null && keys.size() > 0) { 
                 // For each key, get key elements
-                Iterator keyIter = keys.iterator();
-                while(keyIter.hasNext()) { 
-                    List keyElements = metadata.getElementIDsInKey(keyIter.next());
+            	for (Object key : keys) {
+                    List keyElements = metadata.getElementIDsInKey(key);
                     if(elements.containsAll(keyElements)) {
                         // Used all elements of the key
-                        return true;
+                        return key;
                     }    
                 }
             }                                    
         }
         
-        return false; 
+        return null; 
     }    
     
     private static float safeLog(float x) {

@@ -38,6 +38,8 @@ import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.optimizer.TestOptimizer;
+import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.unittest.FakeMetadataFactory;
@@ -50,8 +52,10 @@ public class TestTempTables {
 	private TempTableDataManager dataManager;
 	private TempTableStore tempStore;
 	
-	private void execute(String sql, List[] expectedResults) throws Exception {
-		execute(TestProcessor.helpGetPlan(sql, metadata), expectedResults);
+	private ProcessorPlan execute(String sql, List[] expectedResults) throws Exception {
+		ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata);
+		execute(plan, expectedResults);
+		return plan;
 	}
 	
 	private void execute(ProcessorPlan processorPlan, List[] expectedResults) throws Exception {
@@ -294,6 +298,15 @@ public class TestTempTables {
 	@Test public void testSessionResolving() throws Exception {
 		execute("create local temporary table temp_table (column1 integer)", new List[] {Arrays.asList(0)});
 		execute("exec pm1.vsp60()", new List[] {Arrays.asList("First"), Arrays.asList("Second"), Arrays.asList("Third")});
+	}
+	
+	/**
+	 * Note that the order by reflects the key order, not the order in which the criteria was entered
+	 */
+	@Test public void testCompositeKeyJoinUsesKeyOrder() throws Exception {
+		execute("create local temporary table x (e1 string, e2 integer, primary key (e1, e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		execute("create local temporary table x1 (e1 string, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		TestOptimizer.helpPlan("select * from x, x1 where x.e2 = x1.e2 and x.e1 = x1.e1", this.metadata, new String[] {"SELECT x1.e2, x1.e1 FROM x1 ORDER BY x1.e1, x1.e2", "SELECT x.e2, x.e1 FROM x ORDER BY x.e1, x.e2"}, ComparisonMode.EXACT_COMMAND_STRING);
 	}
 	
 	private void sampleTable() throws Exception {

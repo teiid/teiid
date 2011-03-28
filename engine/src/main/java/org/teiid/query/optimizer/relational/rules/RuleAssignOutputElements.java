@@ -351,10 +351,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
             PlanNode projectNode = allProjects.get(i);
             List<SingleElementSymbol> projectCols = (List<SingleElementSymbol>) projectNode.getProperty(NodeConstants.Info.PROJECT_COLS);
 
-            newCols = new ArrayList<SingleElementSymbol>();
-            for(int j=0; j<filteredIndex.length; j++) {
-                newCols.add(projectCols.get(filteredIndex[j]));
-            }
+            newCols = filter(filteredIndex, projectCols);
             
             projectNode.setProperty(NodeConstants.Info.PROJECT_COLS, newCols);
             if (updateGroups) {
@@ -403,6 +400,15 @@ public final class RuleAssignOutputElements implements OptimizerRule {
         }
 
 		// Create output columns for virtual group project
+		return newCols;
+	}
+
+	static List<SingleElementSymbol> filter(int[] filteredIndex,
+			List<SingleElementSymbol> projectCols) {
+		List<SingleElementSymbol> newCols = new ArrayList<SingleElementSymbol>();
+		for(int j=0; j<filteredIndex.length; j++) {
+		    newCols.add(projectCols.get(filteredIndex[j]));
+		}
 		return newCols;
 	}
 
