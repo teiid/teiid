@@ -55,11 +55,11 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	
 	private static Pattern pkPattern = Pattern.compile("select ta.attname, ia.attnum, ic.relname, n.nspname, tc.relname " +//$NON-NLS-1$
 			"from pg_catalog.pg_attribute ta, pg_catalog.pg_attribute ia, pg_catalog.pg_class tc, pg_catalog.pg_index i, " +//$NON-NLS-1$
-			"pg_catalog.pg_namespace n, pg_catalog.pg_class ic where tc.relname = E?((?:'[^']*')+) AND n.nspname = E?((?:'[^']*')+).*" );//$NON-NLS-1$
+			"pg_catalog.pg_namespace n, pg_catalog.pg_class ic where tc.relname = (E?(?:'[^']*')+) AND n.nspname = (E?(?:'[^']*')+).*" );//$NON-NLS-1$
 	
 	private static Pattern pkKeyPattern = Pattern.compile("select ta.attname, ia.attnum, ic.relname, n.nspname, NULL from " + //$NON-NLS-1$
 			"pg_catalog.pg_attribute ta, pg_catalog.pg_attribute ia, pg_catalog.pg_class ic, pg_catalog.pg_index i, " + //$NON-NLS-1$
-			"pg_catalog.pg_namespace n where ic.relname = E?((?:'[^']*')+) AND n.nspname = E?((?:'[^']*')+) .*"); //$NON-NLS-1$
+			"pg_catalog.pg_namespace n where ic.relname = (E?(?:'[^']*')+) AND n.nspname = (E?(?:'[^']*')+) .*"); //$NON-NLS-1$
 	
 	private Pattern fkPattern = Pattern.compile("select\\s+((?:'[^']*')+)::name as PKTABLE_CAT," + //$NON-NLS-1$
 			"\\s+n2.nspname as PKTABLE_SCHEM," +  //$NON-NLS-1$
@@ -104,9 +104,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			"\\s+pg_catalog.pg_namespace n" +  //$NON-NLS-1$
 			"\\s+where contype = 'f' " +  //$NON-NLS-1$
 			"\\s+and  conrelid = c.oid" +  //$NON-NLS-1$
-			"\\s+and  relname = E?((?:'[^']*')+)" +  //$NON-NLS-1$
+			"\\s+and  relname = (E?(?:'[^']*')+)" +  //$NON-NLS-1$
 			"\\s+and  n.oid = c.relnamespace" +  //$NON-NLS-1$
-			"\\s+and  n.nspname = E?((?:'[^']*')+)" +  //$NON-NLS-1$
+			"\\s+and  n.nspname = (E?(?:'[^']*')+)" +  //$NON-NLS-1$
 			"\\s+\\) ref" +  //$NON-NLS-1$
 			"\\s+inner join pg_catalog.pg_class c1" +  //$NON-NLS-1$
 			"\\s+on c1.oid = ref.conrelid\\)" +  //$NON-NLS-1$
@@ -131,12 +131,12 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			"nspname, p.oid, atttypid, attname, proargnames, proargmodes, proallargtypes from ((pg_catalog.pg_namespace n inner join " + //$NON-NLS-1$
 			"pg_catalog.pg_proc p on p.pronamespace = n.oid) inner join pg_type t on t.oid = p.prorettype) left outer join " + //$NON-NLS-1$
 			"pg_attribute a on a.attrelid = t.typrelid  and attnum > 0 and not attisdropped " + //$NON-NLS-1$
-			"where has_function_privilege(p.oid, 'EXECUTE') and nspname like E?((?:'[^']*')+) " + //$NON-NLS-1$
-			"and proname like E?((?:'[^']*')+) " + //$NON-NLS-1$
+			"where has_function_privilege(p.oid, 'EXECUTE') and nspname like (E?(?:'[^']*')+) " + //$NON-NLS-1$
+			"and proname like (E?(?:'[^']*')+) " + //$NON-NLS-1$
 			"order by nspname, proname, p.oid, attnum"); //$NON-NLS-1$
 	
 	private static Pattern preparedAutoIncrement = Pattern.compile("select 1 \\s*from pg_catalog.pg_attrdef \\s*where adrelid = \\$1 AND adnum = \\$2 " + //$NON-NLS-1$
-			"\\s*and pg_catalog.pg_get_expr\\(adbin, adrelid\\) \\s*like .*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+			"\\s*and pg_catalog.pg_get_expr\\(adbin, adrelid\\) \\s*like '%nextval\\(%'", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	
 	private static Pattern deallocatePattern = Pattern.compile("DEALLOCATE \"(\\w+\\d+_*)\""); //$NON-NLS-1$
 	private static Pattern releasePattern = Pattern.compile("RELEASE (\\w+\\d+_*)"); //$NON-NLS-1$
@@ -317,99 +317,101 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	}
 	
 	private String fixSQL(String sql) {
+		String modified = modifySQL(sql);
+		if (modified != null && !modified.equals(sql)) {
+			LogManager.logDetail(LogConstants.CTX_ODBC, "Modified Query:", modified); //$NON-NLS-1$
+		}			
+		return modified;
+	}
+	
+	private String modifySQL(String sql) {
 		String modified = sql;
 		// select current_schema()
 		// set client_encoding to 'WIN1252'
-		if (sql != null) {
-			// selects are coming with "select\t" so using a space after "select" does not always work
-			if (StringUtil.startsWithIgnoreCase(sql, "select")) { //$NON-NLS-1$
-				modified = sql.replace('\n', ' ');
-											
-				Matcher m = null;
-				if ((m = pkPattern.matcher(modified)).matches()) {
-					modified = new StringBuffer("SELECT k.Name AS attname, convert(Position, short) AS attnum, TableName AS relname, SchemaName AS nspname, TableName AS relname") //$NON-NLS-1$
-				          .append(" FROM SYS.KeyColumns k") //$NON-NLS-1$ 
-				          .append(" WHERE ") //$NON-NLS-1$
-				          .append(" UCASE(SchemaName)").append(" LIKE UCASE(").append(m.group(2)).append(")")//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-				          .append(" AND UCASE(TableName)") .append(" LIKE UCASE(").append(m.group(1)).append(")")//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-				          .append(" AND KeyType LIKE 'Primary'") //$NON-NLS-1$
-				          .append(" ORDER BY attnum").toString(); //$NON-NLS-1$					
-				}
-				else if ((m = pkKeyPattern.matcher(modified)).matches()) {
-					String tableName = m.group(1);
-					if (tableName.endsWith("_pkey'")) { //$NON-NLS-1$
-						tableName = tableName.substring(0, tableName.length()-6) + '\'';
-						modified = "select ia.attname, ia.attnum, ic.relname, n.nspname, NULL "+ //$NON-NLS-1$	
-							"from pg_catalog.pg_attribute ia, pg_catalog.pg_class ic, pg_catalog.pg_namespace n, Sys.KeyColumns kc "+ //$NON-NLS-1$	
-							"where ic.relname = "+tableName+" AND n.nspname = "+m.group(2)+" AND "+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-							"n.oid = ic.relnamespace AND ia.attrelid = ic.oid AND kc.SchemaName = n.nspname " +//$NON-NLS-1$	
-							"AND kc.TableName = ic.relname AND kc.KeyType = 'Primary' AND kc.Name = ia.attname order by ia.attnum";//$NON-NLS-1$	
-					}
-					else {
-						modified = "SELECT NULL, NULL, NULL, NULL, NULL FROM (SELECT 1) as X WHERE 0=1"; //$NON-NLS-1$
-					}
-					
-				}
-				else if ((m = fkPattern.matcher(modified)).matches()){
-					modified = "SELECT PKTABLE_CAT, PKTABLE_SCHEM, PKTABLE_NAME, PKCOLUMN_NAME, FKTABLE_CAT, FKTABLE_SCHEM, "+//$NON-NLS-1$
-								"FKTABLE_NAME, FKCOLUMN_NAME, KEY_SEQ, UPDATE_RULE, DELETE_RULE, FK_NAME, PK_NAME, DEFERRABILITY "+//$NON-NLS-1$
-								"FROM SYS.ReferenceKeyColumns WHERE PKTABLE_NAME LIKE "+m.group(14)+" and PKTABLE_SCHEM LIKE "+m.group(15);//$NON-NLS-1$ //$NON-NLS-2$ 
-				}
-				else if (modified.equalsIgnoreCase("select version()")) { //$NON-NLS-1$
-					modified = "SELECT 'Teiid "+ApplicationInfo.getInstance().getReleaseNumber()+"'"; //$NON-NLS-1$ //$NON-NLS-2$
-				}
-				else if (modified.startsWith("SELECT name FROM master..sysdatabases")) { //$NON-NLS-1$
-					modified = "SELECT 'Teiid'"; //$NON-NLS-1$
-				}
-				else if (modified.equalsIgnoreCase("select db_name() dbname")) { //$NON-NLS-1$
-					modified = "SELECT current_database()"; //$NON-NLS-1$
-				}
-				else if (preparedAutoIncrement.matcher(modified).matches()) {
-					modified = "SELECT 1 from matpg_relatt where attrelid = ? and attnum = ? and autoinc = true"; //$NON-NLS-1$
-				}
-				else {
-					// since teiid can work with multiple schemas at a given time
-					// this call resolution is ambiguous
-					if (sql.equalsIgnoreCase("select current_schema()")) { //$NON-NLS-1$
-						modified = "SELECT ''";  //$NON-NLS-1$
-					}							
-				}
-				
+		if (sql == null) {
+			return null;
+		}
+		// selects are coming with "select\t" so using a space after "select" does not always work
+		if (StringUtil.startsWithIgnoreCase(sql, "select")) { //$NON-NLS-1$
+			modified = sql.replace('\n', ' ');
+										
+			Matcher m = null;
+			if ((m = pkPattern.matcher(modified)).matches()) {
+				return new StringBuffer("SELECT k.Name AS attname, convert(Position, short) AS attnum, TableName AS relname, SchemaName AS nspname, TableName AS relname") //$NON-NLS-1$
+			          .append(" FROM SYS.KeyColumns k") //$NON-NLS-1$ 
+			          .append(" WHERE ") //$NON-NLS-1$
+			          .append(" UCASE(SchemaName)").append(" LIKE UCASE(").append(m.group(2)).append(")")//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			          .append(" AND UCASE(TableName)") .append(" LIKE UCASE(").append(m.group(1)).append(")")//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			          .append(" AND KeyType LIKE 'Primary'") //$NON-NLS-1$
+			          .append(" ORDER BY attnum").toString(); //$NON-NLS-1$					
 			}
-			else if (sql.equalsIgnoreCase("show max_identifier_length")){ //$NON-NLS-1$
-				modified = "select 63"; //$NON-NLS-1$
+			else if ((m = pkKeyPattern.matcher(modified)).matches()) {
+				String tableName = m.group(1);
+				if (tableName.endsWith("_pkey'")) { //$NON-NLS-1$
+					tableName = tableName.substring(0, tableName.length()-6) + '\'';
+					return "select ia.attname, ia.attnum, ic.relname, n.nspname, NULL "+ //$NON-NLS-1$	
+						"from pg_catalog.pg_attribute ia, pg_catalog.pg_class ic, pg_catalog.pg_namespace n, Sys.KeyColumns kc "+ //$NON-NLS-1$	
+						"where ic.relname = "+tableName+" AND n.nspname = "+m.group(2)+" AND "+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						"n.oid = ic.relnamespace AND ia.attrelid = ic.oid AND kc.SchemaName = n.nspname " +//$NON-NLS-1$	
+						"AND kc.TableName = ic.relname AND kc.KeyType = 'Primary' AND kc.Name = ia.attname order by ia.attnum";//$NON-NLS-1$	
+				}
+				return "SELECT NULL, NULL, NULL, NULL, NULL FROM (SELECT 1) as X WHERE 0=1"; //$NON-NLS-1$
+			}
+			else if ((m = fkPattern.matcher(modified)).matches()){
+				return "SELECT PKTABLE_CAT, PKTABLE_SCHEM, PKTABLE_NAME, PKCOLUMN_NAME, FKTABLE_CAT, FKTABLE_SCHEM, "+//$NON-NLS-1$
+							"FKTABLE_NAME, FKCOLUMN_NAME, KEY_SEQ, UPDATE_RULE, DELETE_RULE, FK_NAME, PK_NAME, DEFERRABILITY "+//$NON-NLS-1$
+							"FROM SYS.ReferenceKeyColumns WHERE PKTABLE_NAME LIKE "+m.group(14)+" and PKTABLE_SCHEM LIKE "+m.group(15);//$NON-NLS-1$ //$NON-NLS-2$ 
+			}
+			else if (modified.equalsIgnoreCase("select version()")) { //$NON-NLS-1$
+				return "SELECT 'Teiid "+ApplicationInfo.getInstance().getReleaseNumber()+"'"; //$NON-NLS-1$ //$NON-NLS-2$
+			}
+			else if (modified.startsWith("SELECT name FROM master..sysdatabases")) { //$NON-NLS-1$
+				return "SELECT 'Teiid'"; //$NON-NLS-1$
+			}
+			else if (modified.equalsIgnoreCase("select db_name() dbname")) { //$NON-NLS-1$
+				return "SELECT current_database()"; //$NON-NLS-1$
+			}
+			else if (preparedAutoIncrement.matcher(modified).matches()) {
+				return "SELECT 1 from matpg_relatt where attrelid = ? and attnum = ? and autoinc = true"; //$NON-NLS-1$
 			}
 			else {
-				Matcher m = setPattern.matcher(sql);
-				if (m.matches()) {
-					modified = "SET " + m.group(2) + " " + m.group(4); //$NON-NLS-1$ //$NON-NLS-2$
-				}
-				else if (modified.equalsIgnoreCase("BEGIN")) { //$NON-NLS-1$
-					modified = "START TRANSACTION"; //$NON-NLS-1$
-				}
-				else if ((m = rollbackPattern.matcher(modified)).matches()) {
-					modified = "ROLLBACK"; //$NON-NLS-1$
-				}	
-				else if ((m = savepointPattern.matcher(modified)).matches()) {
-					modified = "SELECT 'SAVEPOINT'"; //$NON-NLS-1$
-				}
-				else if ((m = releasePattern.matcher(modified)).matches()) {
-					modified = "SELECT 'RELEASE'"; //$NON-NLS-1$
-				}		
-				else if ((m = deallocatePattern.matcher(modified)).matches()) {
-					closePreparedStatement(m.group(1));
-					modified = "SELECT 'DEALLOCATE'"; //$NON-NLS-1$
-				}					
+				// since teiid can work with multiple schemas at a given time
+				// this call resolution is ambiguous
+				if (sql.equalsIgnoreCase("select current_schema()")) { //$NON-NLS-1$
+					return "SELECT ''";  //$NON-NLS-1$
+				}							
 			}
-			//these are somewhat dangerous
-			modified = modified.replaceAll("E('[^']*')+", "unescape($1)"); //$NON-NLS-1$ //$NON-NLS-2$
-			modified =  modified.replaceAll("::[A-Za-z0-9]*", " "); //$NON-NLS-1$ //$NON-NLS-2$
-			modified =  modified.replaceAll("'pg_toast'", "'SYS'"); //$NON-NLS-1$ //$NON-NLS-2$
-
-			if (modified != null && !modified.equalsIgnoreCase(sql)) {
-				LogManager.logDetail(LogConstants.CTX_ODBC, "Modified Query:"+modified); //$NON-NLS-1$
-			}			
+			
 		}
+		else if (sql.equalsIgnoreCase("show max_identifier_length")){ //$NON-NLS-1$
+			return "select 63"; //$NON-NLS-1$
+		}
+		else {
+			Matcher m = setPattern.matcher(sql);
+			if (m.matches()) {
+				return "SET " + m.group(2) + " " + m.group(4); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+			else if (modified.equalsIgnoreCase("BEGIN")) { //$NON-NLS-1$
+				return "START TRANSACTION"; //$NON-NLS-1$
+			}
+			else if ((m = rollbackPattern.matcher(modified)).matches()) {
+				return "ROLLBACK"; //$NON-NLS-1$
+			}	
+			else if ((m = savepointPattern.matcher(modified)).matches()) {
+				return "SELECT 'SAVEPOINT'"; //$NON-NLS-1$
+			}
+			else if ((m = releasePattern.matcher(modified)).matches()) {
+				return "SELECT 'RELEASE'"; //$NON-NLS-1$
+			}		
+			else if ((m = deallocatePattern.matcher(modified)).matches()) {
+				closePreparedStatement(m.group(1));
+				return "SELECT 'DEALLOCATE'"; //$NON-NLS-1$
+			}					
+		}
+		modified = sql;
+		//these are somewhat dangerous
+		modified =  modified.replaceAll("::[A-Za-z0-9]*", " "); //$NON-NLS-1$ //$NON-NLS-2$
+		modified =  modified.replaceAll("'pg_toast'", "'SYS'"); //$NON-NLS-1$ //$NON-NLS-2$
 		return modified;
 	}
 

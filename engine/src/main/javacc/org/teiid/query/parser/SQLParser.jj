@@ -375,7 +375,7 @@ TOKEN : /* User variables and literals */
 |	< INTEGERVAL: (<MINUS>)?(<DIGIT>)+ >
 |   < FLOATVAL: (<MINUS>)? (<DIGIT>)* <PERIOD> (<DIGIT>)+ 
 				( ["e", "E"] (["+","-"])? (<DIGIT>)+ )? >
-|   < STRINGVAL: (("N")? "'" ( ("''") | ~["'"] )* "'") >
+|   < STRINGVAL: (("N"|"E")? "'" ( ("''") | ~["'"] )* "'") >
 |	< #LETTER: (["a"-"z","A"-"Z"] | ["\u0153"-"\ufffd"]) >
 |	< #DIGIT: ["0"-"9"] >
 

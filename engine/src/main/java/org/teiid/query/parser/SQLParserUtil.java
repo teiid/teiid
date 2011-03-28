@@ -32,6 +32,7 @@ import org.teiid.core.util.Assertion;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.FromClause;
 import org.teiid.query.sql.lang.JoinType;
@@ -54,12 +55,20 @@ public class SQLParserUtil {
 	
 	String normalizeStringLiteral(String s) {
 		int start = 1;
+		boolean unescape = false;
   		if (s.charAt(0) == 'N') {
   			start++;
+  		} else if (s.charAt(0) == 'E') {
+  			start++;
+  			unescape = true;
   		}
   		char tickChar = s.charAt(start - 1);
   		s = s.substring(start, s.length() - 1);
-  		return removeEscapeChars(s, String.valueOf(tickChar));
+  		String result = removeEscapeChars(s, String.valueOf(tickChar));
+  		if (unescape) {
+  			result = FunctionMethods.unescape(result);
+  		}
+  		return result;
 	}
 	
 	String normalizeId(String s) {
