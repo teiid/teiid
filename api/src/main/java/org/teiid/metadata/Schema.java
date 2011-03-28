@@ -22,6 +22,7 @@
 
 package org.teiid.metadata;
 
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -113,5 +114,16 @@ public class Schema extends AbstractMetadataRecord {
     public void setPhysical(boolean physical) {
 		this.physical = physical;
 	}
+    
+    /**
+     * 7.1 schemas did not have functions
+     */
+    private void readObject(java.io.ObjectInputStream in)
+    throws IOException, ClassNotFoundException {
+    	in.defaultReadObject();
+    	if (this.functions == null) {
+    		this.functions = new LinkedHashMap<String, FunctionMethod>();
+    	}
+    }
     
 }

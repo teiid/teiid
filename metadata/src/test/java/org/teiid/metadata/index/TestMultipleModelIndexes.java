@@ -24,10 +24,13 @@ package org.teiid.metadata.index;
 
 import static org.junit.Assert.*;
 
+import java.io.FileInputStream;
+import java.io.ObjectInputStream;
 import java.util.Collection;
 
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.query.metadata.TransformationMetadata;
 
@@ -52,6 +55,12 @@ public class TestMultipleModelIndexes {
 		//ensure that datatypes are set
 		Table t = tm.getGroupID("Northwind.Northwind.dbo.Employees");
 		assertFalse(t.isVirtual());
+	}
+	
+	@Test public void test71Schema() throws Exception {
+		ObjectInputStream ois = new ObjectInputStream(new FileInputStream(UnitTestUtil.getTestDataFile("schema.ser")));
+		Schema schema = (Schema) ois.readObject();
+		assertNotNull(schema.getFunctions());
 	}
 	
 }
