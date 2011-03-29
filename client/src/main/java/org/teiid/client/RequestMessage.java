@@ -89,6 +89,7 @@ public class RequestMessage implements Externalizable {
     private long executionId;
     private int transactionIsolation;
     private boolean noExec;
+    private transient boolean sync;
     
     public RequestMessage() {
     }
@@ -96,6 +97,14 @@ public class RequestMessage implements Externalizable {
 	public RequestMessage(String command) {
 		this();
 		setCommands(command);
+	}
+	
+	public boolean isSync() {
+		return sync;
+	}
+	
+	public void setSync(boolean sync) {
+		this.sync = sync;
 	}
 
     public int getFetchSize() {

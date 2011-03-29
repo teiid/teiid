@@ -161,7 +161,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     private long processingTimestamp = System.currentTimeMillis();
     
     public RequestWorkItem(DQPCore dqpCore, RequestMessage requestMsg, Request request, ResultsReceiver<ResultsMessage> receiver, RequestID requestID, DQPWorkContext workContext) {
-    	super(workContext.useCallingThread());
+    	super(workContext.useCallingThread() || requestMsg.isSync());
         this.requestMsg = requestMsg;
         this.requestID = requestID;
         this.processorTimeslice = dqpCore.getProcessorTimeSlice();

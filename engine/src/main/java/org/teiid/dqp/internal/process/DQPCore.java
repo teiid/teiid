@@ -327,7 +327,7 @@ public class DQPCore implements DQP {
     	logMMCommand(workItem, Event.NEW, null); 
         addRequest(requestID, workItem, state);
         synchronized (waitingPlans) {
-			if (currentlyActivePlans < maxActivePlans) {
+			if (currentlyActivePlans < maxActivePlans || (!DQPWorkContext.getWorkContext().useCallingThread() && requestMsg.isSync())) {
 				startActivePlan(workItem);
 			} else {
 				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
@@ -358,7 +358,7 @@ public class DQPCore implements DQP {
 
 	private void startActivePlan(RequestWorkItem workItem) {
 		workItem.active = true;
-		if (workItem.getDqpWorkContext().useCallingThread()) {
+		if (workItem.getDqpWorkContext().useCallingThread() || workItem.requestMsg.isSync()) {
 			this.currentlyActivePlans++;
 			workItem.run();
 		} else {

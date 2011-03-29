@@ -525,6 +525,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         }
         
         final RequestMessage reqMessage = createRequestMessage(commands, isBatchedCommand, resultsMode);
+        reqMessage.setSync(synch);
     	ResultsFuture<Boolean> result = execute(reqMessage);
     	if (synch) {
     		try {
