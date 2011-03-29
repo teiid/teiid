@@ -22,16 +22,18 @@
 
 package org.teiid.query.processor;
 
+import static org.junit.Assert.*;
+
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Test;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
-import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.JoinNode;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalPlan;
@@ -39,12 +41,10 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.FakeMetadataObject;
+import org.teiid.query.util.CommandContext;
 
-import junit.framework.TestCase;
-
-
-
-public class TestDependentJoins extends TestCase {
+@SuppressWarnings({"unchecked"})
+public class TestDependentJoins {
     
     /** 
      * @param sql
@@ -66,7 +66,7 @@ public class TestDependentJoins extends TestCase {
     }
     
     /** SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e1=pm2.g1.e1 AND pm1.g1.e2=pm2.g1.e2 */
-    public void testMultiCritDepJoin1() { 
+    @Test public void testMultiCritDepJoin1() { 
        // Create query 
        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e1=pm2.g1.e1 AND pm1.g1.e2=pm2.g1.e2 order by pm1.g1.e1 option makedep pm1.g1"; //$NON-NLS-1$
        
@@ -93,7 +93,7 @@ public class TestDependentJoins extends TestCase {
    }
 
     /** SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm2.g1.e1=pm1.g1.e1 AND pm1.g1.e2=pm2.g1.e2 */
-    public void testMultiCritDepJoin2() { 
+    @Test public void testMultiCritDepJoin2() { 
        // Create query 
        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm2.g1.e1=pm1.g1.e1 AND pm1.g1.e2=pm2.g1.e2 order by pm1.g1.e1 option makedep pm1.g1"; //$NON-NLS-1$
        
@@ -119,7 +119,7 @@ public class TestDependentJoins extends TestCase {
    }
 
     /** SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm2.g1.e1=pm1.g1.e1 AND pm1.g1.e2=pm2.g1.e2 */
-    public void testMultiCritDepJoin3() { 
+    @Test public void testMultiCritDepJoin3() { 
        // Create query 
        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm2.g1.e1=pm1.g1.e1 AND pm1.g1.e2=pm2.g1.e2 order by pm1.g1.e1 option makedep pm1.g1"; //$NON-NLS-1$
        
@@ -146,7 +146,7 @@ public class TestDependentJoins extends TestCase {
    }
 
     /** SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm2.g1.e1=pm1.g1.e1 AND pm1.g1.e2=pm2.g1.e2 */
-    public void testMultiCritDepJoin4() { 
+    @Test public void testMultiCritDepJoin4() { 
        // Create query 
        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm2.g1.e1=pm1.g1.e1 AND pm1.g1.e2=pm2.g1.e2 order by pm1.g1.e1 option makedep pm1.g1"; //$NON-NLS-1$
        
@@ -173,7 +173,7 @@ public class TestDependentJoins extends TestCase {
    }
 
     /** SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm2.g1.e1=pm1.g1.e1 AND concat(pm1.g1.e1, 'a') = concat(pm2.g1.e1, 'a') AND pm1.g1.e2=pm2.g1.e2 */
-    public void testMultiCritDepJoin5() { 
+    @Test public void testMultiCritDepJoin5() { 
        // Create query 
        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE concat(pm1.g1.e1, 'a') = concat(pm2.g1.e1, 'a') AND pm1.g1.e2=pm2.g1.e2 order by pm1.g1.e1 option makedep pm1.g1"; //$NON-NLS-1$
        
@@ -199,7 +199,7 @@ public class TestDependentJoins extends TestCase {
        TestProcessor.helpProcess(plan, dataManager, expected);
    }
 
-    public void testMultiCritDepJoin5a() { 
+    @Test public void testMultiCritDepJoin5a() { 
         // Create query 
         String sql = "SELECT X.e1 FROM pm1.g1 as X, pm2.g1 WHERE concat(X.e1, 'a') = concat(pm2.g1.e1, 'a') AND X.e2=pm2.g1.e2 order by x.e1"; //$NON-NLS-1$
        
@@ -225,7 +225,7 @@ public class TestDependentJoins extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
    }
 
-   public void testMultiCritDepJoin5b() { 
+   @Test public void testMultiCritDepJoin5b() { 
        //Create query 
        String sql = "SELECT X.e1, X.e2 FROM pm1.g1 as X, pm2.g1 WHERE concat(X.e1, convert(X.e4, string)) = concat(pm2.g1.e1, convert(pm2.g1.e4, string)) AND X.e2=pm2.g1.e2 order by x.e1 option makedep x"; //$NON-NLS-1$
        
@@ -251,7 +251,7 @@ public class TestDependentJoins extends TestCase {
    }
 
     /** SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e1 = concat(pm2.g1.e1, '') AND pm1.g1.e2=pm2.g1.e2 */
-    public void testMultiCritDepJoin6() { 
+    @Test public void testMultiCritDepJoin6() { 
        // Create query 
        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e1 = concat(pm2.g1.e1, '') AND pm1.g1.e2=pm2.g1.e2 order by pm1.g1.e1 option makedep pm1.g1"; //$NON-NLS-1$
        
@@ -278,7 +278,7 @@ public class TestDependentJoins extends TestCase {
    }
 
     /** SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE concat(pm1.g1.e1, '') = pm2.g1.e1 AND pm1.g1.e2=pm2.g1.e2 */
-    public void testMultiCritDepJoin7() { 
+    @Test public void testMultiCritDepJoin7() { 
        // Create query 
        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE concat(pm1.g1.e1, '') = pm2.g1.e1 AND pm1.g1.e2=pm2.g1.e2 order by pm1.g1.e1 option makedep pm1.g1"; //$NON-NLS-1$
        
@@ -305,7 +305,7 @@ public class TestDependentJoins extends TestCase {
    }
 
     /** SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e1 = pm2.g1.e1 AND pm1.g1.e2 <> pm2.g1.e2 */
-    public void testMultiCritDepJoin8() { 
+    @Test public void testMultiCritDepJoin8() { 
        // Create query 
        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e1 = pm2.g1.e1 AND pm1.g1.e2 <> pm2.g1.e2 option makedep pm1.g1"; //$NON-NLS-1$
        
@@ -329,7 +329,7 @@ public class TestDependentJoins extends TestCase {
    }
 
     /** SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e2 <> pm2.g1.e2 */
-    public void testMultiCritDepJoin9() { 
+    @Test public void testMultiCritDepJoin9() { 
        // Create query 
        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e2 <> pm2.g1.e2 option makedep pm1.g1"; //$NON-NLS-1$
        
@@ -375,7 +375,7 @@ public class TestDependentJoins extends TestCase {
    }     
 
     /** SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e3=pm2.g1.e3 AND pm1.g1.e2=pm2.g1.e2 AND pm2.g1.e1 = 'a' */
-    public void testMultiCritDepJoin10() { 
+    @Test public void testMultiCritDepJoin10() { 
        // Create query 
        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e3=pm2.g1.e3 AND pm1.g1.e2=pm2.g1.e2 AND pm2.g1.e1 = 'a' option makedep pm1.g1"; //$NON-NLS-1$
        
@@ -399,11 +399,11 @@ public class TestDependentJoins extends TestCase {
        TestProcessor.helpProcess(plan, dataManager, expected);
    }       
 
-    public void testLargeSetInDepJoinWAccessPatternCausingSortNodeInsertCanHandleAlias() {
+    @Test public void testLargeSetInDepJoinWAccessPatternCausingSortNodeInsertCanHandleAlias() {
         helpTestDepAccessCausingSortNodeInsert(true);
     }
     
-    public void testLargeSetInDepJoinWAccessPatternCausingSortNodeInsertCannotHandleAlias() {
+    @Test public void testLargeSetInDepJoinWAccessPatternCausingSortNodeInsertCannotHandleAlias() {
         helpTestDepAccessCausingSortNodeInsert(false);
     }
     
@@ -456,7 +456,7 @@ public class TestDependentJoins extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);          
     }
     
-    public void testCase5130() {
+    @Test public void testCase5130() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
@@ -501,13 +501,13 @@ public class TestDependentJoins extends TestCase {
         assertFalse(dataManager.getCommandHistory().contains("SELECT a.stringkey, a.intkey FROM bqt1.smalla AS a WHERE concat(a.stringkey, 't') IN ('1', '2')")); //$NON-NLS-1$
     }
     
-    public void testCase5130a() throws Exception {
+    @Test public void testCase5130a() throws Exception {
         HardcodedDataManager dataManager = helpTestDependentJoin(false);
         
         assertFalse(dataManager.getCommandHistory().contains("SELECT a.stringkey, a.intkey FROM bqt2.smalla AS a WHERE (concat(a.stringkey, 't') IN ('1t', '2')) AND (a.intkey IN (1))")); //$NON-NLS-1$
     }
     
-    public void testUnlimitedIn() throws Exception {
+    @Test public void testUnlimitedIn() throws Exception {
     	helpTestDependentJoin(true);
     }
 
@@ -596,7 +596,7 @@ public class TestDependentJoins extends TestCase {
     }
 
     /** SELECT pm1.g1.e1 FROM pm1.g1, pm6.g1 WHERE pm1.g1.e1=pm6.g1.e1 OPTION MAKEDEP pm6.g1 */
-    public void testLargeSetInDepAccess() throws Exception {
+    @Test public void testLargeSetInDepAccess() throws Exception {
         // Create query 
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm6.g1 WHERE pm1.g1.e1=pm6.g1.e1 OPTION MAKEDEP pm6.g1"; //$NON-NLS-1$
 
@@ -632,7 +632,7 @@ public class TestDependentJoins extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
 
-    public void testLargeSetInDepAccessMultiJoinCriteria() {
+    @Test public void testLargeSetInDepAccessMultiJoinCriteria() throws Exception {
         //     Create query 
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e1=pm2.g1.e1 AND pm1.g1.e2=pm2.g1.e2 order by e1 OPTION MAKEDEP pm2.g1"; //$NON-NLS-1$
         // Construct data manager with data
@@ -673,13 +673,16 @@ public class TestDependentJoins extends TestCase {
 
         Command command = TestProcessor.helpParse(sql);
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, fakeMetadata, capFinder);
-
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setUserRequestSourceConcurrency(5);
+        FakeTupleSource.resetStats();
         // Run query
-        TestProcessor.helpProcess(plan, dataManager, expected);
+        TestProcessor.helpProcess(plan, cc, dataManager, expected);
 
+        assertEquals(4, FakeTupleSource.maxOpen);
     }
 
-    public void testLargeSetInDepAccessWithAccessPattern() {
+    @Test public void testLargeSetInDepAccessWithAccessPattern() {
         String sql = "SELECT a.e1, b.e1, b.e2 FROM pm4.g1 a INNER JOIN pm1.g1 b ON a.e1=b.e1 AND a.e2 = b.e2"; //$NON-NLS-1$
 
         // Create expected results
@@ -727,7 +730,7 @@ public class TestDependentJoins extends TestCase {
     }
     
     /** SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2 WHERE pm1.g1.e1 = pm1.g2.e1 AND pm1.g1.e2 = -100 OPTION MAKEDEP pm1.g2 */
-    public void testDependentNoRows() { 
+    @Test public void testDependentNoRows() { 
        // Create query 
        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2 WHERE pm1.g1.e1 = pm1.g2.e1 AND pm1.g1.e2 = -100 OPTION MAKEDEP pm1.g2"; //$NON-NLS-1$
         
@@ -747,7 +750,7 @@ public class TestDependentJoins extends TestCase {
     }
 
     /** SELECT pm1.g1.e2, pm2.g1.e2 FROM pm1.g1, pm2.g1 WHERE (pm1.g1.e2+1)=pm2.g1.e2 OPTION MAKEDEP pm1.g2 */
-    public void testExpressionInDepJoin() { 
+    @Test public void testExpressionInDepJoin() { 
        // Create query 
        String sql = "SELECT pm1.g1.e2, pm2.g1.e2 FROM pm1.g1, pm2.g1 WHERE (pm1.g1.e2+1)=pm2.g1.e2 OPTION MAKEDEP pm2.g1"; //$NON-NLS-1$
        

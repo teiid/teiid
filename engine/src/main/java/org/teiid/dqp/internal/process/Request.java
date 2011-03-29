@@ -135,6 +135,7 @@ public class Request {
 	private SessionAwareCache<PreparedPlan> planCache;
 	private boolean resultSetCacheEnabled = true;
 	private boolean allowCreateTemporaryTablesByDefault;
+	private int userRequestConcurrency;
 
     void initialize(RequestMessage requestMsg,
                               BufferManager bufferManager,
@@ -264,7 +265,12 @@ public class Request {
         context.setBufferManager(this.bufferManager);
         context.setPreparedPlanCache(planCache);
         context.setResultSetCacheEnabled(this.resultSetCacheEnabled);
+        context.setUserRequestSourceConcurrency(this.userRequestConcurrency);
     }
+    
+    public void setUserRequestConcurrency(int userRequestConcurrency) {
+		this.userRequestConcurrency = userRequestConcurrency;
+	}
 
     protected void checkReferences(List<Reference> references) throws QueryValidatorException {
     	referenceCheck(references);

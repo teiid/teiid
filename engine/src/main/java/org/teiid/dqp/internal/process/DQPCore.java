@@ -322,6 +322,7 @@ public class DQPCore implements DQP {
 				workContext, this.config.getUseDataRoles(), this.prepPlanCache);
 		request.setResultSetCacheEnabled(this.rsCache != null);
 		request.setAllowCreateTemporaryTablesByDefault(this.config.isAllowCreateTemporaryTablesByDefault());
+		request.setUserRequestConcurrency(this.getUserRequestSourceConcurrency());
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
         RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
     	logMMCommand(workItem, Event.NEW, null); 

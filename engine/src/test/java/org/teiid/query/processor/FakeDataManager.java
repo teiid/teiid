@@ -104,10 +104,6 @@ public class FakeDataManager implements ProcessorDataManager {
 		tuples.put(groupID, new Object[] { elements, data });
 	}
 	
-	public void closeRequest(Object requestID) {
-		// does nothing?
-    } 
-	
 	public TupleSource registerRequest(CommandContext context, Command command, String modelName, String connectorBindingId, int nodeID, int limit)
 		throws TeiidComponentException {
         

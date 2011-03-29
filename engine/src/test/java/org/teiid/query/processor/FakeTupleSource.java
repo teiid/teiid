@@ -25,11 +25,20 @@ package org.teiid.query.processor;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.common.buffer.*;
+import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 
 
 public class FakeTupleSource implements TupleSource {
+	
+	static int maxOpen;
+	static int open;
+	
+	static void resetStats() {
+		maxOpen = 0;
+		open = 0;
+	}
     
     public static class FakeComponentException extends TeiidComponentException {
         
@@ -55,6 +64,8 @@ public class FakeTupleSource implements TupleSource {
 		this.tuples = tuples; 
 		this.expectedSymbols = expectedSymbols;
 		this.columnMap = columnMap;
+		open++;
+		maxOpen = Math.max(open, maxOpen);
 	}
 
 	public List getSchema() { 
@@ -68,9 +79,7 @@ public class FakeTupleSource implements TupleSource {
         return theElements;
 	}
 	
-	public void openSource()
-		throws TeiidComponentException {				
-		
+	public void openSource() {				
 		index = 0;
 	}
 
@@ -105,6 +114,7 @@ public class FakeTupleSource implements TupleSource {
 	}
 
 	public void closeSource() {
+		open--;
 	}
     
     public void setBlockOnce(){

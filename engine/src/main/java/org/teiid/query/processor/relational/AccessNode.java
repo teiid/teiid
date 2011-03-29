@@ -46,14 +46,15 @@ import org.teiid.query.util.CommandContext;
 
 public class AccessNode extends SubqueryAwareRelationalNode {
 
-    // Initialization state
+    private static final int MAX_CONCURRENT = 10; //TODO: this could be settable via a property
+	// Initialization state
     private Command command;
     private String modelName;
     private String connectorBindingId;
     private boolean shouldEvaluate = false;
 
     // Processing state
-	private TupleSource tupleSource;
+	private ArrayList<TupleSource> tupleSources = new ArrayList<TupleSource>();
 	private boolean isUpdate = false;
     private boolean returnedRows = false;
     private Command nextCommand;
@@ -68,7 +69,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 
     public void reset() {
         super.reset();
-        tupleSource = null;
+        this.tupleSources.clear();
 		isUpdate = false;
         returnedRows = false;
         nextCommand = null;
@@ -100,22 +101,25 @@ public class AccessNode extends SubqueryAwareRelationalNode {
         // Copy command and resolve references if necessary
         Command atomicCommand = command;
         boolean needProcessing = true;
-        if(shouldEvaluate) {
-            atomicCommand = nextCommand();
-            needProcessing = prepareNextCommand(atomicCommand);
-            nextCommand = null;
-        } else {
-            needProcessing = RelationalNodeUtil.shouldExecute(atomicCommand, true);
-        }
-        // else command will not be changed, so no reason to all this work.
-        // Removing this if block and always evaluating has a significant cost that will
-        // show up in performance tests for many simple tests that do not require it.
-        
-        isUpdate = RelationalNodeUtil.isUpdate(atomicCommand);
-        
-		if(needProcessing) {
-			registerRequest(atomicCommand);
-		}
+        do {
+	        if(shouldEvaluate) {
+	            atomicCommand = nextCommand();
+	            needProcessing = prepareNextCommand(atomicCommand);
+	            nextCommand = null;
+	        } else {
+	            needProcessing = RelationalNodeUtil.shouldExecute(atomicCommand, true);
+	        }
+	        // else command will not be changed, so no reason to all this work.
+	        // Removing this if block and always evaluating has a significant cost that will
+	        // show up in performance tests for many simple tests that do not require it.
+	        
+	        isUpdate = RelationalNodeUtil.isUpdate(atomicCommand);
+	        
+			if(needProcessing) {
+				registerRequest(atomicCommand);
+			}
+			//We hardcode an upper limit on currency because these commands have potentially large in-memory value sets
+        } while (!processCommandsIndividually() && hasNextCommand() && this.tupleSources.size() < Math.min(MAX_CONCURRENT, this.getContext().getUserRequestSourceConcurrency()));
 	}
 
 	private Command nextCommand() {
@@ -147,38 +151,52 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	public TupleBatch nextBatchDirect()
 		throws BlockedException, TeiidComponentException, TeiidProcessingException {
         
-        while (tupleSource != null || hasNextCommand()) {
-        	//drain the tuple source
-        	while (tupleSource != null) {
-                List<?> tuple = tupleSource.nextTuple();
-    
-                if(tuple == null) {
-                    closeSources();
-                    break;
-                } 
-                
-                returnedRows = true;
-                
-                addBatchRow(tuple);
-                
-                if (isBatchFull()) {
-                	return pullBatch();
-                }
+        while (!tupleSources.isEmpty() || hasNextCommand()) {
+        	
+        	if (tupleSources.isEmpty() && processCommandsIndividually()) {
+        		registerNext();
         	}
         	
-        	//execute another command
-            while (hasNextCommand()) {
-            	if (processCommandsIndividually() && hasPendingRows()) {
-            		return pullBatch();
-            	}
-                Command atomicCommand = nextCommand();
-                if (prepareNextCommand(atomicCommand)) {
-                	nextCommand = null;
-                    registerRequest(atomicCommand);
-                    break;
-                }
-                nextCommand = null;
-            }            
+        	//drain the tuple source(s)
+        	for (int i = 0; i < this.tupleSources.size(); i++) {
+        		TupleSource tupleSource = tupleSources.get(i);
+        		try {
+	        		List<?> tuple = null;
+	        		
+	        		while ((tuple = tupleSource.nextTuple()) != null) {
+	                    returnedRows = true;
+	                    addBatchRow(tuple);
+	                    
+	                    if (isBatchFull()) {
+	                    	return pullBatch();
+	                    }
+	        		}
+	        		
+                	//end of source
+                    tupleSource.closeSource();
+                    tupleSources.remove(i--);
+                    if (!processCommandsIndividually()) {
+                    	registerNext();
+                    }
+                    continue;
+        		} catch (BlockedException e) {
+        			if (processCommandsIndividually()) {
+        				throw e;
+        			}
+        			continue;
+        		}
+			}
+        	
+        	if (processCommandsIndividually()) {
+        		if (hasPendingRows()) {
+        			return pullBatch();
+        		}
+        		continue;
+        	}
+        	
+        	if (!this.tupleSources.isEmpty()) {
+        		throw BlockedException.INSTANCE;
+        	}
         }
         
         if(isUpdate && !returnedRows) {
@@ -191,6 +209,19 @@ public class AccessNode extends SubqueryAwareRelationalNode {
         return pullBatch();
 	}
 
+	private void registerNext() throws TeiidComponentException,
+			TeiidProcessingException {
+		while (hasNextCommand()) {
+		    Command atomicCommand = nextCommand();
+		    if (prepareNextCommand(atomicCommand)) {
+		    	nextCommand = null;
+		        registerRequest(atomicCommand);
+		        break;
+		    }
+		    nextCommand = null;
+		}
+	}
+
 	private void registerRequest(Command atomicCommand)
 			throws TeiidComponentException, TeiidProcessingException {
 		int limit = -1;
@@ -200,7 +231,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 				limit = parent.getLimit() + parent.getOffset();
 			}
 		}
-		tupleSource = getDataManager().registerRequest(getContext(), atomicCommand, modelName, connectorBindingId, getID(), limit);
+		tupleSources.add(getDataManager().registerRequest(getContext(), atomicCommand, modelName, connectorBindingId, getID(), limit));
 	}
 	
 	protected boolean processCommandsIndividually() {
@@ -217,10 +248,10 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	}
 
     private void closeSources() {
-        if(this.tupleSource != null) {
-    		this.tupleSource.closeSource();
-            tupleSource = null;
-        }
+    	for (TupleSource ts : this.tupleSources) {
+    		ts.closeSource();			
+		}
+    	this.tupleSources.clear();
 	}
 
 	protected void getNodeString(StringBuffer str) {

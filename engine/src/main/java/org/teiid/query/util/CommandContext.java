@@ -110,6 +110,8 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    
 	    private boolean resultSetCacheEnabled = true;
 	    
+	    private int userRequestSourceConcurrency;
+
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -510,6 +512,14 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     
     public void setResultSetCacheEnabled(boolean resultSetCacheEnabled) {
 		this.globalState.resultSetCacheEnabled = resultSetCacheEnabled;
+	}
+    
+	public int getUserRequestSourceConcurrency() {
+		return this.globalState.userRequestSourceConcurrency;
+	}
+	
+	public void setUserRequestSourceConcurrency(int userRequestSourceConcurrency) {
+		this.globalState.userRequestSourceConcurrency = userRequestSourceConcurrency;
 	}
 	
 }
