@@ -228,16 +228,16 @@ public class MetaDataProcessor {
         return xmlMetadata;
     }
 
-    private Map createColumnMetadata(String shortColumnName, SingleElementSymbol symbol) throws QueryMetadataException, TeiidComponentException {
+    private Map createColumnMetadata(String label, SingleElementSymbol symbol) throws QueryMetadataException, TeiidComponentException {
         if(symbol instanceof ElementSymbol) {
-            return createElementMetadata(shortColumnName, (ElementSymbol) symbol);        
+            return createElementMetadata(label, (ElementSymbol) symbol);        
         } else if(symbol instanceof AggregateSymbol) {
-            return createAggregateMetadata(shortColumnName, (AggregateSymbol) symbol);
+            return createAggregateMetadata(label, (AggregateSymbol) symbol);
         }
-        return createTypedMetadata(shortColumnName, symbol);            
+        return createTypedMetadata(label, symbol);            
     }
     
-    private Map createElementMetadata(String shortColumnName, ElementSymbol symbol) throws QueryMetadataException, TeiidComponentException {
+    private Map createElementMetadata(String label, ElementSymbol symbol) throws QueryMetadataException, TeiidComponentException {
         Object elementID = symbol.getMetadataID();
         
         Map column = new HashMap();
@@ -246,8 +246,8 @@ public class MetaDataProcessor {
         column.put(ResultsMetadataConstants.CURRENCY, Boolean.FALSE);
         Class type = symbol.getType();
         column.put(ResultsMetadataConstants.DATA_TYPE, DataTypeManager.getDataTypeName(type));
-        column.put(ResultsMetadataConstants.ELEMENT_LABEL, shortColumnName); 
-        column.put(ResultsMetadataConstants.ELEMENT_NAME, shortColumnName);
+        column.put(ResultsMetadataConstants.ELEMENT_LABEL, label); 
+        column.put(ResultsMetadataConstants.ELEMENT_NAME, symbol.getShortName());
         
         GroupSymbol group = symbol.getGroupSymbol();        
         if(group == null) {

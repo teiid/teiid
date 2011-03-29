@@ -98,7 +98,7 @@ public class TestMetaDataProcessor extends TestCase {
     	Map[] metadata = helpGetMetadata("SELECT E2 FROM pm1.g1", FakeMetadataFactory.example1Cached(), FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNotNull(metadata);
         assertEquals(1, metadata.length);
-        assertEquals("E2", metadata[0].get(ResultsMetadataConstants.ELEMENT_NAME)); //$NON-NLS-1$
+        assertEquals("e2", metadata[0].get(ResultsMetadataConstants.ELEMENT_NAME)); //$NON-NLS-1$
     }
     
     public void testSimpleExec() throws Exception {

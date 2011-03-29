@@ -25,6 +25,7 @@ import java.nio.charset.Charset;
 import java.sql.ParameterMetaData;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.Statement;
 import java.util.Properties;
 
 public interface ODBCClientRemote {
@@ -60,7 +61,7 @@ public interface ODBCClientRemote {
 
 	//	RowDescription (B)
 	//	NoData (B)
-	void sendResultSetDescription(ResultSetMetaData metaData);
+	void sendResultSetDescription(ResultSetMetaData metaData, Statement stmt);
 	
 	//	DataRow (B)
 	//	CommandComplete (B)

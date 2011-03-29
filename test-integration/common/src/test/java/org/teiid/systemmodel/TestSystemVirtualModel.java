@@ -130,6 +130,11 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 				"PK_SUPPLIER	null",  //$NON-NLS-1$
 				"PK_SUPPLIER_PARTS	null", //$NON-NLS-1$
 				"PK_SUPPLIER_PARTS	null",  //$NON-NLS-1$
+				"idx_matpg_relatt_ids	null",//$NON-NLS-1$
+				"idx_matpg_relatt_ids	null",//$NON-NLS-1$
+				"pk_matpg_relatt_names	null",//$NON-NLS-1$
+				"pk_matpg_relatt_names	null",//$NON-NLS-1$
+				"pk_matpg_relatt_names	null",//$NON-NLS-1$
 				"pk_pg_attr	null",  //$NON-NLS-1$
 				"pk_pg_class	null",  //$NON-NLS-1$
 				"pk_pg_index	null",  //$NON-NLS-1$
