@@ -319,7 +319,8 @@ public interface SourceCapabilities {
         REQUIRES_CRITERIA,
         INSERT_WITH_QUERYEXPRESSION,
         INSERT_WITH_ITERATOR,
-        COMMON_TABLE_EXPRESSIONS
+        COMMON_TABLE_EXPRESSIONS,
+        MAX_DEPENDENT_PREDICATES,
     }
 
     public enum Scope {

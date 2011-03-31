@@ -65,6 +65,7 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
 		setDatabaseVersion(TWELVE_5);
 		setSupportsFullOuterJoins(false);
 		setMaxInCriteriaSize(250);
+		setMaxDependentPredicates(10);
 	}
     
     public void start() throws TranslatorException {

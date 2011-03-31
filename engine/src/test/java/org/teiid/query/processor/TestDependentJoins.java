@@ -43,7 +43,7 @@ import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.FakeMetadataObject;
 import org.teiid.query.util.CommandContext;
 
-@SuppressWarnings({"unchecked"})
+@SuppressWarnings({"unchecked", "nls"})
 public class TestDependentJoins {
     
     /** 
@@ -529,8 +529,8 @@ public class TestDependentJoins {
                                                     new String[] {"SELECT g_0.stringkey, g_0.intkey FROM bqt1.smalla AS g_0 WHERE g_0.intkey IN (<dependent values>)", "SELECT g_0.stringkey, g_0.intkey FROM bqt2.smallb AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
  
         TestOptimizer.checkNodeTypes(plan, new int[] { 
-            unlimitIn?2:1,      // Access 
-            unlimitIn?0:1,      // DependentAccess 
+            1,      // Access 
+            1,      // DependentAccess 
             0,      // DependentSelect 
             0,      // DependentProject 
             0,      // DupRemove 
@@ -633,8 +633,30 @@ public class TestDependentJoins {
     }
 
     @Test public void testLargeSetInDepAccessMultiJoinCriteria() throws Exception {
+    	helpTestLargeSetInDepAccessMultiJoinCriteria(1, -1, 1, 2);
+    }
+    
+    @Test public void testLargeSetInDepAccessMultiJoinCriteriaConcurrent() throws Exception {
+    	//allows concurrent
+    	helpTestLargeSetInDepAccessMultiJoinCriteria(1, -1, 4, 4);
+    }
+    
+    @Test public void testLargeSetInDepAccessMultiJoinCriteriaCompound() throws Exception {
+    	//max predicates forces multiple queries
+    	helpTestLargeSetInDepAccessMultiJoinCriteria(1, 4, 3, 3);
+    }
+    
+    @Test public void testLargeSetInDepAccessMultiJoinCriteriaCompoundAll() throws Exception {
+    	//max predicates allows a one shot
+    	helpTestLargeSetInDepAccessMultiJoinCriteria(1, 10, 2, 2);
+    }
+    
+    /**
+     * concurrentOpen will be minimum of 2 to gather the pm1 results.
+     */
+    public void helpTestLargeSetInDepAccessMultiJoinCriteria(int maxInSize, int maxPredicates, int maxConcurrency, int concurrentOpen) throws Exception {
         //     Create query 
-        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e1=pm2.g1.e1 AND pm1.g1.e2=pm2.g1.e2 order by e1 OPTION MAKEDEP pm2.g1"; //$NON-NLS-1$
+        String sql = "SELECT pm1.g1.e1 FROM (pm1.g2 cross join pm1.g1) inner join pm2.g1 makedep ON pm1.g1.e1=pm2.g1.e1 AND pm1.g1.e2=pm2.g1.e2 AND pm1.g2.e4 = pm2.g1.e4 order by e1"; //$NON-NLS-1$
         // Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();
         TestProcessor.sampleData1(dataManager);
@@ -647,7 +669,8 @@ public class TestDependentJoins {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities depcaps = new BasicSourceCapabilities();
         depcaps.setCapabilitySupport(Capability.CRITERIA_IN, true);
-        depcaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(1));
+        depcaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, maxInSize);
+        depcaps.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, maxPredicates);
 
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
@@ -656,30 +679,32 @@ public class TestDependentJoins {
         capFinder.addCapabilities("pm2", depcaps); //$NON-NLS-1$
 
         List[] expected = new List[] {
-            Arrays.asList(new Object[] {
-                new String("a")}), //$NON-NLS-1$
-            Arrays.asList(new Object[] {
-                new String("a")}), //$NON-NLS-1$
-            Arrays.asList(new Object[] {
-                new String("a")}), //$NON-NLS-1$
-            Arrays.asList(new Object[] {
-                new String("a")}), //$NON-NLS-1$
-            Arrays.asList(new Object[] {
-                new String("a")}), //$NON-NLS-1$
-            Arrays.asList(new Object[] {
-                new String("b")}), //$NON-NLS-1$
-            Arrays.asList(new Object[] {
-                new String("c")})}; //$NON-NLS-1$
+            Arrays.asList("a"), //$NON-NLS-1$
+            Arrays.asList("a"), //$NON-NLS-1$
+            Arrays.asList("a"), //$NON-NLS-1$
+            Arrays.asList("a"), //$NON-NLS-1$
+            Arrays.asList("a"), //$NON-NLS-1$
+            Arrays.asList("a"), //$NON-NLS-1$
+            Arrays.asList("a"), //$NON-NLS-1$
+            Arrays.asList("a"), //$NON-NLS-1$
+            Arrays.asList("a"), //$NON-NLS-1$
+            Arrays.asList("b"), //$NON-NLS-1$
+        	}; 
 
         Command command = TestProcessor.helpParse(sql);
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, fakeMetadata, capFinder);
+        TestOptimizer.checkAtomicQueries(new String[] {
+        		"SELECT pm1.g2.e4 FROM pm1.g2", 
+        		"SELECT pm2.g1.e1, pm2.g1.e2, pm2.g1.e4 FROM pm2.g1 WHERE (pm2.g1.e1 IN (<dependent values>)) AND (pm2.g1.e2 IN (<dependent values>)) AND (pm2.g1.e4 IN (<dependent values>))", 
+        		"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"
+        }, plan);
         CommandContext cc = TestProcessor.createCommandContext();
-        cc.setUserRequestSourceConcurrency(5);
+        cc.setUserRequestSourceConcurrency(maxConcurrency);
         FakeTupleSource.resetStats();
         // Run query
         TestProcessor.helpProcess(plan, cc, dataManager, expected);
 
-        assertEquals(4, FakeTupleSource.maxOpen);
+        assertEquals("Wrong number of concurrent source queries", concurrentOpen, FakeTupleSource.maxOpen);
     }
 
     @Test public void testLargeSetInDepAccessWithAccessPattern() {

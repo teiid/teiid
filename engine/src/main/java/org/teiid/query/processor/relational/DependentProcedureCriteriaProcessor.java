@@ -50,7 +50,7 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
                                                Criteria dependentCriteria,
                                                List references,
                                                List defaults) throws ExpressionEvaluationException, TeiidComponentException {
-        super(1, dependentNode, dependentCriteria);
+        super(1, -1, dependentNode, dependentCriteria);
         this.inputDefaults = defaults;
         this.inputReferences = references;
     }

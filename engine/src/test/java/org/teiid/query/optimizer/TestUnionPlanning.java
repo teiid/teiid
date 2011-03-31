@@ -121,7 +121,7 @@ public class TestUnionPlanning {
             0,      // Project
             0,      // Select
             0,      // Sort
-            2       // UnionAll
+            1       // UnionAll
         });                                    
     }
     

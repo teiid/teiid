@@ -41,6 +41,7 @@ public class SimpleJDBCExecutionFactory extends JDBCExecutionFactory {
 		setSupportsFullOuterJoins(false);
 		setSupportsOrderBy(false);
 		setMaxInCriteriaSize(250);
+		setMaxDependentPredicates(10);
 	}
 	
     @Override

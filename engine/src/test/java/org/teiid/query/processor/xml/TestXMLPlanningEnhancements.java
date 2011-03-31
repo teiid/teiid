@@ -496,8 +496,8 @@ public class TestXMLPlanningEnhancements {
         
         ProcessorPlan plan = instr.info.getPlan();        
         TestOptimizer.checkNodeTypes(plan, new int[] {
-            2,      // Access
-            0,      // DependentAccess
+            1,      // Access
+            1,      // DependentAccess
             0,      // DependentSelect
             0,      // DependentProject
             0,      // DupRemove

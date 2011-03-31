@@ -296,6 +296,11 @@ public class CapabilitiesUtil {
 
     public static int getMaxInCriteriaSize(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, TeiidComponentException {
+    	return getProperty(Capability.MAX_IN_CRITERIA_SIZE, modelID, metadata, capFinder);
+    }
+    	
+    private static int getProperty(Capability cap, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    throws QueryMetadataException, TeiidComponentException {
 
         if (metadata.isVirtualModel(modelID)){
             return -1;
@@ -303,7 +308,7 @@ public class CapabilitiesUtil {
 
         // Find capabilities
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-        Object maxInCriteriaSize = caps.getSourceProperty(Capability.MAX_IN_CRITERIA_SIZE);
+        Object maxInCriteriaSize = caps.getSourceProperty(cap);
         int value = -1;
         if(maxInCriteriaSize != null) {
             value = ((Integer)maxInCriteriaSize).intValue();
@@ -314,6 +319,11 @@ public class CapabilitiesUtil {
             value = -1;
         }
         return value;
+    }
+    
+    public static int getMaxDependentPredicatesSize(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    throws QueryMetadataException, TeiidComponentException {
+    	return getProperty(Capability.MAX_DEPENDENT_PREDICATES, modelID, metadata, capFinder);
     }
     
     public static int getMaxFromGroups(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 

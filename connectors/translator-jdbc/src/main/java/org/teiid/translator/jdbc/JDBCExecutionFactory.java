@@ -81,6 +81,7 @@ import org.teiid.translator.UpdateExecution;
 public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connection> {
 
 	public static final int DEFAULT_MAX_IN_CRITERIA = 1000;
+	public static final int DEFAULT_MAX_DEPENDENT_PREDICATES = 50;
 
 	// Because the retrieveValue() method will be hit for every value of 
     // every JDBC result set returned, we do lots of weird special stuff here 
@@ -149,6 +150,8 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 		setSupportsOuterJoins(true);
 		setSupportsSelectDistinct(true);
 		setSupportsInnerJoins(true);
+		setMaxInCriteriaSize(DEFAULT_MAX_IN_CRITERIA);
+		setMaxDependentPredicates(DEFAULT_MAX_DEPENDENT_PREDICATES);
 	}
     
 	@Override

@@ -72,6 +72,7 @@ public class Create extends Command {
     		for (Column column : columns) {
 				ElementSymbol es = new ElementSymbol(column.getName());
 				es.setType(DataTypeManager.getDataTypeClass(column.getRuntimeType()));
+				es.setGroupSymbol(table);
 				columnSymbols.add(es);
 			}
     	}

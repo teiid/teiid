@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
@@ -57,7 +56,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	private ArrayList<TupleSource> tupleSources = new ArrayList<TupleSource>();
 	private boolean isUpdate = false;
     private boolean returnedRows = false;
-    private Command nextCommand;
+    protected Command nextCommand;
     
     protected AccessNode() {
 		super();
@@ -101,9 +100,13 @@ public class AccessNode extends SubqueryAwareRelationalNode {
         // Copy command and resolve references if necessary
         Command atomicCommand = command;
         boolean needProcessing = true;
+        
+        if (shouldEvaluate) {
+	        atomicCommand = initialCommand();
+        } 
         do {
-	        if(shouldEvaluate) {
-	            atomicCommand = nextCommand();
+			atomicCommand = nextCommand();
+        	if(shouldEvaluate) {
 	            needProcessing = prepareNextCommand(atomicCommand);
 	            nextCommand = null;
 	        } else {
@@ -122,7 +125,22 @@ public class AccessNode extends SubqueryAwareRelationalNode {
         } while (!processCommandsIndividually() && hasNextCommand() && this.tupleSources.size() < Math.min(MAX_CONCURRENT, this.getContext().getUserRequestSourceConcurrency()));
 	}
 
-	private Command nextCommand() {
+	static void rewriteAndEvaluate(Command atomicCommand, Evaluator eval, CommandContext context, QueryMetadataInterface metadata)
+			throws TeiidProcessingException, TeiidComponentException {
+		try {
+		    // Defect 16059 - Rewrite the command to replace references, etc. with values.
+			QueryRewriter.evaluateAndRewrite(atomicCommand, eval, context, metadata);
+		} catch (QueryValidatorException e) {
+		    throw new TeiidProcessingException(e, QueryPlugin.Util.getString("AccessNode.rewrite_failed", atomicCommand)); //$NON-NLS-1$
+		}
+	}
+	
+	@SuppressWarnings("unused")
+	protected Command initialCommand() throws TeiidProcessingException, TeiidComponentException {
+		return nextCommand();
+	}
+
+	protected Command nextCommand() {
 		//it's important to save the next command
 		//to ensure that the subquery ids remain stable
 		if (nextCommand == null) {
@@ -132,22 +150,10 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	}
 
     protected boolean prepareNextCommand(Command atomicCommand) throws TeiidComponentException, TeiidProcessingException {
-    	return prepareCommand(atomicCommand, getEvaluator(Collections.emptyMap()), this.getContext(), this.getContext().getMetadata());
+		rewriteAndEvaluate(atomicCommand, getEvaluator(Collections.emptyMap()), this.getContext(), this.getContext().getMetadata());
+    	return RelationalNodeUtil.shouldExecute(atomicCommand, true);
     }
 
-	static boolean prepareCommand(Command atomicCommand, Evaluator eval, CommandContext context, QueryMetadataInterface metadata)
-			throws ExpressionEvaluationException, TeiidComponentException,
-			TeiidProcessingException {
-        try {
-            // Defect 16059 - Rewrite the command once the references have been replaced with values.
-            QueryRewriter.evaluateAndRewrite(atomicCommand, eval, context, metadata);
-        } catch (QueryValidatorException e) {
-            throw new TeiidProcessingException(e, QueryPlugin.Util.getString("AccessNode.rewrite_failed", atomicCommand)); //$NON-NLS-1$
-        }
-        
-        return RelationalNodeUtil.shouldExecute(atomicCommand, true);
-	}
-    
 	public TupleBatch nextBatchDirect()
 		throws BlockedException, TeiidComponentException, TeiidProcessingException {
         

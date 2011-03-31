@@ -106,6 +106,7 @@ public class ExecutionFactory<F, C> {
 	private boolean supportsFullOuterJoins;
 	private boolean requiresCriteria;
 	private int maxInSize = DEFAULT_MAX_IN_CRITERIA_SIZE;
+	private int maxDependentInPredicates = DEFAULT_MAX_IN_CRITERIA_SIZE;
 	
 	/**
 	 * Initialize the connector with supplied configuration
@@ -667,7 +668,21 @@ public class ExecutionFactory<F, C> {
 	public void setMaxInCriteriaSize(int maxInSize) {
 		this.maxInSize = maxInSize;
 	}
-    
+	
+    /**
+     * Get the integer value representing the number of values allowed in an IN criteria
+     * in the WHERE clause of a query
+     * @since 5.0
+     */
+	@TranslatorProperty(display="Max number of dependent values across all IN predicates", advanced=true)
+	public int getMaxDependentInPredicates() {
+		return maxDependentInPredicates;
+	}
+	
+	public void setMaxDependentPredicates(int maxDependentInPredicates) {
+		this.maxDependentInPredicates = maxDependentInPredicates;
+	}
+
     /**
      * <p>Support indicates that the connector supports functions in GROUP BY, such as:
      *  <code>SELECT dayofmonth(theDate), COUNT(*) FROM table GROUP BY dayofmonth(theDate)</code></p>

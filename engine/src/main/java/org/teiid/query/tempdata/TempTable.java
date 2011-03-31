@@ -194,7 +194,6 @@ class TempTable {
 
 	private abstract class UpdateProcessor {
 		private TupleSource ts;
-		protected final Map lookup;
 		protected final Evaluator eval;
 		private final Criteria crit;
 		protected int updateCount = 0;
@@ -204,8 +203,7 @@ class TempTable {
 
 		UpdateProcessor(Criteria crit, TupleSource ts) throws TeiidComponentException {
 			this.ts = ts;
-			this.lookup = RelationalNode.createLookupMap(columns);
-			this.eval = new Evaluator(lookup, null, null);
+			this.eval = new Evaluator(columnMap, null, null);
 			this.crit = crit;
 			this.undoLog = bm.createTupleBuffer(columns, sessionID, TupleSourceType.PROCESSOR);
 		}
@@ -530,7 +528,7 @@ class TempTable {
 					BlockedException, TeiidComponentException {
 				List<Object> newTuple = new ArrayList<Object>(tuple);
     			for (Map.Entry<ElementSymbol, Expression> entry : update.getClauseMap().entrySet()) {
-    				newTuple.set((Integer)lookup.get(entry.getKey()), eval.evaluate(entry.getValue(), tuple));
+    				newTuple.set((Integer)columnMap.get(entry.getKey()), eval.evaluate(entry.getValue(), tuple));
     			}
     			if (primaryKeyChangePossible) {
     				browser.removed();

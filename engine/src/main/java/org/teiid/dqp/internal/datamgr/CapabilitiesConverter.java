@@ -115,6 +115,7 @@ public class CapabilitiesConverter {
         }
         
         tgtCaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(srcCaps.getMaxInCriteriaSize()));
+        tgtCaps.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, new Integer(srcCaps.getMaxDependentInPredicates()));
         tgtCaps.setSourceProperty(Capability.CONNECTOR_ID, connectorID);
         tgtCaps.setSourceProperty(Capability.MAX_QUERY_FROM_GROUPS, new Integer(srcCaps.getMaxFromGroups()));
         tgtCaps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, srcCaps.getSupportedJoinCriteria());

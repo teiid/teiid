@@ -102,10 +102,9 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
                 updateCommand = (Command) updateCommand.clone();
                 Evaluator eval = getEvaluator(Collections.emptyMap());
                 eval.initialize(context, getDataManager());
-                needProcessing = AccessNode.prepareCommand(updateCommand, eval, context, context.getMetadata());
-            } else {
-                needProcessing = RelationalNodeUtil.shouldExecute(updateCommand, true);
+                AccessNode.rewriteAndEvaluate(updateCommand, eval, context, context.getMetadata());
             }
+            needProcessing = RelationalNodeUtil.shouldExecute(updateCommand, true);
             if (needProcessing) {
                 commandsToExecute.add(updateCommand);
             } else {

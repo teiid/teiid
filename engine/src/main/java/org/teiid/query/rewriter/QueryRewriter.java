@@ -67,7 +67,6 @@ import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
 import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria.PlannedResult;
-import org.teiid.query.processor.relational.DependentValueSource;
 import org.teiid.query.processor.relational.RelationalNodeUtil;
 import org.teiid.query.resolver.ProcedureContainerResolver;
 import org.teiid.query.resolver.QueryResolver;
@@ -152,7 +151,6 @@ import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.util.SymbolMap;
-import org.teiid.query.sql.util.ValueIterator;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
 import org.teiid.query.sql.visitor.CriteriaTranslatorVisitor;
@@ -1222,26 +1220,8 @@ public class QueryRewriter {
 			if (rewriteLeftExpression(dsc)) {
 				return UNKNOWN_CRITERIA;
 			}
-			return dsc;
 		}
-		SetCriteria setCrit = new SetCriteria();
-		setCrit.setExpression(dsc.getExpression());
-		HashSet<Object> values = new HashSet<Object>();
-		try {
-			DependentValueSource dvs = (DependentValueSource)this.context.getVariableContext().getGlobalValue(dsc.getContextSymbol());
-			ValueIterator iter = dvs.getValueIterator(dsc.getValueExpression());
-			while (iter.hasNext()) {
-				values.add(iter.next());
-			}
-		} catch (TeiidComponentException e) {
-			throw new TeiidRuntimeException(e);
-		}
-		List<Constant> constants = new ArrayList<Constant>(values.size());
-		for (Object value : values) {
-			constants.add(new Constant(value, setCrit.getExpression().getType()));
-		}
-		setCrit.setValues(constants);
-		return rewriteCriteria(setCrit);
+		return dsc;
 	}
     
     /**

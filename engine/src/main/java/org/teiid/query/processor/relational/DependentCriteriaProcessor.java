@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -81,6 +82,7 @@ public class DependentCriteriaProcessor {
         public void sort() throws BlockedException,
                    TeiidComponentException, TeiidProcessingException {
             if (dvs == null) {
+            	//TODO: detect if we're already distinct
             	if (sortUtility == null) {
             		List<Expression> sortSymbols = new ArrayList<Expression>(dependentSetStates.size());
 	                List<Boolean> sortDirection = new ArrayList<Boolean>(sortSymbols.size());
@@ -117,6 +119,7 @@ public class DependentCriteriaProcessor {
 
     //constructor state
     private int maxSetSize;
+    private int maxPredicates;
     private RelationalNode dependentNode;
     private Criteria dependentCrit;
 
@@ -133,8 +136,9 @@ public class DependentCriteriaProcessor {
     private boolean hasNextCommand;
     protected SubqueryAwareEvaluator eval;
 
-    public DependentCriteriaProcessor(int maxSetSize, RelationalNode dependentNode, Criteria dependentCriteria) throws ExpressionEvaluationException, TeiidComponentException {
+    public DependentCriteriaProcessor(int maxSetSize, int maxPredicates, RelationalNode dependentNode, Criteria dependentCriteria) throws ExpressionEvaluationException, TeiidComponentException {
         this.maxSetSize = maxSetSize;
+        this.maxPredicates = maxPredicates;
         this.dependentNode = dependentNode;
         this.dependentCrit = dependentCriteria;
         this.eval = new SubqueryAwareEvaluator(Collections.emptyMap(), dependentNode.getDataManager(), dependentNode.getContext(), dependentNode.getBufferManager());
@@ -250,55 +254,82 @@ public class DependentCriteriaProcessor {
      * @throws TeiidComponentException
      */
     private void replaceDependentValueIterators() throws TeiidComponentException {
+    	int totalPredicates = sources.size();
+    	if (this.maxPredicates > 0) {
+        	//We have a bin packing problem if totalPredicates < sources - We'll address that case later.
+    		//TODO: better handling for the correlated composite case
+    		totalPredicates = Math.max(totalPredicates, this.maxPredicates);
+    	}
+    	long maxSize = Integer.MAX_VALUE;
+    	if (this.maxSetSize > 0) {
+    		maxSize = this.maxSetSize;
+    	}
+    	int currentPredicates = 0;
+    	for (int run = 0; currentPredicates < totalPredicates; run++) {
+    		currentPredicates = 0;
+    		if (!restartIndexes.isEmpty()) {
+    			currentIndex = restartIndexes.removeLast().intValue();
+    		}
+	        for (int i = 0; i < sources.size(); i++) {
 
-        for (; currentIndex < sources.size(); currentIndex++) {
+	            List<SetState> source = sources.get(i);
 
-            List<SetState> source = sources.get(currentIndex);
-
-            boolean done = false;
-
-            while (!done) {
-
-                boolean isNull = false;
-                boolean lessThanMax = true;
-
-                for (SetState state : source) {
-                    if (state.nextValue == null && !state.isNull) {
-                        if (state.valueIterator.hasNext()) {
-                            state.nextValue = state.valueIterator.next();
-                            state.isNull = state.nextValue == null;
-                        } else {
-                            state.valueIterator.reset();
-                            done = true; // should be true for each iterator from this source
-                            continue;
-                        }
-                    }
-
-                    isNull |= state.isNull;
-                    lessThanMax &= state.replacement.size() < maxSetSize;
-                }
-
-                if (done) {
-                    if (!restartIndexes.isEmpty() && restartIndexes.getLast().intValue() == currentIndex) {
-                        restartIndexes.removeLast();
-                    }
-                    break;
-                }
-
-                if (lessThanMax || isNull) {
-                	for (SetState state : source) {
-                        if (!isNull) {
-                            state.replacement.add(state.nextValue);
-                        }
-                        state.nextValue = null;
-                        state.isNull = false;
-                    }
-                } else {
-                    restartIndexes.add(currentIndex);
-                    done = true;
-                }
+	        	if (i == currentIndex++) {
+		
+		            boolean done = false;
+		
+		            while (!done) {
+		
+		                boolean isNull = false;
+		                boolean lessThanMax = true;
+		
+		                for (SetState state : source) {
+		                    if (state.nextValue == null && !state.isNull) {
+		                        if (state.valueIterator.hasNext()) {
+		                            state.nextValue = state.valueIterator.next();
+		                            state.isNull = state.nextValue == null;
+		                        } else {
+		                            state.valueIterator.reset();
+		                            done = true; // should be true for each iterator from this source
+		                            continue;
+		                        }
+		                    }
+		
+		                    isNull |= state.isNull;
+		                    lessThanMax &= state.replacement.size() < maxSize * (run + 1);
+		                }
+		
+		                if (done) {
+		                    if (!restartIndexes.isEmpty() && restartIndexes.getLast().intValue() == i) {
+		                        restartIndexes.removeLast();
+		                    }
+		                    break;
+		                }
+		
+		                if (lessThanMax || isNull) {
+		                	for (SetState state : source) {
+		                        if (!isNull) {
+		                            state.replacement.add(state.nextValue);
+		                        }
+		                        state.nextValue = null;
+		                        state.isNull = false;
+		                    }
+		                } else {
+		                    restartIndexes.add(i);
+		                    done = true;
+		                }
+		            }
+	        	}
+	            
+	            for (SetState setState : source) {
+	            	currentPredicates += setState.replacement.size()/maxSize+(setState.replacement.size()%maxSize!=0?1:0);
+				}
+	        }
+	        
+            if (restartIndexes.isEmpty()) {
+            	break;
             }
-        }
+    	}
 
         hasNextCommand = !restartIndexes.isEmpty();
     }
@@ -312,18 +343,36 @@ public class DependentCriteriaProcessor {
             // No values - return criteria that is always false
             return QueryRewriter.FALSE_CRITERIA;
     	}
-    	if (state.replacement.size() == 1) {
-    		return new CompareCriteria(crit.getExpression(), CompareCriteria.EQ, new Constant(state.replacement.iterator().next()));
+    	int numberOfSets = 1;
+    	int maxSize = Integer.MAX_VALUE;
+    	if (this.maxSetSize > 0) {
+    		maxSize = this.maxSetSize;
+    		numberOfSets = state.replacement.size()/maxSize + (state.replacement.size()%maxSize!=0?1:0);
     	}
-        List vals = new ArrayList(state.replacement.size());
-        for (Object val : state.replacement) {
-            vals.add(new Constant(val));
-        }
-        
-        SetCriteria sc = new SetCriteria();
-        sc.setExpression(crit.getExpression());
-        sc.setValues(vals);
-        return sc;
+    	Iterator<Object> iter = state.replacement.iterator();
+    	ArrayList<Criteria> orCrits = new ArrayList<Criteria>(numberOfSets);
+    	
+    	for (int i = 0; i < numberOfSets; i++) {
+    		if (maxSize == 1 || i + 1 == state.replacement.size()) {
+				orCrits.add(new CompareCriteria(crit.getExpression(), CompareCriteria.EQ, new Constant(iter.next())));    				
+			} else {
+	    		List<Constant> vals = new ArrayList<Constant>(Math.min(state.replacement.size(), maxSize));
+				
+	    		for (int j = 0; j < maxSize && iter.hasNext(); j++) {
+	    			Object val = iter.next();
+	                vals.add(new Constant(val));
+	            }
+	            
+	            SetCriteria sc = new SetCriteria();
+	            sc.setExpression(crit.getExpression());
+	            sc.setValues(vals);
+	            orCrits.add(sc);
+			}
+    	}
+    	if (orCrits.size() == 1) {
+    		return orCrits.get(0);
+    	}
+    	return new CompoundCriteria(CompoundCriteria.OR, orCrits);
     }
 
 }

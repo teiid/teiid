@@ -22,6 +22,8 @@
 
 package org.teiid.query.processor.relational;
 
+import java.util.Collections;
+
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
@@ -40,12 +42,17 @@ public class DependentAccessNode extends AccessNode {
 
     //plan state
     private int maxSetSize;
+    private int maxPredicates;
 
     //processing state
     private DependentCriteriaProcessor criteriaProcessor;
     private Criteria dependentCrit;
     private boolean sort = true;
-
+    /**
+     * Cached rewritten command to be used as the base for all dependent queries.
+     */
+    private Command rewrittenCommand;
+    
     public DependentAccessNode(int nodeID) {
         super(nodeID);
     }
@@ -66,11 +73,32 @@ public class DependentAccessNode extends AccessNode {
         criteriaProcessor = null;
         dependentCrit = null;
         sort = true;
+        rewrittenCommand = null;
+    }
+    
+    @Override
+    protected Command initialCommand() throws TeiidProcessingException, TeiidComponentException {
+    	if (rewrittenCommand == null) {
+    		Command atomicCommand = nextCommand();
+	        rewriteAndEvaluate(atomicCommand, getEvaluator(Collections.emptyMap()), this.getContext(), this.getContext().getMetadata());
+	        rewrittenCommand = atomicCommand;
+	        nextCommand = null;
+    	}
+    	return rewrittenCommand;
+    }
+    
+    @Override
+    protected Command nextCommand() {
+    	if (nextCommand == null && rewrittenCommand != null) {
+			nextCommand = (Command)rewrittenCommand.clone();
+    	}
+    	return super.nextCommand();
     }
 
     public Object clone() {
         DependentAccessNode clonedNode = new DependentAccessNode(super.getID());
         clonedNode.maxSetSize = this.maxSetSize;
+        clonedNode.maxPredicates = this.maxPredicates;
         super.copy(this, clonedNode);
         return clonedNode;
     }
@@ -81,6 +109,14 @@ public class DependentAccessNode extends AccessNode {
     public int getMaxSetSize() {
         return this.maxSetSize;
     }
+    
+    public int getMaxPredicates() {
+		return maxPredicates;
+	}
+    
+    public void setMaxPredicates(int maxPredicates) {
+		this.maxPredicates = maxPredicates;
+	}
 
     /**
      * @param maxSize
@@ -100,7 +136,7 @@ public class DependentAccessNode extends AccessNode {
         Query query = (Query)atomicCommand;
 
         if (this.criteriaProcessor == null) {
-            this.criteriaProcessor = new DependentCriteriaProcessor(this.maxSetSize, this, query.getCriteria());
+            this.criteriaProcessor = new DependentCriteriaProcessor(this.maxSetSize, this.maxPredicates, this, query.getCriteria());
         }
         
         if (this.dependentCrit == null) {
@@ -127,7 +163,7 @@ public class DependentAccessNode extends AccessNode {
             query.setOrderBy(null);
         }
                 
-        boolean result = super.prepareNextCommand(query);
+        boolean result = RelationalNodeUtil.shouldExecute(atomicCommand, true);
         
         dependentCrit = null;
         

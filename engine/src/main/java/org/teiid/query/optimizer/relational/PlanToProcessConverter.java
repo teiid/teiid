@@ -152,7 +152,16 @@ public class PlanToProcessConverter {
 		
 		// Call convertPlan recursively on children
 		for (PlanNode childNode : planNode.getChildren()) {
-		    nextParent.addChild(convertPlan(childNode));
+			RelationalNode child = convertPlan(childNode);
+			if (planNode.getType() == NodeConstants.Types.SET_OP && childNode.getType() == NodeConstants.Types.SET_OP && childNode.hasBooleanProperty(Info.USE_ALL)) {
+				for (RelationalNode grandChild : child.getChildren()) {
+					if (grandChild != null) {
+						nextParent.addChild(grandChild);
+					}
+				}
+			} else {
+				nextParent.addChild(child);
+			}
 		}
 
         // Return root of tree for top node
@@ -297,7 +306,8 @@ public class PlanToProcessConverter {
                             DependentAccessNode depAccessNode = new DependentAccessNode(getID());
                             
                             if(modelID != null){
-                                depAccessNode.setMaxSetSize(CapabilitiesUtil.getMaxInCriteriaSize(modelID, metadata, capFinder));   
+                                depAccessNode.setMaxSetSize(CapabilitiesUtil.getMaxInCriteriaSize(modelID, metadata, capFinder));
+                                depAccessNode.setMaxPredicates(CapabilitiesUtil.getMaxDependentPredicatesSize(modelID, metadata, capFinder));   
                             }
                             processNode = depAccessNode;
                             aNode = depAccessNode;
