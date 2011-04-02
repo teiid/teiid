@@ -114,6 +114,12 @@
                         <entry>If in criteria are supported, defines what the maximum number of in entries are per predicate.  -1 indicates no limit.</entry>
                         <entry>-1</entry>
                     </row>
+                    <row>
+                        <entry>MaxDependentInPredicates</entry>
+                        <entry>If in criteria are supported, defines what the maximum number of predicates that can be used for a dependent join.  
+                        Values less than 1 indicate to use only one in predicate per dependent value pushed (which matches the pre-7.4 behavior).</entry>
+                        <entry>-1</entry>
+                    </row>
                 </tbody>
             </tgroup>
         </table>

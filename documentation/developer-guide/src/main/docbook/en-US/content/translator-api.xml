@@ -1329,6 +1329,11 @@ int count = visitor.getCount();]]></programlisting>
 			IN criteria.  This is an important constraint as an IN criteria is
 			frequently used to pass criteria between one source and another using
 			a dependent join.</para>
+	    <para>The method <code>ExecutionFactory.getMaxDependentInPredicates()</code> is
+			used to specify the maximum number of IN predicates (of at most MaxInCriteriaSize) that can be passed
+			as part of a dependent join.  For example if there are 10000 values to pass as part of the dependent join
+			and a MaxInCriteriaSize of 1000 and a MaxDependentInPredicates setting of 5, then the 
+			dependent join logic will form two source queries each with 5 IN predicates of 1000 values each combined by OR.</para>
 		<para>The method <code>ExecutionFactory.getMaxFromGroups()</code> can be used
 			to specify the maximum number of FROM Clause groups that can used in a
 			join. -1 indicates there is no limit.</para>
