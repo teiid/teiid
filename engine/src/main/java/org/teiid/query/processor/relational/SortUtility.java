@@ -176,6 +176,16 @@ public class SortUtility {
         }
         return this.activeTupleBuffers.get(0);
     }
+    
+    public List<TupleBuffer> onePassSort() throws TeiidComponentException, TeiidProcessingException {
+    	assert this.mode != Mode.DUP_REMOVE;
+    	
+    	if(this.phase == INITIAL_SORT) {
+            initialSort();
+        }
+    	
+    	return activeTupleBuffers;
+    }
 
 	private TupleBuffer createTupleBuffer() throws TeiidComponentException {
 		TupleBuffer tb = bufferManager.createTupleBuffer(this.schema, this.groupName, TupleSourceType.PROCESSOR);

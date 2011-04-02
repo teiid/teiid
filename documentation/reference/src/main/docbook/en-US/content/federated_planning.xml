@@ -188,6 +188,9 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
           inefficient join structure and may result in many source
           queries.</para>
       </tip>
+      <para>The engine will for IN clauses to filter the values coming from the dependent side.  
+      If the number of values from the independent side exceeds the translators MaxInCriteriaSize, the values will be split into multiple IN predicates up to MaxDependentPredicates.  
+      When the number of independent values exceeds MaxInCriteriaSize*MaxDependentPredicates, then multiple dependent queries will be issued in parallel.</para>
     </section>
     <section>
       <title>Copy Criteria</title>

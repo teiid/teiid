@@ -54,7 +54,7 @@ public class JoinNode extends SubqueryAwareRelationalNode {
 	
 	public enum JoinStrategyType {    
 	    MERGE,
-	    PARTITIONED_SORT,
+	    ENHANCED_SORT,
 	    NESTED_LOOP,
 	    NESTED_TABLE
 	}

@@ -519,6 +519,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			
 			//TODO: if this insert fails, it's unnecessary to do the undo processing
 			table.insert(ts, variables);
+			table.getTree().compact();
 			rowCount = table.getRowCount();
 			//TODO: could pre-process indexes to remove overlap
 			for (Object index : metadata.getIndexesInGroup(group.getMetadataID())) {

@@ -63,7 +63,7 @@ import org.teiid.query.processor.relational.MergeJoinStrategy;
 import org.teiid.query.processor.relational.NestedLoopJoinStrategy;
 import org.teiid.query.processor.relational.NestedTableJoinStrategy;
 import org.teiid.query.processor.relational.NullNode;
-import org.teiid.query.processor.relational.PartitionedSortJoin;
+import org.teiid.query.processor.relational.EnhancedSortMergeJoinStrategy;
 import org.teiid.query.processor.relational.PlanExecutionNode;
 import org.teiid.query.processor.relational.ProjectIntoNode;
 import org.teiid.query.processor.relational.ProjectNode;
@@ -396,8 +396,8 @@ public class TestOptimizer {
                 updateCounts(NestedLoopJoinStrategy.class, counts, types);
             } else if (strategy instanceof MergeJoinStrategy) {
                 updateCounts(MergeJoinStrategy.class, counts, types);
-                if (strategy instanceof PartitionedSortJoin) {
-                    updateCounts(PartitionedSortJoin.class, counts, types);
+                if (strategy instanceof EnhancedSortMergeJoinStrategy) {
+                    updateCounts(EnhancedSortMergeJoinStrategy.class, counts, types);
                 } 
             } else if (strategy instanceof NestedTableJoinStrategy) {
             	updateCounts(NestedTableJoinStrategy.class, counts, types);

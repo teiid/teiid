@@ -61,7 +61,7 @@ import org.teiid.query.processor.relational.MergeJoinStrategy;
 import org.teiid.query.processor.relational.NestedLoopJoinStrategy;
 import org.teiid.query.processor.relational.NestedTableJoinStrategy;
 import org.teiid.query.processor.relational.NullNode;
-import org.teiid.query.processor.relational.PartitionedSortJoin;
+import org.teiid.query.processor.relational.EnhancedSortMergeJoinStrategy;
 import org.teiid.query.processor.relational.PlanExecutionNode;
 import org.teiid.query.processor.relational.ProjectIntoNode;
 import org.teiid.query.processor.relational.ProjectNode;
@@ -235,10 +235,10 @@ public class PlanToProcessConverter {
                 List joinCrits = (List) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
                 String depValueSource = (String) node.getProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE);
                 SortOption leftSort = (SortOption)node.getProperty(NodeConstants.Info.SORT_LEFT);
-                if(stype == JoinStrategyType.MERGE || stype == JoinStrategyType.PARTITIONED_SORT) {
+                if(stype == JoinStrategyType.MERGE || stype == JoinStrategyType.ENHANCED_SORT) {
                 	MergeJoinStrategy mjStrategy = null;
-                	if (stype.equals(JoinStrategyType.PARTITIONED_SORT)) { 
-                		mjStrategy = new PartitionedSortJoin(leftSort, (SortOption)node.getProperty(NodeConstants.Info.SORT_RIGHT));
+                	if (stype.equals(JoinStrategyType.ENHANCED_SORT)) { 
+                		mjStrategy = new EnhancedSortMergeJoinStrategy(leftSort, (SortOption)node.getProperty(NodeConstants.Info.SORT_RIGHT));
                 	} else {
                 		mjStrategy = new MergeJoinStrategy(leftSort, (SortOption)node.getProperty(NodeConstants.Info.SORT_RIGHT), false);
                 	}

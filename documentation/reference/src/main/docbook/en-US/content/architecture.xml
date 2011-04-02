@@ -148,11 +148,11 @@
         have a match, emit a row.  In general, merge join is
         on the order of n+m rather than n*m in nested loop.  Merge join is the
         default algorithm.</para>
-      <para>Any of the Join Algorithms above can be made into a
-        dependent join.  The
-        decision to implement a dependent join is considered after the
-        join algorithm is chosen, and does not currently influence the
-        algorithm selection.</para>
+      <para>Using costing information the engine may also delay the decision
+      to perform a full sort merge join.  Based upon the actual row counts involved, the engine 
+      can choose to build an index of the smaller side (which will perform similarly to a hash join) 
+      or to only partially sort the larger side of the relation.</para>
+      <para>Joins involving equi-join predicates are also eligible to be made into <xref linkend="dependent_joins"/>.</para>
     </section>
     <section>
       <title>Sort Based Algorithms</title>
@@ -162,13 +162,13 @@
         does not require all of the result set to ever be in memory yet
         uses the maximal amount of memory allowed by the buffer manager.
       </para>
-      <para>It consists of two phases.  The first phase (“sort”) will
+      <para>It consists of two phases.  The first phase ("sort") will
         take an unsorted input stream and produce one or more sorted
         input streams.  Each pass reads as much of the unsorted stream
         as possible, sorts it, and writes it back out as a new stream.
          Since the stream may be more than can fit in memory, this may
         result in many sorted streams.</para>
-      <para>The second phase (“merge”) consists of a set of phases
+      <para>The second phase ("merge") consists of a set of phases
         that grab the next batch from as many sorted input streams as
         will fit in memory.  It then repeatedly grabs the next tuple in
         sorted order from each stream and outputs merged sorted batches

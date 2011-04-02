@@ -580,12 +580,11 @@ public class TestVirtualDepJoin {
         elementIDs = metadata.getElementIDsInGroupID(groupID);
         elementSymbols = FakeDataStore.createElements(elementIDs);
     
-        TimestampUtil ts = new TimestampUtil();
         dataMgr.registerTuples(groupID, elementSymbols,                               
                                new List[] { 
-                                   Arrays.asList(new Object[] { new Long(100), "Miles", "Davis", ts.createDate(1926, 4, 25) }), //$NON-NLS-1$ //$NON-NLS-2$
-                                   Arrays.asList(new Object[] { new Long(200), "John", "Coltrane", ts.createDate(1926, 8, 23) }), //$NON-NLS-1$ //$NON-NLS-2$
-                                   Arrays.asList(new Object[] { new Long(300), "Thelonious", "Monk", ts.createDate(1917, 9, 10) }), //$NON-NLS-1$ //$NON-NLS-2$
+                                   Arrays.asList(new Object[] { new Long(100), "Miles", "Davis", TimestampUtil.createDate(1926, 4, 25) }), //$NON-NLS-1$ //$NON-NLS-2$
+                                   Arrays.asList(new Object[] { new Long(200), "John", "Coltrane", TimestampUtil.createDate(1926, 8, 23) }), //$NON-NLS-1$ //$NON-NLS-2$
+                                   Arrays.asList(new Object[] { new Long(300), "Thelonious", "Monk", TimestampUtil.createDate(1917, 9, 10) }), //$NON-NLS-1$ //$NON-NLS-2$
                                    } );    
 
         // Group CustomerMaster.Locations

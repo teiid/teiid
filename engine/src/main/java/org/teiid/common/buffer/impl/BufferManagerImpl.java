@@ -87,7 +87,7 @@ import org.teiid.query.sql.symbol.Expression;
  */
 public class BufferManagerImpl implements BufferManager, StorageManager {
 	
-	private static final double KB_PER_VALUE = 64d/1024;
+	public static final double KB_PER_VALUE = 64d/1024;
 	private static final int IO_BUFFER_SIZE = 1 << 14;
 	private static final int COMPACTION_THRESHOLD = 1 << 25; //start checking at 32 megs
 	
@@ -528,7 +528,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		if (this.maxProcessingBatches < 0) {
 			this.maxProcessingKB = Math.max((int)Math.min(128 * KB_PER_VALUE * processorBatchSize, Integer.MAX_VALUE), (int)(.1 * maxMemory)/maxActivePlans);
 		} else {
-			this.maxProcessingKB = Math.max(0, (int)Math.min(maxProcessingBatches * KB_PER_VALUE * processorBatchSize, Integer.MAX_VALUE));
+			this.maxProcessingKB = Math.max(0, (int)Math.min(Math.ceil(maxProcessingBatches * KB_PER_VALUE * processorBatchSize), Integer.MAX_VALUE));
 		}
 	}
 	
@@ -551,14 +551,15 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     	lock.lock();
 	    try {
 	    	if (mode == BufferReserveMode.WAIT) {
-		    	int waitCount = 0;
-		    	while (count - waitCount > this.reserveBatchKB) {
+	    		//don't wait for more than is available
+	    		int waitCount = Math.min(count, this.maxReserveBatchKB);
+		    	while (waitCount > 0 && waitCount > this.reserveBatchKB) {
 		    		try {
 						batchesFreed.await(100, TimeUnit.MILLISECONDS);
 					} catch (InterruptedException e) {
 						throw new TeiidRuntimeException(e);
 					}
-					waitCount++;
+					waitCount /= 2;
 		    	}	
 	    	}
 	    	if (this.reserveBatchKB >= count || mode == BufferReserveMode.FORCE) {

@@ -345,10 +345,11 @@ class TempTable {
 		//TODO: ordered insert optimization
 		TupleSource ts = createTupleSource(allColumns, null, null);
 		indexTable.insert(ts, allColumns);
+		indexTable.getTree().compact();
 	}
 	
 	private int reserveBuffers() {
-		return bm.reserveBuffers(leafBatchSize + (tree.getHeight() - 1)*keyBatchSize, BufferReserveMode.WAIT);
+		return bm.reserveBuffers(leafBatchSize + (tree.getHeight() - 1)*keyBatchSize, BufferReserveMode.FORCE);
 	}
 
 	public TupleSource createTupleSource(final List<? extends SingleElementSymbol> projectedCols, final Criteria condition, OrderBy orderBy) throws TeiidComponentException, TeiidProcessingException {
@@ -612,7 +613,7 @@ class TempTable {
 	}
 	
 	private void insertTuple(List<?> list, boolean ordered) throws TeiidComponentException, TeiidProcessingException {
-		if (tree.insert(list, ordered?InsertMode.ORDERED:InsertMode.NEW) != null) {
+		if (tree.insert(list, ordered?InsertMode.ORDERED:InsertMode.NEW, -1) != null) {
 			throw new TeiidProcessingException(QueryPlugin.Util.getString("TempTable.duplicate_key")); //$NON-NLS-1$
 		}
 	}
@@ -639,11 +640,11 @@ class TempTable {
 				}
 				return result;
 			} 
-			List<?> result = tree.insert(tuple, InsertMode.UPDATE);
+			List<?> result = tree.insert(tuple, InsertMode.UPDATE, -1);
 			if (indexTables != null) {
 				for (TempTable index : this.indexTables.values()) {
 					tuple = RelationalNode.projectTuple(RelationalNode.getProjectionIndexes(index.getColumnMap(), index.columns), tuple);
-					index.tree.insert(tuple, InsertMode.UPDATE);
+					index.tree.insert(tuple, InsertMode.UPDATE, -1);
 				}
 			}
 			return result;
@@ -653,7 +654,7 @@ class TempTable {
 	}
 	
 	private void updateTuple(List<?> tuple) throws TeiidComponentException {
-		if (tree.insert(tuple, InsertMode.UPDATE) == null) {
+		if (tree.insert(tuple, InsertMode.UPDATE, -1) == null) {
 			throw new AssertionError("Update failed"); //$NON-NLS-1$
 		}
 	}

@@ -73,7 +73,7 @@ public class MergeJoinStrategy extends JoinStrategy {
     
     //planning time information
     public enum SortOption {
-        ALREADY_SORTED, SORT, SORT_DISTINCT, PARTITION
+        ALREADY_SORTED, SORT, SORT_DISTINCT, NOT_SORTED
     }
     
     protected SortOption sortLeft;
@@ -112,7 +112,13 @@ public class MergeJoinStrategy extends JoinStrategy {
     @Override
     public void initialize(JoinNode joinNode) {
         super.initialize(joinNode);
-        this.outerState = this.leftSource;
+        resetMatchState();
+        this.processingSortRight = this.sortRight;
+        this.processingSortLeft = this.sortLeft;
+    }
+
+	protected void resetMatchState() {
+		this.outerState = this.leftSource;
         this.innerState = this.rightSource;
         this.mergeState = MergeState.SCAN;
         this.matchState = MatchState.MATCH_LEFT;
@@ -120,9 +126,7 @@ public class MergeJoinStrategy extends JoinStrategy {
         this.leftScanState = ScanState.READ;
         this.rightScanState = ScanState.READ;
         this.outerMatched = false;
-        this.processingSortRight = this.sortRight;
-        this.processingSortLeft = this.sortLeft;
-    }
+	}
 
     /**
      * @see org.teiid.query.processor.relational.JoinStrategy#close()

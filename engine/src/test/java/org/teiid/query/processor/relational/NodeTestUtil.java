@@ -22,15 +22,11 @@
 
 package org.teiid.query.processor.relational;
 
-import java.util.Properties;
-
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.StorageManager;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.common.buffer.impl.MemoryStorageManager;
 import org.teiid.core.TeiidComponentException;
-
-
 
 /** 
  * @since 4.2
@@ -41,6 +37,8 @@ public class NodeTestUtil {
     	BufferManagerImpl bufferManager = new BufferManagerImpl();
     	bufferManager.setProcessorBatchSize(procBatchSize);
     	bufferManager.setConnectorBatchSize(connectorBatchSize);
+    	bufferManager.setMaxProcessingBatchColumns((int)(bytesAvailable/procBatchSize/BufferManagerImpl.KB_PER_VALUE/1024));
+    	bufferManager.setMaxReserveBatchColumns((int)(bytesAvailable/procBatchSize/BufferManagerImpl.KB_PER_VALUE/1024));
         // Get the properties for BufferManager
         return createBufferManager(bufferManager);
     }
@@ -48,6 +46,8 @@ public class NodeTestUtil {
     static BufferManager getTestBufferManager(long bytesAvailable, int procBatchSize) {
     	BufferManagerImpl bufferManager = new BufferManagerImpl();
     	bufferManager.setProcessorBatchSize(procBatchSize);
+    	bufferManager.setMaxProcessingBatchColumns((int)(bytesAvailable/procBatchSize/BufferManagerImpl.KB_PER_VALUE/1024));
+    	bufferManager.setMaxReserveBatchColumns((int)(bytesAvailable/procBatchSize/BufferManagerImpl.KB_PER_VALUE/1024));
         // Get the properties for BufferManager
         return createBufferManager(bufferManager);
     }

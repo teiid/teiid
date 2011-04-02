@@ -48,6 +48,7 @@ class SourceState {
     private List expressions;
     private BatchCollector collector;
     private TupleBuffer buffer;
+    private List<TupleBuffer> buffers;
     private List<Object> outerVals;
     private IndexedTupleSource iterator;
     private int[] expressionIndexes;
@@ -75,7 +76,7 @@ class SourceState {
 		this.implicitBuffer = implicitBuffer;
 	}
     
-    private int[] getExpressionIndecies(List expressions,
+    static int[] getExpressionIndecies(List expressions,
                                         List elements) {
         if (expressions == null) {
             return new int[0];
@@ -104,7 +105,14 @@ class SourceState {
     }
     
     public void close() {
-    	if (this.buffer != null) {
+    	while (nextBuffer()) {
+    		//do nothing
+    	}
+        this.open = false;
+    }
+
+	private void closeBuffer() {
+		if (this.buffer != null) {
             this.buffer.remove();
             this.buffer = null;
         }
@@ -113,8 +121,7 @@ class SourceState {
         	this.iterator = null;
         }
         this.currentTuple = null;
-        this.open = false;
-    }
+	}
 
     public int getRowCount() throws TeiidComponentException, TeiidProcessingException {
     	return this.getTupleBuffer().getRowCount();
@@ -178,22 +185,58 @@ class SourceState {
     }
     
     public void sort(SortOption sortOption) throws TeiidComponentException, TeiidProcessingException {
-    	if (sortOption == SortOption.SORT || sortOption == SortOption.SORT_DISTINCT) {
-	    	if (this.sortUtility == null) {
-	    		TupleSource ts = null;
-	    		if (this.buffer != null) {
-	    			this.buffer.setForwardOnly(true);
-	    			ts = this.buffer.createIndexedTupleSource();
-	    		} else {
-	    			ts = new BatchIterator(this.source);
-	    		}
-			    this.sortUtility = new SortUtility(ts, expressions, Collections.nCopies(expressions.size(), OrderBy.ASC), 
-			    		sortOption == SortOption.SORT_DISTINCT?Mode.DUP_REMOVE_SORT:Mode.SORT, this.source.getBufferManager(), this.source.getConnectionID(), source.getElements());
-			    this.markDistinct(sortOption == SortOption.SORT_DISTINCT && expressions.size() == this.getOuterVals().size());
-			}
-			this.buffer = sortUtility.sort();
-	        this.markDistinct(sortUtility.isDistinct());
+    	if (sortOption == SortOption.ALREADY_SORTED) {
+    		return;
     	}
+    	if (this.sortUtility == null) {
+    		TupleSource ts = null;
+    		if (this.buffer != null) {
+    			this.buffer.setForwardOnly(true);
+    			ts = this.buffer.createIndexedTupleSource();
+    		} else {
+    			ts = new BatchIterator(this.source);
+    		}
+		    this.sortUtility = new SortUtility(ts, expressions, Collections.nCopies(expressions.size(), OrderBy.ASC), 
+		    		sortOption == SortOption.SORT_DISTINCT?Mode.DUP_REMOVE_SORT:Mode.SORT, this.source.getBufferManager(), this.source.getConnectionID(), source.getElements());
+		    this.markDistinct(sortOption == SortOption.SORT_DISTINCT && expressions.size() == this.getOuterVals().size());
+		}
+    	if (sortOption == SortOption.NOT_SORTED) {
+    		this.buffers = sortUtility.onePassSort();
+    		if (this.buffers.size() == 1) {
+    			this.markDistinct(sortUtility.isDistinct());
+    		}
+    		nextBuffer();
+    		return;
+    	} 
+		this.buffer = sortUtility.sort();
+        this.markDistinct(sortUtility.isDistinct());
+    }
+    
+    public boolean hasBuffer() {
+    	return this.buffer != null;
+    }
+    
+    public boolean nextBuffer() {
+    	this.closeBuffer();
+    	if (this.buffers == null || this.buffers.isEmpty()) {
+    		return false;
+    	}
+    	this.buffer = this.buffers.remove(this.buffers.size() - 1);
+    	this.buffer.setForwardOnly(false);
+    	this.resetState();
+    	return true;
     }
 
+    /**
+     * return the iterator to a fresh state
+     */
+	public void resetState() {
+		if (this.iterator != null) {
+			this.iterator.reset();
+			this.iterator.setPosition(1);
+		}
+		this.currentTuple = null;
+		this.maxProbeMatch = 1;
+	}
+    
 }

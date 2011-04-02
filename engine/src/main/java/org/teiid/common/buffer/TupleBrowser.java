@@ -79,11 +79,11 @@ public class TupleBrowser implements TupleSource {
 		this.tree = sTree;
 		this.direction = direction;
 		
-		init(lowerBound, upperBound);
+		init(lowerBound, upperBound, false);
 	}
 
 	private void init(List<Object> lowerBound,
-			List<?> upperBound)
+			List<?> upperBound, boolean isPartialKey)
 			throws TeiidComponentException {
 		if (lowerBound != null) {
 			lowerBound.addAll(Collections.nCopies(tree.getKeyLength() - lowerBound.size(), null));
@@ -95,7 +95,7 @@ public class TupleBrowser implements TupleSource {
 		boolean valid = true;
 		
 		if (upperBound != null) {
-			if (lowerBound != null && this.tree.comparator.compare(upperBound, lowerBound) < 0) {
+			if (!isPartialKey && lowerBound != null && this.tree.comparator.compare(upperBound, lowerBound) < 0) {
 				valid = false;
 			}
 			LinkedList<SearchResult> places = new LinkedList<SearchResult>();
@@ -105,11 +105,14 @@ public class TupleBrowser implements TupleSource {
 			boundIndex = upper.index;
 			if (boundIndex < 0) {
 				//we are guaranteed by find to not get back the -1 index, unless
-				//there are now tuples, in which case a bound of -1 is fine
+				//there are no tuples, in which case a bound of -1 is fine
 				boundIndex = Math.min(upper.values.getTuples().size(), -boundIndex -1) - 1;
 			}
 			if (!direction) {
 				values = upper.values;
+			}
+			if (lowerBound != null) {
+				valid = index<=boundIndex;
 			}
 		} else {
 			while (bound == null || bound.children != null) {
@@ -165,7 +168,7 @@ public class TupleBrowser implements TupleSource {
 					return null;
 				}
 				if (newValue.size() < tree.getKeyLength()) {
-					init(new ArrayList<Object>(newValue), newValue);
+					init(new ArrayList<Object>(newValue), newValue, true);
 					inPartial = true;
 					continue;
 				}

@@ -31,7 +31,7 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.processor.relational.PartitionedSortJoin;
+import org.teiid.query.processor.relational.EnhancedSortMergeJoinStrategy;
 import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.FakeMetadataObject;
@@ -76,7 +76,7 @@ public class TestPartitionedJoinPlanning {
             0,      // Sort
             0       // UnionAll
         });  
-        checkNodeTypes(plan, new int[] {1}, new Class[] {PartitionedSortJoin.class});
+        checkNodeTypes(plan, new int[] {1}, new Class[] {EnhancedSortMergeJoinStrategy.class});
     }    
 
 

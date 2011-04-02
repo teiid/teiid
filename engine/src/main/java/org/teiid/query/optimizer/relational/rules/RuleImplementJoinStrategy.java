@@ -41,6 +41,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
+import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
 import org.teiid.query.sql.lang.CompareCriteria;
@@ -98,7 +99,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
             } 
             
             /**
-             * Don't push sorts for unbalanced inner joins, we prefer to use partitioning 
+             * Don't push sorts for unbalanced inner joins, we prefer to use a processing time cost based decision 
              */
             boolean pushLeft = true;
             boolean pushRight = true;
@@ -163,8 +164,8 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 					}
 				}
         		joinNode.setProperty(Info.JOIN_CRITERIA, joinCriteria);
-        		leftExpressions = RuleAssignOutputElements.filter(reorder, leftExpressions);
-            	rightExpressions = RuleAssignOutputElements.filter(reorder, rightExpressions);
+        		leftExpressions = RelationalNode.projectTuple(reorder, leftExpressions);
+            	rightExpressions = RelationalNode.projectTuple(reorder, rightExpressions);
             	joinNode.setProperty(NodeConstants.Info.LEFT_EXPRESSIONS, leftExpressions);
             	joinNode.setProperty(NodeConstants.Info.RIGHT_EXPRESSIONS, rightExpressions);
             }
@@ -173,7 +174,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 			insertSort(joinNode.getLastChild(), rightExpressions, joinNode, metadata, capabilitiesFinder, pushRight);
         	
         	if (joinNode.getProperty(NodeConstants.Info.JOIN_TYPE) == JoinType.JOIN_INNER && (!pushRight || !pushedLeft)) {
-        		joinNode.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.PARTITIONED_SORT);
+        		joinNode.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.ENHANCED_SORT);
         	}
         }
         

@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.common.buffer.STree.InsertMode;
+import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.sql.symbol.ElementSymbol;
 
@@ -45,7 +46,7 @@ public class TestSTree {
 		STree map = bm.createSTree(elements, "1", 1);
 		
 		for (int i = 20000; i > 0; i--) {
-			assertNull(map.insert(Arrays.asList(i, String.valueOf(i)), InsertMode.NEW));
+			assertNull(map.insert(Arrays.asList(i, String.valueOf(i)), InsertMode.NEW, -1));
 			assertEquals(20000 - i + 1, map.getRowCount());
 		}
 		
@@ -54,7 +55,31 @@ public class TestSTree {
 		}
 		
 		assertEquals(0, map.getRowCount());
-		assertNull(map.insert(Arrays.asList(1, String.valueOf(1)), InsertMode.NEW));
+		assertNull(map.insert(Arrays.asList(1, String.valueOf(1)), InsertMode.NEW, -1));
 	}
 	
+	@Test public void testOrderedInsert() throws TeiidComponentException {
+		BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
+		bm.setProcessorBatchSize(16);
+		
+		ElementSymbol e1 = new ElementSymbol("x");
+		e1.setType(Integer.class);
+		List elements = Arrays.asList(e1);
+		STree map = bm.createSTree(elements, "1", 1);
+		
+		int size = (1<<16)+(1<<4)+1;
+		
+		for (int i = 0; i < size; i++) {
+			assertNull(map.insert(Arrays.asList(i), InsertMode.ORDERED, size));
+			assertEquals(i + 1, map.getRowCount());
+		}
+		
+		assertEquals(4, map.getHeight());
+
+		for (int i = 0; i < size; i++) {
+			assertNotNull(map.remove(Arrays.asList(i)));
+		}
+				
+	}
+
 }

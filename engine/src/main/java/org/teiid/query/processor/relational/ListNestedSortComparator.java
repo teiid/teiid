@@ -192,5 +192,13 @@ public class ListNestedSortComparator<T extends Comparable<? super T>> implement
     	return null;	
     }
     
+    public int[] getSortParameters() {
+		return sortParameters;
+	}
+    
+    public void setSortParameters(int[] sortParameters) {
+		this.sortParameters = sortParameters;
+	}
+    
 } // END CLASS    
 

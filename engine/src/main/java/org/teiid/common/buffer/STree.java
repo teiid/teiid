@@ -23,8 +23,8 @@
 package org.teiid.common.buffer;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -33,6 +33,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.teiid.common.buffer.SPage.SearchResult;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.query.processor.relational.ListNestedSortComparator;
 
 /**
  * Self balancing search tree using skip list like logic
@@ -53,7 +54,7 @@ public class STree {
 	protected volatile SPage[] header = new SPage[] {new SPage(this, true)};
     protected BatchManager keyManager;
     protected BatchManager leafManager;
-    protected Comparator comparator;
+    protected ListNestedSortComparator comparator;
     protected int pageSize;
     protected int keyLength;
     protected String[] types;
@@ -66,7 +67,7 @@ public class STree {
 	
 	public STree(BatchManager manager,
 			BatchManager leafManager,
-            final Comparator comparator,
+            final ListNestedSortComparator comparator,
             int pageSize,
             int keyLength,
             String[] types) {
@@ -168,7 +169,7 @@ public class STree {
 		return null;
 	}
 	
-	public List insert(List tuple, InsertMode mode) throws TeiidComponentException {
+	public List insert(List tuple, InsertMode mode, int sizeHint) throws TeiidComponentException {
 		LinkedList<SearchResult> places = new LinkedList<SearchResult>();
 		List match = null;
 		if (mode == InsertMode.ORDERED) {
@@ -193,7 +194,16 @@ public class STree {
 			}
 		}
 		List key = extractKey(tuple);
-		int level = randomLevel(); 
+		int level = 0;
+		if (mode != InsertMode.ORDERED || sizeHint == -1) {
+			level = randomLevel(); 
+		} else if (!places.isEmpty() && places.getLast().values.getTuples().size() == pageSize) {
+			int row = rowCount.get();
+			while (row != 0 && row%pageSize == 0) {
+				row = (row - pageSize + 1)/pageSize;
+				level++;
+			}
+		}
 		assert header.length == places.size();
 		if (level >= header.length) {
 			header = Arrays.copyOf(header, level + 1);
@@ -219,7 +229,10 @@ public class STree {
 	}
 	
 	List extractKey(List tuple) {
-		return tuple.subList(0, keyLength);
+		if (tuple.size() > keyLength) {
+			return new ArrayList(tuple.subList(0, keyLength));
+		}
+		return tuple;
 	}
 
 	SPage insert(List k, SearchResult result, SearchResult parent, Object value, boolean ordered) throws TeiidComponentException {
@@ -394,6 +407,35 @@ public class STree {
 	
 	public boolean isPreferMemory() {
 		return preferMemory;
+	}
+	
+	public ListNestedSortComparator getComparator() {
+		return comparator;
+	}
+	
+	/**
+	 * Quickly check if the index can be compacted
+	 */
+	public void compact() {
+		while (true) {
+			if (this.header.length == 1) {
+				return;
+			}
+			SPage child = this.header[header.length - 2];
+			if (child.next != null) {
+				//TODO: condense the page pointers
+				return;
+			}
+			//remove unneeded index level
+			this.header = Arrays.copyOf(this.header, header.length - 1);
+		}
+	}
+
+	public void removeRowIdFromKey() {
+		this.keyLength--;
+		int[] sortParameters = this.comparator.getSortParameters();
+		sortParameters = Arrays.copyOf(sortParameters, sortParameters.length - 1);
+		this.comparator.setSortParameters(sortParameters);
 	}
 	
 }
