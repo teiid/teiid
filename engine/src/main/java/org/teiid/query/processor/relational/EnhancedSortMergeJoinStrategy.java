@@ -136,6 +136,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	int rowId = 0;
     	List<?> lastTuple = null;
     	boolean sortedDistinct = sorted && !state.isDistinct();
+    	int sizeHint = index.getExpectedHeight(state.getTupleBuffer().getRowCount());
     	outer: while (its.hasNext()) {
     		//detect if sorted and distinct
     		List<?> originalTuple = its.nextTuple();
@@ -153,7 +154,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     		if (!state.isDistinct()) {
     			tuple.add(keyLength - 1, rowId++);
     		}
-    		index.insert(tuple, sorted?InsertMode.ORDERED:InsertMode.NEW, state.getTupleBuffer().getRowCount());
+    		index.insert(tuple, sorted?InsertMode.ORDERED:InsertMode.NEW, sizeHint);
     	}
     	if (!sorted) {
     		index.compact();

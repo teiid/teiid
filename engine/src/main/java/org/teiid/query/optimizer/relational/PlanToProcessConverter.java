@@ -307,7 +307,7 @@ public class PlanToProcessConverter {
                             
                             if(modelID != null){
                                 depAccessNode.setMaxSetSize(CapabilitiesUtil.getMaxInCriteriaSize(modelID, metadata, capFinder));
-                                depAccessNode.setMaxPredicates(CapabilitiesUtil.getMaxDependentPredicatesSize(modelID, metadata, capFinder));   
+                                depAccessNode.setMaxPredicates(CapabilitiesUtil.getMaxDependentPredicates(modelID, metadata, capFinder));   
                             }
                             processNode = depAccessNode;
                             aNode = depAccessNode;

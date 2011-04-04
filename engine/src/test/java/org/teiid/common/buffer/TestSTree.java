@@ -58,6 +58,25 @@ public class TestSTree {
 		assertNull(map.insert(Arrays.asList(1, String.valueOf(1)), InsertMode.NEW, -1));
 	}
 	
+	@Test public void testUnOrderedInsert() throws TeiidComponentException {
+		BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
+		bm.setProcessorBatchSize(16);
+		
+		ElementSymbol e1 = new ElementSymbol("x");
+		e1.setType(Integer.class);
+		List elements = Arrays.asList(e1);
+		STree map = bm.createSTree(elements, "1", 1);
+		
+		int size = (1<<16)+(1<<4)+1;
+		int logSize = map.getExpectedHeight(size);
+
+		for (int i = 0; i < size; i++) {
+			assertNull(map.insert(Arrays.asList(i), InsertMode.NEW, logSize));
+			assertEquals(i + 1, map.getRowCount());
+		}
+		assertTrue(5 >= map.getHeight());
+	}
+
 	@Test public void testOrderedInsert() throws TeiidComponentException {
 		BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
 		bm.setProcessorBatchSize(16);

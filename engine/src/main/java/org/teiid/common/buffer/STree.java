@@ -195,8 +195,12 @@ public class STree {
 		}
 		List key = extractKey(tuple);
 		int level = 0;
-		if (mode != InsertMode.ORDERED || sizeHint == -1) {
-			level = randomLevel(); 
+		if (mode != InsertMode.ORDERED) {
+			if (sizeHint > -1) {
+				level = Math.min(sizeHint, randomLevel());
+			} else {
+				level = randomLevel();
+			}
 		} else if (!places.isEmpty() && places.getLast().values.getTuples().size() == pageSize) {
 			int row = rowCount.get();
 			while (row != 0 && row%pageSize == 0) {
@@ -228,6 +232,18 @@ public class STree {
 		return null;
 	}
 	
+	public int getExpectedHeight(int sizeHint) {
+		if (sizeHint == 0) {
+			return 0;
+		}
+		int logSize = 1;
+		while (sizeHint > this.pageSize) {
+			logSize++;
+			sizeHint/=this.pageSize;
+		}
+		return logSize;
+	}
+
 	List extractKey(List tuple) {
 		if (tuple.size() > keyLength) {
 			return new ArrayList(tuple.subList(0, keyLength));

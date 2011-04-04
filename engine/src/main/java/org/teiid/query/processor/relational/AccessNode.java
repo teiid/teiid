@@ -31,13 +31,16 @@ import java.util.List;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleSource;
+import org.teiid.common.buffer.BufferManager.BufferReserveMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.util.CommandContext;
@@ -57,6 +60,8 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	private boolean isUpdate = false;
     private boolean returnedRows = false;
     protected Command nextCommand;
+    private int reserved;
+    private int schemaSize;
     
     protected AccessNode() {
 		super();
@@ -64,6 +69,13 @@ public class AccessNode extends SubqueryAwareRelationalNode {
     
 	public AccessNode(int nodeID) {
 		super(nodeID);
+	}
+	
+	@Override
+	public void initialize(CommandContext context, BufferManager bufferManager,
+			ProcessorDataManager dataMgr) {
+		super.initialize(context, bufferManager, dataMgr);
+    	this.schemaSize = getBufferManager().getSchemaSize(getOutputElements());
 	}
 
     public void reset() {
@@ -181,6 +193,10 @@ public class AccessNode extends SubqueryAwareRelationalNode {
                 	//end of source
                     tupleSource.closeSource();
                     tupleSources.remove(i--);
+            		if (reserved > 0) {
+                    	reserved -= schemaSize;
+                    	getBufferManager().releaseBuffers(schemaSize);
+            		}
                     if (!processCommandsIndividually()) {
                     	registerNext();
                     }
@@ -238,6 +254,9 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 			}
 		}
 		tupleSources.add(getDataManager().registerRequest(getContext(), atomicCommand, modelName, connectorBindingId, getID(), limit));
+		if (tupleSources.size() > 1) {
+        	reserved += getBufferManager().reserveBuffers(schemaSize, BufferReserveMode.FORCE);
+		}
 	}
 	
 	protected boolean processCommandsIndividually() {
@@ -249,6 +268,8 @@ public class AccessNode extends SubqueryAwareRelationalNode {
     }
     
 	public void closeDirect() {
+    	getBufferManager().releaseBuffers(reserved);
+    	reserved = 0;
 		super.closeDirect();
         closeSources();            
 	}

@@ -41,6 +41,7 @@ import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil.DependentCostAnalysis;
 import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -85,31 +86,31 @@ public final class RuleChooseDependent implements OptimizerRule {
             
             PlanNode chosenNode = chooseDepWithoutCosting(sourceNode, bothCandidates?siblingNode:null, analysisRecord);
             if(chosenNode != null) {
-                pushCriteria |= markDependent(chosenNode, joinNode, metadata);
+                pushCriteria |= markDependent(chosenNode, joinNode, metadata, null);
                 continue;
             }   
             
-            boolean useDepJoin = NewCalculateCostUtil.computeCostForDepJoin(joinNode, !entry.leftCandidate, metadata, capFinder, context) != null;
+            DependentCostAnalysis dca = NewCalculateCostUtil.computeCostForDepJoin(joinNode, !entry.leftCandidate, metadata, capFinder, context);
             PlanNode dependentNode = sourceNode;
             
-            if (bothCandidates && !useDepJoin) {
-                useDepJoin = NewCalculateCostUtil.computeCostForDepJoin(joinNode, true, metadata, capFinder, context) != null;
-                if (useDepJoin) {
+            if (bothCandidates && dca.expectedCardinality == null) {
+                dca = NewCalculateCostUtil.computeCostForDepJoin(joinNode, true, metadata, capFinder, context);
+                if (dca.expectedCardinality != null) {
                     dependentNode = siblingNode;
                 }
             }
             
-            if (useDepJoin) {
-                pushCriteria |= markDependent(dependentNode, joinNode, metadata);
+            if (dca.expectedCardinality != null) {
+                pushCriteria |= markDependent(dependentNode, joinNode, metadata, dca);
             } else {
             	float sourceCost = NewCalculateCostUtil.computeCostForTree(sourceNode, metadata);
             	float siblingCost = NewCalculateCostUtil.computeCostForTree(siblingNode, metadata);
             	
                 if (bothCandidates && sourceCost != NewCalculateCostUtil.UNKNOWN_VALUE && sourceCost < RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY 
                 		&& (sourceCost < siblingCost || siblingCost == NewCalculateCostUtil.UNKNOWN_VALUE)) {
-                    pushCriteria |= markDependent(siblingNode, joinNode, metadata);
+                    pushCriteria |= markDependent(siblingNode, joinNode, metadata, null);
                 } else if (siblingCost != NewCalculateCostUtil.UNKNOWN_VALUE && siblingCost < RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY) {
-                    pushCriteria |= markDependent(sourceNode, joinNode, metadata);
+                    pushCriteria |= markDependent(sourceNode, joinNode, metadata, null);
                 }
             }
         }
@@ -260,10 +261,11 @@ public final class RuleChooseDependent implements OptimizerRule {
     /**
      * Mark the specified access node to be made dependent
      * @param sourceNode Node to make dependent
+     * @param dca 
      * @throws TeiidComponentException 
      * @throws QueryMetadataException 
      */
-    boolean markDependent(PlanNode sourceNode, PlanNode joinNode, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+    boolean markDependent(PlanNode sourceNode, PlanNode joinNode, QueryMetadataInterface metadata, DependentCostAnalysis dca) throws QueryMetadataException, TeiidComponentException {
 
         boolean isLeft = joinNode.getFirstChild() == sourceNode;
         
@@ -279,7 +281,7 @@ public final class RuleChooseDependent implements OptimizerRule {
         // Create DependentValueSource and set on the independent side as this will feed the values
         joinNode.setProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE, id);
 
-        List<PlanNode> crits = getDependentCriteriaNodes(id, independentExpressions, dependentExpressions, isLeft?joinNode.getLastChild():joinNode.getFirstChild(), metadata);
+        List<PlanNode> crits = getDependentCriteriaNodes(id, independentExpressions, dependentExpressions, isLeft?joinNode.getLastChild():joinNode.getFirstChild(), metadata, dca);
         
         PlanNode newRoot = sourceNode;
         
@@ -303,21 +305,30 @@ public final class RuleChooseDependent implements OptimizerRule {
      * @since 4.3
      */
     private List<PlanNode> getDependentCriteriaNodes(String id, List independentExpressions,
-                                           List dependentExpressions, PlanNode indNode, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+                                           List dependentExpressions, PlanNode indNode, QueryMetadataInterface metadata, DependentCostAnalysis dca) throws QueryMetadataException, TeiidComponentException {
         
         List<PlanNode> result = new LinkedList<PlanNode>();
         
-        Iterator depIter = dependentExpressions.iterator();
-        Iterator indepIter = independentExpressions.iterator();
+        Float cardinality = null;
         
-        float cardinality = NewCalculateCostUtil.computeCostForTree(indNode, metadata);
-        
-        while(depIter.hasNext()) {
-            Expression depExpr = (Expression) depIter.next();
-            Expression indepExpr = (Expression) indepIter.next();
+        for (int i = 0; i < dependentExpressions.size(); i++) {
+            Expression depExpr = (Expression) dependentExpressions.get(i);
+            Expression indepExpr = (Expression) independentExpressions.get(i);
             DependentSetCriteria crit = new DependentSetCriteria(SymbolMap.getExpression(depExpr), id);
-            Collection<ElementSymbol> elems = ElementCollectorVisitor.getElements(indepExpr, true);
-            float ndv = NewCalculateCostUtil.getNDVEstimate(indNode, metadata, cardinality, elems, true);
+            float ndv = NewCalculateCostUtil.UNKNOWN_VALUE;
+            if (dca != null && dca.expectedNdv[i] != null) {
+            	if (dca.expectedNdv[i] > 4*dca.maxNdv[i]) {
+            		continue; //not necessary to use
+            	}
+            	ndv = dca.expectedNdv[i];
+            	crit.setMaxNdv(dca.maxNdv[i]);
+            } else { 
+	            Collection<ElementSymbol> elems = ElementCollectorVisitor.getElements(indepExpr, true);
+	            if (cardinality == null) {
+	            	cardinality = NewCalculateCostUtil.computeCostForTree(indNode, metadata);
+	            }
+	            ndv = NewCalculateCostUtil.getNDVEstimate(indNode, metadata, cardinality, elems, true);
+            }
             crit.setNdv(ndv);
             crit.setValueExpression(indepExpr);
             

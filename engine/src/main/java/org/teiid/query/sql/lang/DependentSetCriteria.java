@@ -24,6 +24,7 @@ package org.teiid.query.sql.lang;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.ContextReference;
 import org.teiid.query.sql.symbol.Expression;
@@ -46,7 +47,8 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
     /**
      * The estimated number of distinct values for the value Expression
      */
-    private float ndv;
+    private float ndv = NewCalculateCostUtil.UNKNOWN_VALUE;
+    private float maxNdv = NewCalculateCostUtil.UNKNOWN_VALUE;
     
     /** 
      * Construct with the left expression 
@@ -60,6 +62,14 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
     public String getContextSymbol() {
     	return id;
     }
+    
+    public float getMaxNdv() {
+		return maxNdv;
+	}
+    
+    public void setMaxNdv(float maxNdv) {
+		this.maxNdv = maxNdv;
+	}
     
     public float getNdv() {
 		return ndv;
@@ -144,6 +154,7 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
         }
         criteriaCopy.id = this.id;
         criteriaCopy.ndv = this.ndv;
+        criteriaCopy.maxNdv = this.maxNdv;
         return criteriaCopy;
     }
     

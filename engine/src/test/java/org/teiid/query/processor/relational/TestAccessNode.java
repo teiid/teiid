@@ -61,7 +61,7 @@ public class TestAccessNode {
         BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
         FakeDataManager dataManager = new FakeDataManager(); 
         TestProcessor.sampleData1(dataManager);
-        
+        node.setElements(command.getProjectedSymbols());
         node.initialize(context, bm, dataManager);
         node.setShouldEvaluateExpressions(true);
         // Call open()
@@ -99,6 +99,7 @@ public class TestAccessNode {
         BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
         FakeDataManager dataManager = new FakeDataManager(); 
         TestProcessor.sampleData1(dataManager);
+        node.setElements(query.getProjectedSymbols());
         node.initialize(context, bm, dataManager);
         // Call open()
         node.open();

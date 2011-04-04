@@ -365,7 +365,7 @@ class JoinRegion {
 		if (leftExpressions.isEmpty()) {
 			return null;
 		}
-		return NewCalculateCostUtil.computeCostForDepJoin(indNode, depNode, leftExpressions, rightExpressions, metadata, capFinder, context);
+		return NewCalculateCostUtil.computeCostForDepJoin(indNode, depNode, leftExpressions, rightExpressions, metadata, capFinder, context).expectedCardinality;
 	}
     
     /**

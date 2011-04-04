@@ -25,12 +25,14 @@ package org.teiid.query.processor;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import org.junit.Test;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.optimizer.TestOptimizer;
+import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -809,5 +811,47 @@ public class TestDependentJoins {
        // Run query
        TestProcessor.helpProcess(plan, dataManager, expected);
    }    
+    
+    @Test public void testDependentJoinBackoff() throws Exception {
+        // Create query 
+        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm6.g1 WHERE pm1.g1.e1=pm6.g1.e1"; //$NON-NLS-1$
+
+        // Construct data manager with data
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData4(dataManager);
+
+        FakeMetadataFacade fakeMetadata = FakeMetadataFactory.example1();
+
+        FakeMetadataFactory.setCardinality("pm1.g1", 1, fakeMetadata);
+        FakeMetadataFactory.setCardinality("pm6.g1", 1000, fakeMetadata);
+        // Plan query
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities depcaps = new BasicSourceCapabilities();
+        depcaps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        depcaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(1));
+        depcaps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm6", depcaps); //$NON-NLS-1$
+
+        List[] expected = new List[] {
+            Arrays.asList(new Object[] {
+                new String("b")})}; //$NON-NLS-1$
+
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, fakeMetadata, new String[] {
+        		"SELECT pm6.g1.e1 FROM pm6.g1 WHERE pm6.g1.e1 IN (<dependent values>) ORDER BY pm6.g1.e1",
+        		"SELECT pm1.g1.e1 FROM pm1.g1"
+        }, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
+
+        // Run query
+        TestProcessor.helpProcess(plan, dataManager, expected);
+        
+        //note that the dependent join was not actually performed
+        assertEquals(new HashSet<String>(Arrays.asList("SELECT pm1.g1.e1 FROM pm1.g1", "SELECT pm6.g1.e1 FROM pm6.g1 ORDER BY pm6.g1.e1")), 
+        		new HashSet<String>(dataManager.getQueries()));
+    }
     
 }

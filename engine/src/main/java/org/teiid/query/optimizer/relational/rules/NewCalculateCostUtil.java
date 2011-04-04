@@ -97,6 +97,12 @@ public class NewCalculateCostUtil {
     	NDV,
     	NNV
     }
+    
+    public static class DependentCostAnalysis {
+    	Float[] maxNdv;
+    	Float[] expectedNdv;
+    	Float expectedCardinality;
+    }
 
     @SuppressWarnings("serial")
 	private static class ColStats extends LinkedHashMap<Expression, float[]> {
@@ -1112,7 +1118,7 @@ public class NewCalculateCostUtil {
      * @throws QueryPlannerException 
      * 
      */
-    public static Float computeCostForDepJoin(PlanNode joinNode, boolean leftIndependent, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, CommandContext context) 
+    public static DependentCostAnalysis computeCostForDepJoin(PlanNode joinNode, boolean leftIndependent, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, CommandContext context) 
         throws TeiidComponentException, QueryMetadataException, QueryPlannerException {
         
         PlanNode independentNode = leftIndependent?joinNode.getFirstChild():joinNode.getLastChild();
@@ -1125,8 +1131,8 @@ public class NewCalculateCostUtil {
 				independentExpressions, dependentExpressions, metadata,
 				capFinder, context);
     }
-
-	public static Float computeCostForDepJoin(PlanNode independentNode,
+    
+	public static DependentCostAnalysis computeCostForDepJoin(PlanNode independentNode,
 			PlanNode dependentNode, List independentExpressions,
 			List dependentExpressions, QueryMetadataInterface metadata,
 			CapabilitiesFinder capFinder, CommandContext context)
@@ -1134,9 +1140,13 @@ public class NewCalculateCostUtil {
 
         float independentCardinality = computeCostForTree(independentNode, metadata);
         float dependentCardinality = computeCostForTree(dependentNode, metadata);
-        
+
+        DependentCostAnalysis dca = new DependentCostAnalysis();
+        dca.maxNdv = new Float[independentExpressions.size()];
+        dca.expectedNdv = new Float[independentExpressions.size()];
+
         if (independentCardinality == UNKNOWN_VALUE || dependentCardinality == UNKNOWN_VALUE) {
-        	return null;
+        	return dca; //no cost information to be determined
         }
         
         float processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
@@ -1153,56 +1163,9 @@ public class NewCalculateCostUtil {
 			float indSymbolNDV = getNDVEstimate(independentNode, metadata, independentCardinality, indElements, true);
 			Expression depExpr = (Expression)dependentExpressions.get(i);
 			
-			LinkedList<PlanNode> critNodes = new LinkedList<PlanNode>();
-			LinkedList<PlanNode> initialTargets = new LinkedList<PlanNode>();
-			
 			LinkedList<Expression> depExpressions = new LinkedList<Expression>();
-			LinkedList<PlanNode> targets = new LinkedList<PlanNode>();
-			critNodes.add(RelationalPlanner.createSelectNode(new DependentSetCriteria(depExpr, null), false));
-			initialTargets.add(dependentNode);
-			while (!critNodes.isEmpty()) {
-				PlanNode critNode = critNodes.remove();
-				PlanNode initial = initialTargets.remove();
-				if (critNode.getGroups().isEmpty()) {
-					//TODO: we need to project constants up through a plan to avoid this case
-					continue;
-				}
-				PlanNode sourceNode = FrameUtil.findOriginatingNode(initial, critNode.getGroups());
-				PlanNode target = sourceNode;
-				if (initial != sourceNode) {
-					target = rpsc.examinePath(initial, sourceNode, metadata, capFinder);					
-				}
-				if (target != sourceNode || (sourceNode.getType() == NodeConstants.Types.SOURCE && sourceNode.getChildCount() == 0)) {
-					targets.add(target);
-					DependentSetCriteria dsc = (DependentSetCriteria)critNode.getProperty(Info.SELECT_CRITERIA);
-					depExpressions.add(dsc.getExpression());
-					continue;
-				}
-				if (sourceNode.getType() == NodeConstants.Types.SOURCE) {
-					PlanNode child = sourceNode.getFirstChild();
-		            child = FrameUtil.findOriginatingNode(child, child.getGroups());
-		            if (child != null && child.getType() == NodeConstants.Types.SET_OP) {
-		            	targets.add(target);
-						DependentSetCriteria dsc = (DependentSetCriteria)critNode.getProperty(Info.SELECT_CRITERIA);
-						depExpressions.add(dsc.getExpression());
-						//TODO: we need better handling for set op situations
-						continue;
-		            }
-					if (!rpsc.pushAcrossFrame(sourceNode, critNode, metadata)) {
-						targets.add(target);
-						DependentSetCriteria dsc = (DependentSetCriteria)critNode.getProperty(Info.SELECT_CRITERIA);
-						depExpressions.add(dsc.getExpression());
-					}
-					List<PlanNode> createdNodes = rpsc.getCreatedNodes();
-					for (PlanNode planNode : createdNodes) {
-						critNodes.add(planNode);
-						initialTargets.add(planNode.getFirstChild());
-						NodeEditor.removeChildNode(planNode.getParent(), planNode);
-					}
-					rpsc.getCreatedNodes().clear();
-				} 
-				//the source must be a null or project node, which we don't care about
-			}
+			LinkedList<PlanNode> targets = determineTargets(dependentNode,
+					metadata, capFinder, rpsc, depExpr, depExpressions);
 			
 			Iterator<Expression> exprIter = depExpressions.iterator(); 
 			for (Iterator<PlanNode> targetIter = targets.iterator(); targetIter.hasNext();) {
@@ -1216,6 +1179,11 @@ public class NewCalculateCostUtil {
 		            setCriteriaBatchSize = CapabilitiesUtil.getMaxInCriteriaSize(RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata), metadata, capFinder);
 		            if (setCriteriaBatchSize < 1) {
 		                setCriteriaBatchSize = indSymbolNDV;
+		            } else {
+		            	int numberOfSets = CapabilitiesUtil.getMaxDependentPredicates(RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata), metadata, capFinder);
+		            	if (numberOfSets > 0) {
+		            		setCriteriaBatchSize *= Math.max(1, numberOfSets /dependentExpressions.size()); //scale down to be conservative 
+		            	}
 		            }
 		        } else if (indSymbolNDV > processorBatchSize) {
 	            	//don't bother making a virtual join dependent if they are likely to be large
@@ -1259,26 +1227,111 @@ public class NewCalculateCostUtil {
 				if (!usesKey && accessNode != null && target.getType() == NodeConstants.Types.SOURCE && target.getChildCount() == 0) {
 					usesIndex = usesKey(depElems, target.getGroups(), metadata, false);
 				}
-		        float dependentAccessCardinality = Math.min(depTargetCardinality, depTargetCardinality * indSymbolNDV / depSymbolNDV);
-		        float scaledCardinality = Math.min(dependentCardinality, dependentCardinality * indSymbolNDV / depSymbolNDV);
-		        float numberComparisons = (usesIndex?safeLog(depTargetCardinality):depTargetCardinality) * (usesIndex?indSymbolNDV:safeLog(indSymbolNDV));
-		        float newDependentQueries = accessNode == null?0:(float)Math.ceil(indSymbolNDV / setCriteriaBatchSize);
-		        
-		        float relativeCost = newDependentQueries*procNewRequestTime;
-		        float relativeComparisonCost = (numberComparisons - safeLog(scaledCardinality) /*no longer needed by the join*/
-		            /*sort cost reduction, however it's always true if its on the source and using an index
-		              TODO: there are other cost reductions, which we could get by checking the other parent nodes */
-		        	+ (scaledCardinality*safeLog(scaledCardinality) - dependentCardinality*safeLog(dependentCardinality))) 
-		        	* compareTime;
-		        float relativeReadCost = (dependentAccessCardinality - depTargetCardinality)*readTime; //cardinality reductions
-		        
-		        if (relativeCost + relativeComparisonCost + relativeReadCost < 0) {
-		        	return scaledCardinality;
+		        float[] estimates = estimateCost(accessNode, setCriteriaBatchSize, usesIndex, depTargetCardinality, indSymbolNDV, dependentCardinality, depSymbolNDV);
+		        if (estimates[1] < 0) {
+		        	if (dca.expectedCardinality == null) {
+		        		dca.expectedCardinality = estimates[0];
+		        	} else {
+		        		dca.expectedCardinality = Math.min(dca.expectedCardinality, estimates[0]);
+		        	}
 		        }
+		        dca.expectedNdv[i] = indSymbolNDV;
+		        //use a quick binary search to find the max ndv
+		        float min = 0;
+		        float max = Math.max(Integer.MAX_VALUE, indSymbolNDV);
+		        for (int j = 0; j < 10; j++) {
+		        	if (estimates[1] > 1) {
+		        		max = indSymbolNDV;
+		        		indSymbolNDV = (indSymbolNDV + min)/2;
+		        	} else if (estimates[1] < 0) {
+		        		min = indSymbolNDV;
+		        		//we assume that values should be closer to the min side
+		        		indSymbolNDV = Math.min(indSymbolNDV * 8 + 1, (indSymbolNDV + max)/2);
+		        	} else {
+		        		break;
+		        	}
+		        	estimates = estimateCost(accessNode, setCriteriaBatchSize, usesIndex, depTargetCardinality, indSymbolNDV, dependentCardinality, depSymbolNDV);
+		        }
+		        dca.maxNdv[i] = indSymbolNDV;
 			}
 		}
+        return dca;
+	}
+	
+	private static float[] estimateCost(PlanNode accessNode, float setCriteriaBatchSize, boolean usesIndex, float depTargetCardinality, 
+			float indSymbolNDV, float dependentCardinality, float depSymbolNDV) {
+        float dependentAccessCardinality = Math.min(depTargetCardinality, depTargetCardinality * indSymbolNDV / depSymbolNDV);
+        float scaledCardinality = Math.min(dependentCardinality, dependentCardinality * indSymbolNDV / depSymbolNDV);
+		float numberComparisons = (usesIndex?safeLog(depTargetCardinality):depTargetCardinality) * (usesIndex?indSymbolNDV:safeLog(indSymbolNDV));
+        float newDependentQueries = accessNode == null?0:(float)Math.ceil(indSymbolNDV / setCriteriaBatchSize);
         
-        return null;
+        float relativeCost = newDependentQueries*procNewRequestTime;
+        float relativeComparisonCost = (numberComparisons - safeLog(scaledCardinality) /*no longer needed by the join*/
+            /*sort cost reduction, however it's always true if its on the source and using an index
+              TODO: there are other cost reductions, which we could get by checking the other parent nodes */
+        	+ (scaledCardinality*safeLog(scaledCardinality) - dependentCardinality*safeLog(dependentCardinality))) 
+        	* compareTime;
+        float relativeReadCost = (dependentAccessCardinality - depTargetCardinality)*readTime; //cardinality reductions
+        return new float[] {scaledCardinality, relativeCost + relativeComparisonCost + relativeReadCost};
+	}
+	
+	/**
+	 * For now we only consider a single target. In the future we may consider multiple.
+	 */
+	private static LinkedList<PlanNode> determineTargets(
+			PlanNode dependentNode, QueryMetadataInterface metadata,
+			CapabilitiesFinder capFinder, RulePushSelectCriteria rpsc,
+			Expression depExpr, LinkedList<Expression> depExpressions)
+			throws QueryPlannerException, TeiidComponentException {
+		LinkedList<PlanNode> targets = new LinkedList<PlanNode>();
+		LinkedList<PlanNode> critNodes = new LinkedList<PlanNode>();
+		critNodes.add(RelationalPlanner.createSelectNode(new DependentSetCriteria(depExpr, null), false));
+		LinkedList<PlanNode> initialTargets = new LinkedList<PlanNode>();
+		initialTargets.add(dependentNode);
+		while (!critNodes.isEmpty()) {
+			PlanNode critNode = critNodes.remove();
+			PlanNode initial = initialTargets.remove();
+			if (critNode.getGroups().isEmpty()) {
+				//TODO: we need to project constants up through a plan to avoid this case
+				continue;
+			}
+			PlanNode sourceNode = FrameUtil.findOriginatingNode(initial, critNode.getGroups());
+			PlanNode target = sourceNode;
+			if (initial != sourceNode) {
+				target = rpsc.examinePath(initial, sourceNode, metadata, capFinder);					
+			}
+			if (target != sourceNode || (sourceNode.getType() == NodeConstants.Types.SOURCE && sourceNode.getChildCount() == 0)) {
+				targets.add(target);
+				DependentSetCriteria dsc = (DependentSetCriteria)critNode.getProperty(Info.SELECT_CRITERIA);
+				depExpressions.add(dsc.getExpression());
+				continue;
+			}
+			if (sourceNode.getType() == NodeConstants.Types.SOURCE) {
+				PlanNode child = sourceNode.getFirstChild();
+		        child = FrameUtil.findOriginatingNode(child, child.getGroups());
+		        if (child != null && child.getType() == NodeConstants.Types.SET_OP) {
+		        	targets.add(target);
+					DependentSetCriteria dsc = (DependentSetCriteria)critNode.getProperty(Info.SELECT_CRITERIA);
+					depExpressions.add(dsc.getExpression());
+					//TODO: we need better handling for set op situations
+					continue;
+		        }
+				if (!rpsc.pushAcrossFrame(sourceNode, critNode, metadata)) {
+					targets.add(target);
+					DependentSetCriteria dsc = (DependentSetCriteria)critNode.getProperty(Info.SELECT_CRITERIA);
+					depExpressions.add(dsc.getExpression());
+				}
+				List<PlanNode> createdNodes = rpsc.getCreatedNodes();
+				for (PlanNode planNode : createdNodes) {
+					critNodes.add(planNode);
+					initialTargets.add(planNode.getFirstChild());
+					NodeEditor.removeChildNode(planNode.getParent(), planNode);
+				}
+				rpsc.getCreatedNodes().clear();
+			} 
+			//the source must be a null or project node, which we don't care about
+		}
+		return targets;
 	}
 
 	static float getNDVEstimate(PlanNode indNode,

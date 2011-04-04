@@ -321,7 +321,7 @@ public class CapabilitiesUtil {
         return value;
     }
     
-    public static int getMaxDependentPredicatesSize(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    public static int getMaxDependentPredicates(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, TeiidComponentException {
     	return getProperty(Capability.MAX_DEPENDENT_PREDICATES, modelID, metadata, capFinder);
     }

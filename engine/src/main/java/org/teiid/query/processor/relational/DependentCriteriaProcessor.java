@@ -38,6 +38,7 @@ import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.AbstractSetCriteria;
@@ -66,6 +67,10 @@ public class DependentCriteriaProcessor {
         Object nextValue;
 
         boolean isNull;
+        
+        float maxNdv = NewCalculateCostUtil.UNKNOWN_VALUE;
+        
+        boolean overMax;
     }
 
     class TupleState {
@@ -96,6 +101,21 @@ public class DependentCriteriaProcessor {
             	dvs = new DependentValueSource(sortUtility.sort());
             	for (SetState setState : dependentSetStates) {
                     setState.valueIterator = dvs.getValueIterator(setState.valueExpression);
+                    if (setState.maxNdv > 0 && setState.maxNdv < dvs.getTupleBuffer().getRowCount()) {
+                    	ValueIterator vi = dvs.getValueIterator(setState.valueExpression);
+                    	Comparable last = null;
+                    	int distinctCount = 0;
+                    	while (vi.hasNext()) {
+                    		Comparable next = (Comparable) vi.next();
+                    		if (last == null || next.compareTo(last) != 0) {
+                    			distinctCount++;
+                    		}
+                    		last = next;
+                    	}
+                    	if (distinctCount > setState.maxNdv) {
+                    		setState.overMax = true;
+                    	}
+                    }
     			}
             }
         }
@@ -177,6 +197,7 @@ public class DependentCriteriaProcessor {
                     sources.add(ts.getDepedentSetStates());
                 }
                 ts.getDepedentSetStates().add(state);
+                state.maxNdv = dsc.getMaxNdv();
             } 
         }        
     }
@@ -276,21 +297,25 @@ public class DependentCriteriaProcessor {
 
 	        	if (i == currentIndex++) {
 		
-		            boolean done = false;
+		            int doneCount = 0;
 		
-		            while (!done) {
+		            while (doneCount < source.size()) {
 		
 		                boolean isNull = false;
 		                boolean lessThanMax = true;
 		
 		                for (SetState state : source) {
+		                	if (state.overMax) {
+		                		doneCount++;
+		                		continue;
+		                	}
 		                    if (state.nextValue == null && !state.isNull) {
 		                        if (state.valueIterator.hasNext()) {
 		                            state.nextValue = state.valueIterator.next();
 		                            state.isNull = state.nextValue == null;
 		                        } else {
 		                            state.valueIterator.reset();
-		                            done = true; // should be true for each iterator from this source
+		                            doneCount++; // should be true for each iterator from this source
 		                            continue;
 		                        }
 		                    }
@@ -299,7 +324,7 @@ public class DependentCriteriaProcessor {
 		                    lessThanMax &= state.replacement.size() < maxSize * (run + 1);
 		                }
 		
-		                if (done) {
+		                if (doneCount == source.size()) {
 		                    if (!restartIndexes.isEmpty() && restartIndexes.getLast().intValue() == i) {
 		                        restartIndexes.removeLast();
 		                    }
@@ -316,7 +341,7 @@ public class DependentCriteriaProcessor {
 		                    }
 		                } else {
 		                    restartIndexes.add(i);
-		                    done = true;
+		                    break;
 		                }
 		            }
 	        	}
@@ -339,6 +364,9 @@ public class DependentCriteriaProcessor {
     }
     
     public Criteria replaceDependentCriteria(AbstractSetCriteria crit, SetState state) {
+    	if (state.overMax) {
+    		return QueryRewriter.TRUE_CRITERIA;
+    	}
     	if (state.replacement.isEmpty()) {
             // No values - return criteria that is always false
             return QueryRewriter.FALSE_CRITERIA;

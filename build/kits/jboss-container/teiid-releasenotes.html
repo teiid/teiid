@@ -41,13 +41,14 @@
 	<LI><B>InterSystems Cache</B> - InterSystems Cache database translator is now available to use as supported source under Teiid.
 	<LI><B>userRequestSourceConcurrency</B> - was added to control the number of concurrent source queries allowed for each user request.
 	<LI><B>Memory Management Improvements</B> - maxReserveBatchColumns and maxProcessingBatchesColumns will be default be determined automatically and will more reliably prevent memory issues.  See the admin guide for more.
-	<LI><B>Subquery optimization control</B> - added the MJ and NO_UNNEST hints and the org.teiid.subqueryUnnestDefault system property to control the optimization of subqueries to traditional joins or to a merge join implemenation of a semijoin or antijoin.
+	<LI><B>Subquery optimization control</B> - added the MJ and NO_UNNEST hints and the org.teiid.subqueryUnnestDefault system property to control the optimization of subqueries to traditional joins or to a merge join implementation of a semijoin or antijoin.
 	<LI><B>Local connection threads</B> - local connection calling threads will be used to process work rather than using an engine thread.  This helps decouple the configuration of maxThreads.
 	<LI><B>Dependent Join Improvements</B> - several major improvements were made to increase performance and develop better plans.
 		<UL>
 			<LI><B>Improved Planning</B> - the decision to create a dependent join is now considered earlier in planning and is much more effective for dependent joins involving multiple unrelated independent tables. 
 			<LI><B>IN predicate splitting</B> - the planner can now split large dependent IN predicates into multiple IN predicates, which is controlled by the translator property MaxDepdendentInPredicates.  This allows for much larger dependent joins to be performed as a single query.
-			<LI><B>Dependent query parallization</B> - when multiple dependent queries are still required, then they will be run in parallel (up to MaxUserSourceRequestConcurrency), rather than sequentially. 
+			<LI><B>Dependent query parallization</B> - when multiple dependent queries are still required, then they will be run in parallel (up to MaxUserSourceRequestConcurrency), rather than sequentially.
+			<LI><B>Cost based back-off</B> - for cost based dependent joins if the number of independent values is too large, then the join will be performed as normal. 
 		</UL>
 	<LI><B>Enhanced Sort Join</B> - the partitioned merge join was replaced with an enhanced sort join.  The enhanced sort join will use the actual row counts from each side of the relation to perform a index based join if one side is small enough, a partial sort of the larger side and a repeated merge join if the tuples are unbalanced but one side is not small enough to form an index, or a standard sort merge join if the tuples are balanced.   
 </UL>
