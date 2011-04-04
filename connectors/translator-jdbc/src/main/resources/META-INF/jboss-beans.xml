@@ -306,12 +306,12 @@
     </bean>     
     
     <!-- Ingres 9.3 -->
-    <bean name="translator-ingres-template" class="org.teiid.templates.TranslatorDeploymentTemplate">
+    <bean name="translator-ingres-template93" class="org.teiid.templates.TranslatorDeploymentTemplate">
         <property name="info"><inject bean="translator-ingres93" /> </property>
         <property name="managedObjectFactory"> <inject bean="ManagedObjectFactory" /> </property>
     </bean>
 
-    <bean name="translator-ingres" class="org.teiid.templates.TranslatorTemplateInfo">
+    <bean name="translator-ingres93" class="org.teiid.templates.TranslatorTemplateInfo">
         <constructor factoryMethod="createTemplateInfo">
             <factory bean="TranslatorDeploymentTemplateInfoFactory" />
             <parameter class="java.lang.Class">org.teiid.templates.TranslatorTemplateInfo</parameter>
