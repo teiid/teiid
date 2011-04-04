@@ -301,6 +301,9 @@
                     You can use a sequence as the default value for insert columns by 
                     setting the column to autoincrement and the name in source to 
                     <code>&lt;element name&gt;:SEQUENCE=&lt;sequence name&gt;.&lt;sequence value&gt;</code>.
+                    A rownum column can also added to any Oracle physical table to support the rownum pseudo-column.
+                    A rownum colum should have a name in source of <code>rownum</code>.  These rownum columns do not 
+                    have the same semantics as the Oracle rownum construct so care must be taken in their usage. 
                     </para>
                 </listitem>
                 <listitem>
