@@ -144,14 +144,15 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
 		// add transformation metadata to the repository.
 		this.vdbRepository.addVDB(deployment, store, visibilityMap, udf, cmr);
 		
-		try {
-			saveMetadataStore((VFSDeploymentUnit)unit, deployment, store);
-		} catch (IOException e1) {
-			LogManager.logWarning(LogConstants.CTX_RUNTIME, e1, RuntimePlugin.Util.getString("vdb_save_failed", deployment.getName()+"."+deployment.getVersion())); //$NON-NLS-1$ //$NON-NLS-2$			
-		}
-			
 		boolean valid = true;
 		synchronized (deployment) {
+			if (indexFactory != null) {
+				try {
+					saveMetadataStore((VFSDeploymentUnit)unit, deployment, store);
+				} catch (IOException e1) {
+					LogManager.logWarning(LogConstants.CTX_RUNTIME, e1, RuntimePlugin.Util.getString("vdb_save_failed", deployment.getName()+"."+deployment.getVersion())); //$NON-NLS-1$ //$NON-NLS-2$			
+				}
+			}
 			if (!preview) {
 				valid = validateSources(cmr, deployment);
 				
