@@ -150,7 +150,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		CompositeMetadataStore metadata = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
 		TransformationMetadata indexMetadata = vdb.getAttachment(TransformationMetadata.class);
 		Collection rows = new ArrayList();
-		int oid = 0;
+		int oid = 1;
 		if (command instanceof Query) {
 			Query query = (Query)command;
 			UnaryFromClause ufc = (UnaryFromClause)query.getFrom().getClauses().get(0);

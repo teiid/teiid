@@ -615,7 +615,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	
     private final class QueryWorkItem implements Runnable {
 		private final ScriptReader reader;
-		String s;
+		String modfiedSQL;
+		String sql;
 
 		private QueryWorkItem(String query) {
 			this.reader = new ScriptReader(new StringReader(query));
@@ -624,25 +625,27 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		@Override
 		public void run() {
 			try {
-				if (s == null) {
-			        s = fixSQL(reader.readStatement());
+				if (modfiedSQL == null) {
+					sql = reader.readStatement();
+			        modfiedSQL = fixSQL(sql);
 				}
-		        while (s != null) {
+		        while (modfiedSQL != null) {
 		            try {
 		            	final StatementImpl stmt = connection.createStatement();
-		                executionFuture = stmt.submitExecute(s);
+		                executionFuture = stmt.submitExecute(modfiedSQL);
 		                executionFuture.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
 			        		@Override
 			        		public void onCompletion(ResultsFuture<Boolean> future) {
 			        			executionFuture = null;
 			        			try {
 					                if (future.get()) {
-					                	client.sendResults(s, stmt.getResultSet(), true);
+					                	client.sendResults(sql, stmt.getResultSet(), true);
 					                } else {
-					                	client.sendUpdateCount(s, stmt.getUpdateCount());
+					                	client.sendUpdateCount(sql, stmt.getUpdateCount());
 					                	setEncoding();
 					                }
-					                s = fixSQL(reader.readStatement());
+					                sql = reader.readStatement();
+					                modfiedSQL = fixSQL(sql);
 			        			} catch (Throwable e) {
 			        				client.errorOccurred(e);
 			        				sync();
