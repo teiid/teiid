@@ -56,7 +56,7 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 	
 	public LDAPExecutionFactory() {
 		this.setMaxInCriteriaSize(1000);
-		this.setMaxDependentPredicates(25); //no spec limit on query size, AD is 10MB for the query
+		this.setMaxDependentInPredicates(25); //no spec limit on query size, AD is 10MB for the query
 	}
 	
     @TranslatorProperty(display="Default Search Base DN", description="Default Base DN for LDAP Searches")
