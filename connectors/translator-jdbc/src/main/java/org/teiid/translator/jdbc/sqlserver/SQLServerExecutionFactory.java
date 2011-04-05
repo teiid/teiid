@@ -51,7 +51,7 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 	public SQLServerExecutionFactory() {
 		setDatabaseVersion(V_2005);
 		setMaxInCriteriaSize(JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA);
-		setMaxDependentPredicates(JDBCExecutionFactory.DEFAULT_MAX_DEPENDENT_PREDICATES);
+		setMaxDependentInPredicates(JDBCExecutionFactory.DEFAULT_MAX_DEPENDENT_PREDICATES);
 	}
 	
 	@Override

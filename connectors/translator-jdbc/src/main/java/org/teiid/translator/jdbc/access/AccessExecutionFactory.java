@@ -40,7 +40,7 @@ public class AccessExecutionFactory extends SybaseExecutionFactory {
 		setSupportsOrderBy(false);
 		setDatabaseVersion("2003"); //$NON-NLS-1$
 		setMaxInCriteriaSize(JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA);
-		setMaxDependentPredicates(10); //sql length length is 64k
+		setMaxDependentInPredicates(10); //sql length length is 64k
 	}
 	
     @Override

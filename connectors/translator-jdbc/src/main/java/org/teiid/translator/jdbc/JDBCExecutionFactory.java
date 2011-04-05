@@ -151,7 +151,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 		setSupportsSelectDistinct(true);
 		setSupportsInnerJoins(true);
 		setMaxInCriteriaSize(DEFAULT_MAX_IN_CRITERIA);
-		setMaxDependentPredicates(DEFAULT_MAX_DEPENDENT_PREDICATES);
+		setMaxDependentInPredicates(DEFAULT_MAX_DEPENDENT_PREDICATES);
 	}
     
 	@Override
