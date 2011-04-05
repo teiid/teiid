@@ -70,7 +70,6 @@ public class TestRequest extends TestCase {
     public void testValidateEntitlement() throws Exception {
         QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
         
-        
         Request request = new Request();
         Command command = QueryParser.getQueryParser().parseCommand(QUERY);
         QueryResolver.resolveCommand(command, metadata);
@@ -78,8 +77,9 @@ public class TestRequest extends TestCase {
         RequestMessage message = new RequestMessage();
         DQPWorkContext workContext = FakeMetadataFactory.buildWorkContext(metadata, FakeMetadataFactory.example1VDB());
         
-        request.initialize(message, null, null,new FakeTransactionService(),null, workContext, false, null);
+        request.initialize(message, null, null,new FakeTransactionService(),null, workContext, null);
         request.initMetadata();
+        request.setAuthorizationValidator(new DataRoleAuthorizationValidator(true, true));
         request.validateAccess(command);
     }
     
@@ -132,8 +132,8 @@ public class TestRequest extends TestCase {
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(new AutoGenDataService());
         
         request.initialize(message, Mockito.mock(BufferManager.class),
-				new FakeDataManager(), new FakeTransactionService(), null, workContext, false, null);
-        
+				new FakeDataManager(), new FakeTransactionService(), null, workContext, null);
+        request.setAuthorizationValidator(new DataRoleAuthorizationValidator(false, true));
         request.processRequest();
         return request;
     }

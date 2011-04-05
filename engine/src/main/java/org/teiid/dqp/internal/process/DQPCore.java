@@ -191,6 +191,8 @@ public class DQPCore implements DQP {
     private CacheFactory cacheFactory;
 
 	private SessionAwareCache<CachedResults> matTables;
+	
+	private AuthorizationValidator authorizationValidator;
     
     /**
      * perform a full shutdown and wait for 10 seconds for all threads to finish
@@ -319,9 +321,9 @@ public class DQPCore implements DQP {
 	    ClientState state = this.getClientState(workContext.getSessionId(), true);
 	    request.initialize(requestMsg, bufferManager,
 				dataTierMgr, transactionService, state.sessionTables,
-				workContext, this.config.getUseDataRoles(), this.prepPlanCache);
+				workContext, this.prepPlanCache);
 		request.setResultSetCacheEnabled(this.rsCache != null);
-		request.setAllowCreateTemporaryTablesByDefault(this.config.isAllowCreateTemporaryTablesByDefault());
+		request.setAuthorizationValidator(this.authorizationValidator);
 		request.setUserRequestConcurrency(this.getUserRequestSourceConcurrency());
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
         RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
@@ -666,7 +668,10 @@ public class DQPCore implements DQP {
 	
 	public void start(DQPConfiguration config) {
 		this.config = config;
-        
+        this.authorizationValidator = config.getAuthorizationValidator();
+        if (this.authorizationValidator == null) {
+        	this.authorizationValidator = new DataRoleAuthorizationValidator(config.getUseDataRoles(), config.isAllowCreateTemporaryTablesByDefault());
+        }
         this.chunkSize = config.getLobChunkSizeInKB() * 1024;
 
         //get buffer manager

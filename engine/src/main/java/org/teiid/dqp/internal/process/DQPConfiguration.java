@@ -54,6 +54,8 @@ public class DQPConfiguration{
 	private CacheConfiguration resultsetCacheConfig;
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
     private int userRequestSourceConcurrency = DEFAULT_USER_REQUEST_SOURCE_CONCURRENCY;
+    
+    private AuthorizationValidator authorizationValidator;
 
 	@ManagementProperty(description="Max active plans (default 20).  Increase this value, and max threads, on highly concurrent systems - but ensure that the underlying pools can handle the increased load without timeouts.")
 	public int getMaxActivePlans() {
@@ -208,5 +210,14 @@ public class DQPConfiguration{
 	
 	public void setMaxODBCLobSizeAllowed(int lobSize) {
 		this.maxODBCLobSizeAllowed = lobSize;
+	}
+	
+	public AuthorizationValidator getAuthorizationValidator() {
+		return authorizationValidator;
+	}
+	
+	public void setAuthorizationValidator(
+			AuthorizationValidator authorizationValidator) {
+		this.authorizationValidator = authorizationValidator;
 	}
 }

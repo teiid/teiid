@@ -7650,5 +7650,5 @@ public class TestProcessor {
         helpProcess(plan, dataManager, expected);
     }
     
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 }

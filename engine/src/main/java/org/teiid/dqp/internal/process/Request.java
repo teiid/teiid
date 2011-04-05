@@ -130,12 +130,11 @@ public class Request {
     
     protected Command userCommand;
     protected boolean returnsUpdateCount;
-    protected boolean useEntitlements;
 	private TempTableStore globalTables;
 	private SessionAwareCache<PreparedPlan> planCache;
 	private boolean resultSetCacheEnabled = true;
-	private boolean allowCreateTemporaryTablesByDefault;
 	private int userRequestConcurrency;
+	private AuthorizationValidator authorizationValidator;
 
     void initialize(RequestMessage requestMsg,
                               BufferManager bufferManager,
@@ -143,7 +142,6 @@ public class Request {
                               TransactionService transactionService,
                               TempTableStore tempTableStore,
                               DQPWorkContext workContext,
-                              boolean useEntitlements,
                               SessionAwareCache<PreparedPlan> planCache) {
 
         this.requestMsg = requestMsg;
@@ -157,7 +155,6 @@ public class Request {
         this.workContext = workContext;
         this.requestId = workContext.getRequestID(this.requestMsg.getExecutionId());
         this.connectorManagerRepo = workContext.getVDB().getAttachment(ConnectorManagerRepository.class);
-        this.useEntitlements = useEntitlements && !workContext.getVDB().getDataPolicies().isEmpty();
         this.planCache = planCache;
     }
     
@@ -171,11 +168,11 @@ public class Request {
 		this.resultSetCacheEnabled = resultSetCacheEnabled;
 	}
 	
-	public void setAllowCreateTemporaryTablesByDefault(
-			boolean allowCreateTemporaryTablesByDefault) {
-		this.allowCreateTemporaryTablesByDefault = allowCreateTemporaryTablesByDefault;
+	public void setAuthorizationValidator(
+			AuthorizationValidator authorizationValidator) {
+		this.authorizationValidator = authorizationValidator;
 	}
-    
+	
 	/**
 	 * if the metadata has not been supplied via setMetadata, this method will create the appropriate state
 	 * 
@@ -250,13 +247,10 @@ public class Request {
         context.setSecurityFunctionEvaluator(new SecurityFunctionEvaluator() {
 			@Override
 			public boolean hasRole(String roleType, String roleName) throws TeiidComponentException {
-				if (!useEntitlements) {
-					return true;
-				}
 		        if (!DATA_ROLE.equalsIgnoreCase(roleType)) {
 		            return false;
 		        }
-				return workContext.getAllowedDataPolicies().containsKey(roleName);
+		        return authorizationValidator.hasRole(roleName, workContext);
 			}
         });
         context.setTempTableStore(tempTableStore);
@@ -472,11 +466,7 @@ public class Request {
 	}
 
 	protected void validateAccess(Command command) throws QueryValidatorException, TeiidComponentException {
-		if (useEntitlements) {
-			AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(this.workContext.getAllowedDataPolicies(), this.workContext.getUserName());
-			visitor.setAllowCreateTemporaryTablesDefault(this.allowCreateTemporaryTablesByDefault);
-			validateWithVisitor(visitor, this.metadata, command);
-		}
+		this.authorizationValidator.validate(command, metadata, workContext);
 	}
 	
 }

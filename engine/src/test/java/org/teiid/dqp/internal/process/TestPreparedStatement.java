@@ -60,9 +60,6 @@ public class TestPreparedStatement {
 	
 	private static final int SESSION_ID = 6;
 	
-	private static boolean DEBUG = false;
-	
-
     static void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, QueryMetadataInterface metadata, boolean callableStatement, VDBMetaData vdb) throws Exception { 
     	helpTestProcessing(preparedSql, values, expected, dataManager, metadata, callableStatement, false, vdb);
     }
@@ -246,9 +243,9 @@ public class TestPreparedStatement {
         ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(new AutoGenDataService());
         
-        serverRequest.initialize(request, BufferManagerFactory.getStandaloneBufferManager(), null, new FakeTransactionService(), null, workContext, false, prepPlanCache);
-
+        serverRequest.initialize(request, BufferManagerFactory.getStandaloneBufferManager(), null, new FakeTransactionService(), null, workContext, prepPlanCache);
         serverRequest.setMetadata(capFinder, metadata, null);
+        serverRequest.setAuthorizationValidator(new DataRoleAuthorizationValidator(false, true));
         serverRequest.processRequest();
         
         assertNotNull(serverRequest.processPlan);
