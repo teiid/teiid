@@ -193,7 +193,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
      * @see org.teiid.language.visitor.SQLStringVisitor#visit(org.teiid.language.Literal)
      */
     public void visit(Literal obj) {
-        if (this.prepared && (replaceWithBinding || TranslatedCommand.isBindEligible(obj) || obj.isBindValue())) {
+        if (this.prepared && ((replaceWithBinding && obj.isBindEligible()) || TranslatedCommand.isBindEligible(obj) || obj.isBindValue())) {
             buffer.append(UNDEFINED_PARAM);
             preparedValues.add(obj);
         } else {

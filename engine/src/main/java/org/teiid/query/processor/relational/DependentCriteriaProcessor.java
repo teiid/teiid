@@ -382,13 +382,13 @@ public class DependentCriteriaProcessor {
     	
     	for (int i = 0; i < numberOfSets; i++) {
     		if (maxSize == 1 || i + 1 == state.replacement.size()) {
-				orCrits.add(new CompareCriteria(crit.getExpression(), CompareCriteria.EQ, new Constant(iter.next())));    				
+				orCrits.add(new CompareCriteria(crit.getExpression(), CompareCriteria.EQ, newConstant(iter.next())));    				
 			} else {
 	    		List<Constant> vals = new ArrayList<Constant>(Math.min(state.replacement.size(), maxSize));
 				
 	    		for (int j = 0; j < maxSize && iter.hasNext(); j++) {
 	    			Object val = iter.next();
-	                vals.add(new Constant(val));
+	                vals.add(newConstant(val));
 	            }
 	            
 	            SetCriteria sc = new SetCriteria();
@@ -401,6 +401,12 @@ public class DependentCriteriaProcessor {
     		return orCrits.get(0);
     	}
     	return new CompoundCriteria(CompoundCriteria.OR, orCrits);
+    }
+    
+    private Constant newConstant(Object val) {
+    	Constant c = new Constant(val);
+    	c.setBindEligible(true);
+    	return c;
     }
 
 }

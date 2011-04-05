@@ -46,6 +46,7 @@ import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
+import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
@@ -172,8 +173,8 @@ import org.teiid.translator.SourceSystemFunctions;
  */
 public class QueryRewriter {
 
-    public static final CompareCriteria TRUE_CRITERIA = new CompareCriteria(new Constant(new Integer(1), DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, new Constant(new Integer(1), DataTypeManager.DefaultDataClasses.INTEGER));
-    public static final CompareCriteria FALSE_CRITERIA = new CompareCriteria(new Constant(new Integer(1), DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, new Constant(new Integer(0), DataTypeManager.DefaultDataClasses.INTEGER));
+    public static final CompareCriteria TRUE_CRITERIA = new CompareCriteria(new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER));
+    public static final CompareCriteria FALSE_CRITERIA = new CompareCriteria(new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, new Constant(0, DataTypeManager.DefaultDataClasses.INTEGER));
     public static final CompareCriteria UNKNOWN_CRITERIA = new CompareCriteria(new Constant(null, DataTypeManager.DefaultDataClasses.STRING), CompareCriteria.NE, new Constant(null, DataTypeManager.DefaultDataClasses.STRING));
     
     private static final Map<String, String> ALIASED_FUNCTIONS = new HashMap<String, String>();
@@ -2280,7 +2281,9 @@ public class QueryRewriter {
             }
             return expression;
     	}
+    	boolean isBindEligible = true;
     	if(expression instanceof Function) {
+    		isBindEligible = !isConstantConvert(expression);
     		expression = rewriteFunction((Function) expression);
 		} else if (expression instanceof CaseExpression) {
 			expression = rewriteCaseExpression((CaseExpression)expression);
@@ -2319,12 +2322,34 @@ public class QueryRewriter {
 			return expression;
 		}
     	
+		return evaluate(expression, isBindEligible);
+	}
+
+	private Constant evaluate(Expression expression, boolean isBindEligible)
+			throws ExpressionEvaluationException, BlockedException,
+			TeiidComponentException {
 		Object value = evaluator.evaluate(expression, Collections.emptyList());
         if (value instanceof Constant) {
         	return (Constant)value; //multi valued substitution
         }
-		return new Constant(value, expression.getType());
+		Constant result = new Constant(value, expression.getType());
+		result.setBindEligible(isBindEligible);
+		return result;
 	}
+    
+    private boolean isConstantConvert(Expression ex) {
+    	if (ex instanceof Constant) {
+    		return true;
+    	}
+    	if (!(ex instanceof Function)) {
+    		return false;
+    	}
+    	Function f = (Function)ex;
+		if (!FunctionLibrary.isConvert(f)) {
+			return false;
+		}
+		return isConstantConvert(f.getArg(0));
+    }
     
     private Expression rewriteExpression(AggregateSymbol expression) {
     	if (expression.isBoolean()) {
@@ -2691,7 +2716,8 @@ public class QueryRewriter {
             if (!processing) {
             	param.setExpression(rewriteExpressionDirect(param.getExpression()));
             } else if (!(param.getExpression() instanceof Constant)) {
-            	param.setExpression(new Constant(this.evaluator.evaluate(param.getExpression(), null), param.getClassType()));
+            	boolean isBindEligible = !isConstantConvert(param.getExpression());
+            	param.setExpression(evaluate(param.getExpression(), isBindEligible));
             }
         }
         return storedProcedure;

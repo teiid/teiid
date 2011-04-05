@@ -493,6 +493,7 @@ public class LanguageBridgeFactory {
         Literal result = new Literal(constant.getValue(), constant.getType());
         result.setBindValue(constant.isMultiValued());
         result.setMultiValued(constant.isMultiValued());
+        result.setBindEligible(constant.isBindEligible());
         return result;
     }
 

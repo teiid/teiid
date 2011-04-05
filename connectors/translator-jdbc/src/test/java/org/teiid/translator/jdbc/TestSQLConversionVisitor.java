@@ -22,7 +22,7 @@
 
 package org.teiid.translator.jdbc;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -35,8 +35,8 @@ import org.teiid.dqp.internal.datamgr.TestUpdateImpl;
 import org.teiid.dqp.internal.datamgr.TstLanguageBridgeFactory;
 import org.teiid.language.LanguageObject;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.TranslatorException;
 
 /**
  */
@@ -311,28 +311,28 @@ public class TestSQLConversionVisitor {
 
     @Test public void testPreparedStatementCreationWithUpdate() {
         helpTestVisitor(getTestVDB(),
-                        "update parts set part_weight = 'a' where part_weight < 5", //$NON-NLS-1$
+                        "update parts set part_weight = 'a' || 'b' where part_weight < 50/10", //$NON-NLS-1$
                         "UPDATE PARTS SET PART_WEIGHT = ? WHERE PARTS.PART_WEIGHT < ?", //$NON-NLS-1$
                         true); 
     }
     
     @Test public void testPreparedStatementCreationWithInsert() {
         helpTestVisitor(getTestVDB(),
-                        "insert into parts (part_weight) values (5)", //$NON-NLS-1$
+                        "insert into parts (part_weight) values (50/10)", //$NON-NLS-1$
                         "INSERT INTO PARTS (PART_WEIGHT) VALUES (?)", //$NON-NLS-1$
                         true); 
     }
     
     @Test public void testPreparedStatementCreationWithSelect() {
         helpTestVisitor(getTestVDB(),
-                        "select part_name from parts where part_id not in ('x', 'y') and part_weight < 6", //$NON-NLS-1$
-                        "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID NOT IN (?, ?) AND PARTS.PART_WEIGHT < ?", //$NON-NLS-1$
+                        "select part_name from parts where part_id not in ('x' || 'a', 'y' || 'b') and part_weight < '6'", //$NON-NLS-1$
+                        "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_ID NOT IN (?, ?) AND PARTS.PART_WEIGHT < '6'", //$NON-NLS-1$
                         true); 
     }
     
     @Test public void testPreparedStatementCreationWithLike() {
         helpTestVisitor(getTestVDB(),
-                        "select part_name from parts where part_name like '%foo'", //$NON-NLS-1$
+                        "select part_name from parts where part_name like '%foo' || '_'", //$NON-NLS-1$
                         "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_NAME LIKE ?", //$NON-NLS-1$
                         true); 
     }
@@ -361,7 +361,7 @@ public class TestSQLConversionVisitor {
     
     @Test public void testPreparedStatementCreationWithCase() {
         helpTestVisitor(getTestVDB(),
-                        "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_WEIGHT = CASE WHEN PARTS.PART_NAME='a' THEN 'b' ELSE 'c' END", //$NON-NLS-1$
+                        "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_WEIGHT = CASE WHEN PARTS.PART_NAME='a' || 'b' THEN 'b' ELSE 'c' END", //$NON-NLS-1$
                         "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_WEIGHT = CASE WHEN PARTS.PART_NAME = ? THEN 'b' ELSE 'c' END", //$NON-NLS-1$
                         true); 
     }

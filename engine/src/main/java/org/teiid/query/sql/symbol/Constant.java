@@ -44,6 +44,7 @@ public class Constant implements Expression, Comparable<Constant> {
 	private Object value;
 	private Class<?> type;
 	private boolean multiValued;
+	private boolean bindEligible;
 
 	/**
 	 * Construct a typed constant.  The specified value is not verified to be a value
@@ -52,7 +53,7 @@ public class Constant implements Expression, Comparable<Constant> {
      * @param value Constant value, may be null
 	 * @param type Type for the constant, should never be null
 	 */
-	public Constant(Object value, Class type) {
+	public Constant(Object value, Class<?> type) {
         // Set value
         this.value = DataTypeManager.convertToRuntimeType(value);
 
@@ -194,6 +195,7 @@ public class Constant implements Expression, Comparable<Constant> {
 	public Object clone() {
         Constant copy =  new Constant(getValue(), getType());
         copy.multiValued = multiValued;
+        copy.bindEligible = bindEligible;
         return copy;
 	}
 
@@ -217,6 +219,14 @@ public class Constant implements Expression, Comparable<Constant> {
 			return 1;
 		}
 		return ((Comparable)this.value).compareTo(o.getValue());
+	}
+	
+	public boolean isBindEligible() {
+		return bindEligible;
+	}
+	
+	public void setBindEligible(boolean bindEligible) {
+		this.bindEligible = bindEligible;
 	}
 	
 }
