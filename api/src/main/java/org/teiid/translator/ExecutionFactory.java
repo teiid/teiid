@@ -679,7 +679,7 @@ public class ExecutionFactory<F, C> {
 		return maxDependentInPredicates;
 	}
 	
-	public void setMaxDependentPredicates(int maxDependentInPredicates) {
+	public void setMaxDependentInPredicates(int maxDependentInPredicates) {
 		this.maxDependentInPredicates = maxDependentInPredicates;
 	}
 
