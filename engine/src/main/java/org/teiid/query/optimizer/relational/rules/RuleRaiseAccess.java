@@ -154,7 +154,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
             }
             case NodeConstants.Types.SORT:
             {         
-                if (canRaiseOverSort(accessNode, metadata, capFinder, parentNode, record)) {
+                if (canRaiseOverSort(accessNode, metadata, capFinder, parentNode, record, false)) {
                     return performRaise(rootNode, accessNode, parentNode);
                 }
                 return null;
@@ -333,7 +333,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
     static boolean canRaiseOverSort(PlanNode accessNode,
                                    QueryMetadataInterface metadata,
                                    CapabilitiesFinder capFinder,
-                                   PlanNode parentNode, AnalysisRecord record) throws QueryMetadataException,
+                                   PlanNode parentNode, AnalysisRecord record, boolean compensateForUnrelated) throws QueryMetadataException,
                                                        TeiidComponentException {
         // Find the model for this node by getting ACCESS node's model
         Object modelID = getModelIDFromAccess(accessNode, metadata);
@@ -395,11 +395,10 @@ public final class RuleRaiseAccess implements OptimizerRule {
         	return false;
         }
         
-        /* If we have an unrelated sort it cannot be pushed down if it's not supported by the source
-         * 
-         * TODO: we should be able to work this
-         */
-        if (parentNode.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT) && !CapabilitiesUtil.supports(Capability.QUERY_ORDERBY_UNRELATED, modelID, metadata, capFinder)) {
+        if (parentNode.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT) 
+        		&& !CapabilitiesUtil.supports(Capability.QUERY_ORDERBY_UNRELATED, modelID, metadata, capFinder)
+        		&& NodeEditor.findParent(accessNode, NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE) == null
+        		&& !compensateForUnrelated) {
         	return false;
         }
         

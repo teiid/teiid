@@ -56,6 +56,7 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.DependentAccessNode;
+import org.teiid.query.processor.relational.EnhancedSortMergeJoinStrategy;
 import org.teiid.query.processor.relational.GroupingNode;
 import org.teiid.query.processor.relational.JoinNode;
 import org.teiid.query.processor.relational.JoinStrategy;
@@ -63,7 +64,6 @@ import org.teiid.query.processor.relational.MergeJoinStrategy;
 import org.teiid.query.processor.relational.NestedLoopJoinStrategy;
 import org.teiid.query.processor.relational.NestedTableJoinStrategy;
 import org.teiid.query.processor.relational.NullNode;
-import org.teiid.query.processor.relational.EnhancedSortMergeJoinStrategy;
 import org.teiid.query.processor.relational.PlanExecutionNode;
 import org.teiid.query.processor.relational.ProjectIntoNode;
 import org.teiid.query.processor.relational.ProjectNode;
@@ -1555,33 +1555,6 @@ public class TestOptimizer {
 
         checkNodeTypes(plan, FULL_PUSHDOWN);                                    
     }    
-
-    /** 
-     * Tests that query transformation order by is discarded by
-     * user order by, and that user order by is discarded because
-     * of the function in the query transformation 
-     */
-    @Test public void testPushOrderByThroughFrame3() {
-        ProcessorPlan plan = helpPlan("SELECT e, e2 FROM vm1.g16 ORDER BY e2", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] { "SELECT e1, e2 FROM pm3.g1"}); //$NON-NLS-1$
-
-        checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            0,      // Select
-            1,      // Sort
-            0       // UnionAll
-        });                                    
-    } 
 
     /** 
      * Tests that a user's order by does not get pushed to the source
@@ -3610,11 +3583,11 @@ public class TestOptimizer {
         checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);     
     }
     
-    @Test public void testBQT9500_126() {
+    @Test public void testBQT9500_126() throws Exception {
         String sql = "SELECT IntKey, LongNum, expr FROM (SELECT IntKey, LongNum, concat(LongNum, 'abc') FROM BQT2.SmallA ) AS x ORDER BY IntKey"; //$NON-NLS-1$
         ProcessorPlan plan = helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), 
                                       new String[] { 
-                                          "SELECT IntKey, LongNum FROM BQT2.SmallA" }); //$NON-NLS-1$ 
+                                          "SELECT g_0.IntKey AS c_0, g_0.LongNum AS c_1 FROM BQT2.SmallA AS g_0 ORDER BY c_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
 
         checkNodeTypes(plan, new int[] {
                                         1,      // Access
@@ -3629,7 +3602,7 @@ public class TestOptimizer {
                                         0,      // PlanExecution
                                         1,      // Project
                                         0,      // Select
-                                        1,      // Sort
+                                        0,      // Sort
                                         0       // UnionAll
         });                                    
         
