@@ -64,6 +64,7 @@ import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.unittest.FakeMetadataObject;
 import org.teiid.query.util.CommandContext;
 
+@SuppressWarnings("unchecked")
 public class TestRuleChooseDependent {
 
     /* Make Left Side Dependent */
@@ -566,7 +567,7 @@ public class TestRuleChooseDependent {
          atomicCrit2a, 
          atomicJoinCrits2,
          crits, 
-         expected, -1, 57734);        
+         expected, -1, 7930);        
     }
     
     /**

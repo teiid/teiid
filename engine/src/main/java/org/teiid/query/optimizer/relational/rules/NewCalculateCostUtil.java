@@ -805,17 +805,18 @@ public class NewCalculateCostUtil {
         }
 
         if (ndv == UNKNOWN_VALUE) {
-            ndv = 3;
             if (multiGroup) {
                 if (usesKey) {
                     ndv = (float)Math.ceil(Math.sqrt(childCost));
                 } else {
                     ndv = (float)Math.ceil(Math.sqrt(childCost)/4);
                 }
-                ndv = Math.max(ndv, 1);
             } else if (usesKey) {
                 ndv = childCost;
+            } else {
+                ndv = (float)Math.ceil(Math.sqrt(childCost)/2);
             }
+            ndv = Math.max(ndv, 1);
         } 
                 
         boolean isNegatedPredicateCriteria = false;

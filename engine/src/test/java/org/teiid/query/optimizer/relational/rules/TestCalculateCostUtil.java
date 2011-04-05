@@ -133,7 +133,7 @@ public class TestCalculateCostUtil {
         QueryMetadataInterface metadata = FakeMetadataFactory.example4();
         String critString = "pm2.g3.e1 NOT LIKE '#_'"; //$NON-NLS-1$
         
-        helpTestEstimateCost(critString, 300, 200, metadata);
+        helpTestEstimateCost(critString, 300, 233, metadata);
     }
     
     /**
@@ -166,7 +166,7 @@ public class TestCalculateCostUtil {
         QueryMetadataInterface metadata = FakeMetadataFactory.example4();
         String critString = "pm2.g3.e1 IS NULL"; //$NON-NLS-1$
         
-        helpTestEstimateCost(critString, 300, 100, metadata);
+        helpTestEstimateCost(critString, 300, 33, metadata);
     }
     
     /**
@@ -177,7 +177,7 @@ public class TestCalculateCostUtil {
         QueryMetadataInterface metadata = FakeMetadataFactory.example4();
         String critString = "pm2.g3.e1 IS NOT NULL"; //$NON-NLS-1$
         
-        helpTestEstimateCost(critString, 300, 200, metadata);
+        helpTestEstimateCost(critString, 300, 266, metadata);
     }
     
     /**
@@ -235,7 +235,7 @@ public class TestCalculateCostUtil {
         QueryMetadataInterface metadata = FakeMetadataFactory.example4();
         String critString = "pm2.g3.e1 IN ('2', '3')"; //$NON-NLS-1$
         
-        helpTestEstimateCost(critString, 300, 200, metadata);
+        helpTestEstimateCost(critString, 300, 66, metadata);
     }
     
     /**
@@ -247,7 +247,7 @@ public class TestCalculateCostUtil {
         QueryMetadataInterface metadata = FakeMetadataFactory.example4();
         String critString = "pm2.g3.e1 NOT IN ('2', '3')"; //$NON-NLS-1$
         
-        helpTestEstimateCost(critString, 300, 100, metadata);
+        helpTestEstimateCost(critString, 300, 233, metadata);
     }
     
     /**

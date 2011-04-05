@@ -488,7 +488,7 @@ public class TestXMLPlanningEnhancements {
 
         String expectedDoc = TestXMLProcessor.readFile("TestXMLProcessor-FullSuppliers.xml"); //$NON-NLS-1$
         
-        XMLPlan xmlPlan = (XMLPlan)TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.docJoin", expectedDoc, metadata, dataMgr); //$NON-NLS-1$        
+        XMLPlan xmlPlan = (XMLPlan)TestXMLProcessor.helpTestProcess("SELECT * FROM xmltest.docJoin", metadata, dataMgr, null, TestOptimizer.getGenericFinder(false), expectedDoc); //$NON-NLS-1$        
         Map stats = XMLProgramUtil.getProgramStats(xmlPlan.getOriginalProgram());
         List list = (List)stats.get(ExecSqlInstruction.class);
         
