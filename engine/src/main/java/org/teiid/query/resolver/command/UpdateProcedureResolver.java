@@ -50,6 +50,7 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolveVirtualGroupCriteriaVisitor;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
@@ -97,21 +98,14 @@ public class UpdateProcedureResolver implements CommandResolver {
     	// get a symbol map between virtual elements and the elements that define
     	// then in the query transformation, this info is used in evaluating/validating
     	// has criteria/translate criteria clauses
-        Command transformCmd = getQueryTransformCmd(virtualGroup, metadata);
-		Map symbolMap = SymbolMap.createSymbolMap(virtualGroup, transformCmd.getProjectedSymbols(), metadata).asMap();
-		procCommand.setSymbolMap(symbolMap);
-    }
-    
-    /**
-	 * Get the command for the transformation query that defines this virtual group.
-	 */
-    public static Command getQueryTransformCmd(GroupSymbol virtualGroup, QueryMetadataInterface metadata)
-    throws QueryMetadataException, QueryResolverException, TeiidComponentException {
-    	try {
-			return QueryResolver.resolveView(virtualGroup, metadata.getVirtualPlan(virtualGroup.getMetadataID()), SQLConstants.Reserved.SELECT, metadata);
+        Command transformCmd;
+		try {
+			transformCmd = QueryResolver.resolveView(virtualGroup, metadata.getVirtualPlan(virtualGroup.getMetadataID()), SQLConstants.Reserved.SELECT, metadata).getCommand();
 		} catch (QueryValidatorException e) {
 			throw new QueryResolverException(e, e.getMessage());
 		}
+		Map<ElementSymbol, Expression> symbolMap = SymbolMap.createSymbolMap(virtualGroup, LanguageObject.Util.deepClone(transformCmd.getProjectedSymbols(), SingleElementSymbol.class), metadata).asMap();
+		procCommand.setSymbolMap(symbolMap);
     }
 
     /**

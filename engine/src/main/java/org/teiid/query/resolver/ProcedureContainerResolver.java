@@ -29,10 +29,10 @@ import java.util.List;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -43,7 +43,6 @@ import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.metadata.TempMetadataID.Type;
 import org.teiid.query.parser.QueryParser;
-import org.teiid.query.resolver.command.UpdateProcedureResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
@@ -55,9 +54,7 @@ import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.query.validator.UpdateValidator;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
-import org.teiid.query.validator.UpdateValidator.UpdateType;
 
 
 public abstract class ProcedureContainerResolver implements CommandResolver {
@@ -184,37 +181,16 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 	public static UpdateInfo getUpdateInfo(GroupSymbol group,
 			QueryMetadataInterface metadata) throws TeiidComponentException,
 			QueryMetadataException, QueryResolverException {
-		//if this is not a view, just return null
-		if(group.isTempGroupSymbol() || !metadata.isVirtualGroup(group.getMetadataID()) || !metadata.isVirtualModel(metadata.getModelID(group.getMetadataID()))) {
+		if (!QueryResolver.isView(group, metadata)) {
 			return null;
 		}
-		String updatePlan = metadata.getUpdatePlan(group.getMetadataID());
-		String deletePlan = metadata.getDeletePlan(group.getMetadataID());
-		String insertPlan = metadata.getInsertPlan(group.getMetadataID());
-
-    	UpdateInfo info = (UpdateInfo)metadata.getFromMetadataCache(group.getMetadataID(), "UpdateInfo"); //$NON-NLS-1$
-    	if (info == null) {
-            List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(group, metadata);
-    		UpdateValidator validator = new UpdateValidator(metadata, determineType(insertPlan), determineType(updatePlan), determineType(deletePlan));
-    		info = validator.getUpdateInfo();
-			validator.validate(UpdateProcedureResolver.getQueryTransformCmd(group, metadata), elements);
-    		metadata.addToMetadataCache(group.getMetadataID(), "UpdateInfo", info); //$NON-NLS-1$
-    	}
-		return info;
+		try {
+			return QueryResolver.resolveView(group, metadata.getVirtualPlan(group.getMetadataID()), SQLConstants.Reserved.SELECT, metadata).getUpdateInfo();
+		} catch (QueryValidatorException e) {
+			throw new QueryResolverException(e, e.getMessage());
+		}
 	}
 	
-	private static UpdateType determineType(String plan) {
-		UpdateType type = UpdateType.INHERENT;
-		if (plan != null) {
-			if (StringUtil.startsWithIgnoreCase(plan, SQLConstants.Reserved.CREATE)) {
-				type = UpdateType.UPDATE_PROCEDURE;
-			} else {
-				type = UpdateType.INSTEAD_OF;
-			}
-		}
-		return type;
-	}
-    
     /** 
      * @param metadata
      * @param procCommand

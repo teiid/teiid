@@ -25,6 +25,7 @@ import org.jboss.managed.api.annotation.ManagementProperty;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.client.RequestMessage;
 import org.teiid.core.util.ApplicationInfo;
+import org.teiid.metadata.MetadataProvider;
 
 
 public class DQPConfiguration{
@@ -56,6 +57,7 @@ public class DQPConfiguration{
     private int userRequestSourceConcurrency = DEFAULT_USER_REQUEST_SOURCE_CONCURRENCY;
     
     private AuthorizationValidator authorizationValidator;
+    private MetadataProvider metadataProvider;
 
 	@ManagementProperty(description="Max active plans (default 20).  Increase this value, and max threads, on highly concurrent systems - but ensure that the underlying pools can handle the increased load without timeouts.")
 	public int getMaxActivePlans() {
@@ -219,5 +221,13 @@ public class DQPConfiguration{
 	public void setAuthorizationValidator(
 			AuthorizationValidator authorizationValidator) {
 		this.authorizationValidator = authorizationValidator;
+	}
+	
+	public MetadataProvider getMetadataProvider() {
+		return metadataProvider;
+	}
+	
+	public void setMetadataProvider(MetadataProvider metadataProvider) {
+		this.metadataProvider = metadataProvider;
 	}
 }

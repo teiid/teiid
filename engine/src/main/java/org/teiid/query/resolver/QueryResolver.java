@@ -37,7 +37,9 @@ import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
+import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.Request;
+import org.teiid.language.SQLConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -80,7 +82,10 @@ import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
+import org.teiid.query.validator.UpdateValidator;
 import org.teiid.query.validator.ValidationVisitor;
+import org.teiid.query.validator.UpdateValidator.UpdateInfo;
+import org.teiid.query.validator.UpdateValidator.UpdateType;
 
 
 /**
@@ -423,16 +428,20 @@ public class QueryResolver {
         }
 	}
 	
-	public static Command resolveView(GroupSymbol virtualGroup, QueryNode qnode,
+	public static QueryNode resolveView(GroupSymbol virtualGroup, QueryNode qnode,
 			String cacheString, QueryMetadataInterface qmi) throws TeiidComponentException,
 			QueryMetadataException, QueryResolverException,
 			QueryValidatorException {
 		qmi = qmi.getDesignTimeMetadata();
-		Command result = (Command)qmi.getFromMetadataCache(virtualGroup.getMetadataID(), "transformation/" + cacheString); //$NON-NLS-1$
-        if (result != null) {
-        	result = (Command)result.clone();
-        } else {
-        	result = qnode.getCommand();
+		cacheString = "transformation/" + cacheString; //$NON-NLS-1$
+		if (qnode.getUser() != null) {
+			cacheString += "/" + qnode.getUser(); //$NON-NLS-1$
+		}
+		QueryNode cachedNode = (QueryNode)qmi.getFromMetadataCache(virtualGroup.getMetadataID(), cacheString);
+        if (cachedNode == null 
+        		|| (qnode.getQuery() != null && !cachedNode.getQuery().equals(qnode.getQuery()))
+        		|| (qnode.getCommand() != null && !cachedNode.getCommand().equals(qnode.getCommand()))) {
+        	Command result = qnode.getCommand();
         	List bindings = null;
             if (result == null) {
                 try {
@@ -463,9 +472,42 @@ public class QueryResolver {
             	}
             	ResolverUtil.setSymbolType(projectedSymbol, symbols.get(i).getType());
             }
-	        qmi.addToMetadataCache(virtualGroup.getMetadataID(), "transformation/" + cacheString, result.clone()); //$NON-NLS-1$
+            cachedNode = new QueryNode(qnode.getQuery());
+            cachedNode.setCommand((Command)result.clone());
+            cachedNode.setUser(qnode.getUser());
+	        
+			if(isView(virtualGroup, qmi)) {
+		        String updatePlan = qmi.getUpdatePlan(virtualGroup.getMetadataID());
+				String deletePlan = qmi.getDeletePlan(virtualGroup.getMetadataID());
+				String insertPlan = qmi.getInsertPlan(virtualGroup.getMetadataID());
+
+	            List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(virtualGroup, qmi);
+	    		UpdateValidator validator = new UpdateValidator(qmi, determineType(insertPlan), determineType(updatePlan), determineType(deletePlan));
+				validator.validate(result, elements);
+	    		UpdateInfo info = validator.getUpdateInfo();
+	    		cachedNode.setUpdateInfo(info);
+			}
+	        qmi.addToMetadataCache(virtualGroup.getMetadataID(), cacheString, cachedNode);
         }
-		return result;
+		return cachedNode;
+	}
+
+	public static boolean isView(GroupSymbol virtualGroup,
+			QueryMetadataInterface qmi) throws TeiidComponentException,
+			QueryMetadataException {
+		return !virtualGroup.isTempGroupSymbol() && qmi.isVirtualGroup(virtualGroup.getMetadataID()) && qmi.isVirtualModel(qmi.getModelID(virtualGroup.getMetadataID()));
+	}
+	
+	private static UpdateType determineType(String plan) {
+		UpdateType type = UpdateType.INHERENT;
+		if (plan != null) {
+			if (StringUtil.startsWithIgnoreCase(plan, SQLConstants.Reserved.CREATE)) {
+				type = UpdateType.UPDATE_PROCEDURE;
+			} else {
+				type = UpdateType.INSTEAD_OF;
+			}
+		}
+		return type;
 	}
 	
 }

@@ -1114,7 +1114,7 @@ public class RelationalPlanner {
             qnode = metadata.getVirtualPlan(metadataID);            
         }
 
-        Command result = QueryResolver.resolveView(virtualGroup, qnode, cacheString, metadata);   
+        Command result = (Command)QueryResolver.resolveView(virtualGroup, qnode, cacheString, metadata).getCommand().clone();   
         return QueryRewriter.rewrite(result, metadata, context);
     }
     
@@ -1155,7 +1155,7 @@ public class RelationalPlanner {
 					for (Object index : indexes) {
 						id.addIndex(resolveIndex(metadata, id, index));
 					}
-					Command c = QueryResolver.resolveView(table, metadata.getVirtualPlan(table.getMetadataID()), SQLConstants.Reserved.SELECT, metadata);
+					Command c = (Command)QueryResolver.resolveView(table, metadata.getVirtualPlan(table.getMetadataID()), SQLConstants.Reserved.SELECT, metadata).getCommand().clone();
 					CacheHint hint = c.getCacheHint();
 					if (hint != null) {
 						recordAnnotation(analysisRecord, Annotation.MATERIALIZED_VIEW, Priority.LOW, "SimpleQueryResolver.cache_hint_used", table, matTableName, id.getCacheHint()); //$NON-NLS-1$

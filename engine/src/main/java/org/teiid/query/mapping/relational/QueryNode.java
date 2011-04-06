@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 
 
 /**
@@ -43,9 +44,10 @@ public class QueryNode {
 	// Initial state
 	private String query;
 	private List<String> bindings;     // optional - construct if needed
-
+	private String user;
 	// After parsing and resolution
 	private Command command;
+	private UpdateInfo updateInfo;
 
     /**
      * Construct a query node with the required parameters.
@@ -123,5 +125,21 @@ public class QueryNode {
 	public String toString() {
         return query;
 	}
-
+	
+	public String getUser() {
+		return user;
+	}
+	
+	public void setUser(String user) {
+		this.user = user;
+	}
+	
+	public UpdateInfo getUpdateInfo() {
+		return updateInfo;
+	}
+	
+	public void setUpdateInfo(UpdateInfo updateInfo) {
+		this.updateInfo = updateInfo;
+	}
+	
 }

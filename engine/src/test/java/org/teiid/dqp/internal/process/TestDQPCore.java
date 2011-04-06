@@ -34,6 +34,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.CommandContext;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.RequestMessage;
@@ -44,20 +45,23 @@ import org.teiid.dqp.internal.datamgr.FakeTransactionService;
 import org.teiid.dqp.internal.process.AbstractWorkItem.ThreadState;
 import org.teiid.dqp.service.AutoGenDataService;
 import org.teiid.dqp.service.FakeBufferService;
+import org.teiid.metadata.MetadataProvider;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
 public class TestDQPCore {
 
     private DQPCore core;
+    private DQPConfiguration config;
     private AutoGenDataService agds;
 
     @Before public void setUp() throws Exception {
     	agds = new AutoGenDataService();
-        DQPWorkContext context = FakeMetadataFactory.buildWorkContext(FakeMetadataFactory.exampleBQT());
+        DQPWorkContext context = FakeMetadataFactory.buildWorkContext(RealMetadataFactory.exampleBQTCached());
         context.getVDB().getModel("BQT3").setVisible(false); //$NON-NLS-1$
         context.getVDB().getModel("VQT").setVisible(false); //$NON-NLS-1$
 
@@ -70,7 +74,7 @@ public class TestDQPCore {
         core.setCacheFactory(new DefaultCacheFactory());
         core.setTransactionService(new FakeTransactionService());
         
-        DQPConfiguration config = new DQPConfiguration();
+        config = new DQPConfiguration();
         config.setMaxActivePlans(1);
         config.setUserRequestSourceConcurrency(2);
         core.start(config);
@@ -307,6 +311,33 @@ public class TestDQPCore {
     	agds.getExecuteCount().set(0);
     	helpExecute(sql.toString(), "a");
     	assertEquals(1, agds.getExecuteCount().get());
+    }
+    
+    @Test public void testMetadataProvider() throws Exception {
+    	this.config.setMetadataProvider(new MetadataProvider() {
+    		int callCount;
+    		@Override
+    		public ViewDefinition getViewDefinition(String schema,
+    				String viewName, CommandContext context) {
+    			if (callCount++ > 0) {
+        			ViewDefinition vd = new ViewDefinition("SELECT 'something else'", Scope.USER);
+        			return vd;
+    			}	
+    			ViewDefinition vd = new ViewDefinition("SELECT 'hello world'", Scope.USER);
+    			return vd;
+    		}
+    	});
+    	//the sql should normally return 10 rows
+        String sql = "SELECT * FROM vqt.SmallB UNION SELECT * FROM vqt.SmallB"; //$NON-NLS-1$
+        String userName = "1"; //$NON-NLS-1$
+        
+        ResultsMessage rm = helpExecute(sql, userName);
+        assertEquals(1, rm.getResults().length); //$NON-NLS-1$
+        assertEquals("hello world", rm.getResults()[0].get(0)); //$NON-NLS-1$
+        
+        rm = helpExecute(sql, userName);
+        assertEquals(1, rm.getResults().length); //$NON-NLS-1$
+        assertEquals("something else", rm.getResults()[0].get(0)); //$NON-NLS-1$
     }
     
 	public void helpTestVisibilityFails(String sql) throws Exception {
