@@ -134,10 +134,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     /*
      * TODO: move caching to jboss cache structure
      */
-    private final Map<String, Object> metadataCache = Collections.synchronizedMap(new LRUCache<String, Object>(250));
-    private final Map<String, Object> groupInfoCache = Collections.synchronizedMap(new LRUCache<String, Object>(250));
-    private final Map<String, Collection<Table>> partialNameToFullNameCache = Collections.synchronizedMap(new LRUCache<String, Collection<Table>>(1000));
-    private final Map<String, Collection<StoredProcedureInfo>> procedureCache = Collections.synchronizedMap(new LRUCache<String, Collection<StoredProcedureInfo>>(200));
+    private Map<String, Object> metadataCache = Collections.synchronizedMap(new LRUCache<String, Object>(250));
+    private Map<String, Object> groupInfoCache = Collections.synchronizedMap(new LRUCache<String, Object>(250));
+    private Map<String, Collection<Table>> partialNameToFullNameCache = Collections.synchronizedMap(new LRUCache<String, Collection<Table>>(1000));
+    private Map<String, Collection<StoredProcedureInfo>> procedureCache = Collections.synchronizedMap(new LRUCache<String, Collection<StoredProcedureInfo>>(200));
     /**
      * TransformationMetadata constructor
      * @param context Object containing the info needed to lookup metadta.
@@ -1076,6 +1076,11 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	
 	@Override
 	public QueryMetadataInterface getDesignTimeMetadata() {
-		return new TransformationMetadata(store, functionLibrary);
+		TransformationMetadata tm = new TransformationMetadata(store, functionLibrary);
+		tm.groupInfoCache = this.groupInfoCache;
+		tm.metadataCache = this.metadataCache;
+		tm.partialNameToFullNameCache = this.partialNameToFullNameCache;
+		tm.procedureCache = this.procedureCache; 
+		return tm;
 	}
 }
