@@ -47,7 +47,7 @@ public class XaJdbcConnectorTemplateInfo extends DsDataSourceTemplateInfo implem
 	static final String SERVER_NAME = "ServerName";//$NON-NLS-1$	
 	static final String PORT_NUMBER = "PortNumber";//$NON-NLS-1$	
 	static final String DATABASE_NAME = "DatabaseName";//$NON-NLS-1$
-	static final String ADDITIONAL_DS_PROPS = "addtional-ds-properties";//$NON-NLS-1$
+	static final String ADDITIONAL_DS_PROPS = "additional-ds-properties";//$NON-NLS-1$
 	
 	static final String[] EXTENDED_DS_PROPERTIES = {SERVER_NAME, PORT_NUMBER,DATABASE_NAME};
 	

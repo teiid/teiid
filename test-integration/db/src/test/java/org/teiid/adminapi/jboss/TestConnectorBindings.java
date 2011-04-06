@@ -363,7 +363,7 @@ public class TestConnectorBindings extends BaseConnection {
 		p.setProperty("DatabaseName", "txntest");
 		p.setProperty("PortNumber", "3306");
 		p.setProperty("ServerName", "localhost");
-		p.setProperty("addtional-ds-properties", "foo=bar, t= x");
+		p.setProperty("additional-ds-properties", "foo=bar, t= x");
 		p.setProperty("user-name", "rareddy");
 		p.setProperty("password", "mm");
 		p.setProperty("xa-datasource-class", "com.mysql.jdbc.jdbc2.optional.MysqlXADataSource");
@@ -376,7 +376,7 @@ public class TestConnectorBindings extends BaseConnection {
 		
 		Properties p = new Properties();
 		p.setProperty("connection-url", "jdbc:mysql://localhost:3306/txntest");
-		p.setProperty("addtional-connection-properties", "foo=bar, t= x");
+		p.setProperty("additional-connection-properties", "foo=bar, t= x");
 		p.setProperty("user-name", "rareddy");
 		p.setProperty("password", "mm");
 		p.setProperty("driver-class", "com.mysql.jdbc.Driver");
