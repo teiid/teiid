@@ -50,7 +50,8 @@
 			<LI><B>Dependent query parallization</B> - when multiple dependent queries are still required, then they will be run in parallel (up to MaxUserSourceRequestConcurrency), rather than sequentially.
 			<LI><B>Cost based back-off</B> - for cost based dependent joins if the number of independent values is too large, then the join will be performed as normal. 
 		</UL>
-	<LI><B>Enhanced Sort Join</B> - the partitioned merge join was replaced with an enhanced sort join.  The enhanced sort join will use the actual row counts from each side of the relation to perform a index based join if one side is small enough, a partial sort of the larger side and a repeated merge join if the tuples are unbalanced but one side is not small enough to form an index, or a standard sort merge join if the tuples are balanced.   
+	<LI><B>Enhanced Sort Join</B> - the partitioned merge join was replaced with an enhanced sort join.  The enhanced sort join will use the actual row counts from each side of the relation to perform a index based join if one side is small enough, a partial sort of the larger side and a repeated merge join if the tuples are unbalanced but one side is not small enough to form an index, or a standard sort merge join if the tuples are balanced.
+	<LI><B>JDK1.5 JDBC Client JAR</B> - A retro-translated Teiid client JDBC jar now available to use with JDK 1.5 VM. Note only JDBC API supported, not Admin API.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

@@ -62,7 +62,7 @@
                 </goals>
               </execution>
             </executions>
-          </plugin>
+          </plugin>          
         </plugins>
     </build>
     
@@ -86,6 +86,32 @@
                 </descriptors>
               </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>retrotranslator-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>translate</goal>
+                        </goals>
+                        <configuration>
+                            <attach>true</attach>
+                            <target>1.5</target>
+                            <embed>org.teiid.retroruntime</embed>
+                            <destjar>target/teiid-${pom.version}-client-jdk15.jar</destjar>
+                            <verify>false</verify>
+                            <failonwarning>true</failonwarning>
+                            <includes>
+                                <include>
+                                    <directory>target</directory>
+                                    <pattern>teiid-${pom.version}-client.jar</pattern>
+                                </include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>             
           </plugins>
         </build>
       </profile>
