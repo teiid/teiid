@@ -270,6 +270,33 @@ public class TestTextTable {
         helpProcess(plan, hdm, expected);    	
     }
     
+    @Test public void testTextAggOrderByUnrelated() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
+        
+        BasicSourceCapabilities caps = getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, false);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$        
+        
+        ProcessorPlan plan = helpPlan("select convert(to_chars(textagg(for pm1.g1.e1 header order by e2), 'UTF-8'), string) as x from pm1.g1", metadata,  null, capFinder, //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", new List[] {Arrays.asList("z", 2), Arrays.asList("b", 1)});
+        hdm.setBlockOnce(true);
+                
+        String nl = System.getProperty("line.separator");
+        ArrayList list = new ArrayList();
+        list.add("\"e1\""+nl+"\"b\""+nl+"\"z\""+nl);
+        List[] expected = new List[] {
+        		list,
+        };    
+
+        helpProcess(plan, hdm, expected);    	
+    }
+    
 	@Test(expected=TeiidProcessingException.class) public void testTextTableInvalidData() throws Exception {
     	String sql = "select count(*) from texttable(? COLUMNS PARTNAME string) x"; //$NON-NLS-1$
     	

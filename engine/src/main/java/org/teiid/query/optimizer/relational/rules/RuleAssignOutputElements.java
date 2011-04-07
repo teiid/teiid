@@ -498,6 +498,10 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	                    if(aggExpr != null) {
 	                        AggregateSymbolCollectorVisitor.getAggregates(aggExpr, requiredSymbols, requiredSymbols);
 	                    }
+	                    OrderBy orderBy = agg.getOrderBy();
+	                    if(orderBy != null) {
+	                        AggregateSymbolCollectorVisitor.getAggregates(orderBy, requiredSymbols, requiredSymbols);
+	                    }
 					}
 				}
 
