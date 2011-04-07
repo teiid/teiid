@@ -304,7 +304,8 @@ public class TestDQPCore {
     	core.setUserRequestSourceConcurrency(20);
     	agds.getExecuteCount().set(0);
     	helpExecute(sql.toString(), "a");
-    	assertEquals(20, agds.getExecuteCount().get());
+    	assertTrue(agds.getExecuteCount().get() <= 20);
+    	assertTrue(agds.getExecuteCount().get() > 10);
     	
     	//serial
     	core.setUserRequestSourceConcurrency(1);
