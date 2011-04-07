@@ -29,6 +29,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TimeZone;
 
+import javax.security.auth.Subject;
+
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
@@ -111,7 +113,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    private boolean resultSetCacheEnabled = true;
 	    
 	    private int userRequestSourceConcurrency;
-
+	    private Subject subject;
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -520,6 +522,15 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	public void setUserRequestSourceConcurrency(int userRequestSourceConcurrency) {
 		this.globalState.userRequestSourceConcurrency = userRequestSourceConcurrency;
+	}
+	
+	@Override
+	public Subject getSubject() {
+		return this.globalState.subject;
+	}
+	
+	public void setSubject(Subject subject) {
+		this.globalState.subject = subject;
 	}
 	
 }

@@ -313,6 +313,7 @@ public class Request implements SecurityFunctionEvaluator {
         context.setPreparedPlanCache(planCache);
         context.setResultSetCacheEnabled(this.resultSetCacheEnabled);
         context.setUserRequestSourceConcurrency(this.userRequestConcurrency);
+        context.setSubject(workContext.getSubject());
     }
     
     @Override

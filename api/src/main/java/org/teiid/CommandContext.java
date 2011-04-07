@@ -25,6 +25,8 @@ package org.teiid;
 import java.util.Properties;
 import java.util.TimeZone;
 
+import javax.security.auth.Subject;
+
 /**
  * Context information for the currently executing command.
  * Can be used as an argument to UDFs.
@@ -48,5 +50,7 @@ public interface CommandContext {
 	int getProcessorBatchSize();
 	
 	TimeZone getServerTimeZone();
+	
+	Subject getSubject();
 
 }
