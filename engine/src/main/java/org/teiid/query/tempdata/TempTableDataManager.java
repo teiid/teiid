@@ -172,7 +172,7 @@ public class TempTableDataManager implements ProcessorDataManager {
             	return result;
             }
         }
-        return this.processorDataManager.registerRequest(context, command, modelName, connectorBindingId, nodeID, -1);
+        return this.processorDataManager.registerRequest(context, command, modelName, connectorBindingId, nodeID, limit);
 	}
 	        
     TupleSource registerRequest(CommandContext context, String modelName, Command command) throws TeiidComponentException, TeiidProcessingException {

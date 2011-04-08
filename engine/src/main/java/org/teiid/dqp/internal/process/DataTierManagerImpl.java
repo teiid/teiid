@@ -126,7 +126,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		AtomicRequestMessage aqr = createRequest(context.getProcessorID(), command, modelName, connectorBindingId, nodeID);
 		if (limit > 0) {
 			aqr.setFetchSize(Math.min(limit, aqr.getFetchSize()));
-			throw new AssertionError();
 		}
 		ConnectorManagerRepository cmr = workItem.getDqpWorkContext().getVDB().getAttachment(ConnectorManagerRepository.class);
 		ConnectorWork work = cmr.getConnectorManager(aqr.getConnectorName()).registerRequest(aqr);
