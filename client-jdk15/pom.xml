@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<parent>
+		<artifactId>teiid-parent</artifactId>
+		<groupId>org.jboss.teiid</groupId>
+		<version>7.4.0.Beta3-SNAPSHOT</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>teiid-client-jdk15</artifactId>
+	<name>Client JDK15</name>
+	<description>Contains the packages related retrotranslator that will convert 1.6 to 1.5</description>
+	<dependencies>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-common-core</artifactId>
+		</dependency>
+	</dependencies>
+</project>
