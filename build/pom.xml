@@ -8,6 +8,24 @@
   <artifactId>teiid</artifactId>
   <name>Build</name>
   <description>Teiid Build</description>
+    <dependencies>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-client-jdk15</artifactId>
+            <version>${version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.retrotranslator</groupId>
+            <artifactId>retrotranslator-runtime</artifactId>
+            <version>1.2.9</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.sf.retrotranslator</groupId>
+            <artifactId>retrotranslator-transformer</artifactId>
+            <version>1.2.9</version>
+        </dependency>        
+    </dependencies>     
     <build>
         <outputDirectory>target/kits</outputDirectory>
         <resources>
@@ -86,32 +104,31 @@
                 </descriptors>
               </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
-                <artifactId>retrotranslator-maven-plugin</artifactId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.1.1</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
                         <goals>
-                            <goal>translate</goal>
+                            <goal>java</goal>
                         </goals>
                         <configuration>
-                            <attach>true</attach>
-                            <target>1.5</target>
-                            <embed>org.teiid.retroruntime</embed>
-                            <destjar>target/teiid-${pom.version}-client-jdk15.jar</destjar>
-                            <verify>false</verify>
-                            <failonwarning>true</failonwarning>
-                            <includes>
-                                <include>
-                                    <directory>target</directory>
-                                    <pattern>teiid-${pom.version}-client.jar</pattern>
-                                </include>
-                            </includes>
+                            <mainClass>net.sf.retrotranslator.transformer.Retrotranslator</mainClass>
+                            <arguments>                     
+                                <argument>-srcjar</argument>
+                                <argument>${pom.basedir}/target/teiid-${pom.version}-client.jar</argument>
+                                <argument>-destjar</argument>
+                                <argument>${pom.basedir}/target/teiid-${pom.version}-client-jdk15.jar</argument>            
+                                <argument>-embed</argument>
+                                <argument>org.teiid.retroruntime</argument>                    
+                            </arguments>
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>             
+            </plugin>              
           </plugins>
         </build>
       </profile>
