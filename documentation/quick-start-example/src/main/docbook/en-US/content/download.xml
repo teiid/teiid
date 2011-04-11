@@ -1,41 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 <!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/custom.dtd">
 %CustomDTD;
 ]>
 <chapter id="download">
   <title>Download</title>
-  <para>
-    You need to download the binaries for
-    <ulink url="http://www.jboss.org/teiid/downloads.html">Teiid</ulink>
-    . Note that there are three different artifacts are available for download.
-  </para>
+
+  <para>You need to download the binaries for <ulink
+  url="http://www.jboss.org/teiid/downloads.html">Teiid</ulink> . Note that
+  there are three different artifacts are available for download.</para>
+
   <orderedlist>
     <listitem>
       <para>Teiid Source - contains all of the source code</para>
     </listitem>
+
     <listitem>
       <para>Teiid AdminShell - contains the admin client</para>
     </listitem>
+
     <listitem>
       <para>Teiid Runtime - contains the Teiid engine and required 3rd party
-        dependencies</para>
+      dependencies</para>
     </listitem>
   </orderedlist>
-  <para>
-    For this Quick Start, download and install <ulink url="http://www.jboss.org/jbossas/downloads.html">JBoss AS 5.1.0</ulink>. 
-    Then download the Teiid runtime and unzip the contents under any of the JBoss AS profiles, such as "default" or "all". 
-    The default profile is the typical installation location, for example "&lt;jboss-install&gt;/server/default". The Teiid runtime directory structure matches JBoss profiles directly - it is just an overlay.
-  </para>
-  <para>In the "&lt;jboss-install&gt;/server/&lt;profile&gt;/lib" directory, you will find "teiid-&versionNumber;-client.jar", which 
-    is the main client binary jar file for Teiid. This jar file contains the Teiid's JDBC driver and data source classes. </para>
+
+  <para>For this Quick Start, download and install <ulink
+  url="http://www.jboss.org/jbossas/downloads.html">JBoss AS 5.1.0</ulink>.
+  Then download the Teiid runtime and unzip the contents under any of the
+  JBoss AS profiles, such as "default" or "all". The default profile is the
+  typical installation location, for example
+  "&lt;jboss-install&gt;/server/default". The Teiid runtime directory
+  structure matches JBoss profiles directly - it is just an overlay.</para>
+
+  <para>In the "&lt;jboss-install&gt;/server/&lt;profile&gt;/lib" directory,
+  you will find "teiid-&versionNumber;-client.jar", which is the main client
+  binary jar file for Teiid. This jar file contains the Teiid's JDBC driver
+  and data source driver jar's.</para>
+
   <note>
-    <para>JBoss AS 5.1 requires <ulink url="http://java.sun.com/javase/downloads">Java 6</ulink> to run.
-    </para>
-  	<para>
-      Access to physical data sources such as Oracle, MS-SQL Server, DB2, and Sybase through Teiid relies upon
-      the user supplying their own JDBC drivers in the deployment. Copy the JDBC driver files into 
-      "&lt;jboss-install&gt;/server/&lt;profile&gt;/lib" before you create any data sources.
-    </para>
+    <para>JBoss AS 5.1 requires <ulink
+    url="http://java.sun.com/javase/downloads">Java 6</ulink> to run.</para>
+
+    <para>Access to physical data sources such as Oracle, MS-SQL Server, DB2,
+    and Sybase through Teiid relies upon the user supplying their own JDBC
+    drivers in the deployment. Copy the JDBC driver files into
+    "&lt;jboss-install&gt;/server/&lt;profile&gt;/lib" before you create any
+    data sources.</para>
   </note>
 </chapter>

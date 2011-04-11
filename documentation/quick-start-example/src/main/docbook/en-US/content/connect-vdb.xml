@@ -83,7 +83,6 @@ Connection connection = ds.getConnection();
   <para>The Teiid installation includes a simple Java class which demonstrates JDBC access of the deployed VDB.
   To execute this demonstration, follow these steps:</para> 
   <orderedlist numeration="arabic">
-    <listitem><para>Ensure Derby is running</para></listitem>
     <listitem><para>Change to the ${jboss-install}/server/profile/teiid-examples/simpleclient directory</para></listitem>
     <listitem><para>Execute the run script (either for Linux or Windows)</para></listitem>
   </orderedlist>
@@ -92,7 +91,7 @@ Connection connection = ds.getConnection();
     VDB, but also the SYS schema tables.
    </para>
      
-  <para>If your application is Web based, you can create data source for your VDB using the above  and treat it as any other JDBC source using 
+  <para>If your application is Web based, you can create data source for your VDB using the above and treat it as any other JDBC source using 
   <code>org.teiid.jdbc.TeiidDataSource</code> and assigning it a JNDI name. 
   Refer to Client Developer's Guide deployment for more information on creating a DataSource. 
   </para>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/custom.dtd">
+%CustomDTD;
+]>
+<chapter id="setupDS">
+  <title>Setup Data Sources / Connection Factories</title>
+
+  <section id="setup-1">
+    <title>Install Data Sources / Connection Factories</title>
+
+    <para>This examples uses two data sources, a relational database and a
+    text file. An HSQL database is used here since it is Open Source, comes
+    with JBoss AS and is light-weight. This section will describe how to setup
+    the data sources in order to run the example.</para>
+
+    <para>We need to create and deploy the required Connection Factories for
+    HSQL database and File sources. Connection Factories are sources that
+    provide the data when their data is integrated through Teiid. If you are
+    familiar with creating data sources or connection factories in JBoss AS,
+    then this is exactly the same operation</para>
+
+    <para>Perform the following steps to install and setup the data
+    sources:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Copy the following files from
+        "teiid-examples/dynamicvdb-portfolio" directory to the
+        "&lt;jboss-install&gt;/server/default/deploy" directory</para>
+
+        <para>(1) portfolio-ds.xml</para>
+
+        <para>(2) marketdata-file-ds.xml</para>
+      </listitem>
+
+      <listitem>
+        <para>If the server has not been started, start it</para>
+      </listitem>
+
+      <listitem>
+        <para>Using a web browser, goto the JMX console
+        (http://localhost:8080/jmx-console/) and select:
+        <emphasis>database-portfolioDB,service=PortfolioService</emphasis> to
+        present the bean options.</para>
+      </listitem>
+
+      <listitem>
+        <para>Now click invoke "startDatabaseManager" to bring up HSQL
+        Database Manager</para>
+      </listitem>
+
+      <listitem>
+        <para>Use the File/Open Script menu option to load the
+        customer-schema.sql script located in
+        "teiid-examples/dynamicvdb-portfolio"</para>
+      </listitem>
+
+      <listitem>
+        <para>Click the Execute SQL button to create the required tables and
+        insert the example data</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Make sure you did not have any issues when creating the schema as it
+    is needed for going forward in this example.</para>
+  </section>
+
+  <section id="setup-2">
+    <title>Describe the CSV file and its contents</title>
+
+    <para>In order to use a Text file as the source, we need a data file which
+    defines the data in the table</para>
+
+    <orderedlist>
+      <listitem>
+        <para>Data File: Each data file contains column information for the
+        table. The column information is typically defined on line 1 as header
+        line in the file, and all the following lines contain the actual rows
+        of data. Each single line corresponds to single row. A portion of the
+        sample file is shown below. The complete sample file is
+        "teiid-examples/dynamicvdb-portfolio/data/marketdata-price.txt".</para>
+
+        <programlisting>
+           SYMBOL,PRICE
+           IBM,83.46
+           RHT,11.84
+           BA, 44.58
+           ORCL,17.37           
+                 
+        </programlisting>
+      </listitem>
+    </orderedlist>
+
+    <para>You can use the provide data files or create your own data
+    files.</para>
+
+    <para>At this point, both data sources are ready to access.</para>
+  </section>
+</chapter>

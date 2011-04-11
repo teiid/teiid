@@ -1,36 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-<chapter id="step-3">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="buildVDB">
   <title>Building a VDB</title>
-  <para>A VDB can be built with either the <ulink url="http://www.jboss.org/teiiddesigner.html">Designer</ulink> tool or through a 
-  simple XML file called a dynamic VDB.  See the "dyanmicvdb-portolio" for an example dynamic VDB.  
-  for this example purpose we will use the a dynamic VDB. If you would like to use the 
-  Designer to build your VDB, check out the Designer examples. If you need to build any view layers using your source, 
-  you must use Designer based approach to building the VDB. A sample Designer based VDB is 
-  available in the "teiid-examples/dynamicvdb-portfolio/PortfolioModel" directory.</para>
-  
-  <section id="dynamic_vdb">
-      <title>Building Dynamic VDB</title>
-      <para>This XML file is defines a set of sources that need to treated as single source by the client application.
-      Dynamic VDB does not yet allow for the creation of view layers. Below XML file defines "dynamicvdb-portfolio" example
-      vdb.</para>
-      <para>portfolio-vdb.xml (copy available in "teiid-examples/dynamicvdb-portfolio" directory)</para>
-    <programlisting><![CDATA[
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<vdb name="DynamicPortfolio" version="1">
 
-    <description>A Dynamic VDB</description>
+  <para>A VDB can be built with either the <ulink
+  url="http://www.jboss.org/teiiddesigner.html">Designer</ulink> tool or
+  through a simple XML file called a dynamic VDB. See the
+  "dyanmicvdb-portolio" for an example dynamic VDB. For this example we will
+  use the dynamic VDB. If you would like to use the Designer to build your
+  VDB, check out the Designer examples. If you need to build any view layers
+  using your source, you must use the Designer based approach to building the
+  VDB. A sample Designer based VDB is available in the
+  "teiid-examples/dynamicvdb-portfolio/PortfolioModel" directory.</para>
+
+  <section id="dynamic_vdb">
+    <title>Building Dynamic VDB</title>
+
+    <para>This XML file defines a set of sources that can be accessed by the
+    client application. A dynamic VDB does not yet allow for the creation of
+    view layers. Below is the "dynamicvdb-portfolio" example vdb.</para>
+
+    <para>portfolio-vdb.xml (copy available in
+    "teiid-examples/dynamicvdb-portfolio" directory)</para>
+
+    <programlisting>
+&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;
+&lt;vdb name="DynamicPortfolio" version="1"&gt;
+
+    &lt;description&gt;A Dynamic VDB&lt;/description&gt;
     
-    <!-- 
+    &lt;!-- 
       Setting to use connector supplied metadata. Can be "true" or "cached".  
       "true" will obtain metadata once for every launch of Teiid. 
       "cached" will save a file containing the metadata into 
-      the deploy/<vdb name>/<vdb version/META-INF directory
-    -->
-    <property name="UseConnectorMetadata" value="cached" />
+      the deploy/&lt;vdb name&gt;/&lt;vdb version/META-INF directory
+    --&gt;
+    &lt;property name="UseConnectorMetadata" value="true" /&gt;
 
 
-    <!-- 
+    &lt;!-- 
       Each model represents a access to one or more sources.
       The name of the model will be used as a top level schema name
       for all of the metadata imported from the connector.
@@ -38,50 +47,74 @@
       NOTE: Multiple model, with different import settings, can be bound to 
       the same connector binding and will be treated as the same source at
       runtime. 
-    --> 
-    <model name="MarketData">
-        <!-- 
+    --&gt; 
+    &lt;model name="MarketData"&gt;
+        &lt;!-- 
             Each source represents a translator and data source. There are 
             pre-defined translators, or you can create one. ConnectionFactories 
             or DataSources in JBoss AS they are typically defined using "xxx-ds.xml" files. 
-        -->
-        <source name="text-connector" translator-name="file" connection-jndi-name="java:marketdata-file"/>
-    </model>
+        --&gt;
+        &lt;source name="text-connector" translator-name="file" connection-jndi-name="java:marketdata-file"/&gt;
+    &lt;/model&gt;
 
-    <model name="Accounts">
-        <!-- 
+    &lt;model name="Accounts"&gt;
+        &lt;!-- 
           JDBC Import settings 
           
           importer.useFullSchemaName directs the importer to drop the source 
           schema from the Teiid object name, so that the Teiid fully qualified name
-          will be in the form of <model name>.<table name>
-        -->
-        <property name="importer.useFullSchemaName" value="false"/>
+          will be in the form of &lt;model name&gt;.&lt;table name&gt;
+        --&gt;
+        &lt;property name="importer.useFullSchemaName" value="false"/&gt;
            
-         <!--
-            This connector is defined in the "derby-connector-ds.xml" 
-          -->
-        <source name="derby-connector" translator-name="derby" connection-jndi-name="java:PortfolioDS"/>
-    </model>
+         &lt;!--
+            This connector is defined in the "portfoio-ds.xml" 
+          --&gt;
+        &lt;source name="hsql-connector" translator-name="hsql" connection-jndi-name="java:PortfolioDS"/&gt;
+    &lt;/model&gt;
 
-</vdb>        
-    ]]></programlisting>      
-    
-    <para>The XML file is explained below.</para>
+&lt;/vdb&gt;        
+    </programlisting>
+  </section>
+
+  <section>
+    <title>Dynamic VDB XML Structure</title>
+
+    <para>The above vdb XML structure is explained.</para>
+
     <orderedlist>
-        <listitem><para>The above XML file defines a "vdb" with name "DynamicPortfolio" with version "1"</para></listitem>
-        <listitem><para>A "model" XML element represents a schema that being integrated. This sample
-        defines two sources, "MarketData" that represents the schema for the text file that has the 
-        stock price information and "Accounts" that represents the "portfolio" schema in the Derby database. 
-         </para></listitem>
-        <listitem><para>The "source" element inside the "model" element defines name of the source (can be any name), and
-        name of the translator (defines the type of the source like oracle, db2, mysql, h2, file, ws etc..) and the 
-        "connection-jndi-name" defines the source's JNDI name in the JBoss AS container.</para></listitem>
-        <listitem><para>Also note that inside the "model" elements, some "property" elements are used to define how 
-        metadata can be imported from source. For more information check out the Reference Guide's Dynamic VDB section.</para></listitem>
-        <listitem><para>Note that you need to also create the necessary deployment 
-        files for the data sources (Connection Factories) too.</para></listitem>
+      <listitem>
+        <para>The "vdb" element defines the virtualdatase that has a name of
+        "DynamicPortfolio" with version "1"</para>
+      </listitem>
+
+      <listitem>
+        <para>A "model" element represents a schema that being integrated.
+        This sample defines two sources, "MarketData" that represents the
+        schema for the text file that has the stock price information and
+        "Accounts" that represents the "portfolio" schema in the HSQL
+        database.</para>
+      </listitem>
+
+      <listitem>
+        <para>The "source" element inside the "model" element defines name of
+        the source (can be any name), and name of the translator (defines the
+        type of the source like oracle, db2, mysql, h2, file, ws etc..) and
+        the "connection-jndi-name" defines the source's JNDI name in the JBoss
+        AS container.</para>
+      </listitem>
+
+      <listitem>
+        <para>Also note that inside the "model" elements, some "property"
+        elements are used to define how metadata can be imported from source.
+        For more information check out the Reference Guide's Dynamic VDB
+        section.</para>
+      </listitem>
+
+      <listitem>
+        <para>Note that you need to also create the necessary deployment files
+        for the data sources (Connection Factories) too.</para>
+      </listitem>
     </orderedlist>
-    
   </section>
 </chapter>

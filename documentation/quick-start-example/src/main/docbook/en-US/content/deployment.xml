@@ -1,43 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="deployment">
-  <title>Deployment</title>
-  <para> Having built the VDB, it must be deployed into Teiid server, so it can be accessed through a JDBC connection.</para>
+  <title>VDB Deployment</title>
 
-  <para />
-  <para>This example deploys Teiid within a JBoss AS. The sample deployment is shown below.
-  You can find more details about deploying to application servers on the Teiid web-site</para>
-  <para />
-  <section id="teiid-runtime">
-    <title>JBoss AS Application Deployment</title>
-    
-    <orderedlist>
-      <listitem>
-        <para>
-        Before we can deploy the VDB to the server, we need to create and deploy the required Connection Factories for Derby
-        and File sources. Connection Factories are sources that provide the data then their data is integrated through Teiid. If you are
-        familiar with creating data sources or connection factories in JBoss AS, then this is exactly the same operation. 
-        </para>
-        
-        <para>Access to Derby first requires that the the Derby client jar (${derby-install}/lib/derbyclient.jar) be placed in the ${jboss-install}/server/{profile}/lib directory.</para>
-        
-        <para>See or copy the following:</para>
-        <programlisting><![CDATA[${teiid-examples}/dynamicvdb-portfolio/portfolio-ds.xml
-${teiid-examples}/dynamicvdb-portfolio/marketdata-file-ds.xml]]> </programlisting>  
-        <para>files into "${jboss-install}/server/{profile}/deploy" directory to create the Derby and File data sources respectively.</para>
-      </listitem>      
-      <listitem>
-        <para>The above data sources provide the data to your VDB. Now to deploy your VDBl place your VDB file (either the dynamicvdb-portfolio/portfolio-vdb.xml file or the full .vdb file) in a the "${jboss-install}/server/{profile}/deploy" directory. 
-        If the JBoss AS is not already started, start by running the "${jboss-install}/bin/run.sh" or "${jboss-install}/bin/run.bat" scripts. 
-        Check the logs or the console to make sure there were no errors during the deployment of the VDB.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          Now, go to the next section to learn how to
-          <link linkend="OpenConnection">connect to the VDB</link>
-        </para>
-      </listitem>
-    </orderedlist>
-  </section>
+  <para>Having built the VDB or using the example dynamic vdb, it must be
+  deployed into the JBoss AS server so it can be accessed using a Teiid JDBC
+  connection.</para>
+
+  <para></para>
+
+  <para>This example is using the dynamic vdb and requires that it be deployed
+  into the JBoss AS server. To deploy the vdb, copy the following file into
+  "<emphasis>&lt;jboss-install&gt;/server/default/deploy</emphasis>"
+  directory:</para>
+
+  <para></para>
+
+  <itemizedlist>
+    <listitem>
+      <para>teiid-examples/dynamicvdb-portfolio/portfolio-vdb.xml</para>
+    </listitem>
+  </itemizedlist>
+
+  <para></para>
+
+  <para>Now, go to the next section to learn how to <link
+  linkend="OpenConnection">connect to the VDB.</link></para>
+
+  <para></para>
 </chapter>

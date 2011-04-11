@@ -1,123 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="example-explained">
-  <title>Example Explained</title>
+  <title>Portfolio Example Explained</title>
+
   <section>
-    <title>Portfolio Application Explained</title>
-    <para>
-      The investor's portfolio information is stored in a Derby database and
-      "current" stock prices are stored in a delimited text file. When the VDB is completed, a single query will cause
-      Teiid to access the relational and non-relational sources, calculate the portfolio values, and
-      return the results.
-    </para>
+    <para>The investor's portfolio example information is stored in a HSQL
+    database and "current" stock prices are stored in a delimited text file.
+    When the VDB is completed, a single query will cause Teiid to access the
+    relational and non-relational sources, calculate the portfolio values, and
+    return the results.</para>
+
     <figure id="steps">
       <title>Various Steps involved in creating the example</title>
-      <graphic align="center" scale="100" fileref="../images/steps-defined.png" />
+
+      <graphic align="center" fileref="../images/steps-defined.png"
+               scale="100" />
     </figure>
+
     <itemizedlist>
       <listitem>
         <para>
-          <link linkend="step-1">Step-1: Create the Relational Database's schema and load the sample data</link>
+          <link linkend="setupDS">Step-1: Setup Data Sources /
+          ConnectionFactories</link>
         </para>
       </listitem>
+
       <listitem>
         <para>
-          <link linkend="step-2">Step-2: Describe the CSV file and its contents</link>
+          <link linkend="buildVDB">Step-3: Build a VDB</link>
         </para>
       </listitem>
+
       <listitem>
         <para>
-          <link linkend="step-3">Step-3: Build a VDB</link>
+          <link linkend="deployment">Step-4: Deploy the VDB in JBoss AS</link>
         </para>
       </listitem>
+
       <listitem>
         <para>
-          <link linkend="deployment">Step-4: Deploy the VDB in Teiid</link>
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          <link linkend="OpenConnection">Step-5: Access the VDB using the JDBC API</link>
+          <link linkend="OpenConnection">Step-5: Access the VDB using the JDBC
+          API</link>
         </para>
       </listitem>
     </itemizedlist>
   </section>
+
   <note>
-    <para>
-      <ulink url="http://db.apache.org/derby/">Derby</ulink>
-      is used here since it is Open Source, easily obtained, and light-weight. You can substitute any other relational
-      database, as long as you have a suitable JDBC driver. The schema file provided, and described below, is
-      specific to Derby, but can be easily converted for use with other databases.
-    </para>
+    <para>HSQL database is used here since it is Open Source and comes with
+    JBoss AS and is light-weight. You can substitute any other relational
+    database, as long as you have a suitable JDBC driver. The schema file
+    provided, and described below, is specific to HSQL, but can be easily
+    converted for use with other databases.</para>
   </note>
-  <section id="step-1">
-    <title>Create the Relational Database's schema and load the sample data</title>
-    <para>
-      This example is written using
-      <ulink url="http://db.apache.org/derby/">"Derby"</ulink>
-      as the relational database.
-      <ulink url="http://db.apache.org/derby/derby_downloads.html">Download</ulink>
-      and install Derby on your machine.  An existing local or remote instance can be used if it exists.
-    </para>
-    <para>We need to start the Derby RDBMS and create the "accounts" database with the below schema. These
-      commands are intended for a Linux environment. For starting the Derby instance on another platform, you will need to use 
-      commands appropriate to that platform.</para>
-      <para>Start a terminal session, and change directory to where
-      Derby is installed and execute following commands</para>
-    <programlisting><![CDATA[export DERBY_HOME=`pwd`
-./bin/startNetworkServer]]>        
-    </programlisting>
-    <para>This starts the Derby in network mode. Now, start another terminal and we will use Derby''s 'ij' tool 
-    (like SQL*PLus for Oracle) to create the schema, using the "customer-schema.sql" file in
-      "examples/dynamicvdb-portfolio" directory</para>
-    <programlisting><![CDATA[export DERBY_HOME=`pwd`
-./bin/ij /path/to/customer-schema.sql]]>        
-    </programlisting>
-        <para>This will create the accounts schema.  It's abbreviated ddl is shown below. </para>
-    <programlisting><![CDATA[--Contains the name and address of a Customer who owns portfolio account 
-CREATE TABLE CUSTOMER
-...
-
---Contains Customer's account number and its current status
-CREATE TABLE ACCOUNT
-...
-          
---Contains information about stock symbol, company name etc.
-CREATE TABLE PRODUCT
-...
-
---Contains each Account's holdings of Stocks   
-CREATE TABLE HOLDINGS
-...]]></programlisting>
-    
-    <para>
-      Make sure you did not have any issues when creating the schema as it is needed for going forward in this example.
-      You can use 'ij' tool to verify the tables were created. As an alternative, you may use other tools like
-      <ulink url="http://www.squirrelsql.org/">SQuirreL</ulink>
-      , or
-      <ulink url="http://www.eclipse.org/datatools/">Eclipse's Data Tools</ulink>
-      plugin to connect to the Derby instance to check the schema and sample data.
-    </para>
-  </section>
-  <section id="step-2">
-    <title>Describe the CSV file and its contents</title>
-    <para>In order to use a Text file as the source, we need a data file defines data inside a table</para>
-    <orderedlist>
-      <listitem>
-        <para>Data File: Each data file contains column information for the table. The
-          column information is typically defined on line 1 as header line in the file, and all the following lines
-          contain the actual rows of data. Each single line corresponds to single row. A portion of the sample file
-          is shown below. The complete sample file is "examples/dynamicvdb-portfolio/marketdata-price.txt".</para>
-        <programlisting><![CDATA[
-           SYMBOL,PRICE
-           IBM,83.46
-           RHT,11.84
-           BA, 44.58
-           ORCL,17.37           
-         ]]>        
-        </programlisting>
-      </listitem>
-    </orderedlist>
-    <para>Just locate the sample data files provided or create your own data files. Now, both our sources are ready.</para>
-  </section>
 </chapter>

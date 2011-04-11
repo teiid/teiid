@@ -1,47 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <preface>
   <title>Preface</title>
-    <section>
+
+  <section>
     <title>What is Teiid?</title>
-    <para>Teiid is runtime for executing queries against a Virtual Database or VDB. Before you can access your data in a federated
-      manner, use can use Teiid Designer or the Dynamic VDB feature to build a VDB. This picture shows the relationship between the tools
-      involved.</para>
+
+    <para>Teiid is runtime for executing queries against a Virtual Database or
+    VDB. Before you can access your data in a federated manner, user can use
+    Teiid Designer or the Dynamic VDB feature to build a VDB. This picture
+    shows the relationship between the tools involved.</para>
+
     <figure id="lifecycle">
       <title>Lifecycle of Events</title>
-      <graphic align="center" scale="100" fileref="../images/steps.png" />
+
+      <graphic align="center" fileref="../images/steps.png" scale="100" />
     </figure>
+
     <section>
-    <title>What is a Virtual Database?</title>
-    <para> A Virtual Database (VDB) is an artifact that combines one or more
-      physical data sources to provide for easy data integration. Integration is encapsulated through view and procedures that Teiid will process in an optimized way against their respective sources. 
-      The physical sources can be JDBC sources, delimited text files, spreadsheets, or even Web services.</para>
-  	</section>
-    
-    <para>The Teiid Designer tool lets you define physical data sources by importing the required metadata
-      (schema) from these sources. Once the metadata is imported, Designer can assist in building additional view layers.
-      The collection of physical and view models will form a VDB.</para>
+      <title>What is a Virtual Database?</title>
+
+      <para>A Virtual Database (VDB) is an artifact that combines one or more
+      physical data sources to provide for easy data integration. Integration
+      is encapsulated through view and procedures that Teiid will process in
+      an optimized way against their respective sources. The physical sources
+      can be JDBC sources, delimited text files, spreadsheets, or even Web
+      services.</para>
+    </section>
+
+    <para>The Teiid Designer tool lets you define physical data sources by
+    importing the required metadata (schema) from these sources. Once the
+    metadata is imported, Designer can assist in building additional view
+    layers. The collection of physical and view models will form a VDB.</para>
   </section>
-  
+
   <section>
     <title>What is This Guide About?</title>
-    <para>This guide takes you through an introduction to the concepts important to Teiid, 
-    downloading the software, and building and deploying a virtual database in 60 minutes.
-    There is a lot to cover, so let's begin!</para>
+
+    <para>This guide takes you through an introduction to the concepts
+    important to Teiid, downloading the software, and building and deploying a
+    virtual database in 60 minutes. There is a lot to cover, so let's
+    begin!</para>
   </section>
-    
+
   <note>
-    <para>
-      Please read 
-      <ulink url="http://www.jboss.org/teiid/basics.html">Federation Basics</ulink>
-      to understand different terminologies used, resources needed, and artifacts to be generated before
-      developing a successful application. This example takes advantage of only a minimal set of features from
-      Teiid for the sake of simplicity and time.
-    </para>
+    <para>Please read <ulink
+    url="http://www.jboss.org/teiid/basics.html">Federation Basics</ulink> to
+    understand different terminologies used, resources needed, and artifacts
+    to be generated before developing a successful application. This example
+    takes advantage of only a minimal set of features from Teiid for the sake
+    of simplicity and time.</para>
   </note>
-  
-    <para>Commercial development support, production support, and training for Teiid is available through JBoss.
-    Teiid is a Professional Open Source project and a critical component of the JBoss Enterprise Data Services
-    Platform.</para>
-  
+
+  <para>Commercial development support, production support, and training for
+  Teiid is available through JBoss. Teiid is a Professional Open Source
+  project and a critical component of the JBoss Enterprise Data Services
+  Platform.</para>
 </preface>
