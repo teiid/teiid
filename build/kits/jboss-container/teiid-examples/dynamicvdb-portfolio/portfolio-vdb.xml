@@ -9,7 +9,7 @@
       "cached" will save a file containing the metadata into 
       the deploy/<vdb name>/<vdb version/META-INF directory
     -->
-    <property name="UseConnectorMetadata" value="cached" />
+    <property name="UseConnectorMetadata" value="true" />
 
 
     <!-- 
@@ -41,9 +41,9 @@
         <property name="importer.useFullSchemaName" value="false"/>
            
          <!--
-            This connector is defined in the "derby-connector-ds.xml" 
+            This connector is defined to reference the HSQL localDS" 
           -->
-        <source name="derby-connector" translator-name="derby" connection-jndi-name="java:PortfolioDS"/>
+        <source name="hsql-connector" translator-name="hsql" connection-jndi-name="java:DefaultDS"/>
     </model>
 
 </vdb>
