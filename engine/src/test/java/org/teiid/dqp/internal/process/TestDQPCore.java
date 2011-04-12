@@ -28,6 +28,7 @@ import java.sql.ResultSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.junit.After;
 import org.junit.Before;
@@ -39,12 +40,15 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
+import org.teiid.client.RequestMessage.StatementType;
+import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
 import org.teiid.dqp.internal.process.AbstractWorkItem.ThreadState;
 import org.teiid.dqp.service.AutoGenDataService;
-import org.teiid.dqp.service.FakeBufferService;
+import org.teiid.dqp.service.BufferService;
 import org.teiid.metadata.MetadataProvider;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -70,7 +74,13 @@ public class TestDQPCore {
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(agds);
         
         core = new DQPCore();
-        core.setBufferService(new FakeBufferService());
+        core.setBufferService(new BufferService() {
+			
+			@Override
+			public BufferManager getBufferManager() {
+				return BufferManagerFactory.createBufferManager();
+			}
+		});
         core.setCacheFactory(new DefaultCacheFactory());
         core.setTransactionService(new FakeTransactionService());
         
@@ -78,6 +88,7 @@ public class TestDQPCore {
         config.setMaxActivePlans(1);
         config.setUserRequestSourceConcurrency(2);
         core.start(config);
+        core.getPrepPlanCache().setModTime(1);
     }
     
     @After public void tearDown() throws Exception {
@@ -239,13 +250,13 @@ public class TestDQPCore {
         DQPWorkContext.getWorkContext().getSession().setUserName(userName);
         ((BufferManagerImpl)core.getBufferManager()).setProcessorBatchSize(2);
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
-        ResultsMessage rm = message.get(5000, TimeUnit.MILLISECONDS);
+        ResultsMessage rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
         assertEquals(2, rm.getResults().length);
         RequestWorkItem item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
 
         message = core.processCursorRequest(reqMsg.getExecutionId(), 3, 2);
-        rm = message.get(5000, TimeUnit.MILLISECONDS);
+        rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
         assertEquals(2, rm.getResults().length);
         //ensure that we are idle
@@ -277,7 +288,7 @@ public class TestDQPCore {
         DQPWorkContext.getWorkContext().getSession().setUserName(userName);
         ((BufferManagerImpl)core.getBufferManager()).setProcessorBatchSize(2);
         Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
-        ResultsMessage rm = message.get(5000, TimeUnit.MILLISECONDS);
+        ResultsMessage rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
         assertEquals(2, rm.getResults().length);
         RequestWorkItem item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
@@ -341,6 +352,44 @@ public class TestDQPCore {
         assertEquals("something else", rm.getResults()[0].get(0)); //$NON-NLS-1$
     }
     
+    @Test public void testPreparedPlanInvalidation() throws Exception {
+        String sql = "insert into #temp select * FROM vqt.SmallB"; //$NON-NLS-1$
+        String userName = "1"; //$NON-NLS-1$
+        int sessionid = 1; //$NON-NLS-1$
+        RequestMessage reqMsg = exampleRequestMessage(sql);
+        ResultsMessage rm = execute(userName, sessionid, reqMsg);
+        assertEquals(1, rm.getResults().length); //$NON-NLS-1$
+        
+        sql = "select * from #temp"; //$NON-NLS-1$
+        reqMsg = exampleRequestMessage(sql);
+        reqMsg.setStatementType(StatementType.PREPARED);
+        rm = execute(userName, sessionid, reqMsg);
+        assertEquals(10, rm.getResults().length); //$NON-NLS-1$
+        
+        sql = "select * from #temp"; //$NON-NLS-1$
+        reqMsg = exampleRequestMessage(sql);
+        reqMsg.setStatementType(StatementType.PREPARED);
+        rm = execute(userName, sessionid, reqMsg);
+        assertEquals(10, rm.getResults().length); //$NON-NLS-1$
+        
+        assertEquals(1, this.core.getPrepPlanCache().getCacheHitCount());
+
+        Thread.sleep(100);
+
+        sql = "delete from #temp"; //$NON-NLS-1$
+        reqMsg = exampleRequestMessage(sql);
+        rm = execute(userName, sessionid, reqMsg);
+        assertEquals(1, rm.getResults().length); //$NON-NLS-1$
+        
+        sql = "select * from #temp"; //$NON-NLS-1$
+        reqMsg = exampleRequestMessage(sql);
+        reqMsg.setStatementType(StatementType.PREPARED);
+        rm = execute(userName, sessionid, reqMsg);
+        assertEquals(0, rm.getResults().length); //$NON-NLS-1$
+        
+        assertEquals(1, this.core.getPrepPlanCache().getCacheHitCount());
+    }
+    
 	public void helpTestVisibilityFails(String sql) throws Exception {
         RequestMessage reqMsg = exampleRequestMessage(sql); 
         reqMsg.setTxnAutoWrapMode(RequestMessage.TXN_WRAP_OFF);
@@ -356,15 +405,10 @@ public class TestDQPCore {
 
     private ResultsMessage helpExecute(String sql, String userName, int sessionid, boolean txnAutoWrap) throws Exception {
         RequestMessage reqMsg = exampleRequestMessage(sql);
-        DQPWorkContext.getWorkContext().getSession().setSessionId(String.valueOf(sessionid));
-        DQPWorkContext.getWorkContext().getSession().setUserName(userName);
         if (txnAutoWrap) {
         	reqMsg.setTxnAutoWrapMode(RequestMessage.TXN_WRAP_ON);
         }
-
-        Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
-        assertNotNull(core.getClientState(String.valueOf(sessionid), false));
-        ResultsMessage results = message.get(5000, TimeUnit.MILLISECONDS);
+        ResultsMessage results = execute(userName, sessionid, reqMsg);
         core.terminateSession(String.valueOf(sessionid));
         assertNull(core.getClientState(String.valueOf(sessionid), false));
         if (results.getException() != null) {
@@ -372,4 +416,15 @@ public class TestDQPCore {
         }
         return results;
     }
+
+	private ResultsMessage execute(String userName, int sessionid, RequestMessage reqMsg)
+			throws InterruptedException, ExecutionException, TimeoutException {
+		DQPWorkContext.getWorkContext().getSession().setSessionId(String.valueOf(sessionid));
+        DQPWorkContext.getWorkContext().getSession().setUserName(userName);
+
+        Future<ResultsMessage> message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
+        assertNotNull(core.getClientState(String.valueOf(sessionid), false));
+        ResultsMessage results = message.get(500000, TimeUnit.MILLISECONDS);
+		return results;
+	}
 }

@@ -73,7 +73,6 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
 
@@ -171,7 +170,7 @@ public class DQPCore implements DQP {
     
     // Resources
     private BufferManager bufferManager;
-    private ProcessorDataManager dataTierMgr;
+    private TempTableDataManager dataTierMgr;
     private SessionAwareCache<PreparedPlan> prepPlanCache;
     private SessionAwareCache<CachedResults> rsCache;
     private TransactionService transactionService;
@@ -643,7 +642,7 @@ public class DQPCore implements DQP {
         LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_COMMANDLOGGING, message);
     }
     
-    ProcessorDataManager getDataTierManager() {
+    public TempTableDataManager getDataTierManager() {
     	return this.dataTierMgr;
     }
     
@@ -686,7 +685,8 @@ public class DQPCore implements DQP {
         }
 
         //prepared plan cache
-        prepPlanCache = new SessionAwareCache<PreparedPlan>(this.cacheFactory, SessionAwareCache.Type.PREPAREDPLAN,  new CacheConfiguration(Policy.LRU, 60*60*8, config.getPreparedPlanCacheMaxCount(), "PreparedCache")); //$NON-NLS-1$
+        CacheConfiguration ppCacheConfig = config.getPreparedPlanCacheConfig();
+        prepPlanCache = new SessionAwareCache<PreparedPlan>(this.cacheFactory, SessionAwareCache.Type.PREPAREDPLAN,  ppCacheConfig); 
         prepPlanCache.setBufferManager(this.bufferManager);
 		
         this.processWorkerPool = new ThreadReuseExecutor(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, config.getMaxThreads());
@@ -896,6 +896,10 @@ public class DQPCore implements DQP {
 	
 	public int getMaxActivePlans() {
 		return maxActivePlans;
+	}
+	
+	SessionAwareCache<PreparedPlan> getPrepPlanCache() {
+		return prepPlanCache;
 	}
 	
 }

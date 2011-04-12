@@ -323,10 +323,6 @@
 					displayName="Lob Chunk Size In KB"
 					description="The max lob chunk size in KB transferred to the client for xml, blobs, clobs (default 100KB)"
 					required="false" readOnly="false" />				
-				<c:simple-property name="RuntimeEngineDeployer.preparedPlanCacheMaxCount"
-					displayName="Prepared Plan Cache Max Count"
-					description="The maximum number of query plans that are cached. Note: this is a memory based cache. (default 512)"
-					required="false" readOnly="false" />
 				<c:simple-property name="RuntimeEngineDeployer.queryThresholdInSecs"
 					displayName="Long Running Query Threshold"
 					description="Length of time in seconds before a query is considered long running"
@@ -350,6 +346,26 @@
                 <c:simple-property name="ResultSetCacheConfig.maxAgeInSeconds"
                     displayName="Max Entry Age"
                     description="The maximum age of a result set cache entry in seconds. -1 indicates no max. (default 7200)"
+                    required="false" readOnly="false" />
+                <c:simple-property name="ResultSetCacheConfig.maxStaleness"
+                    displayName="Max Entry Staleness"
+                    description="The maximum staleness of a result set cache entry in seconds based upon data modifications. -1 indicates no max. (default 60)"
+                    required="false" readOnly="false" />            
+            </c:group>
+            
+            <c:group name="PreparedPlanCacheConfig" displayName="Prepared Plan Cache Properties" hiddenByDefault="false">
+                <!-- the below property on  RuntimeEngineDeployer -->
+                <c:simple-property name="PreparedPlanCacheConfig.maxEntries"
+                    displayName="Max Entries"
+                    description="The maximum number of prepared plan cache entries. -1 indicates no limit. (default 512"
+                    required="false" readOnly="false" />
+                <c:simple-property name="PreparedPlanCacheConfig.maxAgeInSeconds"
+                    displayName="Max Entry Age"
+                    description="The maximum age of a prepared plan cache entry in seconds. -1 indicates no max. (default 28800)"
+                    required="false" readOnly="false" />
+                <c:simple-property name="PreparedPlanCacheConfig.maxStaleness"
+                    displayName="Max Entry Staleness"
+                    description="The maximum staleness of a prepared plan cache entry in seconds based upon costing modifications. -1 indicates no max. (default 300)"
                     required="false" readOnly="false" />            
             </c:group>
             

@@ -33,8 +33,6 @@ import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
-import org.teiid.api.exception.query.QueryResolverException;
-import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.plan.Annotation;
 import org.teiid.client.plan.Annotation.Priority;
 import org.teiid.common.buffer.LobManager;
@@ -43,13 +41,13 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.dqp.internal.process.Request;
 import org.teiid.language.SQLConstants;
+import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
-import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.TriggerActionPlanner;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -1089,9 +1087,13 @@ public class RelationalPlanner {
         	CacheHint hint = null;
         	boolean isImplicitGlobal = matMetadataId == null;
             if (isImplicitGlobal) {
-        		matTableName = MAT_PREFIX + metadata.getFullName(metadataID);
-        		matMetadataId = getGlobalTempTableMetadataId(virtualGroup, matTableName, context, metadata, analysisRecord);
-        		hint = ((TempMetadataID)matMetadataId).getCacheHint();
+        		TempMetadataID tid = context.getGlobalTableStore().getGlobalTempTableMetadataId(metadataID, metadata);
+        		matTableName = tid.getID();
+        		hint = tid.getCacheHint();
+        		if (hint != null) {
+					recordAnnotation(analysisRecord, Annotation.MATERIALIZED_VIEW, Priority.LOW, "SimpleQueryResolver.cache_hint_used", virtualGroup, matTableName, tid); //$NON-NLS-1$
+				}        	
+        		matMetadataId = tid;
             } else {
             	matTableName = metadata.getFullName(matMetadataId);
             }
@@ -1111,7 +1113,10 @@ public class RelationalPlanner {
         	}
         } else {
             // Not a materialized view - query the primary transformation
-            qnode = metadata.getVirtualPlan(metadataID);            
+            qnode = metadata.getVirtualPlan(metadataID); 
+            if (metadataID instanceof Table) {
+            	this.context.accessedView((Table)metadataID);
+            }
         }
 
         Command result = (Command)QueryResolver.resolveView(virtualGroup, qnode, cacheString, metadata).getCommand().clone();   
@@ -1126,59 +1131,6 @@ public class RelationalPlanner {
 		gs.setMetadataID(matMetadataId);
 		query.setFrom(new From(Arrays.asList(new UnaryFromClause(gs))));
 		return query;
-	}
-
-	public static Object getGlobalTempTableMetadataId(GroupSymbol table, String matTableName, CommandContext context, QueryMetadataInterface metadata, AnalysisRecord analysisRecord)
-			throws QueryMetadataException, TeiidComponentException, QueryResolverException, QueryValidatorException {
-		TempMetadataStore store = context.getGlobalTableStore().getMetadataStore();
-		TempMetadataID id = store.getTempGroupID(matTableName);
-		//define the table preserving the primary key
-		if (id == null) {
-			synchronized (table.getMetadataID()) {
-				id = store.getTempGroupID(matTableName);
-				if (id == null) {
-					//this is really just temporary and will be replaced by the real table
-					id = store.addTempGroup(matTableName, ResolverUtil.resolveElementsInGroup(table, metadata), false, true);
-					id.setQueryNode(metadata.getVirtualPlan(table.getMetadataID()));
-					id.setCardinality(metadata.getCardinality(table.getMetadataID()));
-					
-					Object pk = metadata.getPrimaryKey(table.getMetadataID());
-					if (pk != null) {
-						ArrayList<TempMetadataID> primaryKey = resolveIndex(metadata, id, pk);
-						id.setPrimaryKey(primaryKey);
-					}
-					Collection keys = metadata.getUniqueKeysInGroup(table.getMetadataID());
-					for (Object key : keys) {
-						id.addUniqueKey(resolveIndex(metadata, id, key));
-					}
-					Collection indexes = metadata.getIndexesInGroup(table.getMetadataID());
-					for (Object index : indexes) {
-						id.addIndex(resolveIndex(metadata, id, index));
-					}
-					Command c = (Command)QueryResolver.resolveView(table, metadata.getVirtualPlan(table.getMetadataID()), SQLConstants.Reserved.SELECT, metadata).getCommand().clone();
-					CacheHint hint = c.getCacheHint();
-					if (hint != null) {
-						recordAnnotation(analysisRecord, Annotation.MATERIALIZED_VIEW, Priority.LOW, "SimpleQueryResolver.cache_hint_used", table, matTableName, id.getCacheHint()); //$NON-NLS-1$
-					}
-					id.setCacheHint(hint);
-				}
-			}
-		} else if (id.getCacheHint() != null) {
-			recordAnnotation(analysisRecord, Annotation.MATERIALIZED_VIEW, Priority.LOW, "SimpleQueryResolver.cache_hint_used", table, matTableName, id.getCacheHint()); //$NON-NLS-1$
-		}
-		return id;
-	}
-
-	private static ArrayList<TempMetadataID> resolveIndex(
-			QueryMetadataInterface metadata, TempMetadataID id, Object pk)
-			throws TeiidComponentException, QueryMetadataException {
-		List cols = metadata.getElementIDsInKey(pk);
-		ArrayList<TempMetadataID> primaryKey = new ArrayList<TempMetadataID>(cols.size());
-		for (Object coldId : cols) {
-			int pos = metadata.getPosition(coldId) - 1;
-			primaryKey.add(id.getElements().get(pos));
-		}
-		return primaryKey;
 	}
 
     public static boolean isNoCacheGroup(QueryMetadataInterface metadata,

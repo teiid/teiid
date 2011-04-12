@@ -27,6 +27,7 @@ import org.jboss.managed.api.annotation.ManagementObject;
 import org.jboss.managed.api.annotation.ManagementObjectID;
 import org.jboss.managed.api.annotation.ManagementProperties;
 import org.jboss.managed.api.annotation.ManagementProperty;
+import org.teiid.dqp.internal.process.SessionAwareCache;
 
 @ManagementObject(componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
 public class CacheConfiguration {
@@ -37,12 +38,14 @@ public class CacheConfiguration {
 	}
 	
 	private Policy policy;
-	private int maxage;
-	private int maxEntries;
+	private int maxage = -1;
+	private int maxEntries = SessionAwareCache.DEFAULT_MAX_SIZE_TOTAL;
 	private boolean enabled = true;
 	private String name;
 	private String location;
-
+	
+	private int maxStaleness = -1;
+	
 	public CacheConfiguration() {
 	}
 	
@@ -57,7 +60,7 @@ public class CacheConfiguration {
 		return this.policy;
 	}
 
-	@ManagementProperty(description="The maximum age of a result set cache entry in seconds. -1 indicates no max. (default 7200)")
+	@ManagementProperty(description="The maximum age of an entry in seconds. -1 indicates no max.")
 	public int getMaxAgeInSeconds(){
 		return maxage;
 	}
@@ -66,7 +69,16 @@ public class CacheConfiguration {
 		this.maxage = maxage;
 	}
 	
-	@ManagementProperty(description="The maximum number of result set cache entries. -1 indicates no limit. (default 1024)")
+	@ManagementProperty(description="The maximum staleness in seconds of an entry based upon modifications. -1 indicates no max.")
+	public int getMaxStaleness() {
+		return maxStaleness;
+	}
+	
+	public void setMaxStaleness(int maxStaleDataModification) {
+		this.maxStaleness = maxStaleDataModification;
+	}
+	
+	@ManagementProperty(description="The maximum number of cache entries. -1 indicates no limit. (default 1024)")
 	public int getMaxEntries() {
 		return this.maxEntries;
 	}
@@ -98,37 +110,6 @@ public class CacheConfiguration {
 		this.location = location;
 	}	
 	
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + maxage;
-		result = prime * result + maxEntries;
-		result = prime * result + ((policy == null) ? 0 : policy.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		CacheConfiguration other = (CacheConfiguration) obj;
-		if (maxage != other.maxage)
-			return false;
-		if (maxEntries != other.maxEntries)
-			return false;
-		if (policy == null) {
-			if (other.policy != null)
-				return false;
-		} else if (!policy.equals(other.policy))
-			return false;
-		return true;
-	}
-
 	public boolean isEnabled() {
 		return enabled;
 	}

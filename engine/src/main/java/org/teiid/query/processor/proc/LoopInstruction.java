@@ -107,5 +107,11 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
     public void postInstruction(ProcedurePlan procEnv) throws TeiidComponentException {
         procEnv.removeResults(rsName);
     }
+    
+    @Override
+    public void getChildPlans(List<ProcessorPlan> plans) {
+    	super.getChildPlans(plans);
+    	this.loopProgram.getChildPlans(plans);
+    }
 
 }

@@ -480,7 +480,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     	CachedResults cr = new CachedResults();
     	cr.setCommand(originalCommand);
         cr.setAnalysisRecord(analysisRecord);
-        cr.setResults(resultsBuffer);
+        cr.setResults(resultsBuffer, processor.getProcessorPlan());
         if (originalCommand.getCacheHint() != null) {
         	LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Using cache hint", originalCommand.getCacheHint()); //$NON-NLS-1$
 			resultsBuffer.setPrefersMemory(originalCommand.getCacheHint().getPrefersMemory());

@@ -59,8 +59,7 @@ public abstract class ProgramInstruction implements Cloneable {
      * @return List of ProcessorPlan 
      * @since 4.2
      */
-    public List<ProcessorPlan> getChildPlans() {
-        return null;
+    public void getChildPlans(List<ProcessorPlan> plans) {
     }
     
     /**

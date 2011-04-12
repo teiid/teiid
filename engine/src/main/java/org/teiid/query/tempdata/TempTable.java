@@ -482,6 +482,7 @@ class TempTable {
 	}
 	
 	public int truncate() {
+		this.tid.getTableData().setLastModified(System.currentTimeMillis());
 		return tree.truncate();
 	}
 	
@@ -512,6 +513,7 @@ class TempTable {
         UpdateProcessor up = new InsertUpdateProcessor(tuples, rowId != null, shouldProject?indexes:null);
         int updateCount = up.process();
         tid.setCardinality(tree.getRowCount());
+        tid.getTableData().setLastModified(System.currentTimeMillis());
         return CollectionTupleSource.createUpdateCountTupleSource(updateCount);
     }
 	
@@ -577,6 +579,9 @@ class TempTable {
 			
 		};
 		int updateCount = up.process();
+		if (updateCount > 0) {
+			tid.getTableData().setLastModified(System.currentTimeMillis());
+		}
 		return CollectionTupleSource.createUpdateCountTupleSource(updateCount);
 	}
 
@@ -609,6 +614,9 @@ class TempTable {
 		};
 		int updateCount = up.process();
 		tid.setCardinality(tree.getRowCount());
+		if (updateCount > 0) {
+			tid.getTableData().setLastModified(System.currentTimeMillis());
+		}
 		return CollectionTupleSource.createUpdateCountTupleSource(updateCount);
 	}
 	
@@ -638,6 +646,7 @@ class TempTable {
 						index.tree.remove(tuple);
 					}
 				}
+				tid.getTableData().setLastModified(System.currentTimeMillis());
 				return result;
 			} 
 			List<?> result = tree.insert(tuple, InsertMode.UPDATE, -1);
@@ -647,6 +656,7 @@ class TempTable {
 					index.tree.insert(tuple, InsertMode.UPDATE, -1);
 				}
 			}
+			tid.getTableData().setLastModified(System.currentTimeMillis());
 			return result;
 		} finally {
 			lock.writeLock().unlock();
@@ -698,6 +708,10 @@ class TempTable {
 	
 	STree getTree() {
 		return tree;
+	}
+	
+	public TempMetadataID getMetadataId() {
+		return tid;
 	}
 
 }

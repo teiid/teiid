@@ -88,7 +88,7 @@ public class QueryProcessorFactoryImpl implements QueryProcessor.ProcessorFactor
 	        AnalysisRecord record = new AnalysisRecord(false, false);
 	        ProcessorPlan plan = QueryOptimizer.optimizePlan(newCommand, metadata, idGenerator, finder, record, copy);
 	        pp = new PreparedPlan();
-	        pp.setPlan(plan);
+	        pp.setPlan(plan, copy);
 	        pp.setReferences(references);
 	        pp.setAnalysisRecord(record);
 	        pp.setCommand(newCommand);

@@ -57,15 +57,31 @@
     <bean name="ResultsetCacheConfig" class="org.teiid.cache.CacheConfiguration">
         <property name="name">ResultSetCacheConfig</property>
         <property name="enabled">true</property>
-        <!-- Max Entries allowed for ResultSet Cache (default 1024) -->
+        <!-- Max Entries allowed (default 1024) -->
         <property name="maxEntries">1024</property>
         <!-- Max age in seconds (default 7200 - 2 hours) -->
         <property name="maxAgeInSeconds">7200</property>
+        <!-- Max staleness in seconds.  Modifications are based upon data updates
+             -1 indicates no max. (default 60 - 1 minute) -->
+        <property name="maxStaleness">60</property>
         <!-- Allowed values are LRU, EXPIRATION.  
              Setting this value to LRU will cause cache hint TTL values
              to be ignored. (default EXPIRATION) -->
         <property name="type">EXPIRATION</property>
         <property name="location">resultset</property>               
+    </bean>
+    
+    <!-- Configuration for prepared plan caching. (local memory only)
+     -->
+    <bean name="PreparedPlanCacheConfig" class="org.teiid.cache.CacheConfiguration">
+        <property name="name">PreparedPlanCacheConfig</property>
+        <!-- Max Entries allowed (default 512) -->
+        <property name="maxEntries">512</property>
+        <!-- Max age in seconds (default 28800 - 8 hours) -->
+        <property name="maxAgeInSeconds">28800</property>
+        <!-- Max staleness in seconds.  Modifications are based upon costing updates
+            -1 indicates no max.  (default 300 - 5 minutes) -->
+        <property name="maxStaleness">300</property>
     </bean>    
     
     <bean name="RuntimeEngineDeployer" class="org.teiid.jboss.deployers.RuntimeEngineDeployer">
@@ -84,6 +100,7 @@
         <property name="VDBStatusChecker"><inject bean="VDBStatusChecker"/></property>
         <property name="cacheFactory"><inject bean="CacheFactory"/></property>
         <property name="resultsetCacheConfig"><inject bean="ResultsetCacheConfig"/></property>
+        <property name="preparedPlanCacheConfig"><inject bean="PreparedPlanCacheConfig"/></property>
         
         <!-- Process pool maximum thread count. (default 64) -->
         <property name="maxThreads">64</property>
@@ -100,10 +117,6 @@
         <property name="maxRowsFetchSize">20480</property>
         <!-- The max lob chunk size in KB transferred each time when processing blobs, clobs (100KB default) -->
         <property name="lobChunkSizeInKB">100</property>
-        <!-- The maximum number of query plans that are cached. 
-             This includes both user plans and internal prepared plans.
-             Note: this is a memory based cache. (default 512)  -->
-        <property name="preparedPlanCacheMaxCount">512</property>
         <!-- Turn on role checking based upon the data roles defined in VDBs. (default true) -->
         <property name="useDataRoles">true</property>
         <!-- Sets whether temporary table usage is enabled by default (default true) -->
@@ -116,6 +129,8 @@
         <property name="exceptionOnMaxSourceRows">true</property>
         <!-- Maximum size of lob allowed through ODBC connection in bytes (default 5MB) -->
         <property name="maxODBCLobSizeAllowed">5242880</property>
+        <!-- The JNDI name of the Teiid Event Distributor -->
+        <property name="eventDistributorName">teiid/event-distributor</property>
     </bean>
 
     <!-- JDBC Socket connection properties (SSL see below) -->

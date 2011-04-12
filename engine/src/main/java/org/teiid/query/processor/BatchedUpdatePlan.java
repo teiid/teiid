@@ -33,6 +33,7 @@ import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.util.CommandContext;
 
@@ -236,6 +237,13 @@ public class BatchedUpdatePlan extends ProcessorPlan {
 			return updatePlans[0].requiresTransaction(transactionalReads);
 		}
 		return true;
+    }
+    
+    @Override
+    public void getAccessedGroups(List<GroupSymbol> groups) {
+        for (int i = 0; i < getPlanCount(); i++) {
+        	updatePlans[i].getAccessedGroups(groups);
+        }
     }
 
 }

@@ -32,9 +32,8 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.query.processor.ProcessorDataManager;
-import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.util.CommandContext;
 
 
@@ -140,6 +139,10 @@ public class FakeProcessorPlan extends ProcessorPlan {
      */
     public List getSchema() {
         return this.outputElements;
+    }
+    
+    @Override
+    public void getAccessedGroups(List<GroupSymbol> groups) {
     }
 
 }

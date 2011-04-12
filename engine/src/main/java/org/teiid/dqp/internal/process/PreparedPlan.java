@@ -24,17 +24,23 @@ package org.teiid.dqp.internal.process;
 
 import java.util.List;
 
+import org.teiid.cache.Cachable;
+import org.teiid.cache.Cache;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.util.CommandContext;
 
 
-public class PreparedPlan{
+public class PreparedPlan implements Cachable {
 	private ProcessorPlan plan;
 	private Command command;
 	private List<Reference> refs;
 	private AnalysisRecord analysisRecord;
+	
+	private AccessInfo accessInfo = new AccessInfo();
 	
 	/**
 	 * Return the ProcessorPlan.
@@ -66,9 +72,11 @@ public class PreparedPlan{
 	
 	/**
 	 * Set the ProcessorPlan.
+	 * @param context 
 	 */
-	public void setPlan(ProcessorPlan planValue){
+	public void setPlan(ProcessorPlan planValue, CommandContext context){
 		plan = planValue;
+		this.accessInfo.populate(planValue, context);
 	}
 	
 	/**
@@ -92,4 +100,19 @@ public class PreparedPlan{
 		refs = refsValue;
 	}
 	
+	@Override
+	public AccessInfo getAccessInfo() {
+		return accessInfo;
+	}
+	
+	@Override
+	public boolean prepare(Cache cache, BufferManager bufferManager) {
+		return true; //no remotable actions
+	}
+	
+	@Override
+	public boolean restore(Cache cache, BufferManager bufferManager) {
+		return true; //no remotable actions
+	}
+		
 }

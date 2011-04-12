@@ -61,6 +61,8 @@ public class SessionAwareCache<T> {
 	private Cache tupleBatchCache;
 	
 	private int maxSize = DEFAULT_MAX_SIZE_TOTAL;
+	private long modTime;
+	private Type type;
 	
 	private AtomicInteger cacheHit = new AtomicInteger();
 	private AtomicInteger totalRequests = new AtomicInteger();
@@ -95,6 +97,8 @@ public class SessionAwareCache<T> {
 				this.tupleBatchCache = this.distributedCache;
 			}
 		}
+		this.modTime = config.getMaxStaleness()*1000;
+		this.type = type;
 	}	
 	
 	public T get(CacheID id){
@@ -115,7 +119,7 @@ public class SessionAwareCache<T> {
 				result = distributedCache.get(id);
 			}
 			
-			if (result != null && result instanceof Cachable) {
+			if (result instanceof Cachable) {
 				Cachable c = (Cachable)result;
 				if (!c.restore(this.tupleBatchCache, this.bufferManager)) {
 					result = null;
@@ -124,6 +128,19 @@ public class SessionAwareCache<T> {
 		}
 		
 		if (result != null) {
+			if (result instanceof Cachable) {
+				Cachable c = (Cachable)result;
+				AccessInfo info = c.getAccessInfo();
+				if (info != null && !info.validate(type == Type.RESULTSET, modTime)) {
+					LogManager.logTrace(LogConstants.CTX_DQP, "Invalidating cache entry", id); //$NON-NLS-1$
+					if (id.getSessionId() == null) {
+						this.distributedCache.remove(id);
+					} else {
+						this.localCache.remove(id);
+					}
+					return null;
+				}
+			}
 			LogManager.logTrace(LogConstants.CTX_DQP, "Cache hit for", id); //$NON-NLS-1$
 			cacheHit.getAndIncrement();
 		} else {
@@ -307,4 +324,8 @@ public class SessionAwareCache<T> {
     public void setBufferManager(BufferManager bufferManager) {
     	this.bufferManager = bufferManager;
     }
+    
+    public void setModTime(long modTime) {
+		this.modTime = modTime;
+	}
 }

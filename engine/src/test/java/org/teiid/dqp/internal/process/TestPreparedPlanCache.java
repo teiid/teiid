@@ -22,10 +22,7 @@
 
 package org.teiid.dqp.internal.process;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 
@@ -40,6 +37,8 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.relational.ProjectNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.util.CommandContext;
 
 
 public class TestPreparedPlanCache {
@@ -70,7 +69,7 @@ public class TestPreparedPlanCache {
     	assertNotNull("Unable to get prepared plan from cache", cache.get(id)); //$NON-NLS-1$
     }
     
-    @Test public void testget(){
+    @Test public void testGet(){
     	SessionAwareCache<PreparedPlan> cache = new SessionAwareCache<PreparedPlan>();
     	helpPutPreparedPlans(cache, token, 0, 10);
     	helpPutPreparedPlans(cache, token2, 0, 15);
@@ -81,7 +80,7 @@ public class TestPreparedPlanCache {
     	assertEquals("Error getting plan from cache", new RelationalPlan(new ProjectNode(12)).toString(), pPlan.getPlan().toString()); //$NON-NLS-1$
     	assertEquals("Error getting command from cache", EXAMPLE_QUERY + 12, pPlan.getCommand().toString()); //$NON-NLS-1$
     	assertNotNull("Error getting plan description from cache", pPlan.getAnalysisRecord()); //$NON-NLS-1$
-    	assertEquals("Error gettting reference from cache", "ref12", pPlan.getReferences().get(0)); //$NON-NLS-1$ //$NON-NLS-2$
+    	assertEquals("Error gettting reference from cache", new Reference(1), pPlan.getReferences().get(0)); //$NON-NLS-1$
     }
     
     @Test public void testClearAll(){
@@ -152,11 +151,11 @@ public class TestPreparedPlanCache {
 	    	PreparedPlan pPlan = new PreparedPlan();
     		cache.put(id, Determinism.SESSION_DETERMINISTIC, pPlan, null);
     		pPlan.setCommand(dummy); 
-    		pPlan.setPlan(new RelationalPlan(new ProjectNode(i)));
+    		pPlan.setPlan(new RelationalPlan(new ProjectNode(i)), new CommandContext());
             AnalysisRecord analysisRecord = new AnalysisRecord(true, false);
     		pPlan.setAnalysisRecord(analysisRecord);
-    		ArrayList refs = new ArrayList();
-    		refs.add("ref"+i); //$NON-NLS-1$
+    		ArrayList<Reference> refs = new ArrayList<Reference>();
+    		refs.add(new Reference(1));
     		pPlan.setReferences(refs);
     	}
     }

@@ -66,6 +66,9 @@ public class Table extends ColumnSet<Schema> {
 	private List<String> schemaPaths;
 	private String resourcePath;
 	
+	private transient long lastModified;
+	private transient long lastDataModification;
+	
     public List<String> getBindings() {
 		return bindings;
 	}
@@ -268,6 +271,22 @@ public class Table extends ColumnSet<Schema> {
 	public void addColumn(Column column) {
 		super.addColumn(column);
 		column.setParent(this);
+	}
+	
+	public long getLastDataModification() {
+		return lastDataModification;
+	}
+	
+	public long getLastModified() {
+		return lastModified;
+	}
+	
+	public void setLastDataModification(long lastDataModification) {
+		this.lastDataModification = lastDataModification;
+	}
+	
+	public void setLastModified(long lastModified) {
+		this.lastModified = lastModified;
 	}
 	
 }

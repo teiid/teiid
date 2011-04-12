@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.client.plan.PlanNode;
+import org.teiid.query.processor.ProcessorPlan;
 
 
 /**
@@ -211,6 +212,12 @@ public class Program implements Cloneable {
         } 
         
         buffer.append(counterStr + line + "\n"); //$NON-NLS-1$
+    }
+    
+    void getChildPlans(List<ProcessorPlan> plans) {
+    	for (ProgramInstruction instruction : programInstructions) {
+			instruction.getChildPlans(plans);
+		}
     }
         
 }

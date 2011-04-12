@@ -23,6 +23,8 @@
 package org.teiid.query.util;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Properties;
 import java.util.Random;
@@ -38,6 +40,7 @@ import org.teiid.core.util.ArgCheck;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
+import org.teiid.metadata.Table;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.SecurityFunctionEvaluator;
@@ -122,6 +125,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     private TempTableStore tempTableStore;
     private LinkedList<String> recursionStack;
     private boolean nonBlocking;
+    private HashSet<Table> viewsAccessed;
 
     /**
      * Construct a new context.
@@ -531,6 +535,20 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	public void setSubject(Subject subject) {
 		this.globalState.subject = subject;
+	}
+	
+	public void accessedView(Table id) {
+		if (this.viewsAccessed == null) {
+			this.viewsAccessed = new HashSet<Table>();
+		}
+		this.viewsAccessed.add(id);
+	}
+	
+	public Set<Table> getViewsAccessed() {
+		if (this.viewsAccessed == null) {
+			return Collections.emptySet();
+		}
+		return viewsAccessed;
 	}
 	
 }

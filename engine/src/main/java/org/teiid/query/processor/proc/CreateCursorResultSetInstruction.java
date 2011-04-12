@@ -26,6 +26,7 @@ package org.teiid.query.processor.proc;
 
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
+import java.util.List;
 import java.util.Map;
 
 import org.teiid.client.plan.PlanNode;
@@ -101,6 +102,11 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
     
     public ProcessorPlan getCommand() { //Defect 13291 - added method to support changes to ProcedurePlan
         return plan;
+    }
+    
+    @Override
+    public void getChildPlans(List<ProcessorPlan> plans) {
+    	plans.add(this.plan);
     }
 
 }

@@ -35,6 +35,7 @@ import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogConstants;
@@ -44,6 +45,7 @@ import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
@@ -65,6 +67,8 @@ public class CachedResults implements Serializable, Cachable {
 	private int rowCount;
 	private boolean hasLobs;
 	
+	private AccessInfo accessInfo = new AccessInfo();
+	
 	public String getId() {
 		return this.uuid;
 	}
@@ -81,13 +85,14 @@ public class CachedResults implements Serializable, Cachable {
 		return results;
 	}
 	
-	public void setResults(TupleBuffer results) {
+	public void setResults(TupleBuffer results, ProcessorPlan plan) {
 		this.results = results;
 		this.batchSize = results.getBatchSize();
 		this.types = TupleBuffer.getTypeNames(results.getSchema());
 		this.rowCount = results.getRowCount();
 		this.uuid = results.getId();
 		this.hasLobs = results.isLobs();
+		this.accessInfo.populate(plan, plan.getContext());
 	}
 	
 	public void setCommand(Command command) {
@@ -146,10 +151,17 @@ public class CachedResults implements Serializable, Cachable {
 				this.results = buffer;	
 				bufferManager.addTupleBuffer(this.results);
 			}
+			this.accessInfo.restore();
 			return true;
-		} catch (TeiidComponentException e) {
-			LogManager.logDetail(LogConstants.CTX_DQP, QueryPlugin.Util.getString("not_found_cache")); //$NON-NLS-1$
+		} catch (TeiidException e) {
+			LogManager.logDetail(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("not_found_cache")); //$NON-NLS-1$
 		}
 		return false;
 	}	
+	
+	@Override
+	public AccessInfo getAccessInfo() {
+		return accessInfo;
+	}
+	
 }

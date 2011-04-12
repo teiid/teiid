@@ -48,7 +48,7 @@ public class TempMetadataID implements Serializable {
 	private static final long serialVersionUID = -1879211827339120135L;
 	private static final int LOCAL_CACHE_SIZE = 8;
 	
-	static class TableData {
+	public static class TableData {
 		Collection<TempMetadataID> accessPatterns;
 		List<TempMetadataID> elements;
 		int cardinality = QueryMetadataInterface.UNKNOWN_CARDINALITY;
@@ -58,6 +58,15 @@ public class TempMetadataID implements Serializable {
 		CacheHint cacheHint;
 		List<List<TempMetadataID>> keys;
 		List<List<TempMetadataID>> indexes;
+		long lastModified;
+		
+		public long getLastModified() {
+			return lastModified;
+		}
+		
+		public void setLastModified(long lastModified) {
+			this.lastModified = lastModified;
+		}
 	}
 	
 	private static TableData DUMMY_DATA = new TableData();
@@ -336,7 +345,7 @@ public class TempMetadataID implements Serializable {
 		this.getTableData().keys.add(key);
 	}
 
-	private TableData getTableData() {
+	public TableData getTableData() {
 		if (data == null) {
 			return DUMMY_DATA;
 		}
@@ -373,5 +382,5 @@ public class TempMetadataID implements Serializable {
 		}
 		return this.name;
 	}
-		
+	
 }

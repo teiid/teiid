@@ -55,7 +55,7 @@ import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
-@SuppressWarnings("nls")
+@SuppressWarnings({"nls", "unchecked"})
 public class TestPreparedStatement {
 	
 	private static final int SESSION_ID = 6;
@@ -148,8 +148,7 @@ public class TestPreparedStatement {
             Arrays.asList(new Object[] { "a",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }) //$NON-NLS-1$
         };    
     
-		List values = new ArrayList();
-		values.add(new Short((short)0));
+		List<?> values = Arrays.asList((short)0);
 		FakeDataManager dataManager = new FakeDataManager();
         TestProcessor.sampleData1(dataManager);
 		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, FakeMetadataFactory.example1VDB());
@@ -166,8 +165,7 @@ public class TestPreparedStatement {
             Arrays.asList(new Object[] { "foo",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }) //$NON-NLS-1$
         };    
     
-		List values = new ArrayList();
-		values.add(new Short((short)0));
+        List<?> values = Arrays.asList((short)0);
         FakeDataManager dataManager = new FakeDataManager();
         TestProcessor.sampleData1(dataManager);
 		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, true, FakeMetadataFactory.example1VDB());
@@ -256,8 +254,7 @@ public class TestPreparedStatement {
         // Create query 
         String preparedSql = "SELECT pm1.g1.e1, e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1 WHERE pm1.g1.e1=?"; //$NON-NLS-1$
         
-		List values = new ArrayList();
-		values.add("a"); //$NON-NLS-1$
+        List values = Arrays.asList("a"); //$NON-NLS-1$
 		
         //Create plan
         helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>());
@@ -291,8 +288,7 @@ public class TestPreparedStatement {
 		String preparedSql = "SELECT X.e1 FROM (SELECT pm1.g2.e1 FROM pm1.g2 WHERE pm1.g2.e1 = ?) as X"; //$NON-NLS-1$
         
 		//Create Request
-		List values = new ArrayList();
-		values.add("d"); //$NON-NLS-1$
+		List values = Arrays.asList("d"); //$NON-NLS-1$
 		
         //Create plan
         helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>());
@@ -305,8 +301,7 @@ public class TestPreparedStatement {
 
 	    //wrong type
 		try{         	        
-			List values = new ArrayList();
-			values.add("x"); //$NON-NLS-1$
+			List values = Arrays.asList("x"); //$NON-NLS-1$
 			
 	        //Create plan
 	        helpGetProcessorPlan(preparedSql, values, prepCache, SESSION_ID);

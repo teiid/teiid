@@ -39,6 +39,7 @@ import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.util.CommandContext;
 
@@ -160,6 +161,12 @@ public class ForEachRowPlan extends ProcessorPlan {
 	@Override
 	public boolean requiresTransaction(boolean transactionalReads) {
 		return true;
+	}
+	
+	@Override
+	public void getAccessedGroups(List<GroupSymbol> groups) {
+		this.queryPlan.getAccessedGroups(groups);
+		this.rowProcedure.getAccessedGroups(groups);
 	}
 
 }

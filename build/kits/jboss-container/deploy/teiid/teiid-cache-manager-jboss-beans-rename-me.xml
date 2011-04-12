@@ -137,5 +137,15 @@
             </map>
         </property>
     </bean>
+    
+    <bean name="EventDistributorFactory" class="org.teiid.events.jboss.JGroupsEventDistributor">
+    	<property name="jndiName">teiid/event-distributor</property>
+        <property name="channelFactory">
+            <inject bean="JChannelFactory" />
+        </property>
+        <property name="clusterName">${jboss.partition.name:DefaultPartition}-teiid-events</property>
+        <property name="multiplexerStack">${jboss.default.jgroups.stack:udp}</property>        
+        <property name="localEventDistributorName">teiid/runtime-engine</property>
+    </bean>
 
 </deployment>

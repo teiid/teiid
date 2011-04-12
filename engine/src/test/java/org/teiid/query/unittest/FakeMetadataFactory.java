@@ -97,6 +97,9 @@ public class FakeMetadataFactory {
 		session.setUserName("foo"); //$NON-NLS-1$
 		session.setVdb(vdb);
         workContext.getVDB().addAttchment(QueryMetadataInterface.class, metadata);
+        if (metadata instanceof TransformationMetadata) {
+        	workContext.getVDB().addAttchment(TransformationMetadata.class, (TransformationMetadata)metadata);
+        }
         DQPWorkContext.setWorkContext(workContext);
 		return workContext;
 	}

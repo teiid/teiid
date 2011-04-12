@@ -22,7 +22,7 @@
 
 package org.teiid.query.processor.xml;
 
-import static org.teiid.query.analysis.AnalysisRecord.PROP_OUTPUT_COLS;
+import static org.teiid.query.analysis.AnalysisRecord.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -477,5 +477,10 @@ public class XMLPlan extends ProcessorPlan {
      */
     public Program getOriginalProgram() {
         return this.originalProgram;
+    }
+    
+    @Override
+    public void getAccessedGroups(List<GroupSymbol> groups) {
+    	//TODO: add support
     }
 }

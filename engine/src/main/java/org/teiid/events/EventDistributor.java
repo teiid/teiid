@@ -19,16 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.cache;
 
-import org.teiid.common.buffer.BufferManager;
-import org.teiid.dqp.internal.process.AccessInfo;
+package org.teiid.events;
 
-public interface Cachable {
-	
-	boolean prepare(Cache cache, BufferManager bufferManager);
-	
-	boolean restore(Cache cache, BufferManager bufferManager);
+import java.util.List;
 
-	AccessInfo getAccessInfo();
+public interface EventDistributor {
+	void updateMatViewRow(String vdbName, int vdbVersion, String matViewFqn, List<?> tuple, boolean delete);
+	void schemaModification(String vdbName, int vdbVersion, String fqn);
+	void dataModification(String vdbName, int vdbVersion, String tableFqn);
 }

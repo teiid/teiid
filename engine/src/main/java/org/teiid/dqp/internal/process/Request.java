@@ -24,7 +24,6 @@ package org.teiid.dqp.internal.process;
 
 import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -110,7 +109,7 @@ public class Request implements SecurityFunctionEvaluator {
 	private final class ViewDefinitionMetadataWrapper extends
 			BasicQueryMetadataWrapper {
 		
-		private Map<List<String>, QueryNode> qnodes = new HashMap<List<String>, QueryNode>();
+		private Map<Object, QueryNode> qnodes = new HashMap<Object, QueryNode>();
 		
 		private ViewDefinitionMetadataWrapper(
 				QueryMetadataInterface actualMetadata) {
@@ -125,9 +124,8 @@ public class Request implements SecurityFunctionEvaluator {
 
 			String schema = getName(getModelID(groupID));
 			String viewName = getName(groupID);
-			List<String> key = Arrays.asList(schema, viewName);
 			
-			QueryNode cached = qnodes.get(key);
+			QueryNode cached = qnodes.get(groupID);
 			if (cached != null) {
 				return cached;
 			}
@@ -135,14 +133,14 @@ public class Request implements SecurityFunctionEvaluator {
 				//TODO: could just consider moving up when the context is created
 				throw new AssertionError("Should not attempt to resolve a view before the context has been set."); //$NON-NLS-1$
 			}
-			ViewDefinition vd = metadataProvider.getViewDefinition(getName(getModelID(groupID)), getName(groupID), context);
+			ViewDefinition vd = metadataProvider.getViewDefinition(schema, viewName, context);
 			if (vd != null) {
 				result = new QueryNode(DataTypeManager.getCanonicalString(vd.getSql()));
 				if (vd.getScope() == MetadataProvider.Scope.USER) {
 					result.setUser(context.getUserName());
 				}
 			}
-			qnodes.put(key, result);
+			qnodes.put(groupID, result);
 			return result;
 		}
 

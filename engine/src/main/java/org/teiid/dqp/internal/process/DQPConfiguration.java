@@ -45,7 +45,6 @@ public class DQPConfiguration{
 	private int timeSliceInMilli = DEFAULT_PROCESSOR_TIMESLICE;
 	private int maxRowsFetchSize = DEFAULT_FETCH_SIZE;
 	private int lobChunkSizeInKB = 100;
-	private int preparedPlanCacheMaxCount = SessionAwareCache.DEFAULT_MAX_SIZE_TOTAL;
 	private boolean useDataRoles = true;
 	private boolean allowCreateTemporaryTablesByDefault = true;
 	private int queryThresholdInSecs = DEFAULT_QUERY_THRESHOLD;
@@ -53,11 +52,12 @@ public class DQPConfiguration{
 	private int maxSourceRows = -1;
 	private int maxActivePlans = DEFAULT_MAX_ACTIVE_PLANS;
 	private CacheConfiguration resultsetCacheConfig;
+	private CacheConfiguration preparedPlanCacheConfig = new CacheConfiguration();
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
     private int userRequestSourceConcurrency = DEFAULT_USER_REQUEST_SOURCE_CONCURRENCY;
     
-    private AuthorizationValidator authorizationValidator;
-    private MetadataProvider metadataProvider;
+    private transient AuthorizationValidator authorizationValidator;
+    private transient MetadataProvider metadataProvider;
 
 	@ManagementProperty(description="Max active plans (default 20).  Increase this value, and max threads, on highly concurrent systems - but ensure that the underlying pools can handle the increased load without timeouts.")
 	public int getMaxActivePlans() {
@@ -116,15 +116,6 @@ public class DQPConfiguration{
 		this.lobChunkSizeInKB = lobChunkSizeInKB;
 	}
 
-	@ManagementProperty(description="The maximum number of query plans that are cached. Note: this is a memory based cache. (default 512)")
-	public int getPreparedPlanCacheMaxCount() {
-		return this.preparedPlanCacheMaxCount;
-	}
-
-	public void setPreparedPlanCacheMaxCount(int preparedPlanCacheMaxCount) {
-		this.preparedPlanCacheMaxCount = preparedPlanCacheMaxCount;
-	}
-	
 	public CacheConfiguration getResultsetCacheConfig() {
 		return this.resultsetCacheConfig;
 	}	
@@ -230,4 +221,14 @@ public class DQPConfiguration{
 	public void setMetadataProvider(MetadataProvider metadataProvider) {
 		this.metadataProvider = metadataProvider;
 	}
+	
+	public CacheConfiguration getPreparedPlanCacheConfig() {
+		return preparedPlanCacheConfig;
+	}
+	
+	public void setPreparedPlanCacheConfig(
+			CacheConfiguration preparedPlanCacheConfig) {
+		this.preparedPlanCacheConfig = preparedPlanCacheConfig;
+	}
+
 }

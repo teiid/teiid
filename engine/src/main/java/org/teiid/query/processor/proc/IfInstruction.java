@@ -24,11 +24,14 @@ package org.teiid.query.processor.proc;
 
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
+import java.util.List;
+
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.logging.LogManager;
+import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.sql.lang.Criteria;
 
 
@@ -136,6 +139,14 @@ public class IfInstruction extends ProgramInstruction {
         	props.addProperty(PROP_ELSE, this.elseProgram.getDescriptionProperties());
         }
         return props;
+    }
+    
+    @Override
+    public void getChildPlans(List<ProcessorPlan> plans) {
+    	ifProgram.getChildPlans(plans);
+    	if (elseProgram != null) {
+    		elseProgram.getChildPlans(plans);
+    	}
     }
     
 }

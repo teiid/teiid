@@ -43,7 +43,8 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
  */
 public class TempMetadataStore implements Serializable {
 
-    // UPPER CASE TEMP GROUP NAME --> TempMetadataID for group
+	private static final long serialVersionUID = 4055072385672022478L;
+	// UPPER CASE TEMP GROUP NAME --> TempMetadataID for group
     private Map<String, TempMetadataID> tempGroups;     
     
     /**
@@ -216,7 +217,7 @@ public class TempMetadataStore implements Serializable {
      * @return Metadata ID or null if not found
      */
     public List<TempMetadataID> getTempElementElementIDs(String tempGroup) {
-        TempMetadataID groupID = tempGroups.get(tempGroup.toUpperCase());        
+        TempMetadataID groupID = getTempGroupID(tempGroup);       
         if(groupID != null) {
             return groupID.getElements();
         }

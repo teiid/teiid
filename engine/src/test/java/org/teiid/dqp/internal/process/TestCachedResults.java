@@ -23,10 +23,6 @@ package org.teiid.dqp.internal.process;
 
 import static org.junit.Assert.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import java.util.List;
 
@@ -37,13 +33,19 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TestTupleBuffer.FakeBatchManager;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.service.FakeBufferService;
+import org.teiid.metadata.Table;
+import org.teiid.query.processor.FakeProcessorPlan;
+import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.unittest.FakeMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.util.CommandContext;
 
-
+@SuppressWarnings({"nls", "unchecked"})
 public class TestCachedResults {
-
 	
 	@Test
 	public void testCaching() throws Exception {
@@ -70,10 +72,15 @@ public class TestCachedResults {
 		
 		BufferManager bm = fbs.getBufferManager();
 		CachedResults results = new CachedResults();
-		results.setResults(tb);
+		ProcessorPlan plan = new FakeProcessorPlan(0);
+		CommandContext cc = new CommandContext();
+		Table t = RealMetadataFactory.exampleBQT().getGroupID("bqt1.smalla");
+		cc.accessedView(t);
+		plan.setContext(cc);
+		results.setResults(tb, plan);
 		results.setCommand(new Query());
 		Cache cache = new DefaultCache("dummy"); //$NON-NLS-1$
-		
+		long ts = results.getAccessInfo().getCreationTime();
 		// simulate the jboss-cache remote transport, where the batches are remotely looked up
 		// in cache
 		for (int row=1; row<=tb.getRowCount();row+=4) {
@@ -82,14 +89,9 @@ public class TestCachedResults {
 		
 		results.prepare(cache, bm);
 		
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ObjectOutputStream oos = new ObjectOutputStream(baos);
-		oos.writeObject(results);
-		oos.close();
+		CachedResults cachedResults = UnitTestUtil.helpSerialize(results);
 		
-		ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
-		CachedResults cachedResults = (CachedResults)ois.readObject();
-		ois.close();
+		FakeMetadataFactory.buildWorkContext(RealMetadataFactory.exampleBQT());
 		
 		cachedResults.restore(cache, bm);
 		
@@ -103,5 +105,6 @@ public class TestCachedResults {
 		
 		assertArrayEquals(tb.getBatch(1).getAllTuples(), cachedTb.getBatch(1).getAllTuples());
 		assertArrayEquals(tb.getBatch(9).getAllTuples(), cachedTb.getBatch(9).getAllTuples());
+		assertTrue(ts - cachedResults.getAccessInfo().getCreationTime() <= 5000);
 	}	
 }

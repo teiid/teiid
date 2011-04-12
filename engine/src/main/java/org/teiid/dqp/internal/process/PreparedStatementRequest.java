@@ -139,7 +139,7 @@ public class PreparedStatementRequest extends Request {
 	        if (!this.addedLimit) { //TODO: this is a little problematic
             	prepPlan.setCommand(this.userCommand);
 		        // Defect 13751: Clone the plan in its current state (i.e. before processing) so that it can be used for later queries
-		        prepPlan.setPlan(processPlan.clone());
+		        prepPlan.setPlan(processPlan.clone(), this.context);
 		        prepPlan.setAnalysisRecord(analysisRecord);
 				
 		        Determinism determinismLevel = this.context.getDeterminismLevel();

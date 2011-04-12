@@ -299,7 +299,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 			//NOTE: we could tap into the relationalplanner at a lower level to get this in a plan node form,
 			//the major benefit would be to reuse the dependent join planning logic if possible.
 			if (analysisRecord != null && analysisRecord.recordDebug()) {
-				analysisRecord.println("Attempting to plan " + crit + " as a mege join"); //$NON-NLS-1$ //$NON-NLS-2$
+				analysisRecord.println("Attempting to plan " + crit + " as a merge join"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			RelationalPlan subPlan = (RelationalPlan)QueryOptimizer.optimizePlan(plannedResult.query, metadata, idGenerator, capFinder, analysisRecord, context);
 			Number planCardinality = subPlan.getRootNode().getEstimateNodeCardinality();

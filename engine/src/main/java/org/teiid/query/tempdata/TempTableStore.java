@@ -23,19 +23,29 @@
 package org.teiid.query.tempdata;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryProcessingException;
+import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.language.SQLConstants;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.optimizer.relational.RelationalPlanner;
+import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.command.TempTableResolver;
+import org.teiid.query.resolver.util.ResolverUtil;
+import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Create;
 import org.teiid.query.sql.lang.Insert;
@@ -235,5 +245,55 @@ public class TempTableStore {
     public Set<String> getAllTempTables() {
         return new HashSet<String>(this.groupToTupleSourceID.keySet());
     }
+
+	public TempMetadataID getGlobalTempTableMetadataId(Object viewId, QueryMetadataInterface metadata)
+			throws QueryMetadataException, TeiidComponentException, QueryResolverException, QueryValidatorException {
+		String matViewName = metadata.getFullName(viewId);
+		String matTableName = RelationalPlanner.MAT_PREFIX+matViewName.toUpperCase();
+		GroupSymbol group = new GroupSymbol(matViewName);
+		group.setMetadataID(viewId);
+		TempMetadataID id = tempMetadataStore.getTempGroupID(matTableName);
+		//define the table preserving the key/index information and ensure that only a single instance exists
+		if (id == null) {
+			synchronized (viewId) {
+				id = tempMetadataStore.getTempGroupID(matTableName);
+				if (id == null) {
+					id = tempMetadataStore.addTempGroup(matTableName, ResolverUtil.resolveElementsInGroup(group, metadata), false, true);
+					id.setQueryNode(metadata.getVirtualPlan(viewId));
+					id.setCardinality(metadata.getCardinality(viewId));
+					
+					Object pk = metadata.getPrimaryKey(viewId);
+					if (pk != null) {
+						ArrayList<TempMetadataID> primaryKey = resolveIndex(metadata, id, pk);
+						id.setPrimaryKey(primaryKey);
+					}
+					Collection keys = metadata.getUniqueKeysInGroup(viewId);
+					for (Object key : keys) {
+						id.addUniqueKey(resolveIndex(metadata, id, key));
+					}
+					Collection indexes = metadata.getIndexesInGroup(viewId);
+					for (Object index : indexes) {
+						id.addIndex(resolveIndex(metadata, id, index));
+					}
+					Command c = (Command)QueryResolver.resolveView(group, metadata.getVirtualPlan(viewId), SQLConstants.Reserved.SELECT, metadata).getCommand().clone();
+					CacheHint hint = c.getCacheHint();
+					id.setCacheHint(hint);
+				}
+			}
+		}
+		return id;
+	}
+	
+	static ArrayList<TempMetadataID> resolveIndex(
+			QueryMetadataInterface metadata, TempMetadataID id, Object pk)
+			throws TeiidComponentException, QueryMetadataException {
+		List cols = metadata.getElementIDsInKey(pk);
+		ArrayList<TempMetadataID> primaryKey = new ArrayList<TempMetadataID>(cols.size());
+		for (Object coldId : cols) {
+			int pos = metadata.getPosition(coldId) - 1;
+			primaryKey.add(id.getElements().get(pos));
+		}
+		return primaryKey;
+	}
     
 }
