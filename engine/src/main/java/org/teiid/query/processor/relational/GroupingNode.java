@@ -44,6 +44,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.aggregate.AggregateFunction;
+import org.teiid.query.function.aggregate.ArrayAgg;
 import org.teiid.query.function.aggregate.Avg;
 import org.teiid.query.function.aggregate.ConstantFunction;
 import org.teiid.query.function.aggregate.Count;
@@ -189,6 +190,9 @@ public class GroupingNode extends RelationalNode {
                 	case XMLAGG:
                 		functions[i] = new XMLAgg(context);
                 		break;
+                	case ARRAY_AGG:
+                		functions[i] = new ArrayAgg(context);
+                		break;                		
                 	case TEXTAGG:
                			functions[i] = new TextAgg(context, (TextLine)ex);
                 		break;                		

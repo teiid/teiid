@@ -55,11 +55,6 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
 		TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
 	}
 
-	@Test public void test_PG_PROC()  throws Exception {
-		execute("select * FROM pg_proc"); //$NON-NLS-1$
-		TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
-	}
-
 	@Test public void test_PG_TRIGGER()  throws Exception {
 		execute("select * FROM pg_trigger"); //$NON-NLS-1$
 		TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);

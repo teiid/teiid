@@ -357,6 +357,9 @@ public class SQLConstants {
 	    public static final String WITHIN = "WITHIN"; //$NON-NLS-1$
 	    public static final String WITHOUT = "WITHOUT"; //$NON-NLS-1$
 		public static final String YEAR = "YEAR"; //$NON-NLS-1$
+		
+		// SQL 2008 words
+		public static final String ARRAY_AGG= "ARRAY_AGG"; //$NON-NLS-1$
 	    
 		//SQL/XML
 		

@@ -139,4 +139,17 @@ public class TestODBCSocketTransport {
 		assertTrue(rs.next());
 		assertEquals("\n\thello pg", rs.getString(1));
 	}
+	
+	@Test public void testPgProc() throws Exception {
+		Statement stmt = conn.createStatement();
+		ResultSet rs = stmt.executeQuery("select * from pg_proc");
+		rs.next();
+		assertEquals("oid", rs.getArray("proargtypes").getBaseTypeName());
+	}
+	
+	@Test public void testPgProcedure() throws Exception {
+		Statement stmt = conn.createStatement();
+		ResultSet rs = stmt.executeQuery("select has_function_privilege(100, 'foo')");
+		rs.next();
+	}
 }

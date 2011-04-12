@@ -126,15 +126,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			"\\s+on cn.conrelid = ref.confrelid" +  //$NON-NLS-1$
 			"\\s+and cn.contype = 'p'\\)" +  //$NON-NLS-1$
 			"\\s+order by ref.oid, ref.i"); //$NON-NLS-1$
-	
-	private static Pattern procParametersPattern = Pattern.compile("select proname, proretset, prorettype, pronargs, proargtypes, " + //$NON-NLS-1$
-			"nspname, p.oid, atttypid, attname, proargnames, proargmodes, proallargtypes from ((pg_catalog.pg_namespace n inner join " + //$NON-NLS-1$
-			"pg_catalog.pg_proc p on p.pronamespace = n.oid) inner join pg_type t on t.oid = p.prorettype) left outer join " + //$NON-NLS-1$
-			"pg_attribute a on a.attrelid = t.typrelid  and attnum > 0 and not attisdropped " + //$NON-NLS-1$
-			"where has_function_privilege(p.oid, 'EXECUTE') and nspname like (E?(?:'[^']*')+) " + //$NON-NLS-1$
-			"and proname like (E?(?:'[^']*')+) " + //$NON-NLS-1$
-			"order by nspname, proname, p.oid, attnum"); //$NON-NLS-1$
-	
+		
 	private static Pattern preparedAutoIncrement = Pattern.compile("select 1 \\s*from pg_catalog.pg_attrdef \\s*where adrelid = \\$1 AND adnum = \\$2 " + //$NON-NLS-1$
 			"\\s*and pg_catalog.pg_get_expr\\(adbin, adrelid\\) \\s*like '%nextval\\(%'", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	

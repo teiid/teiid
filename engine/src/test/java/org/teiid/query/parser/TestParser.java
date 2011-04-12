@@ -6749,6 +6749,24 @@ public class TestParser {
         helpTest(sql, "SELECT TEXTAGG(FOR e1 AS col1, e2 AS col2 DELIMITER ',' HEADER ORDER BY e2)", query);
     }    
     
+    @Test public void testArrayAggWithOrderBy() throws Exception {
+        String sql = "SELECT array_agg(1 order by e2)"; //$NON-NLS-1$
+        AggregateSymbol as = new AggregateSymbol("foo", Reserved.ARRAY_AGG, false, new Constant(1));
+        as.setOrderBy(new OrderBy(Arrays.asList(new ElementSymbol("e2"))));
+        Query query = new Query();
+        query.setSelect(new Select(Arrays.asList(as)));
+        helpTest(sql, "SELECT ARRAY_AGG(1 ORDER BY e2)", query);
+    }
+    
+    @Test public void testArrayAggWithIndexing() throws Exception {
+        String sql = "SELECT (array_agg(1))[1]"; //$NON-NLS-1$
+        AggregateSymbol as = new AggregateSymbol("foo", Reserved.ARRAY_AGG, false, new Constant(1));
+        ExpressionSymbol expr = new ExpressionSymbol("expr", new Function("array_get", new Expression[] {as, new Constant(1)}));
+        Query query = new Query();
+        query.setSelect(new Select(Arrays.asList(expr)));
+        helpTest(sql, "SELECT array_get(ARRAY_AGG(1), 1)", query);
+    } 
+    
     @Test public void testNestedTable() throws Exception {
         String sql = "SELECT * from TABLE(exec foo()) as x"; //$NON-NLS-1$
         Query query = new Query();

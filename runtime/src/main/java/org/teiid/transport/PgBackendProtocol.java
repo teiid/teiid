@@ -35,9 +35,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.SQLXML;
 import java.sql.Statement;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -51,6 +52,7 @@ import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.core.util.ReflectionHelper;
+import org.teiid.deployers.PgCatalogMetadataStore;
 import org.teiid.jdbc.ResultSetImpl;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
@@ -67,16 +69,14 @@ import org.teiid.transport.pg.PGbytea;
 public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRemote {
 	
     private final class ResultsWorkItem implements Runnable {
-		private final int[] types;
+		private final List<PgColInfo> cols;
 		private final String sql;
-		private final int columns;
 		private final ResultSetImpl rs;
 
-		private ResultsWorkItem(int[] types, String sql, int columns,
+		private ResultsWorkItem(List<PgColInfo> cols, String sql,
 				ResultSetImpl rs) {
-			this.types = types;
+			this.cols = cols;
 			this.sql = sql;
-			this.columns = columns;
 			this.rs = rs;
 		}
 
@@ -115,7 +115,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 			boolean processNext = true;
 			try {
     			if (future.get()) {
-    				sendDataRow(rs, columns, types);
+    				sendDataRow(rs, cols);
     			} else {
     				sendCommandComplete(sql, 0);
     				processNext = false;
@@ -145,7 +145,12 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
     private static final int PG_TYPE_FLOAT4 = 700;
     private static final int PG_TYPE_FLOAT8 = 701;
     private static final int PG_TYPE_UNKNOWN = 705;
-    //private static final int PG_TYPE_TEXTARRAY = 1009;
+    
+    private static final int PG_TYPE_OIDVECTOR = PgCatalogMetadataStore.PG_TYPE_OIDVECTOR;
+    private static final int PG_TYPE_OIDARRAY = PgCatalogMetadataStore.PG_TYPE_OIDARRAY;
+    private static final int PG_TYPE_CHARARRAY = PgCatalogMetadataStore.PG_TYPE_CHARARRAY;
+    private static final int PG_TYPE_TEXTARRAY = PgCatalogMetadataStore.PG_TYPE_TEXTARRAY;
+    
     private static final int PG_TYPE_DATE = 1082;
     private static final int PG_TYPE_TIME = 1083;
     private static final int PG_TYPE_TIMESTAMP_NO_TMZONE = 1114;
@@ -313,7 +318,8 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	public void sendResultSetDescription(ResultSetMetaData metaData, Statement stmt) {
 		try {
 			try {
-				sendRowDescription(metaData, stmt);
+        		List<PgColInfo> cols = getPgColInfo(metaData, stmt);
+				sendRowDescription(cols);
 			} catch (SQLException e) {
 				sendErrorResponse(e);				
 			}			
@@ -331,16 +337,12 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 				sendErrorResponse(new IllegalStateException("Pending results have not been sent")); //$NON-NLS-1$
 			}
             try {
+    			ResultSetMetaData meta = rs.getMetaData();
+        		List<PgColInfo> cols = getPgColInfo(meta, rs.getStatement());
             	if (describeRows) {
-            		ResultSetMetaData meta = rs.getMetaData();
-            		sendRowDescription(meta, rs.getStatement());
+            		sendRowDescription(cols);
             	}
-            	final int columns = rs.getMetaData().getColumnCount();
-            	final int[] types = new int[columns];
-            	for(int i = 0; i < columns; i++) {
-            		types[i] = rs.getMetaData().getColumnType(i+1);
-            	}
-            	Runnable r = new ResultsWorkItem(types, sql, columns, rs);
+            	Runnable r = new ResultsWorkItem(cols, sql, rs);
             	r.run();                
 			} catch (SQLException e) {
 				sendErrorResponse(e);
@@ -429,11 +431,11 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		sendMessage();
 	}
 
-	private void sendDataRow(ResultSet rs, int columns, int[] types) throws SQLException, IOException {
+	private void sendDataRow(ResultSet rs, List<PgColInfo> cols) throws SQLException, IOException {
 		startMessage('D');
-		writeShort(columns);
-		for (int i = 0; i < columns; i++) {
-			byte[] bytes = getContent(rs, types[i], i+1);			
+		writeShort(cols.size());
+		for (int i = 0; i < cols.size(); i++) {
+			byte[] bytes = getContent(rs, cols.get(i), i+1);			
 			if (bytes == null) {
 				writeInt(-1);
 			} else {
@@ -444,49 +446,35 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		sendMessage();
 	}
 
-	private byte[] getContent(ResultSet rs, int type, int column) throws SQLException, TeiidSQLException, IOException {
+	private byte[] getContent(ResultSet rs, PgColInfo col, int column) throws SQLException, TeiidSQLException, IOException {
 		byte[] bytes = null;
-		switch (type) {
-			case Types.BIT:
-		    case Types.BOOLEAN:
-		    case Types.VARCHAR:       
-		    case Types.CHAR:
-		    case Types.SMALLINT:
-		    case Types.INTEGER:
-		    case Types.BIGINT:
-		    case Types.NUMERIC:
-		    case Types.DECIMAL:
-		    case Types.FLOAT:
-		    case Types.REAL:
-		    case Types.DOUBLE:
-		    case Types.TIME:
-		    case Types.DATE:
-		    case Types.TIMESTAMP:
+		switch (col.type) {
+			case PG_TYPE_BOOL:
+			case PG_TYPE_BPCHAR:
+		    case PG_TYPE_DATE:
+		    case PG_TYPE_FLOAT4:
+		    case PG_TYPE_FLOAT8:
+		    case PG_TYPE_INT2:
+		    case PG_TYPE_INT4:
+		    case PG_TYPE_INT8:
+		    case PG_TYPE_NUMERIC:
+		    case PG_TYPE_TIME:
+		    case PG_TYPE_TIMESTAMP_NO_TMZONE:
+		    case PG_TYPE_VARCHAR:
 		    	String value = rs.getString(column);
 		    	if (value != null) {
 		    		bytes = value.getBytes(this.encoding);
 		    	}
 		    	break;
 		    
-		    case Types.LONGVARCHAR:
-		    case Types.CLOB:    
+		    case PG_TYPE_TEXT:
 		    	Clob clob = rs.getClob(column);
 		    	if (clob != null) {
 		    		bytes = ObjectConverterUtil.convertToByteArray(new ReaderInputStream(clob.getCharacterStream(), this.encoding), this.maxLobSize);
 		    	}		        	
 		    	break;
 		    	
-		    case Types.SQLXML:  
-		    	SQLXML xml = rs.getSQLXML(column);
-		    	if (xml != null) {
-		    		bytes = ObjectConverterUtil.convertToByteArray(new ReaderInputStream(xml.getCharacterStream(), this.encoding), this.maxLobSize);		    		
-		    	}		        	
-		    	break;
-		    	
-		    case Types.BINARY:
-		    case Types.VARBINARY:		        	
-		    case Types.LONGVARBINARY:
-		    case Types.BLOB:
+		    case PG_TYPE_BYTEA:
 		    	Blob blob = rs.getBlob(column);
 		    	if (blob != null) {
 		    		try {
@@ -496,11 +484,74 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		    		}
 		    	}
 		    	break;
+		    	
+		    case PG_TYPE_CHARARRAY:
+		    case PG_TYPE_TEXTARRAY:
+		    case PG_TYPE_OIDARRAY:
+		    	{
+		    	Object[] obj = (Object[])rs.getObject(column);
+		    	if (obj != null) {
+		    		StringBuilder sb = new StringBuilder();	
+			    	sb.append("{");
+			    	boolean first = true;
+			    	for (Object o:obj) {
+			    		if (!first) {
+			    			sb.append(",");
+			    		}
+			    		else {
+			    			first = false;
+			    		}
+			    		if (col.type == PG_TYPE_TEXTARRAY) {
+			    			escapeQuote(sb, o.toString());
+			    		}
+			    		else {
+			    			sb.append(o.toString());
+			    		}
+			    	}
+			    	sb.append("}");
+			    	bytes = sb.toString().getBytes(this.encoding);
+		    	}
+		    	}
+		    	break;
+		    	
+		    case PG_TYPE_OIDVECTOR:
+		    	{
+		    	Object[] obj = (Object[])rs.getObject(column);
+		    	if (obj != null) {
+		    		StringBuilder sb = new StringBuilder();	
+			    	boolean first = true;
+			    	for (Object o:obj) {
+			    		if (!first) {
+			    			sb.append(" ");
+			    		}
+			    		else {
+			    			first = false;
+			    		}
+			    		sb.append(o);
+			    	}
+			    	bytes = sb.toString().getBytes(this.encoding);
+		    	}	
+		    	}
+		    	break;
+		    	
 		    default:
 		    	throw new TeiidSQLException("unknown datatype failed to convert"); 
 		}
 		return bytes;
 	}
+	
+	public static void escapeQuote(StringBuilder sb, String s) {
+		sb.append('"');
+		for (int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+			if (c == '"' || c == '\\') {
+				sb.append('\\');
+			}
+
+			sb.append(c);
+		}
+		sb.append('"');
+	}	
 	
 	@Override
 	public void sslDenied() {
@@ -529,57 +580,74 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		startMessage('n');
 		sendMessage();
 	}
+	
+	private static class PgColInfo {
+		String name;
+		int reloid;
+		short attnum;
+		int type;
+		int precision;
+	}
 
-	private void sendRowDescription(ResultSetMetaData meta, Statement stmt) throws SQLException, IOException {
-		if (meta == null) {
-			sendNoData();
-		} else {
-			int columns = meta.getColumnCount();
-			startMessage('T');
-			writeShort(columns);
-			for (int i = 1; i < columns + 1; i++) {
-				writeString(meta.getColumnName(i).toLowerCase());
-				int type = meta.getColumnType(i);
-				type = convertType(type);
-				int precision = meta.getColumnDisplaySize(i);
-				String name = meta.getColumnName(i);
-				String table = meta.getTableName(i);
-				String schema = meta.getSchemaName(i);
-				int reloid = 0;
-				short attnum = 0;
-				if (schema != null) {
-					PreparedStatement ps = null;
-					try {
-						ps = stmt.getConnection().prepareStatement("select attrelid, attnum from matpg_relatt where attname = ? and relname = ? and nspname = ?");
-						ps.setString(1, name);
-						ps.setString(2, table);
-						ps.setString(3, schema);
-						ResultSet rs = ps.executeQuery();
-						if (rs.next()) {
-							reloid = rs.getInt(1);
-							attnum = rs.getShort(2);
-						}
-					} finally {
-						if (ps != null) {
-							ps.close();
+	private void sendRowDescription(List<PgColInfo> cols) throws IOException {
+		startMessage('T');
+		writeShort(cols.size());
+		for (PgColInfo info : cols) {
+			writeString(info.name);
+			// rel ID
+			writeInt(info.reloid);
+			// attribute number of the column
+			writeShort(info.attnum);
+			// data type
+			writeInt(info.type);
+			// pg_type.typlen
+			writeShort(getTypeSize(info.type, info.precision));
+			// pg_attribute.atttypmod
+			writeInt(-1);
+			// text
+			writeShort(0);
+		}
+		sendMessage();
+	}
+
+	private List<PgColInfo> getPgColInfo(ResultSetMetaData meta, Statement stmt)
+			throws SQLException {
+		int columns = meta.getColumnCount();
+		ArrayList<PgColInfo> result = new ArrayList<PgColInfo>(columns);
+		for (int i = 1; i < columns + 1; i++) {
+	 		PgColInfo info = new PgColInfo();
+			info.name = meta.getColumnName(i).toLowerCase();
+			info.type = meta.getColumnType(i);
+			info.type = convertType(info.type);
+			info.precision = meta.getColumnDisplaySize(i);
+			String name = meta.getColumnName(i);
+			String table = meta.getTableName(i);
+			String schema = meta.getSchemaName(i);
+			if (schema != null) {
+				PreparedStatement ps = null;
+				try {
+					ps = stmt.getConnection().prepareStatement("select attrelid, attnum, typoid from matpg_relatt where attname = ? and relname = ? and nspname = ?");
+					ps.setString(1, name);
+					ps.setString(2, table);
+					ps.setString(3, schema);
+					ResultSet rs = ps.executeQuery();
+					if (rs.next()) {
+						info.reloid = rs.getInt(1);
+						info.attnum = rs.getShort(2);
+						int specificType = rs.getInt(3);
+						if (!rs.wasNull()) {
+							info.type = specificType;
 						}
 					}
+				} finally {
+					if (ps != null) {
+						ps.close();
+					}
 				}
-				// rel ID
-				writeInt(reloid);
-				// attribute number of the column
-				writeShort(attnum);
-				// data type
-				writeInt(type);
-				// pg_type.typlen
-				writeShort(getTypeSize(type, precision));
-				// pg_attribute.atttypmod
-				writeInt(-1);
-				// text
-				writeShort(0);
 			}
-			sendMessage();
+			result.add(info);
 		}
+		return result;
 	}
 
 	private int getTypeSize(int pgType, int precision) {

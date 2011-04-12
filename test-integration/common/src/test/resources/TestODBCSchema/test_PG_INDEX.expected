@@ -18,7 +18,11 @@ oid          indexrelid   indrelid     indisclustered  indisunique  indisprimary
 16           16           30           false           false        true                                                                             0                                                                
 17           17           30           false           false        false                                                                            0                                                                
 18           18           30           false           false        false                                                                            0                                                                
-Row Count : 18
+19           19           31           false           false        true                                                                             0                                                                
+20           20           31           false           false        true                                                                             0                                                                
+21           21           31           false           false        false                                                                            0                                                                
+22           22           31           false           false        false                                                                            0                                                                
+Row Count : 22
 getColumnName   getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
 oid             4              PartsSupplier   java.lang.Integer   oid             integer            pg_catalog     pg_index      11                    10            0         false            false            false       false                 2           true        true          false     false       
 indexrelid      4              PartsSupplier   java.lang.Integer   indexrelid      integer            pg_catalog     pg_index      11                    10            0         false            false            false       false                 2           true        true          false     false       

@@ -62,6 +62,7 @@ public class AggregateSymbol extends ExpressionSymbol {
 		MAX,
 		XMLAGG,
 		TEXTAGG,
+		ARRAY_AGG,
 		ANY,
 		SOME,
 		EVERY,
@@ -176,6 +177,8 @@ public class AggregateSymbol extends ExpressionSymbol {
 			return DataTypeManager.DefaultDataClasses.BOOLEAN;
 		} else if (isEnhancedNumeric()) {
 			return DataTypeManager.DefaultDataClasses.DOUBLE;
+		} else if (this.aggregate == Type.ARRAY_AGG) {
+			return DataTypeManager.DefaultDataClasses.OBJECT;
 		} else {
 			return this.getExpression().getType();
 		}

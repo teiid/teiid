@@ -22,6 +22,7 @@
 package org.teiid.deployers;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
@@ -30,13 +31,22 @@ import java.util.UUID;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
+import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.Table.Type;
 import org.teiid.translator.TranslatorException;
 
 public class PgCatalogMetadataStore extends MetadataFactory {
+	
+    public static final int PG_TYPE_OIDVECTOR = 30;
+    public static final int PG_TYPE_OIDARRAY = 1028;
+    public static final int PG_TYPE_CHARARRAY = 1002;
+    public static final int PG_TYPE_TEXTARRAY = 1009;
 
 	private static final long serialVersionUID = 5391872008395637166L;
 	private Random random;
@@ -56,6 +66,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		add_pg_database();
 		add_pg_user();
 		add_matpg_relatt();
+		add_matpg_datatype();
+		addHasFunctionPrivilage();
 	}
 	
 	@Override
@@ -154,13 +166,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"false as atthasdef " + //$NON-NLS-1$
 				"FROM SYS.Columns as t1 LEFT OUTER JOIN " + //$NON-NLS-1$
 				"SYS.Tables st ON (st.Name = t1.TableName AND st.SchemaName = t1.SchemaName) LEFT OUTER JOIN " + //$NON-NLS-1$
-				"pg_catalog.pg_type pt ON (CASE " +//$NON-NLS-1$
-				"WHEN (t1.DataType = 'clob' OR t1.DataType = 'blob') THEN 'lo' " +//$NON-NLS-1$
-				"WHEN (t1.DataType = 'byte' ) THEN 'short' " + //$NON-NLS-1$
-				"WHEN (t1.DataType = 'time' ) THEN 'datetime' " + //$NON-NLS-1$
-				"WHEN (t1.DataType = 'biginteger' ) THEN 'decimal' " + //$NON-NLS-1$
-				"WHEN (t1.DataType = 'bigdecimal' ) THEN 'decimal' " + //$NON-NLS-1$
-				"ELSE t1.DataType END = pt.typname)"; //$NON-NLS-1$
+				"pg_catalog.matpg_datatype pt ON t1.DataType = pt.Name";//$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		t.setMaterialized(true);
 		return t;		
@@ -285,31 +291,49 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		// Number of input arguments
 		addColumn("pronargs", DataTypeManager.DefaultDataTypes.SHORT, t); //$NON-NLS-1$ 
 		
-		addColumn("proargtypes", DataTypeManager.DefaultDataTypes.OBJECT, t); //$NON-NLS-1$ 
-		addColumn("proargnames", DataTypeManager.DefaultDataTypes.OBJECT, t); //$NON-NLS-1$ 
-		addColumn("proargmodes", DataTypeManager.DefaultDataTypes.OBJECT, t); //$NON-NLS-1$ 
-		addColumn("proallargtypes", DataTypeManager.DefaultDataTypes.OBJECT, t); //$NON-NLS-1$ 
+		Column c = addColumn("proargtypes", DataTypeManager.DefaultDataTypes.OBJECT, t); //$NON-NLS-1$
+		c.setProperty("pg_type:oid", String.valueOf(PG_TYPE_OIDVECTOR)); //$NON-NLS-1$
+		
+		c = addColumn("proargnames", DataTypeManager.DefaultDataTypes.OBJECT, t); //$NON-NLS-1$
+		c.setProperty("pg_type:oid", String.valueOf(PG_TYPE_TEXTARRAY)); //$NON-NLS-1$
+		
+		c = addColumn("proargmodes", DataTypeManager.DefaultDataTypes.OBJECT, t); //$NON-NLS-1$
+		c.setProperty("pg_type:oid", String.valueOf(PG_TYPE_CHARARRAY)); //$NON-NLS-1$
+		
+		c = addColumn("proallargtypes", DataTypeManager.DefaultDataTypes.OBJECT, t); //$NON-NLS-1$
+		c.setProperty("pg_type:oid", String.valueOf(PG_TYPE_OIDARRAY)); //$NON-NLS-1$
 		
 		// The OID of the namespace that contains this function 
 		addColumn("pronamespace", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		
 		addPrimaryKey("pk_pg_proc", Arrays.asList("oid"), t); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		String transformation = "SELECT t1.OID as oid, t1.Name as proname, false as proretset, " + //$NON-NLS-1$
-				"(SELECT dt.OID FROM ProcedureParams pp, DataTypes dt WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName AND pp.Type = 'ResultSet' AND pp.Position = 1 AND dt.Name = pp.DataType) as prorettype, " + //$NON-NLS-1$ 
-				"convert((SELECT count(*) FROM ProcedureParams pp WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName ), short) as pronargs, " + //$NON-NLS-1$
-				"null as proargtypes, " + //$NON-NLS-1$
-				"null as proargnames, " + //$NON-NLS-1$
-				"null as proargmodes, " + //$NON-NLS-1$
-				"null as proallargtypes, " + //$NON-NLS-1$
-				"(SELECT OID FROM SYS.Schemas WHERE Name = t1.SchemaName) as pronamespace " + //$NON-NLS-1$
-				"FROM SYS.Procedures as t1"; //$NON-NLS-1$
+		
+		String transformation = "SELECT t1.OID as oid, t1.Name as proname, (SELECT (CASE WHEN count(pp.Type)>0 THEN true else false END) as x FROM ProcedureParams pp WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName and pp.Type='ResultSet') as proretset, " + //$NON-NLS-1$
+		"CASE WHEN (SELECT count(dt.oid) FROM ProcedureParams pp, matpg_datatype dt WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName AND pp.Type IN ('ReturnValue', 'ResultSet') AND dt.Name = pp.DataType) IS NULL THEN (select oid from pg_type WHERE typname = 'void') WHEN (SELECT count(dt.oid) FROM ProcedureParams pp, matpg_datatype dt WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName AND pp.Type = 'ResultSet' AND dt.Name = pp.DataType) IS NOT NULL THEN (select oid from pg_type WHERE typname = 'record') ELSE (SELECT dt.oid FROM ProcedureParams pp, matpg_datatype dt WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName AND pp.Type = 'ReturnValue' AND dt.Name = pp.DataType) END as prorettype,  " + //$NON-NLS-1$
+		"convert((SELECT count(*) FROM ProcedureParams pp WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName AND pp.Type IN ('In', 'InOut')), short) as pronargs, " + //$NON-NLS-1$
+		"(select "+textAggStmt("y.oid","y.type, y.position" )+" FROM ("+paramTable("'ResultSet','ReturnValue', 'Out'")+") as y) as proargtypes, " +//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		"(select "+textAggStmt("y.name", "y.type, y.position")+" FROM (SELECT pp.Name as name, pp.position as position, pp.Type as type FROM ProcedureParams pp WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName AND pp.Type NOT IN ('ReturnValue' )) as y) as proargnames, " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		"(select case WHEN count(distinct(y.type)) = 1 THEN null ELSE "+textAggStmt("CASE WHEN (y.type ='In') THEN 'i' WHEN (y.type = 'Out') THEN 'o' WHEN (y.type = 'InOut') THEN 'b' WHEN (y.type = 'ResultSet') THEN 't' END", "y.type,y.position")+" END FROM (SELECT pp.Type as type, pp.Position as position FROM ProcedureParams pp WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName AND pp.Type NOT IN ('ReturnValue')) as y) as proargmodes, " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		"(select case WHEN count(distinct(y.oid)) = 1 THEN null ELSE "+textAggStmt("y.oid", "y.type, y.position")+" END FROM ("+paramTable("'ReturnValue'")+") as y) as proallargtypes, " +  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		"(SELECT OID FROM SYS.Schemas WHERE Name = t1.SchemaName) as pronamespace " + //$NON-NLS-1$
+		"FROM SYS.Procedures as t1";//$NON-NLS-1$			
+		
 		t.setSelectTransformation(transformation);
 		t.setMaterialized(true);
 		return t;		
 	}
-
 	
+	private String paramTable(String notIn) {
+		return "SELECT dt.oid as oid, pp.Position as position, pp.Type as type FROM ProcedureParams pp LEFT JOIN matpg_datatype dt ON pp.DataType=dt.Name " + //$NON-NLS-1$
+				"WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName AND pp.Type NOT IN ("+notIn+")"; //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
+	
+	private String textAggStmt(String select, String orderby) {
+		return "array_agg("+select+" ORDER BY "+orderby+")";  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	}
+
 	// triggers
 	private Table add_pg_trigger() throws TranslatorException  {
 		Table t = createView("pg_trigger"); //$NON-NLS-1$ 
@@ -360,44 +384,80 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("typtypmod", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		
 		addColumn("typrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
+		addColumn("typelem", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 		
 		String transformation =
-			"SELECT 16 as oid,  'boolean' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid FROM (SELECT 1) X" + //$NON-NLS-1$
+			"SELECT 16 as oid,  'boolean' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 0 as typelem FROM (SELECT 1) X" + //$NON-NLS-1$
 			"   union " + //$NON-NLS-1$
-			//"SELECT 17 as oid,  'blob' as typname,(SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid  FROM (SELECT 1) X" + //$NON-NLS-1$
+			//"SELECT 17 as oid,  'blob' as typname,(SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 0 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$
 			//"   union " + //$NON-NLS-1$
-			"SELECT 1043 as oid,  'string' as typname,  (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen, convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid  FROM (SELECT 1) X" + //$NON-NLS-1$
+			"SELECT 1043 as oid,  'string' as typname,  (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen, convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 0 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$
 			"   union " + //$NON-NLS-1$
-			"SELECT 25 as oid,  'text' as typname,  (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen, convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid  FROM (SELECT 1) X" + //$NON-NLS-1$
+			"SELECT 25 as oid,  'text' as typname,  (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen, convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 0 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$
 			"   union " + //$NON-NLS-1$
-			"SELECT 1042 as oid,  'char' as typname,  (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid  FROM (SELECT 1) X" + //$NON-NLS-1$
+			"SELECT 1042 as oid,  'char' as typname,  (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 0 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$
 			"   union " + //$NON-NLS-1$
-			"SELECT 21 as oid,  'short' as typname,  (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(2, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid  FROM (SELECT 1) X" + //$NON-NLS-1$
+			"SELECT 21 as oid,  'short' as typname,  (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(2, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 0 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$
 			"   union " + //$NON-NLS-1$
-			"SELECT 20 as oid,  'long' as typname,  (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(8, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid  FROM (SELECT 1) X" + //$NON-NLS-1$
+			"SELECT 20 as oid,  'long' as typname,  (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(8, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 0 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$
 			"   union " + //$NON-NLS-1$
-			"SELECT 23 as oid,  'integer' as typname,   (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(4, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid  FROM (SELECT 1) X" + //$NON-NLS-1$
+			"SELECT 23 as oid,  'integer' as typname,   (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(4, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 0 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$
 			"   union " + //$NON-NLS-1$
-			"SELECT 26 as oid,  'oid' as typname,  (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typname,    convert(4, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid  FROM (SELECT 1) X" + //$NON-NLS-1$
+			"SELECT 26 as oid,  'oid' as typname,  (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typname,    convert(4, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 0 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$
 			"   union " + //$NON-NLS-1$
-			"SELECT 700 as oid,  'float' as typname,(SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(4, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid  FROM (SELECT 1) X" + //$NON-NLS-1$ 
+			"SELECT 700 as oid,  'float' as typname,(SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(4, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 0 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$ 
 			"   union " + //$NON-NLS-1$
-			"SELECT 701 as oid,  'double' as typname,  (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(8, short) as typlen, convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid  FROM (SELECT 1) X" + //$NON-NLS-1$
+			"SELECT 701 as oid,  'double' as typname,  (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(8, short) as typlen, convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 0 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$
 			"   union " + //$NON-NLS-1$
-			//"SELECT 1009 as oid,  'clob' as typname,(SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen, convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid  FROM (SELECT 1) X" + //$NON-NLS-1$
+			//"SELECT 1009 as oid,  'clob' as typname,(SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen, convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 0 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$
 			//"   union " + //$NON-NLS-1$
-			"SELECT 1082 as oid,  'date' as typname,  (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(4, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid  FROM (SELECT 1) X" + //$NON-NLS-1$
+			"SELECT 1082 as oid,  'date' as typname,  (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(4, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 0 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$
 			"   union " + //$NON-NLS-1$
-			"SELECT 1083 as oid,  'datetime' as typname,(SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(8, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid  FROM (SELECT 1) X" + //$NON-NLS-1$
+			"SELECT 1083 as oid,  'datetime' as typname,(SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(8, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 0 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$
 			"   union " + //$NON-NLS-1$
-			"SELECT 1114 as oid,  'timestamp' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace, convert(8, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid  FROM (SELECT 1) X" + //$NON-NLS-1$
+			"SELECT 1114 as oid,  'timestamp' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace, convert(8, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 0 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$
 			"   union " + //$NON-NLS-1$
-			"SELECT 1700 as oid,  'decimal' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid  FROM (SELECT 1) X"  + //$NON-NLS-1$
+			"SELECT 1700 as oid,  'decimal' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 0 as typelem  FROM (SELECT 1) X"  + //$NON-NLS-1$
 			"   union " + //$NON-NLS-1$
-			"SELECT 142 as oid,  'xml' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid  FROM (SELECT 1) X" + //$NON-NLS-1$
+			"SELECT 142 as oid,  'xml' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 0 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$
 			"   union " + //$NON-NLS-1$
-			"SELECT 14939 as oid,  'lo' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid  FROM (SELECT 1) X"; //$NON-NLS-1$
-		
+			"SELECT 14939 as oid,  'lo' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 0 as typelem  FROM (SELECT 1) X"+//$NON-NLS-1$
+			"   union " + //$NON-NLS-1$
+			"SELECT 2278 as oid,  'void' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(4, short) as typlen,  convert('p', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 0 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$
+			"   union " + //$NON-NLS-1$
+			"SELECT 2249 as oid,  'record' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('p', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 0 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$		
+			"   union " + //$NON-NLS-1$
+			"SELECT 30 as oid,  'oidvector' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 26 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$
+			"   union " + //$NON-NLS-1$
+			"SELECT 1000 as oid,  '_bool' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 16 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$
+			"   union " + //$NON-NLS-1$
+			"SELECT 1002 as oid,  '_char' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 18 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$
+			"   union " + //$NON-NLS-1$
+			"SELECT 1005 as oid,  '_int2' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 21 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$
+			"   union " + //$NON-NLS-1$
+			"SELECT 1007 as oid,  '_int4' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 23 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$
+			"   union " + //$NON-NLS-1$
+			"SELECT 1009 as oid,  '_text' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 25 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$
+			"   union " + //$NON-NLS-1$
+			"SELECT 1028 as oid,  '_oid' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 26 as typelem  FROM (SELECT 1) X" + //$NON-NLS-1$
+			"   union " + //$NON-NLS-1$
+			"SELECT 1014 as oid,  '_bpchar' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 1042 as typelem  FROM (SELECT 1) X"+ //$NON-NLS-1$
+			"   union " + //$NON-NLS-1$
+			"SELECT 1015 as oid,  '_varchar' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 1043 as typelem  FROM (SELECT 1) X"+ //$NON-NLS-1$
+			"   union " + //$NON-NLS-1$
+			"SELECT 1016 as oid,  '_int8' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 20 as typelem  FROM (SELECT 1) X"+ //$NON-NLS-1$
+			"   union " + //$NON-NLS-1$
+			"SELECT 1021 as oid,  '_float4' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 700 as typelem  FROM (SELECT 1) X"+ //$NON-NLS-1$
+			"   union " + //$NON-NLS-1$
+			"SELECT 1022 as oid,  '_float8' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 701 as typelem  FROM (SELECT 1) X"+ //$NON-NLS-1$
+			"   union " + //$NON-NLS-1$
+			"SELECT 1115 as oid,  '_timestamp' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 1114 as typelem  FROM (SELECT 1) X"+ //$NON-NLS-1$
+			"   union " + //$NON-NLS-1$
+			"SELECT 1182 as oid,  '_date' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 1082 as typelem  FROM (SELECT 1) X"+ //$NON-NLS-1$
+			"   union " + //$NON-NLS-1$
+			"SELECT 1183 as oid,  '_time' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 1083 as typelem  FROM (SELECT 1) X"+ //$NON-NLS-1$
+			"   union " + //$NON-NLS-1$
+			"SELECT 2287 as oid,  '_record' as typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace,  convert(-1, short) as typlen,  convert('b', char) as typtype, 0 as typbasetype, -1 as typtypmod, 0 as typrelid, 2249 as typelem  FROM (SELECT 1) X"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);			
 		return t;		
 	}
@@ -451,15 +511,60 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("relname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
 		addColumn("nspname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
 		addColumn("autoinc", DataTypeManager.DefaultDataTypes.BOOLEAN, t); //$NON-NLS-1$
+		addColumn("typoid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 		
 		addPrimaryKey("pk_matpg_relatt_names", Arrays.asList("attname", "relname", "nspname"), t); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$  
 		addIndex("idx_matpg_relatt_ids", true, Arrays.asList("attrelid", "attnum"), t); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-		String transformation = "select pg_class.oid as attrelid, attnum, attname, relname, nspname, IsAutoIncremented as autoinc " + //$NON-NLS-1$
+		String transformation = "select pg_class.oid as attrelid, attnum, attname, relname, nspname, IsAutoIncremented as autoinc, cast((select p.value from SYS.Properties p where p.name = 'pg_type:oid' and p.uid = SYS.Columns.uid) as integer) as typoid " + //$NON-NLS-1$
 				"from pg_attribute, pg_class, pg_namespace, SYS.Columns " + //$NON-NLS-1$
 				"where pg_attribute.attrelid = pg_class.oid and pg_namespace.oid = relnamespace" + //$NON-NLS-1$
 				" and SchemaName = nspname and TableName = relname and Name = attname";  //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		t.setMaterialized(true);
 		return t;
+	}
+	
+	private Table add_matpg_datatype() throws TranslatorException  {
+		Table t = createView("matpg_datatype"); //$NON-NLS-1$ 
+		addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+		addColumn("typname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+		addColumn("name", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+		addColumn("uid", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+		addColumn("typlen", DataTypeManager.DefaultDataTypes.SHORT, t); //$NON-NLS-1$
+		
+		addPrimaryKey("matpg_datatype_names", Arrays.asList("oid", "name"), t); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+		addIndex("matpg_datatype_ids", true, Arrays.asList("typname", "oid"), t); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+		String transformation = "select pt.oid as oid, pt.typname as typname, t.Name name, t.UID, pt.typlen from pg_catalog.pg_type pt JOIN (select (CASE "+//$NON-NLS-1$
+		"WHEN (Name = 'clob' OR Name = 'blob') THEN 'lo' " +//$NON-NLS-1$
+		"WHEN (Name = 'byte' ) THEN 'short' " +//$NON-NLS-1$
+		"WHEN (Name = 'time' ) THEN 'datetime' " + //$NON-NLS-1$
+		"WHEN (Name = 'biginteger' ) THEN 'decimal' " +//$NON-NLS-1$
+		"WHEN (Name = 'bigdecimal' ) THEN 'decimal' " +//$NON-NLS-1$
+		"ELSE Name END) as pg_name, Name, UID from SYS.DataTypes) as t ON t.pg_name = pt.typname";  //$NON-NLS-1$
+		t.setSelectTransformation(transformation);
+		t.setMaterialized(true);
+		return t;
+	}	
+	
+	private FunctionMethod addHasFunctionPrivilage() throws TranslatorException  {
+		FunctionMethod func = addFunction("has_function_privilege"); //$NON-NLS-1$
+		
+		ArrayList<FunctionParameter> inParams = new ArrayList<FunctionParameter>();
+		inParams.add(new FunctionParameter("oid", DataTypeManager.DefaultDataTypes.INTEGER, ""));//$NON-NLS-1$ //$NON-NLS-2$
+		inParams.add(new FunctionParameter("permission", DataTypeManager.DefaultDataTypes.STRING, "")); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		func.setInputParameters(inParams);
+		func.setOutputParameter(new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, ""));  //$NON-NLS-1$ //$NON-NLS-2$
+		
+		func.setInvocationClass(ReturnTrue.class.getName());
+		func.setInvocationMethod("result"); //$NON-NLS-1$
+		func.setPushdown(PushDown.CANNOT_PUSHDOWN);
+		return func;
+	}
+	
+	public static class ReturnTrue{
+		public static boolean result(@SuppressWarnings("unused")int oid, @SuppressWarnings("unused") String permission) {
+			return true;
+		}
 	}
 }

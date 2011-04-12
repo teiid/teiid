@@ -102,6 +102,7 @@ TOKEN : /* Reserved words */
 |   <AND: "and">
 |   <ANY: "any">
 |   <ARRAY: "array">
+|   <ARRAY_AGG: "array_agg">
 |   <AS: "as">
 |   <ASC: "asc">
 |   <ATOMIC: "atomic">
@@ -389,6 +390,8 @@ TOKEN : /* Punctuation */
 |	<RPAREN: ")">
 |   <LBRACE: "{">
 |   <RBRACE: "}">
+|   <LSBRACE: "[">
+|   <RSBRACE: "]">
 |	<EQ: "=">
 |	<NE: "<>">
 |	<NE2: "!=">
@@ -1869,6 +1872,30 @@ AggregateSymbol xmlAgg(ParseInfo info) :
 	}
 }
 
+AggregateSymbol arrayAgg(ParseInfo info) :
+{
+	Expression expression = null;
+	OrderBy orderBy = null;
+}
+{
+	<ARRAY_AGG> <LPAREN>
+	expression = expression(info)
+	[
+		orderBy = orderby(info)
+	]
+	<RPAREN>
+	{
+		if(! info.aggregatesAllowed) {
+			throw new ParseException(QueryPlugin.Util.getString("SQLParser.Aggregate_only_top_level")); //$NON-NLS-1$
+		}
+		
+		String name = generateFunctionName(info, "ARRAY_AGG");
+		AggregateSymbol	agg = new AggregateSymbol(name, "ARRAY_AGG", false, expression);
+		agg.setOrderBy(orderBy);
+		return agg;
+	}
+}
+
 
 AggregateSymbol textAgg(ParseInfo info) :
 {
@@ -3294,6 +3321,7 @@ Expression valueExpressionPrimary(ParseInfo info) :
 	Token symbol = null;
 	Constant literal = null;	
 	QueryCommand subquery = null;
+	Integer arrayIndex = null;
 }
 {
         (
@@ -3311,8 +3339,8 @@ Expression valueExpressionPrimary(ParseInfo info) :
 			<RBRACE>
 		)
 		|
-		LOOKAHEAD(<ID> <LPAREN> <FOR>) (expression=textAgg(info))
-		|
+		LOOKAHEAD(<ID> <LPAREN> <FOR>) (expression=textAgg(info))				
+		|		
 		// Aggregate function
 		LOOKAHEAD(<ID>, {matchesAny(getToken(1).image, "count", "min", "max", "sum", "avg", "every", "STDDEV_POP", "STDDEV_SAMP", "VAR_SAMP", "VAR_POP") != null}) (expression=aggregateSymbol(info))
 		|
@@ -3321,6 +3349,8 @@ Expression valueExpressionPrimary(ParseInfo info) :
 		LOOKAHEAD(<SOME>) (expression=aggregateSymbol(info))
 		|
 		(expression=xmlAgg(info))
+		|
+		(expression=arrayAgg(info))
 		|
 		// Function
 		LOOKAHEAD(2) (expression=function(info))
@@ -3334,6 +3364,7 @@ Expression valueExpressionPrimary(ParseInfo info) :
 				    symbol = null;
 				}  
 			}
+			(<LSBRACE> arrayIndex = intVal() <RSBRACE>)?
 		)
 		|
 		LOOKAHEAD(subquery(info)) subquery = subquery(info)
@@ -3341,6 +3372,7 @@ Expression valueExpressionPrimary(ParseInfo info) :
 		( <LPAREN> 
  			expression = expression(info)
 		  <RPAREN>
+		  (<LSBRACE> arrayIndex = intVal() <RSBRACE>)?
 		)
 		|
 		// Searched CASE expressions
@@ -3355,16 +3387,18 @@ Expression valueExpressionPrimary(ParseInfo info) :
 		    if (refToken.image.charAt(0) == '$') {
 				return new Reference(Integer.parseInt(refToken.image.substring(1)) -1);
 		    }
-			return new Reference(info.referenceCount++);
+			expression = new Reference(info.referenceCount++);
 		} else if(symbol != null) {
-			return new ElementSymbol(normalizeId(symbol.image));
+			expression = new ElementSymbol(normalizeId(symbol.image));
 		} else if(literal != null) {
-			return literal;		// may be null literal
+			expression = literal;		// may be null literal
 		} else if (subquery != null){
-			return new ScalarSubquery(subquery);
-		} else {		
-			return expression;
+			expression = new ScalarSubquery(subquery);
 		}
+		if (arrayIndex != null) {
+			expression = new Function("array_get", new Expression[] {expression, new Constant(arrayIndex)});		
+		}
+		return expression;
 	}
 }
 

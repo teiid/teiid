@@ -109,6 +109,11 @@ public class CompositeVDB {
 		CompositeMetadataStore compositeStore = new CompositeMetadataStore(stores.getStores());
 		for (MetadataStore s:this.additionalStores) {
 			compositeStore.addMetadataStore(s);
+			for (Schema schema:s.getSchemas().values()) {
+				if (!schema.getFunctions().isEmpty()) {
+					udfs.add(new FunctionTree(schema.getName(), new UDFSource(schema.getFunctions().values()), true));
+				}
+			}
 		}
 		
 		TransformationMetadata metadata =  new TransformationMetadata(vdb, compositeStore, visibilityMap, systemFunctions, udfs);

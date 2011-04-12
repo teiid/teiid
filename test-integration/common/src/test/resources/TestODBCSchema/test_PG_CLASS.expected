@@ -30,7 +30,8 @@ oid          relname                                                            
 28           pg_database                                                        4             v        0            0.0                     0            false        false                                                            
 29           pg_user                                                            4             v        0            0.0                     0            false        false                                                            
 30           matpg_relatt                                                       4             v        0            0.0                     0            false        false                                                            
-Row Count : 30
+31           matpg_datatype                                                     4             v        0            0.0                     0            false        false                                                            
+Row Count : 31
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
 oid            4              PartsSupplier   java.lang.Integer   oid             integer            pg_catalog     pg_class      11                    10            0         false            false            false       false                 2           true        true          false     false       
 relname        12             PartsSupplier   java.lang.String    relname         string             pg_catalog     pg_class      4000                  4000          0         false            false            false       false                 2           true        true          false     false       
