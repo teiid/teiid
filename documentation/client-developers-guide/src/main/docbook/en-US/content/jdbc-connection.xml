@@ -529,6 +529,8 @@
         	It's important to consider that 1 <code>ServerDiscovery</code> instance will be created for each connection.  Any sharing of information between instances should be done through static state or some other shared lookup.       	
         	</para>
         	<para>Your customized server discovery class will then need to be referenced by the discoveryStategy connection/DataSource property by its full class name.</para>
+        	<para>You may also choose to use an external tcp load balancer, such as <ulink url="http://haproxy.1wt.eu/">haproxy</ulink>.  
+        	The Teiid driver/DataSource should then typically be configured to just use the single host/port of your load balancer.</para>
         </section>
     </section>
     <section>

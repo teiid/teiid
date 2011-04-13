@@ -913,7 +913,7 @@
               <para>LTRIM(x)</para>
             </entry>
             <entry>
-              <para>Left trim x of white space</para>
+              <para>Left trim x of blank chars</para>
             </entry>
             <entry>
               <para>x in {string}, return string</para>
@@ -996,7 +996,7 @@
               <para>RTRIM(x)</para>
             </entry>
             <entry>
-              <para>Right trim x of white space</para>
+              <para>Right trim x of blank chars</para>
             </entry>
             <entry>
               <para>x is string, return string</para>
