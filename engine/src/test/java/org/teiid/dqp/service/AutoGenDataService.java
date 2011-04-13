@@ -25,6 +25,7 @@ package org.teiid.dqp.service;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -38,6 +39,7 @@ import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
+import org.teiid.query.processor.relational.RelationalNodeUtil;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.TranslatorException;
@@ -83,8 +85,11 @@ public class AutoGenDataService extends ConnectorManager{
     @Override
     public ConnectorWork registerRequest(AtomicRequestMessage message)
     		throws TeiidComponentException {
-        List projectedSymbols = (message.getCommand()).getProjectedSymbols();               
+        List projectedSymbols = (message.getCommand()).getProjectedSymbols(); 
         List[] results = createResults(projectedSymbols);
+        if (RelationalNodeUtil.isUpdate(message.getCommand())) {
+        	results = new List[] {Arrays.asList(1)};
+        }
                 
         final AtomicResultsMessage msg = ConnectorWorkItem.createResultsMessage(results, projectedSymbols);
         msg.setFinalRow(rows);

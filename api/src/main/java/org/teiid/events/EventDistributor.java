@@ -24,8 +24,41 @@ package org.teiid.events;
 
 import java.util.List;
 
+/**
+ * Distributes events across the Teiid cluster
+ */
 public interface EventDistributor {
+	
+	/**
+	 * Update the given materialized view row using the internal mat view name #MAT_VIEWFQN.
+	 * The tuple is expected to be in table order, which has the primary key first.
+	 * Deletes need to only send the key, not the entire row contents.
+	 * 
+	 * @param vdbName
+	 * @param vdbVersion
+	 * @param matViewFqn
+	 * @param tuple
+	 * @param delete
+	 */
 	void updateMatViewRow(String vdbName, int vdbVersion, String matViewFqn, List<?> tuple, boolean delete);
-	void schemaModification(String vdbName, int vdbVersion, String fqn);
-	void dataModification(String vdbName, int vdbVersion, String tableFqn);
+	
+	/**
+	 * Notify that the metadata has been changed for the given fqns.
+	 * A fqn has the form schema.entityname.
+	 * This typically implies that the costing metadata has changed, but may also indicate
+	 * a view definition has changed.
+	 * @param vdbName
+	 * @param vdbVersion
+	 * @param fqns
+	 */
+	void schemaModification(String vdbName, int vdbVersion, String... fqns);
+	
+	/**
+	 * Notify that the table data has changed.
+	 * A table fqn has the form schema.tablename.
+	 * @param vdbName
+	 * @param vdbVersion
+	 * @param tableFqns
+	 */
+	void dataModification(String vdbName, int vdbVersion, String... tableFqns);
 }

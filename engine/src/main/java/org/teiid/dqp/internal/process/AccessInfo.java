@@ -171,7 +171,7 @@ public class AccessInfo implements Serializable {
 				}
 			} else if (o instanceof TempMetadataID) {
 				TempMetadataID tid = (TempMetadataID)o;
-				if (tid.getTableData().getLastModified() - modTime > this.creationTime) {
+				if ((data?tid.getTableData().getLastDataModification():tid.getTableData().getLastModified()) - modTime > this.creationTime) {
 					return false;
 				}
 			}

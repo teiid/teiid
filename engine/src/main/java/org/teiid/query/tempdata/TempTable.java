@@ -482,7 +482,7 @@ class TempTable {
 	}
 	
 	public int truncate() {
-		this.tid.getTableData().setLastModified(System.currentTimeMillis());
+		this.tid.getTableData().dataModified(tree.getRowCount());
 		return tree.truncate();
 	}
 	
@@ -513,7 +513,7 @@ class TempTable {
         UpdateProcessor up = new InsertUpdateProcessor(tuples, rowId != null, shouldProject?indexes:null);
         int updateCount = up.process();
         tid.setCardinality(tree.getRowCount());
-        tid.getTableData().setLastModified(System.currentTimeMillis());
+        tid.getTableData().dataModified(updateCount);
         return CollectionTupleSource.createUpdateCountTupleSource(updateCount);
     }
 	
@@ -579,9 +579,7 @@ class TempTable {
 			
 		};
 		int updateCount = up.process();
-		if (updateCount > 0) {
-			tid.getTableData().setLastModified(System.currentTimeMillis());
-		}
+		tid.getTableData().dataModified(updateCount);
 		return CollectionTupleSource.createUpdateCountTupleSource(updateCount);
 	}
 
@@ -614,9 +612,7 @@ class TempTable {
 		};
 		int updateCount = up.process();
 		tid.setCardinality(tree.getRowCount());
-		if (updateCount > 0) {
-			tid.getTableData().setLastModified(System.currentTimeMillis());
-		}
+		tid.getTableData().dataModified(updateCount);
 		return CollectionTupleSource.createUpdateCountTupleSource(updateCount);
 	}
 	
@@ -646,7 +642,7 @@ class TempTable {
 						index.tree.remove(tuple);
 					}
 				}
-				tid.getTableData().setLastModified(System.currentTimeMillis());
+				tid.getTableData().dataModified(1);
 				return result;
 			} 
 			List<?> result = tree.insert(tuple, InsertMode.UPDATE, -1);
@@ -656,7 +652,7 @@ class TempTable {
 					index.tree.insert(tuple, InsertMode.UPDATE, -1);
 				}
 			}
-			tid.getTableData().setLastModified(System.currentTimeMillis());
+			tid.getTableData().dataModified(1);
 			return result;
 		} finally {
 			lock.writeLock().unlock();

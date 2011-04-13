@@ -26,6 +26,7 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.events.EventDistributor;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.util.CommandContext;
 
@@ -47,5 +48,7 @@ public interface ProcessorDataManager {
                                            String keyElementName,
                                            Object keyValue) throws BlockedException,
                                                            TeiidComponentException, TeiidProcessingException;
+    
+    void setEventDistributor(EventDistributor ed);
 
 }

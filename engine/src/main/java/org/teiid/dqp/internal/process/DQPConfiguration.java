@@ -55,6 +55,7 @@ public class DQPConfiguration{
 	private CacheConfiguration preparedPlanCacheConfig = new CacheConfiguration();
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
     private int userRequestSourceConcurrency = DEFAULT_USER_REQUEST_SOURCE_CONCURRENCY;
+    private boolean detectingChangeEvents = true;
     
     private transient AuthorizationValidator authorizationValidator;
     private transient MetadataProvider metadataProvider;
@@ -229,6 +230,15 @@ public class DQPConfiguration{
 	public void setPreparedPlanCacheConfig(
 			CacheConfiguration preparedPlanCacheConfig) {
 		this.preparedPlanCacheConfig = preparedPlanCacheConfig;
+	}
+
+	public boolean isDetectingChangeEvents() {
+		return detectingChangeEvents;
+	}
+	
+	@ManagementProperty(description="Set to true for the engine to detect local change events. Should be disabled if using external change data capture tools. (default true)")
+	public void setDetectingChangeEvents(boolean detectingChangeEvents) {
+		this.detectingChangeEvents = detectingChangeEvents;
 	}
 
 }

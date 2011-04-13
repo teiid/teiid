@@ -52,6 +52,7 @@ import org.teiid.dqp.internal.datamgr.ConnectorWork;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.BufferService;
+import org.teiid.events.EventDistributor;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
@@ -110,10 +111,25 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	// Resources
 	private DQPCore requestMgr;
     private BufferService bufferService;
+    private EventDistributor eventDistributor;
+    private boolean detectChangeEvents;
 
-    public DataTierManagerImpl(DQPCore requestMgr, BufferService bufferService) {
+    public DataTierManagerImpl(DQPCore requestMgr, BufferService bufferService, boolean detectChangeEvents) {
 		this.requestMgr = requestMgr;
         this.bufferService = bufferService;
+        this.detectChangeEvents = detectChangeEvents;
+	}
+    
+    public boolean detectChangeEvents() {
+		return detectChangeEvents;
+	}
+    
+    public void setEventDistributor(EventDistributor eventDistributor) {
+		this.eventDistributor = eventDistributor;
+	}
+    
+    public EventDistributor getEventDistributor() {
+		return eventDistributor;
 	}
     
 	public TupleSource registerRequest(CommandContext context, Command command, String modelName, String connectorBindingId, int nodeID, int limit) throws TeiidComponentException, TeiidProcessingException {

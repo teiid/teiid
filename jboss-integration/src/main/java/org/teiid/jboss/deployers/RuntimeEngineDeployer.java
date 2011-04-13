@@ -659,7 +659,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	}
 	
 	@Override
-	public void dataModification(String vdbName, int vdbVersion, String tableFqn) {
+	public void dataModification(String vdbName, int vdbVersion, String... tableFqns) {
 		VDBMetaData vdb = this.vdbRepository.getVDB(vdbName, vdbVersion);
 		if (vdb == null) {
 			return;
@@ -668,16 +668,18 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		if (tm == null) {
 			return;
 		}
-		try {
-			Table table = tm.getGroupID(tableFqn);
-			table.setLastDataModification(System.currentTimeMillis());
-		} catch (TeiidException e) {
-			LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("DQPCore.unable_to_process_event")); //$NON-NLS-1$
+		for (String tableFqn:tableFqns) {
+			try {
+				Table table = tm.getGroupID(tableFqn);
+				table.setLastDataModification(System.currentTimeMillis());
+			} catch (TeiidException e) {
+				LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("DQPCore.unable_to_process_event")); //$NON-NLS-1$
+			}
 		}
 	}
 	
 	@Override
-	public void schemaModification(String vdbName, int vdbVersion, String fqn) {
+	public void schemaModification(String vdbName, int vdbVersion, String... fqns) {
 		VDBMetaData vdb = this.vdbRepository.getVDB(vdbName, vdbVersion);
 		if (vdb == null) {
 			return;
@@ -686,11 +688,13 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		if (tm == null) {
 			return;
 		}
-		try {
-			Table table = tm.getGroupID(fqn);
-			table.setLastModified(System.currentTimeMillis());
-		} catch (TeiidException e) {
-			LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("DQPCore.unable_to_process_event")); //$NON-NLS-1$
+		for (String fqn:fqns) {
+			try {
+				Table table = tm.getGroupID(fqn);
+				table.setLastModified(System.currentTimeMillis());
+			} catch (TeiidException e) {
+				LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("DQPCore.unable_to_process_event")); //$NON-NLS-1$
+			}
 		}
 	}
 }

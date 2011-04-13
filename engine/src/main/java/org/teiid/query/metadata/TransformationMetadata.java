@@ -262,9 +262,9 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     
     public boolean hasProcedure(String name) throws TeiidComponentException {
     	try {
-    		return getStoredProcedureInfoForProcedure(name) != null;
+    		return getStoredProcInfoDirect(name) != null;
     	} catch (QueryMetadataException e) {
-    		return false;
+    		return true;
     	}
     }
 

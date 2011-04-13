@@ -37,6 +37,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.CommandContext;
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
@@ -87,8 +88,10 @@ public class TestDQPCore {
         config = new DQPConfiguration();
         config.setMaxActivePlans(1);
         config.setUserRequestSourceConcurrency(2);
+        config.setResultsetCacheConfig(new CacheConfiguration());
         core.start(config);
         core.getPrepPlanCache().setModTime(1);
+        core.getRsCache().setModTime(1);
     }
     
     @After public void tearDown() throws Exception {
@@ -376,6 +379,21 @@ public class TestDQPCore {
 
         Thread.sleep(100);
 
+        //perform a minor update, we should still use the cache
+        sql = "delete from #temp where a12345 = '11'"; //$NON-NLS-1$
+        reqMsg = exampleRequestMessage(sql);
+        rm = execute(userName, sessionid, reqMsg);
+        assertEquals(1, rm.getResults().length); //$NON-NLS-1$
+
+        sql = "select * from #temp"; //$NON-NLS-1$
+        reqMsg = exampleRequestMessage(sql);
+        reqMsg.setStatementType(StatementType.PREPARED);
+        rm = execute(userName, sessionid, reqMsg);
+        assertEquals(10, rm.getResults().length); //$NON-NLS-1$
+        
+        assertEquals(2, this.core.getPrepPlanCache().getCacheHitCount());
+
+        //perform a minor update, we will purge the plan
         sql = "delete from #temp"; //$NON-NLS-1$
         reqMsg = exampleRequestMessage(sql);
         rm = execute(userName, sessionid, reqMsg);
@@ -387,7 +405,40 @@ public class TestDQPCore {
         rm = execute(userName, sessionid, reqMsg);
         assertEquals(0, rm.getResults().length); //$NON-NLS-1$
         
-        assertEquals(1, this.core.getPrepPlanCache().getCacheHitCount());
+        assertEquals(2, this.core.getPrepPlanCache().getCacheHitCount());
+    }
+    
+    @Test public void testRsCacheInvalidation() throws Exception {
+        String sql = "select * FROM vqt.SmallB"; //$NON-NLS-1$
+        String userName = "1"; //$NON-NLS-1$
+        int sessionid = 1; //$NON-NLS-1$
+        RequestMessage reqMsg = exampleRequestMessage(sql);
+        reqMsg.setUseResultSetCache(true);
+        ResultsMessage rm = execute(userName, sessionid, reqMsg);
+        assertEquals(10, rm.getResults().length); //$NON-NLS-1$
+                
+        sql = "select * FROM vqt.SmallB"; //$NON-NLS-1$
+        reqMsg = exampleRequestMessage(sql);
+        reqMsg.setUseResultSetCache(true);
+        rm = execute(userName, sessionid, reqMsg);
+        assertEquals(10, rm.getResults().length); //$NON-NLS-1$
+        
+        assertEquals(1, this.core.getRsCache().getCacheHitCount());
+
+        Thread.sleep(100);
+
+        sql = "delete from bqt1.smalla"; //$NON-NLS-1$
+        reqMsg = exampleRequestMessage(sql);
+        rm = execute(userName, sessionid, reqMsg);
+        assertEquals(1, rm.getResults().length); //$NON-NLS-1$
+        
+        sql = "select * FROM vqt.SmallB"; //$NON-NLS-1$
+        reqMsg = exampleRequestMessage(sql);
+        reqMsg.setUseResultSetCache(true);
+        rm = execute(userName, sessionid, reqMsg);
+        assertEquals(10, rm.getResults().length); //$NON-NLS-1$
+        
+        assertEquals(1, this.core.getRsCache().getCacheHitCount());
     }
     
 	public void helpTestVisibilityFails(String sql) throws Exception {

@@ -113,7 +113,7 @@ public class TestXMLTypeTranslations extends BaseQueryTest {
         Mockito.stub(rwi.getDqpWorkContext()).toReturn(workContext);
         
         Mockito.stub(core.getRequestWorkItem((RequestID)Mockito.anyObject())).toReturn(rwi);
-        DataTierManagerImpl dataMgr = new DataTierManagerImpl(core, null);
+        DataTierManagerImpl dataMgr = new DataTierManagerImpl(core, null, true);
         doProcess(metadata,  
                 sql, 
                 finder, dataMgr , new List[] {Arrays.asList(new String(ObjectConverterUtil.convertToByteArray(new FileInputStream(UnitTestUtil.getTestDataFile("test-schema.xsd")))))}, DEBUG); //$NON-NLS-1$

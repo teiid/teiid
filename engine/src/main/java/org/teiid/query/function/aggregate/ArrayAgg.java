@@ -45,6 +45,9 @@ public class ArrayAgg extends AggregateFunction {
 			this.result = new ArrayList<Object>();
 		}
 		this.result.add(input);
+		if (this.result.size() > 1000) {
+			throw new AssertionError("Exceeded the max allowable array size of 1000."); //$NON-NLS-1$
+		}
 	}
 
 	@Override

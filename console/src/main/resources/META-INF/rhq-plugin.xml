@@ -330,7 +330,11 @@
                 <c:simple-property name="RuntimeEngineDeployer.useDataRoles"
                     displayName="Data Roles Enabled"
                     description="Turn on role checking of resources based on the roles defined in VDB (default true)"
-                    required="false" readOnly="false" />                    
+                    required="false" readOnly="false" />
+                <c:simple-property name="RuntimeEngineDeployer.detectingChangeEvents"
+                    displayName="Detecting Change Events"
+                    description="Set to true for the engine to detect local change events. Should be disabled if using external change data capture tools. (default true)"
+                    required="false" readOnly="false" />
 			</c:group>
             
             <c:group name="ResultSetCacheConfig" displayName="ResultSet Cache Properties" hiddenByDefault="false">

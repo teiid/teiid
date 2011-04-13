@@ -23,10 +23,9 @@
 package org.teiid.query.sql.lang;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.util.VariableContext;
 
@@ -38,42 +37,13 @@ import org.teiid.query.sql.util.VariableContext;
  */
 public class BatchedUpdateCommand extends Command {
     
-    protected List commands;
+    protected List<Command> commands;
     private List<VariableContext> variableContexts; //processing state
-    
-    /**
-     * Add sub command
-     * @param command Additional sub-command
-     */
-    public void addSubCommand(Command command) {
-        if(this.commands == null) {
-            this.commands = new ArrayList();
-        }
-        this.commands.add(command);
-    }
-
-    /**
-     * Add sub commands
-     * @param commands Additional sub-commands
-     */
-    public void addSubCommands(Collection commands) {
-        if(commands == null || commands.size() == 0) {
-            return;
-        }
-        
-        if(this.commands == null) {
-            this.commands = new ArrayList();
-        } 
-        this.commands.addAll(commands);    
-    }
     
     /** 
      * @see org.teiid.query.sql.lang.Command#getSubCommands()
      */
-    public List getSubCommands() {
-        if(commands == null || commands.size() == 0) {
-            return Collections.EMPTY_LIST;
-        }
+    public List<Command> getSubCommands() {
         return commands;
     }
     
@@ -82,8 +52,8 @@ public class BatchedUpdateCommand extends Command {
      * @param updateCommands
      * @since 4.2
      */
-    public BatchedUpdateCommand(List updateCommands) {
-        addSubCommands(updateCommands);
+    public BatchedUpdateCommand(List<? extends Command> updateCommands) {
+        this.commands = new ArrayList<Command>(updateCommands);
     }
     
     /**
@@ -91,7 +61,7 @@ public class BatchedUpdateCommand extends Command {
      * @return
      * @since 4.2
      */
-    public List getUpdateCommands() {
+    public List<Command> getUpdateCommands() {
         return getSubCommands();
     }
 
@@ -123,10 +93,7 @@ public class BatchedUpdateCommand extends Command {
      * @since 4.2
      */
     public Object clone() {
-        List clonedCommands = new ArrayList(commands.size());
-        for (int i = 0; i < commands.size(); i++) {
-            clonedCommands.add(((Command)commands.get(i)).clone());
-        }
+        List<Command> clonedCommands = LanguageObject.Util.deepClone(this.commands, Command.class);
         BatchedUpdateCommand copy = new BatchedUpdateCommand(clonedCommands);
         copyMetadataState(copy);
         return copy;
@@ -142,9 +109,9 @@ public class BatchedUpdateCommand extends Command {
     public String toString() {
         StringBuffer val = new StringBuffer("BatchedUpdate{"); //$NON-NLS-1$
         if (commands != null && commands.size() > 0) {
-            val.append(getCommandToken((Command)commands.get(0)));
+            val.append(getCommandToken(commands.get(0)));
             for (int i = 1; i < commands.size(); i++) {
-                val.append(',').append(getCommandToken((Command)commands.get(i)));
+                val.append(',').append(getCommandToken(commands.get(i)));
             }
         }
         val.append('}');

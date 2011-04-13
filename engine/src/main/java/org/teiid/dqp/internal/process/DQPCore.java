@@ -715,7 +715,7 @@ public class DQPCore implements DQP {
         	matTables.setBufferManager(this.bufferManager);
         }
         
-        dataTierMgr = new TempTableDataManager(new DataTierManagerImpl(this,this.bufferService), this.bufferManager, this.processWorkerPool, this.rsCache, this.matTables, this.cacheFactory); 
+        dataTierMgr = new TempTableDataManager(new DataTierManagerImpl(this,this.bufferService, this.config.isDetectingChangeEvents()), this.bufferManager, this.processWorkerPool, this.rsCache, this.matTables, this.cacheFactory); 
 	}
 	
 	public void setBufferService(BufferService service) {

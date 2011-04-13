@@ -23,6 +23,7 @@
 package org.teiid.dqp.internal.process;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -56,7 +57,13 @@ import org.teiid.dqp.internal.process.DQPCore.CompletionListener;
 import org.teiid.dqp.internal.process.DQPCore.FutureWork;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
+import org.teiid.metadata.Table;
 import org.teiid.query.function.source.XMLSystemFunctions;
+import org.teiid.query.processor.relational.RelationalNodeUtil;
+import org.teiid.query.sql.lang.BatchedUpdateCommand;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.ProcedureContainer;
+import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.TranslatorException;
@@ -133,7 +140,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 		}, this, 100);
 	}
 
-	private List correctTypes(List row) throws TransformationException {
+	private List<?> correctTypes(List<Object> row) throws TransformationException {
 		//TODO: add a proper intermediate schema
 		for (int i = 0; i < row.size(); i++) {
 			Object value = row.get(i);
@@ -213,6 +220,25 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 	    			} else {
 	    				results = getResults();
 	    			}
+	    			//check for update events
+	    			if (index == 0 && this.dtm.detectChangeEvents()) {
+	    				Command command = aqr.getCommand();
+	    				ArrayList<String> updates = new ArrayList<String>();
+	    				int commandIndex = 0;
+	    				if (RelationalNodeUtil.isUpdate(command)) {
+	    					long ts = System.currentTimeMillis();
+	    					checkForUpdates(results, command, updates, commandIndex, ts);
+	    				} else if (command instanceof BatchedUpdateCommand) {
+	    					long ts = System.currentTimeMillis();
+	    					BatchedUpdateCommand bac = (BatchedUpdateCommand)command;
+	    					for (Command uc : bac.getUpdateCommands()) {
+	    						checkForUpdates(results, uc, updates, commandIndex++, ts);
+	    					}
+	    				}
+	    				if (this.dtm.getEventDistributor() != null && !updates.isEmpty()) {
+	    					this.dtm.getEventDistributor().dataModification(this.workItem.getDqpWorkContext().getVdbName(), this.workItem.getDqpWorkContext().getVdbVersion(), updates.toArray(new String[updates.size()]));
+	    				}
+	    			}
     			} catch (TranslatorException e) {
     				results = exceptionOccurred(e, true);
     			} catch (DataNotAvailableException e) {
@@ -240,6 +266,29 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 	    	}
     	}
     }
+
+	private void checkForUpdates(AtomicResultsMessage results, Command command,
+			ArrayList<String> updates, int commandIndex, long ts) {
+		if (!RelationalNodeUtil.isUpdate(command) || !(command instanceof ProcedureContainer)) {
+			return;
+		}
+		ProcedureContainer pc = (ProcedureContainer)aqr.getCommand();
+		GroupSymbol gs = pc.getGroup();
+		Integer zero = Integer.valueOf(0);
+		if (results.getResults().length <= commandIndex || zero.equals(results.getResults()[commandIndex].get(0))) {
+			return;
+		}
+		Object metadataId = gs.getMetadataID();
+		if (metadataId == null) {
+			return;
+		}
+		if (!(metadataId instanceof Table)) {
+			return;
+		} 
+		Table t = (Table)metadataId;
+		updates.add(t.getFullName());
+		t.setLastDataModification(ts);
+	}
 
 	private AtomicResultsMessage asynchGet()
 			throws BlockedException, TeiidProcessingException,

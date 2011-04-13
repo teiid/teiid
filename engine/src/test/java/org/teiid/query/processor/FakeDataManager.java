@@ -34,6 +34,7 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.events.EventDistributor;
 import org.teiid.logging.LogManager;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -388,5 +389,8 @@ public class FakeDataManager implements ProcessorDataManager {
 		this.registerTuples(group.getMetadataID(), elementSymbols, tuples);
 	}
 
+	@Override
+	public void setEventDistributor(EventDistributor ed) {
+	}
 
 }

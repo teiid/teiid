@@ -87,7 +87,7 @@ public class TestDataTierManager {
         
         
         dtm = new DataTierManagerImpl(rm,
-                                  bs);
+                                  bs, true);
         command = helpGetCommand(sql, metadata);
         
         RequestMessage original = new RequestMessage();

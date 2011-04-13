@@ -33,7 +33,6 @@ import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 
-
 /**
  * This class represents a temporary metadata ID.  A temporary metadata ID 
  * does not exist in a real metadata source.  Rather, it is used temporarily 
@@ -48,6 +47,8 @@ public class TempMetadataID implements Serializable {
 	private static final long serialVersionUID = -1879211827339120135L;
 	private static final int LOCAL_CACHE_SIZE = 8;
 	
+	private static final int MOD_COUNT_FOR_COST_UPDATE = 8;
+	
 	public static class TableData {
 		Collection<TempMetadataID> accessPatterns;
 		List<TempMetadataID> elements;
@@ -58,15 +59,31 @@ public class TempMetadataID implements Serializable {
 		CacheHint cacheHint;
 		List<List<TempMetadataID>> keys;
 		List<List<TempMetadataID>> indexes;
+		long lastDataModification;
 		long lastModified;
+		int modCount;
+		
+		public long getLastDataModification() {
+			return lastDataModification;
+		}
+		
+		public void dataModified(int updateCount) {
+			if (updateCount == 0) {
+				return;
+			}
+			long ts = System.currentTimeMillis();
+			modCount += updateCount;
+			if (modCount > MOD_COUNT_FOR_COST_UPDATE) {
+				this.lastModified = ts;
+				modCount = 0;
+			}
+			this.lastDataModification = ts;
+		}
 		
 		public long getLastModified() {
 			return lastModified;
 		}
 		
-		public void setLastModified(long lastModified) {
-			this.lastModified = lastModified;
-		}
 	}
 	
 	private static TableData DUMMY_DATA = new TableData();
