@@ -38,6 +38,8 @@
 	org.teiid.AUDIT_LOG - Authorization enforcement events.
 	
 	org.teiid.ADMIN_API - Admin API logs.
+    
+    org.teiid.ODBC - ODBC logs
 -->
    
 <!-- 

@@ -159,6 +159,14 @@
 								<para>Admin API logs.</para>
 							</entry>
 						</row>
+                        <row>
+                            <entry>
+                                <para>org.teiid.ODBC</para>
+                            </entry>
+                            <entry>
+                                <para>ODBC logs.</para>
+                            </entry>
+                        </row>                        
 					</tbody>
 				</tgroup>
 			</informaltable>
