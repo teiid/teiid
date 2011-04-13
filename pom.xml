@@ -470,8 +470,9 @@
 		<module>adminshell</module>
 		<module>cache-jbosscache</module>
 		<module>hibernate-dialect</module>
-        <module>jboss-integration</module>
+                <module>jboss-integration</module>
 		<module>test-integration</module>
+		<module>client-jdk15</module>
   </modules>
     <distributionManagement>
         <repository>
