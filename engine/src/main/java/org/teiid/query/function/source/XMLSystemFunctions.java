@@ -386,27 +386,67 @@ public class XMLSystemFunctions {
 			return singleValue;
 		}
 		
-		XMLType result = new XMLType(XMLSystemFunctions.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
-			
-			@Override
-			public void translate(Writer writer) throws TransformerException,
-					IOException {
-				try {
-					XMLOutputFactory factory = getOutputFactory();
-					XMLEventWriter eventWriter = factory.createXMLEventWriter(writer);
-					XMLEventFactory eventFactory = XMLEventFactory.newInstance();
-					convertValue(writer, eventWriter, eventFactory, xml);
-					for (Object object : other) {
-						convertValue(writer, eventWriter, eventFactory, object);
-					}
-					eventWriter.flush(); //woodstox needs a flush rather than a close
-				} catch (XMLStreamException e) {
-					throw new TransformerException(e);
-				} 
+		XmlConcat concat = new XmlConcat(context.getBufferManager());
+		concat.addValue(xml);
+		for (Object object : other) {
+			concat.addValue(object);
+		}
+		return concat.close();
+	}
+	
+	public static class XmlConcat {
+		private XMLOutputFactory factory;
+		private XMLEventWriter eventWriter;
+		private XMLEventFactory eventFactory;
+		private Writer writer;
+		private FileStoreInputStreamFactory fsisf;
+		private FileStore fs;
+		
+		public XmlConcat(BufferManager bm) throws TeiidProcessingException {
+			fs = bm.createFileStore("xml"); //$NON-NLS-1$
+			fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
+		    writer = fsisf.getWriter();
+			factory = getOutputFactory();
+			try {
+				eventWriter = factory.createXMLEventWriter(writer);
+			} catch (XMLStreamException e) {
+				fs.remove();
+				throw new TeiidProcessingException(e);
 			}
-		}));
-		result.setType(Type.CONTENT);
-		return result;
+			eventFactory = XMLEventFactory.newInstance();
+		}
+		
+		public void addValue(Object object) throws TeiidProcessingException {
+			try {
+				convertValue(writer, eventWriter, eventFactory, object);
+			} catch (IOException e) {
+				fs.remove();
+				throw new TeiidProcessingException(e);
+			} catch (XMLStreamException e) {
+				fs.remove();
+				throw new TeiidProcessingException(e);
+			} catch (TransformerException e) {
+				fs.remove();
+				throw new TeiidProcessingException(e);
+			}
+		}
+		
+		public XMLType close() throws TeiidProcessingException {
+			try {
+				eventWriter.flush();
+				writer.close();
+			} catch (XMLStreamException e) {
+				fs.remove();
+				throw new TeiidProcessingException(e);
+			} catch (IOException e) {
+				fs.remove();
+				throw new TeiidProcessingException(e);
+			}
+	        XMLType result = new XMLType(new SQLXMLImpl(fsisf));
+	        result.setType(Type.CONTENT);
+	        return result;
+		}
+		
 	}
 	
 	private static XMLOutputFactory getOutputFactory() throws FactoryConfigurationError {

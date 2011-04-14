@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.PhantomReference;
 import java.lang.ref.ReferenceQueue;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Set;
@@ -46,6 +47,7 @@ public abstract class FileStore {
 		private byte[] buffer;
 		private int count;
 		private boolean bytesWritten;
+		private boolean closed;
 		
 		public FileStoreOutputStream(int size) {
 			this.buffer = new byte[size];
@@ -58,6 +60,7 @@ public abstract class FileStore {
 
 		@Override
 		public void write(byte[] b, int off, int len) throws IOException {
+			checkOpen();
 			if (len > buffer.length) {
 				flushBuffer();
 				writeDirect(b, off, len);
@@ -86,12 +89,18 @@ public abstract class FileStore {
 		}
 
 		public void flushBuffer() throws IOException {
+			checkOpen();
 			if (count > 0) {
 				writeDirect(buffer, 0, count);
 				count = 0;
 			}
 		}
 		
+		/**
+		 * Return the buffer.  Can be null if closed and the underlying filestore
+		 * has been writen to.
+		 * @return
+		 */
 		public byte[] getBuffer() {
 			return buffer;
 		}
@@ -114,6 +123,19 @@ public abstract class FileStore {
 		@Override
 		public void close() throws IOException {
 			flush();
+			closed = true;
+			if (bytesWritten) {
+				this.buffer = null;
+			} else {
+				//truncate
+				this.buffer = Arrays.copyOf(this.buffer, this.count);
+			}
+		}
+		
+		private void checkOpen() {
+			if (closed) {
+				throw new IllegalStateException("Alread closed"); //$NON-NLS-1$
+			}
 		}
 		
 	}

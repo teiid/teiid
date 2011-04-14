@@ -72,7 +72,7 @@ public class TextAgg extends AggregateFunction {
 					}
 				}, textLine.getDelimiter(), textLine.getQuote()));
 			}
-			w.close();
+			w.flush();
 			return fisf;
 		} catch (IOException e) {
 			throw new TeiidProcessingException(e);
@@ -96,7 +96,7 @@ public class TextAgg extends AggregateFunction {
     		String in = (String)input;
     		Writer w = result.getWriter();
     		w.write(in);
-			w.close();
+			w.flush();
 		} catch (IOException e) {
 			throw new TeiidProcessingException(e);
 		}

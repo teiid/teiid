@@ -59,10 +59,20 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 		return lobBuffer.getLength();
 	}
 
+	/**
+	 * Returns a new writer instance that is backed by the shared output stream.
+	 * Closing a writer will prevent further writes.
+	 * @return
+	 */
 	public Writer getWriter() {
 		return new OutputStreamWriter(getOuputStream(), Charset.forName(encoding));
 	}
 	
+	/**
+	 * The returned output stream is shared among all uses.
+	 * Once closed no further writing can occur
+	 * @return
+	 */
 	public FileStoreOutputStream getOuputStream() {
 		if (fsos == null) {
 			fsos = lobBuffer.createOutputStream(DataTypeManager.MAX_LOB_MEMORY_BYTES);
@@ -77,6 +87,6 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 	
 	@Override
 	public boolean isPersistent() {
-		return true;
+		return fsos == null || fsos.bytesWritten();
 	}
 }
