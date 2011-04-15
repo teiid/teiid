@@ -272,9 +272,17 @@ public class RulePlanSorts implements OptimizerRule {
 		}
 		if (raiseAccess) {
 			PlanNode accessNode = node.getFirstChild();
-			root = RuleRaiseAccess.raiseAccessNode(root, accessNode, metadata, capFinder, true, record);
-			if (accessNode.getParent().getType() == NodeConstants.Types.TUPLE_LIMIT) {
-				root = RulePushLimit.raiseAccessOverLimit(root, accessNode, metadata, capFinder, accessNode.getParent());
+			//instead of just calling ruleraiseaccess, we're more selective
+			//we do not want to raise the access node over a project that is handling an unrelated sort
+			PlanNode newRoot = RuleRaiseAccess.raiseAccessNode(root, accessNode, metadata, capFinder, true, record);
+			if (newRoot != null) {
+				root = newRoot;
+				if (accessNode.getParent().getType() == NodeConstants.Types.TUPLE_LIMIT) {
+					newRoot = RulePushLimit.raiseAccessOverLimit(root, accessNode, metadata, capFinder, accessNode.getParent());
+				}
+				if (newRoot != null) {
+					root = newRoot;
+				}
 			}
 		}
 		return root;
