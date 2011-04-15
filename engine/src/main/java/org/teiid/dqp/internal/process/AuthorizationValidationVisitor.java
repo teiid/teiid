@@ -187,7 +187,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 			}
     	} else if (!allowFunctionCallsByDefault) {
     		String schema = obj.getFunctionDescriptor().getSchema();
-    		if (schema != null && !CoreConstants.SYSTEM_MODEL.equals(schema)) {
+    		if (schema != null && !isSystemSchema(schema)) {
     			Map<String, Function> map = new HashMap<String, Function>();
     			map.put(schema + '.' + obj.getFunctionDescriptor().getName(), obj);
     			validateEntitlements(PermissionType.READ, Context.FUNCTION, map);
@@ -309,7 +309,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
                 fullName = getMetadata().getFullName(metadataID);
                 Object modelId = getMetadata().getModelID(metadataID);
                 String modelName = getMetadata().getFullName(modelId);
-                if (CoreConstants.SYSTEM_MODEL.equals(modelName) || CoreConstants.ODBC_MODEL.equals(modelName)) {
+                if (isSystemSchema(modelName)) {
                 	continue;
                 }
                 nameToSymbolMap.put(fullName, symbol);
@@ -321,6 +321,10 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         }
 
         validateEntitlements(actionCode, auditContext, nameToSymbolMap);
+	}
+
+	private boolean isSystemSchema(String modelName) {
+		return CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(modelName) || CoreConstants.ODBC_MODEL.equalsIgnoreCase(modelName);
 	}
 
 	private void validateEntitlements(DataPolicy.PermissionType actionCode,

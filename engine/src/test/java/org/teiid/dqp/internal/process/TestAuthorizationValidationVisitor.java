@@ -193,8 +193,8 @@ public class TestAuthorizationValidationVisitor {
     @Test public void testFunction() throws Exception {
     	FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new FakeFunctionMetadataSource()));
         FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
-    	//helpTest(exampleAuthSvc1(), "SELECT e1 FROM pm1.g1 where xyz() > 0", metadata, new String[] {}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
-        helpTest(exampleAuthSvc2(), "SELECT e1 FROM pm1.g2 where xyz() > 0", metadata, new String[] {"xyz()"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ 
+    	helpTest(exampleAuthSvc1(), "SELECT e1 FROM pm1.g1 where xyz() > 0", metadata, new String[] {}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
+        helpTest(exampleAuthSvc2(), "SELECT e1, curdate() FROM pm1.g2 where xyz() > 0", metadata, new String[] {"xyz()"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ 
     }
     
     @Test public void testEverythingAccessible() throws Exception {
