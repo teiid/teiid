@@ -22,7 +22,7 @@
 package org.teiid.translator.olap;
 
 import java.sql.SQLException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -126,8 +126,10 @@ public class OlapQueryExecution implements ProcedureExecution {
 		for (Position colPos : cols) {
 			Cell cell = cellSet.getCell(colPos, nextRow);
 			result[i++] = cell.getValue();
-		}			
-		return Arrays.asList(result);
+		}	
+		ArrayList<Object[]> results = new ArrayList<Object[]>();
+		results.add(result);
+		return results;
     }  
     
     @Override

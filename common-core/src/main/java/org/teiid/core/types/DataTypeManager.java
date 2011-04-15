@@ -772,7 +772,7 @@ public class DataTypeManager {
 	@SuppressWarnings("unchecked")
 	public static <T> T transformValue(Object value, Class sourceType,
 			Class<T> targetClass) throws TransformationException {
-		if (value == null || sourceType == targetClass) {
+		if (value == null || sourceType == targetClass || DefaultDataClasses.OBJECT == targetClass) {
 			return (T) value;
 		}
 		Transform transform = DataTypeManager.getTransform(sourceType,
