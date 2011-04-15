@@ -223,6 +223,7 @@ public class FunctionTree {
         }
 
         FunctionDescriptor descriptor = createFunctionDescriptor(source, method, inputTypes, types);
+        descriptor.setSchema(schema);
         // Store this path in the function tree
         
         int index = -1;

@@ -79,7 +79,7 @@ public class TestRequest extends TestCase {
         
         request.initialize(message, null, null,new FakeTransactionService(),null, workContext, null);
         request.initMetadata();
-        request.setAuthorizationValidator(new DataRoleAuthorizationValidator(true, true));
+        request.setAuthorizationValidator(new DataRoleAuthorizationValidator(true, true, true));
         request.validateAccess(command);
     }
     
@@ -133,7 +133,7 @@ public class TestRequest extends TestCase {
         
         request.initialize(message, Mockito.mock(BufferManager.class),
 				new FakeDataManager(), new FakeTransactionService(), null, workContext, null);
-        request.setAuthorizationValidator(new DataRoleAuthorizationValidator(false, true));
+        request.setAuthorizationValidator(new DataRoleAuthorizationValidator(false, true, true));
         request.processRequest();
         return request;
     }

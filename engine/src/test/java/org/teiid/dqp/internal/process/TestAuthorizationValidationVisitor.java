@@ -27,7 +27,6 @@ import static org.junit.Assert.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import org.junit.Ignore;
@@ -41,11 +40,16 @@ import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.query.function.FunctionLibrary;
+import org.teiid.query.function.FunctionTree;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.optimizer.FakeFunctionMetadataSource;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.symbol.Symbol;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorFailure;
@@ -121,8 +125,8 @@ public class TestAuthorizationValidationVisitor {
         svc.addPermission(addResource(DataPolicy.PermissionType.DELETE, "pm1.g4.e1")); //$NON-NLS-1$
         svc.addPermission(addResource(DataPolicy.PermissionType.DELETE, "pm1.g4.e2")); //$NON-NLS-1$
 
-        // pm1.sq2
         svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1.sq1")); //$NON-NLS-1$
+        svc.addPermission(addResource(DataPolicy.PermissionType.READ, "foo.xyz")); //$NON-NLS-1$
         
         return svc;
     }
@@ -157,18 +161,21 @@ public class TestAuthorizationValidationVisitor {
         policies.put(policy.getName(), policy);
         
         AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(policies, "test"); //$NON-NLS-1$
+        visitor.setAllowFunctionCallsByDefault(false);
         ValidatorReport report = Validator.validate(command, metadata, visitor);
         if(report.hasItems()) {
-            ValidatorFailure firstFailure = (ValidatorFailure) report.getItems().iterator().next();
+            ValidatorFailure firstFailure = report.getItems().iterator().next();
             
             // strings
-            Set expected = new HashSet(Arrays.asList(expectedInaccesible));
+            Set<String> expected = new HashSet<String>(Arrays.asList(expectedInaccesible));
             // elements
-            Set actual = new HashSet();
-            Iterator iter = firstFailure.getInvalidObjects().iterator();
-            while(iter.hasNext()) {
-                Symbol symbol = (Symbol) iter.next();
-                actual.add(symbol.getName());
+            Set<String> actual = new HashSet<String>();
+            for (LanguageObject obj : firstFailure.getInvalidObjects()) {
+            	if (obj instanceof ElementSymbol) {
+            		actual.add(((ElementSymbol)obj).getName());
+            	} else {
+            		actual.add(obj.toString());
+            	}
             }
             assertEquals(expected, actual);
         } else if(expectedInaccesible.length > 0) {
@@ -181,6 +188,13 @@ public class TestAuthorizationValidationVisitor {
     	helpTest(exampleAuthSvc1(), "create local temporary table x (y string)", FakeMetadataFactory.example1Cached(), new String[] {}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
     	//explicitly denied
         helpTest(exampleAuthSvc2(), "create local temporary table x (y string)", FakeMetadataFactory.example1Cached(), new String[] {"x"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ 
+    }
+    
+    @Test public void testFunction() throws Exception {
+    	FunctionLibrary funcLibrary = new FunctionLibrary(FakeMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new FakeFunctionMetadataSource()));
+        FakeMetadataFacade metadata = new FakeMetadataFacade(FakeMetadataFactory.example1Cached().getStore(), funcLibrary);
+    	//helpTest(exampleAuthSvc1(), "SELECT e1 FROM pm1.g1 where xyz() > 0", metadata, new String[] {}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$
+        helpTest(exampleAuthSvc2(), "SELECT e1 FROM pm1.g2 where xyz() > 0", metadata, new String[] {"xyz()"}, FakeMetadataFactory.example1VDB()); //$NON-NLS-1$ 
     }
     
     @Test public void testEverythingAccessible() throws Exception {

@@ -670,7 +670,7 @@ public class DQPCore implements DQP {
 		this.config = config;
         this.authorizationValidator = config.getAuthorizationValidator();
         if (this.authorizationValidator == null) {
-        	this.authorizationValidator = new DataRoleAuthorizationValidator(config.getUseDataRoles(), config.isAllowCreateTemporaryTablesByDefault());
+        	this.authorizationValidator = new DataRoleAuthorizationValidator(config.getUseDataRoles(), config.isAllowCreateTemporaryTablesByDefault(), config.isAllowFunctionCallsByDefault());
         }
         this.chunkSize = config.getLobChunkSizeInKB() * 1024;
 

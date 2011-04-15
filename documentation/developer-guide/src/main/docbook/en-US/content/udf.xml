@@ -174,7 +174,7 @@
 				</listitem>
 			</itemizedlist>
 			<para>You may optionally add an additional <code>org.teiid.CommandContext</code> argument as the first parameter.  
-			The <code>CommandContext</code> interface provides access to information about the current command, such as the executing user, the vdb, the session id, etc.  
+			The <code>CommandContext</code> interface provides access to information about the current command, such as the executing user, Subject, the vdb, the session id, etc.  
 			This <code>CommandContext</code> parameter does not need to be delared in the function metadata.</para>
 			<example>
 				<title>Sample code</title>

@@ -51,7 +51,8 @@
 			<LI><B>Cost based back-off</B> - for cost based dependent joins if the number of independent values is too large, then the join will be performed as normal. 
 		</UL>
 	<LI><B>Enhanced Sort Join</B> - the partitioned merge join was replaced with an enhanced sort join.  The enhanced sort join will use the actual row counts from each side of the relation to perform a index based join if one side is small enough, a partial sort of the larger side and a repeated merge join if the tuples are unbalanced but one side is not small enough to form an index, or a standard sort merge join if the tuples are balanced.
-	<LI><B>JDK1.5 JDBC Client JAR</B> - A retro-translated Teiid client JDBC jar now available to use with JDK 1.5 VM. Note only JDBC API supported, not Admin API.
+	<LI><B>JDK1.5 JDBC Client JAR</B> - A retro-translated Teiid client JDBC jar now available to use with JDK 1.5 VM. Note only the JDBC API is supported, not the Admin API, or retrieving query plans as XML.
+	<LI><B>Security Improvements</B> - UDF and pushdown functions can now be protected with data roles.  Also the CommandContext can provide the Subject for custom security checks in UDFs.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -122,6 +123,7 @@ See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on c
   <LI>SocketConfiguration.maxSocketThreads will interpret a setting of 0 to mean use the system default of max available processors.  Both the ODBC and JDBC transports now default to the 0 setting.
   <LI>maxReserveBatchColumns and maxProcessingBatchesColumns will interpret a setting of -1 to mean auto-calculate acceptable values given the max heap and other information.  See the admin guide for more.
   <LI>The default for org.teiid.useValueCache has changed to false, since typical installations will not greatly benefit from the additional lookup cost.
+  <LI>The property RuntimeEngineDeployer.allowFunctionCallsByDefault was added so that Teiid 7.4 behavior is compatible with Teiid 7.3.  Set this property to false to require permissions for function calls when data roles are enabled. 
 </ul>
 
 <h4>from 7.2</h4>

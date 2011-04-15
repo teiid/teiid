@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.teiid.adminapi.DataPolicy;
+import org.teiid.adminapi.DataPolicy.PermissionType;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.CoreConstants;
@@ -49,6 +50,7 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.resolver.util.ResolverUtil;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Create;
 import org.teiid.query.sql.lang.Delete;
 import org.teiid.query.sql.lang.Drop;
@@ -75,12 +77,14 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 		INSERT,
 		UPDATE,
 		DELETE,
+		FUNCTION,
 		STORED_PROCEDURE;
     }
     
     private HashMap<String, DataPolicy> allowedPolicies;
     private String userName;
     private boolean allowCreateTemporaryTablesDefault = true;
+    private boolean allowFunctionCallsByDefault = true;
 
     public AuthorizationValidationVisitor(HashMap<String, DataPolicy> policies, String user) {
         this.allowedPolicies = policies;
@@ -90,6 +94,10 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     public void setAllowCreateTemporaryTablesDefault(
 			boolean allowCreateTemporaryTablesDefault) {
 		this.allowCreateTemporaryTablesDefault = allowCreateTemporaryTablesDefault;
+	}
+    
+    public void setAllowFunctionCallsByDefault(boolean allowFunctionCallsDefault) {
+		this.allowFunctionCallsByDefault = allowFunctionCallsDefault;
 	}
 
     // ############### Visitor methods for language objects ##################
@@ -123,7 +131,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     	logResult(resources, context, allowed);
     	if (!allowed) {
 		    handleValidationError(
-			        QueryPlugin.Util.getString("ERR.018.005.0095", userName, "CREATE_TEMPORARY_TABLES"), //$NON-NLS-1$                   
+			        QueryPlugin.Util.getString("ERR.018.005.0095", userName, "CREATE_TEMPORARY_TABLES"), //$NON-NLS-1$  //$NON-NLS-2$
 			        symbols);
     	}
 	}
@@ -177,6 +185,13 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 			} catch (TeiidProcessingException e) {
 				handleException(e, obj);
 			}
+    	} else if (!allowFunctionCallsByDefault) {
+    		String schema = obj.getFunctionDescriptor().getSchema();
+    		if (schema != null && !CoreConstants.SYSTEM_MODEL.equals(schema)) {
+    			Map<String, Function> map = new HashMap<String, Function>();
+    			map.put(schema + '.' + obj.getFunctionDescriptor().getName(), obj);
+    			validateEntitlements(PermissionType.READ, Context.FUNCTION, map);
+    		}
     	}
     }
 
@@ -273,9 +288,9 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
      * @param actionCode The actions to validate for
      * @param auditContext The {@link AuthorizationService} to use when resource auditing is done.
      */
-    protected void validateEntitlements(Collection<? extends Symbol> symbols, DataPolicy.PermissionType actionCode, Context auditContext) {
-        Map<String, Symbol> nameToSymbolMap = new HashMap<String, Symbol>();
-        for (Symbol symbol : symbols) {
+    protected void validateEntitlements(Collection<? extends LanguageObject> symbols, DataPolicy.PermissionType actionCode, Context auditContext) {
+        Map<String, LanguageObject> nameToSymbolMap = new HashMap<String, LanguageObject>();
+        for (LanguageObject symbol : symbols) {
             try {
                 String fullName = null;
                 Object metadataID = null;
@@ -305,22 +320,29 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
             }
         }
 
-        if (!nameToSymbolMap.isEmpty()) {
-			Collection<String> inaccessibleResources = getInaccessibleResources(actionCode, nameToSymbolMap.keySet(), auditContext);
-			if(inaccessibleResources.size() > 0) {                              
-				List<Symbol> inaccessibleSymbols = new ArrayList<Symbol>(inaccessibleResources.size());
-				for (String name : inaccessibleResources) {
-			        inaccessibleSymbols.add(nameToSymbolMap.get(name));
-			    }
-			    
-			    // CASE 2362 - do not include the names of the elements for which the user
-			    // is not authorized in the exception message
-			    
-			    handleValidationError(
-			        QueryPlugin.Util.getString("ERR.018.005.0095", userName, actionCode), //$NON-NLS-1$                    
-			        inaccessibleSymbols);
-			}
-        }
+        validateEntitlements(actionCode, auditContext, nameToSymbolMap);
+	}
+
+	private void validateEntitlements(DataPolicy.PermissionType actionCode,
+			Context auditContext, Map<String, ? extends LanguageObject> nameToSymbolMap) {
+		if (nameToSymbolMap.isEmpty()) {
+			return;
+		}
+		Collection<String> inaccessibleResources = getInaccessibleResources(actionCode, nameToSymbolMap.keySet(), auditContext);
+		if(inaccessibleResources.isEmpty()) {
+			return;
+		}
+		List<LanguageObject> inaccessibleSymbols = new ArrayList<LanguageObject>(inaccessibleResources.size());
+		for (String name : inaccessibleResources) {
+	        inaccessibleSymbols.add(nameToSymbolMap.get(name));
+	    }
+	    
+	    // CASE 2362 - do not include the names of the elements for which the user
+	    // is not authorized in the exception message
+	    
+	    handleValidationError(
+	        QueryPlugin.Util.getString("ERR.018.005.0095", userName, actionCode), //$NON-NLS-1$                    
+	        inaccessibleSymbols);
 	}
 
     /**

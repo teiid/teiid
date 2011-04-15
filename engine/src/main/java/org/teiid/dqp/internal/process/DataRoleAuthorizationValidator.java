@@ -34,11 +34,13 @@ public class DataRoleAuthorizationValidator implements AuthorizationValidator {
 	
 	private boolean useEntitlements;
 	private boolean allowCreateTemporaryTablesByDefault;
+	private boolean allowFunctionCallsByDefault;
 	
 	public DataRoleAuthorizationValidator(boolean useEntitlements,
-			boolean allowCreateTemporaryTablesByDefault) {
+			boolean allowCreateTemporaryTablesByDefault, boolean allowFunctionCallsByDefault) {
 		this.useEntitlements = useEntitlements;
 		this.allowCreateTemporaryTablesByDefault = allowCreateTemporaryTablesByDefault;
+		this.allowFunctionCallsByDefault = allowFunctionCallsByDefault;
 	}
 
 	@Override
@@ -46,6 +48,7 @@ public class DataRoleAuthorizationValidator implements AuthorizationValidator {
 		if (useEntitlements && !workContext.getVDB().getDataPolicies().isEmpty()) {
 			AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(workContext.getAllowedDataPolicies(), workContext.getUserName());
 			visitor.setAllowCreateTemporaryTablesDefault(allowCreateTemporaryTablesByDefault);
+			visitor.setAllowFunctionCallsByDefault(allowFunctionCallsByDefault);
 			Request.validateWithVisitor(visitor, metadata, command);
 		}		
 	}

@@ -76,6 +76,13 @@
 	    	<para>To process a <emphasis>EXEC</emphasis> statement, the user account requires the following access rights:</para>
 	        <listitem> <para><emphasis>READ</emphasis> - on the Procedure being executed.</para></listitem>
 	    </orderedlist>
+	    
+	    <orderedlist>
+	    	<para>To process any function, the user account requires the following access rights:</para>
+	        <listitem> <para><emphasis>READ</emphasis> - on the Function being called.</para> </listitem>
+	        <note><para>For backwards compatibility RuntimeEngineDeployer.allowFunctionCallsByDefault located in the &jboss-beans; file in the <code>RuntimeEngineDeployer</code> section defaults to true. 
+	        This means that to actually require permissions for functions, you need to set this property to false.</para></note>
+	    </orderedlist>
 	       
     </section>
     

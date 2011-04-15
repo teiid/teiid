@@ -52,6 +52,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 	private Class<?> returnType;	
     private boolean requiresContext;
     private FunctionMethod method;
+    private String schema; //TODO: remove me - we need to create a proper schema for udf and system functions
     
     // This is transient as it would be useless to invoke this method in 
     // a different VM.  This function descriptor can be used to look up 
@@ -70,7 +71,15 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         this.requiresContext = requiresContext;
         this.method = method;
 	}
-
+	
+	public String getSchema() {
+		return schema;
+	}
+	
+	public void setSchema(String schema) {
+		this.schema = schema;
+	}
+	
 	public String getName() {
 		return this.method.getName();				
 	}
