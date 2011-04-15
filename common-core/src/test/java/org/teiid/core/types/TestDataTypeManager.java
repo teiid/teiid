@@ -32,6 +32,7 @@ import javax.sql.rowset.serial.SerialBlob;
 
 import org.junit.Test;
 
+@SuppressWarnings("nls")
 public class TestDataTypeManager {
 
     private void helpDetermineDataType(Object value, Class<?> expectedClass) { 
@@ -206,9 +207,19 @@ public class TestDataTypeManager {
     			DataTypeManager.DefaultDataTypes.OBJECT), DataTypeManager.getImplicitConversions(DataTypeManager.DefaultDataTypes.INTEGER));
     }
     
-    @SuppressWarnings("unchecked")
 	@Test(expected=TransformationException.class) public void testStringToXML() throws Exception {
     	DataTypeManager.transformValue("hello", DataTypeManager.DefaultDataClasses.XML); //$NON-NLS-1$
+    }
+	
+	static class Foo {
+		@Override
+		public String toString() {
+			return "hello";
+		}
+	}
+	
+	@Test public void testObjectToString() throws Exception {
+    	assertEquals("hello", DataTypeManager.transformValue(new Foo(), DataTypeManager.DefaultDataClasses.STRING)); //$NON-NLS-1$
     }
 	
 }

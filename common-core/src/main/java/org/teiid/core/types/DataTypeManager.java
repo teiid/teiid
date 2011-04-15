@@ -691,6 +691,13 @@ public class DataTypeManager {
 				DataTypeManager.addTransform(new NullToAnyTransform(type));
 			}
 		}
+		
+		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.OBJECT) {
+			@Override
+			public boolean isExplicit() {
+				return true;
+			}
+		});
 
 	}
 
