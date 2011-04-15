@@ -526,16 +526,32 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         
         final RequestMessage reqMessage = createRequestMessage(commands, isBatchedCommand, resultsMode);
         reqMessage.setSync(synch);
-    	ResultsFuture<Boolean> result = execute(reqMessage);
+    	ResultsFuture<ResultsMessage> pendingResult = execute(reqMessage, synch);
+    	final ResultsFuture<Boolean> result = new ResultsFuture<Boolean>();
+    	pendingResult.addCompletionListener(new ResultsFuture.CompletionListener<ResultsMessage>() {
+    		@Override
+    		public void onCompletion(ResultsFuture<ResultsMessage> future) {
+    			try {
+					postReceiveResults(reqMessage, future.get());
+					result.getResultsReceiver().receiveResults(hasResultSet());
+				} catch (Throwable t) {
+					result.getResultsReceiver().exceptionOccurred(t);
+				}
+    		}
+		});
     	if (synch) {
     		try {
     			if (queryTimeoutMS > 0) {
-    				result.get(queryTimeoutMS, TimeUnit.MILLISECONDS);
+    				pendingResult.get(queryTimeoutMS, TimeUnit.MILLISECONDS);
     			} else {
-    				result.get();
+    				pendingResult.get();
     			}
+    			result.get(); //throw an exception if needed
     			return result;
     		} catch (ExecutionException e) {
+    			if (e.getCause() instanceof SQLException) {
+    				throw (SQLException)e.getCause();
+    			}
     			throw TeiidSQLException.create(e);
     		} catch (InterruptedException e) {
     			timeoutOccurred();
@@ -547,7 +563,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     	return result;
     }
 
-	private ResultsFuture<Boolean> execute(final RequestMessage reqMsg) throws SQLException,
+	private ResultsFuture<ResultsMessage> execute(final RequestMessage reqMsg, boolean synch) throws SQLException,
 			TeiidSQLException {
 		this.getConnection().beginLocalTxnIfNeeded();
         this.currentRequestID = this.driverConnection.nextRequestID();
@@ -564,7 +580,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         reqMsg.setExecutionId(this.currentRequestID);
         
         ResultsFuture.CompletionListener<ResultsMessage> compeletionListener = null;
-		if (queryTimeoutMS > 0) {
+		if (queryTimeoutMS > 0 && !synch) {
 			final CancelTask c = new QueryTimeoutCancelTask(queryTimeoutMS, this);
 			cancellationTimer.add(c);
 			compeletionListener = new ResultsFuture.CompletionListener<ResultsMessage>() {
@@ -584,19 +600,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 		if (compeletionListener != null) {
 			pendingResult.addCompletionListener(compeletionListener);
 		}
-    	final ResultsFuture<Boolean> result = new ResultsFuture<Boolean>();
-    	pendingResult.addCompletionListener(new ResultsFuture.CompletionListener<ResultsMessage>() {
-    		@Override
-    		public void onCompletion(ResultsFuture<ResultsMessage> future) {
-    			try {
-					postReceiveResults(reqMsg, future.get());
-					result.getResultsReceiver().receiveResults(hasResultSet());
-				} catch (Throwable t) {
-					result.getResultsReceiver().exceptionOccurred(t);
-				}
-    		}
-		});
-    	return result;
+    	return pendingResult;
     }
 
 	public static ResultsFuture<Boolean> booleanFuture(boolean isTrue) {
