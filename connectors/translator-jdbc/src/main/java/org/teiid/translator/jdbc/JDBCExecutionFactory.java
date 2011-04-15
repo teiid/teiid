@@ -37,6 +37,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -60,8 +61,12 @@ import org.teiid.language.Argument.Direction;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ColumnStats;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Table;
+import org.teiid.metadata.TableStats;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ProcedureExecution;
@@ -1084,5 +1089,67 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      */
     public boolean useSelectLimit() {
     	return false;
-    }    
+    }
+    
+	public static List<String> parseName(String tableName, char escape, char delim) {
+		boolean quoted = false;
+		boolean escaped = false;
+        List<String> nameParts = new LinkedList<String>();
+        StringBuilder current = new StringBuilder();
+        for (int i = 0; i < tableName.length(); i++) {
+			char c = tableName.charAt(i);
+			if (quoted) {
+				if (c == escape) {
+					if (escaped) {
+						current.append(c);
+					}
+					escaped = !escaped;
+				} else if (c == delim) {
+					if (escaped) {
+						escaped = false;
+						quoted = false;
+						nameParts.add(current.toString());
+						current = new StringBuilder();
+					} else {
+						current.append(c);
+					}
+				} else {
+					current.append(c);
+				}
+			} else {
+				if (c == escape) {
+					if (current.length() == 0) {
+						quoted = true;
+					} else {
+						current.append(c);
+					}
+				} else if (c == delim) {
+					quoted = false;
+					nameParts.add(current.toString());
+					current = new StringBuilder();
+				} else {
+					current.append(c);
+				}
+			}
+		}
+        if (current.length() > 0) {
+        	nameParts.add(current.toString());
+        }
+        return nameParts;
+	}
+	
+	@Override
+	public boolean updateColumnStats(Column column, ColumnStats stats,
+			Connection conn) throws TranslatorException {
+		// TODO Auto-generated method stub
+		return super.updateColumnStats(column, stats, conn);
+	}
+	
+	
+	@Override
+	public boolean updateTableStats(Table table, TableStats stats,
+			Connection conn) throws TranslatorException {
+		return super.updateTableStats(table, stats, conn);
+	}
+
 }

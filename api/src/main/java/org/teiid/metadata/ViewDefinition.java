@@ -19,23 +19,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-
+ 
 package org.teiid.metadata;
 
-import org.teiid.CommandContext;
-
-/**
- * A hook for providing {@link ViewDefinition}s
- */
-public interface MetadataProvider {
+public class ViewDefinition {
+	private String sql;
 	
-	/**
-	 * Returns an updated {@link ViewDefinition} or null if the default view definition 
-	 * should be used.
-	 * @param viewName
-	 * @param context
-	 * @return
-	 */
-	ViewDefinition getViewDefinition(String schema, String viewName, CommandContext context);
+	public ViewDefinition(String sql) {
+		this.sql = sql;
+	}
+
+	public String getSql() {
+		return sql;
+	}
 	
 }

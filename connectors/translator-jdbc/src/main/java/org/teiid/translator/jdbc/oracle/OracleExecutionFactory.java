@@ -24,14 +24,20 @@
  */
 package org.teiid.translator.jdbc.oracle;
 
+import java.sql.CallableStatement;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
@@ -49,7 +55,10 @@ import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.ColumnStats;
 import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.Table;
+import org.teiid.metadata.TableStats;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
@@ -76,6 +85,35 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public final static String DUAL = "DUAL"; //$NON-NLS-1$
     public final static String ROWNUM = "ROWNUM"; //$NON-NLS-1$
     public final static String SEQUENCE = ":SEQUENCE="; //$NON-NLS-1$
+    
+    private static final String NUMBER = "number"; //$NON-NLS-1$
+    private static final char escape = '"'; 
+    private static final char delim = '.';
+    
+    private final static Map<Class<?>, String> type_to_raw_mapping = new HashMap<Class<?>, String>();
+    private final static Map<Class<?>, Integer> type_to_jdbc_mapping = new HashMap<Class<?>, Integer>();
+    private final static Map<String, String> native_to_raw_mapping = new TreeMap<String, String>();
+    
+    static {
+        type_to_raw_mapping.put(TypeFacility.RUNTIME_TYPES.BOOLEAN, NUMBER);
+        type_to_raw_mapping.put(TypeFacility.RUNTIME_TYPES.BYTE, NUMBER);
+        type_to_raw_mapping.put(TypeFacility.RUNTIME_TYPES.SHORT, NUMBER);
+        type_to_raw_mapping.put(TypeFacility.RUNTIME_TYPES.INTEGER, NUMBER);
+        type_to_raw_mapping.put(TypeFacility.RUNTIME_TYPES.LONG, NUMBER);
+        type_to_raw_mapping.put(TypeFacility.RUNTIME_TYPES.FLOAT, NUMBER);
+        type_to_raw_mapping.put(TypeFacility.RUNTIME_TYPES.DOUBLE, NUMBER);
+        type_to_raw_mapping.put(TypeFacility.RUNTIME_TYPES.STRING, "varchar2"); //$NON-NLS-1$
+        
+        native_to_raw_mapping.put("varchar2", "varchar2"); //$NON-NLS-1$ //$NON-NLS-2$
+        native_to_raw_mapping.put("nvarchar2", "nvarchar2"); //$NON-NLS-1$ //$NON-NLS-2$
+        native_to_raw_mapping.put("binary_float", "binary_float"); //$NON-NLS-1$ //$NON-NLS-2$
+        native_to_raw_mapping.put("binary_integer", "binary_integer"); //$NON-NLS-1$ //$NON-NLS-2$
+        native_to_raw_mapping.put("binary_double", "binary_double"); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        type_to_jdbc_mapping.put(TypeFacility.RUNTIME_TYPES.DATE, Types.DATE);
+        type_to_jdbc_mapping.put(TypeFacility.RUNTIME_TYPES.TIME, Types.DATE);
+        type_to_jdbc_mapping.put(TypeFacility.RUNTIME_TYPES.TIMESTAMP, Types.DATE);
+    }
     
     public void start() throws TranslatorException {
         super.start();
@@ -508,4 +546,157 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsAggregatesEnhancedNumeric() {
     	return true;
     }
+    
+    @Override
+    public boolean updateTableStats(Table table, TableStats stats, Connection conn)
+    		throws TranslatorException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        String qualifiedTableName = table.getNameInSource();
+        if (qualifiedTableName == null) {
+        	return false;
+        }
+        if (DUAL.equalsIgnoreCase(qualifiedTableName)) {
+        	stats.setCardinality(1);
+        	return false;
+        }
+        List<String> nameParts = JDBCExecutionFactory.parseName(qualifiedTableName, escape, delim);
+        if (nameParts.size() < 2) {
+        	return false;
+        }
+        String schemaName = nameParts.get(nameParts.size() - 2);
+        String tableName = nameParts.get(nameParts.size() - 1);
+        try {
+	        try {
+	            stmt = conn.prepareStatement("select num_rows from ALL_TABLES where owner = ? AND table_name = ?");  //$NON-NLS-1$
+	            stmt.setString(1, schemaName);
+	            stmt.setString(2, tableName);
+	            rs = stmt.executeQuery();
+	            if(rs.next()) {
+	                stats.setCardinality(rs.getInt(1));
+	                return true;
+	            }
+	        } finally { 
+	            if(rs != null) {
+	                rs.close();
+	            }
+	            if(stmt != null) {
+	                stmt.close();
+	            }
+	        }        
+        } catch (SQLException e) {
+        	throw new TranslatorException(e);
+        }
+        return false;
+    }
+    
+    @Override
+    public boolean updateColumnStats(Column column, ColumnStats stats,
+    		Connection conn) throws TranslatorException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        String columnName = column.getNameInSource();
+        if (columnName == null) {
+        	columnName = column.getName();
+        }
+        String qualifiedTableName = column.getParent().getNameInSource();
+        if (qualifiedTableName == null) {
+        	return false;
+        }
+        if (DUAL.equalsIgnoreCase(qualifiedTableName)) {
+        	return false;
+        }
+        List<String> nameParts = JDBCExecutionFactory.parseName(qualifiedTableName, escape, delim);
+        if (nameParts.size() < 2) {
+        	return false;
+        }
+        String schemaName = nameParts.get(nameParts.size() - 2);
+        String tableName = nameParts.get(nameParts.size() - 1);
+        try {
+	        try {
+	            String sql = "select num_distinct, num_nulls"; //$NON-NLS-1$
+	            boolean knownType = true;
+	            String type = null;
+	            Integer jdbcType = null;
+	            if (column.getNativeType() != null) {
+	            	type = native_to_raw_mapping.get(column.getNativeType());
+	            }
+	            Class<?> clazzType = TypeFacility.getDataTypeClass(column.getRuntimeType());
+	            if (type == null) {
+	                type = type_to_raw_mapping.get(clazzType);
+	            }
+	            if (type != null) {
+	            	//TODO: could split into two queries to ensure that we at least get the ndv/nnv
+	                sql += ", utl_raw.cast_to_"+type+"(low_value), utl_raw.cast_to_"+type+"(high_value)"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	            } else {
+	            	//TODO could get type from the databasemetadata or store the type in the extension metadata
+	                sql += ", low_value, high_value"; //$NON-NLS-1$
+	                knownType = false;
+	                jdbcType = type_to_jdbc_mapping.get(clazzType);
+	            }
+	            
+	            sql += " from ALL_TAB_COL_STATISTICS where owner=? and TABLE_NAME = ? and COLUMN_NAME = ?"; //$NON-NLS-1$
+	            stmt = conn.prepareStatement(sql);
+	            stmt.setString(1, schemaName);
+	            stmt.setString(2, tableName);
+	            stmt.setString(3, columnName);
+	            rs = stmt.executeQuery();
+	            if(rs.next()) {
+	                stats.setNumDistinctValues(rs.getInt(1));
+	                stats.setNumNullValues(rs.getInt(2));
+	
+	                if (jdbcType != null) {
+	                    byte[] bytes = rs.getBytes(3);
+	                    String val = getRawAsString(conn, bytes, jdbcType);
+	                    stats.setMin(val);
+	                    bytes = rs.getBytes(4);
+	                    val = getRawAsString(conn, bytes, jdbcType);
+	                    stats.setMax(val);
+	                } else if (knownType) {
+	                    stats.setMin(rs.getString(3));
+	                    stats.setMax(rs.getString(4));
+	                }
+                    //if not a known conversion type (rowid, char, etc.), then we could choose to compensate
+	            }
+	        } finally { 
+	            if(rs != null) {
+	                rs.close();
+	            }
+	            if(stmt != null) {
+	                stmt.close();
+	            }
+	        }
+        } catch (SQLException e) {
+        	throw new TranslatorException(e);
+        }
+        return true;
+    }
+    
+    /**
+     * @param colStat
+     * @param bytes
+     * @return
+     * @throws SQLException
+     */
+    private String getRawAsString( Connection conn, byte[] bytes, int type ) {
+        CallableStatement cs = null;
+        try {
+            cs = conn.prepareCall("{call dbms_stats.convert_raw_value(?, ?)}"); //$NON-NLS-1$
+            cs.registerOutParameter(2, type);
+            cs.setBytes(1, bytes);
+            cs.execute();
+            String val = cs.getString(2);
+            return val;
+        } catch (SQLException e) {
+            return null; //TODO
+        } finally {
+            if (cs != null) {
+                try {
+                    cs.close();
+                } catch (SQLException e) {
+                }
+            }
+        }
+    }
+    
 }

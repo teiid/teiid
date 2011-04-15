@@ -51,6 +51,7 @@ import org.teiid.dqp.internal.process.AbstractWorkItem.ThreadState;
 import org.teiid.dqp.service.AutoGenDataService;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.metadata.MetadataProvider;
+import org.teiid.metadata.ViewDefinition;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -335,10 +336,10 @@ public class TestDQPCore {
     		public ViewDefinition getViewDefinition(String schema,
     				String viewName, CommandContext context) {
     			if (callCount++ > 0) {
-        			ViewDefinition vd = new ViewDefinition("SELECT 'something else'", Scope.USER);
+        			ViewDefinition vd = new ViewDefinition("SELECT 'something else'");
         			return vd;
     			}	
-    			ViewDefinition vd = new ViewDefinition("SELECT 'hello world'", Scope.USER);
+    			ViewDefinition vd = new ViewDefinition("SELECT 'hello world'");
     			return vd;
     		}
     	});

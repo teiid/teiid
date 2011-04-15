@@ -84,7 +84,6 @@ public class JDBCMetdataProcessor {
 	private boolean widenUnsingedTypes = true;
 	private boolean quoteNameInSource = true;
 	private boolean useProcedureSpecificName;
-	//TODO add an option to not fully qualify name in source
 	
 	private Set<String> unsignedTypes = new HashSet<String>();
 	private String quoteString;

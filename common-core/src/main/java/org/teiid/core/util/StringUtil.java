@@ -197,9 +197,9 @@ public final class StringUtil {
 	 * @param splitter Characters to split on
 	 * @return List of String pieces from full string
 	 */
-    public static List split(String str, String splitter) {
+    public static List<String> split(String str, String splitter) {
         StringTokenizer tokens = new StringTokenizer(str, splitter);
-        ArrayList l = new ArrayList(tokens.countTokens());
+        ArrayList<String> l = new ArrayList<String>(tokens.countTokens());
         while(tokens.hasMoreTokens()) {
             l.add(tokens.nextToken());
         }
@@ -213,8 +213,8 @@ public final class StringUtil {
      * @param delimiter The sub-string which is used to break the target.
      * @return List of String from the target.
      */
-    public static List splitOnEntireString(String target, String delimiter) {
-        ArrayList result = new ArrayList();
+    public static List<String> splitOnEntireString(String target, String delimiter) {
+        ArrayList<String> result = new ArrayList<String>();
         if (delimiter.length() > 0) {
             int index = 0;
             int indexOfNextMatch = target.indexOf(delimiter);

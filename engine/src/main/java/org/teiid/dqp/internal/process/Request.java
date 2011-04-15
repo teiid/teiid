@@ -60,8 +60,8 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.MetadataProvider;
+import org.teiid.metadata.ViewDefinition;
 import org.teiid.metadata.FunctionMethod.Determinism;
-import org.teiid.metadata.MetadataProvider.ViewDefinition;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.eval.SecurityFunctionEvaluator;
@@ -136,9 +136,6 @@ public class Request implements SecurityFunctionEvaluator {
 			ViewDefinition vd = metadataProvider.getViewDefinition(schema, viewName, context);
 			if (vd != null) {
 				result = new QueryNode(DataTypeManager.getCanonicalString(vd.getSql()));
-				if (vd.getScope() == MetadataProvider.Scope.USER) {
-					result.setUser(context.getUserName());
-				}
 			}
 			qnodes.put(groupID, result);
 			return result;

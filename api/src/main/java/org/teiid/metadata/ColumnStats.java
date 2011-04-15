@@ -22,20 +22,43 @@
 
 package org.teiid.metadata;
 
-import org.teiid.CommandContext;
+public class ColumnStats {
 
-/**
- * A hook for providing {@link ViewDefinition}s
- */
-public interface MetadataProvider {
+    private int numDistinctValues = -1;
+    private int numNullValues = -1;
+    private String min;
+    private String max;
+    
+	public int getNumDistinctValues() {
+		return numDistinctValues;
+	}
 	
-	/**
-	 * Returns an updated {@link ViewDefinition} or null if the default view definition 
-	 * should be used.
-	 * @param viewName
-	 * @param context
-	 * @return
-	 */
-	ViewDefinition getViewDefinition(String schema, String viewName, CommandContext context);
+	public void setNumDistinctValues(int numDistinctValues) {
+		this.numDistinctValues = numDistinctValues;
+	}
 	
+	public int getNumNullValues() {
+		return numNullValues;
+	}
+	
+	public void setNumNullValues(int numNullValues) {
+		this.numNullValues = numNullValues;
+	}
+	
+	public String getMin() {
+		return min;
+	}
+	
+	public void setMin(String min) {
+		this.min = min;
+	}
+	
+	public String getMax() {
+		return max;
+	}
+	
+	public void setMax(String max) {
+		this.max = max;
+	}
+    
 }

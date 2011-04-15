@@ -361,7 +361,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			}
 			List<?> result = updateMatViewRow(globalStore, matTableName, tuple, delete);
 			if (result != null && eventDistributor != null) {
-				this.eventDistributor.updateMatViewRow(context.getVdbName(), context.getVdbVersion(), matTableName, tuple, delete);
+				this.eventDistributor.updateMatViewRow(context.getVdbName(), context.getVdbVersion(), metadata.getName(metadata.getModelID(groupID)), metadata.getName(groupID), tuple, delete);
 			}
 			return CollectionTupleSource.createUpdateCountTupleSource(result != null ? 1 : 0);
 		}

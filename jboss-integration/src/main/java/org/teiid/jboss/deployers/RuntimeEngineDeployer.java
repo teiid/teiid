@@ -70,6 +70,7 @@ import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.adminapi.jboss.AdminProvider;
+import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.cache.CacheFactory;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
@@ -95,15 +96,21 @@ import org.teiid.dqp.service.SessionService;
 import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.dqp.service.TransactionService;
 import org.teiid.events.EventDistributor;
+import org.teiid.events.EventDistributorFactory;
 import org.teiid.jboss.IntegrationPlugin;
 import org.teiid.logging.Log4jListener;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ColumnStats;
+import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
+import org.teiid.metadata.TableStats;
 import org.teiid.net.TeiidURL;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.security.SecurityHelper;
 import org.teiid.transport.ClientServiceRegistry;
@@ -116,7 +123,7 @@ import org.teiid.vdb.runtime.VDBKey;
 
 
 @ManagementObject(name="RuntimeEngineDeployer", isRuntime=true, componentType=@ManagementComponent(type="teiid",subtype="dqp"), properties=ManagementProperties.EXPLICIT)
-public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManagement, Serializable , ClientServiceRegistry, EventDistributor  {
+public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManagement, Serializable , ClientServiceRegistry, EventDistributor, EventDistributorFactory  {
 	private static final long serialVersionUID = -4676205340262775388L;
 	
 	private transient SocketConfiguration jdbcSocketConfiguration;
@@ -641,8 +648,8 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	}
 	
 	@Override
-	public void updateMatViewRow(String vdbName, int vdbVersion, String matViewFqn, List<?> tuple,
-			boolean delete) {
+	public void updateMatViewRow(String vdbName, int vdbVersion, String schema,
+			String viewName, List<?> tuple, boolean delete) {
 		VDBMetaData vdb = this.vdbRepository.getVDB(vdbName, vdbVersion);
 		if (vdb == null) {
 			return;
@@ -652,14 +659,26 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 			return;
 		}
 		try {
-			this.dqpCore.getDataTierManager().updateMatViewRow(globalStore, matViewFqn, tuple, delete);
+			this.dqpCore.getDataTierManager().updateMatViewRow(globalStore, RelationalPlanner.MAT_PREFIX + (schema + '.' + viewName).toUpperCase(), tuple, delete);
 		} catch (TeiidException e) {
 			LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("DQPCore.unable_to_process_event")); //$NON-NLS-1$
 		}
 	}
 	
 	@Override
-	public void dataModification(String vdbName, int vdbVersion, String... tableFqns) {
+	public void dataModification(String vdbName, int vdbVersion, String schema,
+			String... tableNames) {
+		updateModified(true, vdbName, vdbVersion, schema, tableNames);
+	}
+	
+	@Override
+	public void schemaModification(String vdbName, int vdbVersion,
+			String schema, String... objectNames) {
+		updateModified(false, vdbName, vdbVersion, schema, objectNames);
+	}
+
+	private void updateModified(boolean data, String vdbName, int vdbVersion, String schema,
+			String... objectNames) {
 		VDBMetaData vdb = this.vdbRepository.getVDB(vdbName, vdbVersion);
 		if (vdb == null) {
 			return;
@@ -668,33 +687,80 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		if (tm == null) {
 			return;
 		}
-		for (String tableFqn:tableFqns) {
-			try {
-				Table table = tm.getGroupID(tableFqn);
-				table.setLastDataModification(System.currentTimeMillis());
-			} catch (TeiidException e) {
-				LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("DQPCore.unable_to_process_event")); //$NON-NLS-1$
+		try {
+			Schema s = tm.getMetadataStore().getSchema(schema.toUpperCase());
+			long ts = System.currentTimeMillis();
+			for (String name:objectNames) {
+				Table table = s.getTables().get(name);
+				if (table == null) {
+					continue;
+				}
+				if (data) {
+					table.setLastDataModification(ts);
+				} else {
+					table.setLastModified(ts);
+				}
+			}
+		} catch (TeiidException e) {
+			LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("DQPCore.unable_to_process_event")); //$NON-NLS-1$
+		}
+	}
+	
+	@Override
+	public void setColumnStats(String vdbName, int vdbVersion,
+			String schemaName, String tableName, String columnName,
+			ColumnStats stats) {
+		Table t = getTable(vdbName, vdbVersion, schemaName, tableName);
+		if (t == null) {
+			return;
+		}
+		for (Column c : t.getColumns()) {
+			if (c.getName().equalsIgnoreCase(columnName)) {
+				c.setDistinctValues(stats.getNumDistinctValues());
+				c.setNullValues(stats.getNumNullValues());
+				c.setMaximumValue(stats.getMax());
+				c.setMinimumValue(stats.getMin());
+				t.setLastModified(System.currentTimeMillis());
+				break;
 			}
 		}
 	}
 	
 	@Override
-	public void schemaModification(String vdbName, int vdbVersion, String... fqns) {
+	public void setTableStats(String vdbName, int vdbVersion,
+			String schemaName, String tableName, TableStats stats) {
+		Table t = getTable(vdbName, vdbVersion, schemaName, tableName);
+		if (t == null) {
+			return;
+		}
+		t.setCardinality(stats.getCardinality());
+		t.setLastModified(System.currentTimeMillis());
+	}
+
+	private Table getTable(String vdbName, int vdbVersion, String schemaName,
+			String tableName) {
 		VDBMetaData vdb = this.vdbRepository.getVDB(vdbName, vdbVersion);
 		if (vdb == null) {
-			return;
+			return null;
 		}
 		TransformationMetadata tm = vdb.getAttachment(TransformationMetadata.class);
 		if (tm == null) {
-			return;
+			return null;
 		}
-		for (String fqn:fqns) {
-			try {
-				Table table = tm.getGroupID(fqn);
-				table.setLastModified(System.currentTimeMillis());
-			} catch (TeiidException e) {
-				LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("DQPCore.unable_to_process_event")); //$NON-NLS-1$
-			}
+		Schema s;
+		try {
+			s = tm.getMetadataStore().getSchema(schemaName.toUpperCase());
+		} catch (QueryMetadataException e) {
+			LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.getString("DQPCore.unable_to_process_event")); //$NON-NLS-1$
+			return null;
 		}
+		return s.getTables().get(tableName.toUpperCase());
+	}
+	
+	public EventDistributor getEventDistributor() {
+		if (this.eventDistributor != null) { 
+			return eventDistributor;
+		}
+		return this;
 	}
 }

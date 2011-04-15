@@ -20,22 +20,15 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.metadata;
+package org.teiid.events;
 
-import org.teiid.CommandContext;
-
-/**
- * A hook for providing {@link ViewDefinition}s
- */
-public interface MetadataProvider {
+public interface EventDistributorFactory {
 	
 	/**
-	 * Returns an updated {@link ViewDefinition} or null if the default view definition 
-	 * should be used.
-	 * @param viewName
-	 * @param context
+	 * Get an {@link EventDistributor} that will distribute events to 
+	 * all members.
 	 * @return
 	 */
-	ViewDefinition getViewDefinition(String schema, String viewName, CommandContext context);
-	
+	EventDistributor getEventDistributor();
+
 }

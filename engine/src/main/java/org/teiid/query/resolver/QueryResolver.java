@@ -434,9 +434,6 @@ public class QueryResolver {
 			QueryValidatorException {
 		qmi = qmi.getDesignTimeMetadata();
 		cacheString = "transformation/" + cacheString; //$NON-NLS-1$
-		if (qnode.getUser() != null) {
-			cacheString += "/" + qnode.getUser(); //$NON-NLS-1$
-		}
 		QueryNode cachedNode = (QueryNode)qmi.getFromMetadataCache(virtualGroup.getMetadataID(), cacheString);
         if (cachedNode == null 
         		|| (qnode.getQuery() != null && !cachedNode.getQuery().equals(qnode.getQuery()))
@@ -474,7 +471,6 @@ public class QueryResolver {
             }
             cachedNode = new QueryNode(qnode.getQuery());
             cachedNode.setCommand((Command)result.clone());
-            cachedNode.setUser(qnode.getUser());
 	        
 			if(isView(virtualGroup, qmi)) {
 		        String updatePlan = qmi.getUpdatePlan(virtualGroup.getMetadataID());

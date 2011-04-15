@@ -44,7 +44,6 @@ public class QueryNode {
 	// Initial state
 	private String query;
 	private List<String> bindings;     // optional - construct if needed
-	private String user;
 	// After parsing and resolution
 	private Command command;
 	private UpdateInfo updateInfo;
@@ -124,14 +123,6 @@ public class QueryNode {
 	 */
 	public String toString() {
         return query;
-	}
-	
-	public String getUser() {
-		return user;
-	}
-	
-	public void setUser(String user) {
-		this.user = user;
 	}
 	
 	public UpdateInfo getUpdateInfo() {

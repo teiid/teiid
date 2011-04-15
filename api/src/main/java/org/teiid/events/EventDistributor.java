@@ -24,41 +24,48 @@ package org.teiid.events;
 
 import java.util.List;
 
+import org.teiid.metadata.ColumnStats;
+import org.teiid.metadata.TableStats;
+
 /**
  * Distributes events across the Teiid cluster
  */
 public interface EventDistributor {
 	
 	/**
-	 * Update the given materialized view row using the internal mat view name #MAT_VIEWFQN.
+	 * Update the given materialized view row.
 	 * The tuple is expected to be in table order, which has the primary key first.
 	 * Deletes need to only send the key, not the entire row contents.
 	 * 
 	 * @param vdbName
 	 * @param vdbVersion
-	 * @param matViewFqn
+	 * @param schema
+	 * @param viewName
 	 * @param tuple
 	 * @param delete
 	 */
-	void updateMatViewRow(String vdbName, int vdbVersion, String matViewFqn, List<?> tuple, boolean delete);
+	void updateMatViewRow(String vdbName, int vdbVersion, String schema, String viewName, List<?> tuple, boolean delete);
 	
 	/**
-	 * Notify that the metadata has been changed for the given fqns.
-	 * A fqn has the form schema.entityname.
-	 * This typically implies that the costing metadata has changed, but may also indicate
-	 * a view definition has changed.
+	 * Notify that the metadata has been changed for the given table or view.
 	 * @param vdbName
 	 * @param vdbVersion
-	 * @param fqns
+	 * @param schema
+	 * @param objectNames
 	 */
-	void schemaModification(String vdbName, int vdbVersion, String... fqns);
+	void schemaModification(String vdbName, int vdbVersion, String schema, String... objectNames);
 	
 	/**
 	 * Notify that the table data has changed.
-	 * A table fqn has the form schema.tablename.
 	 * @param vdbName
 	 * @param vdbVersion
-	 * @param tableFqns
+ 	 * @param schema
+	 * @param tableNames
 	 */
-	void dataModification(String vdbName, int vdbVersion, String... tableFqns);
+	void dataModification(String vdbName, int vdbVersion, String schema, String... tableNames);
+	
+	void setTableStats(String vdbName, int vdbVersion, String schemaName, String tableName, TableStats stats);
+	
+	void setColumnStats(String vdbName, int vdbVersion, String schemaName, String tableName, String columnName, ColumnStats stats);
+	
 }
