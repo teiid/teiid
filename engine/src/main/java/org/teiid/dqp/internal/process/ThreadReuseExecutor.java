@@ -228,6 +228,7 @@ public class ThreadReuseExecutor implements Executor {
 			return result;
 		}
 	});
+	private long warnWaitTime = 500;
 	
 	public ThreadReuseExecutor(String name, int maximumPoolSize) {
 		this.maximumPoolSize = maximumPoolSize;
@@ -252,7 +253,6 @@ public class ThreadReuseExecutor implements Executor {
 
 	private void executeDirect(final PrioritizedRunnable command) {
 		boolean atMaxThreads = false;
-		boolean newMaxQueueSize = false;
 		synchronized (poolLock) {
 			checkForTermination();
 			submittedCount++;
@@ -261,7 +261,6 @@ public class ThreadReuseExecutor implements Executor {
 				queue.add(command);
 				int queueSize = queue.size();
 				if (queueSize > highestQueueSize) {
-					newMaxQueueSize = true;
 					highestQueueSize = queueSize;
 				}
 			} else {
@@ -270,9 +269,6 @@ public class ThreadReuseExecutor implements Executor {
 			}
 		}
 		if (atMaxThreads) {
-			if (newMaxQueueSize && maximumPoolSize > 1) {
-				LogManager.logWarning(LogConstants.CTX_RUNTIME, QueryPlugin.Util.getString("WorkerPool.Max_thread", maximumPoolSize, poolName, highestQueueSize)); //$NON-NLS-1$
-			}
 			return;
 		}
 		tpe.execute(new Runnable() {
@@ -285,7 +281,7 @@ public class ThreadReuseExecutor implements Executor {
 				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_RUNTIME, MessageLevel.TRACE)) {
 					LogManager.logTrace(LogConstants.CTX_RUNTIME, "Beginning work with virtual worker", t.getName()); //$NON-NLS-1$ 
 				}
-				Runnable r = command;
+				PrioritizedRunnable r = command;
 				while (r != null) {
 					boolean success = false;
 					try {
@@ -304,6 +300,11 @@ public class ThreadReuseExecutor implements Executor {
 									poolLock.notifyAll();
 								}		
 							}
+						}
+						long warnTime = warnWaitTime;
+						if (r != null && System.currentTimeMillis() - r.getCreationTime() > warnTime) {
+							LogManager.logWarning(LogConstants.CTX_RUNTIME, QueryPlugin.Util.getString("WorkerPool.Max_thread", maximumPoolSize, poolName, highestQueueSize, warnTime)); //$NON-NLS-1$
+							warnWaitTime*=2; //we don't really care if this is synchronized
 						}
 						t.setName(name);
 					}
