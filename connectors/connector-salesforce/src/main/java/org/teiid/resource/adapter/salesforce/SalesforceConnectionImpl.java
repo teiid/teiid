@@ -336,8 +336,12 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		try {
 			List<SObject> objects = sfSoap.retrieve(fieldList, sObjectType, ids, sh);
 			QueryResult result = new QueryResult();
-			result.getRecords().addAll(objects);
-			result.setSize(objects.size());
+			for (SObject sObject : objects) {
+			    if (sObject != null) {
+					result.getRecords().add(sObject);
+			    }
+			}
+			result.setSize(result.getRecords().size());
 			result.setDone(true);
 			return result;			
 		} catch (InvalidFieldFault e) {
