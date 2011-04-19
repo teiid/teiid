@@ -364,7 +364,7 @@ public class XMLSystemFunctions {
 		eventWriter.add(eventFactory.createEndElement("", null, name)); //$NON-NLS-1$
 	}
 	
-	public static XMLType xmlConcat(CommandContext context, final XMLType xml, final Object... other) throws TeiidComponentException, TeiidProcessingException {
+	public static XMLType xmlConcat(CommandContext context, final XMLType xml, final Object... other) throws TeiidProcessingException {
 		//determine if there is just a single xml value and return it
 		XMLType singleValue = xml;
 		XMLType.Type type = null;
