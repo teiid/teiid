@@ -322,7 +322,7 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
      * @return true if loaded, null if not loaded - but a cm is available, else false
      */
     private Boolean loadMetadata(VDBMetaData vdb, ModelMetaData model, boolean cache, File cacheFile, MetadataStoreGroup vdbStore, ConnectorManagerRepository cmr) {
-		String msg = RuntimePlugin.Util.getString("model_metadata_loading", vdb.getName()+"-"+vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())); //$NON-NLS-1$ //$NON-NLS-2$
+		String msg = RuntimePlugin.Util.getString("model_metadata_loading", vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())); //$NON-NLS-1$ 
 		model.addError(ModelMetaData.ValidationError.Severity.ERROR.toString(), msg); 
 		LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
 
@@ -359,13 +359,14 @@ public class VDBDeployer extends AbstractSimpleRealDeployer<VDBMetaData> {
     	synchronized (vdb) {
 	    	if (loaded == null || !loaded) {
 	    		vdb.setStatus(VDB.Status.INACTIVE);
-	    		String failed_msg = RuntimePlugin.Util.getString(loaded==null?"failed_to_retrive_metadata":"nosources_to_retrive_metadata", vdb.getName()+"-"+vdb.getVersion(), model.getName()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	    		String failed_msg = RuntimePlugin.Util.getString(loaded==null?"failed_to_retrive_metadata":"nosources_to_retrive_metadata", vdb.getName(), vdb.getVersion(), model.getName()); //$NON-NLS-1$ //$NON-NLS-2$ 
 		    	model.addError(ModelMetaData.ValidationError.Severity.ERROR.toString(), failed_msg); 
 		    	if (exceptionMessage != null) {
 		    		model.addError(ModelMetaData.ValidationError.Severity.ERROR.toString(), exceptionMessage);     		
 		    	}
 		    	LogManager.logWarning(LogConstants.CTX_RUNTIME, failed_msg);
 	    	} else {
+	    		LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.getString("metadata_loaded",vdb.getName(), vdb.getVersion(), model.getName())); //$NON-NLS-1$
 	    		model.clearErrors();
 	    		if (vdb.isValid()) {
 	    			this.vdbRepository.updateVDB(vdb.getName(), vdb.getVersion());

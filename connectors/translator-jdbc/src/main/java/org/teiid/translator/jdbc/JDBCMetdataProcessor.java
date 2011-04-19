@@ -35,6 +35,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.teiid.core.util.StringUtil;
+import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.BaseColumn;
@@ -132,7 +133,7 @@ public class JDBCMetdataProcessor {
 
 	private void getProcedures(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata) throws SQLException, TranslatorException {
-		LogManager.logDetail("JDBCMetadataProcessor - Importing procedures"); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing procedures"); //$NON-NLS-1$
 		ResultSet procedures = metadata.getProcedures(catalog, schemaPattern, procedureNamePattern);
 		int rsColumns = procedures.getMetaData().getColumnCount();
 		while (procedures.next()) {
@@ -199,7 +200,7 @@ public class JDBCMetdataProcessor {
 	
 	private Map<String, TableInfo> getTables(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata) throws SQLException, TranslatorException {
-		LogManager.logDetail("JDBCMetadataProcessor - Importing tables"); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing tables"); //$NON-NLS-1$
 		ResultSet tables = metadata.getTables(catalog, schemaPattern, tableNamePattern, tableTypes);
 		Map<String, TableInfo> tableMap = new HashMap<String, TableInfo>();
 		while (tables.next()) {
@@ -224,7 +225,7 @@ public class JDBCMetdataProcessor {
 	private void getColumns(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata, Map<String, TableInfo> tableMap)
 			throws SQLException, TranslatorException {
-		LogManager.logDetail("JDBCMetadataProcessor - Importing columns"); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing columns"); //$NON-NLS-1$
 		ResultSet columns = metadata.getColumns(catalog, schemaPattern, tableNamePattern, null);
 		int rsColumns = columns.getMetaData().getColumnCount();
 		while (columns.next()) {
@@ -301,7 +302,7 @@ public class JDBCMetdataProcessor {
 	private void getPrimaryKeys(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata, Map<String, TableInfo> tableMap)
 			throws SQLException, TranslatorException {
-		LogManager.logDetail("JDBCMetadataProcessor - Importing primary keys"); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing primary keys"); //$NON-NLS-1$
 		for (TableInfo tableInfo : tableMap.values()) {
 			ResultSet pks = metadata.getPrimaryKeys(tableInfo.catalog, tableInfo.schema, tableInfo.name);
 			TreeMap<Short, String> keyColumns = null;
@@ -329,7 +330,7 @@ public class JDBCMetdataProcessor {
 	
 	private void getForeignKeys(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata, Map<String, TableInfo> tableMap) throws SQLException, TranslatorException {
-		LogManager.logDetail("JDBCMetadataProcessor - Importing foreign keys"); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing foreign keys"); //$NON-NLS-1$
 		for (TableInfo tableInfo : tableMap.values()) {
 			ResultSet fks = metadata.getImportedKeys(tableInfo.catalog, tableInfo.schema, tableInfo.name);
 			TreeMap<Short, String> keyColumns = null;
@@ -373,7 +374,7 @@ public class JDBCMetdataProcessor {
 
 	private void getIndexes(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata, Map<String, TableInfo> tableMap) throws SQLException, TranslatorException {
-		LogManager.logDetail("JDBCMetadataProcessor - Importing index info"); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing index info"); //$NON-NLS-1$
 		for (TableInfo tableInfo : tableMap.values()) {
 			ResultSet indexInfo = metadata.getIndexInfo(tableInfo.catalog, tableInfo.schema, tableInfo.name, false, importApproximateIndexes);
 			TreeMap<Short, String> indexColumns = null;
