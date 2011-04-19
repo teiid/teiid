@@ -31,10 +31,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
@@ -78,35 +75,6 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public final static String DUAL = "DUAL"; //$NON-NLS-1$
     public final static String ROWNUM = "ROWNUM"; //$NON-NLS-1$
     public final static String SEQUENCE = ":SEQUENCE="; //$NON-NLS-1$
-    
-    private final static Map<Class<?>, Integer> type_to_jdbc_mapping = new HashMap<Class<?>, Integer>();
-    private final static Map<String, String> native_to_raw_mapping = new TreeMap<String, String>();
-    
-    static {
-        native_to_raw_mapping.put("number", "number"); //$NON-NLS-1$ //$NON-NLS-2$
-        native_to_raw_mapping.put("varchar2", "varchar2"); //$NON-NLS-1$ //$NON-NLS-2$
-        native_to_raw_mapping.put("nvarchar2", "nvarchar2"); //$NON-NLS-1$ //$NON-NLS-2$
-        native_to_raw_mapping.put("binary_float", "binary_float"); //$NON-NLS-1$ //$NON-NLS-2$
-        native_to_raw_mapping.put("binary_integer", "binary_integer"); //$NON-NLS-1$ //$NON-NLS-2$
-        native_to_raw_mapping.put("natural", "binary_integer"); //$NON-NLS-1$ //$NON-NLS-2$
-        native_to_raw_mapping.put("positive", "binary_integer"); //$NON-NLS-1$ //$NON-NLS-2$
-        native_to_raw_mapping.put("naturaln", "binary_integer"); //$NON-NLS-1$ //$NON-NLS-2$
-        native_to_raw_mapping.put("postiven", "binary_integer"); //$NON-NLS-1$ //$NON-NLS-2$
-        native_to_raw_mapping.put("signtype", "binary_integer"); //$NON-NLS-1$ //$NON-NLS-2$
-        native_to_raw_mapping.put("binary_double", "binary_double"); //$NON-NLS-1$ //$NON-NLS-2$
-        
-        type_to_jdbc_mapping.put(TypeFacility.RUNTIME_TYPES.DATE, Types.DATE);
-        type_to_jdbc_mapping.put(TypeFacility.RUNTIME_TYPES.TIME, Types.DATE);
-        type_to_jdbc_mapping.put(TypeFacility.RUNTIME_TYPES.TIMESTAMP, Types.DATE);
-        type_to_jdbc_mapping.put(TypeFacility.RUNTIME_TYPES.BOOLEAN, Types.NUMERIC);
-        type_to_jdbc_mapping.put(TypeFacility.RUNTIME_TYPES.BYTE, Types.NUMERIC);
-        type_to_jdbc_mapping.put(TypeFacility.RUNTIME_TYPES.SHORT, Types.NUMERIC);
-        type_to_jdbc_mapping.put(TypeFacility.RUNTIME_TYPES.INTEGER, Types.NUMERIC);
-        type_to_jdbc_mapping.put(TypeFacility.RUNTIME_TYPES.LONG, Types.NUMERIC);
-        type_to_jdbc_mapping.put(TypeFacility.RUNTIME_TYPES.FLOAT, Types.NUMERIC);
-        type_to_jdbc_mapping.put(TypeFacility.RUNTIME_TYPES.DOUBLE, Types.NUMERIC);
-        type_to_jdbc_mapping.put(TypeFacility.RUNTIME_TYPES.STRING, Types.VARCHAR);
-    }
     
     public void start() throws TranslatorException {
         super.start();
