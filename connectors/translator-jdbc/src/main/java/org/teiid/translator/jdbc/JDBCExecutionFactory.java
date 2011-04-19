@@ -61,12 +61,8 @@ import org.teiid.language.Argument.Direction;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnStats;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.metadata.Table;
-import org.teiid.metadata.TableStats;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ProcedureExecution;
@@ -1138,18 +1134,4 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         return nameParts;
 	}
 	
-	@Override
-	public boolean updateColumnStats(Column column, ColumnStats stats,
-			Connection conn) throws TranslatorException {
-		// TODO Auto-generated method stub
-		return super.updateColumnStats(column, stats, conn);
-	}
-	
-	
-	@Override
-	public boolean updateTableStats(Table table, TableStats stats,
-			Connection conn) throws TranslatorException {
-		return super.updateTableStats(table, stats, conn);
-	}
-
 }
