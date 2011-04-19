@@ -42,13 +42,9 @@ import org.teiid.language.Select;
 import org.teiid.language.SetQuery;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnStats;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.metadata.Table;
-import org.teiid.metadata.TableStats;
 
 
 
@@ -808,14 +804,6 @@ public class ExecutionFactory<F, C> {
     public void getMetadata(MetadataFactory metadataFactory, C conn) throws TranslatorException {
     	
     }
-    
-	public boolean updateTableStats(Table table, TableStats stats, C conn) throws TranslatorException {
-		return false;
-	}
-	
-	public boolean updateColumnStats(Column column, ColumnStats stats, C conn) throws TranslatorException {
-		return false;
-	}
     
     /**
      * Indicates if LOBs are usable after the execution is closed.
