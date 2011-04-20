@@ -100,6 +100,7 @@ public class TestCachedResults {
 		
 		TupleBuffer cachedTb = cachedResults.getResults();
 		
+		assertTrue(cachedTb.isFinal());
 		assertEquals(tb.getRowCount(), cachedTb.getRowCount());
 		assertEquals(tb.getBatchSize(), cachedTb.getBatchSize());
 		
