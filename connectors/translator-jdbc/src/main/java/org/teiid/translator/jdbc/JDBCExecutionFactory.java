@@ -127,9 +127,19 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     };
     public final static TimeZone DEFAULT_TIME_ZONE = TimeZone.getDefault();
 
-    private static final ThreadLocal<Calendar> CALENDAR = new ThreadLocal<Calendar>() {
+    static class DatbaseCalender extends ThreadLocal<Calendar> {
+    	private String timeZone;
+    	public DatbaseCalender(String tz) {
+    		this.timeZone = tz;
+    	}
     	@Override
     	protected Calendar initialValue() {
+            if(this.timeZone != null && this.timeZone.trim().length() > 0) {
+            	TimeZone tz = TimeZone.getTimeZone(this.timeZone);
+                if(!DEFAULT_TIME_ZONE.hasSameRules(tz)) {
+            		return Calendar.getInstance(tz);
+                }
+            }      		
     		return Calendar.getInstance();
     	}
     };
@@ -142,6 +152,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	private boolean useCommentsInSourceQuery;
 	private String version;
 	private int maxInsertBatchSize = 2048;
+	private DatbaseCalender databaseCalender;
 
 	private AtomicBoolean initialConnection = new AtomicBoolean(true);
 	
@@ -157,15 +168,8 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     
 	@Override
 	public void start() throws TranslatorException {
-		super.start();
-		
-        String timeZone = getDatabaseTimeZone();
-        if(timeZone != null && timeZone.trim().length() > 0) {
-        	TimeZone tz = TimeZone.getTimeZone(timeZone);
-            if(!DEFAULT_TIME_ZONE.hasSameRules(tz)) {
-        		CALENDAR.set(Calendar.getInstance(tz));
-            }
-        }  		
+		super.start();		
+		this.databaseCalender = new DatbaseCalender(this.databaseTimeZone);
     }
 	
     @TranslatorProperty(display="Database Version", description= "Database Version")
@@ -492,7 +496,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @return the database calendar
      */
     public Calendar getDatabaseCalendar() {
-    	return CALENDAR.get();
+    	return this.databaseCalender.get();
     }
     
     /**
