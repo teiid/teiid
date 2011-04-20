@@ -37,7 +37,7 @@ import org.teiid.query.processor.relational.SortNode;
 import org.teiid.query.unittest.FakeMetadataFacade;
 import org.teiid.query.unittest.FakeMetadataFactory;
 
-
+@SuppressWarnings("nls")
 public class TestRuleMergeVirtual {
     
     @Test public void testSimpleMergeGroupBy() {
@@ -182,6 +182,20 @@ public class TestRuleMergeVirtual {
             0,      // Sort
             0       // UnionAll
         });                                    
+    }
+    
+    //see TEIID-1562
+    @Test public void testSimpleMergeUnderUnionWithJoin() {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_UNION, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+         
+        TestOptimizer.helpPlan("select * from (SELECT x.x, x.e2 FROM (select '1' as x, pm1.g1.e2 from pm1.g1, pm1.g2 where pm1.g1.e1 = pm1.g2.e1 group by pm1.g1.e2, pm1.g1.e3 || '1') x union all select e1, 1 from pm1.g2) as y where x = '1'", //$NON-NLS-1$
+                                      FakeMetadataFactory.example1Cached(), null, capFinder,
+                                      new String[] {
+                                          "SELECT pm1.g2.e1 FROM pm1.g2", "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3 FROM pm1.g1"}, TestOptimizer.SHOULD_SUCCEED); 
     }
     
     @Test public void testSimpleMergeUnion3() {

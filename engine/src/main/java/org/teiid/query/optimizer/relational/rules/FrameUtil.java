@@ -108,7 +108,11 @@ public class FrameUtil {
         if(endNode == null) {
             return;
         }
-        // Top of a frame - fix symbol mappings on endNode      
+        correctSymbolMap(symbolMap, endNode);
+    }
+
+	static void correctSymbolMap(Map symbolMap, PlanNode endNode) {
+		// Top of a frame - fix symbol mappings on endNode      
         SymbolMap parentSymbolMap = (SymbolMap) endNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
         if(parentSymbolMap == null) {
             return;
@@ -117,8 +121,7 @@ public class FrameUtil {
         for (Map.Entry<ElementSymbol, Expression> entry : parentSymbolMap.asUpdatableMap().entrySet()) {
 			entry.setValue(convertExpression(entry.getValue(), symbolMap));
 		}
-        
-    }
+	}
     
     static boolean canConvertAccessPatterns(PlanNode sourceNode) {
         List accessPatterns = (List)sourceNode.getProperty(NodeConstants.Info.ACCESS_PATTERNS);

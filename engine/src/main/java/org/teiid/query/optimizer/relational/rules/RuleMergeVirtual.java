@@ -291,7 +291,12 @@ public final class RuleMergeVirtual implements
             sort.addGroups(GroupsUsedByElementsVisitor.getGroups(elements));
         }
         
-        prepareFrame(frame);
+        
+        PlanNode parentSource = NodeEditor.findParent(parentProject, NodeConstants.Types.SOURCE);
+        
+        if (parentSource != null) {
+        	FrameUtil.correctSymbolMap(((SymbolMap)frame.getProperty(NodeConstants.Info.SYMBOL_MAP)).asMap(), parentSource);
+        }
         
         //remove the parent project and the source node
         NodeEditor.removeChildNode(parentProject, frame);
